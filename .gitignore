@@ -9,7 +9,8 @@
 *.identcache
 *.tvsconfig
 *.dproj.local
-.vlb
+*.vlb
+*.7z
 .identcache
 __history/
 __recovery/
