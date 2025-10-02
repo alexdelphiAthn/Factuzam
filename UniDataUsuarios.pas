@@ -22,6 +22,7 @@ type
     dsEmpresas: TDataSource;
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure DataModuleCreate(Sender: TObject);
   private
     function UsuarioEsGrupo(sUsuario:string):boolean;
   public
@@ -34,7 +35,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibGlobalVar;
+  inLibtb, inLibGlobalVar, inMtoUsuarios;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -58,6 +59,15 @@ begin
     Result := unqrySol.RecordCount > 0;
   end;
   FreeAndNil(unqrySol);
+end;
+
+procedure TdmUsuarios.DataModuleCreate(Sender: TObject);
+begin
+  inherited;
+  unqryEmpresas.Connection := inLibGlobalVar.oConn;
+  unqryGrupos.Connection := inLibGlobalVar.oConn;
+  //unqryEmpresas.MasterSource :=  (Self.Owner as TfrmMtoUsuarios).dsTablaG;
+  //unqry
 end;
 
 procedure TdmUsuarios.unqryTablaGAfterInsert(DataSet: TDataSet);

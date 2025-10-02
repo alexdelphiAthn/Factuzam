@@ -8,7 +8,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
-  ExplicitTop = -171
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -693,7 +692,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsRegistro
+            Properties.ActivePage = tsVerifactu
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 421
             ClientRectLeft = 4
@@ -2015,19 +2014,18 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Height = 391
                 HorzScrollBar.Position = 19
                 VertScrollBar.ButtonSize = 20
-                VertScrollBar.Position = 261
                 Align = alClient
                 TabOrder = 0
                 object lbl18: TLabel
                   Left = 25
-                  Top = 351
+                  Top = 612
                   Width = 176
                   Height = 19
                   Caption = 'PETICION_COMPLETA'
                 end
                 object lbl17: TLabel
                   Left = 24
-                  Top = -201
+                  Top = 60
                   Width = 188
                   Height = 19
                   Caption = 'RESPUESTA_COMPLETA'
@@ -2035,7 +2033,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl13: TLabel
                   Left = 55
-                  Top = 282
+                  Top = 543
                   Width = 140
                   Height = 19
                   Caption = 'QRCODE_BASE64'
@@ -2043,7 +2041,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl12: TLabel
                   Left = 61
-                  Top = 215
+                  Top = 476
                   Width = 134
                   Height = 19
                   Caption = 'VERIFACTU_URL'
@@ -2051,7 +2049,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl11: TLabel
                   Left = 82
-                  Top = 149
+                  Top = 410
                   Width = 109
                   Height = 19
                   Caption = 'CHAIN_HASH'
@@ -2059,7 +2057,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl10: TLabel
                   Left = 73
-                  Top = 100
+                  Top = 361
                   Width = 136
                   Height = 19
                   Caption = 'CHAIN_NUMBER'
@@ -2067,7 +2065,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl9: TLabel
                   Left = 102
-                  Top = 52
+                  Top = 313
                   Width = 109
                   Height = 19
                   Caption = 'ISSUED_TIME'
@@ -2075,7 +2073,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl8: TLabel
                   Left = 89
-                  Top = 3
+                  Top = 264
                   Width = 118
                   Height = 19
                   Caption = 'ISSUER_IRS_ID'
@@ -2083,7 +2081,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl7: TLabel
                   Left = 123
-                  Top = -45
+                  Top = 216
                   Width = 84
                   Height = 19
                   Caption = 'QUEUE_ID'
@@ -2091,7 +2089,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl6: TLabel
                   Left = 106
-                  Top = -94
+                  Top = 167
                   Width = 101
                   Height = 19
                   Caption = 'REQUEST_ID'
@@ -2099,7 +2097,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl: TLabel
                   Left = 42
-                  Top = -241
+                  Top = 20
                   Width = 170
                   Height = 19
                   Caption = 'ID_CONSOLIDACION'
@@ -2107,7 +2105,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl15: TLabel
                   Left = 427
-                  Top = -37
+                  Top = 224
                   Width = 205
                   Height = 19
                   Caption = 'FECHA_PROCESAMIENTO'
@@ -2115,7 +2113,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object lbl16: TLabel
                   Left = 367
-                  Top = -241
+                  Top = 20
                   Width = 65
                   Height = 19
                   Caption = 'ESTADO'
@@ -2123,7 +2121,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object btnReconsolidar: TSpeedButton
                   Left = 833
-                  Top = -142
+                  Top = 119
                   Width = 217
                   Height = 52
                   Cursor = crHandPoint
@@ -2131,7 +2129,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object btnConsultarEstado: TSpeedButton
                   Left = 833
-                  Top = -235
+                  Top = 26
                   Width = 217
                   Height = 39
                   Cursor = crHandPoint
@@ -2139,7 +2137,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object btnCancelarFactura: TSpeedButton
                   Left = 833
-                  Top = -189
+                  Top = 72
                   Width = 217
                   Height = 39
                   Cursor = crHandPoint
@@ -2147,7 +2145,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object btnSubsanacion: TSpeedButton
                   Left = 833
-                  Top = -83
+                  Top = 178
                   Width = 217
                   Height = 52
                   Cursor = crHandPoint
@@ -2155,7 +2153,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object spQUEUE_ID: TcxDBSpinEdit
                   Left = 221
-                  Top = -53
+                  Top = 208
                   DataBinding.DataField = 'QUEUE_ID_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2164,7 +2162,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object cxdbmRESPUESTA_COMPLETA: TcxDBMemo
                   Left = 221
-                  Top = -205
+                  Top = 56
                   DataBinding.DataField = 'RESPUESTA_COMPLETA_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2174,7 +2172,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object cxdbmQRCODE_BASE64: TcxDBMemo
                   Left = 208
-                  Top = 256
+                  Top = 517
                   DataBinding.DataField = 'QRCODE_BASE64_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2184,7 +2182,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object cxdbmVERIFACTU_URL: TcxDBMemo
                   Left = 208
-                  Top = 189
+                  Top = 450
                   DataBinding.DataField = 'VERIFACTU_URL'
                   Properties.ReadOnly = True
                   TabOrder = 3
@@ -2193,7 +2191,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object txtCHAIN_HASH: TcxDBTextEdit
                   Left = 208
-                  Top = 141
+                  Top = 402
                   DataBinding.DataField = 'CHAIN_HASH_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2202,7 +2200,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object txtCHAIN_NUMBER: TcxDBTextEdit
                   Left = 221
-                  Top = 92
+                  Top = 353
                   DataBinding.DataField = 'CHAIN_NUMBER_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2211,7 +2209,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object dteISSUED_TIME: TcxDBDateEdit
                   Left = 221
-                  Top = 44
+                  Top = 305
                   DataBinding.DataField = 'ISSUED_TIME_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2220,7 +2218,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object txtISSUER_IRS_ID: TcxDBTextEdit
                   Left = 221
-                  Top = -5
+                  Top = 256
                   DataBinding.DataField = 'ISSUER_IRS_ID_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2229,7 +2227,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object imgQRCODE_PNG: TcxDBImage
                   Left = 629
-                  Top = -244
+                  Top = 17
                   DataBinding.DataField = 'QRCODE_PNG_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.FitMode = ifmProportionalStretch
@@ -2241,7 +2239,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object txtREQUEST_ID: TcxDBTextEdit
                   Left = 221
-                  Top = -102
+                  Top = 159
                   DataBinding.DataField = 'REQUEST_ID_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2250,7 +2248,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object spID_CONSOLIDACION: TcxDBSpinEdit
                   Left = 221
-                  Top = -247
+                  Top = 14
                   DataBinding.DataField = 'ID_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2259,7 +2257,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object cxdbmPETICION_COMPLETA1: TcxDBMemo
                   Left = 208
-                  Top = 326
+                  Top = 587
                   DataBinding.DataField = 'PETICION_COMPLETA_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2269,7 +2267,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object dteFECHA_PROCESAMIENTO: TcxDBDateEdit
                   Left = 640
-                  Top = -45
+                  Top = 216
                   DataBinding.DataField = 'FECHA_PROCESAMIENTO_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
@@ -2280,7 +2278,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
                 object txtESTADO: TcxDBTextEdit
                   Left = 448
-                  Top = -247
+                  Top = 14
                   DataBinding.DataField = 'ESTADO_CONSOLIDACION'
                   DataBinding.DataSource = dmFacturas.dsConsolidacion
                   Properties.ReadOnly = True
@@ -2303,7 +2301,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 918
                 object cxGridDBTableView1: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -3291,6 +3288,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitLeft = 46
+          ExplicitTop = 360
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3441,12 +3440,16 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     end
   end
   inherited Localizer1: TcxLocalizer
-    Left = 976
-    Top = 395
+    Left = 1104
+    Top = 587
+  end
+  inherited jvntrstb1: TJvEnterAsTab
+    Left = 1104
+    Top = 136
   end
   object ActionListFacturas: TActionList [5]
-    Left = 1040
-    Top = 392
+    Left = 1104
+    Top = 528
     object actArticulo: TAction
       Caption = 'actArticulo'
       ShortCut = 16449
@@ -3465,12 +3468,12 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   end
   inherited dsTablaG: TDataSource
     DataSet = dmFacturas.unqryTablaG
-    Left = 1092
-    Top = 407
+    Left = 1108
+    Top = 439
   end
   inherited saveDialog: TdxSaveFileDialog
-    Left = 696
-    Top = 256
+    Left = 1104
+    Top = 72
   end
   object JvCalculator1: TJvCalculator
     Ctl3D = False

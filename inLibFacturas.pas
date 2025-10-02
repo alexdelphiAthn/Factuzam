@@ -707,12 +707,12 @@ begin
     _dPorRetencion := FieldByName('PORCEN_RETENCION_FACTURA').AsFloat;
 
     // Leer configuración desde la factura (puede ser override)
-    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString <> '' then
+    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S' then
       _configuracion.IRPFImpuestoIncluido :=
         (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S');
-    if FindField('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString <> '' then
-      _configuracion.AplicaRecargo :=
-        (FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString = 'S');
+//    if FindField('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString <> '' then
+//      _configuracion.AplicaRecargo :=
+//        (FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString = 'S');
   end;
   LeerPorcentajesDesdeFactura;
 end;
@@ -772,15 +772,15 @@ begin
   end;
 
   // REAGP Empresa + Cliente Normal sin retenciones
-  if _configuracion.EsRegimenAgricolaEmpresa and 
-     not _configuracion.EsRegimenAgricolaCliente and 
+  if _configuracion.EsRegimenAgricolaEmpresa and
+     not _configuracion.EsRegimenAgricolaCliente and
      not _configuracion.AplicaRetencionesCliente then
   begin
     _configuracion.IVAExento := True;
   end;
   // REAGP Empresa + Cliente Normal con retenciones
-  if ((_configuracion.EsRegimenAgricolaEmpresa) and 
-      (not _configuracion.EsRegimenAgricolaCliente) and 
+  if ((_configuracion.EsRegimenAgricolaEmpresa) and
+      (not _configuracion.EsRegimenAgricolaCliente) and
       (_configuracion.AplicaRetencionesCliente)) then
   begin
     // Aplicar IVA normal, no exento
@@ -789,7 +789,7 @@ begin
   // Aplicar IVA Exento si es necesario
   if _configuracion.IVAExento then
   begin
-     //AplicarIVAExento; 
+     //AplicarIVAExento;
   end;
 end;
 

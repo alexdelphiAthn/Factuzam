@@ -18,6 +18,9 @@ Win32/
 Win64/
 .git
 
+# Contraseña de la conexión es distinta en cada punto
+UniDataConn.dfm
+
 # Configuración sensible (MySQL, etc.)
 config.ini
 database.cfg

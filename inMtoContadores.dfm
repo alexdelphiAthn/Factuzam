@@ -23,6 +23,11 @@ inherited frmMtoContadores: TfrmMtoContadores
               DataBinding.FieldName = 'DESCRIPCION_TIPODOCUMENTO'
               Width = 197
             end
+            object cxgrdbclmnGrdDBTabPrinSUBTIPODOC_CONTADOR: TcxGridDBColumn
+              Caption = 'Subtipo'
+              DataBinding.FieldName = 'SUBTIPODOC_CONTADOR'
+              Width = 133
+            end
             object cxGrdDBTabPrinEMPRESA_CONTADOR: TcxGridDBColumn
               Caption = 'Empresa'
               DataBinding.FieldName = 'EMPRESA_CONTADOR'
@@ -82,10 +87,30 @@ inherited frmMtoContadores: TfrmMtoContadores
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 943
+        ExplicitHeight = 484
+      end
+      inherited tsPerfil: TcxTabSheet
+        inherited pnlPerfilTop: TPanel
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      inherited pnlTopGrid: TPanel
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmContadores.unqryTablaG
+    Left = 96
+    Top = 360
   end
 end

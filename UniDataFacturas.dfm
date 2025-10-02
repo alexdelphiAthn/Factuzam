@@ -2356,7 +2356,7 @@ inherited dmFacturas: TdmFacturas
       'ORDER BY ID_CONSOLIDACION DESC')
     MasterSource = frmMtoFacturas.dsTablaG
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
-    DetailFields = 'SERIE_FACTURA;NRO_FACTURA'
+    DetailFields = 'ID_CONSOLIDACION;NRO_FACTURA_CONSOLIDACION'
     ReadOnly = True
     Left = 1216
     Top = 144
@@ -2364,13 +2364,14 @@ inherited dmFacturas: TdmFacturas
       item
         DataType = ftWideString
         Name = 'NRO_FACTURA'
-        Value = ''
+        ParamType = ptInput
+        Value = '000001'
       end
       item
         DataType = ftWideString
         Name = 'SERIE_FACTURA'
         ParamType = ptInput
-        Value = ''
+        Value = 'A0'
       end>
   end
   object dsErrores: TDataSource

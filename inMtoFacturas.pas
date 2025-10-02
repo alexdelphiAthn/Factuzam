@@ -944,6 +944,7 @@ end;
 
 procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
+  if Assigned(dmmFacturas) then
    if dmmFacturas.unqryTablaG.FieldByName(fescon).AsString ='S' then
     begin
       dmmFacturas.unqryTablaG.ReadOnly := True;
