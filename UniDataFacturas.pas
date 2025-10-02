@@ -63,6 +63,10 @@ type
     unqryPaisesCli: TUniQuery;
     unqryPaisesEmp: TUniQuery;
     dsPaisesEmp: TDataSource;
+    dsConsolidacion: TDataSource;
+    unqryConsolidacion: TUniQuery;
+    dsErrores: TDataSource;
+    unqryErrores: TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryLinFacBeforeInsert(DataSet: TDataSet);
@@ -100,8 +104,8 @@ public
                                 sEmpresa,
                                 sTipoDoc:string): Boolean;
   end;
-//var
-//  dmFacturas: TdmFacturas;
+var
+  dmFacturas: TdmFacturas;
 
 implementation
 
@@ -658,8 +662,12 @@ begin
   unqryIvasTipos.Connection := inLibGlobalVar.oConn;
   unqryPaisesEmp.Connection := inLibGlobalVar.oConn;
   unqryPaisesCli.Connection := inLibGlobalVar.oConn;
+  unqryConsolidacion.Connection := inLibGlobalVar.oConn;
+  unqryErrores.Connection := inLibGlobalVar.oConn;
   unqryLinfac.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
   unqryRecibos.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
+  unqryConsolidacion.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
+  unqryErrores.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
   unqryIvasTipos.Open;
   unqryLinFac.Open;
   unqrySeries.Open;
@@ -669,6 +677,8 @@ begin
   unqryRecibos.Open;
   unqryPaisesCli.Open;
   unqryPaisesEmp.Open;
+  unqryConsolidacion.Open;
+  unqryErrores.Open;
 end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);

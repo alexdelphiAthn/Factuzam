@@ -2004,6 +2004,294 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 end
               end
             end
+            object tsVerifactu: TcxTabSheet
+              Caption = '&5_Verifactu'
+              ImageIndex = 4
+              object scrlbx1: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 1071
+                Height = 391
+                HorzScrollBar.Position = 19
+                VertScrollBar.ButtonSize = 20
+                VertScrollBar.Position = 261
+                Align = alClient
+                TabOrder = 0
+                object lbl18: TLabel
+                  Left = 25
+                  Top = 351
+                  Width = 176
+                  Height = 19
+                  Caption = 'PETICION_COMPLETA'
+                end
+                object lbl17: TLabel
+                  Left = 24
+                  Top = -201
+                  Width = 188
+                  Height = 19
+                  Caption = 'RESPUESTA_COMPLETA'
+                  FocusControl = cxdbmRESPUESTA_COMPLETA
+                end
+                object lbl13: TLabel
+                  Left = 55
+                  Top = 282
+                  Width = 140
+                  Height = 19
+                  Caption = 'QRCODE_BASE64'
+                  FocusControl = cxdbmQRCODE_BASE64
+                end
+                object lbl12: TLabel
+                  Left = 61
+                  Top = 215
+                  Width = 134
+                  Height = 19
+                  Caption = 'VERIFACTU_URL'
+                  FocusControl = cxdbmVERIFACTU_URL
+                end
+                object lbl11: TLabel
+                  Left = 82
+                  Top = 149
+                  Width = 109
+                  Height = 19
+                  Caption = 'CHAIN_HASH'
+                  FocusControl = txtCHAIN_HASH
+                end
+                object lbl10: TLabel
+                  Left = 73
+                  Top = 100
+                  Width = 136
+                  Height = 19
+                  Caption = 'CHAIN_NUMBER'
+                  FocusControl = txtCHAIN_NUMBER
+                end
+                object lbl9: TLabel
+                  Left = 102
+                  Top = 52
+                  Width = 109
+                  Height = 19
+                  Caption = 'ISSUED_TIME'
+                  FocusControl = dteISSUED_TIME
+                end
+                object lbl8: TLabel
+                  Left = 89
+                  Top = 3
+                  Width = 118
+                  Height = 19
+                  Caption = 'ISSUER_IRS_ID'
+                  FocusControl = txtISSUER_IRS_ID
+                end
+                object lbl7: TLabel
+                  Left = 123
+                  Top = -45
+                  Width = 84
+                  Height = 19
+                  Caption = 'QUEUE_ID'
+                  FocusControl = spQUEUE_ID
+                end
+                object lbl6: TLabel
+                  Left = 106
+                  Top = -94
+                  Width = 101
+                  Height = 19
+                  Caption = 'REQUEST_ID'
+                  FocusControl = txtREQUEST_ID
+                end
+                object lbl: TLabel
+                  Left = 42
+                  Top = -241
+                  Width = 170
+                  Height = 19
+                  Caption = 'ID_CONSOLIDACION'
+                  FocusControl = spID_CONSOLIDACION
+                end
+                object lbl15: TLabel
+                  Left = 427
+                  Top = -37
+                  Width = 205
+                  Height = 19
+                  Caption = 'FECHA_PROCESAMIENTO'
+                  FocusControl = dteFECHA_PROCESAMIENTO
+                end
+                object lbl16: TLabel
+                  Left = 367
+                  Top = -241
+                  Width = 65
+                  Height = 19
+                  Caption = 'ESTADO'
+                  FocusControl = txtESTADO
+                end
+                object btnReconsolidar: TSpeedButton
+                  Left = 833
+                  Top = -142
+                  Width = 217
+                  Height = 52
+                  Cursor = crHandPoint
+                  Caption = '&Reconsolidar OFFLINE'
+                end
+                object btnConsultarEstado: TSpeedButton
+                  Left = 833
+                  Top = -235
+                  Width = 217
+                  Height = 39
+                  Cursor = crHandPoint
+                  Caption = 'Cons&ultar Estado'
+                end
+                object btnCancelarFactura: TSpeedButton
+                  Left = 833
+                  Top = -189
+                  Width = 217
+                  Height = 39
+                  Cursor = crHandPoint
+                  Caption = 'Cancelar &Factura'
+                end
+                object btnSubsanacion: TSpeedButton
+                  Left = 833
+                  Top = -83
+                  Width = 217
+                  Height = 52
+                  Cursor = crHandPoint
+                  Caption = 'Su&bsanacion Manual'
+                end
+                object spQUEUE_ID: TcxDBSpinEdit
+                  Left = 221
+                  Top = -53
+                  DataBinding.DataField = 'QUEUE_ID_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 0
+                  Width = 121
+                end
+                object cxdbmRESPUESTA_COMPLETA: TcxDBMemo
+                  Left = 221
+                  Top = -205
+                  DataBinding.DataField = 'RESPUESTA_COMPLETA_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 1
+                  Height = 89
+                  Width = 402
+                end
+                object cxdbmQRCODE_BASE64: TcxDBMemo
+                  Left = 208
+                  Top = 256
+                  DataBinding.DataField = 'QRCODE_BASE64_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 2
+                  Height = 44
+                  Width = 665
+                end
+                object cxdbmVERIFACTU_URL: TcxDBMemo
+                  Left = 208
+                  Top = 189
+                  DataBinding.DataField = 'VERIFACTU_URL'
+                  Properties.ReadOnly = True
+                  TabOrder = 3
+                  Height = 44
+                  Width = 665
+                end
+                object txtCHAIN_HASH: TcxDBTextEdit
+                  Left = 208
+                  Top = 141
+                  DataBinding.DataField = 'CHAIN_HASH_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 4
+                  Width = 665
+                end
+                object txtCHAIN_NUMBER: TcxDBTextEdit
+                  Left = 221
+                  Top = 92
+                  DataBinding.DataField = 'CHAIN_NUMBER_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 5
+                  Width = 121
+                end
+                object dteISSUED_TIME: TcxDBDateEdit
+                  Left = 221
+                  Top = 44
+                  DataBinding.DataField = 'ISSUED_TIME_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 6
+                  Width = 121
+                end
+                object txtISSUER_IRS_ID: TcxDBTextEdit
+                  Left = 221
+                  Top = -5
+                  DataBinding.DataField = 'ISSUER_IRS_ID_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 7
+                  Width = 153
+                end
+                object imgQRCODE_PNG: TcxDBImage
+                  Left = 629
+                  Top = -244
+                  DataBinding.DataField = 'QRCODE_PNG_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.FitMode = ifmProportionalStretch
+                  Properties.GraphicClassName = 'TdxPNGImage'
+                  Properties.ReadOnly = True
+                  TabOrder = 8
+                  Height = 176
+                  Width = 196
+                end
+                object txtREQUEST_ID: TcxDBTextEdit
+                  Left = 221
+                  Top = -102
+                  DataBinding.DataField = 'REQUEST_ID_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 9
+                  Width = 402
+                end
+                object spID_CONSOLIDACION: TcxDBSpinEdit
+                  Left = 221
+                  Top = -247
+                  DataBinding.DataField = 'ID_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 10
+                  Width = 121
+                end
+                object cxdbmPETICION_COMPLETA1: TcxDBMemo
+                  Left = 208
+                  Top = 326
+                  DataBinding.DataField = 'PETICION_COMPLETA_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 11
+                  Height = 44
+                  Width = 654
+                end
+                object dteFECHA_PROCESAMIENTO: TcxDBDateEdit
+                  Left = 640
+                  Top = -45
+                  DataBinding.DataField = 'FECHA_PROCESAMIENTO_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+                  Properties.Kind = ckDateTime
+                  Properties.ReadOnly = True
+                  TabOrder = 12
+                  Width = 185
+                end
+                object txtESTADO: TcxDBTextEdit
+                  Left = 448
+                  Top = -247
+                  DataBinding.DataField = 'ESTADO_CONSOLIDACION'
+                  DataBinding.DataSource = dmFacturas.dsConsolidacion
+                  Properties.ReadOnly = True
+                  TabOrder = 13
+                  Width = 126
+                end
+              end
+            end
+            object tsRegistro: TcxTabSheet
+              Caption = '&6_Registro'
+              ImageIndex = 5
+            end
           end
         end
         object pnlTopFicha: TPanel
@@ -2917,6 +3205,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilTop: TPanel
           Width = 1079
           ExplicitWidth = 1079
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1079
@@ -2942,6 +3233,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
           StyleName = 'Windows'
+        end
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 336

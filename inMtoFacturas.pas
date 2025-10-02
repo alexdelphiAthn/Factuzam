@@ -30,7 +30,23 @@ uses
   dxScrollbarAnnotations, dxCore, cxRadioGroup, System.Actions, Vcl.ActnList,
   IDETheme.ActnCtrls, Vcl.ActnMan, Vcl.StdStyleActnCtrls, Vcl.AppEvnts,
   JvComponentBase, JvEnterTab, UniDataFacturas, dxShellDialogs, JvBaseDlg,
-  JvCalc, dxDateTimeWheelPicker;
+  JvCalc, dxDateTimeWheelPicker, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
+  dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
+  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
+  dxSkinGlassOceans, dxSkinHighContrast, dxSkiniMaginary, dxSkinLilian,
+  dxSkinLiquidSky, dxSkinLondonLiquidSky, dxSkinMcSkin, dxSkinMetropolis,
+  dxSkinMetropolisDark, dxSkinMoneyTwins, dxSkinOffice2007Black,
+  dxSkinOffice2007Blue, dxSkinOffice2007Green, dxSkinOffice2007Pink,
+  dxSkinOffice2007Silver, dxSkinOffice2010Black, dxSkinOffice2010Blue,
+  dxSkinOffice2010Silver, dxSkinOffice2013DarkGray, dxSkinOffice2013LightGray,
+  dxSkinOffice2013White, dxSkinOffice2016Colorful, dxSkinOffice2016Dark,
+  dxSkinOffice2019Black, dxSkinOffice2019Colorful, dxSkinOffice2019DarkGray,
+  dxSkinOffice2019White, dxSkinPumpkin, dxSkinSeven, dxSkinSevenClassic,
+  dxSkinSharp, dxSkinSharpPlus, dxSkinSilver, dxSkinSpringtime, dxSkinStardust,
+  dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
+  dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
+  dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
+  dxSkinWhiteprint, dxSkinXmas2008Blue;
 
 type
   TfrmMtoFacturas = class(TfrmMtoGen)
@@ -336,6 +352,40 @@ type
     dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_FACTURA: TcxGridDBColumn;
     dbcGrdDBTabPrinESCONSOLIDADA_FACTURA: TcxGridDBColumn;
     dbcGrdDBTabPrinINSTANTECONSO_FACTURA: TcxGridDBColumn;
+    tsVerifactu: TcxTabSheet;
+    tsRegistro: TcxTabSheet;
+    scrlbx1: TScrollBox;
+    lbl18: TLabel;
+    lbl17: TLabel;
+    lbl13: TLabel;
+    lbl12: TLabel;
+    lbl11: TLabel;
+    lbl10: TLabel;
+    lbl9: TLabel;
+    lbl8: TLabel;
+    lbl7: TLabel;
+    lbl6: TLabel;
+    lbl: TLabel;
+    lbl15: TLabel;
+    lbl16: TLabel;
+    btnReconsolidar: TSpeedButton;
+    btnConsultarEstado: TSpeedButton;
+    btnCancelarFactura: TSpeedButton;
+    btnSubsanacion: TSpeedButton;
+    spQUEUE_ID: TcxDBSpinEdit;
+    cxdbmRESPUESTA_COMPLETA: TcxDBMemo;
+    cxdbmQRCODE_BASE64: TcxDBMemo;
+    cxdbmVERIFACTU_URL: TcxDBMemo;
+    txtCHAIN_HASH: TcxDBTextEdit;
+    txtCHAIN_NUMBER: TcxDBTextEdit;
+    dteISSUED_TIME: TcxDBDateEdit;
+    txtISSUER_IRS_ID: TcxDBTextEdit;
+    imgQRCODE_PNG: TcxDBImage;
+    txtREQUEST_ID: TcxDBTextEdit;
+    spID_CONSOLIDACION: TcxDBSpinEdit;
+    cxdbmPETICION_COMPLETA1: TcxDBMemo;
+    dteFECHA_PROCESAMIENTO: TcxDBDateEdit;
+    txtESTADO: TcxDBTextEdit;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -425,6 +475,7 @@ type
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
+    procedure AsignarControles;
   end;
 
 var
@@ -931,6 +982,7 @@ begin
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   Self.pkFieldName := 'NRO_FACTURA; SERIE_FACTURA';
   CheckConsolidacion;
+  AsignarControles;
 end;
 
 procedure TfrmMtoFacturas.chkConsolidadaPropertiesChange(Sender: TObject);
@@ -1454,6 +1506,27 @@ begin
     end;
   end;
 end;
+
+procedure TfrmMtoFacturas.AsignarControles;
+begin
+  with dmmFacturas do
+  begin
+    spID_CONSOLIDACION.DataBinding.DataSource := dsConsolidacion;
+    txtESTADO.DataBinding.DataSource := dsConsolidacion;
+    cxdbmRESPUESTA_COMPLETA.DataBinding.DataSource := dsConsolidacion;
+    imgQRCODE_PNG.DataBinding.DataSource := dsConsolidacion;
+    spQUEUE_ID.DataBinding.DataSource := dsConsolidacion;
+    dteFECHA_PROCESAMIENTO.DataBinding.DataSource := dsConsolidacion;
+    txtISSUER_IRS_ID.DataBinding.DataSource := dsConsolidacion;
+    dteISSUED_TIME.DataBinding.DataSource := dsConsolidacion;
+    txtCHAIN_NUMBER.DataBinding.DataSource := dsConsolidacion;
+    txtCHAIN_HASH.DataBinding.DataSource := dsConsolidacion;
+    cxdbmVERIFACTU_URL.DataBinding.DataSource := dsConsolidacion;
+    cxdbmQRCODE_BASE64.DataBinding.DataSource := dsConsolidacion;
+    cxdbmPETICION_COMPLETA1.DataBinding.DataSource := dsConsolidacion;
+  end;
+end;
+
 
 procedure TfrmMtoFacturas.spnRetencionPropertiesEditValueChanged(
   Sender: TObject);
