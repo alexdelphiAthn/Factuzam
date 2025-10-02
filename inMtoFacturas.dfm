@@ -8,6 +8,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
+  ExplicitTop = -171
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -692,7 +693,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsRegistro
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 421
             ClientRectLeft = 4
@@ -2289,8 +2290,101 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               end
             end
             object tsRegistro: TcxTabSheet
-              Caption = '&6_Registro'
+              Caption = '&6_Registro Verifactu'
               ImageIndex = 5
+              object cxGrid1: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 1071
+                Height = 391
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                Align = alClient
+                TabOrder = 0
+                ExplicitWidth = 918
+                object cxGridDBTableView1: TcxGridDBTableView
+                  OnDblClick = cxGrdDBTabPrinDblClick
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.CustomButtons = <>
+                  Navigator.Buttons.First.Hint = 'Va al primer Registro'
+                  Navigator.Buttons.First.Visible = False
+                  Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
+                  Navigator.Buttons.PriorPage.Visible = False
+                  Navigator.Buttons.Prior.Hint = 'Va al Registro Anterior'
+                  Navigator.Buttons.Prior.Visible = False
+                  Navigator.Buttons.Next.Hint = 'Va al siguiente Registro'
+                  Navigator.Buttons.Next.Visible = False
+                  Navigator.Buttons.NextPage.Hint = 'Va a la p'#225'gina siguiente'
+                  Navigator.Buttons.NextPage.Visible = False
+                  Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
+                  Navigator.Buttons.Last.Visible = False
+                  Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
+                  Navigator.Buttons.Insert.Visible = True
+                  Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
+                  Navigator.Buttons.Delete.Visible = True
+                  Navigator.Buttons.Edit.Enabled = False
+                  Navigator.Buttons.Edit.Hint = 'Edita registro Actual'
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
+                  Navigator.Buttons.Post.Visible = True
+                  Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
+                  Navigator.Buttons.Cancel.Visible = True
+                  Navigator.Buttons.Refresh.Hint = 'Refresca Datos Activos'
+                  Navigator.Buttons.SaveBookmark.Enabled = False
+                  Navigator.Buttons.SaveBookmark.Hint = 'Marca Registro Actual'
+                  Navigator.Buttons.SaveBookmark.Visible = False
+                  Navigator.Buttons.GotoBookmark.Enabled = False
+                  Navigator.Buttons.GotoBookmark.Hint = 'Va al registro Marcado'
+                  Navigator.Buttons.GotoBookmark.Visible = False
+                  Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
+                  Navigator.Visible = True
+                  ScrollbarAnnotations.CustomAnnotations = <>
+                  DataController.DataSource = dmFacturas.dsErrores
+                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <
+                    item
+                      Format = '##,##.00 '#8364
+                      Kind = skSum
+                    end>
+                  DataController.Summary.SummaryGroups = <>
+                  OptionsBehavior.AlwaysShowEditor = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsBehavior.IncSearch = True
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.Appending = True
+                  OptionsView.Footer = True
+                  OptionsView.GroupByBox = False
+                  OptionsView.Indicator = True
+                  object cxGridDBTableView1TIMESTAMP_LOG: TcxGridDBColumn
+                    Caption = 'Fecha Hora'
+                    DataBinding.FieldName = 'TIMESTAMP_LOG'
+                  end
+                  object cxGridDBTableView1DESCRIPCION_LOG: TcxGridDBColumn
+                    Caption = 'Evento'
+                    DataBinding.FieldName = 'DESCRIPCION_LOG'
+                    Width = 308
+                  end
+                  object cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn
+                    Caption = 'Datos adicionales'
+                    DataBinding.FieldName = 'DATOS_ADICIONALES_LOG'
+                    Width = 628
+                  end
+                  object cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn
+                    DataBinding.FieldName = 'NRO_FACTURA_LOG'
+                    Visible = False
+                  end
+                  object cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn
+                    DataBinding.FieldName = 'SERIE_FACTURA_LOG'
+                    Visible = False
+                  end
+                end
+                object cxGridLevel1: TcxGridLevel
+                  GridView = cxGridDBTableView1
+                end
+              end
             end
           end
         end

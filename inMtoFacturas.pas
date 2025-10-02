@@ -386,6 +386,14 @@ type
     cxdbmPETICION_COMPLETA1: TcxDBMemo;
     dteFECHA_PROCESAMIENTO: TcxDBDateEdit;
     txtESTADO: TcxDBTextEdit;
+    cxGrid1: TcxGrid;
+    cxGridDBTableView1: TcxGridDBTableView;
+    cxGridLevel1: TcxGridLevel;
+    cxGridDBTableView1TIMESTAMP_LOG: TcxGridDBColumn;
+    cxGridDBTableView1DESCRIPCION_LOG: TcxGridDBColumn;
+    cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn;
+    cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn;
+    cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);

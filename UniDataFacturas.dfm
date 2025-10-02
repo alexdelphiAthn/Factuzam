@@ -2382,26 +2382,28 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
-      'FROM suboc_verifactu_log_eventos'
+      'FROM fza_verifactu_eventos'
       'order by id_log desc')
+    MasterSource = frmMtoFacturas.dsTablaG
     MasterFields = 'NRO_FACTURA;SERIE_FACTURA'
     DetailFields = 'NRO_FACTURA_LOG;SERIE_FACTURA_LOG'
     ReadOnly = True
+    Active = True
     AutoCalcFields = False
     Left = 1304
     Top = 144
     ParamData = <
       item
-        DataType = ftInteger
+        DataType = ftWideString
         Name = 'NRO_FACTURA'
         ParamType = ptInput
-        Value = 16
+        Value = '000001'
       end
       item
         DataType = ftWideString
         Name = 'SERIE_FACTURA'
         ParamType = ptInput
-        Value = 'PRUE'
+        Value = 'A0'
       end>
   end
 end

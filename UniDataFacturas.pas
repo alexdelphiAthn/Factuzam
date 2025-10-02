@@ -693,6 +693,8 @@ begin
   unqryRecibos.Close;
   unqryPaisesEmp.Close;
   unqryPaisesCli.Close;
+  unqryConsolidacion.Close;
+  unqryErrores.Close;
   //unqrySeriesEditCombo.Close;
   //unqryCabIVA.Close;
 end;
