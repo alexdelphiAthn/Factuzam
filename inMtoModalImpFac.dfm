@@ -3,16 +3,16 @@ inherited frmPrintFac: TfrmPrintFac
   ClientHeight = 275
   ClientWidth = 432
   Position = poMainFormCenter
-  ExplicitWidth = 448
-  ExplicitHeight = 314
+  ExplicitWidth = 444
+  ExplicitHeight = 313
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 278
     Width = 154
     Height = 275
-    ExplicitLeft = 278
+    ExplicitLeft = 274
     ExplicitWidth = 154
-    ExplicitHeight = 275
+    ExplicitHeight = 274
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -26,9 +26,9 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 250
+      Top = 249
       Width = 152
-      ExplicitTop = 249
+      ExplicitTop = 248
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
