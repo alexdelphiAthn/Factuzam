@@ -12,8 +12,8 @@ inherited frmOpenApp2: TfrmOpenApp2
   OnResize = FormResize
   OnShow = FormShow
   ExplicitWidth = 1136
-  ExplicitHeight = 607
-  TextHeight = 19
+  ExplicitHeight = 612
+  TextHeight = 20
   object dxstsbr1: TdxStatusBar [0]
     AlignWithMargins = True
     Left = 3
@@ -56,8 +56,8 @@ inherited frmOpenApp2: TfrmOpenApp2
     Font.Height = -12
     Font.Name = 'Lucida Sans Unicode'
     Font.Style = []
-    ExplicitTop = 521
-    ExplicitWidth = 1114
+    ExplicitTop = 513
+    ExplicitWidth = 1112
   end
   object Panel1: TPanel [1]
     Left = 0
@@ -67,8 +67,8 @@ inherited frmOpenApp2: TfrmOpenApp2
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 1120
-    ExplicitHeight = 518
+    ExplicitWidth = 1118
+    ExplicitHeight = 510
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
@@ -77,8 +77,8 @@ inherited frmOpenApp2: TfrmOpenApp2
       Align = alClient
       TabOrder = 0
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 1120
-      ExplicitHeight = 447
+      ExplicitWidth = 1118
+      ExplicitHeight = 439
       ClientRectBottom = 444
       ClientRectLeft = 4
       ClientRectRight = 1120
@@ -91,8 +91,8 @@ inherited frmOpenApp2: TfrmOpenApp2
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 447
-      ExplicitWidth = 1120
+      ExplicitTop = 439
+      ExplicitWidth = 1118
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -103,7 +103,7 @@ inherited frmOpenApp2: TfrmOpenApp2
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1118
+        ExplicitWidth = 1116
         Height = 69
         Width = 1122
       end
