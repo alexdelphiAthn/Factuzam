@@ -12,7 +12,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, UniDataGen,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, dxSkinsCore,
   dxSkinsDefaultPainters, cxPC, dxDockControl, cxControls, dxDockPanel,
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
@@ -41,7 +41,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue;
+  dxSkinXmas2008Blue, System.Generics.Collections;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -128,7 +128,7 @@ type
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
     procedure SimulateTabKey;
   public
-    tdmDataModule:TdmBase;
+    tdmDataModule:TObject;
     sDataModuleName:string;
     oPerfilDic : TProfileDicc;
     sUso:string;
@@ -158,7 +158,8 @@ uses inMtoGenSearch,
      inLibGlobalVar,
      inLibShowMto,
      inLibLog,
-     inMtoModalGenImpSave;
+     inMtoModalGenImpSave,
+     UniDataGen;
 
 {https://stackoverflow.com/questions/3979298/
  how-to-simulate-an-ondestroy-event-on-a-tframe-in-delphi}
@@ -220,7 +221,7 @@ begin
                           ' WHERE ((KEY_PERFILES = :NameDataModule) ' +
                           '    OR  (KEY_PERFILES = :NameFormModule)) ';
             ParamByName('NameDataModule').AsString := Self.Name;
-            ParamByName('NameFormModule').AsString := tdmDataModule.Name;
+            ParamByName('NameFormModule').AsString := (tdmDataModule as TdmBase).Name;
           end;
           if (Active = false) then
             Open;
@@ -351,20 +352,17 @@ begin
        btnGrabarClick(Sender);
      end;
   end;
-    //pc := ts.PageControl;
-  //https://stackoverflow.com/questions/13826623
-          ///remove-a-tab-at-runtime-via-containing-forms-button
-  if bCancelar then
-  begin
-    if Assigned(tdmDataModule) then
-      FreeAndNil(tdmDatamodule)
-    else
-      tdmDataModule := nil;
-    ts := parent as TcxTabSheet;
-    formP:=(ts.Parent.Parent.Parent as TForm);
-    PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
-  end;
 
+  // NO liberar el DataModule manualmente
+  // Se liberará automáticamente cuando se destruya el formulario (Self)
+  // porque se creó con Owner = Self
+
+  // Simplemente asignar nil a la referencia
+  tdmDataModule := nil;
+
+  ts := parent as TcxTabSheet;
+  formP:=(ts.Parent.Parent.Parent as TForm);
+  PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
 end;
 
 procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
@@ -393,7 +391,7 @@ begin
   begin
     CargarPerfilesComunes(sPermisos);
     if (tdmDataModule <> nil) then
-      GrabarPerfilDatam(tdmDataModule, Self.Owner, sPermisos);
+      GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner, sPermisos);
     CargarCaptions(Self, Self.Owner, sPermisos);
     if Not(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False') = 'True') then
     begin
@@ -405,7 +403,7 @@ begin
         begin
           cxGrid := (Self.Components[i] as TcxGridDBTableView);
         // Hay que resetear aquí los registros que contengan el grid en perfiles
-          tdmDataModule.ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+          (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
           IsSavingGrid := (GetPerfilValueDef(oPerfilDic,
                                              cxGrid.Name + '__' + 'oApplyWidth',
                                              'False') = 'True');
@@ -451,7 +449,7 @@ begin
         if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
       begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
-        tdmDataModule.ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
       end;
     end;
   end;
@@ -554,7 +552,7 @@ end;
 procedure TfrmMtoGen.CargarPerfilesParticulares;
 begin
   if (tdmDataModule <> nil) then
-    GrabarPerfilDatam(tdmDataModule, Self.Owner);
+    GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner);
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
@@ -588,6 +586,7 @@ begin
     FreeAndNil(tdmDataModule);
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
+  //FDataModules.Free;
   inherited;
 end;
 
@@ -629,6 +628,7 @@ var
   sModoBusq:String;
 begin
   inherited;
+  //FDataModules := TDictionary<TClass, TdmBase>.Create;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
   //Application.ProcessMessages;

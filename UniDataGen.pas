@@ -24,10 +24,20 @@ type
     procedure unqryPerfilesBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
+    constructor CreateWithForm(AOwner: TComponent; AForm: TComponent);
   private
+    procedure DoCreate;
+    function GetCurrentForm: TComponent;
+    procedure SetCurrentForm(const Value: TComponent);
+  protected
+    function GetOwnerForm<T: TComponent>: T;
+    function HasOwnerForm: Boolean;
 
   public
+    property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
+  private
+    FCurrentForm: TComponent;
   end;
 
 var
@@ -42,24 +52,50 @@ uses  inLibGlobalVar, inMtoPrincipal2, inMtoGen;
 
 {$R *.dfm}
 
-procedure TdmBase.DataModuleCreate(Sender: TObject);
+//constructor TdmBase.Create(AOwner: TComponent);
+//begin
+//  inherited Create(AOwner);
+//  FManualCreate := False;
+//  // Si FCurrentForm no está asignado, no ejecutar DoCreate aún
+//  if not FManualCreate then
+//    DoCreate;
+//end;
+
+constructor TdmBase.CreateWithForm(AOwner: TComponent; AForm: TComponent);
 begin
+  //FManualCreate := True;
+  FCurrentForm := AForm;
+  inherited Create(AOwner);
+  //FManualCreate := False;
+  DoCreate;  // Ahora sí ejecutar con CurrentForm ya asignado
+end;
+
+procedure TdmBase.DoCreate;
+var
+  Form: TfrmMtoGen;
+begin
+  Form := GetOwnerForm<TfrmMtoGen>;
   oPerfilDic := nil;
   unqryTablaG.Connection              := oConn;
   unqryPerfiles.Connection            := oConn;
-  if (Owner is TfrmMtoGen) then
+  if Assigned(Form) then
   begin
-    if (GetPerfilValueDef((Owner as TfrmMtoGen).oPerfilDic,
+    if (GetPerfilValueDef(Form.oPerfilDic,
                         'oGetSQLFromDB',
                         'False') = 'True') then
     begin
       GetFormUserProfile(oPerfilDic, Self.Name);
       LoadSQLFromProfile(Self, oPerfilDic);
     end;
-    (Self.Owner as TfrmMtoGen).tdmDataModule := Self;
-    (Self.Owner as TfrmMtoGen).dsTablaG.DataSet := unqryTablaG;
+    Form.tdmDataModule := Self;
+    Form.dsTablaG.DataSet := unqryTablaG;
     unqryTablaG.Open;
   end;
+end;
+
+procedure TdmBase.DataModuleCreate(Sender: TObject);
+begin
+ //
 end;
 
 procedure TdmBase.DataModuleDestroy(Sender: TObject);
@@ -69,6 +105,32 @@ begin
   if (oPerfilDic <> nil) then
     FreeAndNil(oPerfilDic);
 //  oPerfilDic.Free;
+end;
+
+function TdmBase.GetCurrentForm: TComponent;
+begin
+  Result := FCurrentForm;
+end;
+
+procedure TdmBase.SetCurrentForm(const Value: TComponent);
+begin
+  FCurrentForm := Value;
+end;
+
+function TdmBase.GetOwnerForm<T>: T;
+begin
+  if Assigned(FCurrentForm) and
+     not (csDestroying in FCurrentForm.ComponentState) and
+     (FCurrentForm is T) then
+    Result := T(FCurrentForm)
+  else
+    Result := nil;
+end;
+
+function TdmBase.HasOwnerForm: Boolean;
+begin
+  Result := Assigned(FCurrentForm) and
+            not (csDestroying in FCurrentForm.ComponentState);
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);

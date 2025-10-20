@@ -497,7 +497,7 @@ begin
     if (FindField('ESRETENCIONES_CLIENTE_FACTURA').AsString <> 'S') then
       unqryTablaG.FindField('PORCEN_RETENCION_FACTURA').AsFloat := 0;
     if (State = dsInsert) then
-      (Self.Owner as TfrmMtoFacturas).ActualizarComboSeries;
+      (GetOwnerForm<TfrmMtoFacturas>).ActualizarComboSeries;
   end;
 end;
 
@@ -544,7 +544,7 @@ begin
         CalcularRetencionesEmpresa;
       end;
      if (State = dsInsert) then
-       (Self.Owner as TfrmMtoFacturas).ActualizarComboSeries;
+       (GetOwnerForm<TfrmMtoFacturas>).ActualizarComboSeries;
    end;
 end;
 
@@ -664,10 +664,10 @@ begin
   unqryPaisesCli.Connection := inLibGlobalVar.oConn;
   unqryConsolidacion.Connection := inLibGlobalVar.oConn;
   unqryErrores.Connection := inLibGlobalVar.oConn;
-  unqryLinfac.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
-  unqryRecibos.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
-  unqryConsolidacion.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
-  unqryErrores.MasterSource := (Self.Owner as TfrmMtoFacturas).dsTablaG;
+  unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+  unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+  unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+  unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryIvasTipos.Open;
   unqryLinFac.Open;
   unqrySeries.Open;
@@ -697,14 +697,17 @@ begin
   unqryErrores.Close;
   //unqrySeriesEditCombo.Close;
   //unqryCabIVA.Close;
+  inherited;
 end;
 
 procedure TdmFacturas.dsLinFacStateChange(Sender: TObject);
 begin
   inherited;
+  var  Form := GetOwnerForm<TfrmMtoFacturas>;
+  if not Assigned(Form) then Exit;
   with dsLinFac do
   begin
-    with (Self.Owner as TfrmMtoFacturas) do
+    with Form do
     begin
       if ((State = dsEdit) or (State = dsInsert) or (State = dsBrowse)) then
       begin               //si la factura es con impuestos incluídos
@@ -1041,7 +1044,7 @@ begin
     FieldByName('ESFECHADEENTREGA_FACTURA').AsString := 'N';
     FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString := 'N';
     FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';
-    (Self.Owner AS TfrmMtoFacturas).sbNuevaFacturaClick(Self.Owner);
+    (GetOwnerForm<TfrmMtoFacturas>).sbNuevaFacturaClick(Self.Owner);
   end;
 end;
 
@@ -1134,7 +1137,7 @@ var
 begin
   inherited;
   IsError := False;
-  frmFac := (Owner as TfrmMtoFacturas);
+  frmFac := (GetOwnerForm<TfrmMtoFacturas>);
   with unqryTablaG do
   begin
     if ((ExisteSerieEmpresa(FieldByName(fseriefac).AsString,

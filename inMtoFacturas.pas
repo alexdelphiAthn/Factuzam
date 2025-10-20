@@ -957,8 +957,7 @@ procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
   if Assigned(dmmFacturas) then
     if Assigned(dsTablaG.Dataset) then
-      if (dmmFacturas.unqryTablaG.Fields.Count > 0) then
-
+      if Assigned(self.tdmDataModule) then
        if dsTablaG.Dataset.FieldByName(fescon).AsString ='S' then
        begin
          dmmFacturas.unqryTablaG.ReadOnly := True;

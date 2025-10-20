@@ -25,7 +25,7 @@ type
   procedure ShowMto(Owner: TComponent;
                     sCall:String;
                     sBusq:string = '');
-  function CrearDataModule(sDataUnit:String;var pOwner:TfrmMtoGen):TdmBase;
+  function CrearDataModule(sDataUnit:String;var pOwner:TfrmMtoGen):TObject;
 
 implementation
 
@@ -34,6 +34,8 @@ implementation
       inMtoPrincipal2,
       inLibLog,
       inLibUnitForm;
+ var
+   GlobalDataModules: TObjectDictionary<string, TDataModule>;
 
 procedure ShowMto (Owner:TComponent;
                    sCall:String;
@@ -99,7 +101,7 @@ begin
         //https://stackoverflow.com/questions/14742505/
         //how-do-i-intantiate-a-class-from-its-trttitype
       finally
-        ctx.Free;
+        //ctx.Free;
       end;
       iAbiertaPes := EncuentraPagina(frmOpen2.pcPrincipal, sTitle);
     end;
@@ -113,7 +115,7 @@ begin
       begin
         frmGen := (tsNew.Controls[0] as TfrmMtoGen);
         sPkTab := frmGen.pkFieldName;
-        dmDat := frmGen.tdmDataModule;
+        dmDat := (frmGen.tdmDataModule as TdmBase);
         if not BuscarTabla(dmDat.unqryTablaG, sPkTab, sBusq)  then
           ShowMessageFmt(SLocateNotFnd, [sBusq, sTitle])
         else
@@ -126,30 +128,60 @@ begin
   end;
 end;
 
-//https://stackoverflow.com/questions/14742505/
-// how-do-i-instantiate-a-class-from-its-trttitype
-function CrearDataModule(sDataUnit:String; var pOwner:TfrmMtoGen):TdmBase;
+function CrearDataModule(sDataUnit: String; var pOwner: TfrmMtoGen): TObject;
 type
   TDataMBaseClass = class of TDataModule;
 var
   ctx: TRttiContext;
   lType: TRttiType;
-  f: TValue;
+  DataModuleClass: TClass;
+  CacheKey: string;
+  DataModule: TDataModule;
+  CreateMethod: TRttiMethod;
 begin
-  ctx := TRttiContext.Create;
   Result := nil;
-  try
-    lType:= ctx.FindType(sDataUnit);
-    if (lType<>nil) then
-    begin
-      f:= TDataMBaseClass(GetTypeData(lType.Handle)^.ClassType).Create(pOwner);
+  CacheKey := sDataUnit + '_' + IntToStr(NativeInt(pOwner));
+
+  if not GlobalDataModules.TryGetValue(CacheKey, DataModule) then
+  begin
+    ctx := TRttiContext.Create;
+    try
+      lType := ctx.FindType(sDataUnit);
+
+      if (lType <> nil) then
       begin
-        Result := (f.AsObject as TdmBase);
+        // Buscar el constructor CreateWithForm
+        CreateMethod := lType.GetMethod('CreateWithForm');
+
+        if Assigned(CreateMethod) then
+        begin
+          // Usar CreateWithForm que asigna CurrentForm ANTES de inicializar
+          DataModule := CreateMethod.Invoke(lType.AsInstance.MetaclassType,
+                                           [TValue.From<TComponent>(nil),
+                                            TValue.From<TComponent>(pOwner)]).AsObject as TDataModule;
+        end
+        else
+        begin
+          // Fallback al método antiguo si no existe CreateWithForm
+          DataModuleClass := GetTypeData(lType.Handle)^.ClassType;
+          DataModule := TDataMBaseClass(DataModuleClass).Create(nil);
+          if Assigned(DataModule) and (DataModule is TdmBase) then
+            TdmBase(DataModule).CurrentForm := pOwner;
+        end;
+
+        GlobalDataModules.Add(CacheKey, DataModule);
       end;
+    finally
+      // ctx se libera automáticamente
     end;
-  finally
-    ctx.Free;
+  end
+  else
+  begin
+    if Assigned(DataModule) and (DataModule is TdmBase) then
+      TdmBase(DataModule).CurrentForm := pOwner;
   end;
+
+  Result := DataModule;
 end;
 
 function BuscarTabla(Query: TUniQuery;
@@ -191,5 +223,12 @@ begin
     end;
   end;
 end;
+
+initialization
+  GlobalDataModules := TObjectDictionary<string,
+                                         TDataModule>.Create([doOwnsValues]);
+//
+//finalization
+//  GlobalDataModules.Free;
 
 end.
