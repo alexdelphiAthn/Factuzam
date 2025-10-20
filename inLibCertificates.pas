@@ -3,8 +3,7 @@
 interface
 
 uses
-
-System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, System.Types,
   Winapi.Windows, system.StrUtils, Winapi.Messages, cxListView;
 
@@ -15,7 +14,6 @@ const
   COLUMNA_CER_NOMBRE = 1;
   COLUMNA_CER_TITULAR = 0;
   CRYPT32 = 'crypt32.dll';
-  // Constantes necesarias
   X509_ASN_ENCODING = $00000001;
   PKCS_7_ASN_ENCODING = $00010000;
   szOID_ENHANCED_KEY_USAGE = '2.5.29.37';
@@ -36,22 +34,24 @@ const
   CERT_NAME_STR_DISABLE_IE4_UTF8_FLAG = 65536;
   CERT_NAME_STR_ENABLE_PUNYCODE_FLAG = 131072;
   CERT_NAME_STR_ENABLE_UTF8_UNICODE_FLAG = 262144;
-    // OIDs de políticas para certificados de e-factura
   CRYPT_DECODE_ALLOC_FLAG = $8000;
   CRYPT_DECODE_NOCOPY_FLAG = $1;
-  function CertNameToStrA(dwCertEncodingType: DWORD;
-                          pName: PCERT_NAME_BLOB;
-                          dwStrType: DWORD;
-                          psz: LPSTR;
-                          csz: DWORD): DWORD;
-                          stdcall; external CRYPT32;
+
 type
+  {$IF CompilerVersion < 34.0} // Delphi 10.3 y versiones anteriores
+  // Declarar tipos que no existen en Delphi 10.3
+  PCERT_NAME_BLOB = ^CERT_NAME_BLOB;
+  PCERT_INFO = ^CERT_INFO;
+  PCERT_EXTENSION = ^CERT_EXTENSION;
+  PCERT_PUBLIC_KEY_INFO = ^CERT_PUBLIC_KEY_INFO;
+
   CERT_NAME_BLOB = record
     cbData: DWORD;
     pbData: PByte;
   end;
 
   CRYPT_INTEGER_BLOB = CERT_NAME_BLOB;
+
   CRYPT_BIT_BLOB = record
     cbData: DWORD;
     pbData: PByte;
@@ -73,13 +73,12 @@ type
     fCritical: BOOL;
     Value: CERT_NAME_BLOB;
   end;
-  PCERT_EXTENSION = ^CERT_EXTENSION;
-  {$ALIGN ON}
+
   HCRYPTPROV_LEGACY = ULONG_PTR;
   HCRYPTPROV = ULONG_PTR;
   HCERTSTORE = THandle;
   PCCERT_CONTEXT = ^CERT_CONTEXT;
-  {$ALIGN 4}
+
   CERT_CONTEXT = record
     dwCertEncodingType: DWORD;
     pbCertEncoded: PBYTE;
@@ -87,8 +86,7 @@ type
     pCertInfo: PCERT_INFO;
     hCertStore: HCERTSTORE;
   end;
-  PCERT_PUBLIC_KEY_INFO = ^CERT_PUBLIC_KEY_INFO;
-  PCERT_INFO = ^CERT_INFO;
+
   CERT_INFO = record
     dwVersion: DWORD;
     SerialNumber: CRYPT_INTEGER_BLOB;
@@ -103,26 +101,37 @@ type
     cExtension: DWORD;
     rgExtension: PCERT_EXTENSION;
   end;
+  {$ELSE}
+  // Para Delphi 11, estos tipos ya existen en Winapi.Windows
+  HCRYPTPROV_LEGACY = ULONG_PTR;
+  {$IFEND}
+
+  // Este tipo no existe en ninguna versión, siempre hay que declararlo
   PCERT_ENHKEY_USAGE = ^CERT_ENHKEY_USAGE;
   CERT_ENHKEY_USAGE = record
     cUsageIdentifier: DWORD;
     rgpszUsageIdentifier: ^LPSTR;
   end;
 
-  //procedure InitializeControls;
+  function CertNameToStrA(dwCertEncodingType: DWORD;
+                          pName: PCERT_NAME_BLOB;
+                          dwStrType: DWORD;
+                          psz: LPSTR;
+                          csz: DWORD): DWORD;
+                          stdcall; external CRYPT32;
+
   procedure LoadCerts(lvCertificates:TcxListView);
   function GetCertName(pName: PCERT_NAME_BLOB): string;
   function FileTimeToDateTime(const FileTime: TFileTime): TDateTime;
   function GetCertificateName(pName: PCERT_NAME_BLOB): string;
   function IsCertificateValid(CertContext: PCCERT_CONTEXT): Boolean;
   function IsEFacturaCertificate(CertContext: PCCERT_CONTEXT): Boolean;
-  //function GetSelectedSerialNumber: string;
-  //function GetSelectedCertificate: Integer;
   function GetCertificateType(const Issuer: string): string;
-  function ExtractCertificateName(const Description: string): string; //
+  function ExtractCertificateName(const Description: string): string;
   procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
                            SerialNumber: string;
                            ValidFrom, ValidTo: TDateTime);
+
   function CertGetEnhancedKeyUsage(
                                     pCertContext: PCCERT_CONTEXT;
                                     dwFlags: DWORD;
@@ -154,7 +163,6 @@ var
   I: Integer;
 begin
   Result := '';
-  // Para certificado de Representación
   if ContainsText(Description, 'O=') then
   begin
     Parts := Description.Split([',']);
@@ -162,12 +170,11 @@ begin
     begin
       if Parts[I].Contains('O=') then
       begin
-        Result := Copy(Parts[I], 3, Length(Parts[I])); // Elimina 'O='
+        Result := Copy(Parts[I], 3, Length(Parts[I]));
         Break;
       end;
     end;
   end
-  // Para certificado Nominal
   else if ContainsText(Description, 'CN=') then
   begin
     Parts := Description.Split([',']);
@@ -175,7 +182,7 @@ begin
     begin
       if Parts[I].Contains('CN=') then
       begin
-        Result := Copy(Parts[I], 4, Length(Parts[I])); // Elimina 'CN='
+        Result := Copy(Parts[I], 4, Length(Parts[I]));
         Break;
       end;
     end;
@@ -192,31 +199,14 @@ begin
     Result := 'Otro';
 end;
 
-//function TfrmCertificateSelector.GetSelectedSerialNumber: string;
-//begin
-//  Result := '';
-//  if lvCertificates.Selected <> nil then
-//    Result := lvCertificates.Selected.SubItems[COLUMNA_NROSERIE];
-//end;
-
 function IsCertificateValid(CertContext: PCCERT_CONTEXT): Boolean;
 var
   CurrentTime, NotBefore, NotAfter: TFileTime;
 begin
   Result := False;
-
-  // Obtener la hora actual en formato FileTime
   GetSystemTimeAsFileTime(CurrentTime);
-
-  // Obtener las fechas de validez del certificado
   NotBefore := CertContext^.pCertInfo^.NotBefore;
   NotAfter := CertContext^.pCertInfo^.NotAfter;
-
-  // Comparar las fechas
-  // CompareFileTime devuelve:
-  // -1 si el primer parámetro es menor que el segundo
-  //  0 si son iguales
-  //  1 si el primer parámetro es mayor que el segundo
   Result := (CompareFileTime(CurrentTime, NotBefore) >= 0) and
             (CompareFileTime(CurrentTime, NotAfter) <= 0);
 end;
@@ -227,23 +217,18 @@ var
   pwszNameString: PAnsiChar;
 begin
   Result := '';
-
-  // First call to get required buffer size
   dwStrLen := CertNameToStrA( X509_ASN_ENCODING or PKCS_7_ASN_ENCODING,
-                              // Explicit typecast to ensure compatibility
-                              PCERT_NAME_BLOB(pName),
+                              pName,
                               CERT_X500_NAME_STR,
                               nil,
                               0);
   if (dwStrLen > 0) then
   begin
-    // Allocate buffer
     GetMem(pwszNameString, dwStrLen);
     try
-      // Second call to get actual name
       if CertNameToStrA(
         X509_ASN_ENCODING or PKCS_7_ASN_ENCODING,
-        PCERT_NAME_BLOB(pName),  // Explicit typecast
+        pName,
         CERT_X500_NAME_STR,
         pwszNameString,
         dwStrLen) > 0 then
@@ -262,7 +247,6 @@ var
   pwszStr: PWideChar;
 begin
   Result := '';
-  // Obtener longitud necesaria
   pcbStrLen := CertNameToStr(X509_ASN_ENCODING,
                              pName,
                              CERT_X500_NAME_STR,
@@ -270,10 +254,8 @@ begin
                              0);
   if (pcbStrLen > 1) then
   begin
-    // Asignar buffer
     GetMem(pwszStr, pcbStrLen * 2);
     try
-      // Obtener nombre
       if CertNameToStr(X509_ASN_ENCODING,
                        pName,
                        CERT_X500_NAME_STR,
@@ -298,9 +280,7 @@ var
   Issuer: string;
 begin
   Result := False;
-  // Obtener el Issuer del certificado
   Issuer := GetCertificateName(@CertContext^.pCertInfo^.Issuer);
-  // Verificar si es un certificado FNMT válido para e-factura
   Result := (ContainsText(Issuer, 'AC Representación') or
             (ContainsText(Issuer, 'AC FNMT Usuarios')));
 end;
@@ -316,7 +296,11 @@ var
 begin
   lvCertificates.Items.Clear;
   Store := CertOpenSystemStoreA(0, PAnsiChar('MY'));
-  if Store <> 0 then
+  {$IF CompilerVersion < 34.0}
+  if Store <> 0 then  // Delphi 10.3
+  {$ELSE}
+  if Store <> nil then  // Delphi 11
+  {$IFEND}
   try
     CertContext := nil;
     repeat
@@ -325,7 +309,6 @@ begin
           and (IsCertificateValid(CertContext))
           and (IsEFacturaCertificate(CertContext))) then
       begin
-        // Use the corrected GetCertificateName function
         Subject := GetCertificateName(@CertContext^.pCertInfo^.Subject);
         Issuer := GetCertificateName(@CertContext^.pCertInfo^.Issuer);
 
@@ -345,57 +328,6 @@ begin
     CertCloseStore(Store, 0);
   end;
 end;
-//
-//procedure TfrmCertificateSelector.lvCertificatesDblClick(Sender: TObject);
-//begin
-//  btnOkClick(Sender);
-//end;
-
-//procedure TfrmCertificateSelector.InitializeControls;
-//begin
-//  with lvCertificates do
-//  begin
-//    ViewStyle := vsReport;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Tipo';
-//      Width := 100;
-//    end;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Titular/Empresa';
-//      Width := 250;
-//    end;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Nombre';
-//      Width := 250;
-//    end;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Emisor';
-//      Width := 200;
-//    end;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Válido hasta';
-//      Width := 120;
-//    end;
-//    with Columns.Add do
-//    begin
-//      Caption := 'Número Serie';
-//      Width := 150;
-//    end;
-//  end;
-//end;
-
-//function TfrmCertificateSelector.GetSelectedCertificate: Integer;
-//begin
-//  if lvCertificates.Selected <> nil then
-//    Result := lvCertificates.Selected.Index
-//  else
-//    Result := -1;
-//end;
 
 procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
   SerialNumber: string; ValidFrom, ValidTo: TDateTime);
@@ -414,52 +346,5 @@ begin
   Item.SubItems.Add(DateTimeToStr(ValidTo));
   Item.SubItems.Add(SerialNumber);
 end;
-(*uses
-  SBXMLAdESIntf, SBXMLAdES, SBXMLSec, SBX509, SBUtils, SBConstants;
-procedure FirmarFacturaE(const ArchivoXMLEntrada, ArchivoXMLSalida, NumeroSerieCertificado: string);
-var
-  Signer: TElXAdESSigner;
-  Cert: TElX509Certificate;
-  CertManager: TElX509CertificateStore;
-begin
-  Signer := TElXAdESSigner.Create(nil);
-  CertManager := TElX509CertificateStore.Create(nil);
-  try
-    // Configurar el almacén de certificados para buscar por número de serie
-    CertManager.Open(SB_CERT_STORE_SYSTEM);
-    // Buscar el certificado por número de serie
-    Cert := CertManager.FindCertificateBySerialNumber(NumeroSerieCertificado);
-    if not Assigned(Cert) then
-      raise Exception.Create('No se pudo encontrar el certificado con número de serie: ' + NumeroSerieCertificado);
-    // Configurar el firmante
-    Signer.SigningCertificate := Cert;
-    // Importante: Usar el formato XAdES-EPES para Facturae
-    Signer.XAdESVersion := xav_XAdES_EPES;
-    // Política de firma para Facturae (ajustar según versión requerida)
-    Signer.PolicyID := 'http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf';
-    Signer.PolicyDescription := 'Política de Firma Facturae v3.1';
-    Signer.PolicyDigestAlgorithm := SB_ALGORITHM_DIGEST_SHA1;
-    // Hash de la política - deberás usar el valor correcto para la versión específica
-    Signer.PolicyDigestValue := 'Hm7xQrCkuY3sXqMD4RUZjlyhTTk=';
-    // Configurar el elemento a firmar (toda la factura)
-    Signer.InputFile := ArchivoXMLEntrada;
-    Signer.OutputFile := ArchivoXMLSalida;
-    // Configurar la ubicación de la firma en el documento
-    Signer.SignatureType := xst_Enveloped;
-    // Para Facturae, se suele firmar el nodo raíz
-    Signer.SigningElementID := ''; // Vacío para firmar el documento completo
-    // Incluir información del firmante y timestamp
-    Signer.IncludeSigningTime := True;
-    Signer.IncludeSignerRole := True;
-    Signer.SignerRole := 'supplier'; // Para Facturae
-    // Ejecutar la firma
-    Signer.Sign();
-    ShowMessage('Documento firmado correctamente');
-  finally
-    Cert.Free;
-    CertManager.Free;
-    Signer.Free;
-  end;
-end;*)
 
 end.
