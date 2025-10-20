@@ -473,6 +473,7 @@ type
     procedure btnCalculatorClick(Sender: TObject);
     procedure chkConsolidadaPropertiesChange(Sender: TObject);
     procedure btnConsolidarClick(Sender: TObject);
+    procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(Sender: TObject);
 //    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     procedure ActualizarComboSeries;
@@ -942,42 +943,57 @@ begin
     cbbSerieFactura.DroppedDown := True;
 end;
 
+procedure TfrmMtoFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  if ((dsTablaG.DataSet.State = dsEdit) or
+      (dsTablaG.DataSet.State = dsInsert)) then
+  dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
+    dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString ;
+end;
+
 procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
   if Assigned(dmmFacturas) then
-   if dmmFacturas.unqryTablaG.FieldByName(fescon).AsString ='S' then
-    begin
-      dmmFacturas.unqryTablaG.ReadOnly := True;
-      dmmFacturas.unqryLinFac.ReadOnly := True;
-      tvLineasFactura.optionsData.Editing := False;
-      tvLineasFactura.optionsData.Deleting := False;
-      tvLineasFactura.optionsData.Inserting := False;
-      btnGenerarRecibos.Enabled := False;
-      btnConsolidar.Enabled := False;
-//      tvRecibos.optionsData.Editing := False;
-//      tvRecibos.optionsData.Deleting := False;
-//      tvRecibos.optionsData.Inserting := False;
-    end
-    else
-    begin
-      dmmFacturas.unqryTablaG.ReadOnly := False;
-      dmmFacturas.unqryLinFac.ReadOnly := False;
-      tvLineasFactura.optionsData.Editing := True;
-      tvLineasFactura.optionsData.Deleting := True;
-      tvLineasFactura.optionsData.Inserting := True;
-      btnGenerarRecibos.Enabled := True;
-      btnConsolidar.Enabled := True;
-//      tvRecibos.optionsData.Editing := True;
-//      tvRecibos.optionsData.Deleting := True;
-//      tvRecibos.optionsData.Inserting := True;
+    if Assigned(dsTablaG.Dataset) then
+      if (dmmFacturas.unqryTablaG.Fields.Count > 0) then
 
-    end;
+       if dsTablaG.Dataset.FieldByName(fescon).AsString ='S' then
+       begin
+         dmmFacturas.unqryTablaG.ReadOnly := True;
+         dmmFacturas.unqryLinFac.ReadOnly := True;
+         tvLineasFactura.optionsData.Editing := False;
+         tvLineasFactura.optionsData.Deleting := False;
+         tvLineasFactura.optionsData.Inserting := False;
+         btnGenerarRecibos.Enabled := False;
+         btnConsolidar.Enabled := False;
+    //     tvRecibos.optionsData.Editing := False;
+    //     tvRecibos.optionsData.Deleting := False;
+    //     tvRecibos.optionsData.Inserting := False;
+       end
+        else
+        begin
+          dmmFacturas.unqryTablaG.ReadOnly := False;
+          dmmFacturas.unqryLinFac.ReadOnly := False;
+          tvLineasFactura.optionsData.Editing := True;
+          tvLineasFactura.optionsData.Deleting := True;
+          tvLineasFactura.optionsData.Inserting := True;
+          btnGenerarRecibos.Enabled := True;
+          btnConsolidar.Enabled := True;
+    //      tvRecibos.optionsData.Editing := True;
+    //      tvRecibos.optionsData.Deleting := True;
+    //      tvRecibos.optionsData.Inserting := True;
+
+        end;
 end;
 
 procedure TfrmMtoFacturas.CrearTablaPrincipal;
 begin
   inherited;
   dmmFacturas := (tdmDataModule as TdmFacturas);
+  if not Assigned(dmmFacturas) then
+    dmmFacturas := TdmFacturas.Create(Self);
   cbbSerieFactura.Properties.ListSource := dmmFacturas.dsSeries;
   cbbCanalIVA.Properties.ListSource := dmmFacturas.dsIvas;
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
@@ -997,10 +1013,10 @@ end;
 procedure TfrmMtoFacturas.chkConsolidadaPropertiesChange(Sender: TObject);
 begin
   inherited;
-  if ( (dmmFacturas <> nil) and
-       (dmmFacturas.unqryTablaG <> nil) and
-       (dmmFacturas.unqryTablaG.Disconnected = false)) then
-     CheckConsolidacion;
+  if Assigned(dmmFacturas) then
+    if (Assigned(dmmFacturas.unqryTablaG)) then
+      if (Assigned(dsTablaG.DataSet)) then
+        CheckConsolidacion;
 end;
 
 procedure TfrmMtoFacturas.chkCrearArticulosPropertiesChange(Sender: TObject);

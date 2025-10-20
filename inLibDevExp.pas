@@ -412,7 +412,7 @@ begin
       dsData := (frmMto.Components[i] as
             TcxGridDBTableView).DataController.DataSource;
       // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
-      if (dsData <> nil)
+      if (dsData.DataSet <> nil)
       then
         if ((dsData.DataSet.State = dsInsert) or
             (dsData.DataSet.State = dsEdit)

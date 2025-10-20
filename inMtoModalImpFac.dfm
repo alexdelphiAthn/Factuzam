@@ -985,8 +985,8 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'begin'
       'end.')
-    Left = 288
-    Top = 192
+    Left = 232
+    Top = 144
     Datasets = <
       item
         DataSet = dmFacturas.fxdsPrintFac
@@ -1564,9 +1564,14 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."PROVINCIA_CLIENTE_FACTURA"]   [Facturas."PAIS_CLIENTE' +
-              '_FACTURA"]')
+              '[Facturas."PROVINCIA_CLIENTE_FACTURA"]   [Facturas."NOMBRE_PAIS_' +
+              'CLIENTE_FACTURA"]')
           ParentFont = False
+          Formats = <
+            item
+            end
+            item
+            end>
         end
         object FacturasMOVIL_CLIENTE_FACTURA: TfrxMemoView
           IndexTag = 1

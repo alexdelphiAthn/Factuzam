@@ -308,7 +308,8 @@ inherited dmFacturas: TdmFacturas
       'DIRECCION2_EMPRESA_FACTURA=DIRECCION2_EMPRESA_FACTURA'
       'POBLACION_EMPRESA_FACTURA=POBLACION_EMPRESA_FACTURA'
       'PROVINCIA_EMPRESA_FACTURA=PROVINCIA_EMPRESA_FACTURA'
-      'PAIS_EMPRESA_FACTURA=PAIS_EMPRESA_FACTURA'
+      'NOMBRE_PAIS_EMPRESA_FACTURA=NOMBRE_PAIS_EMPRESA_FACTURA'
+      'CODIGO_PAIS_EMPRESA_FACTURA=CODIGO_PAIS_EMPRESA_FACTURA'
       'CPOSTAL_EMPRESA_FACTURA=CPOSTAL_EMPRESA_FACTURA'
       'ESRETENCIONES_EMPRESA_FACTURA=ESRETENCIONES_EMPRESA_FACTURA'
       'GRUPO_ZONA_IVA_EMPRESA_FACTURA=GRUPO_ZONA_IVA_EMPRESA_FACTURA'
@@ -325,7 +326,8 @@ inherited dmFacturas: TdmFacturas
       'POBLACION_CLIENTE_FACTURA=POBLACION_CLIENTE_FACTURA'
       'PROVINCIA_CLIENTE_FACTURA=PROVINCIA_CLIENTE_FACTURA'
       'CPOSTAL_CLIENTE_FACTURA=CPOSTAL_CLIENTE_FACTURA'
-      'PAIS_CLIENTE_FACTURA=PAIS_CLIENTE_FACTURA'
+      'NOMBRE_PAIS_CLIENTE_FACTURA=NOMBRE_PAIS_CLIENTE_FACTURA'
+      'CODIGO_PAIS_CLIENTE_FACTURA=CODIGO_PAIS_CLIENTE_FACTURA'
       'ESIVA_RECARGO_CLIENTE_FACTURA=ESIVA_RECARGO_CLIENTE_FACTURA'
       'ESIVA_EXENTO_CLIENTE_FACTURA=ESIVA_EXENTO_CLIENTE_FACTURA'
       
@@ -796,13 +798,13 @@ inherited dmFacturas: TdmFacturas
         DataType = ftWideString
         Name = 'NRO_FACTURA'
         ParamType = ptInput
-        Value = '000001'
+        Value = nil
       end
       item
         DataType = ftWideString
         Name = 'SERIE_FACTURA'
         ParamType = ptInput
-        Value = 'A0'
+        Value = nil
       end>
   end
   object unstrdprcCrearFacturaAbono: TUniStoredProc
@@ -2398,13 +2400,13 @@ inherited dmFacturas: TdmFacturas
         DataType = ftWideString
         Name = 'NRO_FACTURA'
         ParamType = ptInput
-        Value = '000001'
+        Value = nil
       end
       item
         DataType = ftWideString
         Name = 'SERIE_FACTURA'
         ParamType = ptInput
-        Value = 'A0'
+        Value = nil
       end>
   end
 end
