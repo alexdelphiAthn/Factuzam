@@ -568,12 +568,14 @@ begin
   end;
 end;
 
-
 procedure TfrmMtoFacturas.ResetForm;
 begin
   inherited;
-  pcCab.ActivePage := tsCabecera;
-  pcDetail.ActivePage := tsLineasFactura;
+  if Assigned(dmmFacturas) and Assigned(pcCab) and Assigned(pcDetail) then
+  begin
+    pcCab.ActivePage := tsCabecera;
+    pcDetail.ActivePage := tsLineasFactura;
+  end;
 end;
 
 procedure TfrmMtoFacturas.btnUpdateClienteClick(Sender: TObject);
@@ -1340,6 +1342,8 @@ procedure TfrmMtoFacturas.
   Sender: TObject);
 var
   e: TcxCustomEdit;
+  oLinFac:TLinFac;
+  factotales : TFacturaTotales;
 begin
   inherited;
   with dmmFacturas.unqryLinFac do
@@ -1347,12 +1351,11 @@ begin
     if ((State = dsInsert) or (State = dsEdit)) then
     begin
       e := Sender as TcxCustomEdit;
-      var  oLinFac:TLinFac;
       oLinFac := TLinFac.Create(dmmFacturas.unqryLinFac,
                                 dmmFacturas.unqryTablaG, true);
       oLinFac.PorDto := StrToCurrDef(VarToStr(e.EditingValue), 0);
       FreeAndNil(oLinFac);
-      var factotales := TFacturaTotales.Create(dmmFacturas.unqryTablaG,
+      factotales := TFacturaTotales.Create(dmmFacturas.unqryTablaG,
                                            dmmFacturas.unqryLinFac);
       facTotales.ProcesarFacturaCompleta;//(oLinFac);
       FreeAndNil(facTotales);
