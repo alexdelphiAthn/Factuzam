@@ -146,7 +146,6 @@ begin
   end;
 end;
 
-
 function DarkModeIsEnabled: boolean;
 {$IFDEF MSWINDOWS}
 const
@@ -156,9 +155,7 @@ var
   Reg: TRegistry;
 {$ENDIF}
 begin
-
   Result := False;  // There is no dark side - the Jedi are victorious!
-
 // This relies on a registry setting only available on MS Windows
 // If the developer has somehow managed to get to this point then tell
 // them not to do this!
@@ -181,7 +178,6 @@ begin
   end;
 {$ENDIF}
 end;
-
 
 function EncuentraPagina(pc: TcxPageControl;
                            sName:string):integer; overload;
@@ -306,69 +302,6 @@ begin
   if Assigned(oSender) then
     Result := (oSender as Tcomponent);
 end;
-
-//function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
-//var
-//  i       : Integer;
-//  bfound  : boolean;
-//begin
-//  bfound := false;
-//    for i:= 0 to (Owner as TfrmOpenApp).MDIChildCount - 1 do
-//      if (Owner as TfrmOpenApp).MDIChildren[i].Name = sName then
-//      begin
-//        bFound := true;
-//        (Owner as TfrmOpenApp).MDIChildren[i].BringToFront  ;
-//      end;
-//  Result := bFound;
-//end;
-//
-//function IsOpenMDI(sName: String; Owner : TComponent;
-//                                        var Found:TComponent):boolean; overload;
-//var
-//  i       : Integer;
-//  bfound  : boolean;
-//begin
-//  bfound := false;
-//  i := 0;
-//  while (not(bfound) and (i < (Owner as TfrmOpenApp).MDIChildCount - 1))  do
-//  begin
-//    if (Owner as TfrmOpenApp).MDIChildren[i].Name = sName then
-//    begin
-//      bFound := true;
-//      (Owner as TfrmOpenApp).MDIChildren[i].BringToFront  ;
-//      Found := (Owner as TfrmOpenApp).MDIChildren[i];
-//    end;
-//    i := i + 1;
-//  end;
-//  Result := bFound;
-//end;
-//
-//function FindMDIChildOpen(const AParentForm: TForm;
-//                          const AMDIChildClass: TFormClass;
-//                          const AMDICaption : string): TForm;
-//var
-//  i: Integer;
-//  Child: TForm;
-//  bfound:boolean;
-//begin
-//  Result := nil;
-//  bfound := false;
-//  i := Pred(AParentForm.MDIChildCount);
-//  if (i >  0) then
-//    while (i >= 0) and not(bfound) do
-//    begin
-//      Child := AParentForm.MDIChildren[i];
-//      if Child.InheritsFrom(AMDIChildClass) and
-//         (Child.Name = AMDICaption) then
-//      begin
-//        Result := Child;
-//        bfound := true;
-//      end;
-//      i := i - 1;
-//    end
-//    else
-//      Result := nil;
-//end;
 
 function EncontrarObjeto(oControl:TComponent; sBusquedaTipo:String):TObject; overload;
 var

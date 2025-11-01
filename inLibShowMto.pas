@@ -77,15 +77,11 @@ begin
       tsNew.PageControl := frmOpen2.pcPrincipal;
       ctx := TRttiContext.Create;
       try
-        //https://stackoverflow.com/questions/10613094/
-        //how-can-i-make-sure-rtti-is-available-for-a-
-        //class-without-instantiating-it/10613212#10613212
         lType:= ctx.FindType(sUnidadTipo);
         if (lType<>nil) then
         begin
           f:= TFormBaseClass(
                          GetTypeData(lType.Handle)^.ClassType).Create(frmOpen2);
-          //f:= t.GetMethod('Create').Invoke(t.MetaclassType,[nil]);
           tsNew.Caption := sTitle;
           inLibLog.Log.LogInfo('Abriendo Pantalla Mto: '+ sTitle);
           prop := lType.GetProperty('Parent');
@@ -98,8 +94,6 @@ begin
         begin
           ShowMessageFmt(SClassRttiNotFnd, [sUnidadTipo]);
         end;
-        //https://stackoverflow.com/questions/14742505/
-        //how-do-i-intantiate-a-class-from-its-trttitype
       finally
         //ctx.Free;
       end;
@@ -141,18 +135,15 @@ var
 begin
   Result := nil;
   CacheKey := sDataUnit + '_' + IntToStr(NativeInt(pOwner));
-
   if not GlobalDataModules.TryGetValue(CacheKey, DataModule) then
   begin
     ctx := TRttiContext.Create;
     try
       lType := ctx.FindType(sDataUnit);
-
       if (lType <> nil) then
       begin
         // Buscar el constructor CreateWithForm
         CreateMethod := lType.GetMethod('CreateWithForm');
-
         if Assigned(CreateMethod) then
         begin
           // Usar CreateWithForm que asigna CurrentForm ANTES de inicializar
@@ -168,7 +159,6 @@ begin
           if Assigned(DataModule) and (DataModule is TdmBase) then
             TdmBase(DataModule).CurrentForm := pOwner;
         end;
-
         GlobalDataModules.Add(CacheKey, DataModule);
       end;
     finally
@@ -180,7 +170,6 @@ begin
     if Assigned(DataModule) and (DataModule is TdmBase) then
       TdmBase(DataModule).CurrentForm := pOwner;
   end;
-
   Result := DataModule;
 end;
 
