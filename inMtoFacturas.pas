@@ -947,12 +947,35 @@ end;
 
 procedure TfrmMtoFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
   Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sTarifa: string;
 begin
   inherited;
-  if ((dsTablaG.DataSet.State = dsEdit) or
-      (dsTablaG.DataSet.State = dsInsert)) then
-  dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
-    dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString ;
+  if ((dsTablaG.DataSet.State = dsInsert)) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sTarifa := VarToStr(e.EditingValue);
+    // Verificar que hay una tarifa seleccionada
+    if (sTarifa <> '') then
+    begin
+      // Localizar la tarifa en el dataset
+      if dmmFacturas.unqryTarifas.Locate('CODIGO_TARIFA', sTarifa, []) then
+      begin
+        dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
+          dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString;
+
+        // Opcional: Mostrar mensaje de confirmación
+        // ShowMessage('IVA incluido: ' +
+        //   IfThen(dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString = 'S',
+        //          'SÍ', 'NO'));
+      end
+      else
+      begin
+        ShowMessage('No se encontró la tarifa seleccionada');
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturas.CheckConsolidacion;
@@ -1321,11 +1344,24 @@ procedure TfrmMtoFacturas.tvLineasFacturaKeyDown(Sender: TObject;
                                                  Shift: TShiftState);
 begin
   inherited;
-  if (Shift <> [ssCtrl]) then
-    if ((Key = VK_RETURN) and
-        (dmmFacturas.dsLinFac.DataSet.RecordCount = 0)
-       ) then
-      tvLineasFactura.DataController.Insert;
+  // Antes de insertar nueva línea, asegurar que la cabecera está grabada
+  if (Key = VK_RETURN) and (Shift <> [ssCtrl]) and
+     (dmmFacturas.dsLinFac.DataSet.RecordCount = 0) then
+  begin
+    if dmmFacturas.unqryTablaG.State in [dsInsert, dsEdit] then
+    begin
+      try
+        dmmFacturas.unqryTablaG.Post;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Debe completar los datos de la factura: ' + E.Message);
+          Exit;
+        end;
+      end;
+    end;
+    tvLineasFactura.DataController.Insert;
+  end;
 end;
 
 procedure TfrmMtoFacturas.CambiarIVA;

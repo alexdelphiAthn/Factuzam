@@ -1058,19 +1058,37 @@ end;
 
 procedure TdmFacturas.unqryLinFacBeforeInsert(DataSet: TDataSet);
 begin
-//  if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
-//    unqryTablaG.Post;
-//  if (unqryTablaG.FieldByName(
-//                                   'ESCONSOLIDADA_FACTURA').AsString = 'S') then
-//    begin
-//      unqryTablaG.ReadOnly := True;
-//      unqryLinFac.ReadOnly := True;
-//    end
-//    else
-//    begin
-//      unqryTablaG.ReadOnly := False;
-//      unqryLinFac.ReadOnly := False;
-//    end;
+  inherited;
+  // Verificar que la factura esté guardada antes de insertar líneas
+  if not Assigned(unqryTablaG) then
+    Abort;
+  // Si la cabecera está en edición o inserción, grabarla primero
+  if unqryTablaG.State in [dsInsert, dsEdit] then
+  begin
+    try
+      unqryTablaG.Post;
+    except
+      on E: Exception do
+      begin
+        ShowMessage('No se puede insertar líneas sin grabar primero la cabecera: ' + E.Message);
+        Abort;
+      end;
+    end;
+  end;
+  // Verificar que exista un número de factura válido
+  if (unqryTablaG.FieldByName('NRO_FACTURA').AsString = '') or
+     (unqryTablaG.FieldByName('NRO_FACTURA').AsString = '0') or
+     (unqryTablaG.FieldByName('SERIE_FACTURA').AsString = '') then
+  begin
+    ShowMessage('Debe grabar primero la factura antes de añadir líneas');
+    Abort;
+  end;
+  // Verificar estado de consolidación
+  if (unqryTablaG.FieldByName('ESCONSOLIDADA_FACTURA').AsString = 'S') then
+  begin
+    ShowMessage('No se pueden añadir líneas a una factura consolidada');
+    Abort;
+  end;
 end;
 
 procedure TdmFacturas.unqryLinFacAfterPost(DataSet: TDataSet);

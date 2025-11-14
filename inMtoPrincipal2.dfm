@@ -12,14 +12,14 @@ inherited frmOpenApp2: TfrmOpenApp2
   OnResize = FormResize
   OnShow = FormShow
   ExplicitWidth = 1136
-  ExplicitHeight = 612
-  TextHeight = 20
+  ExplicitHeight = 607
+  TextHeight = 19
   object dxstsbr1: TdxStatusBar [0]
     AlignWithMargins = True
     Left = 3
-    Top = 522
+    Top = 528
     Width = 1118
-    Height = 24
+    Height = 18
     AutoSize = True
     Panels = <
       item
@@ -55,44 +55,47 @@ inherited frmOpenApp2: TfrmOpenApp2
     Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Lucida Sans Unicode'
+    Font.Pitch = fpFixed
     Font.Style = []
-    ExplicitTop = 513
-    ExplicitWidth = 1112
+    Font.Quality = fqClearTypeNatural
+    ParentFont = False
+    ExplicitTop = 527
+    ExplicitWidth = 1114
   end
   object Panel1: TPanel [1]
     Left = 0
     Top = 0
     Width = 1124
-    Height = 519
+    Height = 525
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 1118
-    ExplicitHeight = 510
+    ExplicitWidth = 1120
+    ExplicitHeight = 524
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
       Width = 1124
-      Height = 448
+      Height = 454
       Align = alClient
       TabOrder = 0
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 1118
-      ExplicitHeight = 439
-      ClientRectBottom = 444
+      ExplicitWidth = 1120
+      ExplicitHeight = 453
+      ClientRectBottom = 450
       ClientRectLeft = 4
       ClientRectRight = 1120
       ClientRectTop = 4
     end
     object pnlPPBottom: TPanel
       Left = 0
-      Top = 448
+      Top = 454
       Width = 1124
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 439
-      ExplicitWidth = 1118
+      ExplicitTop = 453
+      ExplicitWidth = 1120
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -103,7 +106,7 @@ inherited frmOpenApp2: TfrmOpenApp2
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1116
+        ExplicitWidth = 1118
         Height = 69
         Width = 1122
       end

@@ -209,16 +209,27 @@ begin
   Screen.MenuFont.Size := 13;
   //UpdateTitleFont;
 //  https://www.tek-tips.com/viewthread.cfm?qid=1360646
-  if DarkModeIsEnabled then
-  begin
-    LookAndFeelController1.SkinName := 'MetropolisDark';
-    SkinController1.SkinName := 'MetropolisDark';
-  end
-  else
+  try
+    if Assigned(LookAndFeelController1) and Assigned(SkinController1) then
     begin
-      LookAndFeelController1.SkinName := 'Office2007Pink';
-      SkinController1.SkinName := 'Office2007Pink';
+      if DarkModeIsEnabled then
+      begin
+        LookAndFeelController1.SkinName := 'MetropolisDark';
+        SkinController1.SkinName := 'MetropolisDark';
+      end
+      else
+      begin
+        LookAndFeelController1.SkinName := 'Office2007Pink';
+        SkinController1.SkinName := 'Office2007Pink';
+      end;
     end;
+  except
+    on E: Exception do
+    begin
+      inliblog.Log.LogWarning('Error al establecer skin: ' + E.Message);
+      // Continuar sin skin personalizado
+    end;
+  end;
     //SendMessage(Handle, WM_SETFONT,
     //CreateFont(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET,
     //          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,

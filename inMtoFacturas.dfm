@@ -10,7 +10,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   Scaled = False
   ExplicitWidth = 1231
   ExplicitHeight = 844
-  PixelsPerInch = 96
   TextHeight = 19
   object Shape6: TShape [0]
     Left = 76
@@ -706,10 +705,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -724,13 +719,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 object tvLineasFactura: TcxGridDBTableView
                   OnKeyDown = tvLineasFacturaKeyDown
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DataModeController.SmartRefresh = True
                   DataController.DataSource = dmFacturas.dsLinFac
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding, dcoGroupsAlwaysExpanded, dcoInsertOnNewItemRowFocusing]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '##,##.00 '#8364
@@ -747,7 +739,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                       Kind = skSum
                       Column = ctbTOTAL_FACTURASIVA_LINEA
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   FixedDataRows.SeparatorColor = clBlack
                   NewItemRow.InfoText = 'Click aqu'#237' para a'#241'adir fila'
                   NewItemRow.Visible = True
@@ -939,15 +930,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   end
                 end
                 object tv2: TcxGridDBBandedTableView
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DetailKeyFieldNames = 'AppointmentId'
                   DataController.KeyFieldNames = 'PerId'
                   DataController.MasterKeyFieldNames = 'AppointmentId'
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsView.GroupByBox = False
                   Bands = <
                     item
@@ -1128,6 +1114,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total a pagar'
+                TabOrder = 3
                 Transparent = True
               end
               object curTotalAPagar: TcxDBCurrencyEdit
@@ -1165,6 +1152,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Retenci'#243'n Factura'
+                TabOrder = 9
                 Transparent = True
               end
               object lblPorcRetencionFactura: TcxLabel
@@ -1175,6 +1163,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = '% Retenci'#243'n Factura'
+                TabOrder = 10
                 Transparent = True
               end
               object spnRetencion: TcxDBSpinEdit
@@ -1213,6 +1202,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Base Imponible'
+                TabOrder = 11
                 Transparent = True
               end
               object curTOTAL_BASES_FACTURA: TcxDBCurrencyEdit
@@ -1238,6 +1228,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Impuestos'
+                TabOrder = 12
                 Transparent = True
               end
               object chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox
@@ -1270,6 +1261,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Forma de Pago'
+                TabOrder = 14
                 Transparent = True
               end
               object cbbFORMAPAGO: TcxDBLookupComboBox
@@ -1356,46 +1348,55 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Left = 504
                   Top = 40
                   Caption = 'Total R.E.'
+                  TabOrder = 0
                 end
                 object PorRE: TcxLabel
                   Left = 440
                   Top = 40
                   Caption = '%R.E.'
+                  TabOrder = 1
                 end
                 object lblTotIVA: TcxLabel
                   Left = 336
                   Top = 40
                   Caption = 'Total IVA'
+                  TabOrder = 2
                 end
                 object lblPorIVA: TcxLabel
                   Left = 280
                   Top = 40
                   Caption = '%IVA'
+                  TabOrder = 3
                 end
                 object lblBaseNeta: TcxLabel
                   Left = 176
                   Top = 40
                   Caption = 'BaseNeta'
+                  TabOrder = 4
                 end
                 object lblNormal: TcxLabel
                   Left = 90
                   Top = 82
                   Caption = 'Normal'
+                  TabOrder = 5
                 end
                 object lblReducido: TcxLabel
                   Left = 73
                   Top = 133
                   Caption = 'Reducido'
+                  TabOrder = 6
                 end
                 object lblSReducido: TcxLabel
                   Left = 21
                   Top = 181
                   Caption = 'S'#250'per Reducido'
+                  TabOrder = 7
                 end
                 object lblExento: TcxLabel
                   Left = 94
                   Top = 229
                   Caption = 'Exento'
+                  TabOrder = 8
                 end
                 object cxDBCurrencyEdit1: TcxDBCurrencyEdit
                   Left = 162
@@ -1650,10 +1651,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -1728,7 +1725,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   object tvRecibos: TcxGridDBTableView
                     OnDblClick = cxGrdDBTabPrinDblClick
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Buttons.First.Hint = 'Va al primer Registro'
                     Navigator.Buttons.First.Visible = False
                     Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -1761,16 +1757,13 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Navigator.Buttons.GotoBookmark.Visible = False
                     Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                    DataController.Summary.DefaultGroupSummaryItems = <>
                     DataController.Summary.FooterSummaryItems = <
                       item
                         Format = '##,##.00 '#8364
                         Kind = skSum
                         Column = cxgrdbclmnRecibosEUROS_RECIBO
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.AlwaysShowEditor = True
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsBehavior.IncSearch = True
@@ -1891,10 +1884,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -1903,6 +1892,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Comentarios'
+                TabOrder = 0
                 Transparent = True
               end
               object mmodbComentarios: TcxDBMemo
@@ -1944,6 +1934,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -1954,6 +1945,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object txtINSTANTEALTA: TcxDBTextEdit
@@ -1990,6 +1982,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object txtUSUARIOMODIF: TcxDBTextEdit
@@ -2013,6 +2006,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. ModiF.'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -2303,10 +2297,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
@@ -2321,7 +2311,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 object cxGridDBTableView1: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
                   Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -2354,16 +2343,13 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DataSource = dmFacturas.dsErrores
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '##,##.00 '#8364
                       Kind = skSum
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -2461,6 +2447,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Nro Factura'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object lblFechaFactura: TcxLabel
@@ -2471,6 +2458,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Fecha'
+                  TabOrder = 3
                   Transparent = True
                 end
                 object dteFECHA_FACTURA: TcxDBDateEdit
@@ -2496,6 +2484,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Serie Factura'
+                  TabOrder = 6
                   Transparent = True
                 end
                 object btnCODIGO_CLIENTE: TcxDBButtonEdit
@@ -2523,6 +2512,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'C'#243'digo Cliente'
+                  TabOrder = 7
                   Transparent = True
                 end
                 object lbldbRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel
@@ -2530,6 +2520,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Top = 60
                   DataBinding.DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
                   DataBinding.DataSource = dsTablaG
+                  TabOrder = 8
                   Transparent = True
                   Height = 21
                   Width = 332
@@ -2541,6 +2532,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   DataBinding.DataSource = dsTablaG
                   ParentFont = False
                   Style.StyleController = frmOpenApp2.EditStyleController
+                  TabOrder = 9
                   Transparent = True
                   Height = 21
                   Width = 412
@@ -2571,6 +2563,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'C'#243'digo Empresa'
                   ParentFont = False
                   Style.StyleController = frmOpenApp2.EditStyleController
+                  TabOrder = 11
                   Transparent = True
                 end
                 object txtNRO_FACTURA: TcxDBTextEdit
@@ -2635,10 +2628,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -2719,6 +2708,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Provincia'
+                    TabOrder = 10
                     Transparent = True
                   end
                   object lblPaisEmpresa: TcxLabel
@@ -2729,6 +2719,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Pa'#237's'
+                    TabOrder = 11
                     Transparent = True
                   end
                   object txtRAZONSOCIAL_EMPRESA_FACTURA: TcxDBTextEdit
@@ -2765,6 +2756,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Caption = 'NIF Empresa'
                     ParentFont = False
                     Style.StyleController = frmOpenApp2.EditStyleController
+                    TabOrder = 12
                     Transparent = True
                   end
                   object lblMovilEmpresa: TcxLabel
@@ -2777,6 +2769,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Caption = 'M'#243'vil Empresa'
                     ParentFont = False
                     Style.StyleController = frmOpenApp2.EditStyleController
+                    TabOrder = 13
                     Transparent = True
                   end
                   object txtMOVIL_EMPRESA_FACTURA: TcxDBTextEdit
@@ -2813,6 +2806,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Caption = 'Email Empresa'
                     ParentFont = False
                     Style.StyleController = frmOpenApp2.EditStyleController
+                    TabOrder = 15
                     Transparent = True
                   end
                   object chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TcxDBCheckBox
@@ -2875,6 +2869,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Canal IVA'
+                    TabOrder = 17
                     Transparent = True
                   end
                   object lbldbCODIGO_CLIENTE_FACTURA: TcxDBLabel
@@ -2882,6 +2877,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Top = -5
                     DataBinding.DataField = 'CODIGO_EMPRESA_FACTURA'
                     DataBinding.DataSource = dsTablaG
+                    TabOrder = 19
                     Transparent = True
                     Height = 21
                     Width = 94
@@ -3036,6 +3032,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Provincia'
+                    TabOrder = 10
                     Transparent = True
                   end
                   object lblcxlbl13: TcxLabel
@@ -3046,6 +3043,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Pa'#237's'
+                    TabOrder = 11
                     Transparent = True
                   end
                   object txtRAZONSOCIAL_CLIENTE_FACTURA: TcxDBTextEdit
@@ -3080,6 +3078,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'NIF'
+                    TabOrder = 12
                     Transparent = True
                   end
                   object lblTelefonoMovil: TcxLabel
@@ -3090,6 +3089,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Tfno. M'#243'vil'
+                    TabOrder = 13
                     Transparent = True
                   end
                   object txtMOVIL_CLIENTE_FACTURA: TcxDBTextEdit
@@ -3124,6 +3124,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Right = 4
                     Margins.Bottom = 4
                     Caption = 'Email'
+                    TabOrder = 14
                     Transparent = True
                   end
                   object chkESIVA_RECARGO_CLIENTE_FACTURA: TcxDBCheckBox
@@ -3203,6 +3204,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'Tarifa Art'#237'culos'
                     Style.BorderStyle = ebsNone
+                    TabOrder = 20
                     Transparent = True
                   end
                   object chkIVA_EXENTO_CLIENTE_FACTURA: TcxDBCheckBox
@@ -3223,6 +3225,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Top = -4
                     DataBinding.DataField = 'CODIGO_CLIENTE_FACTURA'
                     DataBinding.DataSource = dsTablaG
+                    TabOrder = 22
                     Transparent = True
                     Height = 21
                     Width = 94
