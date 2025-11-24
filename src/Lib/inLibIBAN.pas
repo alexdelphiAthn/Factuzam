@@ -1,4 +1,4 @@
-unit inLibIBAN;
+﻿unit inLibIBAN;
 
 {******************************************************************************}
 {* Librería de validación y generación de IBAN                               *}
@@ -16,16 +16,18 @@ uses
   System.Classes, System.SysUtils;
 
 type
-  {******************************************************************************}
-  {* TIBAN - Clase principal para trabajar con IBAN                            *}
-  {******************************************************************************}
+  {****************************************************************************}
+  {* TIBAN - Clase principal para trabajar con IBAN                           *}
+  {****************************************************************************}
   TIBAN = class
   public
     {** Validación **}
     // Valida un IBAN completo (formato internacional)
-    class function ValidarIBAN(const IBAN: string; Errores: TStringList = nil): Boolean;
+    class function ValidarIBAN(const IBAN: string;
+                               Errores: TStringList = nil): Boolean;
     // Valida un CCC español (con o sin IBAN)
-    class function ValidarCCC(const CCC: string; Errores: TStringList = nil): Boolean;
+    class function ValidarCCC(const CCC: string;
+                              Errores: TStringList = nil): Boolean;
 
     {** Generación **}
     // Genera el IBAN completo a partir de país y CCC
@@ -93,7 +95,10 @@ type
     Cuenta: string;
 
     function ToCCC(Sep: string = ''): string;
-    constructor Build(const inEntidad, inOficina, inDC, inCuenta: string); overload;
+    constructor Build(const inEntidad,
+                            inOficina,
+                            inDC,
+                            inCuenta: string); overload;
     constructor Build(const inCCC: string); overload;
   end;
 
@@ -216,7 +221,8 @@ end;
 {* TIBAN - Implementación                                                     *}
 {******************************************************************************}
 
-class function TIBAN.ValidarIBAN(const IBAN: string; Errores: TStringList): Boolean;
+class function TIBAN.ValidarIBAN(const IBAN: string;
+                                 Errores: TStringList): Boolean;
 var
   Cuenta: TrBancoCuentaInfo;
   IBANInfo: TrBancoIBANInfo;
@@ -226,7 +232,8 @@ begin
   Result := IBANInfo.IsValid(Cuenta.CCC, Errores);
 end;
 
-class function TIBAN.ValidarCCC(const CCC: string; Errores: TStringList): Boolean;
+class function TIBAN.ValidarCCC(const CCC: string;
+                                Errores: TStringList): Boolean;
 var
   isValid, isSpanish, isNumeric: Boolean;
   sBanco, sCta, sDC, sPref: String;
