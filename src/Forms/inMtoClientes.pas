@@ -318,7 +318,7 @@ uses
   inMtoArticulos,
   inMtoModalCliEti,
   inLibDir,
-  inLibIBAN.Utils,
+  inLibIBAN,
   inMtoPrincipal2;
 
 {$R *.dfm}

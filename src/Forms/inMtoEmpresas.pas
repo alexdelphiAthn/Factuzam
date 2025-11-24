@@ -302,7 +302,7 @@ uses
   inLibShowMto,
   inLibDir,
   inLibDevExp,
-  inLibIBAN.Utils,
+  inLibIBAN,
   inMtoPrincipal2,
   inMtoFacturas,
   inMtoArticulos,
