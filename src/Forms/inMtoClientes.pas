@@ -456,7 +456,7 @@ begin
   sPref := (Copy(sIBAN, 1, 2));
   if ((sPref = 'ES') or (iLen = 20)) then
   begin
-    TIBANUtils.IsValidDC(sIBAN, stErr);
+    TIBAN.ValidarCCC(sIBAN, stErr);
     sErr := stErr.Text;
     if (sErr <> '') then
     begin
@@ -468,14 +468,14 @@ begin
       (StrToIntDef(sPref, 0) <> 0) and
       not(EsIBANErr)) then
   begin
-    sPref4 := TIBANUtils.GetIBAN('ES', sIBAN);
+    sPref4 := TIBAN.GenerarIBAN('ES', sIBAN);
     if (dsTablaG.State = dsBrowse) then
       dsTablaG.DataSet.Edit;
     dsTablaG.DataSet.FieldByName('IBAN_CLIENTE').Text := sPref4 + sIBAN;
   end;
   if (not(EsIBANErr) and (StrToIntDef(sPref, 0) = 0)) then
   begin
-    TIBANUtils.IsValidIBAN(sIBAN, stErr);
+    TIBAN.ValidarIBAN(sIBAN, stErr);
     sErr := stErr.Text;
     if (sErr <> '') then
     begin
