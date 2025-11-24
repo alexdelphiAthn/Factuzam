@@ -274,8 +274,8 @@ begin
   //         (ejemplo aleman, sin digitos de control) :
   //      370400440532013000
   //
-  //   2) A�ades al final el pais y digitos de control vacios 00
-  //                                            ('ES00' � 'DE00' en el ejemplo):
+  //   2) Añades al final el pais y digitos de control vacios 00
+  //                                            ('ES00' ó 'DE00' en el ejemplo):
   //      370400440532013000DE00
   //
   //   3) Cambias las letras que queden a numeros segun esta tabla:

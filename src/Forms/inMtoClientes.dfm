@@ -219,6 +219,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Right = 4
               Margins.Bottom = 4
               Caption = 'Raz'#243'n Social Fiscal'
+              TabOrder = 0
               Transparent = True
             end
             object lblCodigoCliente: TcxLabel
@@ -229,6 +230,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Right = 4
               Margins.Bottom = 4
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object txtCODIGO_CLIENTE: TcxDBTextEdit
@@ -278,6 +280,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Right = 4
               Margins.Bottom = 4
               Caption = 'Email'
+              TabOrder = 5
               Transparent = True
             end
             object txtEMAIL_CLIENTE: TcxDBTextEdit
@@ -300,6 +303,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Right = 4
               Margins.Bottom = 4
               Caption = 'NIF/CIF'
+              TabOrder = 7
               Transparent = True
             end
             object txtNIF_CLIENTE: TcxDBTextEdit
@@ -322,6 +326,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Right = 4
               Margins.Bottom = 4
               Caption = 'Tel'#233'fonos'
+              TabOrder = 9
               Transparent = True
             end
             object txtMOVIL_CLIENTE: TcxDBTextEdit
@@ -407,6 +412,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Direcci'#243'n 1'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 0
                   Transparent = True
                   AnchorX = 135
                 end
@@ -431,6 +437,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Direcci'#243'n 2'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 2
                   Transparent = True
                   AnchorX = 135
                 end
@@ -455,6 +462,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'C'#243'digo Postal'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 4
                   Transparent = True
                   AnchorX = 135
                 end
@@ -479,6 +487,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Poblaci'#243'n'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 6
                   Transparent = True
                   AnchorX = 135
                 end
@@ -503,6 +512,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Provincia'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 8
                   Transparent = True
                   AnchorX = 135
                 end
@@ -527,6 +537,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Pa'#237's'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 10
                   Transparent = True
                   AnchorX = 135
                 end
@@ -685,6 +696,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Contacto'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 0
                   Transparent = True
                   AnchorX = 163
                 end
@@ -708,6 +720,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Tel'#233'fono Contacto'
+                  TabOrder = 2
                   Transparent = True
                 end
                 object txtTELEFONO_CONTACTO_CLIENTE: TcxDBTextEdit
@@ -731,6 +744,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Referencia'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 4
                   Transparent = True
                   AnchorX = 163
                 end
@@ -755,6 +769,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'Observaciones'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 6
                   Transparent = True
                   AnchorX = 163
                 end
@@ -775,6 +790,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Forma de Pago'
+                  TabOrder = 8
                   Transparent = True
                 end
                 object cbbFORMAPAGO: TcxDBLookupComboBox
@@ -804,6 +820,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Bottom = 4
                   Caption = 'IBAN Bancario'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 10
                   Transparent = True
                   AnchorX = 163
                 end
@@ -815,6 +832,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Tarifa por defecto'
+                  TabOrder = 11
                   Transparent = True
                 end
                 object cbbTARIFA: TcxDBLookupComboBox
@@ -893,9 +911,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   TabOrder = 0
                   object tvFacturacion: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataModeController.SmartRefresh = True
                     DataController.Summary.DefaultGroupSummaryItems = <
                       item
@@ -935,7 +951,6 @@ inherited frmMtoClientes: TfrmMtoClientes
                         Kind = skSum
                         Column = tvFacturacionTOTAL_BASES_FACTURA
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsCustomize.ColumnGrouping = False
                     OptionsData.Deleting = False
@@ -1359,14 +1374,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                     end
                   end
                   object tvLineasFacturacion: TcxGridDBTableView
-                    Navigator.Buttons.CustomButtons = <>
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                     DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                     DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.ColumnHeaderHints = False
                     OptionsCustomize.ColumnFiltering = False
                     OptionsCustomize.ColumnGrouping = False
@@ -1508,13 +1518,8 @@ inherited frmMtoClientes: TfrmMtoClientes
                 TabOrder = 0
                 object tv2: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DataModeController.SmartRefresh = True
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
                   OptionsData.Deleting = False
@@ -1609,14 +1614,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                   end
                 end
                 object tv3: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                   DataController.KeyFieldNames = 'LINEA_LINEA'
                   DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -1677,6 +1677,10 @@ inherited frmMtoClientes: TfrmMtoClientes
             object tsOtros: TcxTabSheet
               Caption = '&4_Otros'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 329
@@ -1706,6 +1710,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -1716,6 +1721,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object txtINSTANTEALTA: TcxDBTextEdit
@@ -1752,6 +1758,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object txtUSUARIOMODIF: TcxDBTextEdit
@@ -1775,6 +1782,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. ModiF.'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1795,6 +1803,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Texto legal en Factura de Cliente'
+                TabOrder = 3
                 Transparent = True
               end
               object lblSerieDefault: TcxLabel
@@ -1805,6 +1814,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Serie por defecto en Documentos'
+                TabOrder = 4
                 Transparent = True
               end
               object txtSERIE_CONTADOR: TcxDBTextEdit
@@ -1827,6 +1837,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Orden en Listados'
+                TabOrder = 5
                 Transparent = True
               end
               object spORDEN_CLIENTE: TcxDBSpinEdit
@@ -1848,6 +1859,7 @@ inherited frmMtoClientes: TfrmMtoClientes
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1879,7 +1891,7 @@ inherited frmMtoClientes: TfrmMtoClientes
         Width = 1001
         ExplicitWidth = 1001
         inherited edtBusqGlobal: TcxTextEdit
-          TabOrder = 3
+          TabOrder = 4
         end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
@@ -1969,7 +1981,7 @@ inherited frmMtoClientes: TfrmMtoClientes
   object dxBarManager1: TdxBarManager
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -13
+    Font.Height = -12
     Font.Name = 'Lucida Sans'
     Font.Style = []
     Categories.Strings = (
