@@ -28,7 +28,7 @@ uses
   cxDBLookupEdit, cxDBLookupComboBox, dxScrollbarAnnotations, dxCore,
   cxSpinEdit,
   cxRadioGroup, cxGridExportLink,  System.UITypes, System.Actions, Vcl.ActnList,
-  IDETheme.ActnCtrls, Vcl.PlatformDefaultStyleActnCtrls, cxSplitter,
+  Vcl.PlatformDefaultStyleActnCtrls, cxSplitter,
   cxDBExtLookupComboBox, cxGroupBox, dxSkinBasic, dxSkinBlack, dxSkinBlue,
   dxSkinBlueprint, dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,

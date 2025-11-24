@@ -28,7 +28,7 @@ uses
   cxDBNavigator, dxNumericWheelPicker, dxDateRanges, cxDataUtils, cxVariants,
   cxDBLabel, dxGDIPlusClasses, dxSkinsForm, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, System.Actions, Vcl.ActnList,
-  IDETheme.ActnCtrls, Vcl.ActnMan, Vcl.StdStyleActnCtrls, Vcl.AppEvnts,
+  Vcl.ActnMan, Vcl.StdStyleActnCtrls, Vcl.AppEvnts,
   JvComponentBase, JvEnterTab, UniDataFacturas, dxShellDialogs, JvBaseDlg,
   JvCalc, dxDateTimeWheelPicker, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
@@ -964,7 +964,6 @@ begin
       begin
         dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
           dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString;
-
         // Opcional: Mostrar mensaje de confirmación
         // ShowMessage('IVA incluido: ' +
         //   IfThen(dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString = 'S',
