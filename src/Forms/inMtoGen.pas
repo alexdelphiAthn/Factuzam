@@ -352,14 +352,11 @@ begin
        btnGrabarClick(Sender);
      end;
   end;
-
   // NO liberar el DataModule manualmente
   // Se liberará automáticamente cuando se destruya el formulario (Self)
   // porque se creó con Owner = Self
-
   // Simplemente asignar nil a la referencia
   tdmDataModule := nil;
-
   ts := parent as TcxTabSheet;
   formP:=(ts.Parent.Parent.Parent as TForm);
   PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
@@ -528,7 +525,9 @@ begin
         //ShowMessage('Foco establecido en: ' + FocusControl.Name +
         //           ' (TabOrder: ' + IntToStr(FocusControl.TabOrder) + ')');
       end;
-    end
+    end;
+    if edtBusqGlobal.CanFocus then
+      edtBusqGlobal.SetFocus;
 //    else
 //    ShowMessage('No se encontró un control focusable después de la pestaña.');
 //  finally
