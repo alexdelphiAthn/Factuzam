@@ -61,7 +61,6 @@ inherited frmMtoGen: TfrmMtoGen
           TabOrder = 0
           object cxGrdDBTabPrin: TcxGridDBTableView
             OnDblClick = cxGrdDBTabPrinDblClick
-            Navigator.Buttons.CustomButtons = <>
             Navigator.Buttons.First.Hint = 'Va al primer Registro'
             Navigator.Buttons.First.Visible = False
             Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -96,12 +95,8 @@ inherited frmMtoGen: TfrmMtoGen
             Navigator.Buttons.GotoBookmark.Visible = False
             Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
             Navigator.Visible = True
-            ScrollbarAnnotations.CustomAnnotations = <>
             DataController.DataSource = dsTablaG
             DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-            DataController.Summary.DefaultGroupSummaryItems = <>
-            DataController.Summary.FooterSummaryItems = <>
-            DataController.Summary.SummaryGroups = <>
             OptionsBehavior.AlwaysShowEditor = True
             OptionsBehavior.GoToNextCellOnEnter = True
             OptionsBehavior.IncSearch = True
@@ -146,6 +141,7 @@ inherited frmMtoGen: TfrmMtoGen
             Left = 165
             Top = 18
             Caption = 'Texto a buscar'
+            TabOrder = 1
             Transparent = True
           end
           object btnCargarColumnas: TcxButton
@@ -199,7 +195,6 @@ inherited frmMtoGen: TfrmMtoGen
             object tvPerfil: TcxGridDBTableView
               OnDblClick = cxGrdDBTabPrinDblClick
               Navigator.Buttons.ConfirmDelete = True
-              Navigator.Buttons.CustomButtons = <>
               Navigator.Buttons.First.Hint = 'Va al primer Registro'
               Navigator.Buttons.First.Visible = True
               Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -234,12 +229,8 @@ inherited frmMtoGen: TfrmMtoGen
               Navigator.Buttons.GotoBookmark.Visible = False
               Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
               Navigator.Visible = True
-              ScrollbarAnnotations.CustomAnnotations = <>
               DataController.DataSource = dmBase.dsPerfiles
               DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-              DataController.Summary.DefaultGroupSummaryItems = <>
-              DataController.Summary.FooterSummaryItems = <>
-              DataController.Summary.SummaryGroups = <>
               OptionsBehavior.AlwaysShowEditor = True
               OptionsBehavior.GoToNextCellOnEnter = True
               OptionsBehavior.IncSearch = True
@@ -485,7 +476,6 @@ inherited frmMtoGen: TfrmMtoGen
           Top = 6
           Width = 238
           Height = 23
-          Buttons.CustomButtons = <>
           Buttons.Filter.Visible = False
           DataSource = dsTablaG
           LookAndFeel.NativeStyle = False
@@ -495,6 +485,7 @@ inherited frmMtoGen: TfrmMtoGen
           Left = 8
           Top = 9
           Caption = 'Texto a buscar'
+          TabOrder = 3
           Transparent = True
         end
         object rbBBDD: TcxRadioButton
@@ -647,6 +638,7 @@ inherited frmMtoGen: TfrmMtoGen
           Left = 18
           Top = -1
           Caption = 'EditMode'
+          TabOrder = 0
           Transparent = True
         end
       end
@@ -669,6 +661,7 @@ inherited frmMtoGen: TfrmMtoGen
           Left = 17
           Top = 2
           Caption = 'TablaOrigen'
+          TabOrder = 0
           Transparent = True
         end
       end
