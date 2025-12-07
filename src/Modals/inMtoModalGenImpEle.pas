@@ -94,6 +94,8 @@ procedure TfrmMtoModalGenImpEle.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  sElegido := 'Predeterminado';
+  sFicha:= 'O';                             
 end;
 
 end.
