@@ -37,11 +37,12 @@ type
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
   private
     FCurrentForm: TComponent;
+    FoPerfilDic: TProfileDicc;
   end;
 
 var
   dmBase: TdmBase;
-  oPerfilDic : TProfileDicc;
+  //oPerfilDic : TProfileDicc;
 
 implementation
 
@@ -66,7 +67,7 @@ begin
   FCurrentForm := AForm;
   inherited Create(AOwner);
   //FManualCreate := False;
-  DoCreate;  // Ahora s� ejecutar con CurrentForm ya asignado
+  DoCreate;  // Ahora sí ejecuta con CurrentForm ya asignado
 end;
 
 procedure TdmBase.DoCreate;
@@ -74,17 +75,16 @@ var
   Form: TfrmMtoGen;
 begin
   Form := GetOwnerForm<TfrmMtoGen>;
-  oPerfilDic := nil;
-  unqryTablaG.Connection              := oConn;
-  unqryPerfiles.Connection            := oConn;
+  FoPerfilDic := nil; // Inicializamos la variable de instancia
+  unqryTablaG.Connection := oConn;
+  unqryPerfiles.Connection := oConn;
   if Assigned(Form) then
   begin
-    if (GetPerfilValueDef(Form.oPerfilDic,
-                        'oGetSQLFromDB',
-                        'False') = 'True') then
+    // Usamos FoPerfilDic (instancia) en vez de la global
+    if (GetPerfilValueDef(Form.oPerfilDic, 'oGetSQLFromDB', 'False') = 'True') then
     begin
-      GetFormUserProfile(oPerfilDic, Self.Name);
-      LoadSQLFromProfile(Self, oPerfilDic);
+      GetFormUserProfile(FoPerfilDic, Self.Name);
+      LoadSQLFromProfile(Self, FoPerfilDic);
     end;
     Form.tdmDataModule := Self;
     Form.dsTablaG.DataSet := unqryTablaG;
@@ -101,8 +101,8 @@ procedure TdmBase.DataModuleDestroy(Sender: TObject);
 begin
   unqryTablaG.Close;
   unqryPerfiles.Close;
-  if (oPerfilDic <> nil) then
-    FreeAndNil(oPerfilDic);
+  if (FoPerfilDic <> nil) then
+    FreeAndNil(FoPerfilDic);
 //  oPerfilDic.Free;
 end;
 
@@ -110,10 +110,12 @@ function TdmBase.GetCurrentForm: TComponent;
 begin
   Result := FCurrentForm;
 end;
+
 procedure TdmBase.SetCurrentForm(const Value: TComponent);
 begin
   FCurrentForm := Value;
 end;
+
 function TdmBase.GetOwnerForm<T>: T;
 begin
   if Assigned(FCurrentForm) and
@@ -123,6 +125,7 @@ begin
   else
     Result := nil;
 end;
+
 function TdmBase.HasOwnerForm: Boolean;
 begin
   Result := Assigned(FCurrentForm) and
@@ -152,15 +155,15 @@ begin
 end;
 
 procedure TdmBase.unqryTablaGBeforeInsert(DataSet: TDataSet);
+var
+  LForm: TfrmMtoGen;
 begin
-  if (Self.Owner is TfrmMtoGen) then
-    with (Self.Owner as TfrmMtoGen) do
-    begin
-      if tsFicha.TabVisible = true then
-      begin
-        pcPantalla.ActivePage := tsFicha;
-      end;
-    end;
+  LForm := GetOwnerForm<TfrmMtoGen>;
+  if Assigned(LForm) then
+  begin
+    if LForm.tsFicha.TabVisible then
+       LForm.pcPantalla.ActivePage := LForm.tsFicha;
+  end;
 end;
 
 procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);

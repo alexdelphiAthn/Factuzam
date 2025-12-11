@@ -108,10 +108,9 @@ begin
   unqryFacturasClientes.Connection := oConn;
   unqryFacturasLineasClientes.Connection := oConn;
   unqryPaises.Connection := oConn;
-  unqryFacturasClientes.MasterSource :=
-                                       (Self.Owner as TfrmMtoClientes).dsTablaG;
-  unqryFacturasLineasClientes.MasterSource :=
-                                       (Self.Owner as TfrmMtoClientes).dsTablaG;
+  var LForm := GetOwnerForm<TfrmMtoClientes>;
+  unqryFacturasClientes.MasterSource := LForm.dsTablaG;
+  unqryFacturasLineasClientes.MasterSource := LForm.dsTablaG;
   unqryPaises.Open;
   unqryFacturasClientes.Open;
   unqryFacturasLineasClientes.Open;
