@@ -404,7 +404,8 @@ var
   bResul:Boolean;
 begin
   bResul:= False;
-  for i := 0 to frmMto.Componentcount - 1 do
+  i:= 0;
+  while ((i<frmMto.Componentcount) and (bResul = False)) do
   begin
     if frmMto.Components[i].ClassNameis('TcxGridDBTableView')
     then
@@ -419,9 +420,10 @@ begin
               (dsData.DataSet.State = dsEdit)) then
           begin
             bResul:= true;
-            Exit;
+            //Exit;
           end;
     end;
+    Inc(i);
   end;
   Result:=bResul;
 end;

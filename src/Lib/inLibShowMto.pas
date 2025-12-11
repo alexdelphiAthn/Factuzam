@@ -133,7 +133,7 @@ var
   DataModule: TDataModule;
   CreateMethod: TRttiMethod;
 begin
-  Result := nil;
+  //Result := nil;
   CacheKey := sDataUnit + '_' + IntToStr(NativeInt(pOwner));
   if not GlobalDataModules.TryGetValue(CacheKey, DataModule) then
   begin

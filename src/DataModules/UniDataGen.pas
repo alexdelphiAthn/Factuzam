@@ -26,10 +26,10 @@ type
     procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
     constructor CreateWithForm(AOwner: TComponent; AForm: TComponent);
   private
-    procedure DoCreate;
     function GetCurrentForm: TComponent;
     procedure SetCurrentForm(const Value: TComponent);
   protected
+    procedure DoCreate; override;
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
   public

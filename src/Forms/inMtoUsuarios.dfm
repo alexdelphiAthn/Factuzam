@@ -3,7 +3,12 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl
+      Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 943
+        ExplicitHeight = 484
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             OptionsData.Editing = True
@@ -77,6 +82,20 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
+      end
+      inherited tsPerfil: TcxTabSheet
+        inherited pnlPerfilTop: TPanel
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      inherited pnlTopGrid: TPanel
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end

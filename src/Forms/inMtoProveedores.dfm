@@ -15,11 +15,14 @@
       Width = 714
       Height = 485
       TabOrder = 1
+      Properties.ActivePage = tsLista
       ExplicitWidth = 714
       ExplicitHeight = 485
       ClientRectBottom = 481
       ClientRectRight = 710
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 706
         ExplicitHeight = 451
         inherited cxGrdPrincipal: TcxGrid
@@ -147,8 +150,10 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 705
-        ExplicitHeight = 447
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 706
+        ExplicitHeight = 451
         object pnlCabFicha: TPanel
           Left = 0
           Top = 0
@@ -312,8 +317,6 @@
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 141
-          ExplicitWidth = 705
           object pcPestanas: TcxPageControl
             Left = 0
             Top = 0
@@ -325,9 +328,8 @@
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsVentas
+            Properties.ActivePage = tsDomicilioFiscal
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 705
             ClientRectBottom = 302
             ClientRectLeft = 4
             ClientRectRight = 702
@@ -493,15 +495,11 @@
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnl6: TPanel
-                Left = 578
+                Left = 580
                 Top = 0
                 Width = 118
-                Height = 268
+                Height = 272
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -518,16 +516,16 @@
               object pnl61: TPanel
                 Left = 0
                 Top = 0
-                Width = 578
-                Height = 268
+                Width = 580
+                Height = 272
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdArticulos: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 578
-                  Height = 268
+                  Width = 580
+                  Height = 272
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -665,15 +663,11 @@
             object tsVentas: TcxTabSheet
               Caption = '&3_Ventas'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 578
-                Height = 268
+                Width = 580
+                Height = 272
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -836,10 +830,10 @@
                 end
               end
               object pnl62: TPanel
-                Left = 578
+                Left = 580
                 Top = 0
                 Width = 118
-                Height = 268
+                Height = 272
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -884,10 +878,6 @@
             object tsMasDatos: TcxTabSheet
               Caption = '&4_M'#225's datos'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblObservaciones: TcxLabel
                 Left = -8
                 Top = 105
@@ -1147,7 +1137,6 @@
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlDetailFicha
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1156,6 +1145,9 @@
         inherited pnlPerfilTop: TPanel
           Width = 706
           ExplicitWidth = 706
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 706
@@ -1179,16 +1171,20 @@
         Width = 714
         ExplicitWidth = 714
         inherited edtBusqGlobal: TcxTextEdit
-          TabOrder = 4
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
           Height = 25
+          TabOrder = 3
           ExplicitTop = 5
           ExplicitHeight = 25
         end
+        inherited lblTextoaBuscar: TcxLabel
+          TabOrder = 4
+        end
         inherited rbBBDD: TcxRadioButton
-          TabOrder = 0
+          TabOrder = 2
         end
       end
     end

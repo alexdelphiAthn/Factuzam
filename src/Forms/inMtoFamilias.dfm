@@ -17,18 +17,21 @@ inherited frmMtoFamilias: TfrmMtoFamilias
       Width = 740
       Height = 552
       TabOrder = 1
+      Properties.ActivePage = tsLista
       ExplicitWidth = 740
       ExplicitHeight = 552
       ClientRectBottom = 548
       ClientRectRight = 736
       inherited tsLista: TcxTabSheet
-        ExplicitWidth = 731
-        ExplicitHeight = 514
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 732
+        ExplicitHeight = 518
         inherited cxGrdPrincipal: TcxGrid
-          Width = 731
-          Height = 514
-          ExplicitWidth = 731
-          ExplicitHeight = 514
+          Width = 732
+          Height = 518
+          ExplicitWidth = 732
+          ExplicitHeight = 518
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_FAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Familia'
@@ -77,8 +80,10 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 731
-        ExplicitHeight = 514
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 732
+        ExplicitHeight = 518
         object pnl1: TPanel
           Left = 0
           Top = 0
@@ -217,8 +222,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitTop = 169
-          ExplicitWidth = 731
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
@@ -228,7 +231,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             TabOrder = 0
             Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 731
             ClientRectBottom = 341
             ClientRectLeft = 4
             ClientRectRight = 728
@@ -236,10 +238,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblDescripcion: TcxLabel
                 Left = 33
                 Top = 19
@@ -260,15 +258,11 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdArticulosFamilias: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 722
-                Height = 307
+                Width = 724
+                Height = 311
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -581,7 +575,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 4
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -590,6 +583,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         inherited pnlPerfilTop: TPanel
           Width = 732
           ExplicitWidth = 732
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 732
@@ -612,6 +608,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
       inherited pnlTopGrid: TPanel
         Width = 740
         ExplicitWidth = 740
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end

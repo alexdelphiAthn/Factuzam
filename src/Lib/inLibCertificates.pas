@@ -1,12 +1,10 @@
 ﻿unit inLibCertificates;
 
 interface
-
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, System.Types,
   Winapi.Windows, system.StrUtils, Winapi.Messages, cxListView;
-
 const
   COLUMNA_CER_NROSERIE = 4;
   COLUMNA_CER_FECHAHASTA = 3;
@@ -36,7 +34,6 @@ const
   CERT_NAME_STR_ENABLE_UTF8_UNICODE_FLAG = 262144;
   CRYPT_DECODE_ALLOC_FLAG = $8000;
   CRYPT_DECODE_NOCOPY_FLAG = $1;
-
 type
   {$IF CompilerVersion < 34.0} // Delphi 10.3 y versiones anteriores
   // Declarar tipos que no existen en Delphi 10.3
@@ -44,41 +41,33 @@ type
   PCERT_INFO = ^CERT_INFO;
   PCERT_EXTENSION = ^CERT_EXTENSION;
   PCERT_PUBLIC_KEY_INFO = ^CERT_PUBLIC_KEY_INFO;
-
   CERT_NAME_BLOB = record
     cbData: DWORD;
     pbData: PByte;
   end;
-
   CRYPT_INTEGER_BLOB = CERT_NAME_BLOB;
-
   CRYPT_BIT_BLOB = record
     cbData: DWORD;
     pbData: PByte;
     cUnusedBits: DWORD;
   end;
-
   CRYPT_ALGORITHM_IDENTIFIER = record
     pszObjId: LPSTR;
     Parameters: CERT_NAME_BLOB;
   end;
-
   CERT_PUBLIC_KEY_INFO = record
     Algorithm: CRYPT_ALGORITHM_IDENTIFIER;
     PublicKey: CRYPT_BIT_BLOB;
   end;
-
   CERT_EXTENSION = record
     pszObjId: LPSTR;
     fCritical: BOOL;
     Value: CERT_NAME_BLOB;
   end;
-
   HCRYPTPROV_LEGACY = ULONG_PTR;
   HCRYPTPROV = ULONG_PTR;
   HCERTSTORE = THandle;
   PCCERT_CONTEXT = ^CERT_CONTEXT;
-
   CERT_CONTEXT = record
     dwCertEncodingType: DWORD;
     pbCertEncoded: PBYTE;
@@ -86,7 +75,6 @@ type
     pCertInfo: PCERT_INFO;
     hCertStore: HCERTSTORE;
   end;
-
   CERT_INFO = record
     dwVersion: DWORD;
     SerialNumber: CRYPT_INTEGER_BLOB;
@@ -105,21 +93,18 @@ type
   // Para Delphi 11, estos tipos ya existen en Winapi.Windows
   HCRYPTPROV_LEGACY = ULONG_PTR;
   {$IFEND}
-
   // Este tipo no existe en ninguna versión, siempre hay que declararlo
   PCERT_ENHKEY_USAGE = ^CERT_ENHKEY_USAGE;
   CERT_ENHKEY_USAGE = record
     cUsageIdentifier: DWORD;
     rgpszUsageIdentifier: ^LPSTR;
   end;
-
   function CertNameToStrA(dwCertEncodingType: DWORD;
                           pName: PCERT_NAME_BLOB;
                           dwStrType: DWORD;
                           psz: LPSTR;
                           csz: DWORD): DWORD;
                           stdcall; external CRYPT32;
-
   procedure LoadCerts(lvCertificates:TcxListView);
   function GetCertName(pName: PCERT_NAME_BLOB): string;
   function FileTimeToDateTime(const FileTime: TFileTime): TDateTime;
@@ -131,7 +116,6 @@ type
   procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
                            SerialNumber: string;
                            ValidFrom, ValidTo: TDateTime);
-
   function CertGetEnhancedKeyUsage(
                                     pCertContext: PCCERT_CONTEXT;
                                     dwFlags: DWORD;
@@ -154,9 +138,7 @@ type
                          psz: PWideChar;
                          csz: DWORD): DWORD;
                          stdcall; external 'crypt32.dll';
-
 implementation
-
 function ExtractCertificateName(const Description: string): string;
 var
   Parts: TArray<string>;
@@ -188,7 +170,6 @@ begin
     end;
   end;
 end;
-
 function GetCertificateType(const Issuer: string): string;
 begin
   if ContainsText(Issuer, 'AC Representación') then
@@ -198,19 +179,17 @@ begin
   else
     Result := 'Otro';
 end;
-
 function IsCertificateValid(CertContext: PCCERT_CONTEXT): Boolean;
 var
   CurrentTime, NotBefore, NotAfter: TFileTime;
 begin
-  Result := False;
+  //Result := False;
   GetSystemTimeAsFileTime(CurrentTime);
   NotBefore := CertContext^.pCertInfo^.NotBefore;
   NotAfter := CertContext^.pCertInfo^.NotAfter;
   Result := (CompareFileTime(CurrentTime, NotBefore) >= 0) and
             (CompareFileTime(CurrentTime, NotAfter) <= 0);
 end;
-
 function GetCertificateName(pName: PCERT_NAME_BLOB): string;
 var
   dwStrLen: DWORD;
@@ -240,7 +219,6 @@ begin
     end;
   end;
 end;
-
 function GetCertName(pName: PCERT_NAME_BLOB): string;
 var
   pcbStrLen: DWORD;
@@ -266,7 +244,6 @@ begin
     end;
   end;
 end;
-
 function FileTimeToDateTime(const FileTime: TFileTime): TDateTime;
 var
   SystemTime: TSystemTime;
@@ -274,17 +251,15 @@ begin
   FileTimeToSystemTime(FileTime, SystemTime);
   Result := SystemTimeToDateTime(SystemTime);
 end;
-
 function IsEFacturaCertificate(CertContext: PCCERT_CONTEXT): Boolean;
 var
   Issuer: string;
 begin
-  Result := False;
+  //Result := False;
   Issuer := GetCertificateName(@CertContext^.pCertInfo^.Issuer);
   Result := (ContainsText(Issuer, 'AC Representación') or
             (ContainsText(Issuer, 'AC FNMT Usuarios')));
 end;
-
 procedure LoadCerts(lvCertificates:TcxListView);
 var
   Store: HCERTSTORE;
@@ -311,15 +286,12 @@ begin
       begin
         Subject := GetCertificateName(@CertContext^.pCertInfo^.Subject);
         Issuer := GetCertificateName(@CertContext^.pCertInfo^.Issuer);
-
         ValidFrom := FileTimeToDateTime(CertContext^.pCertInfo^.NotBefore);
         ValidTo := FileTimeToDateTime(CertContext^.pCertInfo^.NotAfter);
-
         SerialNumber := '';
         for I := 0 to CertContext^.pCertInfo^.SerialNumber.cbData - 1 do
           SerialNumber := SerialNumber +
             IntToHex(PByte(CertContext^.pCertInfo^.SerialNumber.pbData)[I], 2);
-
         AddCertificate(lvCertificates, Subject, Issuer, SerialNumber,
                        ValidFrom, ValidTo);
       end;
@@ -328,7 +300,6 @@ begin
     CertCloseStore(Store, 0);
   end;
 end;
-
 procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
   SerialNumber: string; ValidFrom, ValidTo: TDateTime);
 var
@@ -346,5 +317,4 @@ begin
   Item.SubItems.Add(DateTimeToStr(ValidTo));
   Item.SubItems.Add(SerialNumber);
 end;
-
 end.
