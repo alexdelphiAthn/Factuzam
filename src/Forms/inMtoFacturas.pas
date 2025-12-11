@@ -502,7 +502,7 @@ uses
   inMtoModalFacRec,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
-  inMtoPrincipal2,
+  inMtoPrincipal,
   inLibUser,
   inMtoArticulos,
   inMtoEmpresas,

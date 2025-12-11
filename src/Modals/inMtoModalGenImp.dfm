@@ -4,19 +4,19 @@ inherited frmPrint: TfrmPrint
   HorzScrollBar.Visible = False
   BorderStyle = bsSingle
   Caption = 'Imprimir'
-  ClientHeight = 294
-  ClientWidth = 377
+  ClientHeight = 293
+  ClientWidth = 373
   FormStyle = fsStayOnTop
   Scaled = False
   OnClose = FormClose
-  ExplicitWidth = 393
-  ExplicitHeight = 333
+  ExplicitWidth = 389
+  ExplicitHeight = 332
   TextHeight = 19
   object pnl1: TPanel [0]
-    Left = 233
+    Left = 229
     Top = 0
     Width = 144
-    Height = 294
+    Height = 293
     Align = alRight
     TabOrder = 0
     ExplicitLeft = 237

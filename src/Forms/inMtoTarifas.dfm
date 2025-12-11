@@ -139,12 +139,14 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               Left = 29
               Top = 13
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 22
               Top = 49
               Caption = 'Nombre'
+              TabOrder = 2
               Transparent = True
             end
             object txtNOMBRE_TARIFA: TcxDBTextEdit
@@ -265,9 +267,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   TabOrder = 0
                   object tvArticulos: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataModeController.SmartRefresh = True
                     DataController.Summary.DefaultGroupSummaryItems = <
                       item
@@ -299,7 +299,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                         Format = '0.00 '#8364';-0.00 '#8364
                         Kind = skSum
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsCustomize.ColumnGrouping = False
                     OptionsData.Deleting = False
@@ -400,14 +399,9 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                     end
                   end
                   object tvLineasFacturacion: TcxGridDBTableView
-                    Navigator.Buttons.CustomButtons = <>
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                     DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                     DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.ColumnHeaderHints = False
                     OptionsCustomize.ColumnFiltering = False
                     OptionsCustomize.ColumnGrouping = False
@@ -484,10 +478,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             object tsOtros: TcxTabSheet
               Caption = '&2_Otros'
               ImageIndex = 3
-              ExplicitLeft = 3
-              ExplicitTop = 32
-              ExplicitWidth = 695
-              ExplicitHeight = 379
               object pnl3: TPanel
                 Left = 0
                 Top = 304
@@ -495,8 +485,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                 Height = 79
                 Align = alBottom
                 TabOrder = 0
-                ExplicitTop = 300
-                ExplicitWidth = 695
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -518,6 +506,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -528,6 +517,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -564,6 +554,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -587,6 +578,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Us. '#218'lt. Modif.'
+                  TabOrder = 6
                   Transparent = True
                 end
               end

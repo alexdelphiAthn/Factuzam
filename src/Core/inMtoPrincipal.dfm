@@ -1,4 +1,4 @@
-inherited frmOpenApp2: TfrmOpenApp2
+inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
   ClientHeight = 549
   ClientWidth = 1124

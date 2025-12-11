@@ -303,7 +303,7 @@ uses
   inLibDir,
   inLibDevExp,
   inLibIBAN,
-  inMtoPrincipal2,
+  inMtoPrincipal,
   inMtoFacturas,
   inMtoArticulos,
   inMtoClientes;

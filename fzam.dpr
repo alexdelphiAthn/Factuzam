@@ -22,7 +22,7 @@ uses
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
-  inMtoPrincipal2 in 'src\Core\inMtoPrincipal2.pas' {frmOpenApp2},
+  inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
   inMtoFacturas in 'src\Forms\inMtoFacturas.pas' {frmMtoFacturas},
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
@@ -108,6 +108,6 @@ begin
   finally
     frmLogon.Free;
   end;
-  Application.CreateForm(TfrmOpenApp2, frmOpenApp2);
+  Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   Application.Run;
 end.

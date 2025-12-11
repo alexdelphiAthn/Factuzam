@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes,  DB,
-   inMtoPrincipal2, DBClient, Provider, frxClass, frxDBSet, inLibUser,
+   inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, Dialogs, System.Variants, MemDS, DBAccess, Uni,
    UniDataGen;
 

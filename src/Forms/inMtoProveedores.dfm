@@ -181,6 +181,7 @@
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = 'C'#243'digo'
+            TabOrder = 0
             Transparent = True
           end
           object txtRAZONSOCIAL_PROVEEDOR: TcxDBTextEdit
@@ -203,6 +204,7 @@
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = 'Raz'#243'n Social Fiscal'
+            TabOrder = 2
             Transparent = True
           end
           object cxdbtxtdtTELEFONO2: TcxDBTextEdit
@@ -225,6 +227,7 @@
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = 'Tel'#233'fonos'
+            TabOrder = 8
             Transparent = True
           end
           object lblEmail: TcxLabel
@@ -235,6 +238,7 @@
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = 'Email'
+            TabOrder = 9
             Transparent = True
           end
           object cxdbtxtdtEMAIL: TcxDBTextEdit
@@ -257,6 +261,7 @@
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = 'NIF/CIF'
+            TabOrder = 11
             Transparent = True
           end
           object cxdbtxtdtNIF: TcxDBTextEdit
@@ -355,6 +360,7 @@
                 Margins.Bottom = 4
                 Caption = 'Direcci'#243'n 1'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 1
                 Transparent = True
                 AnchorX = 135
               end
@@ -367,6 +373,7 @@
                 Margins.Bottom = 4
                 Caption = 'C'#243'digo Postal'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 3
                 Transparent = True
                 AnchorX = 135
               end
@@ -391,6 +398,7 @@
                 Margins.Bottom = 4
                 Caption = 'Poblaci'#243'n'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 5
                 Transparent = True
                 AnchorX = 135
               end
@@ -427,6 +435,7 @@
                 Margins.Bottom = 4
                 Caption = 'Provincia'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 7
                 Transparent = True
                 AnchorX = 135
               end
@@ -451,6 +460,7 @@
                 Margins.Bottom = 4
                 Caption = 'Pa'#237's'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 9
                 Transparent = True
                 AnchorX = 135
               end
@@ -475,6 +485,7 @@
                 Margins.Bottom = 4
                 Caption = 'Direcci'#243'n 2'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 11
                 Transparent = True
                 AnchorX = 135
               end
@@ -526,7 +537,6 @@
                   object tvArticulos: TcxGridDBTableView
                     OnDblClick = cxGrdDBTabPrinDblClick
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Buttons.First.Hint = 'Va al primer Registro'
                     Navigator.Buttons.First.Visible = False
                     Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -559,12 +569,8 @@
                     Navigator.Buttons.GotoBookmark.Visible = False
                     Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataSource = dmProveedores.dsArticulos
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.AlwaysShowEditor = True
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsBehavior.IncSearch = True
@@ -677,7 +683,6 @@
                 object tvLinFac: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
                   Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -710,16 +715,13 @@
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '0.00 '#8364';-0.00 '#8364
                       Kind = skSum
                       Column = cxgrdbclmnLinFacTOTAL_FACTURA_LINEA
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -895,6 +897,7 @@
                 Margins.Bottom = 4
                 Caption = 'Observaciones'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 2
                 Transparent = True
                 AnchorX = 118
               end
@@ -907,6 +910,7 @@
                 Margins.Bottom = 4
                 Caption = 'Referencia'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 3
                 Transparent = True
                 AnchorX = 118
               end
@@ -931,6 +935,7 @@
                 Margins.Bottom = 4
                 Caption = 'Contacto'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 5
                 Transparent = True
                 AnchorX = 118
               end
@@ -967,6 +972,7 @@
                 Margins.Bottom = 4
                 Caption = 'IBAN Bancario'
                 Properties.Alignment.Horz = taRightJustify
+                TabOrder = 7
                 Transparent = True
                 AnchorX = 118
               end
@@ -978,6 +984,7 @@
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Tel'#233'fono Contacto'
+                TabOrder = 9
                 Transparent = True
               end
               object cxdbtxtdtCONTACTO_CLIENTE: TcxDBTextEdit
@@ -1034,6 +1041,7 @@
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -1044,6 +1052,7 @@
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -1080,6 +1089,7 @@
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -1103,6 +1113,7 @@
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. Modif'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1114,6 +1125,7 @@
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Orden en Listados'
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
@@ -1167,7 +1179,7 @@
         Width = 714
         ExplicitWidth = 714
         inherited edtBusqGlobal: TcxTextEdit
-          TabOrder = 3
+          TabOrder = 4
         end
         inherited nvNavegador: TcxDBNavigator
           Top = 5

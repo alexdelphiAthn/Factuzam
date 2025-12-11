@@ -18,7 +18,7 @@ uses
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxNavigator, cxDBNavigator, Vcl.StdCtrls, Vcl.Buttons,
   cxContainer, cxEdit, cxLabel, dxBarBuiltInMenu, Vcl.Menus, cxButtons,
-  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal2,
+  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, dxmdaset, cxTextEdit, dxBevel,
@@ -561,8 +561,8 @@ begin
   tdmDataModule := nil;
   sNameModule := '';
   sNameModule :=
-        (Self.Owner as TfrmOpenApp2).oFzaWinf.GetDataModuleName(Self.UnitName +
-                                                        '.' + Self.ClassName);
+     (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
+                                                          '.' + Self.ClassName);
   if (sNameModule <> '') then
     tdmDataModule := CrearDataModule(sNameModule, Self);
   inherited;
