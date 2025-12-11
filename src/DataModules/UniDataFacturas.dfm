@@ -244,6 +244,7 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_facturas')
+    Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     BeforeEdit = unqryTablaGBeforeEdit
@@ -545,6 +546,7 @@ inherited dmFacturas: TdmFacturas
       'FROM fza_CONTADORES'
       'WHERE TIPODOC_CONTADOR='#39'FC'#39' AND ACTIVO_CONTADOR = '#39'S'#39
       'ORDER BY DEFAULT_CONTADOR DESC')
+    Active = True
     Left = 544
     Top = 144
   end

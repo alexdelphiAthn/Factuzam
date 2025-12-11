@@ -37,7 +37,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       Margins.Right = 5
       Margins.Bottom = 5
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 1087
       ExplicitHeight = 804
       ClientRectBottom = 800
@@ -2590,6 +2590,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     end>
                   Properties.ListOptions.ColumnSorting = False
                   Properties.ListOptions.ShowHeader = False
+                  Properties.ListSource = dmFacturas.dsSeries
                   Properties.ReadOnly = True
                   TabOrder = 5
                   Width = 145
@@ -3316,9 +3317,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilTop: TPanel
           Width = 1079
           ExplicitWidth = 1079
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1079
@@ -3344,12 +3342,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
         end
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
         inherited nvNavegador: TcxDBNavigator
-          Width = 336
-          ExplicitWidth = 336
+          Width = 338
+          ExplicitWidth = 338
         end
         inherited lblTextoaBuscar: TcxLabel
           Top = 7

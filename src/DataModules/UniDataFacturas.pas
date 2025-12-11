@@ -103,6 +103,7 @@ public
     function ExisteSerieEmpresa(sSerie,
                                 sEmpresa,
                                 sTipoDoc:string): Boolean;
+    procedure OpenTables;
   end;
 var
   dmFacturas: TdmFacturas;
@@ -668,6 +669,10 @@ begin
   unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+end;
+
+procedure TdmFacturas.OpenTables;
+begin
   unqryIvasTipos.Open;
   unqryLinFac.Open;
   unqrySeries.Open;
