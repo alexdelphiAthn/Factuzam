@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, inMtoPrincipal2, frxClass, frxDBSet;
+  inLibUser, inMtoPrincipal, frxClass, frxDBSet;
 
 type
   TdmPedidos = class(TdmBase)

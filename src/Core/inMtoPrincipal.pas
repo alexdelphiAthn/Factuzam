@@ -6,7 +6,7 @@
 {                                                       }
 {*******************************************************}
 
-unit inMtoPrincipal2;
+unit inMtoPrincipal;
 
 interface
 
@@ -41,7 +41,7 @@ const
   WM_FREECONTROL = WM_USER;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
-  TfrmOpenApp2 = class(TfrmBase)
+  TfrmMtoPrincipal = class(TfrmBase)
 
 
   private
@@ -140,7 +140,7 @@ type
   end;
 
 var
-  frmOpenApp2: TfrmOpenApp2;
+  frmMtoPrincipal: TfrmMtoPrincipal;
   bIsConnected      : boolean;
 
 implementation
@@ -157,7 +157,7 @@ uses inLibUser,
 
 {$R *.dfm}
 
-procedure TfrmOpenApp2.FormCreate(Sender: TObject);
+procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis              : string;
 begin
@@ -270,13 +270,13 @@ end;
 //    SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED);
 //end;
 
-procedure TfrmOpenApp2.FormDeactivate(Sender: TObject);
+procedure TfrmMtoPrincipal.FormDeactivate(Sender: TObject);
 begin
   inherited;
   //FormPaint(Sender);
 end;
 
-procedure TfrmOpenApp2.FormPaint(Sender: TObject);
+procedure TfrmMtoPrincipal.FormPaint(Sender: TObject);
 // var
 //   LabelHeight, LabelWidth, LabelTop: Integer;
 //   caption_height, border3d_y, button_width, border_thickness: Integer;
@@ -314,13 +314,13 @@ procedure TfrmOpenApp2.FormPaint(Sender: TObject);
 //   MyCanvas.Free;
 end;
 
-procedure TfrmOpenApp2.FormResize(Sender: TObject);
+procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
 begin
   inherited;
   //FormPaint(Sender);
 end;
 
-procedure TfrmOpenApp2.mnuTarifasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
 begin
   if (mnuTarifas.Visible = True) then
     ShowMto(Self,
@@ -335,7 +335,7 @@ end;
   //Exit;
 //end;
 
-procedure TfrmOpenApp2.CopiasdeSeguridad1Click(Sender: TObject);
+procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 begin
   CopiaSeguridad;
 end;
@@ -343,7 +343,7 @@ end;
 //validar iban online https://www.iban.com
 //validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
 
-procedure TfrmOpenApp2.CopiaSeguridad;
+procedure TfrmMtoPrincipal.CopiaSeguridad;
 var
   iButtonSel:Integer;
   s         :string;
@@ -388,13 +388,13 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.FormActivate(Sender: TObject);
+procedure TfrmMtoPrincipal.FormActivate(Sender: TObject);
 begin
   inherited;
   //FormPaint(Sender);
 end;
 
-procedure TfrmOpenApp2.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   I:Integer;
 begin
@@ -421,12 +421,12 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.mnArchivoSalirClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnArchivoSalirClick(Sender: TObject);
 begin
   Self.Close;
 end;
 
-procedure TfrmOpenApp2.FormShow(Sender: TObject);
+procedure TfrmMtoPrincipal.FormShow(Sender: TObject);
 begin
   //si ocurre una excepción durante la carga,
   //se fuerza el cierre de la ventana
@@ -457,7 +457,7 @@ end;
 //  end;
 //end;
 
-function TfrmOpenApp2.IsShortCut(var Message: TWMKey): Boolean;
+function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
 var
   Component:TComponent;
   ts:TcxTabSheet;
@@ -516,7 +516,7 @@ begin
     Result := inherited IsShortCut(Message);
 end;
 
-procedure TfrmOpenApp2.mnuEjecutarScriptClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 //var
 //  openDialog        : topendialog; // lo tenemos persistente
 begin
@@ -545,7 +545,7 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.sbCerrarClick(Sender: TObject);
+procedure TfrmMtoPrincipal.sbCerrarClick(Sender: TObject);
 //var
 //  I:Integer;
 begin
@@ -555,7 +555,7 @@ begin
 //    TcxPageControlPropertiesAccess((pcPrincipal).Properties).DoCloseTab(i);
 end;
 
-procedure TfrmOpenApp2.tmr1Timer(Sender: TObject);
+procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);
 var
   ADateStr          : string;
   ATimeStr          : string;
@@ -578,7 +578,7 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.undmp1Error(Sender: TObject; E: Exception; SQL: string;
+procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception; SQL: string;
   var Action: TErrorAction);
 begin
   inherited;
@@ -590,7 +590,7 @@ begin
   //  Action := eaContinue;
 end;
 
-procedure TfrmOpenApp2.WMFreeControl(var Message: TMessage);
+procedure TfrmMtoPrincipal.WMFreeControl(var Message: TMessage);
 begin
 //
   TObject(Message.LParam).Free;
@@ -654,7 +654,7 @@ end;
 //end;
 
 
-procedure TfrmOpenApp2.mnuLisVentasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
 var
   frmModalGenFilter: TfrmModalGenFilter;
 begin
@@ -667,7 +667,7 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.mnuAcercadeClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
 var
   frmSplash: TfrmSplash;
 begin
@@ -680,76 +680,76 @@ begin
   end;
 end;
 
-procedure TfrmOpenApp2.mnuArticulosClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuArticulosClick(Sender: TObject);
 begin
   if (mnuArticulos.Visible) then
     ShowMto(Self, 'Articulos');
 end;
 
-procedure TfrmOpenApp2.mnuClientesClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuClientesClick(Sender: TObject);
 begin
   if (mnuClientes.Visible) then
     ShowMto(Self,
             'Clientes');
 end;
 
-procedure TfrmOpenApp2.mnuContadoresClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuContadoresClick(Sender: TObject);
 begin
   if (mnuContadores.Visible) then
     ShowMto(Self,
             'Contadores');
 end;
 
-procedure TfrmOpenApp2.mnuFacturasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuFacturasClick(Sender: TObject);
 begin
   if (mnuFacturas.Visible) then
     ShowMto(Self,
             'Facturas');
 end;
 
-procedure TfrmOpenApp2.mnuFamiliasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);
 begin
   if (mnuFamilias.Visible) then
     ShowMto(Self,
             'Familias');
 end;
 
-procedure TfrmOpenApp2.mnuGeneradorProcesosClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
 begin
   if (mnuGeneradorProcesos.Visible) then
     ShowMto(Self,
             'GeneradorProcesos');
 end;
 
-procedure TfrmOpenApp2.mnuGruposClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuGruposClick(Sender: TObject);
 begin
   if (mnuGrupos.Visible) then
     ShowMto(Self,
             'Grupos');
 end;
 
-procedure TfrmOpenApp2.mnuGruposdeIVAClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuGruposdeIVAClick(Sender: TObject);
 begin
   if (mnuGruposdeIVA.Visible) then
     ShowMto(Self,
             'IvasGrupos');
 end;
 
-procedure TfrmOpenApp2.mnuIvasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuIvasClick(Sender: TObject);
 begin
   if (mnuIvas.Visible) then
     ShowMto(Self,
             'Ivas');
 end;
 
-procedure TfrmOpenApp2.mnuEmpresasClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuEmpresasClick(Sender: TObject);
 begin
   if (mnuEmpresas.Visible) then
     ShowMto(Self,
             'Empresas');
 end;
 
-procedure TfrmOpenApp2.mnuPaisesClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuPaisesClick(Sender: TObject);
 begin
   inherited;
   if (mnuPaises.Visible) then
@@ -757,28 +757,28 @@ begin
             'Paises');
 end;
 
-procedure TfrmOpenApp2.mnuPerfilesClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuPerfilesClick(Sender: TObject);
 begin
   if (mnuPerfiles.Visible) then
     ShowMto(Self,
             'UsuariosPerfiles');
 end;
 
-procedure TfrmOpenApp2.mnuFormasdepagoClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuFormasdepagoClick(Sender: TObject);
 begin
   if mnuFormasdepago.Visible then
     ShowMto(Self,
             'FormasdePago');
 end;
 
-procedure TfrmOpenApp2.mnuProveedoresClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuProveedoresClick(Sender: TObject);
 begin
   if (mnuProveedores.Visible) then
     ShowMto(Self,
             'Proveedores');
 end;
 
-procedure TfrmOpenApp2.mnuUsuariosClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuUsuariosClick(Sender: TObject);
 begin
   if (mnuUsuarios.Visible) then
     ShowMto(Self,

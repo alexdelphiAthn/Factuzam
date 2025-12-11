@@ -1,8 +1,8 @@
 object dmPedidos: TdmPedidos
   Left = 0
   Top = 0
-  ClientHeight = 372
-  ClientWidth = 636
+  ClientHeight = 371
+  ClientWidth = 632
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -506,7 +506,6 @@ object dmPedidos: TdmPedidos
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_pedidos')
-    Active = True
     Left = 48
     Top = 24
   end

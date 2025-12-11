@@ -38,7 +38,7 @@ uses inLibDir,
      inLibtb,
      inLibWin,
      inLibLog,
-     inMtoPrincipal2,
+     inMtoPrincipal,
      inLibGlobalVar;
 
 {$R *.dfm}

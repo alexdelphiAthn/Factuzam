@@ -12,7 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  inMtoPrincipal2, Uni, inLibUser, UniDataConn, inLibWin, Forms, Windows,
+  inMtoPrincipal, Uni, inLibUser, UniDataConn, inLibWin, Forms, Windows,
   Datasnap.DBClient, Datasnap.Provider, frxClass, frxDBSet;
 
 type

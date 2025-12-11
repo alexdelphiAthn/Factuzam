@@ -244,7 +244,6 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_facturas')
-    Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     BeforeEdit = unqryTablaGBeforeEdit
@@ -784,7 +783,6 @@ inherited dmFacturas: TdmFacturas
     MasterSource = dsFactura
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'SERIE_FACTURA_LINEA;NRO_FACTURA_LINEA'
-    Active = True
     BeforeInsert = unqryLinFacBeforeInsert
     AfterInsert = unqryLinFacAfterInsert
     BeforeEdit = unqryLinFacBeforeEdit
@@ -2391,7 +2389,6 @@ inherited dmFacturas: TdmFacturas
     MasterFields = 'NRO_FACTURA;SERIE_FACTURA'
     DetailFields = 'NRO_FACTURA_LOG;SERIE_FACTURA_LOG'
     ReadOnly = True
-    Active = True
     AutoCalcFields = False
     Left = 1304
     Top = 144

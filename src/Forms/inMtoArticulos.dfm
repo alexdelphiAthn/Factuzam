@@ -100,12 +100,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Left = 25
               Top = 14
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 18
               Top = 55
               Caption = 'Nombre'
+              TabOrder = 4
               Transparent = True
             end
             object txtDESCRIPCION_ARTICULO: TcxDBTextEdit
@@ -157,6 +159,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Margins.Bottom = 4
               Caption = 'Familia'
               Properties.Alignment.Horz = taRightJustify
+              TabOrder = 6
               Transparent = True
               AnchorX = 90
             end
@@ -192,6 +195,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Top = 128
               DataBinding.DataField = 'DESCRIPCION_FAMILIA'
               DataBinding.DataSource = dsTablaG
+              TabOrder = 7
               Transparent = True
               Height = 21
               Width = 586
@@ -201,6 +205,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Top = 128
               DataBinding.DataField = 'NOMBRE_FAMILIA'
               DataBinding.DataSource = dsTablaG
+              TabOrder = 8
               Transparent = True
               Height = 21
               Width = 133
@@ -248,6 +253,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Margins.Bottom = 4
                   Caption = 'Variaciones'
                   Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 1
                   Transparent = True
                   AnchorX = 107
                 end
@@ -305,7 +311,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvVariaciones: TcxGridDBTableView
                       OnDblClick = cxGrdDBTabPrinDblClick
                       Navigator.Buttons.ConfirmDelete = True
-                      Navigator.Buttons.CustomButtons = <>
                       Navigator.Buttons.First.Hint = 'Va al primer Registro'
                       Navigator.Buttons.First.Visible = False
                       Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -338,11 +343,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Navigator.Buttons.GotoBookmark.Visible = False
                       Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                       Navigator.Visible = True
-                      ScrollbarAnnotations.CustomAnnotations = <>
                       DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                      DataController.Summary.DefaultGroupSummaryItems = <>
-                      DataController.Summary.FooterSummaryItems = <>
-                      DataController.Summary.SummaryGroups = <>
                       OptionsBehavior.AlwaysShowEditor = True
                       OptionsBehavior.GoToNextCellOnEnter = True
                       OptionsBehavior.IncSearch = True
@@ -413,7 +414,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object tvTarifas: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
                   Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -446,11 +446,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -679,7 +675,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object tvProveedores: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
                   Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -712,11 +707,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -850,7 +841,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object tvLinFac: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
                   Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -883,9 +873,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.DefaultGroupSummaryItems = <>
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '#.##'
@@ -897,7 +885,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Kind = skSum
                       Column = cxgrdbclmnLinFacTOTAL_FACTURA_LINEA
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -1087,6 +1074,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -1097,6 +1085,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -1133,6 +1122,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -1156,6 +1146,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Us '#218'lt. Modif.'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1182,6 +1173,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Left = 30
                 Top = 110
                 Caption = 'Tipo de Cantidad'
+                TabOrder = 3
                 Transparent = True
               end
               object lblTextoLegal11: TcxLabel
@@ -1192,6 +1184,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Orden en Listados'
+                TabOrder = 4
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit

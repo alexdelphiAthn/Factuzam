@@ -31,7 +31,7 @@ implementation
 
  uses
       inLibMsg,
-      inMtoPrincipal2,
+      inMtoPrincipal,
       inLibLog,
       inLibUnitForm;
  var
@@ -41,7 +41,7 @@ procedure ShowMto (Owner:TComponent;
                    sCall:String;
                    sBusq:string = '');
 var
-  frmOpen2: TfrmOpenApp2;
+  frmOpen2: TfrmMtoPrincipal;
   iAbiertaPes : integer;
   sTitle :string;
   tsNew: TcxTabSheet;
@@ -57,7 +57,7 @@ var
   mMenu : TMenuItem;
   ofzaF: TfzaForm;
 begin
-  frmOpen2 := (Owner as TfrmOpenApp2);
+  frmOpen2 := (Owner as TfrmMtoPrincipal);
   ofzaF := frmOpen2.oFzaWinf.GetElement(sCall);
   if ofzaF = nil then
   begin

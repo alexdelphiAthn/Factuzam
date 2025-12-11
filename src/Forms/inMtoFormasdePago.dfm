@@ -165,12 +165,14 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
               Left = 21
               Top = 17
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 18
               Top = 51
               Caption = 'Nombre'
+              TabOrder = 2
               Transparent = True
             end
             object txtNOMBRE_FORMAPAGO: TcxDBTextEdit
@@ -221,6 +223,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 28
                 Top = 32
                 Caption = 'N'#250'mero de plazos'
+                TabOrder = 0
                 Transparent = True
               end
               object cxDBSpinEdit1: TcxDBSpinEdit
@@ -235,6 +238,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 28
                 Top = 88
                 Caption = 'D'#237'as entre plazos'
+                TabOrder = 2
                 Transparent = True
               end
               object cxDBSpinEdit2: TcxDBSpinEdit
@@ -249,6 +253,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 79
                 Top = 135
                 Caption = '% Adelanto'
+                TabOrder = 4
                 Transparent = True
               end
               object cxDBSpinEdit3: TcxDBSpinEdit
@@ -303,9 +308,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   TabOrder = 0
                   object tvFacturacion: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataModeController.SmartRefresh = True
                     DataController.DataSource = dmFormasdePago.dsFacturas
                     DataController.Summary.DefaultGroupSummaryItems = <
@@ -339,7 +342,6 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                         Kind = skSum
                         Column = tvFacturacionTOTAL_IMPUESTOS_FACTURA
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsCustomize.ColumnGrouping = False
                     OptionsData.Deleting = False
@@ -787,15 +789,10 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                     end
                   end
                   object tvLineasFacturacion: TcxGridDBTableView
-                    Navigator.Buttons.CustomButtons = <>
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataSource = dmFormasdePago.dsFacturasLineas
                     DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                     DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                     DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.ColumnHeaderHints = False
                     OptionsCustomize.ColumnFiltering = False
                     OptionsCustomize.ColumnGrouping = False
@@ -964,6 +961,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -974,6 +972,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -1010,6 +1009,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modif.'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -1033,6 +1033,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. Modif'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1040,6 +1041,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 20
                 Top = 24
                 Caption = 'Orden en Listados'
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
@@ -1061,6 +1063,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet

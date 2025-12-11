@@ -319,7 +319,7 @@ uses
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
-  inMtoPrincipal2;
+  inMtoPrincipal;
 
 {$R *.dfm}
 

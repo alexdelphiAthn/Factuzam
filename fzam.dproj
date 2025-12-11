@@ -166,8 +166,8 @@
         <DCCReference Include="src\Core\inMtoLogon.pas">
             <Form>frmLogon</Form>
         </DCCReference>
-        <DCCReference Include="src\Core\inMtoPrincipal2.pas">
-            <Form>frmOpenApp2</Form>
+        <DCCReference Include="src\Core\inMtoPrincipal.pas">
+            <Form>frmMtoPrincipal</Form>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
@@ -334,11 +334,9 @@
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoPaises.pas">
             <Form>frmMtoPaises</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataPaises.pas">
             <Form>dmPaises</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCertificates.pas"/>

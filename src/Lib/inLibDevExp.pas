@@ -22,7 +22,7 @@ interface
     cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridLevel,
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
-    cxRadioGroup, inMtoPrincipal2, cxPc, dxShellDialogs,
+    cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs,
     cxGroupBox, cxLabel,  cxListBox, //inMtoPrincipal,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
@@ -140,7 +140,7 @@ begin
       sVistaName + '_' + sColumnName + '_Visible',
       sValue);
     sValue := IntToStr(oColumn.Index);
-    (Sender as TfrmOpenApp2).FdmDataPerfiles.GrabarPerfil(sProfile, sName,
+    (Sender as TfrmMtoPrincipal).FdmDataPerfiles.GrabarPerfil(sProfile, sName,
       sVistaName + '_' + sColumnName + '_Index',
       sValue);
     if (oColumn.Visible) then
@@ -346,10 +346,10 @@ var
   i: Integer;
   iPrincipal:Integer;
   frmMto:TfrmMtoGen;
-  frmMtoPrin2:TfrmOpenApp2;
+  frmMtoPrin2:TfrmMtoPrincipal;
   tsNew: TcxTabSheet;
 begin
-  frmMtoPrin2 := (oPrincipal as TfrmOpenApp2);
+  frmMtoPrin2 := (oPrincipal as TfrmMtoPrincipal);
   iPrincipal := frmMtoPrin2.pcPrincipal.ActivePageIndex;
   tsNew := frmMtoPrin2.pcPrincipal.Pages[iPrincipal];
   frmMto := (tsNew.Controls[0] as TfrmMtoGen);

@@ -133,12 +133,14 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Left = 21
               Top = 17
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 18
               Top = 51
               Caption = 'Nombre'
+              TabOrder = 2
               Transparent = True
             end
             object txtNOMBRE_FAMILIA: TcxDBTextEdit
@@ -189,6 +191,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Margins.Bottom = 4
               Caption = 'Familia Padre'
               Properties.Alignment.Horz = taRightJustify
+              TabOrder = 6
               Transparent = True
               AnchorX = 136
             end
@@ -241,6 +244,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Left = 33
                 Top = 19
                 Caption = 'Descipci'#243'n'
+                TabOrder = 0
                 Transparent = True
               end
               object mDESCRIPCION_FAMILIA: TcxDBMemo
@@ -273,9 +277,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 TabOrder = 0
                 object tvArticulos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DataModeController.SmartRefresh = True
                   DataController.Summary.DefaultGroupSummaryItems = <
                     item
@@ -307,7 +309,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                       Format = '0.00 '#8364';-0.00 '#8364
                       Kind = skSum
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
                   OptionsData.Deleting = False
@@ -377,14 +378,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                 end
                 object tvLineasFacturacion: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                   DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                   DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -454,10 +450,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsOtros: TcxTabSheet
               Caption = '&3_Otros'
               ImageIndex = 3
-              ExplicitLeft = 3
-              ExplicitTop = 32
-              ExplicitWidth = 722
-              ExplicitHeight = 307
               object pnl3: TPanel
                 Left = 0
                 Top = 232
@@ -466,8 +458,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Align = alBottom
                 BevelOuter = bvNone
                 TabOrder = 0
-                ExplicitTop = 228
-                ExplicitWidth = 722
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -489,6 +479,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -499,6 +490,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -535,6 +527,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modif.'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -558,6 +551,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. Modif'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -565,6 +559,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Left = 20
                 Top = 24
                 Caption = 'Orden en Listados'
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit

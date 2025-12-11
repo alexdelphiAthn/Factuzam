@@ -75,7 +75,7 @@ type
 
 implementation
 
-uses inMtoPrincipal2;
+uses inMtoPrincipal;
 
 { TfzaForm }
 
@@ -87,7 +87,7 @@ constructor TfzaForm.Create(pCall,
                             pDataUnit: string;
                             pOwn:TComponent  );
 var
-  frmOpen2:TfrmOpenApp2;
+  frmOpen2:TfrmMtoPrincipal;
 begin
   FCall := pCall;
   FCaption := pCaption;
@@ -95,7 +95,7 @@ begin
   FMenuItem := pMenuITem;
   FShortCut := pShortCut;
   FDataUnit := pDataUnit;
-  frmOpen2 := (pOwn as TfrmOpenApp2);
+  frmOpen2 := (pOwn as TfrmMtoPrincipal);
   FmnMenuItem := (frmOpen2.FindComponent(FMenuITem) as TMenuItem);
 end;
 

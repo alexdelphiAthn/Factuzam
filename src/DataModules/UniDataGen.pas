@@ -1,4 +1,4 @@
-{*******************************************************}
+ï»¿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -32,7 +32,6 @@ type
   protected
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
-
   public
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
@@ -48,7 +47,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses  inLibGlobalVar, inMtoPrincipal2, inMtoGen;
+uses  inLibGlobalVar, inMtoPrincipal, inMtoGen;
 
 {$R *.dfm}
 
@@ -56,7 +55,7 @@ uses  inLibGlobalVar, inMtoPrincipal2, inMtoGen;
 //begin
 //  inherited Create(AOwner);
 //  FManualCreate := False;
-//  // Si FCurrentForm no está asignado, no ejecutar DoCreate aún
+//  // Si FCurrentForm no estÃ¡ asignado, no ejecutar DoCreate aï¿½n
 //  if not FManualCreate then
 //    DoCreate;
 //end;
@@ -67,7 +66,7 @@ begin
   FCurrentForm := AForm;
   inherited Create(AOwner);
   //FManualCreate := False;
-  DoCreate;  // Ahora sí ejecutar con CurrentForm ya asignado
+  DoCreate;  // Ahora sï¿½ ejecutar con CurrentForm ya asignado
 end;
 
 procedure TdmBase.DoCreate;
@@ -111,12 +110,10 @@ function TdmBase.GetCurrentForm: TComponent;
 begin
   Result := FCurrentForm;
 end;
-
 procedure TdmBase.SetCurrentForm(const Value: TComponent);
 begin
   FCurrentForm := Value;
 end;
-
 function TdmBase.GetOwnerForm<T>: T;
 begin
   if Assigned(FCurrentForm) and
@@ -126,7 +123,6 @@ begin
   else
     Result := nil;
 end;
-
 function TdmBase.HasOwnerForm: Boolean;
 begin
   Result := Assigned(FCurrentForm) and

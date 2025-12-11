@@ -2551,7 +2551,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
                   DataBinding.DataSource = dsTablaG
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
                   TabOrder = 9
                   Transparent = True
                   Height = 21
@@ -2582,7 +2581,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Bottom = 4
                   Caption = 'C'#243'digo Empresa'
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
                   TabOrder = 11
                   Transparent = True
                 end
@@ -2779,7 +2777,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'NIF Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 12
                     Transparent = True
                   end
@@ -2792,7 +2789,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'M'#243'vil Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 13
                     Transparent = True
                   end
@@ -2829,7 +2825,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'Email Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 15
                     Transparent = True
                   end

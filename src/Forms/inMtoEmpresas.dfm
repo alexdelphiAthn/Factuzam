@@ -207,6 +207,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Left = 51
                   Top = 25
                   Caption = 'M'#243'vil'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object txtMOVIL_EMPRESA: TcxDBTextEdit
@@ -221,12 +222,14 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Left = 51
                   Top = 63
                   Caption = 'Email'
+                  TabOrder = 3
                   Transparent = True
                 end
                 object lblDireccion: TcxLabel
                   Left = 17
                   Top = 98
                   Caption = 'Direcci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object txtDIRECCION1_EMPRESA: TcxDBTextEdit
@@ -265,12 +268,14 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Left = 15
                   Top = 207
                   Caption = 'Poblaci'#243'n'
+                  TabOrder = 8
                   Transparent = True
                 end
                 object lblProvincia: TcxLabel
                   Left = 21
                   Top = 245
                   Caption = 'Provincia'
+                  TabOrder = 10
                   Transparent = True
                 end
                 object txtPROVINCIA_EMPRESA: TcxDBTextEdit
@@ -306,12 +311,14 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Left = 6
                   Top = 171
                   Caption = 'C'#243'd Postal'
+                  TabOrder = 13
                   Transparent = True
                 end
                 object cxLabel2: TcxLabel
                   Left = 57
                   Top = 310
                   Caption = 'IBAN'
+                  TabOrder = 14
                   Transparent = True
                 end
                 object txtIBAN_EMPRESA: TcxDBMaskEdit
@@ -337,6 +344,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Left = 23
                   Top = 278
                   Caption = 'Pa'#237's'
+                  TabOrder = 17
                   Transparent = True
                 end
                 object txtNOMBRE_PAIS_EMPRESA: TcxDBTextEdit
@@ -380,6 +388,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsRetenciones: TcxTabSheet
               Caption = '&2_Retenciones'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRetenOpts: TPanel
                 Left = 819
                 Top = 0
@@ -420,7 +432,6 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   object tvRetenciones: TcxGridDBTableView
                     OnDblClick = cxGrdDBTabPrinDblClick
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Buttons.First.Hint = 'Va al primer Registro'
                     Navigator.Buttons.First.Visible = False
                     Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -453,11 +464,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     Navigator.Buttons.GotoBookmark.Visible = False
                     Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.AlwaysShowEditor = True
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsBehavior.IncSearch = True
@@ -521,6 +528,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsHistoriaFacturacion: TcxTabSheet
               Caption = '&3_Hist'#243'rico Facturas'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
@@ -541,9 +552,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   TabOrder = 0
                   object tvFacturacion: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataModeController.SmartRefresh = True
                     DataController.DataSource = dmEmpresas.dsFacturasEmpresas
                     DataController.Summary.DefaultGroupSummaryItems = <
@@ -577,7 +586,6 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                         Kind = skSum
                         Column = tvFacturacionTOTAL_IMPUESTOS_FACTURA
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsCustomize.ColumnGrouping = False
                     OptionsData.Deleting = False
@@ -1017,14 +1025,9 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     end
                   end
                   object tvLineasFacturacion: TcxGridDBTableView
-                    Navigator.Buttons.CustomButtons = <>
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                     DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                     DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.ColumnHeaderHints = False
                     OptionsCustomize.ColumnFiltering = False
                     OptionsCustomize.ColumnGrouping = False
@@ -1150,6 +1153,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsSeries: TcxTabSheet
               Caption = '&4_Series'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlSeriesOpts: TPanel
                 Left = 811
                 Top = 0
@@ -1190,7 +1197,6 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   object tvSeries: TcxGridDBTableView
                     OnDblClick = cxGrdDBTabPrinDblClick
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Buttons.First.Hint = 'Va al primer Registro'
                     Navigator.Buttons.First.Visible = False
                     Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -1223,11 +1229,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     Navigator.Buttons.GotoBookmark.Visible = False
                     Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.AlwaysShowEditor = True
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsBehavior.IncSearch = True
@@ -1283,6 +1285,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsOtros: TcxTabSheet
               Caption = '&5_Otros'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 342
@@ -1311,6 +1317,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -1321,6 +1328,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -1357,6 +1365,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modificaci'#243'n'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -1380,6 +1389,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'ltima Modificaci'#243'n'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1387,6 +1397,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 29
                 Top = 167
                 Caption = 'Texto legal en Facturas'
+                TabOrder = 2
                 Transparent = True
               end
               object cxdbmTEXTO_LEGAL_FACTURA_EMPRESA: TcxDBMemo
@@ -1402,6 +1413,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 22
                 Top = 291
                 Caption = 'Orden en Listados'
+                TabOrder = 3
                 Transparent = True
               end
               object cxdbspndtORDEN_EMPRESA: TcxDBSpinEdit
@@ -1416,6 +1428,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 31
                 Top = 18
                 Caption = 'Firma electr'#243'nica en Facturas'
+                TabOrder = 5
                 Transparent = True
               end
               object lblDBNumeroSerieCertificado: TcxDBLabel
@@ -1423,6 +1436,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Top = 47
                 DataBinding.DataField = 'CODIGO_CERTIFICADO_EMPRESA'
                 DataBinding.DataSource = dsTablaG
+                TabOrder = 6
                 Height = 21
                 Width = 410
               end
@@ -1430,12 +1444,14 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 60
                 Top = 47
                 Caption = 'N'#250'mero de Serie'
+                TabOrder = 7
                 Transparent = True
               end
               object lblTipoCertificado: TcxLabel
                 Left = 37
                 Top = 74
                 Caption = 'Tipo de Certificado'
+                TabOrder = 8
                 Transparent = True
               end
               object lblDBTipoCertificado: TcxDBLabel
@@ -1443,6 +1459,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Top = 74
                 DataBinding.DataField = 'TIPO_CERTIFICADO_EMPRESA'
                 DataBinding.DataSource = dsTablaG
+                TabOrder = 9
                 Height = 21
                 Width = 410
               end
@@ -1450,6 +1467,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 142
                 Top = 101
                 Caption = 'Titular'
+                TabOrder = 10
                 Transparent = True
               end
               object lblDBTitularCertificado: TcxDBLabel
@@ -1457,6 +1475,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Top = 101
                 DataBinding.DataField = 'TITULAR_CERTIFICADO_EMPRESA'
                 DataBinding.DataSource = dsTablaG
+                TabOrder = 11
                 Height = 21
                 Width = 410
               end
@@ -1474,6 +1493,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 Left = 60
                 Top = 130
                 Caption = 'FechaCaducidad'
+                TabOrder = 13
                 Transparent = True
               end
               object txtFECHACADUCIDAD: TcxDBTextEdit
@@ -1500,6 +1520,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlFichaDetail
+          ExplicitWidth = 8
         end
         object pnlFichaCab: TPanel
           Left = 0
@@ -1526,6 +1547,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
               Left = 24
               Top = 17
               Caption = 'C'#243'digo'
+              TabOrder = 0
               Transparent = True
             end
             object txtCODIGO_EMPRESA: TcxDBTextEdit
@@ -1541,6 +1563,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
               Left = 317
               Top = 17
               Caption = 'Nif'
+              TabOrder = 2
               Transparent = True
             end
             object txtNIF_EMPRESA: TcxDBTextEdit
@@ -1555,6 +1578,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
               Left = 24
               Top = 59
               Caption = 'Raz'#243'n Social'
+              TabOrder = 4
               Transparent = True
             end
             object txtRAZONSOCIAL_EMPRESA: TcxDBTextEdit
@@ -1599,6 +1623,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
               Margins.Bottom = 4
               Caption = 'Canal de IVA'
               Properties.Alignment.Horz = taRightJustify
+              TabOrder = 8
               Transparent = True
               AnchorX = 289
             end
@@ -1652,7 +1677,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
         Width = 945
         ExplicitWidth = 945
         inherited edtBusqGlobal: TcxTextEdit
-          TabOrder = 3
+          TabOrder = 4
           ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
