@@ -66,7 +66,7 @@ begin
   inherited;
   unqryEmpresas.Connection := inLibGlobalVar.oConn;
   unqryGrupos.Connection := inLibGlobalVar.oConn;
-  //unqryEmpresas.MasterSource :=  (Self.Owner as TfrmMtoUsuarios).dsTablaG;
+  unqryEmpresas.MasterSource :=  (GetOwnerForm<TfrmMtoUsuarios>).dsTablaG;
   //unqry
 end;
 
@@ -91,7 +91,7 @@ begin
     sUsuario := Trim(FindField('USUARIO_USUARIO').AsString);
     if ((sUsuario = '') or (SimbolosProhibidos(sUsuario))) then
     begin
-      ShowMessageFmt('%s no es un valor de registro válido ' +
+      ShowMessageFmt('%s no es un valor de registro vï¿½lido ' +
                      'para el campo usuario',[sUsuario]);
       bError := True;
     end;

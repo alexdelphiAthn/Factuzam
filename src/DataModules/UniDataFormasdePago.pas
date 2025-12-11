@@ -59,9 +59,9 @@ begin
   unstrdprcContador.Connection := oConn;
   unqryFacturas.Connection := oConn;
   unqryFacturasLineas.Connection := oConn;
-  unqryFacturas.MasterSource := (Self.Owner as TfrmMtoFormasdePago).dsTablaG;
+  unqryFacturas.MasterSource := (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
   unqryFacturasLineas.MasterSource :=
-                                (Self.Owner as TfrmMtoFormasdePago).dsTablaG;
+                                   (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
   unqryFacturas.Open;
   unqryFacturasLineas.Open;
 end;
