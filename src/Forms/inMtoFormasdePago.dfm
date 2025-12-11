@@ -17,21 +17,21 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
       Width = 754
       Height = 634
       TabOrder = 1
-      Properties.ActivePage = tsFicha
+      Properties.ActivePage = tsLista
       ExplicitWidth = 754
       ExplicitHeight = 634
       ClientRectBottom = 630
       ClientRectRight = 750
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 3
-        ExplicitTop = 32
-        ExplicitWidth = 745
-        ExplicitHeight = 596
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 746
+        ExplicitHeight = 600
         inherited cxGrdPrincipal: TcxGrid
-          Width = 745
-          Height = 596
-          ExplicitWidth = 745
-          ExplicitHeight = 596
+          Width = 746
+          Height = 600
+          ExplicitWidth = 746
+          ExplicitHeight = 600
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxGrdDBTabPrinCODIGO_FORMAPAGO: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -284,22 +284,18 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
             object tsVentas: TcxTabSheet
               Caption = '&2_Ventas-'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
-                Width = 734
-                Height = 439
+                Width = 736
+                Height = 443
                 Align = alClient
                 TabOrder = 0
                 object cxgrdFacturas: TcxGrid
                   Left = 1
                   Top = 1
-                  Width = 615
-                  Height = 437
+                  Width = 617
+                  Height = 441
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -876,10 +872,10 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   end
                 end
                 object pnlFacturaOpts: TPanel
-                  Left = 616
+                  Left = 618
                   Top = 1
                   Width = 117
-                  Height = 437
+                  Height = 441
                   Align = alRight
                   TabOrder = 1
                   object btnIraFactura: TcxButton
@@ -1063,7 +1059,6 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1072,17 +1067,20 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
         inherited pnlPerfilTop: TPanel
           Width = 746
           ExplicitWidth = 746
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 746
           Height = 543
-          ExplicitWidth = 745
-          ExplicitHeight = 539
+          ExplicitWidth = 746
+          ExplicitHeight = 543
           inherited cxgrdPerfil: TcxGrid
-            Width = 745
-            Height = 539
-            ExplicitWidth = 745
-            ExplicitHeight = 539
+            Width = 746
+            Height = 543
+            ExplicitWidth = 746
+            ExplicitHeight = 543
           end
         end
       end
@@ -1094,6 +1092,9 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
       inherited pnlTopGrid: TPanel
         Width = 754
         ExplicitWidth = 754
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end

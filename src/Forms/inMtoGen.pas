@@ -94,7 +94,6 @@ type
     btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
     procedure FormCreate(Sender: TObject);
-
     //procedure btnSalirClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -332,10 +331,10 @@ const
 var
   ts : TcxTabSheet;
   formP:TForm;
-  bCancelar:Boolean;
+  //bCancelar:Boolean;
 begin
   inherited;
-  bCancelar := True;
+//  bCancelar := True;
   if ( CheckOpenGrids(Self) ) then
   begin
      if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea cancelar'+
@@ -344,11 +343,12 @@ begin
                                  MB_YESNO ) = ID_YES ) then
      begin
        dsTablaG.Dataset.Cancel;
-       bCancelar := True;
+       Exit;
+       //bCancelar := True;
      end
      else
      begin
-       bCancelar := False;
+       //bCancelar := False;
        btnGrabarClick(Sender);
      end;
   end;
@@ -769,7 +769,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
-
+  if edtBusqGlobal.CanFocus then
+    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);
