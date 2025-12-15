@@ -6,6 +6,7 @@
 *.dcp
 *.dsk
 *.local
+fzam.res
 *.identcache
 *.tvsconfig
 *.dproj.local
