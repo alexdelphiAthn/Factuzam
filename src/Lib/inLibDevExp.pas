@@ -50,6 +50,7 @@ interface
                                 var oPerfilDic: TProfileDicc);
   procedure ExportarExcel(cxGrd: TcxGrid;
                           sNomFile: string);
+  procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
 
 implementation
 
@@ -339,6 +340,116 @@ begin
   end
   else
     dbTvGen.DataController.Filter.Root.Clear;
+end;
+
+procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
+
+  procedure AplicarFiltroAVista(AView: TcxGridDBTableView);
+  var
+    i: Integer;
+    bModoTemporal: Boolean; // Unifica Fecha y Hora
+    sTextoBuscar: String;
+    FieldType: TFieldType;
+  begin
+    if sDatoBusq = '' then
+    begin
+      AView.DataController.Filter.Root.Clear;
+      AView.DataController.Filter.Active := False;
+      Exit;
+    end;
+    // --- LÓGICA DE DETECCIÓN INTELIGENTE ---
+    bModoTemporal := False;
+    sTextoBuscar := sDatoBusq;
+    // 1. Comodines de limpieza ("//" para fecha, "::" para hora)
+    if Pos('//', sDatoBusq) > 0 then
+    begin
+      bModoTemporal := True;
+      sTextoBuscar := StringReplace(sDatoBusq, '//', '', [rfReplaceAll]);
+    end
+    else if Pos('::', sDatoBusq) > 0 then
+    begin
+      bModoTemporal := True;
+      sTextoBuscar := StringReplace(sDatoBusq, '::', '', [rfReplaceAll]);
+    end
+    // 2. Separadores estándar ("/" para fecha, ":" para hora)
+    else if (Pos('/', sDatoBusq) > 0) or (Pos(':', sDatoBusq) > 0) then
+    begin
+      bModoTemporal := True;
+      // Aquí NO borramos nada. Buscamos "23:00" o "12/05" tal cual.
+      sTextoBuscar := sDatoBusq;
+    end;
+    // Si entramos en modo temporal pero no hay texto a buscar, salimos
+    if bModoTemporal and (Trim(sTextoBuscar) = '') then Exit;
+
+    with AView.DataController.Filter do
+    begin
+      BeginUpdate;
+      try
+        Options := Options + [fcoCaseInsensitive];
+        Root.Clear;
+        Root.BoolOperatorKind := fboOr;
+
+        for i := 0 to AView.ColumnCount - 1 do
+        begin
+          if (AView.Columns[i].DataBinding.Field <> nil) then
+          begin
+            FieldType := AView.Columns[i].DataBinding.Field.DataType;
+
+            if bModoTemporal then
+            begin
+              // MODO TEMPORAL: Busca en Fechas, Horas y FechaHoras
+              if FieldType in [ftDate, ftTime, ftDateTime, ftTimeStamp] then
+              begin
+                 Root.AddItem((AView.Columns[i] as TObject),
+                    foLike,
+                    '%' + sTextoBuscar + '%',
+                    '%' + sTextoBuscar + '%');
+              end;
+            end
+            else
+            begin
+              // MODO TEXTO/NUMÉRICO: Lo habitual
+              if FieldType in [
+                 ftSmallint, ftInteger, ftWord, ftCurrency, ftBCD, ftLargeint,
+                 ftFMTBcd, ftLongWord, ftShortint, ftString, ftWideString,
+                 ftMemo, ftFmtMemo, ftWideMemo] then
+              begin
+                Root.AddItem((AView.Columns[i] as TObject),
+                  foLike,
+                  '%' + sTextoBuscar + '%',
+                  '%' + sTextoBuscar + '%');
+              end;
+            end;
+          end;
+        end;
+      finally
+        EndUpdate;
+      end;
+      Active := True;
+    end;
+  end;
+
+  procedure ProcesarNivel(ALevel: TcxGridLevel);
+  var
+    i: Integer;
+  begin
+    if (ALevel.GridView <> nil) and (ALevel.GridView is TcxGridDBTableView) then
+      AplicarFiltroAVista(TcxGridDBTableView(ALevel.GridView));
+    for i := 0 to ALevel.Count - 1 do
+      ProcesarNivel(ALevel.Items[i]);
+  end;
+
+var
+  i: Integer;
+begin
+  if AGrid = nil then Exit;
+  AGrid.BeginUpdate;
+  try
+    for i := 0 to AGrid.Levels.Count - 1 do
+      ProcesarNivel(AGrid.Levels[i]);
+  finally
+    AGrid.EndUpdate;
+  end;
 end;
 
 procedure CancelarGrids(oPrincipal:TComponent);
