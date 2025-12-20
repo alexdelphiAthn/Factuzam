@@ -17,18 +17,21 @@ inherited frmMtoFamilias: TfrmMtoFamilias
       Width = 740
       Height = 552
       TabOrder = 1
+      Properties.ActivePage = tsLista
       ExplicitWidth = 740
       ExplicitHeight = 552
       ClientRectBottom = 548
       ClientRectRight = 736
       inherited tsLista: TcxTabSheet
-        ExplicitWidth = 731
-        ExplicitHeight = 514
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 732
+        ExplicitHeight = 518
         inherited cxGrdPrincipal: TcxGrid
-          Width = 731
-          Height = 514
-          ExplicitWidth = 731
-          ExplicitHeight = 514
+          Width = 732
+          Height = 518
+          ExplicitWidth = 732
+          ExplicitHeight = 518
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_FAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Familia'
@@ -77,8 +80,10 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 731
-        ExplicitHeight = 514
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 732
+        ExplicitHeight = 518
         object pnl1: TPanel
           Left = 0
           Top = 0
@@ -133,12 +138,14 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Left = 21
               Top = 17
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 18
               Top = 51
               Caption = 'Nombre'
+              TabOrder = 2
               Transparent = True
             end
             object txtNOMBRE_FAMILIA: TcxDBTextEdit
@@ -189,6 +196,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Margins.Bottom = 4
               Caption = 'Familia Padre'
               Properties.Alignment.Horz = taRightJustify
+              TabOrder = 6
               Transparent = True
               AnchorX = 136
             end
@@ -214,8 +222,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitTop = 169
-          ExplicitWidth = 731
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
@@ -225,7 +231,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             TabOrder = 0
             Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 731
             ClientRectBottom = 341
             ClientRectLeft = 4
             ClientRectRight = 728
@@ -233,14 +238,11 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblDescripcion: TcxLabel
                 Left = 33
                 Top = 19
                 Caption = 'Descipci'#243'n'
+                TabOrder = 0
                 Transparent = True
               end
               object mDESCRIPCION_FAMILIA: TcxDBMemo
@@ -256,15 +258,11 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdArticulosFamilias: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 722
-                Height = 307
+                Width = 724
+                Height = 311
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -273,9 +271,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 TabOrder = 0
                 object tvArticulos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.CustomButtons = <>
                   Navigator.Visible = True
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DataModeController.SmartRefresh = True
                   DataController.Summary.DefaultGroupSummaryItems = <
                     item
@@ -307,7 +303,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                       Format = '0.00 '#8364';-0.00 '#8364
                       Kind = skSum
                     end>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
                   OptionsData.Deleting = False
@@ -377,14 +372,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                 end
                 object tvLineasFacturacion: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  ScrollbarAnnotations.CustomAnnotations = <>
                   DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                   DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                   DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -454,10 +444,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsOtros: TcxTabSheet
               Caption = '&3_Otros'
               ImageIndex = 3
-              ExplicitLeft = 3
-              ExplicitTop = 32
-              ExplicitWidth = 722
-              ExplicitHeight = 307
               object pnl3: TPanel
                 Left = 0
                 Top = 232
@@ -466,8 +452,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Align = alBottom
                 BevelOuter = bvNone
                 TabOrder = 0
-                ExplicitTop = 228
-                ExplicitWidth = 722
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -489,6 +473,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -499,6 +484,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -535,6 +521,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modif.'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -558,6 +545,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. Modif'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -565,6 +553,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Left = 20
                 Top = 24
                 Caption = 'Orden en Listados'
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
@@ -586,7 +575,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 4
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -595,6 +583,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         inherited pnlPerfilTop: TPanel
           Width = 732
           ExplicitWidth = 732
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 732
@@ -617,6 +608,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
       inherited pnlTopGrid: TPanel
         Width = 740
         ExplicitWidth = 740
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end

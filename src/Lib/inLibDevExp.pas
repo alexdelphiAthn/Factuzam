@@ -22,7 +22,7 @@ interface
     cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridLevel,
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
-    cxRadioGroup, inMtoPrincipal2, cxPc, dxShellDialogs,
+    cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs,
     cxGroupBox, cxLabel,  cxListBox, //inMtoPrincipal,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
@@ -141,7 +141,7 @@ begin
       sVistaName + '_' + sColumnName + '_Visible',
       sValue);
     sValue := IntToStr(oColumn.Index);
-    (Sender as TfrmOpenApp2).FdmDataPerfiles.GrabarPerfil(sProfile, sName,
+    (Sender as TfrmMtoPrincipal).FdmDataPerfiles.GrabarPerfil(sProfile, sName,
       sVistaName + '_' + sColumnName + '_Index',
       sValue);
     if (oColumn.Visible) then
@@ -457,10 +457,10 @@ var
   i: Integer;
   iPrincipal:Integer;
   frmMto:TfrmMtoGen;
-  frmMtoPrin2:TfrmOpenApp2;
+  frmMtoPrin2:TfrmMtoPrincipal;
   tsNew: TcxTabSheet;
 begin
-  frmMtoPrin2 := (oPrincipal as TfrmOpenApp2);
+  frmMtoPrin2 := (oPrincipal as TfrmMtoPrincipal);
   iPrincipal := frmMtoPrin2.pcPrincipal.ActivePageIndex;
   tsNew := frmMtoPrin2.pcPrincipal.Pages[iPrincipal];
   frmMto := (tsNew.Controls[0] as TfrmMtoGen);
@@ -515,7 +515,8 @@ var
   bResul:Boolean;
 begin
   bResul:= False;
-  for i := 0 to frmMto.Componentcount - 1 do
+  i:= 0;
+  while ((i<frmMto.Componentcount) and (bResul = False)) do
   begin
     if frmMto.Components[i].ClassNameis('TcxGridDBTableView')
     then
@@ -523,17 +524,17 @@ begin
       dsData := (frmMto.Components[i] as
             TcxGridDBTableView).DataController.DataSource;
       // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
-      if (dsData.DataSet <> nil)
-      then
-        if ((dsData.DataSet.State = dsInsert) or
-            (dsData.DataSet.State = dsEdit)
-          )
+      if dsData <> nil then
+        if (dsData.DataSet <> nil)
         then
-        begin
-          bResul:= true;
-          Exit;
-        end;
+          if ((dsData.DataSet.State = dsInsert) or
+              (dsData.DataSet.State = dsEdit)) then
+          begin
+            bResul:= true;
+            //Exit;
+          end;
     end;
+    Inc(i);
   end;
   Result:=bResul;
 end;

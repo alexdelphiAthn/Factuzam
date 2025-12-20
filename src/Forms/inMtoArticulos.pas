@@ -224,7 +224,7 @@ uses
   inLibDevExp,
   inLibShowMto,
   inMtoProveedores,
-  inMtoPrincipal2,
+  inMtoPrincipal,
   inMtoTarifas,
   inMtoFamilias,
   inMtoEmpresas,

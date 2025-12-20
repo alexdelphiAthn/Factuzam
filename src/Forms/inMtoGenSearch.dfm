@@ -15,18 +15,21 @@ inherited frmMtoSearch: TfrmMtoSearch
     inherited pcPantalla: TcxPageControl
       Width = 801
       Height = 409
+      Properties.ActivePage = tsLista
       ExplicitWidth = 797
       ExplicitHeight = 408
       ClientRectBottom = 405
       ClientRectRight = 797
       inherited tsLista: TcxTabSheet
-        ExplicitWidth = 789
-        ExplicitHeight = 374
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 793
+        ExplicitHeight = 375
         inherited cxGrdPrincipal: TcxGrid
           Width = 793
           Height = 375
-          ExplicitWidth = 789
-          ExplicitHeight = 374
+          ExplicitWidth = 793
+          ExplicitHeight = 375
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             OnCellDblClick = cxGrdDBTabPrinCellDblClick
             OptionsData.Appending = False
@@ -39,8 +42,10 @@ inherited frmMtoSearch: TfrmMtoSearch
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
-        ExplicitWidth = 792
-        ExplicitHeight = 371
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 793
+        ExplicitHeight = 375
       end
       inherited tsPerfil: TcxTabSheet
         TabVisible = False
@@ -49,6 +54,9 @@ inherited frmMtoSearch: TfrmMtoSearch
         inherited pnlPerfilTop: TPanel
           Width = 793
           ExplicitWidth = 789
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 793
@@ -72,6 +80,9 @@ inherited frmMtoSearch: TfrmMtoSearch
         ExplicitWidth = 797
         inherited sbExportExcel: TSpeedButton
           Visible = False
+        end
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Visible = False

@@ -502,7 +502,7 @@ uses
   inMtoModalFacRec,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
-  inMtoPrincipal2,
+  inMtoPrincipal,
   inLibUser,
   inMtoArticulos,
   inMtoEmpresas,
@@ -695,6 +695,10 @@ begin
     dmmFacturas.unqrySeriesEditCombo.First;
     dsTablaG.DataSet.FindField(fseriefac).AsString :=
           dmmFacturas.unqrySeriesEditCombo.FindField('SERIE_CONTADOR').AsString;
+  end
+  else
+  begin
+    cbbSerieFactura.properties.listsource := dmmFacturas.dsSeries;
   end;
 end;
 
@@ -1029,8 +1033,9 @@ begin
   (ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties as
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   Self.pkFieldName := 'NRO_FACTURA; SERIE_FACTURA';
-  CheckConsolidacion;
   AsignarControles;
+  dmmFacturas.OpenTables;
+  CheckConsolidacion;
 end;
 
 procedure TfrmMtoFacturas.chkConsolidadaPropertiesChange(Sender: TObject);
@@ -1564,7 +1569,6 @@ begin
                                            dmmFacturas.unqryLinFac);
       facTotales.ProcesarFacturaCompleta;//(oLinFac);
       FreeAndNil(facTotales);
-
     end;
   end;
 end;

@@ -183,7 +183,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
-  inMtoPrincipal2,
+  inMtoPrincipal,
   inMtoArticulos,
   inMtoClientes,
   inMtoFacturas;

@@ -692,7 +692,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsVerifactu
+            Properties.ActivePage = tsLineasFactura
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 421
             ClientRectLeft = 4
@@ -705,10 +705,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -1655,10 +1651,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -1892,10 +1884,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -2026,10 +2014,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrlbx1: TScrollBox
                 Left = 0
                 Top = 0
@@ -2313,10 +2297,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
@@ -2446,7 +2426,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Align = alClient
               TabOrder = 0
-              Properties.ActivePage = tsDatosCliente
+              Properties.ActivePage = tsCabecera
               Properties.CustomButtons.Buttons = <>
               ClientRectBottom = 333
               ClientRectLeft = 4
@@ -2551,7 +2531,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
                   DataBinding.DataSource = dsTablaG
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
                   TabOrder = 9
                   Transparent = True
                   Height = 21
@@ -2582,7 +2561,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Bottom = 4
                   Caption = 'C'#243'digo Empresa'
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
                   TabOrder = 11
                   Transparent = True
                 end
@@ -2612,6 +2590,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     end>
                   Properties.ListOptions.ColumnSorting = False
                   Properties.ListOptions.ShowHeader = False
+                  Properties.ListSource = dmFacturas.dsSeries
                   Properties.ReadOnly = True
                   TabOrder = 5
                   Width = 145
@@ -2648,10 +2627,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -2779,7 +2754,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'NIF Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 12
                     Transparent = True
                   end
@@ -2792,7 +2766,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'M'#243'vil Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 13
                     Transparent = True
                   end
@@ -2829,7 +2802,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'Email Empresa'
                     ParentFont = False
-                    Style.StyleController = frmOpenApp2.EditStyleController
                     TabOrder = 15
                     Transparent = True
                   end
@@ -3337,7 +3309,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3372,8 +3343,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           ParentFont = True
         end
         inherited nvNavegador: TcxDBNavigator
-          Width = 336
-          ExplicitWidth = 336
+          Width = 338
+          ExplicitWidth = 338
         end
         inherited lblTextoaBuscar: TcxLabel
           Top = 7

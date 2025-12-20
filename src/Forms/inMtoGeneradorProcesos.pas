@@ -27,7 +27,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
-  dxtree, dxdbtree, UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal2,
+  dxtree, dxdbtree, UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs ;
 

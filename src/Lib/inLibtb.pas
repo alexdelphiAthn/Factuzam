@@ -59,6 +59,12 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
   procedure BusqDataBase(sqlConsulta: TUniQuery;
                         sBusqueda:String;
                         var ConsultaO:string);
+  procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
+                         sBusqueda: String;
+                         var sSQLOrigMaster, sSQLOrigDetail: String;
+                         const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
+                         const sCondicionJoin: String);     // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
+  function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
 //  function ExisteSerieEmpresa(sSerie,
 //         sEmpresa,
 //         sTipoDoc:string): Boolean;
@@ -307,6 +313,136 @@ var
  sSQL:string;
 begin
   sSQL := qryConsulta.SQL.Text;
+end;
+
+function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
+var
+  i: Integer;
+  sLike: string;
+  sCampo: string;
+  // Variables para lógica de fecha/hora si la deseas conservar
+  bModoFecha: Boolean;
+  sTextoBuscar: String;
+begin
+  Result := '';
+  if sBusqueda = '' then Exit;
+
+  // --- Lógica de limpieza (Fechas/Horas) que definimos antes ---
+  sTextoBuscar := sBusqueda;
+  // Aquí puedes poner tu IF de "//" o "::" si quieres limpiar sTextoBuscar
+  // ...
+
+  sLike := '';
+
+  // Aseguramos que la query tenga info de campos (por si estaba cerrada)
+  if not AQuery.Active then AQuery.FieldDefs.Update;
+
+  for i := 0 to AQuery.FieldCount - 1 do
+  begin
+    if AQuery.Fields[i].DataType in [ftSmallint, ftInteger, ftWord, ftCurrency,
+       ftBCD, ftLargeint, ftFMTBcd, ftLongWord, ftShortint, ftString,
+       ftWideString, ftMemo, ftFmtMemo, ftWideMemo] then // Añadir ftDate si aplica
+    begin
+       // Usamos FieldName. Si tu SQL tiene Joins y alias, asegúrate que FieldName lo refleje
+       // o pásale el alias a esta función.
+       sLike := sLike + AQuery.Fields[i].FieldName + ' LIKE ' +
+                QuotedStr('%' + sTextoBuscar + '%') + ' OR ';
+    end;
+  end;
+
+  if sLike <> '' then
+  begin
+    // Quitamos el último " OR "
+    sLike := LeftStr(sLike, Length(sLike) - 4);
+    // Devolvemos entre paréntesis para proteger la lógica
+    Result := '(' + sLike + ')';
+  end;
+end;
+
+procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
+                         sBusqueda: String;
+                         var sSQLOrigMaster, sSQLOrigDetail: String;
+                         const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
+                         const sCondicionJoin: String);     // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
+var
+  vParserMaster, vParserDetail: ISQLParserSelect;
+  sFiltroMaster, sFiltroDetail: String;
+  sCondicionFinalMaster: String;
+  sCondicionExists: String;
+begin
+  // 1. Guardar/Restaurar SQL Original
+  if sSQLOrigMaster = '' then sSQLOrigMaster := qryMaster.SQL.Text;
+  if sSQLOrigDetail = '' then sSQLOrigDetail := qryDetail.SQL.Text;
+
+  // Restauramos siempre antes de procesar para no acumular filtros
+  qryMaster.SQL.Text := sSQLOrigMaster;
+  qryDetail.SQL.Text := sSQLOrigDetail;
+
+  if sBusqueda = '' then
+  begin
+    qryMaster.Open;
+    qryDetail.Open;
+    Exit;
+  end;
+
+  // 2. Obtener las cadenas de filtro (el texto LIKE ... OR ...)
+  //    Nota: Asegúrate que las queries estén abiertas o tengan FieldDefs actualizados
+  if not qryMaster.Active then qryMaster.Open;
+  if not qryDetail.Active then qryDetail.Open;
+
+  sFiltroMaster := ObtenerCadenaFiltro(qryMaster, sBusqueda);
+  sFiltroDetail := ObtenerCadenaFiltro(qryDetail, sBusqueda);
+
+  // 3. Configurar Parsers
+  vParserMaster := TGaSQLParserFactory.Select(qryMaster.SQL.Text);
+  vParserDetail := TGaSQLParserFactory.Select(qryDetail.SQL.Text);
+
+  // ---------------------------------------------------------
+  // A. APLICAR AL DETALLE (Solo sus campos)
+  // ---------------------------------------------------------
+  if sFiltroDetail <> '' then
+  begin
+    // Añadimos con AND al resto de condiciones que tenga el detalle
+    vParserDetail.AddWhere(sFiltroDetail, pcAnd);
+    qryDetail.SQL.Text := vParserDetail.ToString;
+  end;
+
+  // ---------------------------------------------------------
+  // B. APLICAR AL MAESTRO (Sus campos OR Exists Detalle)
+  // ---------------------------------------------------------
+
+  // Construimos el bloque EXISTS a mano
+  sCondicionExists := '';
+  if sFiltroDetail <> '' then
+  begin
+    sCondicionExists := Format('EXISTS (SELECT 1 FROM %s WHERE %s AND %s)',
+                        [sNombreTablaDetalle, sCondicionJoin, sFiltroDetail]);
+  end;
+
+  // Combinamos: (FiltroMaestro) OR (FiltroExists)
+  sCondicionFinalMaster := '';
+
+  if (sFiltroMaster <> '') and (sCondicionExists <> '') then
+    sCondicionFinalMaster := '(' + sFiltroMaster + ' OR ' + sCondicionExists + ')'
+  else if sFiltroMaster <> '' then
+    sCondicionFinalMaster := sFiltroMaster
+  else if sCondicionExists <> '' then
+    sCondicionFinalMaster := sCondicionExists;
+
+  if sCondicionFinalMaster <> '' then
+  begin
+    // Inyectamos al parser del maestro. El parser se encarga de WHERE/ORDER BY
+    vParserMaster.AddWhere(sCondicionFinalMaster, pcAnd);
+    qryMaster.SQL.Text := vParserMaster.ToString;
+  end;
+
+  // 4. Reabrir con los nuevos SQLs
+  qryMaster.Open;
+  qryDetail.Open;
+
+  // Liberar interfaces (aunque en Delphi moderno se liberan solas, es bueno ponerlas a nil)
+  vParserMaster := nil;
+  vParserDetail := nil;
 end;
 
 procedure BusqDataBase(sqlConsulta: TUniQuery;

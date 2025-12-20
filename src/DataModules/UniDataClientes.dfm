@@ -97,7 +97,6 @@ inherited dmClientes: TdmClientes
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_clientes')
-    Active = True
     AfterInsert = unqryTablaGAfterInsert
     BeforeDelete = unqryTablaGBeforeDelete
     Left = 56
@@ -503,7 +502,6 @@ inherited dmClientes: TdmClientes
     MasterFields = 'CODIGO_CLIENTE'
     DetailFields = 'CODIGO_CLIENTE_FACTURA'
     ReadOnly = True
-    Active = True
     Left = 408
     Top = 96
   end

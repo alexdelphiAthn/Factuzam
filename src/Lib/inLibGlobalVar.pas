@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -12,14 +12,14 @@ interface
 
 uses Uni,
      UniDataPerfiles,
-     UniDataConn,cxMemo, inMtoPrincipal2;
+     UniDataConn,cxMemo, inMtoPrincipal;
 
 var
   odmPerfiles:TdmPerfiles;
   oConn      :TUniConnection;
   odmConn    :TdmConn;
   oMemoSQL   :TcxMemo;
-  ofrmMto2   :TfrmOpenApp2;
+  ofrmMto2   :TfrmMtoPrincipal;
   oUser      :String;
   oGroup     :String;
   orootGroup :String;
