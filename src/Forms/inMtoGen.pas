@@ -335,21 +335,26 @@ var
 begin
   inherited;
 //  bCancelar := True;
+  bCancelar:Boolean;
+begin
+  inherited;
+  formP:=(ts.Parent.Parent.Parent as TForm); //formulario principal
   if ( CheckOpenGrids(Self) ) then
   begin
-     if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea cancelar'+
-                                  ' la entrada de datos?',
+     if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea grabar'+
+                                  ' los cambios de datos?',
                                  'Mensaje de Advertencia',
                                  MB_YESNO ) = ID_YES ) then
      begin
-       dsTablaG.Dataset.Cancel;
-       Exit;
+       btnGrabarClick(Sender);
+       ShowMessage('Cambios grabados');
+       
        //bCancelar := True;
      end
      else
      begin
        //bCancelar := False;
-       btnGrabarClick(Sender);
+       CancelarGrids(formP);
      end;
   end;
   // NO liberar el DataModule manualmente
@@ -358,7 +363,6 @@ begin
   // Simplemente asignar nil a la referencia
   tdmDataModule := nil;
   ts := parent as TcxTabSheet;
-  formP:=(ts.Parent.Parent.Parent as TForm);
   PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
 end;
 
