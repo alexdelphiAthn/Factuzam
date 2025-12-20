@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -69,8 +69,8 @@ begin
     sDescripcion := Trim(FindField('DESCRIPCION_ZONA_IVA').AsString);
     if ((sDescripcion = '') or (SimbolosProhibidos(sDescripcion))) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor de registro v�lido ' +
-                                   'para el campo Descripci�n de Grupos de IVA',
+      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
+                                   'para el campo Descripción de Grupos de IVA',
                                                                 [sDescripcion]);
       bError := True;
     end;
@@ -78,8 +78,8 @@ begin
         (SimbolosProhibidos(sCodigo))
        ) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor de registro v�lido ' +
-                                        'para el campo C�digo de Grupos de IVA',
+      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
+                                        'para el campo Código de Grupos de IVA',
                                                                      [sCodigo]);
       bError := True;
     end;

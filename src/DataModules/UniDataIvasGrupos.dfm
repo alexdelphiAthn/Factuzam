@@ -1,5 +1,4 @@
 inherited dmIvasGrupos: TdmIvasGrupos
-  OldCreateOrder = True
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_ivas_grupos'

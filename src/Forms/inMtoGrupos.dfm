@@ -40,12 +40,14 @@ inherited frmMtoGrupos: TfrmMtoGrupos
             Left = 88
             Top = 39
             Caption = 'Nombre grupo'
+            TabOrder = 0
             Transparent = True
           end
           object cxLabel2: TcxLabel
             Left = 24
             Top = 75
             Caption = 'Es grupo administradores'
+            TabOrder = 1
             Transparent = True
           end
           object txtNOMBRE_GRUPO: TcxDBTextEdit
@@ -80,7 +82,6 @@ inherited frmMtoGrupos: TfrmMtoGrupos
           object tvUsuarios: TcxGridDBTableView
             OnDblClick = cxGrdDBTabPrinDblClick
             Navigator.Buttons.ConfirmDelete = True
-            Navigator.Buttons.CustomButtons = <>
             Navigator.Buttons.First.Hint = 'Va al primer Registro'
             Navigator.Buttons.First.Visible = False
             Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
@@ -113,12 +114,8 @@ inherited frmMtoGrupos: TfrmMtoGrupos
             Navigator.Buttons.GotoBookmark.Visible = False
             Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
             Navigator.Visible = True
-            ScrollbarAnnotations.CustomAnnotations = <>
             DataController.DataSource = dmGrupos.dsUsuariosGrupo
             DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-            DataController.Summary.DefaultGroupSummaryItems = <>
-            DataController.Summary.FooterSummaryItems = <>
-            DataController.Summary.SummaryGroups = <>
             OptionsBehavior.AlwaysShowEditor = True
             OptionsBehavior.GoToNextCellOnEnter = True
             OptionsBehavior.IncSearch = True
@@ -149,13 +146,6 @@ inherited frmMtoGrupos: TfrmMtoGrupos
           end
           object cxgrdlvlUsuarios: TcxGridLevel
             GridView = tvUsuarios
-          end
-        end
-      end
-      inherited tsPerfil: TcxTabSheet
-        inherited pnlPerfilTop: TPanel
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 21
           end
         end
       end

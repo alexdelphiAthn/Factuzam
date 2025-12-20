@@ -13,7 +13,6 @@ object dmConn: TdmConn
     PoolingOptions.Validate = True
     Username = 'root'
     Server = '127.0.0.1'
-    Connected = True
     LoginPrompt = False
     BeforeConnect = connBeforeConnect
     Left = 216

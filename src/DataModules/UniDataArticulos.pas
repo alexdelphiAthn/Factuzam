@@ -180,11 +180,11 @@ begin
   unqryTiposIVA.Connection := oConn;
   unqryTarifas.Connection := oConn;
   unqryLinFacturasArticulos.MasterSource :=
-                                      (Self.Owner as TfrmMtoArticulos).dsTablaG;
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryTarifasArticulos.MasterSource :=
-                                      (Self.Owner as TfrmMtoArticulos).dsTablaG;
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryProveedoresArticulos.MasterSource :=
-                                      (Self.Owner as TfrmMtoArticulos).dsTablaG;
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryTiposIVA.Open;
   unqryFamiliaArticulos.Open;
   unqryTarifasArticulos.Open;

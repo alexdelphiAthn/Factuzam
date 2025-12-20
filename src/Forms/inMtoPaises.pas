@@ -22,7 +22,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPaises, cxCheckBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  inMtoPrincipal2, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
+  inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
 
 type
   TfrmMtoPaises = class(TfrmMtoGen)

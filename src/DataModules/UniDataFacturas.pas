@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes,  DB,
-   inMtoPrincipal2, DBClient, Provider, frxClass, frxDBSet, inLibUser,
+   inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, Dialogs, System.Variants, MemDS, DBAccess, Uni,
    UniDataGen;
 
@@ -103,6 +103,7 @@ public
     function ExisteSerieEmpresa(sSerie,
                                 sEmpresa,
                                 sTipoDoc:string): Boolean;
+    procedure OpenTables;
   end;
 var
   dmFacturas: TdmFacturas;
@@ -668,6 +669,10 @@ begin
   unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+end;
+
+procedure TdmFacturas.OpenTables;
+begin
   unqryIvasTipos.Open;
   unqryLinFac.Open;
   unqrySeries.Open;

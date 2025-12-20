@@ -258,11 +258,11 @@ begin
   unqryFacturasLineasEmpresas.Connection := oConn;
   unqryPaises.Connection                 := oConn;
   unqryFacturasEmpresas.MasterSource :=
-                                       (Self.Owner as TfrmMtoEmpresas).dsTablaG;
+                                       (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryFacturasLineasEmpresas.MasterSource :=
-                                       (Self.Owner as TfrmMtoEmpresas).dsTablaG;
-  unqryRetenciones.MasterSource    :=  (Self.Owner as TfrmMtoEmpresas).dsTablaG;
-  unqrySeries.MasterSource         :=  (Self.Owner as TfrmMtoEmpresas).dsTablaG;
+                                       (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
+  unqryRetenciones.MasterSource    :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
+  unqrySeries.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   //unqryTiposIVA.Connection               := oConn;
   //unqryTiposIVA.Open;
   unqryPaises.Open;

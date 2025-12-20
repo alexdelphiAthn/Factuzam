@@ -18,7 +18,7 @@ uses
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxNavigator, cxDBNavigator, Vcl.StdCtrls, Vcl.Buttons,
   cxContainer, cxEdit, cxLabel, dxBarBuiltInMenu, Vcl.Menus, cxButtons,
-  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal2,
+  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, dxmdaset, cxTextEdit, dxBevel,
@@ -94,7 +94,6 @@ type
     btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
     procedure FormCreate(Sender: TObject);
-
     //procedure btnSalirClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -332,36 +331,38 @@ const
 var
   ts : TcxTabSheet;
   formP:TForm;
+  //bCancelar:Boolean;
+begin
+  inherited;
+//  bCancelar := True;
   bCancelar:Boolean;
 begin
   inherited;
-  bCancelar := True;
+  formP:=(ts.Parent.Parent.Parent as TForm); //formulario principal
   if ( CheckOpenGrids(Self) ) then
   begin
-     if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea cancelar'+
-                                  ' la entrada de datos?',
+     if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea grabar'+
+                                  ' los cambios de datos?',
                                  'Mensaje de Advertencia',
                                  MB_YESNO ) = ID_YES ) then
      begin
-       dsTablaG.Dataset.Cancel;
-       bCancelar := True;
+       btnGrabarClick(Sender);
+       ShowMessage('Cambios grabados');
+       
+       //bCancelar := True;
      end
      else
      begin
-       bCancelar := False;
-       btnGrabarClick(Sender);
+       //bCancelar := False;
+       CancelarGrids(formP);
      end;
   end;
-
   // NO liberar el DataModule manualmente
   // Se liberará automáticamente cuando se destruya el formulario (Self)
   // porque se creó con Owner = Self
-
   // Simplemente asignar nil a la referencia
   tdmDataModule := nil;
-
   ts := parent as TcxTabSheet;
-  formP:=(ts.Parent.Parent.Parent as TForm);
   PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
 end;
 
@@ -528,7 +529,9 @@ begin
         //ShowMessage('Foco establecido en: ' + FocusControl.Name +
         //           ' (TabOrder: ' + IntToStr(FocusControl.TabOrder) + ')');
       end;
-    end
+    end;
+    if edtBusqGlobal.CanFocus then
+      edtBusqGlobal.SetFocus;
 //    else
 //    ShowMessage('No se encontró un control focusable después de la pestaña.');
 //  finally
@@ -562,8 +565,8 @@ begin
   tdmDataModule := nil;
   sNameModule := '';
   sNameModule :=
-        (Self.Owner as TfrmOpenApp2).oFzaWinf.GetDataModuleName(Self.UnitName +
-                                                        '.' + Self.ClassName);
+     (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
+                                                          '.' + Self.ClassName);
   if (sNameModule <> '') then
     tdmDataModule := CrearDataModule(sNameModule, Self);
   inherited;
@@ -770,7 +773,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
-
+  if edtBusqGlobal.CanFocus then
+    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);

@@ -17,21 +17,21 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
       Width = 754
       Height = 634
       TabOrder = 1
-      Properties.ActivePage = tsFicha
+      Properties.ActivePage = tsLista
       ExplicitWidth = 754
       ExplicitHeight = 634
       ClientRectBottom = 630
       ClientRectRight = 750
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 3
-        ExplicitTop = 32
-        ExplicitWidth = 745
-        ExplicitHeight = 596
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 746
+        ExplicitHeight = 600
         inherited cxGrdPrincipal: TcxGrid
-          Width = 745
-          Height = 596
-          ExplicitWidth = 745
-          ExplicitHeight = 596
+          Width = 746
+          Height = 600
+          ExplicitWidth = 746
+          ExplicitHeight = 600
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxGrdDBTabPrinCODIGO_FORMAPAGO: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -165,12 +165,14 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
               Left = 21
               Top = 17
               Caption = 'C'#243'digo'
+              TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
               Left = 18
               Top = 51
               Caption = 'Nombre'
+              TabOrder = 2
               Transparent = True
             end
             object txtNOMBRE_FORMAPAGO: TcxDBTextEdit
@@ -221,6 +223,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 28
                 Top = 32
                 Caption = 'N'#250'mero de plazos'
+                TabOrder = 0
                 Transparent = True
               end
               object cxDBSpinEdit1: TcxDBSpinEdit
@@ -235,6 +238,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 28
                 Top = 88
                 Caption = 'D'#237'as entre plazos'
+                TabOrder = 2
                 Transparent = True
               end
               object cxDBSpinEdit2: TcxDBSpinEdit
@@ -249,6 +253,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 79
                 Top = 135
                 Caption = '% Adelanto'
+                TabOrder = 4
                 Transparent = True
               end
               object cxDBSpinEdit3: TcxDBSpinEdit
@@ -279,22 +284,18 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
             object tsVentas: TcxTabSheet
               Caption = '&2_Ventas-'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
-                Width = 734
-                Height = 439
+                Width = 736
+                Height = 443
                 Align = alClient
                 TabOrder = 0
                 object cxgrdFacturas: TcxGrid
                   Left = 1
                   Top = 1
-                  Width = 615
-                  Height = 437
+                  Width = 617
+                  Height = 441
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -303,9 +304,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   TabOrder = 0
                   object tvFacturacion: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
-                    Navigator.Buttons.CustomButtons = <>
                     Navigator.Visible = True
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataModeController.SmartRefresh = True
                     DataController.DataSource = dmFormasdePago.dsFacturas
                     DataController.Summary.DefaultGroupSummaryItems = <
@@ -339,7 +338,6 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                         Kind = skSum
                         Column = tvFacturacionTOTAL_IMPUESTOS_FACTURA
                       end>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsCustomize.ColumnGrouping = False
                     OptionsData.Deleting = False
@@ -787,15 +785,10 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                     end
                   end
                   object tvLineasFacturacion: TcxGridDBTableView
-                    Navigator.Buttons.CustomButtons = <>
-                    ScrollbarAnnotations.CustomAnnotations = <>
                     DataController.DataSource = dmFormasdePago.dsFacturasLineas
                     DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
                     DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
                     DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
-                    DataController.Summary.DefaultGroupSummaryItems = <>
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.ColumnHeaderHints = False
                     OptionsCustomize.ColumnFiltering = False
                     OptionsCustomize.ColumnGrouping = False
@@ -879,10 +872,10 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   end
                 end
                 object pnlFacturaOpts: TPanel
-                  Left = 616
+                  Left = 618
                   Top = 1
                   Width = 117
-                  Height = 437
+                  Height = 441
                   Align = alRight
                   TabOrder = 1
                   object btnIraFactura: TcxButton
@@ -964,6 +957,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario Alta'
+                  TabOrder = 0
                   Transparent = True
                 end
                 object lblInstanteAlta: TcxLabel
@@ -974,6 +968,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Alta'
+                  TabOrder = 1
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
@@ -1010,6 +1005,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Instante Modif.'
+                  TabOrder = 5
                   Transparent = True
                 end
                 object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
@@ -1033,6 +1029,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Usuario '#218'lt. Modif'
+                  TabOrder = 6
                   Transparent = True
                 end
               end
@@ -1040,6 +1037,7 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
                 Left = 20
                 Top = 24
                 Caption = 'Orden en Listados'
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
@@ -1069,17 +1067,20 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
         inherited pnlPerfilTop: TPanel
           Width = 746
           ExplicitWidth = 746
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 746
           Height = 543
-          ExplicitWidth = 745
-          ExplicitHeight = 539
+          ExplicitWidth = 746
+          ExplicitHeight = 543
           inherited cxgrdPerfil: TcxGrid
-            Width = 745
-            Height = 539
-            ExplicitWidth = 745
-            ExplicitHeight = 539
+            Width = 746
+            Height = 543
+            ExplicitWidth = 746
+            ExplicitHeight = 543
           end
         end
       end
@@ -1091,6 +1092,9 @@ inherited frmMtoFormasdePago: TfrmMtoFormasdePago
       inherited pnlTopGrid: TPanel
         Width = 754
         ExplicitWidth = 754
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end

@@ -135,7 +135,7 @@ type
   private
     _unqryLin: TDataset;
     _unqryFac: TDataset;
-    _enProcesamiento:boolean;
+//    _enProcesamiento:boolean;
     _sImpcl: string;
     _sTipIva: string;
     _sNumLin: String;
@@ -231,7 +231,7 @@ type
     procedure AcumularTotalesPorTipoIVA(linea: TLinFac);
     procedure CalcularTotalesGenerales;
     procedure CalcularRetenciones;
-    function ConvertirTipoIVA(tipo: string): TTipoIVA;
+//    function ConvertirTipoIVA(tipo: string): TTipoIVA;
     procedure ValidarConfiguracion;
     function ObtenerPorcentajePorTipo(tipo: string): Currency;
     function ObtenerPorcentajeREPorTipo(tipo: string): Currency;
@@ -826,7 +826,7 @@ end;
 
 function TFacturaTotales.ProcesarFacturaCompleta: Boolean;
 begin
-  Result := False;
+//  Result := False;
   _mensajeError := '';
   try
     // Leer configuración de la factura
@@ -1015,17 +1015,17 @@ begin
   end;
 end;
 
-function TFacturaTotales.ConvertirTipoIVA(tipo: string): TTipoIVA;
-begin
-  case IndexStr(tipo, ['N', 'R', 'S', 'E']) of
-    0: Result := tivaNormal;
-    1: Result := tivaReducido;
-    2: Result := tivaSuperReducido;
-    3: Result := tivaExento;
-  else
-    Result := tivaNormal;
-  end;
-end;
+//function TFacturaTotales.ConvertirTipoIVA(tipo: string): TTipoIVA;
+//begin
+//  case IndexStr(tipo, ['N', 'R', 'S', 'E']) of
+//    0: Result := tivaNormal;
+//    1: Result := tivaReducido;
+//    2: Result := tivaSuperReducido;
+//    3: Result := tivaExento;
+//  else
+//    Result := tivaNormal;
+//  end;
+//end;
 
 procedure TFacturaTotales.ValidarConfiguracion;
 begin
@@ -1060,8 +1060,8 @@ end;
 
 procedure TFacturaTotales.RecorrerYCalcularLineasConClientDataSet;
 var
-  Dsp: TDataSetProvider;
-  cdsTemp: TClientDataSet;
+//  Dsp: TDataSetProvider;
+//  cdsTemp: TClientDataSet;
   lineaActual: TLinFac;
   numeroLineaEnEdicion: string;
   bookmark: TBookmark;

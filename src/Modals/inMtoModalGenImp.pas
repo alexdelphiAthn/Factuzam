@@ -18,7 +18,7 @@ uses
   ExtCtrls, ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit,
   cxCalendar, frxDesgn, cxGroupBox, cxRadioGroup, frxExportBaseDialog,
   frxExportXLSX, MemDS, DBAccess, Uni, UniDataConn,
-  inLibGlobalVar, inMtoPrincipal2, inMtoModalGenImpEle, cxStyles, dxSkinsForm,
+  inLibGlobalVar, inMtoPrincipal, inMtoModalGenImpEle, cxStyles, dxSkinsForm,
   cxClasses, cxLocalization, Vcl.Menus, System.UITypes, JvComponentBase,
   JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
   dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide, dxSkinDevExpressDarkStyle,
@@ -237,7 +237,7 @@ begin
                    'Consulte con el Administrador', [sUserProp])
   else
   begin
-    iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
+    iButtonSel := MessageDlg('ï¿½Estï¿½ seguro de borrar el formato?',
                              mtCustom,[mbYes,mbNo], 0);
   if (iButtonSel = mrYes) then
   begin
@@ -303,7 +303,7 @@ begin
       if unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []) then
       begin
         if ( Application.MessageBox( 'El informe ya existe. ' +
-                                    '¿Desea reemplazar el informe?',
+                                    'ï¿½Desea reemplazar el informe?',
                                     'Mensaje Advertencia',
                                     MB_YESNO ) = ID_YES ) then
           unqryPerfiles.Edit

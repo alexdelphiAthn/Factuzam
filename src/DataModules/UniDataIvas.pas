@@ -1,4 +1,4 @@
-{*******************************************************}
+Ôªø{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -75,15 +75,15 @@ begin
     if ((sCodigo = '') or
         (SimbolosProhibidos(sCodigo))) then
     begin
-      ShowMessageFmt('%s no es un valor de registro v·lido ' +
-                                                  'para el campo CÛdigo de IVA',
+      ShowMessageFmt('%s no es un valor de registro v√°lido ' +
+                                                  'para el campo C√≥digo de IVA',
                                                                      [sCodigo]);
       bError := True;
     end;
     if ((FindField('GRUPO_ZONA_IVA').AsString = '0') or
         (not ExisteGrupoZonaIVA(FindField('GRUPO_ZONA_IVA').AsString))) then
     begin
-      ShowMessageFmt('%s no es un valor v·lido o no existe para grupo de IVAS',
+      ShowMessageFmt('%s no es un valor v√°lido o no existe para grupo de IVAS',
                                         [FindField('GRUPO_ZONA_IVA').AsString]);
       bError := True;
     end;
