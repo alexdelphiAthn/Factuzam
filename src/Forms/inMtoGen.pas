@@ -107,22 +107,16 @@ type
     procedure FormShow(Sender: TObject);
     procedure rbGridClick(Sender: TObject);
     procedure rbBBDDClick(Sender: TObject);
-//    procedure edtPerfilBusqKeyPress(Sender: TObject; var Key: Char);
-    procedure pcPantallaPageChanging(Sender: TObject; NewPage: TcxTabSheet;
-      var AllowChange: Boolean);
+    procedure pcPantallaPageChanging(Sender: TObject;
+                                     NewPage: TcxTabSheet;
+                                     var AllowChange: Boolean);
     procedure sbResetGridClick(Sender: TObject);
     procedure sbGrabarGridClick(Sender: TObject);
     procedure btnBusqClick(Sender: TObject);
-//    procedure pcPantallaChange(Sender: TObject);
     procedure pcPantallaEnter(Sender: TObject);
     procedure tsFichaShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
-    //procedure FormKeyPress(Sender: TObject; var Key: Char);
-//    procedure edtBusqGlobalPropertiesValidate(Sender: TObject;
-//     var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
-    //procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
-//  procedure ApplicationEvents1ShortCut(var Msg: TWMKey; var Handled: Boolean);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
     procedure SimulateTabKey;
@@ -140,7 +134,6 @@ type
     procedure ResetForm;  virtual;
     procedure AbrirPerfiles(bTabVisible:Boolean);
     procedure CargarPerfilesParticulares; virtual;
-//    constructor CreateWithDataModule(AOwner: TComponent; ADataModule: TdmBase);
   public
     destructor Destroy; override;
   end;
@@ -159,27 +152,6 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen;
-
-{https://stackoverflow.com/questions/3979298/
- how-to-simulate-an-ondestroy-event-on-a-tframe-in-delphi}
-
-//procedure TfrmMtoGen.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
-//var
-//  Message: TMessage absolute Msg;
-//  Shift: TShiftState;
-//begin
-//  Handled := False;
-//  if ActiveControl is TCustomEdit then
-//  begin
-//    Shift := KeyDataToShiftState(Msg.KeyData);
-//    // add more cases if needed
-//    Handled := (Shift = [ssCtrl]) and
-//               (Msg.CharCode in [Ord('F'), Ord('A'), Ord('E'), Ord('K')]);
-//    if Handled then
-//      TCustomEdit(ActiveControl).DefaultHandler(Message);
-//  end;
-//  //else if ActiveControl is ... then ... // add more cases as needed
-//end;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -261,7 +233,8 @@ begin
       if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
       begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
-        if ((GetPerfilValueDef(oPerfilDic, cxGrid.Name + '__oApplyWidth',
+        if ((GetPerfilValueDef(oPerfilDic,
+                               cxGrid.Name + '__oApplyWidth',
                                'False')) = 'True') then
         begin
           PonerAnchosTitulos(cxGrid,
@@ -271,11 +244,10 @@ begin
       end;
     end;
   end;
-  //if ((GetPerfilValueDef(oPerfilDic, 'oApplySkin', 'False')) = 'True') then
-//  SetSkin(GetPerfilValue(oPerfilDic, 'oSkin'));
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
   if ((GetPerfilValueDef(oPerfilDic,
-                         'oRenameComponents', 'False')) = 'True') then
+                         'oRenameComponents',
+                         'False')) = 'True') then
     SetLabelForm(Self, oPerfilDic);
   tsPerfil.TabVisible :=
             StrToBool(GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil', 'False'));
@@ -331,7 +303,6 @@ const
 var
   ts : TcxTabSheet;
   formP:TForm;
-  //bCancelar:Boolean;
 begin
   inherited;
   ts := Self.parent as TcxTabSheet;
@@ -345,19 +316,12 @@ begin
      begin
        btnGrabarClick(Sender);
        ShowMessage('Cambios grabados');
-
-       //bCancelar := True;
      end
      else
      begin
-       //bCancelar := False;
        CancelarGrids(formP);
      end;
   end;
-  // NO liberar el DataModule manualmente
-  // Se liberará automáticamente cuando se destruya el formulario (Self)
-  // porque se creó con Owner = Self
-  // Simplemente asignar nil a la referencia
   tdmDataModule := nil;
   PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
 end;
@@ -400,7 +364,9 @@ begin
         begin
           cxGrid := (Self.Components[i] as TcxGridDBTableView);
         // Hay que resetear aquí los registros que contengan el grid en perfiles
-          (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+          (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
+                                                       Self.Name,
+                                                       sPermisos);
           IsSavingGrid := (GetPerfilValueDef(oPerfilDic,
                                              cxGrid.Name + '__' + 'oApplyWidth',
                                              'False') = 'True');
@@ -427,7 +393,6 @@ var
   cxGrid : TcxGridDBTableView;
 begin
   inherited;
-  //Grabar Grid
   bGuardar := False;
   formulario := TfrmModalGenImpSave.Create(Self);
   formulario.edtNombreOrigen.Text := Self.Name;
@@ -455,26 +420,6 @@ end;
 procedure TfrmMtoGen.tsFichaShow(Sender: TObject);
 var
   FocusControl: TWinControl;
-//  ControlList: TStringList;
-//  procedure AddControlInfo(AControl: TControl; ALevel: Integer);
-//  var
-//    I: Integer;
-//    Indent: string;
-//  begin
-//    Indent := StringOfChar(' ', ALevel * 2);
-//    if AControl is TWinControl then
-//    begin
-////      ControlList.Add(Format('%s%s (TabOrder: %d, CanFocus: %s)',
-////        [Indent, AControl.Name, TWinControl(AControl).TabOrder,
-////         BoolToStr(TWinControl(AControl).CanFocus, True)]));
-//
-//      for I := 0 to TWinControl(AControl).ControlCount - 1 do
-//        AddControlInfo(TWinControl(AControl).Controls[I], ALevel + 1);
-//    end;
-//    //else
-//    //  ControlList.Add(Format('%s%s (Not a TWinControl)',
-//    //                         [Indent, AControl.Name]));
-//  end;
   function FindNextFocusableControl(AParent: TWinControl): TWinControl;
   var
     I: Integer;
@@ -512,25 +457,14 @@ var
     end;
   end;
 begin
-  //ControlList := TStringList.Create;
-//  try
-    //AddControlInfo(tsFicha, 0);
-    //ShowMessage('Controles en tsFicha:' + sLineBreak + ControlList.Text);
     FocusControl := FindNextFocusableControl(tsFicha);
     if Assigned(FocusControl) then
     begin
       if FocusControl.CanFocus then
       begin
         FocusControl.SetFocus;
-        //ShowMessage('Foco establecido en: ' + FocusControl.Name +
-        //           ' (TabOrder: ' + IntToStr(FocusControl.TabOrder) + ')');
       end;
     end;
-//    else
-//    ShowMessage('No se encontró un control focusable después de la pestaña.');
-//  finally
-//    ControlList.Free;
-//  end;
 end;
 
 procedure TfrmMtoGen.CargarPerfilesComunes(sUser:string = 'Todos');
@@ -573,8 +507,6 @@ begin
     pcPantalla.ActivePage := tsFicha;
 end;
 
-//Desgraciadamente la pestaña al cerrar no llama nunca a Close, hay que poner
-//el cierre de variables en Destroy
 destructor TfrmMtoGen.Destroy;
 begin
   if (oPerfilDic <> nil) then
@@ -583,7 +515,6 @@ begin
     FreeAndNil(tdmDataModule);
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
-  //FDataModules.Free;
   inherited;
 end;
 
@@ -607,28 +538,17 @@ begin
       if (dsTablaG.DataSet.State = dsInactive) then
     begin
       lblEditMode.Caption := 'Inactivo';
-      //Self.Close;
     end;
   end;
 end;
-
-//procedure TfrmMtoGen.edtPerfilBusqKeyPress(Sender: TObject; var Key: Char);
-//begin
-//  inherited;
-////    BusqDataBase((tdmdatamodule.unqryPerfiles as TUniQuery),
-////                 edtPerfilBusq.Text,
-////                 sConsultaP);
-//end;
 
 procedure TfrmMtoGen.FormCreate(Sender: TObject);
 var
   sModoBusq:String;
 begin
   inherited;
-  //FDataModules := TDictionary<TClass, TdmBase>.Create;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
-  //Application.ProcessMessages;
   tsFichCab := nil;
   tsFichBut := nil;
   Self.Position  := poScreenCenter;
@@ -661,16 +581,12 @@ procedure TfrmMtoGen.SimulateTabKey;
 var
   Inputs: array[0..1] of TInput;
 begin
-  // Prepare the input array
   ZeroMemory(@Inputs, SizeOf(Inputs));
-  // Simulate Tab key press
   Inputs[0].Itype := INPUT_KEYBOARD;
   Inputs[0].ki.wVk := VK_TAB;
-  // Simulate Tab key release
   Inputs[1].Itype := INPUT_KEYBOARD;
   Inputs[1].ki.wVk := VK_TAB;
   Inputs[1].ki.dwFlags := KEYEVENTF_KEYUP;
-  // Send the input
   SendInput(2, Inputs[0], SizeOf(TInput));
 end;
 
@@ -683,14 +599,6 @@ begin
     CancelarGrids(Owner);
     if ((pcPantalla.ActivePage = tsFicha)) then
         pcPantalla.ActivePage := tsLista;
-//      else
-//        if ( (dsTablaG.State = dsBrowse) and
-//             (pcPantalla.ActivePage = tsLista)
-//           ) then
-//          if ( Application.MessageBox( '¿Desea abandonar la ficha?',
-//                                   'Mensaje Advertencia',
-//                                   MB_YESNO ) = ID_YES ) then
-//         Close;
   end;
   if (dsTablaG.State = dsBrowse) then
   begin
@@ -711,8 +619,6 @@ begin
       if ((dsTablaG.State = dsEdit) or
           (dsTablaG.State = dsInsert)) then
         dsTablaG.DataSet.Post;
-//  if ((Key = VK_RETURN) and (Shift <> [ssCtrl])) then
-//    Perform(CM_DIALOGKEY, VK_TAB, 0);
 end;
 
 procedure TfrmMtoGen.FormShow(Sender: TObject);
@@ -773,27 +679,10 @@ begin
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);
-//var
-//  sBusq:string;
 begin
   inherited;
-//  if (rbBBDD.Checked = true) then
-//    sBusq := 'Database'
-//  else
-//    sBusq := 'Grid';
-//  if ( sBusq = 'Grid') then
-//  begin
-    //filtro del grid de Developer Express
     BusqAllGrid(cxGrdDBTabPrin,
                 edtBusqGlobal.Text);
-//  end
-//  else
-//    begin
-//      //filtro desde la consulta sql, añadiendo las opc de búsqueda al sql
-//      BusqDataBase( (dsTablaG.DataSet  as TUniQuery),
-//                     edtBusqGlobal.Text,
-//                     sConsultaO);
-//    end;
   if ((pcPantalla.ActivePage <> tsLista) and (tsLista.TabVisible = true)) then
     pcPantalla.ActivePage := tsLista;
 end;
@@ -801,16 +690,11 @@ end;
 procedure TfrmMtoGen.btnCancelarClick(Sender: TObject);
 begin
   inherited;
-  //Screen.Cursor := crHourGlass;
   CancelarGrids(Owner);
-  //Screen.Cursor := crDefault;
 end;
 
 procedure TfrmMtoGen.sbExportExcelClick(Sender: TObject);
-//var
-//  saveDialog : tsavedialog;
 begin
-//  saveDialog := TSaveDialog.Create(self);
   saveDialog.Title := 'Guardar listado a Excel';
   saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
   saveDialog.Filter := 'Archivo Excel|*.xlsx';
@@ -818,36 +702,11 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
-//  saveDialog.Free;
 end;
 
-//procedure TfrmMtoGen.btnSalirClick(Sender: TObject);
-//var
-//  i:Integer;
-//  ts : TcxTabSheet;
-//  pc:TcxPageControl;
-//begin
-//  inherited;
-//  if (dsTablaG.DataSet <> nil) then
-//    if ( dsTablaG.DataSet.State = dsInsert ) or
-//       ( dsTablaG.DataSet.State = dsEdit ) then
-//    begin
-//       if ( Application.MessageBox( '¿Desea cancelar la entrada de datos?',
-//                                   'Mensaje Advertencia',
-//                                   MB_YESNO ) = ID_YES ) then
-////         Close;
-//    end;
-//    ts := parent as TcxTabSheet;
-//    pc := ts.PageControl;//else
-//    i := EncuentraPagina(pc, 'Facturas');
-//    if i<>-1 then
-//       TcxPageControlPropertiesAccess((pc).Properties).DoCloseTab(i);
-//end;
 
 initialization
 
 finalization
-//  if oPerfilDic <> nil then
-//    Sleep(0);
 
 end.
