@@ -526,8 +526,6 @@ begin
         //           ' (TabOrder: ' + IntToStr(FocusControl.TabOrder) + ')');
       end;
     end;
-    if edtBusqGlobal.CanFocus then
-      edtBusqGlobal.SetFocus;
 //    else
 //    ShowMessage('No se encontró un control focusable después de la pestaña.');
 //  finally
@@ -723,6 +721,7 @@ begin
   if (tsLista.TabVisible = true) then
     pcPantalla.ActivePage := tsLista;
   ResetForm;
+
 end;
 
 procedure TfrmMtoGen.pcPantallaEnter(Sender: TObject);
@@ -769,8 +768,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
-//  if edtBusqGlobal.CanFocus then
-//    edtBusqGlobal.SetFocus;
+  if edtBusqGlobal.CanFocus then
+    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);
