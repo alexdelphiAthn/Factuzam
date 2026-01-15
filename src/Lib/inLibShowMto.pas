@@ -149,7 +149,7 @@ begin
           // Usar CreateWithForm que asigna CurrentForm ANTES de inicializar
           DataModule := CreateMethod.Invoke(lType.AsInstance.MetaclassType,
                                            [TValue.From<TComponent>(nil),
-                                            TValue.From<TComponent>(pOwner)]).AsObject as TDataModule;
+                      TValue.From<TComponent>(pOwner)]).AsObject as TDataModule;
         end
         else
         begin

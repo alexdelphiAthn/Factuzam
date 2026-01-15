@@ -334,11 +334,8 @@ var
   //bCancelar:Boolean;
 begin
   inherited;
-//  bCancelar := True;
-  bCancelar:Boolean;
-begin
-  inherited;
-  formP:=(ts.Parent.Parent.Parent as TForm); //formulario principal
+  ts := Self.parent as TcxTabSheet;
+  formP:=(ts.Parent.Parent.Parent as TfrmMtoPrincipal);
   if ( CheckOpenGrids(Self) ) then
   begin
      if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea grabar'+
@@ -348,7 +345,7 @@ begin
      begin
        btnGrabarClick(Sender);
        ShowMessage('Cambios grabados');
-       
+
        //bCancelar := True;
      end
      else
@@ -362,7 +359,6 @@ begin
   // porque se creó con Owner = Self
   // Simplemente asignar nil a la referencia
   tdmDataModule := nil;
-  ts := parent as TcxTabSheet;
   PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
 end;
 
@@ -773,8 +769,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
-  if edtBusqGlobal.CanFocus then
-    edtBusqGlobal.SetFocus;
+//  if edtBusqGlobal.CanFocus then
+//    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);

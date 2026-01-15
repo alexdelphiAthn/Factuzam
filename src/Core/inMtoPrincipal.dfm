@@ -7,12 +7,15 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   WindowState = wsMaximized
   OnActivate = FormActivate
   OnClose = FormClose
+  OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
   OnPaint = FormPaint
   OnResize = FormResize
   OnShow = FormShow
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1136
-  ExplicitHeight = 607
+  ExplicitHeight = 612
   TextHeight = 19
   object dxstsbr1: TdxStatusBar [0]
     AlignWithMargins = True
@@ -59,8 +62,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Font.Style = []
     Font.Quality = fqClearTypeNatural
     ParentFont = False
-    ExplicitTop = 527
-    ExplicitWidth = 1114
+    ExplicitTop = 519
+    ExplicitWidth = 1112
   end
   object Panel1: TPanel [1]
     Left = 0
@@ -70,8 +73,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 1120
-    ExplicitHeight = 524
+    ExplicitWidth = 1118
+    ExplicitHeight = 516
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
@@ -80,8 +83,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Align = alClient
       TabOrder = 0
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 1120
-      ExplicitHeight = 453
+      ExplicitWidth = 1118
+      ExplicitHeight = 445
       ClientRectBottom = 450
       ClientRectLeft = 4
       ClientRectRight = 1120
@@ -94,8 +97,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 453
-      ExplicitWidth = 1120
+      ExplicitTop = 445
+      ExplicitWidth = 1118
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -106,7 +109,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1118
+        ExplicitWidth = 1116
         Height = 69
         Width = 1122
       end

@@ -42,6 +42,7 @@ const
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(TfrmBase)
+    procedure FormDestroy(Sender: TObject);
 
 
   private
@@ -276,6 +277,12 @@ begin
   //FormPaint(Sender);
 end;
 
+procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  //FinalizarDataModules;
+end;
+
 procedure TfrmMtoPrincipal.FormPaint(Sender: TObject);
 // var
 //   LabelHeight, LabelWidth, LabelTop: Integer;
@@ -405,16 +412,9 @@ begin
     FreeAndNil(oFzaWinf);
     for I := Pred(pcPrincipal.PageCount) downto 0 do
       TcxPageControlPropertiesAccess((pcPrincipal).Properties).DoCloseTab(I);
-    //FdmDataPerfiles.unqryPerfiles.Close;
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
     FreeAndNil(FdmConn);
-
-    //Application.Terminate;
-    //Application.ProcessMessages;
-     // ExitProcess(0);
-
-    //Halt;
   finally
     inliblog.Log.LogInfo('Ventana principal Cerrada');
     Action := caFree;
@@ -437,26 +437,6 @@ begin
   end;
 end;
 
-//procedure TfrmOpenApp2.WMNCCreate(var Msg: TWMNCCreate);
-//var
-//  NCMetrics: TNonClientMetrics;
-//begin
-//  inherited;
-//
-//  NCMetrics.cbSize := SizeOf(TNonClientMetrics);
-//  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NCMetrics.cbSize, @NCMetrics, 0) then
-//  begin
-//    // Cambiamos el nombre de la fuente
-//    StrPCopy(NCMetrics.lfCaptionFont.lfFaceName, Self.Font.Name);
-//    // Opcional: cambiar el tamaño (negativo para indicar altura en pixels)
-//    NCMetrics.lfCaptionFont.lfHeight := Self.Font.Height;
-//    // Opcional: hacer la fuente negrita
-//    NCMetrics.lfCaptionFont.lfWeight := FW_BOLD;
-//
-//    SystemParametersInfo(SPI_SETNONCLIENTMETRICS, NCMetrics.cbSize, @NCMetrics, SPIF_UPDATEINIFILE);
-//  end;
-//end;
-
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
 var
   Component:TComponent;
@@ -469,6 +449,13 @@ begin
   I := 0;
   Result := True;
   bFound := False;
+  if Message.CharCode = VK_F5 then
+  begin
+    // Aquí llamas al procedimiento que abre tu ventana
+    //AbrirMiVentanaF5;
+    Result := True;
+    Exit; // Salimos porque ya procesamos la tecla
+  end;
   //Defino los posibles ShortCuts que envío desde TActionList
   //Mejor usar el respositorio de ventanas y añadir el shortcut en algún sitio
   if (GetKeyState(VK_CONTROL) < 0) then
