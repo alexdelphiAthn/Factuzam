@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
-  Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen;
+  Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
+  inLibGlobalVar;
 
 type
   TOnUpdateTotalEvent = 
@@ -74,7 +75,7 @@ begin
       begin
         if EstaEditando and (Clon.RecNo = RecNoActivo) then
         begin
-          TotalLiquido := TotalLiquido + 
+          TotalLiquido := TotalLiquido +
 		                cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
           TotalBase    := TotalBase    + 
 		            cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
@@ -313,7 +314,7 @@ var
   ValorAttr: string;
   NombreAttr: string;
 begin
-  if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = '' 
+  if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = ''
                                                                             then
     Abort;
   Requeridos := DataSet.FieldByName(
@@ -324,9 +325,9 @@ begin
     ValorAttr := DataSet.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString;
     if Trim(ValorAttr) = '' then
     begin
-      NombreAttr := DataSet.FieldByName('ATTR' + IntToStr(i) + 
+      NombreAttr := DataSet.FieldByName('ATTR' + IntToStr(i) +
 	                                                        '_NOMBRE').AsString;
-      raise Exception.Create('Falta especificar: ' + NombreAttr + 
+      raise Exception.Create('Falta especificar: ' + NombreAttr +
 	                                                      ' para el artículo.');
     end;
   end;
@@ -533,8 +534,8 @@ end;
 
 procedure TdmCajaOpe.DataModuleCreate(Sender: TObject);
 begin
-  qryDefinicionArticulo.Connection := uConexion;
-  qryStock.Connection := uConexion;
+  qryDefinicionArticulo.Connection := oConn;
+  qryStock.Connection := oConn;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
 end;

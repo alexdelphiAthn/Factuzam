@@ -279,14 +279,6 @@ begin
     end;
 end;
 
-//procedure TfrmMtoOpeCaja.tvArticuloGetDisplayText(
-//  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
-//  var AText: string);
-//begin
-//  if ARecord <> nil then
-//    AText := VarToStr(ARecord.Values[Sender.Index]);
-//end;
-
 procedure TfrmMtoOpeCaja.tvArticuloGetProperties(Sender: TcxCustomGridTableItem;
   ARecord: TcxCustomGridRecord; var AProperties: TcxCustomEditProperties);
 var
