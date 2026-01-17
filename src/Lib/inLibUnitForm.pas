@@ -12,7 +12,7 @@ interface
 
 uses
   System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
-  Classes, Windows, Forms, Menus, Controls, Uni,   System.SysUtils,
+  Classes, Windows, Forms, vcl.Menus, Controls, Uni,   System.SysUtils,
   System.StrUtils, inLibUser, Vcl.Buttons, Types;
 
 type
@@ -247,14 +247,25 @@ end;
 
 function TfzaWinF.GetShortCutListOrd: TList<Integer>;
 var
-  aList:TList<Integer>;
-  ofzaForm:TfzaForm;
+  aList: TList<Integer>;
+  ofzaForm: TfzaForm;
+  sc: TShortCut;
 begin
   aList := TList<Integer>.Create;
   for ofzaForm in FList do
   begin
-    if (Length(ofzaForm.ShortCut) = 1) then
-      aList.Add(Ord(ofzaForm.ShortCut[1]));
+    if Trim(ofzaForm.ShortCut) = '' then Continue;
+    try
+      // TextToShortCut hace toda la magia.
+      // Convierte 'Ctrl+F1' en el entero correcto (ej: 16496)
+      // Convierte 'F5' en el entero correcto (ej: 116)
+      sc := TextToShortCut(ofzaForm.ShortCut);
+      if sc <> 0 then
+        aList.Add(sc);
+    except
+      // Si hay un texto mal formado en la BD,
+      //lo ignoramos para no romper el programa
+    end;
   end;
   Result := aList;
 end;
