@@ -42,7 +42,10 @@ const
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(TfrmBase)
+    mnuCaja: TMenuItem;
+    mnuMenuCaja: TMenuItem;
     procedure FormDestroy(Sender: TObject);
+    procedure mnuMenuCajaClick(Sender: TObject);
 
 
   private
@@ -154,6 +157,7 @@ uses inLibUser,
      inLibLog,
      inLibDir,
      inMtoSplash,
+     inMtoCajaMenu,
      inMtoModalGenFilter;
 
 {$R *.dfm}
@@ -438,78 +442,68 @@ begin
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
+  function GetKeyShiftState: TShiftState;
+  begin
+    Result := [];
+    if GetKeyState(VK_SHIFT) < 0 then Include(Result, ssShift);
+    if GetKeyState(VK_CONTROL) < 0 then Include(Result, ssCtrl);
+    if GetKeyState(VK_MENU) < 0 then Include(Result, ssAlt);
+  end;
 var
-  Component:TComponent;
-  ts:TcxTabSheet;
-  I:Integer;
-  iPageActive:Integer;
-  bFound:Boolean;
-  aShortCut:TList<integer>;
+  Component: TComponent;
+  ts: TcxTabSheet;
+  I: Integer;
+  iPageActive: Integer;
+  bFound: Boolean;
+  aShortCutList: TList<integer>;
+  CurrentShortCut: TShortCut;
+  ShiftState: TShiftState;
 begin
   I := 0;
   Result := True;
   bFound := False;
-  if Message.CharCode = VK_F5 then
-  begin
-    // Aquí llamas al procedimiento que abre tu ventana
-    //AbrirMiVentanaF5;
-    Result := True;
-    Exit; // Salimos porque ya procesamos la tecla
-  end;
-  //Defino los posibles ShortCuts que envío desde TActionList
-  //Mejor usar el respositorio de ventanas y añadir el shortcut en algún sitio
-  if (GetKeyState(VK_CONTROL) < 0) then
-  begin
-    //Empiezo con la 'A' de la tabla ascii. Lo minimo será Control + 'A'
-    if (Message.CharCode >= 65) then
+  ShiftState := GetKeyShiftState;
+  CurrentShortCut := Vcl.Menus.ShortCut(Message.CharCode, ShiftState);
+  aShortCutList := oFzaWinf.GetShortCutListOrd;
+  try
+    if (aShortCutList.Contains(CurrentShortCut)) then
     begin
-      aShortCut := oFzaWinf.GetShortCutListOrd;
-      if (  (aShortCut.Contains(Message.CharCode))
-         ) then
+      if (Self.pcPrincipal.PageCount) > 0 then
       begin
-        //Sólo proceso si hay ventanas abiertas
-        if (Self.pcPrincipal.PageCount) > 0 then
+        iPageActive := pcPrincipal.ActivePageIndex;
+        ts := (Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet);
+        if (ts.Controls[0] is TForm) then
         begin
-          //Sólo proceso el TActionList de la propia ventana activa
-          iPageActive := pcPrincipal.ActivePageIndex;
-          ts := (Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet);
-          //Sólo proceso si estoy con una página que tiene un form dentro
-          if (ts.Controls[0] is TForm) then
+          while ((I >= 0) and
+                 (I < (ts.Controls[0] as TForm).ComponentCount) and
+                 (not(bFound))) do
           begin
-            while ( (I >= 0) and
-                    (I < (ts.Controls[0] as TForm).ComponentCount - 1) and
-                    (not(bFound)) )  do
+            Component := (ts.Controls[0] as TForm).Components[I];
+            if (Component is TActionList) then
             begin
-              Component := (ts.Controls[0] as TForm).Components[I];
-              if (Component is TActionList) then
+              if TActionList(Component).IsShortCut(Message) then
               begin
-                //Si el ShortCut está en este ActionList, lo proceso
-                if TActionList(Component).IsShortCut(Message) then
-                begin
-                  bFound := True;
-                  Result := False;
-                  Break;
-                end;
+                bFound := True;
+                Result := True;
+                Break;
               end;
-              Inc(I);
             end;
+            Inc(I);
           end;
         end;
       end;
-      FreeAndNil(aShortCut);
     end;
+  finally
+    FreeAndNil(aShortCutList);
   end;
-  if (bFound = False) then
+  if (not bFound) then
     Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
-//var
-//  openDialog        : topendialog; // lo tenemos persistente
 begin
   if (mnuEjecutarScript.Visible) then
   begin
-//    opendialog := TOpenDialog.Create(Self);
     opendialog.Title := 'Cargar script';
     openDialog.InitialDir := GetCurrentDir;
     undmp1.Connection := FDmConn.conUni;
@@ -527,7 +521,6 @@ begin
           Exit;
         end;
       end;
-//      FreeAndNil(opendialog);
     end;
   end;
 end;
@@ -556,7 +549,9 @@ begin
     begin
       bIsConnected := True;
       dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
-    end;
+    end
+    else
+      bIsConnected := False;
   if (FdmConn = nil) or (not bIsConnected) then
   begin
     dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' +
@@ -583,64 +578,6 @@ begin
   TObject(Message.LParam).Free;
 end;
 
-//procedure TfrmOpenApp2.WMNCPaint(var Message: TWMNCPaint);
-//var
-//  DC: HDC;
-//  R: TRect;
-//  Flags: Integer;
-//  TitleBarHeight: Integer;
-//  OldFont, NewFont: HFONT;
-//  LogFont: TLogFont;
-//begin
-//  // Primero llamamos al comportamiento predeterminado
-//  inherited;
-//
-//  // Obtenemos el DC de la parte no cliente de la ventana
-//  DC := GetWindowDC(Handle);
-//  try
-//    // Configuramos la fuente que queremos usar
-//    ZeroMemory(@LogFont, SizeOf(LogFont));
-//    with LogFont do
-//    begin
-//      lfHeight := -17;  // Tamaño de la fuente
-//      lfWeight := FW_BOLD;  // FW_NORMAL para normal, FW_BOLD para negrita
-//      StrPCopy(lfFaceName, 'Lucida Sans');  // Nombre de la fuente
-//      lfQuality := CLEARTYPE_QUALITY;
-//    end;
-//
-//    NewFont := CreateFontIndirect(LogFont);
-//    OldFont := SelectObject(DC, NewFont);
-//
-//    // Obtenemos el rectángulo de la ventana
-//    GetWindowRect(Handle, R);
-//    OffsetRect(R, -R.Left, -R.Top);
-//
-//    // Altura de la barra de título
-//    TitleBarHeight := GetSystemMetrics(SM_CYCAPTION);
-//
-//    // Configuramos el color y modo de fondo
-//    SetBkMode(DC, TRANSPARENT);
-//    SetTextColor(DC, RGB(0, 0, 0));  // Color del texto (negro en este caso)
-//
-//    // Definimos el rectángulo para el texto
-//    R.Bottom := TitleBarHeight;
-//    R.Left := 25;  // Ajusta esto según necesites
-//
-//    // Dibujamos el texto
-//    Flags := DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS;
-//    DrawText(DC, PChar(Caption), -1, R, Flags);
-//
-//    // Limpiamos
-//    SelectObject(DC, OldFont);
-//    DeleteObject(NewFont);
-//  finally
-//    ReleaseDC(Handle, DC);
-//  end;
-//
-//  Message.Result := 0;
-//end;
-
-
 procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
 var
   frmModalGenFilter: TfrmModalGenFilter;
@@ -651,6 +588,22 @@ begin
     frmModalGenFilter.ShowModal;
   finally
     FreeAndNil(frmModalGenFilter);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
+var
+  frmMtoMenuCaja: TfrmMtoMenuCaja;
+begin
+  inherited;
+  if mnuMenuCaja.Visible then
+  begin
+    try
+      frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Self);
+      frmMtoMenuCaja.ShowModal;
+    finally
+      FreeAndNil(frmMtoMenuCaja);
+    end;
   end;
 end;
 

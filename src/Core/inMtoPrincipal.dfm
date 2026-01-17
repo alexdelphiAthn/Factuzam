@@ -1297,6 +1297,14 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
       end
     end
+    object mnuCaja: TMenuItem
+      Caption = 'Ca&ja'
+      object mnuMenuCaja: TMenuItem
+        Caption = 'Men'#250' de Caja'
+        ShortCut = 116
+        OnClick = mnuMenuCajaClick
+      end
+    end
     object Utilidades1: TMenuItem
       Caption = 'Utilidades'
       object mnuGruposdeIVA: TMenuItem

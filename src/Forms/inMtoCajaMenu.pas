@@ -149,12 +149,15 @@ uses
   inLibGlobalVar;
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
   FormatSettings: TFormatSettings;
 begin
   //CargarConfiguracionDesdeINI;
   //UniConnection1.Connect;
+  Self.Position  := poScreenCenter;
   Application.ShowHint := True;
   Application.HintPause := 500;    // Pausa antes de mostrar
   Application.HintHidePause := 5000; // Tiempo visible
@@ -165,11 +168,6 @@ begin
   FAlmacen := 'GEN';
   lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - ' + 'Almacén ' + FAlmacen;
   CargarVentasPeriodoVisible;
-  // Cargar ventas del mes actual al iniciar
-  //DecodeDate(Date, Año, Mes, Dia);
-//  CargarVentasDelMes(Año, Mes);
-  //referente a los  CAMBIOS DE COLOR
-  // Guardar los colores originales
   FOriginalF5Color := lblF5.Style.TextColor;
   FOriginalVentasColor := lblVentas.Style.TextColor;
   FOriginalF10Color := lblF10.Style.TextColor;
@@ -498,7 +496,7 @@ var
   FechaBuscada: TDateTime;
 begin
   Result := nil;
-  FechaBuscada := AFecha; // Solo la parte de fecha, sin hora
+  FechaBuscada := AFecha;
   for I := 0 to Count - 1 do
   begin
     if (Items[I].Fecha = FechaBuscada) then
@@ -514,4 +512,6 @@ begin
   Result := FindByDate(AFecha) <> nil;
 end;
 
+initialization
+  ForceReferenceToClass(TfrmMtoMenuCaja);
 end.
