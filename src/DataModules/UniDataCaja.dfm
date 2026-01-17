@@ -1,8 +1,16 @@
 object dmCajaOpe: TdmCajaOpe
+  Left = 0
+  Top = 0
+  ClientHeight = 199
+  ClientWidth = 507
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -10
+  Font.Name = 'Segoe UI'
+  Font.Style = []
   OnCreate = DataModuleCreate
-  Height = 307
-  Width = 659
-  PixelsPerInch = 120
+  TextHeight = 12
   object cdsCabecera: TClientDataSet
     Aggregates = <>
     FieldDefs = <
