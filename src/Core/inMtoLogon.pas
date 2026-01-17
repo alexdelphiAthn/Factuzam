@@ -78,7 +78,6 @@ type
     btnConf: TcxButton;
     btnAceptar:TButton;
     btnSalir:TButton;
-    JvGIFAnimator3: TJvGIFAnimator;
     procedure FormCreate(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);

@@ -75,13 +75,15 @@ uses
   inMtoPaises in 'src\Forms\inMtoPaises.pas' {frmMtoPaises},
   UniDataPaises in 'src\DataModules\UniDataPaises.pas' {dmPaises: TDataModule},
   inLibCertificates in 'src\Lib\inLibCertificates.pas',
-  inMtoModalEmpCer in 'src\Modals\inMtoModalEmpCer.pas';
-
-//cxButtonHelper in 'cxButtonHelper.pas';
+  inMtoModalEmpCer in 'src\Modals\inMtoModalEmpCer.pas',
+  inMtoCajaMenu in 'src\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
+  inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
+  UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe};
 
 var
   frmLogon: TfrmLogon;
   AutoLoginSuccessful: Boolean;
+
 begin
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
@@ -91,7 +93,6 @@ begin
   Application.Title := 'Fzam';
   frmLogon := TfrmLogon.Create(Application);
   try
-
     AutoLoginSuccessful := False;
     if (frmLogon.IsInitializeAuto) then
     begin
