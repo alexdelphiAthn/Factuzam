@@ -250,10 +250,10 @@ begin
                                   TcxCustomTextEdit(EditActivo).SelStart)
          else
             TextoBusqueda := TcxCustomTextEdit(EditActivo).Text;
-
         TextoBusqueda := Trim(TextoBusqueda);
         if Length(TextoBusqueda) >= 1 then
         begin
+          qryBusq.Connection := oConn;
           qryBusq.Close;
           qryBusq.ParamByName('TOKEN').AsString := '%' + TextoBusqueda + '%';
           qryBusq.Open;
@@ -372,6 +372,7 @@ begin
     if (CodigoPadre <> '') and (CodigoPadre <> CodigoInput) then
     begin
        DisplayValue := CodigoPadre;
+       qryBusq.Connection := oConn;
        if qryBusq.Active then qryBusq.Close;
          qryBusq.ParamByName('TOKEN').AsString := CodigoPadre;
        qryBusq.Open;
@@ -1247,8 +1248,9 @@ begin
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
   DatosCaja.cdsCabecera.Edit;
-  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime :=
-                                                       frmMtoMenuCaja.FechaCaja;
+  //frmMtoMenuCaja tiene que ser padre
+  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := Now;
+                                                     //frmMtoMenuCaja.FechaCaja;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   with dbtvBusqDBTableView1.DataController do
   begin
