@@ -15,6 +15,7 @@ object frmLogon: TfrmLogon
   KeyPreview = True
   Position = poScreenCenter
   OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   TextHeight = 21
   object pnlMain: TPanel
