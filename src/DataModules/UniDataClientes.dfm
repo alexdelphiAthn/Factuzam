@@ -1,6 +1,7 @@
 inherited dmClientes: TdmClientes
-  Height = 296
-  Width = 866
+  Height = 356
+  Width = 989
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_clientes'
