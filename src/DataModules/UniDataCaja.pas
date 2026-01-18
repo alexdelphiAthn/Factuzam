@@ -10,7 +10,7 @@ uses
 type
   TOnUpdateTotalEvent = 
                      procedure(Sender: TObject; NuevoTotal: Currency) of object;
-  TdmCajaOpe = class(TdmBase)
+  TdmCajaOpe = class(TDataModule)
     cdsLineas:TClientDataSet;
     cdsCabecera:TClientDataSet;
     DataSetProviderLineas:TDataSetProvider;
@@ -31,7 +31,7 @@ type
     procedure ConfigurarEstructuraCabecera;
     procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
   public
-    uConexion:TUniConnection;
+    //uConexion:TUniConnection;
     function GenerarSkuFinal(ArticuloBase: string): string;
     { Public declarations }
   public
@@ -200,7 +200,7 @@ begin
     Exit; // Unknown entity type
   unqry := TUniQuery.Create(nil);
   try
-    unqry.Connection := uConexion;
+    unqry.Connection := oConn;
     unqry.SQL.Text := SQLStr;
     unqry.ParamByName('COD').AsString := Codigo;
     unqry.Open;
@@ -238,7 +238,7 @@ function TdmCajaOpe.GetTarifaDefault: string;
 begin
   var sql := TUniQuery.Create(nil);
   try
-    sql.Connection := uConexion;
+    sql.Connection := oConn;
     sql.SQL.Text := 'SELECT CODIGO_TARIFA ' +
                     ' FROM fza_tarifas ' +
                     'WHERE ESDEFAULT_TARIFA = ' + QuotedStr('S') +
