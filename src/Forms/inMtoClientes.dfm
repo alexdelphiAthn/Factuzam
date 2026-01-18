@@ -15,7 +15,7 @@ inherited frmMtoClientes: TfrmMtoClientes
       Width = 1001
       Height = 663
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 1001
       ExplicitHeight = 663
       ClientRectBottom = 659
@@ -378,7 +378,7 @@ inherited frmMtoClientes: TfrmMtoClientes
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDomicilioFiscal
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 438
             ClientRectLeft = 4
@@ -839,6 +839,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Properties.KeyFieldNames = 'CODIGO_TARIFA'
                   Properties.ListColumns = <
                     item
+                      Fixed = True
                       FieldName = 'NOMBRE_TARIFA'
                     end>
                   Properties.ListOptions.ShowHeader = False
@@ -1881,11 +1882,11 @@ inherited frmMtoClientes: TfrmMtoClientes
         end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
-          Width = 322
+          Width = 310
           Height = 25
           TabOrder = 3
           ExplicitTop = 5
-          ExplicitWidth = 322
+          ExplicitWidth = 310
           ExplicitHeight = 25
         end
         inherited lblTextoaBuscar: TcxLabel

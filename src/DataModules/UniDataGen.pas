@@ -24,18 +24,18 @@ type
     procedure unqryPerfilesBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
-    constructor CreateWithForm(AOwner: TComponent; AForm: TComponent);
   private
     function GetCurrentForm: TComponent;
     procedure SetCurrentForm(const Value: TComponent);
   protected
-    procedure DoCreate; override;
+    procedure DoCreate; virtual;
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
   public
+//    constructor CreateWithForm(AOwner: TComponent; AForm: TComponent);
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
-  private
+  public
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
   end;
@@ -51,24 +51,6 @@ implementation
 uses  inLibGlobalVar, inMtoPrincipal, inMtoGen;
 
 {$R *.dfm}
-
-//constructor TdmBase.Create(AOwner: TComponent);
-//begin
-//  inherited Create(AOwner);
-//  FManualCreate := False;
-//  // Si FCurrentForm no está asignado, no ejecutar DoCreate a�n
-//  if not FManualCreate then
-//    DoCreate;
-//end;
-
-constructor TdmBase.CreateWithForm(AOwner: TComponent; AForm: TComponent);
-begin
-  //FManualCreate := True;
-  FCurrentForm := AForm;
-  inherited Create(AOwner);
-  //FManualCreate := False;
-  DoCreate;  // Ahora sí ejecuta con CurrentForm ya asignado
-end;
 
 procedure TdmBase.DoCreate;
 var
@@ -94,7 +76,7 @@ end;
 
 procedure TdmBase.DataModuleCreate(Sender: TObject);
 begin
- //
+  DoCreate;
 end;
 
 procedure TdmBase.DataModuleDestroy(Sender: TObject);

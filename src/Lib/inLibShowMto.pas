@@ -131,42 +131,56 @@ var
   DataModuleClass: TClass;
   CacheKey: string;
   DataModule: TDataModule;
-  CreateMethod: TRttiMethod;
+  InstanceType: TRttiInstanceType;
+  Instance: TObject;
 begin
-  //Result := nil;
+  Result := nil;
   CacheKey := sDataUnit + '_' + IntToStr(NativeInt(pOwner));
+
   if not GlobalDataModules.TryGetValue(CacheKey, DataModule) then
   begin
     ctx := TRttiContext.Create;
     try
       lType := ctx.FindType(sDataUnit);
-      if (lType <> nil) then
+      if (lType <> nil) and (lType is TRttiInstanceType) then
       begin
-        // Buscar el constructor CreateWithForm
-        CreateMethod := lType.GetMethod('CreateWithForm');
-        if Assigned(CreateMethod) then
+        InstanceType := TRttiInstanceType(lType);
+        DataModuleClass := InstanceType.MetaclassType;
+
+        if DataModuleClass.InheritsFrom(TdmBase) then
         begin
-          // Usar CreateWithForm que asigna CurrentForm ANTES de inicializar
-          DataModule := CreateMethod.Invoke(lType.AsInstance.MetaclassType,
-                                           [TValue.From<TComponent>(nil),
-                      TValue.From<TComponent>(pOwner)]).AsObject as TDataModule;
+          // CLAVE: Crear la instancia pero NO ejecutar el constructor aún
+          Instance := DataModuleClass.NewInstance;
+          try
+            // Asignar CurrentForm ANTES de que se ejecute el constructor
+            TdmBase(Instance).FCurrentForm := pOwner;
+
+            // AHORA sí ejecutar el constructor, que cargará el DFM
+            // y disparará OnCreate con CurrentForm ya asignado
+            TDataModule(Instance).Create(nil);
+
+            DataModule := TDataModule(Instance);
+          except
+            Instance.Free;
+            raise;
+          end;
         end
         else
         begin
-          // Fallback al método antiguo si no existe CreateWithForm
-          DataModuleClass := GetTypeData(lType.Handle)^.ClassType;
+          // Fallback para DataModules que no heredan de TdmBase
           DataModule := TDataMBaseClass(DataModuleClass).Create(nil);
-          if Assigned(DataModule) and (DataModule is TdmBase) then
-            TdmBase(DataModule).CurrentForm := pOwner;
         end;
-        GlobalDataModules.Add(CacheKey, DataModule);
+
+        if Assigned(DataModule) then
+          GlobalDataModules.Add(CacheKey, DataModule);
       end;
     finally
-      // ctx se libera automáticamente
+      ctx.Free;
     end;
   end
   else
   begin
+    // Actualizar CurrentForm si el DataModule ya existe
     if Assigned(DataModule) and (DataModule is TdmBase) then
       TdmBase(DataModule).CurrentForm := pOwner;
   end;
