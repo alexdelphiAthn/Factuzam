@@ -804,6 +804,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                       FieldName = 'DESCRIPCION_FORMAPAGO'
                     end>
                   Properties.ListOptions.ShowHeader = False
+                  Properties.ListSource = dmClientes.dsFormasPago
                   TabOrder = 9
                   Width = 263
                 end

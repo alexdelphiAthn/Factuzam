@@ -44,7 +44,7 @@ type
   TfrmMtoPrincipal = class(TfrmBase)
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
-    procedure FormDestroy(Sender: TObject);
+//    procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
 
 
@@ -118,23 +118,18 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
-    procedure sbCerrarClick(Sender: TObject);
     procedure mnuAcercadeClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
     procedure undmp1Error(Sender: TObject; E: Exception; SQL: string;
       var Action: TErrorAction);
     procedure mnuLisVentasClick(Sender: TObject);
-    procedure FormPaint(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
     procedure WMFreeControl(var Message: TMessage); message WM_FREECONTROL;
   private
 
     FException: boolean;
 //    procedure AppException(Sender: TObject; E: Exception);
     procedure CopiaSeguridad;
-    //procedure UpdateTitleFont;
   public
     { Public declarations }
 
@@ -169,11 +164,9 @@ begin
 //  Application.OnException := AppException;
   sDis := '';
   oMemoSQL := cxMemo1;
-  //ShowMessage('CREANDO CONEXIÓN');
   inliblog.Log.LogInfo('Creando ventana principal');
   FdmConn := TdmConn.Create(Self);
   FdmConn.conUni.Connect;
-  //ShowMessage('CREANDO PERFILES');
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   odmPerfiles := FdmDataPerfiles;
   oConn := FdmConn.conUni;
@@ -181,7 +174,6 @@ begin
   ofrmMto2 := Self;
   //carga de todos los forms con sus propiedades y módulos de datos
   oFzaWinF := TfzaWinf.Create(Self);
-  //ShowMessage('CARGANDO OBJETOS FORMS Y DATA EN MARIADB');
   oFzaWinF.Charge(oConn);
   dxstsbr1.Panels[1].Text := FdmConn.conUni.Server + ':'
     + IntToStr(fdmconn.conUni.Port)
@@ -212,7 +204,6 @@ begin
   //ShowMessage('ESTABLECIENDO FUENTES DE MENU');
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
-  //UpdateTitleFont;
 //  https://www.tek-tips.com/viewthread.cfm?qid=1360646
   try
     if Assigned(LookAndFeelController1) and Assigned(SkinController1) then
@@ -245,106 +236,12 @@ begin
   inliblog.Log.LogInfo('Ventana principal creada');
 end;
 
-//procedure TfrmOpenApp2.UpdateTitleFont;
-//var
-//  hWnd: THandle;
-//  DC: HDC;
-//  TitleFont: HFONT;
-//  LogFont: TLogFont;
-//begin
-//  hWnd := Self.Handle;
-//  DC := GetWindowDC(hWnd);
-//  try
-//    ZeroMemory(@LogFont, SizeOf(LogFont));
-//    with LogFont do
-//    begin
-//      lfHeight := -17;  // Tamaño de la fuente
-//      lfWeight := FW_BOLD;  // Negrita
-//      lfQuality := CLEARTYPE_QUALITY;
-//      StrCopy(lfFaceName, 'Lucida Sans'); // Tipo de letra
-//    end;
-//
-//    TitleFont := CreateFontIndirect(LogFont);
-//    SendMessage(hwnd, WM_SETFONT, TitleFont, MAKELPARAM(1, 0));
-//  finally
-//    ReleaseDC(hWnd, DC);
-//  end;
-//
-//  // Forzar redibujado
-//  SetWindowPos(hWnd, 0, 0, 0, 0, 0,
-//    SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED);
-//end;
-
-procedure TfrmMtoPrincipal.FormDeactivate(Sender: TObject);
-begin
-  inherited;
-  //FormPaint(Sender);
-end;
-
-procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
-begin
-  inherited;
-  //FinalizarDataModules;
-end;
-
-procedure TfrmMtoPrincipal.FormPaint(Sender: TObject);
-// var
-//   LabelHeight, LabelWidth, LabelTop: Integer;
-//   caption_height, border3d_y, button_width, border_thickness: Integer;
-//   MyCanvas: TCanvas;
-//   CaptionBarRect: TRect;
- begin
-//   CaptionBarRect := Rect(0, 0, 0, 0);
-//   MyCanvas := TCanvas.Create;
-//   MyCanvas.Handle := GetWindowDC(frmOpenApp2.Handle);
-//   border3d_y := GetSystemMetrics(SM_CYEDGE);
-//   button_width := GetSystemMetrics(SM_CXSIZE);
-//   border_thickness := GetSystemMetrics(SM_CYSIZEFRAME);
-//   caption_height := GetSystemMetrics(SM_CYCAPTION);
-//   LabelWidth := Self.Canvas.TextWidth(Self.Caption);
-//   LabelHeight := Self.Canvas.TextHeight(Self.Caption);
-//   LabelTop := LabelHeight - (caption_height div 2);
-//   CaptionBarRect.Left := border_thickness + border3d_y + button_width;
-//   CaptionBarRect.Right := Self.Width - (border_thickness + border3d_y)
-// 		- (button_width * 4);
-//   CaptionBarRect.Top := border_thickness + border3d_y;
-//   CaptionBarRect.Bottom := caption_height;
-//   if Self.Active then
-//     MyCanvas.Brush.Color := clActiveCaption
-//   else
-//     MyCanvas.Brush.Color := clInActiveCaption;
-//   MyCanvas.Brush.Style := bsSolid;
-//   MyCanvas.FillRect(CaptionBarRect);
-//   MyCanvas.Brush.Style := bsClear;
-//   MyCanvas.Font.Color := clCaptionText;
-//   MyCanvas.Font.Name := Self.Font.Name;
-//   MyCanvas.Font.Size := Self.Font.Size;
-//   MyCanvas.Font.Style := MyCanvas.Font.Style + [fsBold];
-//   DrawText(MyCanvas.Handle, PChar(' ' + Self.Caption), Length(Self.Caption) + 1,
-//     CaptionBarRect, DT_CENTER or DT_SINGLELINE or DT_VCENTER);
-//   MyCanvas.Free;
-end;
-
-procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
-begin
-  inherited;
-  //FormPaint(Sender);
-end;
-
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
 begin
   if (mnuTarifas.Visible = True) then
     ShowMto(Self,
             'Tarifas');
 end;
-
-//procedure TfrmOpenApp2.AppException(Sender: TObject; E: Exception);
-//begin
-  //OJO!!! DA PROBLEMAS!!!!
-  //Log(oConn, oUser, E.Message, Sender, tlCritical, E.ClassName);
-  //('ERROR de clase:' + E.ClassName + ' with Message: ' + E.Message);
-  //Exit;
-//end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 begin
@@ -523,16 +420,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TfrmMtoPrincipal.sbCerrarClick(Sender: TObject);
-//var
-//  I:Integer;
-begin
-  inherited;
-//  i := EncuentraPagina(pcPrincipal, 'Facturas');
-//  if i<>-1 then
-//    TcxPageControlPropertiesAccess((pcPrincipal).Properties).DoCloseTab(i);
 end;
 
 procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);

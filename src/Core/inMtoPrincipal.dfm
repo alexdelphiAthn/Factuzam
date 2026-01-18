@@ -7,10 +7,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   WindowState = wsMaximized
   OnActivate = FormActivate
   OnClose = FormClose
-  OnDestroy = FormDestroy
-  OnDeactivate = FormDeactivate
-  OnPaint = FormPaint
-  OnResize = FormResize
   OnShow = FormShow
   ExplicitLeft = 3
   ExplicitTop = 3
@@ -173,8 +169,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     PixelsPerInch = 96
   end
   object LookAndFeelController1: TcxLookAndFeelController
-    Kind = lfFlat
-    SkinName = 'SkinOffice2007Blue'
     Left = 72
     Top = 144
   end
