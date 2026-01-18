@@ -226,13 +226,6 @@ begin
       // Continuar sin skin personalizado
     end;
   end;
-    //SendMessage(Handle, WM_SETFONT,
-    //CreateFont(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET,
-    //          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-    //          DEFAULT_PITCH or FF_DONTCARE, 'Lucida Sans'), 1);
-  // Forzar redibujado
-  //SetWindowPos(Handle, 0, 0, 0, 0, 0,
-  //             SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED);
   inliblog.Log.LogInfo('Ventana principal creada');
 end;
 
