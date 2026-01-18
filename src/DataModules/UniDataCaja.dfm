@@ -1,16 +1,8 @@
 object dmCajaOpe: TdmCajaOpe
-  Left = 0
-  Top = 0
-  ClientHeight = 199
-  ClientWidth = 507
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -10
-  Font.Name = 'Segoe UI'
-  Font.Style = []
   OnCreate = DataModuleCreate
-  TextHeight = 12
+  Height = 346
+  Width = 791
+  PixelsPerInch = 120
   object cdsCabecera: TClientDataSet
     Aggregates = <>
     FieldDefs = <
@@ -483,8 +475,8 @@ object dmCajaOpe: TdmCajaOpe
     Params = <>
     StoreDefs = True
     AfterInsert = cdsCabeceraAfterInsert
-    Left = 62
-    Top = 102
+    Left = 78
+    Top = 128
   end
   object cdsLineas: TClientDataSet
     Aggregates = <>
@@ -493,28 +485,28 @@ object dmCajaOpe: TdmCajaOpe
     BeforePost = cdsLineasBeforePost
     AfterPost = cdsLineasAfterPost
     AfterDelete = cdsLineasAfterDelete
-    Left = 266
-    Top = 102
+    Left = 333
+    Top = 128
   end
   object DataSetProviderCabecera: TDataSetProvider
     DataSet = cdsCabecera
-    Left = 60
-    Top = 186
+    Left = 75
+    Top = 233
   end
   object DataSetProviderLineas: TDataSetProvider
     DataSet = cdsLineas
-    Left = 266
-    Top = 182
+    Left = 333
+    Top = 228
   end
   object dsLineas: TDataSource
     DataSet = cdsLineas
-    Left = 264
-    Top = 30
+    Left = 330
+    Top = 38
   end
   object dsCabecera: TDataSource
     DataSet = cdsCabecera
-    Left = 62
-    Top = 20
+    Left = 78
+    Top = 25
   end
   object qryDefinicionArticulo: TUniQuery
     SQL.Strings = (
@@ -533,8 +525,8 @@ object dmCajaOpe: TdmCajaOpe
         'o tienes'
       'ORDER BY N.ID_ATRIBUTO ASC '
       'LIMIT 5;')
-    Left = 432
-    Top = 40
+    Left = 540
+    Top = 50
     ParamData = <
       item
         DataType = ftUnknown
@@ -545,8 +537,8 @@ object dmCajaOpe: TdmCajaOpe
   object qryStock: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)')
-    Left = 440
-    Top = 152
+    Left = 550
+    Top = 190
     ParamData = <
       item
         DataType = ftUnknown

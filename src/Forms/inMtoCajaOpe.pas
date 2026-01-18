@@ -1242,7 +1242,7 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   DatosCaja := TdmCajaOpe.Create(Self);
-  DatosCaja.uConexion := oConn;
+  //DatosCaja.uConexion := oConn;
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
