@@ -38,7 +38,7 @@ type
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
-    procedure CalcularTotalesLinea;
+    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
     procedure CalcularTotalesCabecera;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
@@ -105,67 +105,69 @@ begin
     FOnUpdateTotal(Self, TotalLiquido);
 end;
 
-procedure TdmCajaOpe.CalcularTotalesLinea;
+procedure TdmCajaOpe.CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
 var
-  Cantidad, PrecioBase, PorcenDto, PorcenIVA: Currency;
-  MontoDescuentoUnitario: Currency;
-  PrecioTrasDto: Currency;
-  PrecioUnitarioSinIVA, PrecioUnitarioConIVA: Currency;
-  TotalLineaSinIVA, TotalLineaConIVA: Currency;
+  PrecioUnitario, Cantidad, PorcenDto, PorcenIVA: Currency;
+  TotalBruto, MontoDescuentoTotal, TotalNeto: Currency;
+  TotalBase, TotalImpuestos: Currency;
   EsImpuestosIncluidos: Boolean;
 begin
-  // 1. Verificaciones de seguridad
   if not cdsLineas.Active then Exit;
-  //if cdsLineas.RecordCount = 0 then Exit;
-  // Aseguramos modo edición si no lo está
   if cdsLineas.State = dsBrowse then cdsLineas.Edit;
-  // 2. Lectura de datos
   Cantidad := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
-  PrecioBase := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-  PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsCurrency;
+  PrecioUnitario := cdsLineas.FieldByName(
+                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
   PorcenIVA := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-  // Leemos si la tarifa tiene impuestos incluidos (S/N)
-  EsImpuestosIncluidos := 
-      (cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString = 'S');
-  // 3. Cálculo del Descuento
-  // Calculamos el valor monetario del descuento sobre el precio base
-  MontoDescuentoUnitario := RoundTo(PrecioBase * (PorcenDto / 100), -4); 
-  PrecioTrasDto := PrecioBase - MontoDescuentoUnitario;
-  // 4. Cálculo de Bases e Importes (Bifurcación lógica)
-  if EsImpuestosIncluidos then
+  EsImpuestosIncluidos := (cdsLineas.FieldByName(
+                             'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString = 'S');
+  TotalBruto := RoundTo(PrecioUnitario * Cantidad, -2);
+  if MantenerImporteDto then
   begin
-    // CASO A: El precio ya tiene IVA (ej: 121€ con 21% IVA)
-    PrecioUnitarioConIVA := PrecioTrasDto;
-    // Desglosamos hacia atrás: Base = Total / (1 + 0.21)
-    if (1 + (PorcenIVA / 100)) <> 0 then
-      PrecioUnitarioSinIVA := PrecioUnitarioConIVA / (1 + (PorcenIVA / 100))
+    MontoDescuentoTotal := cdsLineas.FieldByName(
+                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+    if TotalBruto <> 0 then
+      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
+                                        (MontoDescuentoTotal * 100) / TotalBruto
     else
-      PrecioUnitarioSinIVA := PrecioUnitarioConIVA;
+      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
   end
   else
   begin
-    // CASO B: El precio es base + IVA (ej: 100€ + 21% IVA)
-    PrecioUnitarioSinIVA := PrecioTrasDto;
-    // Sumamos el IVA
-    PrecioUnitarioConIVA := PrecioUnitarioSinIVA * (1 + (PorcenIVA / 100));
+    // MODO B: Cambio normal. El % manda.
+    PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+    // Calculamos el descuento sobre el Total Bruto
+    MontoDescuentoTotal := RoundTo(TotalBruto * (PorcenDto / 100), -2);
+
+    cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := MontoDescuentoTotal;
   end;
-  // 5. Cálculo de Totales por Línea
-  // Redondeamos a 2 decimales para moneda final
-  TotalLineaSinIVA := RoundTo(PrecioUnitarioSinIVA * Cantidad, -2);
-  TotalLineaConIVA := RoundTo(PrecioUnitarioConIVA * Cantidad, -2);
-  // 6. Escritura en los campos del Dataset
-  
-  cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 
-                                                         MontoDescuentoUnitario;
-  // Precios Unitarios Netos y Brutos
-  cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 
-                                              RoundTo(PrecioUnitarioSinIVA, -4);
-  cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 
-                                              RoundTo(PrecioUnitarioConIVA, -4);
-  // Totales de la Línea (Base Imponible y Total a Pagar)
-  cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := 
-                                                               TotalLineaSinIVA;
-  cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalLineaConIVA;
+
+  // 4. Aplicar el Descuento (Resta Global)
+  // Aquí está la corrección: TotalBruto - DescuentoTotal
+  TotalNeto := TotalBruto - MontoDescuentoTotal;
+
+  // 5. Desglose de Impuestos
+  if EsImpuestosIncluidos then
+  begin
+    // Si el precio incluye IVA, TotalNeto es el Total a Pagar
+    // Desglosamos hacia atrás
+    if (1 + (PorcenIVA / 100)) <> 0 then
+      TotalBase := RoundTo(TotalNeto / (1 + (PorcenIVA / 100)), -2)
+    else
+      TotalBase := TotalNeto;
+
+    // El total final es lo que dio la resta
+    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalNeto;
+    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
+  end
+  else
+  begin
+    // Si el precio NO incluye IVA, TotalNeto es la Base Imponible Total
+    TotalBase := TotalNeto;
+    TotalImpuestos := RoundTo(TotalBase * (PorcenIVA / 100), -2);
+
+    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
+    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalBase + TotalImpuestos;
+  end;
   CalcularTotalesCabecera;
 end;
 
