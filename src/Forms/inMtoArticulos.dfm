@@ -23,6 +23,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       ClientRectBottom = 669
       ClientRectRight = 852
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 848
         ExplicitHeight = 639
         inherited cxGrdPrincipal: TcxGrid
@@ -397,6 +399,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&1_Tarifas'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -654,6 +660,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&2_Proveedores'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -816,6 +826,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&3_Lineas de Facturas - '
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1195,6 +1209,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1227,10 +1242,11 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitWidth = 856
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 1
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
-          Width = 336
-          ExplicitWidth = 336
+          Width = 324
+          ExplicitWidth = 324
         end
         inherited rbBBDD: TcxRadioButton
           Top = 3
