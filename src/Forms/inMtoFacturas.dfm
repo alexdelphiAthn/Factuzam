@@ -2439,6 +2439,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Caption = '&Cabecera Factura '
                 ImageIndex = 0
+                ExplicitLeft = 36
+                ExplicitTop = 34
                 object lblNroFactura: TcxLabel
                   Left = 45
                   Top = 16
@@ -2451,7 +2453,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Transparent = True
                 end
                 object lblFechaFactura: TcxLabel
-                  Left = 95
+                  Left = 94
                   Top = 200
                   Margins.Left = 4
                   Margins.Top = 4
@@ -2477,7 +2479,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Width = 143
                 end
                 object lblSerieFactura: TcxLabel
-                  Left = 35
+                  Left = 36
                   Top = 154
                   Margins.Left = 4
                   Margins.Top = 4
@@ -2488,7 +2490,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Transparent = True
                 end
                 object btnCODIGO_CLIENTE: TcxDBButtonEdit
-                  Left = 159
+                  Left = 155
                   Top = 105
                   DataBinding.DataField = 'CODIGO_CLIENTE_FACTURA'
                   DataBinding.DataSource = dsTablaG
@@ -2502,10 +2504,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Properties.OnEditValueChanged = btnCODIGO_CLIENTEPropertiesEditValueChanged
                   TabOrder = 4
                   OnKeyUp = btnCODIGO_CLIENTEKeyUp
-                  Width = 104
+                  Width = 166
                 end
                 object lblCodigoCliente: TcxLabel
-                  Left = 18
+                  Left = 16
                   Top = 109
                   Margins.Left = 4
                   Margins.Top = 4
@@ -2516,8 +2518,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Transparent = True
                 end
                 object lbldbRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel
-                  Left = 269
-                  Top = 60
+                  Left = 337
+                  Top = 59
                   DataBinding.DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 8
@@ -2526,11 +2528,17 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Width = 332
                 end
                 object lbldbRAZONSOCIAL_CLIENTE_FACTURA: TcxDBLabel
-                  Left = 269
-                  Top = 109
+                  Left = 337
+                  Top = 106
                   DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
                   DataBinding.DataSource = dsTablaG
                   ParentFont = False
+                  Style.Font.Charset = DEFAULT_CHARSET
+                  Style.Font.Color = clWindowText
+                  Style.Font.Height = -17
+                  Style.Font.Name = 'Lucida Sans'
+                  Style.Font.Style = []
+                  Style.IsFontAssigned = True
                   TabOrder = 9
                   Transparent = True
                   Height = 21
@@ -2550,10 +2558,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Properties.OnChange = btnCODIGO_EMPRESA_FACTURAPropertiesChange
                   Properties.OnEditValueChanged = btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged
                   TabOrder = 2
-                  Width = 104
+                  Width = 166
                 end
                 object lblCodigoEmpresa: TcxLabel
-                  Left = 7
+                  Left = 5
                   Top = 62
                   Margins.Left = 4
                   Margins.Top = 4
@@ -2561,6 +2569,12 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Bottom = 4
                   Caption = 'C'#243'digo Empresa'
                   ParentFont = False
+                  Style.Font.Charset = DEFAULT_CHARSET
+                  Style.Font.Color = clWindowText
+                  Style.Font.Height = -17
+                  Style.Font.Name = 'Lucida Sans'
+                  Style.Font.Style = []
+                  Style.IsFontAssigned = True
                   TabOrder = 11
                   Transparent = True
                 end
@@ -3317,6 +3331,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilTop: TPanel
           Width = 1079
           ExplicitWidth = 1079
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1079
@@ -3341,6 +3358,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
+        end
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 338
