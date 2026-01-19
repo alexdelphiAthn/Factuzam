@@ -431,34 +431,24 @@ var
   DescuentoTotal, NuevoPorcen: Double;
 begin
   TcxCustomEdit(Sender).PostEditValue;
-
   // 1. Datos base
   PrecioUnitario := DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
   Cantidad := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
   NuevoTotal := DatosCaja.cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-
   // 2. Calculamos el Total Bruto (Sin descuento)
   TotalBruto := PrecioUnitario * Cantidad;
-
   if TotalBruto = 0 then Exit;
-
   // 3. Calculamos el Descuento TOTAL necesario (Sin dividir por cantidad)
   DescuentoTotal := TotalBruto - NuevoTotal;
-
   if DescuentoTotal < 0 then DescuentoTotal := 0;
-
   // 4. Calculamos el % Global
   NuevoPorcen := (DescuentoTotal / TotalBruto) * 100;
-
   // 5. Guardamos
   DatosCaja.cdsLineas.Edit;
-
   // ¡OJO AQUÍ! Guardamos el TOTAL del descuento directamente
   DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := DescuentoTotal;
-
   // Guardamos el % con precisión alta
   DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := NuevoPorcen;
-
   // 6. Recalculamos protegiendo el importe
   DatosCaja.CalcularTotalesLinea(True);
 end;
