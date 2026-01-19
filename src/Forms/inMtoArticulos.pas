@@ -203,6 +203,7 @@ type
     procedure btnIraClienteClick(Sender: TObject);
     procedure btnBuscarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -444,7 +445,6 @@ begin
   dmmArticulos.unqryTablaG.Insert;
   pcPantalla.Properties.ActivePage := tsFicha;
   tsFicha.SetFocus;
-  ResetForm;
   txtDESCRIPCION_ARTICULO.SetFocus;
 end;
 
@@ -538,7 +538,6 @@ begin
   tvProveedores.DataController.DataSource :=
                                             dmmArticulos.dsProveedoresArticulos;
   tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
-  ResetForm;
   pkFieldName := 'CODIGO_ARTICULO';
 end;
 
@@ -665,6 +664,12 @@ begin
   begin
     txtCODIGO_ARTICULO.Enabled := False;
   end;
+end;
+
+procedure TfrmMtoArticulos.FormShow(Sender: TObject);
+begin
+  inherited;
+  ResetForm;
 end;
 
 initialization
