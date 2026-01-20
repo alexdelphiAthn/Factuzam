@@ -78,7 +78,8 @@ uses
   inMtoModalEmpCer in 'src\Modals\inMtoModalEmpCer.pas',
   inMtoCajaMenu in 'src\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
-  UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe};
+  UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
+  inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro};
 
 var
   frmLogon: TfrmLogon;
@@ -110,5 +111,6 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmMtoCajaFaseCobro, frmMtoCajaFaseCobro);
   Application.Run;
 end.
