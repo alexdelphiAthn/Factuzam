@@ -352,6 +352,10 @@
             <Form>dmCajaOpe</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaFaseCobro.pas">
+            <Form>frmMtoCajaFaseCobro</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
