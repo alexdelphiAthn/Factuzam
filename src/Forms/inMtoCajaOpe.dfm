@@ -154,6 +154,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
+        OnClick = btnF12Click
       end
       object btnF3: TcxButton
         Left = 117
@@ -255,7 +256,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 678
+        Left = 672
         Top = 5
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -277,10 +278,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 672
+        ExplicitLeft = 666
         Height = 80
         Width = 401
-        AnchorX = 1079
+        AnchorX = 1073
       end
       object btnF8: TcxButton
         Left = 224

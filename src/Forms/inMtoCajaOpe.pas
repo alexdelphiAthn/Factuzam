@@ -118,6 +118,7 @@ type
     procedure cxGrid1DBTableView1CanFocusRecord(Sender: TcxCustomGridTableView;
       ARecord: TcxCustomGridRecord; var AAllow: Boolean);
     procedure tvTotalPropertiesEditValueChanged(Sender: TObject);
+    procedure btnF12Click(Sender: TObject);
 //    procedure tvArticuloGetDisplayText(Sender: TcxCustomGridTableItem;
 //      ARecord: TcxCustomGridRecord; var AText: string);
   private
@@ -146,7 +147,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu, inLibGlobalVar;
+  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
 var
@@ -1259,6 +1260,19 @@ begin
     ErrorText := '';
   end;
   cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+end;
+
+procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
+var
+  frmFaseCobro:TfrmMtoCajaFaseCobro;
+begin
+  try
+    frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
+    frmFaseCobro.ShowModal;
+  finally
+    FreeAndNil(frmFaseCobro);
+  end;
+
 end;
 
 procedure TfrmMtoOpeCaja.btnF5Click(Sender: TObject);

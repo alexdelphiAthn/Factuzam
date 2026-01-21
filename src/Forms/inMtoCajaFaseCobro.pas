@@ -10,6 +10,7 @@ uses
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
+  inLibGlobalVar,
   cxDropDownEdit, Uni, System.Generics.Collections, Vcl.Menus, inMtoFrmBase;
 type
   TFormaPagoItem = record
@@ -198,7 +199,7 @@ begin
 end;
 procedure TfrmMtoCajaFaseCobro.CargarBotonesFormasPago;
 var
-  Query: TFDQuery;
+  Query: TUniQuery;
   Btn: TcxButton;
   TopPos, LeftPos, BtnIndex: Integer;
 begin
@@ -206,9 +207,9 @@ begin
   for Btn in FListaBotones do
     Btn.Free;
   FListaBotones.Clear;
-  Query := TFDQuery.Create(nil);
+  Query := TUniQuery.Create(nil);
   try
-    Query.Connection := DMConexion.ConexionMySQL;
+    Query.Connection := oConn;
     Query.SQL.Add('SELECT CODIGO_FORMAP, DESCRIPCION_FORMAP, ');
     Query.SQL.Add('  TIPO_COMPORTAMIENTO_FORMAP, ES_DEVUELVE_CAMBIO_FORMAP,');
     Query.SQL.Add('  ORDEN_VISUAL_FORMAP');
@@ -236,33 +237,33 @@ begin
       Btn.Hint := Query.FieldByName('CODIGO_FORMAP').AsString;
       Btn.OnClick := OnBotonFormaPagoClick;
       // Colores según tipo
-      case AnsiIndexStr(Query.FieldByName('TIPO_COMPORTAMIENTO_FORMAP').AsString,
-        ['EFECTIVO', 'TARJETA', 'VALE', 'DEUDA']) of
-        0: begin // EFECTIVO
-          Btn.Colors.Default := clYellow;
-          Btn.Colors.Normal := clYellow;
-          Btn.Colors.Hot := $0080FFFF;
-        end;
-        1: begin // TARJETA
-          Btn.Colors.Default := clYellow;
-          Btn.Colors.Normal := clYellow;
-          Btn.Colors.Hot := $0080FFFF;
-        end;
-        2: begin // VALE
-          Btn.Colors.Default := clAqua;
-          Btn.Colors.Normal := clAqua;
-          Btn.Colors.Hot := $00FFFF80;
-        end;
-        3: begin // DEUDA
-          Btn.Colors.Default := clAqua;
-          Btn.Colors.Normal := clAqua;
-          Btn.Colors.Hot := $00FFFF80;
-        end;
-      else
-        Btn.Colors.Default := clSilver;
-        Btn.Colors.Normal := clSilver;
-        Btn.Colors.Hot := clWhite;
-      end;
+//      case AnsiIndexStr(Query.FieldByName('TIPO_COMPORTAMIENTO_FORMAP').AsString,
+//        ['EFECTIVO', 'TARJETA', 'VALE', 'DEUDA']) of
+//        0: begin // EFECTIVO
+//          Btn.Colors.Default := clYellow;
+//          Btn.Colors.Normal := clYellow;
+//          Btn.Colors.Hot := $0080FFFF;
+//        end;
+//        1: begin // TARJETA
+//          Btn.Colors.Default := clYellow;
+//          Btn.Colors.Normal := clYellow;
+//          Btn.Colors.Hot := $0080FFFF;
+//        end;
+//        2: begin // VALE
+//          Btn.Colors.Default := clAqua;
+//          Btn.Colors.Normal := clAqua;
+//          Btn.Colors.Hot := $00FFFF80;
+//        end;
+//        3: begin // DEUDA
+//          Btn.Colors.Default := clAqua;
+//          Btn.Colors.Normal := clAqua;
+//          Btn.Colors.Hot := $00FFFF80;
+//        end;
+//      else
+//        Btn.Colors.Default := clSilver;
+//        Btn.Colors.Normal := clSilver;
+//        Btn.Colors.Hot := clWhite;
+//      end;
       Btn.LookAndFeel.Kind := lfUltraFlat;
       Btn.Font.Style := [fsBold];
       FListaBotones.Add(Btn);
@@ -277,18 +278,18 @@ procedure TfrmMtoCajaFaseCobro.OnBotonFormaPagoClick(Sender: TObject);
 var
   Btn: TcxButton;
   CodigoFP, DescripcionFP, TipoFP: string;
-  Query: TFDQuery;
+  Query: TUniQuery;
   DevuelveCambio, RequiereReferencia: Boolean;
-  FrmEspecializado: TFrmPagoEspecializado;
+//  FrmEspecializado: TFrmPagoEspecializado;
   Pago: TFormaPagoItem;
 begin
   Btn := Sender as TcxButton;
   CodigoFP := Btn.Hint;
   DescripcionFP := Btn.Caption;
   // Consultar datos de la forma de pago
-  Query := TFDQuery.Create(nil);
+  Query := TUniQuery.Create(nil);
   try
-    Query.Connection := DMConexion.ConexionMySQL;
+    Query.Connection := oConn;
     Query.SQL.Add('SELECT TIPO_COMPORTAMIENTO_FORMAP, ES_DEVUELVE_CAMBIO_FORMAP,');
     Query.SQL.Add('  ES_REQ_REFERENCIA_FORMAP');
     Query.SQL.Add('FROM fza_formas_pago');
@@ -311,20 +312,20 @@ begin
   else
   begin
     // Abrir formulario especializado para divisas, crypto, o formas complejas
-    FrmEspecializado := TFrmPagoEspecializado.Create(Self);
-    try
-      FrmEspecializado.CodigoFormaPago := CodigoFP;
-      FrmEspecializado.DescripcionFormaPago := DescripcionFP;
-      FrmEspecializado.ImportePendiente := FImportePendiente;
-      FrmEspecializado.RequiereReferencia := RequiereReferencia;
-      if FrmEspecializado.ShowModal = mrOk then
-      begin
-        Pago := FrmEspecializado.ObtenerDatosPago;
-        AgregarFormaPagoCompleja(Pago);
-      end;
-    finally
-      FrmEspecializado.Free;
-    end;
+//    FrmEspecializado := TFrmPagoEspecializado.Create(Self);
+//    try
+//      FrmEspecializado.CodigoFormaPago := CodigoFP;
+//      FrmEspecializado.DescripcionFormaPago := DescripcionFP;
+//      FrmEspecializado.ImportePendiente := FImportePendiente;
+//      FrmEspecializado.RequiereReferencia := RequiereReferencia;
+//      if FrmEspecializado.ShowModal = mrOk then
+//      begin
+//        Pago := FrmEspecializado.ObtenerDatosPago;
+//        AgregarFormaPagoCompleja(Pago);
+//      end;
+//    finally
+//      FrmEspecializado.Free;
+//    end;
   end;
   RecalcularTotales;
 end;

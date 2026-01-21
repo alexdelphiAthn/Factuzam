@@ -111,6 +111,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmMtoCajaFaseCobro, frmMtoCajaFaseCobro);
   Application.Run;
 end.
