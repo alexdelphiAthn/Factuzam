@@ -44,6 +44,7 @@ type
     pnl1: TPanel;
     unqryPerfiles: TUniQuery;
     dsPerfiles: TDataSource;
+    btnAltaRapida: TcxButton;
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure cxGrdDBTabPrinCellDblClick(Sender: TcxCustomGridTableView;
@@ -54,7 +55,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAltaRapidaClick(Sender: TObject);
   private
-    btnAltaRapida:TcxButton;
+    //btnAltaRapida:TcxButton;
 
     function MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
     function ProcesarValor(const aValor, aTipo: string): Variant;
@@ -143,14 +144,9 @@ Self.Position := poScreenCenter;
   // CREAMOS EL BOTÓN PERO OCULTO
   // (Si prefieres que no ocupe espacio, asegúrate de que esté alineado o usa un LayoutControl,
   // pero con Visible := False es suficiente para que el usuario no lo vea)
-  btnAltaRapida := TcxButton.Create(Self);
+
   with btnAltaRapida do
   begin
-    Parent := pnlTopGrid; // O tu panel de botones
-    Caption := 'Alta Rápida';
-    Width := 100;
-    Left := 10;
-    Top := 5;
     OnClick := btnAltaRapidaClick;
     Visible := False; // <--- POR DEFECTO OCULTO
   end;
@@ -166,12 +162,12 @@ var
   pnlBotones: TPanel;
   btnOk, btnCancel: TcxButton;
 
-  // Referencias locales para Código y Descripción
+  // Referencias locales
   edtCod, edtDesc: TcxTextEdit;
   lbl: TcxLabel;
 
   // Variables de bucle
-  i, TopPos, LeftLbl, LeftEdit, EditWidth: Integer;
+  i, TopPos, LeftMargin, ControlWidth: Integer;
 
   // Componentes dinámicos
   newEdit: TcxTextEdit;
@@ -186,126 +182,142 @@ begin
     FormAlta.Position := poScreenCenter;
     FormAlta.BorderStyle := bsDialog;
     FormAlta.Width := 450;
-    FormAlta.Height := 500; // Altura inicial razonable
-    // Fuente un poco más grande para que se vea moderno
+    FormAlta.Height := 600; // Un poco más alto porque ahora ocupamos más verticalmente
     FormAlta.Font.Size := 10;
     FormAlta.Font.Name := 'Segoe UI';
 
-    // 2. Crear ScrollBox (Para que si hay muchos campos, aparezca barra de scroll)
+    // 2. ScrollBox
     ScrollBox := TScrollBox.Create(FormAlta);
     ScrollBox.Parent := FormAlta;
     ScrollBox.Align := alClient;
     ScrollBox.BorderStyle := bsNone;
 
-    // 3. Panel inferior para botones
+    // 3. Panel Botones
     pnlBotones := TPanel.Create(FormAlta);
     pnlBotones.Parent := FormAlta;
     pnlBotones.Align := alBottom;
     pnlBotones.Height := 50;
     pnlBotones.BevelOuter := bvNone;
 
-    // --- Coordenadas base ---
-    TopPos := 20;
-    LeftLbl := 20;
-    LeftEdit := 140;
-    EditWidth := 250;
+    // --- CONFIGURACIÓN DE DISEÑO VERTICAL ---
+    TopPos := 15;
+    LeftMargin := 25;       // Margen izquierdo para todo
+    ControlWidth := 380;    // Ancho grande para llenar la ventana
 
     // -------------------------------------------------------------------------
-    // A. CAMPO CÓDIGO (Obligatorio)
+    // A. CAMPO CÓDIGO
     // -------------------------------------------------------------------------
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
     lbl.Caption := 'Código:';
-    lbl.Left := LeftLbl;
-    lbl.Top := TopPos + 3; // +3 para alinear texto con edit
+    lbl.Left := LeftMargin;
+    lbl.Top := TopPos;
+    lbl.Style.Font.Style := [fsBold]; // Negrita para destacar
 
+    // El campo va DEBAJO de la etiqueta
     edtCod := TcxTextEdit.Create(FormAlta);
     edtCod.Parent := ScrollBox;
-    edtCod.Left := LeftEdit;
-    edtCod.Top := TopPos;
-    edtCod.Width := 100; // El código suele ser corto
-    edtCod.Text := sCod; // Valor inicial (ej: "0")
+    edtCod.Left := LeftMargin;
+    edtCod.Top := TopPos + 20; // 20px debajo de la etiqueta
+    edtCod.Width := 150;       // El código suele ser corto
+    edtCod.Text := sCod;
 
-    TopPos := TopPos + 35;
+    // Incrementamos posición: Altura etiqueta + Altura Edit + Separación
+    TopPos := TopPos + 55;
 
     // -------------------------------------------------------------------------
-    // B. CAMPO DESCRIPCIÓN (Obligatorio)
+    // B. CAMPO DESCRIPCIÓN
     // -------------------------------------------------------------------------
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
     lbl.Caption := 'Descripción:';
-    lbl.Left := LeftLbl;
-    lbl.Top := TopPos + 3;
+    lbl.Left := LeftMargin;
+    lbl.Top := TopPos;
+    lbl.Style.Font.Style := [fsBold];
 
     edtDesc := TcxTextEdit.Create(FormAlta);
     edtDesc.Parent := ScrollBox;
-    edtDesc.Left := LeftEdit;
-    edtDesc.Top := TopPos;
-    edtDesc.Width := EditWidth;
+    edtDesc.Left := LeftMargin;
+    edtDesc.Top := TopPos + 20;
+    edtDesc.Width := ControlWidth; // Ancho completo
     edtDesc.Text := sDesc;
 
-    TopPos := TopPos + 35;
+    TopPos := TopPos + 55;
 
-    // Separador visual (opcional)
+    // Separador visual
     with TBevel.Create(FormAlta) do
     begin
       Parent := ScrollBox;
-      Left := 20; Top := TopPos; Width := 380; Height := 2;
+      Left := LeftMargin; Top := TopPos; Width := ControlWidth; Height := 2;
       Shape := bsTopLine;
     end;
     TopPos := TopPos + 15;
 
     // -------------------------------------------------------------------------
-    // C. CAMPOS DINÁMICOS (Desde Base de Datos)
+    // C. CAMPOS DINÁMICOS
     // -------------------------------------------------------------------------
     for i := 0 to High(FConfigAlta.ValoresDefecto) do
     begin
-      // 1. Crear Etiqueta (Label)
+      // 1. Etiqueta (Arriba)
       lbl := TcxLabel.Create(FormAlta);
       lbl.Parent := ScrollBox;
-      // Quitamos guiones bajos o lo dejamos tal cual según prefieras
-      lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo, '_', ' ', [rfReplaceAll]) + ':';
-      lbl.Left := LeftLbl;
-      lbl.Top := TopPos + 3;
+      // Quitamos guiones bajos
+      lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo, '_', ' ', [rfReplaceAll]);
+      lbl.Left := LeftMargin;
+      lbl.Top := TopPos;
+      // Color grisáceo para diferenciar de los campos principales si quieres, o normal
+      // lbl.Style.TextColor := clGray;
 
-      // 2. Crear Control de Edición (Combo o TextEdit)
+      // 2. Control (Abajo)
       if FConfigAlta.ValoresDefecto[i].Opciones <> '' then
       begin
-        // --- ES UN COMBOBOX ---
+        // --- COMBOBOX ---
         newCombo := TcxComboBox.Create(FormAlta);
         newCombo.Parent := ScrollBox;
-        newCombo.Left := LeftEdit;
-        newCombo.Top := TopPos;
-        newCombo.Width := EditWidth;
+        newCombo.Left := LeftMargin;
+        newCombo.Top := TopPos + 20; // Debajo de la etiqueta
+        newCombo.Width := ControlWidth; // Ancho completo
 
-        // Cargar opciones (ej: S,N)
         newCombo.Properties.Items.CommaText := FConfigAlta.ValoresDefecto[i].Opciones;
-        // Poner valor por defecto
         newCombo.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
-        // Estilo: DropDownList para que no escriban cosas raras
         newCombo.Properties.DropDownListStyle := lsFixedList;
 
-        // Guardamos referencia
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newCombo;
       end
       else
       begin
-        // --- ES UNA CAJA DE TEXTO NORMAL ---
+        // --- TEXT EDIT ---
         newEdit := TcxTextEdit.Create(FormAlta);
         newEdit.Parent := ScrollBox;
-        newEdit.Left := LeftEdit;
-        newEdit.Top := TopPos;
-        newEdit.Width := EditWidth;
+        newEdit.Left := LeftMargin;
+        newEdit.Top := TopPos + 20;
+        newEdit.Width := ControlWidth;
 
-        // Poner valor por defecto
         newEdit.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
-        // Guardamos referencia
+
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newEdit;
       end;
-      TopPos := TopPos + 35;
+
+      // Avanzamos para el siguiente bloque
+      TopPos := TopPos + 55;
     end;
+
+    // Espacio extra al final para que no quede pegado
+    TopPos := TopPos + 20;
+
+    // Truco: Ponemos un panel invisible al final para forzar al ScrollBox
+    // a reconocer la altura total si hay muchos campos
+    with TPanel.Create(FormAlta) do
+    begin
+      Parent := ScrollBox;
+      Top := TopPos;
+      Left := 1; Width := 1; Height := 1;
+      BevelOuter := bvNone;
+      Color := clNone;
+    end;
+
     // -------------------------------------------------------------------------
-    // D. BOTONES
+    // D. BOTONES (Centrados o a la derecha)
     // -------------------------------------------------------------------------
     btnOk := TcxButton.Create(FormAlta);
     btnOk.Parent := pnlBotones;
@@ -313,36 +325,31 @@ begin
     btnOk.ModalResult := mrOk;
     btnOk.Left := 230; btnOk.Top := 12;
     btnOk.Width := 90;
-    // Si usas skins:
     btnOk.LookAndFeel.NativeStyle := False;
+
     btnCancel := TcxButton.Create(FormAlta);
     btnCancel.Parent := pnlBotones;
     btnCancel.Caption := 'Cancelar';
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := 330; btnCancel.Top := 12;
     btnCancel.Width := 90;
+
     // -------------------------------------------------------------------------
-    // E. MOSTRAR Y PROCESAR
+    // E. MOSTRAR
     // -------------------------------------------------------------------------
     if FormAlta.ShowModal = mrOk then
     begin
-      // 1. Recuperar Código y Descripción
       sCod := edtCod.Text;
       sDesc := edtDesc.Text;
-      // 2. Recuperar valores de los campos dinámicos
-      // Aquí recorremos la UI para ver qué ha cambiado el usuario
+
       for i := 0 to High(FConfigAlta.ValoresDefecto) do
       begin
         if FConfigAlta.ValoresDefecto[i].ComponenteUI is TcxComboBox then
-        begin
           FConfigAlta.ValoresDefecto[i].Valor :=
-             TcxComboBox(FConfigAlta.ValoresDefecto[i].ComponenteUI).Text;
-        end
+             TcxComboBox(FConfigAlta.ValoresDefecto[i].ComponenteUI).Text
         else if FConfigAlta.ValoresDefecto[i].ComponenteUI is TcxTextEdit then
-        begin
           FConfigAlta.ValoresDefecto[i].Valor :=
              TcxTextEdit(FConfigAlta.ValoresDefecto[i].ComponenteUI).Text;
-        end;
       end;
       Result := (Trim(sCod) <> '');
     end;
@@ -494,13 +501,13 @@ begin
     while not QryDef.Eof do
     begin
       AddValorDefecto(
-        QryDef.FieldByName('CAMPO_OBJETIVO').AsString,
-        ProcesarValor(QryDef.FieldByName('VALOR_DEFECTO').AsString,
-                      QryDef.FieldByName('TIPO_DATO').AsString)
+        QryDef.FieldByName('CAMPO_OBJETIVO_DEF').AsString,
+        ProcesarValor(QryDef.FieldByName('VALOR_DEFECTO_DEF').AsString,
+                      QryDef.FieldByName('TIPO_DATO_DEF').AsString)
       );
       // Cargar opciones de ComboBox si existen
       FConfigAlta.ValoresDefecto[High(FConfigAlta.ValoresDefecto)].Opciones :=
-         QryDef.FieldByName('VALORES_POSIBLES').AsString;
+         QryDef.FieldByName('VALORES_POSIBLES_DEF').AsString;
       QryDef.Next;
     end;
   finally
