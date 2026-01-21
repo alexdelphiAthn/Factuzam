@@ -498,6 +498,7 @@ uses
   inLibMsg,
   inLibShowMto,
   inLibFacturas,
+  inLibDefaultValues,
   inMtoGenSearch,
   inMtoModalFacRec,
   inMtoModalImpRecFac,
@@ -1259,6 +1260,7 @@ begin
       formulario.dsTablaG.DataSet := dmmFacturas.unqryArtDataLinFac;
       formulario.dsTablaG.DataSet.Open;
       formulario.ProcesarPerfiles;
+      TLibDefaults.Configurar(formulario, esArticulo, True);
       formulario.Caption := 'Búsqueda de Artículos en Lineas de Facturas';
       formulario.ShowModal;
      if (formulario.sFicha = 'S') then

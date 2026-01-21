@@ -79,7 +79,8 @@ uses
   inMtoCajaMenu in 'src\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
   UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
-  inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro};
+  inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
+  inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas';
 
 var
   frmLogon: TfrmLogon;

@@ -1,6 +1,7 @@
 inherited dmArticulos: TdmArticulos
-  Height = 256
-  Width = 1012
+  Height = 459
+  Width = 1129
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_articulos`'
@@ -77,8 +78,8 @@ inherited dmArticulos: TdmArticulos
         'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
         'CT @pcont AS '#39'@pcont'#39)
     Connection = dmConn.conUni
-    Left = 48
-    Top = 84
+    Left = 552
+    Top = 244
     ParamData = <
       item
         DataType = ftWideString
@@ -604,13 +605,13 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_variaciones')
-    Left = 48
-    Top = 136
+    Left = 328
+    Top = 232
   end
   object dsVariaciones: TDataSource
     DataSet = unqryVariaciones
-    Left = 48
-    Top = 192
+    Left = 336
+    Top = 288
   end
   object unqryVariacionesArticulos: TUniQuery
     SQLInsert.Strings = (
@@ -666,12 +667,12 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_variaciones_articulos')
-    Left = 136
-    Top = 136
+    Left = 144
+    Top = 216
   end
   object dsVariacionesArticulos: TDataSource
     DataSet = unqryVariacionesArticulos
-    Left = 136
-    Top = 192
+    Left = 144
+    Top = 296
   end
 end
