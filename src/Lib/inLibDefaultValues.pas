@@ -65,11 +65,11 @@ begin
         AForm.FConfigAlta.TituloVentana := 'Alta Rápida de Cliente';
 
         // A. LECTURA
-        if Assigned(AForm.unqryPerfiles) then
-        begin
-          AForm.unqryPerfiles.Close;
-          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_clientes ORDER BY RAZON_SOCIAL';
-        end;
+//        if Assigned(AForm.unqryPerfiles) then
+//        begin
+//          AForm.unqryPerfiles.Close;
+//          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_clientes ORDER BY RAZON_SOCIAL';
+//        end;
 
         // B. ESCRITURA
         AForm.FConfigAlta.Tabla := 'fza_clientes';

@@ -87,6 +87,7 @@ inherited frmMtoSearch: TfrmMtoSearch
         inherited nvNavegador: TcxDBNavigator
           Width = 240
           Visible = False
+          ExplicitWidth = 240
         end
       end
     end
@@ -122,7 +123,6 @@ inherited frmMtoSearch: TfrmMtoSearch
   inherited pButtonRightBar: TPanel
     Left = 801
     Height = 519
-    Visible = False
     ExplicitLeft = 795
     ExplicitHeight = 510
     inherited pButtonGen: TPanel
@@ -135,13 +135,33 @@ inherited frmMtoSearch: TfrmMtoSearch
         Visible = False
       end
     end
+    object btnAltaRapida: TcxButton
+      Left = 16
+      Top = 96
+      Width = 116
+      Height = 25
+      Caption = 'Alta &R'#225'pida'
+      TabOrder = 2
+      OnClick = btnAltaRapidaClick
+    end
+  end
+  inherited Localizer1: TcxLocalizer
+    Top = 264
+  end
+  inherited dsTablaG: TDataSource
+    Left = 104
+    Top = 264
+  end
+  inherited saveDialog: TdxSaveFileDialog
+    Left = 520
+    Top = 256
   end
   object unqryPerfiles: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM fza_usuarios_perfiles ')
-    Left = 376
-    Top = 440
+    Left = 432
+    Top = 256
   end
   object dsPerfiles: TDataSource
     DataSet = unqryPerfiles
