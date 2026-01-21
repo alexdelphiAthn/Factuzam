@@ -356,6 +356,7 @@
             <Form>frmMtoCajaFaseCobro</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibDefaultValues.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

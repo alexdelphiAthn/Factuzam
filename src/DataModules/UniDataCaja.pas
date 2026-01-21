@@ -137,14 +137,11 @@ begin
     PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
     // Calculamos el descuento sobre el Total Bruto
     MontoDescuentoTotal := RoundTo(TotalBruto * (PorcenDto / 100), -2);
-
     cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := MontoDescuentoTotal;
   end;
-
   // 4. Aplicar el Descuento (Resta Global)
   // Aquí está la corrección: TotalBruto - DescuentoTotal
   TotalNeto := TotalBruto - MontoDescuentoTotal;
-
   // 5. Desglose de Impuestos
   if EsImpuestosIncluidos then
   begin
@@ -154,7 +151,6 @@ begin
       TotalBase := RoundTo(TotalNeto / (1 + (PorcenIVA / 100)), -2)
     else
       TotalBase := TotalNeto;
-
     // El total final es lo que dio la resta
     cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalNeto;
     cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
@@ -164,7 +160,6 @@ begin
     // Si el precio NO incluye IVA, TotalNeto es la Base Imponible Total
     TotalBase := TotalNeto;
     TotalImpuestos := RoundTo(TotalBase * (PorcenIVA / 100), -2);
-
     cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
     cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalBase + TotalImpuestos;
   end;
