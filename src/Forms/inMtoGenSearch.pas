@@ -367,78 +367,106 @@ begin
   sDescripcion := '';
   if MostrarDialogoDinamico(sCodigo, sDescripcion) then
   begin
-    if (Trim(sCodigo) = '0') and (FConfigAlta.TipoDocContador <> '') then
-    begin
-      sCodigo := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
-      if sCodigo = '' then Exit;
-    end;
     EjecutarAltaGenerica(sCodigo, sDescripcion);
   end;
 end;
 
-function TfrmMtoSearch.EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
+function TfrmMtoSearch.EjecutarAltaGenerica(sCod, sDesc: string): Boolean;
 var
   Qry: TUniQuery;
-  SQL: string;
-  ParamNames: string;
+  sCodigoFinal: string;
   i: Integer;
 begin
+  Result := False;
+  sCodigoFinal := sCod; // Por defecto es lo que puso el usuario
+
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn; // Tu conexión global
+    Qry.Connection := inLibGlobalVar.oConn;
 
-    // 1. Construcción dinámica del INSERT
-    // Empezamos con: INSERT INTO Tabla (CampoCod, CampoDesc
-    SQL := 'INSERT INTO ' + FConfigAlta.Tabla + ' (' +
-           FConfigAlta.CampoCodigo + ', ' +
-           FConfigAlta.CampoDescripcion;
+    // 1. INICIAMOS TRANSACCIÓN (Vital para no romper contadores si algo falla)
+    inLibGlobalVar.oConn.StartTransaction;
 
-    // Añadimos los campos extra definidos en defaults
-    for i := 0 to High(FConfigAlta.ValoresDefecto) do
-      SQL := SQL + ', ' + FConfigAlta.ValoresDefecto[i].NombreCampo;
-
-    // Pasamos a los valores: ) VALUES (:pCod, :pDesc
-    SQL := SQL + ') VALUES (:pCod, :pDesc';
-
-    // Añadimos los parámetros para los defaults
-    for i := 0 to High(FConfigAlta.ValoresDefecto) do
-      SQL := SQL + ', :pDef' + IntToStr(i);
-
-    SQL := SQL + ')';
-
-    Qry.SQL.Text := SQL;
-
-    // 2. Asignación de Parámetros
-    Qry.ParamByName('pCod').Value := sCod;
-    Qry.ParamByName('pDesc').Value := sDesc;
-
-    for i := 0 to High(FConfigAlta.ValoresDefecto) do
-    begin
-      // Asignamos el valor variant al parámetro dinámico
-      Qry.ParamByName('pDef' + IntToStr(i)).Value := FConfigAlta.ValoresDefecto[i].Valor;
-    end;
-
-    // 3. Ejecución
     try
-      Qry.Execute;
-      ShowMessage('Registro creado correctamente.');
+      // -----------------------------------------------------------------------
+      // A. LOGICA DE CONTADOR "JUST IN TIME"
+      // -----------------------------------------------------------------------
+      // Verificamos si hay que calcular el contador AHORA MISMO.
+      // Si el código es '0' o vacío, Y tenemos configurado un contador...
+      if ((Trim(sCodigoFinal) = '0') or (Trim(sCodigoFinal) = '')) and
+         (FConfigAlta.TipoDocContador <> '') then
+      begin
+        // Llamamos al SP. Esto incrementa el contador en fza_contadores.
+        sCodigoFinal := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
+
+        // Si por lo que sea falla y devuelve vacío, abortamos para no meter basura
+        if sCodigoFinal = '' then
+          raise Exception.Create('No se pudo obtener el contador automático.');
+      end;
+
+      // -----------------------------------------------------------------------
+      // B. PREPARAR EL DATASET
+      // -----------------------------------------------------------------------
+      Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
+      Qry.Open;
+      Qry.Insert;
+
+      // 1. Asignar CÓDIGO (Usamos el sCodigoFinal que acabamos de calcular)
+      if Qry.FindField(FConfigAlta.CampoCodigo) <> nil then
+        Qry.FieldByName(FConfigAlta.CampoCodigo).AsString := sCodigoFinal;
+
+      // 2. Asignar DESCRIPCIÓN
+      if Qry.FindField(FConfigAlta.CampoDescripcion) <> nil then
+        Qry.FieldByName(FConfigAlta.CampoDescripcion).AsString := sDesc;
+
+      // 3. Asignar CAMPOS DINÁMICOS (Defaults y Combos)
+      for i := 0 to High(FConfigAlta.ValoresDefecto) do
+      begin
+        if Qry.FindField(FConfigAlta.ValoresDefecto[i].NombreCampo) <> nil then
+        begin
+          Qry.FieldByName(FConfigAlta.ValoresDefecto[i].NombreCampo).Value :=
+             FConfigAlta.ValoresDefecto[i].Valor;
+        end;
+      end;
+      odmConn.ActualizarUserTimeModif(Qry);
+      // 4. GUARDAR (POST)
+      Qry.Post;
+
+      // -----------------------------------------------------------------------
+      // C. CONFIRMAR TODO (COMMIT)
+      // -----------------------------------------------------------------------
+      // Si llegamos aquí, el contador subió Y el artículo se guardó. Todo OK.
+      inLibGlobalVar.oConn.Commit;
+
       Result := True;
-      // Refrescar la rejilla
+      // ShowMessage('Registro ' + sCodigoFinal + ' creado correctamente.');
+      // (Opcional: mostrar mensaje con el código real generado)
+
+      // -----------------------------------------------------------------------
+      // D. REFRESCO VISUAL
+      // -----------------------------------------------------------------------
       if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
          (cxGrdDBTabPrin.DataController.DataSource.DataSet.Active) then
       begin
         cxGrdDBTabPrin.DataController.DataSource.DataSet.Refresh;
-        // Intentar localizar el nuevo registro
         if cxGrdDBTabPrin.DataController.DataSource.DataSet.FindField(FConfigAlta.CampoCodigo) <> nil then
-          cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(FConfigAlta.CampoCodigo, sCod, []);
+          cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(FConfigAlta.CampoCodigo, sCodigoFinal, []);
       end;
+
     except
       on E: Exception do
       begin
-        ShowMessage('Error al crear registro: ' + E.Message);
+        // SI ALGO FALLA (Error SQL, clave duplicada, etc.)
+        // DESHACEMOS TODO: El artículo no se guarda Y el contador vuelve atrás.
+        inLibGlobalVar.oConn.Rollback;
+
+        if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
+
+        ShowMessage('Error al insertar (se ha cancelado la operación): ' + E.Message);
         Result := False;
       end;
     end;
+
   finally
     Qry.Free;
   end;
