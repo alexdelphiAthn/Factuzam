@@ -161,89 +161,60 @@ var
   ScrollBox: TScrollBox;
   pnlBotones: TPanel;
   btnOk, btnCancel: TcxButton;
-
-  // Referencias locales
   edtCod, edtDesc: TcxTextEdit;
   lbl: TcxLabel;
-
-  // Variables de bucle
   i, TopPos, LeftMargin, ControlWidth: Integer;
-
-  // Componentes dinámicos
   newEdit: TcxTextEdit;
   newCombo: TcxComboBox;
 begin
   Result := False;
-
-  // 1. Configuración de la Ventana
   FormAlta := TForm.Create(nil);
   try
     FormAlta.Caption := FConfigAlta.TituloVentana;
     FormAlta.Position := poScreenCenter;
     FormAlta.BorderStyle := bsDialog;
     FormAlta.Width := 450;
-    FormAlta.Height := 600; // Un poco más alto porque ahora ocupamos más verticalmente
+    FormAlta.Height := 600;
     FormAlta.Font.Size := 10;
     FormAlta.Font.Name := 'Segoe UI';
-
-    // 2. ScrollBox
     ScrollBox := TScrollBox.Create(FormAlta);
     ScrollBox.Parent := FormAlta;
     ScrollBox.Align := alClient;
     ScrollBox.BorderStyle := bsNone;
-
-    // 3. Panel Botones
     pnlBotones := TPanel.Create(FormAlta);
     pnlBotones.Parent := FormAlta;
     pnlBotones.Align := alBottom;
     pnlBotones.Height := 50;
     pnlBotones.BevelOuter := bvNone;
-
-    // --- CONFIGURACIÓN DE DISEÑO VERTICAL ---
     TopPos := 15;
     LeftMargin := 25;       // Margen izquierdo para todo
     ControlWidth := 380;    // Ancho grande para llenar la ventana
-
-    // -------------------------------------------------------------------------
-    // A. CAMPO CÓDIGO
-    // -------------------------------------------------------------------------
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
     lbl.Caption := 'Código:';
     lbl.Left := LeftMargin;
     lbl.Top := TopPos;
     lbl.Style.Font.Style := [fsBold]; // Negrita para destacar
-
-    // El campo va DEBAJO de la etiqueta
     edtCod := TcxTextEdit.Create(FormAlta);
     edtCod.Parent := ScrollBox;
     edtCod.Left := LeftMargin;
     edtCod.Top := TopPos + 20; // 20px debajo de la etiqueta
     edtCod.Width := 150;       // El código suele ser corto
     edtCod.Text := sCod;
-
-    // Incrementamos posición: Altura etiqueta + Altura Edit + Separación
     TopPos := TopPos + 55;
-
-    // -------------------------------------------------------------------------
-    // B. CAMPO DESCRIPCIÓN
-    // -------------------------------------------------------------------------
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
     lbl.Caption := 'Descripción:';
     lbl.Left := LeftMargin;
     lbl.Top := TopPos;
     lbl.Style.Font.Style := [fsBold];
-
     edtDesc := TcxTextEdit.Create(FormAlta);
     edtDesc.Parent := ScrollBox;
     edtDesc.Left := LeftMargin;
     edtDesc.Top := TopPos + 20;
     edtDesc.Width := ControlWidth; // Ancho completo
     edtDesc.Text := sDesc;
-
     TopPos := TopPos + 55;
-
     // Separador visual
     with TBevel.Create(FormAlta) do
     begin
@@ -252,10 +223,6 @@ begin
       Shape := bsTopLine;
     end;
     TopPos := TopPos + 15;
-
-    // -------------------------------------------------------------------------
-    // C. CAMPOS DINÁMICOS
-    // -------------------------------------------------------------------------
     for i := 0 to High(FConfigAlta.ValoresDefecto) do
     begin
       // 1. Etiqueta (Arriba)
@@ -379,47 +346,25 @@ var
 begin
   Result := False;
   sCodigoFinal := sCod; // Por defecto es lo que puso el usuario
-
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
-
-    // 1. INICIAMOS TRANSACCIÓN (Vital para no romper contadores si algo falla)
     inLibGlobalVar.oConn.StartTransaction;
-
     try
-      // -----------------------------------------------------------------------
-      // A. LOGICA DE CONTADOR "JUST IN TIME"
-      // -----------------------------------------------------------------------
-      // Verificamos si hay que calcular el contador AHORA MISMO.
-      // Si el código es '0' o vacío, Y tenemos configurado un contador...
       if ((Trim(sCodigoFinal) = '0') or (Trim(sCodigoFinal) = '')) and
          (FConfigAlta.TipoDocContador <> '') then
       begin
-        // Llamamos al SP. Esto incrementa el contador en fza_contadores.
         sCodigoFinal := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
-
-        // Si por lo que sea falla y devuelve vacío, abortamos para no meter basura
         if sCodigoFinal = '' then
           raise Exception.Create('No se pudo obtener el contador automático.');
       end;
-
-      // -----------------------------------------------------------------------
-      // B. PREPARAR EL DATASET
-      // -----------------------------------------------------------------------
       Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
       Qry.Open;
       Qry.Insert;
-
-      // 1. Asignar CÓDIGO (Usamos el sCodigoFinal que acabamos de calcular)
       if Qry.FindField(FConfigAlta.CampoCodigo) <> nil then
         Qry.FieldByName(FConfigAlta.CampoCodigo).AsString := sCodigoFinal;
-
-      // 2. Asignar DESCRIPCIÓN
       if Qry.FindField(FConfigAlta.CampoDescripcion) <> nil then
         Qry.FieldByName(FConfigAlta.CampoDescripcion).AsString := sDesc;
-
-      // 3. Asignar CAMPOS DINÁMICOS (Defaults y Combos)
       for i := 0 to High(FConfigAlta.ValoresDefecto) do
       begin
         if Qry.FindField(FConfigAlta.ValoresDefecto[i].NombreCampo) <> nil then
@@ -429,44 +374,29 @@ begin
         end;
       end;
       odmConn.ActualizarUserTimeModif(Qry);
-      // 4. GUARDAR (POST)
       Qry.Post;
-
-      // -----------------------------------------------------------------------
-      // C. CONFIRMAR TODO (COMMIT)
-      // -----------------------------------------------------------------------
-      // Si llegamos aquí, el contador subió Y el artículo se guardó. Todo OK.
       inLibGlobalVar.oConn.Commit;
-
       Result := True;
-      // ShowMessage('Registro ' + sCodigoFinal + ' creado correctamente.');
-      // (Opcional: mostrar mensaje con el código real generado)
-
-      // -----------------------------------------------------------------------
-      // D. REFRESCO VISUAL
-      // -----------------------------------------------------------------------
+      ShowMessage('Registro ' + sCodigoFinal + ' creado correctamente.');
       if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
          (cxGrdDBTabPrin.DataController.DataSource.DataSet.Active) then
       begin
         cxGrdDBTabPrin.DataController.DataSource.DataSet.Refresh;
-        if cxGrdDBTabPrin.DataController.DataSource.DataSet.FindField(FConfigAlta.CampoCodigo) <> nil then
-          cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(FConfigAlta.CampoCodigo, sCodigoFinal, []);
+        if cxGrdDBTabPrin.DataController.DataSource.DataSet.FindField(
+                                            FConfigAlta.CampoCodigo) <> nil then
+          cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(
+                                     FConfigAlta.CampoCodigo, sCodigoFinal, []);
       end;
-
     except
       on E: Exception do
       begin
-        // SI ALGO FALLA (Error SQL, clave duplicada, etc.)
-        // DESHACEMOS TODO: El artículo no se guarda Y el contador vuelve atrás.
         inLibGlobalVar.oConn.Rollback;
-
         if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
-
-        ShowMessage('Error al insertar (se ha cancelado la operación): ' + E.Message);
+        ShowMessage('Error al insertar (se ha cancelado la operación): ' +
+                                                                     E.Message);
         Result := False;
       end;
     end;
-
   finally
     Qry.Free;
   end;

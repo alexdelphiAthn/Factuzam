@@ -16,10 +16,12 @@ inherited frmMtoSearch: TfrmMtoSearch
       Width = 801
       Height = 409
       Properties.ActivePage = tsLista
+      Properties.HideTabs = True
       ExplicitWidth = 795
       ExplicitHeight = 400
       ClientRectBottom = 405
       ClientRectRight = 797
+      ClientRectTop = 4
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
         ExplicitTop = 30
@@ -27,7 +29,7 @@ inherited frmMtoSearch: TfrmMtoSearch
         ExplicitHeight = 366
         inherited cxGrdPrincipal: TcxGrid
           Width = 793
-          Height = 375
+          Height = 401
           ExplicitWidth = 787
           ExplicitHeight = 366
           inherited cxGrdDBTabPrin: TcxGridDBTableView
@@ -60,12 +62,12 @@ inherited frmMtoSearch: TfrmMtoSearch
         end
         inherited pnlPerfilDetail: TPanel
           Width = 793
-          Height = 318
+          Height = 344
           ExplicitWidth = 793
           ExplicitHeight = 318
           inherited cxgrdPerfil: TcxGrid
             Width = 793
-            Height = 318
+            Height = 344
             ExplicitWidth = 793
             ExplicitHeight = 318
           end
@@ -132,6 +134,9 @@ inherited frmMtoSearch: TfrmMtoSearch
         Visible = False
       end
       inherited btnCancelar: TcxButton
+        Visible = False
+      end
+      inherited btnSalir: TcxButton
         Visible = False
       end
     end
