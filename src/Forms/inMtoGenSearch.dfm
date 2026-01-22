@@ -140,11 +140,22 @@ inherited frmMtoSearch: TfrmMtoSearch
         Visible = False
       end
     end
+    inherited pButtonBDStat: TPanel
+      inherited pnlDataSetName: TPanel
+        inherited lblTablaOrigen: TcxLabel
+          ParentFont = False
+          Style.Font.Height = -15
+          Style.IsFontAssigned = True
+          ExplicitWidth = 92
+          ExplicitHeight = 21
+        end
+      end
+    end
     object btnAltaRapida: TcxButton
-      Left = 16
+      Left = 7
       Top = 96
-      Width = 116
-      Height = 25
+      Width = 130
+      Height = 33
       Caption = 'Alta &R'#225'pida'
       TabOrder = 2
       OnClick = btnAltaRapidaClick
