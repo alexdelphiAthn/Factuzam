@@ -24,6 +24,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Color = clCream
     ParentBackground = False
     TabOrder = 0
+    ExplicitWidth = 780
+    ExplicitHeight = 633
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -39,6 +41,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
+      ExplicitWidth = 532
+      ExplicitHeight = 633
       object pnlFormasPago: TPanel
         Left = 0
         Top = 575
@@ -49,6 +53,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         Color = clSilver
         ParentBackground = False
         TabOrder = 0
+        ExplicitTop = 566
+        ExplicitWidth = 532
         object lblDescuento4: TcxLabel
           Left = 26
           Top = 23
@@ -377,6 +383,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Color = clCream
       ParentBackground = False
       TabOrder = 1
+      ExplicitLeft = 532
+      ExplicitHeight = 633
       object pnlBotones: TPanel
         Left = 0
         Top = 0
@@ -392,6 +400,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
+        ExplicitHeight = 437
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -769,6 +778,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
+        ExplicitTop = 437
         object lblNumDoc: TcxLabel
           Left = 86
           Top = 8
@@ -822,5 +832,10 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object dsFormasPago: TDataSource
     Left = 472
     Top = 512
+  end
+  object vrtltbl1: TVirtualTable
+    Left = 384
+    Top = 328
+    Data = {04000000000000000000}
   end
 end

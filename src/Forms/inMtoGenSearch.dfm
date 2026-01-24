@@ -1,15 +1,15 @@
 inherited frmMtoSearch: TfrmMtoSearch
   BorderStyle = bsSizeable
   Caption = 'frmMtoSearch'
-  ClientHeight = 519
-  ClientWidth = 941
+  ClientHeight = 510
+  ClientWidth = 935
   Visible = False
   ExplicitWidth = 953
   ExplicitHeight = 557
   TextHeight = 19
   inherited pButtonPage: TPanel
-    Width = 801
-    Height = 519
+    Width = 795
+    Height = 510
     ExplicitWidth = 795
     ExplicitHeight = 510
     inherited pcPantalla: TcxPageControl
@@ -51,8 +51,9 @@ inherited frmMtoSearch: TfrmMtoSearch
       end
       inherited tsPerfil: TcxTabSheet
         TabVisible = False
+        ExplicitTop = 4
         ExplicitWidth = 793
-        ExplicitHeight = 375
+        ExplicitHeight = 401
         inherited pnlPerfilTop: TPanel
           Width = 793
           ExplicitWidth = 793
@@ -76,10 +77,10 @@ inherited frmMtoSearch: TfrmMtoSearch
     end
     inherited pnlTopPage: TPanel
       Width = 801
-      ExplicitWidth = 795
+      ExplicitWidth = 801
       inherited pnlTopGrid: TPanel
         Width = 801
-        ExplicitWidth = 795
+        ExplicitWidth = 801
         inherited sbExportExcel: TSpeedButton
           Visible = False
         end
@@ -123,10 +124,10 @@ inherited frmMtoSearch: TfrmMtoSearch
     end
   end
   inherited pButtonRightBar: TPanel
-    Left = 801
-    Height = 519
-    ExplicitLeft = 795
-    ExplicitHeight = 510
+    Left = 795
+    Height = 510
+    ExplicitLeft = 801
+    ExplicitHeight = 519
     inherited pButtonGen: TPanel
       Top = 321
       ExplicitTop = 312

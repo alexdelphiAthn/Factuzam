@@ -115,39 +115,6 @@ inherited dmClientes: TdmClientes
     Left = 144
     Top = 88
   end
-  object unstrdprcContador: TUniStoredProc
-    StoredProcName = 'PRC_GET_NEXT_CONT'
-    SQL.Strings = (
-      
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
-        'CT @pcont AS '#39'@pcont'#39)
-    Connection = dmConn.conUni
-    Left = 56
-    Top = 92
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'pTipoDoc'
-        ParamType = ptInput
-        Size = 2
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pUSUARIO_MODIF'
-        ParamType = ptInput
-        Size = 100
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pcont'
-        ParamType = ptOutput
-        Size = 20
-        Value = nil
-      end>
-    CommandStoredProcName = 'PRC_GET_NEXT_CONT'
-  end
   object dsFormasPago: TDataSource
     DataSet = unqryFormaPago
     Left = 224
