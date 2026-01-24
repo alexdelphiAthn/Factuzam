@@ -17,7 +17,6 @@ uses
 
 type
   TdmClientes = class(TdmBase)
-    unstrdprcContador: TUniStoredProc;
     dsFormasPago: TDataSource;
     unqryFormaPago: TUniQuery;
     dsTarifas: TDataSource;
@@ -52,7 +51,7 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibGlobalVar;
+  inMtoClientes, inLibGlobalVar, inLibtb;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -101,7 +100,7 @@ end;
 procedure TdmClientes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection := oConn;
+//  unstrdprcContador.Connection := oConn;
   unqryFormaPago.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   unqryTarifas.Connection := oConn;
@@ -134,33 +133,13 @@ procedure TdmClientes.GetCodigoAutoCliente;
 begin
   if (unqryTablaG.FindField('CODIGO_CLIENTE').AsString = '0') then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'CL';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_CLIENTE').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unqryTablaG.FindField('CODIGO_CLIENTE').AsString :=
+                                                 ObtenerSiguienteContador('CL');
   end;
   if (unqryTablaG.FindField('ORDEN_CLIENTE').AsString = '0') then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'CO';
-      ExecProc;
-      unqryTablaG.FindField('ORDEN_CLIENTE').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unqryTablaG.FindField('ORDEN_CLIENTE').AsString :=
+                                                 ObtenerSiguienteContador('CO');
   end;
 end;
 
@@ -170,14 +149,7 @@ var
   unqryTarifaDef:TUniQuery;
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_CLIENTE').AsString := '0';
-  unqryTablaG.FindField('ORDEN_CLIENTE').AsString := '0';
-  unqryTablaG.FindField('ACTIVO_CLIENTE').AsString := 'S';
-  unqryTablaG.FindField('ESIVA_RECARGO_CLIENTE').AsString := 'N';
-  unqryTablaG.FindField('ESRETENCIONES_CLIENTE').AsString := 'N';
-  unqryTablaG.FindField('ESIVA_EXENTO_CLIENTE').AsString := 'N';
-  unqryTablaG.FindField('ESREGIMENESPECIALAGRICOLA_CLIENTE').AsString := 'N';
-  unqryTablaG.FindField('ESINTRACOMUNITARIO_CLIENTE').AsString := 'N';
+  AplicarValoresPorDefecto(unqryTablaG, 'fza_clientes');
   unqryFormaPagoDef := TUniQuery.Create(Self);
   unqryFormaPagoDef.Connection := oConn;
   unqryFormaPagoDef.SQL.Text := 'SELECT CODIGO_FORMAPAGO ' +

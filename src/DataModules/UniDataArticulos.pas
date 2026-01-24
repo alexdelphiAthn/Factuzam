@@ -17,7 +17,6 @@ uses
 
 type
   TdmArticulos = class(TdmBase)
-    unstrdprcContador: TUniStoredProc;
     unqryFamiliaArticulos: TUniQuery;
     dsFamiliaArticulos: TDataSource;
     unqryTarifasArticulos: TUniQuery;
@@ -139,12 +138,7 @@ end;
 procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_ARTICULO').AsString := '0';
-  unqryTablaG.FindField('ACTIVO_ARTICULO').AsString := 'S';
-  unqryTablaG.FindField('TIPOIVA_ARTICULO').AsString := 'N';
-  unqryTablaG.FindField('TIPO_CANTIDAD_ARTICULO').AsString := 'Uds.';
-  unqryTablaG.FindField('ESACTIVO_FIJO_ARTICULO').AsString := 'N';
-  unqryTablaG.FindField('ORDEN_ARTICULO').AsInteger := 0;
+  AplicarValoresPorDefecto(unqryTablaG, 'fza_articulos');
   unqryTablaG.FindField('CODIGO_FAMILIA_ARTICULO').AsString :=
                                                               GetDefaultFamilia;
 end;
@@ -171,7 +165,6 @@ procedure TdmArticulos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryFamiliaArticulos.Connection := oConn;
-  unstrdprcContador.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   unqryTarifasArticulos.Connection := oConn;
   unqryProveedoresArticulos.Connection := oConn;
@@ -221,33 +214,13 @@ procedure TdmArticulos.GetCodigoAutoArticulo;
 begin
   if unqryTablaG.FindField('CODIGO_ARTICULO').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'AR';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_ARTICULO').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unqryTablaG.FindField('CODIGO_ARTICULO').AsString :=
+                                                 ObtenerSiguienteContador('AR');
   end;
   if unqryTablaG.FindField('ORDEN_ARTICULO').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'AO';
-      ExecProc;
       unqryTablaG.FindField('ORDEN_ARTICULO').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                 ObtenerSiguienteContador('AO');
   end;
 end;
 

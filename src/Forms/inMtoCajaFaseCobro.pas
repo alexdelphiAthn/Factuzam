@@ -2,16 +2,19 @@
 
 interface
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+Vcl.ExtCtrls,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, dxSkinsCore, cxTextEdit, cxMaskEdit, cxSpinEdit, cxCurrencyEdit,
-  cxLabel, cxButtons, cxGroupBox, Data.DB, FireDAC.Comp.Client, cxStyles,
+  cxLabel, cxButtons, cxGroupBox, Data.DB, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGlobalVar,
-  cxDropDownEdit, Uni, System.Generics.Collections, Vcl.Menus, inMtoFrmBase;
+  cxDropDownEdit, Uni, System.Generics.Collections, Vcl.Menus, inMtoFrmBase,
+  MemDS, VirtualTable;
 type
   TFormaPagoItem = record
     NumeroLinea: Integer;
@@ -92,13 +95,14 @@ type
     lblNumDoc: TcxLabel;
     edtNumeroDoc: TcxTextEdit;
     cbbSerie1: TcxComboBox;
+    vrtltbl1: TVirtualTable;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnAtrasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    FMemTablePagos: TFDMemTable;
+    FMemTablePagos: TVirtualTable;
     FListaBotones: TList<TcxButton>;
     FImporteTotal: Currency;
     FImportePendiente: Currency;
@@ -134,7 +138,7 @@ implementation
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
 begin
   // Configurar tabla en memoria para formas de pago
-  FMemTablePagos := TFDMemTable.Create(Self);
+  FMemTablePagos := TVirtualTable.Create(Self);
   FMemTablePagos.FieldDefs.Add('NUMERO_LINEA', ftInteger);
   FMemTablePagos.FieldDefs.Add('CODIGO_FORMAP', ftString, 10);
   FMemTablePagos.FieldDefs.Add('DESCRIPCION', ftString, 100);
@@ -145,7 +149,7 @@ begin
   FMemTablePagos.FieldDefs.Add('IMPORTE', ftCurrency);
   FMemTablePagos.FieldDefs.Add('CAMBIO', ftCurrency);
   FMemTablePagos.FieldDefs.Add('REFERENCIA', ftString, 255);
-  FMemTablePagos.CreateDataSet;
+//  FMemTablePagos.Create;
   FMemTablePagos.Open;
   dsFormasPago.DataSet := FMemTablePagos;
   FListaBotones := TList<TcxButton>.Create;
@@ -172,6 +176,7 @@ begin
   // Cargar botones de formas de pago
   CargarBotonesFormasPago;
 end;
+
 procedure TfrmMtoCajaFaseCobro.ConfigurarGridFormasPago;
 begin
   // Configurar columnas
@@ -197,6 +202,7 @@ begin
   dbtvFormasPago.OptionsData.Inserting := False;
   dbtvFormasPago.OnKeyDown := dbtvFormasPagoKeyDown;
 end;
+
 procedure TfrmMtoCajaFaseCobro.CargarBotonesFormasPago;
 var
   Query: TUniQuery;
@@ -274,6 +280,7 @@ begin
     Query.Free;
   end;
 end;
+
 procedure TfrmMtoCajaFaseCobro.OnBotonFormaPagoClick(Sender: TObject);
 var
   Btn: TcxButton;

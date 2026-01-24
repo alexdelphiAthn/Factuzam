@@ -234,7 +234,6 @@ begin
       lbl.Top := TopPos;
       // Color grisáceo para diferenciar de los campos principales si quieres, o normal
       // lbl.Style.TextColor := clGray;
-
       // 2. Control (Abajo)
       if FConfigAlta.ValoresDefecto[i].Opciones <> '' then
       begin
@@ -244,11 +243,9 @@ begin
         newCombo.Left := LeftMargin;
         newCombo.Top := TopPos + 20; // Debajo de la etiqueta
         newCombo.Width := ControlWidth; // Ancho completo
-
         newCombo.Properties.Items.CommaText := FConfigAlta.ValoresDefecto[i].Opciones;
         newCombo.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
         newCombo.Properties.DropDownListStyle := lsFixedList;
-
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newCombo;
       end
       else
@@ -259,19 +256,14 @@ begin
         newEdit.Left := LeftMargin;
         newEdit.Top := TopPos + 20;
         newEdit.Width := ControlWidth;
-
         newEdit.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
-
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newEdit;
       end;
-
       // Avanzamos para el siguiente bloque
       TopPos := TopPos + 55;
     end;
-
     // Espacio extra al final para que no quede pegado
     TopPos := TopPos + 20;
-
     // Truco: Ponemos un panel invisible al final para forzar al ScrollBox
     // a reconocer la altura total si hay muchos campos
     with TPanel.Create(FormAlta) do
@@ -282,7 +274,6 @@ begin
       BevelOuter := bvNone;
       Color := clNone;
     end;
-
     // -------------------------------------------------------------------------
     // D. BOTONES (Centrados o a la derecha)
     // -------------------------------------------------------------------------
@@ -293,14 +284,12 @@ begin
     btnOk.Left := 230; btnOk.Top := 12;
     btnOk.Width := 90;
     btnOk.LookAndFeel.NativeStyle := False;
-
     btnCancel := TcxButton.Create(FormAlta);
     btnCancel.Parent := pnlBotones;
     btnCancel.Caption := 'Cancelar';
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := 330; btnCancel.Top := 12;
     btnCancel.Width := 90;
-
     // -------------------------------------------------------------------------
     // E. MOSTRAR
     // -------------------------------------------------------------------------
@@ -308,7 +297,6 @@ begin
     begin
       sCod := edtCod.Text;
       sDesc := edtDesc.Text;
-
       for i := 0 to High(FConfigAlta.ValoresDefecto) do
       begin
         if FConfigAlta.ValoresDefecto[i].ComponenteUI is TcxComboBox then
@@ -324,7 +312,6 @@ begin
     FormAlta.Free;
   end;
 end;
-
 procedure TfrmMtoSearch.btnAltaRapidaClick(Sender: TObject);
 var
   sCodigo, sDescripcion: string;
@@ -401,7 +388,6 @@ begin
     Qry.Free;
   end;
 end;
-
 procedure TfrmMtoSearch.FormShow(Sender: TObject);
 begin
   inherited;

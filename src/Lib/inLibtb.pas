@@ -73,8 +73,73 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
                                fFechaFin:TField
                                ): boolean;
   function HayCoincidencia(str1, str2: string): string;
+  procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
+                                   const NombreTabla: string);
+  function ObtenerSiguienteContador(const aTipoDoc: string): string;
 
 implementation
+
+function ObtenerSiguienteContador(const aTipoDoc: string): string;
+var
+  SP: TUniStoredProc;
+begin
+  Result := '';
+  SP := TUniStoredProc.Create(nil);
+  try
+    SP.Connection := inLibGlobalVar.oConn; // Tu conexión global
+    SP.StoredProcName := 'PRC_GET_NEXT_CONT';
+    SP.Params.Clear;
+    SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := aTipoDoc;
+    SP.Params.CreateParam(ftString, 'pcont', ptOutput);
+    try
+      SP.Execute;
+      Result := SP.Params.ParamByName('pcont').AsString;
+    except
+      on E: Exception do
+        ShowMessage('Error al generar contador automático: ' + E.Message);
+    end;
+  finally
+    SP.Free;
+  end;
+end;
+
+procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
+                                   const NombreTabla: string);
+var
+  qryDefaults: TUniQuery; // O TFDQuery, según uses
+begin
+  qryDefaults := TUniQuery.Create(nil);
+  try
+    qryDefaults.Connection := inLibGlobalVar.oConn;
+    // Buscamos todos los valores configurados para esa tabla específica
+    qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF, ' +
+                            '       VALOR_DEFECTO_DEF, ' +
+                            '       TIPO_DATO_DEF ' +
+                            '  FROM fza_gen_defaults ' +
+                            ' WHERE TABLA_OBJETIVO_DEF = ' +
+                                                         QuotedStr(NombreTabla);
+    qryDefaults.Open;
+    while not qryDefaults.Eof do
+    begin
+      var oField := unqryDestino.FindField(
+                        qryDefaults.FieldByName('CAMPO_OBJETIVO_DEF').AsString);
+      if Assigned(oField) then
+      begin
+        var sValor := qryDefaults.FieldByName('VALOR_DEFECTO_DEF').AsString;
+        var sTipo  := qryDefaults.FieldByName('TIPO_DATO_DEF').AsString;
+        if sTipo = 'INTEGER' then
+          oField.AsInteger := StrToIntDef(sValor, 0)
+        else if sTipo = 'FLOAT' then
+          oField.AsFloat := StrToFloatDef(sValor, 0)
+        else
+          oField.AsString := sValor;
+      end;
+      qryDefaults.Next;
+    end;
+  finally
+    qryDefaults.Free;
+  end;
+end;
 
 function HayCoincidencia(str1, str2: string): String;
 var
