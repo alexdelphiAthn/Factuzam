@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 15/01/2026 18:49:14
+ Date: 24/01/2026 07:58:29
 */
 
 SET NAMES utf8mb4;
@@ -23,8 +23,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `fza_almacenes`;
 CREATE TABLE `fza_almacenes`  (
   `CODIGO_ALMACEN_ALM` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `NOMBRE_ALMACEN_ALM` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_EMPRESA_ALM` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ESACTIVO_ALM` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
+  `NOMBRE_ALMACEN_ALM` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_PADRE_ALM` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `ESFISICO_ALM` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
   `TIPO_USO_ALM` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'ESTANDAR',
@@ -34,13 +35,13 @@ CREATE TABLE `fza_almacenes`  (
   `TELEFONO_ALM` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `EMAIL_ALM` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_CLIENTE_ALM` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `ESACTIVO_ALM` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
+  `ALMACEN_DESTINO_ACTUAL_ALM` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Hacia dónde va la mercancía (Pendiente de recibir)',
+  `ALMACEN_ORIGEN_ACTUAL_ALM` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'De dónde viene la mercancía cargada',
+  `ORDEN_ALM` int(11) NULL DEFAULT NULL,
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ALMACEN_ORIGEN_ACTUAL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'De dónde viene la mercancía cargada',
-  `ALMACEN_DESTINO_ACTUAL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Hacia dónde va la mercancía (Pendiente de recibir)',
   PRIMARY KEY (`CODIGO_ALMACEN_ALM`) USING BTREE,
   INDEX `IDX_PADRE_ALM`(`CODIGO_PADRE_ALM` ASC) USING BTREE,
   INDEX `IDX_CLIENTE_ALM`(`CODIGO_CLIENTE_ALM` ASC) USING BTREE,
@@ -51,11 +52,11 @@ CREATE TABLE `fza_almacenes`  (
 -- ----------------------------
 -- Records of fza_almacenes
 -- ----------------------------
-INSERT INTO `fza_almacenes` VALUES ('BCN', 'Almacén Barcelona', '1', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, 'S', '2026-01-05 06:01:06', '0000-00-00 00:00:00', 'DEMO', 'DEMO', '', NULL);
-INSERT INTO `fza_almacenes` VALUES ('DEP_CL_GEN', 'Depósitos Clientes Alm Cen', '1', 'GEN', 'S', 'DEPOSITO', NULL, NULL, NULL, NULL, NULL, NULL, 'S', '2026-01-05 07:21:35', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL);
-INSERT INTO `fza_almacenes` VALUES ('FGN', 'Furgoneta', '1', NULL, 'S', 'TRÁNSITO', NULL, NULL, NULL, NULL, NULL, NULL, 'S', '2026-01-05 07:18:02', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'GEN', 'BCN');
-INSERT INTO `fza_almacenes` VALUES ('GEN', 'Almacén Central', '1', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, 'S', '2026-01-04 22:13:10', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL);
-INSERT INTO `fza_almacenes` VALUES ('TARAS_G', 'Taras Almacén Central', '1', 'GEN', 'S', 'TARAS', NULL, NULL, NULL, NULL, NULL, NULL, 'S', '2026-01-05 07:21:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL);
+INSERT INTO `fza_almacenes` VALUES ('BCN', '1', 'S', 'Almacén Barcelona', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '2026-01-05 06:01:06', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_almacenes` VALUES ('DEP_CL_GEN', '1', 'S', 'Depósitos Clientes Alm Cen', 'GEN', 'S', 'DEPOSITO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-05 07:21:35', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_almacenes` VALUES ('FGN', '1', 'S', 'Furgoneta', NULL, 'S', 'TRÁNSITO', NULL, NULL, NULL, NULL, NULL, NULL, 'BCN', 'GEN', NULL, '2026-01-05 07:18:02', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_almacenes` VALUES ('GEN', '1', 'S', 'Almacén Central', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-04 22:13:10', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_almacenes` VALUES ('TARAS_G', '1', 'S', 'Taras Almacén Central', 'GEN', 'S', 'TARAS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-05 07:21:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 
 -- ----------------------------
 -- Table structure for fza_articulos
@@ -63,20 +64,20 @@ INSERT INTO `fza_almacenes` VALUES ('TARAS_G', 'Taras Almacén Central', '1', 'G
 DROP TABLE IF EXISTS `fza_articulos`;
 CREATE TABLE `fza_articulos`  (
   `CODIGO_ARTICULO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ACTIVO_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
-  `ORDEN_ARTICULO` int(11) NULL DEFAULT NULL,
-  `DESCRIPCION_ARTICULO` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ACTIVO_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'S',
+  `TIPO_ARTICULO` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'ESTANDAR' COMMENT 'ESTANDAR=Físico (Control Stock), SERVICIO=Intangible (Sin Stock), KIT=Pack',
+  `DESCRIPCION_ARTICULO` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `CODIGO_FAMILIA_ARTICULO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `TIPOIVA_ARTICULO` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `TIPOIVA_ARTICULO` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `ESACTIVO_FIJO_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
-  `TIPO_CANTIDAD_ARTICULO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'Uds',
-  `ESVARIACION_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `TIPO_CANTIDAD_ARTICULO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'Uds',
+  `ESVARIACION_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ESTRAZABLE_ARTICULO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'N' COMMENT 'S=Pide Lote/Caducidad, N=No pide',
+  `ORDEN_ARTICULO` int(11) NULL DEFAULT NULL,
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `TIENE_TRAZABILIDAD` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N' COMMENT 'S=Pide Lote/Caducidad, N=No pide',
-  `TIPO_ARTICULO` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'ESTANDAR' COMMENT 'ESTANDAR=Físico (Control Stock), SERVICIO=Intangible (Sin Stock), KIT=Pack',
   PRIMARY KEY (`CODIGO_ARTICULO`) USING BTREE,
   INDEX `CODIGO`(`CODIGO_ARTICULO` ASC) USING BTREE,
   INDEX `IDX_ARTICULOS_FAMILIA`(`CODIGO_FAMILIA_ARTICULO` ASC) USING BTREE,
@@ -86,18 +87,18 @@ CREATE TABLE `fza_articulos`  (
 -- ----------------------------
 -- Records of fza_articulos
 -- ----------------------------
-INSERT INTO `fza_articulos` VALUES ('BLUS-SEDA', 'S', NULL, 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('BOTIN-ANIT', 'S', NULL, 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('CAMI-BASICA', 'S', NULL, 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'ADMIN', 'ADMIN', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('CARTERA-PIEL', 'S', NULL, 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', '2026-01-07 19:47:30', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('CHAQ-CUERO', 'S', NULL, 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('FALD-JEAN', 'S', NULL, 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('FALD-PLIS', 'S', NULL, 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('PANT-CHIN', 'S', NULL, 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('VEST-FLOR', 'S', NULL, 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('ZAP-DEPOR', 'S', NULL, 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('ZAP-OXFORD', 'S', NULL, 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
-INSERT INTO `fza_articulos` VALUES ('ZAP-TACÓN', 'S', NULL, 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', '2026-01-05 07:13:21', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'N', 'ESTANDAR');
+INSERT INTO `fza_articulos` VALUES ('BLUS-SEDA', 'S', 'ESTANDAR', 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'ADMIN', 'ADMIN');
+INSERT INTO `fza_articulos` VALUES ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('PANT-CHIN', 'S', 'ESTANDAR', 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos` VALUES ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:21', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 
 -- ----------------------------
 -- Table structure for fza_articulos_conjuntos_asign
@@ -446,6 +447,38 @@ INSERT INTO `fza_atributos_valores` VALUES (204, 'TEMP', 'OI26', 'Otoño/Inviern
 INSERT INTO `fza_atributos_valores` VALUES (205, 'TEMP', 'ATEMPORAL', 'Básicos / Continuidad', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
 
 -- ----------------------------
+-- Table structure for fza_caja_formas_pago
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_caja_formas_pago`;
+CREATE TABLE `fza_caja_formas_pago`  (
+  `CODIGO_FORMAPAGO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ACTIVO_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ORDEN_FORMAPAGO` int(11) NULL DEFAULT NULL,
+  `DESCRIPCION_FORMAPAGO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `N_PLAZOS_FORMAPAGO` int(11) NULL DEFAULT 1,
+  `N_DIAS_ENTRE_PLAZOS_FORMAPAGO` int(11) NULL DEFAULT 0,
+  `PORCEN_ANTICIPO_FORMAPAGO` int(11) NULL DEFAULT NULL,
+  `ESVERBANCOEMPRESA_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ESCONTADO_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ESDEFAULT_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_FORMAPAGO`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_caja_formas_pago
+-- ----------------------------
+INSERT INTO `fza_caja_formas_pago` VALUES ('30_60_90', 'S', 4, 'RECIBO A 30, 60 y 90 DIAS', 3, 30, 0, 'N', 'N', 'N', '2023-12-14 12:04:03', '2023-12-08 22:33:27', 'Administrador', 'Administrador');
+INSERT INTO `fza_caja_formas_pago` VALUES ('30DIAS', 'S', 2, 'RECIBO A 30 DIAS', 1, 30, 0, 'N', 'N', 'N', '2023-12-09 18:25:02', '2022-11-02 16:13:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_caja_formas_pago` VALUES ('30Y60', 'S', 1, 'RECIBO 30 DIAS Y 60 DIAS', 2, 30, 0, 'N', 'N', 'N', '2023-12-09 18:25:01', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
+INSERT INTO `fza_caja_formas_pago` VALUES ('60DIAS', 'S', 3, 'RECIBO A 60 DIAS', 1, 60, 0, 'N', 'N', 'N', '2023-12-09 18:25:00', '2022-10-06 17:58:14', 'Administrador', 'Administrador');
+INSERT INTO `fza_caja_formas_pago` VALUES ('CONTADO', 'S', 1, 'CONTADO', 1, 0, 100, 'N', 'S', 'S', '2023-12-14 12:04:29', '2021-05-14 20:08:58', 'Administrador', 'Administrador');
+INSERT INTO `fza_caja_formas_pago` VALUES ('TRANSFERENCIA', 'S', 3, 'TRANSFERENCIA', 1, 0, 100, 'S', 'N', 'N', '2023-12-14 12:04:13', '2023-12-06 18:59:38', 'Administrador', 'Administrador');
+
+-- ----------------------------
 -- Table structure for fza_caja_operaciones
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_caja_operaciones`;
@@ -455,9 +488,9 @@ CREATE TABLE `fza_caja_operaciones`  (
   `CODIGO_CAJA_OPCAJA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Terminal físico (TPV1, TPV2...)',
   `SERIE_OPERACION_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'A',
   `NUMERO_OPERACION_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `NRO_FACTURA_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `SERIE_FACTURA_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `FECHA_OPERACION_OPCAJA` datetime NOT NULL,
-  `FECHA_EFECTO_OPCAJA` datetime NOT NULL COMMENT 'Fecha contable (Z)',
-  `CODIGO_TURNO_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Mañana, Tarde, Noche, Refuerzo...',
   `CODIGO_CIERRE_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'ID del Cierre Z al que pertenece esta línea',
   `CODIGO_EMPLEADO_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `TIPO_OPERACION_OPCAJA` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
@@ -467,10 +500,7 @@ CREATE TABLE `fza_caja_operaciones`  (
   `CODIGO_EMPRESA_CONTRA_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_ALMACEN_CONTRA_OPCAJA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `ES_SALIDA_TRASPASO_OPCAJA` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
-  `SERIE_FACTURA_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `NRO_FACTURA_OPCAJA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CONCEPTO_GASTO_OPCAJA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `CODIGO_VALE_OPCAJA` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `ESACTIVO_OPCAJA` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
   `ESTADO_DEVOLUCION_OPCAJA` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'N',
   `IMPORTE_DEVUELTO_ACUM_OPCAJA` decimal(19, 6) NOT NULL DEFAULT 0.000000,
@@ -483,8 +513,6 @@ CREATE TABLE `fza_caja_operaciones`  (
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`CODIGO_EMPRESA_OPCAJA`, `CODIGO_ALMACEN_OPCAJA`, `CODIGO_CAJA_OPCAJA`, `SERIE_OPERACION_OPCAJA`, `NUMERO_OPERACION_OPCAJA`) USING BTREE,
   INDEX `IDX_CIERRE_OPCAJA`(`CODIGO_CIERRE_OPCAJA` ASC) USING BTREE,
-  INDEX `IDX_FECHA_EFECTO_OPCAJA`(`FECHA_EFECTO_OPCAJA` ASC) USING BTREE,
-  INDEX `IDX_TURNO_OPCAJA`(`CODIGO_TURNO_OPCAJA` ASC) USING BTREE,
   INDEX `IDX_REF_ORIGEN_OPCAJA`(`SERIE_REF_ORIGEN_OPCAJA` ASC, `NUMERO_REF_ORIGEN_OPCAJA` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
@@ -553,7 +581,7 @@ CREATE TABLE `fza_clientes`  (
   `ESIVA_EXENTO_CLIENTE` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
   `ESINTRACOMUNITARIO_CLIENTE` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
   `ESREGIMENESPECIALAGRICOLA_CLIENTE` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
-  `CODIGO_FORMA_PAGO_CLIENTE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_FORMA_PAGO_CLIENTE` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `TARIFA_ARTICULO_CLIENTE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `SERIE_CONTADOR_CLIENTE` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `TEXTO_LEGAL_FACTURA_CLIENTE` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
@@ -605,6 +633,32 @@ INSERT INTO `fza_codigos_barras` VALUES ('8410000000200', 'ZAP-TACÓN/ROJO/37', 
 INSERT INTO `fza_codigos_barras` VALUES ('8410000000201', 'ZAP-TACÓN/38/NEGRO', 'EAN13', 'S', '2026-01-04 22:06:12', '2026-01-04 22:06:12', 'DEMO', 'DEMO');
 
 -- ----------------------------
+-- Table structure for fza_config_campos
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_config_campos`;
+CREATE TABLE `fza_config_campos`  (
+  `TABLA_OBJETIVO_CC` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CAMPO_OBJETIVO_CC` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `TITULO_VISUAL_CC` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'El texto bonito para el usuario',
+  `ANCHO_COLUMNA_CC` int(11) NULL DEFAULT 100 COMMENT 'Ancho en píxeles',
+  `ORDEN_VISUAL_CC` int(11) NULL DEFAULT 0 COMMENT 'Para ordenar columnas si quisieras',
+  `VISIBLE_CC` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
+  PRIMARY KEY (`TABLA_OBJETIVO_CC`, `CAMPO_OBJETIVO_CC`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_config_campos
+-- ----------------------------
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'ACTIVO_ARTICULO', 'Activo', 50, 3, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'CODIGO_ARTICULO', 'Código', 100, 1, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'DESCRIPCION_ARTICULO', 'Descripción del Artículo', 350, 2, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'ESVARIACION_ARTICULO', 'Tiene Tallas/Col', 90, 6, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'TIENE_TRAZABILIDAD', 'Trazabilidad', 80, 7, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'TIPO_ARTICULO', 'Tipo', 100, 8, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Unidad Medida', 80, 5, 'S');
+INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', '% IVA', 60, 4, 'S');
+
+-- ----------------------------
 -- Table structure for fza_contadores
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_contadores`;
@@ -612,6 +666,7 @@ CREATE TABLE `fza_contadores`  (
   `TIPODOC_CONTADOR` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `SERIE_CONTADOR` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `EMPRESA_CONTADOR` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `TABLAORIGEN_CONTADOR` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CONTADOR_CONTADOR` bigint(20) NOT NULL,
   `DEFAULT_CONTADOR` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
   `NUMDIGIT_CONTADOR` int(11) NOT NULL DEFAULT 0,
@@ -627,31 +682,31 @@ CREATE TABLE `fza_contadores`  (
 -- ----------------------------
 -- Records of fza_contadores
 -- ----------------------------
-INSERT INTO `fza_contadores` VALUES ('AO', '-', '-', 38, 'S', 3, 'S', NULL, '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('AR', '-', '-', 17, 'S', 3, 'S', NULL, '2023-12-06 13:23:53', '2023-05-25 12:51:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('CL', '-', '-', 297, 'S', 3, 'S', NULL, '2023-12-06 13:26:05', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('CO', '-', '-', 6, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', 13, 'S', 3, 'S', NULL, '2024-02-12 09:38:07', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', 6, 'S', 3, 'S', NULL, '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', 10, 'S', 3, 'S', NULL, '2024-10-06 22:11:21', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', 4, 'S', 3, 'S', NULL, '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1', '1', 25, 'N', 8, 'S', 'NORMAL', '2025-09-07 17:01:05', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1.2023', '011', 6, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1/1T/2024', '011', 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A3', '1', 0, 'N', 8, 'S', 'NORMAL', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO', '1', 8, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO/2023', '1', 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:14', '2023-12-06 13:26:05', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'ANA/2023', '008', 5, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'ATIE', '1', 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:18', '2023-05-17 14:12:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'TICKA1', '1', 0, 'S', 4, 'S', 'SIMPLIFICADA', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FO', '-', '-', 7, 'S', 3, 'S', NULL, '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('GO', '-', '-', 5, 'S', 3, 'S', NULL, '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('GP', '-', '-', 12, 'S', 3, 'S', NULL, '2023-10-28 13:39:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('IG', '-', '-', 4, 'S', 3, 'S', NULL, '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('IV', '-', '-', 18, 'S', 3, 'S', NULL, '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('PG', '-', '-', 3, 'S', 3, 'S', NULL, '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('PV', '-', '-', 25, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', 5, 'S', 3, 'S', NULL, '2023-12-06 12:59:57', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('AO', '-', '-', NULL, 38, 'S', 3, 'S', NULL, '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('AR', '-', '-', 'fza_articulos', 17, 'S', 3, 'S', NULL, '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('CL', '-', '-', 'fza_clientes', 297, 'S', 3, 'S', NULL, '2026-01-21 17:22:27', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('CO', '-', '-', NULL, 6, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', NULL, 13, 'S', 3, 'S', NULL, '2024-02-12 09:38:07', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', NULL, 6, 'S', 3, 'S', NULL, '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', NULL, 10, 'S', 3, 'S', NULL, '2024-10-06 22:11:21', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', NULL, 4, 'S', 3, 'S', NULL, '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'A1', '1', 'fza_facturas', 25, 'N', 8, 'S', 'NORMAL', '2026-01-21 17:22:33', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'A1.2023', '011', NULL, 6, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'A1/1T/2024', '011', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'A3', '1', NULL, 0, 'N', 8, 'S', 'NORMAL', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO', '1', NULL, 8, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO/2023', '1', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:14', '2023-12-06 13:26:05', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'ANA/2023', '008', NULL, 5, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'ATIE', '1', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:18', '2023-05-17 14:12:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', 'TICKA1', '1', NULL, 0, 'S', 4, 'S', 'SIMPLIFICADA', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FO', '-', '-', NULL, 7, 'S', 3, 'S', NULL, '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('GO', '-', '-', NULL, 5, 'S', 3, 'S', NULL, '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('GP', '-', '-', NULL, 12, 'S', 3, 'S', NULL, '2023-10-28 13:39:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('IG', '-', '-', NULL, 4, 'S', 3, 'S', NULL, '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('IV', '-', '-', NULL, 18, 'S', 3, 'S', NULL, '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('PG', '-', '-', NULL, 3, 'S', 3, 'S', NULL, '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('PV', '-', '-', NULL, 25, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', NULL, 5, 'S', 3, 'S', NULL, '2023-12-06 12:59:57', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_empresas
@@ -966,38 +1021,6 @@ CREATE TABLE `fza_facturas_pagos`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for fza_formapago
--- ----------------------------
-DROP TABLE IF EXISTS `fza_formapago`;
-CREATE TABLE `fza_formapago`  (
-  `CODIGO_FORMAPAGO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ACTIVO_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `ORDEN_FORMAPAGO` int(11) NULL DEFAULT NULL,
-  `DESCRIPCION_FORMAPAGO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `N_PLAZOS_FORMAPAGO` int(11) NULL DEFAULT 1,
-  `N_DIAS_ENTRE_PLAZOS_FORMAPAGO` int(11) NULL DEFAULT 0,
-  `PORCEN_ANTICIPO_FORMAPAGO` int(11) NULL DEFAULT NULL,
-  `ESVERBANCOEMPRESA_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `ESCONTADO_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `ESDEFAULT_FORMAPAGO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
-  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
-  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  PRIMARY KEY (`CODIGO_FORMAPAGO`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of fza_formapago
--- ----------------------------
-INSERT INTO `fza_formapago` VALUES ('30_60_90', 'S', 4, 'RECIBO A 30, 60 y 90 DIAS', 3, 30, 0, 'N', 'N', 'N', '2023-12-14 12:04:03', '2023-12-08 22:33:27', 'Administrador', 'Administrador');
-INSERT INTO `fza_formapago` VALUES ('30DIAS', 'S', 2, 'RECIBO A 30 DIAS', 1, 30, 0, 'N', 'N', 'N', '2023-12-09 18:25:02', '2022-11-02 16:13:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_formapago` VALUES ('30Y60', 'S', 1, 'RECIBO 30 DIAS Y 60 DIAS', 2, 30, 0, 'N', 'N', 'N', '2023-12-09 18:25:01', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
-INSERT INTO `fza_formapago` VALUES ('60DIAS', 'S', 3, 'RECIBO A 60 DIAS', 1, 60, 0, 'N', 'N', 'N', '2023-12-09 18:25:00', '2022-10-06 17:58:14', 'Administrador', 'Administrador');
-INSERT INTO `fza_formapago` VALUES ('CONTADO', 'S', 1, 'CONTADO', 1, 0, 100, 'N', 'S', 'S', '2023-12-14 12:04:29', '2021-05-14 20:08:58', 'Administrador', 'Administrador');
-INSERT INTO `fza_formapago` VALUES ('TRANSFERENCIA', 'S', 3, 'TRANSFERENCIA', 1, 0, 100, 'S', 'N', 'N', '2023-12-14 12:04:13', '2023-12-06 18:59:38', 'Administrador', 'Administrador');
-
--- ----------------------------
 -- Table structure for fza_formas_pago
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_formas_pago`;
@@ -1025,6 +1048,41 @@ INSERT INTO `fza_formas_pago` VALUES ('CRED', 'A Crédito / Pendiente', 'DEUDA',
 INSERT INTO `fza_formas_pago` VALUES ('EFE', 'Efectivo', 'EFECTIVO', 'N', 'S', 'S', 'S', 1, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 INSERT INTO `fza_formas_pago` VALUES ('TARJ', 'Tarjeta Crédito/Débito', 'TARJETA', 'N', 'N', 'N', 'S', 2, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 INSERT INTO `fza_formas_pago` VALUES ('TRANSF', 'Transferencia Bancaria', 'TARJETA', 'S', 'N', 'N', 'S', 4, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+
+-- ----------------------------
+-- Table structure for fza_gen_defaults
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_gen_defaults`;
+CREATE TABLE `fza_gen_defaults`  (
+  `TABLA_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre de la tabla, ej: fza_articulos',
+  `CAMPO_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre del campo, ej: TIPOIVA_ARTICULO',
+  `VALOR_DEFECTO_DEF` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'El valor fijo a insertar',
+  `TIPO_DATO_DEF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'STRING' COMMENT 'STRING, INTEGER, FLOAT, BOOLEAN, MACRO',
+  `DESCRIPCION_DEF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para que sepas qué es esto',
+  `VALORES_POSIBLES_DEF` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Lista separada por comas (ej: S,N o 21,10,4)',
+  PRIMARY KEY (`TABLA_OBJETIVO_DEF`, `CAMPO_OBJETIVO_DEF`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_gen_defaults
+-- ----------------------------
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ACTIVO_ARTICULO', 'S', 'STRING', 'Activo por defecto', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'CODIGO_ARTICULO', '0', 'STRING', 'Código Artículo', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESACTIVO_FIJO_ARTICULO', 'N', 'STRING', 'No es inmovilizado REAGP', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESTRAZABLE_ARTICULO', 'N', 'STRING', 'Tiene lote o caducidad', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESVARIACION_ARTICULO', 'N', 'STRING', 'Tiene Variaciones', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ORDEN_ARTICULO', '0', 'INTEGER', 'Orden Artículo', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_ARTICULO', 'ESTANDAR', 'STRING', 'Tipo de Artículo', 'ESTANDAR,SERVICIO,KIT');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Uds', 'STRING', 'Unidad de medida', 'Uds,Kg,L,Mt,H');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', 'N', 'STRING', 'IVA General', '21,10,4,0');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ACTIVO_CLIENTE', 'S', 'STRING', 'Cliente activo por defecto', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'CODIGO_CLIENTE', '0', 'INTEGER', 'Código inicial', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESINTRACOMUNITARIO_CLIENTE', 'N', 'STRING', 'No es intracomunitario', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_EXENTO_CLIENTE', 'N', 'STRING', 'No exento de IVA', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_RECARGO_CLIENTE', 'N', 'STRING', 'Sin recargo de equivalencia', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESREGIMENESPECIALAGRICOLA_CLIENTE', 'N', 'STRING', 'No es régimen agrícola', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESRETENCIONES_CLIENTE', 'N', 'STRING', 'Sin retenciones IRPF', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ORDEN_CLIENTE', '0', 'INTEGER', 'Orden por defecto', NULL);
 
 -- ----------------------------
 -- Table structure for fza_generadorprocesos
@@ -1289,6 +1347,7 @@ CREATE TABLE `fza_movimientos_almacen`  (
   `CANTIDAD_MOV` decimal(19, 6) NULL DEFAULT 0.000000,
   `PRECIO_COSTE_UNITARIO_MOV` decimal(19, 6) NULL DEFAULT 0.000000,
   `TOTAL_COSTE_MOV` decimal(19, 6) NULL DEFAULT 0.000000 COMMENT 'Cantidad * Coste Unitario',
+  `PRECIO_MEDIO_MOV` decimal(19, 6) NULL DEFAULT 0.000000 COMMENT 'PMP capturado en el momento de la transacción',
   `CODIGO_ALMACEN_CONTRA_MOV` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para traspasos: a qué almacén va',
   `CODIGO_CLIENTE_MOV` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para ventas o depósitos',
   `CODIGO_PROVEEDOR_MOV` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para entradas de compra',
@@ -1314,13 +1373,13 @@ CREATE TABLE `fza_movimientos_almacen`  (
 -- ----------------------------
 -- Records of fza_movimientos_almacen
 -- ----------------------------
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '001', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', 'Zapato Oxford Piel 42 Negro', 'E', 10.000000, 40.000000, 400.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:22', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8.000000, 40.000000, 320.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:29', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '003', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-TACÓN', 'ZAP-TACÓN/ROJO/37', 'Zapato Tacón 37 Rojo', 'E', 5.000000, 25.000000, 125.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '004', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-PLIS', 'FALD-PLIS/VERDE/S', 'Falda Plisada S Verde', 'E', 20.000000, 12.000000, 240.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:44', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '005', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', 'Falda Vaquera L', 'E', 15.000000, 10.000000, 150.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:50', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '006', '1', 'GEN', '2026-01-04 22:13:10', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 'Chaqueta Cuero XL Negra', 'E', 3.000000, 60.000000, 180.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:57', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
-INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '007', '1', 'GEN', '2026-01-04 22:13:10', 'CARTERA-PIEL', 'CARTERA-PIEL', 'Cartera de Cuero Unisex', 'E', 8.000000, 20.000000, 160.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:44:09', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '001', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', 'Zapato Oxford Piel 42 Negro', 'E', 10.000000, 40.000000, 400.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:22', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8.000000, 40.000000, 320.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:29', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '003', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-TACÓN', 'ZAP-TACÓN/ROJO/37', 'Zapato Tacón 37 Rojo', 'E', 5.000000, 25.000000, 125.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '004', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-PLIS', 'FALD-PLIS/VERDE/S', 'Falda Plisada S Verde', 'E', 20.000000, 12.000000, 240.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:44', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '005', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', 'Falda Vaquera L', 'E', 15.000000, 10.000000, 150.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:50', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '006', '1', 'GEN', '2026-01-04 22:13:10', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 'Chaqueta Cuero XL Negra', 'E', 3.000000, 60.000000, 180.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:40:57', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
+INSERT INTO `fza_movimientos_almacen` VALUES ('IN', 'A1', '2026001', '007', '1', 'GEN', '2026-01-04 22:13:10', 'CARTERA-PIEL', 'CARTERA-PIEL', 'Cartera de Cuero Unisex', 'E', 8.000000, 20.000000, 160.000000, 0.000000, NULL, NULL, NULL, 'S', '2026-01-08 18:44:09', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL);
 
 -- ----------------------------
 -- Table structure for fza_paises
@@ -1942,7 +2001,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', '012', 'ALEX', '1', '2026-01-15 17:02:21', '2026-01-15 17:02:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', '012', 'ALEX', '1', '2026-01-19 17:29:07', '2026-01-19 17:29:07', '2021-05-14 19:54:29', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -2433,6 +2492,49 @@ INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmPrintRecFac', 'frxrprt1
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'inLibtb', 'oSimbolosProhibidos', ',\"\'+-€%*', NULL, NULL, NULL, '2023-04-26 11:50:56', '2023-04-26 11:50:48', 'Administrador', 'Administrador');
 
 -- ----------------------------
+-- Table structure for fza_vales
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_vales`;
+CREATE TABLE `fza_vales`  (
+  `CODIGO_VL` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Código de barras identificador',
+  `CODIGO_PADRE_VL` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Si este vale es el cambio de otro anterior, aquí va el ID del padre',
+  `PIN_SEGURIDAD_VL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT '' COMMENT 'Código aleatorio tipo CVV para validar el vale',
+  `ESTADO_VL` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'PENDIENTE' COMMENT 'PENDIENTE, REDIMIDO, ANULADO, CADUCADO',
+  `IMPORTE_NOMINAL_VL` decimal(19, 6) NOT NULL DEFAULT 0.000000 COMMENT 'El valor monetario que tiene este vale',
+  `FECHA_EMISION_VL` datetime NOT NULL,
+  `FECHA_CADUCIDAD_VL` date NULL DEFAULT NULL,
+  `CODIGO_EMPRESA_EMI_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_ALMACEN_EMI_VL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_CAJA_EMI_VL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `NUMERO_OPERACION_EMI_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'ID operación TPV donde se creó',
+  `SERIE_FACTURA_EMI_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Factura de abono o ticket origen',
+  `NRO_FACTURA_EMI_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `FECHA_REDENCION_VL` datetime NULL DEFAULT NULL,
+  `IMPORTE_REDIMIDO_VL` decimal(19, 6) NULL DEFAULT 0.000000 COMMENT 'Suele coincidir con el nominal al ser de uso único',
+  `CODIGO_EMPRESA_RED_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_ALMACEN_RED_VL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_CAJA_RED_VL` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `NUMERO_OPERACION_RED_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'ID operación TPV donde se gastó',
+  `SERIE_FACTURA_RED_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Factura o ticket que se pagó con esto',
+  `NRO_FACTURA_RED_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_CLIENTE_VL` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `OBSERVACIONES_VL` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_VL`) USING BTREE,
+  INDEX `IDX_PADRE_VL`(`CODIGO_PADRE_VL` ASC) USING BTREE,
+  INDEX `IDX_ESTADO_VL`(`ESTADO_VL` ASC) USING BTREE,
+  INDEX `IDX_ORIGEN_VL`(`CODIGO_EMPRESA_EMI_VL` ASC, `NUMERO_OPERACION_EMI_VL` ASC) USING BTREE,
+  INDEX `IDX_CADUCIDAD_VL`(`FECHA_CADUCIDAD_VL` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_vales
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for fza_variaciones
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_variaciones`;
@@ -2521,34 +2623,89 @@ CREATE TABLE `fza_winforms`  (
 -- ----------------------------
 -- Records of fza_winforms
 -- ----------------------------
-INSERT INTO `fza_winforms` VALUES ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'A', 'UniDataArticulos.TdmArticulos');
-INSERT INTO `fza_winforms` VALUES ('Clientes', 'Clientes', 'mnuClientes', 'inMtoClientes.TfrmMtoClientes', 'K', 'UniDataClientes.TdmClientes');
-INSERT INTO `fza_winforms` VALUES ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'R', 'UniDataContadores.TdmContadores');
-INSERT INTO `fza_winforms` VALUES ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'E', 'UniDataEmpresas.TdmEmpresas');
-INSERT INTO `fza_winforms` VALUES ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturas.TfrmMtoFacturas', 'F', 'UniDataFacturas.TdmFacturas');
-INSERT INTO `fza_winforms` VALUES ('Familias', 'Familias', 'mnuFamilias', 'inMtoFamilias.TfrmMtoFamilias', 'N', 'UniDataFamilias.TdmFamilias');
-INSERT INTO `fza_winforms` VALUES ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Q', 'UniDataFormasdePago.TdmFormasdePago');
-INSERT INTO `fza_winforms` VALUES ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos');
-INSERT INTO `fza_winforms` VALUES ('Grupos', 'Grupos de Usuarios', 'mnuGrupos', 'inMtoGrupos.TfrmMtoGrupos', 'J', 'UniDataGrupos.TdmGrupos');
-INSERT INTO `fza_winforms` VALUES ('Ivas', 'Impuestos IVA', 'mnuIvas', 'inMtoIvas.TfrmMtoIvas', 'I', 'UniDataIvas.TdmIvas');
-INSERT INTO `fza_winforms` VALUES ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'O', 'UniDataIvasGrupos.TdmIvasGrupos');
-INSERT INTO `fza_winforms` VALUES ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'L', 'UniDataPaises.TdmPaises');
-INSERT INTO `fza_winforms` VALUES ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'P', 'UniDataProveedores.TdmProveedores');
-INSERT INTO `fza_winforms` VALUES ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'T', 'UniDataTarifas.TdmTarifas');
-INSERT INTO `fza_winforms` VALUES ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'H', 'UniDataUsuarios.TdmUsuarios');
-INSERT INTO `fza_winforms` VALUES ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'M', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles');
+INSERT INTO `fza_winforms` VALUES ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos');
+INSERT INTO `fza_winforms` VALUES ('Clientes', 'Clientes', 'mnuClientes', 'inMtoClientes.TfrmMtoClientes', 'Ctrl+K', 'UniDataClientes.TdmClientes');
+INSERT INTO `fza_winforms` VALUES ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores');
+INSERT INTO `fza_winforms` VALUES ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas');
+INSERT INTO `fza_winforms` VALUES ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturas.TfrmMtoFacturas', 'Ctrl+F', 'UniDataFacturas.TdmFacturas');
+INSERT INTO `fza_winforms` VALUES ('Familias', 'Familias', 'mnuFamilias', 'inMtoFamilias.TfrmMtoFamilias', 'Ctrl+N', 'UniDataFamilias.TdmFamilias');
+INSERT INTO `fza_winforms` VALUES ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Ctrl+Q', 'UniDataFormasdePago.TdmFormasdePago');
+INSERT INTO `fza_winforms` VALUES ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'Ctrl+G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos');
+INSERT INTO `fza_winforms` VALUES ('Grupos', 'Grupos de Usuarios', 'mnuGrupos', 'inMtoGrupos.TfrmMtoGrupos', 'Ctrl+J', 'UniDataGrupos.TdmGrupos');
+INSERT INTO `fza_winforms` VALUES ('Ivas', 'Impuestos IVA', 'mnuIvas', 'inMtoIvas.TfrmMtoIvas', 'Ctrl+I', 'UniDataIvas.TdmIvas');
+INSERT INTO `fza_winforms` VALUES ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'Ctrl+O', 'UniDataIvasGrupos.TdmIvasGrupos');
+INSERT INTO `fza_winforms` VALUES ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL);
+INSERT INTO `fza_winforms` VALUES ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+L', 'UniDataPaises.TdmPaises');
+INSERT INTO `fza_winforms` VALUES ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores');
+INSERT INTO `fza_winforms` VALUES ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas');
+INSERT INTO `fza_winforms` VALUES ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios');
+INSERT INTO `fza_winforms` VALUES ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+M', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles');
 
 -- ----------------------------
 -- View structure for vi_articulos
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_articulos`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos` AS select `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,`fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,`fza_articulos`.`ORDEN_ARTICULO` AS `ORDEN_ARTICULO`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,`fza_articulos_familias`.`NOMBRE_FAMILIA` AS `NOMBRE_FAMILIA`,`fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,`fza_ivas_tipos`.`NOMBRE_TIPO_IVA` AS `NOMBRE_TIPO_IVA`,`fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF` from ((((`fza_articulos` left join `fza_articulos_familias` on((`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`))) left join `fza_articulos_proveedores` on(((`fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR`) and (`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')))) left join `fza_proveedores` on((`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`))) left join `fza_ivas_tipos` on((`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`))) order by `fza_articulos`.`ORDEN_ARTICULO` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos` AS SELECT
+  `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,
+  `fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,
+  `fza_articulos`.`ORDEN_ARTICULO` AS `ORDEN_ARTICULO`,
+  `fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,
+  `fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,
+  `fza_articulos_familias`.`NOMBRE_FAMILIA` AS `NOMBRE_FAMILIA`,
+  `fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,
+  `fza_ivas_tipos`.`NOMBRE_TIPO_IVA` AS `NOMBRE_TIPO_IVA`,
+  `fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO`,
+  `fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,
+  `fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,
+  `fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
+  `fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,
+  `fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,
+  `fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF`
+FROM
+  ((((
+  `fza_articulos`
+  LEFT JOIN `fza_articulos_familias` ON ((
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`
+  )))
+  LEFT JOIN `fza_articulos_proveedores` ON (((
+  `fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR`
+  )
+  AND (
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S'
+  ))))
+  LEFT JOIN `fza_proveedores` ON ((
+  `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`
+  )))
+  LEFT JOIN `fza_ivas_tipos` ON ((
+  `fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`
+  )))
+ORDER BY
+  `fza_articulos`.`ORDEN_ARTICULO` ;
 
 -- ----------------------------
 -- View structure for vi_articulos_familias
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_articulos_familias`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_familias` AS select `fza_articulos_familias`.`CODIGO_FAMILIA` AS `CODIGO_FAMILIA`,`fza_articulos_familias`.`ACTIVO_FAMILIA` AS `ACTIVO_FAMILIA`,`fza_articulos_familias`.`ORDEN_FAMILIA` AS `ORDEN_FAMILIA`,`fza_articulos_familias`.`ESDEFAULT_FAMILIA` AS `ESDEFAULT_FAMILIA`,`fza_articulos_familias`.`CODIGO_SUBFAMILIA` AS `CODIGO_SUBFAMILIA`,`fza_articulos_familias2`.`NOMBRE_FAMILIA` AS `NOMBRE_SUBFAMILIA`,`fza_articulos_familias`.`NOMBRE_FAMILIA` AS `NOMBRE_FAMILIA`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,`fza_articulos_familias`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos_familias`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos_familias`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos_familias`.`USUARIOMODIF` AS `USUARIOMODIF` from (`fza_articulos_familias` left join `fza_articulos_familias` `fza_articulos_familias2` on((`fza_articulos_familias`.`CODIGO_SUBFAMILIA` = `fza_articulos_familias2`.`CODIGO_FAMILIA`))) ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_familias` AS SELECT
+  `fza_articulos_familias`.`CODIGO_FAMILIA` AS `CODIGO_FAMILIA`,
+  `fza_articulos_familias`.`ACTIVO_FAMILIA` AS `ACTIVO_FAMILIA`,
+  `fza_articulos_familias`.`ORDEN_FAMILIA` AS `ORDEN_FAMILIA`,
+  `fza_articulos_familias`.`ESDEFAULT_FAMILIA` AS `ESDEFAULT_FAMILIA`,
+  `fza_articulos_familias`.`CODIGO_SUBFAMILIA` AS `CODIGO_SUBFAMILIA`,
+  `fza_articulos_familias2`.`NOMBRE_FAMILIA` AS `NOMBRE_SUBFAMILIA`,
+  `fza_articulos_familias`.`NOMBRE_FAMILIA` AS `NOMBRE_FAMILIA`,
+  `fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,
+  `fza_articulos_familias`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
+  `fza_articulos_familias`.`INSTANTEALTA` AS `INSTANTEALTA`,
+  `fza_articulos_familias`.`USUARIOALTA` AS `USUARIOALTA`,
+  `fza_articulos_familias`.`USUARIOMODIF` AS `USUARIOMODIF`
+FROM
+  (
+  `fza_articulos_familias`
+  LEFT JOIN `fza_articulos_familias` `fza_articulos_familias2` ON ((
+  `fza_articulos_familias`.`CODIGO_SUBFAMILIA` = `fza_articulos_familias2`.`CODIGO_FAMILIA`
+  ))) ;
 
 -- ----------------------------
 -- View structure for vi_articulos_familias_list
@@ -2560,7 +2717,41 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_familias_li
 -- View structure for vi_articulos_list
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_articulos_list`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_list` AS select `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,`fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,`fza_articulos`.`ORDEN_ARTICULO` AS `ORDEN_ARTICULO`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,`fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,`fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF` from (((`fza_articulos` left join `fza_articulos_familias` on((`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`))) left join `fza_articulos_proveedores` on(((`fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` = `fza_articulos`.`CODIGO_ARTICULO`) and (`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')))) left join `fza_proveedores` on((`fza_proveedores`.`CODIGO_PROVEEDOR` = `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`))) where (`fza_articulos`.`ACTIVO_ARTICULO` = 'S') order by `fza_articulos`.`ORDEN_ARTICULO` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_list` AS SELECT
+  `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,
+  `fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,
+  `fza_articulos`.`ORDEN_ARTICULO` AS `ORDEN_ARTICULO`,
+  `fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,
+  `fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,
+  `fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,
+  `fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO`,
+  `fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,
+  `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,
+  `fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,
+  `fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
+  `fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,
+  `fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,
+  `fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF`
+FROM
+  (((
+  `fza_articulos`
+  LEFT JOIN `fza_articulos_familias` ON ((
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`
+  )))
+  LEFT JOIN `fza_articulos_proveedores` ON (((
+  `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` = `fza_articulos`.`CODIGO_ARTICULO`
+  )
+  AND (
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S'
+  ))))
+  LEFT JOIN `fza_proveedores` ON ((
+  `fza_proveedores`.`CODIGO_PROVEEDOR` = `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`
+  )))
+WHERE
+  (`fza_articulos`.`ACTIVO_ARTICULO` = 'S')
+ORDER BY
+  `fza_articulos`.`ORDEN_ARTICULO` ;
 
 -- ----------------------------
 -- View structure for vi_articulos_proveedores
@@ -2631,7 +2822,64 @@ ORDER BY
 -- View structure for vi_art_busquedas
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_art_busquedas`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_art_busquedas` AS select `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,`fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZON_SOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` AS `ESPROVEEDORPRINCIPAL`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_ivas_tipos`.`NOMBRE_TIPO_IVA` AS `NOMBRE_TIPO_IVA`,`fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF`,`fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO` from ((((((`fza_articulos` left join `fza_articulos_familias` on((`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`))) left join `fza_articulos_tarifas` on((`fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA`))) left join `fza_tarifas` on(((`fza_articulos_tarifas`.`CODIGO_TARIFA` = `fza_tarifas`.`CODIGO_TARIFA`) and (`fza_tarifas`.`ESDEFAULT_TARIFA` = 'S')))) left join `fza_ivas_tipos` on((`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`))) left join `fza_articulos_proveedores` on(((`fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR`) and (`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')))) left join `fza_proveedores` on((`fza_proveedores`.`CODIGO_PROVEEDOR` = `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`))) where (`fza_articulos`.`ACTIVO_ARTICULO` = 'S') order by `fza_articulos`.`ORDEN_ARTICULO` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_art_busquedas` AS SELECT
+  `fza_articulos`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,
+  `fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,
+  `fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,
+  `fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,
+  `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,
+  `fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZON_SOCIAL_PROVEEDOR`,
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` AS `ESPROVEEDORPRINCIPAL`,
+  `fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,
+  `fza_articulos_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,
+  `fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,
+  `fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,
+  `fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,
+  `fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,
+  `fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,
+  `fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,
+  `fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,
+  `fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,
+  `fza_ivas_tipos`.`NOMBRE_TIPO_IVA` AS `NOMBRE_TIPO_IVA`,
+  `fza_articulos`.`TIPOIVA_ARTICULO` AS `TIPOIVA_ARTICULO`,
+  `fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,
+  `fza_articulos`.`USUARIOMODIF` AS `USUARIOMODIF`,
+  `fza_articulos`.`INSTANTEALTA` AS `INSTANTEALTA`,
+  `fza_articulos`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
+  `fza_articulos`.`USUARIOALTA` AS `USUARIOALTA`,
+  `fza_articulos`.`ESACTIVO_FIJO_ARTICULO` AS `ESACTIVO_FIJO_ARTICULO`
+FROM
+  ((((((
+  `fza_articulos`
+  LEFT JOIN `fza_articulos_familias` ON ((
+  `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`
+  )))
+  LEFT JOIN `fza_articulos_tarifas` ON ((
+  `fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA`
+  )))
+  LEFT JOIN `fza_tarifas` ON (((
+  `fza_articulos_tarifas`.`CODIGO_TARIFA` = `fza_tarifas`.`CODIGO_TARIFA`
+  )
+  AND (
+  `fza_tarifas`.`ESDEFAULT_TARIFA` = 'S'
+  ))))
+  LEFT JOIN `fza_ivas_tipos` ON ((
+  `fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`
+  )))
+  LEFT JOIN `fza_articulos_proveedores` ON (((
+  `fza_articulos`.`CODIGO_ARTICULO` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR`
+  )
+  AND (
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S'
+  ))))
+  LEFT JOIN `fza_proveedores` ON ((
+  `fza_proveedores`.`CODIGO_PROVEEDOR` = `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`
+  )))
+WHERE
+  (`fza_articulos`.`ACTIVO_ARTICULO` = 'S')
+ORDER BY
+  `fza_articulos`.`ORDEN_ARTICULO` ;
 
 -- ----------------------------
 -- View structure for vi_atributos_nombres
@@ -4907,129 +5155,6 @@ CREATE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO`(IN p_input VARCHAR(50))
 BEGIN
     DECLARE v_codigo_articulo VARCHAR(20);
     DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
-    DECLARE v_id_atributo_pivot VARCHAR(20);
-    DECLARE v_nombre_atributo_pivot VARCHAR(50);
-    DECLARE v_columnas_dinamicas TEXT;
-    DECLARE v_filtros_fijos TEXT DEFAULT '';
-    DECLARE v_sql_query TEXT;
-
-    -- 1. RESOLUCIÓN DE IDENTIDAD (¿Es Artículo padre o es un SKU?)
-    -- Buscamos primero si es un código padre directo
-    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
-    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
-
-    IF v_codigo_articulo IS NULL THEN
-        -- Si no es padre, miramos si es un SKU hijo
-        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
-        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
-        
-        IF v_codigo_articulo IS NOT NULL THEN
-            SET v_es_sku = TRUE;
-        END IF;
-    END IF;
-
-    -- 2. BUSCAR ATRIBUTO PARA PIVOTAR (Talla, Color, etc.)
-    -- Solo intentamos buscar atributos si encontramos un padre válido
-    IF v_codigo_articulo IS NOT NULL THEN
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-        ORDER BY va.ORDEN_VA DESC
-        LIMIT 1;
-    END IF;
-
-    -- 3. DECISIÓN DE EJECUCIÓN
-
-    -- CASO A: TIENE ATRIBUTOS -> HACEMOS PIVOT (Lógica compleja)
-    IF v_id_atributo_pivot IS NOT NULL THEN
-    
-        -- 3.1 Generar columnas dinámicas (S, M, L...)
-        SELECT GROUP_CONCAT(DISTINCT
-            CONCAT(
-                'SUM(CASE WHEN av.VALOR_AV = ''', av.VALOR_AV, 
-                ''' THEN stk.CANTIDAD_STK ELSE 0 END) AS `', av.VALOR_AV, '`'
-            )
-            ORDER BY av.ID_VALOR_AV
-        ) INTO v_columnas_dinamicas
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-          AND av.ID_VA_AV = v_id_atributo_pivot;
-
-        -- 3.2 Filtros si el usuario escaneó un SKU específico (ej. ZAPATO-ROJO)
-        IF v_es_sku = TRUE THEN
-            SELECT GROUP_CONCAT(
-                CONCAT(
-                    ' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask ',
-                    ' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV ',
-                    ' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU ',
-                    ' AND f_av.ID_VA_AV = ''', av.ID_VA_AV, ''' ',
-                    ' AND f_av.VALOR_AV = ''', av.VALOR_AV, ''') '
-                ) SEPARATOR ' '
-            ) INTO v_filtros_fijos
-            FROM fza_atributos_sku ask
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-            WHERE ask.CODIGO_UNIDAD_SA = p_input 
-              AND av.ID_VA_AV <> v_id_atributo_pivot;
-        END IF;
-
-        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''; END IF;
-
-        -- 3.3 Query Pivotada
-        SET @sql = CONCAT(
-            'SELECT sk.CODIGO_UNIDAD_SKU AS Código,
-                alm.NOMBRE_ALMACEN_ALM AS Almacén, ', 
-                v_columnas_dinamicas, ',
-                SUM(stk.CANTIDAD_STK) AS Total
-             FROM fza_articulos_stockactual stk
-             JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
-             JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-             JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-             JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-             WHERE sk.CODIGO_ARTICULO_SKU = ''', v_codigo_articulo, '''
-               AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
-               v_filtros_fijos, '
-             GROUP BY alm.NOMBRE_ALMACEN_ALM
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-    ELSE
-        -- CASO B: NO TIENE ATRIBUTOS O NO ES SKU (Artículo Simple)
-        -- Aquí quitamos el JOIN con fza_articulos_skus para permitir stock directo
-        
-        SELECT stk.CODIGO_UNIDAD_STK as Código,  
-            alm.NOMBRE_ALMACEN_ALM as Almacén, 
-            SUM(stk.CANTIDAD_STK) as `Stock Total`
-        FROM fza_articulos_stockactual stk
-        JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
-        WHERE stk.CODIGO_UNIDAD_STK = p_input -- Buscamos exactamente lo que escribió el usuario
-        GROUP BY alm.NOMBRE_ALMACEN_ALM
-        ORDER BY alm.NOMBRE_ALMACEN_ALM;
-        
-    END IF;
-
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for PRC_GET_CAJA_STOCK_PIVOTADO_PRUEBA
--- ----------------------------
-DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_PRUEBA`;
-delimiter ;;
-CREATE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_PRUEBA`(IN p_input VARCHAR(50))
-BEGIN
-    DECLARE v_codigo_articulo VARCHAR(20);
-    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
     
     -- Variables para identificar qué es Talla (Pivot) y qué es Color (Grupo)
     DECLARE v_id_atributo_pivot VARCHAR(20); -- Ej: TAL
@@ -5162,6 +5287,129 @@ BEGIN
         WHERE stk.CODIGO_UNIDAD_STK = p_input 
         GROUP BY alm.NOMBRE_ALMACEN_ALM
         ORDER BY alm.NOMBRE_ALMACEN_ALM;
+    END IF;
+
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for PRC_GET_CAJA_STOCK_PIVOTADO_ANT
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_ANT`;
+delimiter ;;
+CREATE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_ANT`(IN p_input VARCHAR(50))
+BEGIN
+    DECLARE v_codigo_articulo VARCHAR(20);
+    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
+    DECLARE v_id_atributo_pivot VARCHAR(20);
+    DECLARE v_nombre_atributo_pivot VARCHAR(50);
+    DECLARE v_columnas_dinamicas TEXT;
+    DECLARE v_filtros_fijos TEXT DEFAULT '';
+    DECLARE v_sql_query TEXT;
+
+    -- 1. RESOLUCIÓN DE IDENTIDAD (¿Es Artículo padre o es un SKU?)
+    -- Buscamos primero si es un código padre directo
+    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
+    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
+
+    IF v_codigo_articulo IS NULL THEN
+        -- Si no es padre, miramos si es un SKU hijo
+        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
+        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
+        
+        IF v_codigo_articulo IS NOT NULL THEN
+            SET v_es_sku = TRUE;
+        END IF;
+    END IF;
+
+    -- 2. BUSCAR ATRIBUTO PARA PIVOTAR (Talla, Color, etc.)
+    -- Solo intentamos buscar atributos si encontramos un padre válido
+    IF v_codigo_articulo IS NOT NULL THEN
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
+        INTO v_id_atributo_pivot, v_nombre_atributo_pivot
+        FROM fza_articulos_skus sk
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+        ORDER BY va.ORDEN_VA DESC
+        LIMIT 1;
+    END IF;
+
+    -- 3. DECISIÓN DE EJECUCIÓN
+
+    -- CASO A: TIENE ATRIBUTOS -> HACEMOS PIVOT (Lógica compleja)
+    IF v_id_atributo_pivot IS NOT NULL THEN
+    
+        -- 3.1 Generar columnas dinámicas (S, M, L...)
+        SELECT GROUP_CONCAT(DISTINCT
+            CONCAT(
+                'SUM(CASE WHEN av.VALOR_AV = ''', av.VALOR_AV, 
+                ''' THEN stk.CANTIDAD_STK ELSE 0 END) AS `', av.VALOR_AV, '`'
+            )
+            ORDER BY av.ID_VALOR_AV
+        ) INTO v_columnas_dinamicas
+        FROM fza_articulos_skus sk
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+          AND av.ID_VA_AV = v_id_atributo_pivot;
+
+        -- 3.2 Filtros si el usuario escaneó un SKU específico (ej. ZAPATO-ROJO)
+        IF v_es_sku = TRUE THEN
+            SELECT GROUP_CONCAT(
+                CONCAT(
+                    ' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask ',
+                    ' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV ',
+                    ' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU ',
+                    ' AND f_av.ID_VA_AV = ''', av.ID_VA_AV, ''' ',
+                    ' AND f_av.VALOR_AV = ''', av.VALOR_AV, ''') '
+                ) SEPARATOR ' '
+            ) INTO v_filtros_fijos
+            FROM fza_atributos_sku ask
+            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+            WHERE ask.CODIGO_UNIDAD_SA = p_input 
+              AND av.ID_VA_AV <> v_id_atributo_pivot;
+        END IF;
+
+        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''; END IF;
+
+        -- 3.3 Query Pivotada
+        SET @sql = CONCAT(
+            'SELECT sk.CODIGO_UNIDAD_SKU AS Código,
+                alm.NOMBRE_ALMACEN_ALM AS Almacén, ', 
+                v_columnas_dinamicas, ',
+                SUM(stk.CANTIDAD_STK) AS Total
+             FROM fza_articulos_stockactual stk
+             JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
+             JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
+             JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+             JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+             WHERE sk.CODIGO_ARTICULO_SKU = ''', v_codigo_articulo, '''
+               AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
+               v_filtros_fijos, '
+             GROUP BY alm.NOMBRE_ALMACEN_ALM
+             ORDER BY alm.NOMBRE_ALMACEN_ALM'
+        );
+
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    ELSE
+        -- CASO B: NO TIENE ATRIBUTOS O NO ES SKU (Artículo Simple)
+        -- Aquí quitamos el JOIN con fza_articulos_skus para permitir stock directo
+        
+        SELECT stk.CODIGO_UNIDAD_STK as Código,  
+            alm.NOMBRE_ALMACEN_ALM as Almacén, 
+            SUM(stk.CANTIDAD_STK) as `Stock Total`
+        FROM fza_articulos_stockactual stk
+        JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
+        WHERE stk.CODIGO_UNIDAD_STK = p_input -- Buscamos exactamente lo que escribió el usuario
+        GROUP BY alm.NOMBRE_ALMACEN_ALM
+        ORDER BY alm.NOMBRE_ALMACEN_ALM;
+        
     END IF;
 
 END
@@ -5920,6 +6168,103 @@ END
 delimiter ;
 
 -- ----------------------------
+-- Procedure structure for SP_RECALCULAR_PMP_SKU
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_SKU`;
+delimiter ;;
+CREATE PROCEDURE `SP_RECALCULAR_PMP_SKU`(IN `p_CodigoEmpresa` VARCHAR(20),
+    IN `p_CodigoSKU` VARCHAR(50),
+    IN `p_FechaDesde` DATETIME)
+BEGIN
+    -- Variables para el bucle
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE vIdTipo VARCHAR(5);
+    DECLARE vIdSerie VARCHAR(20);
+    DECLARE vIdNro VARCHAR(20);
+    DECLARE vIdLinea VARCHAR(4);
+    
+    DECLARE vTipoMov VARCHAR(1);
+    DECLARE vCantidad DECIMAL(19,6);
+    DECLARE vPrecioCoste DECIMAL(19,6);
+    
+    -- Variables para el cálculo acumulado
+    DECLARE vStockAcumulado DECIMAL(19,6) DEFAULT 0;
+    DECLARE vPMP_Actual DECIMAL(19,6) DEFAULT 0;
+    
+    -- CURSOR: Seleccionamos TODOS los movimientos de ese SKU ordenados cronológicamente
+    -- Es vital incluir movimientos ANTERIORES a la fecha para coger el saldo inicial correcto
+    DECLARE curMovimientos CURSOR FOR 
+        SELECT 
+            TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
+            TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, PRECIO_COSTE_UNITARIO_MOV, FECHA_MOV
+        FROM fza_movimientos_almacen
+        WHERE CODIGO_EMPRESA_MOV = p_CodigoEmpresa
+          AND CODIGO_UNIDAD_MOV = p_CodigoSKU
+        ORDER BY FECHA_MOV ASC, INSTANTEALTA ASC;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    -- 1. Inicialización: Limpiamos variables
+    SET vStockAcumulado = 0;
+    SET vPMP_Actual = 0;
+
+    OPEN curMovimientos;
+
+    read_loop: LOOP
+        FETCH curMovimientos INTO vIdTipo, vIdSerie, vIdNro, vIdLinea, vTipoMov, vCantidad, vPrecioCoste, p_FechaDesde; -- Reusamos p_FechaDesde solo para leer fecha, no afecta lógica
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- ---------------------------------------------------------
+        -- LÓGICA DE CÁLCULO (Idéntica a la del Trigger, pero en bucle)
+        -- ---------------------------------------------------------
+        
+        IF vTipoMov = 'E' THEN
+            -- Es ENTRADA
+            -- Si el stock venía de negativo o cero, reiniciamos precio
+            IF vStockAcumulado <= 0 THEN
+                SET vPMP_Actual = vPrecioCoste;
+            ELSE
+                -- Fórmula PMP
+                SET vPMP_Actual = (
+                    (vStockAcumulado * vPMP_Actual) + (vCantidad * vPrecioCoste)
+                ) / (vStockAcumulado + vCantidad);
+            END IF;
+            
+            -- Actualizamos el Stock Acumulado sumando
+            SET vStockAcumulado = vStockAcumulado + vCantidad;
+            
+        ELSE
+            -- Es SALIDA
+            -- El PMP no cambia, se mantiene el que traíamos
+            -- Pero el stock baja
+            SET vStockAcumulado = vStockAcumulado - vCantidad;
+        END IF;
+
+        -- ---------------------------------------------------------
+        -- ACTUALIZACIÓN DE LA FILA
+        -- ---------------------------------------------------------
+        -- Actualizamos el campo PRECIO_MEDIO_MOV de esta fila específica
+        -- Nota: Esto disparará el Trigger UPDATE. Para evitar bucles,
+        -- el trigger UPDATE debería detectar si el valor ya es igual para no hacer nada,
+        -- o deshabilitar triggers temporalmente si fuera necesario.
+        
+        UPDATE fza_movimientos_almacen 
+        SET PRECIO_MEDIO_MOV = vPMP_Actual
+        WHERE TIPO_DOC_MOV = vIdTipo 
+          AND SERIE_DOC_MOV = vIdSerie
+          AND NRO_DOC_MOV = vIdNro
+          AND LINEA_MOV = vIdLinea;
+          
+    END LOOP;
+
+    CLOSE curMovimientos;
+END
+;;
+delimiter ;
+
+-- ----------------------------
 -- Triggers structure for table fza_caja_pagos
 -- ----------------------------
 DROP TRIGGER IF EXISTS `TRG_CALC_CAMBIO_INSERT`;
@@ -5967,51 +6312,72 @@ delimiter ;
 -- ----------------------------
 -- Triggers structure for table fza_movimientos_almacen
 -- ----------------------------
-DROP TRIGGER IF EXISTS `TRG_CALCULO_PMP_INSERT`;
+DROP TRIGGER IF EXISTS `TRG_CALCULO_PMP_HISTORICO_BI`;
 delimiter ;;
-CREATE TRIGGER `TRG_CALCULO_PMP_INSERT` AFTER INSERT ON `fza_movimientos_almacen` FOR EACH ROW BEGIN
-    DECLARE vStockActual DECIMAL(19,6);
-    DECLARE vCosteMedioActual DECIMAL(19,6);
-    DECLARE vNuevoCosteMedio DECIMAL(19,6);
+CREATE TRIGGER `TRG_CALCULO_PMP_HISTORICO_BI` BEFORE INSERT ON `fza_movimientos_almacen` FOR EACH ROW BEGIN
+    DECLARE vStockActual DECIMAL(19,6) DEFAULT 0;
+    DECLARE vUltimoPMP DECIMAL(19,6) DEFAULT 0;
+    DECLARE vNuevoPMP DECIMAL(19,6) DEFAULT 0;
 
-    -- Solo nos interesa recalcular si es una ENTRADA ('E') y tiene coste
-    IF NEW.TIPO_MOVIMIENTO_MOV = 'E' AND NEW.PRECIO_COSTE_UNITARIO_MOV > 0 THEN
+    -- -----------------------------------------------------------------------
+    -- 1. BUSCAR EL PRECIO MEDIO DEL ÚLTIMO MOVIMIENTO (El "Anterior")
+    -- -----------------------------------------------------------------------
+    -- Buscamos en la propia tabla de movimientos el registro más reciente
+    -- para este SKU que ya tenga un precio calculado.
+    -- Ordenamos por Fecha descendente para coger el último.
+    SET vUltimoPMP = (
+        SELECT PRECIO_MEDIO_MOV
+        FROM fza_movimientos_almacen
+        WHERE CODIGO_UNIDAD_MOV = NEW.CODIGO_UNIDAD_MOV
+        -- Importante: Solo miramos registros anteriores a este instante
+        ORDER BY FECHA_MOV DESC, INSTANTEALTA DESC
+        LIMIT 1
+    );
 
-        -- 1. Obtenemos el Stock y Coste que teníamos ANTES de este movimiento
-        -- (Nota: Simplificado. En un ERP real leerías de fza_articulos_stockactual)
-        -- Aquí leemos de la ficha del SKU
-        SELECT PRECIO_COSTE_MEDIO 
-        INTO vCosteMedioActual
-        FROM fza_articulos_skus 
-        WHERE CODIGO_UNIDAD_SKU = NEW.CODIGO_UNIDAD_MOV;
+    -- Si no existe ningún movimiento previo (es el primero), el precio base es 0
+    IF vUltimoPMP IS NULL THEN
+        SET vUltimoPMP = 0;
+    END IF;
+
+    -- -----------------------------------------------------------------------
+    -- 2. OBTENER EL STOCK ACTUAL (CANTIDAD)
+    -- -----------------------------------------------------------------------
+    -- Aunque no guardemos el precio en StockActual, SÍ necesitamos la cantidad
+    -- acumulada para poder aplicar la fórmula del PMP.
+    SELECT IFNULL(SUM(CANTIDAD_STK), 0) INTO vStockActual
+    FROM fza_articulos_stockactual
+    WHERE CODIGO_UNIDAD_STK = NEW.CODIGO_UNIDAD_MOV;
+
+    -- -----------------------------------------------------------------------
+    -- 3. CALCULAR EL NUEVO PMP
+    -- -----------------------------------------------------------------------
+    
+    -- CASO A: Es una ENTRADA con coste (Compra, entrada manual, etc.)
+    IF NEW.TIPO_MOVIMIENTO_MOV = 'E' THEN
         
-        -- Calculamos el stock actual sumando todos los movimientos anteriores (sin incluir este nuevo todavía)
-        -- OJO: Esto es lento si hay millones de filas. Idealmente leerías de una tabla de stock acumulado.
-        SET vStockActual = (
-            SELECT IFNULL(SUM(CASE WHEN TIPO_MOVIMIENTO_MOV='E' THEN CANTIDAD_MOV ELSE -CANTIDAD_MOV END), 0)
-            FROM fza_movimientos_almacen
-            WHERE CODIGO_UNIDAD_MOV = NEW.CODIGO_UNIDAD_MOV
-            AND (FECHA_MOV < NEW.FECHA_MOV OR (FECHA_MOV = NEW.FECHA_MOV AND INSTANTEALTA < NEW.INSTANTEALTA))
-        );
-
-        -- Si el stock era negativo o cero (estábamos sin stock), el precio medio es el de la nueva compra
-        IF vStockActual <= 0 THEN
-            SET vNuevoCosteMedio = NEW.PRECIO_COSTE_UNITARIO_MOV;
+        -- Si estamos en negativo o a cero, el precio se reinicia con esta entrada
+        IF (vStockActual + NEW.CANTIDAD_MOV) <= 0 THEN
+            SET vNuevoPMP = NEW.PRECIO_COSTE_UNITARIO_MOV;
         ELSE
-            -- 2. LA FÓRMULA DEL PMP
-            -- ((StockViejo * CosteViejo) + (CantidadNueva * CosteNuevo)) / (StockViejo + CantidadNueva)
-            SET vNuevoCosteMedio = (
-                (vStockActual * vCosteMedioActual) + 
+            -- Fórmula PMP: ((StockViejo * CosteViejo) + (Entrada * CosteEntrada)) / StockTotalNuevo
+            SET vNuevoPMP = (
+                (vStockActual * vUltimoPMP) + 
                 (NEW.CANTIDAD_MOV * NEW.PRECIO_COSTE_UNITARIO_MOV)
             ) / (vStockActual + NEW.CANTIDAD_MOV);
         END IF;
 
-        -- 3. Actualizamos la ficha del producto
-        UPDATE fza_articulos_skus 
-        SET PRECIO_COSTE_MEDIO = vNuevoCosteMedio
-        WHERE CODIGO_UNIDAD_SKU = NEW.CODIGO_UNIDAD_MOV;
-
+    -- CASO B: Es una SALIDA (Venta, merma, etc.)
+    ELSE
+        -- En las salidas, el PMP no cambia, se mantiene el último conocido.
+        -- Así el campo PRECIO_MEDIO_MOV en una venta reflejará el coste al que salió.
+        SET vNuevoPMP = vUltimoPMP;
     END IF;
+
+    -- -----------------------------------------------------------------------
+    -- 4. GUARDAR EL DATO EN EL CAMPO (Esto es lo que pediste)
+    -- -----------------------------------------------------------------------
+    SET NEW.PRECIO_MEDIO_MOV = vNuevoPMP;
+
 END
 ;;
 delimiter ;
