@@ -144,34 +144,17 @@ begin
 end;
 
 procedure TdmClientes.unqryTablaGAfterInsert(DataSet: TDataSet);
-var
-  unqryFormaPagoDef:TUniQuery;
-  unqryTarifaDef:TUniQuery;
 begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_clientes');
-  unqryFormaPagoDef := TUniQuery.Create(Self);
-  unqryFormaPagoDef.Connection := oConn;
-  unqryFormaPagoDef.SQL.Text := 'SELECT CODIGO_FORMAPAGO ' +
-                                '  FROM fza_formapago ' +
-                                ' WHERE ESDEFAULT_FORMAPAGO = ''S'' ' +
-                                ' LIMIT 1;';
-  unqryFormaPagoDef.Open;
   unqryTablaG.FindField('CODIGO_FORMA_PAGO_CLIENTE').AsString :=
-                                           unqryFormaPagoDef.Fields[0].AsString;
-  unqryFormaPagoDef.Close;
-  FreeAndNil(unqryFormaPagoDef);
-  unqryTarifaDef := TUniQuery.Create(Self);
-  unqryTarifaDef.Connection := oConn;
-  unqryTarifaDef.SQL.Text :=    'SELECT CODIGO_TARIFA ' +
-                                '  FROM fza_tarifas ' +
-                                ' WHERE ESDEFAULT_TARIFA = ''S'' ' +
-                                ' LIMIT 1;';
-  unqryTarifaDef.Open;
+                                                GetDefaultValue('fza_formapago',
+                                                             'CODIGO_FORMAPAGO',
+                                                         'ESDEFAULT_FORMAPAGO');
   unqryTablaG.FindField('TARIFA_ARTICULO_CLIENTE').AsString :=
-                                           unqryTarifaDef.Fields[0].AsString;
-  unqryTarifaDef.Close;
-  FreeAndNil(unqryTarifaDef);
+                                                  GetDefaultValue('fza_tarifas',
+                                                                'CODIGO_TARIFA',
+                                                            'ESDEFAULT_TARIFA');
 end;
 
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);

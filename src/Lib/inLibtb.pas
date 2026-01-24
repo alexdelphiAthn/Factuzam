@@ -19,6 +19,7 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       inLibGlobalVar, Dialogs, vcl.consts, inLibMsg;
 
   type
+
   TStringArray = array of string;
   function EncriptAES(s:String):String;
   function EncriptAESPass(s:String; sPass:AnsiString):String;
@@ -62,12 +63,9 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
   procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
                          sBusqueda: String;
                          var sSQLOrigMaster, sSQLOrigDetail: String;
-                         const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
-                         const sCondicionJoin: String);     // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
+                         const sNombreTablaDetalle: String;
+                         const sCondicionJoin: String);
   function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
-//  function ExisteSerieEmpresa(sSerie,
-//         sEmpresa,
-//         sTipoDoc:string): Boolean;
   function ExistePeriodoUnico( qryData:TUniQuery;
                                fFechaIni,
                                fFechaFin:TField
@@ -76,8 +74,29 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
   procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
                                    const NombreTabla: string);
   function ObtenerSiguienteContador(const aTipoDoc: string): string;
+  function GetDefaultValue(const ATable,
+                                 AField,
+                                 AConditionField: string): string;
 
 implementation
+
+function GetDefaultValue(const ATable, AField, AConditionField: string): string;
+var
+  unqry: TUniQuery;
+begin
+  Result := ''; // Valor por defecto inicial
+  unqry := TUniQuery.Create(nil);
+  try
+    unqry.Connection := oConn;
+    unqry.SQL.Text := Format('SELECT %s FROM %s WHERE %s = %s LIMIT 1',
+                             [AField, ATable, AConditionField, QuotedStr('S')]);
+    unqry.Open;
+    if not unqry.Eof then
+      Result := unqry.Fields[0].AsString;
+  finally
+    unqry.Free;
+  end;
+end;
 
 function ObtenerSiguienteContador(const aTipoDoc: string): string;
 var

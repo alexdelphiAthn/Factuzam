@@ -47,7 +47,6 @@ type
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
-    function GetDefaultFamilia:String;
     procedure FillTarifas(lst:TcxListView);
   end;
 
@@ -140,7 +139,9 @@ begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_articulos');
   unqryTablaG.FindField('CODIGO_FAMILIA_ARTICULO').AsString :=
-                                                              GetDefaultFamilia;
+                                   GetDefaultValue('vi_articulos_familias_list',
+                                                   'CODIGO_FAMILIA',
+                                                   'ESDEFAULT_FAMILIA');
 end;
 
 procedure TdmArticulos.CopiarProveedoraArticulo(dtProveedores: TDataset);
@@ -224,30 +225,13 @@ begin
   end;
 end;
 
-function TdmArticulos.GetDefaultFamilia: String;
- var
-  unqrySol:TUniQuery;
-begin
-  unqrySol := TUniQuery.Create(Self);
-  unqrySol.Connection := oConn;
-  unqrySol.SQL.Text := 'SELECT CODIGO_FAMILIA ' +
-                       '  FROM vi_articulos_familias_list ' +
-                       ' WHERE ESDEFAULT_FAMILIA = ' + QuotedStr('S');
-  unqrySol.Open;
-  if unqrySol.RecordCount = 0 then
-    Result := '0'
-  else
-    Result := unqrySol.Fields[0].AsString;
-  unqrySol.Close;
-  FreeAndNil(unqrySol);
-end;
-
 procedure TdmArticulos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   with unqryTablaG do
   begin
-    if Trim(FindField('DESCRIPCION_ARTICULO').AsString) = '' then
+    var sDescripcion := Trim(FindField('DESCRIPCION_ARTICULO').AsString);
+    if (sDescripcion = '') or (SimbolosProhibidos(sDescripcion)) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Descripción de Artículos',

@@ -1,6 +1,7 @@
 inherited dmEmpresas: TdmEmpresas
   Height = 168
   Width = 970
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_empresas'
@@ -102,38 +103,6 @@ inherited dmEmpresas: TdmEmpresas
       'from fza_usuarios_perfiles'
       'where (KEY_PERFILES = '#39'dmEmpresas'#39' '
       'OR KEY_PERFILES='#39'frmMtoEmpresas'#39')')
-  end
-  object unstrdprcContador: TUniStoredProc
-    StoredProcName = 'PRC_GET_NEXT_CONT'
-    SQL.Strings = (
-      
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
-        'CT CAST(@pcont AS SIGNED) AS '#39'@pcont'#39)
-    Connection = dmConn.conUni
-    Left = 8
-    Top = 84
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'pTipoDoc'
-        ParamType = ptInput
-        Size = 2
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pUSUARIO_MODIF'
-        ParamType = ptInput
-        Size = 100
-        Value = nil
-      end
-      item
-        DataType = ftInteger
-        Name = 'pcont'
-        ParamType = ptOutput
-        Value = nil
-      end>
-    CommandStoredProcName = 'PRC_GET_NEXT_CONT'
   end
   object unqryRetenciones: TUniQuery
     SQLInsert.Strings = (

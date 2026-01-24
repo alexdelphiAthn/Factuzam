@@ -17,7 +17,6 @@ uses
 
 type
   TdmEmpresas = class(TdmBase)
-    unstrdprcContador: TUniStoredProc;
     unqryRetenciones: TUniQuery;
     dsRetenciones: TDataSource;
     unqryIvas: TUniQuery;
@@ -48,7 +47,7 @@ type
     procedure GetCodigoAutoRetencion;
     procedure GetCodigoAutoSerie;
 //    function GetLastCodeEmpresa:Integer;
-    function GetZonaDefault:String;
+//    function GetZonaDefault:String;
   end;
 
 //var
@@ -239,18 +238,14 @@ end;
 procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_EMPRESA').AsString := '0';
-  unqryTablaG.FindField('ORDEN_EMPRESA').AsString := '0';
-  unqryTablaG.FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA').AsString := 'N';
-  unqryTablaG.FindField('ESRETENCIONES_EMPRESA').AsString := 'S';
-  unqryTablaG.FindField('ACTIVO_EMPRESA').AsString := 'S';
-  unqryTablaG.FindField('GRUPO_ZONA_IVA_EMPRESA').AsString := GetZonaDefault;
+  AplicarValoresPorDefecto(unqryTablaG, 'fza_empresas');
+  unqryTablaG.FindField('GRUPO_ZONA_IVA_EMPRESA').AsString :=
+       GetDefaultValue('vi_ivas_grupos', 'GRUPO_ZONA_IVA','ESDEFAULT_ZONA_IVA');
 end;
 
 procedure TdmEmpresas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection           := oConn;
   unqryRetenciones.Connection            := oConn;
   unqrySeries.Connection                 := oConn;
   unqryIvas.Connection                   := oConn;
@@ -263,8 +258,6 @@ begin
                                        (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryRetenciones.MasterSource    :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqrySeries.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  //unqryTiposIVA.Connection               := oConn;
-  //unqryTiposIVA.Open;
   unqryPaises.Open;
   unqryFacturasEmpresas.Open;
   unqryFacturasLineasEmpresas.Open;
@@ -273,38 +266,17 @@ begin
   unqrySeries.Open;
 end;
 
-
 procedure TdmEmpresas.GetCodigoAutoEmpresa;
 begin
   if unqryTablaG.FindField('CODIGO_EMPRESA').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'EM';
-      ExecProc;
       unqryTablaG.FindField('CODIGO_EMPRESA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                 ObtenerSiguienteContador('EM');
   end;
   if unqryTablaG.FindField('ORDEN_EMPRESA').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'EO';
-      ExecProc;
       unqryTablaG.FindField('ORDEN_EMPRESA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                 ObtenerSiguienteContador('EO');
   end;
 end;
 
@@ -358,58 +330,58 @@ procedure TdmEmpresas.GetCodigoAutoRetencion;
 begin
   if unqryRetenciones.FindField('CODIGO_RETENCION').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'RT';
-      ExecProc;
+//    with unstrdprcContador do
+//    begin
+//      Params.Clear;
+//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
+//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
+//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
+//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
+//      ParamByName('ptipodoc').AsString :=  'RT';
+//      ExecProc;
       unqryRetenciones.FindField('CODIGO_RETENCION').AsString :=
-                                                  ParamByName('pcont').AsString;
+                                                 ObtenerSiguienteContador('RT');
     end;
-  end;
+//  end;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoSerie;
 begin
   if unqrySeries.FindField('CODIGO_SERIE').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'ES';
-      ExecProc;
+//    with unstrdprcContador do
+//    begin
+//      Params.Clear;
+//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
+//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
+//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
+//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
+//      ParamByName('ptipodoc').AsString :=  'ES';
+//      ExecProc;
       unqrySeries.FindField('CODIGO_SERIE').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                ObtenerSiguienteContador('ES');
+//    end;
   end;
 
 end;
 
-function TdmEmpresas.GetZonaDefault: String;
-var
-  unqrySol:TUniQuery;
-begin
-  unqrySol := TUniQuery.Create(Self);
-  unqrySol.Connection := oConn;
-  unqrySol.SQL.Text := 'SELECT GRUPO_ZONA_IVA FROM vi_ivas_grupos ' +
-                       ' WHERE ESDEFAULT_ZONA_IVA = ' + QuotedStr('S');
-  unqrySol.Open;
-  if unqrySol.RecordCount = 0 then
-    Sleep(0)
-  //   MessageDlg('Empresa: #' + VarToStr(e.EditingValue) + '# no existe')
-   else
-      Result := unqrySol.Fields[0].AsString;
-  unqrySol.Close;
-  FreeAndNil(unqrySol);
-end;
+//function TdmEmpresas.GetZonaDefault: String;
+//var
+//  unqrySol:TUniQuery;
+//begin
+//  unqrySol := TUniQuery.Create(Self);
+//  unqrySol.Connection := oConn;
+//  unqrySol.SQL.Text := 'SELECT GRUPO_ZONA_IVA FROM vi_ivas_grupos ' +
+//                       ' WHERE ESDEFAULT_ZONA_IVA = ' + QuotedStr('S');
+//  unqrySol.Open;
+//  if unqrySol.RecordCount = 0 then
+//    Sleep(0)
+//  //   MessageDlg('Empresa: #' + VarToStr(e.EditingValue) + '# no existe')
+//   else
+//      Result := unqrySol.Fields[0].AsString;
+//  unqrySol.Close;
+//  FreeAndNil(unqrySol);
+//end;
 
 
 
