@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 25/01/2026 05:35:55
+ Date: 25/01/2026 07:29:10
 */
 
 SET NAMES utf8mb4;
@@ -1048,46 +1048,6 @@ INSERT INTO `fza_formas_pago` VALUES ('CRED', 'A Crédito / Pendiente', 'DEUDA',
 INSERT INTO `fza_formas_pago` VALUES ('EFE', 'Efectivo', 'EFECTIVO', 'N', 'S', 'S', 'S', 1, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 INSERT INTO `fza_formas_pago` VALUES ('TARJ', 'Tarjeta Crédito/Débito', 'TARJETA', 'N', 'N', 'N', 'S', 2, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 INSERT INTO `fza_formas_pago` VALUES ('TRANSF', 'Transferencia Bancaria', 'TARJETA', 'S', 'N', 'N', 'S', 4, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-
--- ----------------------------
--- Table structure for fza_gen_defaults
--- ----------------------------
-DROP TABLE IF EXISTS `fza_gen_defaults`;
-CREATE TABLE `fza_gen_defaults`  (
-  `TABLA_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre de la tabla, ej: fza_articulos',
-  `CAMPO_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre del campo, ej: TIPOIVA_ARTICULO',
-  `VALOR_DEFECTO_DEF` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'El valor fijo a insertar',
-  `TIPO_DATO_DEF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'STRING' COMMENT 'STRING, INTEGER, FLOAT, BOOLEAN, MACRO',
-  `DESCRIPCION_DEF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para que sepas qué es esto',
-  `VALORES_POSIBLES_DEF` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Lista separada por comas (ej: S,N o 21,10,4)',
-  PRIMARY KEY (`TABLA_OBJETIVO_DEF`, `CAMPO_OBJETIVO_DEF`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of fza_gen_defaults
--- ----------------------------
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ACTIVO_ARTICULO', 'S', 'STRING', 'Activo por defecto', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'CODIGO_ARTICULO', '0', 'STRING', 'Código Artículo', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESACTIVO_FIJO_ARTICULO', 'N', 'STRING', 'No es inmovilizado REAGP', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESTRAZABLE_ARTICULO', 'N', 'STRING', 'Tiene lote o caducidad', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESVARIACION_ARTICULO', 'N', 'STRING', 'Tiene Variaciones', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ORDEN_ARTICULO', '0', 'INTEGER', 'Orden de aparición', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_ARTICULO', 'ESTANDAR', 'STRING', 'Tipo de Artículo', 'ESTANDAR,SERVICIO,KIT');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Uds', 'STRING', 'Unidad de medida', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', 'N', 'STRING', 'IVA General', 'N,R,SR,E');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ACTIVO_CLIENTE', 'S', 'STRING', 'Cliente activo por defecto', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'CODIGO_CLIENTE', '0', 'STRING', 'Código Cliente', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESINTRACOMUNITARIO_CLIENTE', 'N', 'STRING', 'Es intracomunitario', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_EXENTO_CLIENTE', 'N', 'STRING', 'Está exento de IVA', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_RECARGO_CLIENTE', 'N', 'STRING', 'Aplica recargo de equivalencia', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESREGIMENESPECIALAGRICOLA_CLIENTE', 'N', 'STRING', 'Es régimen agrícola', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESRETENCIONES_CLIENTE', 'N', 'STRING', 'Sin retenciones IRPF', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ORDEN_CLIENTE', '0', 'INTEGER', 'Orden de aparición', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ACTIVO_EMPRESA', 'S', 'STRING', 'Activo por defecto', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'CODIGO_EMPRESA', '0', 'STRING', 'Código Empresa', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ESREGIMENESPECIALAGRICOLA_EMPRESA', 'N', 'STRING', 'Es REAGP', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ESRETENCIONES_EMPRESA', 'N', 'STRING', 'Es AutoEmpresa (IRPF)', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ORDEN_EMPRESA', '0', 'INTEGER', 'Orden de aparición', NULL);
 
 -- ----------------------------
 -- Table structure for fza_generadorprocesos
@@ -2538,6 +2498,67 @@ CREATE TABLE `fza_vales`  (
 -- ----------------------------
 -- Records of fza_vales
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for fza_valores_defecto
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_valores_defecto`;
+CREATE TABLE `fza_valores_defecto`  (
+  `TABLA_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre de la tabla, ej: fza_articulos',
+  `CAMPO_OBJETIVO_DEF` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre del campo, ej: TIPOIVA_ARTICULO',
+  `VALOR_DEFECTO_DEF` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'El valor fijo a insertar',
+  `TIPO_DATO_DEF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'STRING' COMMENT 'STRING, INTEGER, FLOAT, BOOLEAN, MACRO',
+  `DESCRIPCION_DEF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Para que sepas qué es esto',
+  `VALORES_POSIBLES_DEF` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Lista separada por comas (ej: S,N o 21,10,4)',
+  PRIMARY KEY (`TABLA_OBJETIVO_DEF`, `CAMPO_OBJETIVO_DEF`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_valores_defecto
+-- ----------------------------
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'ACTIVO_ARTICULO', 'S', 'STRING', 'Activo por defecto', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'CODIGO_ARTICULO', '0', 'STRING', 'Código Artículo', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'ESACTIVO_FIJO_ARTICULO', 'N', 'STRING', 'No es inmovilizado REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'ESTRAZABLE_ARTICULO', 'N', 'STRING', 'Tiene lote o caducidad', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'ESVARIACION_ARTICULO', 'N', 'STRING', 'Tiene Variaciones', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'ORDEN_ARTICULO', '0', 'INTEGER', 'Orden de aparición', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'TIPO_ARTICULO', 'ESTANDAR', 'STRING', 'Tipo de Artículo', 'ESTANDAR,SERVICIO,KIT');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Uds', 'STRING', 'Unidad de medida', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', 'N', 'STRING', 'Tipo IVA', 'N,R,SR,E');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ACTIVO_CLIENTE', 'S', 'STRING', 'Cliente activo por defecto', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'CODIGO_CLIENTE', '0', 'STRING', 'Código Cliente', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ESINTRACOMUNITARIO_CLIENTE', 'N', 'STRING', 'Es intracomunitario', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ESIVA_EXENTO_CLIENTE', 'N', 'STRING', 'Está exento de IVA', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ESIVA_RECARGO_CLIENTE', 'N', 'STRING', 'Aplica recargo de equivalencia', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ESREGIMENESPECIALAGRICOLA_CLIENTE', 'N', 'STRING', 'Es régimen agrícola', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ESRETENCIONES_CLIENTE', 'N', 'STRING', 'Sin retenciones IRPF', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_clientes', 'ORDEN_CLIENTE', '0', 'INTEGER', 'Orden de aparición', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ACTIVO_EMPRESA', 'S', 'STRING', 'Activo por defecto', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'CODIGO_EMPRESA', '0', 'STRING', 'Código Empresa', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ESREGIMENESPECIALAGRICOLA_EMPRESA', 'N', 'STRING', 'Es REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ESRETENCIONES_EMPRESA', 'N', 'STRING', 'Es AutoEmpresa (IRPF)', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ORDEN_EMPRESA', '0', 'INTEGER', 'Orden de aparición', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'CODIGO_CLIENTE_FACTURA', '0', 'STRING', 'Código de Cliente', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'CODIGO_EMPRESA_FACTURA', '0', 'STRING', 'Código de Emisor', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESAPLICA_RE_ZONA_IVA_FACTURA', 'S', 'STRING', 'Zona de IVA Aplica RE', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESCREARARTICULOS_FACTURA', 'N', 'STRING', 'Factura crea/actualiza artículos', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESDESCRIPCIONES_AMP_FACTURA', 'N', 'STRING', 'Factura tiene descripciones ampliadas', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESFECHADEENTREGA_FACTURA', 'N', 'STRING', 'La factura tiene fecha de entrega', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESINTRACOMUNITARIO_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente es intracomunitario', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESIVA_EXENTO_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente Exento de IVA', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESIVA_RECARGO_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente tiene Recargo de Equivalencia', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente es REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA', 'N', 'STRING', 'Emisor es REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESRETENCIONES_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente es profesional Retiene IRPF', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESVENTA_ACTIVO_FIJO_FACTURA', 'N', 'STRING', 'La factura es venta activo fijo REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'NRO_FACTURA', '0', 'STRING', 'Número de Factura', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'TIPO_FACTURA', 'NORMAL', 'STRING', 'Tipo de Factura nueva', 'NORMAL,SIMPLIFICADA');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'CANTIDAD_FACTURA_LINEA', '1', 'FLOAT', 'Cantidad', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'LINEA_FACTURA_LINEA', '0', 'STRING', 'Número de Linea', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA', 'Uds.', 'STRING', 'Unidad de medida', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'TIPO_IVA_ARTICULO_FACTURA_LINEA', 'N', 'STRING', 'Tipo IVA', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'TOTAL_FACTURA_LINEA', '0', 'INTEGER', 'Total Linea Con IVA', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'TOTAL_FACTURASIVA_LINEA', '0', 'INTEGER', 'Total Linea Sin IVA', NULL);
 
 -- ----------------------------
 -- Table structure for fza_variaciones
