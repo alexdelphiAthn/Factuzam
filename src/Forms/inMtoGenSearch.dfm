@@ -1,26 +1,26 @@
 inherited frmMtoSearch: TfrmMtoSearch
   BorderStyle = bsSizeable
   Caption = 'frmMtoSearch'
-  ClientHeight = 510
-  ClientWidth = 935
+  ClientHeight = 501
+  ClientWidth = 929
   Visible = False
-  ExplicitWidth = 953
-  ExplicitHeight = 557
+  ExplicitWidth = 947
+  ExplicitHeight = 548
   TextHeight = 19
   inherited pButtonPage: TPanel
-    Width = 795
-    Height = 510
+    Width = 789
+    Height = 501
     ExplicitWidth = 795
     ExplicitHeight = 510
     inherited pcPantalla: TcxPageControl
-      Width = 801
-      Height = 409
+      Width = 795
+      Height = 400
       Properties.ActivePage = tsLista
       Properties.HideTabs = True
       ExplicitWidth = 795
       ExplicitHeight = 400
-      ClientRectBottom = 405
-      ClientRectRight = 797
+      ClientRectBottom = 396
+      ClientRectRight = 791
       ClientRectTop = 4
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
@@ -55,15 +55,15 @@ inherited frmMtoSearch: TfrmMtoSearch
         ExplicitWidth = 793
         ExplicitHeight = 401
         inherited pnlPerfilTop: TPanel
-          Width = 793
+          Width = 787
           ExplicitWidth = 793
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 793
-          Height = 344
+          Width = 787
+          Height = 335
           ExplicitWidth = 793
           ExplicitHeight = 318
           inherited cxgrdPerfil: TcxGrid
@@ -76,11 +76,11 @@ inherited frmMtoSearch: TfrmMtoSearch
       end
     end
     inherited pnlTopPage: TPanel
-      Width = 801
-      ExplicitWidth = 801
+      Width = 795
+      ExplicitWidth = 795
       inherited pnlTopGrid: TPanel
-        Width = 801
-        ExplicitWidth = 801
+        Width = 795
+        ExplicitWidth = 795
         inherited sbExportExcel: TSpeedButton
           Visible = False
         end
@@ -96,13 +96,11 @@ inherited frmMtoSearch: TfrmMtoSearch
     end
     object pnl1: TPanel
       Left = 0
-      Top = 449
-      Width = 801
+      Top = 440
+      Width = 795
       Height = 70
       Align = alBottom
       TabOrder = 2
-      ExplicitTop = 440
-      ExplicitWidth = 795
       object btnAceptar: TcxButton
         Left = 320
         Top = 24
@@ -124,12 +122,12 @@ inherited frmMtoSearch: TfrmMtoSearch
     end
   end
   inherited pButtonRightBar: TPanel
-    Left = 795
-    Height = 510
-    ExplicitLeft = 801
-    ExplicitHeight = 519
+    Left = 789
+    Height = 501
+    ExplicitLeft = 795
+    ExplicitHeight = 510
     inherited pButtonGen: TPanel
-      Top = 321
+      Top = 312
       ExplicitTop = 312
       inherited btnGrabar: TcxButton
         Visible = False
