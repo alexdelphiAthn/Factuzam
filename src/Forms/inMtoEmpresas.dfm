@@ -1217,6 +1217,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     Navigator.Buttons.GotoBookmark.Visible = False
                     Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                     Navigator.Visible = True
+                    DataController.DataSource = dmEmpresas.dsSeries
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                     OptionsBehavior.AlwaysShowEditor = True
                     OptionsBehavior.GoToNextCellOnEnter = True
@@ -1225,43 +1226,36 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     OptionsData.Appending = True
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
-                    object dbcCODIGO_SERIE: TcxGridDBColumn
+                    object dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn
+                      Caption = 'Almac'#233'n'
+                      DataBinding.FieldName = 'CODIGO_ALMACEN_SERIE'
+                    end
+                    object dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn
+                      Caption = 'Caja'
+                      DataBinding.FieldName = 'CODIGO_CAJA_SERIE'
+                    end
+                    object dbmSeriesSERIE_SERIE: TcxGridDBColumn
                       Caption = 'Serie'
                       DataBinding.FieldName = 'SERIE_SERIE'
-                      Width = 163
                     end
-                    object dbcCODIGO_EMPRESA: TcxGridDBColumn
-                      DataBinding.FieldName = 'CODIGO_EMPRESA_SERIE'
-                      Visible = False
-                      Width = 122
+                    object dbmSeriesTIPODOC_SERIE: TcxGridDBColumn
+                      Caption = 'Tipo Doc'
+                      DataBinding.FieldName = 'TIPODOC_SERIE'
+                      Width = 45
                     end
-                    object dbccxgrdbclmntv1FECHA_DESDE_SERIE: TcxGridDBColumn
-                      Caption = 'Fecha Aplicaci'#243'n desde'
+                    object dbmSeriesSUBITPO_SERIE: TcxGridDBColumn
+                      Caption = 'Subtipo'
+                      DataBinding.FieldName = 'SUBITPO_SERIE'
+                      Width = 107
+                    end
+                    object dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn
+                      Caption = 'Fecha Desde'
                       DataBinding.FieldName = 'FECHA_DESDE_SERIE'
-                      PropertiesClassName = 'TcxDateEditProperties'
-                      Width = 208
+                      Width = 121
                     end
-                    object dbcFECHA_HASTA_SERIE: TcxGridDBColumn
-                      Caption = 'Fecha Aplicaci'#243'n hasta'
+                    object dbmSeriesFECHA_HASTA_SERIE: TcxGridDBColumn
+                      Caption = 'Fecha Hasta'
                       DataBinding.FieldName = 'FECHA_HASTA_SERIE'
-                      PropertiesClassName = 'TcxDateEditProperties'
-                      Width = 199
-                    end
-                    object cxgrdbclmn2: TcxGridDBColumn
-                      DataBinding.FieldName = 'INSTANTEMODIF'
-                      Visible = False
-                    end
-                    object cxgrdbclmn3: TcxGridDBColumn
-                      DataBinding.FieldName = 'INSTANTEALTA'
-                      Visible = False
-                    end
-                    object cxgrdbclmn4: TcxGridDBColumn
-                      DataBinding.FieldName = 'USUARIOALTA'
-                      Visible = False
-                    end
-                    object cxgrdbclmn5: TcxGridDBColumn
-                      DataBinding.FieldName = 'USUARIOMODIF'
-                      Visible = False
                     end
                   end
                   object lvSeries: TcxGridLevel
@@ -1663,9 +1657,9 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
           ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
-          Width = 308
+          Width = 296
           TabOrder = 3
-          ExplicitWidth = 308
+          ExplicitWidth = 296
         end
         inherited lblTextoaBuscar: TcxLabel
           TabOrder = 4

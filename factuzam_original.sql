@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 25/01/2026 07:29:10
+ Date: 25/01/2026 07:48:46
 */
 
 SET NAMES utf8mb4;
@@ -664,14 +664,13 @@ INSERT INTO `fza_config_campos` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', '% 
 DROP TABLE IF EXISTS `fza_contadores`;
 CREATE TABLE `fza_contadores`  (
   `TIPODOC_CONTADOR` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `SERIE_CONTADOR` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `EMPRESA_CONTADOR` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `SERIE_CONTADOR` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `TABLAORIGEN_CONTADOR` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CONTADOR_CONTADOR` bigint(20) NOT NULL,
   `DEFAULT_CONTADOR` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
   `NUMDIGIT_CONTADOR` int(11) NOT NULL DEFAULT 0,
   `ACTIVO_CONTADOR` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'S',
-  `SUBTIPODOC_CONTADOR` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
@@ -682,31 +681,31 @@ CREATE TABLE `fza_contadores`  (
 -- ----------------------------
 -- Records of fza_contadores
 -- ----------------------------
-INSERT INTO `fza_contadores` VALUES ('AO', '-', '-', NULL, 38, 'S', 3, 'S', NULL, '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('AR', '-', '-', 'fza_articulos', 17, 'S', 3, 'S', NULL, '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('CL', '-', '-', 'fza_clientes', 297, 'S', 3, 'S', NULL, '2026-01-21 17:22:27', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('CO', '-', '-', NULL, 6, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', NULL, 13, 'S', 3, 'S', NULL, '2024-02-12 09:38:07', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', NULL, 6, 'S', 3, 'S', NULL, '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', NULL, 10, 'S', 3, 'S', NULL, '2024-10-06 22:11:21', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', NULL, 4, 'S', 3, 'S', NULL, '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1', '1', 'fza_facturas', 25, 'N', 8, 'S', 'NORMAL', '2026-01-21 17:22:33', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1.2023', '011', NULL, 6, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A1/1T/2024', '011', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'A3', '1', NULL, 0, 'N', 8, 'S', 'NORMAL', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO', '1', NULL, 8, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'AGRO/2023', '1', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:14', '2023-12-06 13:26:05', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'ANA/2023', '008', NULL, 5, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'ATIE', '1', NULL, 2, 'N', 6, 'S', 'NORMAL', '2025-09-07 17:01:18', '2023-05-17 14:12:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FC', 'TICKA1', '1', NULL, 0, 'S', 4, 'S', 'SIMPLIFICADA', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('FO', '-', '-', NULL, 7, 'S', 3, 'S', NULL, '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('GO', '-', '-', NULL, 5, 'S', 3, 'S', NULL, '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('GP', '-', '-', NULL, 12, 'S', 3, 'S', NULL, '2023-10-28 13:39:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('IG', '-', '-', NULL, 4, 'S', 3, 'S', NULL, '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('IV', '-', '-', NULL, 18, 'S', 3, 'S', NULL, '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('PG', '-', '-', NULL, 3, 'S', 3, 'S', NULL, '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('PV', '-', '-', NULL, 25, 'S', 3, 'S', NULL, '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', NULL, 5, 'S', 3, 'S', NULL, '2023-12-06 12:59:57', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('AO', '-', '-', NULL, 38, 'S', 3, 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('AR', '-', '-', 'fza_articulos', 17, 'S', 3, 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('CL', '-', '-', 'fza_clientes', 297, 'S', 3, 'S', '2026-01-21 17:22:27', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('CO', '-', '-', NULL, 6, 'S', 3, 'S', '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', NULL, 13, 'S', 3, 'S', '2024-02-12 09:38:07', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', NULL, 6, 'S', 3, 'S', '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', NULL, 10, 'S', 3, 'S', '2024-10-06 22:11:21', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', NULL, 4, 'S', 3, 'S', '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'A1', 'fza_facturas', 25, 'N', 8, 'S', '2026-01-21 17:22:33', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '011', 'A1.2023', NULL, 6, 'N', 6, 'S', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '011', 'A1/1T/2024', NULL, 2, 'N', 6, 'S', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'A3', NULL, 0, 'N', 8, 'S', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'AGRO', NULL, 8, 'N', 6, 'S', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'AGRO/2023', NULL, 2, 'N', 6, 'S', '2025-09-07 17:01:14', '2023-12-06 13:26:05', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '008', 'ANA/2023', NULL, 5, 'N', 6, 'S', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'ATIE', NULL, 2, 'N', 6, 'S', '2025-09-07 17:01:18', '2023-05-17 14:12:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '1', 'TICKA1', NULL, 0, 'S', 4, 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FO', '-', '-', NULL, 7, 'S', 3, 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('GO', '-', '-', NULL, 5, 'S', 3, 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('GP', '-', '-', NULL, 12, 'S', 3, 'S', '2023-10-28 13:39:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('IG', '-', '-', NULL, 4, 'S', 3, 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('IV', '-', '-', NULL, 18, 'S', 3, 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('PG', '-', '-', NULL, 3, 'S', 3, 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('PV', '-', '-', NULL, 25, 'S', 3, 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', NULL, 5, 'S', 3, 'S', '2023-12-06 12:59:57', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_empresas
@@ -784,8 +783,10 @@ INSERT INTO `fza_empresas_retenciones` VALUES ('2', '1', 2.500000, '2023-10-01',
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_empresas_series`;
 CREATE TABLE `fza_empresas_series`  (
-  `CODIGO_SERIE` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `CODIGO_EMPRESA_SERIE` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_SERIE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_EMPRESA_SERIE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_ALMACEN_SERIE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_CAJA_SERIE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `SERIE_SERIE` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `TIPODOC_SERIE` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `SUBITPO_SERIE` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
@@ -801,12 +802,12 @@ CREATE TABLE `fza_empresas_series`  (
 -- ----------------------------
 -- Records of fza_empresas_series
 -- ----------------------------
-INSERT INTO `fza_empresas_series` VALUES ('003', '007', 'A7/2023', NULL, NULL, '2023-05-01', '2023-05-31', '2023-05-15 12:36:23', '2023-05-13 12:44:21', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('004', '1', 'AGRO/2023', NULL, NULL, '2023-01-01', NULL, '2023-06-01 13:44:51', '2023-06-01 13:44:51', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('005', '011', 'A1.2023', NULL, NULL, '2023-12-06', '2023-12-31', '2023-12-06 13:00:47', '2023-12-06 13:00:47', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('006', '011', 'A1/1T/2024', NULL, NULL, '2024-01-01', '2024-03-31', '2023-12-06 13:01:26', '2023-12-06 13:01:26', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('007', '011', 'A1/2T/2024', NULL, NULL, '2024-04-01', '2024-06-30', '2023-12-06 13:56:28', '2023-12-06 13:56:28', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('008', '011', 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('003', '007', NULL, NULL, 'A7/2023', NULL, NULL, '2023-05-01', '2023-05-31', '2023-05-15 12:36:23', '2023-05-13 12:44:21', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('004', '1', NULL, NULL, 'AGRO/2023', NULL, NULL, '2023-01-01', NULL, '2023-06-01 13:44:51', '2023-06-01 13:44:51', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('005', '011', NULL, NULL, 'A1.2023', NULL, NULL, '2023-12-06', '2023-12-31', '2023-12-06 13:00:47', '2023-12-06 13:00:47', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('006', '011', NULL, NULL, 'A1/1T/2024', NULL, NULL, '2024-01-01', '2024-03-31', '2023-12-06 13:01:26', '2023-12-06 13:01:26', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('007', '011', NULL, NULL, 'A1/2T/2024', NULL, NULL, '2024-04-01', '2024-06-30', '2023-12-06 13:56:28', '2023-12-06 13:56:28', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('008', '011', NULL, NULL, 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas
@@ -3056,7 +3057,10 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_retenciones`
 -- View structure for vi_empresas_series
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_empresas_series`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_series` AS select `fza_empresas_series`.`CODIGO_SERIE` AS `CODIGO_SERIE`,`fza_empresas_series`.`CODIGO_EMPRESA_SERIE` AS `CODIGO_EMPRESA_SERIE`,`fza_empresas_series`.`SERIE_SERIE` AS `SERIE_SERIE`,`fza_empresas_series`.`FECHA_DESDE_SERIE` AS `FECHA_DESDE_SERIE`,`fza_empresas_series`.`FECHA_HASTA_SERIE` AS `FECHA_HASTA_SERIE`,`fza_empresas_series`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_empresas_series`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_empresas_series`.`USUARIOALTA` AS `USUARIOALTA`,`fza_empresas_series`.`USUARIOMODIF` AS `USUARIOMODIF` from `fza_empresas_series` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_series` AS SELECT
+  `fza_empresas_series`.*
+FROM
+  `fza_empresas_series` ;
 
 -- ----------------------------
 -- View structure for vi_emp_busquedas

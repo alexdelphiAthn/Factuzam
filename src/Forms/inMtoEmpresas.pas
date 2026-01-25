@@ -202,14 +202,6 @@ type
     pnlSeriesCli: TPanel;
     cxGrdSeries: TcxGrid;
     tvSeries: TcxGridDBTableView;
-    dbcCODIGO_SERIE: TcxGridDBColumn;
-    dbcCODIGO_EMPRESA: TcxGridDBColumn;
-    dbccxgrdbclmntv1FECHA_DESDE_SERIE: TcxGridDBColumn;
-    dbcFECHA_HASTA_SERIE: TcxGridDBColumn;
-    cxgrdbclmn2: TcxGridDBColumn;
-    cxgrdbclmn3: TcxGridDBColumn;
-    cxgrdbclmn4: TcxGridDBColumn;
-    cxgrdbclmn5: TcxGridDBColumn;
     lvSeries: TcxGridLevel;
     dbcLineasFacturacionNOMBRE_TIPO_IVA: TcxGridDBColumn;
     cxgrpbx1: TcxGroupBox;
@@ -263,6 +255,13 @@ type
     btnSeleccionarCer: TcxButton;
     lblFechaCaducidad: TcxLabel;
     txtFECHACADUCIDAD: TcxDBTextEdit;
+    dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn;
+    dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn;
+    dbmSeriesSERIE_SERIE: TcxGridDBColumn;
+    dbmSeriesTIPODOC_SERIE: TcxGridDBColumn;
+    dbmSeriesSUBITPO_SERIE: TcxGridDBColumn;
+    dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn;
+    dbmSeriesFECHA_HASTA_SERIE: TcxGridDBColumn;
     procedure tsFichaEnter(Sender: TObject);
     procedure chkAplicaRetencionesPropertiesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
