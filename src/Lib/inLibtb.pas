@@ -403,9 +403,8 @@ function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
 var
   i: Integer;
   sLike: string;
-  sCampo: string;
   // Variables para lógica de fecha/hora si la deseas conservar
-  bModoFecha: Boolean;
+//  bModoFecha: Boolean;
   sTextoBuscar: String;
 begin
   Result := '';
@@ -421,9 +420,10 @@ begin
   begin
     if AQuery.Fields[i].DataType in [ftSmallint, ftInteger, ftWord, ftCurrency,
        ftBCD, ftLargeint, ftFMTBcd, ftLongWord, ftShortint, ftString,
-       ftWideString, ftMemo, ftFmtMemo, ftWideMemo] then // Añadir ftDate si aplica
+       ftWideString, ftMemo, ftFmtMemo, ftWideMemo] then
     begin
-       // Usamos FieldName. Si tu SQL tiene Joins y alias, asegúrate que FieldName lo refleje
+       // Usamos FieldName. Si tu SQL tiene Joins y alias,
+       //asegúrate que FieldName lo refleje
        // o pásale el alias a esta función.
        sLike := sLike + AQuery.Fields[i].FieldName + ' LIKE ' +
                 QuotedStr('%' + sTextoBuscar + '%') + ' OR ';

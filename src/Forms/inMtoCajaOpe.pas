@@ -14,7 +14,7 @@ uses
   Vcl.StdCtrls, cxButtons, Datasnap.DBClient, Datasnap.Provider, UniDataCaja,
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
-  cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems;
+  cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -331,7 +331,7 @@ end;
 procedure TfrmMtoOpeCaja.tvArticuloPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
-  CodigoInput, ValorSeleccionado: string;
+  CodigoInput: string;
   CodigoPadre: string;
   SkuDetectado: string;
   NumAtributos: Integer;
@@ -632,7 +632,6 @@ begin
     Qry.ParamByName('SKU').AsString := Sku;
     Qry.Open;
     DatosCaja.cdsLineas.Edit;
-    i:=1;
     var NumAtributosReq :=
       DatosCaja.cdsLineas.FieldByName(
                                    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
@@ -1333,7 +1332,6 @@ end;
 function TfrmMtoOpeCaja.
                       ObtenerColumnaPorTag(NumColumn: Integer): TcxGridDBColumn;
 var
-  Column : TcxGridDBColumn;
   i:Integer;
 begin
   Result := nil;
