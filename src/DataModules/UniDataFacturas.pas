@@ -32,7 +32,6 @@ type
     unqryLinFac: TUniQuery;
     unstrdprcCrearFacturaAbono: TUniStoredProc;
     unstrdprcDuplicarFactura: TUniStoredProc;
-    unstrdprcGetContador: TUniStoredProc;
     unstrdprcCrearCliente: TUniStoredProc;
     unstrdprcGetDataArticulo: TUniStoredProc;
     unstrdprcGetDataCliente: TUniStoredProc;
@@ -653,7 +652,7 @@ begin
   unstdCrearArticuloLin.Connection := inLibGlobalVar.oConn;
   unqryFormaPago.Connection := inLibGlobalVar.oConn;
   unstrdprcGetContadorFactura.Connection := inLibGlobalVar.oConn;
-  unstrdprcGetContador.Connection := inLibGlobalVar.oConn;
+//  unstrdprcGetContador.Connection := inLibGlobalVar.oConn;
   unstdGetContadorLinea.Connection := inLibGlobalVar.oConn;
   unstdCalcularFactura.Connection := inLibGlobalVar.oConn;
   unstrdprcGetDataCliente.Connection := inLibGlobalVar.oConn;
@@ -868,18 +867,18 @@ begin
   if (unqryTablaG.FindField('CODIGO_CLIENTE_FACTURA').AsString = '0') then
   begin
     //bEsNuevoCliente := True;
-    with unstrdprcGetContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-      ParamByName('pUSUARIOMODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'CL';
-      ExecProc;
+//    with unstrdprcGetContador do
+//    begin
+//      Params.Clear;
+//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
+//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
+//      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
+//      ParamByName('pUSUARIOMODIF').AsString := oUser;
+//      ParamByName('ptipodoc').AsString :=  'CL';
+//      ExecProc;
       unqryTablaG.FindField('CODIGO_CLIENTE_FACTURA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                 ObtenerSiguienteContador('CL');
+//    end;
   end;
 end;
 
@@ -893,18 +892,18 @@ procedure TdmFacturas.GetCodigoAutoEmpresa;
 begin
   if unqryTablaG.FindField('CODIGO_EMPRESA_FACTURA').AsString = '0' then
   begin
-    with unstrdprcGetContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-      ParamByName('ptipodoc').AsString :=  'EM';
-      ParamByName('pUSUARIOMODIF').AsString := oUser;
-      ExecProc;
+//    with unstrdprcGetContador do
+//    begin
+//      Params.Clear;
+//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
+//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
+//      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
+//      ParamByName('ptipodoc').AsString :=  'EM';
+//      ParamByName('pUSUARIOMODIF').AsString := oUser;
+//      ExecProc;
       unqryTablaG.FindField('CODIGO_EMPRESA_FACTURA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+                                                 ObtenerSiguienteContador('EM');
+//    end;
   end;
 end;
 
@@ -925,15 +924,17 @@ begin
   inherited;
   with unqryLinFac do
   begin
-    FieldByName(fcant).AsString := '1';
-    FieldByName(ftipocant).AsString := 'Uds.';
-    FieldByName(ftotciva).AsString := '0';
-    FieldByName(ftotsiva).AsString := '0';
-    FieldByName(ftipiva).AsString := 'N';
-    FindField(fporiva).AsCurrency := GetTipoIVA('N');
+//    FieldByName(fcant).AsString := '1';
+//    FieldByName(ftipocant).AsString := 'Uds.';
+//    FieldByName(ftotciva).AsString := '0';
+//    FieldByName(ftotsiva).AsString := '0';
+//    FieldByName(ftipiva).AsString := 'N';
+    AplicarValoresPorDefecto(unqryLinFac, 'fza_facturas_lineas');
+    FindField(fporiva).AsCurrency := GetTipoIVA(
+          FieldByName('TIPO_IVA_ARTICULO_FACTURA_LINEA').AsString);
     FieldByName(fimpcl).AsString :=
           unqryTablaG.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString;
-    FindField(fnrolin).AsString := '0';
+//    FindField(fnrolin).AsString := '0';
    end;
 end;
 
@@ -1045,7 +1046,6 @@ begin
     FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString := 'N';
     FieldByName('ESCREARARTICULOS_FACTURA').AsString := 'N';
     FieldByName('ESDESCRIPCIONES_AMP_FACTURA').AsString := 'N';
-    FieldByName('ESFECHADEENTREGA_FACTURA').AsString := 'N';
     FieldByName('ESFECHADEENTREGA_FACTURA').AsString := 'N';
     FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString := 'N';
     FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';

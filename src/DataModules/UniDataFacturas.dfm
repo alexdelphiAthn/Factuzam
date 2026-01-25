@@ -1,6 +1,7 @@
 inherited dmFacturas: TdmFacturas
   Height = 638
   Width = 1445
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_facturas'
@@ -244,7 +245,6 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_facturas')
-    Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     BeforeEdit = unqryTablaGBeforeEdit
@@ -546,7 +546,6 @@ inherited dmFacturas: TdmFacturas
       'FROM fza_CONTADORES'
       'WHERE TIPODOC_CONTADOR='#39'FC'#39' AND ACTIVO_CONTADOR = '#39'S'#39
       'ORDER BY DEFAULT_CONTADOR DESC')
-    Active = True
     Left = 544
     Top = 144
   end
@@ -930,38 +929,6 @@ inherited dmFacturas: TdmFacturas
         Value = nil
       end>
     CommandStoredProcName = 'PRC_CREAR_FACTURA_DUPLICADA'
-  end
-  object unstrdprcGetContador: TUniStoredProc
-    StoredProcName = 'PRC_GET_NEXT_CONT'
-    SQL.Strings = (
-      
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
-        'CT CAST(@pcont AS SIGNED) AS '#39'@pcont'#39)
-    Connection = dmConn.conUni
-    Left = 192
-    Top = 296
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'pTipoDoc'
-        ParamType = ptInput
-        Size = 2
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pUSUARIO_MODIF'
-        ParamType = ptInput
-        Size = 100
-        Value = nil
-      end
-      item
-        DataType = ftInteger
-        Name = 'pcont'
-        ParamType = ptOutput
-        Value = nil
-      end>
-    CommandStoredProcName = 'PRC_GET_NEXT_CONT'
   end
   object unstrdprcCrearCliente: TUniStoredProc
     StoredProcName = 'PRC_CREAR_ACTUALIZAR_CLIENTE'
