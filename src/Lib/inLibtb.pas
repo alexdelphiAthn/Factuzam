@@ -134,7 +134,7 @@ begin
     qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF, ' +
                             '       VALOR_DEFECTO_DEF, ' +
                             '       TIPO_DATO_DEF ' +
-                            '  FROM fza_gen_defaults ' +
+                            '  FROM fza_valores_defecto ' +
                             ' WHERE TABLA_OBJETIVO_DEF = ' +
                                                          QuotedStr(NombreTabla);
     qryDefaults.Open;

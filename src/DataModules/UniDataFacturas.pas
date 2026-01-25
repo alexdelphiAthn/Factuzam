@@ -508,33 +508,33 @@ begin
       if ((State <> dsEdit) and (State <> dsInsert)) then
         Edit;
       FindField('CODIGO_EMPRESA_FACTURA').AsString :=
-                     Dataset.FindField('CODIGO_EMPRESA').AsString;
+                                   Dataset.FindField('CODIGO_EMPRESA').AsString;
       FindField('RAZONSOCIAL_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('RAZONSOCIAL_EMPRESA').AsString;
+                              DataSet.FindField('RAZONSOCIAL_EMPRESA').AsString;
       FindField('NIF_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('NIF_EMPRESA').AsString;
+                                      DataSet.FindField('NIF_EMPRESA').AsString;
       FindField('MOVIL_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('MOVIL_EMPRESA').AsString;
+                                    DataSet.FindField('MOVIL_EMPRESA').AsString;
       FindField('EMAIL_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('EMAIL_EMPRESA').AsString;
+                                    DataSet.FindField('EMAIL_EMPRESA').AsString;
       FindField('DIRECCION1_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('DIRECCION1_EMPRESA').AsString;
+                               DataSet.FindField('DIRECCION1_EMPRESA').AsString;
       FindField('DIRECCION2_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('DIRECCION2_EMPRESA').AsString;
+                               DataSet.FindField('DIRECCION2_EMPRESA').AsString;
       FindField('POBLACION_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('POBLACION_EMPRESA').AsString;
+                                DataSet.FindField('POBLACION_EMPRESA').AsString;
       FindField('PROVINCIA_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('PROVINCIA_EMPRESA').AsString;
+                                DataSet.FindField('PROVINCIA_EMPRESA').AsString;
       FindField('CPOSTAL_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('CPOSTAL_EMPRESA').AsString;
+                                  DataSet.FindField('CPOSTAL_EMPRESA').AsString;
       FindField('NOMBRE_PAIS_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('NOMBRE_PAIS_EMPRESA').AsString;
+                              DataSet.FindField('NOMBRE_PAIS_EMPRESA').AsString;
       FindField('CODIGO_PAIS_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('CODIGO_PAIS_EMPRESA').AsString;
+                              DataSet.FindField('CODIGO_PAIS_EMPRESA').AsString;
       FindField('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('GRUPO_ZONA_IVA_EMPRESA').AsString;
+                           DataSet.FindField('GRUPO_ZONA_IVA_EMPRESA').AsString;
       FindField('ESRETENCIONES_EMPRESA_FACTURA').AsString :=
-                     DataSet.FindField('ESRETENCIONES_EMPRESA').AsString;
+                            DataSet.FindField('ESRETENCIONES_EMPRESA').AsString;
       FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString :=
                 DataSet.FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA').AsString;
       FindField('TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA').AsString :=
@@ -585,11 +585,11 @@ begin
       ParamByName('pESIVA_RECARGO_CLIENTE').AsString :=
               unqryTablaG.FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString;
       ParamByName('pESREGIMENESPECIALAGRICOLA_CLIENTE').AsString :=
-  unqryTablaG.FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString;
+                                                        unqryTablaG.FieldByName(
+                          'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString;
       ParamByName('pTARIFA_ARTICULO_CLIENTE').AsString :=
             unqryTablaG.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
       ParamByName('pUSUARIO').AsString := oUser;
-      //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
     end;
     unstrdprcCrearCliente.ExecProc;
 end;
@@ -629,7 +629,6 @@ begin
       ParamByName('pGRUPO_ZONA_IVA_EMPRESA').AsString :=
              unqryTablaG.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
       ParamByName('pUSUARIO').AsString := oUser;
-      //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
     end;
     unstdCrearEmpresa.ExecProc;
 end;
@@ -652,7 +651,6 @@ begin
   unstdCrearArticuloLin.Connection := inLibGlobalVar.oConn;
   unqryFormaPago.Connection := inLibGlobalVar.oConn;
   unstrdprcGetContadorFactura.Connection := inLibGlobalVar.oConn;
-//  unstrdprcGetContador.Connection := inLibGlobalVar.oConn;
   unstdGetContadorLinea.Connection := inLibGlobalVar.oConn;
   unstdCalcularFactura.Connection := inLibGlobalVar.oConn;
   unstrdprcGetDataCliente.Connection := inLibGlobalVar.oConn;
@@ -1030,24 +1028,26 @@ begin
   inherited;
   with unqryTablaG do
   begin
-    FieldByName('NRO_FACTURA').AsString := '0';
-    FieldByName('CODIGO_CLIENTE_FACTURA').AsString := '0';
-    FieldByName('CODIGO_EMPRESA_FACTURA').AsString := '0';
-    FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := '0';
-    FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString := 'S';
+    AplicarValoresPorDefecto(unqryTablaG, 'fza_facturas');
+//    FieldByName('NRO_FACTURA').AsString := '0';
+//    FieldByName('CODIGO_CLIENTE_FACTURA').AsString := '0';
+//    FieldByName('CODIGO_EMPRESA_FACTURA').AsString := '0';
+    FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := TarifaDefault;
+    FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
+                         unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString;
     FieldByName('FECHA_FACTURA').AsDateTime := Trunc(Now);
     FieldByName('FORMA_PAGO_FACTURA').AsString := FormaPagoDefault;
-    FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString := 'N';
-    FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString := 'N';
-    FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString := 'N';
-    FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString := 'N';
-    FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString := 'N';
-    FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString := 'N';
-    FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString := 'N';
-    FieldByName('ESCREARARTICULOS_FACTURA').AsString := 'N';
-    FieldByName('ESDESCRIPCIONES_AMP_FACTURA').AsString := 'N';
-    FieldByName('ESFECHADEENTREGA_FACTURA').AsString := 'N';
-    FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString := 'N';
+//    FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString := 'N';
+//    FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString := 'N';
+//    FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString := 'N';
+//    FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString := 'N';
+//    FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString := 'S';
+//    FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString := 'N';
+//    FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString := 'N';
+//    FieldByName('ESCREARARTICULOS_FACTURA').AsString := 'N';
+//    FieldByName('ESDESCRIPCIONES_AMP_FACTURA').AsString := 'N';
+//    FieldByName('ESFECHADEENTREGA_FACTURA').AsString := 'N';
+//    FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString := 'N';
     FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';
     (GetOwnerForm<TfrmMtoFacturas>).sbNuevaFacturaClick(Self.Owner);
   end;
@@ -1075,7 +1075,8 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage('No se puede insertar líneas sin grabar primero la cabecera: ' + E.Message);
+        ShowMessage('No se puede insertar líneas sin grabar primero la ' +
+                    'cabecera: ' + E.Message);
         Abort;
       end;
     end;
@@ -1104,49 +1105,49 @@ begin
     with  unstdCrearArticuloLin do
     begin
       ParamByName('pCODIGO_ARTICULO').AsString :=
-                                  unqryLinFac.FieldByName(fcodart).AsString;
+                                      unqryLinFac.FieldByName(fcodart).AsString;
       ParamByName('pDESCRIPCION_ARTICULO').AsString :=
-                                  unqryLinFac.FieldByName(fdesart).AsString;
+                                      unqryLinFac.FieldByName(fdesart).AsString;
       ParamByName('pTIPOIVA_ARTICULO').AsString :=
-                                  unqryLinFac.FieldByName(ftipiva).AsString;
+                                      unqryLinFac.FieldByName(ftipiva).AsString;
       ParamByName('pTIPO_CANTIDAD_ARTICULO').AsString :=
-                                unqryLinFac.FieldByName(ftipocant).AsString;
+                                    unqryLinFac.FieldByName(ftipocant).AsString;
       ParamByName('pESACTIVO_FIJO_ARTICULO').AsString :=
-                                  unqryTablaG.FieldByName(factfij).AsString;
+                                      unqryTablaG.FieldByName(factfij).AsString;
       ParamByName('pCODIGO_FAMILIA').AsString :=
-                                  unqryLinFac.FieldByName(fcodfam).AsString;
+                                      unqryLinFac.FieldByName(fcodfam).AsString;
       ParamByName('pNOMBRE_FAMILIA').AsString :=
-                                  unqryLinFac.FieldByName(fnomfam).AsString;
+                                      unqryLinFac.FieldByName(fnomfam).AsString;
       ParamByName('pCODIGO_PROVEEDOR').AsString :=
-                                 unqryLinFac.FieldByName(fcodprov).AsString;
+                                     unqryLinFac.FieldByName(fcodprov).AsString;
       ParamByName('pRAZONSOCIAL_PROVEEDOR').AsString :=
-                                 unqryLinFac.FieldByName(frazprov).AsString;
+                                     unqryLinFac.FieldByName(frazprov).AsString;
       ParamByName('pESPROVEEDORPRINCIPAL').AsString :=
-                                   unqryLinFac.FieldByName(fpprov).AsString;
+                                       unqryLinFac.FieldByName(fpprov).AsString;
       ParamByName('pPRECIO_ULT_COMPRA').AsCurrency :=
-            unqryLinFac.FieldByName(fprecultc).AsCurrency;
+                                  unqryLinFac.FieldByName(fprecultc).AsCurrency;
 //      ParamByName('pFECHA_FACTURA').AsString :=
 //                                 unqryTablaG.FieldByName(ffechfac).AsString;
       ParamByName('pCODIGO_TARIFA').AsString :=
-                             unqryLinFac.FieldByName(fcodtariflin).AsString;
+                                 unqryLinFac.FieldByName(fcodtariflin).AsString;
       ParamByName('pPRECIOSALIDA_TARIFA').AsCurrency :=
-                               unqryLinFac.FieldByName(fpreciosal).AsCurrency;
+                                 unqryLinFac.FieldByName(fpreciosal).AsCurrency;
       if SameText(unqryLinFac.FieldByName(fimpcl).AsString, 'S')  then
         ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
-                                  unqryLinFac.FieldByName(fpreciva).AsCurrency
+                                    unqryLinFac.FieldByName(fpreciva).AsCurrency
       else
         ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
-                               unqryLinFac.FieldByName(fpresiva).AsCurrency;
+                                   unqryLinFac.FieldByName(fpresiva).AsCurrency;
       ParamByName('pPRECIO_DTO_TARIFA').AsCurrency :=
-                                  unqryLinFac.FieldByName(fpordto).AsCurrency;
+                                    unqryLinFac.FieldByName(fpordto).AsCurrency;
       ParamByName('pPORCEN_DTO_TARIFA').AsCurrency :=
-                                  unqryLinFac.FieldByName(fpordto).AsCurrency;
+                                    unqryLinFac.FieldByName(fpordto).AsCurrency;
       ParamByName('pUSUARIO').AsString         := oUser;
 //      ParamByName('pUSUARIO').AsString         := oUser;
       //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
       // ojo!!!! HAY UN TEMAZO DE UNIDAC CON EL PASO DE TIMESTAMPS POR PARÁMETRO
       //  ParamByName('pINSTANTEMODIF').AsString :=
-      //                               FormatDateTime('YYYY-MM-DD hh:mm:ss', Now);
+      //                             FormatDateTime('YYYY-MM-DD hh:mm:ss', Now);
       ExecProc;
     end;
   end;
@@ -1177,8 +1178,7 @@ begin
     if (FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString = '') and
        (IsError = False) then
     begin
-      ShowMessage('Debe escribir la razón social del' +
-                                                     ' cliente a facturar ');
+      ShowMessage('Debe escribir la razón social del cliente a facturar ');
       frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
       frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
       IsError := True;
