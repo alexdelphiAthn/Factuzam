@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 24/01/2026 07:58:29
+ Date: 25/01/2026 05:35:55
 */
 
 SET NAMES utf8mb4;
@@ -1071,18 +1071,23 @@ INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'CODIGO_ARTICULO', '0', 
 INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESACTIVO_FIJO_ARTICULO', 'N', 'STRING', 'No es inmovilizado REAGP', 'S,N');
 INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESTRAZABLE_ARTICULO', 'N', 'STRING', 'Tiene lote o caducidad', 'S,N');
 INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ESVARIACION_ARTICULO', 'N', 'STRING', 'Tiene Variaciones', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ORDEN_ARTICULO', '0', 'INTEGER', 'Orden Artículo', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'ORDEN_ARTICULO', '0', 'INTEGER', 'Orden de aparición', NULL);
 INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_ARTICULO', 'ESTANDAR', 'STRING', 'Tipo de Artículo', 'ESTANDAR,SERVICIO,KIT');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Uds', 'STRING', 'Unidad de medida', 'Uds,Kg,L,Mt,H');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', 'N', 'STRING', 'IVA General', '21,10,4,0');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPO_CANTIDAD_ARTICULO', 'Uds', 'STRING', 'Unidad de medida', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_articulos', 'TIPOIVA_ARTICULO', 'N', 'STRING', 'IVA General', 'N,R,SR,E');
 INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ACTIVO_CLIENTE', 'S', 'STRING', 'Cliente activo por defecto', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'CODIGO_CLIENTE', '0', 'INTEGER', 'Código inicial', NULL);
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESINTRACOMUNITARIO_CLIENTE', 'N', 'STRING', 'No es intracomunitario', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_EXENTO_CLIENTE', 'N', 'STRING', 'No exento de IVA', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_RECARGO_CLIENTE', 'N', 'STRING', 'Sin recargo de equivalencia', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESREGIMENESPECIALAGRICOLA_CLIENTE', 'N', 'STRING', 'No es régimen agrícola', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'CODIGO_CLIENTE', '0', 'STRING', 'Código Cliente', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESINTRACOMUNITARIO_CLIENTE', 'N', 'STRING', 'Es intracomunitario', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_EXENTO_CLIENTE', 'N', 'STRING', 'Está exento de IVA', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESIVA_RECARGO_CLIENTE', 'N', 'STRING', 'Aplica recargo de equivalencia', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESREGIMENESPECIALAGRICOLA_CLIENTE', 'N', 'STRING', 'Es régimen agrícola', 'S,N');
 INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ESRETENCIONES_CLIENTE', 'N', 'STRING', 'Sin retenciones IRPF', 'S,N');
-INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ORDEN_CLIENTE', '0', 'INTEGER', 'Orden por defecto', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_clientes', 'ORDEN_CLIENTE', '0', 'INTEGER', 'Orden de aparición', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ACTIVO_EMPRESA', 'S', 'STRING', 'Activo por defecto', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'CODIGO_EMPRESA', '0', 'STRING', 'Código Empresa', NULL);
+INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ESREGIMENESPECIALAGRICOLA_EMPRESA', 'N', 'STRING', 'Es REAGP', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ESRETENCIONES_EMPRESA', 'N', 'STRING', 'Es AutoEmpresa (IRPF)', 'S,N');
+INSERT INTO `fza_gen_defaults` VALUES ('fza_empresas', 'ORDEN_EMPRESA', '0', 'INTEGER', 'Orden de aparición', NULL);
 
 -- ----------------------------
 -- Table structure for fza_generadorprocesos
