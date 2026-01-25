@@ -21,7 +21,7 @@ type
   TFormBaseClass = class of TForm;
   function BuscarTabla(Query: TUniQuery;
                        const ClavePrimaria,
-                       Valores: string):Boolean;
+                       ValoresBusqueda: string):Boolean;
   procedure ShowMto(Owner: TComponent;
                     sCall:String;
                     sBusq:string = '');
@@ -136,7 +136,6 @@ var
 begin
   Result := nil;
   CacheKey := sDataUnit + '_' + IntToStr(NativeInt(pOwner));
-
   if not GlobalDataModules.TryGetValue(CacheKey, DataModule) then
   begin
     ctx := TRttiContext.Create;
@@ -146,19 +145,12 @@ begin
       begin
         InstanceType := TRttiInstanceType(lType);
         DataModuleClass := InstanceType.MetaclassType;
-
         if DataModuleClass.InheritsFrom(TdmBase) then
         begin
-          // CLAVE: Crear la instancia pero NO ejecutar el constructor aún
           Instance := DataModuleClass.NewInstance;
           try
-            // Asignar CurrentForm ANTES de que se ejecute el constructor
             TdmBase(Instance).FCurrentForm := pOwner;
-
-            // AHORA sí ejecutar el constructor, que cargará el DFM
-            // y disparará OnCreate con CurrentForm ya asignado
             TDataModule(Instance).Create(nil);
-
             DataModule := TDataModule(Instance);
           except
             Instance.Free;
@@ -167,10 +159,8 @@ begin
         end
         else
         begin
-          // Fallback para DataModules que no heredan de TdmBase
           DataModule := TDataMBaseClass(DataModuleClass).Create(nil);
         end;
-
         if Assigned(DataModule) then
           GlobalDataModules.Add(CacheKey, DataModule);
       end;
@@ -180,7 +170,6 @@ begin
   end
   else
   begin
-    // Actualizar CurrentForm si el DataModule ya existe
     if Assigned(DataModule) and (DataModule is TdmBase) then
       TdmBase(DataModule).CurrentForm := pOwner;
   end;
@@ -189,7 +178,7 @@ end;
 
 function BuscarTabla(Query: TUniQuery;
                      const ClavePrimaria,
-                     Valores: string):Boolean;
+                     ValoresBusqueda: string):Boolean;
 var
   ValArr: TArray<string>;
   bIsOnlyOne:boolean;
@@ -198,7 +187,7 @@ var
 begin
   bIsOnlyOne := false;
   Result := False;
-  ValArr := Valores.Split([',']);
+  ValArr := ValoresBusqueda.Split([',']);
   if Length(ValArr) = 1 then
     bIsOnlyOne := True
   else
@@ -212,7 +201,7 @@ begin
     Query.Refresh;
     if bIsonlyOne then
     begin
-      if Query.Locate(ClavePrimaria, Valores, []) then
+      if Query.Locate(ClavePrimaria, ValoresBusqueda, []) then
         Result := True;
     end
     else

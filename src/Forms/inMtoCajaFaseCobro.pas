@@ -5,14 +5,14 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-Vcl.ExtCtrls,
+  Vcl.ExtCtrls,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, dxSkinsCore, cxTextEdit, cxMaskEdit, cxSpinEdit, cxCurrencyEdit,
   cxLabel, cxButtons, cxGroupBox, Data.DB, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  inLibGlobalVar,
+  inLibGlobalVar, system.UITypes,
   cxDropDownEdit, Uni, System.Generics.Collections, Vcl.Menus, inMtoFrmBase,
   MemDS, VirtualTable;
 type
