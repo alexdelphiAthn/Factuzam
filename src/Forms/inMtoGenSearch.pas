@@ -21,14 +21,14 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, UniDataConn, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
-  cxMaskEdit, cxDropDownEdit;
+  cxMaskEdit, cxDropDownEdit, inLibtb;
 
 type
   TDefCampo = record
     NombreCampo: string;
-    Valor: Variant;       // El valor seleccionado por defecto
-    Opciones: string;     // NUEVO: String separado por comas "S,N"
-    ComponenteUI: TControl; // NUEVO: Referencia temporal al control visual creado
+    Valor: Variant;
+    Opciones: string;
+    ComponenteUI: TControl;
   end;
   TConfigAltaRapida = record
     Activo: Boolean;
@@ -36,7 +36,6 @@ type
     CampoCodigo: string;
     CampoDescripcion: string;
     TituloVentana: string;
-    // NUEVO: Tipo de documento para PRC_GET_NEXT_CONT (ej: 'AR', 'CL')
     TipoDocContador: string;
     ValoresDefecto: TArray<TDefCampo>;
   end;
@@ -55,13 +54,10 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAltaRapidaClick(Sender: TObject);
   private
-    //btnAltaRapida:TcxButton;
-
     function MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
     function ProcesarValor(const aValor, aTipo: string): Variant;
     procedure AddValorDefecto(const aCampo: string; const aValor: Variant);
     function EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
-    function ObtenerSiguienteContador(const aTipoDoc: string): string;
   public
     FConfigAlta: TConfigAltaRapida;
     sFicha:string;
@@ -104,14 +100,12 @@ end;
 
 procedure TfrmMtoSearch.btnCancelarClick(Sender: TObject);
 begin
-  //inherited;
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TfrmMtoSearch.CrearTablaPrincipal;
 begin
   inherited;
-  //
   cxGrdDBTabPrin.DataController.CreateAllItems;
   cxGrdDBTabPrin.ApplyBestFit();
 end;
@@ -136,25 +130,15 @@ procedure TfrmMtoSearch.FormCreate(Sender: TObject);
 begin
 Self.Position := poScreenCenter;
   sUso := 'Busq';
-
-  // Inicialización segura
   FConfigAlta.Activo := False;
   SetLength(FConfigAlta.ValoresDefecto, 0);
-
-  // CREAMOS EL BOTÓN PERO OCULTO
-  // (Si prefieres que no ocupe espacio, asegúrate de que esté alineado o usa un LayoutControl,
-  // pero con Visible := False es suficiente para que el usuario no lo vea)
-
   with btnAltaRapida do
   begin
     OnClick := btnAltaRapidaClick;
-    Visible := False; // <--- POR DEFECTO OCULTO
+    Visible := False;
   end;
 end;
 
-// =============================================================================
-// CONSTRUCTOR DE FORMULARIO DINÁMICO (Versión Visual Completa)
-// =============================================================================
 function TfrmMtoSearch.MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
 var
   FormAlta: TForm;
@@ -232,25 +216,21 @@ begin
       lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo, '_', ' ', [rfReplaceAll]);
       lbl.Left := LeftMargin;
       lbl.Top := TopPos;
-      // Color grisáceo para diferenciar de los campos principales si quieres, o normal
-      // lbl.Style.TextColor := clGray;
-      // 2. Control (Abajo)
       if FConfigAlta.ValoresDefecto[i].Opciones <> '' then
       begin
-        // --- COMBOBOX ---
         newCombo := TcxComboBox.Create(FormAlta);
         newCombo.Parent := ScrollBox;
         newCombo.Left := LeftMargin;
-        newCombo.Top := TopPos + 20; // Debajo de la etiqueta
-        newCombo.Width := ControlWidth; // Ancho completo
-        newCombo.Properties.Items.CommaText := FConfigAlta.ValoresDefecto[i].Opciones;
+        newCombo.Top := TopPos + 20;
+        newCombo.Width := ControlWidth;
+        newCombo.Properties.Items.CommaText :=
+                                         FConfigAlta.ValoresDefecto[i].Opciones;
         newCombo.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
         newCombo.Properties.DropDownListStyle := lsFixedList;
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newCombo;
       end
       else
       begin
-        // --- TEXT EDIT ---
         newEdit := TcxTextEdit.Create(FormAlta);
         newEdit.Parent := ScrollBox;
         newEdit.Left := LeftMargin;
@@ -259,13 +239,9 @@ begin
         newEdit.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newEdit;
       end;
-      // Avanzamos para el siguiente bloque
       TopPos := TopPos + 55;
     end;
-    // Espacio extra al final para que no quede pegado
     TopPos := TopPos + 20;
-    // Truco: Ponemos un panel invisible al final para forzar al ScrollBox
-    // a reconocer la altura total si hay muchos campos
     with TPanel.Create(FormAlta) do
     begin
       Parent := ScrollBox;
@@ -274,9 +250,6 @@ begin
       BevelOuter := bvNone;
       Color := clNone;
     end;
-    // -------------------------------------------------------------------------
-    // D. BOTONES (Centrados o a la derecha)
-    // -------------------------------------------------------------------------
     btnOk := TcxButton.Create(FormAlta);
     btnOk.Parent := pnlBotones;
     btnOk.Caption := 'Guardar';
@@ -290,9 +263,6 @@ begin
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := 330; btnCancel.Top := 12;
     btnCancel.Width := 90;
-    // -------------------------------------------------------------------------
-    // E. MOSTRAR
-    // -------------------------------------------------------------------------
     if FormAlta.ShowModal = mrOk then
     begin
       sCod := edtCod.Text;
@@ -312,6 +282,7 @@ begin
     FormAlta.Free;
   end;
 end;
+
 procedure TfrmMtoSearch.btnAltaRapidaClick(Sender: TObject);
 var
   sCodigo, sDescripcion: string;
@@ -332,7 +303,7 @@ var
   i: Integer;
 begin
   Result := False;
-  sCodigoFinal := sCod; // Por defecto es lo que puso el usuario
+  sCodigoFinal := sCod;
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
@@ -388,38 +359,11 @@ begin
     Qry.Free;
   end;
 end;
+
 procedure TfrmMtoSearch.FormShow(Sender: TObject);
 begin
   inherited;
   edtBusqGlobal.SetFocus;
-end;
-
-function TfrmMtoSearch.ObtenerSiguienteContador(const aTipoDoc: string): string;
-var
-  SP: TUniStoredProc;
-begin
-  Result := '';
-  SP := TUniStoredProc.Create(nil);
-  try
-    SP.Connection := inLibGlobalVar.oConn; // Tu conexión global
-    SP.StoredProcName := 'PRC_GET_NEXT_CONT';
-
-    // Parámetros de entrada
-    SP.Params.Clear;
-    SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := aTipoDoc;
-    // Parámetro de salida (según tu descripción devuelve pcont)
-    SP.Params.CreateParam(ftString, 'pcont', ptOutput);
-
-    try
-      SP.Execute;
-      Result := SP.Params.ParamByName('pcont').AsString;
-    except
-      on E: Exception do
-        ShowMessage('Error al generar contador automático: ' + E.Message);
-    end;
-  finally
-    SP.Free;
-  end;
 end;
 
 procedure TfrmMtoSearch.CargarDefaultsDesdeBD(const aNombreTabla: string);
@@ -429,11 +373,9 @@ begin
   FConfigAlta.Activo := True;
   if Assigned(btnAltaRapida) then
     btnAltaRapida.Visible := True;
-  // 1. Configuración Básica
   FConfigAlta.Tabla := aNombreTabla;
   FConfigAlta.TipoDocContador := ''; // Limpiamos valor anterior
   SetLength(FConfigAlta.ValoresDefecto, 0);
-  // 2. Cargar DEFAULTS y OPCIONES (fza_gen_defaults)
   QryDef := TUniQuery.Create(nil);
   try
     QryDef.Connection := inLibGlobalVar.oConn;
@@ -449,7 +391,6 @@ begin
         ProcesarValor(QryDef.FieldByName('VALOR_DEFECTO_DEF').AsString,
                       QryDef.FieldByName('TIPO_DATO_DEF').AsString)
       );
-      // Cargar opciones de ComboBox si existen
       FConfigAlta.ValoresDefecto[High(FConfigAlta.ValoresDefecto)].Opciones :=
          QryDef.FieldByName('VALORES_POSIBLES_DEF').AsString;
       QryDef.Next;
@@ -457,7 +398,6 @@ begin
   finally
     QryDef.Free;
   end;
-  // Buscamos el TIPODOC asociado a la tabla origen, asumiendo serie '-'
   QryCont := TUniQuery.Create(nil);
   try
     QryCont.Connection := inLibGlobalVar.oConn;
@@ -480,7 +420,6 @@ end;
 
 function TfrmMtoSearch.ProcesarValor(const aValor, aTipo: string): Variant;
 begin
-  // Aquí podrías añadir lógica para macros como @HOY o @USUARIO
   if (aTipo = 'INTEGER') then
     Result := StrToIntDef(aValor, 0)
   else if (aTipo = 'FLOAT') then
@@ -488,7 +427,7 @@ begin
   else if (aTipo = 'BOOLEAN') then
     Result := (UpperCase(aValor) = 'TRUE') or (aValor = '1')
   else
-    Result := aValor; // String por defecto
+    Result := aValor;
 end;
 
 end.
