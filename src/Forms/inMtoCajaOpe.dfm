@@ -256,7 +256,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 808
+        Left = 802
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -278,9 +278,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
+        ExplicitLeft = 796
         Height = 80
         Width = 327
-        AnchorX = 1135
+        AnchorX = 1129
       end
       object btnF8: TcxButton
         Left = 224

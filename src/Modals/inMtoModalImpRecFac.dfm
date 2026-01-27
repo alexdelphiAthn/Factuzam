@@ -2,23 +2,24 @@ inherited frmPrintRecFac: TfrmPrintRecFac
   Caption = 'Imprimir Recibos'
   ClientHeight = 253
   ClientWidth = 434
-  ExplicitWidth = 450
-  ExplicitHeight = 292
+  ExplicitWidth = 446
+  ExplicitHeight = 291
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 290
     Height = 253
-    ExplicitLeft = 290
-    ExplicitHeight = 253
+    ExplicitLeft = 284
+    ExplicitHeight = 244
     inherited btnSalir: TcxButton
-      Top = 228
-      ExplicitTop = 227
+      Top = 227
+      ExplicitTop = 218
     end
   end
   object lblcxlbl1: TcxLabel [1]
     Left = 8
     Top = 4
     Caption = 'Recibo N'#250'mero'
+    TabOrder = 1
   end
   object edtSerie: TcxTextEdit [2]
     Left = 8

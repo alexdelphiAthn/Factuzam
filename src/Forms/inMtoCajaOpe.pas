@@ -1272,7 +1272,6 @@ begin
                               '  FROM fza_clientes ' +
                               ' WHERE ACTIVO_CLIENTE = ' + QuotedStr('S') +
                               ' ORDER BY RAZONSOCIAL_CLIENTE';
-
     formulario := TfrmMtoSearch.Create(nil);
     try
       formulario.Name := 'frmMtoCliSearch';
