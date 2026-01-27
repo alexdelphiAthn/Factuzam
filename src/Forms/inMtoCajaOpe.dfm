@@ -22,7 +22,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1226
+    ExplicitWidth = 1208
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -124,16 +124,17 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 362
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 1226
-    ExplicitHeight = 371
+    ExplicitWidth = 1208
+    ExplicitHeight = 353
     object Panel1: TPanel
       Left = 1
-      Top = 272
-      Width = 1218
+      Top = 263
+      Width = 1212
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitWidth = 1224
+      ExplicitTop = 254
+      ExplicitWidth = 1206
       DesignSize = (
         1212
         98)
@@ -190,7 +191,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         ParentFont = False
       end
       object btnF5: TcxButton
-        Left = 541
+        Left = 645
         Top = 6
         Width = 103
         Height = 57
@@ -208,7 +209,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         OnClick = btnF5Click
       end
       object btnF7: TcxButton
-        Left = 438
+        Left = 542
         Top = 6
         Width = 103
         Height = 57
@@ -243,20 +244,20 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 10
       end
       object cxLabel4: TcxLabel
-        Left = 451
+        Left = 555
         Top = 71
         Caption = 'Ind. IVA'
         TabOrder = 11
       end
       object cxLabel5: TcxLabel
-        Left = 569
+        Left = 673
         Top = 71
         Caption = 'Otro'
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 660
-        Top = 5
+        Left = 808
+        Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = 'Total'
@@ -277,10 +278,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 672
         Height = 80
-        Width = 401
-        AnchorX = 1061
+        Width = 327
+        AnchorX = 1135
       end
       object btnF8: TcxButton
         Left = 224
@@ -305,6 +305,29 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Caption = 'Eliminar'
         TabOrder = 9
       end
+      object btnF61: TcxButton
+        Left = 437
+        Top = 6
+        Width = 103
+        Height = 57
+        Caption = 'F4'
+        Colors.Default = clBlue
+        Colors.Normal = clBlue
+        Colors.NormalText = clNavy
+        TabOrder = 13
+        Font.Charset = ANSI_CHARSET
+        Font.Color = clBlue
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
+        Font.Style = [fsUnderline]
+        ParentFont = False
+      end
+      object lbl1: TcxLabel
+        Left = 452
+        Top = 69
+        Caption = 'B'#250'sq Tick'
+        TabOrder = 14
+      end
     end
     object Panel2: TPanel
       Left = 1
@@ -313,11 +336,13 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 262
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1206
+      ExplicitHeight = 253
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
-        Width = 1216
-        Height = 189
+        Width = 1210
+        Height = 180
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -328,8 +353,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1210
-        ExplicitHeight = 180
+        ExplicitWidth = 1204
+        ExplicitHeight = 171
         object cxGrid1DBTableView1: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
@@ -415,17 +440,17 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object pnl1: TPanel
         Left = 1
-        Top = 198
-        Width = 1216
+        Top = 189
+        Width = 1210
         Height = 72
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 189
-        ExplicitWidth = 1210
+        ExplicitTop = 180
+        ExplicitWidth = 1204
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1214
+          Width = 1208
           Height = 70
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -437,7 +462,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1208
+          ExplicitWidth = 1202
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
@@ -464,14 +489,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object cxspltr1: TcxSplitter
         Left = 1
-        Top = 190
-        Width = 8
+        Top = 181
+        Width = 1210
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 181
-        ExplicitWidth = 1210
+        ExplicitTop = 172
+        ExplicitWidth = 1204
       end
     end
   end
@@ -521,6 +546,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Default = True
         Kind = bkEllipsis
       end>
+    Properties.OnButtonClick = btnCodigoEmpleadoPropertiesButtonClick
     Properties.OnValidate = btnCodigoEmpleadoPropertiesValidate
     TabOrder = 4
     OnExit = btnCodigoEmpleadoExit
@@ -669,6 +695,17 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Properties.ListFieldItem = cxgrdbclmnBusqDBTableView1INPUT_BUSQUEDA
       Properties.OnInitPopup = repComboBoxPropertiesInitPopup
       Properties.OnValidate = tvArticuloPropertiesValidate
+    end
+  end
+  object actlst1: TActionList
+    Left = 312
+    Top = 168
+    object actBuscarEmpleados: TAction
+      Caption = 'actBuscarEmpleados'
+      SecondaryShortCuts.Strings = (
+        'F3')
+      ShortCut = 16397
+      OnExecute = actBuscarEmpleadosExecute
     end
   end
 end
