@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
+  System.Classes, Vcl.Graphics, inMtoGenSearch,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -14,7 +14,8 @@ uses
   Vcl.StdCtrls, cxButtons, Datasnap.DBClient, Datasnap.Provider, UniDataCaja,
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
-  cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes;
+  cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
+  System.Actions, Vcl.ActnList;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -82,6 +83,10 @@ type
     edtrepArticulo: TcxEditRepository;
     repSoloTexto: TcxEditRepositoryTextItem;
     repComboBox: TcxEditRepositoryExtLookupComboBoxItem;
+    btnF61: TcxButton;
+    lbl1: TcxLabel;
+    actlst1: TActionList;
+    actBuscarEmpleados: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -119,8 +124,11 @@ type
       ARecord: TcxCustomGridRecord; var AAllow: Boolean);
     procedure tvTotalPropertiesEditValueChanged(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
-//    procedure tvArticuloGetDisplayText(Sender: TcxCustomGridTableItem;
-//      ARecord: TcxCustomGridRecord; var AText: string);
+    procedure btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
+//    procedure btnCodigoEmpleadoKeyDown(Sender: TObject; var Key: Word;
+//      Shift: TShiftState);
+    procedure actBuscarEmpleadosExecute(Sender: TObject);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -133,6 +141,7 @@ type
     procedure RecalcularPrecioDesdeSku(sSKU:string);
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure ConsultarStock(const CodigoInput: string);
+    procedure BuscarEmpleados;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -1071,6 +1080,24 @@ begin
     jvntrstb1.EnterAsTab := True;
 end;
 
+procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
+var
+  LCtrl: TWinControl;
+begin
+  LCtrl := Screen.ActiveControl;
+  // Verificamos si el foco está en el Empleado
+  if (LCtrl = btnCodigoEmpleado) or (LCtrl.Parent = btnCodigoEmpleado) then
+  begin
+    BuscarEmpleados;
+  end
+  // Verificamos si el foco está en el Cliente (para el futuro)
+  else if (LCtrl = btnCodigoCliente) or (LCtrl.Parent = btnCodigoCliente) then
+  begin
+     // BuscarClientes;
+     ShowMessage('Funcionalidad de clientes pendiente');
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.ActualizarColumnasDinamicas(ArticuloPadre: string);
 var
   i: Integer;
@@ -1229,6 +1256,22 @@ begin
     TcxCustomEdit(Sender).ValidateEdit(True);
 end;
 
+//procedure TfrmMtoOpeCaja.btnCodigoEmpleadoKeyDown(Sender: TObject;
+//  var Key: Word; Shift: TShiftState);
+//begin
+//  if (Key = VK_F3) then
+//  begin
+//    btnCodigoEmpleadoPropertiesButtonClick(Sender, 0);
+//    Key := 0;
+//  end;
+//end;
+
+procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+begin
+  BuscarEmpleados;
+end;
+
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
@@ -1282,6 +1325,44 @@ begin
   NuevaVenta.Show;
 end;
 
+procedure TfrmMtoOpeCaja.BuscarEmpleados;
+var
+  formulario : TfrmMtoSearch;
+  unqryEmpleados:TUniQuery;
+begin
+  unqryEmpleados := TUniQuery.Create(nil);
+  unqryEmpleados.Connection := oConn;
+  unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USUARIO as `Código de Empleado`,' +
+                             '       DIMINUTIVO_TICKET_USUARIO as `Nombre de Empleado`' +
+                             '  FROM fza_usuarios ' +
+                             ' WHERE ACTIVO_USUARIO =' +QuotedStr('S') +
+                             '   AND CODIGO_EMPLEADO_USUARIO IS NOT NULL' +
+                             ' ORDER BY CODIGO_EMPLEADO_USUARIO ';
+  formulario := TfrmMtoSearch.Create(nil);
+  formulario.Name := 'frmMtoEmpCajSearch';
+  formulario.Caption := 'Búsqueda de Empleados en Caja';
+  try
+    formulario.dsTablaG.DataSet := unqryEmpleados;
+    formulario.dsTablaG.DataSet.Open;
+    formulario.ProcesarPerfiles;  //debe ir después de abrir el dataset
+    formulario.ShowModal;
+  finally
+      inherited;
+      if formulario.sFicha = 'S' then
+      begin
+        btnCodigoEmpleado.Text :=
+                 unqryEmpleados.Fields[0].AsString;
+      if btnCodigoEmpleado.ValidateEdit(True) then
+      begin
+        btnCodigoCliente.SetFocus;
+      end;
+      end;
+      formulario.dsTablaG.DataSet.Close;
+      FreeAndNil(unqryEmpleados);
+      FreeAndNil(formulario);
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   DatosCaja := TdmCajaOpe.Create(Self);
@@ -1313,9 +1394,8 @@ end;
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  case Key of
-    VK_F5: btnF5.Click;
-  end;
+if (Key = VK_F5) then
+    btnF5.Click;
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);

@@ -492,7 +492,8 @@ var
 begin
   tdmDataModule := nil;
   sNameModule := '';
-  sNameModule :=
+  if Self.Owner <> nil then
+    sNameModule :=
      (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
                                                           '.' + Self.ClassName);
   if (sNameModule <> '') then

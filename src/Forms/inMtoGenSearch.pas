@@ -53,6 +53,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAltaRapidaClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     function MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
     function ProcesarValor(const aValor, aTipo: string): Variant;
@@ -136,6 +137,26 @@ Self.Position := poScreenCenter;
   begin
     OnClick := btnAltaRapidaClick;
     Visible := False;
+  end;
+end;
+
+procedure TfrmMtoSearch.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  inherited;
+  case Key of
+    VK_F12:
+    begin
+      // Evita que el sistema procese la tecla después de nosotros
+      Key := 0;
+      btnAceptarClick(Self);
+    end;
+
+    VK_ESCAPE:
+    begin
+      Key := 0;
+      btnCancelarClick(Self);
+    end;
   end;
 end;
 
