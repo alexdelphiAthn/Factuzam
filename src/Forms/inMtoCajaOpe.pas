@@ -142,6 +142,7 @@ type
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure ConsultarStock(const CodigoInput: string);
     procedure BuscarEmpleados;
+    procedure BuscarClientes;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -1093,8 +1094,8 @@ begin
   // Verificamos si el foco está en el Cliente (para el futuro)
   else if (LCtrl = btnCodigoCliente) or (LCtrl.Parent = btnCodigoCliente) then
   begin
-     // BuscarClientes;
-     ShowMessage('Funcionalidad de clientes pendiente');
+     BuscarClientes;
+//     ShowMessage('Funcionalidad de clientes pendiente');
   end;
 end;
 
@@ -1226,6 +1227,7 @@ begin
         DatosCaja.cdsCabecera.FieldByName(
                                      'RAZONSOCIAL_CLIENTE_FACTURA').AsString :=
                               unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
+        sNomCliente := unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
         DatosCaja.cdsCabecera.FieldByName(
                                   'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
                           unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
@@ -1240,7 +1242,6 @@ begin
   begin
     Error := True;
     ErrorText := 'El código de cliente no existe.';
-    lblNombreCliente.Caption := 'CLIENTE NO EXISTE';
   end
   else
   begin
@@ -1256,15 +1257,46 @@ begin
     TcxCustomEdit(Sender).ValidateEdit(True);
 end;
 
-//procedure TfrmMtoOpeCaja.btnCodigoEmpleadoKeyDown(Sender: TObject;
-//  var Key: Word; Shift: TShiftState);
-//begin
-//  if (Key = VK_F3) then
-//  begin
-//    btnCodigoEmpleadoPropertiesButtonClick(Sender, 0);
-//    Key := 0;
-//  end;
-//end;
+procedure TfrmMtoOpeCaja.BuscarClientes;
+var
+  formulario: TfrmMtoSearch;
+  unqryClientes: TUniQuery;
+begin
+  unqryClientes := TUniQuery.Create(nil);
+  try
+    unqryClientes.Connection := oConn;
+    unqryClientes.SQL.Text := 'SELECT CODIGO_CLIENTE as `Código`, ' +
+                              '       RAZONSOCIAL_CLIENTE as `Razón Social`, ' +
+                              '       NIF_CLIENTE as `NIF Cliente`, ' +
+                              '       MOVIL_CLIENTE as `Teléfono Cliente`' +
+                              '  FROM fza_clientes ' +
+                              ' WHERE ACTIVO_CLIENTE = ' + QuotedStr('S') +
+                              ' ORDER BY RAZONSOCIAL_CLIENTE';
+
+    formulario := TfrmMtoSearch.Create(nil);
+    try
+      formulario.Name := 'frmMtoCliSearch';
+      formulario.Caption := 'Búsqueda de Clientes';
+      formulario.dsTablaG.DataSet := unqryClientes;
+      formulario.dsTablaG.DataSet.Open;
+      formulario.ProcesarPerfiles;
+      formulario.ShowModal;
+      if formulario.sFicha = 'S' then
+      begin
+        btnCodigoCliente.Text := unqryClientes.FieldByName('Código').AsString;
+        if btnCodigoCliente.ValidateEdit(True) then
+        begin
+          cxGrid1.SetFocus;
+        end;
+      end;
+    finally
+      formulario.dsTablaG.DataSet.Close;
+      FreeAndNil(formulario);
+    end;
+  finally
+    FreeAndNil(unqryClientes);
+  end;
+end;
 
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);

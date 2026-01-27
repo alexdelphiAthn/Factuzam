@@ -210,7 +210,6 @@ end;
 
 destructor TfzaWinF.Destroy;
 begin
-  //
   FList.Free;
   inherited;
 end;
