@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 27/01/2026 16:41:56
+ Date: 28/01/2026 06:12:28
 */
 
 SET NAMES utf8mb4;
@@ -445,6 +445,23 @@ INSERT INTO `fza_atributos_valores` VALUES (127, 'TAL', '43', 'Talla 43 (Deducid
 INSERT INTO `fza_atributos_valores` VALUES (203, 'TEMP', 'PV26', 'Primavera/Verano 2026', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
 INSERT INTO `fza_atributos_valores` VALUES (204, 'TEMP', 'OI26', 'Otoño/Invierno 2026', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
 INSERT INTO `fza_atributos_valores` VALUES (205, 'TEMP', 'ATEMPORAL', 'Básicos / Continuidad', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
+
+-- ----------------------------
+-- Table structure for fza_atributos_valores_info
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_atributos_valores_info`;
+CREATE TABLE `fza_atributos_valores_info`  (
+  `ID_INFO` int(11) NOT NULL AUTO_INCREMENT,
+  `ID_VALOR_AV_INFO` int(11) NOT NULL COMMENT 'Relación con fza_atributos_valores (El ID del Rojo o de la XL)',
+  `CLAVE` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El nombre del dato: COD_PROV, MEDIDA_CM, HEX, etc.',
+  `VALOR_INFO` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El valor del dato: RED-01, 50-70, #FF0000',
+  PRIMARY KEY (`ID_INFO`) USING BTREE,
+  INDEX `IDX_VALOR_INFO`(`ID_VALOR_AV_INFO` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_atributos_valores_info
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for fza_caja_formas_pago
