@@ -151,7 +151,6 @@ begin
       Key := 0;
       btnAceptarClick(Self);
     end;
-
     VK_ESCAPE:
     begin
       Key := 0;

@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 28/01/2026 06:12:28
+ Date: 28/01/2026 08:03:32
 */
 
 SET NAMES utf8mb4;
@@ -335,13 +335,14 @@ CREATE TABLE `fza_atributos_conjuntos`  (
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`ID_CONJUNTO_AC`) USING BTREE,
   INDEX `IDX_VAR_AC`(`ID_VA_AC` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_atributos_conjuntos
 -- ----------------------------
 INSERT INTO `fza_atributos_conjuntos` VALUES (1, 'COLORES BÁSICOS', 'TC', 'S', '2026-01-04 12:18:01', '2026-01-04 12:17:51', 'Administrador', 'Adminstrador');
-INSERT INTO `fza_atributos_conjuntos` VALUES (2, 'TALLAS CABALLERO (42-43)', 'TAL', 'S', '2026-01-10 17:42:19', '2026-01-10 17:42:19', 'ADMIN', 'ADMIN');
+INSERT INTO `fza_atributos_conjuntos` VALUES (2, 'TALLAS CABALLERO (42-46)', 'TAL', 'S', '2026-01-28 06:35:28', '2026-01-10 17:42:19', 'ADMIN', 'ADMIN');
+INSERT INTO `fza_atributos_conjuntos` VALUES (3, 'TALLAS AMERICANAS (S-XL)', 'TAL', 'S', '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_atributos_conjuntos_det
@@ -364,6 +365,10 @@ CREATE TABLE `fza_atributos_conjuntos_det`  (
 INSERT INTO `fza_atributos_conjuntos_det` VALUES (1, 2, '2026-01-04 12:19:35', '2026-01-04 12:18:26', 'Administrador', 'Administrador');
 INSERT INTO `fza_atributos_conjuntos_det` VALUES (2, 126, '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN');
 INSERT INTO `fza_atributos_conjuntos_det` VALUES (2, 127, '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN');
+INSERT INTO `fza_atributos_conjuntos_det` VALUES (3, 206, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_conjuntos_det` VALUES (3, 207, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_conjuntos_det` VALUES (3, 208, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_conjuntos_det` VALUES (3, 209, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_atributos_sku
@@ -416,20 +421,20 @@ CREATE TABLE `fza_atributos_valores`  (
   `ESACTIVO_AV` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
   `FACTOR_CONVERSION_AV` decimal(19, 6) NULL DEFAULT 1.000000 COMMENT 'Multiplicador respecto a la unidad base',
   `UNIDAD_MEDIDA_AV` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'L, Kg, m, m2, ud',
-  `CODIGO_ARTICULO_EXTRA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Si se rellena, al elegir este valor se genera una linea aparte',
+  `CODIGO_ARTICULO_EXTRA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Si se rellena, al elegir este valor se genera una linea aparte con un incremento por ejemplo',
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`ID_VALOR_AV`) USING BTREE,
   INDEX `IDX_VAR_AV`(`ID_VA_AV` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 206 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 218 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_atributos_valores
 -- ----------------------------
-INSERT INTO `fza_atributos_valores` VALUES (1, 'CO', 'ROJO', 'Corregido por Script: Antes era XL', 'S', 1.000000, NULL, NULL, '2026-01-06 19:35:30', '2026-01-04 12:06:34', 'Sistema', 'Sistema');
-INSERT INTO `fza_atributos_valores` VALUES (3, 'TAL', 'M', 'Corregido por Script: Antes era 356', 'S', 1.000000, NULL, NULL, '2026-01-06 19:35:32', '2026-01-04 12:11:37', 'Sistema', 'Sistema');
+INSERT INTO `fza_atributos_valores` VALUES (1, 'CO', 'ROJO', 'Color ROJO', 'S', 1.000000, NULL, NULL, '2026-01-28 07:21:56', '2026-01-04 12:06:34', 'Sistema', 'Sistema');
+INSERT INTO `fza_atributos_valores` VALUES (3, 'TAL', 'M', 'Talla M', 'S', 1.000000, NULL, NULL, '2026-01-28 07:22:01', '2026-01-04 12:11:37', 'Sistema', 'Sistema');
 INSERT INTO `fza_atributos_valores` VALUES (4, 'TAL', 'L', 'Talla L (Deducido)', 'S', 1.000000, NULL, NULL, '2026-01-06 19:35:33', '0000-00-00 00:00:00', 'ScriptReparacion', 'ScriptReparacion');
 INSERT INTO `fza_atributos_valores` VALUES (100, 'CO', 'NEGRO', 'Color Negro (Deducido)', 'S', 1.000000, NULL, NULL, '2026-01-06 19:35:34', '0000-00-00 00:00:00', 'ScriptReparacion', 'ScriptReparacion');
 INSERT INTO `fza_atributos_valores` VALUES (101, 'CO', 'BLANCO', 'Color Blanco (Deducido)', 'S', 1.000000, NULL, NULL, '2026-01-06 19:35:35', '0000-00-00 00:00:00', 'ScriptReparacion', 'ScriptReparacion');
@@ -445,6 +450,10 @@ INSERT INTO `fza_atributos_valores` VALUES (127, 'TAL', '43', 'Talla 43 (Deducid
 INSERT INTO `fza_atributos_valores` VALUES (203, 'TEMP', 'PV26', 'Primavera/Verano 2026', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
 INSERT INTO `fza_atributos_valores` VALUES (204, 'TEMP', 'OI26', 'Otoño/Invierno 2026', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
 INSERT INTO `fza_atributos_valores` VALUES (205, 'TEMP', 'ATEMPORAL', 'Básicos / Continuidad', 'S', 1.000000, NULL, NULL, '2026-01-06 12:29:59', '0000-00-00 00:00:00', 'Admin', 'Admin');
+INSERT INTO `fza_atributos_valores` VALUES (206, 'TAL', 'S', 'Small - Pequeña', 'S', 1.000000, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_valores` VALUES (207, 'TAL', 'M', 'Medium - Mediana', 'S', 1.000000, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_valores` VALUES (208, 'TAL', 'L', 'Large - Grande', 'S', 1.000000, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_valores` VALUES (209, 'TAL', 'XL', 'Extra Large - Extra G.', 'S', 1.000000, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_atributos_valores_info
@@ -453,7 +462,7 @@ DROP TABLE IF EXISTS `fza_atributos_valores_info`;
 CREATE TABLE `fza_atributos_valores_info`  (
   `ID_INFO` int(11) NOT NULL AUTO_INCREMENT,
   `ID_VALOR_AV_INFO` int(11) NOT NULL COMMENT 'Relación con fza_atributos_valores (El ID del Rojo o de la XL)',
-  `CLAVE` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El nombre del dato: COD_PROV, MEDIDA_CM, HEX, etc.',
+  `CLAVE_INFO` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El nombre del dato: COD_PROV, MEDIDA_CM, HEX, etc.',
   `VALOR_INFO` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El valor del dato: RED-01, 50-70, #FF0000',
   PRIMARY KEY (`ID_INFO`) USING BTREE,
   INDEX `IDX_VALOR_INFO`(`ID_VALOR_AV_INFO` ASC) USING BTREE
@@ -2618,7 +2627,6 @@ CREATE TABLE `fza_variaciones_atributos`  (
 -- Records of fza_variaciones_atributos
 -- ----------------------------
 INSERT INTO `fza_variaciones_atributos` VALUES ('TC', 'CO', 'Color', 'S', 1);
-INSERT INTO `fza_variaciones_atributos` VALUES ('TC', 'COPROV', 'ColorPro', 'N', 3);
 INSERT INTO `fza_variaciones_atributos` VALUES ('TC', 'TAL', 'Talla', 'S', 2);
 INSERT INTO `fza_variaciones_atributos` VALUES ('TEMP', 'TEMP', 'Temporada', 'N', 1);
 

@@ -3,8 +3,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Fase de cobro'
-  ClientHeight = 633
-  ClientWidth = 780
+  ClientHeight = 624
+  ClientWidth = 774
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,20 +17,20 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object pnlPrincipal: TPanel
     Left = 0
     Top = 0
-    Width = 780
-    Height = 633
+    Width = 774
+    Height = 624
     Align = alClient
     BevelOuter = bvNone
     Color = clCream
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 792
-    ExplicitHeight = 642
+    ExplicitWidth = 786
+    ExplicitHeight = 633
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
-      Width = 538
-      Height = 642
+      Width = 532
+      Height = 633
       Align = alClient
       BevelOuter = bvNone
       Font.Charset = DEFAULT_CHARSET
@@ -41,18 +41,18 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
-      ExplicitWidth = 544
+      ExplicitWidth = 538
       object pnlFormasPago: TPanel
         Left = 0
-        Top = 575
-        Width = 538
+        Top = 566
+        Width = 532
         Height = 67
         Align = alBottom
         BevelOuter = bvNone
         Color = clSilver
         ParentBackground = False
         TabOrder = 0
-        ExplicitWidth = 544
+        ExplicitWidth = 538
         object lblDescuento4: TcxLabel
           Left = 26
           Top = 23
@@ -372,21 +372,21 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       end
     end
     object pnlDerecho: TPanel
-      Left = 538
+      Left = 532
       Top = 0
       Width = 248
-      Height = 642
+      Height = 633
       Align = alRight
       BevelOuter = bvNone
       Color = clCream
       ParentBackground = False
       TabOrder = 1
-      ExplicitLeft = 544
+      ExplicitLeft = 538
       object pnlBotones: TPanel
         Left = 0
         Top = 0
         Width = 248
-        Height = 446
+        Height = 437
         Align = alClient
         BevelOuter = bvNone
         Font.Charset = DEFAULT_CHARSET
@@ -397,7 +397,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 437
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -768,7 +767,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       end
       object pnlDocumento: TPanel
         Left = 0
-        Top = 446
+        Top = 437
         Width = 248
         Height = 196
         Align = alBottom
