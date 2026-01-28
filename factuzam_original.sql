@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 28/01/2026 18:35:56
+ Date: 28/01/2026 20:09:50
 */
 
 SET NAMES utf8mb4;
@@ -1994,7 +1994,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-01-28 16:39:35', '2026-01-28 16:39:35', '2021-05-14 19:54:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-01-28 19:40:55', '2026-01-28 19:40:55', '2021-05-14 19:54:29', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
