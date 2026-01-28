@@ -224,14 +224,14 @@ uses
   inLibUser,
   inLibDevExp,
   inLibShowMto,
+  inLibGenBusq,
   inMtoProveedores,
   inMtoPrincipal,
   inMtoTarifas,
   inMtoFamilias,
   inMtoEmpresas,
   inMtoFacturas,
-  inMtoModalArtTar,
-  inMtoGenSearch;
+  inMtoModalArtTar;
 
 {$R *.dfm}
 
@@ -505,27 +505,11 @@ begin
 end;
 
 procedure TfrmMtoArticulos.BuscarProveedores;
-var
-  formulario : TfrmMtoSearch;
 begin
-  formulario := TfrmMtoSearch.Create(Self.Owner);
-  formulario.Name := 'frmMtoArtProvSearch';
-  formulario.Caption := 'Búsqueda de Proveedores en Articulos';
-  try
-    formulario.dsTablaG.DataSet := dmmArticulos.unqryProveedores;
-    formulario.dsTablaG.DataSet.Open;
-    formulario.ProcesarPerfiles;  //debe ir después de abrir el datase
-    formulario.ShowModal;
-  finally
-      inherited;
-      if formulario.sFicha = 'S' then
-      begin
-
-        dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
-      end;
-      formulario.dsTablaG.DataSet.Close;
-      FreeAndNil(formulario);
-  end;
+  if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Proveedores en Articulos',
+                                       dmmArticulos.unqryProveedores,
+                                       'frmMtoArtProvSearch') then
+    dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
 end;
 
 procedure TfrmMtoArticulos.CrearTablaPrincipal;

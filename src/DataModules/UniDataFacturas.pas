@@ -882,8 +882,8 @@ end;
 
 function TdmFacturas.TarifaDefault: string;
 begin
-  unqryTarifas.Locate('DEFAULT_TARIFA', 'S', []);
-  Result := unqryFormaPago.FindField('CODIGO_TARIFA').AsString;
+  unqryTarifas.Locate('ESDEFAULT_TARIFA', 'S', []);
+  Result := unqryTarifas.FindField('CODIGO_TARIFA').AsString;
 end;
 
 procedure TdmFacturas.GetCodigoAutoEmpresa;
@@ -1058,7 +1058,6 @@ begin
   inherited;
   //
   unqryLinFacBeforeInsert(DataSet);
-
 end;
 
 procedure TdmFacturas.unqryLinFacBeforeInsert(DataSet: TDataSet);
