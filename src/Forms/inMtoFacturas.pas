@@ -736,10 +736,10 @@ procedure TfrmMtoFacturas.btnCODIGO_CLIENTEPropertiesButtonClick(
                                                          AButtonIndex: Integer);
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
-  begin     //frmMtoCliFacSearch
+  begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Facturas',
                                        dmmFacturas.unqryCliDataFac,
-                                       Self) then
+                                       'frmMtoCliFacSearch') then
      begin
        dmmFacturas.CopiarClienteaFactura(dmmFacturas.unqryClidataFac);
      end;
@@ -780,7 +780,7 @@ begin
   begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Facturas',
                                        dmmFacturas.unqryEmpDataFac,
-                                       Self) then   ///frmMtoEmpFacSearch
+                                       'frmMtoEmpFacSearch') then
       dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
   end;
 end;
@@ -1234,7 +1234,7 @@ begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Lineas de ' +
                                                                      'Facturas',
                                        dmmFacturas.unqryArtDataLinFac,
-                                       Self) then   ///frmMtoArtFacSearch
+                                       'frmMtoArtFacSearch') then
       dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
   end;
 end;

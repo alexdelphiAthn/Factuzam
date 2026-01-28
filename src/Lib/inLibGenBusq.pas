@@ -16,28 +16,25 @@ type
     class function EjecutarBusqueda(
       const ACaption: string;
       var ADataSet: TUniQuery;
-      AOwner: TComponent
+      const AName:String
     ): Boolean; overload;
-
     class function EjecutarBusqueda(
       const ACaption: string;
       const ASql: string;
       const CampoResultado: string;
       out ValorDevuelto: string;
-      AOwner: TComponent
+      const AName:String
     ): Boolean; overload;
   end;
-
 implementation
-
 class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
                                                var ADataSet: TUniQuery;
-                                               AOwner: TComponent): Boolean;
+                                               const AName:String): Boolean;
 var
   formulario: TfrmMtoSearch;
 begin
   Result := False;
-  formulario := TfrmMtoSearch.Create(AOwner);
+  formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Caption := ACaption;
     ADataSet.Connection := oConn;
@@ -56,14 +53,14 @@ class function TBusquedaUtils.EjecutarBusqueda( const ACaption: string;
                                                 const ASql: string;
                                                 const CampoResultado: string;
                                                 out ValorDevuelto: string;
-                                                AOwner: TComponent
+                                                const AName:String
                                               ): Boolean;
 var
   formulario: TfrmMtoSearch;
   QueryTemp: TUniQuery;
 begin
   Result := False;
-  formulario := TfrmMtoSearch.Create(AOwner);
+  formulario := TfrmMtoSearch.Create(nil);
   QueryTemp := TUniQuery.Create(formulario);
   try
     formulario.Caption := ACaption;
