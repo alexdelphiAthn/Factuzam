@@ -357,6 +357,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDefaultValues.pas"/>
+        <DCCReference Include="src\Lib\inLibGenBusq.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -398,6 +399,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>fzam.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="payment_48_48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_tax_invoice_document_calculator_icon_188684.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>

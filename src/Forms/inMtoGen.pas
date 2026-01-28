@@ -192,7 +192,8 @@ begin
                           ' WHERE ((KEY_PERFILES = :NameDataModule) ' +
                           '    OR  (KEY_PERFILES = :NameFormModule)) ';
             ParamByName('NameDataModule').AsString := Self.Name;
-            ParamByName('NameFormModule').AsString := (tdmDataModule as TdmBase).Name;
+            ParamByName('NameFormModule').AsString :=
+                                                (tdmDataModule as TdmBase).Name;
           end;
           if (Active = false) then
             Open;
@@ -411,7 +412,9 @@ begin
         if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
       begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
-        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
+                                                     Self.Name,
+                                                     sPermisos);
       end;
     end;
   end;

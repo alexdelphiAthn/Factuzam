@@ -520,8 +520,7 @@ begin
       inherited;
       if formulario.sFicha = 'S' then
       begin
-        if (dmmArticulos.unqryProveedoresArticulos.State = dsBrowse) then
-          dmmArticulos.unqryProveedoresArticulos.Insert;
+
         dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
       end;
       formulario.dsTablaG.DataSet.Close;

@@ -131,6 +131,7 @@ procedure TfrmMtoSearch.FormCreate(Sender: TObject);
 begin
 Self.Position := poScreenCenter;
   sUso := 'Busq';
+  sFicha := 'N';
   FConfigAlta.Activo := False;
   SetLength(FConfigAlta.ValoresDefecto, 0);
   with btnAltaRapida do
