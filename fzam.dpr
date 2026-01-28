@@ -80,7 +80,8 @@ uses
   inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
   UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
   inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
-  inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas';
+  inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas',
+  inLibGenBusq in 'src\Lib\inLibGenBusq.pas';
 
 var
   frmLogon: TfrmLogon;

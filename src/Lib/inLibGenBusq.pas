@@ -1,0 +1,87 @@
+﻿unit inLibGenBusq;
+
+interface
+uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
+      Classes, COMObj, ComCtrls, ExtActns, OleCtrls, Forms, inifiles, Uni,
+      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
+      System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
+      inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
+      MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
+      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inMtoGenSearch;
+
+
+type
+  TBusquedaUtils = class
+  public
+    class function EjecutarBusqueda(
+      const ACaption: string;
+      var ADataSet: TUniQuery;
+      AOwner: TComponent
+    ): Boolean; overload;
+
+    class function EjecutarBusqueda(
+      const ACaption: string;
+      const ASql: string;
+      const CampoResultado: string;
+      out ValorDevuelto: string;
+      AOwner: TComponent
+    ): Boolean; overload;
+  end;
+
+implementation
+
+class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
+                                               var ADataSet: TUniQuery;
+                                               AOwner: TComponent): Boolean;
+var
+  formulario: TfrmMtoSearch;
+begin
+  Result := False;
+  formulario := TfrmMtoSearch.Create(AOwner);
+  try
+    formulario.Caption := ACaption;
+    ADataSet.Connection := oConn;
+    formulario.dsTablaG.DataSet := ADataSet;
+    if not ADataSet.Active then
+      ADataSet.Open;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    Result := (formulario.sFicha = 'S');
+  finally
+    FreeAndNil(formulario);
+  end;
+end;
+
+class function TBusquedaUtils.EjecutarBusqueda( const ACaption: string;
+                                                const ASql: string;
+                                                const CampoResultado: string;
+                                                out ValorDevuelto: string;
+                                                AOwner: TComponent
+                                              ): Boolean;
+var
+  formulario: TfrmMtoSearch;
+  QueryTemp: TUniQuery;
+begin
+  Result := False;
+  formulario := TfrmMtoSearch.Create(AOwner);
+  QueryTemp := TUniQuery.Create(formulario);
+  try
+    formulario.Caption := ACaption;
+    QueryTemp.Connection := oConn;
+    QueryTemp.SQL.Text := ASql;
+    formulario.dsTablaG.DataSet := QueryTemp;
+    QueryTemp.Open;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    if ((formulario.sFicha = 'S') and (QueryTemp.RecordCount > 0)) then
+    begin
+      ValorDevuelto := QueryTemp.FieldByName(CampoResultado).AsString;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(QueryTemp);
+    FreeAndNil(formulario);
+  end;
+end;
+
+end.

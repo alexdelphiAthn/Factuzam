@@ -149,7 +149,7 @@ begin
   with unqryProveedoresArticulos do
   begin
     if (State = dsBrowse) then
-      Edit;
+      Insert;
     FindField('CODIGO_PROVEEDOR').AsString :=
                            dtProveedores.FindField('CODIGO_PROVEEDOR').AsString;
     FindField('RAZONSOCIAL_PROVEEDOR').AsString :=

@@ -496,6 +496,7 @@ implementation
 uses
   inLibWin,
   inLibMsg,
+  inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
   inLibDefaultValues,
@@ -733,26 +734,15 @@ end;
 procedure TfrmMtoFacturas.btnCODIGO_CLIENTEPropertiesButtonClick(
                                                          Sender: TObject;
                                                          AButtonIndex: Integer);
-var
-  formulario : TfrmMtoSearch;
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
-  begin
-    formulario := TfrmMtoSearch.Create(Self.Owner);
-    formulario.Name := 'frmMtoCliFacSearch';
-    formulario.Caption := 'Búsqueda de Clientes en Facturas';
-    try
-      formulario.dsTablaG.DataSet := dmmFacturas.unqryCliDataFac;
-      formulario.dsTablaG.DataSet.Open;
-      formulario.ProcesarPerfiles;  //debe ir después de abrir el dataset
-      formulario.ShowModal;
-    finally
-        inherited;
-        if formulario.sFicha = 'S' then
-          dmmFacturas.CopiarClienteaFactura(dmmFacturas.unqryClidataFac);
-        formulario.dsTablaG.DataSet.Close;
-        FreeAndNil(formulario);
-    end;
+  begin     //frmMtoCliFacSearch
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Facturas',
+                                       dmmFacturas.unqryCliDataFac,
+                                       Self) then
+     begin
+       dmmFacturas.CopiarClienteaFactura(dmmFacturas.unqryClidataFac);
+     end;
   end;
 end;
 
@@ -785,25 +775,13 @@ end;
 
 procedure TfrmMtoFacturas.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
-var
-  formulario : TfrmMtoSearch;
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    formulario := TfrmMtoSearch.Create(Self.Owner);
-    formulario.Name := 'frmMtoEmpFacSearch';
-    formulario.Caption := 'Búsqueda de Empresas en Facturas';
-    try
-      formulario.dsTablaG.DataSet := dmmFacturas.unqryEmpDataFac;
-      formulario.dsTablaG.DataSet.Open;
-      formulario.ProcesarPerfiles;
-      formulario.ShowModal;
-    finally
-        if formulario.sFicha = 'S' then
-          dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
-        formulario.dsTablaG.DataSet.Close;
-        FreeAndNil(formulario);
-    end;
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Facturas',
+                                       dmmFacturas.unqryEmpDataFac,
+                                       Self) then   ///frmMtoEmpFacSearch
+      dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
   end;
 end;
 
@@ -1243,32 +1221,21 @@ end;
 procedure TfrmMtoFacturas.
                 cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
-var
-  formulario : TfrmMtoSearch;
 begin
   inherited;
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    formulario := TfrmMtoSearch.Create(Self.Owner);
-    try
-      formulario.Name := 'frmMtoArtFacSearch';
-      dmmFacturas.unqryArtDataLinFac.ParamByName('TARIFA').AsString :=
-        dmmFacturas.unqryTablaG.FindField(
-                                      'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-      dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FACTURA').AsDateTime :=
-                    dmmFacturas.unqryTablaG.FindField('FECHA_FACTURA').AsDateTime;
-      formulario.dsTablaG.DataSet := dmmFacturas.unqryArtDataLinFac;
-      formulario.dsTablaG.DataSet.Open;
-      formulario.ProcesarPerfiles;
-      TLibDefaults.Configurar(formulario, esArticulo, True);
-      formulario.Caption := 'Búsqueda de Artículos en Lineas de Facturas';
-      formulario.ShowModal;
-     if (formulario.sFicha = 'S') then
-          dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
-     formulario.dsTablaG.DataSet.Close;
-    finally
-     FreeAndNil(formulario);
-    end;
+    dmmFacturas.unqryArtDataLinFac.ParamByName('TARIFA').AsString :=
+                                              dmmFacturas.unqryTablaG.FindField(
+                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+    dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FACTURA').AsDateTime :=
+                  dmmFacturas.unqryTablaG.FindField('FECHA_FACTURA').AsDateTime;
+    //      TLibDefaults.Configurar(formulario, esArticulo, True);
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Lineas de ' +
+                                                                     'Facturas',
+                                       dmmFacturas.unqryArtDataLinFac,
+                                       Self) then   ///frmMtoArtFacSearch
+      dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
   end;
 end;
 
