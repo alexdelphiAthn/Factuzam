@@ -33,10 +33,11 @@ class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
 var
   formulario: TfrmMtoSearch;
 begin
-  Result := False;
+//  Result := False;
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Caption := ACaption;
+    formulario.Name := AName;
     ADataSet.Connection := oConn;
     formulario.dsTablaG.DataSet := ADataSet;
     if not ADataSet.Active then
@@ -59,11 +60,12 @@ var
   formulario: TfrmMtoSearch;
   QueryTemp: TUniQuery;
 begin
-  Result := False;
+//  Result := False;
   formulario := TfrmMtoSearch.Create(nil);
   QueryTemp := TUniQuery.Create(formulario);
   try
     formulario.Caption := ACaption;
+    formulario.Name := AName;
     QueryTemp.Connection := oConn;
     QueryTemp.SQL.Text := ASql;
     formulario.dsTablaG.DataSet := QueryTemp;
