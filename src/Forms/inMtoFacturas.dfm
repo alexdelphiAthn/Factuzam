@@ -2426,7 +2426,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Align = alClient
               TabOrder = 0
-              Properties.ActivePage = tsCabecera
+              Properties.ActivePage = tsEmpresa
               Properties.CustomButtons.Buttons = <>
               ClientRectBottom = 333
               ClientRectLeft = 4
@@ -2766,6 +2766,12 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'NIF Empresa'
                     ParentFont = False
+                    Style.Font.Charset = ANSI_CHARSET
+                    Style.Font.Color = clWindowText
+                    Style.Font.Height = -17
+                    Style.Font.Name = 'Lucida Sans'
+                    Style.Font.Style = []
+                    Style.IsFontAssigned = True
                     TabOrder = 12
                     Transparent = True
                   end
@@ -2778,6 +2784,12 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'M'#243'vil Empresa'
                     ParentFont = False
+                    Style.Font.Charset = ANSI_CHARSET
+                    Style.Font.Color = clWindowText
+                    Style.Font.Height = -17
+                    Style.Font.Name = 'Lucida Sans'
+                    Style.Font.Style = []
+                    Style.IsFontAssigned = True
                     TabOrder = 13
                     Transparent = True
                   end
@@ -2814,6 +2826,12 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Margins.Bottom = 4
                     Caption = 'Email Empresa'
                     ParentFont = False
+                    Style.Font.Charset = ANSI_CHARSET
+                    Style.Font.Color = clWindowText
+                    Style.Font.Height = -17
+                    Style.Font.Name = 'Lucida Sans'
+                    Style.Font.Style = []
+                    Style.IsFontAssigned = True
                     TabOrder = 15
                     Transparent = True
                   end

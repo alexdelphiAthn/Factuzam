@@ -1,4 +1,6 @@
 inherited dmAlmacenes: TdmAlmacenes
+  Height = 214
+  Width = 534
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
@@ -70,5 +72,77 @@ inherited dmAlmacenes: TdmAlmacenes
       '')
     Active = True
     Left = 16
+  end
+  object qryAlmacenesCajas: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_almacenes_cajas'
+      
+        '  (CODIGO_ALMACEN_ALMCAJ, CODIGO_CAJA_ALMCAJ, DESCRIPCION_ALMCAJ' +
+        ')'
+      'VALUES'
+      
+        '  (:CODIGO_ALMACEN_ALMCAJ, :CODIGO_CAJA_ALMCAJ, :DESCRIPCION_ALM' +
+        'CAJ)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_almacenes_cajas'
+      'WHERE'
+      
+        '  CODIGO_ALMACEN_ALMCAJ = :Old_CODIGO_ALMACEN_ALMCAJ AND CODIGO_' +
+        'CAJA_ALMCAJ = :Old_CODIGO_CAJA_ALMCAJ')
+    SQLUpdate.Strings = (
+      'UPDATE fza_almacenes_cajas'
+      'SET'
+      
+        '  CODIGO_ALMACEN_ALMCAJ = :CODIGO_ALMACEN_ALMCAJ, CODIGO_CAJA_AL' +
+        'MCAJ = :CODIGO_CAJA_ALMCAJ, DESCRIPCION_ALMCAJ = :DESCRIPCION_AL' +
+        'MCAJ'
+      'WHERE'
+      
+        '  CODIGO_ALMACEN_ALMCAJ = :Old_CODIGO_ALMACEN_ALMCAJ AND CODIGO_' +
+        'CAJA_ALMCAJ = :Old_CODIGO_CAJA_ALMCAJ')
+    SQLLock.Strings = (
+      
+        'SELECT CODIGO_ALMACEN_ALMCAJ, CODIGO_CAJA_ALMCAJ, DESCRIPCION_AL' +
+        'MCAJ FROM fza_almacenes_cajas'
+      'WHERE'
+      
+        '  CODIGO_ALMACEN_ALMCAJ = :Old_CODIGO_ALMACEN_ALMCAJ AND CODIGO_' +
+        'CAJA_ALMCAJ = :Old_CODIGO_CAJA_ALMCAJ'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      
+        'SELECT CODIGO_ALMACEN_ALMCAJ, CODIGO_CAJA_ALMCAJ, DESCRIPCION_AL' +
+        'MCAJ FROM fza_almacenes_cajas'
+      'WHERE'
+      
+        '  CODIGO_ALMACEN_ALMCAJ = :CODIGO_ALMACEN_ALMCAJ AND CODIGO_CAJA' +
+        '_ALMCAJ = :CODIGO_CAJA_ALMCAJ')
+    SQLRecCount.Strings = (
+      'SELECT COUNT(*) FROM fza_almacenes_cajas')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT *  '
+      'FROM fza_almacenes_cajas'
+      '')
+    MasterSource = frmMtoAlmacenes.dsTablaG
+    MasterFields = 'CODIGO_ALMACEN_ALM'
+    DetailFields = 'CODIGO_ALMACEN_ALMCAJ'
+    Active = True
+    BeforeInsert = unqryTablaGBeforeInsert
+    BeforePost = unqryTablaGBeforePost
+    Left = 256
+    Top = 30
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ALMACEN_ALM'
+        ParamType = ptInput
+        Value = 'BCN'
+      end>
+  end
+  object dsAlmacenesCajas: TDataSource
+    DataSet = qryAlmacenesCajas
+    Left = 256
+    Top = 108
   end
 end

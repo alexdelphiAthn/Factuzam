@@ -21,7 +21,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
       Width = 945
       Height = 675
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 945
       ExplicitHeight = 675
       ClientRectBottom = 671
@@ -176,7 +176,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMasDatos
+            Properties.ActivePage = tsSeries
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
