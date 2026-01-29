@@ -320,6 +320,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         ShortCut = 16453
         OnClick = mnuEmpresasClick
       end
+      object mnuAlmacenes: TMenuItem
+        Caption = '&Almacenes'
+        ShortCut = 16460
+        OnClick = mnuAlmacenesClick
+      end
       object mnuClientes: TMenuItem
         Bitmap.Data = {
           36100000424D3610000000000000360000002800000020000000200000000100

@@ -44,8 +44,10 @@ type
   TfrmMtoPrincipal = class(TfrmBase)
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
+    mnuAlmacenes: TMenuItem;
 //    procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
+    procedure mnuAlmacenesClick(Sender: TObject);
 
 
   private
@@ -498,6 +500,13 @@ begin
   finally
     FreeAndNil(frmSplash);
   end;
+end;
+
+procedure TfrmMtoPrincipal.mnuAlmacenesClick(Sender: TObject);
+begin
+  inherited;
+  if mnuAlmacenes.Visible then
+    ShowMto(Self, 'Almacenes');
 end;
 
 procedure TfrmMtoPrincipal.mnuArticulosClick(Sender: TObject);
