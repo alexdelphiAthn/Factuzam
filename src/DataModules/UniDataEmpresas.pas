@@ -330,39 +330,18 @@ procedure TdmEmpresas.GetCodigoAutoRetencion;
 begin
   if unqryRetenciones.FindField('CODIGO_RETENCION').AsString = '0' then
   begin
-//    with unstrdprcContador do
-//    begin
-//      Params.Clear;
-//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-//      ParamByName('ptipodoc').AsString :=  'RT';
-//      ExecProc;
       unqryRetenciones.FindField('CODIGO_RETENCION').AsString :=
                                                  ObtenerSiguienteContador('RT');
     end;
-//  end;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoSerie;
 begin
   if unqrySeries.FindField('CODIGO_SERIE').AsString = '0' then
   begin
-//    with unstrdprcContador do
-//    begin
-//      Params.Clear;
-//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-//      ParamByName('ptipodoc').AsString :=  'ES';
-//      ExecProc;
       unqrySeries.FindField('CODIGO_SERIE').AsString :=
                                                 ObtenerSiguienteContador('ES');
-//    end;
   end;
-
 end;
 
 //function TdmEmpresas.GetZonaDefault: String;
