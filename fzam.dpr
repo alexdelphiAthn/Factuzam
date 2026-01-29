@@ -81,7 +81,9 @@ uses
   UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
   inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
   inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas',
-  inLibGenBusq in 'src\Lib\inLibGenBusq.pas';
+  inLibGenBusq in 'src\Lib\inLibGenBusq.pas',
+  inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
+  UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule};
 
 var
   frmLogon: TfrmLogon;

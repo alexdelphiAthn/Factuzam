@@ -358,6 +358,15 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDefaultValues.pas"/>
         <DCCReference Include="src\Lib\inLibGenBusq.pas"/>
+        <DCCReference Include="src\Forms\inMtoAlmacenes.pas">
+            <Form>frmMtoAlmacenes</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAlmacenes.pas">
+            <Form>dmAlmacenes</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

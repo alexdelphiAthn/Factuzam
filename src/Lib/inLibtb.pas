@@ -109,6 +109,8 @@ begin
     SP.StoredProcName := 'PRC_GET_NEXT_CONT';
     SP.Params.Clear;
     SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := aTipoDoc;
+    SP.Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput).AsString  :=
+                                                           inLibGlobalVar.oUser;
     SP.Params.CreateParam(ftString, 'pcont', ptOutput);
     try
       SP.Execute;
