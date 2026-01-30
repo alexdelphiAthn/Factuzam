@@ -599,7 +599,8 @@ end;
 
 function FileSinExtension(sFile: string):string;
 begin
- Result := ExtractFilePath(sFile) + copy(ExtractFileName(sFile), 1, pos(ExtractFileExt(sFile), ExtractFileName(sFile)) - 1);
+ Result := ExtractFilePath(sFile) + copy(ExtractFileName(sFile), 1,
+                        pos(ExtractFileExt(sFile), ExtractFileName(sFile)) - 1);
 end;
 
 function leCadINI (clave, cadena : string; defecto : string) : string;
@@ -607,7 +608,8 @@ var
   sIniFile:string;
 begin
   if ParamStr(2) = '' then
-    sIniFile := ExtractFilePath(ParamStr(0)) + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
+    sIniFile := ExtractFilePath(ParamStr(0)) +
+                         FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
     sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(2);
   with tinifile.create (sIniFile) do
