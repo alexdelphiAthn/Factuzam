@@ -54,7 +54,7 @@ type
     cxGrdDBTabPrinACTIVO_CONTADOR: TcxGridDBColumn;
     cxGrdDBTabPrinEMPRESA_CONTADOR: TcxGridDBColumn;
     cxGrdDBTabPrinDESCRIPCION_TIPODOCUMENTO: TcxGridDBColumn;
-    cxgrdbclmnGrdDBTabPrinSUBTIPODOC_CONTADOR: TcxGridDBColumn;
+    cxGrdDBTabPrinTABLAORIGEN_TIPODOCUMENTO: TcxGridDBColumn;
     procedure dsTablaGStateChange(Sender: TObject);
   private
     { Private declarations }

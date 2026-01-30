@@ -54,6 +54,7 @@ type
     procedure rbActualClick(Sender: TObject);
   public
     procedure preparar_consulta; override;
+    procedure ConfigurarNombrePDF;
     { Private declarations }
   public
     { Public declarations }
@@ -67,6 +68,28 @@ implementation
 {$R *.dfm}
 
 { TfrmPrintFac }
+
+procedure TfrmPrintFac.ConfigurarNombrePDF;
+begin
+  WITH dmmFacturas.unqrytablaG do
+  begin
+  var RazonSocialCorta :string :=
+              Copy(FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString, 1, 12);
+  RazonSocialCorta := StringReplace(RazonSocialCorta, ' ', '', [rfReplaceAll]);
+  var sFecha : string := FormatDateTime('dd_mm',
+                                    FieldByName('FECHA_FACTURA').AsDateTime);
+  var TotalFormateado:string := FormatFloat('0.00',
+        dmmFacturas.unqryFacPrint.FieldByName('TOTAL_LIQUIDO_FACTURA').AsFloat);
+  TotalFormateado := StringReplace(TotalFormateado, ',', '_', [rfReplaceAll]);
+  TotalFormateado := StringReplace(TotalFormateado, '.', '_', [rfReplaceAll]);
+  var SerieFormateada:string := StringReplace(edtSerie.Text , '.', '_',
+                                                                [rfReplaceAll]);
+  var NombreDefecto :string  := sFecha + '_' + SerieFormateada + '_' +
+                                edtNroFac.Text + '_' +RazonSocialCorta + '_' +
+                                TotalFormateado + '.pdf';
+  frxpdfxprtPedWeb.FileName := NombreDefecto;
+  end;
+end;
 
 procedure TfrmPrintFac.preparar_consulta;
 begin
@@ -139,6 +162,7 @@ begin
     dmmFacturas.unqryLinFacPrint.Open;
     dmmFacturas.fxdstPrintLinFac.UpdateBounds;
   end;
+  ConfigurarNombrePDF;
 end;
 
 procedure TfrmPrintFac.rbActualClick(Sender: TObject);

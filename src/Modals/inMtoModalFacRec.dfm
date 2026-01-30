@@ -4,18 +4,19 @@ inherited frmGenFacRec: TfrmGenFacRec
   HorzScrollBar.Visible = False
   BorderStyle = bsSingle
   Caption = 'Duplicar/Abonar Factura'
-  ClientHeight = 297
-  ClientWidth = 379
+  ClientHeight = 288
+  ClientWidth = 373
   FormStyle = fsStayOnTop
   Position = poMainFormCenter
   Scaled = False
-  ExplicitWidth = 395
-  ExplicitHeight = 336
+  ExplicitWidth = 391
+  ExplicitHeight = 335
   TextHeight = 19
   object cxlbl1: TcxLabel [0]
     Left = 9
     Top = 4
     Caption = 'Factura Origen N'#250'mero'
+    TabOrder = 1
   end
   object edtNumFacOrigen: TcxTextEdit [1]
     Left = 135
@@ -25,12 +26,14 @@ inherited frmGenFacRec: TfrmGenFacRec
     Width = 129
   end
   object pnl1: TPanel [2]
-    Left = 264
+    Left = 258
     Top = 0
     Width = 115
-    Height = 297
+    Height = 288
     Align = alRight
     TabOrder = 0
+    ExplicitLeft = 264
+    ExplicitHeight = 297
     object btn3: TcxButton
       Left = 0
       Top = 274
@@ -101,6 +104,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Right = 4
     Margins.Bottom = 4
     Caption = 'Serie Factura Destino'
+    TabOrder = 8
   end
   object cmbSerieFactura: TcxLookupComboBox [8]
     Left = 16
@@ -123,6 +127,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Right = 4
     Margins.Bottom = 4
     Caption = 'Fecha Factura Destino'
+    TabOrder = 9
   end
   object dtFecha: TcxDateEdit [10]
     Left = 16
