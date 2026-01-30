@@ -16,17 +16,17 @@ inherited frmMtoContadores: TfrmMtoContadores
               Caption = 'Tipo de Documento'
               DataBinding.FieldName = 'TIPODOC_CONTADOR'
               Options.Editing = False
-              Width = 177
+              Width = 71
             end
             object cxGrdDBTabPrinDESCRIPCION_TIPODOCUMENTO: TcxGridDBColumn
               Caption = 'Documento'
               DataBinding.FieldName = 'DESCRIPCION_TIPODOCUMENTO'
               Width = 197
             end
-            object cxgrdbclmnGrdDBTabPrinSUBTIPODOC_CONTADOR: TcxGridDBColumn
-              Caption = 'Subtipo'
-              DataBinding.FieldName = 'SUBTIPODOC_CONTADOR'
-              Width = 133
+            object cxGrdDBTabPrinTABLAORIGEN_TIPODOCUMENTO: TcxGridDBColumn
+              Caption = 'Tabla de origen'
+              DataBinding.FieldName = 'TABLAORIGEN_TIPODOCUMENTO'
+              Width = 188
             end
             object cxGrdDBTabPrinEMPRESA_CONTADOR: TcxGridDBColumn
               Caption = 'Empresa'
@@ -36,12 +36,12 @@ inherited frmMtoContadores: TfrmMtoContadores
             object cxgrdbclmnGrdDBTabPrinSERIE_CONTADOR: TcxGridDBColumn
               Caption = 'Serie'
               DataBinding.FieldName = 'SERIE_CONTADOR'
-              Width = 128
+              Width = 114
             end
             object cxgrdbclmnGrdDBTabPrinCONTADOR_CONTADOR: TcxGridDBColumn
               Caption = 'Contador'
               DataBinding.FieldName = 'CONTADOR_CONTADOR'
-              Width = 174
+              Width = 88
             end
             object cxGrdDBTabPrinNUMDIGIT_CONTADOR: TcxGridDBColumn
               Caption = 'Digitos Contador'
@@ -104,6 +104,10 @@ inherited frmMtoContadores: TfrmMtoContadores
       inherited pnlTopGrid: TPanel
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
+        end
+        inherited nvNavegador: TcxDBNavigator
+          Width = 240
+          ExplicitWidth = 240
         end
       end
     end

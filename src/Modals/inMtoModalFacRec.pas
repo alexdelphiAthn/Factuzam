@@ -99,14 +99,14 @@ begin
   with dmmFacturas do
   begin
     with unqryTablaG do
-    if (ExisteSerieEmpresa(FieldByName('SERIE_FACTURA').AsString,
-                           FieldByName('CODIGO_EMPRESA_FACTURA').AsString,
-                           'FC')) then
-    begin
-      ShowMessage('Esta serie es usada por otra empresa.' +
-                  ' Debe cambiar la serie ');
-      IsError := True;
-    end;
+//    if (ExisteSerieEmpresa(FieldByName('SERIE_FACTURA').AsString,
+//                           FieldByName('CODIGO_EMPRESA_FACTURA').AsString,
+//                           'FC')) then
+//    begin
+//      ShowMessage('Esta serie es usada por otra empresa.' +
+//                  ' Debe cambiar la serie ');
+//      IsError := True;
+//    end;
     if ((chkAbonar.Checked = True) and (IsError = False)) then
     begin
       SavedCursor := Screen.Cursor;

@@ -10,9 +10,9 @@ inherited frmPrintFac: TfrmPrintFac
     Left = 278
     Width = 154
     Height = 275
-    ExplicitLeft = 274
+    ExplicitLeft = 272
     ExplicitWidth = 154
-    ExplicitHeight = 274
+    ExplicitHeight = 266
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,7 +28,7 @@ inherited frmPrintFac: TfrmPrintFac
     inherited btnSalir: TcxButton
       Top = 249
       Width = 152
-      ExplicitTop = 248
+      ExplicitTop = 240
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -51,6 +51,7 @@ inherited frmPrintFac: TfrmPrintFac
     Left = 8
     Top = 4
     Caption = 'Factura N'#250'mero'
+    TabOrder = 2
   end
   object edtSerie: TcxTextEdit [3]
     Left = 8
@@ -109,6 +110,7 @@ inherited frmPrintFac: TfrmPrintFac
       Top = 77
       Caption = 'Desde'
       Enabled = False
+      TabOrder = 3
       Transparent = True
     end
     object lblcxlbl3: TcxLabel
@@ -116,6 +118,7 @@ inherited frmPrintFac: TfrmPrintFac
       Top = 105
       Caption = 'Hasta'
       Enabled = False
+      TabOrder = 5
       Transparent = True
     end
   end
