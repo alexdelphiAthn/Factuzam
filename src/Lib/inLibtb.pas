@@ -599,7 +599,7 @@ end;
 
 function FileSinExtension(sFile: string):string;
 begin
- Result := ExtractFilePath(sFile) + copy(ExtractFileName(sFile), 1,
+  Result := ExtractFilePath(sFile) + copy(ExtractFileName(sFile), 1,
                         pos(ExtractFileExt(sFile), ExtractFileName(sFile)) - 1);
 end;
 
