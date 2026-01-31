@@ -922,18 +922,12 @@ begin
   inherited;
   with unqryLinFac do
   begin
-//    FieldByName(fcant).AsString := '1';
-//    FieldByName(ftipocant).AsString := 'Uds.';
-//    FieldByName(ftotciva).AsString := '0';
-//    FieldByName(ftotsiva).AsString := '0';
-//    FieldByName(ftipiva).AsString := 'N';
     AplicarValoresPorDefecto(unqryLinFac, 'fza_facturas_lineas');
     FindField(fporiva).AsCurrency := GetTipoIVA(
-          FieldByName('TIPO_IVA_ARTICULO_FACTURA_LINEA').AsString);
+          FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString);
     FieldByName(fimpcl).AsString :=
           unqryTablaG.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString;
-//    FindField(fnrolin).AsString := '0';
-   end;
+  end;
 end;
 
 procedure TdmFacturas.unqryLinFacBeforePost(DataSet: TDataSet);
