@@ -698,7 +698,7 @@ begin
     Result  := IntToStr(CalculaDC(sBanco, sNumero));
   end
   else
-    Result := 'N�mero de Cuenta Inv�lido';
+    Result := 'Número de Cuenta Inválido';
 end;
 
 function TomarLetra(S: String):String;
@@ -867,8 +867,8 @@ begin
 end;
 
 function AnsiOccurs(const str: string; const substr: string): integer;
-// Devuelve la cantidad de veces que una subcadena est� en una cadena
-// Versi�n ANSI
+// Devuelve la cantidad de veces que una subcadena está en una cadena
+// Versión ANSI
 var
  p, q: PChar;
  n: integer;
