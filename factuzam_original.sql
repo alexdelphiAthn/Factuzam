@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 31/01/2026 19:13:51
+ Date: 31/01/2026 19:31:29
 */
 
 SET NAMES utf8mb4;
@@ -2022,13 +2022,13 @@ INSERT INTO `fza_tipos_documentos` VALUES ('FA', 'FAMILIAS', 'fza_articulos_fami
 INSERT INTO `fza_tipos_documentos` VALUES ('FC', 'FACTURAS DE CLIENTE', 'fza_facturas');
 INSERT INTO `fza_tipos_documentos` VALUES ('FO', 'ORDEN FAMILIAS', 'fza_articulos_familias');
 INSERT INTO `fza_tipos_documentos` VALUES ('GO', 'ORDEN DE FORMAS DE PAGO', 'fza_formas_pago');
-INSERT INTO `fza_tipos_documentos` VALUES ('GP', 'GENERADOR DE PROCESOS', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('IG', 'ZONAS IVA', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('IV', 'IVAS', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('PG', 'FORMAS DE PAGO', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('PO', 'ORDEN PROVEEDORES', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('PV', 'PROVEEDORES', NULL);
-INSERT INTO `fza_tipos_documentos` VALUES ('RT', 'RETENCIONES POR EMPRESA', NULL);
+INSERT INTO `fza_tipos_documentos` VALUES ('GP', 'GENERADOR DE PROCESOS', 'fza_generadorprocesos');
+INSERT INTO `fza_tipos_documentos` VALUES ('IG', 'ZONAS IVA', 'fza_iva_grupos');
+INSERT INTO `fza_tipos_documentos` VALUES ('IV', 'IVAS', 'fza_ivas');
+INSERT INTO `fza_tipos_documentos` VALUES ('PG', 'FORMAS DE PAGO', 'fza_formas_pago');
+INSERT INTO `fza_tipos_documentos` VALUES ('PO', 'ORDEN PROVEEDORES', 'fza_proveedores');
+INSERT INTO `fza_tipos_documentos` VALUES ('PV', 'PROVEEDORES', 'fza_proveedores');
+INSERT INTO `fza_tipos_documentos` VALUES ('RT', 'RETENCIONES POR EMPRESA', 'fza_empresas_retenciones');
 
 -- ----------------------------
 -- Table structure for fza_usuarios
