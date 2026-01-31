@@ -1651,6 +1651,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -2297,6 +2301,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0

@@ -232,7 +232,7 @@ begin
       DatosCaja.cdsLineas.Cancel
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
-    DatosCaja.CalcularTotalesCabecera;
+//    DatosCaja.CalcularTotalesCabecera;
   end;
 end;
 
@@ -421,19 +421,19 @@ begin
     NuevoPorcen := 0;
   DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
                                                                     NuevoPorcen;
-  DatosCaja.CalcularTotalesLinea
+//  DatosCaja.CalcularTotalesLinea
 end;
 
 procedure TfrmMtoOpeCaja.tvDescuentoPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
-  DatosCaja.CalcularTotalesLinea;
+//  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvPrecioUniPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
-  DatosCaja.CalcularTotalesLinea;
+//  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
@@ -461,13 +461,13 @@ begin
   // Guardamos el % con precisión alta
   DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := NuevoPorcen;
   // 6. Recalculamos protegiendo el importe
-  DatosCaja.CalcularTotalesLinea(True);
+//  DatosCaja.CalcularTotalesLinea(True);
 end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
-  DatosCaja.CalcularTotalesLinea;
+//  DatosCaja.CalcularTotalesLinea;
 end;
 
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
@@ -550,7 +550,7 @@ begin
           end;
           DatosCaja.cdsLineas.FieldByName(
                                       'CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
-          DatosCaja.CalcularTotalesLinea;
+//          DatosCaja.CalcularTotalesLinea;
         finally
           sql.Free;
         end;
@@ -615,7 +615,7 @@ begin
       DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
 //    DatosCaja.cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency :=
 //                             qry.FieldByName('PORCEN_IVA_TARIFA').AsCurrency;
-      DatosCaja.CalcularTotalesLinea;
+//      DatosCaja.CalcularTotalesLinea;
     end;
   finally
     qry.Free;
@@ -700,7 +700,7 @@ begin
                  'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * NewQty;
         end;
         Clon.Post;
-        DatosCaja.CalcularTotalesCabecera;
+//        DatosCaja.CalcularTotalesCabecera;
         Result := True;
         Break;
       end;
