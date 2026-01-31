@@ -51,6 +51,9 @@ interface
   procedure ExportarExcel(cxGrd: TcxGrid;
                           sNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
+  procedure GridRecalc(Sender: TObject;
+                     View: TcxGridDBTableView;
+                     cdsLineas, cdsCabecera: TDataSet);
 
 implementation
 
@@ -59,6 +62,32 @@ implementation
        inLibtb,
        inLibDir,
        inLibGlobalVar; // , DuckTypeUtilsU;
+
+procedure GridRecalc(Sender: TObject;
+                     View: TcxGridDBTableView;
+                     cdsLineas, cdsCabecera: TDataSet);
+var
+  Edit: TcxCustomEdit;
+  Column: TcxGridDBColumn;
+  FieldName: string;
+begin
+  // 1. Obtenemos el editor y confirmamos el valor visual
+  Edit := Sender as TcxCustomEdit;
+  Edit.PostEditValue;
+  // 2. Obtenemos el nombre del campo de la columna que tiene el foco
+if (View.Controller.FocusedColumn <> nil) and
+     (View.Controller.FocusedColumn is TcxGridDBColumn) then
+  begin
+    // 3. Hacemos el CAST para poder acceder a .DataBinding.FieldName
+    Column := TcxGridDBColumn(View.Controller.FocusedColumn);
+    FieldName := Column.DataBinding.FieldName;
+    // 4. Llamamos a la lógica de negocio (asegúrate de tener inLibFacturas en uses)
+    ActualizarLineaFacturaGen(cdsLineas,
+                              cdsCabecera,
+                              FieldName,
+                              Edit.EditingValue);
+  end;
+end;
 
 procedure ExportarExcel(cxGrd: TcxGrid; sNomFile: string);
 var
@@ -343,7 +372,6 @@ begin
 end;
 
 procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
-
   procedure AplicarFiltroAVista(AView: TcxGridDBTableView);
   var
     i: Integer;
@@ -380,7 +408,6 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
     end;
     // Si entramos en modo temporal pero no hay texto a buscar, salimos
     if bModoTemporal and (Trim(sTextoBuscar) = '') then Exit;
-
     with AView.DataController.Filter do
     begin
       BeginUpdate;
@@ -388,13 +415,11 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
         Options := Options + [fcoCaseInsensitive];
         Root.Clear;
         Root.BoolOperatorKind := fboOr;
-
         for i := 0 to AView.ColumnCount - 1 do
         begin
           if (AView.Columns[i].DataBinding.Field <> nil) then
           begin
             FieldType := AView.Columns[i].DataBinding.Field.DataType;
-
             if bModoTemporal then
             begin
               // MODO TEMPORAL: Busca en Fechas, Horas y FechaHoras
@@ -428,7 +453,6 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
       Active := True;
     end;
   end;
-
   procedure ProcesarNivel(ALevel: TcxGridLevel);
   var
     i: Integer;
@@ -438,7 +462,6 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
     for i := 0 to ALevel.Count - 1 do
       ProcesarNivel(ALevel.Items[i]);
   end;
-
 var
   i: Integer;
 begin
@@ -451,7 +474,6 @@ begin
     AGrid.EndUpdate;
   end;
 end;
-
 procedure CancelarGrids(oPrincipal:TComponent);
 var
   i: Integer;

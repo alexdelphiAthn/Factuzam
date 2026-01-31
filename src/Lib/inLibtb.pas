@@ -78,42 +78,53 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
                                  AField,
                                  AConditionField: string): string;
 
-  procedure ActualizarLineaYRecalcular(DLineas,
-                                       DCabecera:TDataset;
-                                       const NombreCampo: string;
-                                       const NuevoValor: Variant);
+procedure ActualizarLineaFacturaGen(
+                                    cdsLineas: TDataSet;
+                                    cdsCabecera: TDataSet;
+                                    const NombreCampo: string;
+                                    const NuevoValor: Variant;
+                                    EventoUpdateTotal: TNotifyEvent = nil
+                                   );
 
 implementation
 
-procedure ActualizarLineaYRecalcular(DLineas,
-                                     DCabecera:TDataset;
-                                     const NombreCampo: string;
-                                     const NuevoValor: Variant);
+procedure ActualizarLineaFacturaGen(
+                                    cdsLineas: TDataSet;
+                                    cdsCabecera: TDataSet;
+                                    const NombreCampo: string;
+                                    const NuevoValor: Variant;
+                                    EventoUpdateTotal: TNotifyEvent = nil);
 var
   Calculador: TLinFac;
   Totales: TFacturaTotales;
   ValorCurrency: Currency;
   TotalBruto, Diferencia: Currency;
 begin
+  if not Assigned(cdsLineas) or not cdsLineas.Active then
+    Exit;
+  if not cdsLineas.CanModify then
+    Exit;
+  if not (cdsLineas.State in [dsEdit, dsInsert]) then
+    cdsLineas.Edit;
   ValorCurrency := StrToCurrDef(VarToStr(NuevoValor), 0);
-  Calculador := TLinFac.Create(DLineas, DCabecera, True);
+  Calculador := TLinFac.Create(cdsLineas, cdsCabecera, True);
   try
     if SameText(NombreCampo, 'PRECIOSALIDA_FACTURA_LINEA') then
-    begin
-      Calculador.PrecioSal := ValorCurrency;
-    end
+      Calculador.PrecioSal := ValorCurrency
     else if SameText(NombreCampo, 'CANTIDAD_FACTURA_LINEA') then
-    begin
-      Calculador.Cant := ValorCurrency;
-    end
+      Calculador.Cant := ValorCurrency
     else if SameText(NombreCampo, 'PORCEN_DTO_FACTURA_LINEA') then
-    begin
-      Calculador.PorDto := ValorCurrency;
-    end
+      Calculador.PorDto := ValorCurrency
     else if SameText(NombreCampo, 'PRECIO_DTO_FACTURA_LINEA') then
-    begin
-      Calculador.Dto := ValorCurrency;
-    end
+      Calculador.Dto := ValorCurrency
+    else if SameText(NombreCampo,
+                                 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA') then
+      Calculador.PreSiva := ValorCurrency
+    else if SameText(NombreCampo,
+                                 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA') then
+      Calculador.PreCiva := ValorCurrency
+    else if SameText(NombreCampo, 'TIPOIVA_ARTICULO_FACTURA_LINEA') then
+      Calculador.TipoIva := VarToStr(NuevoValor) // El Tipo IVA es string
     else if SameText(NombreCampo, 'TOTAL_FACTURA_LINEA') then
     begin
       TotalBruto := Calculador.PrecioSal * Calculador.Cant;
@@ -124,18 +135,16 @@ begin
       Calculador.Dto := Diferencia;
     end;
   finally
-    Calculador.Free;
+    Calculador.Free; // Vuelca cambios al dataset de líneas
   end;
-  Totales := TFacturaTotales.Create(DCabecera, DLineas);
+  Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
   try
     Totales.ProcesarFacturaCompleta;
   finally
     Totales.Free;
   end;
-//  // 5. Actualizar la etiqueta visual del total (si es necesario)
-//  if Assigned(DatosCaja.OnUpdateTotal) then
-//     DatosCaja.OnUpdateTotal(Self,
-//       DatosCaja.cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency);
+  if Assigned(EventoUpdateTotal) then
+    EventoUpdateTotal(nil);
 end;
 
 function GetDefaultValue(const ATable, AField, AConditionField: string): string;

@@ -474,7 +474,7 @@ inherited frmMtoGen: TfrmMtoGen
         object nvNavegador: TcxDBNavigator
           Left = 456
           Top = 6
-          Width = 238
+          Width = 240
           Height = 23
           Buttons.Filter.Visible = False
           DataSource = dsTablaG
