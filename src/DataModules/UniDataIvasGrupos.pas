@@ -16,7 +16,6 @@ uses
 
 type
   TdmIvasGrupos = class(TdmBase)
-    unstrdprcContador: TUniStoredProc;
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -118,25 +117,28 @@ end;
 procedure TdmIvasGrupos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection := oConn;
+//  unstrdprcContador.Connection := oConn;
 end;
 
 procedure TdmIvasGrupos.GetCodigoAutoIvaGrupo;
 begin
+
   if unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'IG';
-      ExecProc;
-      unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString :=
+                                                 ObtenerSiguienteContador('IG');
+//    with unstrdprcContador do
+//    begin
+//      Params.Clear;
+//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
+//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
+//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
+//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
+//      ParamByName('ptipodoc').AsString :=  'IG';
+//      ExecProc;
+//      unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString :=
+//                                                  ParamByName('pcont').AsString;
+//    end;
   end;
 end;
 

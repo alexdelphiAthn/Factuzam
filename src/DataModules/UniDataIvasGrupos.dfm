@@ -1,4 +1,5 @@
 inherited dmIvasGrupos: TdmIvasGrupos
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_ivas_grupos'
@@ -48,40 +49,6 @@ inherited dmIvasGrupos: TdmIvasGrupos
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_ivas_grupos')
-    Active = True
     AfterInsert = unqryTablaGAfterInsert
-  end
-  object unstrdprcContador: TUniStoredProc
-    StoredProcName = 'PRC_GET_NEXT_CONT'
-    SQL.Strings = (
-      
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
-        'CT @pcont AS '#39'@pcont'#39)
-    Connection = dmConn.conUni
-    Left = 8
-    Top = 84
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'pTipoDoc'
-        ParamType = ptInput
-        Size = 2
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pUSUARIO_MODIF'
-        ParamType = ptInput
-        Size = 100
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'pcont'
-        ParamType = ptOutput
-        Size = 20
-        Value = nil
-      end>
-    CommandStoredProcName = 'PRC_GET_NEXT_CONT'
   end
 end
