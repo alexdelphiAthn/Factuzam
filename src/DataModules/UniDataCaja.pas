@@ -38,8 +38,8 @@ type
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
-    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
-    procedure CalcularTotalesCabecera;
+//    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
+//    procedure CalcularTotalesCabecera;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
   end;
@@ -53,118 +53,118 @@ implementation
 
 {$R *.dfm}
 
-procedure TdmCajaOpe.CalcularTotalesCabecera;
-var
-  Clon: TClientDataSet;
-  TotalLiquido, TotalBase, TotalImpuestos: Currency;
-  EstaEditando: Boolean;
-  RecNoActivo: Integer;
-begin
-  TotalLiquido := 0;
-  TotalBase := 0;
-  if cdsLineas.Active then
-  begin
-    RecNoActivo := cdsLineas.RecNo;
-    EstaEditando := (cdsLineas.State in [dsEdit, dsInsert]);
-    Clon := TClientDataSet.Create(nil);
-    try
-      Clon.CloneCursor(cdsLineas, True);
-      Clon.DisableControls;
-      Clon.First;
-      while not Clon.Eof do
-      begin
-        if EstaEditando and (Clon.RecNo = RecNoActivo) then
-        begin
-          TotalLiquido := TotalLiquido +
-		                cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-          TotalBase    := TotalBase    + 
-		            cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-        end
-        else
-        begin
-          TotalLiquido := TotalLiquido + 
-		                     Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-          TotalBase := TotalBase + 
-		                 Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-        end;
-        Clon.Next;
-      end;
-    finally
-      Clon.EnableControls;
-      Clon.Free;
-    end;
-  end;
-  TotalImpuestos := TotalLiquido - TotalBase;
-  cdsCabecera.Edit;
-  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := TotalBase;
-  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency :=
-                                                                 TotalImpuestos;
-  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := TotalLiquido;
-  cdsCabecera.Post;
-  if Assigned(FOnUpdateTotal) then
-    FOnUpdateTotal(Self, TotalLiquido);
-end;
+//procedure TdmCajaOpe.CalcularTotalesCabecera;
+//var
+//  Clon: TClientDataSet;
+//  TotalLiquido, TotalBase, TotalImpuestos: Currency;
+//  EstaEditando: Boolean;
+//  RecNoActivo: Integer;
+//begin
+//  TotalLiquido := 0;
+//  TotalBase := 0;
+//  if cdsLineas.Active then
+//  begin
+//    RecNoActivo := cdsLineas.RecNo;
+//    EstaEditando := (cdsLineas.State in [dsEdit, dsInsert]);
+//    Clon := TClientDataSet.Create(nil);
+//    try
+//      Clon.CloneCursor(cdsLineas, True);
+//      Clon.DisableControls;
+//      Clon.First;
+//      while not Clon.Eof do
+//      begin
+//        if EstaEditando and (Clon.RecNo = RecNoActivo) then
+//        begin
+//          TotalLiquido := TotalLiquido +
+//		                cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+//          TotalBase    := TotalBase    +
+//		            cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+//        end
+//        else
+//        begin
+//          TotalLiquido := TotalLiquido +
+//		                     Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+//          TotalBase := TotalBase +
+//		                 Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+//        end;
+//        Clon.Next;
+//      end;
+//    finally
+//      Clon.EnableControls;
+//      Clon.Free;
+//    end;
+//  end;
+//  TotalImpuestos := TotalLiquido - TotalBase;
+//  cdsCabecera.Edit;
+//  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := TotalBase;
+//  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency :=
+//                                                                 TotalImpuestos;
+//  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := TotalLiquido;
+//  cdsCabecera.Post;
+//  if Assigned(FOnUpdateTotal) then
+//    FOnUpdateTotal(Self, TotalLiquido);
+//end;
 
-procedure TdmCajaOpe.CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
-var
-  PrecioUnitario, Cantidad, PorcenDto, PorcenIVA: Currency;
-  TotalBruto, MontoDescuentoTotal, TotalNeto: Currency;
-  TotalBase, TotalImpuestos: Currency;
-  EsImpuestosIncluidos: Boolean;
-begin
-  if not cdsLineas.Active then Exit;
-  if cdsLineas.State = dsBrowse then cdsLineas.Edit;
-  Cantidad := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
-  PrecioUnitario := cdsLineas.FieldByName(
-                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-  PorcenIVA := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-  EsImpuestosIncluidos := (cdsLineas.FieldByName(
-                             'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString = 'S');
-  TotalBruto := RoundTo(PrecioUnitario * Cantidad, -2);
-  if MantenerImporteDto then
-  begin
-    MontoDescuentoTotal := cdsLineas.FieldByName(
-                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
-    if TotalBruto <> 0 then
-      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-                                        (MontoDescuentoTotal * 100) / TotalBruto
-    else
-      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
-  end
-  else
-  begin
-    // MODO B: Cambio normal. El % manda.
-    PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
-    // Calculamos el descuento sobre el Total Bruto
-    MontoDescuentoTotal := RoundTo(TotalBruto * (PorcenDto / 100), -2);
-    cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := MontoDescuentoTotal;
-  end;
-  // 4. Aplicar el Descuento (Resta Global)
-  // Aquí está la corrección: TotalBruto - DescuentoTotal
-  TotalNeto := TotalBruto - MontoDescuentoTotal;
-  // 5. Desglose de Impuestos
-  if EsImpuestosIncluidos then
-  begin
-    // Si el precio incluye IVA, TotalNeto es el Total a Pagar
-    // Desglosamos hacia atrás
-    if (1 + (PorcenIVA / 100)) <> 0 then
-      TotalBase := RoundTo(TotalNeto / (1 + (PorcenIVA / 100)), -2)
-    else
-      TotalBase := TotalNeto;
-    // El total final es lo que dio la resta
-    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalNeto;
-    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
-  end
-  else
-  begin
-    // Si el precio NO incluye IVA, TotalNeto es la Base Imponible Total
-    TotalBase := TotalNeto;
-    TotalImpuestos := RoundTo(TotalBase * (PorcenIVA / 100), -2);
-    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
-    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalBase + TotalImpuestos;
-  end;
-  CalcularTotalesCabecera;
-end;
+//procedure TdmCajaOpe.CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
+//var
+//  PrecioUnitario, Cantidad, PorcenDto, PorcenIVA: Currency;
+//  TotalBruto, MontoDescuentoTotal, TotalNeto: Currency;
+//  TotalBase, TotalImpuestos: Currency;
+//  EsImpuestosIncluidos: Boolean;
+//begin
+//  if not cdsLineas.Active then Exit;
+//  if cdsLineas.State = dsBrowse then cdsLineas.Edit;
+//  Cantidad := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
+//  PrecioUnitario := cdsLineas.FieldByName(
+//                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+//  PorcenIVA := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+//  EsImpuestosIncluidos := (cdsLineas.FieldByName(
+//                             'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString = 'S');
+//  TotalBruto := RoundTo(PrecioUnitario * Cantidad, -2);
+//  if MantenerImporteDto then
+//  begin
+//    MontoDescuentoTotal := cdsLineas.FieldByName(
+//                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+//    if TotalBruto <> 0 then
+//      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
+//                                        (MontoDescuentoTotal * 100) / TotalBruto
+//    else
+//      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+//  end
+//  else
+//  begin
+//    // MODO B: Cambio normal. El % manda.
+//    PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+//    // Calculamos el descuento sobre el Total Bruto
+//    MontoDescuentoTotal := RoundTo(TotalBruto * (PorcenDto / 100), -2);
+//    cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := MontoDescuentoTotal;
+//  end;
+//  // 4. Aplicar el Descuento (Resta Global)
+//  // Aquí está la corrección: TotalBruto - DescuentoTotal
+//  TotalNeto := TotalBruto - MontoDescuentoTotal;
+//  // 5. Desglose de Impuestos
+//  if EsImpuestosIncluidos then
+//  begin
+//    // Si el precio incluye IVA, TotalNeto es el Total a Pagar
+//    // Desglosamos hacia atrás
+//    if (1 + (PorcenIVA / 100)) <> 0 then
+//      TotalBase := RoundTo(TotalNeto / (1 + (PorcenIVA / 100)), -2)
+//    else
+//      TotalBase := TotalNeto;
+//    // El total final es lo que dio la resta
+//    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalNeto;
+//    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
+//  end
+//  else
+//  begin
+//    // Si el precio NO incluye IVA, TotalNeto es la Base Imponible Total
+//    TotalBase := TotalNeto;
+//    TotalImpuestos := RoundTo(TotalBase * (PorcenIVA / 100), -2);
+//    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
+//    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalBase + TotalImpuestos;
+//  end;
+//  CalcularTotalesCabecera;
+//end;
 
 function TdmCajaOpe.BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                          var LabelDestino: String): Boolean;
@@ -281,7 +281,7 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
 begin
-  CalcularTotalesCabecera;
+//  CalcularTotalesCabecera;
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
@@ -302,7 +302,7 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-  CalcularTotalesCabecera;
+//  CalcularTotalesCabecera;
 end;
 
 procedure TdmCajaOpe.cdsLineasBeforePost(DataSet: TDataSet);

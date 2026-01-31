@@ -16,7 +16,7 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg;
+      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas;
 
   type
 
@@ -78,7 +78,65 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
                                  AField,
                                  AConditionField: string): string;
 
+  procedure ActualizarLineaYRecalcular(DLineas,
+                                       DCabecera:TDataset;
+                                       const NombreCampo: string;
+                                       const NuevoValor: Variant);
+
 implementation
+
+procedure ActualizarLineaYRecalcular(DLineas,
+                                     DCabecera:TDataset;
+                                     const NombreCampo: string;
+                                     const NuevoValor: Variant);
+var
+  Calculador: TLinFac;
+  Totales: TFacturaTotales;
+  ValorCurrency: Currency;
+  TotalBruto, Diferencia: Currency;
+begin
+  ValorCurrency := StrToCurrDef(VarToStr(NuevoValor), 0);
+  Calculador := TLinFac.Create(DLineas, DCabecera, True);
+  try
+    if SameText(NombreCampo, 'PRECIOSALIDA_FACTURA_LINEA') then
+    begin
+      Calculador.PrecioSal := ValorCurrency;
+    end
+    else if SameText(NombreCampo, 'CANTIDAD_FACTURA_LINEA') then
+    begin
+      Calculador.Cant := ValorCurrency;
+    end
+    else if SameText(NombreCampo, 'PORCEN_DTO_FACTURA_LINEA') then
+    begin
+      Calculador.PorDto := ValorCurrency;
+    end
+    else if SameText(NombreCampo, 'PRECIO_DTO_FACTURA_LINEA') then
+    begin
+      Calculador.Dto := ValorCurrency;
+    end
+    else if SameText(NombreCampo, 'TOTAL_FACTURA_LINEA') then
+    begin
+      TotalBruto := Calculador.PrecioSal * Calculador.Cant;
+      if TotalBruto <> 0 then
+        Diferencia := TotalBruto - ValorCurrency
+      else
+        Diferencia := 0;
+      Calculador.Dto := Diferencia;
+    end;
+  finally
+    Calculador.Free;
+  end;
+  Totales := TFacturaTotales.Create(DCabecera, DLineas);
+  try
+    Totales.ProcesarFacturaCompleta;
+  finally
+    Totales.Free;
+  end;
+//  // 5. Actualizar la etiqueta visual del total (si es necesario)
+//  if Assigned(DatosCaja.OnUpdateTotal) then
+//     DatosCaja.OnUpdateTotal(Self,
+//       DatosCaja.cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency);
+end;
 
 function GetDefaultValue(const ATable, AField, AConditionField: string): string;
 var
