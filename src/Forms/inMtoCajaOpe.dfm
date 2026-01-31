@@ -256,7 +256,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 802
+        Left = 796
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -278,10 +278,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 796
+        ExplicitLeft = 790
         Height = 80
         Width = 327
-        AnchorX = 1129
+        AnchorX = 1123
       end
       object btnF8: TcxButton
         Left = 224
@@ -396,8 +396,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           object tvUds: TcxGridDBColumn
             Caption = 'Uds.'
             DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
-            PropertiesClassName = 'TcxSpinEditProperties'
-            Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
+            PropertiesClassName = 'TcxTextEditProperties'
             BestFitMaxWidth = 50
           end
           object tvPrecioUni: TcxGridDBColumn
