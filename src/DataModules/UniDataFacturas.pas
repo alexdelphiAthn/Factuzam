@@ -199,7 +199,8 @@ begin
     SQL.Text := 'CREATE TEMPORARY TABLE tmpfac_comboseries       ' +
                 'SELECT SERIE_CONTADOR_CLIENTE AS SERIE_CONTADOR ' +
                 '  FROM vi_clientes                              ' +
-                ' WHERE SERIE_CONTADOR_CLIENTE IS NOT NULL       ' +
+                ' WHERE (SERIE_CONTADOR_CLIENTE IS NOT NULL      ' +
+                '        AND SERIE_CONTADOR_CLIENTE <> '''')     ' +
                 '   AND CODIGO_CLIENTE = :CLIENTE                ' +
                 ' UNION                                          ' +
                 'SELECT SERIE_SERIE AS SERIE_CONTADOR            ' +
@@ -211,8 +212,9 @@ begin
                 ' UNION                                          ' +
                 'SELECT SERIE_CONTADOR AS SERIE_CONTADOR         ' +
                 '  FROM vi_contadores                            ' +
-                ' WHERE ACTIVO_CONTADOR =' + QuotedStr('S') +
-                '   AND EMPRESA_CONTADOR = :EMPRESA     ';
+                ' WHERE ACTIVO_CONTADOR = ''S''                  ' +
+                '   AND EMPRESA_CONTADOR = :EMPRESA              ';
+    Prepare;
     Params.ParamByName('EMPRESA').AsSTring := sEmpresa;
     Params.ParamByName('FECHA').AsDateTime := dtFecha;
     Params.ParamByName('CLIENTE').AsString := sCliente;

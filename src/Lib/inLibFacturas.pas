@@ -110,7 +110,7 @@ type
     TotalIVASuperReducido: Currency;
     TotalIVAExento: Currency;
     TotalREcargo: Currency;
-    TotalRetenciones: Currency;
+    //TotalRetenciones: Currency;
     TotalCantidades:Currency;
     // Totales por tipo de IVA
     IVAN: TTotalesIVA;
@@ -706,7 +706,6 @@ begin
     // 1. Datos Clave (Los metemos en _configuracion para tener todo junto)
     _fechaFactura      := FieldByName('FECHA_FACTURA').AsDateTime;
     _codigoEmpresa := FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
-
     // 2. Configuración Fiscal (Flags)
     _configuracion.EsRegimenAgricolaEmpresa := (FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString = 'S');
     _configuracion.EsRegimenAgricolaCliente := (FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString = 'S');
@@ -1023,7 +1022,8 @@ begin
     _totales.TotalRetencion := 0;
     Exit;
   end;
-  if (_dPorRetencion = 0) then
+  if (_dPorRetencion = 0) and (_configuracion.AplicaRetencionesCliente and
+          _configuracion.AplicaRetencionesEmpresa) then
   begin
     _dPorRetencion := BuscarPorcenRetencion(_codigoEmpresa);
   end;
@@ -1041,7 +1041,7 @@ begin
   // Total líquido = Base + IVA + RE - Retenciones
   _totales.TotalLiquido := _totales.TotalBases +
                            _totales.TotalImpuestos -
-                           _totales.TotalRetenciones;
+                           _totales.TotalRetencion;
 end;
 
 procedure TFacturaTotales.ActualizarTotalesEnDataSet;
@@ -1072,8 +1072,7 @@ begin
     FieldByName('TOTAL_REE_FACTURA').AsFloat := _totales.IVAE.ImporteRE;
     // Totales generales
     FieldByName('TOTAL_IMPUESTOS_FACTURA').AsFloat := _totales.TotalImpuestos;
-    FieldByName('TOTAL_RETENCION_FACTURA').AsFloat :=
-                                                    _totales.TotalRetenciones;
+    FieldByName('TOTAL_RETENCION_FACTURA').AsFloat := _totales.TotalRetencion;
     FieldByName('PORCEN_RETENCION_FACTURA').AsFloat := _dPorRetencion;
     FieldByName('TOTAL_LIQUIDO_FACTURA').AsFloat := _totales.TotalLiquido;
     // Actualizar configuración aplicada

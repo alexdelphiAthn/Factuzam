@@ -132,6 +132,15 @@ begin
       else
         Diferencia := 0;
       Calculador.Dto := Diferencia;
+    end
+    else if SameText(NombreCampo, 'TOTAL_FACTURASIVA_LINEA') then
+    begin
+      TotalBruto := Calculador.PrecioSal * Calculador.Cant;
+      if TotalBruto <> 0 then
+        Diferencia := TotalBruto - ValorCurrency
+      else
+        Diferencia := 0;
+      Calculador.Dto := Diferencia;
     end;
   finally
     Calculador.Free; // Vuelca cambios al dataset de líneas

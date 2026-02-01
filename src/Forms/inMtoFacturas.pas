@@ -474,6 +474,8 @@ type
     procedure chkConsolidadaPropertiesChange(Sender: TObject);
     procedure btnConsolidarClick(Sender: TObject);
     procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(Sender: TObject);
+    procedure ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
+      Sender: TObject);
 //    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     procedure ActualizarComboSeries;
@@ -1428,6 +1430,16 @@ procedure TfrmMtoFacturas.
 begin
   inherited;
   //rellenar razon social proveedor y precio de coste
+end;
+
+procedure TfrmMtoFacturas.ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  GridRecalc(Sender,
+             tvLineasFactura,
+             dmmFacturas.unqryLinFac,
+             dmmFacturas.unqryTablaG);
 end;
 
 procedure TfrmMtoFacturas.
