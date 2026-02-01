@@ -75,7 +75,7 @@ begin
   Edit := Sender as TcxCustomEdit;
   Edit.PostEditValue;
   // 2. Obtenemos el nombre del campo de la columna que tiene el foco
-if (View.Controller.FocusedColumn <> nil) and
+  if (View.Controller.FocusedColumn <> nil) and
      (View.Controller.FocusedColumn is TcxGridDBColumn) then
   begin
     // 3. Hacemos el CAST para poder acceder a .DataBinding.FieldName

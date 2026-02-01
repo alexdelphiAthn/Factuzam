@@ -157,7 +157,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro;
+  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
 var
@@ -401,72 +401,90 @@ begin
     Error := True;
     ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
   end;
-
-
 end;
 
 procedure TfrmMtoOpeCaja.
                     tvDescuentoMenosPropertiesEditValueChanged(Sender: TObject);
-var
-  Precio, NuevoDescuento, NuevoPorcen: Currency;
+//var
+//  Precio, NuevoDescuento, NuevoPorcen: Currency;
 begin
-  TcxCustomEdit(Sender).PostEditValue;
-  Precio := DatosCaja.cdsLineas.FieldByName(
-                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-  NuevoDescuento := DatosCaja.cdsLineas.FieldByName(
-                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
-  if Precio <> 0 then
-    NuevoPorcen := (NuevoDescuento * 100) / Precio
-  else
-    NuevoPorcen := 0;
-  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-                                                                    NuevoPorcen;
+//  TcxCustomEdit(Sender).PostEditValue;
+//  Precio := DatosCaja.cdsLineas.FieldByName(
+//                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+//  NuevoDescuento := DatosCaja.cdsLineas.FieldByName(
+//                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+//  if Precio <> 0 then
+//    NuevoPorcen := (NuevoDescuento * 100) / Precio
+//  else
+//    NuevoPorcen := 0;
+//  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
+//                                                                    NuevoPorcen;
 //  DatosCaja.CalcularTotalesLinea
+  GridRecalc(Sender,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
 end;
 
 procedure TfrmMtoOpeCaja.tvDescuentoPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
+  GridRecalc(Sender,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
 //  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvPrecioUniPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
+  GridRecalc(Sender,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
 //  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
-var
-  PrecioUnitario, Cantidad, TotalBruto, NuevoTotal: Currency;
-  DescuentoTotal, NuevoPorcen: Double;
+//var
+//  PrecioUnitario, Cantidad, TotalBruto, NuevoTotal: Currency;
+//  DescuentoTotal, NuevoPorcen: Double;
 begin
-  TcxCustomEdit(Sender).PostEditValue;
-  // 1. Datos base
-  PrecioUnitario := DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-  Cantidad := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
-  NuevoTotal := DatosCaja.cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-  // 2. Calculamos el Total Bruto (Sin descuento)
-  TotalBruto := PrecioUnitario * Cantidad;
-  if TotalBruto = 0 then Exit;
-  // 3. Calculamos el Descuento TOTAL necesario (Sin dividir por cantidad)
-  DescuentoTotal := TotalBruto - NuevoTotal;
-  if DescuentoTotal < 0 then DescuentoTotal := 0;
-  // 4. Calculamos el % Global
-  NuevoPorcen := (DescuentoTotal / TotalBruto) * 100;
-  // 5. Guardamos
-  DatosCaja.cdsLineas.Edit;
-  // ¡OJO AQUÍ! Guardamos el TOTAL del descuento directamente
-  DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := DescuentoTotal;
-  // Guardamos el % con precisión alta
-  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := NuevoPorcen;
-  // 6. Recalculamos protegiendo el importe
-//  DatosCaja.CalcularTotalesLinea(True);
+//  TcxCustomEdit(Sender).PostEditValue;
+//  // 1. Datos base
+//  PrecioUnitario := DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+//  Cantidad := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
+//  NuevoTotal := DatosCaja.cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+//  // 2. Calculamos el Total Bruto (Sin descuento)
+//  TotalBruto := PrecioUnitario * Cantidad;
+//  if TotalBruto = 0 then Exit;
+//  // 3. Calculamos el Descuento TOTAL necesario (Sin dividir por cantidad)
+//  DescuentoTotal := TotalBruto - NuevoTotal;
+//  if DescuentoTotal < 0 then DescuentoTotal := 0;
+//  // 4. Calculamos el % Global
+//  NuevoPorcen := (DescuentoTotal / TotalBruto) * 100;
+//  // 5. Guardamos
+//  DatosCaja.cdsLineas.Edit;
+//  // ¡OJO AQUÍ! Guardamos el TOTAL del descuento directamente
+//  DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := DescuentoTotal;
+//  // Guardamos el % con precisión alta
+//  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := NuevoPorcen;
+//  // 6. Recalculamos protegiendo el importe
+////  DatosCaja.CalcularTotalesLinea(True);
+  GridRecalc(Sender,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
 end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
   TcxCustomEdit(Sender).PostEditValue;
+  GridRecalc(Sender,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
 //  DatosCaja.CalcularTotalesLinea;
 end;
 
