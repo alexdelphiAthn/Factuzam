@@ -88,8 +88,7 @@ procedure ActualizarLineaFacturaGen(
 
 implementation
 
-procedure ActualizarLineaFacturaGen(
-                                    cdsLineas: TDataSet;
+procedure ActualizarLineaFacturaGen(cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
                                     const NuevoValor: Variant;

@@ -2,9 +2,9 @@
 
 interface
 
-uses 
+uses
   Uni, System.StrUtils, System.SysUtils, System.Classes, Data.DB, System.Math,
-  Datasnap.DBClient, Datasnap.Provider;
+  Datasnap.DBClient, Datasnap.Provider, inLibGlobalVar;
 
 const
   // Campos de línea de factura
@@ -85,15 +85,32 @@ type
 
   // Estructura para totales generales de factura
   TTotalesFactura = record
+    // Bases Imponibles
+    BaseNormal,
+    BaseReducida,
+    BaseSuper,
+    BaseExenta: Currency;
+    // Cuotas IVA
+    CuotaIVANormal,
+    CuotaIVAReducida,
+    CuotaIVASuper,
+    CuotaIVAExenta: Currency;
+    // Cuotas Recargo
+    CuotaRENormal,
+    CuotaREReducida,
+    CuotaRESuper,
+    CuotaREExenta: Currency;
+    // Agregados
     TotalBases: Currency;
+    TotalImpuestos: Currency; // Suma de Cuotas IVA + RE
+    TotalRetencion: Currency;
+    TotalLiquido: Currency;   // A Pagar
     TotalIVANormal: Currency;
     TotalIVAReducido: Currency;
     TotalIVASuperReducido: Currency;
     TotalIVAExento: Currency;
     TotalREcargo: Currency;
-    TotalImpuestos: Currency;
     TotalRetenciones: Currency;
-    TotalLiquido: Currency;
     TotalCantidades:Currency;
     // Totales por tipo de IVA
     IVAN: TTotalesIVA;
@@ -235,7 +252,8 @@ type
     procedure ValidarConfiguracion;
     function ObtenerPorcentajePorTipo(tipo: string): Currency;
     function ObtenerPorcentajeREPorTipo(tipo: string): Currency;
-
+    function BuscarPorcenRetencion(CodEmpresa: string): Currency;
+    function BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
   public
     constructor Create(unqryFac: TDataset;
                        unqryLineas: TDataset;
@@ -252,7 +270,7 @@ type
     procedure CalcularTotalesFactura;
     procedure ActualizarTotalesEnDataSet;
     function ValidarFactura: Boolean;
-    
+
     // Métodos de depuración y logging
 //    procedure LogConfiguracion;
 //    procedure LogTotales;
@@ -265,7 +283,7 @@ type
     property MensajeError: string read _mensajeError;
   end;
 
- 
+
 implementation
 
 // Función auxiliar IfThen
@@ -596,20 +614,22 @@ var
 begin
   _sTipIVa := Value;
   dPorcen := 0;
-
   if Assigned(_unqryFac) then
   begin
     with _unqryFac do
     begin
       case IndexStr(_sTipIVA, ['N', 'R', 'S', 'E']) of
-        0: if FindField(fPorIvaN) <> nil then dPorcen := FieldByName(fPorIvaN).AsCurrency;
-        1: if FindField(fPorIVAR) <> nil then dPorcen := FieldByName(fPorIVAR).AsCurrency;
-        2: if FindField(fPorIVAS) <> nil then dPorcen := FieldByName(fPorIVAS).AsCurrency;
-        3: if FindField(fPorIVAE) <> nil then dPorcen := FieldByName(fPorIVAE).AsCurrency;
+        0: if FindField(fPorIvaN) <> nil then
+             dPorcen := FieldByName(fPorIvaN).AsCurrency;
+        1: if FindField(fPorIVAR) <> nil then
+             dPorcen := FieldByName(fPorIVAR).AsCurrency;
+        2: if FindField(fPorIVAS) <> nil then
+             dPorcen := FieldByName(fPorIVAS).AsCurrency;
+        3: if FindField(fPorIVAE) <> nil then
+             dPorcen := FieldByName(fPorIVAE).AsCurrency;
       end;
     end;
   end;
-
   Self.PorIva := dPorcen;
 end;
 
@@ -679,40 +699,35 @@ end;
 
 procedure TFacturaTotales.LeerDatosFactura;
 begin
+  // Nota: Uso _cdsCabecera, que es como llamamos al dataset en el Create.
+  // Si en tu clase se llama _unqryFac, cámbialo aquí.
   with _unqryFac do
   begin
-    // Leer configuración básica de empresa y cliente
-    _configuracion.EsRegimenAgricolaEmpresa :=
-      (FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString = 'S');
-    _configuracion.EsRegimenAgricolaCliente :=
-      (FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString = 'S');
-    _configuracion.EsIntracomunitario :=
-      (FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString = 'S');
-    _configuracion.EsVentaActivoFijo :=
-      (FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString = 'S');
-    _configuracion.AplicaRetencionesCliente :=
-      (FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString = 'S');
-    _configuracion.AplicaRetencionesEmpresa :=
-      (FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString = 'S');
-    _configuracion.IVAExento :=
-      (FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString = 'S');
-    _configuracion.IVARecargo :=
-      (FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString = 'S');
-
-    // Leer datos básicos
-    _fechaFactura := FieldByName('FECHA_FACTURA').AsDateTime;
+    // 1. Datos Clave (Los metemos en _configuracion para tener todo junto)
+    _fechaFactura      := FieldByName('FECHA_FACTURA').AsDateTime;
     _codigoEmpresa := FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
-    _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
-    _codigoIVA := FieldByName('CODIGO_IVA_FACTURA').AsString;
-    _dPorRetencion := FieldByName('PORCEN_RETENCION_FACTURA').AsFloat;
 
-    // Leer configuración desde la factura (puede ser override)
-    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S' then
-      _configuracion.IRPFImpuestoIncluido :=
-        (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S');
-//    if FindField('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString <> '' then
-//      _configuracion.AplicaRecargo :=
-//        (FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString = 'S');
+    // 2. Configuración Fiscal (Flags)
+    _configuracion.EsRegimenAgricolaEmpresa := (FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString = 'S');
+    _configuracion.EsRegimenAgricolaCliente := (FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString = 'S');
+    _configuracion.EsIntracomunitario       := (FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString = 'S');
+    _configuracion.EsVentaActivoFijo        := (FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString = 'S');
+    _configuracion.AplicaRetencionesCliente := (FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString = 'S');
+    _configuracion.AplicaRetencionesEmpresa := (FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString = 'S');
+    _configuracion.IVAExento  := (FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString = 'S');
+    _configuracion.IVARecargo := (FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString = 'S');
+    // 3. Flags opcionales (con comprobación FindField como tenías, buena práctica)
+    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA') <> nil then
+       _configuracion.IRPFImpuestoIncluido := (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S')
+    else
+       _configuracion.IRPFImpuestoIncluido := False;
+    if FindField('ESAPLICA_RE_ZONA_IVA_FACTURA') <> nil then
+       _configuracion.AplicaRecargo := (FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString = 'S')
+    else
+       _configuracion.AplicaRecargo := False;
+    _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
+    _CodigoIVA    := FieldByName('CODIGO_IVA_FACTURA').AsString;
+    _dPorRetencion := FieldByName('PORCEN_RETENCION_FACTURA').AsFloat;
   end;
   LeerPorcentajesDesdeFactura;
 end;
@@ -735,63 +750,126 @@ begin
   end;
 end;
 
+
 procedure TFacturaTotales.AplicarReglas;
 begin
-  // Aplicar reglas de negocio según configuración
-
-  // Régimen Especial Agrícola Empresa-
+  // 1. Régimen Especial Agrícola Empresa
   if _configuracion.EsRegimenAgricolaEmpresa then
   begin
     _configuracion.AplicaRetencionesEmpresa := True;
-    _configuracion.AplicaRecargo := False;
+    // OJO: En el SQL esto se refiere a "ESAPLICA_RE_ZONA_IVA",
+    // asegúrate de estar usando el campo correcto de tu configuración.
+    // Si tu variable IVARecargo es la del Cliente, quizás necesites otra variable
+    // para la Zona, o si usas esta para todo, ponla a False.
+    _configuracion.IVARecargo := False;
     // Buscar IVA específico para agricultura
-    //BuscarIVAAgricola;
+    // Llamamos a la función auxiliar que busca en la BD
+    if BuscarDatosIVAAgricola(_codigoEmpresa) then
+    begin
+       // Si encuentra datos, la función BuscarDatosIVAAgricola
+       // ya habrá actualizado la variable _porcentajes y _totales.GrupoZonaIVA
+    end;
   end;
-
-  // Intracomunitario
+  // 2. Intracomunitario
   if _configuracion.EsIntracomunitario then
   begin
     _configuracion.IVAExento := True;
     _configuracion.AplicaRetencionesCliente := False;
     _configuracion.EsRegimenAgricolaCliente := False;
   end;
-
-  // Venta Activo Fijo + REAGP
+  // 3. Venta Activo Fijo + REAGP Empresa
   if ((_configuracion.EsVentaActivoFijo) and
       (_configuracion.EsRegimenAgricolaEmpresa)) then
   begin
     _configuracion.IVAExento := True;
   end;
-  
-  // REAGP Empresa + REAGP Cliente
-  if ((_configuracion.EsRegimenAgricolaEmpresa) and 
+  // 4. REAGP Empresa + REAGP Cliente
+  if ((_configuracion.EsRegimenAgricolaEmpresa) and
       (_configuracion.EsRegimenAgricolaCliente)) then
   begin
     _configuracion.AplicaRetencionesCliente := True;
     _configuracion.IVAExento := True;
   end;
-
-  // REAGP Empresa + Cliente Normal sin retenciones
+  // 5. REAGP Empresa + Cliente Normal sin retenciones
   if _configuracion.EsRegimenAgricolaEmpresa and
      not _configuracion.EsRegimenAgricolaCliente and
      not _configuracion.AplicaRetencionesCliente then
   begin
     _configuracion.IVAExento := True;
   end;
-  // REAGP Empresa + Cliente Normal con retenciones
-  if ((_configuracion.EsRegimenAgricolaEmpresa) and
-      (not _configuracion.EsRegimenAgricolaCliente) and
-      (_configuracion.AplicaRetencionesCliente)) then
-  begin
-    // Aplicar IVA normal, no exento
-    // No cambiar configuración de IVA
-  end;
-  // Aplicar IVA Exento si es necesario
+  // 6. Aplicar la lógica de Exención (Sustituye a //AplicarIVAExento)
+  // Esto replica la parte del SQL: IF (pIVA_EXENTO = 'S') THEN SET pPORCENN = pPORCENE...
   if _configuracion.IVAExento then
   begin
-     //AplicarIVAExento;
+    // Unificamos todos los tipos de IVA al porcentaje de Exento (normalmente 0)
+    _porcentajes.IVANormal        := _porcentajes.IVAExento;
+    _porcentajes.IVAReducido      := _porcentajes.IVAExento;
+    _porcentajes.IVASuperReducido := _porcentajes.IVAExento;
+    // Anulamos cualquier Recargo de Equivalencia
+    _porcentajes.REcNormal        := 0;
+    _porcentajes.REcReducido      := 0;
+    _porcentajes.REcSuperReducido := 0;
+    _porcentajes.REcExento        := 0;
   end;
 end;
+
+//procedure TFacturaTotales.AplicarReglas;
+//begin
+//  // Aplicar reglas de negocio según configuración
+//
+//  // Régimen Especial Agrícola Empresa-
+//  if _configuracion.EsRegimenAgricolaEmpresa then
+//  begin
+//    _configuracion.AplicaRetencionesEmpresa := True;
+//    _configuracion.AplicaRecargo := False;
+//    // Buscar IVA específico para agricultura
+//    //BuscarIVAAgricola;
+//  end;
+//
+//  // Intracomunitario
+//  if _configuracion.EsIntracomunitario then
+//  begin
+//    _configuracion.IVAExento := True;
+//    _configuracion.AplicaRetencionesCliente := False;
+//    _configuracion.EsRegimenAgricolaCliente := False;
+//  end;
+//
+//  // Venta Activo Fijo + REAGP
+//  if ((_configuracion.EsVentaActivoFijo) and
+//      (_configuracion.EsRegimenAgricolaEmpresa)) then
+//  begin
+//    _configuracion.IVAExento := True;
+//  end;
+//
+//  // REAGP Empresa + REAGP Cliente
+//  if ((_configuracion.EsRegimenAgricolaEmpresa) and
+//      (_configuracion.EsRegimenAgricolaCliente)) then
+//  begin
+//    _configuracion.AplicaRetencionesCliente := True;
+//    _configuracion.IVAExento := True;
+//  end;
+//
+//  // REAGP Empresa + Cliente Normal sin retenciones
+//  if _configuracion.EsRegimenAgricolaEmpresa and
+//     not _configuracion.EsRegimenAgricolaCliente and
+//     not _configuracion.AplicaRetencionesCliente then
+//  begin
+//    _configuracion.IVAExento := True;
+//  end;
+//  // REAGP Empresa + Cliente Normal con retenciones
+//  if ((_configuracion.EsRegimenAgricolaEmpresa) and
+//      (not _configuracion.EsRegimenAgricolaCliente) and
+//      (_configuracion.AplicaRetencionesCliente)) then
+//  begin
+//    // Aplicar IVA normal, no exento
+//    // No cambiar configuración de IVA
+//  end;
+//  // Aplicar IVA Exento si es necesario
+//  if _configuracion.IVAExento then
+//  begin
+//     //AplicarIVAExento;
+//  end;
+//end;
 
 function TFacturaTotales.ObtenerPorcentajePorTipo(tipo: string): Currency;
 begin
@@ -807,7 +885,7 @@ end;
 
 function TFacturaTotales.ObtenerPorcentajeREPorTipo(tipo: string): Currency;
 begin
-  if not (_configuracion.AplicaRecargo) then
+  if not (_configuracion.AplicaRecargo and _configuracion.IVARecargo) then
   begin
     Result := 0;
   end
@@ -833,22 +911,16 @@ begin
     LeerDatosFactura;
     // Aplicar reglas de negocio
     AplicarReglas;
-
     // Validar configuración
     ValidarConfiguracion;
-
     // Procesar líneas y calcular totales
     RecorrerYCalcularLineasConClientDataSet;
     CalcularTotalesFactura;
-
     // Actualizar en la base de datos
     if _unqryFac.State <> dsEdit then
       _unqryFac.Edit;
-
     ActualizarTotalesEnDataSet;
-
     Result := True;
-
   except
     on E: Exception do
     begin
@@ -868,11 +940,9 @@ begin
   // Obtener porcentajes según el tipo de IVA
   porcentajeIVA := ObtenerPorcentajePorTipo(linea.TipoIva);
   porcentajeRE := ObtenerPorcentajeREPorTipo(linea.TipoIva);
-
   // Calcular importes
   importeIVA := baseImponible * (porcentajeIVA / 100);
   importeRE := baseImponible * (porcentajeRE / 100);
-
   _totales.TotalCantidades := _totales.TotalCantidades + linea._dCant;
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
@@ -925,11 +995,9 @@ begin
   _totales.TotalIVAReducido := _totales.IVAR.ImporteIVA;
   _totales.TotalIVASuperReducido := _totales.IVAS.ImporteIVA;
   _totales.TotalIVAExento := _totales.IVAE.ImporteIVA;
-
   // Total recargo de equivalencia
   _totales.TotalREcargo := _totales.IVAN.ImporteRE + _totales.IVAR.ImporteRE +
                           _totales.IVAS.ImporteRE + _totales.IVAE.ImporteRE;
-
   // Total impuestos (IVA + RE)
   _totales.TotalImpuestos := _totales.TotalIVANormal +
                              _totales.TotalIVAReducido +
@@ -942,12 +1010,28 @@ procedure TFacturaTotales.CalcularRetenciones;
 var
   baseCalculo: Currency;
 begin
-  // Determinar base de cálculo según configuración
+  if not (_configuracion.AplicaRetencionesCliente and
+          _configuracion.AplicaRetencionesEmpresa) then
+  begin
+    _totales.TotalRetencion := 0;
+    Exit;
+  end;
+  if (_configuracion.EsVentaActivoFijo and
+      _configuracion.EsRegimenAgricolaEmpresa) then
+  begin
+    _dPorRetencion := 0;
+    _totales.TotalRetencion := 0;
+    Exit;
+  end;
+  if (_dPorRetencion = 0) then
+  begin
+    _dPorRetencion := BuscarPorcenRetencion(_codigoEmpresa);
+  end;
   if _configuracion.IRPFImpuestoIncluido then
     baseCalculo := _totales.TotalBases + _totales.TotalImpuestos
   else
     baseCalculo := _totales.TotalBases;
-  _totales.TotalRetenciones := baseCalculo * (_dPorRetencion / 100);
+  _totales.TotalRetencion := baseCalculo * (_dPorRetencion / 100);
 end;
 
 procedure TFacturaTotales.CalcularTotalesFactura;
@@ -955,8 +1039,8 @@ begin
   CalcularTotalesGenerales;
   CalcularRetenciones;
   // Total líquido = Base + IVA + RE - Retenciones
-  _totales.TotalLiquido := _totales.TotalBases + 
-                           _totales.TotalImpuestos -   
+  _totales.TotalLiquido := _totales.TotalBases +
+                           _totales.TotalImpuestos -
                            _totales.TotalRetenciones;
 end;
 
@@ -975,27 +1059,23 @@ begin
     FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsFloat :=
                                          _totales.IVAE.BaseImponible;
     FieldByName('TOTAL_BASES_FACTURA').AsFloat := _totales.TotalBases;
-
     // Importes de IVA
     FieldByName('TOTAL_IVAN_FACTURA').AsFloat := _totales.TotalIVANormal;
     FieldByName('TOTAL_IVAR_FACTURA').AsFloat := _totales.TotalIVAReducido;
     FieldByName('TOTAL_IVAS_FACTURA').AsFloat :=
                                             _totales.TotalIVASuperReducido;
     FieldByName('TOTAL_IVAE_FACTURA').AsFloat := _totales.TotalIVAExento;
-
     // Importes de Recargo Equivalencia
     FieldByName('TOTAL_REN_FACTURA').AsFloat := _totales.IVAN.ImporteRE;
     FieldByName('TOTAL_RER_FACTURA').AsFloat := _totales.IVAR.ImporteRE;
     FieldByName('TOTAL_RES_FACTURA').AsFloat := _totales.IVAS.ImporteRE;
     FieldByName('TOTAL_REE_FACTURA').AsFloat := _totales.IVAE.ImporteRE;
-
     // Totales generales
     FieldByName('TOTAL_IMPUESTOS_FACTURA').AsFloat := _totales.TotalImpuestos;
     FieldByName('TOTAL_RETENCION_FACTURA').AsFloat :=
                                                     _totales.TotalRetenciones;
     FieldByName('PORCEN_RETENCION_FACTURA').AsFloat := _dPorRetencion;
     FieldByName('TOTAL_LIQUIDO_FACTURA').AsFloat := _totales.TotalLiquido;
-
     // Actualizar configuración aplicada
     FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString :=
       IfThen(_configuracion.IVAExento, 'S', 'N');
@@ -1005,7 +1085,6 @@ begin
       IfThen(_configuracion.AplicaRetencionesEmpresa, 'S', 'N');
     FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString :=
       IfThen(_configuracion.AplicaRecargo, 'S', 'N');
-
     // Actualizar porcentajes aplicados
     FieldByName('PORCEN_IVAN_FACTURA').AsFloat := _porcentajes.IVANormal;
     FieldByName('PORCEN_IVAR_FACTURA').AsFloat := _porcentajes.IVAReducido;
@@ -1037,7 +1116,7 @@ begin
 //
 //  if not Assigned(_unqryLineas) or not _unqryLineas.Active then
 //    raise Exception.Create('El dataset de líneas debe estar activo');
-//    
+//
 //  if not Assigned(_unqryFac) or not _unqryFac.Active then
 //    raise Exception.Create('El dataset de factura debe estar activo');
 end;
@@ -1046,7 +1125,6 @@ function TFacturaTotales.ValidarFactura: Boolean;
 begin
   Result := True;
   _mensajeError := '';
-  
   try
     ValidarConfiguracion;
   except
@@ -1060,46 +1138,26 @@ end;
 
 procedure TFacturaTotales.RecorrerYCalcularLineasConClientDataSet;
 var
-//  Dsp: TDataSetProvider;
-//  cdsTemp: TClientDataSet;
   lineaActual: TLinFac;
-  numeroLineaEnEdicion: string;
   bookmark: TBookmark;
   sLinea:String;
 begin
   sLinea := _unqryLineas.FieldByName(fnrolin).AsString;
   _unqryLineas.DisableControls;
   bookmark := _unqryLineas.GetBookmark;
-  // 1. Primero procesar la línea en edición si existe
-  numeroLineaEnEdicion := 'X';
-  if Assigned(_LineaEnEdicion) then
-  begin
-    //numeroLineaEnEdicion := _LineaEnEdicion._sNumLin;
-    // NO liberar _LineaEnEdicion aquí - se libera externamente
-    //AcumularTotalesPorTipoIVA(_LineaEnEdicion);
-  end;
-//  dsp := TDataSetProvider.Create(nil);
-//  cdsTemp := TClientDataSet.Create(nil);
   try
     if ((_unqryLineas.State = dsEdit) or (_unqryLineas.State = dsInsert)) then
       _unqryLineas.Post;
     _unqryLineas.First;
-//    dsp.DataSet := _unqryLineas;
-//    dsp.ResolveToDataSet := False;
-//    cdsTemp.SetProvider(dsp);
-//    cdsTemp.Open;
-//    cdsTemp.First;
     while not _unqryLineas.Eof do
     begin
-//      if cdsTemp.FieldByName(fnrolin).AsString <> numeroLineaEnEdicion then
-//      begin
-        lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
-//        try
-          AcumularTotalesPorTipoIVA(lineaActual);
-//        finally
-          lineaActual.Free;
-//        end;
-//      end;
+      lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
+      if _configuracion.IVAExento then
+        lineaActual.TipoIva := 'E';
+      lineaActual.PorIva := ObtenerPorcentajePorTipo(lineaActual.TipoIva);
+      lineaActual.CalcularLinea;
+      AcumularTotalesPorTipoIVA(lineaActual);
+      lineaActual.Free;
       _unqryLineas.Next;
     end;
   finally
@@ -1107,12 +1165,70 @@ begin
     _unqryLineas.GotoBookmark(bookmark);
     _unqryLineas.FreeBookmark(bookmark);
   end;
-//  finally
-//    cdsTemp.Close;
-//    cdsTemp.Free;
-//    dsp.Free;
-//    _unqryLineas.Locate(fnrolin, sLinea, []);
-//  end;
+end;
+
+function TFacturaTotales.BuscarPorcenRetencion(CodEmpresa: string): Currency;
+var
+  Qry: TUniQuery;
+begin
+  Result := 0;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.SQL.Text := 'SELECT PORCENRETENCION_RETENCION ' +
+                    '  FROM fza_empresas_retenciones ' +
+                    ' WHERE CODIGO_EMPRESA_RETENCION = :EMP ' +
+                    '   AND FECHA_DESDE_RETENCION <= :FECHA ' +
+                    '   AND (FECHA_HASTA_RETENCION >= :FECHA ' +
+                    '        OR FECHA_HASTA_RETENCION IS NULL) ' +
+                    ' ORDER BY FECHA_DESDE_RETENCION DESC LIMIT 1';
+    Qry.ParamByName('EMP').AsString := CodEmpresa;
+    Qry.ParamByName('FECHA').AsDateTime := _FechaFactura;
+    Qry.Open;
+    if not Qry.IsEmpty then
+      Result := Qry.Fields[0].AsCurrency;
+  finally
+    Qry.Free;
+  end;
+end;
+
+function TFacturaTotales.BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
+var
+  Qry: TUniQuery; // O tu componente de datos
+begin
+  Result := False;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := inLibGlobalVar.oConn;
+    // SQL replicando el SELECT ... INTO ... FROM vi_ivas_empresa
+    Qry.SQL.Text := 'SELECT GRUPO_ZONA_IVA, CODIGO_IVA, ' +
+                    '       PORCENNORMAL_IVA, PORCENEXENTO_IVA, ' +
+                    '       PORCENREDUCIDO_IVA, PORCENSUPERREDUCIDO_IVA ' +
+                    '  FROM vi_ivas_empresa ' +
+                    ' WHERE ESIVAAGRICOLA_ZONA_IVA = ''S'' ' +
+                    '   AND CODIGO_EMPRESA = :EMP ' +
+                    '   AND FECHA_DESDE_IVA <= :FECHA ' +
+                    '   AND (   FECHA_HASTA_IVA IS NULL ' +
+                    '        OR FECHA_HASTA_IVA >= :FECHA)';
+    Qry.ParamByName('EMP').AsString := CodEmpresa;
+    Qry.ParamByName('FECHA').AsDateTime := _FechaFactura; // O _fechaFactura
+    Qry.Open;
+    if not Qry.IsEmpty then
+    begin
+      // Actualizamos los datos internos
+      _GrupoZonaIVA := Qry.FieldByName('GRUPO_ZONA_IVA').AsString;
+      _CodigoIVA    := Qry.FieldByName('CODIGO_IVA').AsString;
+      _porcentajes.IVANormal := Qry.FieldByName('PORCENNORMAL_IVA').AsCurrency;
+      _porcentajes.IVAExento := Qry.FieldByName('PORCENEXENTO_IVA').AsCurrency;
+      _porcentajes.IVAReducido :=
+                               Qry.FieldByName('PORCENREDUCIDO_IVA').AsCurrency;
+      _porcentajes.IVASuperReducido :=
+                          Qry.FieldByName('PORCENSUPERREDUCIDO_IVA').AsCurrency;
+      Result := True;
+    end;
+  finally
+    Qry.Free;
+  end;
 end;
 
 end.
