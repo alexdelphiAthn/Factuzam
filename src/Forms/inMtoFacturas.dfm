@@ -8,6 +8,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
+  ExplicitTop = -183
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -919,6 +920,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Caption = 'Total Sin IVA'
                     DataBinding.FieldName = 'TOTAL_FACTURASIVA_LINEA'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.OnEditValueChanged = ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged
                   end
                   object ctbFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Fecha Entrega'
