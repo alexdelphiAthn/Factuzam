@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 31/01/2026 19:31:29
+ Date: 01/02/2026 14:53:38
 */
 
 SET NAMES utf8mb4;
@@ -304,7 +304,7 @@ CREATE TABLE `fza_articulos_tarifas`  (
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`CODIGO_UNICO_TARIFA`) USING BTREE,
   INDEX `IDX_ART_TARIFAS_BUSQUEDA`(`CODIGO_ARTICULO_TARIFA` ASC, `CODIGO_TARIFA` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_articulos_tarifas
@@ -317,6 +317,9 @@ INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 5, '', 'PVP', 'S', 120
 INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 6, 'CHAQ-CUERO/NEGRO/XL', 'PVP', 'S', 130.000000, 130.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-08 18:36:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CAMI-BASICA', 7, '', 'PVP', 'S', 150.000000, 150.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-07 18:04:11', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 8, '', 'PVP', 'S', 50.000000, 50.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-07 19:45:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 9, '', 'PVP', 'S', 20.000000, 20.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
+INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 10, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
+INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 11, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:55:18', '2026-02-01 07:55:18', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_articulos_vinculos
@@ -686,7 +689,7 @@ INSERT INTO `fza_clientes` VALUES ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NU
 INSERT INTO `fza_clientes` VALUES ('294', 'S', 4, 'AGUSTIN SEGURADO', '11632589R', '623356689', 'agustin.segurado@gmail.com', 'CALLE EL RIEGO, 33', '', 'ZAMORA', 'ZAMORA', '49019', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', 'N', 'N', 'N', NULL, '1', NULL, NULL, '2023-11-11 15:27:57', '2023-10-31 12:15:11', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('295', 'S', 6, 'AZUCENA MARTIN (KIOSKO PERLA)', '11356325E', '658963321', 'cliente.nuevo@gmail.om', 'CALLE POZO AMARILLO, 3', '', 'SALAMANCA', 'SALAMANCA', '37003', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, 'ES50 0182 5632 3656 9872 0145               ', 'S', 'S', 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-01-29 05:22:58', '2023-12-06 13:07:42', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('PUBLICO', 'S', 2, 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', NULL, 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, 'ES2101822356985665446552', 'N', 'N', 'N', 'N', 'N', 'CONTADO', '0', NULL, NULL, '2023-12-24 14:10:14', '2022-11-02 20:28:28', 'Administrador', 'Administrador');
-INSERT INTO `fza_clientes` VALUES ('TIENDA', 'S', 1, 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', NULL, 'España', '', NULL, NULL, NULL, NULL, NULL, 'S', 'S', 'N', 'N', 'N', 'CONTADO', '1', 'ATIE', '', '2023-10-31 19:40:39', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
+INSERT INTO `fza_clientes` VALUES ('TIENDA', 'S', 1, 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', NULL, NULL, NULL, NULL, NULL, 'S', 'S', 'N', 'N', 'N', 'TRANSFERENCIA', 'VENTAMAYOR', '', '', '2026-02-01 14:09:13', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_codigos_barras
@@ -769,6 +772,7 @@ INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-1
 INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', 6, 3, 'S', 'S', '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', 10, 3, 'S', 'S', '2026-01-29 05:31:43', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', 4, 3, 'S', 'S', '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('FC', '012', '2026.A1', 4, 6, 'S', 'N', '2026-02-01 14:36:26', '2026-02-01 07:03:46', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FC', '1', 'A1', 25, 8, 'S', 'N', '2026-01-21 17:22:33', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador');
@@ -785,7 +789,7 @@ INSERT INTO `fza_contadores` VALUES ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17
 INSERT INTO `fza_contadores` VALUES ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', 5, 3, 'S', 'S', '2023-12-06 12:59:57', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_empresas
@@ -828,8 +832,8 @@ CREATE TABLE `fza_empresas`  (
 -- ----------------------------
 -- Records of fza_empresas
 -- ----------------------------
-INSERT INTO `fza_empresas` VALUES ('012', NULL, 'S', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', '49750', 'SANTOVENIA', 'ZAMORA', '724', 'FRANCIA', NULL, NULL, '1', 'S', 'N', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-23 22:47:42', '2024-10-01 18:39:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas` VALUES ('1', 1, 'S', 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POSAGRI', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', '724', 'PAIS DEL AGRICULTOR', NULL, 'ES5001825695365423253', '2', 'S', 'S', NULL, NULL, NULL, NULL, NULL, 'Empresario emisor acogido al régimen especial de agricultura ganadería y pesca', '2023-12-09 18:37:41', '2021-05-14 20:07:06', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas` VALUES ('012', NULL, 'S', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', '49750', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', NULL, NULL, '1', 'S', 'N', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-23 22:47:42', '2024-10-01 18:39:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas` VALUES ('1', 1, 'S', 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POSAGRI', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', NULL, 'ES5001825695365423253', '2', 'S', 'S', NULL, NULL, NULL, NULL, NULL, 'Empresario emisor acogido al régimen especial de agricultura ganadería y pesca', '2023-12-09 18:37:41', '2021-05-14 20:07:06', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_empresas_retenciones
@@ -854,6 +858,7 @@ CREATE TABLE `fza_empresas_retenciones`  (
 -- ----------------------------
 INSERT INTO `fza_empresas_retenciones` VALUES ('003', '011', 2.500000, '2023-12-06', '2024-12-06', '2023-12-06 12:59:43', '2023-12-06 12:59:43', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_retenciones` VALUES ('004', '011', 15.000000, '2024-12-07', NULL, '2023-12-06 12:59:57', '2023-12-06 12:59:57', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_retenciones` VALUES ('005', '012', 15.000000, '2026-01-01', NULL, '2026-02-01 07:20:07', '2026-02-01 07:20:07', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_retenciones` VALUES ('10', '1', 1.000000, '1999-12-31', '2023-10-01', '2023-10-31 18:20:15', '2023-01-29 10:31:19', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_retenciones` VALUES ('11', '007', 18.000000, '2022-12-01', NULL, '2023-02-01 09:53:16', '2023-02-01 09:53:16', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_retenciones` VALUES ('2', '1', 2.500000, '2023-10-01', NULL, '2022-10-17 16:19:29', '2021-05-14 19:57:40', 'Administrador', 'Administrador');
@@ -995,6 +1000,9 @@ CREATE TABLE `fza_facturas`  (
 -- ----------------------------
 -- Records of fza_facturas
 -- ----------------------------
+INSERT INTO `fza_facturas` VALUES ('000001', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 62.580000, 5.200000, 15.496000, 298.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 298.000000, 78.076000, 'TRANSFERENCIA', 15.000000, 44.700000, 331.376000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-01 13:50:54', '2026-02-01 07:03:46', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_facturas` VALUES ('000002', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 9.450000, 5.200000, 2.340000, 45.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 45.000000, 11.790000, 'CONTADO', 15.000000, 6.750000, 50.040000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-01 14:09:49', '2026-02-01 14:09:49', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_facturas` VALUES ('000003', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 0.000000, 5.200000, 0.000000, 0.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 'TRANSFERENCIA', 15.000000, 0.000000, 0.000000, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-01 14:36:39', '2026-02-01 14:36:26', 'Administrador', 'Administrador', NULL);
 
 -- ----------------------------
 -- Table structure for fza_facturas_consolidaciones
@@ -1074,6 +1082,12 @@ CREATE TABLE `fza_facturas_lineas`  (
 -- ----------------------------
 -- Records of fza_facturas_lineas
 -- ----------------------------
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '010', 'CHUPACHUS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'Chupachús de cola y fresa', NULL, NULL, 100.000000, 0.050000, 0.000000, 0.000000, 0.050000, 21.000000, 0.060500, 6.050000, 5.000000, '2026-02-01 07:18:48', '2026-02-01 07:18:48', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '020', 'NUBES', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'Nubes de algodón', NULL, NULL, 100.000000, 0.030000, 0.000000, 0.000000, 0.030000, 21.000000, 0.036300, 3.630000, 3.000000, '2026-02-01 07:24:11', '2026-02-01 07:24:11', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '030', 'caca', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'cacafuti', NULL, NULL, 1.000000, 90.000000, 0.000000, 0.000000, 90.000000, 21.000000, 108.900000, 108.900000, 90.000000, '2026-02-01 08:05:39', '2026-02-01 08:05:39', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '040', 'dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'frigodedo', NULL, NULL, 100.000000, 2.000000, 0.000000, 0.000000, 2.000000, 21.000000, 2.420000, 242.000000, 200.000000, '2026-02-01 08:05:51', '2026-02-01 08:05:51', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000002', '2026.A1', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'PETADA BILLI', NULL, NULL, 1.000000, 50.000000, 10.000000, 5.000000, 45.000000, 21.000000, 54.450000, 54.450000, 45.000000, '2026-02-01 14:38:48', '2026-02-01 14:38:48', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'pato aparato', NULL, NULL, 1.000000, 1.000000, 0.000000, 0.000000, 1.000000, 21.000000, 1.210000, 1.210000, 1.000000, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
 
 -- ----------------------------
 -- Table structure for fza_facturas_pagos
@@ -1930,7 +1944,7 @@ CREATE TABLE `fza_recibos`  (
   `NRO_FACTURA_RECIBO` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `SERIE_FACTURA_RECIBO` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `NRO_PLAZO_RECIBO` int(11) NOT NULL,
-  `FORMA_PAGO_ORIGEN_RECIBO` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `FORMA_PAGO_ORIGEN_RECIBO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `EUROS_RECIBO` decimal(18, 6) NULL DEFAULT NULL,
   `STADO_RECIBO` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
@@ -1960,6 +1974,7 @@ CREATE TABLE `fza_recibos`  (
 -- ----------------------------
 INSERT INTO `fza_recibos` VALUES ('00000021', 'A1', 1, '30Y60', '30Y60', 2663.885900, 'Emitido', '2023-05-12', '2023-06-11', NULL, NULL, 'POBLACION DEL AGRICULTOR', 'PUBLICO', 'PUBLICO', 'DIRECCION DEL CLIENTE', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', '724', 'España', 'DOS MIL SEISCIENTOS SESENTA Y TRES CON OCHENTA Y NUEVE CÉNTIMOS ', '2024-09-26 23:00:00', '2023-11-09 04:22:30', 'Administrador', 'Administrador');
 INSERT INTO `fza_recibos` VALUES ('00000021', 'A1', 2, '30Y60', '30Y60', 2663.885900, 'Emitido', '2023-05-12', '2023-07-11', NULL, NULL, 'POBLACION DEL AGRICULTOR', 'PUBLICO', 'PUBLICO', 'DIRECCION DEL CLIENTE', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', NULL, NULL, 'DOS MIL SEISCIENTOS SESENTA Y TRES CON OCHENTA Y NUEVE CÉNTIMOS ', '2023-11-09 04:22:30', '2023-11-09 04:22:30', 'Administrador', 'Administrador');
+INSERT INTO `fza_recibos` VALUES ('000001', '2026.A1', 1, 'TRANSFERENCIA', 'TRANSFERENCIA', 8.896000, 'Pagado', '2026-02-01', '2026-02-01', NULL, '2026-02-01', 'SANTOVENIA', 'TIENDA', 'TIENDA DE ROSA', 'CALLE MAYOR, 2', 'MORALES DEL VINO', 'ZAMORA', '49190', '724', 'España', 'OCHO CON NOVENTA CÉNTIMOS ', '2026-02-01 07:41:56', '2026-02-01 07:41:56', 'Administrador', 'Administrador');
 INSERT INTO `fza_recibos` VALUES ('000001', 'A0', 1, 'CONTADO', 'CONTADO', 433.444800, 'Pagado', '2024-02-12', '2024-02-12', 'ES50018256323656987201452', '2024-02-12', 'SANTOVENIA', '295', 'AZUCENA MARTIN (KIOSKO PERLA)', 'CALLE POZO AMARILLO, 3', 'SALAMANCA', 'SALAMANCA', '37003', '724', 'España', 'CUATROCIENTOS TREINTA Y TRES CON CUARENTA Y CUATRO CÉNTIMOS ', '2025-04-03 23:42:25', '2025-04-03 23:42:25', 'Administrador', 'Administrador');
 INSERT INTO `fza_recibos` VALUES ('000001', 'A1.2023', 1, '30_60_90', '30_60_90', 144.474350, 'Emitido', '2023-12-07', '2024-01-06', 'ES50018256323656987201452', NULL, 'SANTOVENIA', '295', 'AZUCENA MARTIN (KIOSKO PERLA)', 'CALLE POZO AMARILLO, 3', 'SALAMANCA', 'SALAMANCA', '37003', '724', 'España', 'CIENTO CUARENTA Y CUATRO CON CUARENTA Y SIETE CÉNTIMOS ', '2024-10-06 21:31:09', '2024-10-06 21:31:09', 'Administrador', 'Administrador');
 INSERT INTO `fza_recibos` VALUES ('000001', 'A1.2023', 2, '30_60_90', '30_60_90', 144.474350, 'Emitido', '2023-12-07', '2024-02-05', 'ES50018256323656987201452', NULL, 'SANTOVENIA', '295', 'AZUCENA MARTIN (KIOSKO PERLA)', 'CALLE POZO AMARILLO, 3', 'SALAMANCA', 'SALAMANCA', '37003', '724', 'España', 'CIENTO CUARENTA Y CUATRO CON CUARENTA Y SIETE CÉNTIMOS ', '2024-10-06 21:31:09', '2024-10-06 21:31:09', 'Administrador', 'Administrador');
@@ -2055,7 +2070,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-01-30 13:50:53', '2026-01-30 13:50:53', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-01 14:47:25', '2026-02-01 14:47:25', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -5150,7 +5165,7 @@ CREATE PROCEDURE `PRC_CREAR_RECIBOS_FACTURA`(IN `pSERIE_FACTURA` varchar(12),
 	                                        IN `pNRO_FACTURA` varchar(12),
 																					IN `pUSUARIO`             varchar(100))
 BEGIN
-  DECLARE pCODIGO_FORMAPAGO VARCHAR(10);
+  DECLARE pCODIGO_FORMAPAGO VARCHAR(20);
 	DECLARE pFORMA_PAGO_FACTURA VARCHAR(100);
 	DECLARE pN_PLAZOS int(10); 
 	DECLARE I int(10);
@@ -5227,7 +5242,7 @@ BEGIN
 		 /* select pforma_pago_factura; */
 		 IF( EXISTS(
 							 SELECT *
-							 FROM fza_formapago
+							 FROM fza_formas_pago
 							 WHERE CODIGO_FORMAPAGO =  pFORMA_PAGO_FACTURA) ) THEN
 		BEGIN
 			SELECT CODIGO_FORMAPAGO, 
@@ -5238,7 +5253,7 @@ BEGIN
 				     pN_PLAZOS, 
 						 pDIAS_ENTRE_PLAZOS,  
 						 pPORCEN_ANTICIPO
-				FROM fza_formapago
+				FROM fza_formas_pago
 				WHERE CODIGO_FORMAPAGO = pFORMA_PAGO_FACTURA;
 				
 			IF ((pPORCEN_ANTICIPO = 100)) THEN
@@ -5442,25 +5457,36 @@ delimiter ;
 DROP PROCEDURE IF EXISTS `PRC_FNC_GET_NEXT_LINEA_FACTURA`;
 delimiter ;;
 CREATE PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(IN  `pnumfac` VARCHAR(12), 
-                                                   IN  `pserie`  VARCHAR(12), 
-                                                   OUT `presul`  VARCHAR(3))
+    IN  `pserie`  VARCHAR(12), 
+    OUT `presul`  VARCHAR(3))
 BEGIN
-  DECLARE `pnextnum` varchar(3);
-  START TRANSACTION;
-  SET `pnextnum` = ( SELECT lpad(((`CONTADOR_LINEAS_FACTURA`)),3,'0' )
-                       FROM `fza_facturas`
-                      WHERE `NRO_FACTURA`   = `pnumfac`
-                        AND `SERIE_FACTURA` = `pserie`);
-  IF (`pnextnum` IS NULL) THEN
-    SET `presul` = '010';
-  ELSE
-    SET `presul` = `pnextnum`;
-  END IF;
+    DECLARE v_temp VARCHAR(3);
+
+    START TRANSACTION;
+
+    -- 1. Buscamos el valor actual
+    SELECT `CONTADOR_LINEAS_FACTURA` INTO v_temp
+    FROM `fza_facturas`
+    WHERE `NRO_FACTURA`  = `pnumfac`
+      AND `SERIE_FACTURA` = `pserie`
+    FOR UPDATE;
+
+    -- 2. Si la factura existe pero el contador está vacío o es NULL, 
+    -- forzamos a que el primero sea '010'
+    IF (v_temp IS NULL OR v_temp = '') THEN
+        SET v_temp = '010';
+    END IF;
+
+    -- 3. Asignamos a la salida el valor que acabamos de leer
+    SET `presul` = v_temp;
+
+    -- 4. Actualizamos la tabla sumando 10 para la PRÓXIMA vez
     UPDATE `fza_facturas`
-       SET `CONTADOR_LINEAS_FACTURA` = LPAD(((`presul`)+10),3,'0' )
+       SET `CONTADOR_LINEAS_FACTURA` = LPAD((CAST(v_temp AS UNSIGNED) + 10), 3, '0')
      WHERE `SERIE_FACTURA` = `pserie`
-       AND `NRO_FACTURA` = `pnumfac`;
-  COMMIT;
+       AND `NRO_FACTURA`   = `pnumfac`;
+
+    COMMIT;
 END
 ;;
 delimiter ;
