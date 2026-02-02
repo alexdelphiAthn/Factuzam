@@ -11,7 +11,8 @@ uses
   JvGIFCtrl, cxLabel, Vcl.ExtCtrls, math, cxStyles, cxSchedulerStorage,
   cxSchedulerCustomControls, cxSchedulerDateNavigator, cxDateNavigator,
   cxCalendar, UniProvider, MySQLUniProvider, Data.DB, DBAccess, Uni, Vcl.Menus,
-  Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles;
+  Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles,
+  inMtoModalCajDef;
 
 type
   TVentasDia = class
@@ -129,6 +130,7 @@ type
                                     DescLabel: TcxLabel;
                                     OriginalFKeyColor,
                                     OriginalDescColor: TColor);
+    procedure AbrirSelectorCaja;
   public
     { Public declarations }
     FFechaCaja:TDateTime;
@@ -164,12 +166,10 @@ begin
   cxDateNavigator1.ShowHint := True;
   cxDateNavigator1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
-  FEmpresa := '012';
-  FAlmacen := 'GEN';
-  FCaja := '1';
-  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - '
-                         + 'Almacén ' + FAlmacen + ' - ' + 'Caja ' +
-                         FCaja;
+  AbrirSelectorCaja;
+//  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - '
+//                         + 'Almacén ' + FAlmacen + ' - ' + 'Caja ' +
+//                         FCaja;
   CargarVentasPeriodoVisible;
   FOriginalF5Color := lblF5.Style.TextColor;
   FOriginalVentasColor := lblVentas.Style.TextColor;
@@ -204,6 +204,34 @@ begin
   with cxClock1 do
   begin
     Time := Now;              // Hora actual
+  end;
+end;
+
+procedure TfrmMtoMenuCaja.AbrirSelectorCaja;
+var
+  frm: TfrmMtoModalCajDef;
+begin
+  frm := TfrmMtoModalCajDef.Create(Self);
+  try
+    // Configuramos la conexión antes de abrir
+    frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
+    frm.qrySeleccion.Open;
+    frm.ShowModal;
+    if (frm.sFicha = 'S') then
+    begin
+      // ASIGNACIÓN DE VARIABLES desde el dataset del formulario modal
+      FEmpresa := frm.qrySeleccion.FieldByName('Empresa').AsString;
+      FAlmacen := frm.qrySeleccion.FieldByName('Almacen').AsString;
+      FCaja    := frm.qrySeleccion.FieldByName('Caja').AsString;
+      lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
+                                  [FEmpresa, FAlmacen, FCaja]);
+//      if Assigned(VentasList) then
+//        VentasList.Clear;
+//      CargarVentasPeriodoVisible;
+//      cxDateNavigator1.Invalidate;
+    end;
+  finally
+    frm.Free;
   end;
 end;
 
