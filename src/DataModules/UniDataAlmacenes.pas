@@ -5,15 +5,11 @@
 {       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
 {                                                       }
 {*******************************************************}
-
 unit UniDataAlmacenes;
-
 interface
-
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser, UniDataConn, inLibGlobalVar;
-
 type
   TdmAlmacenes = class(TdmBase)
     qryAlmacenesCajas: TUniQuery;
@@ -25,18 +21,13 @@ type
   public
     { Public declarations }
   end;
-
 implementation
 
 uses
   inMtoAlmacenes;
-
 {%CLASSGROUP 'Vcl.Controls.TControl'}
-
 {$R *.dfm}
-
 procedure ForceReferenceToClass(C: TClass); begin end;
-
 procedure TdmAlmacenes.DataModuleCreate(Sender: TObject);
 begin
   inherited;

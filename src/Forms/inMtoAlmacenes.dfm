@@ -117,7 +117,6 @@
             Align = alClient
             BevelOuter = bvNone
             TabOrder = 0
-            ExplicitHeight = 185
             object lblCodigo: TcxLabel
               Left = 16
               Top = 16
@@ -210,8 +209,6 @@
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 258
-          ExplicitHeight = 226
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
@@ -219,9 +216,8 @@
             Height = 355
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsCajas
+            Properties.ActivePage = tsDirección
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 226
             ClientRectBottom = 351
             ClientRectLeft = 4
             ClientRectRight = 939
@@ -229,7 +225,6 @@
             object tsDirección: TcxTabSheet
               Caption = '&0_Direcci'#243'n f'#237'sica'
               ImageIndex = 3
-              ExplicitHeight = 257
               object lblTelefono: TcxLabel
                 Left = 30
                 Top = 122
@@ -317,7 +312,6 @@
             object tsCajas: TcxTabSheet
               Caption = '&1 Cajas de Venta'
               ImageIndex = 1
-              ExplicitHeight = 192
               object pnlSeriesCli: TPanel
                 Left = 0
                 Top = 0
@@ -326,8 +320,6 @@
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
-                ExplicitWidth = 811
-                ExplicitHeight = 421
                 object cxgrdAlmacenCajas: TcxGrid
                   Left = 0
                   Top = 0
@@ -339,7 +331,6 @@
                   Margins.Bottom = 4
                   Align = alClient
                   TabOrder = 0
-                  ExplicitHeight = 192
                   object tvAlmacenesCajas: TcxGridDBTableView
                     OnDblClick = cxGrdDBTabPrinDblClick
                     Navigator.Buttons.ConfirmDelete = True
@@ -408,7 +399,6 @@
             object tsUsosAlmacen: TcxTabSheet
               Caption = '&2_Usos Almac'#233'n'
               ImageIndex = 2
-              ExplicitHeight = 192
               object lblAlmacenDestino: TcxLabel
                 Left = 29
                 Top = 105
@@ -488,7 +478,6 @@
             object tsAuditoria: TcxTabSheet
               Caption = '&3_Otros'
               ImageIndex = 0
-              ExplicitHeight = 192
               object pnl3: TPanel
                 Left = 0
                 Top = 0
@@ -497,7 +486,6 @@
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
-                ExplicitHeight = 192
                 object lblUsuarioAlta: TcxLabel
                   Left = 16
                   Top = 16
@@ -574,7 +562,6 @@
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitTop = 250
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -589,10 +576,6 @@
       inherited pnlTopGrid: TPanel
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
-        end
-        inherited nvNavegador: TcxDBNavigator
-          Width = 240
-          ExplicitWidth = 240
         end
       end
     end

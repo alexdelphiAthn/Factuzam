@@ -148,6 +148,9 @@ type
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
+    FCodigoEmpresa:String;
+    FCodigoAlmacen, FCodigoCaja:String;
+    FFecha:TDate;
   end;
 
 var
@@ -405,21 +408,7 @@ end;
 
 procedure TfrmMtoOpeCaja.
                     tvDescuentoMenosPropertiesEditValueChanged(Sender: TObject);
-//var
-//  Precio, NuevoDescuento, NuevoPorcen: Currency;
 begin
-//  TcxCustomEdit(Sender).PostEditValue;
-//  Precio := DatosCaja.cdsLineas.FieldByName(
-//                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-//  NuevoDescuento := DatosCaja.cdsLineas.FieldByName(
-//                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
-//  if Precio <> 0 then
-//    NuevoPorcen := (NuevoDescuento * 100) / Precio
-//  else
-//    NuevoPorcen := 0;
-//  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-//                                                                    NuevoPorcen;
-//  DatosCaja.CalcularTotalesLinea
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -428,50 +417,22 @@ end;
 
 procedure TfrmMtoOpeCaja.tvDescuentoPropertiesEditValueChanged(Sender: TObject);
 begin
-  TcxCustomEdit(Sender).PostEditValue;
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera);
-//  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvPrecioUniPropertiesEditValueChanged(Sender: TObject);
 begin
-  TcxCustomEdit(Sender).PostEditValue;
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera);
-//  DatosCaja.CalcularTotalesLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
-//var
-//  PrecioUnitario, Cantidad, TotalBruto, NuevoTotal: Currency;
-//  DescuentoTotal, NuevoPorcen: Double;
 begin
-//  TcxCustomEdit(Sender).PostEditValue;
-//  // 1. Datos base
-//  PrecioUnitario := DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-//  Cantidad := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
-//  NuevoTotal := DatosCaja.cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-//  // 2. Calculamos el Total Bruto (Sin descuento)
-//  TotalBruto := PrecioUnitario * Cantidad;
-//  if TotalBruto = 0 then Exit;
-//  // 3. Calculamos el Descuento TOTAL necesario (Sin dividir por cantidad)
-//  DescuentoTotal := TotalBruto - NuevoTotal;
-//  if DescuentoTotal < 0 then DescuentoTotal := 0;
-//  // 4. Calculamos el % Global
-//  NuevoPorcen := (DescuentoTotal / TotalBruto) * 100;
-//  // 5. Guardamos
-//  DatosCaja.cdsLineas.Edit;
-//  // ¡OJO AQUÍ! Guardamos el TOTAL del descuento directamente
-//  DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := DescuentoTotal;
-//  // Guardamos el % con precisión alta
-//  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := NuevoPorcen;
-//  // 6. Recalculamos protegiendo el importe
-////  DatosCaja.CalcularTotalesLinea(True);
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -480,12 +441,10 @@ end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
-  TcxCustomEdit(Sender).PostEditValue;
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera);
-//  DatosCaja.CalcularTotalesLinea;
 end;
 
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
@@ -538,6 +497,7 @@ begin
           sql.Connection := oConn;
           sql.SQL.Text := 'SELECT PRECIOSALIDA_TARIFA, ' +
                           '       ESIMP_INCL_TARIFA, ' +
+                          '       TIPO_IVA_ARTICULO, ' +
                           '       PORCEN_DTO_TARIFA ' +
                           '  FROM vi_articulos_tarifas ' +
                           ' WHERE CODIGO_TARIFA = :CODTARIFA ' +
@@ -550,6 +510,9 @@ begin
           sql.Open;
           if not sql.IsEmpty then
           begin
+             DatosCaja.cdsLineas.FieldByName(
+                                  'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString :=
+                                  sql.FieldByName('TIPO_IVA_ARTICULO').AsString;
              DatosCaja.cdsLineas.FieldByName(
                                   'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString :=
                                   sql.FieldByName('ESIMP_INCL_TARIFA').AsString;
@@ -568,7 +531,10 @@ begin
           end;
           DatosCaja.cdsLineas.FieldByName(
                                       'CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
-//          DatosCaja.CalcularTotalesLinea;
+          GridRecalc(nil,
+                     cxGrid1DBTableView1,
+                     DatosCaja.cdsLineas,
+                     DatosCaja.cdsCabecera);
         finally
           sql.Free;
         end;
@@ -634,6 +600,11 @@ begin
 //    DatosCaja.cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency :=
 //                             qry.FieldByName('PORCEN_IVA_TARIFA').AsCurrency;
 //      DatosCaja.CalcularTotalesLinea;
+      GridRecalc(nil,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
+
     end;
   finally
     qry.Free;
@@ -718,7 +689,10 @@ begin
                  'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * NewQty;
         end;
         Clon.Post;
-//        DatosCaja.CalcularTotalesCabecera;
+        GridRecalc(nil,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera);
         Result := True;
         Break;
       end;
@@ -1104,16 +1078,13 @@ var
   LCtrl: TWinControl;
 begin
   LCtrl := Screen.ActiveControl;
-  // Verificamos si el foco está en el Empleado
   if (LCtrl = btnCodigoEmpleado) or (LCtrl.Parent = btnCodigoEmpleado) then
   begin
     BuscarEmpleados;
   end
-  // Verificamos si el foco está en el Cliente (para el futuro)
   else if (LCtrl = btnCodigoCliente) or (LCtrl.Parent = btnCodigoCliente) then
   begin
      BuscarClientes;
-//     ShowMessage('Funcionalidad de clientes pendiente');
   end;
 end;
 
@@ -1363,7 +1334,6 @@ begin
   finally
     FreeAndNil(frmFaseCobro);
   end;
-
 end;
 
 procedure TfrmMtoOpeCaja.btnF5Click(Sender: TObject);
@@ -1414,15 +1384,16 @@ end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
+  FCodigoEmpresa := frmMtoMenuCaja.FEmpresa;
+  FCodigoAlmacen := frmMtoMenuCaja.FAlmacen;
+  FCodigoCaja    := frmMtoMenuCaja.FCaja;
+  FFecha := inMtoCajaMenu.frmMtoMenuCaja.FFechaCaja;
   DatosCaja := TdmCajaOpe.Create(Self);
-  //DatosCaja.uConexion := oConn;
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
   DatosCaja.cdsCabecera.Edit;
-  //frmMtoMenuCaja tiene que ser padre
-  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := Now;
-                                                     //frmMtoMenuCaja.FechaCaja;
+  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   with dbtvBusqDBTableView1.DataController do
   begin

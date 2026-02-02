@@ -51,10 +51,10 @@ interface
   procedure ExportarExcel(cxGrd: TcxGrid;
                           sNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
-  procedure GridRecalc(Sender: TObject;
+procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
-                     cdsLineas, cdsCabecera: TDataSet);
-
+                     cdsLineas, cdsCabecera: TDataSet;
+                     OnUpdateTotal: TNotifyEvent = nil);
 implementation
 
   uses inMtoGen,
@@ -65,27 +65,31 @@ implementation
 
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
-                     cdsLineas, cdsCabecera: TDataSet);
+                     cdsLineas, cdsCabecera: TDataSet;
+                     OnUpdateTotal: TNotifyEvent = nil);
 var
   Edit: TcxCustomEdit;
   Column: TcxGridDBColumn;
   FieldName: string;
+  ValoEditado: Variant;
 begin
-  // 1. Obtenemos el editor y confirmamos el valor visual
-  Edit := Sender as TcxCustomEdit;
-  Edit.PostEditValue;
-  // 2. Obtenemos el nombre del campo de la columna que tiene el foco
+  ValoEditado := null;
+  if (Sender is TcxCustomEdit) then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    Edit.PostEditValue;
+    ValoEditado := Edit.EditValue;
+  end;
   if (View.Controller.FocusedColumn <> nil) and
      (View.Controller.FocusedColumn is TcxGridDBColumn) then
   begin
-    // 3. Hacemos el CAST para poder acceder a .DataBinding.FieldName
     Column := TcxGridDBColumn(View.Controller.FocusedColumn);
     FieldName := Column.DataBinding.FieldName;
-    // 4. Llamamos a la lógica de negocio (asegúrate de tener inLibFacturas en uses)
     ActualizarLineaFacturaGen(cdsLineas,
                               cdsCabecera,
                               FieldName,
-                              Edit.EditingValue);
+                              ValoEditado,
+                              OnUpdateTotal);
   end;
 end;
 

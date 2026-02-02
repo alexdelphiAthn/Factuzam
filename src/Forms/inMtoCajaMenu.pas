@@ -129,11 +129,11 @@ type
                                     DescLabel: TcxLabel;
                                     OriginalFKeyColor,
                                     OriginalDescColor: TColor);
-  private
+  public
     { Public declarations }
     FFechaCaja:TDateTime;
     //FConfigBD: TConfigBD; // Variable privada que guardará los datos en RAM
-    FEmpresa, FAlmacen:string;
+    FEmpresa, FAlmacen, FCaja:string;
     //procedure CargarConfiguracionDesdeINI; // Lee el disco SOLO una vez
   public
 //    property ConfigBD: TConfigBD read FConfigBD;
@@ -166,7 +166,10 @@ begin
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
   FEmpresa := '012';
   FAlmacen := 'GEN';
-  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - ' + 'Almacén ' + FAlmacen;
+  FCaja := '1';
+  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - '
+                         + 'Almacén ' + FAlmacen + ' - ' + 'Caja ' +
+                         FCaja;
   CargarVentasPeriodoVisible;
   FOriginalF5Color := lblF5.Style.TextColor;
   FOriginalVentasColor := lblVentas.Style.TextColor;
@@ -320,7 +323,7 @@ end;
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 begin
   // Creamos el formulario de operaciones
-  var frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
+  var frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Self);
   try
     // Aquí podrías inicializar un nuevo ticket si fuera necesario
     frmMtoOpeCaja.ShowModal; // O Show si prefieres no bloquear

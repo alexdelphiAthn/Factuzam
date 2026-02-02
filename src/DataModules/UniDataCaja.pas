@@ -173,12 +173,10 @@ var
   FieldToGet: string;
   SQLStr: string;
 begin
-  // Initialize default values
   LabelDestino := '';
-  Result := False; // Default to "Not Found"
+  Result := False;
   if Trim(Codigo) = '' then
-    Exit; // Code is empty, return False (Not found)
-  // Setup Query parameters based on entity type
+    Exit;
   if TipoEntidad = 'EMPLEADOS' then
   begin
     SQLStr := 'SELECT DIMINUTIVO_TICKET_USUARIO ' +
@@ -194,7 +192,7 @@ begin
     FieldToGet := 'RAZONSOCIAL_CLIENTE';
   end
   else
-    Exit; // Unknown entity type
+    Exit;
   unqry := TUniQuery.Create(nil);
   try
     unqry.Connection := oConn;
@@ -204,10 +202,10 @@ begin
     if not unqry.IsEmpty then
     begin
       LabelDestino := unqry.FieldByName(FieldToGet).AsString;
-      Result := True; // Found!
+      Result := True;
     end;
   finally
-    unqry.Free; // Ensures memory is freed even if SQL fails
+    unqry.Free;
   end;
 end;
 
@@ -223,7 +221,7 @@ begin
   SkuBuilder := ArticuloBase;
   for i := 1 to NumAttr do
   begin
-    ValorAttr := cdsLineas.FieldByName('ATTR' + IntToStr(i) + 
+    ValorAttr := cdsLineas.FieldByName('ATTR' + IntToStr(i) +
 	                                                         '_VALOR').AsString;
     if ValorAttr <> '' then
        SkuBuilder := SkuBuilder + '/' + ValorAttr;
@@ -376,7 +374,6 @@ begin
     Add('CPOSTAL_CLIENTE_FACTURA', ftString, 15);
     Add('CODIGO_PAIS_CLIENTE_FACTURA', ftString, 3);
     Add('NOMBRE_PAIS_CLIENTE_FACTURA', ftString, 150);
-
     Add('CODIGO_CAJERO_FACTURA', ftString, 20);
     // -- CONFIGURACIÓN FISCAL CLIENTE Y FACTURA --
     Add('CODIGO_IVA_FACTURA', ftString, 20);
@@ -471,9 +468,6 @@ begin
     Add('CODIGO_FAMILIA_FACTURA_LINEA', ftString, 20);
     Add('NOMBRE_FAMILIA_FACTURA_LINEA', ftString, 200);
     Add('DESCRIPCION_ARTICULO_FACTURA_LINEA', ftString, 100);
-    // =========================================================================
-    // NUEVO: DATOS DE LA VARIACIÓN (HIJO) Y ATRIBUTOS
-    // =========================================================================
     // El SKU exacto que descuenta stock (ej: ZAP-OXFORD/42/NEGRO)
     Add('CODIGO_UNIDAD_FACTURA_LINEA', ftString, 50);
     Add('TIPO_ARTICULO_FACTURA_LINEA', ftString, 10); // 'ESTANDAR' o 'SERVICIO'
@@ -483,14 +477,9 @@ begin
       Add('ATTR' + IntToStr(i) + '_NOMBRE', ftString, 50);
       Add('ATTR' + IntToStr(i) + '_VALOR', ftString, 50);
     end;
-    // Texto pre-cocinado para imprimir (ej: "Talla: 42 | Color: Negro")
-    // Esto evita tener que consultar tablas de atributos al imprimir el ticket
-    Add('DESCRIPCION_VARIACION_FACTURA_LINEA', ftString, 200);
     // DATOS DE TRAZABILIDAD (Si el artículo lo requiere)
     Add('LOTE_FACTURA_LINEA', ftString, 50);
     Add('FECHA_CADUCIDAD_FACTURA_LINEA', ftDate, 0);
-    // =========================================================================
-    // -- DATOS DE COMPRA / PROVEEDOR --
     Add('PRECIO_ULT_COMPRA_FACTURA_LINEA', ftBCD, 0);
     Add('CODIGO_PROVEEDOR_FACTURA_LINEA', ftString, 20);
     Add('RAZONSOCIAL_PROVEEDOR_FACTURA_LINEA', ftString, 200);
