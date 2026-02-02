@@ -32,7 +32,7 @@ type
     tvAlmacenesCajas: TcxGridDBTableView;
     lvAlmacenCajas: TcxGridLevel;
     DataSource1: TDataSource;
-    UniQuery1: TUniQuery;
+    qrySeleccion: TUniQuery;
     tvAlmacenesCajasEmpresa: TcxGridDBColumn;
     tvAlmacenesCajasNombreEmpresa: TcxGridDBColumn;
     tvAlmacenesCajasAlmacn: TcxGridDBColumn;

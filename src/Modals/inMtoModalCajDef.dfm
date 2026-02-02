@@ -129,11 +129,11 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Top = 440
   end
   object DataSource1: TDataSource
-    DataSet = UniQuery1
+    DataSet = qrySeleccion
     Left = 88
     Top = 32
   end
-  object UniQuery1: TUniQuery
+  object qrySeleccion: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_cajasdef')
