@@ -1,0 +1,144 @@
+inherited frmMtoModalCajDef: TfrmMtoModalCajDef
+  BorderIcons = []
+  Caption = 'Seleccionar Caja'
+  ClientHeight = 184
+  ClientWidth = 758
+  OnClose = FormClose
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 770
+  ExplicitHeight = 222
+  TextHeight = 19
+  object pnl1: TPanel [0]
+    Left = 0
+    Top = 143
+    Width = 758
+    Height = 41
+    Align = alBottom
+    TabOrder = 0
+    ExplicitTop = 134
+    ExplicitWidth = 463
+    object btnCancelar1: TcxButton
+      Left = 130
+      Top = 9
+      Width = 177
+      Height = 25
+      Caption = '&Cancelar'
+      TabOrder = 0
+      OnClick = btnCancelar1Click
+    end
+    object btnAceptar: TcxButton
+      Left = 368
+      Top = 9
+      Width = 177
+      Height = 25
+      Caption = '&Aceptar'
+      TabOrder = 1
+      OnClick = btnAceptarClick
+    end
+  end
+  object cxgrdAlmacenCajas: TcxGrid [1]
+    Left = 0
+    Top = 0
+    Width = 758
+    Height = 143
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alClient
+    TabOrder = 1
+    ExplicitLeft = -177
+    ExplicitTop = -137
+    ExplicitWidth = 935
+    ExplicitHeight = 321
+    object tvAlmacenesCajas: TcxGridDBTableView
+      Navigator.Buttons.ConfirmDelete = True
+      Navigator.Buttons.First.Hint = 'Va al primer Registro'
+      Navigator.Buttons.First.Visible = False
+      Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
+      Navigator.Buttons.PriorPage.Visible = False
+      Navigator.Buttons.Prior.Hint = 'Va al Registro Anterior'
+      Navigator.Buttons.Prior.Visible = False
+      Navigator.Buttons.Next.Hint = 'Va al siguiente Registro'
+      Navigator.Buttons.Next.Visible = False
+      Navigator.Buttons.NextPage.Hint = 'Va a la p'#225'gina siguiente'
+      Navigator.Buttons.NextPage.Visible = False
+      Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
+      Navigator.Buttons.Last.Visible = False
+      Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
+      Navigator.Buttons.Insert.Visible = True
+      Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
+      Navigator.Buttons.Delete.Visible = True
+      Navigator.Buttons.Edit.Enabled = False
+      Navigator.Buttons.Edit.Hint = 'Edita registro Actual'
+      Navigator.Buttons.Edit.Visible = False
+      Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
+      Navigator.Buttons.Post.Visible = True
+      Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
+      Navigator.Buttons.Cancel.Visible = True
+      Navigator.Buttons.Refresh.Hint = 'Refresca Datos Activos'
+      Navigator.Buttons.SaveBookmark.Enabled = False
+      Navigator.Buttons.SaveBookmark.Hint = 'Marca Registro Actual'
+      Navigator.Buttons.SaveBookmark.Visible = False
+      Navigator.Buttons.GotoBookmark.Enabled = False
+      Navigator.Buttons.GotoBookmark.Hint = 'Va al registro Marcado'
+      Navigator.Buttons.GotoBookmark.Visible = False
+      Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
+      Navigator.Visible = True
+      DataController.DataSource = DataSource1
+      DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+      OptionsBehavior.AlwaysShowEditor = True
+      OptionsBehavior.GoToNextCellOnEnter = True
+      OptionsBehavior.IncSearch = True
+      OptionsCustomize.ColumnHiding = True
+      OptionsData.Appending = True
+      OptionsView.GroupByBox = False
+      OptionsView.Indicator = True
+      object tvAlmacenesCajasEmpresa: TcxGridDBColumn
+        DataBinding.FieldName = 'Empresa'
+        Width = 81
+      end
+      object tvAlmacenesCajasNombreEmpresa: TcxGridDBColumn
+        DataBinding.FieldName = 'NombreEmpresa'
+        Width = 192
+      end
+      object tvAlmacenesCajasAlmacn: TcxGridDBColumn
+        DataBinding.FieldName = 'Almac'#233'n'
+        Width = 85
+      end
+      object tvAlmacenesCajasNombreAlmacn: TcxGridDBColumn
+        DataBinding.FieldName = 'NombreAlmac'#233'n'
+        Width = 171
+      end
+      object tvAlmacenesCajasCaja: TcxGridDBColumn
+        DataBinding.FieldName = 'Caja'
+        Width = 52
+      end
+      object tvAlmacenesCajasNombreCaja: TcxGridDBColumn
+        DataBinding.FieldName = 'NombreCaja'
+        Width = 367
+      end
+    end
+    object lvAlmacenCajas: TcxGridLevel
+      GridView = tvAlmacenesCajas
+    end
+  end
+  inherited Localizer1: TcxLocalizer
+    Left = 232
+    Top = 440
+  end
+  object DataSource1: TDataSource
+    DataSet = UniQuery1
+    Left = 88
+    Top = 32
+  end
+  object UniQuery1: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select * from vi_cajasdef')
+    Active = True
+    Left = 96
+    Top = 88
+  end
+end

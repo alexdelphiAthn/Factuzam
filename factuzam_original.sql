@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 01/02/2026 14:53:38
+ Date: 02/02/2026 07:48:10
 */
 
 SET NAMES utf8mb4;
@@ -73,6 +73,7 @@ CREATE TABLE `fza_almacenes_cajas`  (
 -- ----------------------------
 -- Records of fza_almacenes_cajas
 -- ----------------------------
+INSERT INTO `fza_almacenes_cajas` VALUES ('GEN', '1', 'CAJA PARA VENDER ARTÍCULOS AL DETALLE');
 
 -- ----------------------------
 -- Table structure for fza_articulos
@@ -304,7 +305,7 @@ CREATE TABLE `fza_articulos_tarifas`  (
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`CODIGO_UNICO_TARIFA`) USING BTREE,
   INDEX `IDX_ART_TARIFAS_BUSQUEDA`(`CODIGO_ARTICULO_TARIFA` ASC, `CODIGO_TARIFA` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_articulos_tarifas
@@ -315,11 +316,12 @@ INSERT INTO `fza_articulos_tarifas` VALUES ('FALD-PLIS', 3, '', 'PVP', 'S', 29.9
 INSERT INTO `fza_articulos_tarifas` VALUES ('FALD-JEAN', 4, '', 'PVP', 'S', 25.000000, 25.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-05 07:35:15', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 5, '', 'PVP', 'S', 120.000000, 120.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-05 07:35:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 6, 'CHAQ-CUERO/NEGRO/XL', 'PVP', 'S', 130.000000, 130.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-08 18:36:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
-INSERT INTO `fza_articulos_tarifas` VALUES ('CAMI-BASICA', 7, '', 'PVP', 'S', 150.000000, 150.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-07 18:04:11', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos_tarifas` VALUES ('CAMI-BASICA', 7, '', 'PVP', 'S', 150.000000, 165.000000, -15.000000, -10.000000, '2026-01-01', NULL, '2026-01-07 18:04:11', '2026-02-02 06:35:13', 'DEMO', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 8, '', 'PVP', 'S', 50.000000, 50.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-07 19:45:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 9, '', 'PVP', 'S', 20.000000, 20.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 10, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 11, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:55:18', '2026-02-01 07:55:18', 'Administrador', 'Administrador');
+INSERT INTO `fza_articulos_tarifas` VALUES ('PANT-CHIN', 12, '', 'PVP', 'S', 140.000000, 154.000000, -14.000000, -10.000000, '2026-02-02', NULL, '2026-02-02 06:34:47', '2026-02-02 06:34:47', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_articulos_vinculos
@@ -1046,6 +1048,8 @@ CREATE TABLE `fza_facturas_lineas`  (
   `LINEA_FACTURA_LINEA` varchar(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `CODIGO_ARTICULO_FACTURA_LINEA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_UNIDAD_FACTURA_LINEA` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `LOTE_FACTURA_LINEA` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `FECHA_CADUCIDAD_FACTURA_LINEA` date NULL DEFAULT NULL,
   `CODIGO_FAMILIA_FACTURA_LINEA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `NOMBRE_FAMILIA_FACTURA_LINEA` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `PRECIO_ULT_COMPRA_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT NULL,
@@ -1053,27 +1057,27 @@ CREATE TABLE `fza_facturas_lineas`  (
   `RAZONSOCIAL_PROVEEDOR_FACTURA_LINEA` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `ESPROVEEDORPRINCIPAL_FACTURA_LINEA` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `FECHA_ENTREGA_FACTURA_LINEA` datetime NULL DEFAULT NULL,
+  `TIPO_ARTICULO_FACTURA_LINEA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'ESTANDAR' COMMENT 'ESTANDAR=Físico (Control Stock), SERVICIO=Intangible (Sin Stock), KIT=Pack',
   `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'Uds',
-  `ESIMP_INCL_TARIFA_FACTURA_LINEA` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
-  `TIPOIVA_ARTICULO_FACTURA_LINEA` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
+  `CANTIDAD_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 1.000000,
   `DESCRIPCION_ARTICULO_FACTURA_LINEA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `DESCRIPCION_VARIACION_FACTURA_LINEA` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `CODIGO_TARIFA_FACTURA_LINEA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `CANTIDAD_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 1.000000,
+  `ESIMP_INCL_TARIFA_FACTURA_LINEA` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
   `PRECIOSALIDA_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT NULL,
   `PORCEN_DTO_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT NULL,
   `PRECIO_DTO_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT NULL,
   `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 0.000000,
+  `TIPOIVA_ARTICULO_FACTURA_LINEA` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N',
   `PORCEN_IVA_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 0.000000,
   `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 0.000000,
   `TOTAL_FACTURA_LINEA` decimal(19, 6) NULL DEFAULT 0.000000,
   `TOTAL_FACTURASIVA_LINEA` decimal(19, 6) NULL DEFAULT NULL,
+  `CODIGO_VENDEDOR_FACTURA_LINEA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Usuario que se lleva la comisión',
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `TIPO_ARTICULO_FACTURA_LINEA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'ESTANDAR' COMMENT 'ESTANDAR=Físico (Control Stock), SERVICIO=Intangible (Sin Stock), KIT=Pack',
-  `CODIGO_VENDEDOR_FACTURA_LINEA` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Usuario que se lleva la comisión',
   PRIMARY KEY (`SERIE_FACTURA_LINEA`, `NRO_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`) USING BTREE,
   INDEX `IDX_FAC_LIN_ARTICULO`(`CODIGO_ARTICULO_FACTURA_LINEA` ASC, `SERIE_FACTURA_LINEA` ASC) USING BTREE,
   INDEX `IDX_FAC_LIN_FAMILIA`(`CODIGO_FAMILIA_FACTURA_LINEA` ASC) USING BTREE
@@ -1082,12 +1086,12 @@ CREATE TABLE `fza_facturas_lineas`  (
 -- ----------------------------
 -- Records of fza_facturas_lineas
 -- ----------------------------
-INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '010', 'CHUPACHUS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'Chupachús de cola y fresa', NULL, NULL, 100.000000, 0.050000, 0.000000, 0.000000, 0.050000, 21.000000, 0.060500, 6.050000, 5.000000, '2026-02-01 07:18:48', '2026-02-01 07:18:48', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '020', 'NUBES', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'Nubes de algodón', NULL, NULL, 100.000000, 0.030000, 0.000000, 0.000000, 0.030000, 21.000000, 0.036300, 3.630000, 3.000000, '2026-02-01 07:24:11', '2026-02-01 07:24:11', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '030', 'caca', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'cacafuti', NULL, NULL, 1.000000, 90.000000, 0.000000, 0.000000, 90.000000, 21.000000, 108.900000, 108.900000, 90.000000, '2026-02-01 08:05:39', '2026-02-01 08:05:39', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '040', 'dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'frigodedo', NULL, NULL, 100.000000, 2.000000, 0.000000, 0.000000, 2.000000, 21.000000, 2.420000, 242.000000, 200.000000, '2026-02-01 08:05:51', '2026-02-01 08:05:51', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000002', '2026.A1', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'PETADA BILLI', NULL, NULL, 1.000000, 50.000000, 10.000000, 5.000000, 45.000000, 21.000000, 54.450000, 54.450000, 45.000000, '2026-02-01 14:38:48', '2026-02-01 14:38:48', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Uds.', 'N', 'N', 'pato aparato', NULL, NULL, 1.000000, 1.000000, 0.000000, 0.000000, 1.000000, 21.000000, 1.210000, 1.210000, 1.000000, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador', 'ESTANDAR', NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '010', 'CHUPACHUS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'Chupachús de cola y fresa', NULL, NULL, 'N', 0.050000, 0.000000, 0.000000, 0.050000, 'N', 21.000000, 0.060500, 6.050000, 5.000000, NULL, '2026-02-01 07:18:48', '2026-02-01 07:18:48', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '020', 'NUBES', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'Nubes de algodón', NULL, NULL, 'N', 0.030000, 0.000000, 0.000000, 0.030000, 'N', 21.000000, 0.036300, 3.630000, 3.000000, NULL, '2026-02-01 07:24:11', '2026-02-01 07:24:11', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '030', 'caca', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'cacafuti', NULL, NULL, 'N', 90.000000, 0.000000, 0.000000, 90.000000, 'N', 21.000000, 108.900000, 108.900000, 90.000000, NULL, '2026-02-01 08:05:39', '2026-02-01 08:05:39', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '040', 'dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'frigodedo', NULL, NULL, 'N', 2.000000, 0.000000, 0.000000, 2.000000, 'N', 21.000000, 2.420000, 242.000000, 200.000000, NULL, '2026-02-01 08:05:51', '2026-02-01 08:05:51', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_lineas` VALUES ('000002', '2026.A1', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'PETADA BILLI', NULL, NULL, 'N', 50.000000, 10.000000, 5.000000, 45.000000, 'N', 21.000000, 54.450000, 54.450000, 45.000000, NULL, '2026-02-01 14:38:48', '2026-02-01 14:38:48', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'pato aparato', NULL, NULL, 'N', 1.000000, 0.000000, 0.000000, 1.000000, 'N', 21.000000, 1.210000, 1.210000, 1.000000, NULL, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas_pagos
@@ -2070,7 +2074,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-01 14:47:25', '2026-02-01 14:47:25', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-02 06:56:02', '2026-02-02 06:56:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -2981,6 +2985,25 @@ FROM fza_articulos_skus ASK
 JOIN fza_variaciones_atributos VAT ON VAT.ID_VA = ASK.CODIGO_VAR_SKU 
 WHERE VAT.ESDEFINITORIO = 'S' 
 ORDER BY ASK.CODIGO_ARTICULO_SKU, VAT.ORDEN_VA ;
+
+-- ----------------------------
+-- View structure for vi_cajasdef
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_cajasdef`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_cajasdef` AS SELECT 
+    e.CODIGO_EMPRESA AS Empresa, 
+    e.RAZONSOCIAL_EMPRESA AS NombreEmpresa, 
+    a.CODIGO_ALMACEN_ALM AS Almacén, 
+    a.NOMBRE_ALMACEN_ALM AS NombreAlmacén, 
+    c.CODIGO_CAJA_ALMCAJ AS Caja, 
+    c.DESCRIPCION_ALMCAJ AS NombreCaja
+FROM fza_empresas e
+INNER JOIN fza_almacenes a 
+    ON e.CODIGO_EMPRESA = a.CODIGO_EMPRESA_ALM
+INNER JOIN fza_almacenes_cajas c 
+    ON a.CODIGO_ALMACEN_ALM = c.CODIGO_ALMACEN_ALMCAJ
+WHERE e.ACTIVO_EMPRESA = 'S' 
+  AND a.ESACTIVO_ALM = 'S' ;
 
 -- ----------------------------
 -- View structure for vi_caja_busqueda_unificada
