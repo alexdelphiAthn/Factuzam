@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 442
-  ClientWidth = 1208
+  ClientHeight = 451
+  ClientWidth = 1214
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -18,10 +18,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1208
+    Width = 1214
     Height = 89
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1208
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -119,10 +120,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1208
-    Height = 353
+    Width = 1214
+    Height = 362
     Align = alClient
     TabOrder = 3
+    ExplicitWidth = 1208
+    ExplicitHeight = 353
     object Panel1: TPanel
       Left = 1
       Top = 263
@@ -133,7 +136,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       ExplicitTop = 254
       ExplicitWidth = 1206
       DesignSize = (
-        1206
+        1212
         98)
       object btnF12: TcxButton
         Left = 10
@@ -253,16 +256,16 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 784
+        Left = 754
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
-        Caption = 'Total'
+        Caption = 'Total 0,00 '#8364
         ParentFont = False
         Style.BorderStyle = ebsOffice11
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clNavy
-        Style.Font.Height = -53
+        Style.Font.Height = -50
         Style.Font.Name = 'Arial Black'
         Style.Font.Style = [fsBold]
         Style.Shadow = True
@@ -276,8 +279,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.WordWrap = True
         TabOrder = 0
         Height = 80
-        Width = 327
-        AnchorX = 1111
+        Width = 447
+        AnchorX = 1201
       end
       object btnF8: TcxButton
         Left = 224
@@ -329,10 +332,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1206
-      Height = 253
+      Width = 1212
+      Height = 262
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1206
+      ExplicitHeight = 253
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
@@ -391,6 +396,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
             Caption = 'Uds.'
             DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
             PropertiesClassName = 'TcxTextEditProperties'
+            Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
             BestFitMaxWidth = 50
           end
           object tvPrecioUni: TcxGridDBColumn

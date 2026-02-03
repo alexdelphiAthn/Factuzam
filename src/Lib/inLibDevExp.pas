@@ -10,7 +10,7 @@ unit inLibDevExp;
 
 interface
 
-  uses
+uses
     Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
     Dialogs, DB, ADODB, DBCtrls, StdCtrls, cxGridExportLink,
     ExtCtrls, Grids, DBGrids, ComCtrls, Buttons, Mask,
@@ -26,6 +26,8 @@ interface
     cxGroupBox, cxLabel,  cxListBox, //inMtoPrincipal,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
+type
+  TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
 
   procedure BusqAllGrid(var dbTvGen: TcxGridDBTableView;
                         sDatoBusq: String);
@@ -54,7 +56,7 @@ interface
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
                      cdsLineas, cdsCabecera: TDataSet;
-                     OnUpdateTotal: TNotifyEvent = nil);
+                     OnUpdateTotal: TUpdateTotalEvent = nil);
 implementation
 
   uses inMtoGen,
@@ -66,7 +68,7 @@ implementation
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
                      cdsLineas, cdsCabecera: TDataSet;
-                     OnUpdateTotal: TNotifyEvent = nil);
+                     OnUpdateTotal: TUpdateTotalEvent = nil);
 var
   Edit: TcxCustomEdit;
   Column: TcxGridDBColumn;
@@ -85,6 +87,14 @@ begin
   begin
     Column := TcxGridDBColumn(View.Controller.FocusedColumn);
     FieldName := Column.DataBinding.FieldName;
+    if VarIsNull(ValoEditado) or (not VarIsNumeric(ValoEditado)) then
+    begin
+      FieldName := 'PRECIOSALIDA_FACTURA_LINEA';
+      if cdsLineas.FindField(FieldName) <> nil then
+        ValoEditado := cdsLineas.FieldByName(FieldName).Value
+      else
+        ValoEditado := 0;
+    end;
     ActualizarLineaFacturaGen(cdsLineas,
                               cdsCabecera,
                               FieldName,

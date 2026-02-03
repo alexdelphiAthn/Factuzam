@@ -18,8 +18,8 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
       inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas;
 
-  type
-
+type
+  TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
   TStringArray = array of string;
   function EncriptAES(s:String):String;
   function EncriptAESPass(s:String; sPass:AnsiString):String;
@@ -83,7 +83,7 @@ procedure ActualizarLineaFacturaGen(
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
                                     const NuevoValor: Variant;
-                                    EventoUpdateTotal: TNotifyEvent = nil
+                                    EventoUpdateTotal: TUpdateTotalEvent = nil
                                    );
 
 implementation
@@ -92,7 +92,7 @@ procedure ActualizarLineaFacturaGen(cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
                                     const NuevoValor: Variant;
-                                    EventoUpdateTotal: TNotifyEvent = nil);
+                                    EventoUpdateTotal: TUpdateTotalEvent = nil);
 var
   Calculador: TLinFac;
   Totales: TFacturaTotales;
@@ -148,11 +148,11 @@ begin
   Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
   try
     Totales.ProcesarFacturaCompleta;
+    if Assigned(EventoUpdateTotal) then
+      EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
     Totales.Free;
   end;
-  if Assigned(EventoUpdateTotal) then
-    EventoUpdateTotal(nil);
 end;
 
 function GetDefaultValue(const ATable, AField, AConditionField: string): string;
