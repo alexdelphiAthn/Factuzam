@@ -105,6 +105,7 @@ type
     procedure cxButton1Click(Sender: TObject);
     procedure lblVentasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure lblEmpresaDblClick(Sender: TObject);
   //FECHAS SOMBREADAS
   private
     VentasList: TVentasList;
@@ -229,7 +230,9 @@ begin
 //        VentasList.Clear;
 //      CargarVentasPeriodoVisible;
 //      cxDateNavigator1.Invalidate;
-    end;
+    end
+    else
+      PostMessage(Self.Handle, WM_CLOSE, 0, 0);
   finally
     frm.Free;
   end;
@@ -347,17 +350,17 @@ begin
   DescLabel.Style.TextColor := OriginalDescColor;
 end;
 
-// Eventos para F5 - Ventas
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 begin
-  // Creamos el formulario de operaciones
   var frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Self);
   try
-    // Aquí podrías inicializar un nuevo ticket si fuera necesario
-    frmMtoOpeCaja.ShowModal; // O Show si prefieres no bloquear
+    frmMtoOpeCaja.PrepararValores(Self.FEmpresa,
+                                  Self.FAlmacen,
+                                  Self.FCaja,
+                                  Self.FFechaCaja);
+    frmMtoOpeCaja.ShowModal;
   finally
     frmMtoOpeCaja.Free;
-    // Al volver, recargamos el calendario por si hubo ventas nuevas
     CargarVentasPeriodoVisible;
   end;
 end;
@@ -404,6 +407,12 @@ begin
 end;
 
 // Eventos para F6 - Entrada de Cambio
+procedure TfrmMtoMenuCaja.lblEmpresaDblClick(Sender: TObject);
+begin
+  inherited;
+  AbrirSelectorCaja;
+end;
+
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF6, lblEntradaCambio, clWebOrange);

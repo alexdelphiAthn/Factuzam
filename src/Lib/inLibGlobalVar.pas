@@ -13,6 +13,8 @@ interface
 uses Uni,
      UniDataPerfiles,
      UniDataConn,cxMemo, inMtoPrincipal;
+//type
+//  TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
 
 var
   odmPerfiles:TdmPerfiles;

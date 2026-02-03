@@ -153,7 +153,6 @@ begin
   end;
 end;
 
-
 function TdmFacturas.GetUserEmpresaDef:String;
 var
   unqrySol:TUniQuery;

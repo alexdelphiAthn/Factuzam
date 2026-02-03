@@ -4,8 +4,6 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
   ClientHeight = 184
   ClientWidth = 758
   OnClose = FormClose
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 770
   ExplicitHeight = 222
   TextHeight = 19
@@ -17,7 +15,7 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Align = alBottom
     TabOrder = 0
     ExplicitTop = 134
-    ExplicitWidth = 463
+    ExplicitWidth = 752
     object btnCancelar1: TcxButton
       Left = 130
       Top = 9
@@ -48,10 +46,8 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = -177
-    ExplicitTop = -137
-    ExplicitWidth = 935
-    ExplicitHeight = 321
+    ExplicitWidth = 752
+    ExplicitHeight = 134
     object tvAlmacenesCajas: TcxGridDBTableView
       Navigator.Buttons.ConfirmDelete = True
       Navigator.Buttons.First.Hint = 'Va al primer Registro'
@@ -92,7 +88,11 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
       OptionsBehavior.GoToNextCellOnEnter = True
       OptionsBehavior.IncSearch = True
       OptionsCustomize.ColumnHiding = True
-      OptionsData.Appending = True
+      OptionsData.CancelOnExit = False
+      OptionsData.Deleting = False
+      OptionsData.DeletingConfirmation = False
+      OptionsData.Editing = False
+      OptionsData.Inserting = False
       OptionsView.GroupByBox = False
       OptionsView.Indicator = True
       object tvAlmacenesCajasEmpresa: TcxGridDBColumn
@@ -104,7 +104,7 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
         Width = 192
       end
       object tvAlmacenesCajasAlmacn: TcxGridDBColumn
-        DataBinding.FieldName = 'Almac'#233'n'
+        DataBinding.FieldName = 'Almacen'
         Width = 85
       end
       object tvAlmacenesCajasNombreAlmacn: TcxGridDBColumn
@@ -137,7 +137,6 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_cajasdef')
-    Active = True
     Left = 96
     Top = 88
   end

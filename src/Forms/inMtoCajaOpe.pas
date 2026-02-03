@@ -126,8 +126,6 @@ type
     procedure btnF12Click(Sender: TObject);
     procedure btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
-//    procedure btnCodigoEmpleadoKeyDown(Sender: TObject; var Key: Word;
-//      Shift: TShiftState);
     procedure actBuscarEmpleadosExecute(Sender: TObject);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
@@ -145,6 +143,8 @@ type
     procedure BuscarClientes;
   public
     DatosCaja: TdmCajaOpe;
+    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
+                              AFecha: TDateTime);
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
@@ -161,6 +161,22 @@ implementation
 
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp;
+
+procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
+                                         AFecha: TDateTime);
+begin
+  FCodigoEmpresa := AEmpresa;
+  FCodigoAlmacen := AAlmacen;
+  FCodigoCaja    := ACaja;
+  FFecha         := AFecha;
+
+  // Ahora inicializa lo que dependa de esos valores
+  if Assigned(DatosCaja) then
+  begin
+    DatosCaja.cdsCabecera.Edit;
+    DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
+  end;
+end;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
 var
@@ -412,7 +428,8 @@ begin
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
 end;
 
 procedure TfrmMtoOpeCaja.tvDescuentoPropertiesEditValueChanged(Sender: TObject);
@@ -420,7 +437,8 @@ begin
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
 end;
 
 procedure TfrmMtoOpeCaja.tvPrecioUniPropertiesEditValueChanged(Sender: TObject);
@@ -428,7 +446,8 @@ begin
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
 end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
@@ -436,7 +455,8 @@ begin
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
 end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
@@ -444,7 +464,8 @@ begin
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
 end;
 
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
@@ -534,7 +555,8 @@ begin
           GridRecalc(nil,
                      cxGrid1DBTableView1,
                      DatosCaja.cdsLineas,
-                     DatosCaja.cdsCabecera);
+                     DatosCaja.cdsCabecera,
+                     ActualizarLabelTotal);
         finally
           sql.Free;
         end;
@@ -603,7 +625,8 @@ begin
       GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal );
 
     end;
   finally
@@ -692,7 +715,8 @@ begin
         GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera);
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
         Result := True;
         Break;
       end;
@@ -1384,16 +1408,10 @@ end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
-  FCodigoEmpresa := frmMtoMenuCaja.FEmpresa;
-  FCodigoAlmacen := frmMtoMenuCaja.FAlmacen;
-  FCodigoCaja    := frmMtoMenuCaja.FCaja;
-  FFecha := inMtoCajaMenu.frmMtoMenuCaja.FFechaCaja;
   DatosCaja := TdmCajaOpe.Create(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
-  DatosCaja.cdsCabecera.Edit;
-  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   with dbtvBusqDBTableView1.DataController do
   begin
