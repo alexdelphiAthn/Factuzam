@@ -204,6 +204,9 @@ procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
 var
   qryDefaults: TUniQuery; // O TFDQuery, según uses
 begin
+  if ((unqryDestino.State <> dsInsert) and
+      (unqryDestino.State <> dsEdit)) then
+    unqryDestino.Edit;
   qryDefaults := TUniQuery.Create(nil);
   try
     qryDefaults.Connection := inLibGlobalVar.oConn;

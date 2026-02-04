@@ -335,16 +335,13 @@ begin
   cdsCabecera.IndexDefs.Clear;
   with cdsCabecera.FieldDefs do
   begin
-    // -- IDENTIFICACIÓN DEL DOCUMENTO (PK) --
     Add('SERIE_FACTURA', ftString, 20, True);
     Add('NRO_FACTURA', ftString, 20, True);
-    // -- ESTADOS Y TIPOS --
     Add('FECHA_FACTURA', ftDate, 0);
     Add('ESCONSOLIDADA_FACTURA', ftString, 1);
     Add('INSTANTECONSO_FACTURA', ftDateTime, 0);
     Add('TIPO_FACTURA', ftString, 20); // NORMAL, SIMPLIFICADA...
     Add('FASE_FACTURA', ftString, 20); // BORRADOR, ONLINE...
-    // -- DATOS DE LA EMPRESA (EMISOR) --
     Add('CODIGO_EMPRESA_FACTURA', ftString, 8);
     Add('RAZONSOCIAL_EMPRESA_FACTURA', ftString, 200);
     Add('NIF_EMPRESA_FACTURA', ftString, 50);
@@ -357,11 +354,9 @@ begin
     Add('CODIGO_PAIS_EMPRESA_FACTURA', ftString, 3);
     Add('NOMBRE_PAIS_EMPRESA_FACTURA', ftString, 150);
     Add('CPOSTAL_EMPRESA_FACTURA', ftString, 15);
-    // -- CONFIGURACIÓN FISCAL EMPRESA --
     Add('ESRETENCIONES_EMPRESA_FACTURA', ftString, 1);
     Add('GRUPO_ZONA_IVA_EMPRESA_FACTURA', ftString, 10);
     Add('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA', ftString, 1);
-    // -- DATOS DEL CLIENTE (RECEPTOR) --
     Add('CODIGO_CLIENTE_FACTURA', ftString, 10);
     Add('RAZONSOCIAL_CLIENTE_FACTURA', ftString, 200);
     Add('NIF_CLIENTE_FACTURA', ftString, 50);
@@ -375,7 +370,6 @@ begin
     Add('CODIGO_PAIS_CLIENTE_FACTURA', ftString, 3);
     Add('NOMBRE_PAIS_CLIENTE_FACTURA', ftString, 150);
     Add('CODIGO_CAJERO_FACTURA', ftString, 20);
-    // -- CONFIGURACIÓN FISCAL CLIENTE Y FACTURA --
     Add('CODIGO_IVA_FACTURA', ftString, 20);
     Add('ESIVA_RECARGO_CLIENTE_FACTURA', ftString, 1);
     Add('ESIVA_EXENTO_CLIENTE_FACTURA', ftString, 1);
@@ -389,59 +383,48 @@ begin
     Add('ESIVAAGRICOLA_ZONA_IVA_FACTURA', ftString, 1);
     Add('PALABRA_REPORTS_ZONA_IVA_FACTURA', ftString, 10);
     Add('ESVENTA_ACTIVO_FIJO_FACTURA', ftString, 1);
-    // -- IMPORTES Y DESGLOSES DE IVA (N:Normal, R:Reducido, S:Super, E:Exento)
-    // IVA NORMAL
     Add('PORCEN_IVAN_FACTURA', ftBCD, 0);
     Add('TOTAL_IVAN_FACTURA', ftBCD, 0);
     Add('PORCEN_REN_FACTURA', ftBCD, 0);
     Add('TOTAL_REN_FACTURA', ftBCD, 0);
     Add('TOTAL_BASEI_IVAN_FACTURA', ftBCD, 0);
-    // IVA REDUCIDO
     Add('PORCEN_IVAR_FACTURA', ftBCD, 0);
     Add('TOTAL_IVAR_FACTURA', ftBCD, 0);
     Add('PORCEN_RER_FACTURA', ftBCD, 0);
     Add('TOTAL_RER_FACTURA', ftBCD, 0);
     Add('TOTAL_BASEI_IVAR_FACTURA', ftBCD, 0);
-    // IVA SUPER REDUCIDO
     Add('PORCEN_IVAS_FACTURA', ftBCD, 0);
     Add('TOTAL_IVAS_FACTURA', ftBCD, 0);
     Add('PORCEN_RES_FACTURA', ftBCD, 0);
     Add('TOTAL_RES_FACTURA', ftBCD, 0);
     Add('TOTAL_BASEI_IVAS_FACTURA', ftBCD, 0);
-    // IVA EXENTO
     Add('PORCEN_IVAE_FACTURA', ftBCD, 0);
     Add('TOTAL_IVAE_FACTURA', ftBCD, 0);
     Add('PORCEN_REE_FACTURA', ftBCD, 0);
     Add('TOTAL_REE_FACTURA', ftBCD, 0);
     Add('TOTAL_BASEI_IVAE_FACTURA', ftBCD, 0);
-    // -- TOTALES GENERALES --
     Add('TOTAL_BASES_FACTURA', ftBCD, 0);
     Add('TOTAL_IMPUESTOS_FACTURA', ftBCD, 0);
     Add('PORCEN_RETENCION_FACTURA', ftBCD, 0);
     Add('TOTAL_RETENCION_FACTURA', ftBCD, 0);
     Add('TOTAL_LIQUIDO_FACTURA', ftBCD, 0); // Lo que paga el cliente
-    // -- OTROS DATOS --
     Add('FORMA_PAGO_FACTURA', ftString, 200);
     Add('NRO_FACTURA_ABONO_FACTURA', ftString, 8);
     Add('SERIE_FACTURA_ABONO_FACTURA', ftString, 8);
-    // -- CAMPOS LARGOS Y MEMOS --
     Add('TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA', ftString, 1000);
     Add('TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA', ftString, 1000);
     Add('COMENTARIOS_FACTURA', ftString, 1000);
     Add('XML_FACTURA', ftMemo, 0); // Para VeriFactu
     Add('DOCUMENTO_FACTURA', ftBlob, 0);
-    // -- CONTROL INTERNO --
     Add('CONTADOR_LINEAS_FACTURA', ftString, 8);
     Add('ESCREARARTICULOS_FACTURA', ftString, 1);
     Add('ESDESCRIPCIONES_AMP_FACTURA', ftString, 1);
     Add('ESFECHADEENTREGA_FACTURA', ftString, 1);
-    // -- AUDITORÍA --
     Add('INSTANTEMODIF', ftDateTime, 0);
     Add('INSTANTEALTA', ftDateTime, 0);
     Add('USUARIOALTA', ftString, 100);
     Add('USUARIOMODIF', ftString, 100);
   end;
-
   with cdsCabecera.IndexDefs.AddIndexDef do
   begin
     Name := 'PK_CABECERA';

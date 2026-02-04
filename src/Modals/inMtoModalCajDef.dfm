@@ -4,6 +4,7 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
   ClientHeight = 184
   ClientWidth = 758
   OnClose = FormClose
+  OnShow = FormShow
   ExplicitWidth = 770
   ExplicitHeight = 222
   TextHeight = 19
@@ -139,5 +140,21 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
       'select * from vi_cajasdef')
     Left = 96
     Top = 88
+  end
+  object ActionList1: TActionList
+    Left = 368
+    Top = 96
+    object Action1: TAction
+      Caption = 'Action1'
+      SecondaryShortCuts.Strings = (
+        'F12')
+      ShortCut = 116
+      OnExecute = Action1Execute
+    end
+    object Action2: TAction
+      Caption = 'Action2'
+      ShortCut = 27
+      OnExecute = Action2Execute
+    end
   end
 end
