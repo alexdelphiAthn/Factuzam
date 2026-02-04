@@ -160,7 +160,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp;
+  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb;
 
 procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
@@ -169,8 +169,6 @@ begin
   FCodigoAlmacen := AAlmacen;
   FCodigoCaja    := ACaja;
   FFecha         := AFecha;
-
-  // Ahora inicializa lo que dependa de esos valores
   if Assigned(DatosCaja) then
   begin
     DatosCaja.cdsCabecera.Edit;
@@ -251,7 +249,11 @@ begin
       DatosCaja.cdsLineas.Cancel
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
-//    DatosCaja.CalcularTotalesCabecera;
+    GridRecalc(nil,
+               cxGrid1DBTableView1,
+               DatosCaja.cdsLineas,
+               DatosCaja.cdsCabecera,
+               ActualizarLabelTotal);
   end;
 end;
 
@@ -1216,6 +1218,11 @@ begin
     DatosCaja.cdsCabecera.FieldByName(
                                   'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
                                                      DatosCaja.GetTarifaDefault;
+    DatosCaja.cdsCabecera.FieldByName(
+                                'ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
+                                                                            'S';
+//    DatosCaja.cdsCabecera.FieldByName(
+//                                'CODIGO_FORMA_PAGO_CLIENTE').AsString := 'CAJA';
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
     Error := False;
@@ -1237,9 +1244,6 @@ begin
         DatosCaja.cdsCabecera.Edit;
         DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString :=
                                                           btnCodigoCliente.Text;
-        DatosCaja.cdsCabecera.FieldByName(
-                                     'RAZONSOCIAL_CLIENTE_FACTURA').AsString :=
-                              unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
         sNomCliente := unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
         DatosCaja.cdsCabecera.FieldByName(
                                   'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
@@ -1427,6 +1431,11 @@ begin
   end;
   repSoloTexto.Properties.OnValidate := tvArticuloPropertiesValidate;
   repComboBox.Properties.OnCloseUp := tvArticuloPropertiesCloseUp;
+  AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
+  DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString :=
+                                                                 FCodigoEmpresa;
+  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
+  DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
 end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;

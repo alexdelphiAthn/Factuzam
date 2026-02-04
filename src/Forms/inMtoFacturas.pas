@@ -1341,8 +1341,7 @@ end;
 
 procedure TfrmMtoFacturas.CambiarIVA;
 begin
-  if ( ((dsTablaG.DataSet.State = dsEdit) or
-        (dsTablaG.DataSet.State = dsInsert) ) ) then
+  if (dsTablaG.DataSet.State = dsInsert) then
     dmmFacturas.AsignarIVA(
         dsTablaG.DataSet.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString,
         dmmFacturas.unqryTablaG);

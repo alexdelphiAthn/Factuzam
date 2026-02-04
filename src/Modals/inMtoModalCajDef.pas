@@ -21,7 +21,7 @@ uses
   JvEnterTab, cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridCustomView,
-  cxGrid, MemDS, DBAccess, Uni;
+  cxGrid, MemDS, DBAccess, Uni, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoModalCajDef = class(TfrmBase)
@@ -39,10 +39,16 @@ type
     tvAlmacenesCajasNombreAlmacn: TcxGridDBColumn;
     tvAlmacenesCajasCaja: TcxGridDBColumn;
     tvAlmacenesCajasNombreCaja: TcxGridDBColumn;
+    ActionList1: TActionList;
+    Action1: TAction;
+    Action2: TAction;
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelar1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Action2Execute(Sender: TObject);
+    procedure Action1Execute(Sender: TObject);
   private
     { Private declarations }
 
@@ -59,6 +65,18 @@ implementation
 {$R *.dfm}
 
 uses UniDataConn;
+
+procedure TfrmMtoModalCajDef.Action1Execute(Sender: TObject);
+begin
+  inherited;
+  btnAceptarClick(Sender);
+end;
+
+procedure TfrmMtoModalCajDef.Action2Execute(Sender: TObject);
+begin
+  inherited;
+  btnCancelar1Click(Sender);
+end;
 
 procedure TfrmMtoModalCajDef.btnAceptarClick(Sender: TObject);
 begin
@@ -85,6 +103,13 @@ procedure TfrmMtoModalCajDef.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+end;
+
+procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);
+begin
+  inherited;
+  if btnAceptar.CanBeFocused then
+    btnAceptar.SetFocus;
 end;
 
 end.

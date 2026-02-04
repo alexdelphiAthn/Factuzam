@@ -8,7 +8,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
-  ExplicitTop = -183
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -1653,10 +1652,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -2303,10 +2298,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
@@ -2881,7 +2872,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Width = 251
                   end
                   object cbbCanalIVA: TcxDBLookupComboBox
-                    Left = 112
+                    Left = 114
                     Top = 233
                     DataBinding.DataField = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
                     DataBinding.DataSource = dsTablaG
@@ -2895,7 +2886,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Properties.ReadOnly = True
                     Properties.OnChange = cbbCanalIVAPropertiesChange
                     TabOrder = 18
-                    Width = 363
+                    Width = 361
                   end
                   object lblCanalIVA: TcxLabel
                     Left = 20
