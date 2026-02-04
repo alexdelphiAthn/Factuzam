@@ -110,6 +110,7 @@ begin
   inherited;
   if btnAceptar.CanBeFocused then
     btnAceptar.SetFocus;
+  tvAlmacenesCajas.ApplyBestFit(nil, True, False);
 end;
 
 end.

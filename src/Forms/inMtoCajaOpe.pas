@@ -1331,7 +1331,7 @@ begin
   begin
     lblNombreEmpleado.Caption := '';
     Error := True;
-    ErrorText := 'Debe haber un empleado en la venta'; // Mensaje al usuario
+    ErrorText := 'Debe haber un empleado en la venta';
     Exit;
   end;
   if not DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
@@ -1379,8 +1379,10 @@ var
 begin
   unqryEmpleados := TUniQuery.Create(nil);
   unqryEmpleados.Connection := oConn;
-  unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USUARIO as `Código de Empleado`,' +
-                             '       DIMINUTIVO_TICKET_USUARIO as `Nombre de Empleado`' +
+  unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USUARIO ' +
+                                                    'as `Código de Empleado`,' +
+                             '       DIMINUTIVO_TICKET_USUARIO ' +
+                                                     'as `Nombre de Empleado`' +
                              '  FROM fza_usuarios ' +
                              ' WHERE ACTIVO_USUARIO =' +QuotedStr('S') +
                              '   AND CODIGO_EMPLEADO_USUARIO IS NOT NULL' +
