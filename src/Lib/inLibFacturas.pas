@@ -1347,7 +1347,7 @@ procedure TFacturaTotales.VerificarYCompletarDatosEmpresa;
 var
   Qry: TUniQuery;
 begin
-  if _unqryFac.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString <> '' then
+  if (_unqryFac.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString <> '') then
     Exit;
   if _codigoEmpresa = '' then
     Exit;
