@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
-  inLibGlobalVar;
+  inLibGlobalVar, system.StrUtils;
 
 type
   TOnUpdateTotalEvent = 
@@ -29,6 +29,7 @@ type
     FOnUpdateTotal: TOnUpdateTotalEvent;
     procedure ConfigurarEstructuraLineas;
     procedure ConfigurarEstructuraCabecera;
+    function GetTipoIVA(sTipoIVA: string): Currency;
 //    procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
   public
     //uConexion:TUniConnection;
@@ -293,19 +294,43 @@ procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
 var
   NuevoNumero: Integer;
 begin
-  AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
-//  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
-//  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
-  NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger
+  with cdsLineas do
+  begin
+    AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
+    FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
+    FieldByName('NRO_FACTURA_LINEA').AsString := '0';
+    NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger
                                                                           + 10 ;
-  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
-  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
-  cdsCabecera.Edit;
-  cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := NuevoNumero;
-  cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsString :=
+    cdsCabecera.Edit;
+    cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := NuevoNumero;
+    FieldByName('LINEA_FACTURA_LINEA').AsString :=
                                                   Format('%.4d', [NuevoNumero]);
-  cdsLineas.FieldByName('CODIGO_VENDEDOR_FACTURA_LINEA').AsString :=
+    FieldByName('CODIGO_VENDEDOR_FACTURA_LINEA').AsString :=
                       cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
+    FindField('PORCEN_IVA_FACTURA_LINEA').AsCurrency := GetTipoIVA(
+          FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString);
+  end;
+end;
+
+function TdmCajaOpe.GetTipoIVA(sTipoIVA: string): Currency;
+var
+  fPorcen:Currency;
+begin
+  with cdsCabecera do
+  begin
+  case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
+    0: fPorcen := FindField('PORCEN_IVAN_FACTURA').AsCurrency;
+    1: fPorcen := FindField('PORCEN_IVAR_FACTURA').AsCurrency;
+    2: fPorcen := FindField('PORCEN_IVAS_FACTURA').AsCurrency;
+    3: fPorcen := FindField('PORCEN_IVAE_FACTURA').AsCurrency;
+    else
+    begin
+      fPorcen := FindField('PORCEN_IVAN_FACTURA').AsCurrency;
+      cdsLineas.FindField('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString := 'N';
+    end;
+  end;
+  end;
+  Result := fPorcen;
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);

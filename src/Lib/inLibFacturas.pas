@@ -1278,6 +1278,8 @@ var
 begin
   sCodCli := _unqryFac.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
   if (sCodCli = '') or
+     (sCodCli = '0') or
+     (sCodCli = 'VENTA CONTADO') or //no hay cliente
      (_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString <> '') then
     Exit;
   Qry := TUniQuery.Create(nil);

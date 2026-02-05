@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 02/02/2026 07:48:10
+ Date: 05/02/2026 12:16:17
 */
 
 SET NAMES utf8mb4;
@@ -2074,7 +2074,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-02 06:56:02', '2026-02-02 06:56:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-05 12:09:06', '2026-02-05 12:09:06', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -2605,7 +2605,9 @@ INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ESRETENCIONES_EMPRESA
 INSERT INTO `fza_valores_defecto` VALUES ('fza_empresas', 'ORDEN_EMPRESA', '0', 'INTEGER', 'Orden de aparición', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'CODIGO_CLIENTE_FACTURA', '0', 'STRING', 'Código de Cliente', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'CODIGO_EMPRESA_FACTURA', '0', 'STRING', 'Código de Emisor', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'CONTADOR_LINEAS_FACTURA', '0', 'STRING', 'Contador de Lineas de Facturas', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESAPLICA_RE_ZONA_IVA_FACTURA', 'S', 'STRING', 'Zona de IVA Aplica RE', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESCONSOLIDADA_FACTURA', 'N', 'STRING', 'Consolidación de Factura', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESCREARARTICULOS_FACTURA', 'N', 'STRING', 'Factura crea/actualiza artículos', 'S,N');
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESDESCRIPCIONES_AMP_FACTURA', 'N', 'STRING', 'Factura tiene descripciones ampliadas', 'S,N');
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESFECHADEENTREGA_FACTURA', 'N', 'STRING', 'La factura tiene fecha de entrega', 'S,N');
@@ -2616,8 +2618,12 @@ INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESREGIMENESPECIALAGRI
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA', 'N', 'STRING', 'Emisor es REAGP', 'S,N');
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESRETENCIONES_CLIENTE_FACTURA', 'N', 'STRING', 'Cliente es profesional Retiene IRPF', 'S,N');
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'ESVENTA_ACTIVO_FIJO_FACTURA', 'N', 'STRING', 'La factura es venta activo fijo REAGP', 'S,N');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'FASE_FACTURA', 'BORRADOR', 'STRING', 'Fase inicial de Factura', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'NRO_FACTURA', '0', 'STRING', 'Número de Factura', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'TIPO_FACTURA', 'NORMAL', 'STRING', 'Tipo de Factura nueva', 'NORMAL,SIMPLIFICADA');
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'TOTAL_BASES_FACTURA', '0', 'FLOAT', 'Bases inicial', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'TOTAL_IMPUESTOS_FACTURA', '0', 'FLOAT', 'Impùestos inicial', NULL);
+INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas', 'TOTAL_LIQUIDO_FACTURA', '0', 'FLOAT', 'Total inicial', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'CANTIDAD_FACTURA_LINEA', '1', 'FLOAT', 'Cantidad', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'LINEA_FACTURA_LINEA', '0', 'STRING', 'Número de Linea', NULL);
 INSERT INTO `fza_valores_defecto` VALUES ('fza_facturas_lineas', 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA', 'Uds.', 'STRING', 'Unidad de medida', NULL);
@@ -2993,7 +2999,7 @@ DROP VIEW IF EXISTS `vi_cajasdef`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_cajasdef` AS SELECT 
     e.CODIGO_EMPRESA AS Empresa, 
     e.RAZONSOCIAL_EMPRESA AS NombreEmpresa, 
-    a.CODIGO_ALMACEN_ALM AS Almacén, 
+    a.CODIGO_ALMACEN_ALM AS Almacen, 
     a.NOMBRE_ALMACEN_ALM AS NombreAlmacén, 
     c.CODIGO_CAJA_ALMCAJ AS Caja, 
     c.DESCRIPCION_ALMCAJ AS NombreCaja
