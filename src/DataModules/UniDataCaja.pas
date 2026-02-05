@@ -29,7 +29,7 @@ type
     FOnUpdateTotal: TOnUpdateTotalEvent;
     procedure ConfigurarEstructuraLineas;
     procedure ConfigurarEstructuraCabecera;
-    procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
+//    procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
   public
     //uConexion:TUniConnection;
     function GenerarSkuFinal(ArticuloBase: string): string;
@@ -275,17 +275,18 @@ end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);
 begin
-//    cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
-    AplicarValoresPorDefecto(cdsCabecera, 'fza_facturas');
-    cdsCabecera.FieldByName('SERIE_FACTURA').AsString := '0';
-    cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
-
-//    cdsCabecera.FieldByName('NRO_FACTURA').AsString := '0';
+  AplicarValoresPorDefecto(cdsCabecera, 'fza_facturas');
+  cdsCabecera.FieldByName('SERIE_FACTURA').AsString := '0';
+  cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
 begin
-//  CalcularTotalesCabecera;
+  GridRecalc(nil,
+             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+             cdsLineas,
+             cdsCabecera,
+             OnUpdateTotal);
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
@@ -296,7 +297,9 @@ begin
 //  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
 //  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
   NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger
-                                                                          + 10;
+                                                                          + 10 ;
+  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
+  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
   cdsCabecera.Edit;
   cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := NuevoNumero;
   cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsString :=
@@ -307,11 +310,11 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-         GridRecalc(nil,
-             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
-             cdsLineas,
-             cdsCabecera,
-             OnUpdateTotal);
+//         GridRecalc(nil,
+//             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+//             cdsLineas,
+//             cdsCabecera,
+//             OnUpdateTotal);
 end;
 
 procedure TdmCajaOpe.cdsLineasBeforePost(DataSet: TDataSet);
