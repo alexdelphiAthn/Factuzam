@@ -51,6 +51,8 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
+uses inLibtb, inMtoCajaOpe, inLibDevExp;
+
 {$R *.dfm}
 
 //procedure TdmCajaOpe.CalcularTotalesCabecera;
@@ -246,35 +248,39 @@ begin
   end;
 end;
 
-procedure TdmCajaOpe.InicializarNuevaFactura(const ASerieFactura,
-                                                   ANroFactura: string);
-begin
-  // Limpiar datos anteriores
-  if cdsLineas.Active then cdsLineas.EmptyDataSet;
-  if cdsCabecera.Active then cdsCabecera.EmptyDataSet;
-  // Crear nuevo registro de cabecera
-  cdsCabecera.Append;
-  cdsCabecera.FieldByName('SERIE_FACTURA').AsString := ASerieFactura;
-  cdsCabecera.FieldByName('NRO_FACTURA').AsString := ANroFactura;
-  cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := Date;
-  cdsCabecera.FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';
-  cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'NORMAL';
-  cdsCabecera.FieldByName('FASE_FACTURA').AsString := 'BORRADOR';
-  cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
-  cdsCabecera.FieldByName('INSTANTEALTA').AsDateTime := Now;
-  cdsCabecera.FieldByName('USUARIOALTA').AsString := 'SISTEMA';
-  // Inicializar totales a 0
-  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := 0;
-  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency := 0;
-  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := 0;
-  cdsCabecera.Post;
-end;
+//procedure TdmCajaOpe.InicializarNuevaFactura(const ASerieFactura,
+//                                                   ANroFactura: string);
+//begin
+//  // Limpiar datos anteriores
+//  if cdsLineas.Active then cdsLineas.EmptyDataSet;
+//  if cdsCabecera.Active then cdsCabecera.EmptyDataSet;
+//  // Crear nuevo registro de cabecera
+//  cdsCabecera.Append;
+////  cdsCabecera.FieldByName('SERIE_FACTURA').AsString := ASerieFactura;
+////  cdsCabecera.FieldByName('NRO_FACTURA').AsString := ANroFactura;
+////  cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := Date;
+////  cdsCabecera.FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';
+////
+////  cdsCabecera.FieldByName('FASE_FACTURA').AsString := 'BORRADOR';
+////  cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
+////  cdsCabecera.FieldByName('INSTANTEALTA').AsDateTime := Now;
+////  cdsCabecera.FieldByName('USUARIOALTA').AsString := 'SISTEMA';
+////  // Inicializar totales a 0
+////  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := 0;
+////  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency := 0;
+////  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := 0;
+//
+//  cdsCabecera.Post;
+//end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);
 begin
-    cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
+//    cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
+    AplicarValoresPorDefecto(cdsCabecera, 'fza_facturas');
     cdsCabecera.FieldByName('SERIE_FACTURA').AsString := '0';
-    cdsCabecera.FieldByName('NRO_FACTURA').AsString := '0';
+    cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
+
+//    cdsCabecera.FieldByName('NRO_FACTURA').AsString := '0';
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
@@ -286,8 +292,9 @@ procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
 var
   NuevoNumero: Integer;
 begin
-  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
-  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
+  AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
+//  cdsLineas.FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
+//  cdsLineas.FieldByName('NRO_FACTURA_LINEA').AsString := '0';
   NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger
                                                                           + 10;
   cdsCabecera.Edit;
@@ -300,7 +307,11 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-//  CalcularTotalesCabecera;
+         GridRecalc(nil,
+             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+             cdsLineas,
+             cdsCabecera,
+             OnUpdateTotal);
 end;
 
 procedure TdmCajaOpe.cdsLineasBeforePost(DataSet: TDataSet);

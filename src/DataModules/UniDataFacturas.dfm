@@ -268,8 +268,8 @@ inherited dmFacturas: TdmFacturas
   object dsLinFac: TDataSource
     DataSet = unqryLinFac
     OnStateChange = dsLinFacStateChange
-    Left = 128
-    Top = 72
+    Left = 168
+    Top = 48
   end
   object dsFacPrint: TDataSource
     DataSet = unqryFacPrint
@@ -791,7 +791,7 @@ inherited dmFacturas: TdmFacturas
     BeforePost = unqryLinFacBeforePost
     AfterPost = unqryLinFacAfterPost
     AfterDelete = unqryLinFacAfterDelete
-    Left = 128
+    Left = 168
     Top = 136
     ParamData = <
       item
@@ -1090,7 +1090,7 @@ inherited dmFacturas: TdmFacturas
         'AS '#39'@ptipoiva'#39)
     Connection = dmConn.conUni
     Left = 528
-    Top = 296
+    Top = 272
     ParamData = <
       item
         DataType = ftWideString

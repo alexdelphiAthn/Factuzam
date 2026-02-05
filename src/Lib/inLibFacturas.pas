@@ -754,7 +754,6 @@ var
   Qry: TUniQuery;
 begin
   if sGrupoZona = '' then Exit;
-
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
@@ -765,11 +764,9 @@ begin
     Qry.ParamByName('grupo').AsString := sGrupoZona;
     Qry.ParamByName('fecha').AsDateTime := _fechaFactura;
     Qry.Open;
-
     if not Qry.IsEmpty then
     begin
       if _unqryFac.State = dsBrowse then _unqryFac.Edit;
-
       // Asignación al DataSet de la Factura (Persistencia)
       _unqryFac.FieldByName('PORCEN_IVAN_FACTURA').AsFloat := Qry.FieldByName('PORCENNORMAL_IVA').AsFloat;
       _unqryFac.FieldByName('PORCEN_REN_FACTURA').AsFloat  := Qry.FieldByName('PORCENNORMAL_RE_IVA').AsFloat;
@@ -779,18 +776,15 @@ begin
       _unqryFac.FieldByName('PORCEN_RES_FACTURA').AsFloat  := Qry.FieldByName('PORCENSUPERREDUCIDO_RE_IVA').AsFloat;
       _unqryFac.FieldByName('PORCEN_IVAE_FACTURA').AsFloat := Qry.FieldByName('PORCENEXENTO_IVA').AsFloat;
       _unqryFac.FieldByName('PORCEN_REE_FACTURA').AsFloat  := Qry.FieldByName('PORCENEXENTO_RE_IVA').AsFloat;
-
       _unqryFac.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString := Qry.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA').AsString;
       _unqryFac.FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString     := Qry.FieldByName('ESAPLICA_RE_ZONA_IVA').AsString;
       _unqryFac.FieldByName('CODIGO_IVA_FACTURA').AsString               := Qry.FieldByName('CODIGO_IVA').AsString;
       _unqryFac.FieldByName('ESIVAAGRICOLA_ZONA_IVA_FACTURA').AsString   := Qry.FieldByName('ESIVAAGRICOLA_ZONA_IVA').AsString;
-
       // Actualizar también la estructura interna de trabajo (_configuracion y _porcentajes)
       _configuracion.AplicaRecargo        := (Qry.FieldByName('ESAPLICA_RE_ZONA_IVA').AsString = 'S');
       _configuracion.IRPFImpuestoIncluido := (Qry.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA').AsString = 'S');
       _grupoZonaIVA                       := sGrupoZona;
       _codigoIVA                          := Qry.FieldByName('CODIGO_IVA').AsString;
-
       LeerPorcentajesDesdeFactura; // Sincroniza _porcentajes con los nuevos valores del DataSet
     end;
   finally
@@ -1406,5 +1400,4 @@ begin
     Qry.Free;
   end;
 end;
-
 end.
