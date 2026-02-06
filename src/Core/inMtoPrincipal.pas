@@ -267,11 +267,11 @@ begin
     end;
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
-      s:= 'DROP DATABASE IF EXISTS factuzam; ' + sLineBreak +
-                       'CREATE DATABASE factuzam ' +
+      s:= 'DROP DATABASE IF EXISTS '+ FDmConn.conUni.Database +'; ' + sLineBreak +
+                       'CREATE DATABASE ' + FDmConn.conUni.Database + ' ' +
                        '  CHARACTER SET utf8mb4 ' +
                        '       COLLATE utf8mb4_spanish_ci; ' +  sLineBreak +
-                       'USE factuzam;' + sLineBreak + sLineBreak + s;
+                       'USE '+FDmConn.conUni.Database+';' + sLineBreak + sLineBreak + s;
       //undmp1.SpecificOptions.Values['UseExtSyntax'] := 'False';
       //To make TUniDump component generate an INSERT statement for each row
       //La anterior orden genera un insert por cada fila.
