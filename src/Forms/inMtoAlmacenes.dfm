@@ -35,11 +35,17 @@
             object dbcGrdDBTabPrinESACTIVO_ALM: TcxGridDBColumn
               Caption = 'Activo'
               DataBinding.FieldName = 'ESACTIVO_ALM'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
               Width = 89
             end
             object dbcGrdDBTabPrinESFISICO_ALM: TcxGridDBColumn
               Caption = 'Es F'#237'sico'
               DataBinding.FieldName = 'ESFISICO_ALM'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
               Width = 97
             end
             object dbcGrdDBTabPrinTIPO_USO_ALM: TcxGridDBColumn
@@ -121,7 +127,7 @@
               Left = 16
               Top = 16
               Caption = 'C'#243'digo Almac'#233'n'
-              TabOrder = 6
+              TabOrder = 4
               Transparent = True
             end
             object txtCODIGO_ALMACEN_ALM: TcxDBTextEdit
@@ -136,7 +142,7 @@
               Left = 17
               Top = 48
               Caption = 'C'#243'digo Empresa'
-              TabOrder = 7
+              TabOrder = 6
               Transparent = True
             end
             object txtCODIGO_EMPRESA_ALM: TcxDBTextEdit
@@ -144,7 +150,7 @@
               Top = 45
               DataBinding.DataField = 'CODIGO_EMPRESA_ALM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 1
+              TabOrder = 5
               Width = 150
             end
             object lblNombre: TcxLabel
@@ -159,7 +165,7 @@
               Top = 76
               DataBinding.DataField = 'NOMBRE_ALMACEN_ALM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 2
+              TabOrder = 7
               Width = 313
             end
             object chkESACTIVO_ALM: TcxDBCheckBox
@@ -170,7 +176,7 @@
               DataBinding.DataSource = dsTablaG
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
-              TabOrder = 3
+              TabOrder = 1
               Transparent = True
             end
             object chkESFISICO_ALM: TcxDBCheckBox
@@ -181,7 +187,7 @@
               DataBinding.DataSource = dsTablaG
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
-              TabOrder = 4
+              TabOrder = 3
               Transparent = True
             end
             object lblOrden: TcxLabel
@@ -196,7 +202,7 @@
               Top = 47
               DataBinding.DataField = 'ORDEN_ALM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 5
+              TabOrder = 2
               Width = 100
             end
           end
@@ -237,14 +243,14 @@
                 Top = 118
                 DataBinding.DataField = 'TELEFONO_ALM'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 1
+                TabOrder = 9
                 Width = 164
               end
               object lblEmail: TcxLabel
                 Left = 43
                 Top = 154
                 Caption = 'Email'
-                TabOrder = 2
+                TabOrder = 1
                 Transparent = True
               end
               object cxdbtxtdtEMAIL_ALM: TcxDBTextEdit
@@ -252,14 +258,14 @@
                 Top = 151
                 DataBinding.DataField = 'EMAIL_ALM'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 3
+                TabOrder = 10
                 Width = 250
               end
               object lblPoblacion: TcxLabel
                 Left = 23
                 Top = 56
                 Caption = 'Poblaci'#243'n'
-                TabOrder = 4
+                TabOrder = 2
                 Transparent = True
               end
               object cxdbtxtdtCODPOSTAL: TcxDBTextEdit
@@ -275,14 +281,14 @@
                 Top = 54
                 DataBinding.DataField = 'POBLACION_ALM'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 6
+                TabOrder = 7
                 Width = 223
               end
               object lblDireccion: TcxLabel
                 Left = 25
                 Top = 24
                 Caption = 'Direcci'#243'n'
-                TabOrder = 7
+                TabOrder = 3
                 Transparent = True
               end
               object cxdbtxtdtDIRECCION_ALM: TcxDBTextEdit
@@ -290,14 +296,14 @@
                 Top = 21
                 DataBinding.DataField = 'DIRECCION_ALM'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 8
+                TabOrder = 4
                 Width = 373
               end
               object lblPoblacion1: TcxLabel
                 Left = 23
                 Top = 88
                 Caption = 'Provincia'
-                TabOrder = 9
+                TabOrder = 6
                 Transparent = True
               end
               object cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit
@@ -305,7 +311,7 @@
                 Top = 85
                 DataBinding.DataField = 'PROVINCIA_ALM'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 10
+                TabOrder = 8
                 Width = 269
               end
             end

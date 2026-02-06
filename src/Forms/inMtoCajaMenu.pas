@@ -257,12 +257,16 @@ begin
     Query.SQL.Text :=
       ' SELECT FECHA_FACTURA AS FECHA, ' +
       '        COUNT(*) AS TOTAL_VENTAS, '+
-      '        SUM(TOTAL_LIQUIDO_FACTURA) AS TOTAL_COBRADO ' +
+      '               0 AS TOTAL_COBRADO ' +
+//      '        SUM(TOTAL_LIQUIDO_FACTURA) AS TOTAL_COBRADO ' +
       '    FROM fza_facturas ' +
       '   WHERE FECHA_FACTURA >= :fecha_inicio ' +
       '     AND FECHA_FACTURA <= :fecha_fin ' +
+      '     AND CODIGO_EMPRESA_FACTURA = :Empresa ' +
+      '     AND TIPO_FACTURA = ''SIMPLIFICADA'' ' +
       'GROUP BY FECHA_FACTURA ' +
       'ORDER BY FECHA_FACTURA ';
+    Query.ParamByName('Empresa').AsString := FEmpresa;
     Query.ParamByName('fecha_inicio').AsDate := PrimerDia;
     Query.ParamByName('fecha_fin').AsDate := UltimoDia;
     Query.Open;
