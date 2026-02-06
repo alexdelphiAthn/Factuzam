@@ -41,7 +41,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 1
+    FrameIndex = 385
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528

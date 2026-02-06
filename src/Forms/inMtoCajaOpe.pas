@@ -173,6 +173,12 @@ begin
   begin
     DatosCaja.cdsCabecera.Edit;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
+    AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString :=
+                                                                 FCodigoEmpresa;
+    DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
+   DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
+
   end;
 end;
 
@@ -1433,11 +1439,6 @@ begin
   end;
   repSoloTexto.Properties.OnValidate := tvArticuloPropertiesValidate;
   repComboBox.Properties.OnCloseUp := tvArticuloPropertiesCloseUp;
-  AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
-  DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString :=
-                                                                 FCodigoEmpresa;
-  DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
-  DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
 end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
