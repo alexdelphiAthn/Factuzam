@@ -1,10 +1,18 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoBase                                                     }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Este formulario es el formulario base para todos los demás. Tiene la      }
+{    traducción al Español de Developer Express. Sólo sirve a propósito de     }
+{    herencia para generar otros formularios                                   }
+{******************************************************************************}
 
 unit inMtoFrmBase;
 

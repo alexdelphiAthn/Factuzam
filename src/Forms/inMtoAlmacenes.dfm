@@ -3,7 +3,7 @@
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
         ExplicitTop = 30
@@ -11,7 +11,6 @@
         ExplicitHeight = 484
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            OptionsData.Editing = True
             object dbcGrdDBTabPrinCODIGO_ALMACEN_ALM: TcxGridDBColumn
               Caption = 'C'#243'digo Almac'#233'n'
               DataBinding.FieldName = 'CODIGO_ALMACEN_ALM'
@@ -222,7 +221,7 @@
             Height = 355
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDirección
+            Properties.ActivePage = tsUsosAlmacen
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 351
             ClientRectLeft = 4

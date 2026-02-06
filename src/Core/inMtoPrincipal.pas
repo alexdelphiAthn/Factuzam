@@ -1,12 +1,20 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
+﻿unit inMtoPrincipal;
 
-unit inMtoPrincipal;
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoPrincipal                                                }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Esta unidad proporciona la lógica necesaria para presentar la pantalla    }
+{    Principal de entrada al programa donde está el menú con todas las opcio-  }
+{    nes disponibles. Guarda estructuras como Conexión a BBDD.                 }
+{******************************************************************************}
 
 interface
 
@@ -39,19 +47,19 @@ uses
 
 const
   WM_FREECONTROL = WM_USER;
+
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(TfrmBase)
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
-//    procedure FormDestroy(Sender: TObject);
+    // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
 
-
   private
-    //procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
+    // procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
   published
     undmp1: TUniDump;
     tmr1: TTimer;
@@ -129,84 +137,84 @@ type
     procedure WMFreeControl(var Message: TMessage); message WM_FREECONTROL;
   private
 
-    FException: boolean;
-//    procedure AppException(Sender: TObject; E: Exception);
+    FException: Boolean;
+    // procedure AppException(Sender: TObject; E: Exception);
     procedure CopiaSeguridad;
   public
     { Public declarations }
 
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
-    oFzaWinf : TfzaWinF;
+    oFzaWinf: TfzaWinF;
   end;
 
 var
   frmMtoPrincipal: TfrmMtoPrincipal;
-  bIsConnected      : boolean;
+  bIsConnected: Boolean;
 
 implementation
 
 uses inLibUser,
-     inLibWin,
-     inLibShowMto,
-     inLibtb,
-     inLibGlobalVar,
-     inLibLog,
-     inLibDir,
-     inMtoSplash,
-     inMtoCajaMenu,
-     inMtoModalGenFilter;
+  inLibWin,
+  inLibShowMto,
+  inLibtb,
+  inLibGlobalVar,
+  inLibLog,
+  inLibDir,
+  inMtoSplash,
+  inMtoCajaMenu,
+  inMtoModalGenFilter;
 
 {$R *.dfm}
 
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
-  sDis              : string;
+  sDis: string;
 begin
-//  Application.OnException := AppException;
+  // Application.OnException := AppException;
   sDis := '';
   oMemoSQL := cxMemo1;
-  inliblog.Log.LogInfo('Creando ventana principal');
-  FdmConn := TdmConn.Create(Self);
-  FdmConn.conUni.Connect;
+  inLibLog.Log.LogInfo('Creando ventana principal');
+  FDmConn := TdmConn.Create(Self);
+  FDmConn.conUni.Connect;
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   odmPerfiles := FdmDataPerfiles;
-  oConn := FdmConn.conUni;
-  odmConn := FdmConn;
+  oConn := FDmConn.conUni;
+  odmConn := FDmConn;
   ofrmMto2 := Self;
-  //carga de todos los forms con sus propiedades y módulos de datos
-  oFzaWinF := TfzaWinf.Create(Self);
-  oFzaWinF.Charge(oConn);
-  dxstsbr1.Panels[1].Text := FdmConn.conUni.Server + ':'
-    + IntToStr(fdmconn.conUni.Port)
-    + ' (' + FdmConn.conUni.Database + ')';
+  // carga de todos los forms con sus propiedades y módulos de datos
+  oFzaWinf := TfzaWinF.Create(Self);
+  oFzaWinf.Charge(oConn);
+  dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
+    IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
   dxstsbr1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
   Self.Caption := oAppName + ' ' + oVersion;
   pnlPPBottom.Visible := False;
   cxMemo1.Visible := False;
-  {$IFDEF DEBUG}
-    pnlPPBottom.Visible := True;
-    cxMemo1.Visible := True;
-  {$ENDIF }
+{$IFDEF DEBUG}
+  pnlPPBottom.Visible := True;
+  cxMemo1.Visible := True;
+{$ENDIF }
   // Log(FdmConn.ConUni, oUSer, 'Entrando en el software', Self);
-  //  zqryPermisoMenu.Connection := FdmConn.ZconnGlent;
-  //  zqryPermisoMenu.SQL.Text := 'SELECT Entidad, Menu, PermisoAcceso, PermisoListado, PermisoEscritura ' +
-  //                         '  FROM glt_user_permisos ' +
-  //                         ' WHERE Entidad = ' + QuotedStr(oUser) +
-  //                         '    OR Entidad = ' + QuotedStr(oGroup) +
-  //                         '  ORDER BY Menu, PermisoAcceso';
-  //  zqryPermisoMenu.Open;
-  //  SetPermisosMenu(mnMenuPrin, oUser, oGroup);
-  //  zqryPermisoMenu.Close;
+  // zqryPermisoMenu.Connection := FdmConn.ZconnGlent;
+  // zqryPermisoMenu.SQL.Text := 'SELECT Entidad, Menu, PermisoAcceso,
+  //PermisoListado, PermisoEscritura ' +
+  // '  FROM glt_user_permisos ' +
+  // ' WHERE Entidad = ' + QuotedStr(oUser) +
+  // '    OR Entidad = ' + QuotedStr(oGroup) +
+  // '  ORDER BY Menu, PermisoAcceso';
+  // zqryPermisoMenu.Open;
+  // SetPermisosMenu(mnMenuPrin, oUser, oGroup);
+  // zqryPermisoMenu.Close;
 
-  //https://stackoverflow.com/questions/2750102/
-  //how-can-i-change-the-fontsize-of-the-mainmenu-items-in-delphi
-  //ShowMessage('ESTABLECIENDO FUENTES DE MENU');
+  // https://stackoverflow.com/questions/2750102/
+  // how-can-i-change-the-fontsize-of-the-mainmenu-items-in-delphi
+  // ShowMessage('ESTABLECIENDO FUENTES DE MENU');
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
-//  https://www.tek-tips.com/viewthread.cfm?qid=1360646
+  // https://www.tek-tips.com/viewthread.cfm?qid=1360646
   try
     if Assigned(LookAndFeelController1) and Assigned(SkinController1) then
     begin
@@ -224,18 +232,17 @@ begin
   except
     on E: Exception do
     begin
-      inliblog.Log.LogWarning('Error al establecer skin: ' + E.Message);
+      inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
       // Continuar sin skin personalizado
     end;
   end;
-  inliblog.Log.LogInfo('Ventana principal creada');
+  inLibLog.Log.LogInfo('Ventana principal creada');
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
 begin
   if (mnuTarifas.Visible = True) then
-    ShowMto(Self,
-            'Tarifas');
+    ShowMto(Self, 'Tarifas');
 end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
@@ -243,14 +250,14 @@ begin
   CopiaSeguridad;
 end;
 
-//validar iban online https://www.iban.com
-//validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
+// validar iban online https://www.iban.com
+// validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
 
 procedure TfrmMtoPrincipal.CopiaSeguridad;
 var
-  iButtonSel:Integer;
-  s         :string;
-  MyText    :TStringlist;
+  iButtonSel: Integer;
+  s: string;
+  MyText: TStringlist;
 begin
   iButtonSel := 0;
   saveDialog.Title := 'Guardar copia de seguridad';
@@ -283,8 +290,8 @@ begin
       MyText.Text := s;
       saveDialog.InitialDir := GetUserDeskFolder;
       MyText.SaveToFile(saveDialog.FileName, TEncoding.UTF8);
-      inliblog.Log.LogInfo('Copia de seguridad creada en ' +
-                           saveDialog.FileName);
+      inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
+        saveDialog.FileName);
       MyText.Free;
       ShowMessage('La copia se guardó exitosamente');
     end;
@@ -294,25 +301,25 @@ end;
 procedure TfrmMtoPrincipal.FormActivate(Sender: TObject);
 begin
   inherited;
-  //FormPaint(Sender);
+  // FormPaint(Sender);
 end;
 
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-  I:Integer;
+  I: Integer;
 begin
   inherited;
   try
-    inliblog.Log.LogInfo('Cerrando ventana principal');
+    inLibLog.Log.LogInfo('Cerrando ventana principal');
     tmr1.Enabled := False;
     FreeAndNil(oFzaWinf);
     for I := Pred(pcPrincipal.PageCount) downto 0 do
       TcxPageControlPropertiesAccess((pcPrincipal).Properties).DoCloseTab(I);
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
-    FreeAndNil(FdmConn);
+    FreeAndNil(FDmConn);
   finally
-    inliblog.Log.LogInfo('Ventana principal Cerrada');
+    inLibLog.Log.LogInfo('Ventana principal Cerrada');
     Action := caFree;
   end;
 end;
@@ -324,8 +331,8 @@ end;
 
 procedure TfrmMtoPrincipal.FormShow(Sender: TObject);
 begin
-  //si ocurre una excepción durante la carga,
-  //se fuerza el cierre de la ventana
+  // si ocurre una excepción durante la carga,
+  // se fuerza el cierre de la ventana
   if FException then
   begin
     PostMessage(Handle, wm_Close, 0, 0);
@@ -337,17 +344,21 @@ function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
   function GetKeyShiftState: TShiftState;
   begin
     Result := [];
-    if GetKeyState(VK_SHIFT) < 0 then Include(Result, ssShift);
-    if GetKeyState(VK_CONTROL) < 0 then Include(Result, ssCtrl);
-    if GetKeyState(VK_MENU) < 0 then Include(Result, ssAlt);
+    if GetKeyState(VK_SHIFT) < 0 then
+      Include(Result, ssShift);
+    if GetKeyState(VK_CONTROL) < 0 then
+      Include(Result, ssCtrl);
+    if GetKeyState(VK_MENU) < 0 then
+      Include(Result, ssAlt);
   end;
+
 var
   Component: TComponent;
   ts: TcxTabSheet;
   I: Integer;
   iPageActive: Integer;
   bFound: Boolean;
-  aShortCutList: TList<integer>;
+  aShortCutList: TList<Integer>;
   CurrentShortCut: TShortCut;
   ShiftState: TShiftState;
 begin
@@ -396,13 +407,13 @@ procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 begin
   if (mnuEjecutarScript.Visible) then
   begin
-    opendialog.Title := 'Cargar script';
+    openDialog.Title := 'Cargar script';
     openDialog.InitialDir := GetCurrentDir;
     undmp1.Connection := FDmConn.conUni;
     if openDialog.Execute then
     begin
       try
-        undmp1.RestoreFromFile(opendialog.FileName, TEncoding.UTF8);
+        undmp1.RestoreFromFile(openDialog.FileName, TEncoding.UTF8);
         ShowMessage('El script se ejecutó exitosamente');
       except
         on E: Exception do
@@ -421,7 +432,6 @@ procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);
 var
   ADateStr          : string;
   ATimeStr          : string;
-
 begin
   bIsConnected := False;
   ADateStr := DateToStr(Now);
@@ -434,29 +444,27 @@ begin
     end
     else
       bIsConnected := False;
-  if (FdmConn = nil) or (not bIsConnected) then
+  if (FDmConn = nil) or (not bIsConnected) then
   begin
-    dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' +
-                                            ATimeStr + 'NO Conn';
-    inliblog.Log.LogError('Se ha perdido la conexión con la BBDD');
+    dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
+    inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
   end;
 end;
 
-procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception; SQL: string;
-  var Action: TErrorAction);
+procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception;
+  SQL: string; var Action: TErrorAction);
 begin
   inherited;
   ShowMessage('Ha habido incidencias');
   Action := eaAbort;
-  //https://forums.devart.com/viewtopic.php?t=21244
-  //Continúa a pesar de los errores, por ejemplo si hay filas duplicadas
-  //if (EUniError(E).ErrorCode = 1062) then // ER_DUP_ENTRY
-  //  Action := eaContinue;
+  // https://forums.devart.com/viewtopic.php?t=21244
+  // Continúa a pesar de los errores, por ejemplo si hay filas duplicadas
+  // if (EUniError(E).ErrorCode = 1062) then // ER_DUP_ENTRY
+  // Action := eaContinue;
 end;
 
 procedure TfrmMtoPrincipal.WMFreeControl(var Message: TMessage);
 begin
-//
   TObject(Message.LParam).Free;
 end;
 
@@ -518,57 +526,49 @@ end;
 procedure TfrmMtoPrincipal.mnuClientesClick(Sender: TObject);
 begin
   if (mnuClientes.Visible) then
-    ShowMto(Self,
-            'Clientes');
+    ShowMto(Self, 'Clientes');
 end;
 
 procedure TfrmMtoPrincipal.mnuContadoresClick(Sender: TObject);
 begin
   if (mnuContadores.Visible) then
-    ShowMto(Self,
-            'Contadores');
+    ShowMto(Self, 'Contadores');
 end;
 
 procedure TfrmMtoPrincipal.mnuFacturasClick(Sender: TObject);
 begin
   if (mnuFacturas.Visible) then
-    ShowMto(Self,
-            'Facturas');
+    ShowMto(Self, 'Facturas');
 end;
 
 procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);
 begin
   if (mnuFamilias.Visible) then
-    ShowMto(Self,
-            'Familias');
+    ShowMto(Self, 'Familias');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
 begin
   if (mnuGeneradorProcesos.Visible) then
-    ShowMto(Self,
-            'GeneradorProcesos');
+    ShowMto(Self, 'GeneradorProcesos');
 end;
 
 procedure TfrmMtoPrincipal.mnuGruposClick(Sender: TObject);
 begin
   if (mnuGrupos.Visible) then
-    ShowMto(Self,
-            'Grupos');
+    ShowMto(Self, 'Grupos');
 end;
 
 procedure TfrmMtoPrincipal.mnuGruposdeIVAClick(Sender: TObject);
 begin
   if (mnuGruposdeIVA.Visible) then
-    ShowMto(Self,
-            'IvasGrupos');
+    ShowMto(Self, 'IvasGrupos');
 end;
 
 procedure TfrmMtoPrincipal.mnuIvasClick(Sender: TObject);
 begin
   if (mnuIvas.Visible) then
-    ShowMto(Self,
-            'Ivas');
+    ShowMto(Self, 'Ivas');
 end;
 
 procedure TfrmMtoPrincipal.mnuEmpresasClick(Sender: TObject);
@@ -582,8 +582,7 @@ procedure TfrmMtoPrincipal.mnuPaisesClick(Sender: TObject);
 begin
   inherited;
   if (mnuPaises.Visible) then
-    ShowMto(Self,
-            'Paises');
+    ShowMto(Self, 'Paises');
 end;
 
 procedure TfrmMtoPrincipal.mnuPerfilesClick(Sender: TObject);
@@ -595,22 +594,20 @@ end;
 
 procedure TfrmMtoPrincipal.mnuFormasdepagoClick(Sender: TObject);
 begin
-  if mnuFormasdepago.Visible then
-    ShowMto(Self,
-            'FormasdePago');
+  if mnuFormasdePago.Visible then
+    ShowMto(Self, 'FormasdePago');
 end;
 
 procedure TfrmMtoPrincipal.mnuProveedoresClick(Sender: TObject);
 begin
   if (mnuProveedores.Visible) then
-    ShowMto(Self,
-            'Proveedores');
+    ShowMto(Self, 'Proveedores');
 end;
 
 procedure TfrmMtoPrincipal.mnuUsuariosClick(Sender: TObject);
 begin
   if (mnuUsuarios.Visible) then
-    ShowMto(Self,
-            'Usuarios');
+    ShowMto(Self, 'Usuarios');
 end;
+
 end.

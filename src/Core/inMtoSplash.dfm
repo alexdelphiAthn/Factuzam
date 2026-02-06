@@ -28,7 +28,7 @@ object frmSplash: TfrmSplash
       Height = 334
       Animate = True
       Center = True
-      FrameIndex = 9
+      FrameIndex = 17
       Image.Data = {
         8A191500474946383961A802E801D5000096856AE8E8E78E7957A7A7A2E9CDB3
         161613CBB4A172706BDEDEDB49463653514CB08A42A0917A786953CBCBC5444F
@@ -43273,6 +43273,7 @@ object frmSplash: TfrmSplash
         Style.IsFontAssigned = True
         Properties.PenWidth = 2
         Properties.WordWrap = True
+        TabOrder = 0
         Transparent = True
         OnClick = cxLabel1Click
         Height = 81
@@ -43307,6 +43308,7 @@ object frmSplash: TfrmSplash
         Style.IsFontAssigned = True
         Properties.PenWidth = 2
         Properties.WordWrap = True
+        TabOrder = 2
         Transparent = True
         Height = 20
         Width = 185
