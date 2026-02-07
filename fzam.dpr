@@ -84,7 +84,8 @@ uses
   inLibGenBusq in 'src\Lib\inLibGenBusq.pas',
   inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
   UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule},
-  inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef};
+  inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
+  inLibFormManager in 'src\Lib\inLibFormManager.pas';
 
 var
   frmLogon: TfrmLogon;

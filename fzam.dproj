@@ -370,6 +370,7 @@
             <Form>frmMtoModalCajDef</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibFormManager.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

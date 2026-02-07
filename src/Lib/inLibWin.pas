@@ -180,7 +180,7 @@ begin
 end;
 
 function EncuentraPagina(pc: TcxPageControl;
-                           sName:string):integer; overload;
+                         sName:string):integer; overload;
 Var
 //   AComponent: TComponent;
    aIndex, I: Integer;

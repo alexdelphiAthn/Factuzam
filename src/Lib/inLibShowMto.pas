@@ -15,7 +15,8 @@ uses
   Classes, Windows, Forms, Menus, Controls, Uni,   System.SysUtils, UniDataGen,
   Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
   System.StrUtils, inLibUser, Vcl.Buttons, inlibGlobalVar, inMtoGen,
-  system.math, System.IOUtils, inLibWin, cxPC, Types, Vcl.Consts;
+  system.math, System.IOUtils, inLibWin, cxPC, Types, Vcl.Consts,
+  inLibFormManager;
 
 type
   TFormBaseClass = class of TForm;
@@ -37,86 +38,194 @@ implementation
  var
    GlobalDataModules: TObjectDictionary<string, TDataModule>;
 
-procedure ShowMto (Owner:TComponent;
-                   sCall:String;
-                   sBusq:string = '');
+//procedure ShowMto (Owner:TComponent;
+//                   sCall:String;
+//                   sBusq:string = '');
+//var
+//  frmOpen2: TfrmMtoPrincipal;
+//  iAbiertaPes : integer;
+//  sTitle :string;
+//  tsNew: TcxTabSheet;
+//  ctx:TRttiContext;
+//  lType:TRttiType;
+//  f,val : TValue;
+//  prop: TRttiProperty;
+//  dmDat: TdmBase;
+//  frmGen:TfrmMtoGen;
+//  sUnidadTipo:String;
+//  sDataUnit:String;
+//  sPkTab:String;
+//  mMenu : TMenuItem;
+//  ofzaF: TfzaForm;
+//begin
+//  frmOpen2 := (Owner as TfrmMtoPrincipal);
+//  ofzaF := frmOpen2.oFzaWinf.GetElement(sCall);
+//  if ofzaF = nil then
+//  begin
+//    ShowMessageFmt(SResWinFNotFnd, [sCall]);
+//    Exit;
+//  end;
+//  mMenu := ofzaF.mnMenuItem;
+//  sTitle := ofzaf.Caption;
+//  sUnidadTipo := ofzaf.UnitForm;
+//  sDataUnit := ofzaf.DataUnit;
+//  if (mMenu.Visible) then
+//  begin
+//    iAbiertaPes := EncuentraPagina(frmOpen2.pcPrincipal, sTitle);
+//    if (iAbiertaPes = -1) then
+//    begin
+//      tsNew := TcxTabSheet.Create(frmOpen2.pcPrincipal);
+//      tsNew.PageControl := frmOpen2.pcPrincipal;
+//      ctx := TRttiContext.Create;
+//      try
+//        lType:= ctx.FindType(sUnidadTipo);
+//        if (lType<>nil) then
+//        begin
+//          f:= TFormBaseClass(
+//                         GetTypeData(lType.Handle)^.ClassType).Create(frmOpen2);
+//          tsNew.Caption := sTitle;
+//          inLibLog.Log.LogInfo('Abriendo Pantalla Mto: '+ sTitle);
+//          prop := lType.GetProperty('Parent');
+//          prop.SetValue(f.asObject, (tsNew as TObject));
+//          prop := lType.GetProperty('Align');
+//          val := TValue.From<TAlign>(alClient);
+//          prop.SetValue(f.asObject, val);
+//        end
+//        else
+//        begin
+//          ShowMessageFmt(SClassRttiNotFnd, [sUnidadTipo]);
+//        end;
+//      finally
+//        //ctx.Free;
+//      end;
+//      iAbiertaPes := EncuentraPagina(frmOpen2.pcPrincipal, sTitle);
+//    end;
+//    if (iAbiertaPes <> -1) then
+//        frmOpen2.pcPrincipal.ActivePageIndex := iAbiertaPes;
+//    if (iAbiertaPes <> -1) and (sBusq <> '') then
+//    begin
+//      //existe el formulario en la pestaña, entonces si hay búsqueda de dato
+//      tsNew := frmOpen2.pcPrincipal.Pages[iAbiertaPes];
+//      if (tsNew.Controls[0] is TfrmMtoGen) then
+//      begin
+//        frmGen := (tsNew.Controls[0] as TfrmMtoGen);
+//        sPkTab := frmGen.pkFieldName;
+//        dmDat := (frmGen.tdmDataModule as TdmBase);
+//        if not BuscarTabla(dmDat.unqryTablaG, sPkTab, sBusq)  then
+//          ShowMessageFmt(SLocateNotFnd, [sBusq, sTitle])
+//        else
+//        begin
+//          if (frmGen.tsFicha.TabVisible = True) then
+//            frmGen.pcPantalla.ActivePage := frmGen.tsFicha;
+//        end;
+//      end;
+//    end;
+//  end;
+//end;
+
+procedure ShowMto(Owner: TComponent; sCall: String; sBusq: string = '');
 var
-  frmOpen2: TfrmMtoPrincipal;
-  iAbiertaPes : integer;
-  sTitle :string;
-  tsNew: TcxTabSheet;
-  ctx:TRttiContext;
-  lType:TRttiType;
-  f,val : TValue;
-  prop: TRttiProperty;
-  dmDat: TdmBase;
-  frmGen:TfrmMtoGen;
-  sUnidadTipo:String;
-  sDataUnit:String;
-  sPkTab:String;
-  mMenu : TMenuItem;
+  frmMain: TfrmMtoPrincipal;
   ofzaF: TfzaForm;
+  TargetForm: TForm;
+
+  // Variables RTTI
+  ctx: TRttiContext;
+  lType: TRttiType;
+  FormClass: TFormBaseClass;
+
+  // Variables Búsqueda
+  frmGen: TfrmMtoGen;
+  dmDat: TdmBase;
+  sPkTab: String;
 begin
-  frmOpen2 := (Owner as TfrmMtoPrincipal);
-  ofzaF := frmOpen2.oFzaWinf.GetElement(sCall);
+  // 1. Validaciones básicas
+  if not (Owner is TfrmMtoPrincipal) then Exit;
+  frmMain := TfrmMtoPrincipal(Owner);
+
+  // Inicialización Lazy del Manager
+  if frmMain.FormManager = nil then
+    frmMain.FormManager := TEmbeddedFormManager.Create(frmMain.pcPrincipal);
+
+  // 2. Obtener configuración
+  ofzaF := frmMain.oFzaWinf.GetElement(sCall);
+
   if ofzaF = nil then
   begin
     ShowMessageFmt(SResWinFNotFnd, [sCall]);
     Exit;
   end;
-  mMenu := ofzaF.mnMenuItem;
-  sTitle := ofzaf.Caption;
-  sUnidadTipo := ofzaf.UnitForm;
-  sDataUnit := ofzaf.DataUnit;
-  if (mMenu.Visible) then
+
+  // ---------------------------------------------------------
+  // NUEVA VALIDACIÓN: Seguridad / Visibilidad del Menú
+  // ---------------------------------------------------------
+  // Si tiene un ítem de menú asociado y este NO es visible, salimos.
+  // Esto respeta la lógica de tu código original: "if (mMenu.Visible) then"
+  if (ofzaF.mnMenuItem <> nil) and (not ofzaF.mnMenuItem.Visible) then
   begin
-    iAbiertaPes := EncuentraPagina(frmOpen2.pcPrincipal, sTitle);
-    if (iAbiertaPes = -1) then
-    begin
-      tsNew := TcxTabSheet.Create(frmOpen2.pcPrincipal);
-      tsNew.PageControl := frmOpen2.pcPrincipal;
-      ctx := TRttiContext.Create;
-      try
-        lType:= ctx.FindType(sUnidadTipo);
-        if (lType<>nil) then
-        begin
-          f:= TFormBaseClass(
-                         GetTypeData(lType.Handle)^.ClassType).Create(frmOpen2);
-          tsNew.Caption := sTitle;
-          inLibLog.Log.LogInfo('Abriendo Pantalla Mto: '+ sTitle);
-          prop := lType.GetProperty('Parent');
-          prop.SetValue(f.asObject, (tsNew as TObject));
-          prop := lType.GetProperty('Align');
-          val := TValue.From<TAlign>(alClient);
-          prop.SetValue(f.asObject, val);
-        end
-        else
-        begin
-          ShowMessageFmt(SClassRttiNotFnd, [sUnidadTipo]);
-        end;
-      finally
-        //ctx.Free;
-      end;
-      iAbiertaPes := EncuentraPagina(frmOpen2.pcPrincipal, sTitle);
-    end;
-    if (iAbiertaPes <> -1) then
-        frmOpen2.pcPrincipal.ActivePageIndex := iAbiertaPes;
-    if (iAbiertaPes <> -1) and (sBusq <> '') then
-    begin
-      //existe el formulario en la pestaña, entonces si hay búsqueda de dato
-      tsNew := frmOpen2.pcPrincipal.Pages[iAbiertaPes];
-      if (tsNew.Controls[0] is TfrmMtoGen) then
+    // Opcional: Loguear intento de acceso no autorizado
+    // inLibLog.Log.LogWarn('Intento de acceso a menú oculto: ' + sCall);
+    Exit;
+  end;
+  // ---------------------------------------------------------
+
+  // 3. Buscar si el formulario YA existe en el Manager
+  TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);
+
+  // 4. Si NO existe, crear e incrustar
+  if TargetForm = nil then
+  begin
+    ctx := TRttiContext.Create;
+    try
+      lType := ctx.FindType(ofzaF.UnitForm);
+
+      if (lType <> nil) and (lType.IsInstance) then
       begin
-        frmGen := (tsNew.Controls[0] as TfrmMtoGen);
-        sPkTab := frmGen.pkFieldName;
-        dmDat := (frmGen.tdmDataModule as TdmBase);
-        if not BuscarTabla(dmDat.unqryTablaG, sPkTab, sBusq)  then
-          ShowMessageFmt(SLocateNotFnd, [sBusq, sTitle])
-        else
-        begin
-          if (frmGen.tsFicha.TabVisible = True) then
-            frmGen.pcPantalla.ActivePage := frmGen.tsFicha;
-        end;
+        FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
+
+        // Crear instancia (Sin Parent visual aún)
+        TargetForm := FormClass.Create(frmMain);
+
+        // Delegar al Manager para incrustar en el PageControl
+        frmMain.FormManager.EmbedForm(TargetForm, ofzaF.Caption, True);
+
+        inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
+      end
+      else
+      begin
+        ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
+        Exit;
+      end;
+    finally
+      ctx.Free;
+    end;
+  end
+  else
+  begin
+    // Si ya existe, simplemente lo traemos al frente
+    if (TargetForm.Parent is TcxTabSheet) then
+      (TargetForm.Parent as TcxTabSheet).PageControl.ActivePage := (TargetForm.Parent as TcxTabSheet);
+  end;
+
+  // 5. Lógica de Búsqueda (si aplica)
+  if (sBusq <> '') and (TargetForm is TfrmMtoGen) then
+  begin
+    frmGen := TfrmMtoGen(TargetForm);
+    if (frmGen.tdmDataModule <> nil) and (frmGen.tdmDataModule is TdmBase) then
+    begin
+      dmDat := TdmBase(frmGen.tdmDataModule);
+      sPkTab := frmGen.pkFieldName;
+
+      if not BuscarTabla(dmDat.unqryTablaG, sPkTab, sBusq) then
+      begin
+        ShowMessageFmt(SLocateNotFnd, [sBusq, ofzaF.Caption]);
+      end
+      else
+      begin
+        if (frmGen.tsFicha <> nil) and (frmGen.tsFicha.TabVisible) then
+          frmGen.pcPantalla.ActivePage := frmGen.tsFicha;
+        if frmGen.CanFocus then
+          frmGen.SetFocus;
       end;
     end;
   end;

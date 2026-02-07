@@ -44,10 +44,6 @@ inherited frmMtoGen: TfrmMtoGen
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object cxGrdPrincipal: TcxGrid
           Left = 0
           Top = 0
@@ -115,10 +111,6 @@ inherited frmMtoGen: TfrmMtoGen
         Caption = '&Ficha'
         ImageIndex = 1
         OnShow = tsFichaShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
       end
       object tsPerfil: TcxTabSheet
         Caption = 'Perfil'

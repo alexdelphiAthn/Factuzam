@@ -43,7 +43,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -142,7 +142,7 @@ type
     procedure CopiaSeguridad;
   public
     { Public declarations }
-
+    FormManager : TEmbeddedFormManager;
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
     oFzaWinf: TfzaWinF;
@@ -175,6 +175,7 @@ begin
   sDis := '';
   oMemoSQL := cxMemo1;
   inLibLog.Log.LogInfo('Creando ventana principal');
+  FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
   FdmDataPerfiles := TdmPerfiles.Create(Self);
