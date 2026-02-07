@@ -77,8 +77,7 @@ type
   function GetDefaultValue(const ATable,
                                  AField,
                                  AConditionField: string): string;
-
-procedure ActualizarLineaFacturaGen(
+  procedure ActualizarLineaFacturaGen(
                                     cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
@@ -86,7 +85,73 @@ procedure ActualizarLineaFacturaGen(
                                     EventoUpdateTotal: TUpdateTotalEvent = nil
                                    );
 
+  function CheckOpenDatasets(AModule: TDataModule): Boolean;
+  procedure CancelarDatasets(AModule: TDataModule);
+  procedure GrabarDatasets(AModule: TDataModule);
+
 implementation
+
+procedure GrabarDatasets(AModule: TDataModule);
+var
+  i: Integer;
+  LDataSet: TDataSet;
+begin
+  if AModule = nil then Exit;
+  for i := 0 to AModule.ComponentCount - 1 do
+  begin
+    if AModule.Components[i] is TDataSet then
+    begin
+      LDataSet := TDataSet(AModule.Components[i]);
+      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
+      begin
+        LDataSet.Post;
+      end;
+    end;
+  end;
+end;
+
+procedure CancelarDatasets(AModule: TDataModule);
+var
+  i: Integer;
+  LDataSet: TDataSet;
+begin
+  if AModule = nil then Exit;
+
+  for i := 0 to AModule.ComponentCount - 1 do
+  begin
+    if AModule.Components[i] is TDataSet then
+    begin
+      LDataSet := TDataSet(AModule.Components[i]);
+
+      // Si está editando o insertando, cancelamos
+      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
+      begin
+        LDataSet.Cancel;
+      end;
+    end;
+  end;
+end;
+
+function CheckOpenDatasets(AModule: TDataModule): Boolean;
+var
+  i: Integer;
+  LDataSet: TDataSet;
+begin
+  Result := False;
+  if AModule = nil then Exit;
+  for i := 0 to AModule.ComponentCount - 1 do
+  begin
+    if AModule.Components[i] is TDataSet then
+    begin
+      LDataSet := TDataSet(AModule.Components[i]);
+      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+end;
 
 procedure ActualizarLineaFacturaGen(cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;

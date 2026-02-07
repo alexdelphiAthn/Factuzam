@@ -488,6 +488,7 @@ begin
     AGrid.EndUpdate;
   end;
 end;
+
 procedure CancelarGrids(oPrincipal:TComponent);
 var
   i: Integer;
