@@ -57,13 +57,14 @@ var
   Form: TfrmMtoGen;
 begin
   Form := GetOwnerForm<TfrmMtoGen>;
-  FoPerfilDic := nil; // Inicializamos la variable de instancia
+  FoPerfilDic := nil;
   unqryTablaG.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   if Assigned(Form) then
   begin
-    // Usamos FoPerfilDic (instancia) en vez de la global
-    if (GetPerfilValueDef(Form.oPerfilDic, 'oGetSQLFromDB', 'False') = 'True') then
+    if (GetPerfilValueDef(Form.oPerfilDic,
+                          'oGetSQLFromDB',
+                          'False') = 'True') then
     begin
       GetFormUserProfile(FoPerfilDic, Self.Name);
       LoadSQLFromProfile(Self, FoPerfilDic);

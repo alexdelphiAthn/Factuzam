@@ -399,6 +399,18 @@ begin
     Password := sPassword;
     Port := StrToIntDef(sPort, 3306);
     SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+    SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
+    SpecificOptions.Values['MySQL.Protocol'] := 'mpDefault';
+    Pooling := True;
+    PoolingOptions.ConnectionLifetime := 0;
+    PoolingOptions.Validate := True;
+    PoolingOptions.MinPoolSize := 3;
+    PoolingOptions.MaxPoolSize := 20;
+    SpecificOptions.Values['MySQL.Interactive'] := 'True';
+    SpecificOptions.Values['ConnectionTimeout'] := '5';
+    Options.LocalFailover := True;
+    Options.DisconnectedMode := False;
+    // SpecificOptions.Values['MySQL.Compress'] := 'True';
   end;
 end;
 
