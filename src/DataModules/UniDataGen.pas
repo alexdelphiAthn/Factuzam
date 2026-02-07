@@ -100,12 +100,11 @@ end;
 
 function TdmBase.GetOwnerForm<T>: T;
 begin
-  if Assigned(FCurrentForm) and
-     not (csDestroying in FCurrentForm.ComponentState) and
-     (FCurrentForm is T) then
+  Result := nil;
+  if Assigned(FCurrentForm) and (FCurrentForm is T) then
     Result := T(FCurrentForm)
-  else
-    Result := nil;
+  else if (Self.Owner <> nil) and (Self.Owner is T) then
+    Result := T(Self.Owner);
 end;
 
 function TdmBase.HasOwnerForm: Boolean;

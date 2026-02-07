@@ -94,7 +94,6 @@ type
     btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
     procedure FormCreate(Sender: TObject);
-    //procedure btnSalirClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure cxGrdDBTabPrinDblClick(Sender: TObject);
@@ -291,40 +290,63 @@ end;
 procedure TfrmMtoGen.btnGrabarClick(Sender: TObject);
 begin
   inherited;
+  if tdmDataModule = nil then
+    Exit;
   Screen.Cursor := crHourGlass;
-  GrabarGrids(Self);
-  if oDmConn.conUni.InTransaction = True then
-    oDmConn.conUni.Commit;
-  Screen.Cursor := crDefault;
+  try
+    try
+       if not oDmConn.conUni.InTransaction then
+         oDmConn.conUni.StartTransaction;
+      GrabarDatasets(tdmDataModule as TDataModule);
+      if oDmConn.conUni.InTransaction then
+        oDmConn.conUni.Commit;
+      ShowMessage('Datos guardados correctamente');
+    except
+      on E: Exception do
+      begin
+        if oDmConn.conUni.InTransaction then
+          oDmConn.conUni.Rollback;
+        raise Exception.Create('Error al grabar: ' + E.Message);
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TfrmMtoGen.btnSalirClick(Sender: TObject);
 const
-  WM_FREECONTROL = WM_USER;
+  WM_FREECONTROL = WM_USER + 1;
 var
-  ts : TcxTabSheet;
-  formP:TForm;
+  ts: TcxTabSheet;
+  formMain: TCustomForm;
 begin
   inherited;
-  ts := Self.parent as TcxTabSheet;
-  formP:=(ts.Parent.Parent.Parent as TfrmMtoPrincipal);
-  if ( CheckOpenGrids(Self) ) then
+  if not (Self.Parent is TcxTabSheet) then Exit;
+  formMain := Application.MainForm;
+  if (tdmDataModule <> nil) and
+     CheckOpenDatasets(tdmDataModule as TDataModule) then
   begin
-     if ( Application.MessageBox( 'Hay datos no grabados. ¿Desea grabar'+
-                                  ' los cambios de datos?',
-                                 'Mensaje de Advertencia',
-                                 MB_YESNO ) = ID_YES ) then
-     begin
-       btnGrabarClick(Sender);
-       ShowMessage('Cambios grabados');
-     end
-     else
-     begin
-       CancelarGrids(formP);
-     end;
+    if Application.MessageBox('Hay datos no grabados. ' +
+                              '¿Desea grabar los cambios?',
+                              'Mensaje de Advertencia',
+                              MB_YESNO + MB_ICONQUESTION) = ID_YES then
+    begin
+      btnGrabarClick(Sender);
+      ShowMessage('Cambios grabados');
+    end
+    else
+    begin
+      CancelarDatasets(tdmDataModule as TDataModule);
+      ShowMessage('Cambios revertidos/cancelados');
+    end;
   end;
-  tdmDataModule := nil;
-  PostMessage(formP.Handle, WM_FREECONTROL, 0, LParam(ts));
+  if (Self.Parent is TcxTabSheet) then
+  begin
+    ts := TcxTabSheet(Self.Parent);
+    formMain := Application.MainForm;
+    PostMessage(formMain.Handle, WM_FREECONTROL, 0, LParam(ts));
+  end;
 end;
 
 procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
@@ -336,7 +358,6 @@ var
   cxGrid : TcxGridDBTableView;
 begin
   inherited;
-  //Grabar Grid
   bGuardar := False;
   formulario := TfrmModalGenImpSave.Create(Application);
   formulario.edtDescripcion.Enabled := False;
@@ -364,7 +385,6 @@ begin
         if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
         begin
           cxGrid := (Self.Components[i] as TcxGridDBTableView);
-        // Hay que resetear aquí los registros que contengan el grid en perfiles
           (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
                                                        Self.Name,
                                                        sPermisos);
@@ -409,7 +429,7 @@ begin
   begin
     for i:= 0 to Self.Componentcount - 1 do
     begin
-        if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
+      if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
       begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
         (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,

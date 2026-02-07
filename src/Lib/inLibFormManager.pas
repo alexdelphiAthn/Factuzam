@@ -9,22 +9,18 @@ type
   TEmbeddedFormManager = class
   private
     FPageControl: TcxPageControl;
-    // Lista interna para gestionar las instancias y permitir el bucle for..in
     FForms: TList<TForm>;
+    procedure InternalCloseForm(AForm:TForm);
   public
     constructor Create(APageControl: TcxPageControl);
     destructor Destroy; override;
-
-    // Método para incrustar un formulario
     procedure EmbedForm(AForm: TForm;
                         const ATitle: string;
                         ASelect: Boolean = True);
-
-    // Método para buscar si ya existe
     function FindFormByCaption(const ATitle: string): TForm;
-
-    // Soporte para "for Form in Manager do"
     function GetEnumerator: TList<TForm>.TEnumerator;
+    procedure CloseFormByCaption(const ATitle: string);
+    procedure CloseAll;
   end;
 
 implementation
@@ -44,34 +40,31 @@ begin
   inherited;
 end;
 
-procedure TEmbeddedFormManager.EmbedForm(AForm: TForm; const ATitle: string; ASelect: Boolean);
+procedure TEmbeddedFormManager.CloseAll;
+begin
+  // Iteramos al revés porque vamos a eliminar elementos de la lista
+  while FForms.Count > 0 do
+  begin
+    InternalCloseForm(FForms.Last);
+  end;
+end;
+
+procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
+                                         const ATitle: string;
+                                         ASelect: Boolean);
 var
   NewTab: TcxTabSheet;
 begin
-  // 1. Preparar el formulario (Quitar bordes antes de nada)
   AForm.BorderStyle := bsNone;
-
-  // 2. Crear la pestaña
   NewTab := TcxTabSheet.Create(FPageControl.Owner);
   NewTab.PageControl := FPageControl;
   NewTab.Caption := ATitle;
-
-  // 3. EL PASO CRÍTICO: Asignar el Parent ANTES del Align
   AForm.Parent := NewTab;
-
-  // 4. Forzar posición inicial (Truco para asegurar que el VCL refresque)
   AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
-
-  // 5. Ahora sí, activar el Align
   AForm.Align := alClient;
-
-  // 6. Asegurar visibilidad
   AForm.Visible := True;
   AForm.Show;
-
-  // Registrar en la lista
   FForms.Add(AForm);
-
   if ASelect then
     FPageControl.ActivePage := NewTab;
 end;
@@ -83,8 +76,8 @@ begin
   Result := nil;
   for F in FForms do
   begin
-    // Asumimos que el caption del tab coincide o el del form
-    if (F.Parent is TcxTabSheet) and (TcxTabSheet(F.Parent).Caption = ATitle) then
+    if (F.Parent is TcxTabSheet) and
+       (TcxTabSheet(F.Parent).Caption = ATitle) then
       Exit(F);
   end;
 end;
@@ -93,6 +86,30 @@ end;
 function TEmbeddedFormManager.GetEnumerator: TList<TForm>.TEnumerator;
 begin
   Result := FForms.GetEnumerator;
+end;
+
+procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm);
+var
+  ParentTab: TcxTabSheet;
+begin
+  if AForm = nil then
+    Exit;
+  ParentTab := nil;
+  if AForm.Parent is TcxTabSheet then
+    ParentTab := TcxTabSheet(AForm.Parent);
+  FForms.Remove(AForm);
+  AForm.Free;
+  if ParentTab <> nil then
+    ParentTab.Free;
+end;
+
+procedure TEmbeddedFormManager.CloseFormByCaption(const ATitle: string);
+var
+  LForm: TForm;
+begin
+  LForm := FindFormByCaption(ATitle);
+  if LForm <> nil then
+    InternalCloseForm(LForm);
 end;
 
 end.

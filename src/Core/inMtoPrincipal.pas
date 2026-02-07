@@ -134,7 +134,7 @@ type
       var Action: TErrorAction);
     procedure mnuLisVentasClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure WMFreeControl(var Message: TMessage); message WM_FREECONTROL;
+    procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
   private
 
     FException: Boolean;
@@ -314,8 +314,8 @@ begin
     inLibLog.Log.LogInfo('Cerrando ventana principal');
     tmr1.Enabled := False;
     FreeAndNil(oFzaWinf);
-    for I := Pred(pcPrincipal.PageCount) downto 0 do
-      TcxPageControlPropertiesAccess((pcPrincipal).Properties).DoCloseTab(I);
+    if FormManager <> nil then
+      FormManager.CloseAll;
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
     FreeAndNil(FDmConn);
@@ -464,10 +464,25 @@ begin
   // Action := eaContinue;
 end;
 
-procedure TfrmMtoPrincipal.WMFreeControl(var Message: TMessage);
+procedure TfrmMtoPrincipal.WMFreeControl(var Msg: TMessage);
+var
+  TabACerrar: TcxTabSheet;
 begin
-  TObject(Message.LParam).Free;
+  TabACerrar := TcxTabSheet(Msg.LParam);
+  if FormManager <> nil then
+  begin
+    FormManager.CloseFormByCaption(TabACerrar.Caption);
+  end
+  else
+  begin
+    TabACerrar.Free;
+  end;
 end;
+
+//procedure TfrmMtoPrincipal.WMFreeControl(var Message: TMessage);
+//begin
+//  TObject(Message.LParam).Free;
+//end;
 
 procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
 var
