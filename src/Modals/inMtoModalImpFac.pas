@@ -1,4 +1,4 @@
-{*******************************************************}
+Ôªø{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -91,6 +91,17 @@ var
   Cell: TdxSpreadSheetCell;
   NombreSugerido: string;
 
+  procedure Merge(ARow, ACol, ColCount, RowCount: Integer);
+  begin
+    // HSpan: Cu√°ntas columnas de ancho (ej. 2 para ocupar D y E)
+    // VSpan: Cu√°ntas filas de alto (ej. 1 para una sola fila)
+    // TRect.Create(Left, Top, Right, Bottom)
+    var R := Rect(ACol, ARow, ACol + ColCount - 1, ARow + RowCount - 1);
+
+    // A√±adimos el rect√°ngulo a la lista de celdas fusionadas
+    Sheet.MergedCells.Add(R);
+  end;
+
   // Helper para escribir celdas
   procedure W(ARow, ACol: Integer;
               const AValue: Variant;
@@ -112,7 +123,7 @@ var
   begin
     with Sheet.CreateCell(ARow, ACol) do
     begin
-      // SetText(..., True) es CRÕTICO para que interprete la fÛrmula
+      // SetText(..., True) es CR√çTICO para que interprete la f√≥rmula
       SetText(AFormula, True);
       Style.AlignHorz := ssahRight;
       if AFormat <> '' then Style.DataFormat.FormatCode := AFormat;
@@ -171,18 +182,18 @@ var
 
        // BASE -> SUMIF filtrando por LETRA ('N', 'R'...)
        WFormula(iRow, 0, '=SUMIF(' + RangoTL +
-              ',"' + TipoLetra + '",' + RangoBR + ')', '#,##0.00" Ä"');
+              ',"' + TipoLetra + '",' + RangoBR + ')', '#,##0.00" ‚Ç¨"');
        RefBase := GetRef(iRow, 0);
 
        // CUOTA IVA -> Base * % / 100
        WFormula(iRow, 2, '=' + RefBase + '*' + FloatToStr(PctIVA) +
-                                                        '/100', '#,##0.00" Ä"');
+                                                        '/100', '#,##0.00" ‚Ç¨"');
        // RECARGO
        if PctRE > 0 then
        begin
          W(iRow, 3, PctRE, False, ssahCenter);
          WFormula(iRow, 4, '=' + RefBase + '*' + FloatToStr(PctRE) + '/100',
-                                                                '#,##0.00" Ä"');
+                                                                '#,##0.00" ‚Ç¨"');
        end
        else
        begin
@@ -205,11 +216,12 @@ begin
 
     W(1, 4, 'Fecha: ' + QMaster.FieldByName('FECHA_FACTURA').AsString,
              False, ssahRight);
-    W(2, 4, 'N˙mero: ' + QMaster.FieldByName('SERIE_FACTURA').AsString + '.' +
+    W(2, 4, 'N√∫mero: ' + QMaster.FieldByName('SERIE_FACTURA').AsString + '.' +
              QMaster.FieldByName('NRO_FACTURA').AsString, True, ssahRight);
 
     // --- EMISOR Y RECEPTOR ---
     W(4, 0, 'EMISOR', True);
+    Merge(4, 0, 3, 1);
     W(5, 0, QMaster.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString);
     W(6, 0, 'NIF: ' + QMaster.FieldByName('NIF_EMPRESA_FACTURA').AsString);
     W(7, 0, QMaster.FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString);
@@ -221,36 +233,37 @@ begin
     W(7, 3, QMaster.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
     W(8, 3, QMaster.FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString + ' ' + QMaster.FieldByName('POBLACION_CLIENTE_FACTURA').AsString);
 
-    // --- TABLA DE LÕNEAS (CORREGIDO: 5 COLUMNAS AHORA) ---
+    // --- TABLA DE L√çNEAS (CORREGIDO: 5 COLUMNAS AHORA) ---
     iRow := 11;
-    W(iRow, 0, 'DescripciÛn', True);   // Col A
-    W(iRow, 1, 'Cantidad', True, ssahRight); // Col B (Antes estaba vacÌa)
+    W(iRow, 0, 'Descripci√≥n', True);   // Col A
+    W(iRow, 1, 'Cantidad', True, ssahRight); // Col B (Antes estaba vac√≠a)
     W(iRow, 2, 'Precio', True, ssahRight);   // Col C
     W(iRow, 3, '% IVA', True, ssahRight);    // Col D (Nueva)
     W(iRow, 4, 'Total', True, ssahRight);    // Col E
-    // Columnas Ocultas (TÌtulos para referencia)
+    // Columnas Ocultas (T√≠tulos para referencia)
     W(iRow, 6, 'Tipo Letra', False); // Col G (Oculta)
 
     // Bordes inferiores cabecera
     if Sheet.Cells[iRow, 0] <> nil then
-                  Sheet.Cells[iRow, 0].Style.Borders[bBottom].Style := sscbsThin;
+                 Sheet.Cells[iRow, 0].Style.Borders[bBottom].Style := sscbsThin;
     if Sheet.Cells[iRow, 1] <> nil then
-                  Sheet.Cells[iRow, 1].Style.Borders[bBottom].Style := sscbsThin;
+                 Sheet.Cells[iRow, 1].Style.Borders[bBottom].Style := sscbsThin;
     if Sheet.Cells[iRow, 2] <> nil then
-                  Sheet.Cells[iRow, 2].Style.Borders[bBottom].Style := sscbsThin;
+                 Sheet.Cells[iRow, 2].Style.Borders[bBottom].Style := sscbsThin;
     if Sheet.Cells[iRow, 3] <> nil then
-                  Sheet.Cells[iRow, 3].Style.Borders[bBottom].Style := sscbsThin;
+                 Sheet.Cells[iRow, 3].Style.Borders[bBottom].Style := sscbsThin;
     if Sheet.Cells[iRow, 4] <> nil then
-                  Sheet.Cells[iRow, 4].Style.Borders[bBottom].Style := sscbsThin;
+                 Sheet.Cells[iRow, 4].Style.Borders[bBottom].Style := sscbsThin;
     var FilaInicioLineas := iRow + 1;
     QLineas.First;
     while not QLineas.Eof do
     begin
       Inc(iRow);
-      // Col A: DescripciÛn
+      // Col A: Descripci√≥n
       with Sheet.CreateCell(iRow, 0) do
       begin
-        AsString := QLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+        AsString :=
+             QLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
         Style.WordWrap := True;
       end;
 
@@ -264,22 +277,22 @@ begin
         QLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsFloat,
         False, ssahRight);
 
-      // Col D: % IVA (Desde la lÌnea)
+      // Col D: % IVA (Desde la l√≠nea)
       W(iRow, 3,
         QLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat,
         False, ssahRight);
 
-      // Col E: Total LÌnea
+      // Col E: Total L√≠nea
 //      W(iRow, 4,
 //        QLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsFloat,
 //        False, ssahRight);
       WFormula(iRow, 4, '=' + GetRef(iRow, 1) + '*' +
-                                               GetRef(iRow, 2), '#,##0.00" Ä"');
+                                               GetRef(iRow, 2), '#,##0.00" ‚Ç¨"');
       // Formatos
       if Sheet.Cells[iRow, 2] <> nil then
-        Sheet.Cells[iRow, 2].Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+        Sheet.Cells[iRow, 2].Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
       if Sheet.Cells[iRow, 4] <> nil then
-        Sheet.Cells[iRow, 4].Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+        Sheet.Cells[iRow, 4].Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
       if ImpuestosIncluidos then
       begin
          // Caso IVA INCLUIDO: Base = Total / (1 + %/100)
@@ -347,36 +360,36 @@ begin
     PintarCuadro(Sheet, RowInicioTabla, 0, RowFinTabla, 4, sscbsMedium);
 
     // ==========================================
-    // 4. RESUMEN FINAL CON F”RMULAS
+    // 4. RESUMEN FINAL CON F√ìRMULAS
     // ==========================================
     Inc(iRow, 2);
 
-    // A. TOTAL BASE IMPONIBLE (FÛrmula SUM de la columna 0 del cuadro)
+    // A. TOTAL BASE IMPONIBLE (F√≥rmula SUM de la columna 0 del cuadro)
     W(iRow, 3, 'Total Base Imponible:', True, ssahRight);
 
     with Sheet.CreateCell(iRow, 4) do
     begin
-      // FÛrmula: =SUM(A_Inicio : A_Fin)
+      // F√≥rmula: =SUM(A_Inicio : A_Fin)
       SetText('=SUM(' + GetRef(RowInicioTabla + 1, 0) + ':' +
               GetRef(RowFinTabla, 0) + ')', True);
-      Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+      Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
       Style.AlignHorz := ssahRight;
     end;
     var RefTotalBase := GetRef(iRow, 4); // Guardamos "E15" (ejemplo) para usarlo luego
 
-    // B. TOTAL IMPUESTOS (FÛrmula SUM Columna Cuota + SUM Columna RE)
+    // B. TOTAL IMPUESTOS (F√≥rmula SUM Columna Cuota + SUM Columna RE)
     Inc(iRow);
     W(iRow, 3, 'Total Impuestos (IVA+RE):', True, ssahRight);
 
     with Sheet.CreateCell(iRow, 4) do
     begin
-      // FÛrmula: =SUM(C_Inicio : C_Fin) + SUM(E_Inicio : E_Fin)
+      // F√≥rmula: =SUM(C_Inicio : C_Fin) + SUM(E_Inicio : E_Fin)
       // Col 2 es 'C' (Cuota), Col 4 es 'E' (RE)
       SetText('=SUM(' + GetRef(RowInicioTabla + 1, 2) + ':' +
                GetRef(RowFinTabla, 2) + ')+' +
                'SUM(' + GetRef(RowInicioTabla + 1, 4) + ':' +
                GetRef(RowFinTabla, 4) + ')', True);
-      Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+      Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
       Style.AlignHorz := ssahRight;
     end;
     var RefTotalImpuestos := GetRef(iRow, 4);
@@ -392,19 +405,19 @@ begin
        // Ponemos el % IRPF en columna 5 (oculta pero editable)
        W(iRow, 5, PctIRPF, False, ssahCenter);
 
-       // TÌtulo con fÛrmula que concatena el % desde la columna 5
+       // T√≠tulo con f√≥rmula que concatena el % desde la columna 5
        with Sheet.CreateCell(iRow, 3) do
        begin
-         SetText('="RetenciÛn IRPF ("&' + GetRef(iRow, 5) + '&"%):"', True);
+         SetText('="Retenci√≥n IRPF ("&' + GetRef(iRow, 5) + '&"%):"', True);
          Style.Font.Style := [fsBold];
          Style.AlignHorz := ssahRight;
        end;
 
-       // FÛrmula: Total Base * Celda_F / 100 (negativo)
+       // F√≥rmula: Total Base * Celda_F / 100 (negativo)
        with Sheet.CreateCell(iRow, 4) do
        begin
          SetText('=-(' + RefTotalBase + '*' + GetRef(iRow, 5) + '/100)', True);
-         Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+         Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
          Style.Font.Color := clRed;
          Style.AlignHorz := ssahRight;
        end;
@@ -412,7 +425,7 @@ begin
        RefRetenciones := GetRef(iRow, 4);
     end;
 
-    // D. TOTAL A PAGAR (FÛrmula suma de los anteriores)
+    // D. TOTAL A PAGAR (F√≥rmula suma de los anteriores)
     Inc(iRow);
     W(iRow, 3, 'TOTAL A PAGAR:', True, ssahRight);
     with Sheet.CreateCell(iRow, 4) do
@@ -423,7 +436,7 @@ begin
       SetText(FormulaStr, True);
       Style.Font.Style := [fsBold];
       Style.Font.Size := 14;
-      Style.DataFormat.FormatCode := '#,##0.00" Ä"';
+      Style.DataFormat.FormatCode := '#,##0.00" ‚Ç¨"';
       Style.AlignHorz := ssahRight;
     end;
     PintarCuadro(Sheet, iRow, 4, iRow, 4, sscbsMedium);
@@ -469,7 +482,7 @@ var
   SerieFormateada: string;
   sNro: string;
 begin
-  // 1. RazÛn Social (Primeros 12 caracteres, sin espacios)
+  // 1. Raz√≥n Social (Primeros 12 caracteres, sin espacios)
   RazonSocialCorta := Copy(ADataSet.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString, 1, 12);
   RazonSocialCorta := StringReplace(RazonSocialCorta, ' ', '', [rfReplaceAll]);
 
@@ -487,10 +500,10 @@ begin
   // 4. Serie (cambiando . por _)
   SerieFormateada := StringReplace(ADataSet.FieldByName('SERIE_FACTURA').AsString, '.', '_', [rfReplaceAll]);
 
-  // 5. N˙mero
+  // 5. N√∫mero
   sNro := ADataSet.FieldByName('NRO_FACTURA').AsString;
 
-  // ConstrucciÛn final: FECHA_SERIE_NUMERO_CLIENTE_TOTAL.extensiÛn
+  // Construcci√≥n final: FECHA_SERIE_NUMERO_CLIENTE_TOTAL.extensi√≥n
   Result := sFecha + '_' + SerieFormateada + '_' + sNro + '_' + RazonSocialCorta + '_' + TotalFormateado + AExtension;
 end;
 
