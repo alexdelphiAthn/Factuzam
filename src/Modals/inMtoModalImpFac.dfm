@@ -1,15 +1,15 @@
 inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
-  ClientHeight = 275
-  ClientWidth = 432
+  ClientHeight = 266
+  ClientWidth = 426
   Position = poMainFormCenter
   ExplicitWidth = 444
   ExplicitHeight = 313
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 278
+    Left = 272
     Width = 154
-    Height = 275
+    Height = 266
     ExplicitLeft = 272
     ExplicitWidth = 154
     ExplicitHeight = 266
@@ -2653,5 +2653,9 @@ inherited frmPrintFac: TfrmPrintFac
         end
       end
     end
+  end
+  object DialogoGuardar: TdxSaveFileDialog
+    Left = 112
+    Top = 144
   end
 end
