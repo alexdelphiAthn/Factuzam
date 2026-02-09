@@ -6,6 +6,7 @@ uses
   Vcl.Consts in 'src\vcl\Vcl.Consts.pas',
   System.SysConst in 'src\vcl\System.SysConst.pas',
   Sysutils,
+  dxCore,
   inLibDevExp in 'src\Lib\inLibDevExp.pas',
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
@@ -96,6 +97,10 @@ begin
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //   {$ENDIF}
+   TdxDiacriticStringOptions.ComparisonMode :=
+                                   TdxDiacriticStringComparisonMode.Insensitive;
+  TdxDiacriticStringOptions.NormalizationMode :=
+                                     TdxDiacriticStringNormalizationMode.System;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Fzam';
