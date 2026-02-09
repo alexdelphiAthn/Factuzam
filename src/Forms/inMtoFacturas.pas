@@ -394,6 +394,12 @@ type
     cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn;
     cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn;
     cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn;
+    cxLabel1: TcxLabel;
+    cxDBTextEdit1: TcxDBTextEdit;
+    cxLabel2: TcxLabel;
+    cxDBTextEdit2: TcxDBTextEdit;
+    cxDBTextEdit3: TcxDBTextEdit;
+    cxLabel3: TcxLabel;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);

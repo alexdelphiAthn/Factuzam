@@ -713,5 +713,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       ShortCut = 27
       OnExecute = actSalirExecute
     end
+    object actEliminarLinea: TAction
+      Caption = 'Eliminar'
+      ShortCut = 119
+      OnExecute = actEliminarLineaExecute
+    end
   end
 end
