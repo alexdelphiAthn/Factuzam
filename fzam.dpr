@@ -85,7 +85,8 @@ uses
   inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
   UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule},
   inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
-  inLibFormManager in 'src\Lib\inLibFormManager.pas';
+  inLibFormManager in 'src\Lib\inLibFormManager.pas',
+  inMtoPreviewExcel in 'src\Core\inMtoPreviewExcel.pas' {frmMtoPreviewExcel};
 
 var
   frmLogon: TfrmLogon;
@@ -117,6 +118,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmMtoModalCajDef, frmMtoModalCajDef);
   Application.Run;
 end.

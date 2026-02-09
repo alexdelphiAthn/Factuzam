@@ -2654,11 +2654,4 @@ inherited frmPrintFac: TfrmPrintFac
       end
     end
   end
-  object DialogoGuardar: TdxSaveFileDialog
-    DefaultExt = 'xlsx'
-    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
-    Title = 'Guardar Excel'
-    Left = 112
-    Top = 144
-  end
 end
