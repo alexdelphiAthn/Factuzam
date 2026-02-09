@@ -293,22 +293,27 @@ begin
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
+var
+  PorcentajeMedio : Double;
 begin
   if TotalesFactura = nil then Exit;
 
-  // 1. Actualizar variables internas críticas para la lógica de cobro
-  // Usamos el TotalLiquido (Total a Pagar) calculado por el objeto
   FImporteTotal := TotalesFactura.Totales.TotalLiquido;
   FImportePendiente := FImporteTotal;
+  txtCantidadLineas.Text := FormatFloat('0.##',
+                                        TotalesFactura.Totales.TotalCantidades);
+  txtBrutoLineas.Value := TotalesFactura.Totales.TotalBruto;
+  txtDtoGlobal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
 
-  // 2. Actualizar interfaz de usuario (Resumen de la venta)
-
-  // Cantidad de artículos/líneas
-  txtCantidadLineas.Text := FormatFloat('0.##', TotalesFactura.Totales.TotalCantidades);
-
-  // "Suma": Normalmente es la Base Imponible total antes de impuestos
-  // Si prefieres el total con impuestos antes de retenciones, usa (TotalBases + TotalImpuestos)
-  txtBrutoLineas.Value := TotalesFactura.Totales.TotalBases;
+  // Calculamos el porcentaje visual para mostrarlo (10% en tu ejemplo)
+  if TotalesFactura.Totales.TotalBruto <> 0 then
+  begin
+    PorcentajeMedio := (TotalesFactura.Totales.TotalDescuentosLineas /
+                        TotalesFactura.Totales.TotalBruto) * 100;
+    txtPorcenDtoGlobal.Text := FormatFloat('0.##', PorcentajeMedio);
+  end
+  else
+    txtPorcenDtoGlobal.Text := '0';
 
   // Total Final a Pagar (Líquido)
   txtTotalPagar.Value := FImporteTotal;
