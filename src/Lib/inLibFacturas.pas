@@ -117,6 +117,9 @@ type
     IVAR: TTotalesIVA;
     IVAS: TTotalesIVA;
     IVAE: TTotalesIVA;
+
+    TotalBruto: Currency;
+    TotalDescuentosLineas: Currency;
   end;
 
   // Configuración de factura para regímenes especiales
@@ -986,6 +989,9 @@ begin
   importeIVA := baseImponible * (porcentajeIVA / 100);
   importeRE := baseImponible * (porcentajeRE / 100);
   _totales.TotalCantidades := _totales.TotalCantidades + linea._dCant;
+  _totales.TotalBruto := _totales.TotalBruto + (linea.PrecioSal * linea.Cant);
+  _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
+                                    (linea.Dto * linea.Cant);
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
       begin

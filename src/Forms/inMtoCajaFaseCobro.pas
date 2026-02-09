@@ -14,7 +14,7 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGlobalVar, system.UITypes,
   cxDropDownEdit, Uni, System.Generics.Collections, Vcl.Menus, inMtoFrmBase,
-  MemDS, VirtualTable;
+  MemDS, VirtualTable, inLibFacturas, System.Actions, Vcl.ActnList;
 type
   TFormaPagoItem = record
     NumeroLinea: Integer;
@@ -96,11 +96,15 @@ type
     edtNumeroDoc: TcxTextEdit;
     cbbSerie1: TcxComboBox;
     vrtltbl1: TVirtualTable;
+    ActionList1: TActionList;
+    actSalir: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnAtrasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnESCClick(Sender: TObject);
+    procedure actSalirExecute(Sender: TObject);
   private
     FMemTablePagos: TVirtualTable;
     FListaBotones: TList<TcxButton>;
@@ -129,6 +133,7 @@ type
     property NumeroOperacion: string read FNumeroOperacion write FNumeroOperacion;
     function ObtenerDatosPagos: TArray<TFormaPagoItem>;
     function ValidarPagos: Boolean;
+    procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
   end;
 var
   frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro;
@@ -163,16 +168,22 @@ begin
   txtTotalPagar.Value := 0;
   txtPendienteCobro.Value := 0;
 end;
+
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
 begin
-  // Cargar datos iniciales
-  txtBrutoLineas.Value := FImporteTotal;
-  txtTotalPagar.Value := FImporteTotal;
-  txtPendienteCobro.Value := FImporteTotal;
-  FImportePendiente := FImporteTotal;
+// Cargar datos iniciales
+  // txtBrutoLineas.Value := FImporteTotal; // <--- COMENTAR O QUITAR ESTO si quieres ver la BASE en lugar del TOTAL en "Bruto"
+
+  // Si no hemos cargado datos enriquecidos (ej. CantidadLineas es 0 o vacío), usamos el comportamiento básico
+  if (txtTotalPagar.Value = 0) and (FImporteTotal <> 0) then
+     txtTotalPagar.Value := FImporteTotal;
+
+  txtPendienteCobro.Value := FImportePendiente;
+
   // Configurar serie y número
   cbbSerie1.Text := FSerieOperacion;
   edtNumeroDoc.Text := FNumeroOperacion;
+
   // Cargar botones de formas de pago
   CargarBotonesFormasPago;
 end;
@@ -219,7 +230,7 @@ begin
     Query.SQL.Add('SELECT CODIGO_FORMAP, DESCRIPCION_FORMAP, ');
     Query.SQL.Add('  TIPO_COMPORTAMIENTO_FORMAP, ES_DEVUELVE_CAMBIO_FORMAP,');
     Query.SQL.Add('  ORDEN_VISUAL_FORMAP');
-    Query.SQL.Add('FROM fza_formas_pago');
+    Query.SQL.Add('FROM fza_caja_formas_pago');
     Query.SQL.Add('WHERE ES_ACTIVO_FORMAP = ''S''');
     Query.SQL.Add('ORDER BY ORDEN_VISUAL_FORMAP');
     Query.Open;
@@ -281,6 +292,44 @@ begin
   end;
 end;
 
+procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
+begin
+  if TotalesFactura = nil then Exit;
+
+  // 1. Actualizar variables internas críticas para la lógica de cobro
+  // Usamos el TotalLiquido (Total a Pagar) calculado por el objeto
+  FImporteTotal := TotalesFactura.Totales.TotalLiquido;
+  FImportePendiente := FImporteTotal;
+
+  // 2. Actualizar interfaz de usuario (Resumen de la venta)
+
+  // Cantidad de artículos/líneas
+  txtCantidadLineas.Text := FormatFloat('0.##', TotalesFactura.Totales.TotalCantidades);
+
+  // "Suma": Normalmente es la Base Imponible total antes de impuestos
+  // Si prefieres el total con impuestos antes de retenciones, usa (TotalBases + TotalImpuestos)
+  txtBrutoLineas.Value := TotalesFactura.Totales.TotalBases;
+
+  // Total Final a Pagar (Líquido)
+  txtTotalPagar.Value := FImporteTotal;
+
+  // 3. Actualizar paneles de importes pendientes
+  txtPendienteCobro.Value := FImportePendiente;
+
+  // Si usas el panel de "A cuenta"
+  txtPendienteCuenta.Value := FImportePendiente;
+
+  // 4. (Opcional) Visualizar Retenciones si el formulario lo soporta
+  // Como tu formulario de cobro parece genérico, podrías usar labels existentes
+  // o mostrar un mensaje si hay retención para avisar al cajero.
+  if TotalesFactura.Totales.TotalRetencion > 0 then
+  begin
+    // Ejemplo: Si tuvieras un label para avisos o reutilizando uno de descuento
+    // lblDescuento.Caption := 'Retención:';
+    // txtDtoGlobal.Value := TotalesFactura.Totales.TotalRetencion;
+  end;
+end;
+
 procedure TfrmMtoCajaFaseCobro.OnBotonFormaPagoClick(Sender: TObject);
 var
   Btn: TcxButton;
@@ -336,6 +385,7 @@ begin
   end;
   RecalcularTotales;
 end;
+
 procedure TfrmMtoCajaFaseCobro.AgregarFormaPagoSimple(const CodigoFP, DescripcionFP: string;
   DevuelveCambio: Boolean);
 var
@@ -368,6 +418,13 @@ begin
     FMemTablePagos.FieldByName('CAMBIO').AsCurrency := ImporteNum - FImportePendiente;
   FMemTablePagos.Post;
 end;
+
+procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+  btnAtrasClick(Sender);
+end;
+
 procedure TfrmMtoCajaFaseCobro.AgregarFormaPagoCompleja(Pago: TFormaPagoItem);
 begin
   FMemTablePagos.Append;
@@ -383,6 +440,7 @@ begin
   FMemTablePagos.FieldByName('REFERENCIA').AsString := Pago.Referencia;
   FMemTablePagos.Post;
 end;
+
 procedure TfrmMtoCajaFaseCobro.EliminarFormaPagoSeleccionada;
 begin
   if FMemTablePagos.IsEmpty then
@@ -394,12 +452,14 @@ begin
     RecalcularTotales;
   end;
 end;
+
 procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Key = VK_DELETE then
     EliminarFormaPagoSeleccionada;
 end;
+
 procedure TfrmMtoCajaFaseCobro.RecalcularTotales;
 var
   TotalPagado: Currency;
@@ -423,10 +483,12 @@ begin
       ModalResult := mrOk;
   end;
 end;
+
 procedure TfrmMtoCajaFaseCobro.ConfigurarTeclasFuncion;
 begin
   KeyPreview := True;
 end;
+
 procedure TfrmMtoCajaFaseCobro.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
@@ -441,11 +503,22 @@ begin
     VK_ESCAPE: btnAtras.Click;
   end;
 end;
+
 procedure TfrmMtoCajaFaseCobro.btnAtrasClick(Sender: TObject);
 begin
-  if MessageDlg('¿Desea cancelar el cobro?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Desea cancelar el cobro?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     ModalResult := mrCancel;
 end;
+
+procedure TfrmMtoCajaFaseCobro.btnESCClick(Sender: TObject);
+begin
+  inherited;
+  btnAtrasClick(Sender);
+end;
+
 function TfrmMtoCajaFaseCobro.ValidarPagos: Boolean;
 begin
   Result := False;

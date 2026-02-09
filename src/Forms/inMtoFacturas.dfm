@@ -2427,7 +2427,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Align = alClient
               TabOrder = 0
-              Properties.ActivePage = tsEmpresa
+              Properties.ActivePage = tsCabecera
               Properties.CustomButtons.Buttons = <>
               ClientRectBottom = 333
               ClientRectLeft = 4
@@ -2440,6 +2440,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Caption = '&Cabecera Factura '
                 ImageIndex = 0
+                ExplicitLeft = 72
+                ExplicitTop = 64
                 object lblNroFactura: TcxLabel
                   Left = 45
                   Top = 16
@@ -2633,6 +2635,69 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Properties.ReadOnly = True
                   TabOrder = 13
                   Width = 348
+                end
+                object cxLabel1: TcxLabel
+                  Left = 366
+                  Top = 154
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Caption = 'Tipo Factura'
+                  TabOrder = 14
+                  Transparent = True
+                end
+                object cxDBTextEdit1: TcxDBTextEdit
+                  Left = 495
+                  Top = 150
+                  DataBinding.DataField = 'TIPO_FACTURA'
+                  DataBinding.DataSource = dsTablaG
+                  Enabled = False
+                  Properties.ReadOnly = True
+                  TabOrder = 15
+                  Width = 189
+                end
+                object cxLabel2: TcxLabel
+                  Left = 338
+                  Top = 16
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Caption = 'Usuario Factura'
+                  TabOrder = 16
+                  Transparent = True
+                end
+                object cxDBTextEdit2: TcxDBTextEdit
+                  Left = 495
+                  Top = 12
+                  DataBinding.DataField = 'CODIGO_CAJERO_FACTURA'
+                  DataBinding.DataSource = dsTablaG
+                  Enabled = False
+                  Properties.ReadOnly = True
+                  TabOrder = 17
+                  Width = 178
+                end
+                object cxDBTextEdit3: TcxDBTextEdit
+                  Left = 495
+                  Top = 196
+                  DataBinding.DataField = 'FASE_FACTURA'
+                  DataBinding.DataSource = dsTablaG
+                  Enabled = False
+                  Properties.ReadOnly = True
+                  TabOrder = 18
+                  Width = 189
+                end
+                object cxLabel3: TcxLabel
+                  Left = 367
+                  Top = 196
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Caption = 'Fase Factura'
+                  TabOrder = 19
+                  Transparent = True
                 end
               end
               object tsEmpresa: TcxTabSheet

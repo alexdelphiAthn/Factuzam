@@ -88,6 +88,7 @@ type
     actlst1: TActionList;
     actBuscarEmpleados: TAction;
     actSalir: TAction;
+    actEliminarLinea: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -129,6 +130,7 @@ type
       AButtonIndex: Integer);
     procedure actBuscarEmpleadosExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
+    procedure actEliminarLineaExecute(Sender: TObject);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -162,7 +164,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb;
+  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
+  inLibFacturas;
 
 procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
@@ -1122,6 +1125,15 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
+begin
+  if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+    DatosCaja.cdsLineas.Cancel
+  else
+    if DatosCaja.cdsLineas.State in [dsBrowse] then
+      DatosCaja.cdsLineas.Delete;
+end;
+
 procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
   // Verificamos si el dataset está activo y tiene líneas (venta en curso)
@@ -1467,13 +1479,57 @@ end;
 
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
-  frmFaseCobro:TfrmMtoCajaFaseCobro;
+  frmFaseCobro: TfrmMtoCajaFaseCobro;
+  ObjTotales: TFacturaTotales;
 begin
+  // 1. GESTIÓN DE LÍNEA EN BLANCO O EDICIÓN PENDIENTE
+  if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+  begin
+    if DatosCaja.cdsLineas.State = dsInsert then
+    begin
+      if Trim(DatosCaja.cdsLineas.FieldByName(
+                            'CODIGO_ARTICULO_FACTURA_LINEA').AsString) = '' then
+      begin
+        DatosCaja.cdsLineas.Cancel;
+      end
+      else
+      begin
+        DatosCaja.cdsLineas.Post;
+      end;
+    end
+    else
+    begin
+      DatosCaja.cdsLineas.Post;
+    end;
+  end;
+
+  // 2. VALIDAR QUE HAYA ALGO QUE COBRAR
+  if DatosCaja.cdsLineas.IsEmpty then
+  begin
+    ShowMessage('No hay líneas en la venta para cobrar.');
+    Exit;
+  end;
+  frmFaseCobro := nil;
   try
+    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
+                                          DatosCaja.cdsLineas);
+    ObjTotales.ProcesarFacturaCompleta;
+
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
-    frmFaseCobro.ShowModal;
+
+      frmFaseCobro.CargarDatosDesdeFactura(ObjTotales); // <--- NUEVA LLAMADA
+
+      // Pasamos datos de cabecera estándar
+  //    frmFaseCobro.SerieOperacion := DatosCaja.cdsCabecera.FieldByName('SERIE_FACTURA').AsString;
+  //    frmFaseCobro.NumeroOperacion := DatosCaja.cdsCabecera.FieldByName('NRO_FACTURA').AsString;
+
+    if frmFaseCobro.ShowModal = mrOk then
+    begin
+       // Procesar cobro...
+    end;
   finally
-    FreeAndNil(frmFaseCobro);
+    frmFaseCobro.Free;
+    ObjTotales.Free;
   end;
 end;
 
