@@ -371,6 +371,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFormManager.pas"/>
+        <DCCReference Include="src\Core\inMtoPreviewExcel.pas">
+            <Form>frmMtoPreviewExcel</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

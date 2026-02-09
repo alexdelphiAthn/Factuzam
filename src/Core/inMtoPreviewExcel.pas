@@ -1,0 +1,53 @@
+﻿unit inMtoPreviewExcel;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, cxGraphics, cxControls,
+  cxLookAndFeels, cxLookAndFeelPainters, dxCore, dxCoreClasses, dxHashUtils,
+  dxSpreadSheetCore, dxSpreadSheetCoreFormulas, dxSpreadSheetCoreHistory,
+  dxSpreadSheetCoreStyles, dxSpreadSheetCoreStrs,
+  dxSpreadSheetConditionalFormatting, dxSpreadSheetConditionalFormattingRules,
+  dxSpreadSheetClasses, dxSpreadSheetContainers, dxSpreadSheetFormulas,
+  dxSpreadSheetHyperlinks, dxSpreadSheetFunctions, dxSpreadSheetStyles,
+  dxSpreadSheetGraphics, dxSpreadSheetPrinting, dxSpreadSheetTypes,
+  dxSpreadSheetUtils, dxSpreadSheetFormattedTextUtils, dxBarBuiltInMenu,
+  Vcl.Menus, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSpreadSheet,
+  JvComponentBase, JvEnterTab, cxClasses, cxLocalization, dxShellDialogs,
+  dxSpreadSheetFormulaBar, dxSpreadSheetFunctionsStatistical,
+  dxSpreadSheetFunctionsMath;
+
+type
+  TfrmMtoPreviewExcel = class(TfrmBase)
+    dxSpreadSheet1: TdxSpreadSheet;
+    Panel1: TPanel;
+    btnGuardar: TcxButton;
+    btnCerrar: TcxButton;
+    DialogoGuardar: TdxSaveFileDialog;
+    dxSpreadSheetFormulaBar1: TdxSpreadSheetFormulaBar;
+    procedure btnGuardarClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMtoPreviewExcel: TfrmMtoPreviewExcel;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmMtoPreviewExcel.btnGuardarClick(Sender: TObject);
+begin
+  inherited;
+  DialogoGuardar.DefaultExt := 'xlsx';
+  DialogoGuardar.Filter := 'Libro de Excel (*.xlsx)|*.xlsx';
+  if DialogoGuardar.Execute then
+    dxSpreadSheet1.SaveToFile(DialogoGuardar.FileName);
+end;
+
+end.
