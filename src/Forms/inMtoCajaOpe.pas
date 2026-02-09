@@ -87,6 +87,7 @@ type
     lbl1: TcxLabel;
     actlst1: TActionList;
     actBuscarEmpleados: TAction;
+    actSalir: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -127,6 +128,7 @@ type
     procedure btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure actBuscarEmpleadosExecute(Sender: TObject);
+    procedure actSalirExecute(Sender: TObject);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -1120,6 +1122,31 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
+begin
+  // Verificamos si el dataset está activo y tiene líneas (venta en curso)
+  if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
+  begin
+    // HAY DATOS: Preguntamos confirmación
+    if MessageDlg('Hay una venta en curso.' + sLineBreak +
+                  '¿Desea BORRAR LA VENTA y salir?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      // Si el usuario dice SÍ, cancelamos cualquier edición pendiente para limpiar y cerramos
+      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+         DatosCaja.cdsLineas.Cancel;
+
+      Close;
+    end;
+    // Si dice NO, la acción termina y no hace nada (se queda en la venta)
+  end
+  else
+  begin
+    // NO HAY DATOS: Cerramos directamente
+    Close;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.ActualizarColumnasDinamicas(ArticuloPadre: string);
 var
   i: Integer;
@@ -1326,35 +1353,115 @@ begin
   BuscarEmpleados;
 end;
 
+//procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
+//  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+//var
+//  sNomEmpleado: string;
+//  sCodigo: string;
+//begin
+//  sCodigo := VarToStr(DisplayValue);
+//  if Trim(sCodigo) = '' then
+//  begin
+//    lblNombreEmpleado.Caption := '';
+//    Error := True;
+//    ErrorText := 'Debe haber un empleado en la venta';
+//    Exit;
+//  end;
+//  if not DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
+//  begin
+//    Error := True;
+//    ErrorText := 'El código de empleado no existe.';
+//    lblNombreEmpleado.Caption := '';
+//  end
+//  else
+//  begin
+//    Error := False; // Permite salir
+//    lblNombreEmpleado.Caption := sNomEmpleado;
+//    DatosCaja.cdsCabecera.Edit;
+//    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString :=
+//                                                         btnCodigoEmpleado.Text;
+//    ErrorText := '';
+//  end;
+//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+//end;
+
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
   sNomEmpleado: string;
   sCodigo: string;
+  qry: TUniQuery;
 begin
   sCodigo := VarToStr(DisplayValue);
-  if Trim(sCodigo) = '' then
+
+  // 1. PRIMER INTENTO: Búsqueda exacta (Lógica original)
+  // Si el usuario escribió un código correcto, usamos la función existente.
+  if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
   begin
-    lblNombreEmpleado.Caption := '';
-    Error := True;
-    ErrorText := 'Debe haber un empleado en la venta';
-    Exit;
-  end;
-  if not DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
-  begin
-    Error := True;
-    ErrorText := 'El código de empleado no existe.';
-    lblNombreEmpleado.Caption := '';
-  end
-  else
-  begin
-    Error := False; // Permite salir
+    Error := False;
     lblNombreEmpleado.Caption := sNomEmpleado;
     DatosCaja.cdsCabecera.Edit;
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString :=
-                                                         btnCodigoEmpleado.Text;
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := sCodigo;
     ErrorText := '';
+
+    // Forzamos que se muestre el valor correctamente formateado
+    DisplayValue := sCodigo;
+    Exit;
   end;
+
+  // 2. SEGUNDO INTENTO: Auto-seleccionar el primer empleado coincidente o el primero de la lista
+  // Si llegamos aquí, el código no existe o está vacío. Vamos a buscar el "primero".
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn; // Usamos la conexión global definida en tu unit
+    qry.SQL.Text := 'SELECT CODIGO_EMPLEADO_USUARIO, DIMINUTIVO_TICKET_USUARIO ' +
+                    '  FROM fza_usuarios ' +
+                    ' WHERE ACTIVO_USUARIO = ''S'' ' +
+                    '   AND CODIGO_EMPLEADO_USUARIO IS NOT NULL ';
+
+    // Si el usuario escribió algo parcial (ej: "JU"), buscamos parecidos.
+    // Si está vacío, simplemente traerá el primero de toda la tabla.
+    if Trim(sCodigo) <> '' then
+    begin
+      qry.SQL.Add('AND (CODIGO_EMPLEADO_USUARIO LIKE :TOKEN OR DIMINUTIVO_TICKET_USUARIO LIKE :TOKEN) ');
+      qry.ParamByName('TOKEN').AsString := '%' + sCodigo + '%';
+    end;
+
+    // Ordenamos para asegurar que siempre salga "el primero" consistentemente
+    qry.SQL.Add('ORDER BY CODIGO_EMPLEADO_USUARIO ASC LIMIT 1');
+
+    qry.Open;
+
+    if not qry.IsEmpty then
+    begin
+      // ¡ÉXITO! Encontramos un candidato
+      sCodigo := qry.FieldByName('CODIGO_EMPLEADO_USUARIO').AsString;
+      sNomEmpleado := qry.FieldByName('DIMINUTIVO_TICKET_USUARIO').AsString;
+
+      // CAMBIAMOS el valor que el usuario escribió por el código real encontrado
+      DisplayValue := sCodigo;
+
+      // Actualizamos UI y Dataset
+      lblNombreEmpleado.Caption := sNomEmpleado;
+      DatosCaja.cdsCabecera.Edit;
+      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := sCodigo;
+
+      // IMPORTANTE: Decimos que NO hay error para que el foco pueda saltar al siguiente control
+      Error := False;
+      ErrorText := '';
+    end
+    else
+    begin
+      // FALLO TOTAL: No hay empleados en la BD o el filtro no trajo nada
+      Error := True;
+      ErrorText := 'No se encontró ningún empleado válido.';
+      lblNombreEmpleado.Caption := '';
+    end;
+
+  finally
+    qry.Free;
+  end;
+
   cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 

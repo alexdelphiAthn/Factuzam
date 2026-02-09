@@ -85,6 +85,7 @@ begin
   try
     var NombreSugerido := ObtenerNombreFactura(dmmFacturas.unqryTablaG,
                                                '.xlsx');
+    fPreview.DialogoGuardar.FileName := NombreSugerido;
     ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
                                dmmFacturas.unqryTablaG,
                                dmmFacturas.unqryLinFac);

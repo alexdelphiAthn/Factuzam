@@ -256,7 +256,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 742
+        Left = 736
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -278,10 +278,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 736
+        ExplicitLeft = 730
         Height = 80
         Width = 447
-        AnchorX = 1189
+        AnchorX = 1183
       end
       object btnF8: TcxButton
         Left = 224
@@ -707,6 +707,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         'F3')
       ShortCut = 16397
       OnExecute = actBuscarEmpleadosExecute
+    end
+    object actSalir: TAction
+      Caption = 'Salir'
+      ShortCut = 27
+      OnExecute = actSalirExecute
     end
   end
 end

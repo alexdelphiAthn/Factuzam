@@ -1,9 +1,13 @@
 inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
+  BorderIcons = []
   Caption = 'Previsualizaci'#243'n Excel'
   ClientHeight = 563
   ClientWidth = 970
-  ExplicitWidth = 982
-  ExplicitHeight = 601
+  StyleElements = [seFont, seClient]
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 988
+  ExplicitHeight = 610
   TextHeight = 19
   object dxSpreadSheet1: TdxSpreadSheet [0]
     Left = 0
@@ -12,8 +16,6 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
     Height = 495
     Align = alClient
     OptionsView.PrintAreas = True
-    ExplicitWidth = 964
-    ExplicitHeight = 486
     Data = {
       A402000044585353763242461000000042465320000000000000000001000101
       010100000100000001004246532000000000424653200100000001000000200B
@@ -45,7 +47,6 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
     Height = 41
     Align = alTop
     TabOrder = 1
-    ExplicitWidth = 964
     object btnGuardar: TcxButton
       Left = 6
       Top = 3
@@ -62,6 +63,7 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
       Height = 34
       Caption = 'Cerrar'
       TabOrder = 1
+      OnClick = btnCerrarClick
     end
   end
   object dxSpreadSheetFormulaBar1: TdxSpreadSheetFormulaBar [2]
@@ -72,7 +74,6 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
     Align = alTop
     SpreadSheet = dxSpreadSheet1
     TabOrder = 2
-    ExplicitWidth = 964
   end
   inherited Localizer1: TcxLocalizer
     Active = False
