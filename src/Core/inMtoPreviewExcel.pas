@@ -28,6 +28,7 @@ type
     DialogoGuardar: TdxSaveFileDialog;
     dxSpreadSheetFormulaBar1: TdxSpreadSheetFormulaBar;
     procedure btnGuardarClick(Sender: TObject);
+    procedure btnCerrarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -40,6 +41,12 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmMtoPreviewExcel.btnCerrarClick(Sender: TObject);
+begin
+  inherited;
+  Close;
+end;
 
 procedure TfrmMtoPreviewExcel.btnGuardarClick(Sender: TObject);
 begin
