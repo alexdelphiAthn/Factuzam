@@ -142,7 +142,32 @@ begin
         try
           NewDM.Create(pOwner);
           if NewDM is TdmBase then
+          begin
              TdmBase(NewDM).FCurrentForm := pOwner;
+             // 1. Aseguramos conexión
+             if Assigned(pOwner.dsTablaG) then
+               pOwner.dsTablaG.DataSet := TdmBase(NewDM).unqryTablaG;
+              if (GetPerfilValueDef(pOwner.oPerfilDic,
+                                    'oGetSQLFromDB',
+                                    'False') = 'True') then
+              begin
+                GetFormUserProfile(TdmBase(NewDM).FoPerfilDic,
+                                   TdmBase(NewDM).Name);
+                LoadSQLFromProfile(TdmBase(NewDM), TdmBase(NewDM).FoPerfilDic);
+              end;
+
+             // 2. AHORA SÍ es seguro abrir.
+             // El objeto está creado y asignado.
+             try
+               if not TdmBase(NewDM).unqryTablaG.Active then
+                  TdmBase(NewDM).unqryTablaG.Open;
+             except
+               on E: Exception do
+                 inLibLog.Log.LogError('Error al abrir tabla en ' + sDataUnit + ': ' + E.Message);
+             end;
+          end;
+//          if NewDM is TdmBase then
+//             TdmBase(NewDM).FCurrentForm := pOwner;
           pOwner.tdmDataModule := NewDM;
           Result := NewDM;
         except

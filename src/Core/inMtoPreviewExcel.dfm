@@ -4,6 +4,7 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
   ClientHeight = 563
   ClientWidth = 970
   StyleElements = [seFont, seClient]
+  OnShow = FormShow
   ExplicitWidth = 988
   ExplicitHeight = 610
   TextHeight = 19

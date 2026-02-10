@@ -32,7 +32,6 @@ type
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
   public
-//    constructor CreateWithForm(AOwner: TComponent; AForm: TComponent);
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
   public
@@ -40,9 +39,8 @@ type
     FoPerfilDic: TProfileDicc;
   end;
 
-var
-  dmBase: TdmBase;
-  //oPerfilDic : TProfileDicc;
+//var
+//  dmBase: TdmBase;
 
 implementation
 
@@ -53,26 +51,10 @@ uses  inLibGlobalVar, inMtoPrincipal, inMtoGen;
 {$R *.dfm}
 
 procedure TdmBase.DoCreate;
-var
-  Form: TfrmMtoGen;
 begin
-  Form := GetOwnerForm<TfrmMtoGen>;
   FoPerfilDic := nil;
   unqryTablaG.Connection := oConn;
   unqryPerfiles.Connection := oConn;
-  if Assigned(Form) then
-  begin
-    if (GetPerfilValueDef(Form.oPerfilDic,
-                          'oGetSQLFromDB',
-                          'False') = 'True') then
-    begin
-      GetFormUserProfile(FoPerfilDic, Self.Name);
-      LoadSQLFromProfile(Self, FoPerfilDic);
-    end;
-    Form.tdmDataModule := Self;
-    Form.dsTablaG.DataSet := unqryTablaG;
-    unqryTablaG.Open;
-  end;
 end;
 
 procedure TdmBase.DataModuleCreate(Sender: TObject);

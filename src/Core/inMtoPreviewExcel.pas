@@ -1,4 +1,20 @@
-﻿unit inMtoPreviewExcel;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoPreviewExcel                                             }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Esta unidad proporciona la lógica necesaria para presentar la pantalla    }
+{    de Previsualización de Hoja de Cálculo. Tiene una tradución propia.       }
+{    que es inLibdxSpreadSheetStrs_ESP, ejecutando ApplySpanishTranslation;    }
+{******************************************************************************}
+
+unit inMtoPreviewExcel;
 
 interface
 
@@ -33,6 +49,7 @@ type
     procedure btnCerrarClick(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -73,6 +90,13 @@ procedure TfrmMtoPreviewExcel.FormCreate(Sender: TObject);
 begin
   inherited;
   ApplySpanishTranslation;
+
+end;
+
+procedure TfrmMtoPreviewExcel.FormShow(Sender: TObject);
+begin
+  inherited;
+  Self.WindowState := wsMaximized;
 end;
 
 end.
