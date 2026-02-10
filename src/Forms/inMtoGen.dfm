@@ -674,13 +674,4 @@ inherited frmMtoGen: TfrmMtoGen
     Left = 424
     Top = 448
   end
-  object ActionList1: TActionList
-    Left = 528
-    Top = 264
-    object actSalir: TAction
-      Caption = 'actSalir'
-      ShortCut = 27
-      OnExecute = actSalirExecute
-    end
-  end
 end
