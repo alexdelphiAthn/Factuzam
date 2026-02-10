@@ -38,7 +38,7 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue,   dxSpreadSheet, dxSpreadSheetCore,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
-  dxSpreadSheetStyles, dxHashUtils, inLibDevExcel;
+  dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList;
 
 type
   TfrmPrintFac = class(TfrmPrint)
@@ -111,10 +111,13 @@ var
   Sheet: TdxSpreadSheetTableView;
   iRow: Integer;
   NombreSugerido: string;
+  PorcenREN, PorcenRER, PorcenRESR, PorcenREE: Double;
+  TieneRE : Boolean;
 
   procedure PintarImpuesto(TipoLetra: string; PctIVA, PctRE: Double;
                            RangoTL, RangoBR: String);
-  var RefBase: string;
+  var
+    RefBase: string;
   begin
      Inc(iRow);
      WFormula(Sheet, iRow, COL_DESC,
@@ -146,6 +149,7 @@ var
 
 begin
   ASheetControl.ClearAll;
+  TieneRE := QMaster.FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString = 'S';
   Sheet := ASheetControl.AddSheet('Factura',
                             TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   if not QMaster.FieldByName('NRO_FACTURA').IsNull then
@@ -161,14 +165,50 @@ begin
   W(Sheet, 2, COL_TOTAL, 'Número: ' +
                            QMaster.FieldByName('SERIE_FACTURA').AsString + '.' +
                   QMaster.FieldByName('NRO_FACTURA').AsString, True, ssahRight);
-  // --- DATOS EMISOR / RECEPTOR ---
-  W(Sheet, 4, COL_DESC, 'EMISOR', True);
-  W(Sheet, 5, COL_DESC,
-                   QMaster.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString);
-  // ... (Aquí irían tus Merge y resto de campos de dirección)
-  W(Sheet, 4, COL_PIVA, 'RECEPTOR', True);
-  W(Sheet, 5, COL_PIVA,
-                   QMaster.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
+  // Título
+  W(Sheet, 4, COL_DESC, 'EMISOR', True); // Negrita
+
+  // Razón Social (Combinamos 3 columnas: A, B, C para que quepa bien)
+  W(Sheet, 5, COL_DESC, QMaster.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString);
+  Merge(Sheet, 5, COL_DESC, 3, 1);
+
+  // NIF
+  W(Sheet, 6, COL_DESC, 'NIF: ' + QMaster.FieldByName('NIF_EMPRESA_FACTURA').AsString);
+  Merge(Sheet, 6, COL_DESC, 3, 1);
+
+  // Dirección
+  W(Sheet, 7, COL_DESC, QMaster.FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString);
+  Merge(Sheet, 7, COL_DESC, 3, 1);
+
+  // CP y Población
+  W(Sheet, 8, COL_DESC, QMaster.FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString + ' ' +
+                        QMaster.FieldByName('POBLACION_EMPRESA_FACTURA').AsString);
+  Merge(Sheet, 8, COL_DESC, 3, 1);
+
+
+  // --- DATOS RECEPTOR (Derecha - Columna D) ---
+  // Usamos COL_PIVA (Columna 3) como inicio del bloque derecho
+
+  // Título
+  W(Sheet, 4, COL_PIVA, 'RECEPTOR', True); // Negrita
+
+  // Razón Social (Combinamos 2 columnas: D y E)
+  W(Sheet, 5, COL_PIVA, QMaster.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
+  Merge(Sheet, 5, COL_PIVA, 2, 1);
+
+  // NIF
+  W(Sheet, 6, COL_PIVA, 'NIF: ' + QMaster.FieldByName('NIF_CLIENTE_FACTURA').AsString);
+  Merge(Sheet, 6, COL_PIVA, 2, 1);
+
+  // Dirección
+  W(Sheet, 7, COL_PIVA, QMaster.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  Merge(Sheet, 7, COL_PIVA, 2, 1);
+
+  // CP y Población
+  W(Sheet, 8, COL_PIVA,
+    QMaster.FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString + ' ' +
+    QMaster.FieldByName('POBLACION_CLIENTE_FACTURA').AsString);
+  Merge(Sheet, 8, COL_PIVA, 2, 1);
   // --- TABLA DE LÍNEAS ---
   iRow := 11;
   W(Sheet, iRow, COL_DESC,   'Descripción', True);
@@ -191,20 +231,25 @@ begin
       AsString :=
              QLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
       Style.WordWrap := True;
+      Style.AlignVert := ssavTop;
     end;
     W(Sheet, iRow, COL_CANT,
       QLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat, False, ssahRight);
+    Sheet.Cells[iRow, COL_CANT].Style.AlignVert := ssavTop;
     W(Sheet, iRow, COL_PRECIO,
         QLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsFloat,
         False, ssahRight);
+    Sheet.Cells[iRow, COL_PRECIO].Style.AlignVert := ssavTop;
     W(Sheet, iRow, COL_PIVA,
       QLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat,
       False, ssahRight);
+    Sheet.Cells[iRow, COL_PIVA].Style.AlignVert := ssavTop;
     if Sheet.Cells[iRow, COL_PIVA] <> nil then
        Sheet.Cells[iRow, COL_PIVA].Style.DataFormat.FormatCode := '0.##"%"';
     WFormula(Sheet, iRow, COL_TOTAL,
              '=' + GetRef(iRow, COL_CANT) + '*' + GetRef(iRow, COL_PRECIO),
              '#,##0.00" €"');
+    Sheet.Cells[iRow, COL_TOTAL].Style.AlignVert := ssavTop;
     if ImpuestosIncluidos then
        WFormula(Sheet, iRow, COL_BASEI, '=' + GetRef(iRow, COL_TOTAL) +
                                       '/(1+' + GetRef(iRow, COL_PIVA) + '/100)')
@@ -229,28 +274,50 @@ begin
   W(Sheet, iRow, COL_DESC,   'Base Imponible', True, ssahRight);
   W(Sheet, iRow, COL_CANT,   'Tipo IVA',       True, ssahRight);
   W(Sheet, iRow, COL_PRECIO, 'Cuota IVA',      True, ssahRight);
-  W(Sheet, iRow, COL_PIVA,   '% RE',           True, ssahRight);
-  W(Sheet, iRow, COL_TOTAL,  'Total RE',       True, ssahRight);
+  if TieneRE then
+  begin
+    W(Sheet, iRow, COL_PIVA,  '% RE',    True, ssahRight);
+    W(Sheet, iRow, COL_TOTAL, 'Total RE', True, ssahRight);
+  end
+  else
+  begin
+    // Limpiar o dejar vacío si no hay RE
+    W(Sheet, iRow, COL_PIVA,  '', False);
+    W(Sheet, iRow, COL_TOTAL, '', False);
+  end;
 
   for var b := 0 to 4 do
     if Sheet.Cells[iRow, b] <> nil then
        Sheet.Cells[iRow, b].Style.Borders[bBottom].Style := sscbsThin;
-
+  if TieneRE then
+  begin
+    PorcenREN := QMaster.FieldByName('PORCEN_REN_FACTURA').AsFloat;
+    PorcenRER := QMaster.FieldByName('PORCEN_RER_FACTURA').AsFloat;
+    PorcenRESR := QMaster.FieldByName('PORCEN_RES_FACTURA').AsFloat;
+    PorcenREE := QMaster.FieldByName('PORCEN_REE_FACTURA').AsFloat;
+  end
+  else
+  begin
+    PorcenREN := 0;
+    PorcenRER := 0;
+    PorcenRESR := 0;
+    PorcenREE := 0;
+  end;
   if QMaster.FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsFloat > 0 then
       PintarImpuesto('N', QMaster.FieldByName('PORCEN_IVAN_FACTURA').AsFloat,
-                      QMaster.FieldByName('PORCEN_REN_FACTURA').AsFloat,
+                      PorcenREN,
                       RangoTiposLetra, RangoBasesReales);
   if QMaster.FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsFloat > 0 then
       PintarImpuesto('R', QMaster.FieldByName('PORCEN_IVAR_FACTURA').AsFloat,
-                      QMaster.FieldByName('PORCEN_RER_FACTURA').AsFloat,
+                      PorcenRER,
                       RangoTiposLetra, RangoBasesReales);
   if QMaster.FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsFloat > 0 then
       PintarImpuesto('S', QMaster.FieldByName('PORCEN_IVAS_FACTURA').AsFloat,
-                      QMaster.FieldByName('PORCEN_RES_FACTURA').AsFloat,
+                      PorcenRESR,
                       RangoTiposLetra, RangoBasesReales);
   if QMaster.FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsFloat > 0 then
       PintarImpuesto('E', QMaster.FieldByName('PORCEN_IVAE_FACTURA').AsFloat,
-                      QMaster.FieldByName('PORCEN_REE_FACTURA').AsFloat,
+                      PorcenREE,
                       RangoTiposLetra, RangoBasesReales);
   var RowFinTabla := iRow;
 
@@ -316,8 +383,22 @@ begin
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
+  Inc(iRow, 2); // Dejamos un par de filas de margen tras los totales
+  with Sheet.CreateCell(iRow, COL_DESC) do
+  begin
+    AsString := 'Forma de Pago:';
+    Style.Font.Style := [fsBold];
+    Style.AlignVert := ssavCenter;
+  end;
+  with Sheet.CreateCell(iRow, COL_CANT) do
+  begin
+    AsString := QMaster.FieldByName('FORMA_PAGO_FACTURA').AsString;
+    Style.AlignVert := ssavCenter;
+    Style.AlignHorz := ssahLeft;
+    Style.WordWrap := False;
+  end;
+  Merge(Sheet, iRow, COL_CANT, 4, 1);
 
-  // Configuración final de columnas
   Sheet.Columns[COL_DESC].Size := 280;
   Sheet.Columns[COL_CANT].Size := 60;
   Sheet.Columns[COL_PRECIO].Size := 80;

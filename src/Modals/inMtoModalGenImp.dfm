@@ -9,8 +9,8 @@ inherited frmPrint: TfrmPrint
   FormStyle = fsStayOnTop
   Scaled = False
   OnClose = FormClose
-  ExplicitWidth = 385
-  ExplicitHeight = 331
+  ExplicitWidth = 379
+  ExplicitHeight = 322
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 223
@@ -19,6 +19,8 @@ inherited frmPrint: TfrmPrint
     Height = 284
     Align = alRight
     TabOrder = 0
+    ExplicitLeft = 217
+    ExplicitHeight = 275
     object btnPDF: TcxButton
       Left = 0
       Top = 48
@@ -48,14 +50,14 @@ inherited frmPrint: TfrmPrint
     end
     object btnSalir: TcxButton
       Left = 1
-      Top = 267
+      Top = 258
       Width = 142
       Height = 25
       Align = alBottom
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 258
+      ExplicitTop = 249
     end
     object btnEditar: TcxButton
       Left = 0
@@ -254,6 +256,15 @@ inherited frmPrint: TfrmPrint
       BottomMargin = 20.000000000000000000
       Frame.Typ = []
       MirrorMode = []
+    end
+  end
+  object ActionList1: TActionList
+    Left = 176
+    Top = 144
+    object actSalir: TAction
+      Caption = 'Salir'
+      ShortCut = 27
+      OnExecute = actSalirExecute
     end
   end
 end

@@ -17,7 +17,7 @@ uses
   Vcl.Menus, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSpreadSheet,
   JvComponentBase, JvEnterTab, cxClasses, cxLocalization, dxShellDialogs,
   dxSpreadSheetFormulaBar, dxSpreadSheetFunctionsStatistical,
-  dxSpreadSheetFunctionsMath;
+  dxSpreadSheetFunctionsMath, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoPreviewExcel = class(TfrmBase)
@@ -27,8 +27,11 @@ type
     btnCerrar: TcxButton;
     DialogoGuardar: TdxSaveFileDialog;
     dxSpreadSheetFormulaBar1: TdxSpreadSheetFormulaBar;
+    ActionList1: TActionList;
+    actSalir: TAction;
     procedure btnGuardarClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
+    procedure actSalirExecute(Sender: TObject);
   private
     { Private declarations }
   public
@@ -41,6 +44,12 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmMtoPreviewExcel.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+  btnCerrarClick(Sender);
+end;
 
 procedure TfrmMtoPreviewExcel.btnCerrarClick(Sender: TObject);
 begin

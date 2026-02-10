@@ -4,8 +4,6 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
   ClientHeight = 563
   ClientWidth = 970
   StyleElements = [seFont, seClient]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 988
   ExplicitHeight = 610
   TextHeight = 19
@@ -61,7 +59,7 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
       Top = 3
       Width = 193
       Height = 34
-      Caption = 'Cerrar'
+      Caption = 'Cerrar (ESC)'
       TabOrder = 1
       OnClick = btnCerrarClick
     end
@@ -84,5 +82,14 @@ inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
     Title = 'Guardar Excel'
     Left = 72
     Top = 56
+  end
+  object ActionList1: TActionList
+    Left = 480
+    Top = 288
+    object actSalir: TAction
+      Caption = 'Salir'
+      ShortCut = 27
+      OnExecute = actSalirExecute
+    end
   end
 end
