@@ -967,15 +967,18 @@ end;
 procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
   if Assigned(dmmFacturas) then
-    if Assigned(dsTablaG.Dataset) then
+    if Assigned(dsTablaG.Dataset) and Assigned(dmmFacturas.unqryTablaG) then
       if Assigned(self.tdmDataModule) then
        if dsTablaG.Dataset.FieldByName(fescon).AsString ='S' then
        begin
          dmmFacturas.unqryTablaG.ReadOnly := True;
          dmmFacturas.unqryLinFac.ReadOnly := True;
-         tvLineasFactura.optionsData.Editing := False;
-         tvLineasFactura.optionsData.Deleting := False;
-         tvLineasFactura.optionsData.Inserting := False;
+         if Assigned(tvLineasFactura) then
+         begin
+           tvLineasFactura.optionsData.Editing := False;
+           tvLineasFactura.optionsData.Deleting := False;
+           tvLineasFactura.optionsData.Inserting := False;
+         end;
          btnGenerarRecibos.Enabled := False;
          btnConsolidar.Enabled := False;
     //     tvRecibos.optionsData.Editing := False;
@@ -986,9 +989,12 @@ begin
         begin
           dmmFacturas.unqryTablaG.ReadOnly := False;
           dmmFacturas.unqryLinFac.ReadOnly := False;
-          tvLineasFactura.optionsData.Editing := True;
-          tvLineasFactura.optionsData.Deleting := True;
-          tvLineasFactura.optionsData.Inserting := True;
+          if Assigned(tvLineasFactura) then
+          begin
+            tvLineasFactura.optionsData.Editing := True;
+            tvLineasFactura.optionsData.Deleting := True;
+            tvLineasFactura.optionsData.Inserting := True;
+          end;
           btnGenerarRecibos.Enabled := True;
           btnConsolidar.Enabled := True;
     //      tvRecibos.optionsData.Editing := True;

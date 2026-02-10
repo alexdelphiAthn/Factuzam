@@ -8,6 +8,7 @@ inherited frmMtoGen: TfrmMtoGen
   Font.Pitch = fpDefault
   Font.Quality = fqDefault
   Visible = True
+  OnClose = FormClose
   OnKeyUp = FormKeyUp
   OnShow = FormShow
   ExplicitWidth = 1091
@@ -672,5 +673,14 @@ inherited frmMtoGen: TfrmMtoGen
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 424
     Top = 448
+  end
+  object ActionList1: TActionList
+    Left = 528
+    Top = 264
+    object actSalir: TAction
+      Caption = 'actSalir'
+      ShortCut = 27
+      OnExecute = actSalirExecute
+    end
   end
 end

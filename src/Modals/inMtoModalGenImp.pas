@@ -268,7 +268,7 @@ procedure TfrmPrint.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
   unqryPerfiles.Close;
-  FreeAndNil(unqryPerfiles);
+//  FreeAndNil(unqryPerfiles);
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);

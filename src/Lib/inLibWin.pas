@@ -62,7 +62,6 @@ implementation
 function SanitizeFileName(const AFileName: string;
                           const AReplacement: Char = '_'): string;
 const
-  // Añadimos '=' a la lista de caracteres prohibidos globalmente
   InvalidGlobalChars: set of AnsiChar = ['<', '>', ':', '"', '/', '\', '|',
                                          '?', '*', '='];
 var

@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 09/02/2026 09:04:02
+ Date: 10/02/2026 18:50:22
 */
 
 SET NAMES utf8mb4;
@@ -318,7 +318,7 @@ INSERT INTO `fza_articulos_tarifas` VALUES ('FALD-PLIS', 3, '', 'PVP', 'S', 29.9
 INSERT INTO `fza_articulos_tarifas` VALUES ('FALD-JEAN', 4, '', 'PVP', 'S', 25.000000, 25.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-05 07:35:15', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 5, '', 'PVP', 'S', 120.000000, 120.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-05 07:35:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CHAQ-CUERO', 6, 'CHAQ-CUERO/NEGRO/XL', 'PVP', 'S', 130.000000, 130.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-08 18:36:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
-INSERT INTO `fza_articulos_tarifas` VALUES ('CAMI-BASICA', 7, '', 'PVP', 'S', 150.000000, 165.000000, -15.000000, -10.000000, '2026-01-01', NULL, '2026-01-07 18:04:11', '2026-02-02 06:35:13', 'DEMO', 'Administrador');
+INSERT INTO `fza_articulos_tarifas` VALUES ('CAMI-BASICA', 7, '', 'PVP', 'S', 150.000000, 135.000000, 15.000000, 10.000000, '2026-01-01', NULL, '2026-01-07 18:04:11', '2026-02-02 06:35:13', 'DEMO', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 8, '', 'PVP', 'S', 50.000000, 50.000000, NULL, NULL, '2026-01-01', NULL, '2026-01-07 19:45:48', '0000-00-00 00:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 9, '', 'PVP', 'S', 20.000000, 20.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 10, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
@@ -1097,10 +1097,10 @@ CREATE TABLE `fza_facturas_lineas`  (
 -- ----------------------------
 INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '010', 'CHUPACHUS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'Chupachús de cola y fresa', NULL, NULL, 'N', 0.050000, 0.000000, 0.000000, 0.050000, 'N', 21.000000, 0.060500, 6.050000, 5.000000, NULL, '2026-02-01 07:18:48', '2026-02-01 07:18:48', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '020', 'NUBES', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'Nubes de algodón', NULL, NULL, 'N', 0.030000, 0.000000, 0.000000, 0.030000, 'N', 21.000000, 0.036300, 3.630000, 3.000000, NULL, '2026-02-01 07:24:11', '2026-02-01 07:24:11', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '030', 'caca', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'cacafuti', NULL, NULL, 'N', 90.000000, 10.000000, 9.000000, 81.000000, 'N', 21.000000, 98.010000, 98.010000, 81.000000, NULL, '2026-02-01 08:05:39', '2026-02-01 08:05:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '030', 'caca', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 2.000000, 'cacafuti', NULL, NULL, 'N', 90.000000, 10.000000, 9.000000, 81.000000, 'N', 21.000000, 98.010000, 196.020000, 162.000000, NULL, '2026-02-01 08:05:39', '2026-02-01 08:05:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000001', '2026.A1', '040', 'dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 100.000000, 'frigodedo', NULL, NULL, 'N', 2.000000, 0.000000, 0.000000, 2.000000, 'N', 21.000000, 2.420000, 242.000000, 200.000000, NULL, '2026-02-01 08:05:51', '2026-02-01 08:05:51', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000002', '2026.A1', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'PETADA BILLI', NULL, NULL, 'N', 50.000000, 10.000000, 5.000000, 45.000000, 'N', 21.000000, 54.450000, 54.450000, 45.000000, NULL, '2026-02-01 14:38:48', '2026-02-01 14:38:48', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'pato aparato', NULL, NULL, 'N', 1.000000, 0.000000, 0.000000, 1.000000, 'N', 21.000000, 1.210000, 1.210000, 1.000000, NULL, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1.000000, 'pato aparato', NULL, NULL, 'N', 1.100000, 0.000000, 0.000000, 1.100000, 'N', 21.000000, 1.331000, 1.331000, 1.100000, NULL, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_facturas_pagos
@@ -2084,7 +2084,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-09 08:52:05', '2026-02-09 08:52:05', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-10 18:42:24', '2026-02-10 18:42:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -3274,6 +3274,9 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_facturas` AS SELECT
     `fza_facturas`.`ESCREARARTICULOS_FACTURA` AS `ESCREARARTICULOS_FACTURA`,
     `fza_facturas`.`ESDESCRIPCIONES_AMP_FACTURA` AS `ESDESCRIPCIONES_AMP_FACTURA`,
     `fza_facturas`.`ESFECHADEENTREGA_FACTURA` AS `ESFECHADEENTREGA_FACTURA`,
+    `fza_facturas`.`CODIGO_ALMACEN_FACTURA` AS `CODIGO_ALMACEN_FACTURA`,
+    `fza_facturas`.`CODIGO_CAJA_FACTURA` AS `CODIGO_CAJA_FACTURA`,
+    `fza_facturas`.`NUMERO_OPERACION_FACTURA` AS `NUMERO_OPERACION_FACTURA`,
     `fza_facturas`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
     `fza_facturas`.`INSTANTEALTA` AS `INSTANTEALTA`,
     `fza_facturas`.`USUARIOALTA` AS `USUARIOALTA`,
