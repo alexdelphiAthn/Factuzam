@@ -5,7 +5,7 @@ interface
 uses
   dxSpreadSheet, dxSpreadSheetCore, Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Variants, cxGraphics,
-  System.Classes, Vcl.Graphics,
+  System.Classes, Vcl.Graphics, system.Types,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
   dxSpreadSheetStyles, dxHashUtils;
 
@@ -25,10 +25,18 @@ uses
 
 implementation
   procedure Merge(Sheet: TdxSpreadSheetTableView;
-                   ARow, ACol, ColCount, RowCount: Integer);
+                  ARow, ACol, ColCount, RowCount: Integer);
+  var
+    R: TRect;
   begin
-    // TRect.Create(Left, Top, Right, Bottom)
-    var R := Rect(ACol, ARow, ACol + ColCount - 1, ARow + RowCount - 1);
+    // Definimos el rectángulo explícitamente para evitar errores de cálculo
+    // TRect(Left, Top, Right, Bottom) -> (X1, Y1, X2, Y2)
+
+    R.Left   := ACol;                // Columna Inicial
+    R.Top    := ARow;                // Fila Inicial
+    R.Right  := ACol + ColCount - 1; // Columna Final (Inclusive)
+    R.Bottom := ARow + RowCount - 1; // Fila Final (Inclusive)
+
     Sheet.MergedCells.Add(R);
   end;
 

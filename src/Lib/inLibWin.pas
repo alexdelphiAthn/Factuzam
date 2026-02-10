@@ -54,8 +54,35 @@ uses
   function GetWindowsUserName: string;
   function GetWindowsVersion: string;
   function FindNextFocusableControl(Form:TWinControl): TWinControl;
+  function SanitizeFileName(const AFileName: string;
+                            const AReplacement: Char = '_'): string;
 
 implementation
+
+function SanitizeFileName(const AFileName: string;
+                          const AReplacement: Char = '_'): string;
+const
+  // Añadimos '=' a la lista de caracteres prohibidos globalmente
+  InvalidGlobalChars: set of AnsiChar = ['<', '>', ':', '"', '/', '\', '|',
+                                         '?', '*', '='];
+var
+  i: Integer;
+begin
+  Result := AFileName;
+  for i := 1 to Length(Result) do
+  begin
+    if (Ord(Result[i]) < 32) or CharInSet(Result[i], InvalidGlobalChars) then
+    begin
+      Result[i] := AReplacement;
+    end;
+  end;
+  i := Length(Result);
+  while (i > 0) and ((Result[i] = ' ') or (Result[i] = '.')) do
+  begin
+    Result[i] := AReplacement;
+    Dec(i);
+  end;
+end;
 
 function FindNextFocusableControl(Form:TWinControl): TWinControl;
 var

@@ -36,7 +36,7 @@ uses
   dxSkinTheBezier, dxSkinsDefaultPainters, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue;
+  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList;
 type
   TfrmPrint = class(TfrmBase)
     pnl1: TPanel;
@@ -53,6 +53,8 @@ type
     dsPerfiles: TDataSource;
     frxdsgnr1: TfrxDesigner;
     frxReportOrigen: TfrxReport;
+    ActionList1: TActionList;
+    actSalir: TAction;
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnPDFClick(Sender: TObject);
@@ -66,6 +68,7 @@ type
     procedure FormCreate(Sender: TObject);
     function frxdsgnr1SaveReport(Report: TfrxReport; SaveAs: Boolean): Boolean;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
 
@@ -87,6 +90,12 @@ uses
   inMtoModalGenImpSave, inLibUser;
 
 {$R *.dfm}
+
+procedure TfrmPrint.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+  btnSalirClick(Sender);
+end;
 
 procedure TfrmPrint.btnEditarClick(Sender: TObject);
 begin
