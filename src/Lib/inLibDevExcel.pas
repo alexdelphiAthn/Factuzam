@@ -1,0 +1,116 @@
+﻿unit inLibDevExcel;
+
+interface
+
+uses
+  dxSpreadSheet, dxSpreadSheetCore, Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, cxGraphics,
+  System.Classes, Vcl.Graphics,
+  dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
+  dxSpreadSheetStyles, dxHashUtils;
+
+  procedure Merge(Sheet: TdxSpreadSheetTableView;
+                  ARow, ACol, ColCount, RowCount: Integer);
+  procedure W(Sheet: TdxSpreadSheetTableView;ARow, ACol: Integer;
+              const AValue: Variant;
+              ABold: Boolean = False;
+              AAlign: TdxSpreadSheetDataAlignHorz = ssahLeft);
+  procedure WFormula(Sheet: TdxSpreadSheetTableView;ARow, ACol: Integer;
+                     const AFormula: string;
+                     AFormat: string = '');
+  procedure PintarCuadro(Sheet: TdxSpreadSheetTableView;
+                         R1, C1, R2, C2: Integer;
+                         DxStyle: TdxSpreadSheetCellBorderStyle);
+  function GetRef(R, C: Integer; Absolute: Boolean = False): string;
+
+implementation
+  procedure Merge(Sheet: TdxSpreadSheetTableView;
+                   ARow, ACol, ColCount, RowCount: Integer);
+  begin
+    // TRect.Create(Left, Top, Right, Bottom)
+    var R := Rect(ACol, ARow, ACol + ColCount - 1, ARow + RowCount - 1);
+    Sheet.MergedCells.Add(R);
+  end;
+
+  // Helper para escribir celdas
+  procedure W(Sheet: TdxSpreadSheetTableView;ARow, ACol: Integer;
+              const AValue: Variant;
+              ABold: Boolean = False;
+              AAlign: TdxSpreadSheetDataAlignHorz = ssahLeft);
+  begin
+    with Sheet.CreateCell(ARow, ACol) do
+    begin
+      AsVariant := AValue;
+      if ABold then Style.Font.Style := [fsBold] else Style.Font.Style := [];
+      Style.AlignHorz := AAlign;
+      Style.AlignVert := ssavCenter; // Centrado vertical para que quede mejor
+    end;
+  end;
+
+//  function N(const AValue: Double): string;
+//  var
+//    fs: TFormatSettings;
+//  begin
+//    //fs := TFormatSettings.Invariant; // Fuerza el punto (5.2)
+//    Result := FloatToStr(AValue, fs);
+//  end;
+
+  procedure WFormula(Sheet: TdxSpreadSheetTableView;ARow, ACol: Integer;
+                     const AFormula: string;
+                     AFormat: string = '');
+  begin
+    with Sheet.CreateCell(ARow, ACol) do
+    begin
+      // SetText(..., True) es CRÍTICO para que interprete la fórmula
+      SetText(AFormula, True);
+      Style.AlignHorz := ssahRight;
+      if AFormat <> '' then Style.DataFormat.FormatCode := AFormat;
+    end;
+  end;
+
+  procedure PintarCuadro(Sheet: TdxSpreadSheetTableView;
+                         R1, C1, R2, C2: Integer;
+                         DxStyle: TdxSpreadSheetCellBorderStyle);
+  var
+    r, c: Integer;
+  begin
+
+    // 2. Pintamos Bordes Superior e Inferior (Techo y Suelo)
+    for c := C1 to C2 do
+    begin
+      // Borde Superior
+      if Sheet.Cells[R1, c] = nil then Sheet.CreateCell(R1, c);
+      Sheet.Cells[R1, c].Style.Borders[bTop].Style := DxStyle;
+
+      // Borde Inferior
+      if Sheet.Cells[R2, c] = nil then Sheet.CreateCell(R2, c);
+      Sheet.Cells[R2, c].Style.Borders[bBottom].Style := DxStyle;
+    end;
+
+    // 3. Pintamos Bordes Izquierdo y Derecho (Paredes)
+    for r := R1 to R2 do
+    begin
+      // Borde Izquierdo
+      if Sheet.Cells[r, C1] = nil then Sheet.CreateCell(r, C1);
+      Sheet.Cells[r, C1].Style.Borders[bLeft].Style := DxStyle;
+
+      // Borde Derecho
+      if Sheet.Cells[r, C2] = nil then Sheet.CreateCell(r, C2);
+      Sheet.Cells[r, C2].Style.Borders[bRight].Style := DxStyle;
+    end;
+  end;
+
+  function GetRef(R, C: Integer; Absolute: Boolean = False): string;
+  var
+    ColStr: string;
+  begin
+    // Convertimos 0->A, 1->B...
+    ColStr := Chr(Ord('A') + C);
+    if Absolute then
+      Result := '$' + ColStr + '$' + IntToStr(R + 1)
+    else
+      Result := ColStr + IntToStr(R + 1);
+  end;
+
+
+end.
