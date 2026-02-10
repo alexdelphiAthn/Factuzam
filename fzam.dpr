@@ -87,7 +87,8 @@ uses
   UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule},
   inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
   inLibFormManager in 'src\Lib\inLibFormManager.pas',
-  inMtoPreviewExcel in 'src\Core\inMtoPreviewExcel.pas' {frmMtoPreviewExcel};
+  inMtoPreviewExcel in 'src\Core\inMtoPreviewExcel.pas' {frmMtoPreviewExcel},
+  inLibDevExcel in 'src\Lib\inLibDevExcel.pas';
 
 var
   frmLogon: TfrmLogon;

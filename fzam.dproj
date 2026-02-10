@@ -375,6 +375,7 @@
             <Form>frmMtoPreviewExcel</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibDevExcel.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
