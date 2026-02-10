@@ -25,7 +25,8 @@ type
                        ValoresBusqueda: string):Boolean;
   procedure ShowMto(Owner: TComponent;
                     sCall:String;
-                    sBusq:string = '');
+                    sBusq:string = '';
+                    bMultiple: Boolean = False);
   function CrearDataModule(sDataUnit:String;var pOwner:TfrmMtoGen):TObject;
 
 implementation
@@ -36,7 +37,10 @@ implementation
       inLibLog,
       inLibUnitForm;
 
-procedure ShowMto(Owner: TComponent; sCall: String; sBusq: string = '');
+procedure ShowMto(Owner: TComponent;
+                  sCall: String;
+                  sBusq:string = '';
+                  bMultiple: Boolean = False);
 var
   frmMain: TfrmMtoPrincipal;
   ofzaF: TfzaForm;
@@ -47,6 +51,8 @@ var
   frmGen: TfrmMtoGen;
   dmDat: TdmBase;
   sPkTab: String;
+  iNum : Integer;
+  NewCaption: string;
 begin
   if not (Owner is TfrmMtoPrincipal) then Exit;
   frmMain := TfrmMtoPrincipal(Owner);
@@ -63,7 +69,21 @@ begin
     inLibLog.Log.LogWarning('Intento de acceso a menú oculto: ' + sCall);
     Exit;
   end;
-  TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);
+  NewCaption := ofzaF.Caption;
+  if bMultiple then
+  begin
+    iNum := 1;
+    NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+    // Buscamos un nombre que no esté pillado (Facturas 1, Facturas 2...)
+    while (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
+    begin
+      Inc(iNum);
+      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+    end;
+    TargetForm := nil; // Forzamos creación
+  end
+  else
+    TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);
   if TargetForm = nil then
   begin
     ctx := TRttiContext.Create;
@@ -73,7 +93,7 @@ begin
       begin
         FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
         TargetForm := FormClass.Create(frmMain);
-        frmMain.FormManager.EmbedForm(TargetForm, ofzaF.Caption, True);
+        frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
         inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
       end
       else

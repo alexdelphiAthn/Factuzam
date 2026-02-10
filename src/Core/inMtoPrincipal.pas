@@ -317,16 +317,21 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  I: Integer;
+//var
+//  I: Integer;
 begin
   inherited;
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
     tmr1.Enabled := False;
-    FreeAndNil(oFzaWinf);
-    if FormManager <> nil then
+
+    if Assigned(FormManager) then
+    try
       FormManager.CloseAll;
+    except
+      on E: Exception do inLibLog.Log.LogError('Error en CloseAll: ' + E.Message);
+    end;
+    FreeAndNil(oFzaWinf);
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
     FreeAndNil(FDmConn);
@@ -398,11 +403,23 @@ var
   CurrentShortCut: TShortCut;
   ShiftState: TShiftState;
 begin
+  if (Message.CharCode = VK_F4) and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
+  begin
+    Self.Close;
+    Result := True;
+    Exit;
+  end;
   if (Message.CharCode = VK_ESCAPE) then
   begin
     if (pcPrincipal.PageCount = 0) then
     begin
       Self.Close;
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      FormManager.CloseActiveForm;
       Result := True;
       Exit;
     end;
@@ -598,7 +615,7 @@ end;
 procedure TfrmMtoPrincipal.mnuFacturasClick(Sender: TObject);
 begin
   if (mnuFacturas.Visible) then
-    ShowMto(Self, 'Facturas');
+    ShowMto(Self, 'Facturas', '', true);
 end;
 
 procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);

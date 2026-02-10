@@ -77,7 +77,9 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 454
       Align = alClient
       TabOrder = 0
+      Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
+      Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       ExplicitWidth = 1118
       ExplicitHeight = 445
       ClientRectBottom = 450

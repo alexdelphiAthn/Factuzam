@@ -93,8 +93,6 @@ type
     lblTablaOrigen: TcxLabel;
     btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
-    ActionList1: TActionList;
-    actSalir: TAction;
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -118,7 +116,6 @@ type
     procedure tsFichaShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
-    procedure actSalirExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
@@ -205,15 +202,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoGen.actSalirExecute(Sender: TObject);
-begin
-  inherited;
-  if (tsFicha.TabVisible = True) and (pcPantalla.ActivePage = tsFicha) then
-    pcPantalla.ActivePage := tsLista
-  else
-    if (pcPantalla.ActivePage = tsLista) then
-      btnSalirClick(Sender);
-end;
+
 
 procedure TfrmMtoGen.AplicarEtiquetas;
 var
