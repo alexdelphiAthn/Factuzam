@@ -54,13 +54,11 @@ type
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
-    ActionList1: TActionList;
-    actSalir: TAction;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure actSalirExecute(Sender: TObject);
+//    procedure actSalirExecute(Sender: TObject);
 
   private
     // procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
@@ -250,14 +248,14 @@ begin
     ShowMto(Self, 'Tarifas');
 end;
 
-procedure TfrmMtoPrincipal.actSalirExecute(Sender: TObject);
-begin
-  inherited;
-  if (pcPrincipal.PageCount = 0) then
-  begin
-    Self.Close;
-  end;
-end;
+//procedure TfrmMtoPrincipal.actSalirExecute(Sender: TObject);
+//begin
+//  inherited;
+//  if (pcPrincipal.PageCount = 0) then
+//  begin
+//    Self.Close;
+//  end;
+//end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 begin
@@ -400,6 +398,15 @@ var
   CurrentShortCut: TShortCut;
   ShiftState: TShiftState;
 begin
+  if (Message.CharCode = VK_ESCAPE) then
+  begin
+    if (pcPrincipal.PageCount = 0) then
+    begin
+      Self.Close;
+      Result := True;
+      Exit;
+    end;
+  end;
   I := 0;
   Result := True;
   bFound := False;

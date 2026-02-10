@@ -966,9 +966,10 @@ end;
 
 procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
-  if Assigned(dmmFacturas) then
-    if Assigned(dsTablaG.Dataset) and Assigned(dmmFacturas.unqryTablaG) then
-      if Assigned(self.tdmDataModule) then
+  if Assigned(dmmFacturas) and
+     Assigned(dsTablaG.Dataset) and
+     Assigned(dmmFacturas.unqryTablaG) and
+     Assigned(self.tdmDataModule) then
        if dsTablaG.Dataset.FieldByName(fescon).AsString ='S' then
        begin
          dmmFacturas.unqryTablaG.ReadOnly := True;

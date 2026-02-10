@@ -2950,13 +2950,4 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Left = 816
     Top = 136
   end
-  object ActionList1: TActionList
-    Left = 552
-    Top = 296
-    object actSalir: TAction
-      Caption = 'Salir'
-      ShortCut = 27
-      OnExecute = actSalirExecute
-    end
-  end
 end

@@ -548,6 +548,8 @@ end;
 
 destructor TfrmMtoGen.Destroy;
 begin
+  if Assigned(dsTablaG) then
+    dsTablaG.DataSet := nil;
   if (oPerfilDic <> nil) then
     FreeAndNil(oPerfilDic);
   if (tdmDataModule <> nil) then
