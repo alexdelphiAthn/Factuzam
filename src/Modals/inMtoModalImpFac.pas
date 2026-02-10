@@ -142,8 +142,8 @@ var
      end
      else
      begin
-       W(Sheet, iRow, COL_PIVA, '-', False, ssahCenter);
-       W(Sheet, iRow, COL_TOTAL, '-', False, ssahCenter);
+       W(Sheet, iRow, COL_PIVA, '', False, ssahCenter);
+       W(Sheet, iRow, COL_TOTAL, '', False, ssahCenter);
      end;
   end;
 
@@ -157,7 +157,6 @@ begin
                      + '_' + QMaster.FieldByName('NRO_FACTURA').AsString;
   var ImpuestosIncluidos :=
       (QMaster.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString = 'S');
-  // --- ENCABEZADO ---
   W(Sheet, 1, COL_DESC, 'FACTURA', True);
   Sheet.Cells[1, COL_DESC].Style.Font.Size := 18;
   W(Sheet, 1, COL_TOTAL, 'Fecha: ' +
@@ -165,51 +164,33 @@ begin
   W(Sheet, 2, COL_TOTAL, 'Número: ' +
                            QMaster.FieldByName('SERIE_FACTURA').AsString + '.' +
                   QMaster.FieldByName('NRO_FACTURA').AsString, True, ssahRight);
-  // Título
   W(Sheet, 4, COL_DESC, 'EMISOR', True); // Negrita
-
-  // Razón Social (Combinamos 3 columnas: A, B, C para que quepa bien)
-  W(Sheet, 5, COL_DESC, QMaster.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString);
+  W(Sheet, 5, COL_DESC, QMaster.FieldByName(
+                                       'RAZONSOCIAL_EMPRESA_FACTURA').AsString);
   Merge(Sheet, 5, COL_DESC, 3, 1);
-
-  // NIF
-  W(Sheet, 6, COL_DESC, 'NIF: ' + QMaster.FieldByName('NIF_EMPRESA_FACTURA').AsString);
+  W(Sheet, 6, COL_DESC, 'NIF: ' + QMaster.FieldByName(
+                                               'NIF_EMPRESA_FACTURA').AsString);
   Merge(Sheet, 6, COL_DESC, 3, 1);
-
-  // Dirección
-  W(Sheet, 7, COL_DESC, QMaster.FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString);
+  W(Sheet, 7, COL_DESC, QMaster.FieldByName(
+                                        'DIRECCION1_EMPRESA_FACTURA').AsString);
   Merge(Sheet, 7, COL_DESC, 3, 1);
-
-  // CP y Población
-  W(Sheet, 8, COL_DESC, QMaster.FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString + ' ' +
-                        QMaster.FieldByName('POBLACION_EMPRESA_FACTURA').AsString);
+  W(Sheet, 8, COL_DESC, QMaster.FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString
+            +  ' ' + QMaster.FieldByName('POBLACION_EMPRESA_FACTURA').AsString);
   Merge(Sheet, 8, COL_DESC, 3, 1);
-
-
-  // --- DATOS RECEPTOR (Derecha - Columna D) ---
-  // Usamos COL_PIVA (Columna 3) como inicio del bloque derecho
-
-  // Título
   W(Sheet, 4, COL_PIVA, 'RECEPTOR', True); // Negrita
-
-  // Razón Social (Combinamos 2 columnas: D y E)
-  W(Sheet, 5, COL_PIVA, QMaster.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
+  W(Sheet, 5, COL_PIVA, QMaster.FieldByName(
+                                       'RAZONSOCIAL_CLIENTE_FACTURA').AsString);
   Merge(Sheet, 5, COL_PIVA, 2, 1);
-
-  // NIF
-  W(Sheet, 6, COL_PIVA, 'NIF: ' + QMaster.FieldByName('NIF_CLIENTE_FACTURA').AsString);
+  W(Sheet, 6, COL_PIVA, 'NIF: ' + QMaster.FieldByName(
+                                               'NIF_CLIENTE_FACTURA').AsString);
   Merge(Sheet, 6, COL_PIVA, 2, 1);
-
-  // Dirección
-  W(Sheet, 7, COL_PIVA, QMaster.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  W(Sheet, 7, COL_PIVA, QMaster.FieldByName(
+                                        'DIRECCION1_CLIENTE_FACTURA').AsString);
   Merge(Sheet, 7, COL_PIVA, 2, 1);
-
-  // CP y Población
   W(Sheet, 8, COL_PIVA,
     QMaster.FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString + ' ' +
     QMaster.FieldByName('POBLACION_CLIENTE_FACTURA').AsString);
   Merge(Sheet, 8, COL_PIVA, 2, 1);
-  // --- TABLA DE LÍNEAS ---
   iRow := 11;
   W(Sheet, iRow, COL_DESC,   'Descripción', True);
   W(Sheet, iRow, COL_CANT,   'Cantidad',    True, ssahRight);
@@ -348,14 +329,12 @@ begin
     Style.AlignHorz := ssahRight;
   end;
   var RefTotalImpuestos := GetRef(iRow, COL_TOTAL);
-
-  // 3. RETENCIONES e IRPF (Opcional según Master)
   var RefRetenciones := '';
   if Abs(QMaster.FieldByName('TOTAL_RETENCION_FACTURA').AsFloat) > 0.001 then
   begin
      Inc(iRow);
      W(Sheet, iRow, COL_BASEI, QMaster.FieldByName(
-                   'PORCEN_RETENCION_FACTURA').AsFloat); // Guardamos % en Col F
+                   'PORCEN_RETENCION_FACTURA').AsFloat);
      WFormula(Sheet, iRow, COL_PIVA, '="Retención IRPF ("&' +
                                             GetRef(iRow, COL_BASEI) + '&"%):"');
      with Sheet.CreateCell(iRow, COL_TOTAL) do
@@ -368,8 +347,6 @@ begin
      end;
      RefRetenciones := GetRef(iRow, COL_TOTAL);
   end;
-
-  // 4. TOTAL A PAGAR
   Inc(iRow);
   W(Sheet, iRow, COL_PIVA, 'TOTAL A PAGAR:', True, ssahRight);
   with Sheet.CreateCell(iRow, COL_TOTAL) do
@@ -383,7 +360,7 @@ begin
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
-  Inc(iRow, 2); // Dejamos un par de filas de margen tras los totales
+  Inc(iRow, 2);
   with Sheet.CreateCell(iRow, COL_DESC) do
   begin
     AsString := 'Forma de Pago:';
@@ -398,14 +375,11 @@ begin
     Style.WordWrap := False;
   end;
   Merge(Sheet, iRow, COL_CANT, 4, 1);
-
   Sheet.Columns[COL_DESC].Size := 280;
   Sheet.Columns[COL_CANT].Size := 60;
   Sheet.Columns[COL_PRECIO].Size := 80;
   Sheet.Columns[COL_PIVA].Size := 180;
   Sheet.Columns[COL_TOTAL].Size := 110;
-
-  // Ocultar auxiliares
   Sheet.Columns[COL_BASEI].Visible := False;
   Sheet.Columns[COL_TIPO_L].Visible := False;
 end;
@@ -477,7 +451,6 @@ begin
     //dmmFacturas.fxdstPrintLinFac.OpenDataSource;
     dmmFacturas.fxdstPrintLinFac.UpdateBounds;
   end;
-
   if rbRangoFechas.Checked = true then
   begin
     with dmmFacturas.unqryFacPrint do

@@ -88,7 +88,8 @@ uses
   inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
   inLibFormManager in 'src\Lib\inLibFormManager.pas',
   inMtoPreviewExcel in 'src\Core\inMtoPreviewExcel.pas' {frmMtoPreviewExcel},
-  inLibDevExcel in 'src\Lib\inLibDevExcel.pas';
+  inLibDevExcel in 'src\Lib\inLibDevExcel.pas',
+  inLibdxSpreadSheetStrs_ESP in 'src\Lib\inLibdxSpreadSheetStrs_ESP.pas';
 
 var
   frmLogon: TfrmLogon;

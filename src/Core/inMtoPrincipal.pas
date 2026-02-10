@@ -43,7 +43,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -54,9 +54,13 @@ type
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
+    ActionList1: TActionList;
+    actSalir: TAction;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure actSalirExecute(Sender: TObject);
 
   private
     // procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
@@ -246,6 +250,15 @@ begin
     ShowMto(Self, 'Tarifas');
 end;
 
+procedure TfrmMtoPrincipal.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+  if (pcPrincipal.PageCount = 0) then
+  begin
+    Self.Close;
+  end;
+end;
+
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 begin
   CopiaSeguridad;
@@ -322,6 +335,30 @@ begin
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
     Action := caFree;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  inherited;
+  if (pcPrincipal.PageCount = 0) then
+  begin
+    if MessageDlg('¿Quiere salir de la aplicación Fzam?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+    begin
+      CanClose := False; // Cancela el cierre
+    end
+    else
+    begin
+      CanClose := True;  // Permite el cierre
+    end;
+  end
+  else
+  begin
+    // Si hay formularios abiertos, podrías decidir si dejar cerrar
+    // directamente o pedir cerrar primero las pestañas.
+//    CanClose := True;
   end;
 end;
 

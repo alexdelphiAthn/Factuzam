@@ -8,6 +8,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
+  ExplicitLeft = -137
+  ExplicitTop = -183
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -47,8 +49,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
-        ExplicitLeft = 4
-        ExplicitTop = 30
         ExplicitWidth = 1079
         ExplicitHeight = 770
         inherited cxGrdPrincipal: TcxGrid
@@ -664,8 +664,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
-        ExplicitLeft = 4
-        ExplicitTop = 30
         ExplicitWidth = 1079
         ExplicitHeight = 770
         object pnl1: TPanel
@@ -2440,8 +2438,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Caption = '&Cabecera Factura '
                 ImageIndex = 0
-                ExplicitLeft = 72
-                ExplicitTop = 64
                 object lblNroFactura: TcxLabel
                   Left = 45
                   Top = 16
@@ -3413,9 +3409,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilTop: TPanel
           Width = 1079
           ExplicitWidth = 1079
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1079
@@ -3440,9 +3433,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
-        end
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 338
@@ -3589,7 +3579,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     Left = 1104
     Top = 72
   end
-  object JvCalculator1: TJvCalculator
+  object JvCalculator1: TJvCalculator [8]
     Ctl3D = False
     Title = 'Calculadora'
     Left = 968

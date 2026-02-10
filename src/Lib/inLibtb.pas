@@ -116,14 +116,11 @@ var
   LDataSet: TDataSet;
 begin
   if AModule = nil then Exit;
-
   for i := 0 to AModule.ComponentCount - 1 do
   begin
     if AModule.Components[i] is TDataSet then
     begin
       LDataSet := TDataSet(AModule.Components[i]);
-
-      // Si está editando o insertando, cancelamos
       if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
       begin
         LDataSet.Cancel;

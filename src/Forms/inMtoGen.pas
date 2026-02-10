@@ -41,7 +41,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Generics.Collections;
+  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -93,6 +93,8 @@ type
     lblTablaOrigen: TcxLabel;
     btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
+    ActionList1: TActionList;
+    actSalir: TAction;
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -116,6 +118,8 @@ type
     procedure tsFichaShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
+    procedure actSalirExecute(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
     procedure SimulateTabKey;
@@ -199,6 +203,16 @@ begin
         end;
       end;
   end;
+end;
+
+procedure TfrmMtoGen.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+  if (tsFicha.TabVisible = True) and (pcPantalla.ActivePage = tsFicha) then
+    pcPantalla.ActivePage := tsLista
+  else
+    if (pcPantalla.ActivePage = tsLista) then
+      btnSalirClick(Sender);
 end;
 
 procedure TfrmMtoGen.AplicarEtiquetas;
@@ -322,7 +336,8 @@ var
   formMain: TCustomForm;
 begin
   inherited;
-  if not (Self.Parent is TcxTabSheet) then Exit;
+  if not (Self.Parent is TcxTabSheet) then
+    Exit;
   formMain := Application.MainForm;
   if (tdmDataModule <> nil) and
      CheckOpenDatasets(tdmDataModule as TDataModule) then
@@ -539,6 +554,7 @@ begin
     FreeAndNil(tdmDataModule);
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
+  frmMtoGen := nil;
   inherited;
 end;
 
@@ -564,6 +580,12 @@ begin
       lblEditMode.Caption := 'Inactivo';
     end;
   end;
+end;
+
+procedure TfrmMtoGen.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  inherited;
+  Action := caFree;
 end;
 
 procedure TfrmMtoGen.FormCreate(Sender: TObject);

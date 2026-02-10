@@ -32,6 +32,7 @@ type
     procedure btnGuardarClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -42,6 +43,8 @@ var
   frmMtoPreviewExcel: TfrmMtoPreviewExcel;
 
 implementation
+
+uses inLibdxSpreadSheetStrs_ESP;
 
 {$R *.dfm}
 
@@ -64,6 +67,12 @@ begin
   DialogoGuardar.Filter := 'Libro de Excel (*.xlsx)|*.xlsx';
   if DialogoGuardar.Execute then
     dxSpreadSheet1.SaveToFile(DialogoGuardar.FileName);
+end;
+
+procedure TfrmMtoPreviewExcel.FormCreate(Sender: TObject);
+begin
+  inherited;
+  ApplySpanishTranslation;
 end;
 
 end.
