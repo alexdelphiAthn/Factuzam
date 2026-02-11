@@ -158,6 +158,8 @@ begin
   FMemTablePagos.FieldDefs.Add('IMPORTE', ftCurrency);
   FMemTablePagos.FieldDefs.Add('CAMBIO', ftCurrency);
   FMemTablePagos.FieldDefs.Add('REFERENCIA', ftString, 255);
+  // NUEVO CAMPO DE CONTROL (Invisible en el grid, solo para lógica)
+  FMemTablePagos.FieldDefs.Add('REQ_REFERENCIA', ftString, 1); // 'S' o 'N'
 //  FMemTablePagos.Create;
   FMemTablePagos.Open;
   dsFormasPago.DataSet := FMemTablePagos;
