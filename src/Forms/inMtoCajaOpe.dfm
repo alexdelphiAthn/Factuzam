@@ -11,6 +11,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Font.Name = 'Lucida Sans'
   Font.Style = []
   KeyPreview = True
+  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnShow = FormShow
@@ -256,7 +257,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 754
+        Left = 748
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -278,9 +279,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
+        ExplicitLeft = 742
         Height = 80
         Width = 423
-        AnchorX = 1177
+        AnchorX = 1171
       end
       object btnF8: TcxButton
         Left = 224
