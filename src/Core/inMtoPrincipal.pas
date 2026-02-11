@@ -413,7 +413,9 @@ begin
   begin
     if (pcPrincipal.PageCount = 0) then
     begin
-      Self.Close;
+      // Usar PostMessage garantiza que el mensaje de cierre se procese
+      // después de que termine la cadena de eventos de teclado actual.
+      PostMessage(Self.Handle, WM_CLOSE, 0, 0);
       Result := True;
       Exit;
     end

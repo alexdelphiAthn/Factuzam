@@ -256,7 +256,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 736
+        Left = 754
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -278,10 +278,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 730
         Height = 80
-        Width = 447
-        AnchorX = 1183
+        Width = 423
+        AnchorX = 1177
       end
       object btnF8: TcxButton
         Left = 224
@@ -717,6 +716,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Caption = 'Eliminar'
       ShortCut = 119
       OnExecute = actEliminarLineaExecute
+    end
+    object actCobro: TAction
+      Caption = 'actCobro'
+      ShortCut = 123
+      OnExecute = actCobroExecute
     end
   end
 end

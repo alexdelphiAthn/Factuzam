@@ -4,8 +4,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'Fase de cobro'
-  ClientHeight = 667
-  ClientWidth = 774
+  ClientHeight = 686
+  ClientWidth = 842
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,22 +17,22 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   OnShow = FormShow
   TextHeight = 18
   object pnlPrincipal: TPanel
-    Left = 0
+    Left = 65
     Top = 0
-    Width = 774
-    Height = 667
+    Width = 777
+    Height = 686
     Align = alClient
     BevelOuter = bvNone
     Color = clCream
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 768
-    ExplicitHeight = 615
+    ExplicitWidth = 771
+    ExplicitHeight = 677
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
-      Width = 526
-      Height = 667
+      Width = 529
+      Height = 686
       Align = alClient
       BevelOuter = bvNone
       Font.Charset = DEFAULT_CHARSET
@@ -43,355 +43,374 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
-      ExplicitWidth = 520
-      ExplicitHeight = 615
-      object pnlFormasPago: TPanel
+      ExplicitWidth = 523
+      ExplicitHeight = 677
+      object Panel2: TPanel
         Left = 0
-        Top = 600
-        Width = 526
-        Height = 67
-        Align = alBottom
-        BevelOuter = bvNone
-        Color = clSilver
-        ParentBackground = False
+        Top = 0
+        Width = 529
+        Height = 686
+        Align = alClient
         TabOrder = 0
-        ExplicitTop = 548
-        ExplicitWidth = 520
-        object lblDescuento4: TcxLabel
-          Left = 26
-          Top = 23
-          Caption = 'Pendiente de cobro'
-          ParentColor = False
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
+        ExplicitWidth = 523
+        ExplicitHeight = 677
+        object pnl1: TPanel
+          Left = 6
+          Top = 0
+          Width = 522
+          Height = 201
+          BevelInner = bvLowered
+          BevelKind = bkSoft
+          BevelOuter = bvLowered
           TabOrder = 0
+          object lblDescuento1: TcxLabel
+            Left = 8
+            Top = 100
+            Caption = 'Imp dto. Lineal'
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 0
+          end
+          object lblDescuento2: TcxLabel
+            Left = 8
+            Top = 143
+            Caption = 'Imp TOTAL a pagar'
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 1
+          end
+          object lblDescuento: TcxLabel
+            Left = 8
+            Top = 58
+            Caption = '% Descuento'
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 2
+          end
+          object lblSuma: TcxLabel
+            Left = 8
+            Top = 18
+            Caption = 'Suma'
+            ParentFont = False
+            Style.Font.Charset = ANSI_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 3
+          end
+          object txtCantidadLineas: TcxTextEdit
+            Left = 280
+            Top = 17
+            Properties.Alignment.Horz = taCenter
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 4
+            Text = '1'
+            Width = 64
+          end
+          object txtBrutoLineas: TcxCurrencyEdit
+            Left = 339
+            Top = 17
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 5
+            Width = 171
+          end
+          object txtPorcenDtoLineal: TcxTextEdit
+            Left = 261
+            Top = 99
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 8
+            Width = 83
+          end
+          object txtTotalPagar: TcxCurrencyEdit
+            Left = 339
+            Top = 142
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clWhite
+            TabOrder = 10
+            Width = 171
+          end
+          object txtDtoGlobal: TcxCurrencyEdit
+            Left = 339
+            Top = 57
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 7
+            Width = 171
+          end
+          object txtTotalDtoLineal: TcxCurrencyEdit
+            Left = 339
+            Top = 99
+            Properties.Alignment.Horz = taRightJustify
+            Style.Color = clCream
+            TabOrder = 9
+            Width = 171
+          end
+          object txtPorcenDtoGlobal: TcxCurrencyEdit
+            Left = 248
+            Top = 57
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 %'
+            Properties.EditFormat = ',0.00 %'
+            Properties.ReadOnly = False
+            Properties.OnEditValueChanged = txtPorcenDtoGlobalPropertiesEditValueChanged
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clWindow
+            TabOrder = 6
+            Width = 92
+          end
         end
-        object txtPendienteCobro: TcxCurrencyEdit
-          Left = 357
-          Top = 25
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
+        object pnl11: TPanel
+          Left = 6
+          Top = 197
+          Width = 522
+          Height = 108
+          BevelInner = bvLowered
+          BevelKind = bkSoft
+          BevelOuter = bvLowered
           TabOrder = 1
-          Width = 171
+          object lblDescuento3: TcxLabel
+            Left = 8
+            Top = 58
+            Caption = 'Pendiente de cobro'
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 0
+          end
+          object lblSuma1: TcxLabel
+            Left = 8
+            Top = 18
+            Caption = 'Importe a dejar A CUENTA'
+            ParentFont = False
+            Style.Font.Charset = ANSI_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 1
+          end
+          object txtDejarCuenta: TcxCurrencyEdit
+            Left = 339
+            Top = 17
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 2
+            Width = 171
+          end
+          object txtPendienteCuenta: TcxCurrencyEdit
+            Left = 339
+            Top = 57
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 3
+            Width = 171
+          end
         end
-      end
-      object pnl1: TPanel
-        Left = 16
-        Top = 1
-        Width = 522
-        Height = 201
-        BevelInner = bvLowered
-        BevelKind = bkSoft
-        BevelOuter = bvLowered
-        TabOrder = 1
-        object lblDescuento1: TcxLabel
-          Left = 8
-          Top = 100
-          Caption = 'Imp dto. Lineal'
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 0
-        end
-        object lblDescuento2: TcxLabel
-          Left = 8
-          Top = 143
-          Caption = 'Imp TOTAL a pagar'
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 1
-        end
-        object lblDescuento: TcxLabel
-          Left = 8
-          Top = 58
-          Caption = '% Descuento'
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
+        object pnl111: TPanel
+          Left = 6
+          Top = 301
+          Width = 522
+          Height = 108
+          BevelInner = bvLowered
+          BevelKind = bkSoft
+          BevelOuter = bvLowered
           TabOrder = 2
+          object lblDescuento31: TcxLabel
+            Left = 8
+            Top = 58
+            Caption = 'Vale Emitido'
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 0
+          end
+          object lblSuma11: TcxLabel
+            Left = 8
+            Top = 14
+            Caption = 'Vale Recogido'
+            ParentFont = False
+            Style.Font.Charset = ANSI_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 1
+          end
+          object txtValeRecogido: TcxCurrencyEdit
+            Left = 339
+            Top = 13
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clWhite
+            TabOrder = 2
+            Width = 171
+          end
+          object txtValeEmitido: TcxCurrencyEdit
+            Left = 339
+            Top = 57
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clWhite
+            TabOrder = 3
+            Width = 171
+          end
         end
-        object lblSuma: TcxLabel
-          Left = 8
-          Top = 18
-          Caption = 'Suma'
-          ParentFont = False
-          Style.Font.Charset = ANSI_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
+        object cxgrdFormasPago: TcxGrid
+          Left = 16
+          Top = 409
+          Width = 512
+          Height = 186
           TabOrder = 3
+          object dbtvFormasPago: TcxGridDBTableView
+            DataController.DataSource = dsFormasPago
+            OptionsData.Deleting = False
+            OptionsData.Inserting = False
+            OptionsView.GroupByBox = False
+            OptionsView.Indicator = True
+            object cxgrdbclmnCodigo: TcxGridDBColumn
+              Caption = 'C'#243'digo'
+              DataBinding.FieldName = 'CODIGO_FORMAP'
+              Visible = False
+              HeaderAlignmentHorz = taCenter
+              Options.Editing = False
+              Options.Focusing = False
+              Width = 95
+            end
+            object dbmDescripcion: TcxGridDBColumn
+              Caption = 'Descripci'#243'n'
+              HeaderAlignmentHorz = taCenter
+              Options.Editing = False
+              Options.Focusing = False
+              Width = 320
+            end
+            object dbmImporte: TcxGridDBColumn
+              Caption = 'Importe'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
+              Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
+              HeaderAlignmentHorz = taRightJustify
+              Width = 170
+            end
+          end
+          object cxgrdlvlFormasPago: TcxGridLevel
+            GridView = dbtvFormasPago
+          end
         end
-        object txtCantidadLineas: TcxTextEdit
-          Left = 280
-          Top = 17
-          Properties.Alignment.Horz = taCenter
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
+        object pnlFormasPago: TPanel
+          Left = 1
+          Top = 618
+          Width = 527
+          Height = 67
+          Align = alBottom
+          BevelOuter = bvNone
+          Color = clSilver
+          ParentBackground = False
           TabOrder = 4
-          Text = '1'
-          Width = 64
-        end
-        object txtBrutoLineas: TcxCurrencyEdit
-          Left = 339
-          Top = 17
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
-          TabOrder = 5
-          Width = 171
-        end
-        object txtPorcenDtoGlobal: TcxTextEdit
-          Left = 261
-          Top = 57
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clWhite
-          TabOrder = 6
-          Width = 83
-        end
-        object txtPorcenDtoLineal: TcxTextEdit
-          Left = 261
-          Top = 99
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
-          TabOrder = 7
-          Width = 83
-        end
-        object txtTotalDtoLineal: TcxTextEdit
-          Left = 339
-          Top = 99
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clWhite
-          TabOrder = 8
-          Width = 171
-        end
-        object txtTotalPagar: TcxCurrencyEdit
-          Left = 339
-          Top = 142
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clWhite
-          TabOrder = 9
-          Width = 171
-        end
-        object txtDtoGlobal: TcxCurrencyEdit
-          Left = 339
-          Top = 57
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
-          TabOrder = 10
-          Width = 171
-        end
-      end
-      object pnl11: TPanel
-        Left = 16
-        Top = 198
-        Width = 522
-        Height = 108
-        BevelInner = bvLowered
-        BevelKind = bkSoft
-        BevelOuter = bvLowered
-        TabOrder = 2
-        object lblDescuento3: TcxLabel
-          Left = 8
-          Top = 58
-          Caption = 'Pendiente de cobro'
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 0
-        end
-        object lblSuma1: TcxLabel
-          Left = 8
-          Top = 18
-          Caption = 'Importe a dejar A CUENTA'
-          ParentFont = False
-          Style.Font.Charset = ANSI_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 1
-        end
-        object txtDejarCuenta: TcxCurrencyEdit
-          Left = 339
-          Top = 17
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
-          TabOrder = 2
-          Width = 171
-        end
-        object txtPendienteCuenta: TcxCurrencyEdit
-          Left = 339
-          Top = 57
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
-          TabOrder = 3
-          Width = 171
-        end
-      end
-      object pnl111: TPanel
-        Left = 16
-        Top = 302
-        Width = 522
-        Height = 108
-        BevelInner = bvLowered
-        BevelKind = bkSoft
-        BevelOuter = bvLowered
-        TabOrder = 3
-        object lblDescuento31: TcxLabel
-          Left = 8
-          Top = 58
-          Caption = 'Vale Emitido'
-          ParentFont = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 0
-        end
-        object lblSuma11: TcxLabel
-          Left = 8
-          Top = 14
-          Caption = 'Vale Recogido'
-          ParentFont = False
-          Style.Font.Charset = ANSI_CHARSET
-          Style.Font.Color = clNavy
-          Style.Font.Height = -23
-          Style.Font.Name = 'Lucida Sans'
-          Style.Font.Style = [fsBold]
-          Style.IsFontAssigned = True
-          TabOrder = 1
-        end
-        object txtValeRecogido: TcxCurrencyEdit
-          Left = 339
-          Top = 13
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clWhite
-          TabOrder = 2
-          Width = 171
-        end
-        object txtValeEmitido: TcxCurrencyEdit
-          Left = 339
-          Top = 57
-          Properties.Alignment.Horz = taRightJustify
-          Properties.DisplayFormat = ',0.00 '#8364
-          Properties.EditFormat = ',0.00 '#8364
-          Properties.ReadOnly = True
-          Style.BorderStyle = ebsOffice11
-          Style.Color = clWhite
-          TabOrder = 3
-          Width = 171
-        end
-      end
-      object cxgrdFormasPago: TcxGrid
-        Left = 16
-        Top = 410
-        Width = 512
-        Height = 186
-        TabOrder = 4
-        object dbtvFormasPago: TcxGridDBTableView
-          DataController.DataSource = dsFormasPago
-          OptionsData.Deleting = False
-          OptionsData.Editing = False
-          OptionsData.Inserting = False
-          OptionsSelection.CellSelect = False
-          OptionsView.GroupByBox = False
-          OptionsView.Indicator = True
-          object cxgrdbclmnCodigo: TcxGridDBColumn
-            Caption = 'C'#243'digo'
-            DataBinding.FieldName = 'CODIGO_FORMAP'
-            HeaderAlignmentHorz = taCenter
-            Width = 95
+          ExplicitTop = 609
+          ExplicitWidth = 521
+          object lblDescuento4: TcxLabel
+            Left = 15
+            Top = 23
+            Caption = 'Pendiente de cobro'
+            ParentColor = False
+            ParentFont = False
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -23
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            TabOrder = 0
           end
-          object dbmDescripcion: TcxGridDBColumn
-            Caption = 'Descripci'#243'n'
-            HeaderAlignmentHorz = taCenter
-            Width = 226
+          object txtPendienteCobro: TcxCurrencyEdit
+            Left = 346
+            Top = 25
+            Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Style.BorderStyle = ebsOffice11
+            Style.Color = clCream
+            TabOrder = 1
+            Width = 171
           end
-          object dbmImporte: TcxGridDBColumn
-            Caption = 'Importe'
-            PropertiesClassName = 'TcxCurrencyEditProperties'
-            Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
-            HeaderAlignmentHorz = taRightJustify
-            Width = 170
-          end
-        end
-        object cxgrdlvlFormasPago: TcxGridLevel
-          GridView = dbtvFormasPago
         end
       end
     end
     object pnlDerecho: TPanel
-      Left = 526
+      Left = 529
       Top = 0
       Width = 248
-      Height = 667
+      Height = 686
       Align = alRight
       BevelOuter = bvNone
       Color = clCream
       ParentBackground = False
       TabOrder = 1
-      ExplicitLeft = 520
-      ExplicitHeight = 615
+      ExplicitLeft = 523
+      ExplicitHeight = 677
       object pnlBotones: TPanel
         Left = 0
         Top = 0
         Width = 248
-        Height = 471
+        Height = 490
         Align = alClient
         BevelOuter = bvNone
         Font.Charset = DEFAULT_CHARSET
@@ -402,7 +421,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 419
+        ExplicitHeight = 481
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -775,14 +794,14 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       end
       object pnlDocumento: TPanel
         Left = 0
-        Top = 471
+        Top = 490
         Width = 248
         Height = 196
         Align = alBottom
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
-        ExplicitTop = 419
+        ExplicitTop = 481
         object lblNumDoc: TcxLabel
           Left = 86
           Top = 8
@@ -833,6 +852,63 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       end
     end
   end
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 65
+    Height = 686
+    Align = alLeft
+    TabOrder = 1
+    ExplicitHeight = 677
+    object cxLabel3: TcxLabel
+      Left = 1
+      Top = 172
+      AutoSize = False
+      Caption = 'Veri*Factu'
+      ParentFont = False
+      Style.BorderStyle = ebsOffice11
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clNavy
+      Style.Font.Height = -36
+      Style.Font.Name = 'Arial Black'
+      Style.Font.Style = [fsBold]
+      Style.Shadow = True
+      Style.IsFontAssigned = True
+      Properties.Angle = 90
+      Properties.LabelStyle = cxlsLowered
+      Properties.LineOptions.Alignment = cxllaTop
+      Properties.LineOptions.Visible = True
+      Properties.Orientation = cxoRight
+      Properties.WordWrap = True
+      TabOrder = 0
+      Height = 220
+      Width = 58
+    end
+    object cxLabel2: TcxLabel
+      Left = 1
+      Top = 398
+      AutoSize = False
+      Caption = 'Fzam'
+      ParentFont = False
+      Style.BorderStyle = ebsOffice11
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clOlive
+      Style.Font.Height = -36
+      Style.Font.Name = 'Arial Black'
+      Style.Font.Style = [fsBold]
+      Style.Shadow = True
+      Style.IsFontAssigned = True
+      Properties.Angle = 90
+      Properties.LabelStyle = cxlsLowered
+      Properties.LineOptions.Alignment = cxllaTop
+      Properties.LineOptions.Visible = True
+      Properties.Orientation = cxoRight
+      Properties.WordWrap = True
+      TabOrder = 1
+      Height = 113
+      Width = 58
+    end
+  end
   object dsFormasPago: TDataSource
     Left = 472
     Top = 512
@@ -843,8 +919,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Data = {04000000000000000000}
   end
   object ActionList1: TActionList
-    Left = 376
-    Top = 336
+    Left = 304
+    Top = 328
     object actSalir: TAction
       Caption = 'Salir'
       ShortCut = 27
