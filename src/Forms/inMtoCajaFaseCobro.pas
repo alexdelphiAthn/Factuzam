@@ -33,44 +33,8 @@ type
     pnlPrincipal: TPanel;
     pnlIzquierdo: TPanel;
     pnlDerecho: TPanel;
-    pnlFormasPago: TPanel;
-    pnl1: TPanel;
-    pnl11: TPanel;
-    pnl111: TPanel;
-    cxgrdFormasPago: TcxGrid;
-    dbtvFormasPago: TcxGridDBTableView;
-    cxgrdlvlFormasPago: TcxGridLevel;
     pnlBotones: TPanel;
     pnlDocumento: TPanel;
-    // Labels y campos del panel superior
-    lblSuma: TcxLabel;
-    txtCantidadLineas: TcxTextEdit;
-    txtBrutoLineas: TcxCurrencyEdit;
-    lblDescuento: TcxLabel;
-    txtPorcenDtoGlobal: TcxTextEdit;
-    txtDtoGlobal: TcxCurrencyEdit;
-    lblDescuento1: TcxLabel;
-    txtPorcenDtoLineal: TcxTextEdit;
-    txtTotalDtoLineal: TcxTextEdit;
-    lblDescuento2: TcxLabel;
-    txtTotalPagar: TcxCurrencyEdit;
-    // Panel A CUENTA
-    lblSuma1: TcxLabel;
-    txtDejarCuenta: TcxCurrencyEdit;
-    lblDescuento3: TcxLabel;
-    txtPendienteCuenta: TcxCurrencyEdit;
-    // Panel VALES
-    lblSuma11: TcxLabel;
-    txtValeRecogido: TcxCurrencyEdit;
-    lblDescuento31: TcxLabel;
-    txtValeEmitido: TcxCurrencyEdit;
-    // Panel inferior pendiente
-    lblDescuento4: TcxLabel;
-    txtPendienteCobro: TcxCurrencyEdit;
-    // Grid de formas de pago
-    cxgrdbclmnCodigo: TcxGridDBColumn;
-    dbmDescripcion: TcxGridDBColumn;
-    dbmImporte: TcxGridDBColumn;
     dsFormasPago: TDataSource;
     // Botones laterales
     btnSinTicket: TcxButton;
@@ -98,13 +62,50 @@ type
     vrtltbl1: TVirtualTable;
     ActionList1: TActionList;
     actSalir: TAction;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    pnl1: TPanel;
+    lblDescuento1: TcxLabel;
+    lblDescuento2: TcxLabel;
+    lblDescuento: TcxLabel;
+    lblSuma: TcxLabel;
+    txtCantidadLineas: TcxTextEdit;
+    txtBrutoLineas: TcxCurrencyEdit;
+    txtPorcenDtoLineal: TcxTextEdit;
+    txtTotalPagar: TcxCurrencyEdit;
+    txtDtoGlobal: TcxCurrencyEdit;
+    pnl11: TPanel;
+    lblDescuento3: TcxLabel;
+    lblSuma1: TcxLabel;
+    txtDejarCuenta: TcxCurrencyEdit;
+    txtPendienteCuenta: TcxCurrencyEdit;
+    pnl111: TPanel;
+    lblDescuento31: TcxLabel;
+    lblSuma11: TcxLabel;
+    txtValeRecogido: TcxCurrencyEdit;
+    txtValeEmitido: TcxCurrencyEdit;
+    cxgrdFormasPago: TcxGrid;
+    dbtvFormasPago: TcxGridDBTableView;
+    cxgrdbclmnCodigo: TcxGridDBColumn;
+    dbmDescripcion: TcxGridDBColumn;
+    dbmImporte: TcxGridDBColumn;
+    cxgrdlvlFormasPago: TcxGridLevel;
+    pnlFormasPago: TPanel;
+    lblDescuento4: TcxLabel;
+    txtPendienteCobro: TcxCurrencyEdit;
+    cxLabel3: TcxLabel;
+    cxLabel2: TcxLabel;
+    txtTotalDtoLineal: TcxCurrencyEdit;
+    txtPorcenDtoGlobal: TcxCurrencyEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnAtrasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+//    procedure dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnESCClick(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
+    procedure txtPorcenDtoGlobalPropertiesEditValueChanged(Sender: TObject);
+    procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
   private
     FMemTablePagos: TVirtualTable;
     FListaBotones: TList<TcxButton>;
@@ -122,8 +123,11 @@ type
       DevuelveCambio: Boolean);
     procedure AgregarFormaPagoCompleja(Pago: TFormaPagoItem);
     procedure EliminarFormaPagoSeleccionada;
-    procedure RecalcularTotales;
+//    procedure RecalcularTotales;
+    procedure CargarFormasPagoEnGrid;
     procedure ConfigurarTeclasFuncion;
+    procedure CalcularDescuentoGlobal;
+    procedure RecalcularTotalesEconomicos;
   public
     property ImporteTotal: Currency read FImporteTotal write FImporteTotal;
     property CodigoEmpresa: string read FCodigoEmpresa write FCodigoEmpresa;
@@ -167,25 +171,37 @@ begin
   txtBrutoLineas.Value := 0;
   txtTotalPagar.Value := 0;
   txtPendienteCobro.Value := 0;
+
+  dbtvFormasPago.OptionsData.Editing := True;
+  dbtvFormasPago.OptionsSelection.CellSelect := True; // Para que puedas entrar en la celda
+
+  // 2. BLOQUEAR COLUMNAS QUE NO SE TOCAN
+  cxgrdbclmnCodigo.Options.Editing := False;
+  cxgrdbclmnCodigo.Options.Focusing := False;
+  cxgrdbclmnCodigo.Visible := False;
+  dbmDescripcion.Options.Editing := False;
+  dbmDescripcion.Options.Focusing := False;
+
+  // 3. ACTIVAR COLUMNA IMPORTE
+  dbmImporte.Options.Editing := True;
+  dbmImporte.Options.Focusing := True;
+
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
 begin
 // Cargar datos iniciales
   // txtBrutoLineas.Value := FImporteTotal; // <--- COMENTAR O QUITAR ESTO si quieres ver la BASE en lugar del TOTAL en "Bruto"
-
   // Si no hemos cargado datos enriquecidos (ej. CantidadLineas es 0 o vacío), usamos el comportamiento básico
   if (txtTotalPagar.Value = 0) and (FImporteTotal <> 0) then
      txtTotalPagar.Value := FImporteTotal;
-
   txtPendienteCobro.Value := FImportePendiente;
-
   // Configurar serie y número
   cbbSerie1.Text := FSerieOperacion;
   edtNumeroDoc.Text := FNumeroOperacion;
-
   // Cargar botones de formas de pago
   CargarBotonesFormasPago;
+  CargarFormasPagoEnGrid;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarGridFormasPago;
@@ -195,10 +211,10 @@ begin
   dbmDescripcion.DataBinding.FieldName := 'DESCRIPCION';
   dbmImporte.DataBinding.FieldName := 'IMPORTE';
   // Agregar columna para divisa/crypto si existe
-  var colDivisa := dbtvFormasPago.CreateColumn;
-  colDivisa.Caption := 'Divisa/Crypto';
-  colDivisa.DataBinding.FieldName := 'CODIGO_DIVISA';
-  colDivisa.Width := 80;
+//  var colDivisa := dbtvFormasPago.CreateColumn;
+//  colDivisa.Caption := 'Divisa/Crypto';
+//  colDivisa.DataBinding.FieldName := 'CODIGO_DIVISA';
+//  colDivisa.Width := 80;
   // Formato de importe
   with (dbmImporte.Properties as TcxCurrencyEditProperties) do
   begin
@@ -207,11 +223,36 @@ begin
   end;
   // Configurar vista
   dbtvFormasPago.OptionsView.GroupByBox := False;
-  dbtvFormasPago.OptionsSelection.CellSelect := False;
-  dbtvFormasPago.OptionsData.Editing := False;
-  dbtvFormasPago.OptionsData.Deleting := True;
-  dbtvFormasPago.OptionsData.Inserting := False;
-  dbtvFormasPago.OnKeyDown := dbtvFormasPagoKeyDown;
+//  dbtvFormasPago.OptionsSelection.CellSelect := False;
+//  dbtvFormasPago.OptionsData.Editing := False;
+//  dbtvFormasPago.OptionsData.Deleting := True;
+//  dbtvFormasPago.OptionsData.Inserting := False;
+//  dbtvFormasPago.OnKeyDown := dbtvFormasPagoKeyDown;
+end;
+
+procedure TfrmMtoCajaFaseCobro.CalcularDescuentoGlobal;
+var
+  Porcentaje, ImporteDto: Currency;
+begin
+  // Convertimos el texto del porcentaje a número
+  // Usamos TryStrToCurr para evitar errores si el usuario escribe letras
+  if not TryStrToCurr(txtPorcenDtoGlobal.Text, Porcentaje) then
+    Porcentaje := 0;
+
+  // Calculamos el importe del descuento sobre el Bruto de las líneas
+  // Importe = Bruto * (Porcentaje / 100)
+  ImporteDto := txtBrutoLineas.Value * (Porcentaje / 100);
+
+  // 1. Escribimos el resultado en el cuadro de importe de descuento
+  txtDtoGlobal.Value := ImporteDto;
+
+  // 2. Recalculamos el Total a Pagar
+  // Total Pagar = (Bruto - Dto Lineal) - Dto Global
+  txtTotalPagar.Value := (txtBrutoLineas.Value - txtTotalDtoLineal.Value) -
+                          ImporteDto;
+
+  // 3. Actualizamos lo pendiente de cobro
+  RecalcularTotalesEconomicos;
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarBotonesFormasPago;
@@ -297,33 +338,27 @@ var
   PorcentajeMedio : Double;
 begin
   if TotalesFactura = nil then Exit;
-
   FImporteTotal := TotalesFactura.Totales.TotalLiquido;
   FImportePendiente := FImporteTotal;
   txtCantidadLineas.Text := FormatFloat('0.##',
                                         TotalesFactura.Totales.TotalCantidades);
   txtBrutoLineas.Value := TotalesFactura.Totales.TotalBruto;
-  txtDtoGlobal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
-
+  txtTotalDtoLineal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
   // Calculamos el porcentaje visual para mostrarlo (10% en tu ejemplo)
   if TotalesFactura.Totales.TotalBruto <> 0 then
   begin
     PorcentajeMedio := (TotalesFactura.Totales.TotalDescuentosLineas /
                         TotalesFactura.Totales.TotalBruto) * 100;
-    txtPorcenDtoGlobal.Text := FormatFloat('0.##', PorcentajeMedio);
+    txtPorcenDtoLineal.Text := FormatFloat('0.## %', PorcentajeMedio);
   end
   else
-    txtPorcenDtoGlobal.Text := '0';
-
+    txtPorcenDtoLineal.Text := '0';
   // Total Final a Pagar (Líquido)
   txtTotalPagar.Value := FImporteTotal;
-
   // 3. Actualizar paneles de importes pendientes
   txtPendienteCobro.Value := FImportePendiente;
-
   // Si usas el panel de "A cuenta"
   txtPendienteCuenta.Value := FImportePendiente;
-
   // 4. (Opcional) Visualizar Retenciones si el formulario lo soporta
   // Como tu formulario de cobro parece genérico, podrías usar labels existentes
   // o mostrar un mensaje si hay retención para avisar al cajero.
@@ -388,7 +423,7 @@ begin
 //      FrmEspecializado.Free;
 //    end;
   end;
-  RecalcularTotales;
+  RecalcularTotalesEconomicos;
 end;
 
 procedure TfrmMtoCajaFaseCobro.AgregarFormaPagoSimple(const CodigoFP, DescripcionFP: string;
@@ -454,44 +489,181 @@ begin
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     FMemTablePagos.Delete;
-    RecalcularTotales;
+    RecalcularTotalesEconomicos;
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if Key = VK_DELETE then
-    EliminarFormaPagoSeleccionada;
-end;
+//procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoKeyDown(Sender: TObject; var Key: Word;
+//  Shift: TShiftState);
+//begin
+//  if Key = VK_DELETE then
+//    EliminarFormaPagoSeleccionada;
+//end;
 
-procedure TfrmMtoCajaFaseCobro.RecalcularTotales;
+procedure TfrmMtoCajaFaseCobro.CargarFormasPagoEnGrid;
 var
-  TotalPagado: Currency;
+  Qry: TUniQuery;
 begin
-  TotalPagado := 0;
-  FMemTablePagos.First;
-  while not FMemTablePagos.Eof do
-  begin
-    TotalPagado := TotalPagado + FMemTablePagos.FieldByName('IMPORTE').AsCurrency;
-    FMemTablePagos.Next;
+  // Aseguramos que la tabla de memoria esté limpia y abierta
+  if not FMemTablePagos.Active then
+    FMemTablePagos.Open;
+  FMemTablePagos.Clear;
+
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn; // Asumo que oConn está en inLibGlobalVar
+    Qry.SQL.Text := 'SELECT CODIGO_FORMAP, DESCRIPCION_FORMAP, TIPO_COMPORTAMIENTO_FORMAP ' +
+                    'FROM fza_caja_formas_pago ' +
+                    'WHERE ES_ACTIVO_FORMAP = ''S'' ' +
+                    'ORDER BY ORDEN_VISUAL_FORMAP';
+    Qry.Open;
+
+    while not Qry.Eof do
+    begin
+      FMemTablePagos.Append;
+      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger := FMemTablePagos.RecordCount + 1;
+      FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := Qry.FieldByName('CODIGO_FORMAP').AsString;
+      FMemTablePagos.FieldByName('DESCRIPCION').AsString := Qry.FieldByName('DESCRIPCION_FORMAP').AsString;
+
+      // Inicializamos el importe a 0 para que el usuario lo rellene
+      // Opcional: Si quieres que "Efectivo" venga pre-rellenado con el total, dímelo y lo ajustamos.
+      FMemTablePagos.FieldByName('IMPORTE').AsCurrency := 0;
+      FMemTablePagos.FieldByName('CAMBIO').AsCurrency := 0;
+
+      FMemTablePagos.Post;
+      Qry.Next;
+    end;
+
+    // Posicionamos el cursor en la primera línea (habitualmente Efectivo)
+    if not FMemTablePagos.IsEmpty then
+      FMemTablePagos.First;
+
+  finally
+    Qry.Free;
   end;
-  FImportePendiente := FImporteTotal - TotalPagado;
-  // Actualizar pantalla
-  txtPendienteCobro.Value := FImportePendiente;
-  txtPendienteCuenta.Value := FImportePendiente;
-  // Si ya está todo pagado, cerrar automáticamente
-  if FImportePendiente <= 0 then
+end;
+
+procedure TfrmMtoCajaFaseCobro.RecalcularTotalesEconomicos;
+var
+  cBruto, cDtoLineal, cBaseDescuento: Currency;
+  cPorcenGlobal, cImpDtoGlobal: Currency;
+  cTotalPagar, cPagado, cPendiente: Currency;
+begin
+  // 1. Obtener valores base
+  cBruto := txtBrutoLineas.Value;       // 150.00
+  cDtoLineal := txtTotalDtoLineal.Value; // 15.00
+
+  // 2. Calcular la base sobre la que aplica el descuento global
+  // Normalmente: Bruto - Descuentos de línea ya aplicados
+  cBaseDescuento := cBruto - cDtoLineal; // 135.00
+
+  // 3. Calcular Descuento Global (Sincronización)
+  // Usamos el Porcentaje escrito para calcular el Importe exacto
+  cPorcenGlobal := txtPorcenDtoGlobal.Value;
+  cImpDtoGlobal := cBaseDescuento * (cPorcenGlobal / 100);
+
+  // Escribimos el importe calculado en su caja correspondiente
+  txtDtoGlobal.Value := cImpDtoGlobal;
+
+  // 4. Calcular Total Final
+  cTotalPagar := cBaseDescuento - cImpDtoGlobal;
+  txtTotalPagar.Value := cTotalPagar;
+
+  // 5. Calcular Pendiente (Total Pagar - Lo que ya hayan entregado)
+  // Sumamos lo que hay en la grilla de pagos (si existe)
+  cPagado := 0;
+  if not FMemTablePagos.IsEmpty then
   begin
-    if MessageDlg('Cobro completado. ¿Desea finalizar?',
-      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      ModalResult := mrOk;
+    FMemTablePagos.First;
+    while not FMemTablePagos.Eof do
+    begin
+      cPagado := cPagado + FMemTablePagos.FieldByName('IMPORTE').AsCurrency;
+      FMemTablePagos.Next;
+    end;
   end;
+
+  cPendiente := cTotalPagar - cPagado;
+
+  // Actualizar paneles de pendiente
+  txtPendienteCobro.Value := cPendiente;
+  txtPendienteCuenta.Value := cPendiente; // Si usas este panel
+
+  // (Opcional) Actualizar el label grande de abajo si tienes uno
+  // lblPendienteGigante.Caption := FormatFloat(',0.00 €', cPendiente);
+end;
+
+//procedure TfrmMtoCajaFaseCobro.RecalcularTotales;
+//var
+//  TotalPagado: Currency;
+//begin
+//  TotalPagado := 0;
+//  FMemTablePagos.First;
+//  while not FMemTablePagos.Eof do
+//  begin
+//    TotalPagado := TotalPagado + FMemTablePagos.FieldByName('IMPORTE').AsCurrency;
+//    FMemTablePagos.Next;
+//  end;
+//  FImportePendiente := FImporteTotal - TotalPagado;
+//  // Actualizar pantalla
+//  txtPendienteCobro.Value := FImportePendiente;
+//  txtPendienteCuenta.Value := FImportePendiente;
+//  // Si ya está todo pagado, cerrar automáticamente
+//  if FImportePendiente <= 0 then
+//  begin
+//    if MessageDlg('Cobro completado. ¿Desea finalizar?',
+//      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+//      ModalResult := mrOk;
+//  end;
+//end;
+
+procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  Porcentaje: Double;
+  ImporteDto: Currency;
+  BaseImponible: Currency;
+begin
+  // 1. Obtenemos el valor limpio (el componente ignora el % automáticamente)
+  Porcentaje := txtPorcenDtoGlobal.Value;
+
+  // Evitamos errores si está vacío
+  if Porcentaje = 0 then
+  begin
+    txtDtoGlobal.Value := 0;
+    // Restaurar total original (Bruto - Dto Lineal)
+    txtTotalPagar.Value := txtBrutoLineas.Value - txtTotalDtoLineal.Value;
+    RecalcularTotalesEconomicos;
+    Exit;
+  end;
+
+  // 2. Definimos sobre qué base aplicamos el descuento
+  // (Generalmente es sobre el Bruto - Descuentos de línea)
+  BaseImponible := txtBrutoLineas.Value - txtTotalDtoLineal.Value;
+
+  // 3. Calculamos el importe
+  ImporteDto := BaseImponible * (Porcentaje / 100);
+
+  // 4. Asignamos el resultado al campo de Importe (en Euros)
+  // Nota: Asegúrate que txtDtoGlobal también sea un cxCurrencyEdit para evitar conversiones
+  txtDtoGlobal.Value := ImporteDto;
+
+  // 5. Calculamos el Total Final
+  txtTotalPagar.Value := BaseImponible - ImporteDto;
+
+  // 6. Actualizamos restas pendientes
+  RecalcularTotalesEconomicos;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarTeclasFuncion;
 begin
   KeyPreview := True;
+end;
+
+procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  RecalcularTotalesEconomicos;
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

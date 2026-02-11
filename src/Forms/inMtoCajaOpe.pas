@@ -89,6 +89,7 @@ type
     actBuscarEmpleados: TAction;
     actSalir: TAction;
     actEliminarLinea: TAction;
+    actCobro: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -131,6 +132,7 @@ type
     procedure actBuscarEmpleadosExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure actEliminarLineaExecute(Sender: TObject);
+    procedure actCobroExecute(Sender: TObject);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -1125,6 +1127,11 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.actCobroExecute(Sender: TObject);
+begin
+  btnF12Click(Sender);
+end;
+
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
 begin
   if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
@@ -1502,7 +1509,6 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
-
   // 2. VALIDAR QUE HAYA ALGO QUE COBRAR
   if DatosCaja.cdsLineas.IsEmpty then
   begin
