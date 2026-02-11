@@ -106,6 +106,7 @@ type
     procedure lblVentasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lblEmpresaDblClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   //FECHAS SOMBREADAS
   private
     VentasList: TVentasList;
@@ -153,6 +154,38 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// Asigna este procedimiento al evento OnCloseQuery del formulario del Menú
+procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  i: Integer;
+  F: TForm;
+begin
+  CanClose := True;
+
+  // Recorremos los formularios de la pantalla.
+  // IMPORTANTE: Iteramos hacia atrás (downto 0) porque vamos a ir destruyendo
+  // formularios y eso altera el índice de Screen.Forms.
+  for i := Screen.FormCount - 1 downto 0 do
+  begin
+    F := Screen.Forms[i];
+
+    // Verificamos si el formulario es del tipo Operación de Caja
+    if F is TfrmMtoOpeCaja then
+    begin
+      // Llamamos a la función que creamos antes
+      if not TfrmMtoOpeCaja(F).IntentarCerrar then
+      begin
+        // Si el usuario dijo "NO" en alguna operación,
+        // cancelamos el cierre del menú principal.
+        CanClose := False;
+
+        // Opcional: Salimos del bucle si queremos parar a la primera negativa
+        Break;
+      end;
+    end;
+  end;
+end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
@@ -355,17 +388,24 @@ begin
 end;
 
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
+var
+  frmMtoOpeCaja: TfrmMtoOpeCaja;
 begin
-  var frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Self);
+  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application); // Ojo: Owner Application para que no muera al cerrar el menú si fuera necesario
   try
+    // INICIALIZACIÓN IMPORTANTE
+    frmMtoOpeCaja.Tag := 1; // Esta es la operación 1
+    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)', [Self.FCaja]);
+
     frmMtoOpeCaja.PrepararValores(Self.FEmpresa,
                                   Self.FAlmacen,
                                   Self.FCaja,
                                   Self.FFechaCaja);
-    frmMtoOpeCaja.ShowModal;
-  finally
+
+    frmMtoOpeCaja.Show;
+    // No usamos ShowModal para permitir que existan varias ventanas si fuera necesario interactuar
+  except
     frmMtoOpeCaja.Free;
-    CargarVentasPeriodoVisible;
   end;
 end;
 

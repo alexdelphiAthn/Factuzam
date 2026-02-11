@@ -133,6 +133,7 @@ type
     procedure actSalirExecute(Sender: TObject);
     procedure actEliminarLineaExecute(Sender: TObject);
     procedure actCobroExecute(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -149,14 +150,23 @@ type
     procedure BuscarClientes;
   public
     DatosCaja: TdmCajaOpe;
-    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
-                              AFecha: TDateTime);
+//    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
+//                              AFecha: TDateTime);
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
+  private
+    FNumeroCajaActual: Integer; // Para saber si soy la Caja 1, 2, etc.
+    const MAX_CAJAS = 5;
+  public
+    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
+                              AFecha: TDateTime);
+    function IntentarCerrar:Boolean;
+    // Añadimos esta propiedad para asignar el número desde fuera
+    property NumeroCajaActual: Integer read FNumeroCajaActual write FNumeroCajaActual;
   end;
 
 var
@@ -932,6 +942,10 @@ begin
        EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
        SkuNuevo := DatosCaja.GenerarSkuFinal( DatosCaja.cdsLineas.FieldByName(
                                      'CODIGO_ARTICULO_FACTURA_LINEA').AsString);
+       if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+        begin
+          DatosCaja.cdsLineas.Edit;
+        end;
        DatosCaja.cdsLineas.FieldByName(
                             'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuNuevo;
        RecalcularPrecioDesdeSku(SkuNuevo);
@@ -1541,10 +1555,70 @@ end;
 
 procedure TfrmMtoOpeCaja.btnF5Click(Sender: TObject);
 var
-  NuevaVenta: TfrmMtoOpeCaja;
+  i: Integer;
+  NextIndex: Integer;
+  TargetForm: TfrmMtoOpeCaja;
+  Found: Boolean;
+  const MAX_OPERACIONES = 5; // Configura aquí tu límite
 begin
-  NuevaVenta := TfrmMtoOpeCaja.Create(Application);
-  NuevaVenta.Show;
+  // 1. Calculamos cuál es el siguiente número de operación (Ticket)
+  // Usamos 'Self.Tag' para guardar si somos la 1, la 2, etc.
+  NextIndex := Self.Tag + 1;
+
+  if NextIndex > MAX_OPERACIONES then
+    NextIndex := 1; // Vuelta a empezar
+
+  // 2. Buscamos si esa operación YA está abierta en memoria
+  Found := False;
+  TargetForm := nil;
+
+  for i := 0 to Screen.FormCount - 1 do
+  begin
+    // Buscamos formularios de esta misma clase
+    if Screen.Forms[i] is TfrmMtoOpeCaja then
+    begin
+      // Comprobamos si tiene el número que buscamos
+      if Screen.Forms[i].Tag = NextIndex then
+      begin
+        TargetForm := TfrmMtoOpeCaja(Screen.Forms[i]);
+        Found := True;
+        Break;
+      end;
+    end;
+  end;
+
+  // 3. Si existe la traemos al frente, si no, la creamos
+  if Found then
+  begin
+    TargetForm.Show;
+    TargetForm.BringToFront;
+    if TargetForm.WindowState = wsMinimized then
+      TargetForm.WindowState := wsNormal;
+  end
+  else
+  begin
+    // CREAMOS UNA NUEVA INSTANCIA
+    TargetForm := TfrmMtoOpeCaja.Create(Application);
+
+    // Le asignamos su número de operación
+    TargetForm.Tag := NextIndex;
+
+    // Actualizamos el Caption para que el usuario sepa dónde está
+    // Mantenemos el número de caja real (FCodigoCaja) fijo, pero cambiamos el número visual
+    TargetForm.Caption := Format('Operación %d - (Caja Real %s)', [NextIndex, Self.FCodigoCaja]);
+
+    // Pasamos los MISMOS datos de conexión de la caja actual (Empresa, Almacén, Caja)
+    TargetForm.PrepararValores(Self.FCodigoEmpresa,
+                               Self.FCodigoAlmacen,
+                               Self.FCodigoCaja, // <--- OJO: La caja física NO cambia
+                               Self.FFecha);
+
+    TargetForm.Show;
+  end;
+
+  // 4. Ocultamos la actual para dar efecto de "cambio de canal"
+  // No hacemos Close porque perderíamos la venta a medio hacer si volvemos a pasar por aquí.
+  Self.Hide;
 end;
 
 procedure TfrmMtoOpeCaja.BuscarEmpleados;
@@ -1587,6 +1661,11 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   DatosCaja := TdmCajaOpe.Create(Self);
@@ -1626,6 +1705,47 @@ procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
 begin
   if Sender is TcxComboBox then
     TcxComboBox(Sender).DroppedDown := True;
+end;
+
+function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
+begin
+  Result := True; // Por defecto asumimos que se puede cerrar
+
+  // 1. Si el formulario ya se está destruyendo, no hacemos nada
+  if (csDestroying in ComponentState) then Exit;
+
+  // 2. Verificamos si hay datos en la venta
+  if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
+  begin
+    // IMPORTANTE: Como con F5 ocultamos la ventana (Hide),
+    // hay que mostrarla para que el usuario vea qué operación le pide confirmar.
+    if not Visible then
+    begin
+      Show;
+      BringToFront;
+    end;
+
+    // 3. Preguntamos
+    if MessageDlg(Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
+                         '¿Desea ELIMINARLA y cerrar?', [Self.Tag]),
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      // Limpiamos cambios pendientes
+      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+        DatosCaja.cdsLineas.Cancel;
+
+      Close; // Esto destruirá el formulario si Action = caFree en OnClose
+    end
+    else
+    begin
+      Result := False; // El usuario dijo NO, abortamos el cierre general
+    end;
+  end
+  else
+  begin
+    // Si está vacía, cerramos directamente sin preguntar
+    Close;
+  end;
 end;
 
 function TfrmMtoOpeCaja.
