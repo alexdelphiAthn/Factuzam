@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 10/02/2026 18:50:22
+ Date: 11/02/2026 07:57:47
 */
 
 SET NAMES utf8mb4;
@@ -520,11 +520,9 @@ CREATE TABLE `fza_caja_formas_pago`  (
 -- ----------------------------
 -- Records of fza_caja_formas_pago
 -- ----------------------------
-INSERT INTO `fza_caja_formas_pago` VALUES ('CB_REG', 'Regularización Deuda', 'EFECTIVO', 'N', 'N', 'N', 'S', 99, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-INSERT INTO `fza_caja_formas_pago` VALUES ('CRED', 'A Crédito / Pendiente', 'DEUDA', 'N', 'N', 'N', 'S', 3, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_formas_pago` VALUES ('BONO', 'Bono ayuntamiento', 'BONO', 'S', 'N', 'N', 'S', 4, '2026-02-11 07:07:06', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 INSERT INTO `fza_caja_formas_pago` VALUES ('EFE', 'Efectivo', 'EFECTIVO', 'N', 'S', 'S', 'S', 1, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-INSERT INTO `fza_caja_formas_pago` VALUES ('TARJ', 'Tarjeta Crédito/Débito', 'TARJETA', 'N', 'N', 'N', 'S', 2, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-INSERT INTO `fza_caja_formas_pago` VALUES ('TRANSF', 'Transferencia Bancaria', 'TARJETA', 'S', 'N', 'N', 'S', 4, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_formas_pago` VALUES ('TARJ', 'Tarjeta BBVA', 'TARJETA', 'N', 'N', 'N', 'S', 2, '2026-02-11 07:06:51', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_caja_operaciones
@@ -1007,7 +1005,7 @@ CREATE TABLE `fza_facturas`  (
 -- ----------------------------
 -- Records of fza_facturas
 -- ----------------------------
-INSERT INTO `fza_facturas` VALUES ('000001', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 62.580000, 5.200000, 15.496000, 298.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 298.000000, 78.076000, 'TRANSFERENCIA', 15.000000, 44.700000, 331.376000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-09 08:48:58', '2026-02-01 07:03:46', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas` VALUES ('000001', '2026.A1', '2026-02-10', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 77.700000, 5.200000, 19.240000, 370.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 370.000000, 96.940000, 'TRANSFERENCIA', 15.000000, 55.500000, 411.440000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-10 20:39:33', '2026-02-01 07:03:46', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas` VALUES ('000002', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 9.450000, 5.200000, 2.340000, 45.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 45.000000, 11.790000, 'CONTADO', 15.000000, 6.750000, 50.040000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-09 08:48:59', '2026-02-01 14:09:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas` VALUES ('000003', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 0.000000, 5.200000, 0.000000, 0.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 'TRANSFERENCIA', 15.000000, 0.000000, 0.000000, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-09 08:49:01', '2026-02-01 14:36:26', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 
@@ -2084,7 +2082,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-10 18:42:24', '2026-02-10 18:42:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-11 07:26:24', '2026-02-11 07:26:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
