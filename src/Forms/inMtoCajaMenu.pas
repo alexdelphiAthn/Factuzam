@@ -54,8 +54,8 @@ type
     cxLabel2: TcxLabel;
     cxLabel3: TcxLabel;
     Shape2: TShape;
-    cxLabel6: TcxLabel;
-    cxlbl1: TcxLabel;
+    lblF3: TcxLabel;
+    lblTraspasos: TcxLabel;
     jvgfnmtr1: TJvGIFAnimator;
     lblEmpresa: TcxLabel;
     procedure Timer1Timer(Sender: TObject);
@@ -85,6 +85,11 @@ type
     procedure lblArqueoMouseLeave(Sender: TObject);
     procedure lblF11MouseEnter(Sender: TObject);
     procedure lblF11MouseLeave(Sender: TObject);
+    // Eventos para F3 - Traspasos
+    procedure lblTraspasosMouseEnter(Sender: TObject);
+    procedure lblTraspasosMouseLeave(Sender: TObject);
+    procedure lblF3MouseEnter(Sender: TObject);
+    procedure lblF3MouseLeave(Sender: TObject);
     //Eventos para ESC - Salir
     procedure lblSalirMouseEnter(Sender: TObject);
     procedure lblSalirMouseLeave(Sender: TObject);
@@ -125,6 +130,8 @@ type
     FOriginalArqueoColor: TColor;
     FOriginalESCColor:TColor;
     FOriginalSalirColor:TColor;
+    FOriginalF3Color: TColor;
+    FOriginalTraspasosColor: TColor;
     // Métodos auxiliares para cambiar colores
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
@@ -215,7 +222,31 @@ begin
   FOriginalGastosCajaColor := lblGastosCaja.Style.TextColor;
   FOriginalF11Color := lblF11.Style.TextColor;
   FOriginalArqueoColor := lblArqueo.Style.TextColor;
+  FOriginalF3Color := lblF3.Style.TextColor;
+  FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
   FFechaCaja := Now;
+end;
+
+// Eventos para F3 - Traspasos
+procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
+begin
+  // Usamos clWebOrange para mantener la coherencia con F6, F7, F10, F11
+  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
+end;
+
+procedure TfrmMtoMenuCaja.lblTraspasosMouseLeave(Sender: TObject);
+begin
+  RestoreMenuItemColors(lblF3, lblTraspasos, FOriginalF3Color, FOriginalTraspasosColor);
+end;
+
+procedure TfrmMtoMenuCaja.lblF3MouseEnter(Sender: TObject);
+begin
+  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
+end;
+
+procedure TfrmMtoMenuCaja.lblF3MouseLeave(Sender: TObject);
+begin
+  RestoreMenuItemColors(lblF3, lblTraspasos, FOriginalF3Color, FOriginalTraspasosColor);
 end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
@@ -536,7 +567,10 @@ end;
 
 procedure TfrmMtoMenuCaja.lblSalirMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblESC, lblSalir, FOriginalESCColor, FOriginalSalirColor);
+  RestoreMenuItemColors(lblESC,
+                        lblSalir,
+                        FOriginalESCColor,
+                        FOriginalSalirColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblESCClick(Sender: TObject);
@@ -551,7 +585,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblESCMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblESC, lblSalir, FOriginalESCColor, FOriginalSalirColor);
+  RestoreMenuItemColors(lblESC,
+                              lblSalir, FOriginalESCColor, FOriginalSalirColor);
 end;
 
 { TVentasDia }
