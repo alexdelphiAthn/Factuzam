@@ -42,7 +42,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 275
+    FrameIndex = 442
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21504,7 +21504,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 207
     Width = 58
   end
-  object cxLabel6: TcxLabel
+  object lblF3: TcxLabel
     Left = 197
     Top = 355
     AutoSize = False
@@ -21525,13 +21525,13 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LabelStyle = cxlsRaised
     Properties.Orientation = cxoRight
     TabOrder = 18
-    OnMouseEnter = lblF11MouseEnter
-    OnMouseLeave = lblF11MouseLeave
+    OnMouseEnter = lblF3MouseEnter
+    OnMouseLeave = lblF3MouseLeave
     Height = 36
     Width = 34
     AnchorX = 231
   end
-  object cxlbl1: TcxLabel
+  object lblTraspasos: TcxLabel
     Left = 303
     Top = 353
     AutoSize = False
@@ -21551,8 +21551,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
     TabOrder = 19
-    OnMouseEnter = lblGastosCajaMouseEnter
-    OnMouseLeave = lblGastosCajaMouseLeave
+    OnMouseEnter = lblTraspasosMouseEnter
+    OnMouseLeave = lblTraspasosMouseLeave
     Height = 43
     Width = 437
   end
