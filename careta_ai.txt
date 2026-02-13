@@ -2,7 +2,8 @@ Careta para Ai
 Principios para un Delphi Moderno
 Programar para Interfaces, no Implementaciones: Define qué hace el objeto antes de decidir cómo lo hace.
 
-Desacoplamiento (DI): Pasa las dependencias por el constructor. No dejes que una clase cree sus propios "ayudantes".
+Desacoplamiento (DI): Pasa las dependencias por el constructor. 
+                      No dejes que una clase cree sus propios "ayudantes".
 
 Encapsulamiento: Usa strict private y strict protected.
 
@@ -14,4 +15,6 @@ Las interfaces son el contrato que permite el desacoplamiento total.
 2. Implementación Desacoplada
 La clase no sabe quién la usará, solo cumple su contrato.
 3. Uso mediante Inyección de Dependencias
+4. Programar contra abstracciones no contra implementaciones.
+5. 
 Observa cómo el procesador de pedidos no sabe cómo se envía el mail,
