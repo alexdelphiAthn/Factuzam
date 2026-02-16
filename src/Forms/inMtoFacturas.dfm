@@ -8,8 +8,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
-  ExplicitLeft = -137
-  ExplicitTop = -183
+  ExplicitTop = -117
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -49,6 +48,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 1079
         ExplicitHeight = 770
         inherited cxGrdPrincipal: TcxGrid
@@ -664,6 +665,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 1079
         ExplicitHeight = 770
         object pnl1: TPanel
@@ -690,7 +693,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 421
             ClientRectLeft = 4
@@ -1113,7 +1116,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total a pagar'
-                TabOrder = 3
+                TabOrder = 2
                 Transparent = True
               end
               object curTotalAPagar: TcxDBCurrencyEdit
@@ -1127,7 +1130,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 Properties.UseThousandSeparator = True
-                TabOrder = 13
+                TabOrder = 11
                 Width = 133
               end
               object curTOTAL_LIQUIDO_FACTURA: TcxDBCurrencyEdit
@@ -1140,7 +1143,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 DataBinding.DataField = 'TOTAL_RETENCION_FACTURA'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
-                TabOrder = 6
+                TabOrder = 4
                 Width = 133
               end
               object lblTotalRetencionFactura: TcxLabel
@@ -1151,7 +1154,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Retenci'#243'n Factura'
-                TabOrder = 9
+                TabOrder = 7
                 Transparent = True
               end
               object lblPorcRetencionFactura: TcxLabel
@@ -1162,7 +1165,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = '% Retenci'#243'n Factura'
-                TabOrder = 10
+                TabOrder = 8
                 Transparent = True
               end
               object spnRetencion: TcxDBSpinEdit
@@ -1176,7 +1179,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Properties.MaxValue = 100.000000000000000000
                 Properties.ReadOnly = False
                 Properties.OnEditValueChanged = spnRetencionPropertiesEditValueChanged
-                TabOrder = 4
+                TabOrder = 3
                 Width = 133
               end
               object curTOTAL_RETENCION_FACTURA: TcxDBCurrencyEdit
@@ -1201,7 +1204,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Base Imponible'
-                TabOrder = 11
+                TabOrder = 9
                 Transparent = True
               end
               object curTOTAL_BASES_FACTURA: TcxDBCurrencyEdit
@@ -1227,45 +1230,23 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Total Impuestos'
-                TabOrder = 12
-                Transparent = True
-              end
-              object chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox
-                Left = 582
-                Top = 352
-                Caption = 'C'#225'lculo IRPF con impuestos (S'#243'lo REAGP)'
-                DataBinding.DataField = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
-                DataBinding.DataSource = dsTablaG
-                Properties.ValueChecked = 'S'
-                Properties.ValueUnchecked = 'N'
-                TabOrder = 2
-                Transparent = True
-              end
-              object chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox
-                Left = 582
-                Top = 318
-                Caption = 'Venta de Activo Fijo --Maquinaria, Aperos-- (S'#243'lo REAGP)'
-                DataBinding.DataField = 'ESVENTA_ACTIVO_FIJO_FACTURA'
-                DataBinding.DataSource = dsTablaG
-                Properties.ValueChecked = 'S'
-                Properties.ValueUnchecked = 'N'
-                TabOrder = 5
+                TabOrder = 10
                 Transparent = True
               end
               object lblFormadePago: TcxLabel
-                Left = 91
-                Top = 314
+                Left = 79
+                Top = 274
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Forma de Pago'
-                TabOrder = 14
+                TabOrder = 12
                 Transparent = True
               end
               object cbbFORMAPAGO: TcxDBLookupComboBox
-                Left = 226
-                Top = 310
+                Left = 214
+                Top = 270
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1288,26 +1269,26 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     FieldName = 'DESCRIPCION_FORMAPAGO'
                   end>
                 Properties.ListOptions.CaseInsensitive = True
-                TabOrder = 7
+                TabOrder = 5
                 OnKeyUp = cbbSerieFacturaKeyUp
-                Width = 335
+                Width = 195
               end
               object btnGenerarRecibos: TcxButton
-                Left = 225
-                Top = 346
+                Left = 249
+                Top = 304
                 Width = 160
                 Height = 25
                 Caption = 'Generar &Recibo/s'
-                TabOrder = 8
+                TabOrder = 6
                 OnClick = btnGenerarRecibosClick
               end
               object GroupBox1: TGroupBox
                 Left = 432
                 Top = 11
                 Width = 617
-                Height = 294
+                Height = 318
                 Caption = 'Desglose Impuestos'
-                TabOrder = 15
+                TabOrder = 13
                 object Shape1: TShape
                   Left = 163
                   Top = 32
@@ -1644,6 +1625,30 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Style.BorderStyle = ebsNone
                   TabOrder = 28
                   Width = 63
+                end
+                object chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox
+                  Left = 16
+                  Top = 278
+                  Caption = 'C'#225'lculo IRPF con impuestos (S'#243'lo REAGP)'
+                  DataBinding.DataField = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 29
+                  Transparent = True
+                end
+                object chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox
+                  Left = 401
+                  Top = 278
+                  Caption = 'Venta de Activo Fijo --Maquinaria, Aperos-- (S'#243'lo REAGP)'
+                  DataBinding.DataField = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 30
+                  Transparent = True
                 end
               end
             end
@@ -3579,10 +3584,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     Left = 1104
     Top = 72
   end
-  object JvCalculator1: TJvCalculator [8]
+  object JvCalculator1: TJvCalculator
     Ctl3D = False
     Title = 'Calculadora'
-    Left = 968
-    Top = 696
+    Left = 464
+    Top = 496
   end
 end

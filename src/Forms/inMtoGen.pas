@@ -252,10 +252,10 @@ begin
                          'oRenameComponents',
                          'False')) = 'True') then
     SetLabelForm(Self, oPerfilDic);
-  tsPerfil.TabVisible :=
-            StrToBool(GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil', 'False'));
+  tsPerfil.TabVisible := false;
+       //   StrToBool(GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil', 'False'));
   {$IFDEF DEBUG}
-    tsPerfil.TabVisible := True;
+    tsPerfil.TabVisible := False;
   {$ENDIF }
   if (tsPerfil.TabVisible = true) then
     AbrirPerfiles(tsPerfil.TabVisible);
@@ -686,7 +686,11 @@ end;
 
 procedure TfrmMtoGen.ProcesarPerfiles;
 begin
-  inLibUser.GetFormUserProfile(oPerfilDic, Self.Name);
+  //inLibUser.GetFormUserProfile(oPerfilDic, Self.Name);
+  inLibUser.GetFormUserProfile(oPerfilDic,
+                               Self.Name,
+                               inLibGlobalVar.oUser,
+                               inLibGlobalVar.oGroup);
   CrearTablaPrincipal;
   AplicarEtiquetas;
 end;

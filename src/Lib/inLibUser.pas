@@ -31,8 +31,6 @@ type
   TDictValue = record
     sValue: string;
     sValueText: WideString;
-    //typevalueblob:string;
-    //valueblob:Variant;
   end;
 
   TProfileUserDicc = TDictionary<TDictUserKey,
@@ -43,7 +41,8 @@ function GetPerfilValueText(var oPerfilDic: TProfileDicc; sSubKey: string):
                                                                      WideString;
 procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
                                  var oPerfilDic: TProfileDicc);
-procedure GetFormUserProfile(var oPerfilDic: TProfileDicc; sFormName: string);
+procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
+                             sFormName: string); overload;
 function GetPerfilSubKeyValueDef( var oPerfilDic: TProfileDicc;
                                   sSubKey: string;
                                   sSubSubKey: string;
@@ -59,6 +58,9 @@ procedure GetDictionaryKeySubKey( var oPerfilDic: TProfileDicc;
                                 sFieldName,
                                 sColumnName,
                                 sGridViewName: string);
+procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
+                           const sFormName, sUsuario, sGrupo: string); overload;
+
 //  procedure AbrirPerfiles(bTabVisible:Boolean; unqryPerfiles:TUniQuery; Sender:TComponent);
 
 implementation
@@ -66,6 +68,37 @@ implementation
 uses
   inLibDir, inLibWin,
   inLibGlobalVar;
+
+// Dentro de inLibUser.pas
+procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
+  const sFormName, sUsuario, sGrupo: string);
+var
+  oDictValue: TDictValue;
+  qPerfil: TUniQuery;
+begin
+  oPerfilDic := TProfileDicc.Create;
+  oPerfilDic.Clear;
+  qPerfil := TUniQuery.Create(nil);
+  try
+    qPerfil.Connection := inLibGlobalVar.oConn;
+    qPerfil.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:u, :g, :f)';
+    qPerfil.Params[0].AsString := sUsuario;
+    qPerfil.Params[1].AsString := sGrupo;
+    qPerfil.Params[2].AsString := sFormName;
+    qPerfil.Open;
+    while not qPerfil.Eof do
+    begin
+      oDictValue.sValue := qPerfil.FieldByName('VALUE_PERFILES').AsString;
+      oDictValue.sValueText :=
+                        qPerfil.FieldByName('VALUE_TEXT_PERFILES').AsWideString;
+      oPerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_PERFILES').AsString,
+                               oDictValue);
+      qPerfil.Next;
+    end;
+  finally
+    qPerfil.Free;
+  end;
+end;
 
 procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
   var oPerfilDic: TProfileDicc);
@@ -144,6 +177,7 @@ begin
   FreeAndNil(oPerfilUserDic);
 end;
 
+// Dentro de inLibUser.pas
 function GetPerfilValue(var oPerfilDic: TPRofileDicc;
   sSubKey: string): string;
 var
