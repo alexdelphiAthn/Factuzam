@@ -69,6 +69,8 @@ type
   TDatosReferencia = record
     Referencia: string;
     CodigoDivisa: string;
+    EsCripto: boolean;
+    EsDivisa: boolean;
     FactorCambio: Currency;
     ImporteDivisa: Currency;
     RedBlockchain: string;
@@ -194,6 +196,8 @@ begin
   ImporteDivisa := 0;
   RedBlockchain := '';
   HashBlockchain := '';
+  EsCripto := False;
+  EsDivisa := False;
 end;
 
 { TResultadoValidacion }

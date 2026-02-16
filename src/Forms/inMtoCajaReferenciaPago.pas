@@ -2,7 +2,7 @@
 
 {
   Formulario para captura de referencia de pago y datos de divisa
-  
+
   Usado para pagos con tarjeta, transferencias, criptomonedas, etc.
   que requieren información adicional como número de autorización,
   tipo de cambio, etc.
@@ -11,12 +11,12 @@
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, 
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls,
   // DevExpress
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
-  cxContainer, cxEdit, dxSkinsCore, cxTextEdit, cxMaskEdit, 
+  cxContainer, cxEdit, dxSkinsCore, cxTextEdit, cxMaskEdit,
   cxCurrencyEdit, cxLabel, cxButtons, cxGroupBox, cxDropDownEdit,
   // Unidades propias
   inLibFaseCobro, inMtoFrmBase, Vcl.Menus;
@@ -27,23 +27,22 @@ type
     pnlBotones: TPanel;
     btnAceptar: TcxButton;
     btnCancelar: TcxButton;
-    
+
     // Información de la forma de pago
     gbInfoPago: TcxGroupBox;
     lblFormaPago: TcxLabel;
     lblFormaPagoValor: TcxLabel;
     lblImporte: TcxLabel;
     edtImporte: TcxCurrencyEdit;
-    
+
     // Referencia
     gbReferencia: TcxGroupBox;
     lblReferencia: TcxLabel;
     edtReferencia: TcxTextEdit;
     lblEjemplo: TcxLabel;
-    
+
     // Divisa (opcional)
     gbDivisa: TcxGroupBox;
-    chkUsarOtraDivisa: TCheckBox;
     lblDivisa: TcxLabel;
     cbbDivisa: TcxComboBox;
     lblFactorCambio: TcxLabel;
@@ -51,36 +50,36 @@ type
     lblImporteDivisa: TcxLabel;
     edtImporteDivisa: TcxCurrencyEdit;
     lblEquivale: TcxLabel;
-    
+
     // Blockchain (para crypto)
     gbBlockchain: TcxGroupBox;
     lblRedBlockchain: TcxLabel;
     cbbRedBlockchain: TcxComboBox;
     lblTxHash: TcxLabel;
     edtTxHash: TcxTextEdit;
-    
+
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
-    procedure chkUsarOtraDivisaClick(Sender: TObject);
+//    procedure chkUsarOtraDivisaClick(Sender: TObject);
     procedure edtFactorCambioPropertiesChange(Sender: TObject);
     procedure edtImporteDivisaPropertiesChange(Sender: TObject);
     procedure edtImportePropertiesChange(Sender: TObject);
     procedure cbbDivisaPropertiesChange(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    
+
   private
     FFormaPagoInfo: TFormaPagoInfo;
     FImporteOriginal: Currency;
     FDatosResultado: TDatosReferencia;
-    
+
     procedure ConfigurarInterfaz;
     procedure ActualizarCalculosDivisa;
     procedure CargarDivisasDisponibles;
     procedure CargarRedesBlockchain;
     function ValidarDatos: Boolean;
-    
+
   public
     class function Ejecutar(const AFormaPago: TFormaPagoInfo;
                             AImporte: Currency;
@@ -106,13 +105,13 @@ var
   Frm: TfrmCajaReferenciaPago;
 begin
   Result := False;
-  
+
   Frm := TfrmCajaReferenciaPago.Create(nil);
   try
     Frm.FFormaPagoInfo := AFormaPago;
     Frm.FImporteOriginal := AImporte;
-    Frm.FDatosResultado.Init;
-    
+    //Frm.FDatosResultado.Init;
+    Frm.FDatosResultado := ADatosRef;
     if Frm.ShowModal = mrOk then
     begin
       ADatosRef := Frm.FDatosResultado;
@@ -126,33 +125,33 @@ end;
 procedure TfrmCajaReferenciaPago.FormCreate(Sender: TObject);
 begin
   inherited;
-  
+
   KeyPreview := True;
-  
+
   // Configurar valores por defecto
-  FDatosResultado.Init;
+//  FDatosResultado.Init;
 end;
 
 procedure TfrmCajaReferenciaPago.FormShow(Sender: TObject);
 begin
   inherited;
-  
+
   ConfigurarInterfaz;
-  
+
   // Poner foco en referencia
   if edtReferencia.Enabled and edtReferencia.Visible then
     edtReferencia.SetFocus;
 end;
 
 procedure TfrmCajaReferenciaPago.ConfigurarInterfaz;
-var
-  EsTarjeta, EsCripto, EsTransferencia: Boolean;
+//var
+//  EsTarjeta, EsCripto, EsTransferencia: Boolean;
 begin
   // Mostrar información de la forma de pago
   lblFormaPagoValor.Caption := FFormaPagoInfo.Descripcion;
   edtImporte.Value := FImporteOriginal;
   edtImporte.Enabled := False; // No permitir cambiar el importe aquí
-  
+
   // Determinar tipo de pago
 //  EsTarjeta := SameText(FFormaPagoInfo.TipoComportamiento, 'TARJETA');
 //  EsCripto := Pos('CRYPTO', UpperCase(FFormaPagoInfo.TipoComportamiento)) > 0;
@@ -160,40 +159,56 @@ begin
 
   // Configurar grupo de referencia
   gbReferencia.Visible := FFormaPagoInfo.RequiereReferencia;
-  if EsCripto then
+  edtReferencia.Text := FDatosResultado.Referencia;
+  if FDatosResultado.EsCripto then
   begin
-    lblReferencia.Caption := 'TX Hash:';
-    lblEjemplo.Caption := 'Ej: 0x...';
-    edtReferencia.Properties.MaxLength := 100;
+    gbBlockChain.Enabled := True;
+
+//    lblReferencia.Caption := 'Referencia:';
+////    lblEjemplo.Caption := 'Ej: 0x...';
+//    edtReferencia.Properties.MaxLength := 100;
   end
   else
   begin
-    lblReferencia.Caption := 'Referencia:';
-    lblEjemplo.Caption := '';
-    edtReferencia.Properties.MaxLength := 255;
+    gbBlockChain.Enabled := False;
+//    lblReferencia.Caption := 'Referencia:';
+//    lblEjemplo.Caption := '';
+//    edtReferencia.Properties.MaxLength := 255;
   end;
 
   // Configurar grupo blockchain
-  gbBlockchain.Visible := EsCripto;
-  if EsCripto then
+  gbBlockchain.Visible := FDatosResultado.EsCripto;
+  if FDatosResultado.EsCripto then
     CargarRedesBlockchain;
 
   // Configurar grupo divisa
-  gbDivisa.Visible := True;
-  chkUsarOtraDivisa.Checked := False;
-  CargarDivisasDisponibles;
-
-  // Inicialmente ocultar controles de divisa
-  lblDivisa.Enabled := False;
-  cbbDivisa.Enabled := False;
-  lblFactorCambio.Enabled := False;
-  edtFactorCambio.Enabled := False;
-  lblImporteDivisa.Enabled := False;
-  edtImporteDivisa.Enabled := False;
-  lblEquivale.Enabled := False;
-  
-  // Ajustar altura del formulario según visibilidad
-  ClientHeight := pnlPrincipal.Height + pnlBotones.Height + 20;
+  if FDatosResultado.EsDivisa then
+  begin
+    gbDivisa.Enabled := True;
+    gbDivisa.Visible := True;
+//    chkUsarOtraDivisa.Checked := True;
+    CargarDivisasDisponibles;
+    lblDivisa.Enabled := True;
+    cbbDivisa.Enabled := True;
+    lblFactorCambio.Enabled := True;
+    edtFactorCambio.Enabled := True;
+    lblImporteDivisa.Enabled := True;
+    edtImporteDivisa.Enabled := True;
+    lblEquivale.Enabled := True;
+  end
+  else
+  begin
+    gbDivisa.Enabled := False;
+    gbDivisa.Visible := False;
+//    chkUsarOtraDivisa.Checked := False;
+    lblDivisa.Enabled := False;
+    cbbDivisa.Enabled := False;
+    lblFactorCambio.Enabled := False;
+    edtFactorCambio.Enabled := False;
+    lblImporteDivisa.Enabled := False;
+    edtImporteDivisa.Enabled := False;
+    lblEquivale.Enabled := False;
+  end;
 end;
 
 procedure TfrmCajaReferenciaPago.CargarDivisasDisponibles;
@@ -206,7 +221,7 @@ begin
   cbbDivisa.Properties.Items.Add('BTC - Bitcoin');
   cbbDivisa.Properties.Items.Add('ETH - Ethereum');
   cbbDivisa.Properties.Items.Add('USDT - Tether');
-  
+
   cbbDivisa.ItemIndex := 0;
 end;
 
@@ -220,42 +235,8 @@ begin
   cbbRedBlockchain.Properties.Items.Add('BSC (Binance Smart Chain)');
   cbbRedBlockchain.Properties.Items.Add('Tron (TRC20)');
   cbbRedBlockchain.Properties.Items.Add('Solana');
-  
-  cbbRedBlockchain.ItemIndex := 0;
-end;
 
-procedure TfrmCajaReferenciaPago.chkUsarOtraDivisaClick(Sender: TObject);
-var
-  Activar: Boolean;
-begin
-  Activar := chkUsarOtraDivisa.Checked;
-  
-  lblDivisa.Enabled := Activar;
-  cbbDivisa.Enabled := Activar;
-  lblFactorCambio.Enabled := Activar;
-  edtFactorCambio.Enabled := Activar;
-  lblImporteDivisa.Enabled := Activar;
-  edtImporteDivisa.Enabled := Activar;
-  lblEquivale.Enabled := Activar;
-  
-  if Activar then
-  begin
-    // Establecer factor de cambio por defecto
-    if edtFactorCambio.Value = 0 then
-      edtFactorCambio.Value := 1;
-      
-    // Calcular importe en divisa
-    ActualizarCalculosDivisa;
-    
-    if edtFactorCambio.CanFocus then
-      edtFactorCambio.SetFocus;
-  end
-  else
-  begin
-    // Limpiar valores
-    edtFactorCambio.Value := 1;
-    edtImporteDivisa.Value := 0;
-  end;
+  cbbRedBlockchain.ItemIndex := 0;
 end;
 
 procedure TfrmCajaReferenciaPago.edtFactorCambioPropertiesChange(Sender: TObject);
@@ -287,19 +268,17 @@ procedure TfrmCajaReferenciaPago.ActualizarCalculosDivisa;
 var
   Factor: Currency;
 begin
-  if not chkUsarOtraDivisa.Checked then
-    Exit;
-    
+
   Factor := edtFactorCambio.Value;
-  
+
   if Factor > 0 then
   begin
     // Calcular importe en divisa extranjera
     edtImporteDivisa.Value := FImporteOriginal / Factor;
-    
+
     // Actualizar etiqueta de equivalencia
     lblEquivale.Caption := Format('%m EUR = %n %s',
-      [FImporteOriginal, 
+      [FImporteOriginal,
        edtImporteDivisa.Value,
        Copy(cbbDivisa.Text, 1, 3)]);
   end;
@@ -308,9 +287,9 @@ end;
 function TfrmCajaReferenciaPago.ValidarDatos: Boolean;
 begin
   Result := False;
-  
+
   // Validar referencia si es requerida
-  if FFormaPagoInfo.RequiereReferencia and 
+  if FFormaPagoInfo.RequiereReferencia and
      (Trim(edtReferencia.Text) = '') and
      gbReferencia.Visible then
   begin
@@ -319,9 +298,9 @@ begin
       edtReferencia.SetFocus;
     Exit;
   end;
-  
+
   // Validar divisa si está activada
-  if chkUsarOtraDivisa.Checked then
+  if FDatosResultado.EsDivisa then
   begin
     if edtFactorCambio.Value <= 0 then
     begin
@@ -330,7 +309,7 @@ begin
         edtFactorCambio.SetFocus;
       Exit;
     end;
-    
+
     if edtImporteDivisa.Value <= 0 then
     begin
       ShowMessage('El importe en divisa debe ser mayor que cero.');
@@ -339,9 +318,9 @@ begin
       Exit;
     end;
   end;
-  
+
   // Validar blockchain si es cripto
-  if gbBlockchain.Visible then
+  if FDatosResultado.EsCripto then
   begin
     if Trim(edtTxHash.Text) = '' then
     begin
@@ -351,7 +330,7 @@ begin
       Exit;
     end;
   end;
-  
+
   Result := True;
 end;
 
@@ -361,15 +340,15 @@ var
 begin
   if not ValidarDatos then
     Exit;
-    
+
   // Preparar datos de resultado
   FDatosResultado.Referencia := Trim(edtReferencia.Text);
-  
-  if chkUsarOtraDivisa.Checked then
+
+  if FDatosResultado.EsDivisa then
   begin
     // Extraer código de divisa (primeros 3 caracteres)
     CodigoDivisa := Copy(cbbDivisa.Text, 1, 3);
-    
+
     FDatosResultado.CodigoDivisa := CodigoDivisa;
     FDatosResultado.FactorCambio := edtFactorCambio.Value;
     FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
@@ -380,17 +359,17 @@ begin
     FDatosResultado.FactorCambio := 1;
     FDatosResultado.ImporteDivisa := 0;
   end;
-  
-  if gbBlockchain.Visible then
+
+  if FDatosResultado.EsCripto then
   begin
     FDatosResultado.RedBlockchain := cbbRedBlockchain.Text;
     // Sobrescribir referencia con TX Hash si es cripto
     if Trim(edtTxHash.Text) <> '' then
       FDatosResultado.Referencia := Trim(edtTxHash.Text);
   end;
-  
+
   //FDatosResultado.Observaciones := Trim(memObservaciones.Text);
-  
+
   ModalResult := mrOk;
 end;
 
@@ -404,7 +383,7 @@ procedure TfrmCajaReferenciaPago.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   case Key of
     VK_ESCAPE: btnCancelar.Click;
-    VK_F10: btnAceptar.Click;
+    VK_F12: btnAceptar.Click;
   end;
 end;
 

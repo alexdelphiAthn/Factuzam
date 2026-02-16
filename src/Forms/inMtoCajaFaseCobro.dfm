@@ -65,7 +65,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 0
           object lblDescuento1: TcxLabel
             Left = 8
-            Top = 100
+            Top = 61
             Caption = 'Imp dto. Lineal'
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
@@ -91,7 +91,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           end
           object lblDescuento: TcxLabel
             Left = 8
-            Top = 58
+            Top = 104
             Caption = '% Descuento'
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
@@ -139,12 +139,12 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtPorcenDtoLineal: TcxTextEdit
-            Left = 261
-            Top = 96
+            Left = 248
+            Top = 57
             Style.BorderStyle = ebsOffice11
             Style.Color = clCream
             TabOrder = 8
-            Width = 83
+            Width = 96
           end
           object txtTotalPagar: TcxCurrencyEdit
             Left = 339
@@ -160,7 +160,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           end
           object txtDtoGlobal: TcxCurrencyEdit
             Left = 339
-            Top = 54
+            Top = 100
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
@@ -172,7 +172,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           end
           object txtTotalDtoLineal: TcxCurrencyEdit
             Left = 339
-            Top = 96
+            Top = 57
             Properties.Alignment.Horz = taRightJustify
             Style.Color = clCream
             TabOrder = 9
@@ -180,7 +180,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           end
           object txtPorcenDtoGlobal: TcxCurrencyEdit
             Left = 248
-            Top = 54
+            Top = 100
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 %'
             Properties.EditFormat = ',0.00 %'
@@ -341,7 +341,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               Options.Editing = False
               Options.Focusing = False
               Styles.Header = cxStyle1
-              Width = 287
+              Width = 264
             end
             object dbmImporte: TcxGridDBColumn
               Caption = 'Importe Entregado'
@@ -351,7 +351,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
               HeaderAlignmentHorz = taRightJustify
               Styles.Header = cxStyle1
-              Width = 221
+              Width = 249
             end
           end
           object cxgrdlvlFormasPago: TcxGridLevel
@@ -955,8 +955,10 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object cxStyleRepository1: TcxStyleRepository
     PixelsPerInch = 96
     object cxStyle1: TcxStyle
-      AssignedValues = [svColor]
+      AssignedValues = [svColor, svTextColor]
       Color = clSkyBlue
+      TextColorType = AlphaColor
+      TextColorValue = -16744448
     end
   end
 end
