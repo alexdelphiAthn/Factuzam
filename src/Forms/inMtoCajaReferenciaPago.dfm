@@ -97,41 +97,32 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Left = 59
         Top = 59
         Caption = 'Divisa:'
-        TabOrder = 4
+        TabOrder = 3
       end
       object lblFactorCambio: TcxLabel
         Left = 28
         Top = 89
         Caption = 'Cotizaci'#243'n:'
-        TabOrder = 5
+        TabOrder = 4
       end
       object lblImporteDivisa: TcxLabel
         Left = 240
         Top = 89
         Caption = 'Importe divisa:'
-        TabOrder = 6
+        TabOrder = 5
       end
       object lblEquivale: TcxLabel
         Left = 120
         Top = 115
         Caption = '0,00 EUR = 0.00 USD'
-        TabOrder = 7
-      end
-      object chkUsarOtraDivisa: TCheckBox
-        Left = 15
-        Top = 29
-        Width = 250
-        Height = 17
-        Caption = 'El cliente paga en otra divisa'
-        TabOrder = 0
-        OnClick = chkUsarOtraDivisaClick
+        TabOrder = 6
       end
       object cbbDivisa: TcxComboBox
         Left = 120
         Top = 56
         Properties.DropDownListStyle = lsFixedList
         Properties.OnChange = cbbDivisaPropertiesChange
-        TabOrder = 1
+        TabOrder = 0
         Width = 200
       end
       object edtFactorCambio: TcxCurrencyEdit
@@ -139,14 +130,14 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Top = 86
         Properties.DisplayFormat = '0.0000'
         Properties.OnChange = edtFactorCambioPropertiesChange
-        TabOrder = 2
+        TabOrder = 1
         Width = 100
       end
       object edtImporteDivisa: TcxCurrencyEdit
         Left = 350
         Top = 86
         Properties.OnChange = edtImporteDivisaPropertiesChange
-        TabOrder = 3
+        TabOrder = 2
         Width = 110
       end
     end

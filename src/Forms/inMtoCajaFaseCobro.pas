@@ -205,13 +205,18 @@ var
   ImporteActual: Currency;
 begin
   dbtvFormasPago.DataController.Post;
+  dr.EsCripto :=
+                (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
+  dr.EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
   ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
   if (ImporteActual > 0) and
      ((FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S') or
-      (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S')) then
+      dr.EsCripto or
+      dr.EsDivisa ) then
   begin
     fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
     fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
+
     fp.RequiereReferencia := True;
     if TfrmCajaReferenciaPago.Ejecutar(fp, ImporteActual, dr) then
     begin
@@ -227,7 +232,7 @@ begin
       FMemTablePagos.Post;
     end;
   end;
-
+  FDatosCobro.Recalcular;
 //  CalcularTotales;
 end;
 
@@ -398,6 +403,7 @@ procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
 begin
   inherited;
 //   CalcularTotales;
+  FDatosCobro.Recalcular;
 end;
 
 
