@@ -1537,7 +1537,7 @@ begin
 
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
 
-      frmFaseCobro.CargarDatosDesdeFactura(ObjTotales); // <--- NUEVA LLAMADA
+    frmFaseCobro.CargarDatosDesdeFactura(ObjTotales); // <--- NUEVA LLAMADA
 
       // Pasamos datos de cabecera estándar
   //    frmFaseCobro.SerieOperacion := DatosCaja.cdsCabecera.FieldByName('SERIE_FACTURA').AsString;
@@ -1710,10 +1710,8 @@ end;
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
 begin
   Result := True; // Por defecto asumimos que se puede cerrar
-
   // 1. Si el formulario ya se está destruyendo, no hacemos nada
   if (csDestroying in ComponentState) then Exit;
-
   // 2. Verificamos si hay datos en la venta
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
   begin
@@ -1724,7 +1722,6 @@ begin
       Show;
       BringToFront;
     end;
-
     // 3. Preguntamos
     if MessageDlg(Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
                          '¿Desea ELIMINARLA y cerrar?', [Self.Tag]),
@@ -1733,7 +1730,6 @@ begin
       // Limpiamos cambios pendientes
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
         DatosCaja.cdsLineas.Cancel;
-
       Close; // Esto destruirá el formulario si Action = caFree en OnClose
     end
     else

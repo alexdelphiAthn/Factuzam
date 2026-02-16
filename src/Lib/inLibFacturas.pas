@@ -276,9 +276,22 @@ type
     property PorcentajeRetencion: Currency read _dPorRetencion write _dPorRetencion;
     property MensajeError: string read _mensajeError;
   end;
+  function IfThen(AValue: Boolean;
+                const ATrue: string;
+                AFalse: string = ''): string;
 
 
 implementation
+
+function IfThen(AValue: Boolean;
+                const ATrue: string;
+                AFalse: string = ''): string;
+begin
+  if AValue then
+    Result := ATrue
+  else
+    Result := AFalse;
+end;
 
 // Función auxiliar IfThen
 //function IfThen(AValue: Boolean; const ATrue: string; AFalse: string = ''): string; overload;
@@ -928,8 +941,18 @@ begin
 end;
 
 function TFacturaTotales.ObtenerPorcentajeREPorTipo(tipo: string): Currency;
+var
+  sNif, sRazon, sDir: string;
+  tieneDatosMinimos: Boolean;
 begin
+  // Primero verificamos los datos mínimos del cliente
+  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FACTURA').AsString);
+  sRazon := Trim(_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
+  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
+  // Si es Simplificada O no tiene datos mínimos O no aplica recargo por config: devolvemos 0
   if _configuracion.EsFacturaSimplificada or
+     (not tieneDatosMinimos) or
      not (_configuracion.AplicaRecargo and _configuracion.IVARecargo) then
   begin
     Result := 0;
@@ -1053,10 +1076,23 @@ end;
 procedure TFacturaTotales.CalcularRetenciones;
 var
   baseCalculo: Currency;
+  sNif, sRazon, sDir: string;
+  tieneDatosMinimos: Boolean;
 begin
   if _configuracion.EsFacturaSimplificada then
   begin
     _totales.TotalRetencion := 0;
+    Exit;
+  end;
+  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FACTURA').AsString);
+  sRazon := Trim(_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
+  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
+  if not tieneDatosMinimos then
+  begin
+    _totales.TotalRetencion := 0;
+    // _mensajeError := 'Cliente no cualificado: faltan datos fiscales.
+    //                   IRPF no aplicado.';
     Exit;
   end;
   if not (_configuracion.AplicaRetencionesCliente and
@@ -1081,6 +1117,7 @@ begin
     baseCalculo := _totales.TotalBases + _totales.TotalImpuestos
   else
     baseCalculo := _totales.TotalBases;
+
   _totales.TotalRetencion := baseCalculo * (_dPorRetencion / 100);
 end;
 

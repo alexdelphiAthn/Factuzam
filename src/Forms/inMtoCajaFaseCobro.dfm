@@ -14,6 +14,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Font.Style = []
   Position = poScreenCenter
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 18
   object pnlPrincipal: TPanel
@@ -27,7 +28,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     ParentBackground = False
     TabOrder = 0
     ExplicitWidth = 771
-    ExplicitHeight = 677
+    ExplicitHeight = 688
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -44,7 +45,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentFont = False
       TabOrder = 0
       ExplicitWidth = 523
-      ExplicitHeight = 677
+      ExplicitHeight = 688
       object Panel2: TPanel
         Left = 0
         Top = 0
@@ -53,7 +54,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         Align = alClient
         TabOrder = 0
         ExplicitWidth = 523
-        ExplicitHeight = 677
+        ExplicitHeight = 688
         object pnl1: TPanel
           Left = 6
           Top = 0
@@ -335,20 +336,22 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             end
             object dbmDescripcion: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
+              DataBinding.FieldName = 'DESCRIPCION_FORMAP'
               HeaderAlignmentHorz = taCenter
               Options.Editing = False
               Options.Focusing = False
               Styles.Header = cxStyle1
-              Width = 320
+              Width = 287
             end
             object dbmImporte: TcxGridDBColumn
-              Caption = 'Importe'
+              Caption = 'Importe Entregado'
+              DataBinding.FieldName = 'IMPORTE_ENTREGADO'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
               HeaderAlignmentHorz = taRightJustify
               Styles.Header = cxStyle1
-              Width = 170
+              Width = 221
             end
           end
           object cxgrdlvlFormasPago: TcxGridLevel
@@ -364,6 +367,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
+          ExplicitTop = 607
+          ExplicitWidth = 521
           object lblDescuento4: TcxLabel
             Left = 15
             Top = 43
@@ -430,7 +435,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       TabOrder = 1
       ExplicitLeft = 523
-      ExplicitHeight = 677
+      ExplicitHeight = 688
       object pnlBotones: TPanel
         Left = 0
         Top = 0
@@ -446,7 +451,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 481
+        ExplicitHeight = 492
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -826,7 +831,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
-        ExplicitTop = 481
+        ExplicitTop = 492
         object lblNumDoc: TcxLabel
           Left = 86
           Top = 8
@@ -884,7 +889,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Height = 697
     Align = alLeft
     TabOrder = 1
-    ExplicitHeight = 677
+    ExplicitHeight = 688
     object cxLabel3: TcxLabel
       Left = 1
       Top = 172
@@ -937,11 +942,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object dsFormasPago: TDataSource
     Left = 472
     Top = 512
-  end
-  object vrtltbl1: TVirtualTable
-    Left = 384
-    Top = 328
-    Data = {04000000000000000000}
   end
   object ActionList1: TActionList
     Left = 304
