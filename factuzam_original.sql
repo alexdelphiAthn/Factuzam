@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 11/02/2026 07:57:47
+ Date: 16/02/2026 07:04:08
 */
 
 SET NAMES utf8mb4;
@@ -323,7 +323,7 @@ INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 8, '', 'PVP', 'S', 5
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 9, '', 'PVP', 'S', 20.000000, 20.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('VEST-FLOR', 10, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:54:53', '2026-02-01 07:54:53', 'Administrador', 'Administrador');
 INSERT INTO `fza_articulos_tarifas` VALUES ('CARTERA-PIEL', 11, '', 'VENTAMAYOR', 'S', 12.000000, 12.000000, NULL, NULL, '2026-02-01', NULL, '2026-02-01 07:55:18', '2026-02-01 07:55:18', 'Administrador', 'Administrador');
-INSERT INTO `fza_articulos_tarifas` VALUES ('PANT-CHIN', 12, '', 'PVP', 'S', 140.000000, 154.000000, -14.000000, -10.000000, '2026-02-02', NULL, '2026-02-02 06:34:47', '2026-02-02 06:34:47', 'Administrador', 'Administrador');
+INSERT INTO `fza_articulos_tarifas` VALUES ('PANT-CHIN', 12, '', 'PVP', 'S', 140.000000, 126.000000, 14.000000, 10.000000, '2026-02-02', NULL, '2026-02-02 06:34:47', '2026-02-02 06:34:47', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_articulos_vinculos
@@ -504,8 +504,12 @@ DROP TABLE IF EXISTS `fza_caja_formas_pago`;
 CREATE TABLE `fza_caja_formas_pago`  (
   `CODIGO_FORMAP` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Código identificativo (EFE, TARJ, etc)',
   `DESCRIPCION_FORMAP` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre visual para el ticket',
-  `TIPO_COMPORTAMIENTO_FORMAP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'EFECTIVO' COMMENT 'Lógica interna: EFECTIVO, TARJETA, VALE, DEUDA',
-  `ES_REQ_REFERENCIA_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N' COMMENT 'S=Obliga a introducir un número (ej: cod barras bono, nro autorización tarjeta)',
+  `ES_REQ_REFERENCIA_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'N' COMMENT 'S=Obliga a introducir un número (ej: cod barras bono, nro autorización tarjeta)',
+  `ES_CRIPTO_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `RED_BLOCKCHAIN_FORMAP` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `HASH_BOCKCHAIN_FORMAP` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `CODIGO_DIVISA_FORMAP` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ESDIVISA_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `ES_DEVUELVE_CAMBIO_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S' COMMENT 'S=Permite dar cambio. N=No permite (el bono debe gastarse entero o se pierde el resto)',
   `ES_ABRE_CAJON_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'N' COMMENT 'S=Lanza la secuencia de apertura de cajón',
   `ES_ACTIVO_FORMAP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
@@ -520,9 +524,9 @@ CREATE TABLE `fza_caja_formas_pago`  (
 -- ----------------------------
 -- Records of fza_caja_formas_pago
 -- ----------------------------
-INSERT INTO `fza_caja_formas_pago` VALUES ('BONO', 'Bono ayuntamiento', 'BONO', 'S', 'N', 'N', 'S', 4, '2026-02-11 07:07:06', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-INSERT INTO `fza_caja_formas_pago` VALUES ('EFE', 'Efectivo', 'EFECTIVO', 'N', 'S', 'S', 'S', 1, '2026-01-04 07:09:34', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
-INSERT INTO `fza_caja_formas_pago` VALUES ('TARJ', 'Tarjeta BBVA', 'TARJETA', 'N', 'N', 'N', 'S', 2, '2026-02-11 07:06:51', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_formas_pago` VALUES ('BONO', 'Bono ayuntamiento', 'S', 'N', NULL, NULL, 'EUR', 'N', 'N', 'N', 'S', 4, '2026-02-16 06:14:09', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_formas_pago` VALUES ('EFE', 'Efectivo', 'N', 'N', NULL, NULL, 'EUR', 'N', 'S', 'S', 'S', 1, '2026-02-16 06:14:10', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_formas_pago` VALUES ('TARJ', 'Tarjeta BBVA', 'N', 'N', NULL, NULL, 'EUR', 'N', 'N', 'N', 'S', 2, '2026-02-16 06:14:12', '0000-00-00 00:00:00', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_caja_operaciones
@@ -2082,7 +2086,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-11 07:26:24', '2026-02-11 07:26:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-16 06:59:08', '2026-02-16 06:59:08', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
