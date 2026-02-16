@@ -395,9 +395,9 @@ var
 begin
   FPorcentajeDescuentoGlobal := APorcentaje;
   
-  BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-  FImporteDescuentoGlobal := BaseImponible * (APorcentaje / 100);
-  
+//  BaseImponible := FImporteBruto - FImporteDescuentoLineal;
+//  FImporteDescuentoGlobal := BaseImponible * (APorcentaje / 100);
+//
   Recalcular;
 end;
 
@@ -508,17 +508,17 @@ var
 begin
   // 1. Base imponible después de descuentos de línea
   BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-  
+
   // 2. Aplicar descuento global
   if FPorcentajeDescuentoGlobal <> 0 then
     FImporteDescuentoGlobal := BaseImponible * (FPorcentajeDescuentoGlobal / 100);
-  
+
   // 3. Total a pagar
   FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
-  
+
   // 4. Calcular total entregado
   TotalEntregado := 0;
-  
+
   if Assigned(FMemTablePagos) and FMemTablePagos.Active then
   begin
     FMemTablePagos.DisableControls;
@@ -528,7 +528,7 @@ begin
         FMemTablePagos.First;
         while not FMemTablePagos.Eof do
         begin
-          TotalEntregado := TotalEntregado + 
+          TotalEntregado := TotalEntregado +
             FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
           FMemTablePagos.Next;
         end;
@@ -541,9 +541,9 @@ begin
       FMemTablePagos.EnableControls;
     end;
   end;
-  
+
   FImporteEntregado := TotalEntregado + FImporteValeRecogido;
-  
+
   // 5. Calcular pendiente y cambio
   if FImporteEntregado >= FImporteTotalPagar then
   begin
@@ -555,7 +555,7 @@ begin
     FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
     FImporteCambio := 0;
   end;
-  
+
   // Disparar evento de recalculado
   if Assigned(FOnRecalculado) then
     FOnRecalculado(Self);
