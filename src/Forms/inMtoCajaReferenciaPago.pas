@@ -340,15 +340,12 @@ var
 begin
   if not ValidarDatos then
     Exit;
-
   // Preparar datos de resultado
   FDatosResultado.Referencia := Trim(edtReferencia.Text);
-
   if FDatosResultado.EsDivisa then
   begin
     // Extraer código de divisa (primeros 3 caracteres)
     CodigoDivisa := Copy(cbbDivisa.Text, 1, 3);
-
     FDatosResultado.CodigoDivisa := CodigoDivisa;
     FDatosResultado.FactorCambio := edtFactorCambio.Value;
     FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
@@ -359,17 +356,12 @@ begin
     FDatosResultado.FactorCambio := 1;
     FDatosResultado.ImporteDivisa := 0;
   end;
-
   if FDatosResultado.EsCripto then
   begin
     FDatosResultado.RedBlockchain := cbbRedBlockchain.Text;
-    // Sobrescribir referencia con TX Hash si es cripto
     if Trim(edtTxHash.Text) <> '' then
       FDatosResultado.Referencia := Trim(edtTxHash.Text);
   end;
-
-  //FDatosResultado.Observaciones := Trim(memObservaciones.Text);
-
   ModalResult := mrOk;
 end;
 

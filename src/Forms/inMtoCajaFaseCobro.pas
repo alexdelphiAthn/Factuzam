@@ -400,9 +400,15 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
   Sender: TObject);
+var
+  Edit: TcxCustomEdit;
 begin
-  inherited;
-//   CalcularTotales;
+  if (Sender is TcxCustomEdit) then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    Edit.PostEditValue;
+  end;
+  FDatosCobro.AplicarDescuentoGlobal(txtPorcenDtoGlobal.Value);
   FDatosCobro.Recalcular;
 end;
 
