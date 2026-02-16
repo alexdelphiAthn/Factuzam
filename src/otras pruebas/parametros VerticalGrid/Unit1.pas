@@ -3,14 +3,16 @@
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, 
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, cxFilter, dxScrollbarAnnotations, cxEdit,
-  cxCheckBox, cxVGrid, cxInplaceContainer, cxTextEdit, cxContainer,
-  dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls;
+  cxCheckBox, cxVGrid, cxInplaceContainer, cxTextEdit, cxContainer, 
+  inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit, 
+  Vcl.ExtCtrls, inMtoFrmBase;
 
 type
-  TForm1 = class(TForm)
+  TForm1 = class(TFrmBase)
     Panel1: TPanel;
     cxButtonEdit1: TcxButtonEdit;
     Panel2: TPanel;
@@ -89,18 +91,19 @@ var
       TextoFila := TcxCategoryRow(Row).Properties.Caption;
 
     // 2. Comprobamos coincidencia (usando la variable TextoFila)
-    Coincide := (Texto = '') or (AnsiContainsText(TextoFila, Texto));
+    Coincide := (AnsiContainsText(TextoFila, Texto));
+	//(Texto = '') or (AnsiContainsText(TextoFila, Texto));
 
-    // 3. Revisamos los hijos (recursividad)
+    {// 3. Revisamos los hijos (recursividad)
     HijoVisible := False;
     for j := 0 to Row.Count - 1 do
     begin
       if ProcesarFila(Row.Rows[j]) then
         HijoVisible := True;
-    end;
+    end;}
 
     // 4. Asignar visibilidad
-    Row.Visible := Coincide or HijoVisible;
+    Row.Visible := Coincide;// or HijoVisible;
     Result := Row.Visible;
   end;
 

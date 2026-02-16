@@ -200,8 +200,6 @@ type
     ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     chkIVA_EXENTO_CLIENTE_FACTURA: TcxDBCheckBox;
     ctbIMP_INCL_TARIFA_FACTURA_LINEA: TcxGridDBColumn;
-    chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
-    chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
     cxGrdDBTabPrinGRUPO_IVA_EMPRESA_FACTURA: TcxGridDBColumn;
     cxGrdDBTabPrinTARIFA_ARTICULO_CLIENTE_FACTURA: TcxGridDBColumn;
     cxGrdDBTabPrinPALABRA_REPORTS_ZONA_IVA_FACTURA: TcxGridDBColumn;
@@ -400,6 +398,8 @@ type
     cxDBTextEdit2: TcxDBTextEdit;
     cxDBTextEdit3: TcxDBTextEdit;
     cxLabel3: TcxLabel;
+    chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
+    chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
