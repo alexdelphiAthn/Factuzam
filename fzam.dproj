@@ -382,6 +382,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFaseCobro.pas"/>
+        <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
+        <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

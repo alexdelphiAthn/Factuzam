@@ -30,40 +30,65 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     ExplicitHeight = 451
     object gbInfoPago: TcxGroupBox
       Left = 10
-      Top = 10
+      Top = 9
       Caption = ' Informaci'#243'n del Pago '
+      ParentFont = False
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clWindowText
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Style = []
+      Style.IsFontAssigned = True
       TabOrder = 0
       Height = 100
       Width = 480
       object lblFormaPago: TcxLabel
-        Left = 15
-        Top = 29
+        Left = 23
+        Top = 23
         Caption = 'Forma de Pago:'
+        Enabled = False
         TabOrder = 0
       end
       object lblFormaPagoValor: TcxLabel
-        Left = 120
-        Top = 29
+        Left = 162
+        Top = 23
         Caption = 'Tarjeta Bancaria'
+        Enabled = False
         TabOrder = 1
       end
       object lblImporte: TcxLabel
         Left = 49
-        Top = 63
+        Top = 61
         Caption = 'Importe:'
+        Enabled = False
         TabOrder = 2
       end
       object edtImporte: TcxCurrencyEdit
-        Left = 120
-        Top = 60
+        Left = 144
+        Top = 57
+        Enabled = False
+        ParentFont = False
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -17
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
         TabOrder = 3
-        Width = 120
+        Width = 142
       end
     end
     object gbReferencia: TcxGroupBox
       Left = 10
       Top = 116
       Caption = ' Referencia '
+      ParentFont = False
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clWindowText
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Style = []
+      Style.IsFontAssigned = True
       TabOrder = 1
       Height = 85
       Width = 480
@@ -80,10 +105,17 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         TabOrder = 1
       end
       object edtReferencia: TcxTextEdit
-        Left = 120
+        Left = 144
         Top = 22
+        ParentFont = False
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -17
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
         TabOrder = 2
-        Width = 340
+        Width = 316
       end
     end
     object gbDivisa: TcxGroupBox
@@ -95,50 +127,76 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       Width = 480
       object lblDivisa: TcxLabel
         Left = 59
-        Top = 59
+        Top = 35
         Caption = 'Divisa:'
-        TabOrder = 3
+        TabOrder = 2
       end
       object lblFactorCambio: TcxLabel
         Left = 28
-        Top = 89
+        Top = 75
         Caption = 'Cotizaci'#243'n:'
-        TabOrder = 4
+        TabOrder = 3
       end
       object lblImporteDivisa: TcxLabel
-        Left = 240
-        Top = 89
-        Caption = 'Importe divisa:'
-        TabOrder = 5
+        Left = 255
+        Top = 75
+        Caption = 'Importe final:'
+        TabOrder = 4
       end
       object lblEquivale: TcxLabel
         Left = 120
-        Top = 115
+        Top = 110
         Caption = '0,00 EUR = 0.00 USD'
-        TabOrder = 6
-      end
-      object cbbDivisa: TcxComboBox
-        Left = 120
-        Top = 56
-        Properties.DropDownListStyle = lsFixedList
-        Properties.OnChange = cbbDivisaPropertiesChange
-        TabOrder = 0
-        Width = 200
+        TabOrder = 5
       end
       object edtFactorCambio: TcxCurrencyEdit
         Left = 120
-        Top = 86
+        Top = 72
         Properties.DisplayFormat = '0.0000'
         Properties.OnChange = edtFactorCambioPropertiesChange
-        TabOrder = 1
-        Width = 100
+        TabOrder = 0
+        Width = 73
       end
       object edtImporteDivisa: TcxCurrencyEdit
         Left = 350
-        Top = 86
+        Top = 72
         Properties.OnChange = edtImporteDivisaPropertiesChange
-        TabOrder = 2
+        TabOrder = 1
         Width = 110
+      end
+      object txtDivisa: TcxTextEdit
+        Left = 120
+        Top = 31
+        Enabled = False
+        TabOrder = 6
+        Width = 340
+      end
+      object btnGetDivisa: TcxButton
+        Left = 194
+        Top = 66
+        Width = 40
+        Height = 34
+        OptionsImage.Glyph.SourceDPI = 96
+        OptionsImage.Glyph.Data = {
+          89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+          610000001974455874536F6674776172650041646F626520496D616765526561
+          647971C9653C00000023744558745469746C6500436F6E766572743B52657065
+          61743B4172726F773B45786368616E6765762368D2000000C049444154785EA5
+          D3B10983501087F1141619C0259C20A033BC29EC1C20609914AE90116C1C208E
+          E00E366EF04AC1E2F205727024175E24C5AFF3FF71A01E4424E9DCDF04011FCF
+          EC08F811FB90CA51A3C78C0DE244DC4085019210BC408111E24B5F703183051D
+          4A1CED385CEF27B45E603281C6790B3A8E98BCC00A4144A663C528438460FD76
+          41C4F3C400790B3410C0BFA0B5E397234A74584CE0E27E483A4E1851E866EF78
+          40A59B5F2ED830A3478D3CF92FD88886AD6440237B027F7900F82BA5E5BA0A0F
+          4B0000000049454E44AE426082}
+        TabOrder = 7
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -17
+        Font.Name = 'Lucida Sans'
+        Font.Style = []
+        ParentFont = False
+        OnClick = btnGetDivisaClick
       end
     end
     object gbBlockchain: TcxGroupBox
@@ -147,7 +205,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       Caption = ' Blockchain '
       TabOrder = 3
       Visible = False
-      Height = 95
+      Height = 99
       Width = 480
       object lblRedBlockchain: TcxLabel
         Left = 73
@@ -188,21 +246,33 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     ExplicitTop = 451
     ExplicitWidth = 494
     object btnAceptar: TcxButton
-      Left = 370
-      Top = 6
-      Width = 120
-      Height = 39
+      Left = 357
+      Top = 5
+      Width = 133
+      Height = 45
       Caption = 'Aceptar (F12)'
       TabOrder = 0
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -17
+      Font.Name = 'Lucida Sans'
+      Font.Style = []
+      ParentFont = False
       OnClick = btnAceptarClick
     end
     object btnCancelar: TcxButton
-      Left = 231
-      Top = 6
-      Width = 120
-      Height = 39
+      Left = 208
+      Top = 5
+      Width = 143
+      Height = 45
       Caption = 'Cancelar (ESC)'
       TabOrder = 1
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -17
+      Font.Name = 'Lucida Sans'
+      Font.Style = []
+      ParentFont = False
       OnClick = btnCancelarClick
     end
   end

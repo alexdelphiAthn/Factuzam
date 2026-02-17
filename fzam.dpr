@@ -91,7 +91,9 @@ uses
   inLibDevExcel in 'src\Lib\inLibDevExcel.pas',
   inLibdxSpreadSheetStrs_ESP in 'src\Lib\inLibdxSpreadSheetStrs_ESP.pas',
   inMtoCajaReferenciaPago in 'src\Forms\inMtoCajaReferenciaPago.pas' {frmCajaReferenciaPago},
-  inLibFaseCobro in 'src\Lib\inLibFaseCobro.pas';
+  inLibFaseCobro in 'src\Lib\inLibFaseCobro.pas',
+  inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
+  inLibDivCurr in 'src\Lib\inLibDivCurr.pas';
 
 var
   frmLogon: TfrmLogon;
