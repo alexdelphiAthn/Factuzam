@@ -73,6 +73,7 @@ type
     EsDivisa: boolean;
     FactorCambio: Currency;
     ImporteDivisa: Currency;
+    ImporteEuros:Currency;
     RedBlockchain: string;
     HashBlockchain: string;
     procedure Init;
