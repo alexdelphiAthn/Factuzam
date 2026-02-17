@@ -178,6 +178,7 @@ begin
       FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
       FieldDefs.Add('REFERENCIA', ftString, 255);
       FieldDefs.Add('IMPORTE_ENTREGADO', ftCurrency);
+      FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
       FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
       Open;
     end;
@@ -254,9 +255,7 @@ var
 begin
   RecordIndex := ARecord.RecordIndex;
   if RecordIndex < 0 then Exit;
-
   var DC := dbtvFormasPago.DataController;
-
   IdxDivisa  := DC.GetItemByFieldName('ESDIVISA_FORMAP').Index;
   IdxCripto  := DC.GetItemByFieldName('ES_CRIPTO_FORMAP').Index;
   IdxImporte := DC.GetItemByFieldName('IMPORTE_ENTREGADO').Index;
@@ -264,11 +263,9 @@ begin
   EsDivisa :=
     (VarToStr(DC.Values[RecordIndex, IdxDivisa]) = 'S') or
     (VarToStr(DC.Values[RecordIndex, IdxCripto]) = 'S');
-
   if EsDivisa then
   begin
     vImporte := DC.Values[RecordIndex, IdxImporte];
-
     // Protegemos el cast si el valor es Null
     if VarIsNull(vImporte) or VarIsEmpty(vImporte) then
       Importe := 0

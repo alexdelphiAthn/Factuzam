@@ -256,7 +256,8 @@ begin
        'EUR']);
   end;
   FDatosResultado.FactorCambio := Factor;
-  FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
+  FDatosResultado.ImporteEuros := edtImporteDivisa.Value
+  FDatosResultado.ImporteDivisa := edtImporte.Value;
 end;
 
 function TfrmCajaReferenciaPago.ValidarDatos: Boolean;

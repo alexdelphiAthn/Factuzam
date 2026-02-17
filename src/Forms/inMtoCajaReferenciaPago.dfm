@@ -68,6 +68,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Top = 57
         Enabled = False
         ParentFont = False
+        Properties.DisplayFormat = ',0.00000000000 ;-,0.00000000000 '
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -17
@@ -75,7 +76,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 3
-        Width = 142
+        Width = 241
       end
     end
     object gbReferencia: TcxGroupBox
