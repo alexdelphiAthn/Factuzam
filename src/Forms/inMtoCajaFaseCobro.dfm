@@ -349,9 +349,22 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
+              OnGetDisplayText = dbmImporteGetDisplayText
               HeaderAlignmentHorz = taRightJustify
               Styles.Header = cxStyle1
               Width = 249
+            end
+            object dbtvFormasPagoColumn1: TcxGridDBColumn
+              DataBinding.FieldName = 'ESDIVISA_FORMAP'
+              Visible = False
+            end
+            object dbtvFormasPagoColumn2: TcxGridDBColumn
+              DataBinding.FieldName = 'ES_CRIPTO_FORMAP'
+              Visible = False
+            end
+            object dbtvFormasPagoColumn3: TcxGridDBColumn
+              DataBinding.FieldName = 'ESIMPORTE_DIVISA'
+              Visible = False
             end
           end
           object cxgrdlvlFormasPago: TcxGridLevel

@@ -13,11 +13,11 @@ uses
   cxLabel, cxButtons, cxGroupBox, cxStyles, cxCustomData, cxFilter, cxData,
   cxDataStorage, cxNavigator, cxDBData, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  cxGrid, cxDropDownEdit,
+  cxGrid, cxDropDownEdit, dxDateRanges, dxScrollbarAnnotations,
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
-  inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro, inMtoCajaReferenciaPago,
-  dxDateRanges, dxScrollbarAnnotations;
+  inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
+  inMtoCajaReferenciaPago;
 
 type
   TfrmMtoCajaFaseCobro = class(TfrmBase)
@@ -88,6 +88,9 @@ type
     cxLabel1: TcxLabel;
     cxStyleRepository1: TcxStyleRepository;
     cxStyle1: TcxStyle;
+    dbtvFormasPagoColumn1: TcxGridDBColumn;
+    dbtvFormasPagoColumn2: TcxGridDBColumn;
+    dbtvFormasPagoColumn3: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -97,6 +100,10 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure btnESCClick(Sender: TObject);
+    procedure dbmImporteGetDisplayText(Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord; var AText: string);
+//    procedure dbmImporteGetDisplayText(Sender: TcxCustomEditProperties;
+//                                       var DisplayText: string);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -151,14 +158,6 @@ begin
     FDatosCobro.Free;
 end;
 
-//procedure TfrmMtoCajaFaseCobro.ConfigurarCobro(ATotal: Currency;
-//                                               ASerie, ANumero: string);
-//begin
-//  FTotalFactura := ATotal;
-//  txtTotalPagar.Value := ATotal;
-//  CargarFormasPago;
-//end;
-
 procedure TfrmMtoCajaFaseCobro.CargarFormasPago;
 var
   qry: TUniQuery;
@@ -176,7 +175,7 @@ begin
       Clear;
       Assign(qry);
       FieldDefs.Add('FACTOR_CAMBIO', ftCurrency);
-      FieldDefs.Add('IMPORTE_DIVISA', ftCurrency);
+      FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
       FieldDefs.Add('REFERENCIA', ftString, 255);
       FieldDefs.Add('IMPORTE_ENTREGADO', ftCurrency);
       FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
@@ -198,7 +197,8 @@ begin
   FMemTablePagos := TVirtualTable.Create(Self);
 end;
 
-procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(
+                                                               Sender: TObject);
 var
   fp: TFormaPagoInfo;
   dr: TDatosReferencia;
@@ -216,12 +216,15 @@ begin
   begin
     fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
     fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
-
-    fp.RequiereReferencia := True;
+    fp.RequiereReferencia :=
+        (FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S');
     if TfrmCajaReferenciaPago.Ejecutar(fp, ImporteActual, dr) then
     begin
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('REFERENCIA').AsString := dr.Referencia;
+      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency :=
+                                                               dr.ImporteDivisa;
+      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
       FMemTablePagos.Post;
     end
     else
@@ -229,11 +232,61 @@ begin
       // Si cancela la referencia, anulamos el importe por seguridad
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
+
       FMemTablePagos.Post;
     end;
   end;
   FDatosCobro.Recalcular;
 //  CalcularTotales;
+end;
+
+procedure TfrmMtoCajaFaseCobro.dbmImporteGetDisplayText(
+  Sender: TcxCustomGridTableItem;
+  ARecord: TcxCustomGridRecord;
+  var AText: string);
+var
+  EsDivisa: Boolean;
+  Importe: Currency;
+  RecordIndex: Integer;
+//  DC: TcxGridDBDataController;
+  IdxDivisa, IdxCripto, IdxImporte, IdxEsDivisa: Integer;
+  vImporte, vEsDivisa: Variant;
+begin
+  RecordIndex := ARecord.RecordIndex;
+  if RecordIndex < 0 then Exit;
+
+  var DC := dbtvFormasPago.DataController;
+
+  IdxDivisa  := DC.GetItemByFieldName('ESDIVISA_FORMAP').Index;
+  IdxCripto  := DC.GetItemByFieldName('ES_CRIPTO_FORMAP').Index;
+  IdxImporte := DC.GetItemByFieldName('IMPORTE_ENTREGADO').Index;
+  IdxEsDivisa := DC.GetItemByFieldName('ESIMPORTE_DIVISA').Index;
+  EsDivisa :=
+    (VarToStr(DC.Values[RecordIndex, IdxDivisa]) = 'S') or
+    (VarToStr(DC.Values[RecordIndex, IdxCripto]) = 'S');
+
+  if EsDivisa then
+  begin
+    vImporte := DC.Values[RecordIndex, IdxImporte];
+
+    // Protegemos el cast si el valor es Null
+    if VarIsNull(vImporte) or VarIsEmpty(vImporte) then
+      Importe := 0
+    else
+      Importe := Currency(vImporte);
+    vEsDivisa := DC.Values[RecordIndex, IdxEsDivisa];
+    if VarIsNull(vEsDivisa) or VarIsEmpty(vEsDivisa) then
+    begin
+      AText := ''
+    end
+    else
+    begin
+      if Importe > 0 then
+        AText := FormatFloat('#.########0,00000000', Importe);
+      if (vEsDivisa = 'N') then
+        AText := FormatCurr(',0.00 €', Importe);
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
@@ -271,69 +324,12 @@ begin
   txtCambio.Value := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value := FDatosCobro.ImporteValeRecogido;
   txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
-
-  // Habilitar botón de ticket solo si está pagado
   btnConTicket.Enabled :=(FDatosCobro.ImportePendiente <= 0.01);
   btnF12.Enabled := btnConTicket.Enabled;
 end;
 
-//procedure TfrmMtoCajaFaseCobro.CalcularTotales;
-//var
-//  SumaEntregado, SumaPermiteCambio, Exceso, AlVale, AlCambio: Currency;
-//begin
-//  SumaEntregado := 0;
-//  SumaPermiteCambio := 0;
-//
-//  FMemTablePagos.DisableControls;
-//  try
-//    FMemTablePagos.First;
-//    while not FMemTablePagos.Eof do
-//    begin
-//      SumaEntregado := SumaEntregado +
-//                     FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-//      if FMemTablePagos.FieldByName(
-//                                'ES_DEVUELVE_CAMBIO_FORMAP').AsString = 'S' then
-//        SumaPermiteCambio := SumaPermiteCambio +
-//                     FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-//      FMemTablePagos.Next;
-//    end;
-//  finally
-//    FMemTablePagos.EnableControls;
-//  end;
-//
-//  // Cálculo de Pendiente
-//  txtPendienteCobro.Value := Max(0, FTotalFactura - SumaEntregado);
-//
-//  // REQUISITO: Lógica de Vale vs Cambio
-//  Exceso := Max(0, SumaEntregado - FTotalFactura);
-//
-//  if Exceso > 0 then
-//  begin
-//    // Si lo que sobra es más de lo que el cliente dio en "Efectivo", la diferencia es un Vale
-//    if SumaPermiteCambio >= Exceso then
-//    begin
-//      AlCambio := Exceso;
-//      AlVale := 0;
-//    end
-//    else
-//    begin
-//      AlCambio := SumaPermiteCambio;
-//      AlVale := Exceso - SumaPermiteCambio;
-//    end;
-//  end
-//  else
-//  begin
-//    AlCambio := 0;
-//    AlVale := 0;
-//  end;
-//  txtCambio.Value := AlCambio;
-//  txtValeEmitido.Value := AlVale;
-//  btnConTicket.Enabled := (txtPendienteCobro.Value <= 0);
-//end;
-
 function TfrmMtoCajaFaseCobro.ValidarIntegridad: Boolean;
 begin
-  // Aquí puedes añadir validaciones finales antes de cerrar
   Result := txtPendienteCobro.Value <= 0.001;
 end;
 
@@ -357,16 +353,8 @@ end;
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
 begin
   inherited;
-//  cbbSerie1.Text := FSerieOperacion;
-//  edtNumeroDoc.Text := FNumeroOperacion;
-
-  // Cargar las formas de pago disponibles
   CargarFormasPago;
-
-  // Actualizar interfaz
   ActualizarInterfaz;
-
-  // Poner el foco en el grid
   if cxgrdFormasPago.CanFocus then
   begin
     cxgrdFormasPago.SetFocus;
@@ -383,7 +371,6 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;
 begin
-  // Actualizar campos calculados
   txtDtoGlobal.Value := FDatosCobro.ImporteDescuentoGlobal;
   txtTotalPagar.Value := FDatosCobro.ImporteTotalPagar;
   txtPendienteCobro.Value := FDatosCobro.ImportePendiente;
@@ -391,12 +378,9 @@ begin
   txtCambio.Value := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value := FDatosCobro.ImporteValeRecogido;
   txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
-
-  // Habilitar/deshabilitar botones
   btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
   btnF12.Enabled := btnConTicket.Enabled;
 end;
-
 
 procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
   Sender: TObject);

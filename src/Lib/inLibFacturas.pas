@@ -1117,7 +1117,6 @@ begin
     baseCalculo := _totales.TotalBases + _totales.TotalImpuestos
   else
     baseCalculo := _totales.TotalBases;
-
   _totales.TotalRetencion := baseCalculo * (_dPorRetencion / 100);
 end;
 
