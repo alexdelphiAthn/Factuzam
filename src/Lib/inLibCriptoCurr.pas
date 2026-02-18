@@ -251,8 +251,61 @@ function CoinGeckoGetBTCPrice(const ACurrency: string = 'eur'): Double;
 
 /// Precio de cualquier coin (función rápida)
 function CoinGeckoGetPrice(const ACoinID, ACurrency: string): Double;
+function GetPriceBinance(const SymbolPair: string): Double;
+procedure TestBinance;
 
 implementation
+
+function GetPriceBinance(const SymbolPair: string): Double;
+var
+  Client: THTTPClient;
+  Response: IHTTPResponse;
+  JSON: TJSONObject;
+  PriceStr: string;
+begin
+  // SymbolPair ejemplo: 'BTCEUR' o 'BTCUSDT'
+  Result := 0.0;
+  Client := THTTPClient.Create;
+  try
+    Response := Client.Get('https://api.binance.com/api/v3/ticker/price?symbol=' + UpperCase(SymbolPair));
+
+    if Response.StatusCode = 200 then
+    begin
+      JSON := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        if Assigned(JSON) then
+        begin
+          PriceStr := JSON.GetValue('price').Value;
+          Result := StrToFloatDef(PriceStr, 0.0, TFormatSettings.Invariant);
+        end;
+      finally
+        JSON.Free;
+      end;
+    end;
+  finally
+    Client.Free;
+  end;
+end;
+
+procedure TestBinance;
+var
+  Client: THTTPClient;
+  Resp: IHTTPResponse;
+begin
+  Client := THTTPClient.Create;
+  try
+    // Probamos con un par que SIEMPRE existe
+    Resp := Client.Get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+
+    if Resp.StatusCode = 200 then
+      System.Writeln('Éxito: ' + Resp.ContentAsString)
+    else
+      // Esto te dirá el mensaje de error real de Binance (ej: {"code":-1121,"msg":"Invalid symbol."})
+      System.Writeln('Error ' + Resp.StatusCode.ToString + ': ' + Resp.ContentAsString);
+  finally
+    Client.Free;
+  end;
+end;
 
 { TCoinPrice }
 

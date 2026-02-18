@@ -48,7 +48,7 @@ type
     CodigoDivisa: string;
     RedBlockchain: string;
     FactorCambio: Currency;
-    ImporteDivisa: Currency;
+    ImporteDivisa: Double;
     ImporteEntregado: Currency;
     ImporteCambio: Currency;
     Referencia: string;
@@ -71,8 +71,9 @@ type
     CodigoDivisa: string;
     EsCripto: boolean;
     EsDivisa: boolean;
-    FactorCambio: Currency;
-    ImporteDivisa: Currency;
+    Pendiente:Double;
+    FactorCambio: Double;
+    ImporteDivisa: Double;
     ImporteEuros:Currency;
     RedBlockchain: string;
     HashBlockchain: string;

@@ -76,7 +76,29 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 3
-        Width = 241
+        Width = 153
+      end
+      object txtPendiente: TcxCurrencyEdit
+        Left = 360
+        Top = 57
+        Enabled = False
+        ParentFont = False
+        Properties.DisplayFormat = ',0.00 '#8364' ;-,0.00 '#8364' '
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -17
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 4
+        Width = 100
+      end
+      object cxLabel1: TcxLabel
+        Left = 375
+        Top = 34
+        Caption = 'Pendiente'
+        Enabled = False
+        TabOrder = 5
       end
     end
     object gbReferencia: TcxGroupBox
@@ -134,33 +156,35 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       end
       object lblFactorCambio: TcxLabel
         Left = 28
-        Top = 75
+        Top = 69
         Caption = 'Cotizaci'#243'n:'
         TabOrder = 3
       end
       object lblImporteDivisa: TcxLabel
         Left = 255
-        Top = 75
+        Top = 106
         Caption = 'Importe final:'
         TabOrder = 4
       end
       object lblEquivale: TcxLabel
-        Left = 120
-        Top = 110
+        Left = 23
+        Top = 102
         Caption = '0,00 EUR = 0.00 USD'
         TabOrder = 5
       end
       object edtFactorCambio: TcxCurrencyEdit
         Left = 120
-        Top = 72
-        Properties.DisplayFormat = '0.0000'
+        Top = 66
+        Properties.DisplayFormat = '0.0000000000'
+        Properties.ReadOnly = True
         Properties.OnChange = edtFactorCambioPropertiesChange
         TabOrder = 0
-        Width = 73
+        Width = 145
       end
       object edtImporteDivisa: TcxCurrencyEdit
         Left = 350
-        Top = 72
+        Top = 103
+        Properties.ReadOnly = True
         Properties.OnChange = edtImporteDivisaPropertiesChange
         TabOrder = 1
         Width = 110
@@ -173,8 +197,8 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Width = 340
       end
       object btnGetDivisa: TcxButton
-        Left = 194
-        Top = 66
+        Left = 271
+        Top = 60
         Width = 40
         Height = 34
         OptionsImage.Glyph.SourceDPI = 96
@@ -198,6 +222,12 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Font.Style = []
         ParentFont = False
         OnClick = btnGetDivisaClick
+      end
+      object lblEquivale2: TcxLabel
+        Left = 23
+        Top = 119
+        Caption = '0,00 EUR = 0.00 USD'
+        TabOrder = 8
       end
     end
     object gbBlockchain: TcxGroupBox
@@ -275,6 +305,28 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       Font.Style = []
       ParentFont = False
       OnClick = btnCancelarClick
+    end
+    object txtSobra: TcxCurrencyEdit
+      Left = 65
+      Top = 0
+      Enabled = False
+      ParentFont = False
+      Properties.DisplayFormat = ',0.00 '#8364' ;-,0.00 '#8364' '
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clWindowText
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Style = []
+      Style.IsFontAssigned = True
+      TabOrder = 2
+      Width = 100
+    end
+    object cxLabel2: TcxLabel
+      Left = 10
+      Top = 3
+      Caption = 'Sobra:'
+      Enabled = False
+      TabOrder = 3
     end
   end
 end
