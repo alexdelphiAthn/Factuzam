@@ -102,17 +102,18 @@ type
     procedure btnESCClick(Sender: TObject);
     procedure dbmImporteGetDisplayText(Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord; var AText: string);
-//    procedure dbmImporteGetDisplayText(Sender: TcxCustomEditProperties;
-//                                       var DisplayText: string);
+    procedure txtValeEmitidoPropertiesEditValueChanged(Sender: TObject);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
     FMemTablePagos: TVirtualTable;
+    FActualizandoVale: Boolean;  // evita bucle en OnEditValueChanged de txtValeEmitido
     procedure CargarFormasPago;
     procedure ActualizarInterfaz;
-//    procedure CalcularTotales;
     function  ValidarIntegridad: Boolean;
     procedure ConfigurarTablaVirtual;
+    procedure ConfigurarModoDevolucion;
+    procedure ConfigurarModoCobroNormal;
   public
     procedure ConfigurarCobro(ATotal: Currency; ASerie, ANumero: string);
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
@@ -204,13 +205,24 @@ var
   fp: TFormaPagoInfo;
   dr: TDatosReferencia;
   ImporteActual: Currency;
+  Edit: TcxCustomEdit;
 begin
-  dbtvFormasPago.DataController.Post;
+  if (Sender is TcxCustomEdit) then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    Edit.PostEditValue;
+  end;
+//  dbtvFormasPago.DataController.Post;
   dr.EsCripto :=
                 (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
   dr.EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
   ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-  if (ImporteActual > 0) and
+  if FDatosCobro.EsDevolucion then
+  begin
+    FDatosCobro.Recalcular;
+  end;
+  // Modo cobro normal: pedir referencia si procede (importe > 0)
+  if (abs(ImporteActual) > 0) and
      ((FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S') or
       dr.EsCripto or
       dr.EsDivisa ) then
@@ -233,12 +245,10 @@ begin
       // Si cancela la referencia, anulamos el importe por seguridad
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
-
       FMemTablePagos.Post;
     end;
   end;
   FDatosCobro.Recalcular;
-//  CalcularTotales;
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbmImporteGetDisplayText(
@@ -279,7 +289,7 @@ begin
     else
     begin
       if Importe > 0 then
-        AText := FormatFloat('#.########0,00000000', Importe);
+        AText := FormatFloat('#.#########0,000000000', Importe);
       if (vEsDivisa = 'N') then
         AText := FormatCurr(',0.00 €', Importe);
     end;
@@ -314,26 +324,117 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.AlRecalcularDatos(Sender: TObject);
 begin
-  txtDtoGlobal.Value := FDatosCobro.ImporteDescuentoGlobal;
-  txtTotalPagar.Value := FDatosCobro.ImporteTotalPagar;
-  txtPendienteCobro.Value := FDatosCobro.ImportePendiente;
-  txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
-  txtCambio.Value := FDatosCobro.ImporteCambio;
+  txtDtoGlobal.Value    := FDatosCobro.ImporteDescuentoGlobal;
+  txtTotalPagar.Value   := FDatosCobro.ImporteTotalPagar;
+  txtCambio.Value       := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value := FDatosCobro.ImporteValeRecogido;
-  txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
-  btnConTicket.Enabled :=(FDatosCobro.ImportePendiente <= 0.01);
+
+  // Escribimos siempre el valor calculado por la lógica.
+  // El flag evita que esa escritura dispare de nuevo el OnEditValueChanged.
+  FActualizandoVale := True;
+  try
+    txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
+  finally
+    FActualizandoVale := False;
+  end;
+
+  if FDatosCobro.EsDevolucion then
+  begin
+    txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
+    txtPendienteCuenta.Value := 0;
+    btnConTicket.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01);
+  end
+  else
+  begin
+    txtPendienteCobro.Value  := FDatosCobro.ImportePendiente;
+    txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
+    btnConTicket.Enabled     := (FDatosCobro.ImportePendiente <= 0.01);
+  end;
+
   btnF12.Enabled := btnConTicket.Enabled;
 end;
 
 function TfrmMtoCajaFaseCobro.ValidarIntegridad: Boolean;
 begin
-  Result := txtPendienteCobro.Value <= 0.001;
+  if FDatosCobro.EsDevolucion then
+    Result := FDatosCobro.ImporteDevolucionPendiente <= 0.01
+  else
+    Result := txtPendienteCobro.Value <= 0.001;
+end;
+
+procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;
+begin
+  txtDtoGlobal.Value      := FDatosCobro.ImporteDescuentoGlobal;
+  txtTotalPagar.Value     := FDatosCobro.ImporteTotalPagar;
+  txtCambio.Value         := FDatosCobro.ImporteCambio;
+  txtValeRecogido.Value   := FDatosCobro.ImporteValeRecogido;
+  txtValeEmitido.Value    := FDatosCobro.ImporteValeEmitido;
+
+  if FDatosCobro.EsDevolucion then
+  begin
+    txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
+    txtPendienteCuenta.Value := 0;
+    btnConTicket.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01);
+  end
+  else
+  begin
+    txtPendienteCobro.Value  := FDatosCobro.ImportePendiente;
+    txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
+    btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
+  end;
+
+  btnF12.Enabled := btnConTicket.Enabled;
+
+  if FDatosCobro.EsDevolucion then
+    ConfigurarModoDevolucion
+  else
+    ConfigurarModoCobroNormal;
+end;
+
+procedure TfrmMtoCajaFaseCobro.ConfigurarModoDevolucion;
+begin
+  // Descuento global no aplica en devolución
+  txtPorcenDtoGlobal.Enabled := False;
+  // El cajero puede escribir directamente el importe del vale a emitir
+  txtValeEmitido.Properties.ReadOnly := False;
+  txtValeEmitido.Style.Color := clWindow;
+  // Etiqueta "Pendiente de cobro" → "Pendiente de devolver"
+  lblDescuento4.Caption := 'Pendiente de devolver';
+end;
+
+procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
+begin
+  txtPorcenDtoGlobal.Enabled := True;
+  txtValeEmitido.Properties.ReadOnly := True;
+  txtValeEmitido.Style.Color := clWhite;
+  lblDescuento4.Caption := 'Pendiente de cobro';
+end;
+
+procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  if not FDatosCobro.EsDevolucion then Exit;
+  if FActualizandoVale then Exit;
+
+  FActualizandoVale := True;
+  try
+    FDatosCobro.EmitirVale(txtValeEmitido.Value);
+  finally
+    FActualizandoVale := False;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
+var
+  Res: TResultadoValidacion;
 begin
-  if ValidarIntegridad then
-    ModalResult := mrOk;
+  Res := FDatosCobro.ValidarParaCobro;
+  if not Res.Valido then
+  begin
+    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ModalResult := mrOk;
 end;
 
 procedure TfrmMtoCajaFaseCobro.btnESCClick(Sender: TObject);
@@ -364,19 +465,6 @@ procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
 begin
   inherited;
   btnAtrasClick(Sender);
-end;
-
-procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;
-begin
-  txtDtoGlobal.Value := FDatosCobro.ImporteDescuentoGlobal;
-  txtTotalPagar.Value := FDatosCobro.ImporteTotalPagar;
-  txtPendienteCobro.Value := FDatosCobro.ImportePendiente;
-  txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
-  txtCambio.Value := FDatosCobro.ImporteCambio;
-  txtValeRecogido.Value := FDatosCobro.ImporteValeRecogido;
-  txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
-  btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
-  btnF12.Enabled := btnConTicket.Enabled;
 end;
 
 procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(

@@ -143,6 +143,9 @@ type
     function EmitirVale(AImporte: Currency): TResultadoValidacion;
     procedure RegistrarValeRecogido(ACodigoVale: string; AImporte: Currency);
 
+    // Devolución
+    function EsDevolucion: Boolean;
+
     // Validación final
     function ValidarParaCobro: TResultadoValidacion;
     function ObtenerDatosPagosParaGrabar: TArray<TFormaPagoItem>;
@@ -164,6 +167,9 @@ type
     property ImporteValeEmitido: Currency read FImporteValeEmitido;
     property HayCliente: Boolean read FHayCliente;
     property PermiteDeuda: Boolean read FPermiteDeuda;
+    // En devoluciones: importe que aún queda pendiente de devolver al cliente
+    // (positivo = falta por devolver, 0 = completado)
+    property ImporteDevolucionPendiente: Currency read FImportePendiente;
 
     // Eventos
     property OnRecalculado: TNotifyEvent read FOnRecalculado write FOnRecalculado;
@@ -456,24 +462,29 @@ begin
   Result := TResultadoValidacion.OK;
 end;
 
+function TDatosFaseCobro.EsDevolucion: Boolean;
+begin
+  Result := FImporteTotalPagar < 0;
+end;
+
 function TDatosFaseCobro.PuedeEmitirVale: Boolean;
 begin
-  // Se puede emitir vale cuando hay un importe negativo (devolución)
-  Result := FImportePendiente < 0;
+  // En devoluciones: siempre se puede emitir vale (es una de las dos opciones)
+  // En cobro normal: cuando hay cambio que no se puede dar en efectivo
+  Result := EsDevolucion or (FImportePendiente < 0) or (FImporteValeEmitido > 0);
 end;
 
 function TDatosFaseCobro.EmitirVale(AImporte: Currency): TResultadoValidacion;
 begin
-  if AImporte >= 0 then
+  if AImporte = 0 then
   begin
-    Result := TResultadoValidacion.Error(
-      'Solo se pueden emitir vales por importes negativos (devoluciones).');
+    Result := TResultadoValidacion.Error('El importe del vale no puede ser cero.');
     Exit;
   end;
-  
+
   FImporteValeEmitido := Abs(AImporte);
   Recalcular;
-  
+
   Result := TResultadoValidacion.OK;
 end;
 
@@ -506,6 +517,8 @@ var
   BaseImponible: Currency;
   TotalEntregado: Currency;
   bookmark: TBookmark;
+  HayFormaPagoQueDevuelveCambio: Boolean;
+  CambioCalculado: Currency;
 begin
   // 1. Base imponible después de descuentos de línea
   BaseImponible := FImporteBruto - FImporteDescuentoLineal;
@@ -514,11 +527,12 @@ begin
   if FPorcentajeDescuentoGlobal <> 0 then
     FImporteDescuentoGlobal := BaseImponible * (FPorcentajeDescuentoGlobal / 100);
 
-  // 3. Total a pagar
+  // 3. Total a pagar (puede ser negativo en devoluciones)
   FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
 
-  // 4. Calcular total entregado
+  // 4. Recorrer formas de pago: acumular importe entregado y detectar cambio
   TotalEntregado := 0;
+  HayFormaPagoQueDevuelveCambio := False;
 
   if Assigned(FMemTablePagos) and FMemTablePagos.Active then
   begin
@@ -531,6 +545,12 @@ begin
         begin
           TotalEntregado := TotalEntregado +
             FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
+
+          // Solo miramos DevuelveCambio para cobros normales (importes positivos)
+          if (FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency > 0) and
+             (FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString = 'S') then
+            HayFormaPagoQueDevuelveCambio := True;
+
           FMemTablePagos.Next;
         end;
       finally
@@ -543,18 +563,69 @@ begin
     end;
   end;
 
-  FImporteEntregado := TotalEntregado + FImporteValeRecogido;
-
-  // 5. Calcular pendiente y cambio
-  if FImporteEntregado >= FImporteTotalPagar then
+  // ── CASO DEVOLUCIÓN (ticket negativo) ────────────────────────────────────
+  // ImporteTotalPagar < 0 → el sistema debe devolver dinero al cliente.
+  // La devolución se puede cubrir con:
+  //   a) Vale emitido (FImporteValeEmitido) — el cajero lo escribe manualmente
+  //   b) Importes negativos en formas de pago (TotalEntregado < 0)
+  // Ambas vías son ALTERNATIVAS: si las formas de pago ya cubren todo,
+  // el vale emitido se resetea a 0 automáticamente.
+  if FImporteTotalPagar < 0 then
   begin
-    FImportePendiente := 0;
-    FImporteCambio := FImporteEntregado - FImporteTotalPagar;
+    FImporteEntregado := 0;   // sin sentido en devolución
+    FImporteCambio    := 0;
+
+    var ImporteADevolver: Currency := Abs(FImporteTotalPagar);
+    var DevueltoPorFormas: Currency := 0;
+    if TotalEntregado < 0 then
+      DevueltoPorFormas := Abs(TotalEntregado);
+
+    // Si las formas de pago ya cubren la devolución, el vale no hace falta
+    if DevueltoPorFormas >= ImporteADevolver then
+    begin
+      FImporteValeEmitido := 0;
+      FImportePendiente   := 0;
+    end
+    else
+    begin
+      // Queda algo por devolver; puede cubrirlo el vale emitido manualmente
+      var RestanteSinFormas: Currency := ImporteADevolver - DevueltoPorFormas;
+      if FImporteValeEmitido >= RestanteSinFormas then
+        FImportePendiente := 0
+      else
+        FImportePendiente := RestanteSinFormas - FImporteValeEmitido;
+    end;
   end
+  // ── CASO COBRO NORMAL ────────────────────────────────────────────────────
   else
   begin
-    FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
-    FImporteCambio := 0;
+    FImporteEntregado := TotalEntregado + FImporteValeRecogido;
+
+    if FImporteEntregado >= FImporteTotalPagar then
+    begin
+      FImportePendiente := 0;
+      CambioCalculado := FImporteEntregado - FImporteTotalPagar;
+
+      // Si hay cambio pero ninguna forma de pago lo puede devolver en efectivo
+      // → se convierte automáticamente en vale emitido
+      if (CambioCalculado > 0) and (not HayFormaPagoQueDevuelveCambio) then
+      begin
+        FImporteCambio      := 0;
+        FImporteValeEmitido := CambioCalculado;
+      end
+      else
+      begin
+        FImporteCambio := CambioCalculado;
+        // Resetear vale automático previo: cuando el cambio ya es 0 o hay
+        // forma de pago que devuelve cambio, el vale no tiene razón de ser
+        FImporteValeEmitido := 0;
+      end;
+    end
+    else
+    begin
+      FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
+      FImporteCambio    := 0;
+    end;
   end;
 
   // Disparar evento de recalculado
@@ -601,7 +672,20 @@ var
 begin
   // Recalcular antes de validar
   CalcularTotales;
-  
+
+  // ── Caso devolución ──────────────────────────────────────────────────────
+  if EsDevolucion then
+  begin
+    if FImportePendiente > 0.01 then
+      Result := TResultadoValidacion.Error(
+        Format('Devolución incompleta. Falta por devolver al cliente: %m',
+               [FImportePendiente]))
+    else
+      Result := TResultadoValidacion.OK;
+    Exit;
+  end;
+
+  // ── Caso cobro normal ────────────────────────────────────────────────────
   // Validar deuda
   Result := ValidarDeuda;
   if not Result.Valido then
@@ -617,8 +701,7 @@ begin
   
   if (TotalCobrado = 0) and (FImporteTotalPagar > 0) then
   begin
-    Result := TResultadoValidacion.Error(
-      'No se ha indicado ningún pago.');
+    Result := TResultadoValidacion.Error('No se ha indicado ningún pago.');
     Exit;
   end;
   

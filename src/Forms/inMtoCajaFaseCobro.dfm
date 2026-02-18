@@ -27,6 +27,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Color = clCream
     ParentBackground = False
     TabOrder = 0
+    ExplicitWidth = 765
+    ExplicitHeight = 679
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -42,6 +44,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
+      ExplicitWidth = 517
+      ExplicitHeight = 679
       object Panel2: TPanel
         Left = 0
         Top = 0
@@ -49,6 +53,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         Height = 688
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 517
+        ExplicitHeight = 679
         object pnl1: TPanel
           Left = 6
           Top = 0
@@ -298,6 +304,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.DisplayFormat = ',0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
+            Properties.OnEditValueChanged = txtValeEmitidoPropertiesEditValueChanged
             Style.BorderStyle = ebsOffice11
             Style.Color = clWhite
             TabOrder = 3
@@ -374,6 +381,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
+          ExplicitTop = 598
+          ExplicitWidth = 515
           object lblDescuento4: TcxLabel
             Left = 15
             Top = 43
@@ -439,6 +448,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Color = clCream
       ParentBackground = False
       TabOrder = 1
+      ExplicitLeft = 517
+      ExplicitHeight = 679
       object pnlBotones: TPanel
         Left = 0
         Top = 0
@@ -454,6 +465,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
+        ExplicitHeight = 483
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -833,6 +845,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
+        ExplicitTop = 483
         object lblNumDoc: TcxLabel
           Left = 86
           Top = 8
@@ -890,6 +903,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Height = 688
     Align = alLeft
     TabOrder = 1
+    ExplicitHeight = 679
     object cxLabel3: TcxLabel
       Left = 1
       Top = 172

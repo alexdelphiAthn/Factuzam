@@ -256,7 +256,7 @@ begin
        'EUR']);
   end;
   FDatosResultado.FactorCambio := Factor;
-  FDatosResultado.ImporteEuros := edtImporteDivisa.Value
+  FDatosResultado.ImporteEuros := edtImporteDivisa.Value;
   FDatosResultado.ImporteDivisa := edtImporte.Value;
 end;
 
@@ -283,13 +283,13 @@ begin
         edtFactorCambio.SetFocus;
       Exit;
     end;
-    if edtImporteDivisa.Value <= 0 then
-    begin
-      ShowMessage('El importe en divisa debe ser mayor que cero.');
-      if edtImporteDivisa.CanFocus then
-        edtImporteDivisa.SetFocus;
-      Exit;
-    end;
+//    if edtImporteDivisa.Value <= 0 then
+//    begin
+//      ShowMessage('El importe en divisa debe ser mayor que cero.');
+//      if edtImporteDivisa.CanFocus then
+//        edtImporteDivisa.SetFocus;
+//      Exit;
+//    end;
   end;
   // Validar blockchain si es cripto
   if FDatosResultado.EsCripto then
@@ -325,7 +325,7 @@ begin
   begin
     FDatosResultado.CodigoDivisa := 'EUR';
     FDatosResultado.FactorCambio := 1;
-    FDatosResultado.ImporteDivisa := 0;
+    FDatosResultado.ImporteDivisa := edtImporte.Value;
   end;
   if FDatosResultado.EsCripto then
   begin

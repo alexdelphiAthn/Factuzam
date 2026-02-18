@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 662
-  ClientWidth = 975
+  ClientHeight = 653
+  ClientWidth = 969
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,27 +15,19 @@ object Form1: TForm1
   object Panel2: TPanel
     Left = 0
     Top = 57
-    Width = 975
-    Height = 605
+    Width = 969
+    Height = 596
     Align = alClient
     Caption = 'Panel2'
     TabOrder = 1
-    ExplicitLeft = 615
-    ExplicitTop = 184
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object cxVerticalGrid1: TcxVerticalGrid
       Left = 1
       Top = 1
-      Width = 973
-      Height = 603
+      Width = 967
+      Height = 594
       Align = alClient
       OptionsView.RowHeaderWidth = 304
       TabOrder = 0
-      ExplicitLeft = 48
-      ExplicitTop = 121
-      ExplicitWidth = 561
-      ExplicitHeight = 393
       Version = 1
       object cxVerticalGrid1EditorRow1: TcxEditorRow
         Properties.Caption = 'Permitir s'#243'lo art'#237'culos que existan'
@@ -95,7 +87,9 @@ object Form1: TForm1
         Version = 1
       end
       object cxVerticalGrid1EditorRow7: TcxEditorRow
-        Properties.Value = Null
+        Properties.Caption = 'Pedir Referencia en devoluciones'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
         ID = 6
         ParentID = -1
         Index = 6
@@ -162,7 +156,7 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 975
+    Width = 969
     Height = 57
     Align = alTop
     TabOrder = 0
