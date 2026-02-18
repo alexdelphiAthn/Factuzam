@@ -476,15 +476,14 @@ end;
 
 function TDatosFaseCobro.EmitirVale(AImporte: Currency): TResultadoValidacion;
 begin
-  if AImporte = 0 then
+  if AImporte <= 0 then
   begin
-    Result := TResultadoValidacion.Error('El importe del vale no puede ser cero.');
+    Result := TResultadoValidacion.Error('El importe del vale no puede ser' +
+                                         ' cero o menor que cero.');
     Exit;
   end;
-
   FImporteValeEmitido := Abs(AImporte);
   Recalcular;
-
   Result := TResultadoValidacion.OK;
 end;
 

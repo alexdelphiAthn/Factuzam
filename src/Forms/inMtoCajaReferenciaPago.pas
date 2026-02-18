@@ -319,13 +319,15 @@ begin
     CodigoDivisa := Copy(txtDivisa.Text, 1, 3);
     FDatosResultado.CodigoDivisa := CodigoDivisa;
     FDatosResultado.FactorCambio := edtFactorCambio.Value;
-    FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
+    FDatosResultado.ImporteEuros := edtImporteDivisa.Value;
+    FDatosResultado.ImporteDivisa := edtImporte.Value;
   end
   else
   begin
     FDatosResultado.CodigoDivisa := 'EUR';
     FDatosResultado.FactorCambio := 1;
     FDatosResultado.ImporteDivisa := edtImporte.Value;
+    FDatosResultado.ImporteEuros := edtImporte.Value;
   end;
   if FDatosResultado.EsCripto then
   begin

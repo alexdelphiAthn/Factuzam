@@ -342,7 +342,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               Options.Editing = False
               Options.Focusing = False
               Styles.Header = cxStyle1
-              Width = 264
+              Width = 254
             end
             object dbmImporte: TcxGridDBColumn
               Caption = 'Importe Entregado'
