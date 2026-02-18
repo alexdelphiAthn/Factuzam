@@ -236,6 +236,8 @@ begin
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('REFERENCIA').AsString := dr.Referencia;
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency :=
+                                                                dr.ImporteEuros;
+      FMemTablePAgos.FieldByName('IMPORTE_DIVISA').AsCurrency :=
                                                                dr.ImporteDivisa;
       FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
       FMemTablePagos.Post;
@@ -244,7 +246,10 @@ begin
     begin
       // Si cancela la referencia, anulamos el importe por seguridad
       FMemTablePagos.Edit;
+      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
+      FMemTablePAgos.FieldByName('IMPORTE_DIVISA').AsCurrency := 0;
+      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
       FMemTablePagos.Post;
     end;
   end;
