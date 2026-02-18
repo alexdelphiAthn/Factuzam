@@ -103,12 +103,15 @@ type
     procedure dbmImporteGetDisplayText(Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord; var AText: string);
     procedure txtValeEmitidoPropertiesEditValueChanged(Sender: TObject);
+    procedure dbtvFormasPagoEditChanged(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;  // evita bucle en OnEditValueChanged de txtValeEmitido
     procedure CargarFormasPago;
+    procedure AjustarFormatoEditorActivo;
     procedure ActualizarInterfaz;
     function  ValidarIntegridad: Boolean;
     procedure ConfigurarTablaVirtual;
@@ -133,7 +136,9 @@ var
 begin
   DatosRef := ADatosActuales;
   // Llamamos a tu formulario modal existente
-  Result := TfrmCajaReferenciaPago.Ejecutar(AInfo, 0, DatosRef);
+  Result := TfrmCajaReferenciaPago.Ejecutar(AInfo,
+                                            txtPendienteCobro.value,
+                                            DatosRef);
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
@@ -178,7 +183,7 @@ begin
       FieldDefs.Add('FACTOR_CAMBIO', ftCurrency);
       FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
       FieldDefs.Add('REFERENCIA', ftString, 255);
-      FieldDefs.Add('IMPORTE_ENTREGADO', ftCurrency);
+      FieldDefs.Add('IMPORTE_ENTREGADO', ftFloat);
       FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
       FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
       Open;
@@ -200,33 +205,44 @@ begin
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(
-                                                               Sender: TObject);
+  Sender: TObject);
 var
   fp: TFormaPagoInfo;
   dr: TDatosReferencia;
-  ImporteActual: Currency;
+  ImporteActual: Double;
   Edit: TcxCustomEdit;
+  v: Variant;
 begin
-  if (Sender is TcxCustomEdit) then
+  // Leer el valor DIRECTAMENTE del editor, no del dataset
+  ImporteActual := 0;
+  if (Sender is TcxCurrencyEdit) then
+  begin
+    v := TcxCurrencyEdit(Sender).EditingValue;
+    if not (VarIsNull(v) or VarIsEmpty(v)) then
+      ImporteActual := Double(v);
+  end
+  else if (Sender is TcxCustomEdit) then
   begin
     Edit := TcxCustomEdit(Sender);
     Edit.PostEditValue;
+    ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
   end;
-//  dbtvFormasPago.DataController.Post;
-  dr.EsCripto :=
-                (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
+
+  // No abrir referencia mientras se está escribiendo (esperar a que salga del campo)
+  // Solo actuar si es cripto/divisa Y el importe ya está completo
+  dr.EsCripto := (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
   dr.EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
-  ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
+  dr.Pendiente := txtPendienteCobro.Value;
   if FDatosCobro.EsDevolucion then
-  begin
     FDatosCobro.Recalcular;
-  end;
-  // Modo cobro normal: pedir referencia si procede (importe > 0)
-  if (abs(ImporteActual) > 0) and
+  if (Abs(ImporteActual) > 0) and
      ((FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S') or
-      dr.EsCripto or
-      dr.EsDivisa ) then
+      dr.EsCripto or dr.EsDivisa) then
   begin
+    // Sincronizar el importe antes de abrir el diálogo
+    FMemTablePagos.Edit;
+    FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := ImporteActual;
+    FMemTablePagos.Post;
     fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
     fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
     fp.RequiereReferencia :=
@@ -234,26 +250,69 @@ begin
     if TfrmCajaReferenciaPago.Ejecutar(fp, ImporteActual, dr) then
     begin
       FMemTablePagos.Edit;
-      FMemTablePagos.FieldByName('REFERENCIA').AsString := dr.Referencia;
-      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency :=
-                                                                dr.ImporteEuros;
-      FMemTablePAgos.FieldByName('IMPORTE_DIVISA').AsCurrency :=
-                                                               dr.ImporteDivisa;
+      FMemTablePagos.FieldByName('REFERENCIA').AsString      := dr.Referencia;
+      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := dr.ImporteEuros;
+      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat   := dr.ImporteDivisa;
       FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
       FMemTablePagos.Post;
     end
     else
     begin
-      // Si cancela la referencia, anulamos el importe por seguridad
       FMemTablePagos.Edit;
-      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
-      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
-      FMemTablePAgos.FieldByName('IMPORTE_DIVISA').AsCurrency := 0;
+      FMemTablePagos.FieldByName('REFERENCIA').AsString      := '';
+      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
+      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat   := 0;
       FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
       FMemTablePagos.Post;
     end;
   end;
   FDatosCobro.Recalcular;
+end;
+
+procedure TfrmMtoCajaFaseCobro.AjustarFormatoEditorActivo;
+var
+  EsCripto, EsDivisa: Boolean;
+  EditProps: TcxCurrencyEditProperties;
+  ActiveEdit: TcxCustomEdit;
+begin
+  EsCripto := (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
+  EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
+  // Accedemos al editor activo del grid, que YA existe y tiene handle
+  ActiveEdit := dbtvFormasPago.Controller.EditingController.Edit;
+  if not Assigned(ActiveEdit) then Exit;
+  if not (ActiveEdit is TcxCurrencyEdit) then Exit;
+
+  EditProps := TcxCurrencyEditProperties(
+                 TcxCurrencyEdit(ActiveEdit).ActiveProperties);
+
+  if EsCripto then
+  begin
+    EditProps.DecimalPlaces := 9;
+    EditProps.DisplayFormat := '#,##0.#########';
+    EditProps.EditFormat    := '#########0.#########';
+  end
+  else
+    if EsDivisa then
+    begin
+      EditProps.DecimalPlaces := 2;
+      EditProps.DisplayFormat := ',0.00';
+      EditProps.EditFormat    := ',0.00';
+    end
+    else
+    begin
+      EditProps.DecimalPlaces := 2;
+      EditProps.DisplayFormat := ',0.00 €';
+      EditProps.EditFormat    := ',0.00 €';
+    end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditChanged(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem);
+begin
+  inherited;
+    if AItem <> dbmImporte then
+      Exit;
+    AjustarFormatoEditorActivo;
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbmImporteGetDisplayText(
@@ -294,7 +353,7 @@ begin
     else
     begin
       if Importe > 0 then
-        AText := FormatFloat('#.#########0,000000000', Importe);
+        AText := FormatFloat('#,##0.000000000', Importe);
       if (vEsDivisa = 'N') then
         AText := FormatCurr(',0.00 €', Importe);
     end;

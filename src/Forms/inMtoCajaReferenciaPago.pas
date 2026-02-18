@@ -49,6 +49,11 @@ type
     edtTxHash: TcxTextEdit;
     txtDivisa: TcxTextEdit;
     btnGetDivisa: TcxButton;
+    lblEquivale2: TcxLabel;
+    txtPendiente: TcxCurrencyEdit;
+    cxLabel1: TcxLabel;
+    txtSobra: TcxCurrencyEdit;
+    cxLabel2: TcxLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
@@ -62,16 +67,18 @@ type
     procedure btnGetDivisaClick(Sender: TObject);
   private
     FFormaPagoInfo: TFormaPagoInfo;
-    FImporteOriginal: Currency;
+    FImporteOriginal, FPendiente: Double;
     FDatosResultado: TDatosReferencia;
     procedure ConfigurarInterfaz;
     procedure ActualizarCalculosDivisa;
     procedure CargarDivisasDisponibles;
     procedure CargarRedesBlockchain;
     function ValidarDatos: Boolean;
+    procedure GetDivisa;
+    procedure GetCripto;
   public
     class function Ejecutar(const AFormaPago: TFormaPagoInfo;
-                            AImporte: Currency;
+                            AImporte: Double;
                             var ADatosRef: TDatosReferencia): Boolean;
   end;
 
@@ -88,7 +95,7 @@ uses
 { TfrmCajaReferenciaPago }
 
 class function TfrmCajaReferenciaPago.Ejecutar(
-  const AFormaPago: TFormaPagoInfo; AImporte: Currency;
+  const AFormaPago: TFormaPagoInfo; AImporte: Double;
   var ADatosRef: TDatosReferencia): Boolean;
 var
   Frm: TfrmCajaReferenciaPago;
@@ -97,8 +104,6 @@ begin
   Frm := TfrmCajaReferenciaPago.Create(nil);
   try
     Frm.FFormaPagoInfo := AFormaPago;
-    Frm.FImporteOriginal := AImporte;
-    //Frm.FDatosResultado.Init;
     Frm.FDatosResultado := ADatosRef;
     if Frm.ShowModal = mrOk then
     begin
@@ -122,8 +127,8 @@ procedure TfrmCajaReferenciaPago.FormShow(Sender: TObject);
 begin
   inherited;
   ConfigurarInterfaz;
-  if FDatosResultado.EsDivisa then
-    btnGetDivisaClick(Sender);
+//  if FDatosResultado.EsDivisa then
+//    btnGetDivisaClick(Sender);
   // Poner foco en referencia
 //  if edtReferencia.Enabled and edtReferencia.Visible and edtReferencia.CanFocus then
 //    edtReferencia.SetFocus;
@@ -135,7 +140,7 @@ procedure TfrmCajaReferenciaPago.ConfigurarInterfaz;
 begin
   // Mostrar información de la forma de pago
   lblFormaPagoValor.Caption := FFormaPagoInfo.Descripcion;
-  edtImporte.Value := FImporteOriginal;
+  //edtImporte.Value := FImporteOriginal;
   edtImporte.Enabled := False; // No permitir cambiar el importe aquí
   // Determinar tipo de pago
 //  EsTarjeta := SameText(FFormaPagoInfo.TipoComportamiento, 'TARJETA');
@@ -144,6 +149,8 @@ begin
   // Configurar grupo de referencia
   txtDivisa.Text := FFormaPagoInfo.Codigo + ' - ' + FFormaPagoInfo.Descripcion;
   gbReferencia.Visible := FFormaPagoInfo.RequiereReferencia;
+  edtImporte.Value := FImporteOriginal;
+  txtPendiente.Value := FDatosResultado.Pendiente;
   edtReferencia.Text := FDatosResultado.Referencia;
   if FDatosResultado.EsCripto then
   begin
@@ -227,10 +234,10 @@ end;
 procedure TfrmCajaReferenciaPago.edtImporteDivisaPropertiesChange(Sender: TObject);
 begin
   // Si cambia el importe en divisa, recalcular el factor
-  if (edtImporteDivisa.Value > 0) and (FImporteOriginal > 0) then
-  begin
-    edtFactorCambio.Value := FImporteOriginal / edtImporteDivisa.Value;
-  end;
+//  if (edtImporteDivisa.Value > 0) and (FImporteOriginal > 0) then
+//  begin
+//    edtFactorCambio.Value := FImporteOriginal / edtImporteDivisa.Value;
+//  end;
 end;
 
 procedure TfrmCajaReferenciaPago.edtImportePropertiesChange(Sender: TObject);
@@ -240,24 +247,25 @@ end;
 
 procedure TfrmCajaReferenciaPago.ActualizarCalculosDivisa;
 var
-  Factor: Currency;
+  sDivisa: string;
+  ImporteEuros: Double;
 begin
-  Factor := edtFactorCambio.Value;
-  if Factor > 0 then
+  sDivisa := Copy(txtDivisa.Text, 1, 3);
+  if edtFactorCambio.Value > 0 then
   begin
-    // Calcular importe en divisa extranjera
-    edtImporteDivisa.Value := FImporteOriginal / Factor;
-    var sDivisa := Copy(txtDivisa.Text, 1, 3);
-    // Actualizar etiqueta de equivalencia
-    lblEquivale.Caption := Format('%m %s = %n %s',
-      [FImporteOriginal,
-       sDivisa,
-       edtImporteDivisa.Value,
-       'EUR']);
+    ImporteEuros := edtImporteDivisa.Value * edtFactorCambio.Value;
+    edtImporteDivisa.Value := ImporteEuros;
   end;
-  FDatosResultado.FactorCambio := Factor;
-  FDatosResultado.ImporteEuros := edtImporteDivisa.Value;
-  FDatosResultado.ImporteDivisa := edtImporte.Value;
+  if edtFactorCambio.Value > 0 then
+  begin
+    lblEquivale.Caption := Format('1 EUR = %.9n %s',
+      [edtFactorCambio.Value, sDivisa]);
+    lblEquivale2.Caption := Format('1 %s = %.2n EUR',
+        [sDivisa, 1/edtFactorCambio.Value]);
+  end;
+  FDatosResultado.FactorCambio  := edtFactorCambio.Value;  // precio mercado
+  FDatosResultado.ImporteDivisa := edtImporteDivisa.Value; // BTC entregados
+  FDatosResultado.ImporteEuros  := edtImporte.Value;       // EUR equivalentes
 end;
 
 function TfrmCajaReferenciaPago.ValidarDatos: Boolean;
@@ -321,14 +329,14 @@ begin
     FDatosResultado.FactorCambio := edtFactorCambio.Value;
     FDatosResultado.ImporteEuros := edtImporteDivisa.Value;
     FDatosResultado.ImporteDivisa := edtImporte.Value;
-  end
-  else
-  begin
-    FDatosResultado.CodigoDivisa := 'EUR';
-    FDatosResultado.FactorCambio := 1;
-    FDatosResultado.ImporteDivisa := edtImporte.Value;
-    FDatosResultado.ImporteEuros := edtImporte.Value;
   end;
+//  else
+//  begin
+//    FDatosResultado.CodigoDivisa := 'EUR';
+//    FDatosResultado.FactorCambio := 1;
+//    FDatosResultado.ImporteDivisa := edtImporte.Value;
+//    FDatosResultado.ImporteEuros := edtImporte.Value;
+//  end;
   if FDatosResultado.EsCripto then
   begin
     FDatosResultado.RedBlockchain := cbbRedBlockchain.Text;
@@ -343,7 +351,27 @@ begin
   ModalResult := mrCancel;
 end;
 
-procedure TfrmCajaReferenciaPago.btnGetDivisaClick(Sender: TObject);
+procedure TfrmCajaReferenciaPago.GetCripto;
+var
+  Moneda: String;
+  PrecioEnEuros: Double;  // 1 BTC = X EUR
+begin
+  Moneda := UpperCase(Copy(txtDivisa.Text, 1, 3));
+  PrecioEnEuros := GetPriceBinance(Moneda + 'EUR');
+  if (PrecioEnEuros > 0) then
+  begin
+    edtFactorCambio.Value  := 1 / PrecioEnEuros;
+    edtImporteDivisa.Value := edtImporte.Value * PrecioEnEuros;
+  end
+  else
+  begin
+    //ShowMessage('No se pudo obtener el precio de ' + Moneda);
+    edtFactorCambio.Value  := 0;
+    edtImporteDivisa.Value := 0;
+  end;
+end;
+
+procedure TfrmCajaReferenciaPago.GetDivisa;
 var
   API: TFrankfurterAPI;
   Tasa: Double;
@@ -358,6 +386,15 @@ begin
   finally
     API.Free;
   end;
+end;
+
+procedure TfrmCajaReferenciaPago.btnGetDivisaClick(Sender: TObject);
+begin
+  if FDatosResultado.EsCripto then
+    GetCripto
+  else
+    if FDatosResultado.EsDivisa then
+      GetDivisa;
 end;
 
 procedure TfrmCajaReferenciaPago.FormKeyDown(Sender: TObject; var Key: Word;
