@@ -93,7 +93,8 @@ uses
   inMtoCajaReferenciaPago in 'src\Forms\inMtoCajaReferenciaPago.pas' {frmCajaReferenciaPago},
   inLibFaseCobro in 'src\Lib\inLibFaseCobro.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
-  inLibDivCurr in 'src\Lib\inLibDivCurr.pas';
+  inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
+  inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale};
 
 var
   frmLogon: TfrmLogon;

@@ -384,6 +384,10 @@
         <DCCReference Include="src\Lib\inLibFaseCobro.pas"/>
         <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
         <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
+        <DCCReference Include="src\Forms\inMtoCajaSeleccionVale.pas">
+            <Form>frmMtoCajaSeleccionVale</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
