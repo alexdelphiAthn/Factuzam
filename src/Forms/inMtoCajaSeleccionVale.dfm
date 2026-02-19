@@ -42,11 +42,11 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         Transparent = True
       end
       object edtBuscar: TcxTextEdit
-        Left = 90
+        Left = 117
         Top = 16
         TabOrder = 0
         OnKeyDown = edtBuscarPropertiesKeyDown
-        Width = 260
+        Width = 233
       end
       object btnBuscar: TcxButton
         Left = 360
@@ -90,7 +90,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OptionsBehavior.GoToNextCellOnEnter = True
         OptionsSelection.CellSelect = False
         object colCodigo: TcxGridDBColumn
-          Caption = 'C\u00f3digo Vale'
+          Caption = 'C'#243'digo Vale'
           DataBinding.FieldName = 'CODIGO_VL'
           Options.Editing = False
           Width = 180
@@ -108,16 +108,16 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
           Width = 90
         end
         object colFechaEmision: TcxGridDBColumn
-          Caption = 'Fecha emisi\u00f3n'
+          Caption = 'Fecha emisi'#243'n'
           DataBinding.FieldName = 'FECHA_EMISION_VL'
           Options.Editing = False
-          Width = 120
+          Width = 139
         end
         object colCaducidad: TcxGridDBColumn
           Caption = 'Caducidad'
           DataBinding.FieldName = 'FECHA_CADUCIDAD_VL'
           Options.Editing = False
-          Width = 100
+          Width = 124
         end
         object colObservaciones: TcxGridDBColumn
           Caption = 'Observaciones'
