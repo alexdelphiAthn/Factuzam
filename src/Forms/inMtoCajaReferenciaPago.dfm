@@ -46,27 +46,23 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Left = 23
         Top = 23
         Caption = 'Forma de Pago:'
-        Enabled = False
         TabOrder = 0
       end
       object lblFormaPagoValor: TcxLabel
         Left = 162
         Top = 23
         Caption = 'Tarjeta Bancaria'
-        Enabled = False
         TabOrder = 1
       end
       object lblImporte: TcxLabel
         Left = 49
         Top = 61
         Caption = 'Importe:'
-        Enabled = False
         TabOrder = 2
       end
       object edtImporteDivisa: TcxCurrencyEdit
         Left = 144
         Top = 57
-        Enabled = False
         ParentFont = False
         Properties.DisplayFormat = ',0.00000000000 ;-,0.00000000000 '
         Style.Font.Charset = DEFAULT_CHARSET
