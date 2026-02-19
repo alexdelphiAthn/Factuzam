@@ -63,7 +63,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Enabled = False
         TabOrder = 2
       end
-      object edtImporte: TcxCurrencyEdit
+      object edtImporteDivisa: TcxCurrencyEdit
         Left = 144
         Top = 57
         Enabled = False
@@ -176,12 +176,12 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Left = 120
         Top = 66
         Properties.DisplayFormat = '0.0000000000'
-        Properties.ReadOnly = True
+        Properties.ReadOnly = False
         Properties.OnChange = edtFactorCambioPropertiesChange
         TabOrder = 0
         Width = 145
       end
-      object edtImporteDivisa: TcxCurrencyEdit
+      object edtImporteEuros: TcxCurrencyEdit
         Left = 350
         Top = 103
         Properties.ReadOnly = True

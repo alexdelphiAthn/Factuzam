@@ -774,6 +774,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnBuscarTClick
         end
         object btnF3: TcxButton
           Left = 18
@@ -794,6 +795,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnF3Click
         end
         object btnAtras: TcxButton
           Left = 89
@@ -965,6 +967,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Caption = 'Salir'
       ShortCut = 27
       OnExecute = actSalirExecute
+    end
+    object actBuscarT: TAction
+      Caption = 'actBuscarT'
+      ShortCut = 114
+      OnExecute = actBuscarTExecute
     end
   end
   object cxStyleRepository1: TcxStyleRepository

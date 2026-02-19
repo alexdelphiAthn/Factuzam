@@ -91,6 +91,7 @@ type
     dbtvFormasPagoColumn1: TcxGridDBColumn;
     dbtvFormasPagoColumn2: TcxGridDBColumn;
     dbtvFormasPagoColumn3: TcxGridDBColumn;
+    actBuscarT: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -105,6 +106,9 @@ type
     procedure txtValeEmitidoPropertiesEditValueChanged(Sender: TObject);
     procedure dbtvFormasPagoEditChanged(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem);
+    procedure btnBuscarTClick(Sender: TObject);
+    procedure btnF3Click(Sender: TObject);
+    procedure actBuscarTExecute(Sender: TObject);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -117,8 +121,9 @@ type
     procedure ConfigurarTablaVirtual;
     procedure ConfigurarModoDevolucion;
     procedure ConfigurarModoCobroNormal;
+    procedure RellenarPendienteEnFormaActual;
+    procedure EscribirImporteEnFormaActual(AImporte: Double);
   public
-    procedure ConfigurarCobro(ATotal: Currency; ASerie, ANumero: string);
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
     procedure AlRecalcularDatos(Sender: TObject);
     function AlRequerirReferencia(AInfo: TFormaPagoInfo;
@@ -193,10 +198,24 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.ConfigurarCobro(ATotal: Currency; ASerie,
-  ANumero: string);
+procedure TfrmMtoCajaFaseCobro.RellenarPendienteEnFormaActual;
+var
+  Pendiente: Currency;
 begin
+  if not (FMemTablePagos.Active and not FMemTablePagos.IsEmpty) then Exit;
 
+  if FDatosCobro.EsDevolucion then
+    Pendiente := FDatosCobro.ImporteDevolucionPendiente
+  else
+    Pendiente := FDatosCobro.ImportePendiente;
+
+  if Pendiente <= 0.01 then Exit;
+
+  // En devolución el importe va negativo (se entrega dinero al cliente)
+  if FDatosCobro.EsDevolucion then
+    EscribirImporteEnFormaActual(-Pendiente)
+  else
+    EscribirImporteEnFormaActual(Pendiente);
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarTablaVirtual;
@@ -204,69 +223,34 @@ begin
   FMemTablePagos := TVirtualTable.Create(Self);
 end;
 
-procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(Sender: TObject);
 var
-  fp: TFormaPagoInfo;
-  dr: TDatosReferencia;
   ImporteActual: Double;
-  Edit: TcxCustomEdit;
   v: Variant;
 begin
-  // Leer el valor DIRECTAMENTE del editor, no del dataset
+  // Origen: teclado del usuario
   ImporteActual := 0;
-  if (Sender is TcxCurrencyEdit) then
+  if Sender is TcxCurrencyEdit then
   begin
     v := TcxCurrencyEdit(Sender).EditingValue;
     if not (VarIsNull(v) or VarIsEmpty(v)) then
       ImporteActual := Double(v);
   end
-  else if (Sender is TcxCustomEdit) then
+  else if Sender is TcxCustomEdit then
   begin
-    Edit := TcxCustomEdit(Sender);
-    Edit.PostEditValue;
+    TcxCustomEdit(Sender).PostEditValue;
     ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
   end;
-
-  // No abrir referencia mientras se está escribiendo (esperar a que salga del campo)
-  // Solo actuar si es cripto/divisa Y el importe ya está completo
-  dr.EsCripto := (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
-  dr.EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
-  dr.Pendiente := txtPendienteCobro.Value;
+  if Abs(ImporteActual) < 0.0000000001 then
+    Exit;
+  // En devolución: si el usuario escribió positivo, lo invertimos
   if FDatosCobro.EsDevolucion then
-    FDatosCobro.Recalcular;
-  if (Abs(ImporteActual) > 0) and
-     ((FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S') or
-      dr.EsCripto or dr.EsDivisa) then
   begin
-    // Sincronizar el importe antes de abrir el diálogo
-    FMemTablePagos.Edit;
-    FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := ImporteActual;
-    FMemTablePagos.Post;
-    fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
-    fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
-    fp.RequiereReferencia :=
-        (FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S');
-    if TfrmCajaReferenciaPago.Ejecutar(fp, ImporteActual, dr) then
-    begin
-      FMemTablePagos.Edit;
-      FMemTablePagos.FieldByName('REFERENCIA').AsString      := dr.Referencia;
-      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := dr.ImporteEuros;
-      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat   := dr.ImporteDivisa;
-      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
-      FMemTablePagos.Post;
-    end
-    else
-    begin
-      FMemTablePagos.Edit;
-      FMemTablePagos.FieldByName('REFERENCIA').AsString      := '';
-      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
-      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat   := 0;
-      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
-      FMemTablePagos.Post;
-    end;
-  end;
-  FDatosCobro.Recalcular;
+    FDatosCobro.Recalcular; // actualiza pendiente antes de abrir diálogo
+    EscribirImporteEnFormaActual(-Abs(ImporteActual));
+  end
+  else
+    EscribirImporteEnFormaActual(ImporteActual);
 end;
 
 procedure TfrmMtoCajaFaseCobro.AjustarFormatoEditorActivo;
@@ -310,9 +294,68 @@ procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditChanged(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem);
 begin
   inherited;
-    if AItem <> dbmImporte then
-      Exit;
-    AjustarFormatoEditorActivo;
+  if AItem <> dbmImporte then
+    Exit;
+  AjustarFormatoEditorActivo;
+end;
+
+procedure TfrmMtoCajaFaseCobro.EscribirImporteEnFormaActual(AImporte: Double);
+var
+  fp: TFormaPagoInfo;
+  dr: TDatosReferencia;
+  EsDivisa, EsCripto: Boolean;
+begin
+  EsDivisa := FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S';
+  EsCripto  := FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S';
+  fp.Codigo             := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
+  fp.Descripcion        :=
+                      FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
+  fp.RequiereReferencia :=
+          FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S';
+  dr.Init;
+  dr.EsDivisa  := EsDivisa;
+  dr.EsCripto  := EsCripto;
+  dr.Pendiente := txtPendienteCobro.Value;
+  if EsDivisa or EsCripto or fp.RequiereReferencia then
+  begin
+    FMemTablePagos.Edit;
+    FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := AImporte;
+    FMemTablePagos.Post;
+    if TfrmCajaReferenciaPago.Ejecutar(fp, Abs(AImporte), dr) then
+    begin
+      FMemTablePagos.Edit;
+      FMemTablePagos.FieldByName('REFERENCIA').AsString       := dr.Referencia;
+      if EsDivisa then
+      begin
+        FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat    :=
+                                                               dr.ImporteDivisa;
+        FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency  :=
+                                                                dr.FactorCambio;
+        FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
+        FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat :=
+                                                                dr.ImporteEuros;
+      end;
+      FMemTablePagos.Post;
+    end
+    else
+    begin
+      FMemTablePagos.Edit;
+      FMemTablePagos.FieldByName('REFERENCIA').AsString       := '';
+      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
+      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat    := 0;
+      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
+      FMemTablePagos.Post;
+    end;
+  end
+  else
+  begin
+    FMemTablePagos.Edit;
+    FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := AImporte;
+    FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
+    FMemTablePagos.Post;
+  end;
+
+  FDatosCobro.Recalcular;
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbmImporteGetDisplayText(
@@ -414,7 +457,8 @@ begin
     txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
     btnConTicket.Enabled     := (FDatosCobro.ImportePendiente <= 0.01);
   end;
-
+  btnBuscarT.Enabled := (txtPendienteCobro.Value > 0.01);
+  btnF3.Enabled      := btnBuscarT.Enabled;
   btnF12.Enabled := btnConTicket.Enabled;
 end;
 
@@ -507,9 +551,21 @@ begin
   btnAtrasClick(Sender);
 end;
 
+procedure TfrmMtoCajaFaseCobro.btnF3Click(Sender: TObject);
+begin
+  inherited;
+  RellenarPendienteEnFormaActual;
+end;
+
 procedure TfrmMtoCajaFaseCobro.btnAtrasClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnBuscarTClick(Sender: TObject);
+begin
+  inherited;
+  RellenarPendienteEnFormaActual;
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
@@ -523,6 +579,12 @@ begin
     if dbtvFormasPago.Controller.SelectedRecordCount > 0 then
       dbtvFormasPago.Controller.FocusedColumn := dbmImporte;
   end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.actBuscarTExecute(Sender: TObject);
+begin
+  inherited;
+  RellenarPendienteEnFormaActual;
 end;
 
 procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
