@@ -64,11 +64,6 @@ type
     procedure btnGenerarClick(Sender: TObject);
     procedure chkAbonarClick(Sender: TObject);
     procedure chkDuplicarClick(Sender: TObject);
-
-  private
-
-  public
-    { Public declarations }
   end;
 
 var
@@ -96,9 +91,10 @@ var
   IsError : Boolean;
 begin
   IsError := False;
-  with dmmFacturas do
+
+  VAR ParentForm := TfrmMtoFacturas(Owner);
+  with ParentForm.tdmDataModule as TdmFacturas do
   begin
-    with unqryTablaG do
 //    if (ExisteSerieEmpresa(FieldByName('SERIE_FACTURA').AsString,
 //                           FieldByName('CODIGO_EMPRESA_FACTURA').AsString,
 //                           'FC')) then
@@ -146,17 +142,14 @@ begin
         Screen.Cursor:=crHourglass;
         with dmmFacturas.unstrdprcDuplicarFactura do
         begin
-         //connection.StartTransaction;
          ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
          ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
          ParamByName('pidcodigo_empresa').AsString :=
                     unqryTablaG.FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
          ParamByName('pUSUARIO').AsString := oUser;
-         //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
          ParamByName('pidseriefacturaabono').AsString :=  cmbSerieFactura.Text;
          ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
          ExecProc;
-         //connection.Commit;
          edtSerieFacAbono.Text := ParamByName('pidseriefacturaabono').AsString;
          edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
          dmmFacturas.unqryTablaG.Refresh;
@@ -182,18 +175,20 @@ end;
 
 procedure TfrmGenFacRec.FormCreate(Sender: TObject);
 begin
-//  Self.Position := poScreenCenter;
-  with inMtoFacturas.dmmFacturas do
+ if Owner is TfrmMtoFacturas then
   begin
-    if unqrySeries.Active = False then
-      unqrySeries.Open;
-    cmbSerieFactura.Properties.ListSource := dsSeries;
-    edtNumFacOrigen.Text := unqryTablaG.findField('NRO_FACTURA').AsString;
-    edtSerieOrigen.Text := unqryTablaG.findField('SERIE_FACTURA').AsString;
-  end;
-  cmbSerieFactura.Text :=
+    VAR ParentForm := TfrmMtoFacturas(Owner);
+    with ParentForm.tdmDataModule as TdmFacturas do
+    begin
+      if unqrySeries.Active = False then
+        unqrySeries.Open;
+      cmbSerieFactura.Properties.ListSource := dsSeries;
+      cmbSerieFactura.Text :=
               cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
-  dtFecha.Date := Trunc(Now);
+      edtNumFacOrigen.Text := unqryTablaG.FieldByName('NRO_FACTURA').AsString;
+    end;
+    dtFecha.Date := Trunc(Now);
+  end;
 end;
 
 end.
