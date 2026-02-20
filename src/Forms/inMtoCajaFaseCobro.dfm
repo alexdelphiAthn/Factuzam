@@ -759,7 +759,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Top = 348
           Width = 155
           Height = 51
-          Caption = 'Buscar &T'
+          Caption = 'Rellenar'
           Colors.Default = clBtnFace
           Colors.Normal = clBtnFace
           Colors.Hot = clSilver

@@ -82,13 +82,15 @@ var
   fPreview: TfrmMtoPreviewExcel; // El formulario que creaste en el paso 1
 begin
   fPreview := TfrmMtoPreviewExcel.Create(Application);
+  var ParentForm := TfrmMtoFacturas(Owner);
+  with (ParentForm.tdmDataModule as TdmFacturas) do
   try
-    var NombreSugerido := ObtenerNombreFactura(dmmFacturas.unqryTablaG,
+    var NombreSugerido := ObtenerNombreFactura(unqryTablaG,
                                                '.xlsx');
     fPreview.DialogoGuardar.FileName := NombreSugerido;
     ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
-                               dmmFacturas.unqryTablaG,
-                               dmmFacturas.unqryLinFac);
+                               unqryTablaG,
+                               unqryLinFac);
     fPreview.ShowModal;
   finally
     fPreview.Free;
@@ -315,8 +317,6 @@ begin
     Style.AlignHorz := ssahRight;
   end;
   var RefTotalBase := GetRef(iRow, COL_TOTAL);
-
-  // 2. TOTAL IMPUESTOS
   Inc(iRow);
   W(Sheet, iRow, COL_PIVA, 'Total Impuestos (IVA+RE):', True, ssahRight);
   with Sheet.CreateCell(iRow, COL_TOTAL) do
@@ -420,9 +420,12 @@ end;
 
 procedure TfrmPrintFac.preparar_consulta;
 begin
+  VAR ParentForm := TfrmMtoFacturas(Owner);
+  with (ParentForm.tdmDataModule as TdmFacturas) do
+  begin
   if rbActual.Checked = true then
   begin
-    with dmmFacturas.unqryFacPrint do
+    with unqryFacPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -432,10 +435,10 @@ begin
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
     end;
-    dmmFacturas.unqryFacPrint.Open;
+    unqryFacPrint.Open;
     //dmmFacturas.fxdsPrintFac.OpenDataSource;
-    dmmFacturas.fxdsPrintFac.UpdateBounds;
-    with dmmFacturas.unqryLinFacPrint do
+    fxdsPrintFac.UpdateBounds;
+    with unqryLinFacPrint do
     begin
       Params.Clear;
       SQL.Text := '       SELECT * ' +
@@ -446,14 +449,14 @@ begin
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
       end;
-    dmmFacturas.unqryLinFacPrint.MasterSource := dmmFacturas.dsFacPrint;
-    dmmFacturas.unqryLinFacPrint.Open;
+    unqryLinFacPrint.MasterSource := dsFacPrint;
+    unqryLinFacPrint.Open;
     //dmmFacturas.fxdstPrintLinFac.OpenDataSource;
-    dmmFacturas.fxdstPrintLinFac.UpdateBounds;
+    fxdstPrintLinFac.UpdateBounds;
   end;
   if rbRangoFechas.Checked = true then
   begin
-    with dmmFacturas.unqryFacPrint do
+    with unqryFacPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -464,10 +467,10 @@ begin
       Params.ParamByName('fecha_ini').Value := dedDesde.Date;
       Params.ParamByName('fecha_fin').Value := dedHasta.Date;
     end;
-    dmmFacturas.unqryFacPrint.Open;
+    unqryFacPrint.Open;
     //dmmFacturas.fxdsPrintFac.OpenDataSource;
-    dmmFacturas.fxdsPrintFac.UpdateBounds;
-    with dmmFacturas.unqryLinFacPrint do
+    fxdsPrintFac.UpdateBounds;
+    with unqryLinFacPrint do
     begin
       Params.Clear;
       SQL.Text := '    SELECT *  ' +
@@ -485,8 +488,9 @@ begin
       Params.ParamByName('fecha_fin').DataType := ftDate;
       Params.ParamByName('fecha_fin').Value := dedHasta.date;
       end;
-    dmmFacturas.unqryLinFacPrint.Open;
-    dmmFacturas.fxdstPrintLinFac.UpdateBounds;
+    unqryLinFacPrint.Open;
+    fxdstPrintLinFac.UpdateBounds;
+  end;
   end;
   ConfigurarNombrePDF;
 end;
