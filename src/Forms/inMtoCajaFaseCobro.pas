@@ -1,7 +1,5 @@
 ﻿unit inMtoCajaFaseCobro;
-
 interface
-
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
@@ -18,7 +16,6 @@ uses
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
   inMtoCajaReferenciaPago;
-
 type
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
@@ -129,11 +126,8 @@ type
     function AlRequerirReferencia(AInfo: TFormaPagoInfo;
                                   ADatosActuales: TDatosReferencia): Boolean;
   end;
-
 implementation
-
 {$R *.dfm}
-
 function TfrmMtoCajaFaseCobro.AlRequerirReferencia(AInfo: TFormaPagoInfo;
                                      ADatosActuales: TDatosReferencia): Boolean;
 var
@@ -145,30 +139,24 @@ begin
                                             txtPendienteCobro.value,
                                             DatosRef);
 end;
-
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
 begin
   inherited;
   ConfigurarTablaVirtual; // Crea FMemTablePagos
-
   // 1. Instanciamos la lógica pasándole la tabla que acabamos de crear
   FDatosCobro := TDatosFaseCobro.Create(FMemTablePagos);
-
   // 2. Asignamos los eventos para que la lógica "hable" con el formulario
   FDatosCobro.OnRecalculado := AlRecalcularDatos;
   FDatosCobro.OnRequiereReferencia := AlRequerirReferencia;
-
   CargarFormasPago;
   dsFormasPago.DataSet := FMemTablePagos;
 end;
-
 procedure TfrmMtoCajaFaseCobro.FormDestroy(Sender: TObject);
 begin
   inherited;
   if Assigned(FDatosCobro) then
     FDatosCobro.Free;
 end;
-
 procedure TfrmMtoCajaFaseCobro.CargarFormasPago;
 var
   qry: TUniQuery;
@@ -197,32 +185,26 @@ begin
     qry.Free;
   end;
 end;
-
 procedure TfrmMtoCajaFaseCobro.RellenarPendienteEnFormaActual;
 var
   Pendiente: Currency;
 begin
   if not (FMemTablePagos.Active and not FMemTablePagos.IsEmpty) then Exit;
-
   if FDatosCobro.EsDevolucion then
     Pendiente := FDatosCobro.ImporteDevolucionPendiente
   else
     Pendiente := FDatosCobro.ImportePendiente;
-
   if Pendiente <= 0.01 then Exit;
-
   // En devolución el importe va negativo (se entrega dinero al cliente)
   if FDatosCobro.EsDevolucion then
     EscribirImporteEnFormaActual(-Pendiente)
   else
     EscribirImporteEnFormaActual(Pendiente);
 end;
-
 procedure TfrmMtoCajaFaseCobro.ConfigurarTablaVirtual;
 begin
   FMemTablePagos := TVirtualTable.Create(Self);
 end;
-
 procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(Sender: TObject);
 var
   ImporteActual: Double;
@@ -252,7 +234,6 @@ begin
   else
     EscribirImporteEnFormaActual(ImporteActual);
 end;
-
 procedure TfrmMtoCajaFaseCobro.AjustarFormatoEditorActivo;
 var
   EsCripto, EsDivisa: Boolean;
@@ -265,10 +246,8 @@ begin
   ActiveEdit := dbtvFormasPago.Controller.EditingController.Edit;
   if not Assigned(ActiveEdit) then Exit;
   if not (ActiveEdit is TcxCurrencyEdit) then Exit;
-
   EditProps := TcxCurrencyEditProperties(
                  TcxCurrencyEdit(ActiveEdit).ActiveProperties);
-
   if EsCripto then
   begin
     EditProps.DecimalPlaces := 9;
@@ -289,7 +268,6 @@ begin
       EditProps.EditFormat    := ',0.00 €';
     end;
 end;
-
 procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditChanged(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem);
 begin
@@ -354,10 +332,8 @@ begin
     FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
     FMemTablePagos.Post;
   end;
-
   FDatosCobro.Recalcular;
 end;
-
 procedure TfrmMtoCajaFaseCobro.dbmImporteGetDisplayText(
   Sender: TcxCustomGridTableItem;
   ARecord: TcxCustomGridRecord;
@@ -403,71 +379,75 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
+procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura:
+                                                       TFacturaTotales);
 var
   PorcentajeMedio: Double;
 begin
 if TotalesFactura = nil then Exit;
-
-  // Pasamos los totales a la lógica
   FDatosCobro.CargarDatosFactura(TotalesFactura);
-
-  // Configuramos datos del cliente si existen en la factura
-  // Nota: Deberás ajustar estos campos según tu TFacturaTotales real
-  // FDatosCobro.EstablecerCliente(...)
-
-  // Pintamos datos estáticos (informativos)
   txtCantidadLineas.Text := FormatFloat('0.##',
                                         TotalesFactura.Totales.TotalCantidades);
   txtBrutoLineas.Value := TotalesFactura.Totales.TotalBruto;
   txtTotalDtoLineal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
   if TotalesFactura.Totales.TotalBruto <> 0 then
-    txtPorcenDtoLineal.Text := FormatFloat('0.## %', (TotalesFactura.Totales.TotalDescuentosLineas / TotalesFactura.Totales.TotalBruto) * 100)
+    txtPorcenDtoLineal.Text := FormatFloat('0.## %',
+                             (TotalesFactura.Totales.TotalDescuentosLineas /
+                              TotalesFactura.Totales.TotalBruto) * 100)
   else
     txtPorcenDtoLineal.Text := '0 %';
-  // Forzamos un recálculo inicial para llenar el resto de campos
   FDatosCobro.Recalcular;
 end;
 
 procedure TfrmMtoCajaFaseCobro.AlRecalcularDatos(Sender: TObject);
+var
+  EsTotal0: Boolean;
 begin
   txtDtoGlobal.Value    := FDatosCobro.ImporteDescuentoGlobal;
   txtTotalPagar.Value   := FDatosCobro.ImporteTotalPagar;
   txtCambio.Value       := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value := FDatosCobro.ImporteValeRecogido;
-
-  // Escribimos siempre el valor calculado por la lógica.
-  // El flag evita que esa escritura dispare de nuevo el OnEditValueChanged.
   FActualizandoVale := True;
   try
     txtValeEmitido.Value := FDatosCobro.ImporteValeEmitido;
   finally
     FActualizandoVale := False;
   end;
-
+  EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
   if FDatosCobro.EsDevolucion then
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
     txtPendienteCuenta.Value := 0;
-    btnConTicket.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01);
+    btnConTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
+    btnSinTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
+    btnSinPrecios.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
   end
   else
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImportePendiente;
     txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
-    btnConTicket.Enabled     := (FDatosCobro.ImportePendiente <= 0.01);
+    btnConTicket.Enabled  := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
+    btnSinTicket.Enabled  := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
+    btnSinPrecios.Enabled := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
   end;
-  btnBuscarT.Enabled := (txtPendienteCobro.Value > 0.01);
+  btnBuscarT.Enabled := (txtPendienteCobro.Value > 0.01) and not EsTotal0;
   btnF3.Enabled      := btnBuscarT.Enabled;
   btnF12.Enabled := btnConTicket.Enabled;
+  btnF11.Enabled := btnSinTicket.Enabled;
+  btnF10.Enabled := btnSinPrecios.Enabled;
 end;
 
 function TfrmMtoCajaFaseCobro.ValidarIntegridad: Boolean;
+var
+  EsTotal0: Boolean;
 begin
-  if FDatosCobro.EsDevolucion then
-    Result := FDatosCobro.ImporteDevolucionPendiente <= 0.01
+  EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
+  if EsTotal0 then
+    Result := True
+  else if FDatosCobro.EsDevolucion then
+    Result := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
   else
-    Result := txtPendienteCobro.Value <= 0.001;
+    Result := (txtPendienteCobro.Value <= 0.01);
 end;
 
 procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;
@@ -477,7 +457,6 @@ begin
   txtCambio.Value         := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value   := FDatosCobro.ImporteValeRecogido;
   txtValeEmitido.Value    := FDatosCobro.ImporteValeEmitido;
-
   if FDatosCobro.EsDevolucion then
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
@@ -490,15 +469,12 @@ begin
     txtPendienteCuenta.Value := FDatosCobro.ImportePendiente;
     btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
   end;
-
   btnF12.Enabled := btnConTicket.Enabled;
-
   if FDatosCobro.EsDevolucion then
     ConfigurarModoDevolucion
   else
     ConfigurarModoCobroNormal;
 end;
-
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoDevolucion;
 begin
   // Descuento global no aplica en devolución
@@ -509,7 +485,6 @@ begin
   // Etiqueta "Pendiente de cobro" → "Pendiente de devolver"
   lblDescuento4.Caption := 'Pendiente de devolver';
 end;
-
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
 begin
   txtPorcenDtoGlobal.Enabled := True;
@@ -523,7 +498,6 @@ procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(
 begin
   if not FDatosCobro.EsDevolucion then Exit;
   if FActualizandoVale then Exit;
-
   FActualizandoVale := True;
   try
     FDatosCobro.EmitirVale(txtValeEmitido.Value);
@@ -544,13 +518,11 @@ begin
   end;
   ModalResult := mrOk;
 end;
-
 procedure TfrmMtoCajaFaseCobro.btnESCClick(Sender: TObject);
 begin
   inherited;
   btnAtrasClick(Sender);
 end;
-
 procedure TfrmMtoCajaFaseCobro.btnF3Click(Sender: TObject);
 begin
   inherited;
@@ -561,7 +533,6 @@ procedure TfrmMtoCajaFaseCobro.btnAtrasClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
 end;
-
 procedure TfrmMtoCajaFaseCobro.btnBuscarTClick(Sender: TObject);
 begin
   inherited;
@@ -580,7 +551,6 @@ begin
       dbtvFormasPago.Controller.FocusedColumn := dbmImporte;
   end;
 end;
-
 procedure TfrmMtoCajaFaseCobro.actBuscarTExecute(Sender: TObject);
 begin
   inherited;
@@ -592,7 +562,6 @@ begin
   inherited;
   btnAtrasClick(Sender);
 end;
-
 procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
   Sender: TObject);
 var
@@ -606,6 +575,5 @@ begin
   FDatosCobro.AplicarDescuentoGlobal(txtPorcenDtoGlobal.Value);
   FDatosCobro.Recalcular;
 end;
-
 
 end.
