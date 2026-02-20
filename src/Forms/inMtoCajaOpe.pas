@@ -135,6 +135,7 @@ type
     procedure actCobroExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
     procedure ForzarDespliegue(Sender: TObject);
@@ -177,7 +178,7 @@ implementation
 
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  inLibFacturas;
+  inLibFacturas, inLibGenBusq;
 
 procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
@@ -382,6 +383,34 @@ begin
   end;
 end;
 
+function TfrmMtoOpeCaja.BuscarArticulo:String;
+begin
+  var unqryCon:TUniQuery := TUniQuery.Create(nil);
+  try
+    unqryCon.Connection := oConn;
+    unqryCon.SQL.Text := 'SELECT * ' +
+                         '  FROM vi_art_busquedas ' +
+                         ' WHERE (codigo_tarifa = :TARIFA' +
+                         '    OR codigo_tarifa is null) ' +
+                         '   AND FECHA_DESDE_TARIFA < :FECHA ' +
+                         '   AND (FECHA_HASTA_TARIFA IS NULL ' +
+                         '        OR FECHA_HASTA_TARIFA > :FECHA)';
+    unqryCon.ParamByName('TARIFA').AsString :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+    unqryCon.PArambyName('FECHA').AsDateTime := FFecha;
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
+                                       unqryCon,
+                                       'frmMtoArtFacSearch')
+                                     then
+      Result := unqryCon.FieldByName('CODIGO_ARTICULO').AsString
+    else
+      Result := '';
+  finally
+    unqryCon.Free;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.tvArticuloPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
@@ -391,23 +420,6 @@ var
   NumAtributos: Integer;
 begin
   CodigoInput := VarToStr(DisplayValue);
-  if Trim(CodigoInput) = '' then
-  begin
-    if MessageDlg('No ha indicado ningún artículo.' + sLineBreak +
-                  '¿Desea ELIMINAR esta línea?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-       Error := False;
-       DisplayValue := '';
-       PostMessage(Self.Handle, WM_CANCELAR_LINEA, 0, 0);
-    end
-    else
-    begin
-       Error := True;
-       ErrorText := 'El código de artículo es obligatorio.';
-    end;
-    Exit;
-  end;
   if RellenarDatosArticuloEnDataset(CodigoInput) then
   begin
     CodigoPadre  := DatosCaja.cdsLineas.FieldByName(
@@ -876,9 +888,22 @@ begin
   if (AItem = tvArticulo) then
   begin
     tmrBusq.Enabled := False;
-    AEdit.PostEditValue; // Guardamos valor
-    if DatosCaja.cdsLineas.State = dsBrowse then
-       DatosCaja.cdsLineas.Edit;
+    if Trim(VarToStr(AEdit.EditValue)) = '' then
+    begin
+      var sCodigo := BuscarArticulo;
+      if sCodigo <> '' then
+      begin
+        AEdit.EditValue := sCodigo;
+        AEdit.PostEditValue;
+      end
+      else
+      begin
+        Key := 0;
+        Exit;
+      end;
+    end;
+    AEdit.PostEditValue; // Guardamos valor    if DatosCaja.cdsLineas.State = dsBrowse then
+    DatosCaja.cdsLineas.Edit;
     var CodArticuloActual := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
     ActualizarColumnasDinamicas(CodArticuloActual);

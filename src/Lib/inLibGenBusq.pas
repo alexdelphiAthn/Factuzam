@@ -18,6 +18,7 @@ type
       var ADataSet: TUniQuery;
       const AName:String
     ): Boolean; overload;
+
     class function EjecutarBusqueda(
       const ACaption: string;
       const ASql: string;
@@ -26,7 +27,9 @@ type
       const AName:String
     ): Boolean; overload;
   end;
+
 implementation
+
 class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
                                                var ADataSet: TUniQuery;
                                                const AName:String): Boolean;
