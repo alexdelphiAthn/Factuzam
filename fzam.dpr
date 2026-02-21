@@ -94,7 +94,8 @@ uses
   inLibFaseCobro in 'src\Lib\inLibFaseCobro.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
   inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
-  inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale};
+  inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
+  inMtoCajaParam in 'src\Core\inMtoCajaParam.pas' {frmMtoCajaParam};
 
 var
   frmLogon: TfrmLogon;
@@ -131,5 +132,6 @@ begin
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   Application.CreateForm(TfrmCajaReferenciaPago, frmCajaReferenciaPago);
+  Application.CreateForm(TfrmMtoCajaParam, frmMtoCajaParam);
   Application.Run;
 end.

@@ -388,6 +388,10 @@
             <Form>frmMtoCajaSeleccionVale</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Core\inMtoCajaParam.pas">
+            <Form>frmMtoCajaParam</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

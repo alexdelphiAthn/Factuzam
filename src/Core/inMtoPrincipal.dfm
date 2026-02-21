@@ -9,6 +9,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1136
   ExplicitHeight = 612
   TextHeight = 19
@@ -1303,6 +1305,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Men'#250' de Caja'
         ShortCut = 116
         OnClick = mnuMenuCajaClick
+      end
+      object mnuCajaParam: TMenuItem
+        Caption = '&Par'#225'metros de Caja'
+        ShortCut = 16500
+        OnClick = mnuCajaParamClick
       end
     end
     object Utilidades1: TMenuItem
