@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 19/02/2026 17:01:28
+ Date: 21/02/2026 08:21:23
 */
 
 SET NAMES utf8mb4;
@@ -2365,7 +2365,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-19 07:32:11', '2026-02-19 07:32:11', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-21 08:05:22', '2026-02-21 08:05:22', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -2624,6 +2624,25 @@ INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoArtProvSearch', 'tvP
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Index', '4', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Visible', 'True', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Width', '140', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerBusqArtTarifaOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerCaducidadDefVale', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerChkStockOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerCodEmpleadoDefecto', '1', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerDefPrinter', 'Generic', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerDefTarifa', 'PVP', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerDiasCaducidadVale', '365', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerFillEmpleadoDefecto', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerFormatoImpPredet', '', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerMaxOpPending', '5', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerMoverLineaIdentif', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerRecuperaValePIN', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCliFacSearch', 'btnAceptar_Caption', '&Aceptar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCliFacSearch', 'btnCancelar_Caption', '&Cancelar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` VALUES ('Todos', 'frmMtoCliFacSearch', 'btnCancelar1_Caption', '&Cancelar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador');
