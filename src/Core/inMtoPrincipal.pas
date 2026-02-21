@@ -54,10 +54,12 @@ type
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
+    mnuCajaParam: TMenuItem;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure mnuCajaParamClick(Sender: TObject);
 //    procedure actSalirExecute(Sender: TObject);
 
   private
@@ -382,6 +384,7 @@ begin
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
+
   function GetKeyShiftState: TShiftState;
   begin
     Result := [];
@@ -413,8 +416,6 @@ begin
   begin
     if (pcPrincipal.PageCount = 0) then
     begin
-      // Usar PostMessage garantiza que el mensaje de cierre se procese
-      // después de que termine la cadena de eventos de teclado actual.
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);
       Result := True;
       Exit;
@@ -542,11 +543,6 @@ begin
   end;
 end;
 
-//procedure TfrmMtoPrincipal.WMFreeControl(var Message: TMessage);
-//begin
-//  TObject(Message.LParam).Free;
-//end;
-
 procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
 var
   frmModalGenFilter: TfrmModalGenFilter;
@@ -600,6 +596,22 @@ procedure TfrmMtoPrincipal.mnuArticulosClick(Sender: TObject);
 begin
   if (mnuArticulos.Visible) then
     ShowMto(Self, 'Articulos');
+end;
+
+procedure TfrmMtoPrincipal.mnuCajaParamClick(Sender: TObject);
+var
+  frmMtoMenuCaja: TfrmMtoMenuCaja;
+begin
+  inherited;
+  if mnuMenuCaja.Visible then
+  begin
+    try
+      frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Self);
+      frmMtoMenuCaja.ShowModal;
+    finally
+      FreeAndNil(frmMtoMenuCaja);
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuClientesClick(Sender: TObject);
