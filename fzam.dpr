@@ -131,7 +131,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmCajaReferenciaPago, frmCajaReferenciaPago);
-  Application.CreateForm(TfrmMtoCajaParam, frmMtoCajaParam);
   Application.Run;
 end.

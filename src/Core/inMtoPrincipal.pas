@@ -167,6 +167,7 @@ uses inLibUser,
   inLibDir,
   inMtoSplash,
   inMtoCajaMenu,
+  inMtoCajaParam,
   inMtoModalGenFilter;
 
 {$R *.dfm}
@@ -600,16 +601,16 @@ end;
 
 procedure TfrmMtoPrincipal.mnuCajaParamClick(Sender: TObject);
 var
-  frmMtoMenuCaja: TfrmMtoMenuCaja;
+  frmMtoCajaParam: TfrmMtoCajaParam;
 begin
   inherited;
   if mnuMenuCaja.Visible then
   begin
     try
-      frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Self);
-      frmMtoMenuCaja.ShowModal;
+      frmMtoCajaParam := TfrmMtoCajaParam.Create(Self);
+      frmMtoCajaParam.ShowModal;
     finally
-      FreeAndNil(frmMtoMenuCaja);
+      FreeAndNil(frmMtoCajaParam);
     end;
   end;
 end;

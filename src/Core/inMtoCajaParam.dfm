@@ -3,7 +3,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   Top = 0
   Caption = 'Par'#225'metros de Caja'
   ClientHeight = 653
-  ClientWidth = 758
+  ClientWidth = 747
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,24 +15,24 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   object Panel2: TPanel
     Left = 0
     Top = 57
-    Width = 758
+    Width = 747
     Height = 596
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 963
+    ExplicitWidth = 741
     ExplicitHeight = 587
     object cxVerticalGrid1: TcxVerticalGrid
       Left = 1
       Top = 1
-      Width = 756
+      Width = 745
       Height = 594
       Align = alClient
-      OptionsView.RowHeaderWidth = 304
+      OptionsView.RowHeaderWidth = 327
       TabOrder = 0
-      ExplicitWidth = 961
+      ExplicitWidth = 739
       ExplicitHeight = 585
       Version = 1
-      object cxVerticalGrid1EditorRow1: TcxEditorRow
+      object vgerChkExistOnly: TcxEditorRow
         Properties.Caption = 'Permitir s'#243'lo art'#237'culos que existan'
         Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.DataBinding.ValueType = 'Boolean'
@@ -42,7 +42,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 0
         Version = 1
       end
-      object cxVerticalGrid1EditorRow2: TcxEditorRow
+      object vgerChkStockOnly: TcxEditorRow
         Properties.Caption = 'Permitir vender sin stock'
         Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.Value = 'True'
@@ -51,8 +51,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 1
         Version = 1
       end
-      object cxVerticalGrid1EditorRow3: TcxEditorRow
-        Properties.Caption = 'Presentar selecci'#243'n de Caja'
+      object vgerShowCajaSelection: TcxEditorRow
+        Properties.Caption = 'Presentar selecci'#243'n de caja'
         Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.Value = 'True'
         ID = 2
@@ -60,8 +60,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 2
         Version = 1
       end
-      object cxVerticalGrid1EditorRow4: TcxEditorRow
-        Properties.Caption = 'Mantener empleado por Defecto'
+      object vgerFillEmpleadoDefecto: TcxEditorRow
+        Properties.Caption = 'Rellenar empleado por defecto al abrir'
         Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.Value = 'False'
         ID = 3
@@ -69,8 +69,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 3
         Version = 1
       end
-      object cxVerticalGrid1EditorRow5: TcxEditorRow
-        Properties.Caption = 'Tarifa por defecto en Caja'
+      object vgerDefTarifa: TcxEditorRow
+        Properties.Caption = 'Tarifa por defecto en caja'
         Properties.EditPropertiesClassName = 'TcxTextEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
         Properties.Value = 'PVP'
@@ -79,7 +79,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 4
         Version = 1
       end
-      object cxVerticalGrid1EditorRow6: TcxEditorRow
+      object vgerMaxOpPending: TcxEditorRow
         Properties.Caption = 'N'#250'mero de operaciones pendientes'
         Properties.EditPropertiesClassName = 'TcxSpinEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
@@ -89,8 +89,9 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 5
         Version = 1
       end
-      object cxVerticalGrid1EditorRow7: TcxEditorRow
-        Properties.Caption = 'Pedir Referencia en devoluciones'
+      object vgerReqRefDevolucion: TcxEditorRow
+        Properties.Caption = 'Pedir referencia en devoluciones'
+        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.DataBinding.ValueType = 'Boolean'
         Properties.Value = True
         ID = 6
@@ -98,8 +99,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 6
         Version = 1
       end
-      object cxVerticalGrid1EditorRow8: TcxEditorRow
-        Properties.Caption = 'Recuperar Vale s'#243'lo con PIN'
+      object vgerRecuperaValePIN: TcxEditorRow
+        Properties.Caption = 'Recuperar vale s'#243'lo con PIN'
         Properties.DataBinding.ValueType = 'Boolean'
         Properties.Value = False
         ID = 7
@@ -107,8 +108,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 7
         Version = 1
       end
-      object cxVerticalGrid1EditorRow9: TcxEditorRow
-        Properties.Caption = 'Caducidad por defecto en Vale'
+      object vgerCaducidadDefVale: TcxEditorRow
+        Properties.Caption = 'Caducidad por defecto en vale'
         Properties.DataBinding.ValueType = 'Boolean'
         Properties.Value = False
         ID = 8
@@ -116,8 +117,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 8
         Version = 1
       end
-      object cxVerticalGrid1EditorRow10: TcxEditorRow
-        Properties.Caption = 'D'#237'as hasta caducidad en Vale'
+      object vgerDiasCaducidadVale: TcxEditorRow
+        Properties.Caption = 'D'#237'as hasta caducidad en vale'
         Properties.EditPropertiesClassName = 'TcxTextEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
         Properties.DataBinding.ValueType = 'Integer'
@@ -127,8 +128,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 9
         Version = 1
       end
-      object cxVerticalGrid1EditorRow11: TcxEditorRow
-        Properties.Caption = 'Aviso en Art'#237'culos sin Stock'
+      object vgerAvisoStockWarning: TcxEditorRow
+        Properties.Caption = 'Aviso en art'#237'culos sin stock'
         Properties.EditPropertiesClassName = 'TcxTextEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
         Properties.Value = 'Art'#237'culo sin Stock. Compruebe Stock en almac'#233'n'
@@ -137,8 +138,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 10
         Version = 1
       end
-      object cxVerticalGrid1EditorRow12: TcxEditorRow
-        Properties.Caption = 'Nombre impresora de Tickets'
+      object vgerDefPrinter: TcxEditorRow
+        Properties.Caption = 'Nombre impresora de tickets'
         Properties.EditPropertiesClassName = 'TcxTextEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
         Properties.Value = 'Generic'
@@ -147,8 +148,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 11
         Version = 1
       end
-      object cxVerticalGrid1EditorRow13: TcxEditorRow
-        Properties.Caption = 'Tipo de Impresi'#243'n Tickets'
+      object vgerTipoImpresion: TcxEditorRow
+        Properties.Caption = 'Tipo de Impresi'#243'n tickets'
         Properties.EditPropertiesClassName = 'TcxComboBoxProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
         Properties.EditProperties.Items.Strings = (
@@ -161,7 +162,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 12
         Version = 1
       end
-      object cxVerticalGrid1EditorRow14: TcxEditorRow
+      object vgerCodEmpleadoDefecto: TcxEditorRow
         Properties.Caption = 'C'#243'digo de empleado por defecto'
         Properties.EditPropertiesClassName = 'TcxTextEditProperties'
         Properties.EditProperties.Alignment.Horz = taCenter
@@ -171,11 +172,88 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 13
         Version = 1
       end
-      object cxVerticalGrid1EditorRow15: TcxEditorRow
-        Properties.Value = Null
+      object vgerShowEmpleadoLinea: TcxEditorRow
+        Properties.Caption = 'Mostrar empleado en linea de caja'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
         ID = 14
         ParentID = -1
         Index = 14
+        Version = 1
+      end
+      object vgerMoverLineaIdentif: TcxEditorRow
+        Properties.Caption = 'Mover linea al identificar art'#237'culo'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = False
+        ID = 15
+        ParentID = -1
+        Index = 15
+        Version = 1
+      end
+      object vgerBusqArtStockOnly: TcxEditorRow
+        Properties.Caption = 'B'#250'squeda de art'#237'culos s'#243'lo con stock'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
+        ID = 16
+        ParentID = -1
+        Index = 16
+        Version = 1
+      end
+      object vgerBusqArtTarifaOnly: TcxEditorRow
+        Properties.Caption = 'B'#250'squeda de art'#237'culos s'#243'lo con tarifa'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
+        ID = 17
+        ParentID = -1
+        Index = 17
+        Version = 1
+      end
+      object vgerFormatoImpPredet: TcxEditorRow
+        Properties.Caption = 'Formato de impresion predeterminado'
+        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
+        Properties.EditProperties.Alignment.Horz = taCenter
+        Properties.Value = ''
+        ID = 18
+        ParentID = -1
+        Index = 18
+        Version = 1
+      end
+      object vgerArqueoTarjetas: TcxEditorRow
+        Properties.Caption = 'Hacer arqueo de todas formas de pago'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = False
+        ID = 19
+        ParentID = -1
+        Index = 19
+        Version = 1
+      end
+      object vgerVentasCredito: TcxEditorRow
+        Properties.Caption = 'Permitir ventas a cr'#233'dito'
+        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
+        ID = 20
+        ParentID = -1
+        Index = 20
+        Version = 1
+      end
+      object vgerDepositos: TcxEditorRow
+        Properties.Caption = 'Permitir ventas dep'#243'sitos'
+        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
+        ID = 21
+        ParentID = -1
+        Index = 21
+        Version = 1
+      end
+      object vgerDescuentos: TcxEditorRow
+        Properties.Caption = 'Permitir descuentos a'#241'adidos'
+        Properties.DataBinding.ValueType = 'Boolean'
+        Properties.Value = True
+        ID = 22
+        ParentID = -1
+        Index = 22
         Version = 1
       end
     end
@@ -183,12 +261,12 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 758
+    Width = 747
     Height = 57
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 963
-    object cxButtonEdit1: TcxButtonEdit
+    ExplicitWidth = 741
+    object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8
       Properties.Buttons = <
@@ -217,22 +295,48 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         end>
       Properties.OnButtonClick = cxButtonEdit1PropertiesButtonClick
       TabOrder = 0
-      OnKeyDown = cxButtonEdit1KeyDown
-      Width = 420
+      OnKeyDown = edtBusquedaKeyDown
+      Width = 292
     end
     object cmbGrupoUsuario: TcxComboBox
-      Left = 576
+      Left = 455
       Top = 15
       TabOrder = 1
       Width = 169
     end
     object btnGuardar: TcxButton
-      Left = 447
+      Left = 319
       Top = 15
       Width = 114
       Height = 26
       Caption = '&Guardar'
       TabOrder = 2
+    end
+    object btnChangeId: TcxButton
+      Left = 689
+      Top = 0
+      Width = 58
+      Height = 57
+      OptionsImage.Glyph.SourceDPI = 96
+      OptionsImage.Glyph.Data = {
+        3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D225554
+        462D38223F3E0D0A3C7376672076657273696F6E3D22312E31222069643D224C
+        61796572312220786D6C6E733D22687474703A2F2F7777772E77332E6F72672F
+        323030302F7376672220786D6C6E733A786C696E6B3D22687474703A2F2F7777
+        772E77332E6F72672F313939392F786C696E6B2220783D223070782220793D22
+        307078222076696577426F783D2230203020333220333222207374796C653D22
+        656E61626C652D6261636B67726F756E643A6E6577203020302033322033323B
+        2220786D6C3A73706163653D227072657365727665223E262331333B26233130
+        3B20203C7374796C6520747970653D22746578742F6373732220786D6C3A7370
+        6163653D227072657365727665223E2E426C61636B262331333B262331303B20
+        2020207B262331333B262331303B20202020202066696C6C3A23373237323732
+        3B262331333B262331303B202020202020666F6E742D66616D696C793A266170
+        6F733B64782D666F6E742D69636F6E732661706F733B3B262331333B26233130
+        3B202020202020666F6E742D73697A653A333270783B262331333B262331303B
+        202020207D262331333B262331303B20203C2F7374796C653E0D0A3C74657874
+        20783D22302220793D2233322220636C6173733D22426C61636B223EEEA38F3C
+        2F746578743E0D0A3C2F7376673E0D0A}
+      TabOrder = 3
     end
   end
 end

@@ -15,29 +15,53 @@ uses
 type
   TfrmMtoCajaParam = class(TFrmBase)
     Panel1: TPanel;
-    cxButtonEdit1: TcxButtonEdit;
+    edtBusqueda: TcxButtonEdit;
     Panel2: TPanel;
     cxVerticalGrid1: TcxVerticalGrid;
-    cxVerticalGrid1EditorRow1: TcxEditorRow;
-    cxVerticalGrid1EditorRow2: TcxEditorRow;
-    cxVerticalGrid1EditorRow3: TcxEditorRow;
-    cxVerticalGrid1EditorRow4: TcxEditorRow;
-    cxVerticalGrid1EditorRow5: TcxEditorRow;
-    cxVerticalGrid1EditorRow6: TcxEditorRow;
-    cxVerticalGrid1EditorRow7: TcxEditorRow;
-    cxVerticalGrid1EditorRow8: TcxEditorRow;
-    cxVerticalGrid1EditorRow9: TcxEditorRow;
-    cxVerticalGrid1EditorRow10: TcxEditorRow;
-    cxVerticalGrid1EditorRow11: TcxEditorRow;
-    cxVerticalGrid1EditorRow12: TcxEditorRow;
-    cxVerticalGrid1EditorRow13: TcxEditorRow;
-    cxVerticalGrid1EditorRow14: TcxEditorRow;
-    cxVerticalGrid1EditorRow15: TcxEditorRow;
+    
+    // GRUPO: Control de Artículos
+    vgerChkExistOnly: TcxEditorRow;          // Permitir sólo artículos que existan
+    vgerChkStockOnly: TcxEditorRow;          // Permitir vender sin stock
+    
+    // GRUPO: Configuración de Caja
+    vgerShowCajaSelection: TcxEditorRow;     // Presentar selección de caja
+    vgerFillEmpleadoDefecto: TcxEditorRow;   // Rellenar empleado por defecto al abrir
+    vgerDefTarifa: TcxEditorRow;             // Tarifa por defecto en caja
+    vgerMaxOpPending: TcxEditorRow;          // Número de operaciones pendientes
+    
+    // GRUPO: Devoluciones y Vales
+    vgerReqRefDevolucion: TcxEditorRow;      // Pedir referencia en devoluciones
+    vgerRecuperaValePIN: TcxEditorRow;       // Recuperar Vale sólo con PIN
+    vgerCaducidadDefVale: TcxEditorRow;      // Caducidad por defecto en vale
+    vgerDiasCaducidadVale: TcxEditorRow;     // Días hasta caducidad en vale
+    
+    // GRUPO: Avisos y Búsquedas
+    vgerAvisoStockWarning: TcxEditorRow;     // Aviso en artículos sin stock
+    vgerBusqArtStockOnly: TcxEditorRow;      // Búsqueda de artículos sólo con stock
+    vgerBusqArtTarifaOnly: TcxEditorRow;     // Búsqueda de artículos sólo con tarifa
+    vgerMoverLineaIdentif: TcxEditorRow;     // Mover linea al identificar artículo
+    
+    // GRUPO: Impresión
+    vgerDefPrinter: TcxEditorRow;            // Nombre impresora de tickets
+    vgerTipoImpresion: TcxEditorRow;         // Tipo de Impresión tickets
+    vgerFormatoImpPredet: TcxEditorRow;      // Formato de impresión predeterminado
+    
+    // GRUPO: Empleado
+    vgerCodEmpleadoDefecto: TcxEditorRow;    // Código de empleado por defecto
+    vgerShowEmpleadoLinea: TcxEditorRow;     // Mostrar empleado en linea de caja
+    
+    // Otros componentes
     cmbGrupoUsuario: TcxComboBox;
     btnGuardar: TcxButton;
+    btnChangeId: TcxButton;
+    vgerArqueoTarjetas: TcxEditorRow;
+    vgerVentasCredito: TcxEditorRow;
+    vgerDepositos: TcxEditorRow;
+    vgerDescuentos: TcxEditorRow;
+    
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
-    procedure cxButtonEdit1KeyDown(Sender: TObject; var Key: Word;
+    procedure edtBusquedaKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormShow(Sender: TObject);
   private
@@ -82,7 +106,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaParam.cxButtonEdit1KeyDown(Sender: TObject; var Key: Word;
+procedure TfrmMtoCajaParam.edtBusquedaKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Key = VK_RETURN then
@@ -95,7 +119,7 @@ end;
 procedure TfrmMtoCajaParam.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  FiltrarVerticalGrid(cxVerticalGrid1, cxButtonEdit1.Text);
+  FiltrarVerticalGrid(cxVerticalGrid1, edtBusqueda.Text);
 end;
 
 procedure TfrmMtoCajaParam.CargarParametros(Grid: TcxVerticalGrid; const pUsuario, pGrupo: string);
@@ -124,7 +148,7 @@ begin
         for i := 0 to cxVerticalGrid1.Rows.Count - 1 do
         begin
           Row := cxVerticalGrid1.Rows[i];
-          if (Row is TcxEditorRow) and (TcxEditorRow(Row).Properties.Caption = SubKey) then
+          if (Row is TcxEditorRow) and (SameText(Row.Name, SubKey)) then
           begin
              // Asignamos el valor recuperado
              TcxEditorRow(Row).Properties.Value := sp.FieldByName('VALUE_PERFILES').Value;
@@ -186,8 +210,8 @@ end;
 
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
 begin
-  if cxbuttonedit1.CanFocus then
-    cxbuttonedit1.SetFocus;
+  if edtBusqueda.CanFocus then
+    edtBusqueda.SetFocus;
 end;
 
 end.
