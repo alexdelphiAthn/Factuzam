@@ -350,18 +350,15 @@ begin
   // 1. Validar descripción
   if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = '' then
     Abort;
-
   // 2. Si no requiere atributos, OK
   Requeridos := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
   if Requeridos = 0 then
     Exit;
-
   // 3. Si requiere atributos pero el SKU no tiene "/" → ABORTAR
   SkuActual := Trim(DataSet.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString);
   if Pos('/', SkuActual) = 0 then
     Abort; // No permite grabar hasta que se complete el SKU
 end;
-
 
 procedure TdmCajaOpe.ConfigurarEstructuraCabecera;
 begin

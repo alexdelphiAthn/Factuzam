@@ -19,7 +19,7 @@ uses
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
-
+  WM_SALTAR_ATRIBUTO = WM_USER + 101;
 type
   TfrmMtoOpeCaja = class(TForm)
     pnlUp1: TPanel;
@@ -149,6 +149,10 @@ type
     procedure ConsultarStock(const CodigoInput: string);
     procedure BuscarEmpleados;
     procedure BuscarClientes;
+    procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
+    procedure ComboAtributoCloseUp(Sender: TObject);
+//    procedure ComboAtributoKeyDown(Sender: TObject;
+//                                   var Key: Word; Shift: TShiftState);
   public
     DatosCaja: TdmCajaOpe;
 //    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
@@ -179,6 +183,24 @@ implementation
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   inLibFacturas, inLibGenBusq;
+
+procedure TfrmMtoOpeCaja.ComboAtributoCloseUp(Sender: TObject);
+begin
+  PostMessage(Self.Handle, WM_SALTAR_ATRIBUTO, 0, 0);
+end;
+
+procedure TfrmMtoOpeCaja.WMSaltarAtributo(var Msg: TMessage);
+var
+Key: Word;
+begin
+  if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
+     (cxGrid1DBTableView1.Controller.EditingController.IsEditing) then
+  begin
+    PostMessage(cxGrid1DBTableView1.Controller.EditingController.Edit.Handle,
+                WM_KEYDOWN,
+                VK_RETURN, 0);
+  end;
+end;
 
 procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
@@ -715,6 +737,27 @@ begin
   end;
 end;
 
+//procedure TfrmMtoOpeCaja.ComboAtributoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+//begin
+//  if Key = VK_RETURN then
+//  begin
+//    if (Sender is TcxComboBox) and TcxComboBox(Sender).DroppedDown then
+//    begin
+//       TcxComboBox(Sender).DroppedDown := False; // Cerramos la lista visualmente
+//    end;
+//
+//    // Pasamos el control directo a la rejilla para que guarde y salte en el mismo golpe
+//    if cxGrid1DBTableView1.Controller.FocusedItem <> nil then
+//    begin
+//       cxGrid1DBTableView1EditKeyDown(cxGrid1DBTableView1,
+//                                      cxGrid1DBTableView1.Controller.FocusedItem,
+//                                      Sender as TcxCustomEdit,
+//                                      Key, Shift);
+//       Key := 0; // Matamos el Enter original para que no haya rebotes
+//    end;
+//  end;
+//end;
+
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
 var
   Clon: TClientDataSet;
@@ -756,7 +799,9 @@ begin
                 Clon.FieldByName(
                  'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * NewQty;
         end;
+        dsLineas.Dataset.DisableControls;
         Clon.Post;
+        dsLineas.Dataset.EnableControls;
         GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -796,7 +841,7 @@ begin
       with TcxComboBoxProperties(Col.Properties) do
       begin
         DropDownListStyle := lsFixedList;
-        ImmediatePost := True;
+//        ImmediatePost := True;
         OnEditValueChanged := OnAtributoChanged;
       end;
       Col.Index := IndiceBase + i;
@@ -889,16 +934,15 @@ begin
       DatosCaja.cdsLineas.Cancel;
       Key := 0;
       Exit;
-    end
-    else
-    begin
-      try
-        DatosCaja.cdsLineas.Post;
-      except
-        Key := 0;
-        raise;
-      end;
     end;
+//    else
+//    begin
+//      try
+//        DatosCaja.cdsLineas.Post;
+//      except        Key := 0;
+//        raise;
+//      end;
+//    end;
   end;
   if (Key <> VK_RETURN) then
     Exit;
@@ -941,7 +985,7 @@ begin
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) then
     begin
        RellenarAtributosDesdeSku(SkuDetectado);
-       DatosCaja.cdsLineas.Post;
+//       DatosCaja.cdsLineas.Post;
        DatosCaja.cdsLineas.Append;
        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -977,9 +1021,19 @@ begin
     Combo := TcxComboBox(AEdit);
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-        if Combo.Properties.Items.Count > 0 then
-           Combo.ItemIndex := 0;
+      if Combo.Properties.Items.Count > 0 then
+      begin
+        Combo.ItemIndex := 0;
+      end;
     end;
+    if Combo.DroppedDown then
+    begin
+      Combo.DroppedDown := False;
+      Key := 0;
+      Exit;
+    end;
+//    if Combo.DroppedDown then
+//      Combo.DroppedDown := False;
     Combo.PostEditValue;
     if (VarIsNull(Combo.EditValue)) or
        (Trim(VarToStr(Combo.EditValue)) = '') then
@@ -989,6 +1043,7 @@ begin
     end;
     NumAtributos := DatosCaja.cdsLineas.FieldByName(
                                    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
     if (AItem.Tag = NumAtributos) then
     begin
        EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
@@ -1011,8 +1066,8 @@ begin
           Key := 0;
           Exit;
        end;
-       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-          DatosCaja.cdsLineas.Post;
+//       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+//          DatosCaja.cdsLineas.Post;
        if EstabaInsertando then
        begin
           DatosCaja.cdsLineas.Append;
@@ -1024,7 +1079,18 @@ begin
        end;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
        Key := 0;
-    end;
+    end
+    else
+      begin
+        // ¡ESTE ELSE ES CLAVE PARA SALTAR DEL COLOR A LA TALLA AUTOMÁTICAMENTE!
+        var SiguienteCol := ObtenerColumnaPorTag(AItem.Tag + 1);
+        if SiguienteCol <> nil then
+        begin
+          cxGrid1DBTableView1.Controller.FocusedColumn := SiguienteCol;
+          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          Key := 0;
+        end;
+      end;
   end;
 end;
 
@@ -1041,6 +1107,7 @@ begin
     Combo := TcxComboBox(AEdit);
     Combo.Tag := AItem.Tag;
     Combo.Properties.OnEditValueChanged := OnAtributoChanged;
+//    Combo.OnKeyDown := ComboAtributoKeyDown;
     Combo.OnEnter := nil;
     OrdenColumna := AItem.Tag;
     if DatosCaja.cdsLineas.Active then
@@ -1081,19 +1148,37 @@ begin
     finally
       Free;
     end;
-    if Combo.Properties.Items.Count = 1 then
-    begin
-      Combo.ItemIndex := 0;
-      Combo.DroppedDown := False;
-    end
-    else if Combo.Properties.Items.Count > 1 then
-    begin
-      Combo.OnEnter := ForzarDespliegue;
-      Combo.ItemIndex := 0;
-      Combo.DroppedDown := True;
-    end;
+//    var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
+//    if Combo.Properties.Items.Count = 1 then
+//    begin
+//      Combo.OnEnter := nil;
+//    end
+//    else if Combo.Properties.Items.Count > 1 then
+//    begin
+//      // 2. SÓLO AUTO-DESPLEGAR SI LA CELDA ESTÁ VACÍA
+//      if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
+//        Combo.OnEnter := ForzarDespliegue
+//      else
+//        Combo.OnEnter := nil; // Si ya hay una talla elegida (ej: '43'), que no salte de nuevo
+//    end;
+      if Combo.Properties.Items.Count > 1 then
+      begin
+        // Múltiples items: solo desplegar si la celda está vacía
+        var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
+        if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
+        begin
+          Combo.OnEnter := ForzarDespliegue;
+          TcxComboBoxProperties(Combo.Properties).OnCloseUp :=
+                                                           ComboAtributoCloseUp;
+          Combo.ItemIndex := 0;
+        end
+        else
+        begin
+          Combo.OnEnter := nil; // ✅ Ya tiene valor, NO desplegar
+        end;
+      end;
   end;
-if AItem = tvArticulo then
+  if AItem = tvArticulo then
   begin
     var ValorActual :=
                     AItem.GridView.Controller.FocusedRecord.Values[AItem.Index];
@@ -1148,16 +1233,16 @@ begin
       DatosCaja.cdsLineas.Cancel;
       Key := 0;
       Exit;
-    end
-    else
-    begin
-      try
-        DatosCaja.cdsLineas.Post;
-      except
-        Key := 0;
-        raise;
-      end;
     end;
+//    else
+//    begin
+//      try
+//        DatosCaja.cdsLineas.Post;
+//      except
+//        Key := 0;
+//        raise;
+//      end;
+//    end;
   end;
 end;
 
@@ -1182,9 +1267,38 @@ procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
 var
   LCtrl: TWinControl;
   CodigoBuscado: string;
+  CurrentItem: TcxCustomGridTableItem;
+  CurrentEdit: TcxCustomEdit;
+  Combo: TcxComboBox;
 begin
+  if cxGrid1DBTableView1.Controller.FocusedItem <> nil then
+  if (cxGrid1DBTableView1.Controller.FocusedItem.Tag > 0) then
+  begin
+    CurrentItem := cxGrid1DBTableView1.Controller.FocusedItem;
+    if dsLineas.DataSet.State = dsBrowse then
+      dsLineas.DataSet.Edit;
+    // Si es una columna de atributo (Tag > 0) y es un combo
+    if not cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    begin
+      cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+    end;
+    if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+     begin
+       CurrentEdit := cxGrid1DBTableView1.Controller.EditingController.Edit;
+       if (CurrentEdit is TcxComboBox) then
+       begin
+         Combo := TcxComboBox(CurrentEdit);
+         // Solo desplegar si tiene múltiples opciones
+         if Combo.Properties.Items.Count > 1 then
+         begin
+           if not Combo.DroppedDown then
+             Combo.DroppedDown := True;
+           Exit; // Salir, no continuar con búsqueda de empleados/artículos
+         end;
+       end;
+    end;
+  end;
   LCtrl := Screen.ActiveControl;
-
   if (LCtrl = btnCodigoEmpleado) or (LCtrl.Parent = btnCodigoEmpleado) then
   begin
     BuscarEmpleados;
@@ -1197,7 +1311,6 @@ begin
   begin
     // ⭐ Por defecto → Buscar Artículo
     CodigoBuscado := BuscarArticulo;
-
     if CodigoBuscado <> '' then
     begin
       // Asegurar que hay línea activa
@@ -1208,20 +1321,15 @@ begin
         else
           DatosCaja.cdsLineas.Edit;
       end;
-
       // Rellenar datos
       if RellenarDatosArticuloEnDataset(CodigoBuscado) then
       begin
         var CodArticulo := DatosCaja.cdsLineas.FieldByName(
                                 'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
-
         ActualizarColumnasDinamicas(CodArticulo);
-
         var NumAtributos := DatosCaja.cdsLineas.FieldByName(
                                    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
-
         cxGrid1.SetFocus;
-
         if NumAtributos > 0 then
         begin
           // Ir al primer atributo
@@ -1236,7 +1344,7 @@ begin
         else
         begin
           // Nueva línea
-          DatosCaja.cdsLineas.Post;
+//          DatosCaja.cdsLineas.Post;
           DatosCaja.cdsLineas.Append;
           cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
           cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -1807,9 +1915,18 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
+var
+  Combo: TcxComboBox;
 begin
   if Sender is TcxComboBox then
-    TcxComboBox(Sender).DroppedDown := True;
+  begin
+    Combo := TcxComboBox(Sender);
+    // Desplegar inmediatamente
+    if not Combo.DroppedDown then
+      Combo.DroppedDown := True;
+    // IMPORTANTE: Desconectar el evento para que no se vuelva a ejecutar
+    Combo.OnEnter := nil;
+  end;
 end;
 
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
