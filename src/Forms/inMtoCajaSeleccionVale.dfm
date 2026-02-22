@@ -51,22 +51,22 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       object btnBuscar: TcxButton
         Left = 360
         Top = 15
-        Width = 80
+        Width = 113
         Height = 26
         Caption = 'Buscar [Enter]'
         TabOrder = 1
         OnClick = btnBuscarClick
       end
       object lblPin: TcxLabel
-        Left = 460
-        Top = 20
+        Left = 508
+        Top = 18
         Caption = 'PIN:'
         TabOrder = 4
         Transparent = True
       end
       object edtPin: TcxTextEdit
-        Left = 494
-        Top = 16
+        Left = 542
+        Top = 14
         Properties.EchoMode = eemPassword
         TabOrder = 2
         Width = 120

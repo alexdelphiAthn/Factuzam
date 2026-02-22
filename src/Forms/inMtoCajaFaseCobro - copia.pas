@@ -33,12 +33,12 @@ type
     lblNumDoc: TcxLabel;
     edtNumeroDoc: TcxTextEdit;
     cbbSerie1: TcxComboBox;
-    pnlCuenta: TPanel;
+    pnl11: TPanel;
     lblDescuento3: TcxLabel;
     lblSuma1: TcxLabel;
     txtDejarCuenta: TcxCurrencyEdit;
     txtPendienteCuenta: TcxCurrencyEdit;
-    pnlCambioVales: TPanel;
+    pnl111: TPanel;
     lblDescuento31: TcxLabel;
     lblSuma11: TcxLabel;
     txtValeRecogido: TcxCurrencyEdit;
@@ -68,8 +68,8 @@ type
     ActionList1: TActionList;
     actSalir: TAction;
     pnlLogoLeft: TPanel;
-    pnlContenedor: TPanel;
-    pnlTotales: TPanel;
+    Panel2: TPanel;
+    pnl1: TPanel;
     lblDescuento1: TcxLabel;
     lblDescuento2: TcxLabel;
     lblDescuento: TcxLabel;
