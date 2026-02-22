@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 22/02/2026 07:39:46
+ Date: 22/02/2026 08:01:24
 */
 
 SET NAMES utf8mb4;
@@ -944,6 +944,16 @@ CREATE TABLE `fza_caja_vales`  (
 -- ----------------------------
 -- Records of fza_caja_vales
 -- ----------------------------
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00001', NULL, '8342', 'REDIMIDO', 45.000000, '2026-01-15 14:30:00', '2027-01-15', '1', 'GEN', '1', '1_GEN_1_20260115001', 'A1', '000125', '2026-01-22 11:45:00', 45.000000, '1', 'GEN', '1', '1_GEN_1_20260122003', '000032', 'A1', 'CLI001', 'Vale usado en compra de jersey', '2026-02-22 07:56:52', '2026-01-15 14:30:00', 'ALEX', 'ALEX');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00002', NULL, '2751', 'PENDIENTE', 89.000000, '2026-02-10 16:20:00', '2027-02-10', '1', 'GEN', '1', '1_GEN_1_20260210005', 'A1', '000198', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI045', 'Devolución zapatos talla incorrecta', '2026-02-22 07:56:52', '2026-02-10 16:20:00', 'MARIA', 'MARIA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00003', NULL, '9234', 'CADUCADO', 25.000000, '2024-02-20 10:15:00', '2025-02-20', '1', 'GEN', '1', '1_GEN_1_20240220002', 'A1', '000089', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI012', 'Vale caducado por no uso', '2026-02-22 07:56:52', '2024-02-20 10:15:00', 'PEDRO', 'PEDRO');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00004', NULL, '5678', 'ANULADO', 150.000000, '2026-01-25 09:30:00', '2027-01-25', '1', 'GEN', '1', '1_GEN_1_20260125001', 'A1', '000165', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI023', 'Anulado por error - cliente prefirió reembolso en efectivo', '2026-02-22 07:56:52', '2026-01-25 09:35:00', 'LAURA', 'LAURA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00005', NULL, '4521', 'REDIMIDO', 100.000000, '2026-01-05 12:00:00', '2027-01-05', '1', 'GEN', '1', '1_GEN_1_20260105002', 'A1', '000078', '2026-02-15 15:30:00', 100.000000, '1', 'GEN', '2', '1_GEN_2_20260215008', '000033', 'A1', 'CLI067', 'Usado parcialmente - generó vale de cambio', '2026-02-22 07:56:52', '2026-01-05 12:00:00', 'CARLOS', 'CARLOS');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00007', NULL, '3344', 'PENDIENTE', 12.500000, '2025-12-20 10:00:00', '2026-12-20', '1', 'GEN', '1', '1_GEN_1_20251220003', 'A1', '000045', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI089', 'Devolución camiseta', '2026-02-22 07:56:52', '2025-12-20 10:00:00', 'ANA', 'ANA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00008', NULL, '5566', 'PENDIENTE', 8.750000, '2026-01-08 14:30:00', '2027-01-08', '1', 'GEN', '1', '1_GEN_1_20260108006', 'A1', '000091', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI089', 'Devolución accesorio', '2026-02-22 07:56:52', '2026-01-08 14:30:00', 'ANA', 'ANA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00009', NULL, '7788', 'PENDIENTE', 15.000000, '2026-02-01 11:15:00', '2027-02-01', '1', 'GEN', '1', '1_GEN_1_20260201004', 'A1', '000187', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI089', 'Devolución artículo defectuoso', '2026-02-22 07:56:52', '2026-02-01 11:15:00', 'ANA', 'ANA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-1-00010', NULL, '9012', 'PENDIENTE', 32.000000, '2026-02-18 17:45:00', '2026-08-18', '1', 'GEN', '1', '1_GEN_1_20260218012', '000031', 'A1', NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Venta contado - vale anónimo', '2026-02-22 07:56:52', '2026-02-18 17:45:00', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_caja_vales` VALUES ('VALE-1-GEN-2-00006', 'VALE-1-GEN-1-00005', '7823', 'PENDIENTE', 35.000000, '2026-02-15 15:35:00', '2027-02-15', '1', 'GEN', '2', '1_GEN_2_20260215008', NULL, NULL, NULL, 0.000000, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI067', 'Vale de cambio generado de VALE-1-GEN-1-00005', '2026-02-22 07:56:52', '2026-02-15 15:35:00', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_clientes
