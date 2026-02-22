@@ -58,7 +58,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         object pnlTotales: TPanel
           Left = 6
           Top = 0
-          Width = 522
+          Width = 515
           Height = 201
           BevelInner = bvRaised
           BevelKind = bkSoft
@@ -116,7 +116,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             TabOrder = 3
           end
           object txtCantidadLineas: TcxTextEdit
-            Left = 280
+            Left = 275
             Top = 14
             Properties.Alignment.Horz = taCenter
             Properties.ReadOnly = True
@@ -127,7 +127,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 64
           end
           object txtBrutoLineas: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 14
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -139,7 +139,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtPorcenDtoLineal: TcxTextEdit
-            Left = 248
+            Left = 243
             Top = 57
             Style.BorderStyle = ebsOffice11
             Style.Color = clCream
@@ -147,7 +147,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 96
           end
           object txtTotalPagar: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 139
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -159,7 +159,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtDtoGlobal: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 100
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -171,7 +171,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtTotalDtoLineal: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 57
             Properties.Alignment.Horz = taRightJustify
             Style.Color = clCream
@@ -179,7 +179,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtPorcenDtoGlobal: TcxCurrencyEdit
-            Left = 248
+            Left = 243
             Top = 100
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 %'
@@ -194,8 +194,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         end
         object pnlCuenta: TPanel
           Left = 6
-          Top = 197
-          Width = 522
+          Top = 196
+          Width = 515
           Height = 108
           BevelInner = bvRaised
           BevelKind = bkSoft
@@ -227,7 +227,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             TabOrder = 1
           end
           object txtDejarCuenta: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 17
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -239,7 +239,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtPendienteCuenta: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 54
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -253,8 +253,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         end
         object pnlCambioVales: TPanel
           Left = 6
-          Top = 301
-          Width = 522
+          Top = 299
+          Width = 515
           Height = 108
           BevelInner = bvRaised
           BevelKind = bkSoft
@@ -286,7 +286,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             TabOrder = 1
           end
           object txtValeRecogido: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 10
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -298,7 +298,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
           object txtValeEmitido: TcxCurrencyEdit
-            Left = 339
+            Left = 334
             Top = 54
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -312,9 +312,9 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           end
         end
         object cxgrdFormasPago: TcxGrid
-          Left = 6
+          Left = 5
           Top = 409
-          Width = 522
+          Width = 514
           Height = 186
           BevelOuter = bvRaised
           BorderStyle = cxcbsNone
@@ -339,7 +339,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             object dbmDescripcion: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
               DataBinding.FieldName = 'DESCRIPCION_FORMAP'
-              HeaderAlignmentHorz = taCenter
               Options.Editing = False
               Options.Focusing = False
               Styles.Header = cxStyle1
@@ -382,7 +381,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
-          ExplicitTop = 598
           ExplicitWidth = 515
           object lblDescuento4: TcxLabel
             Left = 15
@@ -399,7 +397,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             TabOrder = 0
           end
           object txtPendienteCobro: TcxCurrencyEdit
-            Left = 346
+            Left = 341
             Top = 39
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
@@ -425,7 +423,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             TabOrder = 2
           end
           object txtCambio: TcxCurrencyEdit
-            Left = 346
+            Left = 341
             Top = 0
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 '#8364
