@@ -160,14 +160,14 @@ type
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
   private
-    FNumeroCajaActual: Integer; // Para saber si soy la Caja 1, 2, etc.
+    FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
   public
     procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                               AFecha: TDateTime);
     function IntentarCerrar:Boolean;
-    // Añadimos esta propiedad para asignar el número desde fuera
-    property NumeroCajaActual: Integer read FNumeroCajaActual write FNumeroCajaActual;
+    property NumeroCajaActual: Integer read FNumeroCajaActual
+                                       write FNumeroCajaActual;
   end;
 
 var
@@ -428,6 +428,11 @@ begin
                                         'CODIGO_UNIDAD_FACTURA_LINEA').AsString;
     NumAtributos := DatosCaja.cdsLineas.FieldByName(
                                    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
+    begin
+      DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := 0;
+      GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
+    end;
     if ConsolidarSiExiste(SkuDetectado) then
     begin
        DatosCaja.cdsLineas.Cancel;
@@ -556,7 +561,8 @@ begin
           sql.SQL.Text := 'SELECT PRECIOSALIDA_TARIFA, ' +
                           '       ESIMP_INCL_TARIFA, ' +
                           '       TIPO_IVA_ARTICULO, ' +
-                          '       PORCEN_DTO_TARIFA ' +
+                          '       PORCEN_DTO_TARIFA, ' +
+                          '       NUM_ATRIBUTOS_REQ    ' +
                           '  FROM vi_articulos_tarifas ' +
                           ' WHERE CODIGO_TARIFA = :CODTARIFA ' +
                           '   AND CODIGO_ARTICULO_TARIFA = :CODIGOARTICULO ' +
@@ -568,13 +574,19 @@ begin
           sql.Open;
           if not sql.IsEmpty then
           begin
+             var NumAtributosReq :=
+                                 sql.FieldByName('NUM_ATRIBUTOS_REQ').AsInteger;
+             DatosCaja.cdsLineas.FieldByName(
+                                 'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
+                                                                NumAtributosReq;
              DatosCaja.cdsLineas.FieldByName(
                                   'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString :=
                                   sql.FieldByName('TIPO_IVA_ARTICULO').AsString;
              DatosCaja.cdsLineas.FieldByName(
                                   'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString :=
                                   sql.FieldByName('ESIMP_INCL_TARIFA').AsString;
-             DatosCaja.cdsLineas.FieldByName(
+              if NumAtributosReq = 0 then
+                DatosCaja.cdsLineas.FieldByName(
                                      'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
                               sql.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
              if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
@@ -656,15 +668,11 @@ begin
                                      'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
                              qry.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
       DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
-//    DatosCaja.cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency :=
-//                             qry.FieldByName('PORCEN_IVA_TARIFA').AsCurrency;
-//      DatosCaja.CalcularTotalesLinea;
       GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal );
-
     end;
   finally
     qry.Free;
@@ -814,7 +822,16 @@ begin
      );
      DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString :=
                                                                        SkuNuevo;
-     RecalcularPrecioDesdeSku(SkuNuevo);
+     var NumAtributosRequeridos := DatosCaja.cdsLineas.FieldByName(
+                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+     var NumSeparadores := 0;
+     for var i := 1 to Length(SkuNuevo) do
+     begin
+        if SkuNuevo[i] = '/' then
+           Inc(NumSeparadores);
+     end;
+     if NumSeparadores = NumAtributosRequeridos then
+       RecalcularPrecioDesdeSku(SkuNuevo);
   end;
 end;
 
@@ -853,7 +870,7 @@ var
   Combo: TcxComboBox;
   NumAtributos: Integer;
   PrimeraColAtributo: TcxGridDBColumn;
-  SkuNuevo: string;
+  SkuNuevo, ValorActual: string;
   EstabaInsertando: Boolean;
 begin
   if (AItem = tvArticulo) and
@@ -888,13 +905,22 @@ begin
   if (AItem = tvArticulo) then
   begin
     tmrBusq.Enabled := False;
-    if Trim(VarToStr(AEdit.EditValue)) = '' then
+    if AEdit is TcxCustomTextEdit then
+      ValorActual := Trim(TcxCustomTextEdit(AEdit).Text)
+    else
+      ValorActual := Trim(VarToStr(AEdit.EditValue));
+    if ValorActual = '' then
     begin
       var sCodigo := BuscarArticulo;
       if sCodigo <> '' then
       begin
         AEdit.EditValue := sCodigo;
-        AEdit.PostEditValue;
+        if not RellenarDatosArticuloEnDataset(sCodigo) then
+        begin
+          ShowMessage('Artículo no encontrado');
+          Key := 0;
+          Exit;
+        end;
       end
       else
       begin
@@ -902,7 +928,8 @@ begin
         Exit;
       end;
     end;
-    AEdit.PostEditValue; // Guardamos valor    if DatosCaja.cdsLineas.State = dsBrowse then
+    AEdit.PostEditValue; // Guardamos valor
+  if DatosCaja.cdsLineas.State = dsBrowse then
     DatosCaja.cdsLineas.Edit;
     var CodArticuloActual := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString;

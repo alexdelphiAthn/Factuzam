@@ -344,28 +344,24 @@ end;
 
 procedure TdmCajaOpe.cdsLineasBeforePost(DataSet: TDataSet);
 var
-  i, Requeridos: Integer;
-  ValorAttr: string;
-  NombreAttr: string;
+  Requeridos: Integer;
+  SkuActual: string;
 begin
-  if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = ''
-                                                                            then
+  // 1. Validar descripción
+  if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = '' then
     Abort;
-  Requeridos := DataSet.FieldByName(
-                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
-  if Requeridos = 0 then Exit;
-  for i := 1 to Requeridos do
-  begin
-    ValorAttr := DataSet.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString;
-    if Trim(ValorAttr) = '' then
-    begin
-      NombreAttr := DataSet.FieldByName('ATTR' + IntToStr(i) +
-	                                                        '_NOMBRE').AsString;
-      raise Exception.Create('Falta especificar: ' + NombreAttr +
-	                                                      ' para el artículo.');
-    end;
-  end;
+
+  // 2. Si no requiere atributos, OK
+  Requeridos := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+  if Requeridos = 0 then
+    Exit;
+
+  // 3. Si requiere atributos pero el SKU no tiene "/" → ABORTAR
+  SkuActual := Trim(DataSet.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString);
+  if Pos('/', SkuActual) = 0 then
+    Abort; // No permite grabar hasta que se complete el SKU
 end;
+
 
 procedure TdmCajaOpe.ConfigurarEstructuraCabecera;
 begin
