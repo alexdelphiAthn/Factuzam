@@ -46,7 +46,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       TabOrder = 0
       ExplicitWidth = 517
       ExplicitHeight = 679
-      object pnlContenedor: TPanel
+      object Panel2: TPanel
         Left = 0
         Top = 0
         Width = 523
@@ -55,7 +55,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         TabOrder = 0
         ExplicitWidth = 517
         ExplicitHeight = 679
-        object pnlTotales: TPanel
+        object pnl1: TPanel
           Left = 6
           Top = 0
           Width = 522
@@ -192,7 +192,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 92
           end
         end
-        object pnlCuenta: TPanel
+        object pnl11: TPanel
           Left = 6
           Top = 197
           Width = 522
@@ -251,7 +251,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Width = 171
           end
         end
-        object pnlCambioVales: TPanel
+        object pnl111: TPanel
           Left = 6
           Top = 301
           Width = 522

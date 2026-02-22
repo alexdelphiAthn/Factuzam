@@ -1181,15 +1181,68 @@ end;
 procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
 var
   LCtrl: TWinControl;
+  CodigoBuscado: string;
 begin
   LCtrl := Screen.ActiveControl;
+
   if (LCtrl = btnCodigoEmpleado) or (LCtrl.Parent = btnCodigoEmpleado) then
   begin
     BuscarEmpleados;
   end
   else if (LCtrl = btnCodigoCliente) or (LCtrl.Parent = btnCodigoCliente) then
   begin
-     BuscarClientes;
+    BuscarClientes;
+  end
+  else
+  begin
+    // ⭐ Por defecto → Buscar Artículo
+    CodigoBuscado := BuscarArticulo;
+
+    if CodigoBuscado <> '' then
+    begin
+      // Asegurar que hay línea activa
+      if DatosCaja.cdsLineas.State = dsBrowse then
+      begin
+        if DatosCaja.cdsLineas.IsEmpty then
+          DatosCaja.cdsLineas.Append
+        else
+          DatosCaja.cdsLineas.Edit;
+      end;
+
+      // Rellenar datos
+      if RellenarDatosArticuloEnDataset(CodigoBuscado) then
+      begin
+        var CodArticulo := DatosCaja.cdsLineas.FieldByName(
+                                'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+
+        ActualizarColumnasDinamicas(CodArticulo);
+
+        var NumAtributos := DatosCaja.cdsLineas.FieldByName(
+                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+
+        cxGrid1.SetFocus;
+
+        if NumAtributos > 0 then
+        begin
+          // Ir al primer atributo
+          var PrimeraCol := ObtenerColumnaPorTag(1);
+          if PrimeraCol <> nil then
+          begin
+            PrimeraCol.Visible := True;
+            cxGrid1DBTableView1.Controller.FocusedColumn := PrimeraCol;
+            cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          end;
+        end
+        else
+        begin
+          // Nueva línea
+          DatosCaja.cdsLineas.Post;
+          DatosCaja.cdsLineas.Append;
+          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+        end;
+      end;
+    end;
   end;
 end;
 
