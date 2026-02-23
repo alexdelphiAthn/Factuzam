@@ -19,6 +19,7 @@ type
     dsLineas:TDataSource;
     qryDefinicionArticulo: TUniQuery;
     qryStock: TUniQuery;
+    qryVales: TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsLineasBeforePost(DataSet: TDataSet);
     procedure cdsLineasAfterInsert(DataSet: TDataSet);
@@ -536,6 +537,7 @@ end;
 procedure TdmCajaOpe.DataModuleCreate(Sender: TObject);
 begin
   qryDefinicionArticulo.Connection := oConn;
+  qryVales.Connection := oConn;
   qryStock.Connection := oConn;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;

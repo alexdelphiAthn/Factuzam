@@ -32,7 +32,7 @@ uses
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   cxDBData, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid,
+  cxGridDBTableView, cxGrid, UniDataCaja,
   // Acceso a datos
   Uni, MemDS,
   inLibGlobalVar, inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
