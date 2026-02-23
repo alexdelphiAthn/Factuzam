@@ -537,13 +537,19 @@ object dmCajaOpe: TdmCajaOpe
   object qryStock: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)')
-    Left = 550
-    Top = 190
+    Left = 534
+    Top = 150
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'ARTICULO'
         Value = nil
       end>
+  end
+  object qryVales: TUniQuery
+    SQL.Strings = (
+      'SELECT * FROM vi_caja_vales_ptes')
+    Left = 534
+    Top = 230
   end
 end

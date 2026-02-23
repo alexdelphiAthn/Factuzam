@@ -2,8 +2,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
   Left = 0
   Top = 0
   Caption = 'Seleccionar Vale'
-  ClientHeight = 520
-  ClientWidth = 760
+  ClientHeight = 521
+  ClientWidth = 958
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,8 +18,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
   object pnlPrincipal: TPanel
     Left = 0
     Top = 0
-    Width = 760
-    Height = 520
+    Width = 958
+    Height = 521
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
@@ -28,7 +28,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     object pnlSuperior: TPanel
       Left = 0
       Top = 0
-      Width = 760
+      Width = 958
       Height = 60
       Align = alTop
       BevelOuter = bvNone
@@ -75,8 +75,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     object cxgrdVales: TcxGrid
       Left = 0
       Top = 60
-      Width = 760
-      Height = 400
+      Width = 958
+      Height = 401
       Align = alClient
       TabOrder = 1
       ExplicitWidth = 754
@@ -132,8 +132,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     end
     object pnlBotones: TPanel
       Left = 0
-      Top = 460
-      Width = 760
+      Top = 461
+      Width = 958
       Height = 60
       Align = alBottom
       BevelOuter = bvNone
@@ -141,9 +141,9 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       ExplicitTop = 451
       ExplicitWidth = 754
       object btnAceptar: TcxButton
-        Left = 480
+        Left = 632
         Top = 14
-        Width = 120
+        Width = 105
         Height = 32
         Caption = 'Aceptar'
         Default = True
@@ -151,9 +151,9 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OnClick = btnAceptarClick
       end
       object btnCancelar: TcxButton
-        Left = 614
+        Left = 472
         Top = 14
-        Width = 120
+        Width = 111
         Height = 32
         Cancel = True
         Caption = 'Cancelar'
@@ -161,21 +161,21 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OnClick = btnCancelarClick
       end
       object btnF1: TcxButton
-        Left = 480
+        Left = 593
         Top = 14
         Width = 40
         Height = 32
-        Caption = 'F1'
+        Caption = 'F12'
         TabOrder = 2
         Visible = False
         OnClick = btnAceptarClick
       end
       object btnF2: TcxButton
-        Left = 614
+        Left = 435
         Top = 14
         Width = 40
         Height = 32
-        Caption = 'F2'
+        Caption = 'ESC'
         TabOrder = 3
         Visible = False
         OnClick = btnCancelarClick
