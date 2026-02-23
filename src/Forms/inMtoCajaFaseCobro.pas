@@ -106,6 +106,8 @@ type
     procedure btnBuscarTClick(Sender: TObject);
     procedure btnF3Click(Sender: TObject);
     procedure actBuscarTExecute(Sender: TObject);
+    procedure btnBuscarValeClick(Sender: TObject);
+    procedure btnF6Click(Sender: TObject);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -121,13 +123,21 @@ type
     procedure RellenarPendienteEnFormaActual;
     procedure EscribirImporteEnFormaActual(AImporte: Double);
   public
+    FCodigoEmpresa:String;
+    FCodigoAlmacen, FCodigoCaja:String;
+    FFecha:TDate;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
     procedure AlRecalcularDatos(Sender: TObject);
     function AlRequerirReferencia(AInfo: TFormaPagoInfo;
                                   ADatosActuales: TDatosReferencia): Boolean;
   end;
+
 implementation
+
 {$R *.dfm}
+
+uses inMtoCajaSeleccionVale;
+
 function TfrmMtoCajaFaseCobro.AlRequerirReferencia(AInfo: TFormaPagoInfo;
                                      ADatosActuales: TDatosReferencia): Boolean;
 var
@@ -529,14 +539,47 @@ begin
   RellenarPendienteEnFormaActual;
 end;
 
+procedure TfrmMtoCajaFaseCobro.btnF6Click(Sender: TObject);
+begin
+  inherited;
+  btnBuscarValeClick(Sender);
+end;
+
 procedure TfrmMtoCajaFaseCobro.btnAtrasClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
 end;
+
 procedure TfrmMtoCajaFaseCobro.btnBuscarTClick(Sender: TObject);
 begin
   inherited;
   RellenarPendienteEnFormaActual;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnBuscarValeClick(Sender: TObject);
+var
+  ValeSeleccionado: TValeSeleccionado;
+  ImporteAplicar: Currency;
+begin
+  inherited;
+  if TfrmMtoCajaSeleccionVale.Ejecutar(ValeSeleccionado) then
+  begin
+    if FDatosCobro.EsDevolucion then
+    begin
+      ImporteAplicar := Min(ValeSeleccionado.Importe,
+                           FDatosCobro.ImporteDevolucionPendiente);
+    end
+    else
+    begin
+      ImporteAplicar := Min(ValeSeleccionado.Importe,
+                           FDatosCobro.ImportePendiente);
+    end;
+    FDatosCobro.RegistrarValeRecogido(
+      ValeSeleccionado.CodigoVale,
+      ImporteAplicar
+    );
+    FDatosCobro.Recalcular;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);

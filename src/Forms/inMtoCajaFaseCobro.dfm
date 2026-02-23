@@ -381,6 +381,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
+          ExplicitTop = 598
           ExplicitWidth = 515
           object lblDescuento4: TcxLabel
             Left = 15
@@ -689,6 +690,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnF6Click
         end
         object btnBuscarVale: TcxButton
           Left = 89
@@ -710,6 +712,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnBuscarValeClick
         end
         object btnMasDatos: TcxButton
           Left = 89

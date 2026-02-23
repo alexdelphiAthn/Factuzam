@@ -37,6 +37,13 @@ type
     function GenerarSkuFinal(ArticuloBase: string): string;
     { Public declarations }
   public
+    procedure MarcarValeComoCanjeado(const ACodigoVale: string;
+                                 ACodigoCaja: string;
+                                 ACodigoAlmacen: string;
+                                 ANumOperacion: Integer;
+                                 ASerie: string;
+                                 ANumFactura: Integer);
+
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
@@ -541,6 +548,41 @@ begin
   qryStock.Connection := oConn;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
+end;
+
+procedure TdmCajaOpe.MarcarValeComoCanjeado(const ACodigoVale: string;
+                                 ACodigoCaja: string;
+                                 ACodigoAlmacen: string;
+                                 ANumOperacion: Integer;
+                                 ASerie: string;
+                                 ANumFactura: Integer);
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_caja_vales ' +
+      '   SET ESTADO_VL = ''CANJEADO'', ' +
+      '       FECHA_CANJE_VL = NOW(), ' +
+      '       CODIGO_CAJA_CANJE_VL = :caja, ' +
+      '       CODIGO_ALMACEN_CANJE_VL = :almacen, ' +
+      '       NUMERO_OPERACION_CANJE_VL = :numop, ' +
+      '       SERIE_FACTURA_CANJE_VL = :serie, ' +
+      '       NRO_FACTURA_CANJE_VL = :numfac ' +
+      ' WHERE CODIGO_VL = :codigo ' +
+      '   AND ESTADO_VL = ''PENDIENTE''';
+    qry.ParamByName('codigo').AsString := ACodigoVale;
+    qry.ParamByName('caja').AsString := ACodigoCaja;
+    qry.ParamByName('almacen').AsString := ACodigoAlmacen;
+    qry.ParamByName('numop').AsInteger := ANumOperacion;
+    qry.ParamByName('serie').AsString := ASerie;
+    qry.ParamByName('numfac').AsInteger := ANumFactura;
+    qry.ExecSQL;
+  finally
+    qry.Free;
+  end;
 end;
 
 end.
