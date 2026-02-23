@@ -7,7 +7,6 @@ uses
   Datasnap.DBClient, Datasnap.Provider, inLibGlobalVar;
 
 const
-  // Campos de línea de factura
   fnrofaclin = 'NRO_FACTURA_LINEA';
   fserielin = 'SERIE_FACTURA_LINEA';
   fnrolin = 'LINEA_FACTURA_LINEA';
@@ -36,7 +35,6 @@ const
   ftotciva = 'TOTAL_FACTURA_LINEA';
   ftotsiva = 'TOTAL_FACTURASIVA_LINEA';
 
-  // Campos de factura
   ffechfac = 'FECHA_FACTURA';
   fnrofac = 'NRO_FACTURA';
   fseriefac = 'SERIE_FACTURA';
@@ -71,10 +69,8 @@ const
   ftotbasefac = 'TOTAL_BASES_FACTURA';
 
 type
-  // Enumerado para tipos de IVA
   TTipoIVA = (tivaNormal, tivaReducido, tivaSuperReducido, tivaExento);
 
-  // Estructura para totales por tipo de IVA
   TTotalesIVA = record
     BaseImponible: Currency;
     PorcentajeIVA: Currency;
@@ -83,36 +79,29 @@ type
     ImporteRE: Currency;
   end;
 
-  // Estructura para totales generales de factura
   TTotalesFactura = record
-    // Bases Imponibles
     BaseNormal,
     BaseReducida,
     BaseSuper,
     BaseExenta: Currency;
-    // Cuotas IVA
     CuotaIVANormal,
     CuotaIVAReducida,
     CuotaIVASuper,
     CuotaIVAExenta: Currency;
-    // Cuotas Recargo
     CuotaRENormal,
     CuotaREReducida,
     CuotaRESuper,
     CuotaREExenta: Currency;
-    // Agregados
     TotalBases: Currency;
-    TotalImpuestos: Currency; // Suma de Cuotas IVA + RE
+    TotalImpuestos: Currency;
     TotalRetencion: Currency;
-    TotalLiquido: Currency;   // A Pagar
+    TotalLiquido: Currency;
     TotalIVANormal: Currency;
     TotalIVAReducido: Currency;
     TotalIVASuperReducido: Currency;
     TotalIVAExento: Currency;
     TotalREcargo: Currency;
-    //TotalRetenciones: Currency;
     TotalCantidades:Currency;
-    // Totales por tipo de IVA
     IVAN: TTotalesIVA;
     IVAR: TTotalesIVA;
     IVAS: TTotalesIVA;
@@ -122,7 +111,6 @@ type
     TotalDescuentosLineas: Currency;
   end;
 
-  // Configuración de factura para regímenes especiales
   TConfiguracionFactura = record
     EsFacturaSimplificada: Boolean;
     EsRegimenAgricolaEmpresa: Boolean;
@@ -137,7 +125,6 @@ type
     IVARecargo: Boolean;
   end;
 
-  // Estructura para porcentajes de impuestos
   TPorcentajesImpuestos = record
     IVANormal: Currency;
     IVAReducido: Currency;
@@ -149,14 +136,12 @@ type
     REcExento: Currency;
   end;
 
-  // Forward declaration
   TFacturaTotales = class;
 
   TLinFac = class
   private
     _unqryLin: TDataset;
     _unqryFac: TDataset;
-//    _enProcesamiento:boolean;
     _sImpcl: string;
     _sTipIva: string;
     _sNumLin: String;
@@ -222,13 +207,10 @@ type
     procedure CopyToObjectFac;
     procedure SetInit(unqryLin: TDataset);
     procedure CalcularLinea;
-
-    // Métodos de validación mejorados
     function ValidarDatos: Boolean;
     function EsDevolucion: Boolean;
   end;
 
-  // Clase mejorada para gestionar totales de factura
   TFacturaTotales = class
   private
     _unqryFac: TDataset;
@@ -252,7 +234,6 @@ type
     procedure AcumularTotalesPorTipoIVA(linea: TLinFac);
     procedure CalcularTotalesGenerales;
     procedure CalcularRetenciones;
-//    function ConvertirTipoIVA(tipo: string): TTipoIVA;
     procedure ValidarConfiguracion;
     procedure VerificarYCompletarDatosEmpresa;
     procedure CargarConfiguracionIVA(sGrupoZona: string);
@@ -293,23 +274,6 @@ begin
     Result := AFalse;
 end;
 
-// Función auxiliar IfThen
-//function IfThen(AValue: Boolean; const ATrue: string; AFalse: string = ''): string; overload;
-//begin
-//  if AValue then
-//    Result := ATrue
-//  else
-//    Result := AFalse;
-//end;
-//
-//function IfThen(AValue: Boolean; const ATrue: Currency; AFalse: Currency = 0): Currency; overload;
-//begin
-//  if AValue then
-//    Result := ATrue
-//  else
-//    Result := AFalse;
-//end;
-
 { TLinFac - Implementación completa }
 
 constructor TLinFac.Create(unqryLin: TDataset);
@@ -334,7 +298,6 @@ destructor TLinFac.Destroy;
 begin
   if ValidarDatos then
   begin
-    //Self.CalcularLinea;
     Self.CopyToDataSetLin;
   end;
   inherited Destroy;
@@ -344,24 +307,19 @@ function TLinFac.ValidarDatos: Boolean;
 begin
   Result := True;
   _sMensajeError := '';
-
   if (_dPorIva < 0) or (_dPorIva > 100) then
   begin
     _sMensajeError := 'El porcentaje de IVA debe estar entre 0 y 100';
+    raise Exception.Create(_sMensajeError);
     Result := False;
     Exit;
   end;
-
-  // Los precios pueden ser negativos en caso de devoluciones
-  if _dCant > 0 then // Solo validar precios positivos para ventas normales
+  if (_dPreSiva < 0) or (_dPreCiva < 0) then
   begin
-    if (_dPreSiva < 0) or (_dPreCiva < 0) then
-    begin
-      _sMensajeError :=
-                     'Los precios no pueden ser negativos para ventas normales';
-      Result := False;
-      Exit;
-    end;
+    _sMensajeError := 'Los precios no pueden ser negativos';
+    raise Exception.Create(_sMensajeError);
+    Result := False;
+    Exit;
   end;
 end;
 
@@ -376,7 +334,6 @@ begin
     raise Exception.Create(_sMensajeError);
   if (SameText(_sImpcl, 'S')) then
   begin
-    // Precio con impuestos incluidos
     if (_dPorIva = 0) then
       _dPreSiva := _dPreCiva
     else
@@ -394,7 +351,6 @@ begin
   end
   else
   begin
-    // Precio sin impuestos
     _dPreCiva := _dPreSiva * (1 + _dPorIva/100);
     _dTotCiva := _dPreCiva * _dCant;
     _dTotSiva := _dPreSiva * _dCant;
