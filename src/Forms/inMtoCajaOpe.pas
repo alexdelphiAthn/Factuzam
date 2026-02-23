@@ -1747,15 +1747,12 @@ begin
     ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
                                           DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
-
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
-
-    frmFaseCobro.CargarDatosDesdeFactura(ObjTotales); // <--- NUEVA LLAMADA
-
-      // Pasamos datos de cabecera estándar
-  //    frmFaseCobro.SerieOperacion := DatosCaja.cdsCabecera.FieldByName('SERIE_FACTURA').AsString;
-  //    frmFaseCobro.NumeroOperacion := DatosCaja.cdsCabecera.FieldByName('NRO_FACTURA').AsString;
-
+    frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
+    frmFaseCobro.FCodigoEmpresa := FCodigoEmpresa;
+    frmFaseCobro.FCodigoAlmacen := FCodigoAlmacen;
+    frmFaseCobro.FCodigoCaja := FCodigoCaja;
+    frmFaseCobro.FFecha := FFecha;
     if frmFaseCobro.ShowModal = mrOk then
     begin
        // Procesar cobro...
