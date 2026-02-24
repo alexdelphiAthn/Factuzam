@@ -2,14 +2,14 @@
 
 {
   Biblioteca para gestión de fase de cobro en punto de venta
-  
+
   Funcionalidades:
   - Cálculo automático de totales, pendientes y cambios
   - Validación de deudas según cliente
   - Emisión de vales por importes negativos
   - Gestión de referencias y divisas en formas de pago
   - Integración con VirtualTable para grid de pagos
-  
+
   Autor: Sistema Factuzam
   Fecha: 2026-02-15
 }
@@ -21,7 +21,6 @@ uses
   Data.DB, VirtualTable, inLibFacturas;
 
 type
-  // Estructura para datos de cliente
   TDatosCliente = record
     CodigoCliente: string;
     NombreCliente: string;
@@ -31,7 +30,6 @@ type
     procedure Clear;
   end;
 
-  // Estructura para forma de pago
   TFormaPagoInfo = record
     Codigo: string;
     Descripcion: string;
@@ -40,7 +38,6 @@ type
     OrdenPrioridad: Integer;
   end;
 
-  // Estructura para item de pago (para grabar en BD)
   TFormaPagoItem = record
     NumeroLinea: Integer;
     CodigoFormaPago: string;
@@ -55,7 +52,6 @@ type
     Observaciones: string;
   end;
 
-  // Resultado de validación
   TResultadoValidacion = record
     Valido: Boolean;
     Mensaje: string;
@@ -65,7 +61,6 @@ type
     class function Advertencia(const AMensaje: string): TResultadoValidacion; static;
   end;
 
-  // Datos para referencia de pago
   TDatosReferencia = record
     Referencia: string;
     CodigoDivisa: string;
@@ -85,17 +80,13 @@ type
     PinSeguridad: string;
     ImporteAplicado: Currency;
   end;
-  // Clase principal para gestión de fase de cobro
+
   TDatosFaseCobro = class
   private
-    // Datos básicos
     FTotalesFactura: TFacturaTotales;
     FDatosCliente: TDatosCliente;
     FMemTablePagos: TVirtualTable;
-
     FValesRecogidos: TList<TValeAplicado>;
-
-    // Importes calculados
     FImporteBruto: Currency;
     FImporteDescuentoLineal: Currency;
     FPorcentajeDescuentoGlobal: Currency;
@@ -107,64 +98,44 @@ type
     FImporteDejarCuenta: Currency;
     FImporteValeRecogido: Currency;
     FImporteValeEmitido: Currency;
-
-    // Estado
     FHayCliente: Boolean;
     FPermiteDeuda: Boolean;
-
-    // Eventos
     FOnRecalculado: TNotifyEvent;
     FOnRequiereReferencia: TFunc<TFormaPagoInfo, TDatosReferencia, Boolean>;
-
     procedure CalcularTotales;
+    procedure InicializarTotalesPorDefecto;
     function ValidarDeuda: TResultadoValidacion;
     function ValidarVale: TResultadoValidacion;
     function ObtenerFormaPagoInfo(const ACodigo: string): TFormaPagoInfo;
-
+    function ObtenerCurrencySafe(const ANombreCampo: string;
+                                 const ADefault: Currency = 0): Currency;
+    function ObtenerStringSafe(const ANombreCampo: string;
+                               const ADefault: string = ''): string;
+    function ObtenerIntegerSafe(const ANombreCampo: string;
+                                const ADefault: Integer = 0): Integer;
   public
-//    procedure RegistrarValeRecogido(const ACodigoVale:string;
-//                                     AImporte: Currency);
-//    procedure EliminarValeRecogido(const ACodigoVale: string);
     constructor Create(AMemTable: TVirtualTable);
     destructor Destroy; override;
-
-    // Inicialización
     procedure CargarDatosFactura(ATotales: TFacturaTotales);
     procedure EstablecerCliente(const ACodigo, ANombre: string;
                                 APermiteDeuda: Boolean;
                                 ALimiteCredito, ADeudaActual: Currency);
     procedure QuitarCliente;
-
-    // Gestión de formas de pago
     procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
     function ActualizarImportePago(ALineaPago: Integer; AImporte: Currency;
                                    ADatosRef: TDatosReferencia): Boolean;
-
-    // Descuentos
     procedure AplicarDescuentoGlobal(APorcentaje: Currency); overload;
     procedure AplicarDescuentoGlobal(APorcentaje: Currency;
                                      AImporte: Currency); overload;
-
-    // Dejar en cuenta (deuda)
     function PuedeDejarEnCuenta: Boolean;
     function EstablecerDejarEnCuenta(AImporte: Currency): TResultadoValidacion;
-
-    // Vales
     function PuedeEmitirVale: Boolean;
     function EmitirVale(AImporte: Currency): TResultadoValidacion;
     procedure RegistrarValeRecogido(ACodigoVale: string; AImporte: Currency);
-
-    // Devolución
     function EsDevolucion: Boolean;
-
-    // Validación final
     function ValidarParaCobro: TResultadoValidacion;
     function ObtenerDatosPagosParaGrabar: TArray<TFormaPagoItem>;
-
-    // Recálculo manual
     procedure Recalcular;
-
-    // Propiedades de lectura para UI
     property ImporteBruto: Currency read FImporteBruto;
     property ImporteDescuentoLineal: Currency read FImporteDescuentoLineal;
     property PorcentajeDescuentoGlobal: Currency read FPorcentajeDescuentoGlobal;
@@ -179,9 +150,13 @@ type
     property HayCliente: Boolean read FHayCliente;
     property PermiteDeuda: Boolean read FPermiteDeuda;
     property ImporteDevolucionPendiente: Currency read FImportePendiente;
-    property OnRecalculado: TNotifyEvent read FOnRecalculado write FOnRecalculado;
-    property OnRequiereReferencia: TFunc<TFormaPagoInfo, TDatosReferencia, Boolean>
-      read FOnRequiereReferencia write FOnRequiereReferencia;
+    property OnRecalculado: TNotifyEvent read FOnRecalculado
+                                         write FOnRecalculado;
+    property OnRequiereReferencia: TFunc<TFormaPagoInfo,
+                                         TDatosReferencia,
+                                         Boolean>
+                                   read FOnRequiereReferencia
+                                   write FOnRequiereReferencia;
   end;
 
 implementation
@@ -379,8 +354,8 @@ begin
     for FormaPago in AFormasPago do
     begin
       FMemTablePagos.Append;
-      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
-        FMemTablePagos.RecordCount;
+//      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
+//        FMemTablePagos.RecordCount;
       FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := FormaPago.Codigo;
       FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
                                                           FormaPago.Descripcion;
@@ -410,8 +385,8 @@ begin
   Result := False;
   if not Assigned(FMemTablePagos) then
     Exit;
-  if not FMemTablePagos.Locate('NUMERO_LINEA', ALineaPago, []) then
-    Exit;
+//  if not FMemTablePagos.Locate('NUMERO_LINEA', ALineaPago, []) then
+//    Exit;
   CodigoFormaPago := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
   FormaPagoInfo := ObtenerFormaPagoInfo(CodigoFormaPago);
   DatosRef := ADatosRef;
@@ -432,7 +407,7 @@ begin
   FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := DatosRef.CodigoDivisa;
   FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := DatosRef.FactorCambio;
   FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency := DatosRef.ImporteDivisa;
-  FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString := DatosRef.RedBlockchain;
+//  FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString := DatosRef.RedBlockchain;
   FMemTablePagos.FieldByName('REFERENCIA').AsString := DatosRef.Referencia;
   FMemTablePagos.Post;
   Recalcular;
@@ -530,11 +505,11 @@ procedure TDatosFaseCobro.RegistrarValeRecogido(ACodigoVale: string;
 begin
   if not Assigned(FMemTablePagos) then Exit;
   FMemTablePagos.Append;
-  FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
-    FMemTablePagos.RecordCount;
+//  FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
+//                                                FMemTablePagos.RecordCount *100;
   FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := 'VALE';
   FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
-    'Vale: ' + ACodigoVale;
+                                                         'Vale: ' + ACodigoVale;
   FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString := 'N';
   FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := AImporte;
   FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
@@ -546,6 +521,57 @@ begin
   Recalcular;
 end;
 
+function TDatosFaseCobro.ObtenerCurrencySafe(const ANombreCampo: string;
+  const ADefault: Currency = 0): Currency;
+var
+  Field: TField;
+begin
+  Result := ADefault;
+
+  if not Assigned(FMemTablePagos) then Exit;
+  if not FMemTablePagos.Active then Exit;
+
+  Field := FMemTablePagos.FindField(ANombreCampo);
+  if Assigned(Field) and not Field.IsNull then
+    Result := Field.AsCurrency
+  else
+    Result := ADefault;
+end;
+
+function TDatosFaseCobro.ObtenerStringSafe(const ANombreCampo: string;
+  const ADefault: string = ''): string;
+var
+  Field: TField;
+begin
+  Result := ADefault;
+
+  if not Assigned(FMemTablePagos) then Exit;
+  if not FMemTablePagos.Active then Exit;
+
+  Field := FMemTablePagos.FindField(ANombreCampo);
+  if Assigned(Field) and not Field.IsNull then
+    Result := Field.AsString
+  else
+    Result := ADefault;
+end;
+
+function TDatosFaseCobro.ObtenerIntegerSafe(const ANombreCampo: string;
+  const ADefault: Integer = 0): Integer;
+var
+  Field: TField;
+begin
+  Result := ADefault;
+
+  if not Assigned(FMemTablePagos) then Exit;
+  if not FMemTablePagos.Active then Exit;
+
+  Field := FMemTablePagos.FindField(ANombreCampo);
+  if Assigned(Field) and not Field.IsNull then
+    Result := Field.AsInteger
+  else
+    Result := ADefault;
+end;
+
 procedure TDatosFaseCobro.CalcularTotales;
 var
   BaseImponible: Currency;
@@ -555,64 +581,110 @@ var
   HayFormaPagoQueDevuelveCambio: Boolean;
   CambioCalculado: Currency;
   CodigoForma: string;
+  ImporteEntregado: Currency;
 begin
+  // PROTECCIÓN INICIAL MEJORADA
+  if not Assigned(FMemTablePagos) then
+  begin
+    InicializarTotalesPorDefecto;
+    Exit;
+  end;
+
+  if not FMemTablePagos.Active then
+  begin
+    InicializarTotalesPorDefecto;
+    Exit;
+  end;
+
+  if FMemTablePagos.FieldCount = 0 then
+  begin
+    InicializarTotalesPorDefecto;
+    Exit;
+  end;
+
+  // Cálculos básicos
   BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-  if FPorcentajeDescuentoGlobal <> 0 then
-    FImporteDescuentoGlobal := BaseImponible *
-                               (FPorcentajeDescuentoGlobal / 100);
+
+  if Abs(FPorcentajeDescuentoGlobal) > 0.001 then
+    FImporteDescuentoGlobal := BaseImponible * (FPorcentajeDescuentoGlobal / 100)
+  else
+    FImporteDescuentoGlobal := 0;
+
   FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
+
   TotalEntregado := 0;
   TotalValesRecogidos := 0;
   HayFormaPagoQueDevuelveCambio := False;
-  if Assigned(FMemTablePagos) and FMemTablePagos.Active then
-  begin
-    FMemTablePagos.DisableControls;
-    try
-      bookmark := FMemTablePagos.GetBookmark;
-      try
-        FMemTablePagos.First;
-        while not FMemTablePagos.Eof do
-        begin
-          CodigoForma := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
-          if CodigoForma = 'VALE' then
-          begin
-            TotalValesRecogidos := TotalValesRecogidos +
-              FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-          end
-          else
-          begin
-            TotalEntregado := TotalEntregado +
-              FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
 
-            if ((FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency > 0)
-                and (FMemTablePagos.FieldByName(
-                                'ES_DEVUELVE_CAMBIO_FORMAP').AsString = 'S')) then
-              HayFormaPagoQueDevuelveCambio := True;
-          end;
-          FMemTablePagos.Next;
-        end;
-      finally
-        if FMemTablePagos.BookmarkValid(bookmark) then
-          FMemTablePagos.GotoBookmark(bookmark);
-        FMemTablePagos.FreeBookmark(bookmark);
-      end;
-    finally
-      FMemTablePagos.EnableControls;
-    end;
+  // Si la tabla está vacía, inicializar y salir
+  if FMemTablePagos.IsEmpty then
+  begin
+    FImporteValeRecogido := 0;
+    FImporteEntregado := 0;
+    FImportePendiente := FImporteTotalPagar;
+    FImporteCambio := 0;
+
+    if Assigned(FOnRecalculado) then
+      FOnRecalculado(Self);
+    Exit;
   end;
 
-  // Actualizar el total de vales recogidos
+  // Recorrer formas de pago de manera segura
+  FMemTablePagos.DisableControls;
+  try
+    bookmark := FMemTablePagos.GetBookmark;
+    try
+      FMemTablePagos.First;
+      while not FMemTablePagos.Eof do
+      begin
+        CodigoForma := ObtenerStringSafe('CODIGO_FORMAP', '');
+
+        if CodigoForma.IsEmpty then
+        begin
+          FMemTablePagos.Next;
+          Continue;
+        end;
+
+        ImporteEntregado := ObtenerCurrencySafe('IMPORTE_ENTREGADO', 0);
+
+        if CodigoForma = 'VALE' then
+        begin
+          TotalValesRecogidos := TotalValesRecogidos + ImporteEntregado;
+        end
+        else
+        begin
+          TotalEntregado := TotalEntregado + ImporteEntregado;
+
+          if (Abs(ImporteEntregado) > 0.001) and
+             (ObtenerStringSafe('ES_DEVUELVE_CAMBIO_FORMAP', 'N') = 'S') then
+            HayFormaPagoQueDevuelveCambio := True;
+        end;
+
+        FMemTablePagos.Next;
+      end;
+    finally
+      if FMemTablePagos.BookmarkValid(bookmark) then
+        FMemTablePagos.GotoBookmark(bookmark);
+      FMemTablePagos.FreeBookmark(bookmark);
+    end;
+  finally
+    FMemTablePagos.EnableControls;
+  end;
+
   FImporteValeRecogido := TotalValesRecogidos;
 
-  // Resto del cálculo igual que antes
-  if FImporteTotalPagar < 0 then
+  // Lógica de cálculo de totales
+  if FImporteTotalPagar < -0.001 then  // Es devolución
   begin
     FImporteEntregado := 0;
     FImporteCambio    := 0;
+
     var ImporteADevolver: Currency := Abs(FImporteTotalPagar);
     var DevueltoPorFormas: Currency := 0;
-    if TotalEntregado < 0 then
+
+    if TotalEntregado < -0.001 then
       DevueltoPorFormas := Abs(TotalEntregado);
+
     if DevueltoPorFormas >= ImporteADevolver then
     begin
       FImporteValeEmitido := 0;
@@ -627,14 +699,20 @@ begin
         FImportePendiente := RestanteSinFormas - FImporteValeEmitido;
     end;
   end
-  else
+  else  // Es cobro normal
   begin
     FImporteEntregado := TotalEntregado + FImporteValeRecogido;
-    if FImporteEntregado >= FImporteTotalPagar then
+
+    if FImporteEntregado >= FImporteTotalPagar - 0.001 then  // Tolerancia
     begin
       FImportePendiente := 0;
       CambioCalculado := FImporteEntregado - FImporteTotalPagar;
-      if (CambioCalculado > 0) and (not HayFormaPagoQueDevuelveCambio) then
+
+      // Normalizar valores muy pequeños a 0
+      if Abs(CambioCalculado) < 0.01 then
+        CambioCalculado := 0;
+
+      if (CambioCalculado > 0.01) and (not HayFormaPagoQueDevuelveCambio) then
       begin
         FImporteCambio      := 0;
         FImporteValeEmitido := CambioCalculado;
@@ -647,11 +725,29 @@ begin
     end
     else
     begin
-      FImportePendiente := FImporteTotalPagar - FImporteEntregado -
-                           FImporteDejarCuenta;
-      FImporteCambio    := 0;
+      FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
+
+      // Normalizar valores muy pequeños a 0
+      if Abs(FImportePendiente) < 0.01 then
+        FImportePendiente := 0;
+
+      FImporteCambio := 0;
     end;
   end;
+
+  if Assigned(FOnRecalculado) then
+    FOnRecalculado(Self);
+end;
+
+procedure TDatosFaseCobro.InicializarTotalesPorDefecto;
+begin
+  FImporteDescuentoGlobal := 0;
+  FImporteTotalPagar := FImporteBruto - FImporteDescuentoLineal;
+  FImporteEntregado := 0;
+  FImportePendiente := FImporteTotalPagar;
+  FImporteCambio := 0;
+  FImporteValeRecogido := 0;
+  FImporteValeEmitido := 0;
 
   if Assigned(FOnRecalculado) then
     FOnRecalculado(Self);
@@ -672,7 +768,6 @@ begin
         'No se puede dejar importe en cuenta sin cliente.');
       Exit;
     end;
-    
     if not FPermiteDeuda then
     begin
       Result := TResultadoValidacion.Error(
@@ -680,13 +775,11 @@ begin
       Exit;
     end;
   end;
-  
   Result := TResultadoValidacion.OK;
 end;
 
 function TDatosFaseCobro.ValidarVale: TResultadoValidacion;
 begin
-  // TODO: Implementar validación de vales si es necesario
   Result := TResultadoValidacion.OK;
 end;
 
@@ -694,10 +787,7 @@ function TDatosFaseCobro.ValidarParaCobro: TResultadoValidacion;
 var
   TotalCobrado: Currency;
 begin
-  // Recalcular antes de validar
   CalcularTotales;
-
-  // ── Caso devolución ──────────────────────────────────────────────────────
   if EsDevolucion then
   begin
     if FImportePendiente > 0.01 then
@@ -708,28 +798,18 @@ begin
       Result := TResultadoValidacion.OK;
     Exit;
   end;
-
-  // ── Caso cobro normal ────────────────────────────────────────────────────
-  // Validar deuda
   Result := ValidarDeuda;
   if not Result.Valido then
     Exit;
-  
-  // Validar vales
   Result := ValidarVale;
   if not Result.Valido then
     Exit;
-  
-  // Verificar que se ha cobrado algo o hay deuda permitida
   TotalCobrado := FImporteEntregado + FImporteDejarCuenta;
-  
   if (TotalCobrado = 0) and (FImporteTotalPagar > 0) then
   begin
     Result := TResultadoValidacion.Error('No se ha indicado ningún pago.');
     Exit;
   end;
-  
-  // Si hay pendiente sin dejar en cuenta
   if (FImportePendiente > 0.01) and (FImporteDejarCuenta = 0) then
   begin
     Result := TResultadoValidacion.Advertencia(
@@ -737,7 +817,6 @@ begin
              '¿Desea dejarlo en cuenta?', [FImportePendiente]));
     Exit;
   end;
-  
   Result := TResultadoValidacion.OK;
 end;
 
@@ -749,7 +828,7 @@ var
   EsDevuelveCambio: Boolean;
 begin
   CalcularTotales;
-  
+
   RestanteCambio := FImporteCambio;
   Lista := TList<TFormaPagoItem>.Create;
   try
@@ -763,38 +842,30 @@ begin
           // Solo procesar líneas con importe > 0
           if FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency > 0 then
           begin
-            Item.NumeroLinea := FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger;
             Item.CodigoFormaPago := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
             Item.DescripcionFormaPago := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
             Item.CodigoDivisa := FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
-            Item.RedBlockchain := FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString;
             Item.FactorCambio := FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency;
             Item.ImporteDivisa := FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency;
             Item.ImporteEntregado := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
             Item.Referencia := FMemTablePagos.FieldByName('REFERENCIA').AsString;
             Item.Observaciones := '';
-            
-            // Calcular cambio específico para esta línea
             Item.ImporteCambio := 0;
-            EsDevuelveCambio := FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO').AsString = 'S';
-            
+            EsDevuelveCambio := FMemTablePagos.FieldByName(
+                                    'ES_DEVUELVE_CAMBIO_FORMAP').AsString = 'S';
             if (RestanteCambio > 0) and EsDevuelveCambio then
             begin
               Item.ImporteCambio := RestanteCambio;
               RestanteCambio := 0;
             end;
-            
             Lista.Add(Item);
           end;
-          
           FMemTablePagos.Next;
         end;
       finally
         FMemTablePagos.EnableControls;
       end;
     end;
-    
-    // Si hay deuda, agregar línea de DEUDA
     if FImporteDejarCuenta > 0 then
     begin
       Item.NumeroLinea := Lista.Count + 1;
@@ -810,7 +881,6 @@ begin
       Item.Observaciones := 'Pendiente cliente: ' + FDatosCliente.NombreCliente;
       Lista.Add(Item);
     end;
-
     Result := Lista.ToArray;
   finally
     Lista.Free;
@@ -820,36 +890,25 @@ end;
 function TDatosFaseCobro.ObtenerFormaPagoInfo(
                                          const ACodigo: string): TFormaPagoInfo;
 begin
-  // Intentamos leer de la tabla en memoria si estamos posicionados en ella
   if Assigned(FMemTablePagos) and (FMemTablePagos.Active) and
      (FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString = ACodigo) then
   begin
     Result.Codigo := ACodigo;
     Result.Descripcion :=
                       FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
-
-    // Asumiendo que cargaste estos campos en CargarFormasPago
-    // Necesitas asegurarte que estos campos existan en tu query original
     if FMemTablePagos.FindField('ES_DEVUELVE_CAMBIO_FORMAP') <> nil then
        Result.DevuelveCambio :=
         (FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString = 'S')
     else
        Result.DevuelveCambio := True;
-
-    // Aquí está la clave para que salte la ventana modal
     if FMemTablePagos.FindField('ES_REQ_REFERENCIA_FORMAP') <> nil then
        Result.RequiereReferencia :=
          (FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S')
     else
        Result.RequiereReferencia := False;
-
-    // Mapear comportamiento para Crypto/Tarjeta
-//    if FMemTablePagos.FindField('TIPO_COMPORTAMIENTO') <> nil then
-//       Result.TipoComportamiento := FMemTablePagos.FieldByName('TIPO_COMPORTAMIENTO').AsString;
   end
   else
   begin
-    // Fallback por defecto
     Result.Codigo := ACodigo;
     Result.Descripcion := ACodigo;
     Result.DevuelveCambio := True;
