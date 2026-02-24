@@ -122,6 +122,7 @@ type
     procedure ConfigurarModoCobroNormal;
     procedure RellenarPendienteEnFormaActual;
     procedure EscribirImporteEnFormaActual(AImporte: Double);
+    procedure MemTablePagosAfterPost(DataSet: TDataSet);
   public
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -158,6 +159,13 @@ begin
   FDatosCobro.OnRequiereReferencia := AlRequerirReferencia;
   CargarFormasPago;
   dsFormasPago.DataSet := FMemTablePagos;
+  FMemTablePagos.AfterPost := MemTablePagosAfterPost;
+end;
+
+procedure TfrmMtoCajaFaseCobro.MemTablePagosAfterPost(DataSet: TDataSet);
+begin
+  if Assigned(FDatosCobro) then
+    FDatosCobro.Recalcular;
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormDestroy(Sender: TObject);
@@ -189,6 +197,7 @@ begin
       FieldDefs.Add('IMPORTE_ENTREGADO', ftFloat);
       FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
       FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
+      FieldDefs.Add('CODIGO_DIVISA', ftString, 6);
       Open;
     end;
   finally
