@@ -23,8 +23,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 754
-    ExplicitHeight = 511
+    ExplicitWidth = 952
+    ExplicitHeight = 512
     object pnlSuperior: TPanel
       Left = 0
       Top = 0
@@ -33,7 +33,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 754
+      ExplicitWidth = 952
       object lblBuscar: TcxLabel
         Left = 8
         Top = 20
@@ -79,8 +79,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       Height = 401
       Align = alClient
       TabOrder = 1
-      ExplicitWidth = 754
-      ExplicitHeight = 391
+      ExplicitWidth = 952
+      ExplicitHeight = 392
       object dbtvVales: TcxGridDBTableView
         OnDblClick = dbtvValesDblClick
         OnFocusedRecordChanged = dbtvValesFocusedRecordChanged
@@ -138,8 +138,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 451
-      ExplicitWidth = 754
+      ExplicitTop = 452
+      ExplicitWidth = 952
       object btnAceptar: TcxButton
         Left = 632
         Top = 14
@@ -160,25 +160,25 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         TabOrder = 1
         OnClick = btnCancelarClick
       end
-      object btnF1: TcxButton
+      object btnF12: TcxButton
         Left = 593
         Top = 14
-        Width = 40
+        Width = 41
         Height = 32
         Caption = 'F12'
         TabOrder = 2
         Visible = False
         OnClick = btnAceptarClick
       end
-      object btnF2: TcxButton
+      object btnESC: TcxButton
         Left = 435
         Top = 14
-        Width = 40
+        Width = 41
         Height = 32
         Caption = 'ESC'
         TabOrder = 3
         Visible = False
-        OnClick = btnCancelarClick
+        OnClick = btnESCClick
       end
     end
   end
