@@ -1654,10 +1654,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -1891,10 +1887,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -2025,10 +2017,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrlbx1: TScrollBox
                 Left = 0
                 Top = 0
@@ -2312,10 +2300,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
@@ -2721,10 +2705,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -3433,6 +3413,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilTop: TPanel
           Width = 1079
           ExplicitWidth = 1079
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1079

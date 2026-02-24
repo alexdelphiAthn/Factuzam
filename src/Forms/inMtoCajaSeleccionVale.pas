@@ -68,8 +68,8 @@ type
     dsVales:        TDataSource;
     btnAceptar:     TcxButton;
     btnCancelar:    TcxButton;
-    btnF1:          TcxButton; // Etiqueta F1 → Aceptar
-    btnF2:          TcxButton; // Etiqueta F2 → Cancelar / ESC
+    btnF12: TcxButton;
+    btnESC: TcxButton; // Etiqueta F2 → Cancelar / ESC
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -82,6 +82,7 @@ type
     procedure dbtvValesFocusedRecordChanged(Sender: TcxCustomGridTableView;
       APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
+    procedure btnESCClick(Sender: TObject);
   private
     FMemVales:    TMemDataSet;
     FValeSeleccionado: TValeSeleccionado;
@@ -215,7 +216,7 @@ procedure TfrmMtoCajaSeleccionVale.ActualizarBotonAceptar;
 begin
   btnAceptar.Enabled := (not FMemVales.IsEmpty) and
                         (dbtvVales.Controller.FocusedRecord <> nil);
-  btnF1.Enabled      := btnAceptar.Enabled;
+//  btnF1.Enabled      := btnAceptar.Enabled;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.btnBuscarClick(Sender: TObject);
@@ -298,6 +299,12 @@ end;
 
 procedure TfrmMtoCajaSeleccionVale.btnCancelarClick(Sender: TObject);
 begin
+  ModalResult := mrCancel;
+end;
+
+procedure TfrmMtoCajaSeleccionVale.btnESCClick(Sender: TObject);
+begin
+  inherited;
   ModalResult := mrCancel;
 end;
 
