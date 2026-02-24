@@ -64,7 +64,8 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         Left = 144
         Top = 57
         ParentFont = False
-        Properties.DisplayFormat = ',0.00000000000 ;-,0.00000000000 '
+        Properties.DecimalPlaces = 11
+        Properties.DisplayFormat = ',0.00000000000 ;-,0.00000000000'
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -17
@@ -171,7 +172,8 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       object edtFactorCambio: TcxCurrencyEdit
         Left = 120
         Top = 66
-        Properties.DisplayFormat = '0.0000000000'
+        Properties.DecimalPlaces = 11
+        Properties.DisplayFormat = '0.00000000000'
         Properties.ReadOnly = False
         Properties.OnChange = edtFactorCambioPropertiesChange
         TabOrder = 0

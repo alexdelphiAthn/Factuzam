@@ -121,7 +121,7 @@ type
                                 APermiteDeuda: Boolean;
                                 ALimiteCredito, ADeudaActual: Currency);
     procedure QuitarCliente;
-    procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
+//    procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
     function ActualizarImportePago(ALineaPago: Integer; AImporte: Currency;
                                    ADatosRef: TDatosReferencia): Boolean;
     procedure AplicarDescuentoGlobal(APorcentaje: Currency); overload;
@@ -165,27 +165,6 @@ uses
   Vcl.Dialogs, System.UITypes;
 
 { TDatosCliente }
-
-//procedure TDatosFaseCobro.RegistrarValeRecogido(const ACodigoVale,
-//  APinSeguridad: string; AImporte: Currency);
-//var
-//  Vale: TValeAplicado;
-//begin
-//  Vale.CodigoVale := ACodigoVale;
-//  Vale.PinSeguridad := APinSeguridad;
-//  Vale.ImporteAplicado := AImporte;
-//
-//  if not Assigned(FValesRecogidos) then
-//    FValesRecogidos := TList<TValeAplicado>.Create;
-//
-//  FValesRecogidos.Add(Vale);
-//
-//  // Actualizar el importe de vale recogido
-//  FImporteValeRecogido := FImporteValeRecogido + AImporte;
-//
-//  // Recalcular automáticamente
-//  Recalcular;
-//end;
 
 //procedure TDatosFaseCobro.EliminarValeRecogido(const ACodigoVale: string);
 //var
@@ -340,40 +319,40 @@ begin
   end;
 end;
 
-procedure TDatosFaseCobro.CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
-var
-  FormaPago: TFormaPagoInfo;
-begin
-  if not Assigned(FMemTablePagos) then
-    Exit;
-  FMemTablePagos.DisableControls;
-  try
-    FMemTablePagos.Close;
-    FMemTablePagos.Open;
-    FMemTablePagos.Clear;
-    for FormaPago in AFormasPago do
-    begin
-      FMemTablePagos.Append;
-//      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
-//        FMemTablePagos.RecordCount;
-      FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := FormaPago.Codigo;
-      FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
-                                                          FormaPago.Descripcion;
-      FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString :=
-        IfThen(FormaPago.DevuelveCambio, 'S', 'N');
-      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
-      FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
-      FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
-      FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
-      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency := 0;
-      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
-      FMemTablePagos.Post;
-    end;
-    FMemTablePagos.First;
-  finally
-    FMemTablePagos.EnableControls;
-  end;
-end;
+//procedure TDatosFaseCobro.CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
+//var
+//  FormaPago: TFormaPagoInfo;
+//begin
+//  if not Assigned(FMemTablePagos) then
+//    Exit;
+//  FMemTablePagos.DisableControls;
+//  try
+//    FMemTablePagos.Close;
+//    FMemTablePagos.Open;
+//    FMemTablePagos.Clear;
+//    for FormaPago in AFormasPago do
+//    begin
+//      FMemTablePagos.Append;
+////      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
+////        FMemTablePagos.RecordCount;
+//      FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := FormaPago.Codigo;
+//      FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
+//                                                          FormaPago.Descripcion;
+//      FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString :=
+//        IfThen(FormaPago.DevuelveCambio, 'S', 'N');
+//      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
+//      FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
+//      FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
+//      FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
+//      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency := 0;
+//      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
+//      FMemTablePagos.Post;
+//    end;
+//    FMemTablePagos.First;
+//  finally
+//    FMemTablePagos.EnableControls;
+//  end;
+//end;
 
 function TDatosFaseCobro.ActualizarImportePago(ALineaPago: Integer;
   AImporte: Currency; ADatosRef: TDatosReferencia): Boolean;
@@ -628,8 +607,6 @@ begin
       FOnRecalculado(Self);
     Exit;
   end;
-
-  // Recorrer formas de pago de manera segura
   FMemTablePagos.DisableControls;
   try
     bookmark := FMemTablePagos.GetBookmark;
@@ -638,15 +615,12 @@ begin
       while not FMemTablePagos.Eof do
       begin
         CodigoForma := ObtenerStringSafe('CODIGO_FORMAP', '');
-
         if CodigoForma.IsEmpty then
         begin
           FMemTablePagos.Next;
           Continue;
         end;
-
         ImporteEntregado := ObtenerCurrencySafe('IMPORTE_ENTREGADO', 0);
-
         if CodigoForma = 'VALE' then
         begin
           TotalValesRecogidos := TotalValesRecogidos + ImporteEntregado;
@@ -654,12 +628,10 @@ begin
         else
         begin
           TotalEntregado := TotalEntregado + ImporteEntregado;
-
           if (Abs(ImporteEntregado) > 0.001) and
              (ObtenerStringSafe('ES_DEVUELVE_CAMBIO_FORMAP', 'N') = 'S') then
             HayFormaPagoQueDevuelveCambio := True;
         end;
-
         FMemTablePagos.Next;
       end;
     finally
@@ -670,21 +642,15 @@ begin
   finally
     FMemTablePagos.EnableControls;
   end;
-
   FImporteValeRecogido := TotalValesRecogidos;
-
-  // Lógica de cálculo de totales
-  if FImporteTotalPagar < -0.001 then  // Es devolución
+  if FImporteTotalPagar < -0.001 then
   begin
     FImporteEntregado := 0;
     FImporteCambio    := 0;
-
     var ImporteADevolver: Currency := Abs(FImporteTotalPagar);
     var DevueltoPorFormas: Currency := 0;
-
     if TotalEntregado < -0.001 then
       DevueltoPorFormas := Abs(TotalEntregado);
-
     if DevueltoPorFormas >= ImporteADevolver then
     begin
       FImporteValeEmitido := 0;
@@ -699,19 +665,16 @@ begin
         FImportePendiente := RestanteSinFormas - FImporteValeEmitido;
     end;
   end
-  else  // Es cobro normal
+  else
   begin
     FImporteEntregado := TotalEntregado + FImporteValeRecogido;
-
     if FImporteEntregado >= FImporteTotalPagar - 0.001 then  // Tolerancia
     begin
       FImportePendiente := 0;
       CambioCalculado := FImporteEntregado - FImporteTotalPagar;
-
       // Normalizar valores muy pequeños a 0
       if Abs(CambioCalculado) < 0.01 then
         CambioCalculado := 0;
-
       if (CambioCalculado > 0.01) and (not HayFormaPagoQueDevuelveCambio) then
       begin
         FImporteCambio      := 0;
@@ -726,15 +689,12 @@ begin
     else
     begin
       FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
-
       // Normalizar valores muy pequeños a 0
       if Abs(FImportePendiente) < 0.01 then
         FImportePendiente := 0;
-
       FImporteCambio := 0;
     end;
   end;
-
   if Assigned(FOnRecalculado) then
     FOnRecalculado(Self);
 end;

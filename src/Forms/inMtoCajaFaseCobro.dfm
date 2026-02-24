@@ -320,6 +320,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BorderStyle = cxcbsNone
           TabOrder = 3
           object dbtvFormasPago: TcxGridDBTableView
+            OnEditing = dbtvFormasPagoEditing
             OnEditChanged = dbtvFormasPagoEditChanged
             DataController.DataSource = dsFormasPago
             OptionsData.Deleting = False
