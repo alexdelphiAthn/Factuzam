@@ -151,18 +151,18 @@ type
     procedure BuscarClientes;
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure ComboAtributoCloseUp(Sender: TObject);
-//    procedure ComboAtributoKeyDown(Sender: TObject;
-//                                   var Key: Word; Shift: TShiftState);
   public
     DatosCaja: TdmCajaOpe;
-//    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
-//                              AFecha: TDateTime);
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
+    // CAMBIO 1: Variables de control para evitar re-entradas y bucles
+    FNumAtributosActual: Integer;   // Guarda el nº de atributos aunque el dataset haga Post
+    FProcesandoAtributo: Boolean;   // Evita re-entrada en el bloque del último atributo
+    FInicializandoCombo: Boolean;   // Evita que ForzarDespliegue dispare OnAtributoChanged
   private
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
@@ -178,6 +178,7 @@ var
   frmMtoOpeCaja: TfrmMtoOpeCaja;
 
 implementation
+
 {$R *.dfm}
 
 uses
@@ -190,8 +191,6 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.WMSaltarAtributo(var Msg: TMessage);
-var
-Key: Word;
 begin
   if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
      (cxGrid1DBTableView1.Controller.EditingController.IsEditing) then
@@ -217,8 +216,7 @@ begin
     DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString :=
                                                                  FCodigoEmpresa;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
-   DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
-
+    DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
   end;
 end;
 
@@ -694,7 +692,7 @@ begin
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
-             ActualizarLabelTotal );
+             ActualizarLabelTotal);
     end;
   finally
     qry.Free;
@@ -737,33 +735,10 @@ begin
   end;
 end;
 
-//procedure TfrmMtoOpeCaja.ComboAtributoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-//begin
-//  if Key = VK_RETURN then
-//  begin
-//    if (Sender is TcxComboBox) and TcxComboBox(Sender).DroppedDown then
-//    begin
-//       TcxComboBox(Sender).DroppedDown := False; // Cerramos la lista visualmente
-//    end;
-//
-//    // Pasamos el control directo a la rejilla para que guarde y salte en el mismo golpe
-//    if cxGrid1DBTableView1.Controller.FocusedItem <> nil then
-//    begin
-//       cxGrid1DBTableView1EditKeyDown(cxGrid1DBTableView1,
-//                                      cxGrid1DBTableView1.Controller.FocusedItem,
-//                                      Sender as TcxCustomEdit,
-//                                      Key, Shift);
-//       Key := 0; // Matamos el Enter original para que no haya rebotes
-//    end;
-//  end;
-//end;
-
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
 var
   Clon: TClientDataSet;
-  OldQty, NewQty: Double;
-  OldTotal, OldBase: Currency;
-  Factor: Double;
+  OldQty: Double;
 begin
   Result := False;
   if Trim(SkuBuscado) = '' then Exit;
@@ -776,37 +751,18 @@ begin
       if (Clon.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString = SkuBuscado)
          and (Clon.RecNo <> DatosCaja.cdsLineas.RecNo) then
       begin
-        Clon.Edit;
         OldQty := Clon.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
-        OldTotal := Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-        OldBase  := Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-        NewQty := OldQty + 1;
-        Clon.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat := NewQty;
-        if OldQty <> 0 then
-        begin
-          Factor := NewQty / OldQty;
-          Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency :=
-                                                              OldTotal * Factor;
-          Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency :=
-                                                               OldBase * Factor;
-        end
-        else
-        begin
-          Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency :=
-                Clon.FieldByName(
-                 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency * NewQty;
-          Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency :=
-                Clon.FieldByName(
-                 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * NewQty;
-        end;
-        dsLineas.Dataset.DisableControls;
+        Clon.Edit;
+        Clon.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat := OldQty + 1;
+        // GridRecalc se encarga del resto: precio, descuento, total
+        dsLineas.DataSet.DisableControls;
         Clon.Post;
-        dsLineas.Dataset.EnableControls;
+        dsLineas.DataSet.EnableControls;
         GridRecalc(nil,
-             cxGrid1DBTableView1,
-             DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera,
-             ActualizarLabelTotal);
+                   cxGrid1DBTableView1,
+                   DatosCaja.cdsLineas,
+                   DatosCaja.cdsCabecera,
+                   ActualizarLabelTotal);
         Result := True;
         Break;
       end;
@@ -841,7 +797,6 @@ begin
       with TcxComboBoxProperties(Col.Properties) do
       begin
         DropDownListStyle := lsFixedList;
-//        ImmediatePost := True;
         OnEditValueChanged := OnAtributoChanged;
       end;
       Col.Index := IndiceBase + i;
@@ -851,11 +806,15 @@ begin
   end;
 end;
 
+// CAMBIO 2: OnAtributoChanged sale inmediatamente si estamos inicializando el combo
 procedure TfrmMtoOpeCaja.OnAtributoChanged(Sender: TObject);
 var
   Edit: TcxCustomEdit;
   SkuNuevo: string;
 begin
+  // Si ForzarDespliegue está asignando ItemIndex := 0, no procesamos
+  if FInicializandoCombo then Exit;
+
   Edit := Sender as TcxCustomEdit;
   if not DatosCaja.cdsLineas.Active then Exit;
   Edit.PostEditValue;
@@ -922,8 +881,8 @@ begin
      not (Key in [VK_RETURN, VK_ESCAPE, VK_UP, VK_DOWN, VK_TAB, VK_LEFT,
                   VK_RIGHT, VK_F1..VK_F12]) then
   begin
-    tmrBusq.Enabled := False; // Reset
-    tmrBusq.Enabled := True;  // Start (Cuenta atrás de 500ms)
+    tmrBusq.Enabled := False;
+    tmrBusq.Enabled := True;
   end;
   if (Key = VK_UP) and (DatosCaja.cdsLineas.State = dsInsert) then
   begin
@@ -935,14 +894,6 @@ begin
       Key := 0;
       Exit;
     end;
-//    else
-//    begin
-//      try
-//        DatosCaja.cdsLineas.Post;
-//      except        Key := 0;
-//        raise;
-//      end;
-//    end;
   end;
   if (Key <> VK_RETURN) then
     Exit;
@@ -972,20 +923,19 @@ begin
         Exit;
       end;
     end;
-    AEdit.PostEditValue; // Guardamos valor
-  if DatosCaja.cdsLineas.State = dsBrowse then
-    DatosCaja.cdsLineas.Edit;
+    AEdit.PostEditValue;
+    if DatosCaja.cdsLineas.State = dsBrowse then
+      DatosCaja.cdsLineas.Edit;
     var CodArticuloActual := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
     ActualizarColumnasDinamicas(CodArticuloActual);
-    NumAtributos := DatosCaja.cdsLineas.FieldByName(
-                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    // CAMBIO 3: Usar FNumAtributosActual en lugar de leer del dataset
+    NumAtributos := FNumAtributosActual;
     var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
                                         'CODIGO_UNIDAD_FACTURA_LINEA').AsString;
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) then
     begin
        RellenarAtributosDesdeSku(SkuDetectado);
-//       DatosCaja.cdsLineas.Post;
        DatosCaja.cdsLineas.Append;
        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -999,7 +949,7 @@ begin
        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
        Key := 0;
-       Exit; // SALIR
+       Exit;
     end
     else if (NumAtributos > 0) then
     begin
@@ -1012,7 +962,7 @@ begin
          cxGrid1DBTableView1.Controller.FocusedColumn := PrimeraColAtributo;
          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
          Key := 0;
-         Exit; // SALIR
+         Exit;
        end;
     end;
   end;
@@ -1022,18 +972,14 @@ begin
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
       if Combo.Properties.Items.Count > 0 then
-      begin
         Combo.ItemIndex := 0;
-      end;
     end;
+    // Si estaba desplegado, solo cerrarlo y salir
+    // El usuario tendrá que pulsar Enter de nuevo para confirmar
+    // NO: esto es exactamente el doble Enter que queremos evitar
+    // En cambio: cerrarlo y continuar SIN Exit
     if Combo.DroppedDown then
-    begin
       Combo.DroppedDown := False;
-      Key := 0;
-      Exit;
-    end;
-//    if Combo.DroppedDown then
-//      Combo.DroppedDown := False;
     Combo.PostEditValue;
     if (VarIsNull(Combo.EditValue)) or
        (Trim(VarToStr(Combo.EditValue)) = '') then
@@ -1041,56 +987,64 @@ begin
        Key := 0;
        Exit;
     end;
-    NumAtributos := DatosCaja.cdsLineas.FieldByName(
-                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    NumAtributos := FNumAtributosActual;
+    // HideEdit SOLO aquí, cuando el combo ya está cerrado y tiene valor
     cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
+    // CAMBIO 5: Usar FNumAtributosActual en lugar de leer del dataset
+    NumAtributos := FNumAtributosActual;
     if (AItem.Tag = NumAtributos) then
     begin
-       EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
-       SkuNuevo := DatosCaja.GenerarSkuFinal( DatosCaja.cdsLineas.FieldByName(
-                                     'CODIGO_ARTICULO_FACTURA_LINEA').AsString);
-       if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-        begin
+      if FProcesandoAtributo then
+      begin
+        Key := 0;
+        Exit;
+      end;
+      FProcesandoAtributo := True;
+      DatosCaja.cdsLineas.DisableControls;
+      try
+        EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
+        SkuNuevo := DatosCaja.GenerarSkuFinal(DatosCaja.cdsLineas.FieldByName(
+                                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString);
+        if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
           DatosCaja.cdsLineas.Edit;
-        end;
-       DatosCaja.cdsLineas.FieldByName(
-                            'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuNuevo;
-       RecalcularPrecioDesdeSku(SkuNuevo);
-       ConsultarStock(SkuNuevo);
-       if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
-       begin
-          DatosCaja.cdsLineas.Cancel;
+        DatosCaja.cdsLineas.FieldByName(
+                             'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuNuevo;
+
+        if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
+        begin
+          if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+            DatosCaja.cdsLineas.Cancel;
+          if not DatosCaja.cdsLineas.IsEmpty then
+            if DatosCaja.cdsLineas.FieldByName(
+                       'CODIGO_UNIDAD_FACTURA_LINEA').AsString = SkuNuevo then
+              DatosCaja.cdsLineas.Delete;
+          DatosCaja.cdsLineas.EnableControls;  // Antes del Append
           DatosCaja.cdsLineas.Append;
           cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
           cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
           Key := 0;
           Exit;
-       end;
-//       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-//          DatosCaja.cdsLineas.Post;
-       if EstabaInsertando then
-       begin
-          DatosCaja.cdsLineas.Append;
-          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-       end
-       else
-       begin
-          cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
-       end;
-       cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
-       Key := 0;
-    end
-    else
-      begin
-        // ¡ESTE ELSE ES CLAVE PARA SALTAR DEL COLOR A LA TALLA AUTOMÁTICAMENTE!
-        var SiguienteCol := ObtenerColumnaPorTag(AItem.Tag + 1);
-        if SiguienteCol <> nil then
-        begin
-          cxGrid1DBTableView1.Controller.FocusedColumn := SiguienteCol;
-          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
-          Key := 0;
         end;
+
+        RecalcularPrecioDesdeSku(SkuNuevo);
+        ConsultarStock(SkuNuevo);
+
+      finally
+        FProcesandoAtributo := False;
+        DatosCaja.cdsLineas.EnableControls;  // Restaurar siempre
       end;
+
+      // FUERA del try/finally para que EnableControls ya esté activo
+      if EstabaInsertando then
+      begin
+        DatosCaja.cdsLineas.Append;
+        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+      end
+      else
+        cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+      cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+      Key := 0;
+    end;
   end;
 end;
 
@@ -1107,7 +1061,6 @@ begin
     Combo := TcxComboBox(AEdit);
     Combo.Tag := AItem.Tag;
     Combo.Properties.OnEditValueChanged := OnAtributoChanged;
-//    Combo.OnKeyDown := ComboAtributoKeyDown;
     Combo.OnEnter := nil;
     OrdenColumna := AItem.Tag;
     if DatosCaja.cdsLineas.Active then
@@ -1148,35 +1101,21 @@ begin
     finally
       Free;
     end;
-//    var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
-//    if Combo.Properties.Items.Count = 1 then
-//    begin
-//      Combo.OnEnter := nil;
-//    end
-//    else if Combo.Properties.Items.Count > 1 then
-//    begin
-//      // 2. SÓLO AUTO-DESPLEGAR SI LA CELDA ESTÁ VACÍA
-//      if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
-//        Combo.OnEnter := ForzarDespliegue
-//      else
-//        Combo.OnEnter := nil; // Si ya hay una talla elegida (ej: '43'), que no salte de nuevo
-//    end;
-      if Combo.Properties.Items.Count > 1 then
+    if Combo.Properties.Items.Count > 1 then
+    begin
+      var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
+      if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
       begin
-        // Múltiples items: solo desplegar si la celda está vacía
-        var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
-        if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
-        begin
-          Combo.OnEnter := ForzarDespliegue;
-          TcxComboBoxProperties(Combo.Properties).OnCloseUp :=
-                                                           ComboAtributoCloseUp;
-          Combo.ItemIndex := 0;
-        end
-        else
-        begin
-          Combo.OnEnter := nil; // ✅ Ya tiene valor, NO desplegar
-        end;
+        // CAMBIO 8: ForzarDespliegue usa FInicializandoCombo para no disparar
+        // OnAtributoChanged al asignar ItemIndex := 0
+        Combo.OnEnter := ForzarDespliegue;
+        Combo.ItemIndex := 0;
+      end
+      else
+      begin
+        Combo.OnEnter := nil;
       end;
+    end;
   end;
   if AItem = tvArticulo then
   begin
@@ -1234,15 +1173,6 @@ begin
       Key := 0;
       Exit;
     end;
-//    else
-//    begin
-//      try
-//        DatosCaja.cdsLineas.Post;
-//      except
-//        Key := 0;
-//        raise;
-//      end;
-//    end;
   end;
 end;
 
@@ -1277,7 +1207,6 @@ begin
     CurrentItem := cxGrid1DBTableView1.Controller.FocusedItem;
     if dsLineas.DataSet.State = dsBrowse then
       dsLineas.DataSet.Edit;
-    // Si es una columna de atributo (Tag > 0) y es un combo
     if not cxGrid1DBTableView1.Controller.EditingController.IsEditing then
     begin
       cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -1288,12 +1217,11 @@ begin
        if (CurrentEdit is TcxComboBox) then
        begin
          Combo := TcxComboBox(CurrentEdit);
-         // Solo desplegar si tiene múltiples opciones
          if Combo.Properties.Items.Count > 1 then
          begin
            if not Combo.DroppedDown then
              Combo.DroppedDown := True;
-           Exit; // Salir, no continuar con búsqueda de empleados/artículos
+           Exit;
          end;
        end;
     end;
@@ -1309,11 +1237,9 @@ begin
   end
   else
   begin
-    // ⭐ Por defecto → Buscar Artículo
     CodigoBuscado := BuscarArticulo;
     if CodigoBuscado <> '' then
     begin
-      // Asegurar que hay línea activa
       if DatosCaja.cdsLineas.State = dsBrowse then
       begin
         if DatosCaja.cdsLineas.IsEmpty then
@@ -1321,18 +1247,16 @@ begin
         else
           DatosCaja.cdsLineas.Edit;
       end;
-      // Rellenar datos
       if RellenarDatosArticuloEnDataset(CodigoBuscado) then
       begin
         var CodArticulo := DatosCaja.cdsLineas.FieldByName(
                                 'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
         ActualizarColumnasDinamicas(CodArticulo);
-        var NumAtributos := DatosCaja.cdsLineas.FieldByName(
-                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+        // CAMBIO: usar FNumAtributosActual
+        var NumAtributos := FNumAtributosActual;
         cxGrid1.SetFocus;
         if NumAtributos > 0 then
         begin
-          // Ir al primer atributo
           var PrimeraCol := ObtenerColumnaPorTag(1);
           if PrimeraCol <> nil then
           begin
@@ -1343,8 +1267,6 @@ begin
         end
         else
         begin
-          // Nueva línea
-//          DatosCaja.cdsLineas.Post;
           DatosCaja.cdsLineas.Append;
           cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
           cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -1370,25 +1292,19 @@ end;
 
 procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
-  // Verificamos si el dataset está activo y tiene líneas (venta en curso)
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
   begin
-    // HAY DATOS: Preguntamos confirmación
     if MessageDlg('Hay una venta en curso.' + sLineBreak +
                   '¿Desea BORRAR LA VENTA y salir?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      // Si el usuario dice SÍ, cancelamos cualquier edición pendiente para limpiar y cerramos
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
          DatosCaja.cdsLineas.Cancel;
-
       Close;
     end;
-    // Si dice NO, la acción termina y no hace nada (se queda en la venta)
   end
   else
   begin
-    // NO HAY DATOS: Cerramos directamente
     Close;
   end;
 end;
@@ -1427,6 +1343,10 @@ begin
        datosCaja.qryDefinicionArticulo.FieldByName('NOMBRE_ATRIBUTO').AsString);
       datosCaja.qryDefinicionArticulo.Next;
     end;
+
+    // CAMBIO 9: Guardar en FNumAtributosActual para que no se pierda con Posts
+    FNumAtributosActual := NombresAtributos.Count;
+
     if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
     begin
       DatosCaja.cdsLineas.FieldByName(
@@ -1500,8 +1420,6 @@ begin
     DatosCaja.cdsCabecera.FieldByName(
                                 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
                                                                             'S';
-//    DatosCaja.cdsCabecera.FieldByName(
-//                                'CODIGO_FORMA_PAGO_CLIENTE').AsString := 'CAJA';
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
     Error := False;
@@ -1599,38 +1517,6 @@ begin
   BuscarEmpleados;
 end;
 
-//procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
-//  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
-//var
-//  sNomEmpleado: string;
-//  sCodigo: string;
-//begin
-//  sCodigo := VarToStr(DisplayValue);
-//  if Trim(sCodigo) = '' then
-//  begin
-//    lblNombreEmpleado.Caption := '';
-//    Error := True;
-//    ErrorText := 'Debe haber un empleado en la venta';
-//    Exit;
-//  end;
-//  if not DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
-//  begin
-//    Error := True;
-//    ErrorText := 'El código de empleado no existe.';
-//    lblNombreEmpleado.Caption := '';
-//  end
-//  else
-//  begin
-//    Error := False; // Permite salir
-//    lblNombreEmpleado.Caption := sNomEmpleado;
-//    DatosCaja.cdsCabecera.Edit;
-//    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString :=
-//                                                         btnCodigoEmpleado.Text;
-//    ErrorText := '';
-//  end;
-//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
-//end;
-
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
@@ -1639,9 +1525,6 @@ var
   qry: TUniQuery;
 begin
   sCodigo := VarToStr(DisplayValue);
-
-  // 1. PRIMER INTENTO: Búsqueda exacta (Lógica original)
-  // Si el usuario escribió un código correcto, usamos la función existente.
   if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
   begin
     Error := False;
@@ -1649,65 +1532,43 @@ begin
     DatosCaja.cdsCabecera.Edit;
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := sCodigo;
     ErrorText := '';
-
-    // Forzamos que se muestre el valor correctamente formateado
     DisplayValue := sCodigo;
     Exit;
   end;
-
-  // 2. SEGUNDO INTENTO: Auto-seleccionar el primer empleado coincidente o el primero de la lista
-  // Si llegamos aquí, el código no existe o está vacío. Vamos a buscar el "primero".
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn; // Usamos la conexión global definida en tu unit
+    qry.Connection := oConn;
     qry.SQL.Text := 'SELECT CODIGO_EMPLEADO_USUARIO, DIMINUTIVO_TICKET_USUARIO ' +
                     '  FROM fza_usuarios ' +
                     ' WHERE ACTIVO_USUARIO = ''S'' ' +
                     '   AND CODIGO_EMPLEADO_USUARIO IS NOT NULL ';
-
-    // Si el usuario escribió algo parcial (ej: "JU"), buscamos parecidos.
-    // Si está vacío, simplemente traerá el primero de toda la tabla.
     if Trim(sCodigo) <> '' then
     begin
       qry.SQL.Add('AND (CODIGO_EMPLEADO_USUARIO LIKE :TOKEN OR DIMINUTIVO_TICKET_USUARIO LIKE :TOKEN) ');
       qry.ParamByName('TOKEN').AsString := '%' + sCodigo + '%';
     end;
-
-    // Ordenamos para asegurar que siempre salga "el primero" consistentemente
     qry.SQL.Add('ORDER BY CODIGO_EMPLEADO_USUARIO ASC LIMIT 1');
-
     qry.Open;
-
     if not qry.IsEmpty then
     begin
-      // ¡ÉXITO! Encontramos un candidato
       sCodigo := qry.FieldByName('CODIGO_EMPLEADO_USUARIO').AsString;
       sNomEmpleado := qry.FieldByName('DIMINUTIVO_TICKET_USUARIO').AsString;
-
-      // CAMBIAMOS el valor que el usuario escribió por el código real encontrado
       DisplayValue := sCodigo;
-
-      // Actualizamos UI y Dataset
       lblNombreEmpleado.Caption := sNomEmpleado;
       DatosCaja.cdsCabecera.Edit;
       DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := sCodigo;
-
-      // IMPORTANTE: Decimos que NO hay error para que el foco pueda saltar al siguiente control
       Error := False;
       ErrorText := '';
     end
     else
     begin
-      // FALLO TOTAL: No hay empleados en la BD o el filtro no trajo nada
       Error := True;
       ErrorText := 'No se encontró ningún empleado válido.';
       lblNombreEmpleado.Caption := '';
     end;
-
   finally
     qry.Free;
   end;
-
   cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 
@@ -1716,7 +1577,6 @@ var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   ObjTotales: TFacturaTotales;
 begin
-  // 1. GESTIÓN DE LÍNEA EN BLANCO O EDICIÓN PENDIENTE
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
     if DatosCaja.cdsLineas.State = dsInsert then
@@ -1736,7 +1596,6 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
-  // 2. VALIDAR QUE HAYA ALGO QUE COBRAR
   if DatosCaja.cdsLineas.IsEmpty then
   begin
     ShowMessage('No hay líneas en la venta para cobrar.');
@@ -1769,25 +1628,17 @@ var
   NextIndex: Integer;
   TargetForm: TfrmMtoOpeCaja;
   Found: Boolean;
-  const MAX_OPERACIONES = 5; // Configura aquí tu límite
+  const MAX_OPERACIONES = 5;
 begin
-  // 1. Calculamos cuál es el siguiente número de operación (Ticket)
-  // Usamos 'Self.Tag' para guardar si somos la 1, la 2, etc.
   NextIndex := Self.Tag + 1;
-
   if NextIndex > MAX_OPERACIONES then
-    NextIndex := 1; // Vuelta a empezar
-
-  // 2. Buscamos si esa operación YA está abierta en memoria
+    NextIndex := 1;
   Found := False;
   TargetForm := nil;
-
   for i := 0 to Screen.FormCount - 1 do
   begin
-    // Buscamos formularios de esta misma clase
     if Screen.Forms[i] is TfrmMtoOpeCaja then
     begin
-      // Comprobamos si tiene el número que buscamos
       if Screen.Forms[i].Tag = NextIndex then
       begin
         TargetForm := TfrmMtoOpeCaja(Screen.Forms[i]);
@@ -1796,8 +1647,6 @@ begin
       end;
     end;
   end;
-
-  // 3. Si existe la traemos al frente, si no, la creamos
   if Found then
   begin
     TargetForm.Show;
@@ -1807,27 +1656,15 @@ begin
   end
   else
   begin
-    // CREAMOS UNA NUEVA INSTANCIA
     TargetForm := TfrmMtoOpeCaja.Create(Application);
-
-    // Le asignamos su número de operación
     TargetForm.Tag := NextIndex;
-
-    // Actualizamos el Caption para que el usuario sepa dónde está
-    // Mantenemos el número de caja real (FCodigoCaja) fijo, pero cambiamos el número visual
     TargetForm.Caption := Format('Operación %d - (Caja Real %s)', [NextIndex, Self.FCodigoCaja]);
-
-    // Pasamos los MISMOS datos de conexión de la caja actual (Empresa, Almacén, Caja)
     TargetForm.PrepararValores(Self.FCodigoEmpresa,
                                Self.FCodigoAlmacen,
-                               Self.FCodigoCaja, // <--- OJO: La caja física NO cambia
+                               Self.FCodigoCaja,
                                Self.FFecha);
-
     TargetForm.Show;
   end;
-
-  // 4. Ocultamos la actual para dar efecto de "cambio de canal"
-  // No hacemos Close porque perderíamos la venta a medio hacer si volvemos a pasar por aquí.
   Self.Hide;
 end;
 
@@ -1852,18 +1689,17 @@ begin
   try
     formulario.dsTablaG.DataSet := unqryEmpleados;
     formulario.dsTablaG.DataSet.Open;
-    formulario.ProcesarPerfiles;  //debe ir después de abrir el dataset
+    formulario.ProcesarPerfiles;
     formulario.ShowModal;
   finally
       inherited;
       if formulario.sFicha = 'S' then
       begin
-        btnCodigoEmpleado.Text :=
-                 unqryEmpleados.Fields[0].AsString;
-      if btnCodigoEmpleado.ValidateEdit(True) then
-      begin
-        btnCodigoCliente.SetFocus;
-      end;
+        btnCodigoEmpleado.Text := unqryEmpleados.Fields[0].AsString;
+        if btnCodigoEmpleado.ValidateEdit(True) then
+        begin
+          btnCodigoCliente.SetFocus;
+        end;
       end;
       formulario.dsTablaG.DataSet.Close;
       FreeAndNil(unqryEmpleados);
@@ -1902,7 +1738,7 @@ end;
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-if (Key = VK_F5) then
+  if (Key = VK_F5) then
     btnF5.Click;
 end;
 
@@ -1911,6 +1747,7 @@ begin
   btnCodigoEmpleado.SetFocus;
 end;
 
+// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger OnAtributoChanged
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
 var
   Combo: TcxComboBox;
@@ -1918,53 +1755,51 @@ begin
   if Sender is TcxComboBox then
   begin
     Combo := TcxComboBox(Sender);
-    // Desplegar inmediatamente
+    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el precio
+    // con un SKU incompleto (todavía falta confirmar este atributo)
+    FInicializandoCombo := True;
+    try
+      Combo.ItemIndex := 0;
+    finally
+      FInicializandoCombo := False;
+    end;
     if not Combo.DroppedDown then
       Combo.DroppedDown := True;
-    // IMPORTANTE: Desconectar el evento para que no se vuelva a ejecutar
     Combo.OnEnter := nil;
   end;
 end;
 
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
 begin
-  Result := True; // Por defecto asumimos que se puede cerrar
-  // 1. Si el formulario ya se está destruyendo, no hacemos nada
+  Result := True;
   if (csDestroying in ComponentState) then Exit;
-  // 2. Verificamos si hay datos en la venta
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
   begin
-    // IMPORTANTE: Como con F5 ocultamos la ventana (Hide),
-    // hay que mostrarla para que el usuario vea qué operación le pide confirmar.
     if not Visible then
     begin
       Show;
       BringToFront;
     end;
-    // 3. Preguntamos
     if MessageDlg(Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
                          '¿Desea ELIMINARLA y cerrar?', [Self.Tag]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      // Limpiamos cambios pendientes
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
         DatosCaja.cdsLineas.Cancel;
-      Close; // Esto destruirá el formulario si Action = caFree en OnClose
+      Close;
     end
     else
     begin
-      Result := False; // El usuario dijo NO, abortamos el cierre general
+      Result := False;
     end;
   end
   else
   begin
-    // Si está vacía, cerramos directamente sin preguntar
     Close;
   end;
 end;
 
-function TfrmMtoOpeCaja.
-                      ObtenerColumnaPorTag(NumColumn: Integer): TcxGridDBColumn;
+function TfrmMtoOpeCaja.ObtenerColumnaPorTag(NumColumn: Integer): TcxGridDBColumn;
 var
   i:Integer;
 begin
@@ -1979,7 +1814,7 @@ end;
 
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);
 begin
-  lblFechaCaja.Caption := FormatDateTime( 'hh:nn:ss dddd d mmmm yyyy', Now);
+  lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', Now);
 end;
 
 end.

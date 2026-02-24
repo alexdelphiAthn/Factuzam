@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 442
-  ClientWidth = 1208
+  ClientHeight = 424
+  ClientWidth = 1196
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,11 +19,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1208
+    Width = 1196
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1202
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -121,23 +120,21 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1208
-    Height = 353
+    Width = 1196
+    Height = 335
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 1202
-    ExplicitHeight = 344
     object Panel1: TPanel
       Left = 1
-      Top = 254
-      Width = 1206
+      Top = 245
+      Width = 1200
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 245
-      ExplicitWidth = 1200
+      ExplicitTop = 236
+      ExplicitWidth = 1194
       DesignSize = (
-        1206
+        1194
         98)
       object btnF12: TcxButton
         Left = 10
@@ -257,7 +254,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 712
+        Left = 688
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -279,10 +276,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 706
         Height = 80
         Width = 423
-        AnchorX = 1135
+        AnchorX = 1111
       end
       object btnF8: TcxButton
         Left = 224
@@ -334,17 +330,15 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1206
-      Height = 253
+      Width = 1194
+      Height = 235
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1200
-      ExplicitHeight = 244
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
-        Width = 1204
-        Height = 171
+        Width = 1198
+        Height = 162
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -355,8 +349,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1198
-        ExplicitHeight = 162
+        ExplicitWidth = 1192
+        ExplicitHeight = 153
         object cxGrid1DBTableView1: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
@@ -442,17 +436,17 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object pnl1: TPanel
         Left = 1
-        Top = 180
-        Width = 1204
+        Top = 171
+        Width = 1198
         Height = 72
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 171
-        ExplicitWidth = 1198
+        ExplicitTop = 162
+        ExplicitWidth = 1192
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1202
+          Width = 1196
           Height = 70
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -464,7 +458,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1196
+          ExplicitWidth = 1190
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
@@ -491,14 +485,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object cxspltr1: TcxSplitter
         Left = 1
-        Top = 172
-        Width = 1204
+        Top = 163
+        Width = 1198
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 163
-        ExplicitWidth = 1198
+        ExplicitTop = 154
+        ExplicitWidth = 1192
       end
     end
   end

@@ -108,6 +108,8 @@ type
     procedure actBuscarTExecute(Sender: TObject);
     procedure btnBuscarValeClick(Sender: TObject);
     procedure btnF6Click(Sender: TObject);
+    procedure dbtvFormasPagoEditing(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem; var AAllow: Boolean);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -123,6 +125,7 @@ type
     procedure RellenarPendienteEnFormaActual;
     procedure EscribirImporteEnFormaActual(AImporte: Double);
     procedure MemTablePagosAfterPost(DataSet: TDataSet);
+    procedure FMemTablePagosBeforePost(DataSet: TDataSet);
   public
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -157,9 +160,39 @@ begin
   FDatosCobro := TDatosFaseCobro.Create(FMemTablePagos);
   FDatosCobro.OnRecalculado := AlRecalcularDatos;
   FDatosCobro.OnRequiereReferencia := AlRequerirReferencia;
-  CargarFormasPago;
+//  CargarFormasPago;
   dsFormasPago.DataSet := FMemTablePagos;
   FMemTablePagos.AfterPost := MemTablePagosAfterPost;
+  FMemTablePagos.BeforePost := FMemTablePagosBeforePost;
+end;
+
+procedure TfrmMtoCajaFaseCobro.FMemTablePagosBeforePost(DataSet: TDataSet);
+var
+  Importe: Currency;
+  EsDivisa, EsCripto: Boolean;
+begin
+  // Protección: no permitir borrar líneas de vales
+  if (DataSet.State = dsEdit) and
+     (DataSet.FieldByName('CODIGO_FORMAP').AsString = 'VALE') then
+  begin
+    // Si es un vale, solo permitir cambiar el importe a 0 para "desactivarlo"
+    // pero mejor aún, impedirlo totalmente
+    Exit; // O puedes decidir si permites editar vales o no
+  end;
+
+  Importe := DataSet.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
+  EsDivisa := DataSet.FieldByName('ESDIVISA_FORMAP').AsString = 'S';
+  EsCripto := DataSet.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S';
+  if Abs(Importe) < 0.01 then
+  begin
+    DataSet.FieldByName('REFERENCIA').AsString := '';
+//    DataSet.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
+    DataSet.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
+    DataSet.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
+    DataSet.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
+    if EsDivisa or EsCripto then
+      DataSet.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.MemTablePagosAfterPost(DataSet: TDataSet);
@@ -182,23 +215,62 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := '  SELECT * ' +
-                    '    FROM fza_caja_formas_pago ' +
-                      ' WHERE ES_ACTIVO_FORMAP = ''S'' ' +
+    qry.SQL.Text := 'SELECT * ' +
+                    'FROM fza_caja_formas_pago ' +
+                    'WHERE ES_ACTIVO_FORMAP = ''S'' ' +
                     'ORDER BY ORDEN_VISUAL_FORMAP';
     qry.Open;
+
     with FMemTablePagos do
     begin
-      Clear;
-      Assign(qry);
-      FieldDefs.Add('FACTOR_CAMBIO', ftCurrency);
-      FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
-      FieldDefs.Add('REFERENCIA', ftString, 255);
-      FieldDefs.Add('IMPORTE_ENTREGADO', ftFloat);
-      FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
-      FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
-      FieldDefs.Add('CODIGO_DIVISA', ftString, 6);
+      if Active then Close;
+      FieldDefs.Clear;
+      Fields.Clear;
+
+      // Copiar FieldDefs desde la query
+      FieldDefs.Assign(qry.FieldDefs);
+
+      // Añadir campos extra que no vienen de BD
+      FieldDefs.Add('FACTOR_CAMBIO',      ftCurrency);
+      FieldDefs.Add('ESIMPORTE_DIVISA',   ftString, 1);
+      FieldDefs.Add('REFERENCIA',         ftString, 255);
+      FieldDefs.Add('IMPORTE_ENTREGADO',  ftFloat);
+      FieldDefs.Add('IMPORTE_DIVISA',     ftFloat);
+      FieldDefs.Add('IMPORTE_CAMBIO',     ftCurrency);
+      FieldDefs.Add('CODIGO_DIVISA',      ftString, 6);
+
       Open;
+
+      // Ahora cargar los datos desde la query
+      DisableControls;
+      try
+        qry.First;
+        while not qry.Eof do
+        begin
+          Append;
+          // Copiar campos que existen en ambos
+          var i: Integer;
+          for i := 0 to qry.FieldCount - 1 do
+          begin
+            var F := FindField(qry.Fields[i].FieldName);
+            if Assigned(F) and not qry.Fields[i].IsNull then
+              F.Value := qry.Fields[i].Value;
+          end;
+          // Valores por defecto para campos extra
+          FieldByName('FACTOR_CAMBIO').AsCurrency    := 1;
+          FieldByName('ESIMPORTE_DIVISA').AsString   := 'S';
+          FieldByName('REFERENCIA').AsString         := '';
+          FieldByName('IMPORTE_ENTREGADO').AsFloat   := 0;
+          FieldByName('IMPORTE_DIVISA').AsFloat      := 0;
+          FieldByName('IMPORTE_CAMBIO').AsCurrency   := 0;
+          FieldByName('CODIGO_DIVISA').AsString      := 'EUR';
+          Post;
+          qry.Next;
+        end;
+        First;
+      finally
+        EnableControls;
+      end;
     end;
   finally
     qry.Free;
@@ -298,6 +370,15 @@ begin
   AjustarFormatoEditorActivo;
 end;
 
+procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  inherited;
+  if FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString = 'VALE' then
+    AAllow := False;
+end;
+
 procedure TfrmMtoCajaFaseCobro.EscribirImporteEnFormaActual(AImporte: Double);
 var
   fp: TFormaPagoInfo;
@@ -306,9 +387,8 @@ var
 begin
   EsDivisa := FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S';
   EsCripto  := FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S';
-  fp.Codigo             := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
-  fp.Descripcion        :=
-                      FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
+  fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
+  fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
   fp.RequiereReferencia :=
           FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S';
   dr.Init;
@@ -341,6 +421,7 @@ begin
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('REFERENCIA').AsString       := '';
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
+      FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
       FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat    := 0;
       FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
       FMemTablePagos.Post;
@@ -364,7 +445,6 @@ var
   EsDivisa: Boolean;
   Importe: Currency;
   RecordIndex: Integer;
-//  DC: TcxGridDBDataController;
   IdxDivisa, IdxCripto, IdxImporte, IdxEsDivisa: Integer;
   vImporte, vEsDivisa: Variant;
 begin
@@ -381,7 +461,6 @@ begin
   if EsDivisa then
   begin
     vImporte := DC.Values[RecordIndex, IdxImporte];
-    // Protegemos el cast si el valor es Null
     if VarIsNull(vImporte) or VarIsEmpty(vImporte) then
       Importe := 0
     else
