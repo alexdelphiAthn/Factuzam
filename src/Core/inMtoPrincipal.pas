@@ -168,7 +168,7 @@ uses inLibUser,
   inMtoSplash,
   inMtoCajaMenu,
   inMtoCajaParam,
-  inMtoModalGenFilter;
+  inMtoModalGenFilter, inLibCajaParam;
 
 {$R *.dfm}
 
@@ -191,11 +191,13 @@ begin
   // carga de todos los forms con sus propiedades y módulos de datos
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
+  oCajaParams.Inicializar(oUser, oGroup);
   dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
   dxstsbr1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
+  dxstsbr1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
   Self.Caption := oAppName + ' ' + oVersion;
   pnlPPBottom.Visible := False;
   cxMemo1.Visible := False;
@@ -506,13 +508,13 @@ begin
     if FDmConn.conUni.Connected then
     begin
       bIsConnected := True;
-      dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
+      dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
     end
     else
       bIsConnected := False;
   if (FDmConn = nil) or (not bIsConnected) then
   begin
-    dxstsbr1.Panels.Items[3].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
+    dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
     inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
   end;
 end;

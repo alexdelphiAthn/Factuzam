@@ -49,7 +49,7 @@ type
     // GRUPO: Empleado
     vgerCodEmpleadoDefecto: TcxEditorRow;    // Código de empleado por defecto
     vgerShowEmpleadoLinea: TcxEditorRow;     // Mostrar empleado en linea de caja
-    
+
     // Otros componentes
     cmbGrupoUsuario: TcxComboBox;
     btnGuardar: TcxButton;
@@ -58,12 +58,15 @@ type
     vgerVentasCredito: TcxEditorRow;
     vgerDepositos: TcxEditorRow;
     vgerDescuentos: TcxEditorRow;
-    
+
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure edtBusquedaKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormShow(Sender: TObject);
+    procedure cmbGrupoUsuarioPropertiesChange(Sender: TObject);
+    procedure btnGuardarClick(Sender: TObject);
+    procedure btnChangeIdClick(Sender: TObject);
   private
     procedure FiltrarVerticalGrid(Grid: TcxVerticalGrid; Texto: string);
     function QuitarTildes(const Texto: string): string;
@@ -81,7 +84,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils; // Necesario para la función AnsiContainsText (búsqueda insensible a mayúsculas)
+  StrUtils, inLibCajaParam; // Necesario para la función AnsiContainsText (búsqueda insensible a mayúsculas)
 
 // Función para normalizar el texto quitando tildes
 function TfrmMtoCajaParam.QuitarTildes(const Texto: string): string;
@@ -116,52 +119,167 @@ begin
   end;
 end;
 
+procedure TfrmMtoCajaParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
+var
+  sUsuario, sGrupo: string;
+begin
+  case cmbGrupoUsuario.ItemIndex of
+    0: begin sUsuario := oUser;  sGrupo := '';      end; // Usuario específico
+    1: begin sUsuario := '';     sGrupo := oGroup;  end; // Grupo
+    2: begin sUsuario := '';     sGrupo := oAll;    end; // Todos
+  else
+    Exit;
+  end;
+  CargarParametros(cxVerticalGrid1, sUsuario, sGrupo);
+end;
+
 procedure TfrmMtoCajaParam.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   FiltrarVerticalGrid(cxVerticalGrid1, edtBusqueda.Text);
 end;
 
+procedure TfrmMtoCajaParam.btnChangeIdClick(Sender: TObject);
+var
+  qry: TUniQuery;
+  usuarios: TStringList;
+  sUsuario: string;
+  idx: Integer;
+begin
+  qry := TUniQuery.Create(nil);
+  usuarios := TStringList.Create;
+  try
+    // Obtener usuarios distintos que tengan parámetros de este formulario
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT DISTINCT USUARIO_GRUPO_PERFILES ' +
+      'FROM fza_usuarios_perfiles ' +
+      'WHERE KEY_PERFILES = ''frmMtoCajaParam'' ' +
+      'ORDER BY USUARIO_GRUPO_PERFILES';
+    qry.Open;
+
+    while not qry.Eof do
+    begin
+      usuarios.Add(qry.Fields[0].AsString);
+      qry.Next;
+    end;
+
+    if usuarios.Count = 0 then
+    begin
+      ShowMessage('No hay usuarios con parámetros guardados para este formulario.');
+      Exit;
+    end;
+
+    // Selección mediante InputQuery con combo simulado
+    sUsuario := usuarios[0];
+    if not InputQuery('Cambiar usuario',
+                      'Usuarios disponibles:' + sLineBreak +
+                      usuarios.CommaText + sLineBreak + sLineBreak +
+                      'Introduce el nombre de usuario:',
+                      sUsuario) then
+      Exit;
+
+    // Verificar que el usuario introducido existe
+    idx := usuarios.IndexOf(sUsuario);
+    if idx < 0 then
+    begin
+      ShowMessage('Usuario no encontrado: ' + sUsuario);
+      Exit;
+    end;
+
+    // Cargar parámetros como si fuéramos ese usuario
+    CargarParametros(cxVerticalGrid1, sUsuario, '');
+
+    // Opcional: reflejar en el combo quién está "activo"
+    // Añadir al combo si no estaba
+    if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
+      cmbGrupoUsuario.Properties.Items.Add(sUsuario);
+    cmbGrupoUsuario.ItemIndex :=
+      cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+
+  finally
+    usuarios.Free;
+    qry.Free;
+  end;
+end;
+
+procedure TfrmMtoCajaParam.btnGuardarClick(Sender: TObject);
+var
+  qry: TUniQuery;
+  i: Integer;
+  Row: TcxCustomRow;
+  sUsuarioGrupo: string;
+begin
+  case cmbGrupoUsuario.ItemIndex of
+    0: sUsuarioGrupo := oUser;
+    1: sUsuarioGrupo := oGroup;
+    2: sUsuarioGrupo := oAll;
+  else
+    Exit;
+  end;
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, :p_formulario, :p_subkey, :p_value)';
+
+    for i := 0 to cxVerticalGrid1.Rows.Count - 1 do
+    begin
+      Row := cxVerticalGrid1.Rows[i];
+      if not (Row is TcxEditorRow) then
+        Continue;
+
+      qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
+      qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
+      qry.ParamByName('p_subkey').AsString        := Row.Name;
+      qry.ParamByName('p_value').AsString         := VarToStr(TcxEditorRow(Row).Properties.Value);
+      qry.Execute;
+    end;
+
+    ShowMessage('Parámetros guardados correctamente.');
+  finally
+    qry.Free;
+  end;
+  oCajaParams.Recargar(oUser, oGroup);
+end;
+
 procedure TfrmMtoCajaParam.CargarParametros(Grid: TcxVerticalGrid; const pUsuario, pGrupo: string);
 var
-  sp: TUniStoredProc;
+  qry: TUniQuery;
   i: Integer;
   Row: TcxCustomRow;
   SubKey: string;
 begin
-  sp := TUniStoredProc.Create(nil);
+  qry := TUniQuery.Create(nil);
   try
-    sp.Connection := oConn;
-    sp.StoredProcName := 'PRC_GETPERFILFORMULARIO';
-    sp.Params.ParamByName('p_usuario').AsString := pUsuario;
-    sp.Params.ParamByName('p_grupo').AsString := pGrupo;
-    sp.Params.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
-    sp.Open;
+    qry.Connection := oConn;
+    qry.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
+    qry.ParamByName('p_usuario').AsString    := pUsuario;
+    qry.ParamByName('p_grupo').AsString      := pGrupo;
+    qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
+    qry.Open;
 
     Grid.BeginUpdate;
     try
-      while not sp.Eof do
+      while not qry.Eof do
       begin
-        SubKey := sp.FieldByName('SUBKEY_PERFILES').AsString;
-
-        // Buscamos la fila en el grid que coincida con el nombre del parámetro
-        for i := 0 to cxVerticalGrid1.Rows.Count - 1 do
+        SubKey := qry.FieldByName('SUBKEY_PERFILES').AsString;
+        for i := 0 to Grid.Rows.Count - 1 do
         begin
-          Row := cxVerticalGrid1.Rows[i];
-          if (Row is TcxEditorRow) and (SameText(Row.Name, SubKey)) then
+          Row := Grid.Rows[i];
+          if (Row is TcxEditorRow) and SameText(Row.Name, SubKey) then
           begin
-             // Asignamos el valor recuperado
-             TcxEditorRow(Row).Properties.Value := sp.FieldByName('VALUE_PERFILES').Value;
-             Break;
+            TcxEditorRow(Row).Properties.Value := qry.FieldByName('VALUE_PERFILES').Value;
+            Break;
           end;
         end;
-        sp.Next;
+        qry.Next;
       end;
     finally
       Grid.EndUpdate;
     end;
   finally
-    sp.Free;
+    qry.Free;
   end;
 end;
 
@@ -208,8 +326,19 @@ begin
   end;
 end;
 
+
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
 begin
+  // Cargar combo con usuario, grupo y 'Todos'
+  cmbGrupoUsuario.Properties.Items.Clear;
+  cmbGrupoUsuario.Properties.Items.Add(oUser);
+  cmbGrupoUsuario.Properties.Items.Add(oGroup);
+  cmbGrupoUsuario.Properties.Items.Add(oAll);
+  cmbGrupoUsuario.ItemIndex := 0; // Seleccionar usuario por defecto
+  if oRootGroup = 'S' then
+    btnChangeId.Visible := True
+  else
+    btnChangeId.Visible := False;
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
 end;

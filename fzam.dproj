@@ -392,6 +392,7 @@
             <Form>frmMtoCajaParam</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

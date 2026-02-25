@@ -183,7 +183,7 @@ implementation
 
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  inLibFacturas, inLibGenBusq;
+  inLibFacturas, inLibGenBusq, inLibCajaParam;
 
 procedure TfrmMtoOpeCaja.ComboAtributoCloseUp(Sender: TObject);
 begin
@@ -1719,6 +1719,12 @@ begin
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
+
+  // Aplicar visibilidad de columnas según parámetros
+  tvEmpleado.Visible      := oCajaParams.GetBool('vgerShowEmpleadoLinea', True);
+  tvDescuento.Visible     := oCajaParams.GetBool('vgerDescuentos', True);
+  tvDescuentoMenos.Visible:= oCajaParams.GetBool('vgerDescuentos', True);
+
   with dbtvBusqDBTableView1.DataController do
   begin
     DataModeController.GridMode := True;
@@ -1732,7 +1738,7 @@ begin
     IncSearchItem := nil;
   end;
   repSoloTexto.Properties.OnValidate := tvArticuloPropertiesValidate;
-  repComboBox.Properties.OnCloseUp := tvArticuloPropertiesCloseUp;
+  repComboBox.Properties.OnCloseUp   := tvArticuloPropertiesCloseUp;
 end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
@@ -1743,8 +1749,30 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
+var
+  sCodEmpleado: string;
 begin
-  btnCodigoEmpleado.SetFocus;
+  // Tarifa por defecto en cabecera
+  if DatosCaja.cdsCabecera.State = dsBrowse then
+    DatosCaja.cdsCabecera.Edit;
+  DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
+    oCajaParams.GetString('vgerDefTarifa', 'PVP');
+  lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
+                         'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+
+  // Empleado por defecto
+  if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+  begin
+    sCodEmpleado := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+    if sCodEmpleado <> '' then
+    begin
+      btnCodigoEmpleado.Text := sCodEmpleado;
+      btnCodigoEmpleado.ValidateEdit(True);
+      btnCodigoCliente.SetFocus;
+      Exit;
+    end;
+  end;
+   btnCodigoEmpleado.SetFocus;
 end;
 
 // CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger OnAtributoChanged

@@ -301,6 +301,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     object cmbGrupoUsuario: TcxComboBox
       Left = 455
       Top = 15
+      Properties.OnChange = cmbGrupoUsuarioPropertiesChange
       TabOrder = 1
       Width = 169
     end
@@ -311,6 +312,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Height = 26
       Caption = '&Guardar'
       TabOrder = 2
+      OnClick = btnGuardarClick
     end
     object btnChangeId: TcxButton
       Left = 689
@@ -337,6 +339,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         20783D22302220793D2233322220636C6173733D22426C61636B223EEEA38F3C
         2F746578743E0D0A3C2F7376673E0D0A}
       TabOrder = 3
+      OnClick = btnChangeIdClick
     end
   end
 end
