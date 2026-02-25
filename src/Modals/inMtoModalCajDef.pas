@@ -22,7 +22,8 @@ uses
   dxDateRanges, dxScrollbarAnnotations, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridCustomView,
   cxGrid, MemDS, DBAccess, Uni, System.Actions, Vcl.ActnList;
-
+const
+  WM_LOCATE_RECORD = WM_USER + 1;
 type
   TfrmMtoModalCajDef = class(TfrmBase)
     pnl1: TPanel;
@@ -50,10 +51,12 @@ type
     procedure Action2Execute(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
   private
-    { Private declarations }
-
+//    procedure WMLocateRecord(var Message: TMessage); message WM_LOCATE_RECORD;
   public
     sFicha:string;
+    sEmpresa: string;
+    sAlmacen: string;
+    sCaja:    string;
     { Public declarations }
   end;
 
@@ -104,13 +107,23 @@ begin
   inherited;
   Self.Position := poScreenCenter;
 end;
+//
+//procedure TfrmMtoModalCajDef.WMLocateRecord(var Message: TMessage);
+//begin
+//  if (sEmpresa = '') or (sAlmacen = '') or (sCaja = '') then
+//    Exit;
+//
+//end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);
 begin
   inherited;
+  qrySeleccion.Locate('Empresa;Almacen;Caja',
+                         VarArrayOf([sEmpresa, sAlmacen, sCaja]),
+                         []);
   if btnAceptar.CanBeFocused then
     btnAceptar.SetFocus;
   tvAlmacenesCajas.ApplyBestFit(nil, True, False);
 end;
-
+//  PostMessage(Self.Handle, WM_LOCATE_RECORD, 0, 0);end;
 end.

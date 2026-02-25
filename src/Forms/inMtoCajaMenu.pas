@@ -301,6 +301,9 @@ begin
     // Configuramos la conexión antes de abrir
     frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
     frm.qrySeleccion.Open;
+    frm.sEmpresa := oEmpresa;
+    frm.sAlmacen := oAlmacen;
+    frm.sCaja := oCaja;
     frm.ShowModal;
     if (frm.sFicha = 'S') then
     begin
