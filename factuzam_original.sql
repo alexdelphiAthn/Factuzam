@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 25/02/2026 07:17:50
+ Date: 25/02/2026 07:38:02
 */
 
 SET NAMES utf8mb4;
@@ -2530,7 +2530,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-25 07:07:04', '2026-02-25 07:07:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-25 07:27:30', '2026-02-25 07:27:30', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -4202,6 +4202,71 @@ BEGIN
         NOW()
     );
     
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for PRC_BUSQUEDA_ARTICULOS
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `PRC_BUSQUEDA_ARTICULOS`;
+delimiter ;;
+CREATE PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(IN p_tarifa     VARCHAR(10),
+    IN p_almacen    VARCHAR(10),
+    IN p_fecha      DATE,
+    IN p_token      VARCHAR(100),
+    IN p_solostock  TINYINT,
+    IN p_solotarifa TINYINT)
+BEGIN
+    IF p_tarifa IS NULL OR TRIM(p_tarifa) = '' THEN
+        SET p_tarifa := 'PVP';
+    END IF;
+    IF p_fecha IS NULL THEN
+        SET p_fecha := CURDATE();
+    END IF;
+
+    SELECT
+        v.*,
+        COALESCE(stk.STOCK_DISPONIBLE, 0) AS STOCK_DISPONIBLE
+    FROM vi_art_busquedas v
+
+    -- Stock unificado: por SKU + por código directo
+    LEFT JOIN (
+        SELECT COD_ART, SUM(STOCK) AS STOCK_DISPONIBLE
+        FROM (
+            -- Artículos CON SKU: sumar por artículo padre
+            SELECT sku.CODIGO_ARTICULO_SKU AS COD_ART,
+                   s.CANTIDAD_STK          AS STOCK
+              FROM fza_articulos_stockactual s
+              JOIN fza_articulos_skus sku
+                ON s.CODIGO_UNIDAD_STK = sku.CODIGO_UNIDAD_SKU
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+            UNION ALL
+            -- Artículos SIN SKU: código directo no existe en fza_articulos_skus
+            SELECT s.CODIGO_UNIDAD_STK AS COD_ART,
+                   s.CANTIDAD_STK      AS STOCK
+              FROM fza_articulos_stockactual s
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+               AND NOT EXISTS (
+                   SELECT 1 FROM fza_articulos_skus sku2
+                    WHERE sku2.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK
+               )
+        ) t
+        GROUP BY COD_ART
+    ) stk ON v.CODIGO_ARTICULO = stk.COD_ART
+
+    WHERE (v.CODIGO_TARIFA = p_tarifa OR v.CODIGO_TARIFA IS NULL)
+      AND v.FECHA_DESDE_TARIFA <= p_fecha
+      AND (v.FECHA_HASTA_TARIFA IS NULL OR v.FECHA_HASTA_TARIFA >= p_fecha)
+      AND (p_token IS NULL OR p_token = ''
+           OR v.CODIGO_ARTICULO      LIKE p_token
+           OR v.DESCRIPCION_ARTICULO LIKE p_token
+           OR v.DESCRIPCION_FAMILIA  LIKE p_token)
+      AND (p_solostock  = 0 OR COALESCE(stk.STOCK_DISPONIBLE, 0) > 0)
+      AND (p_solotarifa = 0 OR v.CODIGO_TARIFA IS NOT NULL)
+
+    ORDER BY v.CODIGO_ARTICULO;
+
 END
 ;;
 delimiter ;
