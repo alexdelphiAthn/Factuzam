@@ -83,6 +83,7 @@ type
       APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure btnESCClick(Sender: TObject);
+    procedure btnCancelarMouseEnter(Sender: TObject);
   private
     FMemVales:    TMemDataSet;
     FValeSeleccionado: TValeSeleccionado;
