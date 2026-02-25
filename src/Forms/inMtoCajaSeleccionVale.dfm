@@ -158,6 +158,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         Cancel = True
         Caption = 'Cancelar'
         TabOrder = 1
+        OnMouseEnter = btnCancelarMouseEnter
         OnClick = btnCancelarClick
       end
       object btnF12: TcxButton
