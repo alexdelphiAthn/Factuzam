@@ -25,6 +25,9 @@ var
   oUser      :String;
   oGroup     :String;
   orootGroup :String;
+  oEmpresa   :String;
+  oAlmacen   :String;
+  oCaja      :String;
   oAppName   :String;
   oVersion   :String;
   oAll       :string;

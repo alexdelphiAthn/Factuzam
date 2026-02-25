@@ -46,9 +46,13 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       item
         PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
-        PanelStyle.Alignment = taRightJustify
+        PanelStyle.Alignment = taCenter
         MinWidth = 100
         Width = 100
+      end
+      item
+        PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
+        PanelStyle.Alignment = taRightJustify
       end>
     BorderWidth = 1
     Font.Charset = DEFAULT_CHARSET

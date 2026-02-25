@@ -656,10 +656,13 @@ begin
       tbUsers.Edit;
       tbUsers.FieldByName('ULTIMOLOGIN_USUARIO').AsDateTime := Now;
       tbUsers.Post;
-      tbUsers.Close;
       oUser := edtUser.Text;
       oGroup := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
       orootGroup := sGrupoAdmin;
+      oEmpresa   := tbUsers.FieldByName('EMPRESADEF_USUARIO').AsString;
+      oAlmacen   := tbUsers.FieldByName('ALMACENDEF_USUARIO').AsString;
+      oCaja      := tbUsers.FieldByName('CAJADEF_USUARIO').AsString;
+      tbUsers.Close;
       sUserPassOK := 'true';
       SetIniValues;
       sSuccess := 'S';

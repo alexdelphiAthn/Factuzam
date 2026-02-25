@@ -157,7 +157,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibCajaParam;
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -207,7 +207,27 @@ begin
   cxDateNavigator1.ShowHint := True;
   cxDateNavigator1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
-  AbrirSelectorCaja;
+  if oCajaParams.GetBool('vgerShowCajaSelection', True) then
+    AbrirSelectorCaja
+  else
+  begin
+    // Tomar directamente los valores del login
+    FEmpresa := oEmpresa;
+    FAlmacen := oAlmacen;
+    FCaja    := oCaja;
+
+    // Si aún así están vacíos, forzar selector como fallback
+    if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+    begin
+      ShowMessage('Error al asignar Empresa Almacén Caja');
+      Exit;
+    end
+    else
+    begin
+      lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
+                                   [FEmpresa, FAlmacen, FCaja]);
+    end;
+  end;
 //  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - '
 //                         + 'Almacén ' + FAlmacen + ' - ' + 'Caja ' +
 //                         FCaja;
@@ -484,8 +504,8 @@ end;
 // Eventos para F6 - Entrada de Cambio
 procedure TfrmMtoMenuCaja.lblEmpresaDblClick(Sender: TObject);
 begin
-  inherited;
-  AbrirSelectorCaja;
+  if oCajaParams.GetBool('vgerShowCajaSelection', True) then
+    AbrirSelectorCaja;
 end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);

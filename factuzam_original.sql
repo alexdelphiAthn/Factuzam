@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 23/02/2026 06:31:07
+ Date: 25/02/2026 07:17:50
 */
 
 SET NAMES utf8mb4;
@@ -2530,7 +2530,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-23 06:20:30', '2026-02-23 06:20:30', '2021-05-14 19:54:29', 'Administrador', 'Administrador', NULL, NULL);
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-25 07:07:04', '2026-02-25 07:07:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -7182,6 +7182,30 @@ BEGIN
     COMMIT;
     
     SELECT 'Stock recalculado correctamente.' as MENSAJE;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for PRC_SETPERFILFORMULARIO
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `PRC_SETPERFILFORMULARIO`;
+delimiter ;;
+CREATE PROCEDURE `PRC_SETPERFILFORMULARIO`(IN p_usuario_grupo  VARCHAR(200),
+    IN p_formulario     VARCHAR(100),
+    IN p_subkey         VARCHAR(100),
+    IN p_value          VARCHAR(200))
+BEGIN
+    INSERT INTO fza_usuarios_perfiles 
+        (USUARIO_GRUPO_PERFILES, KEY_PERFILES, SUBKEY_PERFILES, 
+         VALUE_PERFILES, INSTANTEMODIF, INSTANTEALTA, USUARIOMODIF, USUARIOALTA)
+    VALUES 
+        (p_usuario_grupo, p_formulario, p_subkey, 
+         p_value, NOW(), NOW(), p_usuario_grupo, p_usuario_grupo)
+    ON DUPLICATE KEY UPDATE
+        VALUE_PERFILES  = p_value,
+        INSTANTEMODIF   = NOW(),
+        USUARIOMODIF    = p_usuario_grupo;
 END
 ;;
 delimiter ;

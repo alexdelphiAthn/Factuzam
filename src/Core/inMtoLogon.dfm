@@ -110,9 +110,9 @@ object frmLogon: TfrmLogon
       TabOrder = 2
     end
     object btnConf: TcxButton
-      Left = 136
+      Left = 120
       Top = 218
-      Width = 207
+      Width = 223
       Height = 31
       Caption = 'Configurar &Base de Datos ->'
       TabOrder = 3
