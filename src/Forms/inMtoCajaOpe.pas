@@ -403,26 +403,32 @@ begin
   end;
 end;
 
-function TfrmMtoOpeCaja.BuscarArticulo:String;
+function TfrmMtoOpeCaja.BuscarArticulo: String;
 begin
-  var unqryCon:TUniQuery := TUniQuery.Create(nil);
+  var unqryCon := TUniQuery.Create(nil);
   try
     unqryCon.Connection := oConn;
-    unqryCon.SQL.Text := 'SELECT * ' +
-                         '  FROM vi_art_busquedas ' +
-                         ' WHERE (codigo_tarifa = :TARIFA' +
-                         '    OR codigo_tarifa is null) ' +
-                         '   AND FECHA_DESDE_TARIFA < :FECHA ' +
-                         '   AND (FECHA_HASTA_TARIFA IS NULL ' +
-                         '        OR FECHA_HASTA_TARIFA > :FECHA)';
-    unqryCon.ParamByName('TARIFA').AsString :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-    unqryCon.PArambyName('FECHA').AsDateTime := FFecha;
+    unqryCon.SQL.Text :=
+      'CALL PRC_BUSQUEDA_ARTICULOS(' +
+      '  :p_tarifa,'   +
+      '  :p_almacen,'  +
+      '  :p_fecha,'    +
+      '  :p_token,'    +
+      '  :p_solostock,' +
+      '  :p_solotarifa)';
+
+    unqryCon.ParamByName('p_tarifa').AsString :=
+      DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+    unqryCon.ParamByName('p_almacen').AsString  := FCodigoAlmacen;
+    unqryCon.ParamByName('p_fecha').AsDate      := FFecha;
+    unqryCon.ParamByName('p_token').AsString    := '';   // sin filtro inicial
+    unqryCon.ParamByName('p_solostock').AsInteger :=
+      Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  True));
+    unqryCon.ParamByName('p_solotarifa').AsInteger :=
+      Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', True));
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
-                                       unqryCon,
-                                       'frmMtoArtFacSearch')
-                                     then
+                                        unqryCon,
+                                        'frmMtoArtFacSearch') then
       Result := unqryCon.FieldByName('CODIGO_ARTICULO').AsString
     else
       Result := '';
