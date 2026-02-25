@@ -49,24 +49,24 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         Width = 233
       end
       object btnBuscar: TcxButton
-        Left = 360
+        Left = 356
         Top = 15
-        Width = 113
-        Height = 26
+        Width = 142
+        Height = 39
         Caption = 'Buscar [Enter]'
         TabOrder = 1
         OnClick = btnBuscarClick
       end
       object lblPin: TcxLabel
-        Left = 508
-        Top = 18
+        Left = 690
+        Top = 17
         Caption = 'PIN:'
         TabOrder = 4
         Transparent = True
       end
       object edtPin: TcxTextEdit
-        Left = 542
-        Top = 14
+        Left = 734
+        Top = 16
         Properties.EchoMode = eemPassword
         TabOrder = 2
         Width = 120
@@ -141,7 +141,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       ExplicitTop = 452
       ExplicitWidth = 952
       object btnAceptar: TcxButton
-        Left = 632
+        Left = 840
         Top = 14
         Width = 105
         Height = 32
@@ -151,7 +151,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OnClick = btnAceptarClick
       end
       object btnCancelar: TcxButton
-        Left = 472
+        Left = 680
         Top = 14
         Width = 111
         Height = 32
@@ -162,7 +162,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OnClick = btnCancelarClick
       end
       object btnF12: TcxButton
-        Left = 593
+        Left = 801
         Top = 14
         Width = 41
         Height = 32
@@ -172,7 +172,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         OnClick = btnAceptarClick
       end
       object btnESC: TcxButton
-        Left = 435
+        Left = 643
         Top = 14
         Width = 41
         Height = 32
@@ -184,7 +184,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     end
   end
   object dsVales: TDataSource
-    Left = 680
+    Left = 576
     Top = 8
   end
 end

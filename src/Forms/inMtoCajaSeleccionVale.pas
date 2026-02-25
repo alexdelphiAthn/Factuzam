@@ -99,6 +99,8 @@ implementation
 
 {$R *.dfm}
 
+uses inLibCajaParam;
+
 { TfrmMtoCajaSeleccionVale }
 
 class function TfrmMtoCajaSeleccionVale.Ejecutar(
@@ -144,8 +146,14 @@ begin
 end;
 
 procedure TfrmMtoCajaSeleccionVale.FormShow(Sender: TObject);
+var
+  bPinObligatorio: Boolean;
 begin
   inherited;
+  bPinObligatorio := oCajaParams.GetBool('vgerRecuperaValePIN', False);
+  lblPin.Visible := bPinObligatorio;
+  edtPin.Visible := bPinObligatorio;
+
   CargarVales;
   ActualizarBotonAceptar;
   if edtBuscar.CanFocus then
@@ -167,7 +175,11 @@ procedure TfrmMtoCajaSeleccionVale.CargarVales(const AFiltro: string);
 var
   qry: TUniQuery;
   SQL: string;
+  bUsarCaducidad: Boolean;
+  sPin: string;
 begin
+  bUsarCaducidad := oCajaParams.GetBool('vgerCaducidadDefVale', False);
+  sPin := Trim(edtPin.Text);
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
@@ -176,41 +188,53 @@ begin
       '       IMPORTE_NOMINAL_VL, FECHA_EMISION_VL,' +
       '       FECHA_CADUCIDAD_VL, OBSERVACIONES_VL' +
       '  FROM fza_caja_vales' +
-      ' WHERE ESTADO_VL = ''PENDIENTE''' +
-      '   AND (FECHA_CADUCIDAD_VL IS NULL OR FECHA_CADUCIDAD_VL >= CURDATE())';
+      ' WHERE ESTADO_VL = ''PENDIENTE''';
+    if bUsarCaducidad then
+      SQL := SQL + ' AND (FECHA_CADUCIDAD_VL IS NULL ' +
+                   '      OR FECHA_CADUCIDAD_VL >= CURDATE())';
     if AFiltro <> '' then
       SQL := SQL + ' AND CODIGO_VL LIKE :filtro';
+    // Filtrar también por PIN si se ha introducido
+    if sPin <> '' then
+      SQL := SQL + ' AND PIN_SEGURIDAD_VL = :pin';
     SQL := SQL + ' ORDER BY FECHA_EMISION_VL DESC';
     qry.SQL.Text := SQL;
     if AFiltro <> '' then
       qry.ParamByName('filtro').AsString := '%' + AFiltro + '%';
+    if sPin <> '' then
+      qry.ParamByName('pin').AsString := sPin;
     qry.Open;
     FMemVales.DisableControls;
+    FMemVales.EmptyDataSet;
     try
-//      FMemVales.EmptyDataSet;
       while not qry.Eof do
       begin
         FMemVales.Append;
-        FMemVales.FieldByName('CODIGO_VL').AsString          := qry.FieldByName('CODIGO_VL').AsString;
-        FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString   := qry.FieldByName('PIN_SEGURIDAD_VL').AsString;
-        FMemVales.FieldByName('ESTADO_VL').AsString          := qry.FieldByName('ESTADO_VL').AsString;
+        FMemVales.FieldByName('CODIGO_VL').AsString            := qry.FieldByName('CODIGO_VL').AsString;
+        FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString     := qry.FieldByName('PIN_SEGURIDAD_VL').AsString;
+        FMemVales.FieldByName('ESTADO_VL').AsString            := qry.FieldByName('ESTADO_VL').AsString;
         FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency := qry.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
-        FMemVales.FieldByName('FECHA_EMISION_VL').AsDateTime  := qry.FieldByName('FECHA_EMISION_VL').AsDateTime;
+        FMemVales.FieldByName('FECHA_EMISION_VL').AsDateTime   := qry.FieldByName('FECHA_EMISION_VL').AsDateTime;
         if not qry.FieldByName('FECHA_CADUCIDAD_VL').IsNull then
           FMemVales.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime := qry.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime;
-        FMemVales.FieldByName('OBSERVACIONES_VL').AsString   := qry.FieldByName('OBSERVACIONES_VL').AsString;
+        FMemVales.FieldByName('OBSERVACIONES_VL').AsString     := qry.FieldByName('OBSERVACIONES_VL').AsString;
         FMemVales.Post;
         qry.Next;
       end;
     finally
       FMemVales.EnableControls;
     end;
-
     FMemVales.First;
   finally
     qry.Free;
   end;
   ActualizarBotonAceptar;
+  // Si se buscó por PIN y hay exactamente un resultado → aceptar directamente
+  if (sPin <> '') and (FMemVales.RecordCount = 1) then
+  begin
+    if ValidarPinYSeleccionar then
+      ModalResult := mrOk;
+  end;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.ActualizarBotonAceptar;
@@ -256,18 +280,18 @@ function TfrmMtoCajaSeleccionVale.ValidarPinYSeleccionar: Boolean;
 var
   PinIntroducido: string;
   PinReal:        string;
+  bPinObligatorio: Boolean;
 begin
   Result := False;
-
-  if FMemVales.IsEmpty or FMemVales.Bof and FMemVales.Eof then
+  if FMemVales.IsEmpty or (FMemVales.Bof and FMemVales.Eof) then
   begin
     ShowMessage('No hay ningún vale seleccionado.');
     Exit;
   end;
-  PinIntroducido := Trim(edtPin.Text);
-  PinReal        := FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString;
-  // Validar PIN si se ha introducido alguno (el PIN es obligatorio)
-  if PinReal <> '' then
+  bPinObligatorio := oCajaParams.GetBool('vgerRecuperaValePIN', False);
+  PinIntroducido  := Trim(edtPin.Text);
+  PinReal         := FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString;
+  if bPinObligatorio and (PinReal <> '') then
   begin
     if PinIntroducido = '' then
     begin
