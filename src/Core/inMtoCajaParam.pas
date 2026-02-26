@@ -157,13 +157,11 @@ begin
       'WHERE KEY_PERFILES = ''frmMtoCajaParam'' ' +
       'ORDER BY USUARIO_GRUPO_PERFILES';
     qry.Open;
-
     while not qry.Eof do
     begin
       usuarios.Add(qry.Fields[0].AsString);
       qry.Next;
     end;
-
     if usuarios.Count = 0 then
     begin
       ShowMessage('No hay usuarios con parámetros guardados para este formulario.');
@@ -210,17 +208,17 @@ var
   Row: TcxCustomRow;
   sUsuarioGrupo: string;
 begin
-  case cmbGrupoUsuario.ItemIndex of
-    0: sUsuarioGrupo := oUser;
-    1: sUsuarioGrupo := oGroup;
-    2: sUsuarioGrupo := oAll;
-  else
-    Exit;
-  end;
+  // CORRECCIÓN: Validar que haya algo seleccionado
+  if cmbGrupoUsuario.ItemIndex = -1 then Exit;
+
+  // CORRECCIÓN: Tomamos el texto directamente del combo.
+  // Esto funcionará tanto para oUser, oGroup como para el usuario cargado por btnChangeId.
+  sUsuarioGrupo := cmbGrupoUsuario.Text;
 
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
+    // Usamos el procedimiento almacenado para guardar
     qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, :p_formulario, :p_subkey, :p_value)';
 
     for i := 0 to cxVerticalGrid1.Rows.Count - 1 do
@@ -236,11 +234,14 @@ begin
       qry.Execute;
     end;
 
-    ShowMessage('Parámetros guardados correctamente.');
+    ShowMessage('Parámetros guardados correctamente para: ' + sUsuarioGrupo);
   finally
     qry.Free;
   end;
-  oCajaParams.Recargar(oUser, oGroup);
+
+  // Refrescar variables globales si el guardado fue para el usuario actual
+  if (sUsuarioGrupo = oUser) or (sUsuarioGrupo = oGroup) or (sUsuarioGrupo = oAll) then
+    oCajaParams.Recargar(oUser, oGroup);
 end;
 
 procedure TfrmMtoCajaParam.CargarParametros(Grid: TcxVerticalGrid; const pUsuario, pGrupo: string);

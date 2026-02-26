@@ -1,5 +1,7 @@
 ﻿unit inMtoCajaFaseCobro;
+
 interface
+
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
@@ -16,6 +18,7 @@ uses
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
   inMtoCajaReferenciaPago;
+
 type
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
@@ -89,6 +92,7 @@ type
     dbtvFormasPagoColumn2: TcxGridDBColumn;
     dbtvFormasPagoColumn3: TcxGridDBColumn;
     actBuscarT: TAction;
+    actBuscarVale: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -110,6 +114,7 @@ type
     procedure btnF6Click(Sender: TObject);
     procedure dbtvFormasPagoEditing(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; var AAllow: Boolean);
+    procedure actBuscarValeExecute(Sender: TObject);
   private
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -226,10 +231,8 @@ begin
       if Active then Close;
       FieldDefs.Clear;
       Fields.Clear;
-
       // Copiar FieldDefs desde la query
       FieldDefs.Assign(qry.FieldDefs);
-
       // Añadir campos extra que no vienen de BD
       FieldDefs.Add('FACTOR_CAMBIO',      ftCurrency);
       FieldDefs.Add('ESIMPORTE_DIVISA',   ftString, 1);
@@ -238,9 +241,7 @@ begin
       FieldDefs.Add('IMPORTE_DIVISA',     ftFloat);
       FieldDefs.Add('IMPORTE_CAMBIO',     ftCurrency);
       FieldDefs.Add('CODIGO_DIVISA',      ftString, 6);
-
       Open;
-
       // Ahora cargar los datos desde la query
       DisableControls;
       try
@@ -654,25 +655,31 @@ end;
 procedure TfrmMtoCajaFaseCobro.btnBuscarValeClick(Sender: TObject);
 var
   ValeSeleccionado: TValeSeleccionado;
-  ImporteAplicar: Currency;
+  PendienteActual, Exceso: Currency;
 begin
   inherited;
   if TfrmMtoCajaSeleccionVale.Ejecutar(ValeSeleccionado) then
   begin
+    // 1. Averiguamos cuánto se debe antes de aplicar el vale
     if FDatosCobro.EsDevolucion then
-    begin
-      ImporteAplicar := Min(ValeSeleccionado.Importe,
-                           FDatosCobro.ImporteDevolucionPendiente);
-    end
+      PendienteActual := FDatosCobro.ImporteDevolucionPendiente
     else
-    begin
-      ImporteAplicar := Min(ValeSeleccionado.Importe,
-                           FDatosCobro.ImportePendiente);
-    end;
+      PendienteActual := FDatosCobro.ImportePendiente;
+    // 2. Calculamos si el vale es mayor que la deuda
+    Exceso := 0;
+    if ValeSeleccionado.Importe > PendienteActual then
+      Exceso := ValeSeleccionado.Importe - PendienteActual;
+    // 3. Registramos siempre el vale recogido por su TOTAL
     FDatosCobro.RegistrarValeRecogido(
       ValeSeleccionado.CodigoVale,
-      ImporteAplicar
+      ValeSeleccionado.Importe
     );
+    // 4. Si ha sobrado dinero, generamos automáticamente un vale emitido
+    if Exceso > 0 then
+    begin
+      FDatosCobro.EmitirVale(Exceso);
+    end;
+    // 5. Recalcular refrescará la interfaz y los totales
     FDatosCobro.Recalcular;
   end;
 end;
@@ -694,6 +701,12 @@ procedure TfrmMtoCajaFaseCobro.actBuscarTExecute(Sender: TObject);
 begin
   inherited;
   RellenarPendienteEnFormaActual;
+end;
+
+procedure TfrmMtoCajaFaseCobro.actBuscarValeExecute(Sender: TObject);
+begin
+  inherited;
+  btnBuscarValeClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
