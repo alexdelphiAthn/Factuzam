@@ -134,6 +134,7 @@ type
     procedure actEliminarLineaExecute(Sender: TObject);
     procedure actCobroExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure tvArticuloPropertiesChange(Sender: TObject);
   private
     function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
@@ -392,6 +393,15 @@ begin
     AProperties := repComboBox.Properties
   else
     AProperties := repSoloTexto.Properties;
+end;
+
+procedure TfrmMtoOpeCaja.tvArticuloPropertiesChange(Sender: TObject);
+begin
+  if not FLeyendoScanner then
+  begin
+    tmrBusq.Enabled := False;
+    tmrBusq.Enabled := True;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.tvArticuloPropertiesCloseUp(Sender: TObject);
@@ -957,17 +967,36 @@ begin
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) then
     begin
        RellenarAtributosDesdeSku(SkuDetectado);
-       DatosCaja.cdsLineas.Append;
-       cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+       if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+       begin
+         if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+           DatosCaja.cdsLineas.Post;
+         DatosCaja.cdsLineas.Append;
+         cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+       end
+       else
+       begin
+         cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+       end;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
        Key := 0;
        Exit;
     end;
     if (NumAtributos = 0) then
     begin
-       DatosCaja.cdsLineas.Post;
-       DatosCaja.cdsLineas.Append;
-       cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+       // Verificamos el parámetro para saber a dónde saltar
+       if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+       begin
+         // Comportamiento habitual: Guardar, nueva línea y foco a Artículo
+         DatosCaja.cdsLineas.Post;
+         DatosCaja.cdsLineas.Append;
+         cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+       end
+       else
+       begin
+         // Comportamiento alternativo: Quedarse en la línea y pasar a Descripción
+         cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+       end;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
        Key := 0;
        Exit;
@@ -1054,18 +1083,24 @@ begin
         FProcesandoAtributo := False;
         DatosCaja.cdsLineas.EnableControls;  // Restaurar siempre
       end;
-
-      // FUERA del try/finally para que EnableControls ya esté activo
-      if EstabaInsertando then
+      if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
       begin
+        // El parámetro indica avanzar: Guardamos y preparamos nueva línea
+        if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+          DatosCaja.cdsLineas.Post;
+
         DatosCaja.cdsLineas.Append;
         cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
       end
       else
+      begin
+        // El parámetro indica quedarse: Movemos el foco a la descripción
         cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+      end;
+
       cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
       Key := 0;
-    end;
+    end; // Fin del if (AItem.Tag = NumAtributos)
   end;
 end;
 
@@ -1140,6 +1175,9 @@ begin
   end;
   if AItem = tvArticulo then
   begin
+    if AEdit is TcxCustomTextEdit then
+      TcxCustomTextEdit(AEdit).Properties.OnChange :=
+                                                     tvArticuloPropertiesChange;
     var ValorActual :=
                     AItem.GridView.Controller.FocusedRecord.Values[AItem.Index];
     if (not VarIsNull(ValorActual)) and (Trim(VarToStr(ValorActual)) <> '') then

@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 406
-  ClientWidth = 1184
+  ClientHeight = 415
+  ClientWidth = 1190
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,10 +19,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1184
+    Width = 1190
     Height = 89
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1184
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -120,10 +121,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1184
-    Height = 317
+    Width = 1190
+    Height = 326
     Align = alClient
     TabOrder = 3
+    ExplicitWidth = 1184
+    ExplicitHeight = 317
     object Panel1: TPanel
       Left = 1
       Top = 227
@@ -134,7 +137,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       ExplicitTop = 218
       ExplicitWidth = 1182
       DesignSize = (
-        1182
+        1188
         98)
       object btnF12: TcxButton
         Left = 10
@@ -254,7 +257,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 664
+        Left = 670
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -276,9 +279,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
+        ExplicitLeft = 664
         Height = 80
         Width = 423
-        AnchorX = 1087
+        AnchorX = 1093
       end
       object btnF8: TcxButton
         Left = 224
@@ -330,10 +334,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1182
-      Height = 217
+      Width = 1188
+      Height = 226
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1182
+      ExplicitHeight = 217
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
