@@ -488,8 +488,7 @@ begin
 //  FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
 //                                                FMemTablePagos.RecordCount *100;
   FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := 'VALE';
-  FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
-                                                         'Vale: ' + ACodigoVale;
+  FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString := ACodigoVale;
   FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString := 'N';
   FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := AImporte;
   FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';

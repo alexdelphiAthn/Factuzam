@@ -186,17 +186,11 @@ end;
 procedure TdmFacturas.CrearTablaSeries(sEmpresa,
                                        sCliente:string;
                                        dtFecha:TDateTime);
-var
-  unqrySol:TUniQuery;
 begin
-  unqrySol := TUniQuery.Create(Self);
-  with unqrySol do
+  with unqrySeriesEditCombo do
   begin
     Connection := inLibGlobalVar.oConn;
-    SQL.Text := 'DROP TABLE IF EXISTS tmpfac_comboseries ';
-    Execute;
-    SQL.Text := 'CREATE TEMPORARY TABLE tmpfac_comboseries       ' +
-                'SELECT SERIE_CONTADOR_CLIENTE AS SERIE_CONTADOR ' +
+    SQL.Text := 'SELECT SERIE_CONTADOR_CLIENTE AS SERIE_CONTADOR ' +
                 '  FROM vi_clientes                              ' +
                 ' WHERE (SERIE_CONTADOR_CLIENTE IS NOT NULL      ' +
                 '        AND SERIE_CONTADOR_CLIENTE <> '''')     ' +
@@ -217,8 +211,6 @@ begin
     Params.ParamByName('EMPRESA').AsSTring := sEmpresa;
     Params.ParamByName('FECHA').AsDateTime := dtFecha;
     Params.ParamByName('CLIENTE').AsString := sCliente;
-    Execute;
-    FreeAndNil(unqrySol);
     if unqrySeriesEditCombo.Active then
       unqrySeriesEditCombo.Close;
     unqrySeriesEditCombo.Open;

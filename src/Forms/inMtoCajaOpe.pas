@@ -266,15 +266,30 @@ begin
   begin
     FLeyendoScanner := True;
     FScanBuffer := '';
+    tmrBusq.Enabled := False;
     Key := #0;
     Exit;
   end;
   if FLeyendoScanner then
   begin
-    if Key = #3 then
+    if (Key = #3) then
     begin
+      tmrBusq.Enabled := False;
       FLeyendoScanner := False;
       Key := #0;
+      if Trim(FScanBuffer) <> '' then
+      begin
+        tmrBusq.Enabled := False;
+        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+        if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+        begin
+          cxGrid1DBTableView1.Controller.EditingController.Edit.EditValue :=
+                                                                    FScanBuffer;
+          cxGrid1DBTableView1.Controller.EditingController.Edit.PostEditValue;
+        end;
+      end;
+      FScanBuffer := '';
     end
     else
     begin
