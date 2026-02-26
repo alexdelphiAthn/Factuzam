@@ -325,8 +325,8 @@ begin
         if facTotales.ProcesarFacturaCompleta then
         begin
           // Refrescar para ver los cambios
-          if unqryTablaG.Active and (unqryTablaG.State <> dsInsert) then
-            unqryTablaG.RefreshRecord;
+//          if unqryTablaG.Active and (unqryTablaG.State <> dsInsert) then
+//            unqryTablaG.RefreshRecord;
         end
         else
         begin
