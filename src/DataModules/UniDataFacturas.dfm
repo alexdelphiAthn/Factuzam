@@ -1959,7 +1959,7 @@ inherited dmFacturas: TdmFacturas
   object unqrySeriesEditCombo: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT DISTINCT * FROM tmpfac_comboseries ')
+      '')
     Left = 848
     Top = 144
   end
