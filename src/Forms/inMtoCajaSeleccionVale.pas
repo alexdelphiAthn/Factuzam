@@ -34,7 +34,7 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, UniDataCaja,
   // Acceso a datos
-  Uni, MemDS,
+  Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
   dxScrollbarAnnotations;
 
@@ -54,8 +54,6 @@ type
     lblBuscar:      TcxLabel;
     edtBuscar:      TcxTextEdit;
     btnBuscar:      TcxButton;
-    lblPin:         TcxLabel;
-    edtPin:         TcxTextEdit;
     cxgrdVales:     TcxGrid;
     dbtvVales:      TcxGridDBTableView;
     cxgrdlvlVales:  TcxGridLevel;
@@ -68,8 +66,9 @@ type
     dsVales:        TDataSource;
     btnAceptar:     TcxButton;
     btnCancelar:    TcxButton;
-    btnF12: TcxButton;
-    btnESC: TcxButton; // Etiqueta F2 → Cancelar / ESC
+    lblPin: TcxLabel;
+    edtPin: TcxTextEdit;
+    cxLabel1: TcxLabel; // Etiqueta F2 → Cancelar / ESC
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -83,9 +82,9 @@ type
       APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure btnESCClick(Sender: TObject);
-    procedure btnCancelarMouseEnter(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    FMemVales:    TMemDataSet;
+    FMemVales: TVirtualTable;
     FValeSeleccionado: TValeSeleccionado;
     procedure CargarVales(const AFiltro: string = '');
     procedure ActualizarBotonAceptar;
@@ -121,10 +120,31 @@ begin
   end;
 end;
 
+procedure TfrmMtoCajaSeleccionVale.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  case Key of
+    VK_F12:
+      begin
+        Key := 0; // Consumimos la tecla
+        // Solo ejecuta la acción si el botón aceptar está activo (hay un vale válido seleccionado)
+        if btnAceptar.Enabled then
+          btnAceptarClick(Self);
+      end;
+    VK_ESCAPE:
+      begin
+        Key := 0; // Consumimos la tecla
+        btnCancelarClick(Self);
+      end;
+  end;
+end;
+
 procedure TfrmMtoCajaSeleccionVale.FormCreate(Sender: TObject);
 begin
   inherited;
-  FMemVales := TMemDataSet.Create(Self);
+  Self.KeyPreview := True;
+  Self.OnKeyDown := FormKeyDown;
+  FMemVales := TVirtualTable.Create(Self);
   with FMemVales do
   begin
     FieldDefs.Add('CODIGO_VL',           ftString,   50);
@@ -134,6 +154,7 @@ begin
     FieldDefs.Add('FECHA_EMISION_VL',    ftDateTime);
     FieldDefs.Add('FECHA_CADUCIDAD_VL',  ftDate);
     FieldDefs.Add('OBSERVACIONES_VL',    ftString,  200);
+    Open;
   end;
   dsVales.DataSet := FMemVales;
   ConfigurarGrid;
@@ -153,7 +174,6 @@ begin
   bPinObligatorio := oCajaParams.GetBool('vgerRecuperaValePIN', False);
   lblPin.Visible := bPinObligatorio;
   edtPin.Visible := bPinObligatorio;
-
   CargarVales;
   ActualizarBotonAceptar;
   if edtBuscar.CanFocus then
@@ -205,7 +225,7 @@ begin
       qry.ParamByName('pin').AsString := sPin;
     qry.Open;
     FMemVales.DisableControls;
-    FMemVales.EmptyDataSet;
+    FMemVales.Clear;
     try
       while not qry.Eof do
       begin
@@ -221,6 +241,7 @@ begin
         FMemVales.Post;
         qry.Next;
       end;
+
     finally
       FMemVales.EnableControls;
     end;
@@ -239,9 +260,9 @@ end;
 
 procedure TfrmMtoCajaSeleccionVale.ActualizarBotonAceptar;
 begin
-  btnAceptar.Enabled := (not FMemVales.IsEmpty) and
+  btnAceptar.Enabled := (FMemVales.RecordCount > 0) and
                         (dbtvVales.Controller.FocusedRecord <> nil);
-//  btnF1.Enabled      := btnAceptar.Enabled;
+//  btnF12.Enabled      := btnAceptar.Enabled;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.btnBuscarClick(Sender: TObject);
@@ -312,7 +333,7 @@ begin
   FValeSeleccionado.CodigoVale   := FMemVales.FieldByName('CODIGO_VL').AsString;
   FValeSeleccionado.PinSeguridad := PinReal;
   FValeSeleccionado.Importe      := FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
-  FValeSeleccionado.Descripcion  := 'Vale ' + FValeSeleccionado.CodigoVale;
+  FValeSeleccionado.Descripcion  := FValeSeleccionado.CodigoVale;
   Result := True;
 end;
 

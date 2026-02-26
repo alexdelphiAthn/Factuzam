@@ -975,6 +975,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ShortCut = 114
       OnExecute = actBuscarTExecute
     end
+    object actBuscarVale: TAction
+      Caption = 'BuscarVale'
+      ShortCut = 117
+      OnExecute = actBuscarValeExecute
+    end
   end
   object cxStyleRepository1: TcxStyleRepository
     PixelsPerInch = 96

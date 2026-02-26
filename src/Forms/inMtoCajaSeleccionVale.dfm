@@ -38,7 +38,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         Left = 8
         Top = 20
         Caption = 'Buscar vale:'
-        TabOrder = 3
+        TabOrder = 2
         Transparent = True
       end
       object edtBuscar: TcxTextEdit
@@ -57,19 +57,12 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
         TabOrder = 1
         OnClick = btnBuscarClick
       end
-      object lblPin: TcxLabel
-        Left = 690
+      object cxLabel1: TcxLabel
+        Left = 512
         Top = 17
-        Caption = 'PIN:'
-        TabOrder = 4
+        Caption = 'El Vale no se canjea hasta que confirme la operaci'#243'n.'
+        TabOrder = 3
         Transparent = True
-      end
-      object edtPin: TcxTextEdit
-        Left = 734
-        Top = 16
-        Properties.EchoMode = eemPassword
-        TabOrder = 2
-        Width = 120
       end
     end
     object cxgrdVales: TcxGrid
@@ -93,25 +86,25 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
           Caption = 'C'#243'digo Vale'
           DataBinding.FieldName = 'CODIGO_VL'
           Options.Editing = False
-          Width = 180
+          Width = 197
         end
         object colEstado: TcxGridDBColumn
           Caption = 'Estado'
           DataBinding.FieldName = 'ESTADO_VL'
           Options.Editing = False
-          Width = 80
+          Width = 117
         end
         object colImporte: TcxGridDBColumn
           Caption = 'Importe'
           DataBinding.FieldName = 'IMPORTE_NOMINAL_VL'
           Options.Editing = False
-          Width = 90
+          Width = 108
         end
         object colFechaEmision: TcxGridDBColumn
           Caption = 'Fecha emisi'#243'n'
           DataBinding.FieldName = 'FECHA_EMISION_VL'
           Options.Editing = False
-          Width = 139
+          Width = 149
         end
         object colCaducidad: TcxGridDBColumn
           Caption = 'Caducidad'
@@ -123,7 +116,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
           Caption = 'Observaciones'
           DataBinding.FieldName = 'OBSERVACIONES_VL'
           Options.Editing = False
-          Width = 160
+          Width = 342
         end
       end
       object cxgrdlvlVales: TcxGridLevel
@@ -141,45 +134,38 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       ExplicitTop = 452
       ExplicitWidth = 952
       object btnAceptar: TcxButton
-        Left = 840
+        Left = 808
         Top = 14
-        Width = 105
+        Width = 137
         Height = 32
-        Caption = 'Aceptar'
+        Caption = 'Aceptar (F12)'
         Default = True
         TabOrder = 0
         OnClick = btnAceptarClick
       end
       object btnCancelar: TcxButton
-        Left = 680
+        Left = 640
         Top = 14
-        Width = 111
+        Width = 151
         Height = 32
         Cancel = True
-        Caption = 'Cancelar'
+        Caption = 'Cancelar (ESC)'
         TabOrder = 1
-        OnMouseEnter = btnCancelarMouseEnter
         OnClick = btnCancelarClick
       end
-      object btnF12: TcxButton
-        Left = 801
-        Top = 14
-        Width = 41
-        Height = 32
-        Caption = 'F12'
+      object lblPin: TcxLabel
+        Left = 7
+        Top = 17
+        Caption = 'PIN:'
         TabOrder = 2
-        Visible = False
-        OnClick = btnAceptarClick
+        Transparent = True
       end
-      object btnESC: TcxButton
-        Left = 643
-        Top = 14
-        Width = 41
-        Height = 32
-        Caption = 'ESC'
+      object edtPin: TcxTextEdit
+        Left = 51
+        Top = 16
+        Properties.EchoMode = eemPassword
         TabOrder = 3
-        Visible = False
-        OnClick = btnESCClick
+        Width = 120
       end
     end
   end

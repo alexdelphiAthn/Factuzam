@@ -301,6 +301,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     object cmbGrupoUsuario: TcxComboBox
       Left = 455
       Top = 15
+      Properties.ReadOnly = True
       Properties.OnChange = cmbGrupoUsuarioPropertiesChange
       TabOrder = 1
       Width = 169
