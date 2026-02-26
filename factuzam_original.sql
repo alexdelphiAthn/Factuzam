@@ -11,7 +11,7 @@
  Target Server Version : 100332 (10.3.32-MariaDB)
  File Encoding         : 65001
 
- Date: 26/02/2026 20:13:12
+ Date: 26/02/2026 20:41:14
 */
 
 SET NAMES utf8mb4;
@@ -1348,7 +1348,7 @@ CREATE TABLE `fza_facturas`  (
 INSERT INTO `fza_facturas` VALUES ('000002', '2026.A1', '2026-02-01', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 9.450000, 5.200000, 2.340000, 45.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 45.000000, 11.790000, 'CONTADO', 15.000000, 6.750000, 50.040000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-09 08:48:59', '2026-02-01 14:09:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas` VALUES ('000003', '2026.A1', '2026-02-01', 'S', '2026-02-23 06:23:26', 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 37.800000, 5.200000, 9.360000, 180.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 180.000000, 47.160000, 'TRANSFERENCIA', 15.000000, 27.000000, 200.160000, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-09 08:49:01', '2026-02-01 14:36:26', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas` VALUES ('000004', '2026.A1', '2026-02-26', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 16.380000, 5.200000, 4.056000, 78.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 78.000000, 20.436000, '60DIAS', 15.000000, 11.700000, 86.736000, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-02-26 19:56:28', '2026-02-26 19:56:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
-INSERT INTO `fza_facturas` VALUES ('000005', '2026.A1', '2026-02-26', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'añlsdfkjañlsdkfj', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', NULL, '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 0.000000, 5.200000, 0.000000, 0.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 'CONTADO', 15.000000, 0.000000, 0.000000, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-26 20:11:53', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas` VALUES ('000005', '2026.A1', '2026-02-26', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'añlsdfkjañlsdkfj', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', NULL, '1', 'N', 'N', 'N', 'N', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 29.820000, 5.200000, 0.000000, 142.000000, 10.000000, 0.000000, 1.400000, 0.000000, 0.000000, 4.000000, 0.000000, 0.500000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 142.000000, 29.820000, 'CONTADO', 15.000000, 0.000000, 171.820000, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-26 20:32:10', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas` VALUES ('000026', 'A1', '2026-01-20', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '301', 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 11.340000, 5.200000, 0.000000, 54.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 54.000000, 11.340000, 'CONTADO', 15.000000, 8.100000, 57.240000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL);
 INSERT INTO `fza_facturas` VALUES ('000027', 'A1', '2026-01-21', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 25.200000, 5.200000, 0.000000, 120.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 120.000000, 25.200000, 'CONTADO', 0.000000, 0.000000, 145.200000, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-21 11:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL);
 INSERT INTO `fza_facturas` VALUES ('000028', 'A1', '2026-01-23', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '306', 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', '968606060', 'pedidos@distribuvelaz.es', 'POLÍGONO EL PINO, 5', 'NAVE 12', 'MURCIA', 'MURCIA', '30001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21.000000, 126.000000, 5.200000, 0.000000, 600.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 600.000000, 126.000000, '30DIAS', 0.000000, 0.000000, 726.000000, NULL, NULL, NULL, 'Pedido PO-2026-0123', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-23 09:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL);
@@ -1450,7 +1450,8 @@ INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '020', 'ZAP-TACÓ
 INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '030', 'BOLSO-PIEL', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55.000000, 0.000000, 0.000000, 55.000000, 'N', 21.000000, 66.550000, 66.550000, 55.000000, NULL, '2026-02-23 06:22:50', '2026-02-23 06:22:50', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000003', '2026.A1', '040', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78.000000, 0.000000, 0.000000, 78.000000, 'N', 21.000000, 94.380000, 94.380000, 78.000000, NULL, '2026-02-23 06:23:01', '2026-02-23 06:23:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000004', '2026.A1', '010', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78.000000, 0.000000, 0.000000, 78.000000, 'N', 21.000000, 94.380000, 94.380000, 78.000000, NULL, '2026-02-26 19:56:25', '2026-02-26 19:56:25', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
-INSERT INTO `fza_facturas_lineas` VALUES ('000005', '2026.A1', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 42.000000, 0.000000, 0.000000, 42.000000, 'N', 21.000000, 50.820000, 50.820000, 42.000000, NULL, '2026-02-26 19:59:49', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000005', '2026.A1', '0', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32.000000, 0.000000, 0.000000, 32.000000, 'N', 21.000000, 38.720000, 38.720000, 32.000000, NULL, '2026-02-26 20:32:10', '2026-02-26 20:32:10', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+INSERT INTO `fza_facturas_lineas` VALUES ('000005', '2026.A1', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 2.000000, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 40.000000, 0.000000, 0.000000, 40.000000, 'N', 21.000000, 48.400000, 96.800000, 80.000000, NULL, '2026-02-26 19:59:49', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000005', '2026.A1', '020', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1.000000, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62.000000, 0.000000, 0.000000, 62.000000, 'N', 21.000000, 75.020000, 75.020000, 62.000000, NULL, '2026-02-26 20:11:53', '2026-02-26 20:11:53', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000026', 'A1', '010', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25.000000, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2.000000, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'N', 55.000000, 0.000000, 0.000000, 55.000000, 'N', 21.000000, 66.550000, 133.100000, 110.000000, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL);
 INSERT INTO `fza_facturas_lineas` VALUES ('000026', 'A1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9.000000, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2.000000, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22.000000, 10.000000, 2.200000, 19.800000, 'N', 21.000000, 23.958000, 47.916000, 39.600000, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL);
@@ -2536,7 +2537,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-26 19:58:18', '2026-02-26 19:58:18', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-26 20:31:55', '2026-02-26 20:31:55', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -5904,31 +5905,29 @@ CREATE PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(IN  `pnumfac` VARCHAR(12),
     OUT `presul`  VARCHAR(3))
 BEGIN
     DECLARE v_temp VARCHAR(3);
-
     START TRANSACTION;
-
+    
     -- 1. Buscamos el valor actual
     SELECT `CONTADOR_LINEAS_FACTURA` INTO v_temp
-    FROM `fza_facturas`
-    WHERE `NRO_FACTURA`  = `pnumfac`
-      AND `SERIE_FACTURA` = `pserie`
-    FOR UPDATE;
-
-    -- 2. Si la factura existe pero el contador está vacío o es NULL, 
-    -- forzamos a que el primero sea '010'
-    IF (v_temp IS NULL OR v_temp = '') THEN
+      FROM `fza_facturas`
+     WHERE `NRO_FACTURA`  = `pnumfac`
+       AND `SERIE_FACTURA` = `pserie`
+       FOR UPDATE;
+    
+    -- 2. Si es NULL, vacío o '0', la primera línea será '010'
+    IF (v_temp IS NULL OR v_temp = '' OR v_temp = '0') THEN
         SET v_temp = '010';
     END IF;
-
-    -- 3. Asignamos a la salida el valor que acabamos de leer
+    
+    -- 3. Asignamos a la salida el valor que acabamos de leer/calcular
     SET `presul` = v_temp;
-
-    -- 4. Actualizamos la tabla sumando 10 para la PRÓXIMA vez
+    
+    -- 4. Actualizamos la tabla sumando 10 para la PRÓXIMA línea
     UPDATE `fza_facturas`
        SET `CONTADOR_LINEAS_FACTURA` = LPAD((CAST(v_temp AS UNSIGNED) + 10), 3, '0')
      WHERE `SERIE_FACTURA` = `pserie`
        AND `NRO_FACTURA`   = `pnumfac`;
-
+    
     COMMIT;
 END
 ;;
