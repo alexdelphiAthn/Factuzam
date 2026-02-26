@@ -298,17 +298,50 @@ begin
   FreeAndNil(unqrySol);
 end;
 
+//procedure TdmFacturas.CalcularFactura;
+//begin
+//  with unstdCalcularFactura do
+//  begin
+//    ParamByName('pSERIE_FACTURA').AsString :=
+//                          unqryTablaG.FieldByName('SERIE_FACTURA').AsString;
+//    ParamByName('pNRO_FACTURA').AsString :=
+//                            unqryTablaG.FieldByName('NRO_FACTURA').AsString;
+//    ExecProc;
+//  end;
+//  unqryTablaG.RefreshRecord;  //sólo refresca el registro en uso
+//end;
+
 procedure TdmFacturas.CalcularFactura;
+var
+  facTotales: TFacturaTotales;
 begin
-  with unstdCalcularFactura do
+  // Usar TFacturaTotales en lugar del procedimiento almacenado
+  if Assigned(unqryTablaG) and unqryTablaG.Active and
+     Assigned(unqryLinFac) and unqryLinFac.Active then
   begin
-    ParamByName('pSERIE_FACTURA').AsString :=
-                          unqryTablaG.FieldByName('SERIE_FACTURA').AsString;
-    ParamByName('pNRO_FACTURA').AsString :=
-                            unqryTablaG.FieldByName('NRO_FACTURA').AsString;
-    ExecProc;
+    try
+      facTotales := TFacturaTotales.Create(unqryTablaG, unqryLinFac);
+      try
+        if facTotales.ProcesarFacturaCompleta then
+        begin
+          // Refrescar para ver los cambios
+          if unqryTablaG.Active and (unqryTablaG.State <> dsInsert) then
+            unqryTablaG.RefreshRecord;
+        end
+        else
+        begin
+          // Si hay error, mostrar mensaje
+          if facTotales.MensajeError <> '' then
+            ShowMessage('Error al calcular factura: ' + facTotales.MensajeError);
+        end;
+      finally
+        facTotales.Free;
+      end;
+    except
+      on E: Exception do
+        ShowMessage('Error en cálculo de factura: ' + E.Message);
+    end;
   end;
-  unqryTablaG.RefreshRecord;  //sólo refresca el registro en uso
 end;
 
 procedure TdmFacturas.CalcularRetencionesEmpresa;

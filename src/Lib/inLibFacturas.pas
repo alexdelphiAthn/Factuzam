@@ -691,11 +691,8 @@ begin
                 (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S')
     else
        _configuracion.IRPFImpuestoIncluido := False;
-    if FindField('ESAPLICA_RE_ZONA_IVA_FACTURA') <> nil then
-       _configuracion.AplicaRecargo :=
-                    (FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString = 'S')
-    else
-       _configuracion.AplicaRecargo := False;
+    if SameText(FindField('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString, 'N') then
+       _configuracion.AplicaRecargo := false;
     _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
     _CodigoIVA    := FieldByName('CODIGO_IVA_FACTURA').AsString;
     _dPorRetencion := FieldByName('PORCEN_RETENCION_FACTURA').AsFloat;

@@ -1,7 +1,6 @@
 inherited dmFacturas: TdmFacturas
-  Height = 638
-  Width = 1445
-  PixelsPerInch = 120
+  Height = 510
+  Width = 1156
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_facturas`'
@@ -283,40 +282,40 @@ inherited dmFacturas: TdmFacturas
     BeforePost = unqryFacBeforePost
     AfterPost = unqryFacAfterPost
     BeforeDelete = unqryTablaGBeforeDelete
-    Left = 56
-    Top = 136
+    Left = 45
+    Top = 109
   end
   inherited unqryPerfiles: TUniQuery
     SQL.Strings = (
       'select *'
       'from fza_usuarios_perfiles')
-    Left = 344
-    Top = 176
+    Left = 275
+    Top = 141
   end
   inherited dsPerfiles: TDataSource
-    Left = 343
-    Top = 76
+    Left = 274
+    Top = 61
   end
   object dsLinFac: TDataSource
     DataSet = unqryLinFac
     OnStateChange = dsLinFacStateChange
-    Left = 168
-    Top = 48
+    Left = 134
+    Top = 38
   end
   object dsFacPrint: TDataSource
     DataSet = unqryFacPrint
-    Left = 568
-    Top = 496
+    Left = 454
+    Top = 397
   end
   object dsLinFacPrint: TDataSource
     DataSet = unqryLinFacPrint
-    Left = 648
-    Top = 496
+    Left = 518
+    Top = 397
   end
   object dsSeries: TDataSource
     DataSet = unqrySeries
-    Left = 544
-    Top = 48
+    Left = 435
+    Top = 38
   end
   object fxdsPrintFac: TfrxDBDataset
     Description = 'Facturas'
@@ -431,8 +430,8 @@ inherited dmFacturas: TdmFacturas
     DataSource = dsFacPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 568
-    Top = 432
+    Left = 454
+    Top = 346
   end
   object fxdstPrintLinFac: TfrxDBDataset
     Description = 'Lineas Facturas'
@@ -474,8 +473,8 @@ inherited dmFacturas: TdmFacturas
     DataSource = dsLinFacPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 648
-    Top = 432
+    Left = 518
+    Top = 346
   end
   object unqryFacPrint: TUniQuery
     Connection = dmConn.conUni
@@ -485,8 +484,8 @@ inherited dmFacturas: TdmFacturas
       'where SERIE_FACTURA = '#39'ANA/2023'#39' '
       'AND NRO_FACTURA = '#39'000003'#39
       'order by NRO_FACTURA Asc')
-    Left = 568
-    Top = 552
+    Left = 454
+    Top = 442
   end
   object unqryLinFacPrint: TUniQuery
     SQLInsert.Strings = (
@@ -556,8 +555,8 @@ inherited dmFacturas: TdmFacturas
     MasterSource = dsFacPrint
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'SERIE_FACTURA_LINEA;NRO_FACTURA_LINEA'
-    Left = 648
-    Top = 552
+    Left = 518
+    Top = 442
     ParamData = <
       item
         DataType = ftWideString
@@ -579,8 +578,8 @@ inherited dmFacturas: TdmFacturas
       'FROM fza_CONTADORES'
       'WHERE TIPODOC_CONTADOR='#39'FC'#39' AND ACTIVO_CONTADOR = '#39'S'#39
       'ORDER BY DEFAULT_CONTADOR DESC')
-    Left = 544
-    Top = 144
+    Left = 435
+    Top = 115
   end
   object unqryCliDataFac: TUniQuery
     SQLInsert.Strings = (
@@ -655,8 +654,8 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_cli_busquedas')
-    Left = 28
-    Top = 536
+    Left = 22
+    Top = 429
   end
   object unqryArtDataLinFac: TUniQuery
     Connection = dmConn.conUni
@@ -668,8 +667,8 @@ inherited dmFacturas: TdmFacturas
       '   AND FECHA_DESDE_TARIFA < :FECHA_FACTURA'
       '   AND (FECHA_HASTA_TARIFA IS NULL'
       '        OR FECHA_HASTA_TARIFA > :FECHA_FACTURA)')
-    Left = 250
-    Top = 536
+    Left = 200
+    Top = 429
     ParamData = <
       item
         DataType = ftUnknown
@@ -823,8 +822,8 @@ inherited dmFacturas: TdmFacturas
     BeforePost = unqryLinFacBeforePost
     AfterPost = unqryLinFacAfterPost
     AfterDelete = unqryLinFacAfterDelete
-    Left = 168
-    Top = 136
+    Left = 134
+    Top = 109
     ParamData = <
       item
         DataType = ftWideString
@@ -848,8 +847,8 @@ inherited dmFacturas: TdmFacturas
         'pidnumfacturaabono, :pUSUARIO); SELECT @pidnumfacturaabono AS '#39'@' +
         'pidnumfacturaabono'#39)
     Connection = dmConn.conUni
-    Left = 1197
-    Top = 296
+    Left = 958
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -910,8 +909,8 @@ inherited dmFacturas: TdmFacturas
         'o, :pUSUARIO, @pidnumfacturaabono); SELECT @pidnumfacturaabono A' +
         'S '#39'@pidnumfacturaabono'#39)
     Connection = dmConn.conUni
-    Left = 1048
-    Top = 296
+    Left = 838
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -975,8 +974,8 @@ inherited dmFacturas: TdmFacturas
         'A_RECARGO_CLIENTE, :pESINTRACOMUNITARIO_CLIENTE, :pESREGIMENESPE' +
         'CIALAGRICOLA_CLIENTE, :pTARIFA_ARTICULO_CLIENTE, :pUSUARIO)')
     Connection = dmConn.conUni
-    Left = 296
-    Top = 264
+    Left = 237
+    Top = 211
     ParamData = <
       item
         DataType = ftWideString
@@ -1121,8 +1120,8 @@ inherited dmFacturas: TdmFacturas
         'ipoiva); SELECT @pidnomarticulo AS '#39'@pidnomarticulo'#39', @ptipoiva ' +
         'AS '#39'@ptipoiva'#39)
     Connection = dmConn.conUni
-    Left = 528
-    Top = 272
+    Left = 422
+    Top = 218
     ParamData = <
       item
         DataType = ftWideString
@@ -1175,8 +1174,8 @@ inherited dmFacturas: TdmFacturas
         ' AS '#39'@pTEXTO_LEGAL_FACTURA_CLIENTE'#39', @pPAIS_CLIENTE AS '#39'@pPAIS_C' +
         'LIENTE'#39', @pCOD_PAIS_CLIENTE AS '#39'@pCOD_PAIS_CLIENTE'#39)
     Connection = dmConn.conUni
-    Left = 656
-    Top = 296
+    Left = 525
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -1321,8 +1320,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsFormasPago: TDataSource
     DataSet = unqryFormaPago
-    Left = 456
-    Top = 80
+    Left = 365
+    Top = 64
   end
   object unqryFormaPago: TUniQuery
     SQLInsert.Strings = (
@@ -1376,13 +1375,13 @@ inherited dmFacturas: TdmFacturas
       'select * from vi_formapago'
       '')
     ReadOnly = True
-    Left = 464
-    Top = 176
+    Left = 371
+    Top = 141
   end
   object dsRecibos: TDataSource
     DataSet = unqryRecibos
-    Left = 736
-    Top = 80
+    Left = 589
+    Top = 64
   end
   object unqryRecibos: TUniQuery
     SQLInsert.Strings = (
@@ -1475,8 +1474,8 @@ inherited dmFacturas: TdmFacturas
     MasterSource = dsFactura
     MasterFields = 'NRO_FACTURA;SERIE_FACTURA'
     DetailFields = 'NRO_FACTURA_RECIBO;SERIE_FACTURA_RECIBO'
-    Left = 736
-    Top = 176
+    Left = 589
+    Top = 141
     ParamData = <
       item
         DataType = ftWideString
@@ -1493,8 +1492,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsRecibosPrint: TDataSource
     DataSet = unqryRecibosPrint
-    Left = 776
-    Top = 496
+    Left = 621
+    Top = 397
   end
   object fxdsRecibos: TfrxDBDataset
     Description = 'Recibos'
@@ -1529,8 +1528,8 @@ inherited dmFacturas: TdmFacturas
     DataSource = dsRecibosPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 776
-    Top = 432
+    Left = 621
+    Top = 346
   end
   object unqryRecibosPrint: TUniQuery
     SQLInsert.Strings = (
@@ -1620,8 +1619,8 @@ inherited dmFacturas: TdmFacturas
       'from vi_recibos'
       '')
     DMLRefresh = True
-    Left = 776
-    Top = 552
+    Left = 621
+    Top = 442
   end
   object unstrdprcGetRecibos: TUniStoredProc
     StoredProcName = 'PRC_CREAR_RECIBOS_FACTURA'
@@ -1630,8 +1629,8 @@ inherited dmFacturas: TdmFacturas
         'CALL PRC_CREAR_RECIBOS_FACTURA(:pSERIE_FACTURA, :pNRO_FACTURA, :' +
         'pUSUARIO)')
     Connection = dmConn.conUni
-    Left = 1280
-    Top = 296
+    Left = 1024
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -1662,13 +1661,13 @@ inherited dmFacturas: TdmFacturas
       'SELECT * '
       'FROM VI_IVAS'
       '')
-    Left = 671
-    Top = 144
+    Left = 537
+    Top = 115
   end
   object dsIvas: TDataSource
     DataSet = unqryIvas
-    Left = 672
-    Top = 56
+    Left = 538
+    Top = 45
   end
   object unqryEmpDataFac: TUniQuery
     SQLInsert.Strings = (
@@ -1743,8 +1742,8 @@ inherited dmFacturas: TdmFacturas
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM VI_EMP_BUSQUEDAS')
-    Left = 132
-    Top = 536
+    Left = 106
+    Top = 429
   end
   object unstdCrearEmpresa: TUniStoredProc
     StoredProcName = 'PRC_CREAR_ACTUALIZAR_EMPRESA'
@@ -1757,8 +1756,8 @@ inherited dmFacturas: TdmFacturas
         'MPRESA, :pRETENCIONES_EMPRESA, :pIVA_RECARGO_EMPRESA, :pREGIMENE' +
         'SPECIALAGRICOLA_EMPRESA, :pGRUPO_ZONA_IVA_EMPRESA, :pUSUARIO)')
     Connection = dmConn.conUni
-    Left = 416
-    Top = 320
+    Left = 333
+    Top = 256
     ParamData = <
       item
         DataType = ftWideString
@@ -1883,8 +1882,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsTarifas: TDataSource
     DataSet = unqryTarifas
-    Left = 608
-    Top = 80
+    Left = 486
+    Top = 64
   end
   object unqryTarifas: TUniQuery
     Connection = dmConn.conUni
@@ -1892,8 +1891,8 @@ inherited dmFacturas: TdmFacturas
       'SELECT *'
       'FROM vi_tarifas'
       '')
-    Left = 608
-    Top = 176
+    Left = 486
+    Top = 141
   end
   object unstdGetContadorLinea: TUniStoredProc
     StoredProcName = 'PRC_FNC_GET_NEXT_LINEA_FACTURA'
@@ -1902,8 +1901,8 @@ inherited dmFacturas: TdmFacturas
         'CALL PRC_FNC_GET_NEXT_LINEA_FACTURA(:pnumfac, :pserie, @presul);' +
         ' SELECT @presul AS '#39'@presul'#39)
     Connection = dmConn.conUni
-    Left = 784
-    Top = 336
+    Left = 627
+    Top = 269
     ParamData = <
       item
         DataType = ftWideString
@@ -1933,8 +1932,8 @@ inherited dmFacturas: TdmFacturas
     SQL.Strings = (
       'CALL PRC_CALCULAR_FACTURA_NETOS(:pSERIE_FACTURA, :pNRO_FACTURA)')
     Connection = dmConn.conUni
-    Left = 920
-    Top = 296
+    Left = 736
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -1953,15 +1952,15 @@ inherited dmFacturas: TdmFacturas
   end
   object dsSeriesEditCombo: TDataSource
     DataSet = unqrySeriesEditCombo
-    Left = 848
-    Top = 56
+    Left = 678
+    Top = 45
   end
   object unqrySeriesEditCombo: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       '')
-    Left = 848
-    Top = 144
+    Left = 678
+    Top = 115
   end
   object unstrdprcGetContadorFactura: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
@@ -1970,8 +1969,8 @@ inherited dmFacturas: TdmFacturas
         'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMPRESA_' +
         'CONTADOR, :pUSUARIOMODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
     Connection = dmConn.conUni
-    Left = 56
-    Top = 296
+    Left = 45
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -2016,18 +2015,18 @@ inherited dmFacturas: TdmFacturas
       'SELECT * '
       'FROM FZA_IVAS_TIPOS'
       '')
-    Left = 959
-    Top = 176
+    Left = 767
+    Top = 141
   end
   object dsIvasTipos: TDataSource
     DataSet = unqryIvasTipos
-    Left = 960
-    Top = 80
+    Left = 768
+    Top = 64
   end
   object dsFactura: TDataSource
     DataSet = unqryTablaG
-    Left = 368
-    Top = 440
+    Left = 294
+    Top = 352
   end
   object unstdCrearArticuloLin: TUniStoredProc
     StoredProcName = 'PRC_CREAR_ACTUALIZAR_ARTICULO'
@@ -2041,8 +2040,8 @@ inherited dmFacturas: TdmFacturas
         'ECIOFINAL_TARIFA, :pPRECIO_DTO_TARIFA, :pPORCEN_DTO_TARIFA, :pUS' +
         'UARIO)')
     Connection = dmConn.conUni
-    Left = 1360
-    Top = 296
+    Left = 1088
+    Top = 237
     ParamData = <
       item
         DataType = ftWideString
@@ -2162,8 +2161,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsPaisesCli: TDataSource
     DataSet = unqryPaisesCli
-    Left = 1048
-    Top = 64
+    Left = 838
+    Top = 51
   end
   object unqryPaisesCli: TUniQuery
     SQLInsert.Strings = (
@@ -2212,8 +2211,8 @@ inherited dmFacturas: TdmFacturas
       'select * from vi_paises'
       '')
     ReadOnly = True
-    Left = 1048
-    Top = 144
+    Left = 838
+    Top = 115
   end
   object unqryPaisesEmp: TUniQuery
     SQLInsert.Strings = (
@@ -2262,18 +2261,18 @@ inherited dmFacturas: TdmFacturas
       'select * from vi_paises'
       '')
     ReadOnly = True
-    Left = 1120
-    Top = 192
+    Left = 896
+    Top = 154
   end
   object dsPaisesEmp: TDataSource
     DataSet = unqryPaisesEmp
-    Left = 1120
-    Top = 80
+    Left = 896
+    Top = 64
   end
   object dsConsolidacion: TDataSource
     DataSet = unqryConsolidacion
-    Left = 1216
-    Top = 48
+    Left = 973
+    Top = 38
   end
   object unqryConsolidacion: TUniQuery
     SQLInsert.Strings = (
@@ -2360,8 +2359,8 @@ inherited dmFacturas: TdmFacturas
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'ID_CONSOLIDACION;NRO_FACTURA_CONSOLIDACION'
     ReadOnly = True
-    Left = 1216
-    Top = 144
+    Left = 973
+    Top = 115
     ParamData = <
       item
         DataType = ftWideString
@@ -2378,8 +2377,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsErrores: TDataSource
     DataSet = unqryErrores
-    Left = 1304
-    Top = 80
+    Left = 1043
+    Top = 64
   end
   object unqryErrores: TUniQuery
     Connection = dmConn.conUni
@@ -2392,8 +2391,8 @@ inherited dmFacturas: TdmFacturas
     DetailFields = 'NRO_FACTURA_LOG;SERIE_FACTURA_LOG'
     ReadOnly = True
     AutoCalcFields = False
-    Left = 1304
-    Top = 168
+    Left = 1043
+    Top = 134
     ParamData = <
       item
         DataType = ftWideString
