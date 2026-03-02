@@ -1810,13 +1810,11 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
-
   if DatosCaja.cdsLineas.IsEmpty then
   begin
     ShowMessage('No hay líneas en la venta para cobrar.');
     Exit;
   end;
-
   frmFaseCobro := nil;
   try
     ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
