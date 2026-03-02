@@ -241,7 +241,6 @@ begin
         FMemVales.Post;
         qry.Next;
       end;
-
     finally
       FMemVales.EnableControls;
     end;
@@ -250,7 +249,6 @@ begin
     qry.Free;
   end;
   ActualizarBotonAceptar;
-  // Si se buscó por PIN y hay exactamente un resultado → aceptar directamente
   if (sPin <> '') and (FMemVales.RecordCount = 1) then
   begin
     if ValidarPinYSeleccionar then
@@ -262,7 +260,6 @@ procedure TfrmMtoCajaSeleccionVale.ActualizarBotonAceptar;
 begin
   btnAceptar.Enabled := (FMemVales.RecordCount > 0) and
                         (dbtvVales.Controller.FocusedRecord <> nil);
-//  btnF12.Enabled      := btnAceptar.Enabled;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.btnBuscarClick(Sender: TObject);

@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB, VirtualTable, inLibFacturas;
+  Data.DB, VirtualTable, inLibFacturas, Uni, inLibGlobalVar;
 
 type
   TDatosCliente = record
@@ -767,8 +767,51 @@ begin
 end;
 
 function TDatosFaseCobro.ValidarVale: TResultadoValidacion;
+var
+  qry: TUniQuery;
+  Bookmark: TBookmark;
+  CodigoVale: string;
 begin
   Result := TResultadoValidacion.OK;
+  if not Assigned(FMemTablePagos) or
+     not FMemTablePagos.Active or
+     FMemTablePagos.IsEmpty then
+    Exit;
+  qry := TUniQuery.Create(nil);
+  FMemTablePagos.DisableControls;
+  Bookmark := FMemTablePagos.GetBookmark;
+  try
+    qry.Connection := inLibGlobalVar.oConn;
+    qry.SQL.Text := 'SELECT * ' +
+                    '  FROM fza_vales ' +
+                    ' WHERE CODIGO_VALE = :CODIGO ' +
+                    '   AND ESTADO_VL = ' + QuotedStr('PENDIENTE');
+    FMemTablePagos.First;
+    while not FMemTablePagos.Eof do
+    begin
+      if FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString = 'VALE' then
+      begin
+        CodigoVale := FMemTablePagos.FieldByName('REFERENCIA').AsString;
+        qry.Close;
+        qry.ParamByName('CODIGO').AsString := CodigoVale;
+        qry.Open;
+        if qry.IsEmpty then
+        begin
+          Result := TResultadoValidacion.Error(
+            'El vale introducido (' + CodigoVale + ') no existe en la base ' +
+            ' de datos o ha sido recogido o anulado.');
+          Break; // Salimos del bucle al primer error
+        end;
+      end;
+      FMemTablePagos.Next;
+    end;
+  finally
+    if FMemTablePagos.BookmarkValid(Bookmark) then
+      FMemTablePagos.GotoBookmark(Bookmark);
+    FMemTablePagos.FreeBookmark(Bookmark);
+    FMemTablePagos.EnableControls;
+    qry.Free;
+  end;
 end;
 
 function TDatosFaseCobro.ValidarParaCobro: TResultadoValidacion;
