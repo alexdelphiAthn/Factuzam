@@ -158,6 +158,8 @@ type
                                          Boolean>
                                    read FOnRequiereReferencia
                                    write FOnRequiereReferencia;
+    property MemTablePagos: TVirtualTable read FMemTablePagos;
+    property ValesRecogidos: TList<TValeAplicado> read FValesRecogidos;
   end;
 
 implementation
@@ -572,29 +574,23 @@ begin
   // Cerrojo de seguridad: Prevención de recursión infinita
   if FCalculandoTotales then Exit;
   FCalculandoTotales := True;
-
   try
     if not Assigned(FMemTablePagos) or not FMemTablePagos.Active or (FMemTablePagos.FieldCount = 0) then
     begin
       InicializarTotalesPorDefecto;
       Exit;
     end;
-
     // Cálculos básicos
     BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-
     if Abs(FPorcentajeDescuentoGlobal) > 0.001 then
       FImporteDescuentoGlobal := BaseImponible * (FPorcentajeDescuentoGlobal / 100)
     else
       FImporteDescuentoGlobal := 0;
-
     FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
-
     TotalEntregado := 0;
     TotalValesRecogidos := 0;
     TotalEntregadoConCambio := 0;
     HayFormaPagoQueDevuelveCambio := False;
-
     if FMemTablePagos.IsEmpty then
     begin
       FImporteValeRecogido := 0;
@@ -668,9 +664,7 @@ begin
     finally
       FMemTablePagos.EnableControls;
     end;
-
     FImporteValeRecogido := TotalValesRecogidos;
-
     // PASADA 2: Lógica de totales y cambio
     if FImporteTotalPagar < -0.001 then
     begin
@@ -701,10 +695,8 @@ begin
       begin
         FImportePendiente := 0;
         CambioCalculado := FImporteEntregado - FImporteTotalPagar;
-
         if Abs(CambioCalculado) < 0.01 then
           CambioCalculado := 0;
-
         // REGLA MATEMÁTICA ANTI-BLANQUEO:
         // El cajón NUNCA devolverá en Cambio (efectivo) más cantidad
         // de la que el cliente puso físicamente en la mesa.
@@ -727,10 +719,8 @@ begin
         FImporteValeEmitido := 0;
       end;
     end;
-
     if Assigned(FOnRecalculado) then
       FOnRecalculado(Self);
-
   finally
     // Liberamos el cerrojo
     FCalculandoTotales := False;

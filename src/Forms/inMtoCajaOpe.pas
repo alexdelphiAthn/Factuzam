@@ -136,6 +136,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvArticuloPropertiesChange(Sender: TObject);
   private
+    procedure ActualizarFoco;
     function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -186,6 +187,19 @@ uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   inLibFacturas, inLibGenBusq, inLibCajaParam;
 
+procedure TfrmMtoOpeCaja.ActualizarFoco;
+begin
+  if btnCodigoEmpleado.Text = '' then
+  begin
+    if btnCodigoEmpleado.CanFocus then
+      btnCodigoEmpleado.SetFocus;
+  end
+  else if cxGrid1.CanFocus then
+  begin
+    cxGrid1.SetFocus;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.ComboAtributoCloseUp(Sender: TObject);
 begin
   PostMessage(Self.Handle, WM_SALTAR_ATRIBUTO, 0, 0);
@@ -204,21 +218,78 @@ end;
 
 procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
+var
+  EmpleadoAnterior, NombreEmpleadoAnterior: string;
+  sCodEmpleadoDefecto: string;
 begin
   FCodigoEmpresa := AEmpresa;
   FCodigoAlmacen := AAlmacen;
   FCodigoCaja    := ACaja;
   FFecha         := AFecha;
+
   if Assigned(DatosCaja) then
   begin
-    DatosCaja.cdsCabecera.Edit;
+    // 1. Guardar el empleado actual antes de vaciar
+    EmpleadoAnterior := '';
+    NombreEmpleadoAnterior := '';
+    if DatosCaja.cdsCabecera.Active and not DatosCaja.cdsCabecera.IsEmpty then
+    begin
+      EmpleadoAnterior := DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
+      NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
+    end;
+
+    // 2. Vaciar las líneas de la venta anterior
+    if DatosCaja.cdsLineas.Active then
+      DatosCaja.cdsLineas.EmptyDataSet;
+
+    // 3. Vaciar la cabecera anterior y crear un registro nuevo
+    if DatosCaja.cdsCabecera.Active then
+    begin
+      DatosCaja.cdsCabecera.EmptyDataSet;
+      DatosCaja.cdsCabecera.Append;
+    end;
+
+    // 4. Aplicar valores base
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
     AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString :=
-                                                                 FCodigoEmpresa;
+
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString := FCodigoEmpresa;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
     DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
+
+    // --- 5. EVALUACIÓN DE PARÁMETROS DE INICIO ---
+
+    // A) Tarifa por defecto (como tenías en FormShow)
+    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
+      oCajaParams.GetString('vgerDefTarifa', 'PVP');
+    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+
+    // B) Empleado: Mantenemos el anterior, o buscamos el parámetro por defecto
+    if EmpleadoAnterior <> '' then
+    begin
+      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := EmpleadoAnterior;
+      btnCodigoEmpleado.Text := EmpleadoAnterior;
+      lblNombreEmpleado.Caption := NombreEmpleadoAnterior;
+    end
+    else if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+    begin
+      sCodEmpleadoDefecto := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+      if sCodEmpleadoDefecto <> '' then
+      begin
+        btnCodigoEmpleado.Text := sCodEmpleadoDefecto;
+        // Lanzamos ValidateEdit para que rellene el nombre y lo asigne a la cabecera
+        btnCodigoEmpleado.ValidateEdit(True);
+      end;
+    end;
   end;
+
+  // 6. Limpiar el resto de la interfaz (Cliente y Totales)
+  lblNombreCliente.Caption := 'VENTA CONTADO';
+  btnCodigoCliente.Text := '';
+  lblTotal.Caption := 'Total 0,00 €';
+
+  if Self.Visible then
+    ActualizarFoco;
 end;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
@@ -1673,7 +1744,23 @@ begin
     frmFaseCobro.FFecha := FFecha;
     if frmFaseCobro.ShowModal = mrOk then
     begin
-       // Procesar cobro...
+       // 1. Grabar todos los datos (Factura, Pagos, Stock, Movimientos de Caja)
+       if DatosCaja.GrabarFacturaSimplificada(frmFaseCobro.DatosCobro) then
+       begin
+         // 2. Generar el ticket según la elección del usuario (F12, F11, F10)
+         case frmFaseCobro.TipoImpresion of
+           tiConTicket:
+             ; // Llamar a tu función de impresión normal FastReport/etc
+           tiTicketRegalo:
+             ; // Llamar a impresión ocultando importes y totales
+           tiSinTicket:
+             ; // Simplemente no hacer nada, saltar impresión
+         end;
+
+         // 3. Limpiar la interfaz para el siguiente cliente
+         // (Aquí podrías limpiar los ClientDataSet y preparar nueva cabecera)
+         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Date);
+       end;
     end;
   finally
     frmFaseCobro.Free;
@@ -1808,30 +1895,32 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
-var
-  sCodEmpleado: string;
+//var
+//  sCodEmpleado: string;
+//begin
+//  // Tarifa por defecto en cabecera
+//  if DatosCaja.cdsCabecera.State = dsBrowse then
+//    DatosCaja.cdsCabecera.Edit;
+//  DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
+//    oCajaParams.GetString('vgerDefTarifa', 'PVP');
+//  lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
+//                         'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+//
+//  // Empleado por defecto
+//  if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+//  begin
+//    sCodEmpleado := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+//    if sCodEmpleado <> '' then
+//    begin
+//      btnCodigoEmpleado.Text := sCodEmpleado;
+//      btnCodigoEmpleado.ValidateEdit(True);
+//      btnCodigoCliente.SetFocus;
+//      Exit;
+//    end;
+//  end;
+//   btnCodigoEmpleado.SetFocus;
 begin
-  // Tarifa por defecto en cabecera
-  if DatosCaja.cdsCabecera.State = dsBrowse then
-    DatosCaja.cdsCabecera.Edit;
-  DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
-    oCajaParams.GetString('vgerDefTarifa', 'PVP');
-  lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
-                         'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-
-  // Empleado por defecto
-  if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
-  begin
-    sCodEmpleado := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
-    if sCodEmpleado <> '' then
-    begin
-      btnCodigoEmpleado.Text := sCodEmpleado;
-      btnCodigoEmpleado.ValidateEdit(True);
-      btnCodigoCliente.SetFocus;
-      Exit;
-    end;
-  end;
-   btnCodigoEmpleado.SetFocus;
+  ActualizarFoco;
 end;
 
 // CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger OnAtributoChanged

@@ -487,6 +487,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnSinTicketClick
         end
         object btnF11: TcxButton
           Left = 18
@@ -507,6 +508,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnSinTicketClick
         end
         object btnConTicket: TcxButton
           Left = 89
@@ -528,6 +530,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnConTicketClick
         end
         object btnF12: TcxButton
           Left = 18
@@ -548,6 +551,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnConTicketClick
         end
         object btnSinPrecios: TcxButton
           Left = 89
@@ -569,6 +573,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnSinPreciosClick
         end
         object btnF10: TcxButton
           Left = 18
@@ -589,6 +594,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnSinPreciosClick
         end
         object btnDeposito: TcxButton
           Left = 89
@@ -852,9 +858,9 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         TabOrder = 1
         ExplicitTop = 483
         object lblNumDoc: TcxLabel
-          Left = 86
-          Top = 8
-          Caption = 'N'#186' doc.'
+          Left = 30
+          Top = 6
+          Caption = 'N'#186' doc. venta'
           ParentFont = False
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clNavy
@@ -865,7 +871,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 0
         end
         object edtNumeroDoc: TcxTextEdit
-          Left = 30
+          Left = 32
           Top = 94
           ParentFont = False
           Properties.Alignment.Horz = taCenter
@@ -882,10 +888,10 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Style.IsFontAssigned = True
           TabOrder = 1
           Text = '00000000'
-          Width = 217
+          Width = 209
         end
         object cbbSerie1: TcxComboBox
-          Left = 62
+          Left = 32
           Top = 47
           ParentFont = False
           Style.Font.Charset = ANSI_CHARSET
@@ -896,7 +902,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Style.IsFontAssigned = True
           TabOrder = 2
           Text = 'cbbSerie1'
-          Width = 147
+          Width = 209
         end
       end
     end

@@ -5,10 +5,10 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
-  inLibGlobalVar, system.StrUtils;
+  inLibGlobalVar, system.StrUtils, inLibFaseCobro;
 
 type
-  TOnUpdateTotalEvent = 
+  TOnUpdateTotalEvent =
                      procedure(Sender: TObject; NuevoTotal: Currency) of object;
   TdmCajaOpe = class(TDataModule)
     cdsLineas:TClientDataSet;
@@ -42,11 +42,15 @@ type
                                  ACodigoAlmacen: string;
                                  ANumOperacion: Integer;
                                  ASerie: string;
-                                 ANumFactura: Integer);
+                                 ANumFactura: String);
 
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
+    function GrabarFacturaSimplificada(const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
+                                     DatosCobro: TDatosFaseCobro;
+                                     out SerieGenerada: string;
+                                     out NumeroGenerado: String): Boolean;
 //    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
 //    procedure CalcularTotalesCabecera;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
@@ -63,6 +67,188 @@ implementation
 uses inLibtb, inMtoCajaOpe, inLibDevExp;
 
 {$R *.dfm}
+
+function TdmCajaOpe.GrabarFacturaSimplificada(const AEmpresa,
+                                                    AAlmacen,
+                                                    ACaja,
+                                                    ASerieElegida: string;
+                                              DatosCobro: TDatosFaseCobro;
+                                              out SerieGenerada: string;
+                                           out NumeroGenerado: String): Boolean;
+var
+  QryTrx: TUniQuery;
+  LineaAct: Integer;
+  NumOperacion: Integer;
+begin
+  Result := False;
+  SerieGenerada := ASerieElegida;
+  NumeroGenerado := '0';
+  if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
+  if cdsLineas.State in [dsEdit, dsInsert] then cdsLineas.Post;
+  if cdsLineas.IsEmpty then
+    raise Exception.Create('No se puede grabar un ticket sin líneas.');
+  QryTrx := TUniQuery.Create(nil);
+  try
+    QryTrx.Connection := inLibGlobalVar.oConn;
+    // =======================================================================
+    // INICIO DE LA TRANSACCIÓN: O se guarda TODO, o no se guarda NADA
+    // =======================================================================
+    inLibGlobalVar.oConn.StartTransaction;
+    try
+      // =======================================================================
+      // PASO 1: OBTENER EL NÚMERO DE FACTURA (Llamada al Procedure)
+      // =======================================================================
+      QryTrx.SQL.Text := 'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, ' +
+                                                           ':pTipoDoc, '+
+                                                           ':pEMP, ' +
+                                                           ':pUSUARIO, ' +
+                                                           ':pcont)';
+      QryTrx.ParamByName('pserie').AsString := SerieGenerada;
+      QryTrx.ParamByName('pTipoDoc').AsString := 'FC';
+      QryTrx.ParamByName('pEMP').AsString := AEmpresa;
+      QryTrx.ParamByName('pUSUARIO').AsString := oConn.Username;
+      QryTrx.ParamByName('pcont').ParamType := ptOutput;
+      QryTrx.ParamByName('pcont').DataType := ftString;
+      QryTrx.ParamByName('pcont').Size := 12;
+      QryTrx.Execute;
+      NumeroGenerado := QryTrx.ParamByName('pcont').AsString;
+
+      // --- PASO 2: GRABAR CABECERA DE FACTURA ---
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_facturas ' +
+        '(CODIGO_EMPRESA_FACTURA, SERIE_FACTURA, NRO_FACTURA, FECHA_FACTURA, ' +
+        ' CODIGO_CLIENTE_FACTURA, TIPO_FACTURA, TOTAL_BRUTO_FACTURA) ' +
+        'VALUES ' +
+        '(:EMP, :SERIE, :NRO, :FECHA, :CLI, :TIPO, :BRUTO)';
+
+      QryTrx.ParamByName('EMP').AsString   := AEmpresa;
+      QryTrx.ParamByName('SERIE').AsString := SerieGenerada;
+      QryTrx.ParamByName('NRO').AsString  := NumeroGenerado;
+      QryTrx.ParamByName('FECHA').AsDateTime := cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
+      QryTrx.ParamByName('CLI').AsString   := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+      QryTrx.ParamByName('TIPO').AsString  := 'SIMPLIFICADA';
+      QryTrx.ParamByName('BRUTO').AsCurrency := DatosCobro.ImporteTotalPagar;
+      QryTrx.Execute;
+
+      // --- PASO 3: GRABAR LÍNEAS DE FACTURA Y SALIDAS DE STOCK ---
+      cdsLineas.DisableControls;
+      try
+        cdsLineas.First;
+        LineaAct := 1;
+        while not cdsLineas.Eof do
+        begin
+          // A) Insertar Línea
+          QryTrx.SQL.Text :=
+            'INSERT INTO fza_facturas_lineas ' +
+            '(CODIGO_EMPRESA_FACTURA_LINEA, SERIE_FACTURA_LINEA, NRO_FACTURA_LINEA, LINEA_FACTURA_LINEA, ' +
+            ' CODIGO_ARTICULO_FACTURA_LINEA, CODIGO_UNIDAD_FACTURA_LINEA, CANTIDAD_FACTURA_LINEA, PRECIO_FACTURA_LINEA) ' +
+            'VALUES ' +
+            '(:EMP, :SERIE, :NRO, :LINEA, :ART, :SKU, :CANT, :PRECIO)';
+
+          QryTrx.ParamByName('EMP').AsString   := AEmpresa;
+          QryTrx.ParamByName('SERIE').AsString := SerieGenerada;
+          QryTrx.ParamByName('NRO').AsString  := NumeroGenerado;
+          QryTrx.ParamByName('LINEA').AsInteger := LineaAct;
+          QryTrx.ParamByName('ART').AsString   := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('SKU').AsString   := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('CANT').AsFloat   := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+          QryTrx.ParamByName('PRECIO').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+          QryTrx.Execute;
+
+          // B) Movimiento de Stock (Salida)
+          QryTrx.SQL.Text :=
+            'INSERT INTO fza_movimientos_almacen ' +
+            '(CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+            'VALUES ' +
+            '(:ALM, :SKU, ''S'', :CANT, :FECHA)';
+          QryTrx.ParamByName('ALM').AsString := AAlmacen;
+          QryTrx.ParamByName('SKU').AsString := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('CANT').AsFloat := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+          QryTrx.ParamByName('FECHA').AsDateTime := Now;
+          QryTrx.Execute;
+
+          Inc(LineaAct);
+          cdsLineas.Next;
+        end;
+      finally
+        cdsLineas.EnableControls;
+      end;
+
+      // --- PASO 4: GRABAR OPERACIÓN DE CAJA (Para el arqueo/cierre) ---
+      // Obtenemos un número único para la operación de caja
+      QryTrx.SQL.Text := 'SELECT GET_NEXT_OP_CAJA(:CAJA) AS NUEVO_OP';
+      QryTrx.ParamByName('CAJA').AsString := ACaja;
+      QryTrx.Open;
+      NumOperacion := QryTrx.FieldByName('NUEVO_OP').AsInteger;
+      QryTrx.Close;
+
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_caja_operaciones ' +
+        '(CODIGO_CAJA_OP, NUMERO_OPERACION_OP, TIPO_OPERACION_OP, IMPORTE_OP, FECHA_OP) ' +
+        'VALUES ' +
+        '(:CAJA, :NUMOP, ''VE'', :IMPORTE, :FECHA)'; // 'VE' = Venta
+      QryTrx.ParamByName('CAJA').AsString := ACaja;
+      QryTrx.ParamByName('NUMOP').AsInteger := NumOperacion;
+      QryTrx.ParamByName('IMPORTE').AsCurrency := DatosCobro.ImporteTotalPagar;
+      QryTrx.ParamByName('FECHA').AsDateTime := Now;
+      QryTrx.Execute;
+
+      // --- PASO 5: GRABAR FORMAS DE PAGO ENTREGADAS ---
+      DatosCobro.MemTablePagos.First;
+      while not DatosCobro.MemTablePagos.Eof do
+      begin
+        var ImporteEntregado := DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
+
+        // Guardamos las filas donde haya entregado dinero
+        if ImporteEntregado > 0.001 then
+        begin
+          QryTrx.SQL.Text :=
+            'INSERT INTO fza_caja_pagos ' +
+            '(CODIGO_CAJA_PAGO, NUMERO_OPERACION_PAGO, CODIGO_FORMAP_PAGO, IMPORTE_ENTREGADO_PAGO, CAMBIO_PAGO) ' +
+            'VALUES ' +
+            '(:CAJA, :NUMOP, :FORMAP, :IMPORTE, :CAMBIO)';
+          QryTrx.ParamByName('CAJA').AsString := ACaja;
+          QryTrx.ParamByName('NUMOP').AsInteger := NumOperacion;
+          QryTrx.ParamByName('FORMAP').AsString := DatosCobro.MemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
+          QryTrx.ParamByName('IMPORTE').AsFloat := ImporteEntregado;
+          QryTrx.ParamByName('CAMBIO').AsCurrency := DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency;
+          QryTrx.Execute;
+        end;
+        DatosCobro.MemTablePagos.Next;
+      end;
+
+      // A) Vales recogidos (Pueden ser varios)
+      for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
+      begin
+        MarcarValeComoCanjeado(DatosCobro.ValesRecogidos[i].CodigoVale,
+                               ACaja, AAlmacen, NumOperacion,
+                               SerieGenerada, NumeroGenerado);
+      end;
+      // B) Vale emitido (Si le sobró dinero o es una devolución)
+      if DatosCobro.ImporteValeEmitido > 0 then
+      begin
+         // EmitirNuevoVale(ACaja, AAlmacen, NumOperacion, DatosCobro.ImporteValeEmitido);
+      end;
+      // =======================================================================
+      // CONFIRMAR TRANSACCIÓN: Todo ha ido perfecto
+      // =======================================================================
+      inLibGlobalVar.oConn.Commit;
+      Result := True;
+    except
+      on E: Exception do
+      begin
+        // =======================================================================
+        // DESHACER TRANSACCIÓN: Hubo un error, no guardamos NADA.
+        // =======================================================================
+        inLibGlobalVar.oConn.Rollback;
+        raise Exception.Create('Error al guardar el ticket. No se ha registrado la operación.' + sLineBreak + 'Motivo: ' + E.Message);
+      end;
+    end;
+
+  finally
+    QryTrx.Free;
+  end;
+end;
 
 //procedure TdmCajaOpe.CalcularTotalesCabecera;
 //var
@@ -555,7 +741,7 @@ procedure TdmCajaOpe.MarcarValeComoCanjeado(const ACodigoVale: string;
                                  ACodigoAlmacen: string;
                                  ANumOperacion: Integer;
                                  ASerie: string;
-                                 ANumFactura: Integer);
+                                 ANumFactura: String);
 var
   qry: TUniQuery;
 begin
@@ -578,7 +764,7 @@ begin
     qry.ParamByName('almacen').AsString := ACodigoAlmacen;
     qry.ParamByName('numop').AsInteger := ANumOperacion;
     qry.ParamByName('serie').AsString := ASerie;
-    qry.ParamByName('numfac').AsInteger := ANumFactura;
+    qry.ParamByName('numfac').AsString := ANumFactura;
     qry.ExecSQL;
   finally
     qry.Free;
