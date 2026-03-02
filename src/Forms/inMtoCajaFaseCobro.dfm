@@ -27,8 +27,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Color = clCream
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 765
-    ExplicitHeight = 679
+    ExplicitWidth = 767
+    ExplicitHeight = 687
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -44,8 +44,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
-      ExplicitWidth = 517
-      ExplicitHeight = 679
+      ExplicitWidth = 519
+      ExplicitHeight = 687
       object pnlContenedor: TPanel
         Left = 0
         Top = 0
@@ -53,8 +53,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         Height = 688
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 517
-        ExplicitHeight = 679
+        ExplicitWidth = 519
+        ExplicitHeight = 687
         object pnlTotales: TPanel
           Left = 6
           Top = 0
@@ -382,8 +382,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
-          ExplicitTop = 598
-          ExplicitWidth = 515
+          ExplicitTop = 606
+          ExplicitWidth = 517
           object lblDescuento4: TcxLabel
             Left = 15
             Top = 43
@@ -449,8 +449,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Color = clCream
       ParentBackground = False
       TabOrder = 1
-      ExplicitLeft = 517
-      ExplicitHeight = 679
+      ExplicitLeft = 519
+      ExplicitHeight = 687
       object pnlBotones: TPanel
         Left = 0
         Top = 0
@@ -466,7 +466,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 483
+        ExplicitHeight = 491
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -601,7 +601,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Top = 149
           Width = 155
           Height = 51
-          Caption = '&Dep'#243'sito'
+          Caption = '&Pr'#233'stamo'
           Colors.Default = clBtnFace
           Colors.Normal = clBtnFace
           Colors.Hot = clSilver
@@ -636,6 +636,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnF7Click
         end
         object btnF8: TcxButton
           Left = 18
@@ -856,7 +857,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
-        ExplicitTop = 483
+        ExplicitTop = 491
         object lblNumDoc: TcxLabel
           Left = 30
           Top = 6
@@ -914,7 +915,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Height = 688
     Align = alLeft
     TabOrder = 1
-    ExplicitHeight = 679
+    ExplicitHeight = 687
     object cxLabel3: TcxLabel
       Left = 1
       Top = 172
