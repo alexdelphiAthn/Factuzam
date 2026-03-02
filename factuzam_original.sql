@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 27/02/2026 07:54:52
+ Date: 02/03/2026 08:20:46
 */
 
 SET NAMES utf8mb4;
@@ -57,7 +57,7 @@ INSERT INTO `fza_almacenes` VALUES ('ALE', '012', 'S', 'GENERAL', NULL, 'S', 'ES
 INSERT INTO `fza_almacenes` VALUES ('BCN', '1', 'S', 'Almacén Barcelona', NULL, 'S', 'ESTANDAR', 'AV. EIXAMPLE, 3', 'BARCELONA', NULL, '932312923', NULL, NULL, NULL, '', 2, '2026-01-05 06:01:06', '2026-01-29 06:12:21', 'DEMO', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('DEP_CL_GEN', '1', 'S', 'Depósitos Clientes Alm Cen', 'GEN', 'S', 'DEPOSITO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-05 07:21:35', '2026-02-06 06:47:51', 'DEMO', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('FGN', '1', 'S', 'Furgoneta GEN -> BCN', NULL, 'S', 'TRÁNSITO', NULL, NULL, NULL, NULL, NULL, NULL, 'BCN', 'GEN', NULL, '2026-01-29 05:42:51', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_almacenes` VALUES ('GEN', '1', 'S', 'Almacén Central', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2, '2026-01-04 22:13:10', '2026-01-29 06:11:20', 'DEMO', 'Administrador', NULL);
+INSERT INTO `fza_almacenes` VALUES ('GEN', '012', 'S', 'Almacén Central', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2, '2026-01-04 22:13:10', '2026-01-29 06:11:20', 'DEMO', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('TARAS_G', '1', 'S', 'Taras Almacén Central', 'GEN', 'S', 'TARAS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-05 07:21:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
 
 -- ----------------------------
@@ -1216,7 +1216,7 @@ CREATE TABLE `fza_empresas_series`  (
   `CODIGO_CAJA_SERIE` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `SERIE_SERIE` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `TIPODOC_SERIE` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `SUBITPO_SERIE` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `SUBTIPO_SERIE` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `FECHA_DESDE_SERIE` date NULL DEFAULT NULL,
   `FECHA_HASTA_SERIE` date NULL DEFAULT NULL,
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
@@ -1236,6 +1236,7 @@ INSERT INTO `fza_empresas_series` VALUES ('006', '011', NULL, NULL, 'A1/1T/2024'
 INSERT INTO `fza_empresas_series` VALUES ('007', '011', NULL, NULL, 'A1/2T/2024', NULL, NULL, '2024-04-01', '2024-06-30', '2023-12-06 13:56:28', '2023-12-06 13:56:28', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('008', '011', NULL, NULL, 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('009', '012', NULL, NULL, '2026.A1', 'FC', 'NORMAL', '2026-01-01', '2026-12-31', '2026-01-29 05:31:11', '2026-01-29 05:24:21', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('010', '012', NULL, NULL, '2026_SIM_A1', 'FC', 'SIMPLIFICADA', '2026-01-01', NULL, '2026-03-02 06:33:43', '2026-03-02 06:33:33', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas
@@ -2537,7 +2538,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-02-26 20:31:55', '2026-02-26 20:31:55', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-02 08:18:21', '2026-03-02 08:18:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -3680,10 +3681,7 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_retenciones`
 -- View structure for vi_empresas_series
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_empresas_series`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_series` AS SELECT
-  `fza_empresas_series`.*
-FROM
-  `fza_empresas_series` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_empresas_series` AS select * from fza_empresas_series ;
 
 -- ----------------------------
 -- View structure for vi_emp_busquedas
@@ -5825,6 +5823,31 @@ IF (pserie IS NULL) THEN
 ELSE
    SET presul = pserie;
 END IF;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for PRC_GENERAR_CODIGO_VALE
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `PRC_GENERAR_CODIGO_VALE`;
+delimiter ;;
+CREATE PROCEDURE `PRC_GENERAR_CODIGO_VALE`(IN pEmpresa VARCHAR(10),
+    IN pAlmacen VARCHAR(10),
+    IN pCaja VARCHAR(10),
+    IN pNumOperacion VARCHAR(20),
+    IN pUsuario VARCHAR(100),
+    OUT pCodigoFinal VARCHAR(100))
+BEGIN
+    -- DECLARE vContador VARCHAR(20);
+    
+    -- 1. Obtenemos el contador secuencial (Le pasamos 'VL' y el Usuario)
+    -- CALL PRC_GET_NEXT_CONT('VL', pUsuario, vContador);
+    
+    -- 2. Construimos el código final concatenando todo
+    -- Resultado ejemplo: 00014_VL_1_ALM01_CAJ1_4509
+    SET pCodigoFinal = CONCAT('VALE_', pEmpresa, '_', pAlmacen, '_', pCaja, '_', pNumOperacion);
+    
 END
 ;;
 delimiter ;
