@@ -21,8 +21,6 @@ inherited frmMtoClientes: TfrmMtoClientes
       ClientRectBottom = 659
       ClientRectRight = 997
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
         ExplicitWidth = 993
         ExplicitHeight = 629
         inherited cxGrdPrincipal: TcxGrid
@@ -183,8 +181,6 @@ inherited frmMtoClientes: TfrmMtoClientes
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
         ExplicitWidth = 993
         ExplicitHeight = 629
         object pnl1: TPanel
@@ -1853,9 +1849,6 @@ inherited frmMtoClientes: TfrmMtoClientes
         inherited pnlPerfilTop: TPanel
           Width = 993
           ExplicitWidth = 993
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 993
@@ -1878,9 +1871,6 @@ inherited frmMtoClientes: TfrmMtoClientes
       inherited pnlTopGrid: TPanel
         Width = 1001
         ExplicitWidth = 1001
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
           Width = 310

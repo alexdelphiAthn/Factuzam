@@ -20,6 +20,7 @@ uses
   inMtoCajaReferenciaPago;
 
 type
+  TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo);
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
     pnlIzquierdo: TPanel;
@@ -96,7 +97,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
-    procedure btnConTicketClick(Sender: TObject);
     procedure btnAtrasClick(Sender: TObject);
     procedure txtPorcenDtoGlobalPropertiesEditValueChanged(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -115,12 +115,18 @@ type
     procedure dbtvFormasPagoEditing(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; var AAllow: Boolean);
     procedure actBuscarValeExecute(Sender: TObject);
+    procedure btnSinTicketClick(Sender: TObject);
+    procedure btnConTicketClick(Sender: TObject);
+    procedure btnSinPreciosClick(Sender: TObject);
   private
+    FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
     FMemTablePagos: TVirtualTable;
-    FActualizandoVale: Boolean;  // evita bucle en OnEditValueChanged de txtValeEmitido
+    FActualizandoVale: Boolean;
+    function ValidaryConfirmar:boolean;
     procedure CargarFormasPago;
+    procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
     procedure ActualizarInterfaz;
     function  ValidarIntegridad: Boolean;
@@ -132,7 +138,11 @@ type
     procedure MemTablePagosAfterPost(DataSet: TDataSet);
     procedure FMemTablePagosBeforePost(DataSet: TDataSet);
   public
+    property DatosCobro: TDatosFaseCobro read FDatosCobro;
+    property TipoImpresion: TTipoImpresionTicket read FTipoImpresion;
+  public
     FCodigoEmpresa:String;
+    FCodigoCliente: String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
@@ -146,6 +156,87 @@ implementation
 {$R *.dfm}
 
 uses inMtoCajaSeleccionVale;
+
+procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
+var
+  qry: TUniQuery;
+  SerieDefecto: string;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text := 'SELECT SERIE_SERIE AS SERIE_CONTADOR              ' +
+                    '  FROM vi_empresas_series                         ' +
+                    ' WHERE CODIGO_EMPRESA_SERIE = :EMPRESA            ' +
+                    '   AND SUBTIPO_SERIE = ' + QuotedStr('SIMPLIFICADA') +
+                    '   AND (FECHA_DESDE_SERIE <= :FECHA               ' +
+                    '        AND (FECHA_HASTA_SERIE >= :FECHA          ' +
+                    '             OR FECHA_HASTA_SERIE IS NULL ))      ';
+    qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    qry.ParamByName('FECHA').AsDateTime := FFecha;
+    qry.Open;
+    cbbSerie1.Properties.Items.BeginUpdate;
+    try
+      cbbSerie1.Properties.Items.Clear;
+      while not qry.Eof do
+      begin
+        cbbSerie1.Properties.Items.Add(qry.FieldByName('SERIE_CONTADOR').AsString);
+        qry.Next;
+      end;
+    finally
+      cbbSerie1.Properties.Items.EndUpdate;
+    end;
+    if cbbSerie1.Properties.Items.Count > 0 then
+    begin
+//      SerieDefecto := oCajaParams.GetString('vgerDefSerieCaja', 'T');
+//      cbbSerie1.ItemIndex := cbbSerie1.Properties.Items.IndexOf(SerieDefecto);
+      if cbbSerie1.ItemIndex = -1 then
+        cbbSerie1.ItemIndex := 0;
+    end;
+  finally
+    qry.Free;
+  end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
+begin
+  if ValidarYConfirmar then
+  begin
+    FTipoImpresion := tiConTicket;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject); // F11
+begin
+  if ValidarYConfirmar then
+  begin
+    FTipoImpresion := tiSinTicket;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject); // F10
+begin
+  if ValidarYConfirmar then
+  begin
+    FTipoImpresion := tiTicketRegalo;
+    ModalResult := mrOk;
+  end;
+end;
+
+function TfrmMtoCajaFaseCobro.ValidarYConfirmar: Boolean;
+var
+  Res: TResultadoValidacion;
+begin
+  Res := FDatosCobro.ValidarParaCobro;
+  if not Res.Valido then
+  begin
+    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
+    Result := False;
+  end else
+    Result := True;
+end;
 
 function TfrmMtoCajaFaseCobro.AlRequerirReferencia(AInfo: TFormaPagoInfo;
                                      ADatosActuales: TDatosReferencia): Boolean;
@@ -610,18 +701,18 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
-var
-  Res: TResultadoValidacion;
-begin
-  Res := FDatosCobro.ValidarParaCobro;
-  if not Res.Valido then
-  begin
-    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
-    Exit;
-  end;
-  ModalResult := mrOk;
-end;
+//procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
+//var
+//  Res: TResultadoValidacion;
+//begin
+//  Res := FDatosCobro.ValidarParaCobro;
+//  if not Res.Valido then
+//  begin
+//    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
+//    Exit;
+//  end;
+//  ModalResult := mrOk;
+//end;
 
 procedure TfrmMtoCajaFaseCobro.btnESCClick(Sender: TObject);
 begin
@@ -687,6 +778,7 @@ end;
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
 begin
   inherited;
+  CargarComboSeries;
   CargarFormasPago;
   ActualizarInterfaz;
   if cxgrdFormasPago.CanFocus then
