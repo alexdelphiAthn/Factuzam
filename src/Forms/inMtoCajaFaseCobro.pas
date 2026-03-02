@@ -169,11 +169,16 @@ begin
     qry.SQL.Text := 'SELECT SERIE_SERIE AS SERIE_CONTADOR              ' +
                     '  FROM vi_empresas_series                         ' +
                     ' WHERE CODIGO_EMPRESA_SERIE = :EMPRESA            ' +
+                    '   AND CODIGO_ALMACEN_SERIE = :ALMACEN            ' +
+                    '   AND CODIGO_CAJA_SERIE = :CAJA                  ' +
+                    '   AND TIPODOC_SERIE     = ' + QuotedStr('FC')      +
                     '   AND SUBTIPO_SERIE = ' + QuotedStr('SIMPLIFICADA') +
                     '   AND (FECHA_DESDE_SERIE <= :FECHA               ' +
                     '        AND (FECHA_HASTA_SERIE >= :FECHA          ' +
                     '             OR FECHA_HASTA_SERIE IS NULL ))      ';
     qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    qry.ParamByName('CAJA').AsString := FCodigoCaja;
     qry.ParamByName('FECHA').AsDateTime := FFecha;
     qry.Open;
     cbbSerie1.Properties.Items.BeginUpdate;
