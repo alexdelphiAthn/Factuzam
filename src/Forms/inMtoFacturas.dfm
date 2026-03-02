@@ -2664,7 +2664,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Usuario Factura'
+                  Caption = 'Vendedor Factura'
                   TabOrder = 16
                   Transparent = True
                 end

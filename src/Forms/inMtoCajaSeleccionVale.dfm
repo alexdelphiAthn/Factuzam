@@ -170,7 +170,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
     end
   end
   object dsVales: TDataSource
-    Left = 576
-    Top = 8
+    Left = 568
+    Top = 464
   end
 end
