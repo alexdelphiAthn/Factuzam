@@ -300,13 +300,15 @@ end;
 procedure TDatosFaseCobro.EstablecerCliente(const ACodigo, ANombre: string;
   APermiteDeuda: Boolean; ALimiteCredito, ADeudaActual: Currency);
 begin
-  FDatosCliente.CodigoCliente := ACodigo;
-  FDatosCliente.NombreCliente := ANombre;
+  FDatosCliente.CodigoCliente := Trim(ACodigo);
+  FDatosCliente.NombreCliente := Trim(ANombre);
   FDatosCliente.PermiteDeuda := APermiteDeuda;
   FDatosCliente.LimiteCredito := ALimiteCredito;
   FDatosCliente.DeudaActual := ADeudaActual;
-  FHayCliente := not ACodigo.IsEmpty;
+  FHayCliente := (Trim(FDatosCliente.CodigoCliente) <> '');
   FPermiteDeuda := FHayCliente and APermiteDeuda;
+  if not FPermiteDeuda then
+    FImporteDejarCuenta := 0;
   Recalcular;
 end;
 
@@ -451,10 +453,8 @@ begin
       Exit;
     end;
   end;
-
   FImporteDejarCuenta := AImporte;
   Recalcular;
-
   Result := TResultadoValidacion.OK;
 end;
 

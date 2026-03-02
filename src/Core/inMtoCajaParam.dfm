@@ -19,8 +19,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 596
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 741
-    ExplicitHeight = 587
+    ExplicitWidth = 743
+    ExplicitHeight = 595
     object cxVerticalGrid1: TcxVerticalGrid
       Left = 1
       Top = 1
@@ -29,8 +29,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Align = alClient
       OptionsView.RowHeaderWidth = 327
       TabOrder = 0
-      ExplicitWidth = 739
-      ExplicitHeight = 585
+      ExplicitWidth = 741
+      ExplicitHeight = 593
       Version = 1
       object vgerChkExistOnly: TcxEditorRow
         Properties.Caption = 'Permitir s'#243'lo art'#237'culos que existan'
@@ -228,7 +228,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Version = 1
       end
       object vgerVentasCredito: TcxEditorRow
-        Properties.Caption = 'Permitir ventas a cr'#233'dito'
+        Properties.Caption = 'Permitir pr'#233'stamos a clientes'
         Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
         Properties.DataBinding.ValueType = 'Boolean'
         Properties.Value = True
@@ -237,23 +237,13 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         Index = 20
         Version = 1
       end
-      object vgerDepositos: TcxEditorRow
-        Properties.Caption = 'Permitir ventas dep'#243'sitos'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 21
-        ParentID = -1
-        Index = 21
-        Version = 1
-      end
       object vgerDescuentos: TcxEditorRow
         Properties.Caption = 'Permitir descuentos a'#241'adidos'
         Properties.DataBinding.ValueType = 'Boolean'
         Properties.Value = True
         ID = 22
         ParentID = -1
-        Index = 22
+        Index = 21
         Version = 1
       end
     end
@@ -265,7 +255,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 57
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 741
+    ExplicitWidth = 743
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8

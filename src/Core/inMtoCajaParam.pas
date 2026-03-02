@@ -56,8 +56,7 @@ type
     btnChangeId: TcxButton;
     vgerArqueoTarjetas: TcxEditorRow;
     vgerVentasCredito: TcxEditorRow;
-    vgerDepositos: TcxEditorRow;
-    vgerDescuentos: TcxEditorRow;
+    vgerDescuentos: TcxEditorRow;           //permite descuentos en ventas
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);

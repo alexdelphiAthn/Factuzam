@@ -118,6 +118,7 @@ type
     procedure btnSinTicketClick(Sender: TObject);
     procedure btnConTicketClick(Sender: TObject);
     procedure btnSinPreciosClick(Sender: TObject);
+    procedure btnF7Click(Sender: TObject);
   private
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
@@ -155,7 +156,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoCajaSeleccionVale;
+uses inMtoCajaSeleccionVale, inLibCajaParam;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -670,6 +671,17 @@ begin
     ConfigurarModoDevolucion
   else
     ConfigurarModoCobroNormal;
+  var PermiteCredito := oCajaParams.GetBool('vgerVentasCredito', True) and
+                     FDatosCobro.HayCliente and FDatosCobro.PermiteDeuda and
+                     FDatosCobro.PuedeDejarEnCuenta;
+  if Assigned(btnDeposito) then
+    btnDeposito.Enabled := PermiteCredito;
+//  txtDejarCuenta.Enabled := PermiteCredito;
+//  if txtDejarCuenta.Enabled then
+//    txtDejarCuenta.Style.Color := clWindow
+//  else
+//    txtDejarCuenta.Style.Color := clBtnFace;
+  btnF7.Enabled := PermiteCredito;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoDevolucion;
@@ -682,7 +694,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
 begin
-  txtPorcenDtoGlobal.Enabled := True;
+  txtPorcenDtoGlobal.Enabled := oCajaParams.GetBool('vgerDescuentos', True);
   txtValeEmitido.Properties.ReadOnly := True;
   txtValeEmitido.Style.Color := clWhite;
   lblDescuento4.Caption := 'Pendiente de cobro';
@@ -732,6 +744,43 @@ begin
   btnBuscarValeClick(Sender);
 end;
 
+procedure TfrmMtoCajaFaseCobro.btnF7Click(Sender: TObject);
+var
+  Res: TResultadoValidacion;
+begin
+  inherited;
+
+  // 1. Validar que tenemos un cliente válido y con permisos para dejar a deber
+  if not FDatosCobro.PuedeDejarEnCuenta then
+  begin
+    ShowMessage('Operación denegada: Identifique a un cliente que tenga el crédito permitido.');
+    Exit;
+  end;
+
+  // 2. Comprobar que realmente hay algo que prestar
+  if FDatosCobro.ImportePendiente <= 0 then
+  begin
+    ShowMessage('No hay importe pendiente para pasar a crédito.');
+    Exit;
+  end;
+
+  // 3. Aplicar TODO el total pendiente a la cuenta del cliente
+  Res := FDatosCobro.EstablecerDejarEnCuenta(FDatosCobro.ImportePendiente);
+
+  if not Res.Valido then
+  begin
+    // Muestra el error de la librería (ej: "Límite de crédito excedido...")
+    ShowMessage(Res.Mensaje);
+  end
+  else
+  begin
+    // 4. Éxito: Reflejar en la interfaz visual para que se vea el cuadre
+    ActualizarInterfaz;
+    if btnConTicket.Enabled then
+      btnConTicketClick(Sender);
+  end;
+end;
+
 procedure TfrmMtoCajaFaseCobro.btnAtrasClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
@@ -776,8 +825,40 @@ begin
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
+var
+  qryCli: TUniQuery;
+  PermiteDeuda: Boolean;
+  LimiteCredito, DeudaActual: Currency;
+  NomCliente: string;
 begin
   inherited;
+  if Trim(FCodigoCliente) <> '' then
+  begin
+    qryCli := TUniQuery.Create(nil);
+    try
+      qryCli.Connection := inLibGlobalVar.oConn;
+      qryCli.SQL.Text := 'SELECT RAZONSOCIAL_CLIENTE, ESPERMITE_DEUDA_CLIENTE, ' +
+                         '       TOTAL_LIMITE_CREDITO_CLIENTE ' +
+                         '  FROM fza_clientes ' +
+                         ' WHERE CODIGO_CLIENTE = :COD LIMIT 1';
+      qryCli.ParamByName('COD').AsString := FCodigoCliente;
+      qryCli.Open;
+      if not qryCli.IsEmpty then
+      begin
+        NomCliente := qryCli.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
+        PermiteDeuda := (qryCli.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString = 'S');
+        LimiteCredito := qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLIENTE').AsCurrency;
+        DeudaActual := 0;
+        FDatosCobro.EstablecerCliente(FCodigoCliente,
+                                      NomCliente,
+                                      PermiteDeuda,
+                                      LimiteCredito,
+                                      DeudaActual);
+      end;
+    finally
+      qryCli.Free;
+    end;
+  end;
   CargarComboSeries;
   CargarFormasPago;
   ActualizarInterfaz;
