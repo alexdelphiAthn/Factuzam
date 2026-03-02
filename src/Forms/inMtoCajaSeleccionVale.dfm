@@ -2,8 +2,8 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
   Left = 0
   Top = 0
   Caption = 'Seleccionar Vale'
-  ClientHeight = 521
-  ClientWidth = 958
+  ClientHeight = 520
+  ClientWidth = 954
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,13 +18,13 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
   object pnlPrincipal: TPanel
     Left = 0
     Top = 0
-    Width = 958
-    Height = 521
+    Width = 954
+    Height = 520
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 952
-    ExplicitHeight = 512
+    ExplicitWidth = 962
+    ExplicitHeight = 521
     object pnlSuperior: TPanel
       Left = 0
       Top = 0
@@ -33,7 +33,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 952
+      ExplicitWidth = 962
       object lblBuscar: TcxLabel
         Left = 8
         Top = 20
@@ -131,8 +131,7 @@ object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 452
-      ExplicitWidth = 952
+      ExplicitWidth = 962
       object btnAceptar: TcxButton
         Left = 808
         Top = 14

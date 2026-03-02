@@ -842,8 +842,10 @@ begin
     qryCli := TUniQuery.Create(nil);
     try
       qryCli.Connection := inLibGlobalVar.oConn;
-      qryCli.SQL.Text := 'SELECT RAZONSOCIAL_CLIENTE, ESPERMITE_DEUDA_CLIENTE, ' +
-                         '       TOTAL_LIMITE_CREDITO_CLIENTE ' +
+      qryCli.SQL.Text := 'SELECT RAZONSOCIAL_CLIENTE, ' +
+                         '       ESPERMITE_DEUDA_CLIENTE, ' +
+                         '       TOTAL_LIMITE_CREDITO_CLIENTE, ' +
+                         '       TOTAL_DEUDA_CLIENTE ' +
                          '  FROM fza_clientes ' +
                          ' WHERE CODIGO_CLIENTE = :COD LIMIT 1';
       qryCli.ParamByName('COD').AsString := FCodigoCliente;
