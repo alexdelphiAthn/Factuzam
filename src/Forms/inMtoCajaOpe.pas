@@ -1706,13 +1706,15 @@ procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   ObjTotales: TFacturaTotales;
+  SerieGenerada: string;
+  NumeroGenerado: string;
+  CodigoValeGenerado: string;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
     if DatosCaja.cdsLineas.State = dsInsert then
     begin
-      if Trim(DatosCaja.cdsLineas.FieldByName(
-                            'CODIGO_ARTICULO_FACTURA_LINEA').AsString) = '' then
+      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString) = '' then
       begin
         DatosCaja.cdsLineas.Cancel;
       end
@@ -1726,15 +1728,16 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
+
   if DatosCaja.cdsLineas.IsEmpty then
   begin
     ShowMessage('No hay líneas en la venta para cobrar.');
     Exit;
   end;
+
   frmFaseCobro := nil;
   try
-    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
-                                          DatosCaja.cdsLineas);
+    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
     frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
@@ -1742,28 +1745,46 @@ begin
     frmFaseCobro.FCodigoAlmacen := FCodigoAlmacen;
     frmFaseCobro.FCodigoCaja := FCodigoCaja;
     frmFaseCobro.FFecha := FFecha;
+    frmFaseCobro.FCodigoCliente :=
+           DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
     if frmFaseCobro.ShowModal = mrOk then
     begin
-       // 1. Grabar todos los datos (Factura, Pagos, Stock, Movimientos de Caja)
-       if DatosCaja.GrabarFacturaSimplificada(frmFaseCobro.DatosCobro) then
+       // 1. Grabar todos los datos (Factura, Pagos, Stock, Movimientos de Caja y Vales)
+       if DatosCaja.GrabarFacturaSimplificada(
+            FCodigoEmpresa,
+            FCodigoAlmacen,
+            FCodigoCaja,
+            frmFaseCobro.cbbSerie1.Text,
+            frmFaseCobro.DatosCobro,
+            SerieGenerada,
+            NumeroGenerado,
+            CodigoValeGenerado) then
        begin
-         // 2. Generar el ticket según la elección del usuario (F12, F11, F10)
+
+         // 2. Generar el ticket principal según la elección del usuario (F12, F11, F10)
          case frmFaseCobro.TipoImpresion of
            tiConTicket:
-             ; // Llamar a tu función de impresión normal FastReport/etc
+             ; // Llamar a tu función de impresión normal FastReport pasando SerieGenerada y NumeroGenerado
            tiTicketRegalo:
              ; // Llamar a impresión ocultando importes y totales
            tiSinTicket:
              ; // Simplemente no hacer nada, saltar impresión
          end;
 
-         // 3. Limpiar la interfaz para el siguiente cliente
-         // (Aquí podrías limpiar los ClientDataSet y preparar nueva cabecera)
-         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Date);
+         // 3. Imprimir el ticket del vale (Si se emitió alguno por devoluciones o cambio sobrante)
+         if CodigoValeGenerado <> '' then
+         begin
+           // ImprimirTicketVale(CodigoValeGenerado, frmFaseCobro.DatosCobro.ImporteValeEmitido);
+           // ShowMessage('Entregue el vale generado al cliente: ' + CodigoValeGenerado);
+         end;
+
+         // 4. Limpiar la interfaz y los datasets para el siguiente cliente
+         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Now);
        end;
     end;
   finally
-    frmFaseCobro.Free;
+    if Assigned(frmFaseCobro) then
+      frmFaseCobro.Free;
     ObjTotales.Free;
   end;
 end;

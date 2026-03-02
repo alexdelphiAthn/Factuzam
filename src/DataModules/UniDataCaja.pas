@@ -31,6 +31,11 @@ type
     procedure ConfigurarEstructuraLineas;
     procedure ConfigurarEstructuraCabecera;
     function GetTipoIVA(sTipoIVA: string): Currency;
+    function EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
+                             ANumOperacion: Integer;
+                             ASerieFactura, ANumFactura: string;
+                             AImporte: Currency): string;
+
 //    procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
   public
     //uConexion:TUniConnection;
@@ -50,7 +55,8 @@ type
     function GrabarFacturaSimplificada(const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
                                      DatosCobro: TDatosFaseCobro;
                                      out SerieGenerada: string;
-                                     out NumeroGenerado: String): Boolean;
+                                     out NumeroGenerado: String;
+                                     out ValeGenerado:String): Boolean;
 //    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
 //    procedure CalcularTotalesCabecera;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
@@ -74,7 +80,8 @@ function TdmCajaOpe.GrabarFacturaSimplificada(const AEmpresa,
                                                     ASerieElegida: string;
                                               DatosCobro: TDatosFaseCobro;
                                               out SerieGenerada: string;
-                                           out NumeroGenerado: String): Boolean;
+                                              out NumeroGenerado: String;
+                                              out ValeGenerado:String): Boolean;
 var
   QryTrx: TUniQuery;
   LineaAct: Integer;
@@ -112,24 +119,65 @@ begin
       QryTrx.ParamByName('pcont').Size := 12;
       QryTrx.Execute;
       NumeroGenerado := QryTrx.ParamByName('pcont').AsString;
-
-      // --- PASO 2: GRABAR CABECERA DE FACTURA ---
+      // =======================================================================
+      // PASO 2: GRABAR CABECERA DE FACTURA CON DESGLOSE DE LOS 4 IVAs
+      // =======================================================================
       QryTrx.SQL.Text :=
         'INSERT INTO fza_facturas ' +
         '(CODIGO_EMPRESA_FACTURA, SERIE_FACTURA, NRO_FACTURA, FECHA_FACTURA, ' +
-        ' CODIGO_CLIENTE_FACTURA, TIPO_FACTURA, TOTAL_BRUTO_FACTURA) ' +
+        ' CODIGO_CLIENTE_FACTURA, TIPO_FACTURA, ' +
+        // Totales Generales reales de tu BD
+        ' TOTAL_BASES_FACTURA, TOTAL_IMPUESTOS_FACTURA, ' +
+        // Tramo 1: IVA Normal
+        ' PORCEN_IVAN_FACTURA, TOTAL_IVAN_FACTURA, PORCEN_REN_FACTURA, TOTAL_REN_FACTURA, TOTAL_BASEI_IVAN_FACTURA, ' +
+        // Tramo 2: IVA Reducido
+        ' PORCEN_IVAR_FACTURA, TOTAL_IVAR_FACTURA, PORCEN_RER_FACTURA, TOTAL_RER_FACTURA, TOTAL_BASEI_IVAR_FACTURA, ' +
+        // Tramo 3: IVA SuperReducido
+        ' PORCEN_IVAS_FACTURA, TOTAL_IVAS_FACTURA, PORCEN_RES_FACTURA, TOTAL_RES_FACTURA, TOTAL_BASEI_IVAS_FACTURA, ' +
+        // Tramo 4: IVA Exento
+        ' PORCEN_IVAE_FACTURA, TOTAL_IVAE_FACTURA, PORCEN_REE_FACTURA, TOTAL_REE_FACTURA, TOTAL_BASEI_IVAE_FACTURA) ' +
         'VALUES ' +
-        '(:EMP, :SERIE, :NRO, :FECHA, :CLI, :TIPO, :BRUTO)';
-
-      QryTrx.ParamByName('EMP').AsString   := AEmpresa;
-      QryTrx.ParamByName('SERIE').AsString := SerieGenerada;
-      QryTrx.ParamByName('NRO').AsString  := NumeroGenerado;
+        '(:EMP, :SERIE, :NRO, :FECHA, :CLI, :TIPO, ' +
+        ' :BASES, :IMPUESTOS, ' +
+        ' :PIVAN, :TIVAN, :PREN, :TREN, :BASEIN, ' +
+        ' :PIVAR, :TIVAR, :PRER, :TRER, :BASEIR, ' +
+        ' :PIVAS, :TIVAS, :PRES, :TRES, :BASEIS, ' +
+        ' :PIVAE, :TIVAE, :PREE, :TREE, :BASEIE)';
+      QryTrx.ParamByName('EMP').AsString     := AEmpresa;
+      QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
+      QryTrx.ParamByName('NRO').AsString     := NumeroGenerado;
       QryTrx.ParamByName('FECHA').AsDateTime := cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
-      QryTrx.ParamByName('CLI').AsString   := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
-      QryTrx.ParamByName('TIPO').AsString  := 'SIMPLIFICADA';
-      QryTrx.ParamByName('BRUTO').AsCurrency := DatosCobro.ImporteTotalPagar;
-      QryTrx.Execute;
+      QryTrx.ParamByName('CLI').AsString     := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+      QryTrx.ParamByName('TIPO').AsString    := 'SIMPLIFICADA';
+      // Totales Generales
+      QryTrx.ParamByName('BASES').AsCurrency     := cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency;
+      QryTrx.ParamByName('IMPUESTOS').AsCurrency := cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency;
+      // Tramo 1: IVA Normal
+      QryTrx.ParamByName('PIVAN').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAN_FACTURA').AsFloat;
+      QryTrx.ParamByName('TIVAN').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAN_FACTURA').AsCurrency;
+      QryTrx.ParamByName('PREN').AsFloat     := cdsCabecera.FieldByName('PORCEN_REN_FACTURA').AsFloat;
+      QryTrx.ParamByName('TREN').AsCurrency  := cdsCabecera.FieldByName('TOTAL_REN_FACTURA').AsCurrency;
+      QryTrx.ParamByName('BASEIN').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsCurrency;
+      // Tramo 2: IVA Reducido
+      QryTrx.ParamByName('PIVAR').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAR_FACTURA').AsFloat;
+      QryTrx.ParamByName('TIVAR').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAR_FACTURA').AsCurrency;
+      QryTrx.ParamByName('PRER').AsFloat     := cdsCabecera.FieldByName('PORCEN_RER_FACTURA').AsFloat;
+      QryTrx.ParamByName('TRER').AsCurrency  := cdsCabecera.FieldByName('TOTAL_RER_FACTURA').AsCurrency;
+      QryTrx.ParamByName('BASEIR').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsCurrency;
+      // Tramo 3: IVA SuperReducido
+      QryTrx.ParamByName('PIVAS').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAS_FACTURA').AsFloat;
+      QryTrx.ParamByName('TIVAS').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAS_FACTURA').AsCurrency;
+      QryTrx.ParamByName('PRES').AsFloat     := cdsCabecera.FieldByName('PORCEN_RES_FACTURA').AsFloat;
+      QryTrx.ParamByName('TRES').AsCurrency  := cdsCabecera.FieldByName('TOTAL_RES_FACTURA').AsCurrency;
+      QryTrx.ParamByName('BASEIS').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsCurrency;
+      // Tramo 4: IVA Exento
+      QryTrx.ParamByName('PIVAE').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAE_FACTURA').AsFloat;
+      QryTrx.ParamByName('TIVAE').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAE_FACTURA').AsCurrency;
+      QryTrx.ParamByName('PREE').AsFloat     := cdsCabecera.FieldByName('PORCEN_REE_FACTURA').AsFloat;
+      QryTrx.ParamByName('TREE').AsCurrency  := cdsCabecera.FieldByName('TOTAL_REE_FACTURA').AsCurrency;
+      QryTrx.ParamByName('BASEIE').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsCurrency;
 
+      QryTrx.Execute;
       // --- PASO 3: GRABAR LÍNEAS DE FACTURA Y SALIDAS DE STOCK ---
       cdsLineas.DisableControls;
       try
@@ -224,10 +272,15 @@ begin
                                ACaja, AAlmacen, NumOperacion,
                                SerieGenerada, NumeroGenerado);
       end;
-      // B) Vale emitido (Si le sobró dinero o es una devolución)
+     // B) Emitir un vale nuevo si sobra saldo
       if DatosCobro.ImporteValeEmitido > 0 then
       begin
-         // EmitirNuevoVale(ACaja, AAlmacen, NumOperacion, DatosCobro.ImporteValeEmitido);
+         ValeGenerado := EmitirNuevoVale(AEmpresa,
+                                             AAlmacen, ACaja,
+                                             NumOperacion,
+                                             SerieGenerada,
+                                             NumeroGenerado,
+                                             DatosCobro.ImporteValeEmitido);
       end;
       // =======================================================================
       // CONFIRMAR TRANSACCIÓN: Todo ha ido perfecto
@@ -247,6 +300,68 @@ begin
 
   finally
     QryTrx.Free;
+  end;
+end;
+
+function TdmCajaOpe.EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
+                                    ANumOperacion: Integer;
+                                    ASerieFactura, ANumFactura: string;
+                                    AImporte: Currency): string;
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := inLibGlobalVar.oConn;
+
+    // =======================================================================
+    // 1. OBTENER EL CÓDIGO FORMATEADO DESDE EL NUEVO PROCEDURE
+    // =======================================================================
+    qry.SQL.Text := 'CALL PRC_GENERAR_CODIGO_VALE(:pEmp, :pAlm, :pCaja, :pOp, :pUsu, :pCodigo)';
+
+    qry.ParamByName('pEmp').AsString   := AEmpresa;
+    qry.ParamByName('pAlm').AsString   := AAlmacen;
+    qry.ParamByName('pCaja').AsString  := ACaja;
+    qry.ParamByName('pOp').AsInteger   := ANumOperacion;
+
+    // Le pasamos el nombre del cajero. Si quieres puedes leerlo del cdsCabecera:
+    // cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString
+    qry.ParamByName('pUsu').AsString   := oUser;
+
+    // Parámetro de salida (OUT) para recoger el código generado (VARCHAR 100)
+    qry.ParamByName('pCodigo').ParamType := ptOutput;
+    qry.ParamByName('pCodigo').DataType  := ftString;
+    qry.ParamByName('pCodigo').Size      := 100;
+
+    qry.Execute;
+
+    Result := qry.ParamByName('pCodigo').AsString;
+
+    // =======================================================================
+    // 2. INSERTAR EL NUEVO VALE EN LA BASE DE DATOS
+    // =======================================================================
+    qry.SQL.Text :=
+      'INSERT INTO fza_caja_vales ' +
+      '(CODIGO_VL, IMPORTE_VL, FECHA_EMISION_VL, ESTADO_VL, ' +
+      ' CODIGO_CAJA_EMISION_VL, CODIGO_ALMACEN_EMISION_VL, ' +
+      ' NUMERO_OPERACION_EMISION_VL, SERIE_FACTURA_EMISION_VL, NRO_FACTURA_EMISION_VL) ' +
+      'VALUES ' +
+      '(:COD, :IMPORTE, :FECHA, ''PENDIENTE'', ' +
+      ' :CAJA, :ALMACEN, :NUMOP, :SERIE, :NUMFAC)';
+
+    qry.ParamByName('COD').AsString        := Result;
+    qry.ParamByName('IMPORTE').AsCurrency  := AImporte;
+    qry.ParamByName('FECHA').AsDateTime    := Now;
+    qry.ParamByName('CAJA').AsString       := ACaja;
+    qry.ParamByName('ALMACEN').AsString    := AAlmacen;
+    qry.ParamByName('NUMOP').AsInteger     := ANumOperacion;
+    qry.ParamByName('SERIE').AsString      := ASerieFactura;
+    qry.ParamByName('NUMFAC').AsString     := ANumFactura;
+
+    qry.Execute;
+
+  finally
+    qry.Free;
   end;
 end;
 
