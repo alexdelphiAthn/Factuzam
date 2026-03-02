@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoGenSearch,
+  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -151,6 +151,7 @@ type
     procedure ConsultarStock(const CodigoInput: string);
     procedure BuscarEmpleados;
     procedure BuscarClientes;
+    procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure ComboAtributoCloseUp(Sender: TObject);
   public
@@ -1702,6 +1703,87 @@ begin
   cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 
+procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
+var
+  TotalBrutoVenta: Currency;
+  Proporcion: Double;
+  DescuentoAplicarLinea: Currency;
+  DescuentoAcumulado: Currency;
+  Cantidad: Double;
+  PrecioSalida: Currency;
+  DescuentoUnitario: Currency;
+  Bkm: TBookmark;
+begin
+  if ImporteDescuentoGlobal = 0 then Exit;
+
+  // 1. Calcular el Total Bruto sumando el importe de todas las líneas
+  TotalBrutoVenta := 0;
+  DatosCaja.cdsLineas.DisableControls;
+  Bkm := DatosCaja.cdsLineas.GetBookmark;
+  try
+    DatosCaja.cdsLineas.First;
+    while not DatosCaja.cdsLineas.Eof do
+    begin
+      TotalBrutoVenta := TotalBrutoVenta +
+        (DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat *
+         DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency);
+      DatosCaja.cdsLineas.Next;
+    end;
+
+    if TotalBrutoVenta = 0 then Exit; // Evitar división por cero
+
+    // 2. Repartir el descuento línea a línea utilizando los campos reales
+    DescuentoAcumulado := 0;
+    DatosCaja.cdsLineas.First;
+    while not DatosCaja.cdsLineas.Eof do
+    begin
+      DatosCaja.cdsLineas.Edit;
+
+      Cantidad := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+      if Cantidad = 0 then Cantidad := 1; // Protección matemática
+
+      PrecioSalida := DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+
+      // Calculamos el % de peso de esta línea sobre el total del ticket
+      Proporcion := (Cantidad * PrecioSalida) / TotalBrutoVenta;
+
+      // Asignamos el descuento total que le toca a esta fila
+      // (Si es la última línea, le damos el resto para que cuadre exactamente al céntimo)
+      DatosCaja.cdsLineas.Next;
+      if DatosCaja.cdsLineas.Eof then
+        DescuentoAplicarLinea := ImporteDescuentoGlobal - DescuentoAcumulado
+      else
+        DescuentoAplicarLinea := SimpleRoundTo(ImporteDescuentoGlobal * Proporcion, -2);
+
+      DatosCaja.cdsLineas.Prior; // Volvemos a la línea actual
+
+      // --- LÓGICA DE CAMPOS REALES DE LA BASE DE DATOS ---
+      DescuentoUnitario := DescuentoAplicarLinea / Cantidad;
+
+      // 1. Guardar el nuevo Precio con Descuento Unitario (PRECIO_DTO_FACTURA_LINEA)
+      DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency :=
+        PrecioSalida - DescuentoUnitario;
+
+      // 2. Calcular y guardar el Porcentaje de descuento exacto (PORCEN_DTO_FACTURA_LINEA)
+      if PrecioSalida <> 0 then
+        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
+          SimpleRoundTo((DescuentoUnitario / PrecioSalida) * 100, -2)
+      else
+        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+
+      DescuentoAcumulado := DescuentoAcumulado + DescuentoAplicarLinea;
+
+      DatosCaja.cdsLineas.Post;
+      DatosCaja.cdsLineas.Next;
+    end;
+  finally
+    if DatosCaja.cdsLineas.BookmarkValid(Bkm) then
+      DatosCaja.cdsLineas.GotoBookmark(Bkm);
+    DatosCaja.cdsLineas.FreeBookmark(Bkm);
+    DatosCaja.cdsLineas.EnableControls;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
@@ -1737,7 +1819,8 @@ begin
 
   frmFaseCobro := nil;
   try
-    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
+                                         DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
     frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
@@ -1749,7 +1832,13 @@ begin
            DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
     if frmFaseCobro.ShowModal = mrOk then
     begin
-       // 1. Grabar todos los datos (Factura, Pagos, Stock, Movimientos de Caja y Vales)
+       if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
+       begin
+         // Repartimos el importe del descuento entre todas las líneas
+         RepartirDescuentoGlobalLinea(
+                                frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
+         ObjTotales.ProcesarFacturaCompleta;
+       end;
        if DatosCaja.GrabarFacturaSimplificada(
             FCodigoEmpresa,
             FCodigoAlmacen,
@@ -1760,8 +1849,6 @@ begin
             NumeroGenerado,
             CodigoValeGenerado) then
        begin
-
-         // 2. Generar el ticket principal según la elección del usuario (F12, F11, F10)
          case frmFaseCobro.TipoImpresion of
            tiConTicket:
              ; // Llamar a tu función de impresión normal FastReport pasando SerieGenerada y NumeroGenerado

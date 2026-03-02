@@ -178,29 +178,61 @@ begin
       QryTrx.ParamByName('BASEIE').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsCurrency;
 
       QryTrx.Execute;
-      // --- PASO 3: GRABAR LÍNEAS DE FACTURA Y SALIDAS DE STOCK ---
+      // =======================================================================
+      // PASO 3: GRABAR LÍNEAS DE FACTURA (CON DESGLOSE DE PRECIOS, IVA Y TOTALES)
+      // =======================================================================
       cdsLineas.DisableControls;
       try
         cdsLineas.First;
-        LineaAct := 1;
         while not cdsLineas.Eof do
         begin
-          // A) Insertar Línea
+          // A) Insertar Línea con todo el desglose fiscal
           QryTrx.SQL.Text :=
             'INSERT INTO fza_facturas_lineas ' +
             '(CODIGO_EMPRESA_FACTURA_LINEA, SERIE_FACTURA_LINEA, NRO_FACTURA_LINEA, LINEA_FACTURA_LINEA, ' +
-            ' CODIGO_ARTICULO_FACTURA_LINEA, CODIGO_UNIDAD_FACTURA_LINEA, CANTIDAD_FACTURA_LINEA, PRECIO_FACTURA_LINEA) ' +
+            ' CODIGO_ARTICULO_FACTURA_LINEA, DESCRIPCION_ARTICULO_FACTURA_LINEA, CODIGO_UNIDAD_FACTURA_LINEA, ' +
+            ' CANTIDAD_FACTURA_LINEA, PRECIOSALIDA_FACTURA_LINEA, PORCEN_DTO_FACTURA_LINEA, ' +
+            ' PRECIO_DTO_FACTURA_LINEA, PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA, ' +
+            ' TIPOIVA_ARTICULO_FACTURA_LINEA, PORCEN_IVA_FACTURA_LINEA, PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA, ' +
+            ' TOTAL_FACTURASIVA_LINEA, TOTAL_FACTURA_LINEA) ' +
             'VALUES ' +
-            '(:EMP, :SERIE, :NRO, :LINEA, :ART, :SKU, :CANT, :PRECIO)';
+            '(:EMP, :SERIE, :NRO, :LINEA, :ART, :DESC, :SKU, :CANT, ' +
+            ' :PRECSALIDA, :PORCDTO, :PRECDTO, :PRECSIVA, :TIPOIVA, :PORCIVA, :PRECCIVA, :TOTALSIVA, :TOTALCIVA)';
 
-          QryTrx.ParamByName('EMP').AsString   := AEmpresa;
-          QryTrx.ParamByName('SERIE').AsString := SerieGenerada;
-          QryTrx.ParamByName('NRO').AsString  := NumeroGenerado;
-          QryTrx.ParamByName('LINEA').AsInteger := LineaAct;
-          QryTrx.ParamByName('ART').AsString   := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('SKU').AsString   := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('CANT').AsFloat   := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
-          QryTrx.ParamByName('PRECIO').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+          // Claves principales
+          QryTrx.ParamByName('EMP').AsString     := AEmpresa;
+          QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
+          QryTrx.ParamByName('NRO').AsString     := NumeroGenerado;
+          QryTrx.ParamByName('LINEA').AsInteger  :=
+                         cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsInteger;
+
+          // Articulo y Cantidades
+          QryTrx.ParamByName('ART').AsString     :=
+                cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('DESC').AsString    :=
+           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('SKU').AsString     :=
+                  cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('CANT').AsFloat     :=
+                        cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+
+          // Precios Base y Descuentos
+          QryTrx.ParamByName('PRECSALIDA').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+          QryTrx.ParamByName('PORCDTO').AsFloat       := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+          QryTrx.ParamByName('PRECDTO').AsCurrency    := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+
+          // Precios Unitarios (Con y Sin IVA)
+          QryTrx.ParamByName('PRECSIVA').AsCurrency   := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+          QryTrx.ParamByName('PRECCIVA').AsCurrency   := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+
+          // Tipo y Cuota de IVA
+          QryTrx.ParamByName('TIPOIVA').AsString      := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+          QryTrx.ParamByName('PORCIVA').AsFloat       := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+
+          // Totales de la línea extendidos (Precio unitario * Cantidad)
+          QryTrx.ParamByName('TOTALSIVA').AsCurrency  := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+          QryTrx.ParamByName('TOTALCIVA').AsCurrency  := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+
           QryTrx.Execute;
 
           // B) Movimiento de Stock (Salida)
@@ -215,7 +247,6 @@ begin
           QryTrx.ParamByName('FECHA').AsDateTime := Now;
           QryTrx.Execute;
 
-          Inc(LineaAct);
           cdsLineas.Next;
         end;
       finally
