@@ -1578,6 +1578,8 @@ begin
                           unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
         lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+        if Trim(btnCodigoCliente.Text) <> '' then
+          DatosCaja.CargarDepositosCliente(btnCodigoCliente.Text);
       end;
     finally
       unqry.Free;
