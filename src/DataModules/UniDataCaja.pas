@@ -134,8 +134,8 @@ begin
       '   AND ESTADO_DEP = ''PENDIENTE''';
     QryDep.ParamByName('CLI').AsString := ACodigoCliente;
     QryDep.Open;
-    if QryDep.IsEmpty then Exit;
-
+    if QryDep.IsEmpty then
+      Exit;
     cdsLineas.DisableControls;
     try
       while not QryDep.Eof do
@@ -148,17 +148,15 @@ begin
         TipoIVA           := QryDep.FieldByName('TIPO_IVA_DEP').AsString;
         PorcIVA           := QryDep.FieldByName('PORCEN_IVA_DEP').AsCurrency;
         EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
-
         // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────────
         cdsLineas.Append;
-
         // 1a. Rellenar descripción y atributos dinámicos desde la BD
         //     usando el callback del Form (si está asignado)
         if Assigned(FOnRellenarArticulo) then
           FOnRellenarArticulo(Sku);   // rellena desc, tipo, código padre, ATTRx
-
         // 1b. Ahora sobreescribimos con los datos reales del depósito,
         //     que tienen prioridad sobre lo que haya devuelto la tarifa
+        cdsLineas.Edit;
         cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString  := Articulo;
         cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString    := Sku;
         cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat          := CantidadPendiente;
@@ -167,7 +165,6 @@ begin
         cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString := TipoIVA;
         cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency     := PorcIVA;
         cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString:= EsImpIncl;
-
         // Precio del depósito manda siempre
         cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency   := PrecioOriginal;
         cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := PrecioOriginal;
@@ -217,12 +214,16 @@ begin
           cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency      := -AnticipoSinIVA;
           cdsLineas.Post;
         end;
-
         QryDep.Next;
       end;
     finally
       cdsLineas.EnableControls;
     end;
+    GridRecalc(nil,
+               (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+               cdsLineas,
+               cdsCabecera,
+               OnUpdateTotal);
   finally
     QryDep.Free;
   end;
