@@ -184,17 +184,17 @@ begin
                                  FindField('CODIGO_EMPRESA_SERIE').AsString;
       unqrySol.Open;
     end;
-    if ((bSinErrores) and  not(ExistePeriodoUnico(
-                                            unqrySol,
-                                            FindField('FECHA_DESDE_SERIE'),
-                                            FindField('FECHA_HASTA_SERIE')))
-       ) then
-    begin
-      raise ERangeError.CreateFmt('No se pueden grabar dos series ' +
-                                ' en la misma fecha para la empresa %s',
-                              [FindField('CODIGO_EMPRESA_RETENCION').AsString]);
-      bSinErrores := False;
-    end;
+//    if ((bSinErrores) and  not(ExistePeriodoUnico(
+//                                            unqrySol,
+//                                            FindField('FECHA_DESDE_SERIE'),
+//                                            FindField('FECHA_HASTA_SERIE')))
+//       ) then
+//    begin
+//      raise ERangeError.CreateFmt('No se pueden grabar dos series ' +
+//                                ' en la misma fecha para la empresa %s',
+//                              [FindField('CODIGO_EMPRESA_RETENCION').AsString]);
+//      bSinErrores := False;
+//    end;
   end;
   if (assigned(unqrySol)) then
   begin

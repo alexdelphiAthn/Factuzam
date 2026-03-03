@@ -388,6 +388,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsRetenciones: TcxTabSheet
               Caption = '&2_Retenciones'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRetenOpts: TPanel
                 Left = 819
                 Top = 0
@@ -524,6 +528,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsHistoriaFacturacion: TcxTabSheet
               Caption = '&3_Hist'#243'rico Facturas'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
@@ -1245,7 +1253,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                     end
                     object dbmSeriesSUBITPO_SERIE: TcxGridDBColumn
                       Caption = 'Subtipo'
-                      DataBinding.FieldName = 'SUBITPO_SERIE'
+                      DataBinding.FieldName = 'SUBTIPO_SERIE'
                       Width = 107
                     end
                     object dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn
@@ -1267,6 +1275,10 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsOtros: TcxTabSheet
               Caption = '&5_Otros'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 342
