@@ -31,24 +31,44 @@ type
     procedure ConfigurarEstructuraLineas;
     procedure ConfigurarEstructuraCabecera;
     function GetTipoIVA(sTipoIVA: string): Currency;
+    function CuadrarFacturaEnMemoria(dsCabecera, dsLineas: TDataSet): Boolean;
     function EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
                              ANumOperacion: Integer;
                              ASerieFactura, ANumFactura: string;
                              AImporte: Currency): string;
-
-//    procedure InicializarNuevaFactura(const ASerieFactura, ANroFactura: string);
+    function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
+    procedure CrearNuevoDepositoCliente(QryTrx: TUniQuery;
+                                        const AEmpresa, ACliente,
+                                        AArticulo, ASku, AUsuario: string;
+                                        APrecioVenta, AAnticipo: Currency;
+                                        const AAlmacenOrigen,
+                                              AAlmacenDestino: string;
+                                        ACantidad: Double;
+                                        ATipoIVA: string;
+                                        APorcIVA: Currency;
+                                        AEsImpIncl: string);
+    procedure CerrarDepositoCliente(QryTrx: TUniQuery;
+                                    const ASku, AUsuario: string);
+    procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
+                                       const ASku, AUsuario: string;
+                                       ANuevoAbono: Currency);
+    procedure AnularDepositoCliente(QryTrx: TUniQuery;
+                                    const ASku, AUsuario,
+                                          AAlmacenTienda,
+                                          AAlmacenDeposito: string;
+                                    out ImporteADevolver: Currency;
+                                    ACantidad: Double);
+    procedure CargarDepositosCliente(const ACodigoCliente: string);
+    procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
+                                                DineroEntregado: Currency);
   public
-    //uConexion:TUniConnection;
     function GenerarSkuFinal(ArticuloBase: string): string;
-    { Public declarations }
-  public
     procedure MarcarValeComoCanjeado(const ACodigoVale: string;
                                  ACodigoCaja: string;
                                  ACodigoAlmacen: string;
                                  ANumOperacion: Integer;
                                  ASerie: string;
                                  ANumFactura: String);
-
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
@@ -70,9 +90,394 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inMtoCajaOpe, inLibDevExp;
+uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas;
 
 {$R *.dfm}
+
+// =============================================================================
+// MÓDULO: GESTIÓN DE CUENTAS Y DEPÓSITOS DE CLIENTES
+// =============================================================================
+
+procedure TdmCajaOpe.CargarDepositosCliente(const ACodigoCliente: string);
+var
+  QryDep: TUniQuery;
+  Sku, Articulo: string;
+  PrecioOriginal, AnticipoDado: Currency;
+  CantidadPendiente: Double;
+begin
+  QryDep := TUniQuery.Create(nil);
+  try
+    QryDep.Connection := inLibGlobalVar.oConn;
+    QryDep.SQL.Text :=
+      'SELECT CODIGO_ARTICULO_DEP, ' +
+      '       CODIGO_UNIDAD_DEP, ' +
+      '       CANTIDAD_PENDIENTE_DEP, ' +
+      '       PRECIO_VENTA_DEP, ' +
+      '       IMPORTE_ANTICIPO_DEP,'+
+      '       TIPO_IVA_DEP, '+
+      '       PORCEN_IVA_DEP, '+
+      '       ESIMP_INCL_DEP ' +
+      '  FROM fza_depositos_cliente ' +
+      ' WHERE CODIGO_CLIENTE_DEP = :CLI ' +
+      '   AND ESTADO_DEP = ''PENDIENTE''';
+    QryDep.ParamByName('CLI').AsString := ACodigoCliente;
+    QryDep.Open;
+    if QryDep.IsEmpty then
+      Exit;
+    cdsLineas.DisableControls;
+    try
+      while not QryDep.Eof do
+      begin
+        Articulo         := QryDep.FieldByName('CODIGO_ARTICULO_DEP').AsString;
+        Sku              := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+        CantidadPendiente:= QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+        PrecioOriginal   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
+        AnticipoDado     := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+
+        // Leer el IVA del artículo para poder descomponer el anticipo
+        // (necesitamos saber si el precio incluye IVA y qué tipo es)
+        var TipoIVA   := QryDep.FieldByName('TIPO_IVA_DEP').AsString;
+        var PorcIVA   := QryDep.FieldByName('PORCEN_IVA_DEP').AsCurrency;
+        var EsImpIncl := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
+
+      // ---------------------------------------------------------
+      // LÍNEA 1: LA PRENDA ORIGINAL (A precio completo)
+      // ---------------------------------------------------------
+      cdsLineas.Append;
+      cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString  := Articulo;
+      cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString    := Sku;
+      cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat          := CantidadPendiente;
+      cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString              := 'S';
+      cdsLineas.FieldByName('ACCION_DEPOSITO').AsString                := 'COBRAR';
+      cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString := TipoIVA;
+      cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency     := PorcIVA;
+      cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString:= EsImpIncl;
+      cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency   := PrecioOriginal;
+      cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := PrecioOriginal;
+      if PorcIVA = 0 then
+        cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := PrecioOriginal
+      else
+        cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
+                                              PrecioOriginal / (1 + (PorcIVA / 100));
+      cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency   := PrecioOriginal;
+      cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency          :=
+                                                   PrecioOriginal * CantidadPendiente;
+      cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency      :=
+        cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency
+                                                                  * CantidadPendiente;
+      cdsLineas.Post;
+
+      // ---------------------------------------------------------
+      // LÍNEA 2: EL ABONO DEL ANTICIPO (En negativo)
+      // ---------------------------------------------------------
+      if AnticipoDado > 0 then
+      begin
+        var AnticipoSinIVA: Currency;
+        if PorcIVA = 0 then
+          AnticipoSinIVA := AnticipoDado
+        else
+          AnticipoSinIVA := AnticipoDado / (1 + (PorcIVA / 100));
+
+        cdsLineas.Append;
+        cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString  := 'ANTICIPO';
+        cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString    := 'ANTICIPO';
+        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
+                                                              'Abono anticipo ' + Sku;
+        cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString              := 'ABONO_ANTICIPO';
+        cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat          := -1;
+
+        // Tipo IVA heredado de la prenda
+        cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString := TipoIVA;
+        cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency     := PorcIVA;
+        cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString:= EsImpIncl;
+
+        // Precio unitario positivo, la cantidad negativa hace el total negativo
+        cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency   := AnticipoDado;
+        cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := AnticipoDado;
+        cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := AnticipoSinIVA;
+
+        // Totales negativos
+        cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency     := -AnticipoDado;
+        cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := -AnticipoSinIVA;
+
+        cdsLineas.Post;
+      end;
+
+      QryDep.Next;
+    end;
+    finally
+      cdsLineas.EnableControls;
+    end;
+  finally
+    QryDep.Free;
+  end;
+end;
+
+procedure TdmCajaOpe.AnularDepositoCliente(QryTrx: TUniQuery; const ASku, AUsuario,
+                                           AAlmacenTienda, AAlmacenDeposito: string;
+                                           out ImporteADevolver: Currency;
+                                           ACantidad: Double);
+begin
+  ImporteADevolver := 0;
+
+  // 1. Averiguar cuánto dinero tenía entregado a cuenta esta prenda
+  QryTrx.SQL.Text :=
+    'SELECT IMPORTE_ANTICIPO_DEP FROM fza_depositos_cliente ' +
+    ' WHERE CODIGO_UNIDAD_DEP = :SKU AND ESTADO_DEP = ''PENDIENTE''';
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.Open;
+
+  if not QryTrx.IsEmpty then
+    ImporteADevolver := QryTrx.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+  QryTrx.Close;
+
+  // 2. Marcar el depósito como cancelado
+  QryTrx.SQL.Text :=
+    'UPDATE fza_depositos_cliente ' +
+    '   SET ESTADO_DEP = ''CANCELADO'', ' +
+    '       USUARIOMODIF = :USUARIO ' +
+    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
+    '   AND ESTADO_DEP = ''PENDIENTE''';
+  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.Execute;
+
+  // 3. Devolver el stock a la tienda (Salida de Depósito, Entrada a Tienda)
+  QryTrx.SQL.Text :=
+    'INSERT INTO fza_movimientos_almacen (CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+    'VALUES (:ALMDEP, :SKU, ''S'', :CANT, :FECHA)';
+  QryTrx.ParamByName('ALMDEP').AsString := AAlmacenDeposito;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('CANT').AsFloat := ACantidad;
+  QryTrx.ParamByName('FECHA').AsDateTime := Now;
+  QryTrx.Execute;
+
+  QryTrx.SQL.Text :=
+    'INSERT INTO fza_movimientos_almacen (CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+    'VALUES (:ALMTIENDA, :SKU, ''E'', :CANT, :FECHA)';
+  QryTrx.ParamByName('ALMTIENDA').AsString := AAlmacenTienda;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('CANT').AsFloat := ACantidad;
+  QryTrx.ParamByName('FECHA').AsDateTime := Now;
+  QryTrx.Execute;
+end;
+
+procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery; const ASku, AUsuario: string);
+begin
+  // Cuando una prenda en depósito se paga al 100%, se cierra el préstamo.
+  // Nota: El stock no se toca aquí porque ya salió físicamente del depósito en la Venta (VE)
+  QryTrx.SQL.Text :=
+    'UPDATE fza_depositos_cliente ' +
+    '   SET ESTADO_DEP = ''CERRADO'', ' +
+    '       USUARIOMODIF = :USUARIO ' +
+    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
+    '   AND ESTADO_DEP = ''PENDIENTE''';
+  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.Execute;
+end;
+
+procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery; const ASku, AUsuario: string;
+                                              ANuevoAbono: Currency);
+begin
+  // Cuando el cliente da un cobro parcial sobre una prenda que YA estaba en depósito
+  if ANuevoAbono <= 0 then Exit;
+
+  QryTrx.SQL.Text :=
+    'UPDATE fza_depositos_cliente ' +
+    '   SET IMPORTE_ANTICIPO_DEP = IMPORTE_ANTICIPO_DEP + :NUEVO_ABONO, ' +
+    '       USUARIOMODIF = :USUARIO ' +
+    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
+    '   AND ESTADO_DEP = ''PENDIENTE''';
+  QryTrx.ParamByName('NUEVO_ABONO').AsCurrency := ANuevoAbono;
+  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.Execute;
+end;
+
+procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
+                                               const AEmpresa, ACliente,
+                                                     AArticulo,
+                                                     ASku,
+                                                     AUsuario: string;
+                                               APrecioVenta,
+                                               AAnticipo: Currency;
+                                               const AAlmacenOrigen,
+                                                     AAlmacenDestino: string;
+                                               ACantidad: Double;
+                                               ATipoIVA: string;
+                                               APorcIVA: Currency;
+                                               AEsImpIncl: string);
+var
+  NuevoIdDep: string;
+begin
+  // 1. Traspaso de Stock: Salida de Tienda (AAlmacenOrigen)
+  QryTrx.SQL.Text :=
+    'INSERT INTO fza_movimientos_almacen (CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+    'VALUES (:ALM, :SKU, ''S'', :CANT, :FECHA)';
+  QryTrx.ParamByName('ALM').AsString := AAlmacenOrigen;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('CANT').AsFloat := ACantidad;
+  QryTrx.ParamByName('FECHA').AsDateTime := Now;
+  QryTrx.Execute;
+
+  // 2. Traspaso de Stock: Entrada al Almacén de Depósitos (AAlmacenDestino)
+  QryTrx.SQL.Text :=
+    'INSERT INTO fza_movimientos_almacen (CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+    'VALUES (:ALMDEP, :SKU, ''E'', :CANT, :FECHA)';
+  QryTrx.ParamByName('ALMDEP').AsString := AAlmacenDestino;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('CANT').AsFloat := ACantidad;
+  QryTrx.ParamByName('FECHA').AsDateTime := Now;
+  QryTrx.Execute;
+  NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) + RightStr(ASku, 3); // Max 20 chars
+  QryTrx.SQL.Text :=
+    'INSERT INTO fza_depositos_cliente (' +
+    '                                     ID_DEPOSITO_DEP, ' +
+    '                                     CODIGO_EMPRESA_DEP, ' +
+    '                                     CODIGO_CLIENTE_DEP, ' +
+    '                                     CODIGO_ARTICULO_DEP, ' +
+    '                                     CODIGO_UNIDAD_DEP, ' +
+    '                                     PRECIO_VENTA_DEP, ' +
+    '                                     IMPORTE_ANTICIPO_DEP, ' +
+    '                                     ESTADO_DEP, ' +
+    '                                     TIPO_IVA_DEP, '+
+    '                                     PORCEN_IVA_DEP, '+
+    '                                     ESIMP_INCL_DEP, ' +
+    '                                     INSTANTEALTA, '+
+    '                                     USUARIOALTA, USUARIOMODIF) ' +
+    'VALUES (' +
+    '  :ID_DEP, :EMP, :CLI, :ART, :SKU, :PRECIO, ' +
+    '  :ABONO, ''PENDIENTE'', :TIPOIVA, :PORCIVA, :IMPINCL, ' +
+    '  NOW(), :USUARIO, :USUARIO)';
+  QryTrx.ParamByName('ID_DEP').AsString := Copy(NuevoIdDep, 1, 20);
+  QryTrx.ParamByName('EMP').AsString := AEmpresa;
+  QryTrx.ParamByName('CLI').AsString := ACliente;
+  QryTrx.ParamByName('ART').AsString := AArticulo;
+  QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('PRECIO').AsCurrency := APrecioVenta;
+  QryTrx.ParamByName('ABONO').AsCurrency := AAnticipo;
+  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
+  QryTrx.ParamByName('TIPOIVA').AsString  := ATipoIVA;
+  QryTrx.ParamByName('PORCIVA').AsCurrency:= APorcIVA;
+  QryTrx.ParamByName('IMPINCL').AsString  := AEsImpIncl;
+  QryTrx.Execute;
+end;
+
+procedure TdmCajaOpe.TransformarLineasParaCobroParcial(cdsLineas: TDataSet; DineroEntregado: Currency);
+var
+  TotalLinea, DineroDisponible: Currency;
+  PorcIva: Double;
+  VieneDeDep, AccionDep: string;
+
+  procedure ProcesarLinea;
+  begin
+    TotalLinea := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+    // Guardar el valor real de la prenda antes de que la toquemos
+    if cdsLineas.FindField('PRECIO_ORIGINAL_DEP') <> nil then
+      cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency := TotalLinea;
+    if DineroDisponible >= TotalLinea then
+    begin
+      // Pagado entero
+      DineroDisponible := DineroDisponible - TotalLinea;
+    end
+    else
+    begin
+      // Cobro parcial -> Transformar en anticipo
+      cdsLineas.Edit;
+      if cdsLineas.FindField('VIENE_DE_DEPOSITO') <> nil then
+      begin
+        if cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
+          cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'AUMENTAR_DEP'
+        else
+          cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'NUEVO_DEP';
+      end;
+      cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
+                                                                   'Anticipo ' +
+           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+      PorcIva := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+      // El importe de esta línea pasa a ser únicamente el dinero que ha dado
+      cdsLineas.FieldByName(
+                        'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
+                                                               DineroDisponible;
+      if PorcIva = 0 then
+        cdsLineas.FieldByName(
+                        'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
+                                                                DineroDisponible
+      else
+        cdsLineas.FieldByName(
+                        'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
+                                       DineroDisponible / (1 + (PorcIva / 100));
+      cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
+                                                          cdsLineas.FieldByName(
+                          'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+      cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat := 1;
+      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+      cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
+      cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency :=
+                                                          cdsLineas.FieldByName(
+                          'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+      cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency :=
+                                                               DineroDisponible;
+      cdsLineas.Post;
+      DineroDisponible := 0; // Se consumió todo el dinero
+    end;
+  end;
+
+begin
+  DineroDisponible := DineroEntregado;
+  cdsLineas.DisableControls;
+  try
+    // PASO 0: Sumar dinero a favor (Abonos de anticipos y devoluciones)
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      if cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency < 0 then
+        DineroDisponible := DineroDisponible -
+                        cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+      cdsLineas.Next;
+    end;
+    // PASO 1: PRIORIDAD ABSOLUTA - Pagar primero las prendas del pasado (Depósitos)
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      VieneDeDep := '';
+      if cdsLineas.FindField('VIENE_DE_DEPOSITO') <> nil then VieneDeDep :=
+                            cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      AccionDep := '';
+      if cdsLineas.FindField('ACCION_DEPOSITO') <> nil then
+        AccionDep := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
+
+      if (VieneDeDep = 'S') and
+         (AccionDep = 'COBRAR') and
+         (cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency > 0) then
+        ProcesarLinea;
+
+      cdsLineas.Next;
+    end;
+
+    // PASO 2: EL RESTO DEL DINERO - Para las prendas nuevas de hoy
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      VieneDeDep := '';
+      if cdsLineas.FindField('VIENE_DE_DEPOSITO') <> nil then
+        VieneDeDep := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      AccionDep := '';
+      if cdsLineas.FindField('ACCION_DEPOSITO') <> nil then
+        AccionDep := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
+      if (VieneDeDep <> 'S') and
+         (VieneDeDep <> 'ABONO_ANTICIPO') and
+         (AccionDep = 'COBRAR') and
+         (cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency > 0) then
+        ProcesarLinea;
+      cdsLineas.Next;
+    end;
+
+  finally
+    cdsLineas.EnableControls;
+  end;
+end;
 
 function TdmCajaOpe.GrabarFacturaSimplificada(const AEmpresa,
                                                     AAlmacen,
@@ -84,109 +489,157 @@ function TdmCajaOpe.GrabarFacturaSimplificada(const AEmpresa,
                                               out ValeGenerado:String): Boolean;
 var
   QryTrx: TUniQuery;
-  LineaAct: Integer;
-  NumOperacion: Integer;
+  NumOperacionVE: Integer;
+  DineroDisponible, TotalFactura, TotalLinea, DineroEntregado: Currency;
+  PorcIva: Double;
+  PrecioSinIva, ImporteDevuelto: Currency;
+  AlmacenDeposito, AlmacenOrigenSalida, AccionDep, SkuLinea, VieneDeDeposito, TipoMov: string;
+  CodigoCliente, UsuarioCaja: string;
 begin
   Result := False;
   SerieGenerada := ASerieElegida;
   NumeroGenerado := '0';
+  ValeGenerado := '';
+
+  AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
+  UsuarioCaja := inLibGlobalVar.oConn.Username;
+
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State in [dsEdit, dsInsert] then cdsLineas.Post;
   if cdsLineas.IsEmpty then
-    raise Exception.Create('No se puede grabar un ticket sin líneas.');
+    raise Exception.Create('No se puede grabar una operación sin líneas.');
+  if DatosCobro.ImporteEntregado <
+                cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency then
+  begin
+    TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
+    if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
+      raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
+  end;
+  CodigoCliente := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+
   QryTrx := TUniQuery.Create(nil);
   try
     QryTrx.Connection := inLibGlobalVar.oConn;
-    // =======================================================================
-    // INICIO DE LA TRANSACCIÓN: O se guarda TODO, o no se guarda NADA
-    // =======================================================================
     inLibGlobalVar.oConn.StartTransaction;
     try
       // =======================================================================
-      // PASO 1: OBTENER EL NÚMERO DE FACTURA (Llamada al Procedure)
+      // PASO 1: DINERO DISPONIBLE (Sumando abonos a favor del cliente)
       // =======================================================================
-      QryTrx.SQL.Text := 'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, ' +
-                                                           ':pTipoDoc, '+
-                                                           ':pEMP, ' +
-                                                           ':pUSUARIO, ' +
-                                                           ':pcont)';
+      DineroDisponible := DatosCobro.ImporteEntregado;
+
+      // El dinero de las líneas negativas (abonos) suma a nuestro favor
+      cdsLineas.DisableControls;
+      try
+        cdsLineas.First;
+        while not cdsLineas.Eof do
+        begin
+          TotalLinea := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+          if TotalLinea < 0 then
+            DineroDisponible := DineroDisponible - TotalLinea; // Ej: -(-30) = +30 disponible
+          cdsLineas.Next;
+        end;
+      finally
+        cdsLineas.EnableControls;
+      end;
+
+      // Todo lo que sea "pagable" formará el total real de la operación (TotalFactura)
+      TotalFactura := DatosCobro.ImporteEntregado;
+
+      // =======================================================================
+      // PASO 2: CREAR CABECERA DE FACTURA Y OPERACIÓN 'VE' ÚNICA
+      // =======================================================================
+      // 1. Obtener Contador
+      QryTrx.SQL.Text := 'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMP, :pUSUARIO, :pcont)';
       QryTrx.ParamByName('pserie').AsString := SerieGenerada;
       QryTrx.ParamByName('pTipoDoc').AsString := 'FC';
       QryTrx.ParamByName('pEMP').AsString := AEmpresa;
-      QryTrx.ParamByName('pUSUARIO').AsString := oConn.Username;
+      QryTrx.ParamByName('pUSUARIO').AsString := UsuarioCaja;
       QryTrx.ParamByName('pcont').ParamType := ptOutput;
       QryTrx.ParamByName('pcont').DataType := ftString;
       QryTrx.ParamByName('pcont').Size := 12;
       QryTrx.Execute;
       NumeroGenerado := QryTrx.ParamByName('pcont').AsString;
-      // =======================================================================
-      // PASO 2: GRABAR CABECERA DE FACTURA CON DESGLOSE DE LOS 4 IVAs
-      // =======================================================================
+
+      // 2. Insertar Cabecera (Inicialmente insertamos los datos brutos del Grid)
       QryTrx.SQL.Text :=
         'INSERT INTO fza_facturas ' +
         '(CODIGO_EMPRESA_FACTURA, SERIE_FACTURA, NRO_FACTURA, FECHA_FACTURA, ' +
-        ' CODIGO_CLIENTE_FACTURA, TIPO_FACTURA, ' +
-        // Totales Generales reales de tu BD
-        ' TOTAL_BASES_FACTURA, TOTAL_IMPUESTOS_FACTURA, ' +
-        // Tramo 1: IVA Normal
+        ' CODIGO_CLIENTE_FACTURA, TIPO_FACTURA, TOTAL_BASES_FACTURA, TOTAL_IMPUESTOS_FACTURA, ' +
         ' PORCEN_IVAN_FACTURA, TOTAL_IVAN_FACTURA, PORCEN_REN_FACTURA, TOTAL_REN_FACTURA, TOTAL_BASEI_IVAN_FACTURA, ' +
-        // Tramo 2: IVA Reducido
         ' PORCEN_IVAR_FACTURA, TOTAL_IVAR_FACTURA, PORCEN_RER_FACTURA, TOTAL_RER_FACTURA, TOTAL_BASEI_IVAR_FACTURA, ' +
-        // Tramo 3: IVA SuperReducido
         ' PORCEN_IVAS_FACTURA, TOTAL_IVAS_FACTURA, PORCEN_RES_FACTURA, TOTAL_RES_FACTURA, TOTAL_BASEI_IVAS_FACTURA, ' +
-        // Tramo 4: IVA Exento
         ' PORCEN_IVAE_FACTURA, TOTAL_IVAE_FACTURA, PORCEN_REE_FACTURA, TOTAL_REE_FACTURA, TOTAL_BASEI_IVAE_FACTURA) ' +
         'VALUES ' +
-        '(:EMP, :SERIE, :NRO, :FECHA, :CLI, :TIPO, ' +
-        ' :BASES, :IMPUESTOS, ' +
-        ' :PIVAN, :TIVAN, :PREN, :TREN, :BASEIN, ' +
-        ' :PIVAR, :TIVAR, :PRER, :TRER, :BASEIR, ' +
-        ' :PIVAS, :TIVAS, :PRES, :TRES, :BASEIS, ' +
-        ' :PIVAE, :TIVAE, :PREE, :TREE, :BASEIE)';
+        '(:EMP, :SERIE, :NRO, :FECHA, :CLI, :TIPO, :BASES, :IMPUESTOS, ' +
+        ' :PIVAN, :TIVAN, :PREN, :TREN, :BASEIN, :PIVAR, :TIVAR, :PRER, :TRER, :BASEIR, ' +
+        ' :PIVAS, :TIVAS, :PRES, :TRES, :BASEIS, :PIVAE, :TIVAE, :PREE, :TREE, :BASEIE)';
+
       QryTrx.ParamByName('EMP').AsString     := AEmpresa;
       QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
       QryTrx.ParamByName('NRO').AsString     := NumeroGenerado;
       QryTrx.ParamByName('FECHA').AsDateTime := cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
-      QryTrx.ParamByName('CLI').AsString     := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+      QryTrx.ParamByName('CLI').AsString     := CodigoCliente;
       QryTrx.ParamByName('TIPO').AsString    := 'SIMPLIFICADA';
-      // Totales Generales
       QryTrx.ParamByName('BASES').AsCurrency     := cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency;
       QryTrx.ParamByName('IMPUESTOS').AsCurrency := cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency;
-      // Tramo 1: IVA Normal
       QryTrx.ParamByName('PIVAN').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAN_FACTURA').AsFloat;
       QryTrx.ParamByName('TIVAN').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAN_FACTURA').AsCurrency;
       QryTrx.ParamByName('PREN').AsFloat     := cdsCabecera.FieldByName('PORCEN_REN_FACTURA').AsFloat;
       QryTrx.ParamByName('TREN').AsCurrency  := cdsCabecera.FieldByName('TOTAL_REN_FACTURA').AsCurrency;
       QryTrx.ParamByName('BASEIN').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsCurrency;
-      // Tramo 2: IVA Reducido
       QryTrx.ParamByName('PIVAR').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAR_FACTURA').AsFloat;
       QryTrx.ParamByName('TIVAR').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAR_FACTURA').AsCurrency;
       QryTrx.ParamByName('PRER').AsFloat     := cdsCabecera.FieldByName('PORCEN_RER_FACTURA').AsFloat;
       QryTrx.ParamByName('TRER').AsCurrency  := cdsCabecera.FieldByName('TOTAL_RER_FACTURA').AsCurrency;
       QryTrx.ParamByName('BASEIR').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsCurrency;
-      // Tramo 3: IVA SuperReducido
       QryTrx.ParamByName('PIVAS').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAS_FACTURA').AsFloat;
       QryTrx.ParamByName('TIVAS').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAS_FACTURA').AsCurrency;
       QryTrx.ParamByName('PRES').AsFloat     := cdsCabecera.FieldByName('PORCEN_RES_FACTURA').AsFloat;
       QryTrx.ParamByName('TRES').AsCurrency  := cdsCabecera.FieldByName('TOTAL_RES_FACTURA').AsCurrency;
       QryTrx.ParamByName('BASEIS').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsCurrency;
-      // Tramo 4: IVA Exento
       QryTrx.ParamByName('PIVAE').AsFloat    := cdsCabecera.FieldByName('PORCEN_IVAE_FACTURA').AsFloat;
       QryTrx.ParamByName('TIVAE').AsCurrency := cdsCabecera.FieldByName('TOTAL_IVAE_FACTURA').AsCurrency;
       QryTrx.ParamByName('PREE').AsFloat     := cdsCabecera.FieldByName('PORCEN_REE_FACTURA').AsFloat;
       QryTrx.ParamByName('TREE').AsCurrency  := cdsCabecera.FieldByName('TOTAL_REE_FACTURA').AsCurrency;
       QryTrx.ParamByName('BASEIE').AsCurrency:= cdsCabecera.FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsCurrency;
-
       QryTrx.Execute;
+
+      // 3. Operación de Caja 'VE'
+      QryTrx.SQL.Text := 'SELECT GET_NEXT_OP_CAJA(:CAJA) AS NUEVO_OP';
+      QryTrx.ParamByName('CAJA').AsString := ACaja;
+      QryTrx.Open;
+      NumOperacionVE := QryTrx.FieldByName('NUEVO_OP').AsInteger;
+      QryTrx.Close;
+
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_caja_operaciones (CODIGO_CAJA_OP, NUMERO_OPERACION_OP, TIPO_OPERACION_OP, IMPORTE_OP, FECHA_OP) ' +
+        'VALUES (:CAJA, :NUMOP, ''VE'', :IMPORTE, :FECHA)';
+      QryTrx.ParamByName('CAJA').AsString := ACaja;
+      QryTrx.ParamByName('NUMOP').AsInteger := NumOperacionVE;
+      QryTrx.ParamByName('IMPORTE').AsCurrency := TotalFactura;
+      QryTrx.ParamByName('FECHA').AsDateTime := Now;
+      QryTrx.Execute;
+
       // =======================================================================
-      // PASO 3: GRABAR LÍNEAS DE FACTURA (CON DESGLOSE DE PRECIOS, IVA Y TOTALES)
+      // PASO 3: PROCESAR LÍNEAS (Los 4 Casos Posibles)
       // =======================================================================
       cdsLineas.DisableControls;
       try
         cdsLineas.First;
         while not cdsLineas.Eof do
         begin
-          // A) Insertar Línea con todo el desglose fiscal
+          TotalLinea := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+          SkuLinea := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+
+          VieneDeDeposito := '';
+          if cdsLineas.FindField('VIENE_DE_DEPOSITO') <> nil then
+            VieneDeDeposito := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+
+          AccionDep := '';
+          if cdsLineas.FindField('ACCION_DEPOSITO') <> nil then
+            AccionDep := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
+
+          // Preparamos la SQL común de Inserción de Línea
           QryTrx.SQL.Text :=
             'INSERT INTO fza_facturas_lineas ' +
             '(CODIGO_EMPRESA_FACTURA_LINEA, SERIE_FACTURA_LINEA, NRO_FACTURA_LINEA, LINEA_FACTURA_LINEA, ' +
@@ -199,96 +652,186 @@ begin
             '(:EMP, :SERIE, :NRO, :LINEA, :ART, :DESC, :SKU, :CANT, ' +
             ' :PRECSALIDA, :PORCDTO, :PRECDTO, :PRECSIVA, :TIPOIVA, :PORCIVA, :PRECCIVA, :TOTALSIVA, :TOTALCIVA)';
 
-          // Claves principales
           QryTrx.ParamByName('EMP').AsString     := AEmpresa;
           QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
           QryTrx.ParamByName('NRO').AsString     := NumeroGenerado;
-          QryTrx.ParamByName('LINEA').AsInteger  :=
-                         cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsInteger;
+          QryTrx.ParamByName('LINEA').AsInteger  := cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsInteger;
 
-          // Articulo y Cantidades
-          QryTrx.ParamByName('ART').AsString     :=
-                cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('DESC').AsString    :=
-           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('SKU').AsString     :=
-                  cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('CANT').AsFloat     :=
-                        cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+          // -------------------------------------------------------------------
+          // CASO A: LÍNEA VIRTUAL DE ABONO DE ANTICIPO PREVIO
+          // -------------------------------------------------------------------
+          if VieneDeDeposito = 'ABONO_ANTICIPO' then
+          begin
+            QryTrx.ParamByName('ART').AsString := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('DESC').AsString := cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('SKU').AsString := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('CANT').AsFloat := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECSALIDA').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PORCDTO').AsFloat := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECDTO').AsCurrency := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECSIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECCIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TIPOIVA').AsString := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('PORCIVA').AsFloat := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('TOTALSIVA').AsCurrency := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TOTALCIVA').AsCurrency := TotalLinea;
+            QryTrx.Execute;
 
-          // Precios Base y Descuentos
-          QryTrx.ParamByName('PRECSALIDA').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-          QryTrx.ParamByName('PORCDTO').AsFloat       := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
-          QryTrx.ParamByName('PRECDTO').AsCurrency    := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+            // NO hay stock, continuamos
+            cdsLineas.Next;
+            Continue;
+          end;
 
-          // Precios Unitarios (Con y Sin IVA)
-          QryTrx.ParamByName('PRECSIVA').AsCurrency   := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
-          QryTrx.ParamByName('PRECCIVA').AsCurrency   := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+          // -------------------------------------------------------------------
+          // CASO B: CANCELACIÓN DE UN DEPÓSITO
+          // -------------------------------------------------------------------
+          if AccionDep = 'CANCELAR' then
+          begin
+            QryTrx.ParamByName('ART').AsString := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('DESC').AsString := 'Devolución anticipo ' + cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('SKU').AsString := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('CANT').AsFloat := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECSALIDA').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PORCDTO').AsFloat := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECDTO').AsCurrency := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECSIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECCIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TIPOIVA').AsString := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('PORCIVA').AsFloat := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('TOTALSIVA').AsCurrency := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TOTALCIVA').AsCurrency := TotalLinea;
+            QryTrx.Execute;
 
-          // Tipo y Cuota de IVA
-          QryTrx.ParamByName('TIPOIVA').AsString      := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('PORCIVA').AsFloat       := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+            AnularDepositoCliente(QryTrx, SkuLinea, UsuarioCaja,
+                                  AAlmacen, AlmacenDeposito,
+                                  ImporteDevuelto, Abs(cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat));
 
-          // Totales de la línea extendidos (Precio unitario * Cantidad)
-          QryTrx.ParamByName('TOTALSIVA').AsCurrency  := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-          QryTrx.ParamByName('TOTALCIVA').AsCurrency  := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+            DineroDisponible := DineroDisponible - TotalLinea;
+            cdsLineas.Next;
+            Continue;
+          end;
 
-          QryTrx.Execute;
+          // -------------------------------------------------------------------
+          // CASO C: VENTA O DEVOLUCIÓN NORMAL (100% Pagado)
+          // -------------------------------------------------------------------
+          if (TotalLinea <= 0) or (DineroDisponible >= TotalLinea) then
+          begin
+            QryTrx.ParamByName('ART').AsString := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('DESC').AsString := cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('SKU').AsString := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('CANT').AsFloat := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECSALIDA').AsCurrency := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PORCDTO').AsFloat := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('PRECDTO').AsCurrency := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECSIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('PRECCIVA').AsCurrency := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TIPOIVA').AsString := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('PORCIVA').AsFloat := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+            QryTrx.ParamByName('TOTALSIVA').AsCurrency := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+            QryTrx.ParamByName('TOTALCIVA').AsCurrency := TotalLinea;
+            QryTrx.Execute;
 
-          // B) Movimiento de Stock (Salida)
-          QryTrx.SQL.Text :=
-            'INSERT INTO fza_movimientos_almacen ' +
-            '(CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
-            'VALUES ' +
-            '(:ALM, :SKU, ''S'', :CANT, :FECHA)';
-          QryTrx.ParamByName('ALM').AsString := AAlmacen;
-          QryTrx.ParamByName('SKU').AsString := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-          QryTrx.ParamByName('CANT').AsFloat := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
-          QryTrx.ParamByName('FECHA').AsDateTime := Now;
-          QryTrx.Execute;
+            if VieneDeDeposito = 'S' then
+            begin
+              AlmacenOrigenSalida := AlmacenDeposito;
+              CerrarDepositoCliente(QryTrx, SkuLinea, UsuarioCaja);
+            end
+            else
+            begin
+              AlmacenOrigenSalida := AAlmacen;
+            end;
 
+            TipoMov := 'S';
+            if cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat < 0 then TipoMov := 'E';
+
+            QryTrx.SQL.Text :=
+              'INSERT INTO fza_movimientos_almacen (CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, FECHA_MOV) ' +
+              'VALUES (:ALM, :SKU, :TIPOMOV, :CANT, :FECHA)';
+            QryTrx.ParamByName('ALM').AsString := AlmacenOrigenSalida;
+            QryTrx.ParamByName('SKU').AsString := SkuLinea;
+            QryTrx.ParamByName('TIPOMOV').AsString := TipoMov;
+            QryTrx.ParamByName('CANT').AsFloat := Abs(cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat);
+            QryTrx.ParamByName('FECHA').AsDateTime := Now;
+            QryTrx.Execute;
+
+            DineroDisponible := DineroDisponible - TotalLinea;
+          end
+
+          // -------------------------------------------------------------------
+          // CASO D: NUEVO ANTICIPO (Cobro Parcial a cuenta)
+          // -------------------------------------------------------------------
+          else if (AccionDep = 'NUEVO_DEP') or (AccionDep = 'AUMENTAR_DEP') then
+          begin
+            DineroEntregado := TotalLinea; // En el ejemplo: 10€
+            var PrecioOriginalReal :=
+                        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+            QryTrx.ParamByName('ART').AsString := 'ANTICIPO';
+            QryTrx.ParamByName('DESC').AsString := 'Anticipo ' +
+                                                          cdsLineas.FieldByName(
+                                 'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('SKU').AsString := 'ANTICIPO';
+            QryTrx.ParamByName('CANT').AsFloat := 1;
+            QryTrx.ParamByName('PRECSALIDA').AsCurrency := PrecioSinIva;
+            QryTrx.ParamByName('PORCDTO').AsFloat := 0;
+            QryTrx.ParamByName('PRECDTO').AsCurrency := 0;
+            QryTrx.ParamByName('PRECSIVA').AsCurrency := PrecioSinIva;
+            QryTrx.ParamByName('PRECCIVA').AsCurrency := DineroEntregado;
+            QryTrx.ParamByName('TIPOIVA').AsString := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('PORCIVA').AsFloat := PorcIva;
+            QryTrx.ParamByName('TOTALSIVA').AsCurrency := PrecioSinIva;
+            QryTrx.ParamByName('TOTALCIVA').AsCurrency := DineroEntregado;
+            QryTrx.Execute;
+            if VieneDeDeposito <> 'S' then
+            begin
+              var TipoIVALinea   := cdsLineas.FieldByName(
+                                     'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+              var PorcIVALinea   := cdsLineas.FieldByName(
+                                         'PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+              var EsImpInclLinea := cdsLineas.FieldByName(
+                                    'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
+              CrearNuevoDepositoCliente(QryTrx,
+                                        AEmpresa,
+                                        CodigoCliente,
+                                        cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString,
+                                        SkuLinea,
+                                        UsuarioCaja,
+                                        PrecioOriginalReal,
+                                        DineroEntregado,
+                                        AAlmacen,
+                                        AlmacenDeposito,
+                                        1,
+                                        TipoIVALinea,
+                                        PorcIVALinea,
+                                        EsImpInclLinea);
+            end
+            else
+            begin
+              AumentarAnticipoDeposito(QryTrx, SkuLinea, UsuarioCaja, DineroEntregado);
+            end;
+          end;
           cdsLineas.Next;
         end;
       finally
         cdsLineas.EnableControls;
       end;
 
-      // --- PASO 4: GRABAR OPERACIÓN DE CAJA (Para el arqueo/cierre) ---
-      // Obtenemos un número único para la operación de caja
-      QryTrx.SQL.Text := 'SELECT GET_NEXT_OP_CAJA(:CAJA) AS NUEVO_OP';
-      QryTrx.ParamByName('CAJA').AsString := ACaja;
-      QryTrx.Open;
-      NumOperacion := QryTrx.FieldByName('NUEVO_OP').AsInteger;
-      QryTrx.Close;
-
-      QryTrx.SQL.Text :=
-        'INSERT INTO fza_caja_operaciones ' +
-        '(CODIGO_CAJA_OP, NUMERO_OPERACION_OP, TIPO_OPERACION_OP, IMPORTE_OP, FECHA_OP) ' +
-        'VALUES ' +
-        '(:CAJA, :NUMOP, ''VE'', :IMPORTE, :FECHA)'; // 'VE' = Venta
-      QryTrx.ParamByName('CAJA').AsString := ACaja;
-      QryTrx.ParamByName('NUMOP').AsInteger := NumOperacion;
-      QryTrx.ParamByName('IMPORTE').AsCurrency := DatosCobro.ImporteTotalPagar;
-      QryTrx.ParamByName('FECHA').AsDateTime := Now;
-      QryTrx.Execute;
-
-      // --- PASO 5: GRABAR FORMAS DE PAGO ENTREGADAS ---
+      // =======================================================================
+      // PASO 4: GUARDAR FORMAS DE PAGO ENTREGADAS (Contra Operación 'VE')
+      // =======================================================================
       DatosCobro.MemTablePagos.First;
       while not DatosCobro.MemTablePagos.Eof do
       begin
+        var CodigoFP := DatosCobro.MemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
         var ImporteEntregado := DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
 
-        // Guardamos las filas donde haya entregado dinero
-        if ImporteEntregado > 0.001 then
+        if Abs(ImporteEntregado) > 0.001 then
         begin
           QryTrx.SQL.Text :=
-            'INSERT INTO fza_caja_pagos ' +
-            '(CODIGO_CAJA_PAGO, NUMERO_OPERACION_PAGO, CODIGO_FORMAP_PAGO, IMPORTE_ENTREGADO_PAGO, CAMBIO_PAGO) ' +
-            'VALUES ' +
-            '(:CAJA, :NUMOP, :FORMAP, :IMPORTE, :CAMBIO)';
+            'INSERT INTO fza_caja_pagos (CODIGO_CAJA_PAGO, NUMERO_OPERACION_PAGO, CODIGO_FORMAP_PAGO, IMPORTE_ENTREGADO_PAGO, CAMBIO_PAGO) ' +
+            'VALUES (:CAJA, :NUMOP, :FORMAP, :IMPORTE, :CAMBIO)';
           QryTrx.ParamByName('CAJA').AsString := ACaja;
-          QryTrx.ParamByName('NUMOP').AsInteger := NumOperacion;
-          QryTrx.ParamByName('FORMAP').AsString := DatosCobro.MemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
+          QryTrx.ParamByName('NUMOP').AsInteger := NumOperacionVE;
+          QryTrx.ParamByName('FORMAP').AsString := CodigoFP;
           QryTrx.ParamByName('IMPORTE').AsFloat := ImporteEntregado;
           QryTrx.ParamByName('CAMBIO').AsCurrency := DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency;
           QryTrx.Execute;
@@ -296,41 +839,56 @@ begin
         DatosCobro.MemTablePagos.Next;
       end;
 
-      // A) Vales recogidos (Pueden ser varios)
+      // =======================================================================
+      // PASO 5: GESTIÓN DE VALES (Canjes y Emisiones)
+      // =======================================================================
       for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
       begin
         MarcarValeComoCanjeado(DatosCobro.ValesRecogidos[i].CodigoVale,
-                               ACaja, AAlmacen, NumOperacion,
+                               ACaja, AAlmacen, NumOperacionVE,
                                SerieGenerada, NumeroGenerado);
       end;
-     // B) Emitir un vale nuevo si sobra saldo
+
       if DatosCobro.ImporteValeEmitido > 0 then
       begin
-         ValeGenerado := EmitirNuevoVale(AEmpresa,
-                                             AAlmacen, ACaja,
-                                             NumOperacion,
-                                             SerieGenerada,
-                                             NumeroGenerado,
-                                             DatosCobro.ImporteValeEmitido);
+         ValeGenerado := EmitirNuevoVale(AEmpresa, AAlmacen, ACaja, NumOperacionVE,
+                                         SerieGenerada, NumeroGenerado,
+                                         DatosCobro.ImporteValeEmitido);
       end;
+
+
       // =======================================================================
-      // CONFIRMAR TRANSACCIÓN: Todo ha ido perfecto
+      // CONFIRMAR TRANSACCIÓN
       // =======================================================================
       inLibGlobalVar.oConn.Commit;
       Result := True;
     except
       on E: Exception do
       begin
-        // =======================================================================
-        // DESHACER TRANSACCIÓN: Hubo un error, no guardamos NADA.
-        // =======================================================================
         inLibGlobalVar.oConn.Rollback;
         raise Exception.Create('Error al guardar el ticket. No se ha registrado la operación.' + sLineBreak + 'Motivo: ' + E.Message);
       end;
     end;
-
   finally
     QryTrx.Free;
+  end;
+end;
+
+function TdmCajaOpe.CuadrarFacturaEnMemoria(dsCabecera, dsLineas: TDataSet): Boolean;
+var
+  CalculadorFiscal: TFacturaTotales;
+begin
+  Result := False;
+  // Instanciamos tu clase pasándole los datasets de la caja
+  CalculadorFiscal := TFacturaTotales.Create(dsCabecera, dsLineas);
+  try
+    // ProcesarFacturaCompleta se encarga de leer configuración, recorrer líneas y sumarizar
+    Result := CalculadorFiscal.ProcesarFacturaCompleta;
+
+    if not Result then
+      raise Exception.Create('Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
+  finally
+    CalculadorFiscal.Free;
   end;
 end;
 
@@ -344,30 +902,23 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := inLibGlobalVar.oConn;
-
     // =======================================================================
     // 1. OBTENER EL CÓDIGO FORMATEADO DESDE EL NUEVO PROCEDURE
     // =======================================================================
     qry.SQL.Text := 'CALL PRC_GENERAR_CODIGO_VALE(:pEmp, :pAlm, :pCaja, :pOp, :pUsu, :pCodigo)';
-
     qry.ParamByName('pEmp').AsString   := AEmpresa;
     qry.ParamByName('pAlm').AsString   := AAlmacen;
     qry.ParamByName('pCaja').AsString  := ACaja;
     qry.ParamByName('pOp').AsInteger   := ANumOperacion;
-
     // Le pasamos el nombre del cajero. Si quieres puedes leerlo del cdsCabecera:
     // cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString
     qry.ParamByName('pUsu').AsString   := oUser;
-
     // Parámetro de salida (OUT) para recoger el código generado (VARCHAR 100)
     qry.ParamByName('pCodigo').ParamType := ptOutput;
     qry.ParamByName('pCodigo').DataType  := ftString;
     qry.ParamByName('pCodigo').Size      := 100;
-
     qry.Execute;
-
     Result := qry.ParamByName('pCodigo').AsString;
-
     // =======================================================================
     // 2. INSERTAR EL NUEVO VALE EN LA BASE DE DATOS
     // =======================================================================
@@ -379,7 +930,6 @@ begin
       'VALUES ' +
       '(:COD, :IMPORTE, :FECHA, ''PENDIENTE'', ' +
       ' :CAJA, :ALMACEN, :NUMOP, :SERIE, :NUMFAC)';
-
     qry.ParamByName('COD').AsString        := Result;
     qry.ParamByName('IMPORTE').AsCurrency  := AImporte;
     qry.ParamByName('FECHA').AsDateTime    := Now;
@@ -388,11 +938,41 @@ begin
     qry.ParamByName('NUMOP').AsInteger     := ANumOperacion;
     qry.ParamByName('SERIE').AsString      := ASerieFactura;
     qry.ParamByName('NUMFAC').AsString     := ANumFactura;
-
     qry.Execute;
-
   finally
     qry.Free;
+  end;
+end;
+
+function TdmCajaOpe.ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
+var
+  QryAlm: TUniQuery;
+begin
+  Result := '';
+  QryAlm := TUniQuery.Create(nil);
+  try
+    // Usamos la conexión global del sistema
+    QryAlm.Connection := inLibGlobalVar.oConn;
+
+    QryAlm.SQL.Text :=
+      'SELECT CODIGO_ALMACEN_ALM ' +
+      '  FROM fza_almacenes ' +
+      ' WHERE CODIGO_EMPRESA_ALM = :EMP ' +
+      '   AND ESACTIVO_ALM = ''S'' ' +
+      '   AND TIPO_USO_ALM = ''DEPÓSITO'' ' + // <-- Usando tu flag real
+      ' LIMIT 1';
+
+    QryAlm.ParamByName('EMP').AsString := AEmpresa;
+    QryAlm.Open;
+
+    if not QryAlm.IsEmpty then
+      Result := QryAlm.FieldByName('CODIGO_ALMACEN_ALM').AsString
+    else
+      // Lanzamos excepción para que la transacción de caja se detenga si hay un error de configuración
+      raise Exception.Create('No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
+
+  finally
+    QryAlm.Free;
   end;
 end;
 
@@ -813,6 +1393,10 @@ begin
   cdsLineas.IndexDefs.Clear;
   with cdsLineas.FieldDefs do
   begin
+    Add('VIENE_DE_DEPOSITO', ftString, 1);
+    Add('PRECIO_ORIGINAL_DEP', ftCurrency);
+    Add('ACCION_DEPOSITO', ftString, 15); // Valores: 'COBRAR' o 'CANCELAR'
+    Add('ANTICIPO_PREVIO', ftCurrency);   // Memoria del dinero adelantado
     // -- CLAVES DE ENLACE CON CABECERA (Foreign Keys) --
     Add('SERIE_FACTURA_LINEA', ftString, 20, True);
     Add('NRO_FACTURA_LINEA', ftString, 20, True);
