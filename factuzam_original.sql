@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 03/03/2026 09:39:06
+ Date: 03/03/2026 18:01:42
 */
 
 SET NAMES utf8mb4;
@@ -1008,10 +1008,10 @@ CREATE TABLE `fza_clientes`  (
 -- ----------------------------
 -- Records of fza_clientes
 -- ----------------------------
-INSERT INTO `fza_clientes` VALUES ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NULL, 'pedro.cojos@gmail.com', 'CALLE CAIDOS ', NULL, 'VILLAVEZA DEL AGUA', 'ZAMORA', '49760', '826', 'España', NULL, NULL, NULL, NULL, NULL, 'ES3201822305650206595350', 'N', 'N', NULL, NULL, NULL, 'N', 'N', 'S', '60DIAS', '1', NULL, NULL, '2023-12-19 19:28:21', '2023-05-22 13:01:22', 'Administrador', 'Administrador');
+INSERT INTO `fza_clientes` VALUES ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NULL, 'pedro.cojos@gmail.com', 'CALLE CAIDOS ', NULL, 'VILLAVEZA DEL AGUA', 'ZAMORA', '49760', '826', 'España', NULL, NULL, NULL, NULL, NULL, 'ES3201822305650206595350', 'N', 'N', 1000.000000, 'S', NULL, 'N', 'N', 'S', '60DIAS', '1', NULL, NULL, '2026-03-03 17:37:45', '2023-05-22 13:01:22', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('294', 'S', 4, 'AGUSTIN SEGURADO', '11632589R', '623356689', 'agustin.segurado@gmail.com', 'CALLE EL RIEGO, 33', '', 'ZAMORA', 'ZAMORA', '49019', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '1', NULL, NULL, '2023-11-11 15:27:57', '2023-10-31 12:15:11', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('295', 'S', 6, 'AZUCENA MARTIN (KIOSKO PERLA)', '11356325E', '658963321', 'cliente.nuevo@gmail.om', 'CALLE POZO AMARILLO, 3', '', 'SALAMANCA', 'SALAMANCA', '37003', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, 'ES50 0182 5632 3656 9872 0145               ', 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-01-29 05:22:58', '2023-12-06 13:07:42', 'Administrador', 'Administrador');
-INSERT INTO `fza_clientes` VALUES ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_clientes` VALUES ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', 1000.000000, 'S', NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-03-03 17:56:25', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('302', 'S', 11, 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, '934455667', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('303', 'S', 12, 'MARTA RUIZ LÓPEZ', '34567890C', '677303030', 'marta.ruiz@gmail.com', 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', NULL, NULL, NULL, NULL, '963344556', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('304', 'S', 13, 'JUAN MARTÍN PÉREZ', '45678901D', '688404040', 'juan.martin@empresa.es', 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', NULL, NULL, NULL, NULL, '915566778', NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
@@ -1146,7 +1146,7 @@ CREATE TABLE `fza_depositos_cliente`  (
   `CODIGO_CLIENTE_DEP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `CODIGO_ARTICULO_DEP` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `CODIGO_UNIDAD_DEP` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'SKU o Código de Barras único de la talla/color',
-  `PRECIO_VENTA_DEP` decimal(19, 6) NOT NULL DEFAULT 0.000000 COMMENT 'Precio original de la venta',
+  `PRECIO_VENTA_DEP` decimal(19, 6) NOT NULL DEFAULT 0.000000 COMMENT 'Precio Unidad original de la venta',
   `IMPORTE_ANTICIPO_DEP` decimal(19, 6) NOT NULL DEFAULT 0.000000 COMMENT 'Dinero acumulado entregado a cuenta hasta la fecha',
   `ESTADO_DEP` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'PENDIENTE' COMMENT 'Valores: PENDIENTE, CERRADO',
   `FECHA_CREACION_DEP` datetime NOT NULL DEFAULT current_timestamp(),
@@ -1157,6 +1157,7 @@ CREATE TABLE `fza_depositos_cliente`  (
   `TIPO_IVA_DEP` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'N',
   `PORCEN_IVA_DEP` decimal(19, 6) NOT NULL DEFAULT 0.000000,
   `ESIMP_INCL_DEP` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'S',
+  `CANTIDAD_PENDIENTE_DEP` decimal(19, 6) NULL DEFAULT NULL COMMENT 'Cantidad de artículos comprados',
   `FECHA_ENTREGA_DEP` date NULL DEFAULT NULL,
   PRIMARY KEY (`ID_DEPOSITO_DEP`) USING BTREE,
   INDEX `IDX_DEP_CLIENTE`(`CODIGO_CLIENTE_DEP` ASC, `ESTADO_DEP` ASC) USING BTREE,
@@ -1166,6 +1167,14 @@ CREATE TABLE `fza_depositos_cliente`  (
 -- ----------------------------
 -- Records of fza_depositos_cliente
 -- ----------------------------
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-001', '1', '301', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', 189.000000, 94.500000, 'PENDIENTE', '2026-02-10 10:30:00', '2026-03-03 17:55:37', '2026-02-10 10:30:00', 'LAURA', 'LAURA', 'N', 21.000000, 'S', 1.000000, '2026-03-15');
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-002', '1', '302', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 299.000000, 0.000000, 'PENDIENTE', '2026-02-14 16:00:00', '2026-03-03 17:55:37', '2026-02-14 16:00:00', 'CARLOS', 'CARLOS', 'N', 21.000000, 'S', 1.000000, '2026-03-20');
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-003', '1', '303', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', 125.000000, 37.500000, 'PENDIENTE', '2026-02-18 11:15:00', '2026-03-03 17:55:37', '2026-02-18 11:15:00', 'ANA', 'ANA', 'N', 21.000000, 'S', 1.000000, '2026-03-10');
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-004', '1', '301', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', 79.000000, 79.000000, 'CERRADO', '2026-01-20 09:00:00', '2026-03-03 17:55:37', '2026-01-20 09:00:00', 'LAURA', 'LAURA', 'N', 21.000000, 'S', 1.000000, NULL);
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-005', '1', '302', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', 159.000000, 39.750000, 'PENDIENTE', '2026-02-20 17:30:00', '2026-03-03 17:55:37', '2026-02-20 17:30:00', 'CARLOS', 'CARLOS', 'N', 21.000000, 'S', 1.000000, '2026-04-01');
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-006', '1', '303', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', 95.000000, 20.000000, 'CANCELADO', '2026-01-28 12:00:00', '2026-03-03 17:55:37', '2026-01-28 12:00:00', 'ANA', 'ANA', 'N', 21.000000, 'S', 1.000000, NULL);
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-007', '1', '301', 'VEST-FLOR', 'VEST-FLOR/AZUL/L', 115.000000, 0.000000, 'PENDIENTE', '2026-03-01 10:00:00', '2026-03-03 17:55:37', '2026-03-01 10:00:00', 'LAURA', 'LAURA', 'N', 21.000000, 'S', 1.000000, '2026-03-25');
+INSERT INTO `fza_depositos_cliente` VALUES ('DEP-008', '1', '302', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', 49.000000, 49.000000, 'CERRADO', '2026-02-05 15:00:00', '2026-03-03 17:55:37', '2026-02-05 15:00:00', 'CARLOS', 'CARLOS', 'N', 21.000000, 'S', 1.000000, NULL);
 
 -- ----------------------------
 -- Table structure for fza_empresas
@@ -2572,7 +2581,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-02 08:18:21', '2026-03-02 08:18:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-03 17:57:51', '2026-03-03 17:57:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos

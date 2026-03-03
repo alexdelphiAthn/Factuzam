@@ -1530,8 +1530,8 @@ end;
 
 procedure TfrmMtoOpeCaja.btnCodigoClienteExit(Sender: TObject);
 begin
-  if Sender is TcxCustomEdit then
-    TcxCustomEdit(Sender).ValidateEdit(True);
+//  if Sender is TcxCustomEdit then     //entra dos veces???
+//    TcxCustomEdit(Sender).ValidateEdit(True);
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoClientePropertiesValidate(Sender: TObject;
@@ -1562,7 +1562,8 @@ begin
     try
       unqry.Connection := oConn;
       unqry.SQL.Text := 'SELECT RAZONSOCIAL_CLIENTE, ' +
-                        '       TARIFA_ARTICULO_CLIENTE ' +
+                        '       TARIFA_ARTICULO_CLIENTE, ' +
+                        '       ESPERMITE_DEUDA_CLIENTE ' +
                         '  FROM fza_clientes ' +
                         ' WHERE CODIGO_CLIENTE = :COD';
       unqry.ParamByName('COD').AsString := sCodigo;
@@ -1578,7 +1579,8 @@ begin
                           unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
         lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-        if Trim(btnCodigoCliente.Text) <> '' then
+        if (Trim(btnCodigoCliente.Text) <> '') and
+           SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString, 'S') then
           DatosCaja.CargarDepositosCliente(btnCodigoCliente.Text);
       end;
     finally
