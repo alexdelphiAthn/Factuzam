@@ -135,6 +135,10 @@ type
     procedure actCobroExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvArticuloPropertiesChange(Sender: TObject);
+    procedure cxGrid1DBTableView1Editing(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem; var AAllow: Boolean);
+    procedure tvUdsPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
   private
     procedure ActualizarFoco;
     function BuscarArticulo:String;
@@ -374,13 +378,26 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.WMCancelarLinea(var Msg: TMessage);
+var
+  VieneDeDep: string;
 begin
   if (DatosCaja.cdsLineas.Active) then
   begin
+    // NUEVO: Bloqueo de borrado por atajo
+    if not DatosCaja.cdsLineas.IsEmpty then
+    begin
+      VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
+      begin
+        ShowMessage('No se puede cancelar o eliminar una línea vinculada a un depósito.');
+        Exit;
+      end;
+    end;
     if (DatosCaja.cdsLineas.State = dsInsert) then
       DatosCaja.cdsLineas.Cancel
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
+
     GridRecalc(nil,
                cxGrid1DBTableView1,
                DatosCaja.cdsLineas,
@@ -631,6 +648,35 @@ begin
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
+end;
+
+procedure TfrmMtoOpeCaja.tvUdsPropertiesValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+var
+  VieneDeDep: string;
+  CantOriginal, NuevaCant: Double;
+begin
+  if (DatosCaja = nil) or not DatosCaja.cdsLineas.Active then
+    Exit;
+
+  VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+  if VieneDeDep = 'S' then
+  begin
+    // Convertimos de forma segura el valor tecleado a float
+    NuevaCant := StrToFloatDef(VarToStrDef(DisplayValue, '0'), 0);
+    CantOriginal := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+
+    // Verificamos que la magnitud sea idéntica (solo permite cambiar signo)
+    if Abs(NuevaCant) <> Abs(CantOriginal) then
+    begin
+      Error := True;
+      ErrorText := 'En artículos de depósito solo está permitido cambiar el signo de la cantidad (ej. cambiar de 1 a -1).';
+    end
+    else
+    begin
+      Error := False;
+    end;
+  end;
 end;
 
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
@@ -966,6 +1012,30 @@ begin
       begin
         DatosCaja.cdsLineas.Cancel;
       end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.cxGrid1DBTableView1Editing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  if (DatosCaja <> nil) and
+     DatosCaja.cdsLineas.Active and
+     not DatosCaja.cdsLineas.IsEmpty then
+  begin
+    // Si la línea es la prenda base del depósito
+    if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
+    begin
+      // Solo permitimos editar la columna de Cantidad/Unidades
+      if AItem <> tvUds then
+        AAllow := False;
+    end
+    // Si la línea es el abono (anticipo de dinero, marcado con 'A' según tu UniDataCaja)
+    else if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A' then
+    begin
+      // No permitimos tocar absolutamente nada de la línea del abono
+      AAllow := False;
     end;
   end;
 end;
@@ -1413,7 +1483,21 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
+var
+  VieneDeDep: string;
 begin
+  // NUEVO: Bloqueo de borrado
+  if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
+  begin
+    VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+    if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
+    begin
+      ShowMessage('No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
+                  'Cambie la cantidad a negativo si necesita revertirla.');
+      Exit;
+    end;
+  end;
+
   if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
     DatosCaja.cdsLineas.Cancel
   else
