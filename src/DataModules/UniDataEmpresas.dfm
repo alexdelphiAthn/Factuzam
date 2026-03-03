@@ -590,30 +590,30 @@ inherited dmEmpresas: TdmEmpresas
   end
   object unqrySeries: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO vi_empresas_series'
+      'INSERT INTO fza_empresas_series'
       
         '  (CODIGO_SERIE, CODIGO_EMPRESA_SERIE, CODIGO_ALMACEN_SERIE, COD' +
-        'IGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBITPO_SERIE, FECHA' +
+        'IGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBTIPO_SERIE, FECHA' +
         '_DESDE_SERIE, FECHA_HASTA_SERIE, INSTANTEMODIF, INSTANTEALTA, US' +
         'UARIOALTA, USUARIOMODIF)'
       'VALUES'
       
         '  (:CODIGO_SERIE, :CODIGO_EMPRESA_SERIE, :CODIGO_ALMACEN_SERIE, ' +
-        ':CODIGO_CAJA_SERIE, :SERIE_SERIE, :TIPODOC_SERIE, :SUBITPO_SERIE' +
+        ':CODIGO_CAJA_SERIE, :SERIE_SERIE, :TIPODOC_SERIE, :SUBTIPO_SERIE' +
         ', :FECHA_DESDE_SERIE, :FECHA_HASTA_SERIE, :INSTANTEMODIF, :INSTA' +
         'NTEALTA, :USUARIOALTA, :USUARIOMODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM vi_empresas_series'
+      'DELETE FROM fza_empresas_series'
       'WHERE'
       '  CODIGO_SERIE = :Old_CODIGO_SERIE')
     SQLUpdate.Strings = (
-      'UPDATE vi_empresas_series'
+      'UPDATE fza_empresas_series'
       'SET'
       
         '  CODIGO_SERIE = :CODIGO_SERIE, CODIGO_EMPRESA_SERIE = :CODIGO_E' +
         'MPRESA_SERIE, CODIGO_ALMACEN_SERIE = :CODIGO_ALMACEN_SERIE, CODI' +
         'GO_CAJA_SERIE = :CODIGO_CAJA_SERIE, SERIE_SERIE = :SERIE_SERIE, ' +
-        'TIPODOC_SERIE = :TIPODOC_SERIE, SUBITPO_SERIE = :SUBITPO_SERIE, ' +
+        'TIPODOC_SERIE = :TIPODOC_SERIE, SUBTIPO_SERIE = :SUBTIPO_SERIE, ' +
         'FECHA_DESDE_SERIE = :FECHA_DESDE_SERIE, FECHA_HASTA_SERIE = :FEC' +
         'HA_HASTA_SERIE, INSTANTEMODIF = :INSTANTEMODIF, INSTANTEALTA = :' +
         'INSTANTEALTA, USUARIOALTA = :USUARIOALTA, USUARIOMODIF = :USUARI' +
@@ -623,22 +623,22 @@ inherited dmEmpresas: TdmEmpresas
     SQLLock.Strings = (
       
         'SELECT CODIGO_SERIE, CODIGO_EMPRESA_SERIE, CODIGO_ALMACEN_SERIE,' +
-        ' CODIGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBITPO_SERIE, F' +
+        ' CODIGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBTIPO_SERIE, F' +
         'ECHA_DESDE_SERIE, FECHA_HASTA_SERIE, INSTANTEMODIF, INSTANTEALTA' +
-        ', USUARIOALTA, USUARIOMODIF FROM vi_empresas_series'
+        ', USUARIOALTA, USUARIOMODIF FROM fza_empresas_series'
       'WHERE'
       '  CODIGO_SERIE = :Old_CODIGO_SERIE'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
         'SELECT CODIGO_SERIE, CODIGO_EMPRESA_SERIE, CODIGO_ALMACEN_SERIE,' +
-        ' CODIGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBITPO_SERIE, F' +
+        ' CODIGO_CAJA_SERIE, SERIE_SERIE, TIPODOC_SERIE, SUBTIPO_SERIE, F' +
         'ECHA_DESDE_SERIE, FECHA_HASTA_SERIE, INSTANTEMODIF, INSTANTEALTA' +
-        ', USUARIOALTA, USUARIOMODIF FROM vi_empresas_series'
+        ', USUARIOALTA, USUARIOMODIF FROM fza_empresas_series'
       'WHERE'
       '  CODIGO_SERIE = :CODIGO_SERIE')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM vi_empresas_series')
+      'SELECT COUNT(*) FROM fza_empresas_series')
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * '
@@ -647,7 +647,6 @@ inherited dmEmpresas: TdmEmpresas
     MasterFields = 'CODIGO_EMPRESA'
     DetailFields = 'CODIGO_EMPRESA_SERIE'
     RefreshOptions = [roAfterUpdate]
-    Active = True
     BeforeInsert = unqryRetencionesBeforeInsert
     AfterInsert = unqrySeriesAfterInsert
     BeforePost = unqrySeriesBeforePost
