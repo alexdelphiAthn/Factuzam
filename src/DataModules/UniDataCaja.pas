@@ -165,6 +165,7 @@ begin
       cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency      :=
         cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency
                                                                   * CantidadPendiente;
+      cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency := AnticipoDado;
       cdsLineas.Post;
 
       // ---------------------------------------------------------
@@ -756,57 +757,56 @@ begin
 
             DineroDisponible := DineroDisponible - TotalLinea;
           end
-
           // -------------------------------------------------------------------
           // CASO D: NUEVO ANTICIPO (Cobro Parcial a cuenta)
           // -------------------------------------------------------------------
           else if (AccionDep = 'NUEVO_DEP') or (AccionDep = 'AUMENTAR_DEP') then
           begin
-            DineroEntregado := TotalLinea; // En el ejemplo: 10€
-            var PrecioOriginalReal :=
-                        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
-            QryTrx.ParamByName('ART').AsString := 'ANTICIPO';
-            QryTrx.ParamByName('DESC').AsString := 'Anticipo ' +
-                                                          cdsLineas.FieldByName(
-                                 'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
-            QryTrx.ParamByName('SKU').AsString := 'ANTICIPO';
-            QryTrx.ParamByName('CANT').AsFloat := 1;
-            QryTrx.ParamByName('PRECSALIDA').AsCurrency := PrecioSinIva;
-            QryTrx.ParamByName('PORCDTO').AsFloat := 0;
-            QryTrx.ParamByName('PRECDTO').AsCurrency := 0;
-            QryTrx.ParamByName('PRECSIVA').AsCurrency := PrecioSinIva;
-            QryTrx.ParamByName('PRECCIVA').AsCurrency := DineroEntregado;
-            QryTrx.ParamByName('TIPOIVA').AsString := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-            QryTrx.ParamByName('PORCIVA').AsFloat := PorcIva;
-            QryTrx.ParamByName('TOTALSIVA').AsCurrency := PrecioSinIva;
-            QryTrx.ParamByName('TOTALCIVA').AsCurrency := DineroEntregado;
+            DineroEntregado    := TotalLinea;
+            var PrecioOriginalReal := cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+            var TipoIVALinea   := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            var PorcIVALinea   := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+            var EsImpInclLinea := cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
+            // Calcular PrecioSinIva sobre el dinero entregado
+            if PorcIVALinea = 0 then
+              PrecioSinIva := DineroEntregado
+            else
+              PrecioSinIva := DineroEntregado / (1 + (PorcIVALinea / 100));
+            QryTrx.ParamByName('ART').AsString      := 'ANTICIPO';
+            QryTrx.ParamByName('DESC').AsString     := 'Anticipo ' +
+                                    cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+            QryTrx.ParamByName('SKU').AsString      := 'ANTICIPO';
+            QryTrx.ParamByName('CANT').AsFloat      := 1;
+            QryTrx.ParamByName('PRECSALIDA').AsCurrency  := PrecioSinIva;
+            QryTrx.ParamByName('PORCDTO').AsFloat        := 0;
+            QryTrx.ParamByName('PRECDTO').AsCurrency     := 0;
+            QryTrx.ParamByName('PRECSIVA').AsCurrency    := PrecioSinIva;
+            QryTrx.ParamByName('PRECCIVA').AsCurrency    := DineroEntregado;
+            QryTrx.ParamByName('TIPOIVA').AsString       := TipoIVALinea;
+            QryTrx.ParamByName('PORCIVA').AsFloat        := PorcIVALinea;
+            QryTrx.ParamByName('TOTALSIVA').AsCurrency   := PrecioSinIva;
+            QryTrx.ParamByName('TOTALCIVA').AsCurrency   := DineroEntregado;
             QryTrx.Execute;
-            if VieneDeDeposito <> 'S' then
+            if AccionDep = 'AUMENTAR_DEP' then
             begin
-              var TipoIVALinea   := cdsLineas.FieldByName(
-                                     'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-              var PorcIVALinea   := cdsLineas.FieldByName(
-                                         'PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-              var EsImpInclLinea := cdsLineas.FieldByName(
-                                    'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
-              CrearNuevoDepositoCliente(QryTrx,
-                                        AEmpresa,
-                                        CodigoCliente,
-                                        cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString,
-                                        SkuLinea,
-                                        UsuarioCaja,
+              var AnticipoPrevio    :=
+                            cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
+              var AnticipoRealNuevo := DineroEntregado - AnticipoPrevio;
+              AumentarAnticipoDeposito(QryTrx, SkuLinea, UsuarioCaja, AnticipoRealNuevo);
+            end
+            else // NUEVO_DEP
+            begin
+              CrearNuevoDepositoCliente(QryTrx, AEmpresa, CodigoCliente,
+                                        cdsLineas.FieldByName(
+                                      'CODIGO_ARTICULO_FACTURA_LINEA').AsString,
+                                        SkuLinea, UsuarioCaja,
                                         PrecioOriginalReal,
                                         DineroEntregado,
-                                        AAlmacen,
-                                        AlmacenDeposito,
+                                        AAlmacen, AlmacenDeposito,
                                         1,
                                         TipoIVALinea,
                                         PorcIVALinea,
                                         EsImpInclLinea);
-            end
-            else
-            begin
-              AumentarAnticipoDeposito(QryTrx, SkuLinea, UsuarioCaja, DineroEntregado);
             end;
           end;
           cdsLineas.Next;
@@ -814,7 +814,6 @@ begin
       finally
         cdsLineas.EnableControls;
       end;
-
       // =======================================================================
       // PASO 4: GUARDAR FORMAS DE PAGO ENTREGADAS (Contra Operación 'VE')
       // =======================================================================
