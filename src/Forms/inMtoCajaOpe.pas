@@ -1973,15 +1973,12 @@ begin
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
-
-  // Aplicar visibilidad de columnas según parámetros
+  DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
+  DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
   tvEmpleado.Visible      := oCajaParams.GetBool('vgerShowEmpleadoLinea', True);
-//  tvDescuento.Visible     := oCajaParams.GetBool('vgerDescuentos', True);
-//  tvDescuentoMenos.Visible:= oCajaParams.GetBool('vgerDescuentos', True);
   var PermiteDescuentos := oCajaParams.GetBool('vgerDescuentos', True);
   tvDescuento.Options.Editing := PermiteDescuentos;
   tvDescuentoMenos.Options.Editing := PermiteDescuentos;
-
   with dbtvBusqDBTableView1.DataController do
   begin
     DataModeController.GridMode := True;
