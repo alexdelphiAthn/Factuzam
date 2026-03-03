@@ -58,10 +58,10 @@ type
                                           AAlmacenDeposito: string;
                                     out ImporteADevolver: Currency;
                                     ACantidad: Double);
-    procedure CargarDepositosCliente(const ACodigoCliente: string);
     procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
                                                 DineroEntregado: Currency);
   public
+    procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
     procedure MarcarValeComoCanjeado(const ACodigoVale: string;
                                  ACodigoCaja: string;
@@ -763,10 +763,14 @@ begin
           else if (AccionDep = 'NUEVO_DEP') or (AccionDep = 'AUMENTAR_DEP') then
           begin
             DineroEntregado    := TotalLinea;
-            var PrecioOriginalReal := cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
-            var TipoIVALinea   := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-            var PorcIVALinea   := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-            var EsImpInclLinea := cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
+            var PrecioOriginalReal :=
+                        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+            var TipoIVALinea   :=
+               cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+            var PorcIVALinea   :=
+                   cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+            var EsImpInclLinea :=
+              cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
             // Calcular PrecioSinIva sobre el dinero entregado
             if PorcIVALinea = 0 then
               PrecioSinIva := DineroEntregado
@@ -774,7 +778,7 @@ begin
               PrecioSinIva := DineroEntregado / (1 + (PorcIVALinea / 100));
             QryTrx.ParamByName('ART').AsString      := 'ANTICIPO';
             QryTrx.ParamByName('DESC').AsString     := 'Anticipo ' +
-                                    cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
             QryTrx.ParamByName('SKU').AsString      := 'ANTICIPO';
             QryTrx.ParamByName('CANT').AsFloat      := 1;
             QryTrx.ParamByName('PRECSALIDA').AsCurrency  := PrecioSinIva;
@@ -792,7 +796,10 @@ begin
               var AnticipoPrevio    :=
                             cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
               var AnticipoRealNuevo := DineroEntregado - AnticipoPrevio;
-              AumentarAnticipoDeposito(QryTrx, SkuLinea, UsuarioCaja, AnticipoRealNuevo);
+              AumentarAnticipoDeposito(QryTrx,
+                                       SkuLinea,
+                                       UsuarioCaja,
+                                       AnticipoRealNuevo);
             end
             else // NUEVO_DEP
             begin
@@ -820,42 +827,51 @@ begin
       DatosCobro.MemTablePagos.First;
       while not DatosCobro.MemTablePagos.Eof do
       begin
-        var CodigoFP := DatosCobro.MemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
-        var ImporteEntregado := DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
-
+        var CodigoFP :=
+                 DatosCobro.MemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
+        var ImporteEntregado :=
+              DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
         if Abs(ImporteEntregado) > 0.001 then
         begin
           QryTrx.SQL.Text :=
-            'INSERT INTO fza_caja_pagos (CODIGO_CAJA_PAGO, NUMERO_OPERACION_PAGO, CODIGO_FORMAP_PAGO, IMPORTE_ENTREGADO_PAGO, CAMBIO_PAGO) ' +
-            'VALUES (:CAJA, :NUMOP, :FORMAP, :IMPORTE, :CAMBIO)';
+            'INSERT INTO fza_caja_pagos (CODIGO_CAJA_PAGO,' +
+            '                            NUMERO_OPERACION_PAGO,' +
+            '                            CODIGO_FORMAP_PAGO, ' +
+            '                            IMPORTE_ENTREGADO_PAGO, ' +
+            '                            CAMBIO_PAGO) ' +
+            '     VALUES (:CAJA, :NUMOP, :FORMAP, :IMPORTE, :CAMBIO)';
           QryTrx.ParamByName('CAJA').AsString := ACaja;
           QryTrx.ParamByName('NUMOP').AsInteger := NumOperacionVE;
           QryTrx.ParamByName('FORMAP').AsString := CodigoFP;
           QryTrx.ParamByName('IMPORTE').AsFloat := ImporteEntregado;
-          QryTrx.ParamByName('CAMBIO').AsCurrency := DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency;
+          QryTrx.ParamByName('CAMBIO').AsCurrency :=
+              DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency;
           QryTrx.Execute;
         end;
         DatosCobro.MemTablePagos.Next;
       end;
-
       // =======================================================================
       // PASO 5: GESTIÓN DE VALES (Canjes y Emisiones)
       // =======================================================================
       for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
       begin
         MarcarValeComoCanjeado(DatosCobro.ValesRecogidos[i].CodigoVale,
-                               ACaja, AAlmacen, NumOperacionVE,
-                               SerieGenerada, NumeroGenerado);
+                               ACaja,
+                               AAlmacen,
+                               NumOperacionVE,
+                               SerieGenerada,
+                               NumeroGenerado);
       end;
-
       if DatosCobro.ImporteValeEmitido > 0 then
       begin
-         ValeGenerado := EmitirNuevoVale(AEmpresa, AAlmacen, ACaja, NumOperacionVE,
-                                         SerieGenerada, NumeroGenerado,
+         ValeGenerado := EmitirNuevoVale(AEmpresa,
+                                         AAlmacen,
+                                         ACaja,
+                                         NumOperacionVE,
+                                         SerieGenerada,
+                                         NumeroGenerado,
                                          DatosCobro.ImporteValeEmitido);
       end;
-
-
       // =======================================================================
       // CONFIRMAR TRANSACCIÓN
       // =======================================================================
