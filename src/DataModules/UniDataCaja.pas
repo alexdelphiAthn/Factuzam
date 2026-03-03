@@ -856,15 +856,13 @@ begin
           begin
             DineroEntregado    := TotalLinea; // puede ser 0
             var PrecioOriginalReal :=
-              cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+                        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
             var TipoIVALinea   :=
-              cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+               cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
             var PorcIVALinea   :=
-              cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+                   cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
             var EsImpInclLinea :=
-              cdsLineas.FieldByName(
-                'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
-
+              cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
             // Solo insertar línea en factura si hay importe a cobrar
             if DineroEntregado > 0 then
             begin
@@ -875,7 +873,7 @@ begin
               QryTrx.ParamByName('ART').AsString   := 'ANTICIPO';
               QryTrx.ParamByName('DESC').AsString  := 'Anticipo ' +
                 cdsLineas.FieldByName(
-                  'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+                                 'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
               QryTrx.ParamByName('SKU').AsString      := 'ANTICIPO';
               QryTrx.ParamByName('CANT').AsFloat      := 1;
               QryTrx.ParamByName('PRECSALIDA').AsCurrency  := PrecioSinIva;
@@ -889,7 +887,6 @@ begin
               QryTrx.ParamByName('TOTALCIVA').AsCurrency   := DineroEntregado;
               QryTrx.Execute;
             end;
-
             if AccionDep = 'AUMENTAR_DEP' then
               // DineroEntregado ya es el nuevo importe a sumar
               AumentarAnticipoDeposito(QryTrx, SkuLinea, UsuarioCaja,
@@ -905,7 +902,6 @@ begin
                 AAlmacen, AlmacenDeposito,
                 cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat,
                 TipoIVALinea, PorcIVALinea, EsImpInclLinea);
-
             cdsLineas.Next;
             Continue;
           end;
