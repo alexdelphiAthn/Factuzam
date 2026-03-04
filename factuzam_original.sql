@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 04/03/2026 07:28:02
+ Date: 04/03/2026 08:09:17
 */
 
 SET NAMES utf8mb4;
@@ -6276,129 +6276,6 @@ END
 delimiter ;
 
 -- ----------------------------
--- Procedure structure for PRC_GET_CAJA_STOCK_PIVOTADO_ANT
--- ----------------------------
-DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_ANT`;
-delimiter ;;
-CREATE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_ANT`(IN p_input VARCHAR(50))
-BEGIN
-    DECLARE v_codigo_articulo VARCHAR(20);
-    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
-    DECLARE v_id_atributo_pivot VARCHAR(20);
-    DECLARE v_nombre_atributo_pivot VARCHAR(50);
-    DECLARE v_columnas_dinamicas TEXT;
-    DECLARE v_filtros_fijos TEXT DEFAULT '';
-    DECLARE v_sql_query TEXT;
-
-    -- 1. RESOLUCIÓN DE IDENTIDAD (¿Es Artículo padre o es un SKU?)
-    -- Buscamos primero si es un código padre directo
-    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
-    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
-
-    IF v_codigo_articulo IS NULL THEN
-        -- Si no es padre, miramos si es un SKU hijo
-        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
-        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
-        
-        IF v_codigo_articulo IS NOT NULL THEN
-            SET v_es_sku = TRUE;
-        END IF;
-    END IF;
-
-    -- 2. BUSCAR ATRIBUTO PARA PIVOTAR (Talla, Color, etc.)
-    -- Solo intentamos buscar atributos si encontramos un padre válido
-    IF v_codigo_articulo IS NOT NULL THEN
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-        ORDER BY va.ORDEN_VA DESC
-        LIMIT 1;
-    END IF;
-
-    -- 3. DECISIÓN DE EJECUCIÓN
-
-    -- CASO A: TIENE ATRIBUTOS -> HACEMOS PIVOT (Lógica compleja)
-    IF v_id_atributo_pivot IS NOT NULL THEN
-    
-        -- 3.1 Generar columnas dinámicas (S, M, L...)
-        SELECT GROUP_CONCAT(DISTINCT
-            CONCAT(
-                'SUM(CASE WHEN av.VALOR_AV = ''', av.VALOR_AV, 
-                ''' THEN stk.CANTIDAD_STK ELSE 0 END) AS `', av.VALOR_AV, '`'
-            )
-            ORDER BY av.ID_VALOR_AV
-        ) INTO v_columnas_dinamicas
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-          AND av.ID_VA_AV = v_id_atributo_pivot;
-
-        -- 3.2 Filtros si el usuario escaneó un SKU específico (ej. ZAPATO-ROJO)
-        IF v_es_sku = TRUE THEN
-            SELECT GROUP_CONCAT(
-                CONCAT(
-                    ' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask ',
-                    ' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV ',
-                    ' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU ',
-                    ' AND f_av.ID_VA_AV = ''', av.ID_VA_AV, ''' ',
-                    ' AND f_av.VALOR_AV = ''', av.VALOR_AV, ''') '
-                ) SEPARATOR ' '
-            ) INTO v_filtros_fijos
-            FROM fza_atributos_sku ask
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-            WHERE ask.CODIGO_UNIDAD_SA = p_input 
-              AND av.ID_VA_AV <> v_id_atributo_pivot;
-        END IF;
-
-        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''; END IF;
-
-        -- 3.3 Query Pivotada
-        SET @sql = CONCAT(
-            'SELECT sk.CODIGO_UNIDAD_SKU AS Código,
-                alm.NOMBRE_ALMACEN_ALM AS Almacén, ', 
-                v_columnas_dinamicas, ',
-                SUM(stk.CANTIDAD_STK) AS Total
-             FROM fza_articulos_stockactual stk
-             JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
-             JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-             JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-             JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-             WHERE sk.CODIGO_ARTICULO_SKU = ''', v_codigo_articulo, '''
-               AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
-               v_filtros_fijos, '
-             GROUP BY alm.NOMBRE_ALMACEN_ALM
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-    ELSE
-        -- CASO B: NO TIENE ATRIBUTOS O NO ES SKU (Artículo Simple)
-        -- Aquí quitamos el JOIN con fza_articulos_skus para permitir stock directo
-        
-        SELECT stk.CODIGO_UNIDAD_STK as Código,  
-            alm.NOMBRE_ALMACEN_ALM as Almacén, 
-            SUM(stk.CANTIDAD_STK) as `Stock Total`
-        FROM fza_articulos_stockactual stk
-        JOIN fza_almacenes alm ON stk.CODIGO_ALMACEN_STK = alm.CODIGO_ALMACEN_ALM
-        WHERE stk.CODIGO_UNIDAD_STK = p_input -- Buscamos exactamente lo que escribió el usuario
-        GROUP BY alm.NOMBRE_ALMACEN_ALM
-        ORDER BY alm.NOMBRE_ALMACEN_ALM;
-        
-    END IF;
-
-END
-;;
-delimiter ;
-
--- ----------------------------
 -- Procedure structure for PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ
 -- ----------------------------
 DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`;
@@ -6873,6 +6750,108 @@ UPDATE fza_contadores
  END IF;								 
 
 COMMIT;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for PRC_GET_NEXT_OP_CAJA
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `PRC_GET_NEXT_OP_CAJA`;
+delimiter ;;
+CREATE PROCEDURE `PRC_GET_NEXT_OP_CAJA`(IN  pEmpresa  VARCHAR(10),
+    IN  pAlmacen  VARCHAR(10),
+    IN  pCaja     VARCHAR(10),
+    IN  pUsuario  VARCHAR(100),
+    OUT pSerie    VARCHAR(12),
+    OUT pcont     VARCHAR(20))
+BEGIN
+    DECLARE pPADD    BIGINT;
+    DECLARE vSerie   VARCHAR(12);
+
+    START TRANSACTION;
+
+        -- 1. Obtener serie vigente
+        SELECT SERIE_SERIE
+          INTO vSerie
+          FROM fza_empresas_series
+         WHERE TIPODOC_SERIE        = 'OV'
+           AND CODIGO_EMPRESA_SERIE = pEmpresa
+           AND CODIGO_ALMACEN_SERIE = pAlmacen
+           AND CODIGO_CAJA_SERIE    = pCaja
+           AND FECHA_DESDE_SERIE   <= CURDATE()
+           AND (FECHA_HASTA_SERIE  >= CURDATE() OR FECHA_HASTA_SERIE IS NULL)
+         LIMIT 1;
+
+        IF vSerie IS NULL THEN
+            ROLLBACK;
+            SIGNAL SQLSTATE '45000'
+               SET MESSAGE_TEXT = 'No existe serie OV vigente para esta empresa/almacen/caja';
+        END IF;
+
+        -- 2. Crear fila de contador si no existe
+        IF NOT EXISTS (
+            SELECT 1
+              FROM fza_contadores
+             WHERE TIPODOC_CONTADOR = 'OV'
+               AND EMPRESA_CONTADOR = pEmpresa
+               AND SERIE_CONTADOR   = vSerie
+        ) THEN
+            INSERT INTO fza_contadores (
+                TIPODOC_CONTADOR,
+                EMPRESA_CONTADOR,
+                SERIE_CONTADOR,
+                CONTADOR_CONTADOR,
+                NUMDIGIT_CONTADOR,
+                ACTIVO_CONTADOR,
+                DEFAULT_CONTADOR,
+                INSTANTEALTA,
+                USUARIOALTA,
+                USUARIOMODIF)
+            VALUES (
+                'OV',
+                pEmpresa,
+                vSerie,
+                1,
+                8,
+                'S',
+                'S',
+                CURRENT_TIMESTAMP,
+                pUsuario,
+                pUsuario);
+        END IF;
+
+        -- 3. Bloquear fila y leer dígitos
+        SELECT NUMDIGIT_CONTADOR
+          INTO pPADD
+          FROM fza_contadores
+         WHERE TIPODOC_CONTADOR = 'OV'
+           AND EMPRESA_CONTADOR = pEmpresa
+           AND SERIE_CONTADOR   = vSerie
+         LIMIT 1
+           FOR UPDATE;
+
+        -- 4. Incrementar
+        UPDATE fza_contadores
+           SET CONTADOR_CONTADOR = CONTADOR_CONTADOR + 1,
+               USUARIOMODIF      = pUsuario
+         WHERE TIPODOC_CONTADOR  = 'OV'
+           AND EMPRESA_CONTADOR  = pEmpresa
+           AND SERIE_CONTADOR    = vSerie;
+
+        -- 5. Devolver serie y número formateado
+        SET pSerie := vSerie;
+
+        SELECT LPAD(CONTADOR_CONTADOR - 1, pPADD, '0')
+          INTO pcont
+          FROM fza_contadores
+         WHERE TIPODOC_CONTADOR = 'OV'
+           AND EMPRESA_CONTADOR = pEmpresa
+           AND SERIE_CONTADOR   = vSerie
+         LIMIT 1;
+
+    COMMIT;
+
 END
 ;;
 delimiter ;
