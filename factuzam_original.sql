@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 04/03/2026 08:09:17
+ Date: 04/03/2026 16:20:46
 */
 
 SET NAMES utf8mb4;
@@ -1279,6 +1279,7 @@ INSERT INTO `fza_empresas_series` VALUES ('006', '011', NULL, NULL, 'A1/1T/2024'
 INSERT INTO `fza_empresas_series` VALUES ('007', '011', NULL, NULL, 'A1/2T/2024', NULL, NULL, '2024-04-01', '2024-06-30', '2023-12-06 13:56:28', '2023-12-06 13:56:28', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('008', '011', NULL, NULL, 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('009', '012', 'GEN', '1', '2026.A1', 'FC', 'SIMPLIFICADA', '2026-01-01', '2026-12-31', '2026-01-29 05:31:11', '2026-01-29 05:24:21', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('010', '012', 'GEN', '1', 'OV', 'OV', NULL, '2026-01-01', NULL, '2026-03-04 16:20:33', '2026-03-04 16:20:33', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas
