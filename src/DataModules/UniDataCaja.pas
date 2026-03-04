@@ -1380,7 +1380,6 @@ begin
                 Cab.CodigoCliente,
                 'Depósito: ' + Lin.Descripcion);
             end;
-
             cdsLineas.Next;
             Continue;
           end;
@@ -1389,14 +1388,11 @@ begin
           // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
           // -------------------------------------------------------------------
 
-          // Movimiento de almacén
           NumMovGenerado := ObtenerSiguienteContador('MV');
-
           if Lin.VieneDeDeposito = 'S' then
           begin
             AlmacenOrigenSalida := AlmacenDeposito;
             CerrarDepositoCliente(QryTrx, Lin.Sku, UsuarioCaja);
-
             // Cierre del depósito: cancela el compromiso total
             InsertarOperacionCaja(
               QryTrx,
@@ -1770,6 +1766,26 @@ procedure TdmCajaOpe.InsertarOperacionCaja(
                         const AEmpresaContra:    string = '';
                         const AAlmContra:        string = '';
                         const AEsTraspaso:       string = 'N');
+  function SiguienteOpCaja: string;  // devuelve el número formateado
+  var
+    NumOp: string;
+  begin
+    QryTrx.SQL.Text :=
+      'CALL PRC_GET_NEXT_OP_CAJA(:pEmpresa, :pAlmacen, :pCaja, :pUsuario, :pSerie, :pcont)';
+    QryTrx.ParamByName('pEmpresa').AsString  := AEmpresa;
+    QryTrx.ParamByName('pAlmacen').AsString  := AAlmacen;
+    QryTrx.ParamByName('pCaja').AsString     := ACaja;
+    QryTrx.ParamByName('pUsuario').AsString  := AEmpleado;
+    QryTrx.ParamByName('pSerie').ParamType   := ptOutput;
+    QryTrx.ParamByName('pSerie').DataType    := ftString;
+    QryTrx.ParamByName('pSerie').Size        := 12;
+    QryTrx.ParamByName('pcont').ParamType    := ptOutput;
+    QryTrx.ParamByName('pcont').DataType     := ftString;
+    QryTrx.ParamByName('pcont').Size         := 20;
+    QryTrx.Execute;
+//    SerieOperacion := QryTrx.ParamByName('pSerie').AsString;  // misma en todas las llamadas
+    Result         := QryTrx.ParamByName('pcont').AsString;
+  end;
 begin
   QryTrx.SQL.Text :=
     'INSERT INTO fza_caja_operaciones (' +
@@ -1818,7 +1834,7 @@ begin
   QryTrx.ParamByName('EMP').AsString      := AEmpresa;
   QryTrx.ParamByName('ALM').AsString      := AAlmacen;
   QryTrx.ParamByName('CAJA').AsString     := ACaja;
-  QryTrx.ParamByName('NUMOP').AsInteger   := ANumOperacion;
+  QryTrx.ParamByName('NUMOP').AsString    := SiguienteOpCaja;
   QryTrx.ParamByName('TIPOOP').AsString   := ATipoOp;
   QryTrx.ParamByName('IMPORTE').AsCurrency:= AImporte;
   QryTrx.ParamByName('EMPLEADO').AsString := AEmpleado;
