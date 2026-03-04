@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 03/03/2026 18:01:42
+ Date: 04/03/2026 07:28:02
 */
 
 SET NAMES utf8mb4;
@@ -55,7 +55,7 @@ CREATE TABLE `fza_almacenes`  (
 -- ----------------------------
 INSERT INTO `fza_almacenes` VALUES ('ALE', '012', 'S', 'GENERAL', NULL, 'S', 'ESTANDARD', 'CALLE CANUTO, 13', 'VILLARALBO', '49159', NULL, NULL, NULL, NULL, NULL, 1, '2026-02-06 06:34:30', '2026-02-06 06:34:30', 'Administrador', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('BCN', '1', 'S', 'Almacén Barcelona', NULL, 'S', 'ESTANDAR', 'AV. EIXAMPLE, 3', 'BARCELONA', NULL, '932312923', NULL, NULL, NULL, '', 2, '2026-01-05 06:01:06', '2026-01-29 06:12:21', 'DEMO', 'Administrador', NULL);
-INSERT INTO `fza_almacenes` VALUES ('DEP_CL_GEN', '1', 'S', 'Depósitos Clientes Alm Cen', 'GEN', 'N', 'DEPÓSITO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-03 05:49:18', '2026-02-06 06:47:51', 'DEMO', 'Administrador', NULL);
+INSERT INTO `fza_almacenes` VALUES ('DEP_CL_GEN', '012', 'S', 'Depósitos Clientes Alm Cen', 'GEN', 'N', 'DEPÓSITO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-03 18:25:17', '2026-02-06 06:47:51', 'DEMO', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('FGN', '1', 'S', 'Furgoneta GEN -> BCN', NULL, 'S', 'TRÁNSITO', NULL, NULL, NULL, NULL, NULL, NULL, 'BCN', 'GEN', NULL, '2026-01-29 05:42:51', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
 INSERT INTO `fza_almacenes` VALUES ('GEN', '012', 'S', 'Almacén Central', NULL, 'S', 'ESTANDAR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2, '2026-01-04 22:13:10', '2026-01-29 06:11:20', 'DEMO', 'Administrador', NULL);
 INSERT INTO `fza_almacenes` VALUES ('TARAS_G', '1', 'S', 'Taras Almacén Central', 'GEN', 'S', 'TARAS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-05 07:21:37', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
@@ -1278,8 +1278,7 @@ INSERT INTO `fza_empresas_series` VALUES ('005', '011', NULL, NULL, 'A1.2023', N
 INSERT INTO `fza_empresas_series` VALUES ('006', '011', NULL, NULL, 'A1/1T/2024', NULL, NULL, '2024-01-01', '2024-03-31', '2023-12-06 13:01:26', '2023-12-06 13:01:26', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('007', '011', NULL, NULL, 'A1/2T/2024', NULL, NULL, '2024-04-01', '2024-06-30', '2023-12-06 13:56:28', '2023-12-06 13:56:28', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('008', '011', NULL, NULL, 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('009', '012', NULL, NULL, '2026.A1', 'FC', 'NORMAL', '2026-01-01', '2026-12-31', '2026-01-29 05:31:11', '2026-01-29 05:24:21', 'Administrador', 'Administrador');
-INSERT INTO `fza_empresas_series` VALUES ('010', '012', NULL, NULL, '2026_SIM_A1', 'FC', 'SIMPLIFICADA', '2026-01-01', NULL, '2026-03-02 06:33:43', '2026-03-02 06:33:33', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('009', '012', 'GEN', '1', '2026.A1', 'FC', 'SIMPLIFICADA', '2026-01-01', '2026-12-31', '2026-01-29 05:31:11', '2026-01-29 05:24:21', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas
@@ -2581,7 +2580,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-03 17:57:51', '2026-03-03 17:57:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-03 19:05:02', '2026-03-03 19:05:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -7365,50 +7364,78 @@ delimiter ;;
 CREATE TRIGGER `TRG_MOVIMIENTOS_BI` BEFORE INSERT ON `fza_movimientos_almacen` FOR EACH ROW BEGIN
     DECLARE vStockActual DECIMAL(19,6) DEFAULT 0;
     DECLARE vValorActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE vPMPActual DECIMAL(19,6) DEFAULT 0;
-    
-    -- 1. Obtener valores actuales del almacén específico
-    SELECT IFNULL(CANTIDAD_STK, 0), IFNULL(VALOR_TOTAL_STK, 0), IFNULL(PRECIO_MEDIO_STK, 0)
-    INTO vStockActual, vValorActual, vPMPActual
-    FROM fza_articulos_stockactual
-    WHERE CODIGO_ALMACEN_STK = NEW.CODIGO_ALMACEN_MOV 
-      AND CODIGO_UNIDAD_STK = NEW.CODIGO_UNIDAD_MOV
-    LIMIT 1 FOR UPDATE;
+    DECLARE vPMPActual   DECIMAL(19,6) DEFAULT 0;
 
+    -- -------------------------------------------------------------------------
+    -- 1. Obtener stock y PMP actuales para este almacén + SKU.
+    --    FOR UPDATE bloquea la fila durante la transacción para evitar
+    --    condiciones de carrera en entornos multiusuario.
+    -- -------------------------------------------------------------------------
+    SELECT IFNULL(CANTIDAD_STK,     0),
+           IFNULL(VALOR_TOTAL_STK,  0),
+           IFNULL(PRECIO_MEDIO_STK, 0)
+      INTO vStockActual, vValorActual, vPMPActual
+      FROM fza_articulos_stockactual
+     WHERE CODIGO_ALMACEN_STK = NEW.CODIGO_ALMACEN_MOV
+       AND CODIGO_UNIDAD_STK  = NEW.CODIGO_UNIDAD_MOV
+     LIMIT 1 FOR UPDATE;
+
+    -- -------------------------------------------------------------------------
     -- 2. Lógica según tipo de movimiento
+    -- -------------------------------------------------------------------------
     IF NEW.TIPO_MOVIMIENTO_MOV = 'E' THEN
-        -- ENTRADA: Recalcula PMP
+
+        -- ENTRADA ------------------------------------------------------------
+        -- Si no viene coste informado (traspaso interno, entrada a depósito,
+        -- devolución de depósito a tienda...) usar el PMP vigente como coste
+        -- para no distorsionar el precio medio ponderado.
+        IF NEW.PRECIO_COSTE_UNITARIO_MOV = 0 AND vPMPActual > 0 THEN
+            SET NEW.PRECIO_COSTE_UNITARIO_MOV = vPMPActual;
+        END IF;
+
         SET NEW.TOTAL_COSTE_MOV = NEW.CANTIDAD_MOV * NEW.PRECIO_COSTE_UNITARIO_MOV;
-        
-        -- Evitar división por cero si el stock resultante es 0
+
+        -- Recalcular PMP: (ValorAcumulado + NuevoValor) / (StockActual + NuevaCantidad)
         IF (vStockActual + NEW.CANTIDAD_MOV) != 0 THEN
-            SET NEW.PRECIO_MEDIO_MOV = (vValorActual + NEW.TOTAL_COSTE_MOV) / (vStockActual + NEW.CANTIDAD_MOV);
+            SET NEW.PRECIO_MEDIO_MOV = (vValorActual + NEW.TOTAL_COSTE_MOV)
+                                     / (vStockActual + NEW.CANTIDAD_MOV);
         ELSE
+            -- Stock resultante = 0: conservar el coste unitario como referencia
             SET NEW.PRECIO_MEDIO_MOV = NEW.PRECIO_COSTE_UNITARIO_MOV;
         END IF;
-        
+
     ELSE
-        -- SALIDA: Mantiene PMP actual, el valor sale al coste medio que tenemos
-        SET NEW.PRECIO_MEDIO_MOV = vPMPActual;
-        SET NEW.TOTAL_COSTE_MOV = NEW.CANTIDAD_MOV * vPMPActual;
+
+        -- SALIDA -------------------------------------------------------------
+        -- El coste de la salida es siempre el PMP vigente.
+        -- PRECIO_COSTE_UNITARIO_MOV puede llegar a 0 desde la aplicación,
+        -- el trigger lo corrige aquí.
+        SET NEW.PRECIO_MEDIO_MOV  = vPMPActual;
+        SET NEW.TOTAL_COSTE_MOV   = NEW.CANTIDAD_MOV * vPMPActual;
+
     END IF;
 
-    -- 3. Actualizar la tabla de Stock (Sincronización)
-    INSERT INTO fza_articulos_stockactual 
-        (CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK, CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF)
+    -- -------------------------------------------------------------------------
+    -- 3. Actualizar tabla de stock actual (INSERT ... ON DUPLICATE KEY UPDATE)
+    --    La clave única es (CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK).
+    -- -------------------------------------------------------------------------
+    INSERT INTO fza_articulos_stockactual
+        (CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
+         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK,
+         INSTANTEMODIF)
     VALUES (
-        NEW.CODIGO_ALMACEN_MOV, 
-        NEW.CODIGO_UNIDAD_MOV, 
-        IF(NEW.TIPO_MOVIMIENTO_MOV='E', NEW.CANTIDAD_MOV, -NEW.CANTIDAD_MOV),
-        IF(NEW.TIPO_MOVIMIENTO_MOV='E', NEW.TOTAL_COSTE_MOV, -NEW.TOTAL_COSTE_MOV),
+        NEW.CODIGO_ALMACEN_MOV,
+        NEW.CODIGO_UNIDAD_MOV,
+        IF(NEW.TIPO_MOVIMIENTO_MOV = 'E',  NEW.CANTIDAD_MOV, -NEW.CANTIDAD_MOV),
+        IF(NEW.TIPO_MOVIMIENTO_MOV = 'E',  NEW.TOTAL_COSTE_MOV, -NEW.TOTAL_COSTE_MOV),
         NEW.PRECIO_MEDIO_MOV,
         NOW()
     )
-    ON DUPLICATE KEY UPDATE 
-        CANTIDAD_STK = CANTIDAD_STK + IF(NEW.TIPO_MOVIMIENTO_MOV='E', NEW.CANTIDAD_MOV, -NEW.CANTIDAD_MOV),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + IF(NEW.TIPO_MOVIMIENTO_MOV='E', NEW.TOTAL_COSTE_MOV, -NEW.TOTAL_COSTE_MOV),
+    ON DUPLICATE KEY UPDATE
+        CANTIDAD_STK    = CANTIDAD_STK    + IF(NEW.TIPO_MOVIMIENTO_MOV = 'E',  NEW.CANTIDAD_MOV,    -NEW.CANTIDAD_MOV),
+        VALOR_TOTAL_STK = VALOR_TOTAL_STK + IF(NEW.TIPO_MOVIMIENTO_MOV = 'E',  NEW.TOTAL_COSTE_MOV, -NEW.TOTAL_COSTE_MOV),
         PRECIO_MEDIO_STK = NEW.PRECIO_MEDIO_MOV,
-        INSTANTEMODIF = NOW();
+        INSTANTEMODIF    = NOW();
 
 END
 ;;
