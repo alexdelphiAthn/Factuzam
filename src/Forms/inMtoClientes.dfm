@@ -15,7 +15,7 @@ inherited frmMtoClientes: TfrmMtoClientes
       Width = 1001
       Height = 663
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 1001
       ExplicitHeight = 663
       ClientRectBottom = 659
@@ -378,7 +378,7 @@ inherited frmMtoClientes: TfrmMtoClientes
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDomicilioFiscal
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 438
             ClientRectLeft = 4
@@ -878,6 +878,59 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Caption = 'Vali&dar'
                   TabOrder = 15
                   OnClick = btnValidarClick
+                end
+                object cxLabel1: TcxLabel
+                  Left = 401
+                  Top = 316
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Caption = 'L'#237'mite Deuda'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 16
+                  Transparent = True
+                  AnchorX = 515
+                end
+                object cxDBCurrencyEdit1: TcxDBCurrencyEdit
+                  Left = 522
+                  Top = 312
+                  DataBinding.DataField = 'TOTAL_LIMITE_CREDITO_CLIENTE'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 17
+                  Width = 121
+                end
+                object cxDBCheckBox1: TcxDBCheckBox
+                  Left = 170
+                  Top = 311
+                  Caption = 'Permite deuda en Caja'
+                  DataBinding.DataField = 'ESPERMITE_DEUDA_CLIENTE'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 18
+                end
+                object cxDBCurrencyEdit2: TcxDBCurrencyEdit
+                  Left = 523
+                  Top = 347
+                  DataBinding.DataField = 'TOTAL_DEUDA_CLIENTE'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 19
+                  Width = 121
+                end
+                object cxLabel2: TcxLabel
+                  Left = 402
+                  Top = 351
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Caption = 'Deuda Actual'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 20
+                  Transparent = True
+                  AnchorX = 516
                 end
               end
             end
@@ -1495,10 +1548,6 @@ inherited frmMtoClientes: TfrmMtoClientes
               Caption = 'Historia Presupuestos'
               ImageIndex = 4
               TabVisible = False
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrd3: TcxGrid
                 Left = 0
                 Top = 0
@@ -1857,6 +1906,9 @@ inherited frmMtoClientes: TfrmMtoClientes
         inherited pnlPerfilTop: TPanel
           Width = 993
           ExplicitWidth = 993
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 993

@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 04/03/2026 16:20:46
+ Date: 05/03/2026 07:35:54
 */
 
 SET NAMES utf8mb4;
@@ -1114,7 +1114,7 @@ INSERT INTO `fza_contadores` VALUES ('CL', '-', '-', 322, 3, 'S', 'S', '2026-02-
 INSERT INTO `fza_contadores` VALUES ('CO', '-', '-', 6, 3, 'S', 'S', '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-12 09:38:07', '0000-00-00 00:00:00', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('EO', '-', '-', 6, 3, 'S', 'S', '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador');
-INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', 10, 3, 'S', 'S', '2026-01-29 05:31:43', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_contadores` VALUES ('ES', '-', '-', 12, 3, 'S', 'S', '2026-03-05 06:37:18', '2023-05-13 12:25:25', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FA', '-', '-', 4, 3, 'S', 'S', '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FC', '012', '2026.A1', 6, 6, 'S', 'N', '2026-02-26 19:59:49', '2026-02-01 07:03:46', 'Administrador', 'Administrador');
 INSERT INTO `fza_contadores` VALUES ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador');
@@ -1219,6 +1219,7 @@ CREATE TABLE `fza_empresas`  (
 -- ----------------------------
 INSERT INTO `fza_empresas` VALUES ('012', NULL, 'S', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', '49750', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', NULL, NULL, '1', 'S', 'N', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-23 22:47:42', '2024-10-01 18:39:25', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas` VALUES ('1', 1, 'S', 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POSAGRI', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', NULL, 'ES5001825695365423253', '2', 'S', 'S', NULL, NULL, NULL, NULL, NULL, 'Empresario emisor acogido al régimen especial de agricultura ganadería y pesca', '2023-12-09 18:37:41', '2021-05-14 20:07:06', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas` VALUES ('MODAEJ', NULL, 'S', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', '28020', 'MADRID', 'MADRID', '724', 'España', NULL, NULL, '1', 'S', 'N', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-05 06:32:36', '2026-03-05 06:32:36', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_empresas_retenciones
@@ -1280,6 +1281,7 @@ INSERT INTO `fza_empresas_series` VALUES ('007', '011', NULL, NULL, 'A1/2T/2024'
 INSERT INTO `fza_empresas_series` VALUES ('008', '011', NULL, NULL, 'A1/3T/2024', NULL, NULL, '2024-07-01', '2024-09-30', '2023-12-06 14:08:33', '2023-12-06 14:08:33', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('009', '012', 'GEN', '1', '2026.A1', 'FC', 'SIMPLIFICADA', '2026-01-01', '2026-12-31', '2026-01-29 05:31:11', '2026-01-29 05:24:21', 'Administrador', 'Administrador');
 INSERT INTO `fza_empresas_series` VALUES ('010', '012', 'GEN', '1', 'OV', 'OV', NULL, '2026-01-01', NULL, '2026-03-04 16:20:33', '2026-03-04 16:20:33', 'Administrador', 'Administrador');
+INSERT INTO `fza_empresas_series` VALUES ('011', 'MODAEJ', NULL, NULL, 'AM1', 'FC', 'NORMAL', '2026-01-01', NULL, '2026-03-05 06:37:18', '2026-03-05 06:37:18', 'Administrador', 'Administrador');
 
 -- ----------------------------
 -- Table structure for fza_facturas
@@ -1726,11 +1728,11 @@ INSERT INTO `fza_ivas_zonas` VALUES (1, 'INTRACOMUNITARIA', 'N');
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_metadatos`;
 CREATE TABLE `fza_metadatos`  (
-  `CODIGO_METADATO` int(11) NOT NULL AUTO_INCREMENT,
+  `CODIGO_METADATO` int(20) NOT NULL AUTO_INCREMENT,
   `NOMBRE_METADATO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `PARENT_METADATO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`CODIGO_METADATO`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 161 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 193 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_metadatos
@@ -1738,41 +1740,62 @@ CREATE TABLE `fza_metadatos`  (
 INSERT INTO `fza_metadatos` VALUES (1, 'Tablas', '-1');
 INSERT INTO `fza_metadatos` VALUES (2, 'Vistas', '-1');
 INSERT INTO `fza_metadatos` VALUES (3, 'Procedimientos', '-1');
-INSERT INTO `fza_metadatos` VALUES (4, 'fza_articulos', '1');
-INSERT INTO `fza_metadatos` VALUES (5, 'fza_articulos_familias', '1');
-INSERT INTO `fza_metadatos` VALUES (6, 'fza_articulos_movimientos', '1');
-INSERT INTO `fza_metadatos` VALUES (7, 'fza_articulos_proveedores', '1');
-INSERT INTO `fza_metadatos` VALUES (8, 'fza_articulos_tarifas', '1');
-INSERT INTO `fza_metadatos` VALUES (9, 'fza_articulos_variaciones_def', '1');
-INSERT INTO `fza_metadatos` VALUES (10, 'fza_clientes', '1');
-INSERT INTO `fza_metadatos` VALUES (11, 'fza_contadores', '1');
-INSERT INTO `fza_metadatos` VALUES (12, 'fza_empresas', '1');
-INSERT INTO `fza_metadatos` VALUES (13, 'fza_empresas_retenciones', '1');
-INSERT INTO `fza_metadatos` VALUES (14, 'fza_empresas_series', '1');
-INSERT INTO `fza_metadatos` VALUES (15, 'fza_facturas', '1');
-INSERT INTO `fza_metadatos` VALUES (16, 'fza_facturas_lineas', '1');
-INSERT INTO `fza_metadatos` VALUES (17, 'fza_formapago', '1');
-INSERT INTO `fza_metadatos` VALUES (18, 'fza_generadorprocesos', '1');
-INSERT INTO `fza_metadatos` VALUES (19, 'fza_ivas', '1');
-INSERT INTO `fza_metadatos` VALUES (20, 'fza_ivas_grupos', '1');
-INSERT INTO `fza_metadatos` VALUES (21, 'fza_ivas_tipos', '1');
-INSERT INTO `fza_metadatos` VALUES (22, 'fza_ivas_zonas', '1');
-INSERT INTO `fza_metadatos` VALUES (23, 'fza_log', '1');
-INSERT INTO `fza_metadatos` VALUES (24, 'fza_metadatos', '1');
-INSERT INTO `fza_metadatos` VALUES (25, 'fza_paises', '1');
-INSERT INTO `fza_metadatos` VALUES (26, 'fza_pedidos', '1');
-INSERT INTO `fza_metadatos` VALUES (27, 'fza_pedidos_lineas', '1');
-INSERT INTO `fza_metadatos` VALUES (28, 'fza_pedidos_mensajes', '1');
-INSERT INTO `fza_metadatos` VALUES (29, 'fza_proveedores', '1');
-INSERT INTO `fza_metadatos` VALUES (30, 'fza_recibos', '1');
-INSERT INTO `fza_metadatos` VALUES (31, 'fza_tarifas', '1');
-INSERT INTO `fza_metadatos` VALUES (32, 'fza_tipos_documentos', '1');
-INSERT INTO `fza_metadatos` VALUES (33, 'fza_usuarios', '1');
-INSERT INTO `fza_metadatos` VALUES (34, 'fza_usuarios_grupos', '1');
-INSERT INTO `fza_metadatos` VALUES (35, 'fza_usuarios_perfiles', '1');
-INSERT INTO `fza_metadatos` VALUES (36, 'fza_variaciones', '1');
-INSERT INTO `fza_metadatos` VALUES (37, 'fza_variaciones_columnas', '1');
-INSERT INTO `fza_metadatos` VALUES (38, 'fza_winforms', '1');
+INSERT INTO `fza_metadatos` VALUES (4, 'fza_almacenes', '1');
+INSERT INTO `fza_metadatos` VALUES (5, 'fza_almacenes_cajas', '1');
+INSERT INTO `fza_metadatos` VALUES (6, 'fza_articulos', '1');
+INSERT INTO `fza_metadatos` VALUES (7, 'fza_articulos_conjuntos_asign', '1');
+INSERT INTO `fza_metadatos` VALUES (8, 'fza_articulos_familias', '1');
+INSERT INTO `fza_metadatos` VALUES (9, 'fza_articulos_propiedades', '1');
+INSERT INTO `fza_metadatos` VALUES (10, 'fza_articulos_proveedores', '1');
+INSERT INTO `fza_metadatos` VALUES (11, 'fza_articulos_skus', '1');
+INSERT INTO `fza_metadatos` VALUES (12, 'fza_articulos_stockactual', '1');
+INSERT INTO `fza_metadatos` VALUES (13, 'fza_articulos_tarifas', '1');
+INSERT INTO `fza_metadatos` VALUES (14, 'fza_articulos_vinculos', '1');
+INSERT INTO `fza_metadatos` VALUES (15, 'fza_atributos_conjuntos', '1');
+INSERT INTO `fza_metadatos` VALUES (16, 'fza_atributos_conjuntos_det', '1');
+INSERT INTO `fza_metadatos` VALUES (17, 'fza_atributos_sku', '1');
+INSERT INTO `fza_metadatos` VALUES (18, 'fza_atributos_valores', '1');
+INSERT INTO `fza_metadatos` VALUES (19, 'fza_atributos_valores_info', '1');
+INSERT INTO `fza_metadatos` VALUES (20, 'fza_caja_formas_pago', '1');
+INSERT INTO `fza_metadatos` VALUES (21, 'fza_caja_operaciones', '1');
+INSERT INTO `fza_metadatos` VALUES (22, 'fza_caja_pagos', '1');
+INSERT INTO `fza_metadatos` VALUES (23, 'fza_caja_vales', '1');
+INSERT INTO `fza_metadatos` VALUES (24, 'fza_clientes', '1');
+INSERT INTO `fza_metadatos` VALUES (25, 'fza_codigos_barras', '1');
+INSERT INTO `fza_metadatos` VALUES (26, 'fza_config_campos', '1');
+INSERT INTO `fza_metadatos` VALUES (27, 'fza_contadores', '1');
+INSERT INTO `fza_metadatos` VALUES (28, 'fza_depositos_cliente', '1');
+INSERT INTO `fza_metadatos` VALUES (29, 'fza_empresas', '1');
+INSERT INTO `fza_metadatos` VALUES (30, 'fza_empresas_retenciones', '1');
+INSERT INTO `fza_metadatos` VALUES (31, 'fza_empresas_series', '1');
+INSERT INTO `fza_metadatos` VALUES (32, 'fza_facturas', '1');
+INSERT INTO `fza_metadatos` VALUES (33, 'fza_facturas_consolidaciones', '1');
+INSERT INTO `fza_metadatos` VALUES (34, 'fza_facturas_lineas', '1');
+INSERT INTO `fza_metadatos` VALUES (35, 'fza_facturas_pagos', '1');
+INSERT INTO `fza_metadatos` VALUES (36, 'fza_formas_pago', '1');
+INSERT INTO `fza_metadatos` VALUES (37, 'fza_generadorprocesos', '1');
+INSERT INTO `fza_metadatos` VALUES (38, 'fza_ivas', '1');
+INSERT INTO `fza_metadatos` VALUES (39, 'fza_ivas_grupos', '1');
+INSERT INTO `fza_metadatos` VALUES (40, 'fza_ivas_tipos', '1');
+INSERT INTO `fza_metadatos` VALUES (41, 'fza_ivas_zonas', '1');
+INSERT INTO `fza_metadatos` VALUES (42, 'fza_metadatos', '1');
+INSERT INTO `fza_metadatos` VALUES (43, 'fza_movimientos_almacen', '1');
+INSERT INTO `fza_metadatos` VALUES (44, 'fza_paises', '1');
+INSERT INTO `fza_metadatos` VALUES (45, 'fza_pedidos', '1');
+INSERT INTO `fza_metadatos` VALUES (46, 'fza_pedidos_lineas', '1');
+INSERT INTO `fza_metadatos` VALUES (47, 'fza_pedidos_mensajes', '1');
+INSERT INTO `fza_metadatos` VALUES (48, 'fza_proveedores', '1');
+INSERT INTO `fza_metadatos` VALUES (49, 'fza_recibos', '1');
+INSERT INTO `fza_metadatos` VALUES (50, 'fza_tarifas', '1');
+INSERT INTO `fza_metadatos` VALUES (51, 'fza_tipos_documentos', '1');
+INSERT INTO `fza_metadatos` VALUES (52, 'fza_usuarios', '1');
+INSERT INTO `fza_metadatos` VALUES (53, 'fza_usuarios_grupos', '1');
+INSERT INTO `fza_metadatos` VALUES (54, 'fza_usuarios_perfiles', '1');
+INSERT INTO `fza_metadatos` VALUES (55, 'fza_valores_defecto', '1');
+INSERT INTO `fza_metadatos` VALUES (56, 'fza_variaciones', '1');
+INSERT INTO `fza_metadatos` VALUES (57, 'fza_variaciones_atributos', '1');
+INSERT INTO `fza_metadatos` VALUES (58, 'fza_verifactu_eventos', '1');
+INSERT INTO `fza_metadatos` VALUES (59, 'fza_winforms', '1');
 INSERT INTO `fza_metadatos` VALUES (67, 'vi_articulos', '2');
 INSERT INTO `fza_metadatos` VALUES (68, 'vi_articulos_familias', '2');
 INSERT INTO `fza_metadatos` VALUES (69, 'vi_articulos_familias_list', '2');
@@ -1780,58 +1803,79 @@ INSERT INTO `fza_metadatos` VALUES (70, 'vi_articulos_list', '2');
 INSERT INTO `fza_metadatos` VALUES (71, 'vi_articulos_proveedores', '2');
 INSERT INTO `fza_metadatos` VALUES (72, 'vi_articulos_tarifas', '2');
 INSERT INTO `fza_metadatos` VALUES (73, 'vi_art_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (74, 'vi_clientes', '2');
-INSERT INTO `fza_metadatos` VALUES (75, 'vi_cli_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (76, 'vi_contadores', '2');
-INSERT INTO `fza_metadatos` VALUES (77, 'vi_empresas', '2');
-INSERT INTO `fza_metadatos` VALUES (78, 'vi_empresas_retenciones', '2');
-INSERT INTO `fza_metadatos` VALUES (79, 'vi_empresas_series', '2');
-INSERT INTO `fza_metadatos` VALUES (80, 'vi_emp_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (81, 'vi_facturas', '2');
-INSERT INTO `fza_metadatos` VALUES (82, 'vi_facturas_lineas', '2');
-INSERT INTO `fza_metadatos` VALUES (83, 'vi_facturas_lineas_print', '2');
-INSERT INTO `fza_metadatos` VALUES (84, 'vi_facturas_print', '2');
-INSERT INTO `fza_metadatos` VALUES (85, 'vi_fac_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (86, 'vi_fac_lin_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (87, 'vi_formapago', '2');
-INSERT INTO `fza_metadatos` VALUES (88, 'vi_ivas', '2');
-INSERT INTO `fza_metadatos` VALUES (89, 'vi_ivas_empresa', '2');
-INSERT INTO `fza_metadatos` VALUES (90, 'vi_ivas_grupos', '2');
-INSERT INTO `fza_metadatos` VALUES (91, 'vi_ivas_zonas', '2');
-INSERT INTO `fza_metadatos` VALUES (92, 'vi_proveedores', '2');
-INSERT INTO `fza_metadatos` VALUES (93, 'vi_proveedores_articulos', '2');
-INSERT INTO `fza_metadatos` VALUES (94, 'vi_proveedores_busquedas', '2');
-INSERT INTO `fza_metadatos` VALUES (95, 'vi_recibos', '2');
-INSERT INTO `fza_metadatos` VALUES (96, 'vi_tarifas', '2');
-INSERT INTO `fza_metadatos` VALUES (97, 'vi_usuarios', '2');
-INSERT INTO `fza_metadatos` VALUES (98, 'vi_usuarios_grupos', '2');
-INSERT INTO `fza_metadatos` VALUES (99, 'vi_usuarios_perfiles', '2');
-INSERT INTO `fza_metadatos` VALUES (100, 'vi_variaciones', '2');
-INSERT INTO `fza_metadatos` VALUES (130, 'PRC_CALCULAR_FACTURA_NETOS', '3');
-INSERT INTO `fza_metadatos` VALUES (131, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3');
-INSERT INTO `fza_metadatos` VALUES (132, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3');
-INSERT INTO `fza_metadatos` VALUES (133, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3');
-INSERT INTO `fza_metadatos` VALUES (134, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3');
-INSERT INTO `fza_metadatos` VALUES (135, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3');
-INSERT INTO `fza_metadatos` VALUES (136, 'PRC_CREAR_ACTUALIZAR_KEY', '3');
-INSERT INTO `fza_metadatos` VALUES (137, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3');
-INSERT INTO `fza_metadatos` VALUES (138, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3');
-INSERT INTO `fza_metadatos` VALUES (139, 'PRC_CREAR_ACTUALIZAR_TEST', '3');
-INSERT INTO `fza_metadatos` VALUES (140, 'PRC_CREAR_FACTURA_ABONO', '3');
-INSERT INTO `fza_metadatos` VALUES (141, 'PRC_CREAR_FACTURA_DUPLICADA', '3');
-INSERT INTO `fza_metadatos` VALUES (142, 'PRC_CREAR_METADATOS', '3');
-INSERT INTO `fza_metadatos` VALUES (143, 'PRC_CREAR_RECIBOS_FACTURA', '3');
-INSERT INTO `fza_metadatos` VALUES (144, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3');
-INSERT INTO `fza_metadatos` VALUES (145, 'PRC_FNC_GET_NEXT_NRO_DOC', '3');
-INSERT INTO `fza_metadatos` VALUES (146, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3');
-INSERT INTO `fza_metadatos` VALUES (147, 'PRC_FNC_GET_SERIE_TIPODOC', '3');
-INSERT INTO `fza_metadatos` VALUES (148, 'PRC_GET_DATA_ARTICULO', '3');
-INSERT INTO `fza_metadatos` VALUES (149, 'PRC_GET_DATA_CLIENTE', '3');
-INSERT INTO `fza_metadatos` VALUES (150, 'PRC_GET_IVA_ZONA_FECHA', '3');
-INSERT INTO `fza_metadatos` VALUES (151, 'PRC_GET_NEXT_CONT', '3');
-INSERT INTO `fza_metadatos` VALUES (152, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3');
-INSERT INTO `fza_metadatos` VALUES (153, 'PRC_GET_NUMEROS_A_LETRAS', '3');
-INSERT INTO `fza_metadatos` VALUES (154, 'PRC_GET_NUMERO_MENOR_MIL', '3');
+INSERT INTO `fza_metadatos` VALUES (74, 'vi_atributos_nombres', '2');
+INSERT INTO `fza_metadatos` VALUES (75, 'vi_cajasdef', '2');
+INSERT INTO `fza_metadatos` VALUES (76, 'vi_caja_busqueda_unificada', '2');
+INSERT INTO `fza_metadatos` VALUES (77, 'vi_caja_tarifa_sku_articulos', '2');
+INSERT INTO `fza_metadatos` VALUES (78, 'vi_caja_totalventas', '2');
+INSERT INTO `fza_metadatos` VALUES (79, 'vi_caja_vales_ptes', '2');
+INSERT INTO `fza_metadatos` VALUES (80, 'vi_clientes', '2');
+INSERT INTO `fza_metadatos` VALUES (81, 'vi_cli_busquedas', '2');
+INSERT INTO `fza_metadatos` VALUES (82, 'vi_contadores', '2');
+INSERT INTO `fza_metadatos` VALUES (83, 'vi_empresas', '2');
+INSERT INTO `fza_metadatos` VALUES (84, 'vi_empresas_retenciones', '2');
+INSERT INTO `fza_metadatos` VALUES (85, 'vi_empresas_series', '2');
+INSERT INTO `fza_metadatos` VALUES (86, 'vi_emp_busquedas', '2');
+INSERT INTO `fza_metadatos` VALUES (87, 'vi_facturas', '2');
+INSERT INTO `fza_metadatos` VALUES (88, 'vi_facturas_lineas', '2');
+INSERT INTO `fza_metadatos` VALUES (89, 'vi_facturas_lineas_print', '2');
+INSERT INTO `fza_metadatos` VALUES (90, 'vi_facturas_print', '2');
+INSERT INTO `fza_metadatos` VALUES (91, 'vi_fac_busquedas', '2');
+INSERT INTO `fza_metadatos` VALUES (92, 'vi_fac_lin_busquedas', '2');
+INSERT INTO `fza_metadatos` VALUES (93, 'vi_formapago', '2');
+INSERT INTO `fza_metadatos` VALUES (94, 'vi_info_tpv_completa', '2');
+INSERT INTO `fza_metadatos` VALUES (95, 'vi_ivas', '2');
+INSERT INTO `fza_metadatos` VALUES (96, 'vi_ivas_empresa', '2');
+INSERT INTO `fza_metadatos` VALUES (97, 'vi_ivas_grupos', '2');
+INSERT INTO `fza_metadatos` VALUES (98, 'vi_ivas_zonas', '2');
+INSERT INTO `fza_metadatos` VALUES (99, 'vi_paises', '2');
+INSERT INTO `fza_metadatos` VALUES (100, 'vi_proveedores', '2');
+INSERT INTO `fza_metadatos` VALUES (101, 'vi_proveedores_articulos', '2');
+INSERT INTO `fza_metadatos` VALUES (102, 'vi_proveedores_busquedas', '2');
+INSERT INTO `fza_metadatos` VALUES (103, 'vi_recibos', '2');
+INSERT INTO `fza_metadatos` VALUES (104, 'vi_tarifas', '2');
+INSERT INTO `fza_metadatos` VALUES (105, 'vi_usuarios', '2');
+INSERT INTO `fza_metadatos` VALUES (106, 'vi_usuarios_grupos', '2');
+INSERT INTO `fza_metadatos` VALUES (107, 'vi_usuarios_perfiles', '2');
+INSERT INTO `fza_metadatos` VALUES (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3');
+INSERT INTO `fza_metadatos` VALUES (131, 'PRC_BUSQUEDA_ARTICULOS', '3');
+INSERT INTO `fza_metadatos` VALUES (132, 'PRC_CALCULAR_FACTURA_NETOS', '3');
+INSERT INTO `fza_metadatos` VALUES (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3');
+INSERT INTO `fza_metadatos` VALUES (134, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3');
+INSERT INTO `fza_metadatos` VALUES (135, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3');
+INSERT INTO `fza_metadatos` VALUES (136, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3');
+INSERT INTO `fza_metadatos` VALUES (137, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3');
+INSERT INTO `fza_metadatos` VALUES (138, 'PRC_CREAR_ACTUALIZAR_KEY', '3');
+INSERT INTO `fza_metadatos` VALUES (139, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3');
+INSERT INTO `fza_metadatos` VALUES (140, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3');
+INSERT INTO `fza_metadatos` VALUES (141, 'PRC_CREAR_ACTUALIZAR_TEST', '3');
+INSERT INTO `fza_metadatos` VALUES (142, 'PRC_CREAR_FACTURA_ABONO', '3');
+INSERT INTO `fza_metadatos` VALUES (143, 'PRC_CREAR_FACTURA_DUPLICADA', '3');
+INSERT INTO `fza_metadatos` VALUES (144, 'PRC_CREAR_METADATOS', '3');
+INSERT INTO `fza_metadatos` VALUES (145, 'PRC_CREAR_RECIBOS_FACTURA', '3');
+INSERT INTO `fza_metadatos` VALUES (146, 'PRC_CREAR_TRASPASO', '3');
+INSERT INTO `fza_metadatos` VALUES (147, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3');
+INSERT INTO `fza_metadatos` VALUES (148, 'PRC_FNC_GET_NEXT_NRO_DOC', '3');
+INSERT INTO `fza_metadatos` VALUES (149, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3');
+INSERT INTO `fza_metadatos` VALUES (150, 'PRC_FNC_GET_SERIE_TIPODOC', '3');
+INSERT INTO `fza_metadatos` VALUES (151, 'PRC_GENERAR_CODIGO_VALE', '3');
+INSERT INTO `fza_metadatos` VALUES (152, 'PRC_GETPERFILFORMULARIO', '3');
+INSERT INTO `fza_metadatos` VALUES (153, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3');
+INSERT INTO `fza_metadatos` VALUES (154, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3');
+INSERT INTO `fza_metadatos` VALUES (155, 'PRC_GET_CREAR_VALOR', '3');
+INSERT INTO `fza_metadatos` VALUES (156, 'PRC_GET_DATA_ARTICULO', '3');
+INSERT INTO `fza_metadatos` VALUES (157, 'PRC_GET_DATA_CLIENTE', '3');
+INSERT INTO `fza_metadatos` VALUES (158, 'PRC_GET_IVA_ZONA_FECHA', '3');
+INSERT INTO `fza_metadatos` VALUES (159, 'PRC_GET_NEXT_CONT', '3');
+INSERT INTO `fza_metadatos` VALUES (160, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3');
+INSERT INTO `fza_metadatos` VALUES (161, 'PRC_GET_NEXT_OP_CAJA', '3');
+INSERT INTO `fza_metadatos` VALUES (162, 'PRC_GET_NUMEROS_A_LETRAS', '3');
+INSERT INTO `fza_metadatos` VALUES (163, 'PRC_GET_NUMERO_MENOR_MIL', '3');
+INSERT INTO `fza_metadatos` VALUES (164, 'PRC_REALIZAR_TRASPASO', '3');
+INSERT INTO `fza_metadatos` VALUES (165, 'PRC_RECALCULAR_STOCK', '3');
+INSERT INTO `fza_metadatos` VALUES (166, 'PRC_SETPERFILFORMULARIO', '3');
+INSERT INTO `fza_metadatos` VALUES (167, 'SP_RECALCULAR_PMP_SKU', '3');
+INSERT INTO `fza_metadatos` VALUES (168, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 
 -- ----------------------------
 -- Table structure for fza_movimientos_almacen
@@ -2581,7 +2625,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-03 19:05:02', '2026-03-03 19:05:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-05 06:57:23', '2026-03-05 06:57:23', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -3675,7 +3719,7 @@ ORDER BY
 -- View structure for vi_clientes
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_clientes`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_clientes` AS select `fza_clientes`.`CODIGO_CLIENTE` AS `CODIGO_CLIENTE`,`fza_clientes`.`ORDEN_CLIENTE` AS `ORDEN_CLIENTE`,`fza_clientes`.`ACTIVO_CLIENTE` AS `ACTIVO_CLIENTE`,`fza_clientes`.`RAZONSOCIAL_CLIENTE` AS `RAZONSOCIAL_CLIENTE`,`fza_clientes`.`NIF_CLIENTE` AS `NIF_CLIENTE`,`fza_clientes`.`MOVIL_CLIENTE` AS `MOVIL_CLIENTE`,`fza_clientes`.`EMAIL_CLIENTE` AS `EMAIL_CLIENTE`,`fza_clientes`.`DIRECCION1_CLIENTE` AS `DIRECCION1_CLIENTE`,`fza_clientes`.`DIRECCION2_CLIENTE` AS `DIRECCION2_CLIENTE`,`fza_clientes`.`POBLACION_CLIENTE` AS `POBLACION_CLIENTE`,`fza_clientes`.`PROVINCIA_CLIENTE` AS `PROVINCIA_CLIENTE`,`fza_clientes`.`CPOSTAL_CLIENTE` AS `CPOSTAL_CLIENTE`,`fza_clientes`.`NOMBRE_PAIS_CLIENTE` AS `NOMBRE_PAIS_CLIENTE`,`fza_clientes`.`CODIGO_PAIS_CLIENTE` AS `CODIGO_PAIS_CLIENTE`,`fza_clientes`.`OBSERVACIONES_CLIENTE` AS `OBSERVACIONES_CLIENTE`,`fza_clientes`.`REFERENCIA_CLIENTE` AS `REFERENCIA_CLIENTE`,`fza_clientes`.`CONTACTO_CLIENTE` AS `CONTACTO_CLIENTE`,`fza_clientes`.`TELEFONO_CONTACTO_CLIENTE` AS `TELEFONO_CONTACTO_CLIENTE`,`fza_clientes`.`TELEFONO_CLIENTE` AS `TELEFONO_CLIENTE`,`fza_clientes`.`IBAN_CLIENTE` AS `IBAN_CLIENTE`,`fza_clientes`.`ESIVA_RECARGO_CLIENTE` AS `ESIVA_RECARGO_CLIENTE`,`fza_clientes`.`ESRETENCIONES_CLIENTE` AS `ESRETENCIONES_CLIENTE`,`fza_clientes`.`ESIVA_EXENTO_CLIENTE` AS `ESIVA_EXENTO_CLIENTE`,`fza_clientes`.`ESINTRACOMUNITARIO_CLIENTE` AS `ESINTRACOMUNITARIO_CLIENTE`,`fza_clientes`.`ESREGIMENESPECIALAGRICOLA_CLIENTE` AS `ESREGIMENESPECIALAGRICOLA_CLIENTE`,`fza_clientes`.`CODIGO_FORMA_PAGO_CLIENTE` AS `CODIGO_FORMA_PAGO_CLIENTE`,`fza_clientes`.`TARIFA_ARTICULO_CLIENTE` AS `TARIFA_ARTICULO_CLIENTE`,`fza_clientes`.`SERIE_CONTADOR_CLIENTE` AS `SERIE_CONTADOR_CLIENTE`,`fza_clientes`.`TEXTO_LEGAL_FACTURA_CLIENTE` AS `TEXTO_LEGAL_FACTURA_CLIENTE`,`fza_clientes`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_clientes`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_clientes`.`USUARIOALTA` AS `USUARIOALTA`,`fza_clientes`.`USUARIOMODIF` AS `USUARIOMODIF` from `fza_clientes` ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_clientes` AS select * from fza_clientes order by orden_cliente ;
 
 -- ----------------------------
 -- View structure for vi_cli_busquedas
@@ -7331,6 +7375,90 @@ BEGIN
         VALOR_TOTAL_STK = vValorAcumulado,
         PRECIO_MEDIO_STK = vPMP_Actual,
         INSTANTEMODIF = NOW();
+
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Triggers structure for table fza_depositos_cliente
+-- ----------------------------
+DROP TRIGGER IF EXISTS `trg_fza_depositos_after_insert`;
+delimiter ;;
+CREATE TRIGGER `trg_fza_depositos_after_insert` AFTER INSERT ON `fza_depositos_cliente` FOR EACH ROW BEGIN
+    DECLARE v_deuda_generada DECIMAL(19,6) DEFAULT 0;
+
+    -- Solo generamos deuda si el depósito nace con estado 'PENDIENTE'
+    IF NEW.ESTADO_DEP = 'PENDIENTE' THEN
+        
+        -- Calculamos la deuda: (Precio * Cantidad) - Anticipo
+        -- Usamos COALESCE por si la cantidad viene a NULL, asumimos 1.
+        SET v_deuda_generada = (NEW.PRECIO_VENTA_DEP * COALESCE(NEW.CANTIDAD_PENDIENTE_DEP, 1)) - NEW.IMPORTE_ANTICIPO_DEP;
+
+        -- Si hay una deuda real a favor de la empresa, actualizamos el cliente
+        IF v_deuda_generada > 0 THEN
+            UPDATE fza_clientes
+            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_generada
+            WHERE CODIGO_CLIENTE = NEW.CODIGO_CLIENTE_DEP;
+        END IF;
+        
+    END IF;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Triggers structure for table fza_depositos_cliente
+-- ----------------------------
+DROP TRIGGER IF EXISTS `trg_fza_depositos_after_update`;
+delimiter ;;
+CREATE TRIGGER `trg_fza_depositos_after_update` AFTER UPDATE ON `fza_depositos_cliente` FOR EACH ROW BEGIN
+    DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
+
+    -- 1. Calculamos la deuda que tenía el depósito ANTES de guardar
+    -- Solo contabiliza si antes estaba PENDIENTE
+    IF OLD.ESTADO_DEP = 'PENDIENTE' THEN
+        SET v_deuda_antigua = (OLD.PRECIO_VENTA_DEP * COALESCE(OLD.CANTIDAD_PENDIENTE_DEP, 1)) - OLD.IMPORTE_ANTICIPO_DEP;
+    END IF;
+
+    -- 2. Calculamos la deuda que tiene el depósito AHORA (con los nuevos datos)
+    -- Si pasa a estar CERRADO o CANCELADO, esto no se ejecuta y v_deuda_nueva se queda en 0
+    IF NEW.ESTADO_DEP = 'PENDIENTE' THEN
+        SET v_deuda_nueva = (NEW.PRECIO_VENTA_DEP * COALESCE(NEW.CANTIDAD_PENDIENTE_DEP, 1)) - NEW.IMPORTE_ANTICIPO_DEP;
+    END IF;
+
+    -- 3. Comprobamos si el cliente sigue siendo el mismo
+    IF OLD.CODIGO_CLIENTE_DEP = NEW.CODIGO_CLIENTE_DEP THEN
+        
+        -- Misma persona: Solo sumamos/restamos la diferencia si ha cambiado el importe o el estado
+        SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+        
+        IF v_diferencia <> 0 THEN
+            UPDATE fza_clientes
+            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
+            WHERE CODIGO_CLIENTE = NEW.CODIGO_CLIENTE_DEP;
+        END IF;
+
+    ELSE
+        -- Han cambiado el cliente del depósito (Poco común, pero evita descuadres)
+        
+        -- Restamos la deuda antigua al cliente anterior
+        IF v_deuda_antigua <> 0 THEN
+            UPDATE fza_clientes
+            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) - v_deuda_antigua
+            WHERE CODIGO_CLIENTE = OLD.CODIGO_CLIENTE_DEP;
+        END IF;
+        
+        -- Sumamos la deuda nueva al nuevo cliente
+        IF v_deuda_nueva <> 0 THEN
+            UPDATE fza_clientes
+            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva
+            WHERE CODIGO_CLIENTE = NEW.CODIGO_CLIENTE_DEP;
+        END IF;
+        
+    END IF;
 
 END
 ;;
