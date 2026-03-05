@@ -14,8 +14,11 @@ object dmConn: TdmConn
     PoolingOptions.Validate = True
     Username = 'root'
     Server = '127.0.0.1'
+    Connected = True
     LoginPrompt = False
+    AfterConnect = conUniAfterConnect
     BeforeConnect = connBeforeConnect
+    OnError = conUniError
     Left = 270
     Top = 150
     EncryptedPassword = 'A5FF9EFF92FF90FF8DFF9EFFCDFFCFFFCDFFCCFF'
