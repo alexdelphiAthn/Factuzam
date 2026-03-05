@@ -906,6 +906,8 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Caption = 'Permite deuda en Caja'
                   DataBinding.DataField = 'ESPERMITE_DEUDA_CLIENTE'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayChecked = 'S'
+                  Properties.DisplayUnchecked = 'N'
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
                   Style.TransparentBorder = False
