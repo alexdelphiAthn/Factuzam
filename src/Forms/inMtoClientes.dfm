@@ -15,12 +15,14 @@ inherited frmMtoClientes: TfrmMtoClientes
       Width = 1001
       Height = 663
       TabOrder = 1
-      Properties.ActivePage = tsFicha
+      Properties.ActivePage = tsLista
       ExplicitWidth = 1001
       ExplicitHeight = 663
       ClientRectBottom = 659
       ClientRectRight = 997
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 993
         ExplicitHeight = 629
         inherited cxGrdPrincipal: TcxGrid
@@ -181,6 +183,8 @@ inherited frmMtoClientes: TfrmMtoClientes
         end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 993
         ExplicitHeight = 629
         object pnl1: TPanel
@@ -374,7 +378,7 @@ inherited frmMtoClientes: TfrmMtoClientes
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMasDatos
+            Properties.ActivePage = tsDomicilioFiscal
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 438
             ClientRectLeft = 4
@@ -1491,6 +1495,10 @@ inherited frmMtoClientes: TfrmMtoClientes
               Caption = 'Historia Presupuestos'
               ImageIndex = 4
               TabVisible = False
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrd3: TcxGrid
                 Left = 0
                 Top = 0
@@ -1871,6 +1879,9 @@ inherited frmMtoClientes: TfrmMtoClientes
       inherited pnlTopGrid: TPanel
         Width = 1001
         ExplicitWidth = 1001
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
           Width = 310
