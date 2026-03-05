@@ -104,7 +104,6 @@ var
   bEsErrorGenerico: Boolean;
 begin
   bEsErrorGenerico := False;
-
   case E.ErrorCode of
     1062: sMensaje := 'Ya existe un registro con ese valor (entrada duplicada).';
     1048,
@@ -129,26 +128,15 @@ begin
     sMensaje := Format('Error en base de datos [%d]:%s%s', [E.ErrorCode, sLineBreak, E.Message]);
     bEsErrorGenerico := True;
   end;
-
   {$IFDEF DEBUG}
     // En debug mostramos el original SOLO si no lo hemos puesto ya en el 'else'
     if (not bEsErrorGenerico) and (E.ErrorCode <> 0) then
       sMensaje := sMensaje + Format('%s(MySQL %d: %s)', [sLineBreak, E.ErrorCode, E.Message]);
   {$ENDIF}
-
   // Guardamos en el log siempre el error real
   inLibLog.Log.LogError(Format('MySQL %d: %s', [E.ErrorCode, E.Message]));
-
-  // --- Opciones de visualización ---
-
-  // OPCIÓN A (Como lo tenías, pero cuidado con los mensajes dobles si no capturas la excepción globalmente)
-  MessageDlg(sMensaje, mtError, [mbOK], 0);
   Fail := False;
-
-  // OPCIÓN B (Recomendada si no tienes Application.OnException configurado)
-  // Anulamos la excepción original y lanzamos una nueva con nuestro texto.
-  // Fail := False;
-  // raise Exception.Create(sMensaje);
+  raise Exception.Create(sMensaje);
 end;
 
 procedure TdmConn.DataModuleCreate(Sender: TObject);

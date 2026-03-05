@@ -284,6 +284,11 @@ type
     blbEtiqueta: TdxBarLargeButton;
     txtNOMBRE_PAIS_CLIENTE: TcxDBTextEdit;
     cbbPaises: TcxDBLookupComboBox;
+    cxLabel1: TcxLabel;
+    cxDBCurrencyEdit1: TcxDBCurrencyEdit;
+    cxDBCheckBox1: TcxDBCheckBox;
+    cxDBCurrencyEdit2: TcxDBCurrencyEdit;
+    cxLabel2: TcxLabel;
     procedure btnGrabarClick(Sender: TObject);
     procedure btnNuevoClienteClick(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);

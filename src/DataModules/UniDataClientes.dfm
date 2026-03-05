@@ -106,6 +106,7 @@ inherited dmClientes: TdmClientes
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_clientes')
+    Active = True
     AfterInsert = unqryTablaGAfterInsert
     BeforeDelete = unqryTablaGBeforeDelete
     Left = 56
