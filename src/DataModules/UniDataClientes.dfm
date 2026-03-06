@@ -720,4 +720,88 @@ inherited dmClientes: TdmClientes
     Left = 640
     Top = 96
   end
+  object dsDepositos: TDataSource
+    DataSet = unqryDepositos
+    Left = 152
+    Top = 176
+  end
+  object unqryDepositos: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_depositos_cliente'
+      
+        '  (ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_CLIENTE_DEP, CODI' +
+        'GO_ARTICULO_DEP, CODIGO_UNIDAD_DEP, PRECIO_VENTA_DEP, IMPORTE_AN' +
+        'TICIPO_DEP, ESTADO_DEP, FECHA_CREACION_DEP, INSTANTEMODIF, INSTA' +
+        'NTEALTA, USUARIOALTA, USUARIOMODIF, TIPO_IVA_DEP, PORCEN_IVA_DEP' +
+        ', ESIMP_INCL_DEP, CANTIDAD_PENDIENTE_DEP, FECHA_ENTREGA_DEP)'
+      'VALUES'
+      
+        '  (:ID_DEPOSITO_DEP, :CODIGO_EMPRESA_DEP, :CODIGO_CLIENTE_DEP, :' +
+        'CODIGO_ARTICULO_DEP, :CODIGO_UNIDAD_DEP, :PRECIO_VENTA_DEP, :IMP' +
+        'ORTE_ANTICIPO_DEP, :ESTADO_DEP, :FECHA_CREACION_DEP, :INSTANTEMO' +
+        'DIF, :INSTANTEALTA, :USUARIOALTA, :USUARIOMODIF, :TIPO_IVA_DEP, ' +
+        ':PORCEN_IVA_DEP, :ESIMP_INCL_DEP, :CANTIDAD_PENDIENTE_DEP, :FECH' +
+        'A_ENTREGA_DEP)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_depositos_cliente'
+      'WHERE'
+      '  ID_DEPOSITO_DEP = :Old_ID_DEPOSITO_DEP')
+    SQLUpdate.Strings = (
+      'UPDATE fza_depositos_cliente'
+      'SET'
+      
+        '  ID_DEPOSITO_DEP = :ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP = :CODI' +
+        'GO_EMPRESA_DEP, CODIGO_CLIENTE_DEP = :CODIGO_CLIENTE_DEP, CODIGO' +
+        '_ARTICULO_DEP = :CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP = :CODIG' +
+        'O_UNIDAD_DEP, PRECIO_VENTA_DEP = :PRECIO_VENTA_DEP, IMPORTE_ANTI' +
+        'CIPO_DEP = :IMPORTE_ANTICIPO_DEP, ESTADO_DEP = :ESTADO_DEP, FECH' +
+        'A_CREACION_DEP = :FECHA_CREACION_DEP, INSTANTEMODIF = :INSTANTEM' +
+        'ODIF, INSTANTEALTA = :INSTANTEALTA, USUARIOALTA = :USUARIOALTA, ' +
+        'USUARIOMODIF = :USUARIOMODIF, TIPO_IVA_DEP = :TIPO_IVA_DEP, PORC' +
+        'EN_IVA_DEP = :PORCEN_IVA_DEP, ESIMP_INCL_DEP = :ESIMP_INCL_DEP, ' +
+        'CANTIDAD_PENDIENTE_DEP = :CANTIDAD_PENDIENTE_DEP, FECHA_ENTREGA_' +
+        'DEP = :FECHA_ENTREGA_DEP'
+      'WHERE'
+      '  ID_DEPOSITO_DEP = :Old_ID_DEPOSITO_DEP')
+    SQLLock.Strings = (
+      
+        'SELECT ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_CLIENTE_DEP, ' +
+        'CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP, PRECIO_VENTA_DEP, IMPORT' +
+        'E_ANTICIPO_DEP, ESTADO_DEP, FECHA_CREACION_DEP, INSTANTEMODIF, I' +
+        'NSTANTEALTA, USUARIOALTA, USUARIOMODIF, TIPO_IVA_DEP, PORCEN_IVA' +
+        '_DEP, ESIMP_INCL_DEP, CANTIDAD_PENDIENTE_DEP, FECHA_ENTREGA_DEP ' +
+        'FROM fza_depositos_cliente'
+      'WHERE'
+      '  ID_DEPOSITO_DEP = :Old_ID_DEPOSITO_DEP'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      
+        'SELECT ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_CLIENTE_DEP, ' +
+        'CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP, PRECIO_VENTA_DEP, IMPORT' +
+        'E_ANTICIPO_DEP, ESTADO_DEP, FECHA_CREACION_DEP, INSTANTEMODIF, I' +
+        'NSTANTEALTA, USUARIOALTA, USUARIOMODIF, TIPO_IVA_DEP, PORCEN_IVA' +
+        '_DEP, ESIMP_INCL_DEP, CANTIDAD_PENDIENTE_DEP, FECHA_ENTREGA_DEP ' +
+        'FROM fza_depositos_cliente'
+      'WHERE'
+      '  ID_DEPOSITO_DEP = :ID_DEPOSITO_DEP')
+    SQLRecCount.Strings = (
+      'SELECT COUNT(*) FROM fza_depositos_cliente')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select * from vi_depositos_cliente')
+    MasterSource = frmMtoClientes.dsTablaG
+    MasterFields = 'CODIGO_CLIENTE'
+    DetailFields = 'CODIGO_CLIENTE_DEP'
+    ReadOnly = True
+    Active = True
+    Left = 152
+    Top = 240
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_CLIENTE'
+        ParamType = ptInput
+        Value = '321'
+      end>
+  end
 end

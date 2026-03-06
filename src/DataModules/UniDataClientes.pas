@@ -32,6 +32,8 @@ type
     fxdsEtiquetas: TfrxDBDataset;
     dsPaises: TDataSource;
     unqryPaises: TUniQuery;
+    dsDepositos: TDataSource;
+    unqryDepositos: TUniQuery;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
@@ -110,11 +112,13 @@ begin
   var LForm := GetOwnerForm<TfrmMtoClientes>;
   unqryFacturasClientes.MasterSource := LForm.dsTablaG;
   unqryFacturasLineasClientes.MasterSource := LForm.dsTablaG;
+  unqryDepositos.MasterSource := LForm.dsTablaG;
   unqryPaises.Open;
   unqryFacturasClientes.Open;
   unqryFacturasLineasClientes.Open;
   unqryTarifas.Open;
   unqryFormaPago.Open;
+  unqryDepositos.Open;
 end;
 
 procedure TdmClientes.DataModuleDestroy(Sender: TObject);
@@ -127,6 +131,7 @@ begin
   unqryFacturasClientes.Close;
   unqryFacturasLineasClientes.Close;
   unqryPaises.Close;
+  unqryDepositos.Close;
 end;
 
 procedure TdmClientes.GetCodigoAutoCliente;
