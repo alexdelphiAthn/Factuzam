@@ -62,7 +62,6 @@ type
     cxgrdbclmnGrdDBTabPrinDESCRIPCION_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinCODIGO_FAMILIA_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinTIPOIVA_ARTICULO: TcxGridDBColumn;
-    rgTipoIVA: TcxDBRadioGroup;
     cxgrdbclmnGrdDBTabPrinDESCRIPCION_FAMILIA: TcxGridDBColumn;
     cxgrdTarifas: TcxGrid;
     tvTarifas: TcxGridDBTableView;
@@ -174,6 +173,8 @@ type
     dbcTarifasESDEFAULT_TARIFA: TcxGridDBColumn;
     cxDBLabel1: TcxDBLabel;
     cxDBLabel2: TcxDBLabel;
+    cxTabSheet1: TcxTabSheet;
+    rgTipoIVA: TcxDBRadioGroup;
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);

@@ -77,7 +77,6 @@ type
     FormaPago:           string;
     Comentarios:         string;
   end;
-
   TDatosLineaFactura = record
     Linea:               string;
     Articulo:            string;
@@ -422,7 +421,6 @@ begin
   Result.FormaPago          := cdsCabecera.FieldByName('FORMA_PAGO_FACTURA').AsString;
   Result.Comentarios        := cdsCabecera.FieldByName('COMENTARIOS_FACTURA').AsString;
 end;
-
 function TdmCajaOpe.LeerLineaActual: TDatosLineaFactura;
 begin
   Result.Linea               := cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsString;
@@ -833,7 +831,6 @@ end;
 //   4. AnularDepositoCliente recibe AEmpresa y AArticulo para poder completar
 //      los movimientos de traspaso con todos los campos.
 // =============================================================================
-
 // -----------------------------------------------------------------------------
 // NUEVO MÉTODO AUXILIAR — añadir a la sección private de TdmCajaOpe
 // -----------------------------------------------------------------------------
@@ -874,7 +871,6 @@ begin
     '  NULLIF(:ALMCONTRA, ''''),' +
     '  NULLIF(:CLI, ''''),' +
     '  :USUARIO, :USUARIO, NOW())';
-
   QryTrx.ParamByName('NUMOV').AsString     := ObtenerSiguienteContador('MV');
   QryTrx.ParamByName('TIPODOC').AsString   := ATipoDoc;
   QryTrx.ParamByName('SERIE').AsString     := ASerie;
@@ -893,7 +889,6 @@ begin
   QryTrx.ParamByName('USUARIO').AsString   := AUsuario;
   QryTrx.Execute;
 end;
-
 // -----------------------------------------------------------------------------
 // MODIFICADO: AnularDepositoCliente
 // Firma ampliada con AEmpresa y AArticulo para poder rellenar los movimientos.
@@ -910,7 +905,6 @@ procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
                                            ACantidad: Double);
 begin
   ImporteADevolver := 0;
-
   // 1. Averiguar el anticipo entregado
   QryTrx.SQL.Text :=
     'SELECT IMPORTE_ANTICIPO_DEP ' +
@@ -922,7 +916,6 @@ begin
   if not QryTrx.IsEmpty then
     ImporteADevolver := QryTrx.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
   QryTrx.Close;
-
   // 2. Marcar depósito como cancelado
   QryTrx.SQL.Text :=
     'UPDATE fza_depositos_cliente ' +
@@ -933,10 +926,8 @@ begin
   QryTrx.ParamByName('USUARIO').AsString := AUsuario;
   QryTrx.ParamByName('SKU').AsString     := ASku;
   QryTrx.Execute;
-
   // 3. Traspaso de stock: Salida del almacén depósito → Entrada a tienda
   //    Coste = 0 en ambos lados: el trigger TRG_MOVIMIENTOS_BI (v2) toma el PMP vigente.
-
   // 3a. Salida del almacén depósito
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -950,7 +941,6 @@ begin
     ACantidad,
     0,                     // salida → trigger usa PMP vigente
     '', AUsuario);
-
   // 3b. Entrada al almacén tienda
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -965,7 +955,6 @@ begin
     0,                     // entrada sin coste → trigger toma PMP del almacén depósito
     '', AUsuario);
 end;
-
 // -----------------------------------------------------------------------------
 // MODIFICADO: CrearNuevoDepositoCliente
 // Sustituye los dos INSERTs incompletos por InsertarMovimientoAlmacen.
@@ -988,7 +977,6 @@ var
   NuevoIdDep: string;
 begin
   // 1. Traspaso de stock: Salida de tienda → Entrada al almacén depósito
-
   // 1a. Salida de tienda
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -1002,7 +990,6 @@ begin
     ACantidad,
     0,                 // salida → trigger usa PMP vigente
     ACliente, AUsuario);
-
   // 1b. Entrada al almacén depósito
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -1016,11 +1003,9 @@ begin
     ACantidad,
     0,                 // entrada sin coste → trigger toma PMP del almacén tienda
     ACliente, AUsuario);
-
   // 2. Crear registro en fza_depositos_cliente
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
-
   QryTrx.SQL.Text :=
     'INSERT INTO fza_depositos_cliente (' +
     '  ID_DEPOSITO_DEP,' +
@@ -1054,7 +1039,6 @@ begin
   QryTrx.Execute;
 end;
 
-
 // =============================================================================
 // ARCHIVO: UniDataCaja_GrabarFactura_v5.pas  — VERSIÓN FINAL
 //
@@ -1079,7 +1063,6 @@ end;
 //   - NUMERO_MOV generado antes del INSERT en almacén para poder enlazarlo
 //     en la línea de factura mediante NUMERO_MOV_FACTURA_LINEA
 // =============================================================================
-
 function TdmCajaOpe.GrabarFacturaSimplificada(
                           const AEmpresa,
                                 AAlmacen,
@@ -1387,8 +1370,10 @@ begin
           // -------------------------------------------------------------------
           // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
           // -------------------------------------------------------------------
-
-          NumMovGenerado := ObtenerSiguienteContador('MV');
+          if Lin.TipoArticulo = 'ESTANDAR' then
+            NumMovGenerado := ObtenerSiguienteContador('MV')
+          else
+            NumMovGenerado := '';
           if Lin.VieneDeDeposito = 'S' then
           begin
             AlmacenOrigenSalida := AlmacenDeposito;
@@ -1443,22 +1428,21 @@ begin
             NumMovGenerado, UsuarioCaja);
 
           // Movimiento de almacén — mismo NumMovGenerado reservado antes
-          InsertarMovimientoAlmacen(
-            QryTrx,
-            'VE', SerieGenerada, NumeroGenerado,
-            Lin.Linea,
-            AEmpresa, AlmacenOrigenSalida, '',
-            TipoMov,
-            Lin.Articulo, Lin.Sku, Lin.Descripcion,
-            Lin.Cantidad, 0,
-            Cab.CodigoCliente, UsuarioCaja);
-
+          if Lin.TipoArticulo = 'ESTANDAR' then
+            InsertarMovimientoAlmacen(
+              QryTrx,
+              'VE', SerieGenerada, NumeroGenerado,
+              Lin.Linea,
+              AEmpresa, AlmacenOrigenSalida, '',
+              TipoMov,
+              Lin.Articulo, Lin.Sku, Lin.Descripcion,
+              Lin.Cantidad, 0,
+              Cab.CodigoCliente, UsuarioCaja);
           cdsLineas.Next;
         end;
       finally
         cdsLineas.EnableControls;
       end;
-
       // =======================================================================
       // PASO 5: FORMAS DE PAGO
       // =======================================================================
@@ -1481,11 +1465,9 @@ begin
         end;
         DatosCobro.MemTablePagos.Next;
       end;
-
       // =======================================================================
       // PASO 6: VALES
       // =======================================================================
-
       // 6a. Vales recogidos — operación VR + línea de pago
       for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
       begin
@@ -1499,7 +1481,6 @@ begin
             'VALE',
             DatosCobro.ValesRecogidos[i].ImporteAplicado,
             0);
-
           InsertarOperacionCaja(
             QryTrx,
             AEmpresa, AAlmacen, ACaja,
@@ -1516,7 +1497,6 @@ begin
           ACaja, AAlmacen, NumOperacionVE,
           SerieGenerada, NumeroGenerado);
       end;
-
       // 6b. Vale de cambio emitido — operación VL
       if DatosCobro.ImporteValeEmitido > 0 then
       begin
@@ -1524,7 +1504,6 @@ begin
           AEmpresa, AAlmacen, ACaja,
           NumOperacionVE, SerieGenerada, NumeroGenerado,
           DatosCobro.ImporteValeEmitido);
-
         InsertarOperacionCaja(
           QryTrx,
           AEmpresa, AAlmacen, ACaja,
@@ -1536,7 +1515,6 @@ begin
           Cab.CodigoCliente,
           'Vale emitido: ' + ValeGenerado);
       end;
-
       // =======================================================================
       // PASO 7: ALBARÁN DE DEPÓSITO
       // =======================================================================
@@ -1592,7 +1570,6 @@ begin
     QryTrx.Free;
   end;
 end;
-
 // =============================================================================
 // ALTER TABLE — actualizar el COMMENT del campo con todos los tipos vigentes
 // Ejecutar en la BD una sola vez.

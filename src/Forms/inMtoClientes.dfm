@@ -1731,7 +1731,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
-                object cxGrid1: TcxGrid
+                object cxgrdPrestamosCliente: TcxGrid
                   Left = 0
                   Top = 0
                   Width = 868
@@ -2308,6 +2308,11 @@ inherited frmMtoClientes: TfrmMtoClientes
                       DataBinding.FieldName = 'CODIGO_UNIDAD_DEP'
                       Width = 136
                     end
+                    object tvDepositosClienteDESCRIPCION_ARTICULO: TcxGridDBColumn
+                      Caption = 'Descripci'#243'n'
+                      DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                      Width = 349
+                    end
                     object tvDepositosClienteCANTIDAD_PENDIENTE_DEP: TcxGridDBColumn
                       Caption = 'Uds'
                       DataBinding.FieldName = 'CANTIDAD_PENDIENTE_DEP'
@@ -2359,7 +2364,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                       Visible = False
                     end
                   end
-                  object cxGrid1Level1: TcxGridLevel
+                  object cxgrdPrestamosClienteLevel1: TcxGridLevel
                     GridView = tvDepositosCliente
                   end
                 end
@@ -2378,14 +2383,16 @@ inherited frmMtoClientes: TfrmMtoClientes
                     Height = 34
                     Caption = '&Exp Excel'
                     TabOrder = 1
+                    OnClick = cxButton4Click
                   end
-                  object cxButton5: TcxButton
+                  object btnIrAArticuloPres: TcxButton
                     Left = 8
                     Top = 8
                     Width = 105
                     Height = 34
                     Caption = 'I&r a Art'#237'culo'
                     TabOrder = 0
+                    OnClick = btnIrAArticuloPresClick
                   end
                 end
               end
