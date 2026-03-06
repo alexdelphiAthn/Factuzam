@@ -848,13 +848,18 @@ end;
 
 procedure TfrmMtoFacturas.sbImprimirClick(Sender: TObject);
 var
-  form:TfrmPrintFac;
+  form: TfrmPrintFac;
 begin
-inherited;
-  form := TfrmPrintFac.Create(Self);
-  form.edtNroFac.Text := dsTablaG.DataSet.findField(fnrofac).AsString;
-  form.edtSerie.Text := dsTablaG.DataSet.findField(fseriefac).AsString;
-  form.Show;
+  inherited;
+  form := TfrmPrintFac.Create(Application);  // Owner = Application
+  try
+    form.edtNroFac.Text := dsTablaG.DataSet.findField(fnrofac).AsString;
+    form.edtSerie.Text := dsTablaG.DataSet.findField(fseriefac).AsString;
+    form.dmFac := dmmFacturas;
+    form.ShowModal;
+  finally
+    form.Free;
+  end;
 end;
 
 procedure TfrmMtoFacturas.btnReciboDevueltoClick(Sender: TObject);

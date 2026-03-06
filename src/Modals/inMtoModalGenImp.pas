@@ -161,7 +161,8 @@ begin
   Preparar_consulta;
   Self.Hide;
   Consultar_Formularios;
-  frxrprt1.ShowReport;
+  if (sElegido <> '') then
+    frxrprt1.ShowReport;
   Self.Show;
 end;
 
@@ -192,35 +193,38 @@ var
 begin
   with unqryPerfiles do
   begin
-      form := TfrmMtoModalGenImpEle.Create(Self);
-      CargarFormatos(form);
-      if (RecordCount > 0) then
-        form.ShowModal
-      else
-        form.sFicha := 'O';
-      sElegido := form.sElegido;
-      if form.sFicha = 'S' then
-      begin
-        //guarda el formato
-        sDescripcion := form.lstFormatos.items[form.lstFormatos.ItemIndex ];
-        memStream:=TMemoryStream.Create;
-        try
-          unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []);
-          TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).
-                                                        SaveToStream(memStream);
-          memStream.Position:=0;
-          frxrprt1.LoadFromStream(memStream);
-        finally
-          memStream.Free;
-        end;
-      end
-      else if (form.sFicha = 'O') then
-      begin
-        frxrprt1.AssignAll(frxReportOrigen);
+    sElegido := '';
+    unqryPerfiles.Close;
+    unqryPerfiles.Open;
+    form := TfrmMtoModalGenImpEle.Create(Self);
+    CargarFormatos(form);
+    if (RecordCount > 0) then
+      form.ShowModal
+    else
+      form.sFicha := 'O';
+    sElegido := form.sElegido;
+    if form.sFicha = 'S' then
+    begin
+      //guarda el formato
+      sDescripcion := form.lstFormatos.items[form.lstFormatos.ItemIndex ];
+      memStream:=TMemoryStream.Create;
+      try
+        unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []);
+        TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).
+                                                      SaveToStream(memStream);
+        memStream.Position:=0;
+        frxrprt1.LoadFromStream(memStream);
+      finally
+        memStream.Free;
       end;
-      FreeAndNil(form);
+    end
+    else if (form.sFicha = 'O') then
+    begin
+      frxrprt1.AssignAll(frxReportOrigen);
     end;
+    FreeAndNil(form);
   end;
+end;
 
 procedure TfrmPrint.DeleteForm(sElegido: String; form:TfrmMtoModalGenImpEle);
 var
@@ -267,6 +271,7 @@ end;
 procedure TfrmPrint.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  Action := caFree;
   unqryPerfiles.Close;
 //  FreeAndNil(unqryPerfiles);
 end;
