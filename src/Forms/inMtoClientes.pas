@@ -291,7 +291,7 @@ type
     cxLabel2: TcxLabel;
     tsPrestamos: TcxTabSheet;
     Panel1: TPanel;
-    cxGrid1: TcxGrid;
+    cxgrdPrestamosCliente: TcxGrid;
     cxGridDBTableView1: TcxGridDBTableView;
     cxGridDBColumn1: TcxGridDBColumn;
     cxGridDBColumn2: TcxGridDBColumn;
@@ -378,8 +378,8 @@ type
     cxGridDBColumn82: TcxGridDBColumn;
     Panel2: TPanel;
     cxButton4: TcxButton;
-    cxButton5: TcxButton;
-    cxGrid1Level1: TcxGridLevel;
+    btnIrAArticuloPres: TcxButton;
+    cxgrdPrestamosClienteLevel1: TcxGridLevel;
     tvDepositosCliente: TcxGridDBTableView;
     tvDepositosClienteID_DEPOSITO_DEP: TcxGridDBColumn;
     tvDepositosClienteCODIGO_EMPRESA_DEP: TcxGridDBColumn;
@@ -399,6 +399,7 @@ type
     tvDepositosClienteESIMP_INCL_DEP: TcxGridDBColumn;
     tvDepositosClienteCANTIDAD_PENDIENTE_DEP: TcxGridDBColumn;
     tvDepositosClienteFECHA_ENTREGA_DEP: TcxGridDBColumn;
+    tvDepositosClienteDESCRIPCION_ARTICULO: TcxGridDBColumn;
     procedure btnGrabarClick(Sender: TObject);
     procedure btnNuevoClienteClick(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);
@@ -413,6 +414,8 @@ type
     procedure btnValidarClick(Sender: TObject);
     procedure blbEtiquetaClick(Sender: TObject);
     procedure txtNOMBRE_PAIS_CLIENTEPropertiesChange(Sender: TObject);
+    procedure btnIrAArticuloPresClick(Sender: TObject);
+    procedure cxButton4Click(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -443,10 +446,12 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoClientes.actArticulosExecute(Sender: TObject);
 begin
   inherited;
-  //Control + R
-  if (
-        (pcPestanas.ActivePage = tsHistoriaFacturacion)) then
-       btnIraArticuloClick(Sender)
+  //Control + A
+  if (pcPestanas.ActivePage = tsHistoriaFacturacion) then
+    btnIraArticuloClick(Sender)
+  else
+    if  (pcPestanas.ActivePage = tsPrestamos) then
+      btnIrAArticuloPresClick(Sender)
     else
       ShowMto(Self.Owner,
               'Articulos' );
@@ -616,6 +621,23 @@ begin
   cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   Self.pkFieldName := 'CODIGO_CLIENTE';
+end;
+
+procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
+begin
+  inherited;
+  ExportarExcel(cxgrdPrestamosCliente, 'Historico_Prestamos_Cliente_' +
+                       dsTablaG.Dataset.FieldByName('CODIGO_CLIENTE').AsString);
+
+end;
+
+procedure TfrmMtoClientes.btnIrAArticuloPresClick(Sender: TObject);
+begin
+  inherited;
+  with tvDepositosCliente.DataController.DataSet do
+    ShowMto(Self.Owner,
+            'Articulos',
+            FieldByName('CODIGO_ARTICULO_DEP').AsString);
 end;
 
 procedure TfrmMtoClientes.dsTablaGStateChange(Sender: TObject);

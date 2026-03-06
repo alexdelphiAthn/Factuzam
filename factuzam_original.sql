@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 05/03/2026 07:35:54
+ Date: 06/03/2026 08:36:50
 */
 
 SET NAMES utf8mb4;
@@ -1011,7 +1011,7 @@ CREATE TABLE `fza_clientes`  (
 INSERT INTO `fza_clientes` VALUES ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NULL, 'pedro.cojos@gmail.com', 'CALLE CAIDOS ', NULL, 'VILLAVEZA DEL AGUA', 'ZAMORA', '49760', '826', 'España', NULL, NULL, NULL, NULL, NULL, 'ES3201822305650206595350', 'N', 'N', 1000.000000, 'S', NULL, 'N', 'N', 'S', '60DIAS', '1', NULL, NULL, '2026-03-03 17:37:45', '2023-05-22 13:01:22', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('294', 'S', 4, 'AGUSTIN SEGURADO', '11632589R', '623356689', 'agustin.segurado@gmail.com', 'CALLE EL RIEGO, 33', '', 'ZAMORA', 'ZAMORA', '49019', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '1', NULL, NULL, '2023-11-11 15:27:57', '2023-10-31 12:15:11', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('295', 'S', 6, 'AZUCENA MARTIN (KIOSKO PERLA)', '11356325E', '658963321', 'cliente.nuevo@gmail.om', 'CALLE POZO AMARILLO, 3', '', 'SALAMANCA', 'SALAMANCA', '37003', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, 'ES50 0182 5632 3656 9872 0145               ', 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-01-29 05:22:58', '2023-12-06 13:07:42', 'Administrador', 'Administrador');
-INSERT INTO `fza_clientes` VALUES ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', 1000.000000, 'S', NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-03-03 17:56:25', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_clientes` VALUES ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', 1000.000000, 'N', NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-03-03 17:56:25', '2026-01-15 09:00:00', 'DEMO', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('302', 'S', 11, 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, '934455667', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('303', 'S', 12, 'MARTA RUIZ LÓPEZ', '34567890C', '677303030', 'marta.ruiz@gmail.com', 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', NULL, NULL, NULL, NULL, '963344556', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('304', 'S', 13, 'JUAN MARTÍN PÉREZ', '45678901D', '688404040', 'juan.martin@empresa.es', 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', NULL, NULL, NULL, NULL, '915566778', NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO');
@@ -1031,7 +1031,7 @@ INSERT INTO `fza_clientes` VALUES ('317', 'S', 26, 'IMPORTACIONES LA MODA SL', '
 INSERT INTO `fza_clientes` VALUES ('318', 'S', 27, 'MARCOS DELGADO SERRANO', '45677654N', '699888888', 'marcos.delgado@empresa.es', 'C/ LARGA, 77', '', 'SALAMANCA', 'SALAMANCA', '37001', '724', 'España', NULL, NULL, NULL, NULL, '923889988', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('319', 'S', 28, 'LUCÍA FLORES MENDOZA', '56788765O', '611999999', 'lucia.flores@gmail.com', 'PLAZA DEL SOL, 1', '', 'BURGOS', 'BURGOS', '09001', '724', 'España', NULL, NULL, NULL, NULL, '947990099', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-19 09:00:00', 'DEMO', 'DEMO');
 INSERT INTO `fza_clientes` VALUES ('320', 'S', 29, 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', NULL, NULL, 'BEATRIZ MORENO', '911000001', '911000000', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-26 19:56:12', '2026-01-19 09:00:00', 'DEMO', 'Administrador');
-INSERT INTO `fza_clientes` VALUES ('321', 'S', NULL, 'añlsdfkjañlsdkfj', '337373837', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', '', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-02-26 19:58:55', '2026-02-26 19:58:55', 'Administrador', 'Administrador');
+INSERT INTO `fza_clientes` VALUES ('321', 'S', NULL, 'añlsdfkjañlsdkfj', '337373837', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', '', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, 'N', NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-02-26 19:58:55', '2026-02-26 19:58:55', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('PUBLICO', 'S', 2, 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', NULL, 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, 'ES2101822356985665446552', 'N', 'N', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', '0', NULL, NULL, '2023-12-24 14:10:14', '2022-11-02 20:28:28', 'Administrador', 'Administrador');
 INSERT INTO `fza_clientes` VALUES ('TIENDA', 'S', 1, 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'VENTAMAYOR', '', '', '2026-02-01 14:09:13', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
 
@@ -2625,7 +2625,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-05 06:57:23', '2026-03-05 06:57:23', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-06 07:48:54', '2026-03-06 07:48:54', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
@@ -3751,6 +3751,14 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_contadores` AS SELECT
     LEFT JOIN `fza_tipos_documentos` ON (
     `fza_contadores`.`TIPODOC_CONTADOR` = `fza_tipos_documentos`.`CODIGO_TIPODOCUMENTO`
     )) ;
+
+-- ----------------------------
+-- View structure for vi_depositos_cliente
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_depositos_cliente`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_depositos_cliente` AS SELECT DC.*, A.DESCRIPCION_ARTICULO FROM fza_depositos_cliente  DC
+ LEFT JOIN fza_articulos A 
+    ON DC.CODIGO_ARTICULO_DEP = A.CODIGO_ARTICULO ;
 
 -- ----------------------------
 -- View structure for vi_empresas

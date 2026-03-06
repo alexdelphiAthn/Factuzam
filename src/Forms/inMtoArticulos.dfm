@@ -17,7 +17,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       Width = 856
       Height = 673
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 856
       ExplicitHeight = 673
       ClientRectBottom = 669
@@ -72,6 +72,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 30
         ExplicitWidth = 848
         ExplicitHeight = 639
         object pnlTopFicha: TPanel
@@ -166,33 +168,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Transparent = True
               AnchorX = 90
             end
-            object rgTipoIVA: TcxDBRadioGroup
-              Left = 472
-              Top = 6
-              Caption = 'Tipo de IVA'
-              DataBinding.DataField = 'TIPOIVA_ARTICULO'
-              DataBinding.DataSource = dsTablaG
-              Properties.Items = <
-                item
-                  Caption = 'Normal'
-                  Value = 'N'
-                end
-                item
-                  Caption = 'Reducido'
-                  Value = 'R'
-                end
-                item
-                  Caption = 'S'#250'per Reducido'
-                  Value = 'SR'
-                end
-                item
-                  Caption = 'Exento'
-                  Value = 'E'
-                end>
-              TabOrder = 9
-              Height = 122
-              Width = 185
-            end
             object cxDBLabel1: TcxDBLabel
               Left = 250
               Top = 128
@@ -230,7 +205,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 457
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsTarifas
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 453
             ClientRectLeft = 4
@@ -396,13 +371,40 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
             end
+            object cxTabSheet1: TcxTabSheet
+              Caption = '&1_General'
+              ImageIndex = 4
+              object rgTipoIVA: TcxDBRadioGroup
+                Left = 264
+                Top = 22
+                Caption = 'Tipo de IVA'
+                DataBinding.DataField = 'TIPOIVA_ARTICULO'
+                DataBinding.DataSource = dsTablaG
+                Properties.Items = <
+                  item
+                    Caption = 'Normal'
+                    Value = 'N'
+                  end
+                  item
+                    Caption = 'Reducido'
+                    Value = 'R'
+                  end
+                  item
+                    Caption = 'S'#250'per Reducido'
+                    Value = 'SR'
+                  end
+                  item
+                    Caption = 'Exento'
+                    Value = 'E'
+                  end>
+                TabOrder = 0
+                Height = 122
+                Width = 185
+              end
+            end
             object tsTarifas: TcxTabSheet
-              Caption = '&1_Tarifas'
+              Caption = '&2_Tarifas'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -658,12 +660,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsProveedores: TcxTabSheet
-              Caption = '&2_Proveedores'
+              Caption = '&3_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -824,12 +822,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsLineasFactura: TcxTabSheet
-              Caption = '&3_Lineas de Facturas - '
+              Caption = '&4_Lineas de Facturas - '
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1047,7 +1041,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsOtros: TcxTabSheet
-              Caption = '&4_Otros'
+              Caption = '&5_Otros'
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
@@ -1209,7 +1203,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1218,6 +1211,9 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         inherited pnlPerfilTop: TPanel
           Width = 848
           ExplicitWidth = 848
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 848
