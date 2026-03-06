@@ -63,7 +63,7 @@ type
     procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
                                          const QMaster, QLineas: TDataSet);
   public
-    { Public declarations }
+    dmFac: TdmFacturas;
   end;
 
 var
@@ -420,13 +420,14 @@ end;
 
 procedure TfrmPrintFac.preparar_consulta;
 begin
-  VAR ParentForm := TfrmMtoFacturas(Owner);
-  with (ParentForm.tdmDataModule as TdmFacturas) do
+//  VAR ParentForm := TfrmMtoFacturas(Owner);
+  with dmFac do
   begin
   if rbActual.Checked = true then
   begin
     with unqryFacPrint do
     begin
+      Close;
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
                   '       FROM vi_FACTURAS_print f' +
@@ -441,11 +442,11 @@ begin
     with unqryLinFacPrint do
     begin
       Params.Clear;
-      SQL.Text := '       SELECT * ' +
-                  '         FROM vi_FACTURAS_LINEAS_print V  ' +
-                  '        WHERE V.NRO_FACTURA_LINEA = :numfac' +
-                  '          AND V.SERIE_FACTURA_LINEA = :serie ' +
-                  '     order by V.LINEA_FACTURA_LINEA';
+      SQL.Text := '  SELECT * ' +
+                  '    FROM vi_FACTURAS_LINEAS_print V  ' +
+                  '   WHERE V.NRO_FACTURA_LINEA = :numfac' +
+                  '     AND V.SERIE_FACTURA_LINEA = :serie ' +
+                  'ORDER BY V.LINEA_FACTURA_LINEA';
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
       end;
@@ -458,12 +459,13 @@ begin
   begin
     with unqryFacPrint do
     begin
+      Close;
       Params.Clear;
-      SQL.Text := '     SELECT *  ' +
-                  '       FROM VI_FACTURAS_PRINT' +
-                  '      WHERE FECHA_FACTURA >= :fecha_ini ' +
-                  '        AND  FECHA_FACTURA <= :fecha_fin ' +
-                  '   order by NRO_FACTURA';
+      SQL.Text := '  SELECT *  ' +
+                  '    FROM VI_FACTURAS_PRINT' +
+                  '   WHERE FECHA_FACTURA >= :fecha_ini ' +
+                  '     AND  FECHA_FACTURA <= :fecha_fin ' +
+                  'ORDER BY NRO_FACTURA';
       Params.ParamByName('fecha_ini').Value := dedDesde.Date;
       Params.ParamByName('fecha_fin').Value := dedHasta.Date;
     end;
@@ -472,6 +474,7 @@ begin
     fxdsPrintFac.UpdateBounds;
     with unqryLinFacPrint do
     begin
+      Close;
       Params.Clear;
       SQL.Text := '    SELECT *  ' +
                   '      FROM vi_FACTURAS_LINEAS_print L ' +
