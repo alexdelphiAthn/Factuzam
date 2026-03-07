@@ -52,21 +52,23 @@ uses
 procedure TfrmModalGenImpSave.btnCancelarClick(Sender: TObject);
 begin
   inherited;
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+//  PostMessage(Handle, WM_CLOSE, 0, 0);
+  ModalResult := mrOk;
 end;
 
 procedure TfrmModalGenImpSave.btnGuardarClick(Sender: TObject);
 begin
   inherited;
   sFicha := 'S';
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+//  PostMessage(Handle, WM_CLOSE, 0, 0);
+  ModalResult := mrOk;
 end;
 
 procedure TfrmModalGenImpSave.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+//  Action := caFree;
 end;
 
 procedure TfrmModalGenImpSave.FormCreate(Sender: TObject);
