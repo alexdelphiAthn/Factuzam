@@ -189,10 +189,10 @@ begin
           begin
             SQL.Text :=   'SELECT * '+
                           '  FROM fza_usuarios_perfiles ' +
-                          ' WHERE ((KEY_PERFILES = :NameFormModule) ' +
-                          '    OR  (KEY_PERFILES = :NameDataModule)) ';
-            ParamByName('NameFormModule').AsString := Self.Name;
-            ParamByName('NameDataModule').AsString :=
+                          ' WHERE ((KEY_PERFILES = :NameDataModule) ' +
+                          '    OR  (KEY_PERFILES = :NameFormModule)) ';
+            ParamByName('NameDataModule').AsString := Self.Name;
+            ParamByName('NameFormModule').AsString :=
                                                 (tdmDataModule as TdmBase).Name;
           end;
           if (Active = false) then
@@ -202,63 +202,45 @@ begin
   end;
 end;
 
-
-
 procedure TfrmMtoGen.AplicarEtiquetas;
 var
   i:integer;
-  cComponent : TComponent;
   cxGrid: TcxGridDBTableView;
 begin
   if (DsTablaG.Dataset <> nil) then
     lblTablaOrigen.Caption :=
                 GetTableNameFromQuery((dsTablaG.Dataset as TUNIQuery).SQL.Text);
-  if (StrToBool(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False'))) then
-  begin
-   for cComponent in (Self as TComponent) do
-   begin
-     if cComponent.ClassNameis('TcxGridDBTableView') then
-     begin
-      if ((GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')) = 'True') then
-       begin
-         cxGrid := (cComponent as TcxGridDBTableView);
-         cxGrid.ClearItems;
-         cxGrid.DataController.CreateAllItems;
-         cxGrid.ApplyBestFit();
-       end;
-     end;
-   end;
-  end;
-  if ((GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')) = 'True') then
+  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')),
+              'True') then
   begin
     for i:= 0 to Self.Componentcount - 1 do
     begin
       if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
       begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
-        if ((GetPerfilValueDef(oPerfilDic,
-                               cxGrid.Name + '__oApplyWidth',
-                               'False')) = 'True') then
+
+        // Segunda validación segura
+        if SameText(Trim(GetPerfilValueDef(oPerfilDic, cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
         begin
-          PonerAnchosTitulos(cxGrid,
-                             Self.Name,
-                             oPerfilDic);
+          PonerAnchosTitulos(cxGrid, Self.Name, oPerfilDic);
         end;
       end;
     end;
   end;
+
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
-  if ((GetPerfilValueDef(oPerfilDic,
-                         'oRenameComponents',
-                         'False')) = 'True') then
+
+  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')), 'True') then
     SetLabelForm(Self, oPerfilDic);
-  tsPerfil.TabVisible := false;
-       //   StrToBool(GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil', 'False'));
-  {$IFDEF DEBUG}
-    tsPerfil.TabVisible := False;
-  {$ENDIF }
-  if (tsPerfil.TabVisible = true) then
-    AbrirPerfiles(tsPerfil.TabVisible);
+
+//  tsPerfil.TabVisible := false;
+//
+//  {$IFDEF DEBUG}
+//    tsPerfil.TabVisible := False;
+//  {$ENDIF }
+//
+//  if (tsPerfil.TabVisible = true) then
+//    AbrirPerfiles(tsPerfil.TabVisible);
 end;
 
 procedure TfrmMtoGen.btnCargarCaptionsClick(Sender: TObject);
@@ -376,11 +358,14 @@ begin
   FreeAndNil(formulario);
   if bGuardar then
   begin
-    // Activar flag global de aplicar anchos (sin resetear el resto de perfiles personalizados)
-    odmPerfiles.GrabarPerfil(sPermisos, Self.Name, 'oApplyWidth', 'True');
+    CargarPerfilesComunes(sPermisos);
     if (tdmDataModule <> nil) then
       GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner, sPermisos);
     CargarCaptions(Self, Self.Owner, sPermisos);
+    if Not(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False') = 'True') then
+    begin
+        odmPerfiles.GrabarPerfil(sPermisos, Self.Name, 'oApplyWidth', 'True');
+    end;
     for i:= 0 to Self.Componentcount - 1 do
     begin
         if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
@@ -389,7 +374,6 @@ begin
           (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
                                                        Self.Name,
                                                        sPermisos);
-          // El usuario ha guardado este grid explícitamente: activar siempre su oApplyWidth
           odmPerfiles.GrabarPerfil(sPermisos,
                                    Self.Name,
                                    cxGrid.Name + '__oApplyWidth',
@@ -490,7 +474,7 @@ begin
   with odmPerfiles do
   begin
     GrabarPerfil(sUser, Self.Name, 'oRenameComponents', 'False' );
-    GrabarPerfil(sUser, Self.Name, 'oCreateItems', 'True' );
+    GrabarPerfil(sUser, Self.Name, 'oCreateItems', 'False' );
     GrabarPerfil(sUser, Self.Name, 'oBusqGlobal', 'Grid' );
     GrabarPerfil(sUser, Self.Name, 'oApplyWidth', 'True' );
     GrabarPerfil(sUser, Self.Name, 'oMostrarPerfil', 'False' );

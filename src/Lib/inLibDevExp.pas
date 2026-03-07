@@ -175,29 +175,22 @@ begin
     oColumn := cxgrdtvVista.Columns[i];
     sColumnName := oColumn.DataBinding.FieldName;
     sVistaName := cxgrdtvVista.Name;
-    if (oColumn.Visible)
-    then
-      sValue := 'True'
-    else
-      sValue := 'False';
-    odmPerfiles.GrabarPerfil(sProfile, sName,
-      sVistaName + '_' + sColumnName + '_Visible',
-      sValue);
+
+    // 1. Guardar Visibilidad
+    if (oColumn.Visible) then sValue := 'True' else sValue := 'False';
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Visible', sValue);
+
+    // 2. Guardar Orden (usamos Index, que es la propiedad de escritura)
     sValue := IntToStr(oColumn.Index);
-    odmPerfiles.GrabarPerfil(sProfile, sName,
-      sVistaName + '_' + sColumnName + '_Index',
-      sValue);
-    if (oColumn.Visible) then
-    begin
-      sValue := IntToStr(oColumn.Width);
-      odmPerfiles.GrabarPerfil(sProfile, sName,
-        sVistaName + '_' + sColumnName + '_Width',
-        sValue);
-      sValue := oColumn.Caption;
-      odmPerfiles.GrabarPerfil(sProfile, sName,
-        sVistaName + '_' + sColumnName + '_Caption',
-        sValue);
-    end;
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Index', sValue);
+
+    // 3. Guardar Ancho
+    sValue := IntToStr(oColumn.Width);
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Width', sValue);
+
+    // 4. Guardar Caption
+    sValue := oColumn.Caption;
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Caption', sValue);
   end;
 end;
 
@@ -207,132 +200,107 @@ procedure PonerAnchosTitulos( cxgrdtvVista: TcxGridDBTableView;
 var
   oColumn: TcxGridDBColumn;
   i: Integer;
-  sName, sColumnName, sSubKey, sProperties: string;
-  IsCurrencyField,
-  IsBooleanField,
-  IsDateField,
-  IsPercentField,
-  IsIntegerField: Boolean;
+  sName, sColumnName, sSubKey, sValue: string;
+  IsCurrencyField, IsBooleanField,
+  IsDateField, IsPercentField, IsIntegerField: Boolean;
 begin
-  for i := 0 to cxgrdtvVista.ColumnCount - 1 do
-  begin
-    oColumn := cxgrdtvVista.Columns[i];
-    sColumnName := oColumn.DataBinding.FieldName;
-    sName := cxgrdtvVista.Name;
-    sSubKey := sName + '_' + sColumnName;
-    oColumn.Visible :=
-      StrToBool(GetPerfilSubKeyValueDef(oPerfilDic,
-        sSubKey,
-        'Visible',
-        'True'));
-    if (oColumn.Visible) then
+  cxgrdtvVista.BeginUpdate;
+  try
+    for i := 0 to cxgrdtvVista.ColumnCount - 1 do
     begin
-      oColumn.Caption :=
-        GetPerfilSubKeyValueDef(oPerfilDic,
-        sSubKey,
-        'Caption',
-        oColumn.Caption);
-      oColumn.Width :=
-        StrToInt(GetPerfilSubKeyValueDef( oPerfilDic,
-                                          sSubKey,
-                                          'Width',
-                                          IntToStr(oColumn.Width)
-                                        ));
-      // StartsText es una función inline que aporta mucho mejor rendimiento
-      IsCurrencyField := (StartsText('EUR', sColumnName) or
-                          StartsText('TOTAL', sColumnName) or
-                          StartsText('PRECIO', sColumnName));
-      if (IsCurrencyField) then
+      oColumn := cxgrdtvVista.Columns[i];
+      sColumnName := oColumn.DataBinding.FieldName;
+      sName := cxgrdtvVista.Name;
+      sSubKey := sName + '_' + sColumnName;
+      // 1. Visibilidad, Caption y Ancho
+      oColumn.Visible := SameText(GetPerfilSubKeyValueDef(oPerfilDic,
+                                                          sSubKey,
+                                                          'Visible',
+                                                          'True'),
+                                  'True');
+      oColumn.Caption := GetPerfilSubKeyValueDef(oPerfilDic,
+                                                 sSubKey,
+                                                 'Caption',
+                                                 oColumn.Caption);
+      oColumn.Width := StrToInt(GetPerfilSubKeyValueDef( oPerfilDic,
+                                                         sSubKey,
+                                                         'Width',
+                                                         IntToStr(oColumn.Width)
+                                                       ));
+      // 2. Formato: SOLO adivinamos si la columna no trae propiedades del DFM
+      if oColumn.PropertiesClassName = '' then
       begin
-        sProperties := (GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sSubKey,
-                                                'PropertiesClass',
-                                                ''
-                                               ));
-        oColumn.PropertiesClassName := 'TcxCurrencyEditProperties';
-      end;
-      IsBooleanField := (StartsText('ES', sColumnName) or
-                        (StartsText('ACTIVO', sColumnName)));
-      if (IsBooleanField) then
-      begin
-        sProperties := (GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sSubKey,
-                                                'PropertiesClass',
-                                                ''
-                                               ));
-        oColumn.PropertiesClassName := 'TcxCheckBoxProperties';
-        TcxCheckBoxProperties(oColumn.Properties).ValueChecked := 'S';
-        TcxCheckBoxProperties(oColumn.Properties).ValueUnChecked := 'N';
-      end;
-      IsDateField := StartsText('FECHA', sColumnName);
-      if (IsDateField) then
-      begin
-        sProperties := (GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sSubKey,
-                                                'PropertiesClass',
-                                                ''
-                                               ));
-        oColumn.PropertiesClassName := 'TcxDateEditProperties';
-        TcxDateEditProperties(oColumn.Properties).Kind := ckDate;
-      end;
-      IsPercentField := StartsText('PORCEN', sColumnName);
-      if (IsPercentField) then
-      begin
-        sProperties := (GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sSubKey,
-                                                'PropertiesClass',
-                                                ''
-                                               ));
-        oColumn.PropertiesClassName := 'TcxSpinEditProperties';
-        with TcxSpinEditProperties(oColumn.Properties) do
+        IsCurrencyField := (StartsText('EUR', sColumnName) or
+                            StartsText('TOTAL', sColumnName) or
+                            StartsText('PRECIO', sColumnName));
+        if (IsCurrencyField) then
+          oColumn.PropertiesClassName := 'TcxCurrencyEditProperties';
+
+        IsBooleanField := (StartsText('ES', sColumnName) or
+                           StartsText('ACTIVO', sColumnName));
+        if (IsBooleanField) then
         begin
-          AssignedValues.MinValue := True;
-          DisplayFormat := '0.00 %';
-          EditFormat := '0.00 %';
-          Increment := 0.100000000000000000;
-          LargeIncrement := 1.000000000000000000;
-          MaxValue := 100.000000000000000000;
-          MinValue := 0;
-          ValueType := vtFloat;
+          oColumn.PropertiesClassName := 'TcxCheckBoxProperties';
+          TcxCheckBoxProperties(oColumn.Properties).ValueChecked := 'S';
+          TcxCheckBoxProperties(oColumn.Properties).ValueUnChecked := 'N';
         end;
-      end;
-      IsIntegerField := ((StartsText('ORDEN', sColumnName)) or
-          (StartsText('N_', sColumnName)));
-      if (IsIntegerField) then
-      begin
-        sProperties := (GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sSubKey,
-                                                'PropertiesClass',
-                                                ''
-                                               ));
-        oColumn.PropertiesClassName := 'TcxSpinEditProperties';
-        with TcxSpinEditProperties(oColumn.Properties) do
+
+        IsDateField := StartsText('FECHA', sColumnName);
+        if (IsDateField) then
         begin
-          AssignedValues.MinValue := True;
-          DisplayFormat := '0';
-          EditFormat := '0';
-          Increment := 1;
-          LargeIncrement := 1;
-          // MaxValue := 100.000000000000000000;
-          MinValue := 0;
-          ValueType := vtInt;
+          oColumn.PropertiesClassName := 'TcxDateEditProperties';
+          TcxDateEditProperties(oColumn.Properties).Kind := ckDate;
         end;
-      end;
-      (* Column.PropertiesClass := TcxBlobEditProperties;
-        Properties := Column.Properties AS TcxBlobEditProperties;
-        Properties.BlobEditKind := bekMemo; *)
+
+        IsPercentField := StartsText('PORCEN', sColumnName);
+        if (IsPercentField) then
+        begin
+          oColumn.PropertiesClassName := 'TcxSpinEditProperties';
+          with TcxSpinEditProperties(oColumn.Properties) do
+          begin
+            AssignedValues.MinValue := True;
+            DisplayFormat := '0.00 %';
+            EditFormat := '0.00 %';
+            Increment := 0.10;
+            LargeIncrement := 1.0;
+            MaxValue := 100.0;
+            MinValue := 0;
+            ValueType := vtFloat;
+          end;
+        end;
+        IsIntegerField := ((StartsText('ORDEN', sColumnName)) or
+                           (StartsText('N_', sColumnName)));
+        if (IsIntegerField) then
+        begin
+          oColumn.PropertiesClassName := 'TcxSpinEditProperties';
+          with TcxSpinEditProperties(oColumn.Properties) do
+          begin
+            AssignedValues.MinValue := True;
+            DisplayFormat := '0';
+            EditFormat := '0';
+            Increment := 1;
+            LargeIncrement := 1;
+            MinValue := 0;
+            ValueType := vtInt;
+          end;
+        end;
+      end; // Fin del IF de formatos
     end;
-  end;
-  for i := 0 to cxgrdtvVista.ColumnCount - 1 do
-  begin
-    oColumn := cxgrdtvVista.Columns[i];
-    sColumnName := oColumn.DataBinding.FieldName;
-    sName := cxgrdtvVista.Name;
-    sSubKey := sName + '_' + sColumnName;
-    oColumn.Index := StrToInt(GetPerfilSubKeyValueDef(oPerfilDic,
-                                                      sSubKey,
-                                                      'Index',
-                                                    IntToStr(oColumn.Index)));
+    // 3. Aplicar el orden (Index) en un bucle SEPARADO para evitar conflictos
+    for i := 0 to cxgrdtvVista.ColumnCount - 1 do
+    begin
+      oColumn := cxgrdtvVista.Columns[i];
+      sColumnName := oColumn.DataBinding.FieldName;
+      sName := cxgrdtvVista.Name;
+      sSubKey := sName + '_' + sColumnName;
+      oColumn.Index := StrToInt(GetPerfilSubKeyValueDef(oPerfilDic,
+                                                        sSubKey,
+                                                        'Index',
+                                                        IntToStr(oColumn.Index)
+                                                       ));
+    end;
+  finally
+    cxgrdtvVista.EndUpdate;
   end;
 end;
 
