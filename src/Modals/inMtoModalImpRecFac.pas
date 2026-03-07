@@ -19,7 +19,8 @@ uses
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturas,
-  cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab;
+  cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
+  System.Actions, Vcl.ActnList;
 
 type
   TfrmPrintRecFac = class(TfrmPrint)

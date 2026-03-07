@@ -1,8 +1,9 @@
 object dmPerfiles: TdmPerfiles
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  Height = 150
-  Width = 285
+  Height = 188
+  Width = 356
+  PixelsPerInch = 120
   object unqryPerfiles: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
@@ -10,8 +11,8 @@ object dmPerfiles: TdmPerfiles
       'FROM fza_usuarios_perfiles '
       'WHERE USUARIO_GRUPO_PERFILES = '#39'Nothing'#39)
     BeforePost = unqryPerfilesBeforePost
-    Left = 88
-    Top = 56
+    Left = 110
+    Top = 70
   end
   object unstdGrabarPerfil: TUniStoredProc
     StoredProcName = 'PRC_CREAR_ACTUALIZAR_KEY'
@@ -20,8 +21,8 @@ object dmPerfiles: TdmPerfiles
         'CALL PRC_CREAR_ACTUALIZAR_KEY(:pUSUARIO, :pKEY, :pSUBKEY, :pVALU' +
         'E, :pVALUE_TEXT, :pUSUARIO_MODIF)')
     Connection = dmConn.conUni
-    Left = 184
-    Top = 56
+    Left = 230
+    Top = 70
     ParamData = <
       item
         DataType = ftWideString

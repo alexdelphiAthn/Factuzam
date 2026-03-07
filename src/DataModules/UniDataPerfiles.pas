@@ -33,14 +33,16 @@ type
     procedure unqryPerfilesBeforePost(DataSet: TDataSet);
   private
     { Private declarations }
-  public
-    procedure GrabarPerfil(psuser, pskey, pssubkey, psvalue:string;
-                           psValueText:WideString = '');
-    procedure Assign_Profile_Dict(pskey:string; var oDict: TProfileUserDicc);
-
-    procedure AddRecordToDict(fpProfile: TFieldsProfile;
-                              var oDict : TProfileUserDicc);
+public
+    // Métodos existentes mejorados
+    procedure GrabarPerfil(psuser, pskey, pssubkey, psvalue: string; psValueText: WideString = '');
+    procedure Assign_Profile_Dict(pskey: string; var oDict: TProfileUserDicc);
+    procedure AddRecordToDict(fpProfile: TFieldsProfile; var oDict: TProfileUserDicc);
     function GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
+
+    // NUEVOS MÉTODOS para centralizar lógica y evitar SQL en los formularios
+    function GetProfileSubKey(sKey: string; sDef: string = ''): string;
+    procedure DeleteProfile(sUserGroup, sKey: string; sSubKey: string = '');
   end;
 
 var
@@ -133,68 +135,91 @@ begin
   //
 end;
 
-function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey,
-                                               sSubKey,
-                                               sDef: string): string;
+procedure TdmPerfiles.DeleteProfile(sUserGroup, sKey: string; sSubKey: string = '');
 var
-  bUser, bGroup, bAll:Boolean;
-  sUserResult, sGroupResult, sAllResult:string;
+  unqryDelete: TUniQuery;
 begin
-  bUser := False;
-  bGroup := False;
-  bAll := False;
-with unqryPerfiles do
+  unqryDelete := TUniQuery.Create(nil);
+  try
+    unqryDelete.Connection := oConn;
+    unqryDelete.SQL.Text := 'DELETE FROM fza_usuarios_perfiles ' +
+                            ' WHERE USUARIO_GRUPO_PERFILES = :UserGroup ' +
+                            '   AND KEY_PERFILES = :Key';
+
+    // Si pasamos un SubKey, lo añadimos a la condición de borrado
+    if sSubKey <> '' then
+      unqryDelete.SQL.Add(' AND SUBKEY_PERFILES = :SubKey');
+
+    unqryDelete.ParamByName('UserGroup').AsString := sUserGroup;
+    unqryDelete.ParamByName('Key').AsString := sKey;
+    if sSubKey <> '' then
+      unqryDelete.ParamByName('SubKey').AsString := sSubKey;
+
+    unqryDelete.Execute;
+  finally
+    unqryDelete.Free;
+  end;
+end;
+
+function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
+begin
+  Result := sDef;
+  with unqryPerfiles do
   begin
-    Connection := oConn;
-    Sql.Text :=  '  SELECT *  ' +
-                 '    FROM fza_usuarios_perfiles ' +
-                 '   WHERE  (   USUARIO_GRUPO_PERFILES = :user ' +
-                  '          OR USUARIO_GRUPO_PERFILES = :group' +
-                  '          OR USUARIO_GRUPO_PERFILES = :todos)' +
-                 '     AND KEY_PERFILES = :key ' +
-                 '     AND SUBKEY_PERFILES = :subkey ' +
-                 '     AND TYPE_BLOB_PERFILES IS NULL ' +
-                 'ORDER BY USUARIO_GRUPO_PERFILES, KEY_PERFILES';
+    Close;
+    // Delegamos la jerarquía al motor SQL. El que quede primero será el de mayor prioridad.
+    SQL.Text := '  SELECT VALUE_PERFILES ' +
+                '    FROM fza_usuarios_perfiles ' +
+                '   WHERE KEY_PERFILES = :key ' +
+                '     AND SUBKEY_PERFILES = :subkey ' +
+                '     AND USUARIO_GRUPO_PERFILES IN (:user, :group, :todos) ' +
+                '     AND TYPE_BLOB_PERFILES IS NULL ' +
+                'ORDER BY CASE USUARIO_GRUPO_PERFILES ' +
+                '            WHEN :user THEN 1 ' +
+                '            WHEN :group THEN 2 ' +
+                '            WHEN :todos THEN 3 ' +
+                '         END';
     ParamByName('user').AsString := oUser;
     ParamByName('group').AsString := oGroup;
+    ParamByName('todos').AsString := oAll;
     ParamByName('key').AsString := skey;
     ParamByName('subkey').AsString := sSubKey;
+    Open;
+
+    // Como está ordenado por prioridad, si hay registros, el primero es el correcto
+    if not IsEmpty then
+      Result := FieldByName('VALUE_PERFILES').AsString;
+
+    Close;
+  end;
+end;
+
+function TdmPerfiles.GetProfileSubKey(sKey: string; sDef: string = ''): string;
+begin
+  Result := sDef;
+  with unqryPerfiles do
+  begin
+    Close;
+    SQL.Text := '  SELECT SUBKEY_PERFILES ' +
+                '    FROM fza_usuarios_perfiles ' +
+                '   WHERE KEY_PERFILES = :key ' +
+                '     AND USUARIO_GRUPO_PERFILES IN (:user, :group, :todos) ' +
+                'ORDER BY CASE USUARIO_GRUPO_PERFILES ' +
+                '            WHEN :user THEN 1 ' +
+                '            WHEN :group THEN 2 ' +
+                '            WHEN :todos THEN 3 ' +
+                '         END';
+    ParamByName('key').AsString := sKey;
+    ParamByName('user').AsString := oUser;
+    ParamByName('group').AsString := oGroup;
     ParamByName('todos').AsString := oAll;
     Open;
-    First;
-    while not Eof do
-    begin
-      if (FindField('USUARIO_GRUPO_PERFILES').AsString = oUser) then
-      begin
-        bUser := True;
-        sUserResult := FindField('VALUE_PERFILES').AsString
-      end
-      else
-      begin
-        if (FindField('USUARIO_GRUPO_PERFILES').AsString = oGroup) then
-        begin
-          sGroupResult := FindField('VALUE_PERFILES').AsString;
-          bGroup := True;
-        end
-        else
-        begin
-          sAllResult := FindField('VALUE_PERFILES').AsString;
-          bAll := True;
-        end;
-      end;
-      Next;
-    end;
+
+    if not IsEmpty then
+      Result := FieldByName('SUBKEY_PERFILES').AsString;
+
+    Close;
   end;
-  if bUser then
-    Result:= sUserResult
-  else
-    if bGroup then
-      Result := sGroupResult
-    else
-     if bAll then
-       Result := sAllResult
-     else
-       Result := sDef;
 end;
 
 procedure TdmPerfiles.GrabarPerfil(psuser, pskey, pssubkey, psvalue: string;

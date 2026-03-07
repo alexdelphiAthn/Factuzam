@@ -16,7 +16,8 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, dxSkinsForm, cxClasses,
   cxContainer, cxEdit, cxLookAndFeels, cxLocalization, Vcl.ExtCtrls, cxGraphics,
   cxControls, cxLookAndFeelPainters, cxCustomListBox, cxListBox, Vcl.Menus,
-  Vcl.StdCtrls, cxButtons, dxCore, cxStyles, JvComponentBase, JvEnterTab;
+  Vcl.StdCtrls, cxButtons, dxCore, cxStyles, JvComponentBase, JvEnterTab,
+  cxCheckBox;
 
 type
   TfrmMtoModalGenImpEle = class(TfrmBase)
@@ -27,6 +28,7 @@ type
     btnSelectFormato: TcxButton;
     btnDeleteFormato: TcxButton;
     btnSalir: TcxButton;
+    chkPredeterminado: TcxCheckBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnSelectFormatoClick(Sender: TObject);
     procedure btnUsarOriginalClick(Sender: TObject);
@@ -38,7 +40,8 @@ type
   public
     { Public declarations }
       sFicha:string;
-      sElegido:String;
+      sElegido:string;
+      bPredeterminado:boolean;
   end;
 
 var
@@ -72,6 +75,7 @@ begin
   inherited;
   sElegido := lstFormatos.Items[lstFormatos.ItemIndex];
   sFicha := 'S';
+  bPredeterminado := chkPredeterminado.Checked;
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
@@ -79,6 +83,7 @@ procedure TfrmMtoModalGenImpEle.btnUsarOriginalClick(Sender: TObject);
 begin
   inherited;
   sElegido := 'Predeterminado';
+  bPredeterminado := chkPredeterminado.Checked;
   sFicha:= 'O';
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;

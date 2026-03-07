@@ -393,6 +393,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
