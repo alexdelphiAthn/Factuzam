@@ -184,7 +184,7 @@ begin
       sVistaName + '_' + sColumnName + '_Visible',
       sValue);
     sValue := IntToStr(oColumn.Index);
-    (Sender as TfrmMtoPrincipal).FdmDataPerfiles.GrabarPerfil(sProfile, sName,
+    odmPerfiles.GrabarPerfil(sProfile, sName,
       sVistaName + '_' + sColumnName + '_Index',
       sValue);
     if (oColumn.Visible) then
