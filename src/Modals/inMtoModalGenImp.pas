@@ -262,7 +262,7 @@ begin
               formularioSave := TfrmModalGenImpSave.Create(Self);
               try
                 formularioSave.edtNombreOrigen.Text := Self.Name;
-                formularioSave.edtDescripcion.Text := 'Predeterminar: ' + sElegido;
+                formularioSave.edtDescripcion.Text := 'Predet: ' + sElegido;
                 formularioSave.edtDescripcion.Enabled := False;
 
                 formularioSave.ShowModal;
