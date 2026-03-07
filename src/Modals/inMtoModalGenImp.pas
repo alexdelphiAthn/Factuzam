@@ -78,7 +78,7 @@ type
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
     { Public declarations }
     procedure preparar_consulta; virtual; abstract;
-    procedure Consultar_Formularios;
+    procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
   end;
 
 var
@@ -102,7 +102,7 @@ begin
   inherited;
   Preparar_consulta;
   Self.Hide;
-  Consultar_Formularios;
+  Consultar_Formularios(True);
   if (sElegido <> '') then
   begin
     frxrprt1.PrepareReport(True);
@@ -185,44 +185,93 @@ begin
   end;
 end;
 
-procedure TfrmPrint.Consultar_Formularios;
+procedure TfrmPrint.Consultar_Formularios(bForzarSeleccion: Boolean = False);
 var
-  form:TfrmMtoModalGenImpEle;
-  sDescripcion:string;
-  memStream:TMemoryStream;
+  form: TfrmMtoModalGenImpEle;
+  formularioSave: TfrmModalGenImpSave;
+  sDescripcion, sPermisos: string;
+  memStream: TMemoryStream;
+  unqryDefault: TUniQuery;
+  sFichaAccion: string;
 begin
   with unqryPerfiles do
   begin
     sElegido := '';
+    sFichaAccion := '';
     unqryPerfiles.Close;
     unqryPerfiles.Open;
-    form := TfrmMtoModalGenImpEle.Create(Self);
-    CargarFormatos(form);
-    if (RecordCount > 0) then
-      form.ShowModal
-    else
-      form.sFicha := 'O';
-    sElegido := form.sElegido;
-    if form.sFicha = 'S' then
+    if not bForzarSeleccion then
     begin
-      //guarda el formato
-      sDescripcion := form.lstFormatos.items[form.lstFormatos.ItemIndex ];
-      memStream:=TMemoryStream.Create;
+      sElegido := odmPerfiles.GetProfileSubKey(Self.Name + '_default', '');
+      if sElegido = 'Predeterminado' then
+        sFichaAccion := 'O'
+      else
+        sFichaAccion := 'S';
+    end;
+    // --- 2. SI NO HAY PREDETERMINADO (O SE FORZÓ), PEDIMOS AL USUARIO ---
+    if sElegido = '' then
+    begin
+      form := TfrmMtoModalGenImpEle.Create(Self);
       try
-        unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []);
-        TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).
-                                                      SaveToStream(memStream);
-        memStream.Position:=0;
-        frxrprt1.LoadFromStream(memStream);
+        CargarFormatos(form);
+        if (RecordCount > 0) then
+          form.ShowModal
+        else
+          form.sFicha := 'O';
+        sElegido := form.sElegido;
+        sFichaAccion := form.sFicha;
+        // --- 3. GUARDAR EL PREDETERMINADO SI SE MARCÓ EL CHECKBOX ---
+        if ((sFichaAccion = 'S') or (sFichaAccion = 'O')) and
+           form.bPredeterminado then
+        begin
+          formularioSave := TfrmModalGenImpSave.Create(Self);
+          try
+            formularioSave.edtNombreOrigen.Text := Self.Name;
+            formularioSave.edtDescripcion.Text := 'Predeterminar: ' + sElegido;
+            formularioSave.edtDescripcion.Enabled := False;
+            formularioSave.ShowModal;
+            if formularioSave.sFicha = 'S' then
+            begin
+              sPermisos := formularioSave.cbbPermisos.Text;
+              odmPerfiles.DeleteProfile(sPermisos, Self.Name + '_default');
+              odmPerfiles.GrabarPerfil(sPermisos, Self.Name + '_default',
+                                       sElegido, sElegido);
+            end;
+          finally
+            formularioSave.Free;
+          end;
+        end;
+      finally
+        form.Free;
+      end;
+    end;
+    // --- 4. CARGAR EL REPORTE FINAL ---
+    // ERROR 3 SOLUCIONADO: Este bloque AHORA está fuera del "if sElegido = ''"
+    if sFichaAccion = 'S' then
+    begin
+      sDescripcion := sElegido;
+      memStream := TMemoryStream.Create;
+      try
+        if unqryPerfiles.Locate('VALUE_PERFILES', sDescripcion, []) then
+        begin
+          TBlobField(unqryPerfiles.FieldByName(
+                                'VALUE_BLOB_PERFILES')).SaveToStream(memStream);
+          memStream.Position := 0;
+          frxrprt1.LoadFromStream(memStream);
+        end
+        else
+        begin
+           frxrprt1.AssignAll(frxReportOrigen);
+        end;
       finally
         memStream.Free;
       end;
     end
-    else if (form.sFicha = 'O') then
+    else if (sFichaAccion = 'O') then
     begin
       frxrprt1.AssignAll(frxReportOrigen);
     end;
-    FreeAndNil(form);
+
   end;
 end;
 
@@ -317,7 +366,7 @@ begin
       if unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []) then
       begin
         if ( Application.MessageBox( 'El informe ya existe. ' +
-                                    '�Desea reemplazar el informe?',
+                                    '¿Desea reemplazar el informe?',
                                     'Mensaje Advertencia',
                                     MB_YESNO ) = ID_YES ) then
           unqryPerfiles.Edit

@@ -96,7 +96,8 @@ uses
   inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
   inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
   inMtoCajaParam in 'src\Core\inMtoCajaParam.pas' {frmMtoCajaParam},
-  inLibCajaParam in 'src\Lib\inLibCajaParam.pas';
+  inLibCajaParam in 'src\Lib\inLibCajaParam.pas',
+  inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas';
 
 var
   frmLogon: TfrmLogon;

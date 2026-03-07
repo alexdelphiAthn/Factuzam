@@ -5,8 +5,8 @@ inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
   ClientWidth = 709
   Position = poMainFormCenter
   OnClose = FormClose
-  ExplicitWidth = 725
-  ExplicitHeight = 191
+  ExplicitWidth = 721
+  ExplicitHeight = 190
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 506
@@ -15,6 +15,8 @@ inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
     Height = 152
     Align = alRight
     TabOrder = 0
+    ExplicitLeft = 500
+    ExplicitHeight = 143
     object btnUsarOriginal: TcxButton
       Left = 0
       Top = 1
@@ -51,6 +53,13 @@ inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
       TabOrder = 3
       OnClick = btnSalirClick
     end
+    object chkPredeterminado: TcxCheckBox
+      Left = 14
+      Top = 120
+      Caption = 'Guardar selecci'#243'n'
+      Style.TransparentBorder = False
+      TabOrder = 4
+    end
   end
   object pnl2: TPanel [1]
     Left = 0
@@ -59,16 +68,20 @@ inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
     Height = 152
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 500
+    ExplicitHeight = 143
     object lstFormatos: TcxListBox
       Left = 1
       Top = 1
-      Width = 508
-      Height = 151
+      Width = 504
+      Height = 150
       Align = alClient
       ExtendedSelect = False
       ItemHeight = 19
       ScrollWidth = 50
       TabOrder = 0
+      ExplicitWidth = 498
+      ExplicitHeight = 141
     end
   end
   inherited Localizer1: TcxLocalizer
