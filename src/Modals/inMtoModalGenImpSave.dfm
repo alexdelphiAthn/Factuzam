@@ -3,10 +3,12 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
   BorderStyle = bsSingle
   Caption = 'Guardar Objeto Editado'
   ClientHeight = 188
-  ClientWidth = 458
+  ClientWidth = 502
   Position = poMainFormCenter
   OnClose = FormClose
-  ExplicitWidth = 470
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 514
   ExplicitHeight = 226
   TextHeight = 19
   object edtNombreOrigen: TcxTextEdit [0]
@@ -14,7 +16,7 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     Top = 24
     Enabled = False
     TabOrder = 0
-    Width = 238
+    Width = 286
   end
   object lbl1: TcxLabel [1]
     Left = 47
@@ -27,7 +29,7 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     Left = 187
     Top = 64
     TabOrder = 2
-    Width = 238
+    Width = 286
   end
   object lbl2: TcxLabel [3]
     Left = 17
@@ -53,7 +55,7 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     OnClick = btnGuardarClick
   end
   object btnCancelar: TcxButton [6]
-    Left = 288
+    Left = 336
     Top = 146
     Width = 137
     Height = 25
@@ -65,6 +67,6 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     Left = 184
     Top = 101
     TabOrder = 7
-    Width = 241
+    Width = 289
   end
 end
