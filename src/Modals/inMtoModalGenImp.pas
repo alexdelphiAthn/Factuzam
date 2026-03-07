@@ -192,8 +192,8 @@ var
   sDescripcion, sPermisos: string;
   memStream: TMemoryStream;
   sFichaAccion: string;
-  sDefaultSubKey: string; // <-- Variable para guardar el predeterminado
-  i: Integer;             // <-- Para recorrer la lista
+  sDefaultSubKey: string;
+  i: Integer;
 begin
   with unqryPerfiles do
   begin
@@ -201,12 +201,7 @@ begin
     sFichaAccion := '';
     unqryPerfiles.Close;
     unqryPerfiles.Open;
-
-    // --- 1. BUSCAR SI HAY UN FORMATO PREDETERMINADO SIEMPRE ---
-    // Leemos cuál es el predeterminado actual (si existe)
     sDefaultSubKey := odmPerfiles.GetProfileSubKey(Self.Name + '_default', '');
-
-    // Si NO forzamos la selección (Imprimir/PDF directo) y hay uno, lo usamos
     if (not bForzarSeleccion) and (sDefaultSubKey <> '') then
     begin
       sElegido := sDefaultSubKey;
@@ -217,17 +212,12 @@ begin
     end
     else
     begin
-      // --- 2. PEDIMOS AL USUARIO (PANTALLA DE ELECCIÓN) ---
       form := TfrmMtoModalGenImpEle.Create(Self);
       try
         CargarFormatos(form);
-
-        // ---> NUEVO: Si hay un predeterminado, lo marcamos en pantalla
         if sDefaultSubKey <> '' then
         begin
           form.chkPredeterminado.Checked := True; // Marcamos el check
-
-          // Buscamos el formato en la lista para dejarlo seleccionado visualmente
           if sDefaultSubKey <> 'Predeterminado' then
           begin
             for i := 0 to form.lstFormatos.Count - 1 do
@@ -240,23 +230,16 @@ begin
             end;
           end;
         end;
-
         if (RecordCount > 0) then
           form.ShowModal
         else
           form.sFicha := 'O';
-
         sElegido := form.sElegido;
         sFichaAccion := form.sFicha;
-
-        // --- 3. GUARDAR O BORRAR EL PREDETERMINADO SEGÚN EL CHECKBOX ---
         if (sFichaAccion = 'S') or (sFichaAccion = 'O') then
         begin
-          // Si el usuario dejó la casilla marcada...
           if form.bPredeterminado then
           begin
-            // Solo preguntamos permisos y guardamos SI HA CAMBIADO de formato
-            // (Si era el mismo, nos ahorramos molestar al usuario)
             if sElegido <> sDefaultSubKey then
             begin
               formularioSave := TfrmModalGenImpSave.Create(Self);
@@ -264,20 +247,18 @@ begin
                 formularioSave.edtNombreOrigen.Text := Self.Name;
                 formularioSave.edtDescripcion.Text := 'Predet: ' + sElegido;
                 formularioSave.edtDescripcion.Enabled := False;
-
                 formularioSave.ShowModal;
-
                 if formularioSave.sFicha = 'S' then
                 begin
                   sPermisos := formularioSave.cbbPermisos.Text;
-
                   // Borramos cualquier regla anterior para evitar duplicados
                   odmPerfiles.DeleteProfile(oUser, Self.Name + '_default');
                   odmPerfiles.DeleteProfile(oGroup, Self.Name + '_default');
                   odmPerfiles.DeleteProfile(oAll, Self.Name + '_default');
-
-                  // Guardamos el nuevo con el DataModule
-                  odmPerfiles.GrabarPerfil(sPermisos, Self.Name + '_default', sElegido, sElegido);
+                  odmPerfiles.GrabarPerfil(sPermisos,
+                                           Self.Name + '_default',
+                                           sElegido,
+                                           sElegido);
                 end;
               finally
                 formularioSave.Free;
@@ -286,7 +267,6 @@ begin
           end
           else
           begin
-            // ---> NUEVO: Si DESMARCÓ la casilla y ANTES había un predeterminado, lo borramos
             if sDefaultSubKey <> '' then
             begin
               odmPerfiles.DeleteProfile(oUser, Self.Name + '_default');
@@ -299,8 +279,6 @@ begin
         form.Free;
       end;
     end;
-
-    // --- 4. CARGAR EL REPORTE FINAL ---
     if sFichaAccion = 'S' then
     begin
       sDescripcion := sElegido;
@@ -308,7 +286,8 @@ begin
       try
         if unqryPerfiles.Locate('VALUE_PERFILES', sDescripcion, []) then
         begin
-          TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).SaveToStream(memStream);
+          TBlobField(unqryPerfiles.FieldByName(
+                                'VALUE_BLOB_PERFILES')).SaveToStream(memStream);
           memStream.Position := 0;
           frxrprt1.LoadFromStream(memStream);
         end
@@ -324,7 +303,6 @@ begin
     begin
       frxrprt1.AssignAll(frxReportOrigen);
     end;
-
   end;
 end;
 
