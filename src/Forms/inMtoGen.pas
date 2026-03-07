@@ -189,10 +189,10 @@ begin
           begin
             SQL.Text :=   'SELECT * '+
                           '  FROM fza_usuarios_perfiles ' +
-                          ' WHERE ((KEY_PERFILES = :NameDataModule) ' +
-                          '    OR  (KEY_PERFILES = :NameFormModule)) ';
-            ParamByName('NameDataModule').AsString := Self.Name;
-            ParamByName('NameFormModule').AsString :=
+                          ' WHERE ((KEY_PERFILES = :NameFormModule) ' +
+                          '    OR  (KEY_PERFILES = :NameDataModule)) ';
+            ParamByName('NameFormModule').AsString := Self.Name;
+            ParamByName('NameDataModule').AsString :=
                                                 (tdmDataModule as TdmBase).Name;
           end;
           if (Active = false) then
@@ -376,14 +376,11 @@ begin
   FreeAndNil(formulario);
   if bGuardar then
   begin
-    CargarPerfilesComunes(sPermisos);
+    // Activar flag global de aplicar anchos (sin resetear el resto de perfiles personalizados)
+    odmPerfiles.GrabarPerfil(sPermisos, Self.Name, 'oApplyWidth', 'True');
     if (tdmDataModule <> nil) then
       GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner, sPermisos);
     CargarCaptions(Self, Self.Owner, sPermisos);
-    if Not(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False') = 'True') then
-    begin
-        odmPerfiles.GrabarPerfil(sPermisos, Self.Name, 'oApplyWidth', 'True');
-    end;
     for i:= 0 to Self.Componentcount - 1 do
     begin
         if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
@@ -392,17 +389,11 @@ begin
           (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
                                                        Self.Name,
                                                        sPermisos);
-          IsSavingGrid := (GetPerfilValueDef(oPerfilDic,
-                                             cxGrid.Name + '__' + 'oApplyWidth',
-                                             'False') = 'True');
-          if IsSavingGrid then
-            sSavingGrid := 'True'
-          else
-            sSavingGrid := 'False';
+          // El usuario ha guardado este grid explícitamente: activar siempre su oApplyWidth
           odmPerfiles.GrabarPerfil(sPermisos,
                                    Self.Name,
-                                   cxGrid.Name + '__' +'oApplyWidth',
-                                   sSavingGrid);
+                                   cxGrid.Name + '__oApplyWidth',
+                                   'True');
           GetSettingsColumnProfile(cxGrid, Self.Name, Self.Owner, sPermisos);
         end;
     end;
