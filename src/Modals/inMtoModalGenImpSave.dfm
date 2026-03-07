@@ -6,8 +6,8 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
   ClientWidth = 458
   Position = poMainFormCenter
   OnClose = FormClose
-  ExplicitWidth = 474
-  ExplicitHeight = 227
+  ExplicitWidth = 470
+  ExplicitHeight = 226
   TextHeight = 19
   object edtNombreOrigen: TcxTextEdit [0]
     Left = 187
@@ -20,6 +20,7 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     Left = 47
     Top = 25
     Caption = 'Nombre origen'
+    TabOrder = 1
     Transparent = True
   end
   object edtDescripcion: TcxTextEdit [2]
@@ -32,12 +33,14 @@ inherited frmModalGenImpSave: TfrmModalGenImpSave
     Left = 17
     Top = 65
     Caption = 'Nombre del objeto'
+    TabOrder = 3
     Transparent = True
   end
   object lbl3: TcxLabel [4]
     Left = 107
     Top = 102
     Caption = 'Permiso'
+    TabOrder = 4
     Transparent = True
   end
   object btnGuardar: TcxButton [5]

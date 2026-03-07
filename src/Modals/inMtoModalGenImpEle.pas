@@ -67,7 +67,8 @@ begin
   inherited;
   sFicha := 'E';
   sElegido := '';
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  ModalResult := mrOk;
+//  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TfrmMtoModalGenImpEle.btnSelectFormatoClick(Sender: TObject);
@@ -76,7 +77,8 @@ begin
   sElegido := lstFormatos.Items[lstFormatos.ItemIndex];
   sFicha := 'S';
   bPredeterminado := chkPredeterminado.Checked;
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  ModalResult := mrOk;
+//  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TfrmMtoModalGenImpEle.btnUsarOriginalClick(Sender: TObject);
@@ -85,14 +87,15 @@ begin
   sElegido := 'Predeterminado';
   bPredeterminado := chkPredeterminado.Checked;
   sFicha:= 'O';
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  ModalResult := mrOk;
+//  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TfrmMtoModalGenImpEle.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+//  Action := caFree;
 end;
 
 procedure TfrmMtoModalGenImpEle.FormCreate(Sender: TObject);
@@ -100,7 +103,7 @@ begin
   inherited;
   Self.Position := poScreenCenter;
   sElegido := 'Predeterminado';
-  sFicha:= 'O';                             
+  sFicha:= 'O';
 end;
 
 end.

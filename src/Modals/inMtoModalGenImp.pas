@@ -191,8 +191,9 @@ var
   formularioSave: TfrmModalGenImpSave;
   sDescripcion, sPermisos: string;
   memStream: TMemoryStream;
-  unqryDefault: TUniQuery;
   sFichaAccion: string;
+  sDefaultSubKey: string; // <-- Variable para guardar el predeterminado
+  i: Integer;             // <-- Para recorrer la lista
 begin
   with unqryPerfiles do
   begin
@@ -200,53 +201,106 @@ begin
     sFichaAccion := '';
     unqryPerfiles.Close;
     unqryPerfiles.Open;
-    if not bForzarSeleccion then
+
+    // --- 1. BUSCAR SI HAY UN FORMATO PREDETERMINADO SIEMPRE ---
+    // Leemos cuál es el predeterminado actual (si existe)
+    sDefaultSubKey := odmPerfiles.GetProfileSubKey(Self.Name + '_default', '');
+
+    // Si NO forzamos la selección (Imprimir/PDF directo) y hay uno, lo usamos
+    if (not bForzarSeleccion) and (sDefaultSubKey <> '') then
     begin
-      sElegido := odmPerfiles.GetProfileSubKey(Self.Name + '_default', '');
+      sElegido := sDefaultSubKey;
       if sElegido = 'Predeterminado' then
         sFichaAccion := 'O'
       else
         sFichaAccion := 'S';
-    end;
-    // --- 2. SI NO HAY PREDETERMINADO (O SE FORZÓ), PEDIMOS AL USUARIO ---
-    if sElegido = '' then
+    end
+    else
     begin
+      // --- 2. PEDIMOS AL USUARIO (PANTALLA DE ELECCIÓN) ---
       form := TfrmMtoModalGenImpEle.Create(Self);
       try
         CargarFormatos(form);
+
+        // ---> NUEVO: Si hay un predeterminado, lo marcamos en pantalla
+        if sDefaultSubKey <> '' then
+        begin
+          form.chkPredeterminado.Checked := True; // Marcamos el check
+
+          // Buscamos el formato en la lista para dejarlo seleccionado visualmente
+          if sDefaultSubKey <> 'Predeterminado' then
+          begin
+            for i := 0 to form.lstFormatos.Count - 1 do
+            begin
+              if form.lstFormatos.Items[i] = sDefaultSubKey then
+              begin
+                form.lstFormatos.ItemIndex := i;
+                Break;
+              end;
+            end;
+          end;
+        end;
+
         if (RecordCount > 0) then
           form.ShowModal
         else
           form.sFicha := 'O';
+
         sElegido := form.sElegido;
         sFichaAccion := form.sFicha;
-        // --- 3. GUARDAR EL PREDETERMINADO SI SE MARCÓ EL CHECKBOX ---
-        if ((sFichaAccion = 'S') or (sFichaAccion = 'O')) and
-           form.bPredeterminado then
+
+        // --- 3. GUARDAR O BORRAR EL PREDETERMINADO SEGÚN EL CHECKBOX ---
+        if (sFichaAccion = 'S') or (sFichaAccion = 'O') then
         begin
-          formularioSave := TfrmModalGenImpSave.Create(Self);
-          try
-            formularioSave.edtNombreOrigen.Text := Self.Name;
-            formularioSave.edtDescripcion.Text := 'Predeterminar: ' + sElegido;
-            formularioSave.edtDescripcion.Enabled := False;
-            formularioSave.ShowModal;
-            if formularioSave.sFicha = 'S' then
+          // Si el usuario dejó la casilla marcada...
+          if form.bPredeterminado then
+          begin
+            // Solo preguntamos permisos y guardamos SI HA CAMBIADO de formato
+            // (Si era el mismo, nos ahorramos molestar al usuario)
+            if sElegido <> sDefaultSubKey then
             begin
-              sPermisos := formularioSave.cbbPermisos.Text;
-              odmPerfiles.DeleteProfile(sPermisos, Self.Name + '_default');
-              odmPerfiles.GrabarPerfil(sPermisos, Self.Name + '_default',
-                                       sElegido, sElegido);
+              formularioSave := TfrmModalGenImpSave.Create(Self);
+              try
+                formularioSave.edtNombreOrigen.Text := Self.Name;
+                formularioSave.edtDescripcion.Text := 'Predeterminar: ' + sElegido;
+                formularioSave.edtDescripcion.Enabled := False;
+
+                formularioSave.ShowModal;
+
+                if formularioSave.sFicha = 'S' then
+                begin
+                  sPermisos := formularioSave.cbbPermisos.Text;
+
+                  // Borramos cualquier regla anterior para evitar duplicados
+                  odmPerfiles.DeleteProfile(oUser, Self.Name + '_default');
+                  odmPerfiles.DeleteProfile(oGroup, Self.Name + '_default');
+                  odmPerfiles.DeleteProfile(oAll, Self.Name + '_default');
+
+                  // Guardamos el nuevo con el DataModule
+                  odmPerfiles.GrabarPerfil(sPermisos, Self.Name + '_default', sElegido, sElegido);
+                end;
+              finally
+                formularioSave.Free;
+              end;
             end;
-          finally
-            formularioSave.Free;
+          end
+          else
+          begin
+            // ---> NUEVO: Si DESMARCÓ la casilla y ANTES había un predeterminado, lo borramos
+            if sDefaultSubKey <> '' then
+            begin
+              odmPerfiles.DeleteProfile(oUser, Self.Name + '_default');
+              odmPerfiles.DeleteProfile(oGroup, Self.Name + '_default');
+              odmPerfiles.DeleteProfile(oAll, Self.Name + '_default');
+            end;
           end;
         end;
       finally
         form.Free;
       end;
     end;
+
     // --- 4. CARGAR EL REPORTE FINAL ---
-    // ERROR 3 SOLUCIONADO: Este bloque AHORA está fuera del "if sElegido = ''"
     if sFichaAccion = 'S' then
     begin
       sDescripcion := sElegido;
@@ -254,8 +308,7 @@ begin
       try
         if unqryPerfiles.Locate('VALUE_PERFILES', sDescripcion, []) then
         begin
-          TBlobField(unqryPerfiles.FieldByName(
-                                'VALUE_BLOB_PERFILES')).SaveToStream(memStream);
+          TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).SaveToStream(memStream);
           memStream.Position := 0;
           frxrprt1.LoadFromStream(memStream);
         end
