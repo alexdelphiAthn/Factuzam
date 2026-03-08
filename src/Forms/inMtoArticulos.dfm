@@ -171,24 +171,24 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               AnchorX = 90
             end
             object cxDBLabel1: TcxDBLabel
-              Left = 250
+              Left = 298
               Top = 128
               DataBinding.DataField = 'DESCRIPCION_FAMILIA'
               DataBinding.DataSource = dsTablaG
               TabOrder = 7
               Transparent = True
               Height = 21
-              Width = 586
+              Width = 538
             end
             object cxDBLabel2: TcxDBLabel
-              Left = 100
+              Left = 18
               Top = 128
               DataBinding.DataField = 'NOMBRE_FAMILIA'
               DataBinding.DataSource = dsTablaG
               TabOrder = 8
               Transparent = True
               Height = 21
-              Width = 133
+              Width = 274
             end
           end
         end
@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 396
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet2
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ExplicitHeight = 457
             ClientRectBottom = 392
