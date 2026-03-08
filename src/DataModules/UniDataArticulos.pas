@@ -184,6 +184,7 @@ begin
   unqryTarifasArticulos.Open;
   unqryProveedoresArticulos.Open;
   unqryLinFacturasArticulos.Open;
+  unqryVariaciones.Open;
 end;
 
 procedure TdmArticulos.FillTarifas(lst: TcxListView);
