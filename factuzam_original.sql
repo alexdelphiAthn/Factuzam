@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 08/03/2026 06:22:32
+ Date: 08/03/2026 08:12:11
 */
 
 SET NAMES utf8mb4;
@@ -109,30 +109,30 @@ CREATE TABLE `fza_articulos`  (
 -- ----------------------------
 -- Records of fza_articulos
 -- ----------------------------
-INSERT INTO `fza_articulos` VALUES ('ABRIGO-PAÑO', 'S', 'ESTANDAR', 'Abrigo de Paño Caballero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('BLUS-SEDA', 'S', 'ESTANDAR', 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('ABRIGO-PAÑO', 'S', 'ESTANDAR', 'Abrigo de Paño Caballero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:12', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('BLUS-SEDA', 'S', 'ESTANDAR', 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:13', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
 INSERT INTO `fza_articulos` VALUES ('BOLSO-PIEL', 'S', 'ESTANDAR', 'Bolso de Piel Mujer Grande', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:18', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'ADMIN', 'ADMIN', NULL);
-INSERT INTO `fza_articulos` VALUES ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:05', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:04', '0000-00-00 00:00:00', 'ADMIN', 'ADMIN', 'TC');
+INSERT INTO `fza_articulos` VALUES ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:03', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
 INSERT INTO `fza_articulos` VALUES ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
 INSERT INTO `fza_articulos` VALUES ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('LEGGING-SPORT', 'S', 'ESTANDAR', 'Legging Deportivo Mujer', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:54', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:51', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:50', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('LEGGING-SPORT', 'S', 'ESTANDAR', 'Legging Deportivo Mujer', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:49', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
 INSERT INTO `fza_articulos` VALUES ('MOCHILA-SPORT', 'S', 'ESTANDAR', 'Mochila Deportiva 30L', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('PANT-CHIN', 'S', 'ESTANDAR', 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:19', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('PANT-CHIN', 'S', 'ESTANDAR', 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:41', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
 INSERT INTO `fza_articulos` VALUES ('SOMBRERO-PJM', 'S', 'ESTANDAR', 'Sombrero Panamá Verano', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
 INSERT INTO `fza_articulos` VALUES ('SRV-ARREGLOS', 'S', 'SERVICIO', 'Arreglos y Modificaciones', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
 INSERT INTO `fza_articulos` VALUES ('SRV-ENVIO', 'S', 'SERVICIO', 'Gastos de Envío', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('SUDADERA-HOOD', 'S', 'ESTANDAR', 'Sudadera con Capucha Unisex', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:20', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
-INSERT INTO `fza_articulos` VALUES ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-01-05 07:13:21', '0000-00-00 00:00:00', 'DEMO', 'DEMO', NULL);
+INSERT INTO `fza_articulos` VALUES ('SUDADERA-HOOD', 'S', 'ESTANDAR', 'Sudadera con Capucha Unisex', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:30', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:31', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
+INSERT INTO `fza_articulos` VALUES ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '0000-00-00 00:00:00', 'DEMO', 'DEMO', 'TC');
 
 -- ----------------------------
 -- Table structure for fza_articulos_conjuntos_asign
@@ -213,6 +213,7 @@ DROP TABLE IF EXISTS `fza_articulos_proveedores`;
 CREATE TABLE `fza_articulos_proveedores`  (
   `CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `CODIGO_ARTICULO_ARTICULO_PROVEEDOR` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `REF_PROVEEDOR_ARTICULO_PROVEEDOR` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` decimal(19, 6) NULL DEFAULT NULL,
   `FECHA_VALIDEZ_ARTICULO_PROVEEDOR` datetime NULL DEFAULT NULL,
   `ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
@@ -227,22 +228,22 @@ CREATE TABLE `fza_articulos_proveedores`  (
 -- ----------------------------
 -- Records of fza_articulos_proveedores
 -- ----------------------------
-INSERT INTO `fza_articulos_proveedores` VALUES ('000', '.lmmlñlk', 2.000000, NULL, 'S', '2025-04-17 09:50:14', '2025-04-17 09:50:14', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('000', '.lmmlñlkasdfasdf', 2.000000, NULL, 'S', '2025-04-18 11:59:13', '2025-04-18 11:59:13', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('000', '016', 2.000000, NULL, 'S', '2025-04-12 16:27:40', '2024-10-06 20:27:00', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('000', 'MANO', 2.000000, NULL, 'S', '2025-04-18 12:05:44', '2025-04-18 12:05:44', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('000', 'MANODEOBRA', 2.000000, NULL, 'S', '2025-04-18 12:04:33', '2025-04-18 12:04:33', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('010', 'PAÑITOS', 1.000000, NULL, 'S', '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('10', '016', 3.000000, NULL, 'N', '2024-10-06 20:13:41', '2024-10-06 20:13:41', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('10', 'CEBADA', 0.080000, '2023-03-16 00:00:00', 'S', '2023-11-04 17:27:48', '2023-03-16 15:34:56', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('11', 'ALFALFA', 0.250000, '2023-05-03 00:00:00', 'S', '2023-05-24 12:53:58', '2023-03-04 13:40:00', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('17', 'ALFALFA', 0.170000, '2023-05-25 00:00:00', 'N', '2023-03-03 14:30:45', '2023-03-03 14:30:45', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('20', 'ALFALFA', 0.100000, '2023-03-02 00:00:00', 'N', '2023-03-04 18:14:28', '2023-03-03 14:02:47', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('7', '013', 5.000000, '2023-10-20 00:00:00', 'S', '2023-11-04 14:56:50', '2023-11-04 14:56:50', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('ANGEL', 'ALFALFA', 0.170000, NULL, '', '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('FER', '016', 25.000000, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('LAIBENSE', 'PATITORICO', 1.500000, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador', NULL);
-INSERT INTO `fza_articulos_proveedores` VALUES ('PEPI', 'PAPAFRITA', 0.200000, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('000', '.lmmlñlk', NULL, 2.000000, NULL, 'S', '2025-04-17 09:50:14', '2025-04-17 09:50:14', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('000', '.lmmlñlkasdfasdf', NULL, 2.000000, NULL, 'S', '2025-04-18 11:59:13', '2025-04-18 11:59:13', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('000', '016', NULL, 2.000000, NULL, 'S', '2025-04-12 16:27:40', '2024-10-06 20:27:00', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('000', 'MANO', NULL, 2.000000, NULL, 'S', '2025-04-18 12:05:44', '2025-04-18 12:05:44', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('000', 'MANODEOBRA', NULL, 2.000000, NULL, 'S', '2025-04-18 12:04:33', '2025-04-18 12:04:33', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('010', 'PAÑITOS', NULL, 1.000000, NULL, 'S', '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('10', '016', NULL, 3.000000, NULL, 'N', '2024-10-06 20:13:41', '2024-10-06 20:13:41', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('10', 'CEBADA', NULL, 0.080000, '2023-03-16 00:00:00', 'S', '2023-11-04 17:27:48', '2023-03-16 15:34:56', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('11', 'ALFALFA', NULL, 0.250000, '2023-05-03 00:00:00', 'S', '2023-05-24 12:53:58', '2023-03-04 13:40:00', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('17', 'ALFALFA', NULL, 0.170000, '2023-05-25 00:00:00', 'N', '2023-03-03 14:30:45', '2023-03-03 14:30:45', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('20', 'ALFALFA', NULL, 0.100000, '2023-03-02 00:00:00', 'N', '2023-03-04 18:14:28', '2023-03-03 14:02:47', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('7', '013', NULL, 5.000000, '2023-10-20 00:00:00', 'S', '2023-11-04 14:56:50', '2023-11-04 14:56:50', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('ANGEL', 'ALFALFA', NULL, 0.170000, NULL, '', '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('FER', '016', NULL, 25.000000, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('LAIBENSE', 'PATITORICO', NULL, 1.500000, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador', NULL);
+INSERT INTO `fza_articulos_proveedores` VALUES ('PEPI', 'PAPAFRITA', NULL, 0.200000, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador', NULL);
 
 -- ----------------------------
 -- Table structure for fza_articulos_skus
@@ -4086,6 +4087,10 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos` AS SELECT
   `fza_articulos`.`ACTIVO_ARTICULO` AS `ACTIVO_ARTICULO`,
   `fza_articulos`.`ORDEN_ARTICULO` AS `ORDEN_ARTICULO`,
   `fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,
+  `fza_articulos`.ESVARIACION_ARTICULO as ESVARIACION_ARTICULO,
+   fza_articulos.ESTRAZABLE_ARTICULO as ESTRAZABLE_ARTICULO,
+  fza_articulos.TIPO_ARTICULO AS TIPO_ARTICULO,
+  fza_articulos.TIPO_VARIACION_ARTICULO AS TIPO_VARIACION_ARTICULO,
   `fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,
   `fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,
   `fza_articulos_familias`.`NOMBRE_FAMILIA` AS `NOMBRE_FAMILIA`,
@@ -4193,7 +4198,30 @@ ORDER BY
 -- View structure for vi_articulos_proveedores
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_articulos_proveedores`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_proveedores` AS select `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` AS `CODIGO_ARTICULO`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` AS `ESPROVEEDORPRINCIPAL`,`fza_articulos_proveedores`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos_proveedores`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos_proveedores`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos_proveedores`.`USUARIOMODIF` AS `USUARIOMODIF` from (`fza_articulos_proveedores` left join `fza_proveedores` on((`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`))) ;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_proveedores` AS SELECT
+  `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,
+  `fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,
+  `fza_articulos_proveedores`.`REF_PROVEEDOR_ARTICULO_PROVEEDOR` AS `REF_PROVEEDOR_ARTICULO_PROVEEDOR`,
+  `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` AS `CODIGO_ARTICULO`,
+  `fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,
+  `fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` AS `ESPROVEEDORPRINCIPAL`,
+  `fza_articulos_proveedores`.`INSTANTEMODIF` AS `INSTANTEMODIF`,
+  `fza_articulos_proveedores`.`INSTANTEALTA` AS `INSTANTEALTA`,
+  `fza_articulos_proveedores`.`USUARIOALTA` AS `USUARIOALTA`,
+  `fza_articulos_proveedores`.`USUARIOMODIF` AS `USUARIOMODIF`
+FROM
+  (
+  `fza_articulos_proveedores`
+  LEFT JOIN `fza_proveedores` ON ((
+  `fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`
+  ))) ;
+
+-- ----------------------------
+-- View structure for vi_articulos_skus
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_articulos_skus`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_skus` AS select * from fza_articulos_skus ;
 
 -- ----------------------------
 -- View structure for vi_articulos_tarifas
@@ -5032,6 +5060,12 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_usuarios_grupos` AS s
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_usuarios_perfiles`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_usuarios_perfiles` AS select `fza_usuarios_perfiles`.`USUARIO_GRUPO_PERFILES` AS `USUARIO_GRUPO_PERFILES`,`fza_usuarios_perfiles`.`KEY_PERFILES` AS `KEY_PERFILES`,`fza_usuarios_perfiles`.`SUBKEY_PERFILES` AS `SUBKEY_PERFILES`,`fza_usuarios_perfiles`.`VALUE_PERFILES` AS `VALUE_PERFILES`,`fza_usuarios_perfiles`.`VALUE_TEXT_PERFILES` AS `VALUE_TEXT_PERFILES`,`fza_usuarios_perfiles`.`TYPE_BLOB_PERFILES` AS `TYPE_BLOB_PERFILES`,`fza_usuarios_perfiles`.`VALUE_BLOB_PERFILES` AS `VALUE_BLOB_PERFILES`,`fza_usuarios_perfiles`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_usuarios_perfiles`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_usuarios_perfiles`.`USUARIOALTA` AS `USUARIOALTA`,`fza_usuarios_perfiles`.`USUARIOMODIF` AS `USUARIOMODIF` from `fza_usuarios_perfiles` ;
+
+-- ----------------------------
+-- View structure for vi_variaciones
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_variaciones`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_variaciones` AS select * from fza_variaciones ;
 
 -- ----------------------------
 -- Procedure structure for PRC_AGREGAR_VALOR_CONJUNTO

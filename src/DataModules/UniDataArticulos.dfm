@@ -77,13 +77,13 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_articulos_familias_list')
-    Left = 224
-    Top = 24
+    Left = 448
+    Top = 176
   end
   object dsFamiliaArticulos: TDataSource
     DataSet = unqryFamiliaArticulos
-    Left = 224
-    Top = 80
+    Left = 448
+    Top = 256
   end
   object unqryTarifasArticulos: TUniQuery
     KeyFields = 'CODIGO_UNICO_TARIFA'
@@ -143,7 +143,7 @@ inherited dmArticulos: TdmArticulos
     MasterFields = 'CODIGO_ARTICULO'
     DetailFields = 'CODIGO_ARTICULO_TARIFA'
     BeforePost = unqryTarifasArticulosBeforePost
-    Left = 328
+    Left = 384
     Top = 16
     ParamData = <
       item
@@ -155,7 +155,7 @@ inherited dmArticulos: TdmArticulos
   end
   object dsTarifasArticulos: TDataSource
     DataSet = unqryTarifasArticulos
-    Left = 336
+    Left = 392
     Top = 80
   end
   object unqryProveedoresArticulos: TUniQuery
@@ -246,7 +246,7 @@ inherited dmArticulos: TdmArticulos
     DetailFields = 'CODIGO_ARTICULO'
     Active = True
     BeforePost = unqryProveedoresArticulosBeforePost
-    Left = 448
+    Left = 504
     Top = 16
     ParamData = <
       item
@@ -258,7 +258,7 @@ inherited dmArticulos: TdmArticulos
   end
   object dsProveedoresArticulos: TDataSource
     DataSet = unqryProveedoresArticulos
-    Left = 440
+    Left = 496
     Top = 80
   end
   object unqryLinFacturasArticulos: TUniQuery
@@ -316,12 +316,12 @@ inherited dmArticulos: TdmArticulos
     MasterFields = 'CODIGO_ARTICULO'
     DetailFields = 'CODIGO_ARTICULO_FACTURA_LINEA'
     BeforePost = unqryPerfilesBeforePost
-    Left = 600
+    Left = 656
     Top = 16
   end
   object dsLinFacturasArticulos: TDataSource
     DataSet = unqryLinFacturasArticulos
-    Left = 600
+    Left = 656
     Top = 80
   end
   object unqryProveedores: TUniQuery
@@ -387,12 +387,12 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_proveedores')
-    Left = 712
+    Left = 768
     Top = 16
   end
   object dsProveedores: TDataSource
     DataSet = unqryProveedores
-    Left = 712
+    Left = 768
     Top = 80
   end
   object unqryTiposIVA: TUniQuery
@@ -468,12 +468,12 @@ inherited dmArticulos: TdmArticulos
       'select *'
       'from fza_ivas_tipos')
     ReadOnly = True
-    Left = 824
+    Left = 880
     Top = 16
   end
   object dsTiposIVA: TDataSource
     DataSet = unqryTiposIVA
-    Left = 824
+    Left = 880
     Top = 80
   end
   object unqryTarifas: TUniQuery
@@ -556,7 +556,7 @@ inherited dmArticulos: TdmArticulos
       'AND ACTIVO_TARIFA ='#39'S'#39
       'ORDER BY ORDEN_TARIFA')
     ReadOnly = True
-    Left = 928
+    Left = 984
     Top = 16
     ParamData = <
       item
@@ -567,7 +567,7 @@ inherited dmArticulos: TdmArticulos
   end
   object dsTarifas: TDataSource
     DataSet = unqryTarifas
-    Left = 928
+    Left = 984
     Top = 80
   end
   object unqryVariaciones: TUniQuery
@@ -576,13 +576,13 @@ inherited dmArticulos: TdmArticulos
       'select *'
       'from vi_variaciones')
     Active = True
-    Left = 328
-    Top = 224
+    Left = 288
+    Top = 176
   end
   object dsVariaciones: TDataSource
     DataSet = unqryVariaciones
-    Left = 328
-    Top = 312
+    Left = 288
+    Top = 264
   end
   object unqryVariacionesArticulos: TUniQuery
     SQLInsert.Strings = (
