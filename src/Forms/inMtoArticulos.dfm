@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 396
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet2
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ExplicitHeight = 457
             ClientRectBottom = 392
@@ -441,10 +441,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Top = 78
                   DataBinding.DataField = 'TIPO_VARIACION_ARTICULO'
                   DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_FAMILIA'
+                  Properties.DropDownListStyle = lsFixedList
+                  Properties.KeyFieldNames = 'CODIGO_VAR'
                   Properties.ListColumns = <
                     item
                       FieldName = 'NOMBRE_VAR'
+                    end
+                    item
+                      FieldName = 'CODIGO_VAR'
                     end>
                   Properties.ListOptions.ShowHeader = False
                   Properties.ListSource = dmArticulos.dsVariaciones
