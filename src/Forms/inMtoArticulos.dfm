@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 396
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet1
+            Properties.ActivePage = cxTabSheet2
             Properties.CustomButtons.Buttons = <>
             ExplicitHeight = 457
             ClientRectBottom = 392
@@ -419,7 +419,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 142
                 Width = 379
                 object cxDBCheckBox1: TcxDBCheckBox
-                  Left = 24
+                  Left = 22
                   Top = 24
                   Caption = 'Tiene Variaciones/SKU m'#250'ltiple'
                   DataBinding.DataField = 'ESVARIACION_ARTICULO'
@@ -430,14 +430,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 0
                 end
                 object cxLabel1: TcxLabel
-                  Left = 20
+                  Left = 22
                   Top = 53
                   Caption = 'Tipo de Variaci'#243'n'
                   TabOrder = 1
                   Transparent = True
                 end
                 object cxDBLookupComboBox1: TcxDBLookupComboBox
-                  Left = 92
+                  Left = 56
                   Top = 78
                   DataBinding.DataField = 'TIPO_VARIACION_ARTICULO'
                   DataBinding.DataSource = dsTablaG
@@ -453,10 +453,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Properties.ListOptions.ShowHeader = False
                   Properties.ListSource = dmArticulos.dsVariaciones
                   TabOrder = 2
-                  Width = 276
+                  Width = 312
                 end
                 object cxDBCheckBox2: TcxDBCheckBox
-                  Left = 20
+                  Left = 22
                   Top = 111
                   Caption = 'Trazabilidad/Serializaci'#243'n por unidad'
                   DataBinding.DataField = 'ESTRAZABLE_ARTICULO'
