@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 08/03/2026 08:12:11
+ Date: 08/03/2026 16:28:04
 */
 
 SET NAMES utf8mb4;
@@ -554,6 +554,26 @@ CREATE TABLE `fza_articulos_vinculos`  (
 -- ----------------------------
 INSERT INTO `fza_articulos_vinculos` VALUES (1, 'MOCASIN-340', 'MOCASIN-340-UPPER', 1.00, 1, 'S');
 INSERT INTO `fza_articulos_vinculos` VALUES (2, 'MOCASIN-340', 'MOCASIN-340-SOLE', 1.00, 2, 'S');
+
+-- ----------------------------
+-- Table structure for fza_atributos_basicos
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_atributos_basicos`;
+CREATE TABLE `fza_atributos_basicos`  (
+  `ID_BASICO` int(11) NOT NULL AUTO_INCREMENT,
+  `ID_VA_BASICO` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_BASICO` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `NOMBRE_BASICO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `EXTRA_BASICO` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `ORDEN_BASICO` int(11) NULL DEFAULT 0,
+  `ESACTIVO_BASICO` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
+  PRIMARY KEY (`ID_BASICO`) USING BTREE,
+  UNIQUE INDEX `ID_VA_BASICO`(`ID_VA_BASICO` ASC, `CODIGO_BASICO` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_atributos_basicos
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for fza_atributos_conjuntos
@@ -2693,7 +2713,7 @@ CREATE TABLE `fza_usuarios`  (
 -- ----------------------------
 -- Records of fza_usuarios
 -- ----------------------------
-INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-07 08:26:56', '2026-03-07 08:26:56', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+INSERT INTO `fza_usuarios` VALUES ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-08 08:24:34', '2026-03-08 08:24:34', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 
 -- ----------------------------
 -- Table structure for fza_usuarios_grupos
