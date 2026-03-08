@@ -56,6 +56,7 @@ inherited dmArticulos: TdmArticulos
       'SELECT *  '
       '  FROM vi_articulos '
       '')
+    Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterDelete = unqryTablaGAfterDelete
@@ -240,8 +241,10 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_articulos_proveedores')
+    MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ARTICULO'
     DetailFields = 'CODIGO_ARTICULO'
+    Active = True
     BeforePost = unqryProveedoresArticulosBeforePost
     Left = 448
     Top = 16
@@ -250,7 +253,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'ALFALFA'
+        Value = 'CARTERA-PIEL'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -572,13 +575,14 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_variaciones')
+    Active = True
     Left = 328
-    Top = 232
+    Top = 224
   end
   object dsVariaciones: TDataSource
     DataSet = unqryVariaciones
-    Left = 336
-    Top = 288
+    Left = 328
+    Top = 312
   end
   object unqryVariacionesArticulos: TUniQuery
     SQLInsert.Strings = (
@@ -633,9 +637,20 @@ inherited dmArticulos: TdmArticulos
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
-      'from vi_variaciones_articulos')
+      'from vi_articulos_skus')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ARTICULO'
+    DetailFields = 'CODIGO_ARTICULO_SKU'
+    Active = True
     Left = 144
     Top = 216
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'CARTERA-PIEL'
+      end>
   end
   object dsVariacionesArticulos: TDataSource
     DataSet = unqryVariacionesArticulos
