@@ -11,7 +11,7 @@
  Target Server Version : 110408 (11.4.8-MariaDB)
  File Encoding         : 65001
 
- Date: 08/03/2026 16:28:04
+ Date: 09/03/2026 08:22:16
 */
 
 SET NAMES utf8mb4;
@@ -139,23 +139,21 @@ INSERT INTO `fza_articulos` VALUES ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacó
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_articulos_conjuntos_asign`;
 CREATE TABLE `fza_articulos_conjuntos_asign`  (
-  `CODIGO_ARTICULO_ACA` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ID_CONJUNTO_ACA` int(11) NOT NULL,
-  `ID_ATRIBUTO_ACA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ES_GENERACION_AUTO` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
-  `INSTANTEMODIF` datetime NULL DEFAULT NULL,
-  `INSTANTEALTA` datetime NULL DEFAULT NULL,
-  `USUARIOALTA` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `USUARIOMODIF` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`) USING BTREE
+  `CODIGO_ARTICULO_ACA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'FK fza_articulos',
+  `ID_CONJUNTO_ACA` int(11) NOT NULL COMMENT 'FK fza_atributos_conjuntos',
+  `ID_ATRIBUTO_ACA` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Posición del atributo (CO, TAL...) – denormalizado del conjunto para índice directo',
+  `ES_GENERACION_AUTO` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'S' COMMENT 'S=genera SKUs automáticamente al procesar',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`) USING BTREE,
+  INDEX `IDX_ACA_ATRIBUTO`(`CODIGO_ARTICULO_ACA` ASC, `ID_ATRIBUTO_ACA` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_articulos_conjuntos_asign
 -- ----------------------------
-INSERT INTO `fza_articulos_conjuntos_asign` VALUES ('CAMI-BASICA', 1, 'CO', 'S', '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN');
-INSERT INTO `fza_articulos_conjuntos_asign` VALUES ('ZAP-OXFORD', 1, 'CO', 'S', '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN');
-INSERT INTO `fza_articulos_conjuntos_asign` VALUES ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN');
 
 -- ----------------------------
 -- Table structure for fza_articulos_familias
@@ -582,22 +580,23 @@ DROP TABLE IF EXISTS `fza_atributos_conjuntos`;
 CREATE TABLE `fza_atributos_conjuntos`  (
   `ID_CONJUNTO_AC` int(11) NOT NULL AUTO_INCREMENT,
   `NOMBRE_AC` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre descriptivo del set',
-  `ID_VA_AC` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'A qué tipo de variación pertenece (CO, TC...)',
+  `ID_VARIACION_AC` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'FK fza_variaciones (TC, TEMP…)',
+  `ID_ATRIBUTO_AC` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Posición/atributo dentro de la variación (CO, TAL, TEMP…) → FK fza_variaciones_atributos',
   `ESACTIVO_AC` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
   PRIMARY KEY (`ID_CONJUNTO_AC`) USING BTREE,
-  INDEX `IDX_VAR_AC`(`ID_VA_AC` ASC) USING BTREE
+  INDEX `IDX_VAR_AC`(`ID_VARIACION_AC` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_atributos_conjuntos
 -- ----------------------------
-INSERT INTO `fza_atributos_conjuntos` VALUES (1, 'COLORES BÁSICOS', 'TC', 'S', '2026-01-04 12:18:01', '2026-01-04 12:17:51', 'Administrador', 'Adminstrador');
-INSERT INTO `fza_atributos_conjuntos` VALUES (2, 'TALLAS CABALLERO (42-46)', 'TAL', 'S', '2026-01-28 06:35:28', '2026-01-10 17:42:19', 'ADMIN', 'ADMIN');
-INSERT INTO `fza_atributos_conjuntos` VALUES (3, 'TALLAS AMERICANAS (S-XL)', 'TAL', 'S', '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_conjuntos` VALUES (1, 'COLORES BÁSICOS', 'TC', 'CO', 'S', '2026-03-09 07:07:15', '2026-01-04 12:17:51', 'Administrador', 'Adminstrador');
+INSERT INTO `fza_atributos_conjuntos` VALUES (2, 'TALLAS CABALLERO (42-46)', 'TC', 'TAL', 'S', '2026-03-09 07:07:42', '2026-01-10 17:42:19', 'ADMIN', 'ADMIN');
+INSERT INTO `fza_atributos_conjuntos` VALUES (3, 'TALLAS AMERICANAS (S-XL)', 'TC', 'TAL', 'S', '2026-03-09 07:07:43', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
 
 -- ----------------------------
 -- Table structure for fza_atributos_conjuntos_det
@@ -2581,6 +2580,43 @@ INSERT INTO `fza_proveedores` VALUES ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETER
 INSERT INTO `fza_proveedores` VALUES ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
 
 -- ----------------------------
+-- Table structure for fza_proveedores_familias
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_proveedores_familias`;
+CREATE TABLE `fza_proveedores_familias`  (
+  `CODIGO_PROVEEDOR_PF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_FAMILIA_PF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `TIPO_VARIACION_PF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `OBSERVACIONES_PF` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIOMODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_PROVEEDOR_PF`, `CODIGO_FAMILIA_PF`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_proveedores_familias
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for fza_proveedores_familias_conjuntos
+-- ----------------------------
+DROP TABLE IF EXISTS `fza_proveedores_familias_conjuntos`;
+CREATE TABLE `fza_proveedores_familias_conjuntos`  (
+  `CODIGO_PROVEEDOR_PFC` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_FAMILIA_PFC` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ID_CONJUNTO_PFC` int(11) NOT NULL,
+  `ES_GENERACION_AUTO` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
+  `ORDEN_PFC` int(11) NULL DEFAULT 0,
+  PRIMARY KEY (`CODIGO_PROVEEDOR_PFC`, `CODIGO_FAMILIA_PFC`, `ID_CONJUNTO_PFC`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of fza_proveedores_familias_conjuntos
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for fza_recibos
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_recibos`;
@@ -4031,7 +4067,7 @@ CREATE TABLE `fza_variaciones_atributos`  (
 -- ----------------------------
 INSERT INTO `fza_variaciones_atributos` VALUES ('TC', 'CO', 'Color', 'S', 1);
 INSERT INTO `fza_variaciones_atributos` VALUES ('TC', 'TAL', 'Talla', 'S', 2);
-INSERT INTO `fza_variaciones_atributos` VALUES ('TEMP', 'TEMP', 'Temporada', 'N', 1);
+INSERT INTO `fza_variaciones_atributos` VALUES ('TEMP', 'TEMP', 'Temporada', 'N', 3);
 
 -- ----------------------------
 -- Table structure for fza_verifactu_eventos
@@ -4145,6 +4181,42 @@ ORDER BY
   `fza_articulos`.`ORDEN_ARTICULO` ;
 
 -- ----------------------------
+-- View structure for vi_articulos_conjuntos_slots
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_articulos_conjuntos_slots`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_conjuntos_slots` AS SELECT
+  a.CODIGO_ARTICULO                                        AS CODIGO_ARTICULO_ACA,
+  a.TIPO_VARIACION_ARTICULO                                AS ID_VARIACION_AC,
+  va.ID_ATRIBUTO_VA                                        AS ID_ATRIBUTO_ACA,
+  COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA)               AS NOMBRE_ATRIBUTO,
+  va.ORDEN_VA                                              AS ORDEN_ATRIBUTO,
+  va.ESDEFINITORIO                                         AS ESDEFINITORIO,   -- << la clave
+  v.NOMBRE_VAR                                             AS NOMBRE_VARIACION,
+
+  aca.ID_CONJUNTO_ACA,
+  ac.NOMBRE_AC,
+  ac.ID_ATRIBUTO_AC,
+  COALESCE(aca.ES_GENERACION_AUTO, 'S')                   AS ES_GENERACION_AUTO,
+  aca.INSTANTEMODIF,
+  aca.INSTANTEALTA,
+  aca.USUARIOALTA,
+  aca.USUARIOMODIF
+
+FROM fza_articulos a
+JOIN fza_variaciones_atributos va
+  ON va.ID_VA             = a.TIPO_VARIACION_ARTICULO
+JOIN fza_variaciones v
+  ON v.CODIGO_VAR         = a.TIPO_VARIACION_ARTICULO
+LEFT JOIN fza_articulos_conjuntos_asign aca
+  ON aca.CODIGO_ARTICULO_ACA = a.CODIGO_ARTICULO
+ AND aca.ID_ATRIBUTO_ACA     = va.ID_ATRIBUTO_VA
+LEFT JOIN fza_atributos_conjuntos ac
+  ON ac.ID_CONJUNTO_AC    = aca.ID_CONJUNTO_ACA
+
+WHERE a.ESVARIACION_ARTICULO    = 'S'
+  AND a.TIPO_VARIACION_ARTICULO IS NOT NULL ;
+
+-- ----------------------------
 -- View structure for vi_articulos_familias
 -- ----------------------------
 DROP VIEW IF EXISTS `vi_articulos_familias`;
@@ -4213,6 +4285,44 @@ WHERE
   (`fza_articulos`.`ACTIVO_ARTICULO` = 'S')
 ORDER BY
   `fza_articulos`.`ORDEN_ARTICULO` ;
+
+-- ----------------------------
+-- View structure for vi_articulos_propiedades_slots
+-- ----------------------------
+DROP VIEW IF EXISTS `vi_articulos_propiedades_slots`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `vi_articulos_propiedades_slots` AS SELECT
+  a.CODIGO_ARTICULO                                        AS CODIGO_ARTICULO_AP,
+
+  -- El atributo esperado (siempre presente aunque no haya valor asignado)
+  va.ID_ATRIBUTO_VA                                        AS ID_ATRIBUTO_VA,
+  COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA)               AS NOMBRE_ATRIBUTO,
+  va.ORDEN_VA                                              AS ORDEN_ATRIBUTO,
+  va.ID_VA                                                 AS ID_VARIACION_ATRIB,
+
+  -- Valor asignado (NULL si el slot está vacío)
+  ap.ID_VALOR_AP,
+  av.VALOR_AV,
+  av.DESCRIPCION_AV,
+  av.FACTOR_CONVERSION_AV
+
+FROM fza_articulos a
+
+-- Todos los atributos no definitorios (transversales: TEMP, MARCA…)
+CROSS JOIN (
+  SELECT DISTINCT va2.*
+  FROM fza_variaciones_atributos va2
+  WHERE va2.ESDEFINITORIO = 'N'
+) va
+
+-- Lo que esté asignado para ese atributo en ese artículo
+LEFT JOIN fza_articulos_propiedades ap
+  ON ap.CODIGO_ARTICULO_AP = a.CODIGO_ARTICULO
+
+LEFT JOIN fza_atributos_valores av
+  ON av.ID_VALOR_AV  = ap.ID_VALOR_AP
+ AND av.ID_VA_AV     = va.ID_ATRIBUTO_VA   -- asegura que el valor es del tipo correcto
+
+WHERE a.ESVARIACION_ARTICULO = 'S' ;
 
 -- ----------------------------
 -- View structure for vi_articulos_proveedores
