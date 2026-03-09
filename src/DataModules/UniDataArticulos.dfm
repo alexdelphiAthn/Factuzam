@@ -253,7 +253,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'CARTERA-PIEL'
+        Value = 'ZAP-OXFORD'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -649,12 +649,60 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'CARTERA-PIEL'
+        Value = 'ZAP-OXFORD'
       end>
   end
   object dsVariacionesArticulos: TDataSource
     DataSet = unqryVariacionesArticulos
     Left = 144
     Top = 296
+  end
+  object unqryVariacionesSlot: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select *'
+      'from vi_articulos_conjuntos_slots')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ARTICULO'
+    DetailFields = 'CODIGO_ARTICULO_ACA'
+    Active = True
+    Left = 600
+    Top = 176
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
+  end
+  object dsVariacionesSlot: TDataSource
+    DataSet = unqryVariacionesSlot
+    Left = 600
+    Top = 264
+  end
+  object unqryPropiedades: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select *'
+      'from vi_articulos_propiedades_slots')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ARTICULO'
+    DetailFields = 'CODIGO_ARTICULO_AP'
+    Active = True
+    Left = 728
+    Top = 176
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
+  end
+  object dsPropiedades: TDataSource
+    DataSet = unqryPropiedades
+    Left = 728
+    Top = 264
   end
 end
