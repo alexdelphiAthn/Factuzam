@@ -42,7 +42,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 48
+    FrameIndex = 814
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21568,10 +21568,10 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     ShowHint = True
     TabOrder = 19
     WeekNumbers = True
+    OnClick = JvMonthCalendar1Click
     OnDblClick = JvMonthCalendar1DblClick
     OnGetMonthBoldInfo = JvMonthCalendar1GetMonthBoldInfo
     StyleElements = [seFont, seClient]
-    OnMouseMove = JvMonthCalendar1MouseMove
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

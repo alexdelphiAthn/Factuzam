@@ -40,10 +40,6 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
-      ExplicitLeft = 224
-      ExplicitTop = 248
-      ExplicitWidth = 300
-      ExplicitHeight = 100
     end
   end
   object Panel1: TPanel
