@@ -97,7 +97,13 @@ uses
   inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
   inMtoCajaParam in 'src\Core\inMtoCajaParam.pas' {frmMtoCajaParam},
   inLibCajaParam in 'src\Lib\inLibCajaParam.pas',
-  inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas';
+  inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
+  ts.core.sqlparser in 'src\Lib\sqlformatter\ts.core.sqlparser.pas',
+  ts.core.sqlscanner in 'src\Lib\sqlformatter\ts.core.sqlscanner.pas',
+  ts.core.sqltree in 'src\Lib\sqlformatter\ts.core.sqltree.pas',
+  ts.core.utils in 'src\Lib\sqlformatter\ts.core.utils.pas',
+  ts.editor.codeformatters in 'src\Lib\sqlformatter\ts.editor.codeformatters.pas',
+  ts.editor.codeformatters.sql in 'src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas';
 
 var
   frmLogon: TfrmLogon;

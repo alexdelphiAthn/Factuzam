@@ -43,7 +43,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
+  Vcl.ComCtrls, JvExComCtrls, JvStatusBar;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -55,11 +56,13 @@ type
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
     mnuCajaParam: TMenuItem;
+    JvStatusBar1: TJvStatusBar;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 //    procedure actSalirExecute(Sender: TObject);
 
   private
@@ -72,7 +75,6 @@ type
     SkinController1: TdxSkinController;
     EditStyleController: TcxEditStyleController;
     LookAndFeelController1: TcxLookAndFeelController;
-    dxstsbr1: TdxStatusBar;
     Panel1: TPanel;
     pcPrincipal: TcxPageControl;
     pnlPPBottom: TPanel;
@@ -140,10 +142,11 @@ type
     procedure FormActivate(Sender: TObject);
     procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
   private
-
+    FIdleCount: Integer;
     FException: Boolean;
     // procedure AppException(Sender: TObject; E: Exception);
     procedure CopiaSeguridad;
+    procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -172,11 +175,41 @@ uses inLibUser,
 
 {$R *.dfm}
 
+procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+var
+  EstadoTeclas: string;
+begin
+  EstadoTeclas := '';
+
+  if (GetKeyState(VK_CAPITAL) and 1) <> 0 then
+    EstadoTeclas := EstadoTeclas + 'CAPS  ';
+
+  if (GetKeyState(VK_NUMLOCK) and 1) <> 0 then
+    EstadoTeclas := EstadoTeclas + 'NUM  ';
+
+  if (GetKeyState(VK_SCROLL) and 1) <> 0 then
+    EstadoTeclas := EstadoTeclas + 'SCRL  ';
+
+  if (GetKeyState(VK_INSERT) and 1) <> 0 then
+    EstadoTeclas := EstadoTeclas + 'OVR'
+  else
+    EstadoTeclas := EstadoTeclas + 'INS';
+
+  EstadoTeclas := Trim(EstadoTeclas);
+
+  // LA MAGIA DE LA OPTIMIZACIÓN:
+  // Solo se asigna (y por tanto se repinta en pantalla) si el usuario
+  // acaba de pulsar o soltar una de las teclas.
+  if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
+    jvStatusBar1.Panels[0].Text := EstadoTeclas;
+end;
+
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;
 begin
   // Application.OnException := AppException;
+  Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
   inLibLog.Log.LogInfo('Creando ventana principal');
@@ -192,14 +225,23 @@ begin
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
   oCajaParams.Inicializar(oUser, oGroup);
-  dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
+//  dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
+//    IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
+//  if oRootGroup = 'S' then
+//    sDis := ' ✪';
+//  dxstsbr1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
+//  dxstsbr1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
+
+  jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
-  dxstsbr1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
-  dxstsbr1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
+  jvStatusBar1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
+  jvStatusBar1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
+
   Self.Caption := oAppName + ' ' + oVersion;
   pnlPPBottom.Visible := False;
+
   cxMemo1.Visible := False;
 {$IFDEF DEBUG}
   pnlPPBottom.Visible := True;
@@ -245,6 +287,16 @@ begin
     end;
   end;
   inLibLog.Log.LogInfo('Ventana principal creada');
+end;
+
+procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
+begin
+  inherited;
+  jvStatusBar1.Panels[1].Width := jvStatusBar1.ClientWidth -
+                                  jvStatusBar1.Panels[0].Width -
+                                  jvStatusBar1.Panels[2].Width -
+                                  jvStatusBar1.Panels[3].Width -
+                                  jvStatusBar1.Panels[4].Width - 20;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
@@ -504,19 +556,34 @@ begin
   bIsConnected := False;
   ADateStr := DateToStr(Now);
   ATimeStr := FormatDateTime('hh:mm', Now);
+
   if FDmConn <> nil then
     if FDmConn.conUni.Connected then
     begin
       bIsConnected := True;
-      dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
+      jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
     end
     else
       bIsConnected := False;
   if (FDmConn = nil) or (not bIsConnected) then
   begin
-    dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
+    jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
     inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
   end;
+
+//  if FDmConn <> nil then
+//    if FDmConn.conUni.Connected then
+//    begin
+//      bIsConnected := True;
+//      dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
+//    end
+//    else
+//      bIsConnected := False;
+//  if (FDmConn = nil) or (not bIsConnected) then
+//  begin
+//    dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
+//    inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
+//  end;
 end;
 
 procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception;

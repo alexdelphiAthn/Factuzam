@@ -1,7 +1,7 @@
 inherited dmGeneradorProcesos: TdmGeneradorProcesos
-  OldCreateOrder = True
   Height = 169
   Width = 689
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
@@ -45,8 +45,12 @@ inherited dmGeneradorProcesos: TdmGeneradorProcesos
   object unqryMetadatos: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select *'
-      'from fza_metadatos')
+      'SELECT '
+      '  CAST(CODIGO_METADATO AS CHAR) AS CODIGO_METADATO,'
+      '  NOMBRE_METADATO,'
+      '  PARENT_METADATO'
+      'FROM fza_metadatos'
+      'ORDER BY PARENT_METADATO, NOMBRE_METADATO')
     AutoCalcFields = False
     Left = 184
     Top = 88

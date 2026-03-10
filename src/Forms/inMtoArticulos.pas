@@ -196,7 +196,7 @@ type
     cxGridDBTableView2NOMBRE_ATRIBUTO: TcxGridDBColumn;
     cxGridDBTableView2ORDEN_ATRIBUTO: TcxGridDBColumn;
     cxGridDBTableView2NOMBRE_VARIACION: TcxGridDBColumn;
-    cxTabSheet3: TcxTabSheet;
+    tsSKUS: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
     cxButton3: TcxButton;

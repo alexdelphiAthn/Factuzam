@@ -29,7 +29,7 @@ uses
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
   dxtree, dxdbtree, UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs ;
+  dxShellDialogs, JvExComCtrls, JvDBTreeView ;
 
 const
   ecSelColumnMode = 2577;
@@ -96,7 +96,6 @@ type
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA1: TcxGridDBColumn;
     cxgrdlvlMetadatoslv11: TcxGridLevel;
     pnlTree: TPanel;
-    tv1: TdxDBTreeView;
     pnlTreeBotton: TPanel;
     btRefresh: TcxButton;
     cxdbtxtdtNOMBRE_METADATO: TcxDBTextEdit;
@@ -132,7 +131,7 @@ type
     pnlFacturaOpts1: TPanel;
     btnExportarExcelMeta: TcxButton;
     btnEditarMeta: TcxButton;
-    procedure tv1DblClick(Sender: TObject);
+    TreeView1: TTreeView;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -151,7 +150,11 @@ type
       Shift: TShiftState);
     procedure dbsyndtTextoMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure TreeView1DblClick(Sender: TObject);
+    procedure tsMetadatosEnter(Sender: TObject);
+    procedure TreeView1Click(Sender: TObject);
   public
+    procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -168,7 +171,8 @@ uses
   inLibNet,
   inLibDevExp,
   inLibGlobalVar,
-  inLibDir;
+  inLibDir,
+  ts.Editor.CodeFormatters;
 
 {$R *.dfm}
 
@@ -291,26 +295,87 @@ begin
 procedure TfrmMtoGeneradorProcesos.btRefreshClick(Sender: TObject);
 begin
   inherited;
-  with dmmGeneradorProcesos do
-  begin
-    unstrdprcRefresh.ParamByName('pDATABASENAME').AsString :=
-                                                  oConn.Database;
-    unstrdprcRefresh.ExecProc;
-    if unqryMetadatos.Active = False then
-      unqryMetadatos.Open
-    else
-      unqryMetadatos.Refresh;
+  Screen.Cursor := crHourGlass;
+  try
+    with dmmGeneradorProcesos do
+    begin
+      unstrdprcRefresh.ParamByName('pDATABASENAME').AsString :=
+                                                    oConn.Database;
+      unstrdprcRefresh.ExecProc;
+      if unqryMetadatos.Active = False then
+        unqryMetadatos.Open
+      else
+        unqryMetadatos.Refresh;
+    end;
+    CargarArbol;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.CargarArbol;
+var
+  nodeRaiz, nodeHijo: TTreeNode;
+  sCodigo, sNombre, sParent: string;
+begin
+  TreeView1.Items.BeginUpdate;
+  try
+    TreeView1.Items.Clear;
+    // Pasar 1: nodos raíz (PARENT = '-1')
+    dmmGeneradorProcesos.unqryMetadatos.First;
+    while not dmmGeneradorProcesos.unqryMetadatos.Eof do
+    begin
+      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
+      sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+      sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+      if sParent = '-1' then
+      begin
+        nodeRaiz := TreeView1.Items.Add(nil, sNombre);
+        nodeRaiz.Data := Pointer(NativeInt(StrToInt(sCodigo))); // guardamos CODIGO
+      end;
+      dmmGeneradorProcesos.unqryMetadatos.Next;
+    end;
+    // Pasar 2: nodos hijo
+    dmmGeneradorProcesos.unqryMetadatos.First;
+    while not dmmGeneradorProcesos.unqryMetadatos.Eof do
+    begin
+      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
+      sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+      sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+      if sParent <> '-1' then
+      begin
+        // Buscar el nodo padre por su CODIGO
+        nodeRaiz := nil;
+        for var i := 0 to TreeView1.Items.Count - 1 do
+          if NativeInt(TreeView1.Items[i].Data) = StrToIntDef(sParent, -1) then
+          begin
+            nodeRaiz := TreeView1.Items[i];
+            Break;
+          end;
+        if nodeRaiz <> nil then
+        begin
+          nodeHijo := TreeView1.Items.AddChild(nodeRaiz, sNombre);
+          nodeHijo.Data := Pointer(NativeInt(StrToInt(sCodigo)));
+        end;
+      end;
+      dmmGeneradorProcesos.unqryMetadatos.Next;
+    end;
+//    TreeView1.FullExpand;
+  finally
+    TreeView1.Items.EndUpdate;
   end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.CrearTablaPrincipal;
+var
+  qry: TUniQuery;
+  nodeParent, nodeChild: TTreeNode;
+  i: Integer;
 begin
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
-  tv1.DataSource := dmmGeneradorProcesos.dsMetadatos;
   tvMetadatostvVista.DataController.DataSource :=
                                                dmmGeneradorProcesos.dsContenido;
-  btRefreshClick(nil);
   tvVista.DataController.DataSource := dmmGeneradorProcesos.dsVista;
   pcPestana.ActivePage := tsSQL;
   pkFieldName := 'CODIGO_GENERADORPROCESO';
@@ -322,7 +387,7 @@ end;
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
   Sender: TObject);
 var
-  sExec:string;
+  Formatter: ICodeFormatter; // <--- Sustituimos sExec por el interfaz del formateador
 begin
   inherited;
   with dmmGeneradorProcesos do
@@ -332,7 +397,6 @@ begin
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE TABLE ' +
                          unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
-      //dbsynedtEstructura.DataField := 'Create Table';
       unqryEstructura.Open;
       syndtEstructura.Lines.Text :=
                            unqryEstructura.FieldByName('Create Table').AsString;
@@ -350,21 +414,54 @@ begin
                            'SQL SECURITY DEFINER',
                            '',
                            [rfReplaceAll]);
-      if FileExists(GetTempPath + 'code.txt') then
-        DeleteFile(GetTempPath + 'code.txt');
-      if FileExists(GetTempPath + 'code_formatted.txt') then
-        DeleteFile(GetTempPath + 'code_formatted.txt');
-      mmo1.Lines.SaveToFile(GetTempPath + 'code.txt');
-      sExec := DirApp + 'fsqlf.exe ' + GetTempPath + 'code.txt ' +
-                              GetTempPath + 'code_formatted.txt';
-      //ShowMessage(sExec);
-      ExecuteAndWait(sExec);
-      syndtEstructura.Lines.LoadFromFile(GetTempPath + '\code_formatted.txt');
-//      syndtEstructura.Lines.Text :=
-//                                 FormatSqlOnlineSqlformatOrg(mmo1.Lines.Text);
-      //syndtEstructura.Lines.Text := Trim(mmo1.Lines.text);
+      var sSQL := mmo1.Lines.Text;
+      sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
+        // 2. Quitar prefijos tabla. en los campos (fza_articulos.CAMPO -> CAMPO)
+  //    Usamos un bucle simple con expresión regular o StringReplace múltiple
+  //    Alternativa sin regex: quitar todo lo que sea "palabra." antes de un campo
+      var i := 1;
+      var sOut := '';
+      var sLen := Length(sSQL);
+      while i <= sLen do
+      begin
+        // Detectar patrón: identificador seguido de punto
+        if (sSQL[i] in ['A'..'Z','a'..'z','_','0'..'9']) then
+        begin
+          // Leer el identificador completo
+          var j := i;
+          while (j <= sLen) and (sSQL[j] in ['A'..'Z','a'..'z','_','0'..'9']) do
+            Inc(j);
+          // ¿Le sigue un punto?
+          if (j <= sLen) and (sSQL[j] = '.') then
+          begin
+            // Saltar el identificador y el punto (era un prefijo tabla.)
+            i := j + 1;
+          end
+          else
+          begin
+            // No le sigue punto, copiar el identificador
+            sOut := sOut + Copy(sSQL, i, j - i);
+            i := j;
+          end;
+        end
+        else
+        begin
+          sOut := sOut + sSQL[i];
+          Inc(i);
+        end;
+      end;
+      sSQL := sOut;
+
+      // 3. Normalizar espacios múltiples
+      while Pos('  ', sSQL) > 0 do
+        sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
+      // --- NUEVO CÓDIGO CON LA LIBRERÍA NATIVA ---
+      Formatter := GetSQLFormatter;
+      syndtEstructura.Lines.Text := Formatter.Format(sSQL);
+      // -------------------------------------------
+
     end
-      else
+    else
     if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE PROCEDURE ' +
@@ -539,25 +636,53 @@ begin
   end; *)
 end;
 
-procedure TfrmMtoGeneradorProcesos.tv1DblClick(Sender: TObject);
+procedure TfrmMtoGeneradorProcesos.TreeView1Click(Sender: TObject);
+var
+  nodo: TTreeNode;
+  iCodigo: Integer;
 begin
-  inherited;
-  pcMetadato.ActivePage := tsContenido;
+  nodo := TreeView1.Selected;
+  if nodo = nil then Exit;
+  iCodigo := NativeInt(nodo.Data);
+  // Posicionar el dataset en el registro correspondiente
+  dmmGeneradorProcesos.unqryMetadatos.Locate(
+    'CODIGO_METADATO', iCodigo, []);
+  // Ahora llama a tu lógica existente
+  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+end;
+
+procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
+var
+  nodo: TTreeNode;
+  iCodigo: Integer;
+begin
+  nodo := TreeView1.Selected;
+  if nodo = nil then Exit;
+
+  iCodigo := NativeInt(nodo.Data);
+  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
+
   with dmmGeneradorProcesos do
   begin
     if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '1') or
         (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '2')) then
     begin
+      pcMetadato.ActivePage := tsContenido;
       tvMetadatostvVista.ClearItems;
+      unqryContenido.Close;
       unqryContenido.SQL.Text := 'SELECT * FROM ' +
                          unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
       unqryContenido.Open;
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
-    end
-    else
-      tvMetadatostvVista.ClearItems;
+    end;
   end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.tsMetadatosEnter(Sender: TObject);
+begin
+  inherited;
+  btRefreshClick(nil);
 end;
 
 initialization

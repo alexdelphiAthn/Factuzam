@@ -591,6 +591,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   end
                   object cxGridDBTableView2ID_CONJUNTO_ACA: TcxGridDBColumn
                     DataBinding.FieldName = 'ID_CONJUNTO_ACA'
+                    PropertiesClassName = 'TcxLookupComboBoxProperties'
+                    Properties.ListColumns = <>
                     Width = 144
                   end
                   object cxGridDBTableView2ID_ATRIBUTO_ACA: TcxGridDBColumn
@@ -599,10 +601,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   end
                   object cxGridDBTableView2ES_GENERACION_AUTO: TcxGridDBColumn
                     DataBinding.FieldName = 'ES_GENERACION_AUTO'
+                    Visible = False
                     Width = 137
                   end
                   object cxGridDBTableView2NOMBRE_AC: TcxGridDBColumn
                     DataBinding.FieldName = 'NOMBRE_AC'
+                    Visible = False
                     Width = 153
                   end
                   object cxGridDBTableView2ID_VARIACION_AC: TcxGridDBColumn
@@ -611,6 +615,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   end
                   object cxGridDBTableView2ID_ATRIBUTO_AC: TcxGridDBColumn
                     DataBinding.FieldName = 'ID_ATRIBUTO_AC'
+                    Visible = False
                   end
                   object cxGridDBTableView2ORDEN_ATRIBUTO: TcxGridDBColumn
                     DataBinding.FieldName = 'ORDEN_ATRIBUTO'
@@ -666,7 +671,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  DataController.DataSource = dmArticulos.DataSource1
+                  DataController.DataSource = dmArticulos.dsPropiedadesSlot
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   DataController.Summary.FooterSummaryItems = <
                     item
@@ -744,6 +749,145 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Caption = 'Propiedades'
                 TabOrder = 6
                 Transparent = True
+              end
+            end
+            object tsSKUS: TcxTabSheet
+              Caption = '&3_SKUS'
+              ImageIndex = 6
+              ExplicitHeight = 362
+              object Panel1: TPanel
+                Left = 719
+                Top = 0
+                Width = 121
+                Height = 421
+                Align = alRight
+                TabOrder = 0
+                ExplicitTop = 128
+                ExplicitHeight = 234
+                object cxButton2: TcxButton
+                  Left = 6
+                  Top = 61
+                  Width = 116
+                  Height = 34
+                  Caption = '&Exp Excel'
+                  TabOrder = 1
+                  OnClick = btnExportarProveedorClick
+                end
+                object cxButton3: TcxButton
+                  Left = 5
+                  Top = 21
+                  Width = 116
+                  Height = 34
+                  Caption = '&A'#241'adir'
+                  TabOrder = 0
+                  OnClick = btnAddProveedorClick
+                end
+              end
+              object cxGrid2: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 719
+                Height = 421
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                Align = alClient
+                TabOrder = 1
+                ExplicitTop = 129
+                ExplicitHeight = 233
+                object cxGridDBTableView1: TcxGridDBTableView
+                  OnDblClick = cxGrdDBTabPrinDblClick
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.First.Hint = 'Va al primer Registro'
+                  Navigator.Buttons.First.Visible = False
+                  Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
+                  Navigator.Buttons.PriorPage.Visible = False
+                  Navigator.Buttons.Prior.Hint = 'Va al Registro Anterior'
+                  Navigator.Buttons.Prior.Visible = False
+                  Navigator.Buttons.Next.Hint = 'Va al siguiente Registro'
+                  Navigator.Buttons.Next.Visible = False
+                  Navigator.Buttons.NextPage.Hint = 'Va a la p'#225'gina siguiente'
+                  Navigator.Buttons.NextPage.Visible = False
+                  Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
+                  Navigator.Buttons.Last.Visible = False
+                  Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
+                  Navigator.Buttons.Insert.Visible = True
+                  Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
+                  Navigator.Buttons.Delete.Visible = True
+                  Navigator.Buttons.Edit.Enabled = False
+                  Navigator.Buttons.Edit.Hint = 'Edita registro Actual'
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
+                  Navigator.Buttons.Post.Visible = True
+                  Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
+                  Navigator.Buttons.Cancel.Visible = True
+                  Navigator.Buttons.Refresh.Hint = 'Refresca Datos Activos'
+                  Navigator.Buttons.SaveBookmark.Enabled = False
+                  Navigator.Buttons.SaveBookmark.Hint = 'Marca Registro Actual'
+                  Navigator.Buttons.SaveBookmark.Visible = False
+                  Navigator.Buttons.GotoBookmark.Enabled = False
+                  Navigator.Buttons.GotoBookmark.Hint = 'Va al registro Marcado'
+                  Navigator.Buttons.GotoBookmark.Visible = False
+                  Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
+                  Navigator.Visible = True
+                  DataController.DataSource = dmArticulos.dsVariacionesArticulos
+                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                  DataController.Summary.FooterSummaryItems = <
+                    item
+                      Format = '#.##'
+                      Kind = skSum
+                    end
+                    item
+                      Format = '##,##.00 '#8364
+                      Kind = skSum
+                    end>
+                  OptionsBehavior.AlwaysShowEditor = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsBehavior.IncSearch = True
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.CancelOnExit = False
+                  OptionsData.Deleting = False
+                  OptionsData.DeletingConfirmation = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.Footer = True
+                  OptionsView.GroupByBox = False
+                  OptionsView.Indicator = True
+                  object cxGridDBTableView1CODIGO_UNIDAD_SKU: TcxGridDBColumn
+                    Caption = 'C'#243'digo SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                    Width = 167
+                  end
+                  object cxGridDBTableView1CODIGO_ARTICULO_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_ARTICULO_SKU'
+                    Visible = False
+                  end
+                  object cxGridDBTableView1ESACTIVO_SKU: TcxGridDBColumn
+                    Caption = 'Activo'
+                    DataBinding.FieldName = 'ESACTIVO_SKU'
+                    Width = 80
+                  end
+                  object cxGridDBTableView1INSTANTEMODIF: TcxGridDBColumn
+                    DataBinding.FieldName = 'INSTANTEMODIF'
+                    Visible = False
+                  end
+                  object cxGridDBTableView1INSTANTEALTA: TcxGridDBColumn
+                    DataBinding.FieldName = 'INSTANTEALTA'
+                    Visible = False
+                  end
+                  object cxGridDBTableView1USUARIOALTA: TcxGridDBColumn
+                    DataBinding.FieldName = 'USUARIOALTA'
+                    Visible = False
+                  end
+                  object cxGridDBTableView1USUARIOMODIF: TcxGridDBColumn
+                    DataBinding.FieldName = 'USUARIOMODIF'
+                    Visible = False
+                  end
+                end
+                object cxGridLevel1: TcxGridLevel
+                  GridView = cxGridDBTableView1
+                end
               end
             end
             object tsTarifas: TcxTabSheet
@@ -1539,145 +1683,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Width = 106
               end
             end
-            object cxTabSheet3: TcxTabSheet
-              Caption = 'cxTabSheet3'
-              ImageIndex = 6
-              ExplicitHeight = 362
-              object Panel1: TPanel
-                Left = 719
-                Top = 0
-                Width = 121
-                Height = 421
-                Align = alRight
-                TabOrder = 0
-                ExplicitTop = 128
-                ExplicitHeight = 234
-                object cxButton2: TcxButton
-                  Left = 6
-                  Top = 61
-                  Width = 116
-                  Height = 34
-                  Caption = '&Exp Excel'
-                  TabOrder = 1
-                  OnClick = btnExportarProveedorClick
-                end
-                object cxButton3: TcxButton
-                  Left = 5
-                  Top = 21
-                  Width = 116
-                  Height = 34
-                  Caption = '&A'#241'adir'
-                  TabOrder = 0
-                  OnClick = btnAddProveedorClick
-                end
-              end
-              object cxGrid2: TcxGrid
-                Left = 0
-                Top = 0
-                Width = 719
-                Height = 421
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Align = alClient
-                TabOrder = 1
-                ExplicitTop = 129
-                ExplicitHeight = 233
-                object cxGridDBTableView1: TcxGridDBTableView
-                  OnDblClick = cxGrdDBTabPrinDblClick
-                  Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.First.Hint = 'Va al primer Registro'
-                  Navigator.Buttons.First.Visible = False
-                  Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
-                  Navigator.Buttons.PriorPage.Visible = False
-                  Navigator.Buttons.Prior.Hint = 'Va al Registro Anterior'
-                  Navigator.Buttons.Prior.Visible = False
-                  Navigator.Buttons.Next.Hint = 'Va al siguiente Registro'
-                  Navigator.Buttons.Next.Visible = False
-                  Navigator.Buttons.NextPage.Hint = 'Va a la p'#225'gina siguiente'
-                  Navigator.Buttons.NextPage.Visible = False
-                  Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
-                  Navigator.Buttons.Last.Visible = False
-                  Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
-                  Navigator.Buttons.Insert.Visible = True
-                  Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
-                  Navigator.Buttons.Delete.Visible = True
-                  Navigator.Buttons.Edit.Enabled = False
-                  Navigator.Buttons.Edit.Hint = 'Edita registro Actual'
-                  Navigator.Buttons.Edit.Visible = False
-                  Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
-                  Navigator.Buttons.Post.Visible = True
-                  Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
-                  Navigator.Buttons.Cancel.Visible = True
-                  Navigator.Buttons.Refresh.Hint = 'Refresca Datos Activos'
-                  Navigator.Buttons.SaveBookmark.Enabled = False
-                  Navigator.Buttons.SaveBookmark.Hint = 'Marca Registro Actual'
-                  Navigator.Buttons.SaveBookmark.Visible = False
-                  Navigator.Buttons.GotoBookmark.Enabled = False
-                  Navigator.Buttons.GotoBookmark.Hint = 'Va al registro Marcado'
-                  Navigator.Buttons.GotoBookmark.Visible = False
-                  Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
-                  Navigator.Visible = True
-                  DataController.DataSource = dmArticulos.dsVariacionesArticulos
-                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.FooterSummaryItems = <
-                    item
-                      Format = '#.##'
-                      Kind = skSum
-                    end
-                    item
-                      Format = '##,##.00 '#8364
-                      Kind = skSum
-                    end>
-                  OptionsBehavior.AlwaysShowEditor = True
-                  OptionsBehavior.GoToNextCellOnEnter = True
-                  OptionsBehavior.IncSearch = True
-                  OptionsCustomize.ColumnHiding = True
-                  OptionsData.CancelOnExit = False
-                  OptionsData.Deleting = False
-                  OptionsData.DeletingConfirmation = False
-                  OptionsData.Editing = False
-                  OptionsData.Inserting = False
-                  OptionsView.Footer = True
-                  OptionsView.GroupByBox = False
-                  OptionsView.Indicator = True
-                  object cxGridDBTableView1CODIGO_UNIDAD_SKU: TcxGridDBColumn
-                    Caption = 'C'#243'digo SKU'
-                    DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
-                    Width = 167
-                  end
-                  object cxGridDBTableView1CODIGO_ARTICULO_SKU: TcxGridDBColumn
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_SKU'
-                    Visible = False
-                  end
-                  object cxGridDBTableView1ESACTIVO_SKU: TcxGridDBColumn
-                    Caption = 'Activo'
-                    DataBinding.FieldName = 'ESACTIVO_SKU'
-                    Width = 80
-                  end
-                  object cxGridDBTableView1INSTANTEMODIF: TcxGridDBColumn
-                    DataBinding.FieldName = 'INSTANTEMODIF'
-                    Visible = False
-                  end
-                  object cxGridDBTableView1INSTANTEALTA: TcxGridDBColumn
-                    DataBinding.FieldName = 'INSTANTEALTA'
-                    Visible = False
-                  end
-                  object cxGridDBTableView1USUARIOALTA: TcxGridDBColumn
-                    DataBinding.FieldName = 'USUARIOALTA'
-                    Visible = False
-                  end
-                  object cxGridDBTableView1USUARIOMODIF: TcxGridDBColumn
-                    DataBinding.FieldName = 'USUARIOMODIF'
-                    Visible = False
-                  end
-                end
-                object cxGridLevel1: TcxGridLevel
-                  GridView = cxGridDBTableView1
-                end
-              end
-            end
           end
         end
         object splSplitterFicha: TcxSplitter
@@ -1768,7 +1773,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       Left = 1
       Top = 157
       Width = 138
-      Height = 25
+      Height = 44
       Caption = '&Nuevo Art'#237'culo'
       TabOrder = 1
       OnClick = btnNuevoArticuloClick
