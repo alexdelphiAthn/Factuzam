@@ -156,7 +156,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             Height = 374
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMetadatos
+            Properties.ActivePage = tsSQL
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 370
             ClientRectLeft = 4
@@ -191,7 +191,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                 object dbsyndtTexto: TDBSynEdit
                   Left = 1
                   Top = 1
-                  Width = 839
+                  Width = 722
                   Height = 253
                   Cursor = crIBeam
                   DataField = 'PROCESO_GENERADORPROCESO'
@@ -246,6 +246,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   OverwriteCaret = ctHorizontalLine
                   SelectedColor.Alpha = 0.400000005960464500
                   TabWidth = 2
+                  ExplicitWidth = 839
                   RemovedKeystrokes = <
                     item
                       Command = ecTab
@@ -266,6 +267,26 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       ShortCut = 8201
                       ShortCut2 = 8201
                     end>
+                end
+                object Panel2: TPanel
+                  Left = 723
+                  Top = 1
+                  Width = 117
+                  Height = 253
+                  Align = alRight
+                  TabOrder = 1
+                  ExplicitLeft = 724
+                  ExplicitTop = 0
+                  ExplicitHeight = 340
+                  object btnBonito: TButton
+                    Left = 24
+                    Top = 16
+                    Width = 75
+                    Height = 25
+                    Caption = 'Bonito'
+                    TabOrder = 0
+                    OnClick = btnBonitoClick
+                  end
                 end
               end
             end

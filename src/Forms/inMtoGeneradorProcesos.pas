@@ -132,6 +132,8 @@ type
     btnExportarExcelMeta: TcxButton;
     btnEditarMeta: TcxButton;
     TreeView1: TTreeView;
+    Panel2: TPanel;
+    btnBonito: TButton;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -153,6 +155,7 @@ type
     procedure TreeView1DblClick(Sender: TObject);
     procedure tsMetadatosEnter(Sender: TObject);
     procedure TreeView1Click(Sender: TObject);
+    procedure btnBonitoClick(Sender: TObject);
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
@@ -177,6 +180,57 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoGeneradorProcesos.btnBonitoClick(Sender: TObject);
+var
+  Formatter: ICodeFormatter;
+begin
+  inherited;
+  var sSQL := dbsyndtTexto.Lines.Text;
+  sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
+      // 2. Quitar prefijos tabla. en los campos (fza_articulos.CAMPO -> CAMPO)
+  //    Usamos un bucle simple con expresión regular o StringReplace múltiple
+  //    Alternativa sin regex: quitar todo lo que sea "palabra." antes de un campo
+  var i := 1;
+  var sOut := '';
+  var sLen := Length(sSQL);
+  while i <= sLen do
+  begin
+    // Detectar patrón: identificador seguido de punto
+    if (sSQL[i] in ['A'..'Z','a'..'z','_','0'..'9']) then
+    begin
+      // Leer el identificador completo
+      var j := i;
+      while (j <= sLen) and (sSQL[j] in ['A'..'Z','a'..'z','_','0'..'9']) do
+        Inc(j);
+      // ¿Le sigue un punto?
+      if (j <= sLen) and (sSQL[j] = '.') then
+      begin
+        // Saltar el identificador y el punto (era un prefijo tabla.)
+        i := j + 1;
+      end
+      else
+      begin
+        // No le sigue punto, copiar el identificador
+        sOut := sOut + Copy(sSQL, i, j - i);
+        i := j;
+      end;
+    end
+    else
+    begin
+      sOut := sOut + sSQL[i];
+      Inc(i);
+    end;
+  end;
+  sSQL := sOut;
+
+  // 3. Normalizar espacios múltiples
+  while Pos('  ', sSQL) > 0 do
+    sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
+  // --- NUEVO CÓDIGO CON LA LIBRERÍA NATIVA ---
+  Formatter := GetSQLFormatter;
+  dbsyndtTexto.Lines.Text := Formatter.Format(sSQL);
+end;
 
 procedure TfrmMtoGeneradorProcesos.btnEditarClick(Sender: TObject);
 begin
