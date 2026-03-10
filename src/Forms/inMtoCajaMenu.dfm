@@ -35,14 +35,14 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Shape = stRoundRect
   end
   object jvgfnmtr1: TJvGIFAnimator
-    Left = 568
-    Top = 559
-    Width = 94
-    Height = 90
+    Left = 479
+    Top = 576
+    Width = 70
+    Height = 73
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 1
+    FrameIndex = 48
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21190,22 +21190,6 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 185
     Transparent = True
   end
-  object cxDateNavigator1: TcxDateNavigator
-    Left = 23
-    Top = 457
-    Width = 242
-    Height = 204
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    TabOrder = 5
-    OnCustomDrawDayNumber = cxDateNavigator1CustomDrawDayNumber
-    OnPeriodChanged = cxDateNavigator1PeriodChanged
-    OnShowDateHint = cxDateNavigator1ShowDateHint
-    OnDblClick = cxDateNavigator1DblClick
-  end
   object lblF6: TcxLabel
     Left = 178
     Top = 178
@@ -21226,7 +21210,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LabelEffect = cxleFun
     Properties.LabelStyle = cxlsRaised
     Properties.Orientation = cxoRight
-    TabOrder = 6
+    TabOrder = 5
     OnMouseEnter = lblF6MouseEnter
     OnMouseLeave = lblF6MouseLeave
     Height = 37
@@ -21252,7 +21236,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 7
+    TabOrder = 6
     OnMouseEnter = lblEntradaCambioMouseEnter
     OnMouseLeave = lblEntradaCambioMouseLeave
     Height = 41
@@ -21278,7 +21262,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LabelEffect = cxleFun
     Properties.LabelStyle = cxlsRaised
     Properties.Orientation = cxoRight
-    TabOrder = 8
+    TabOrder = 7
     OnMouseEnter = lblF7MouseEnter
     OnMouseLeave = lblF7MouseLeave
     Height = 41
@@ -21304,7 +21288,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 9
+    TabOrder = 8
     OnMouseEnter = lblGastosCajaMouseEnter
     OnMouseLeave = lblGastosCajaMouseLeave
     Height = 43
@@ -21329,7 +21313,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 10
+    TabOrder = 9
     OnMouseEnter = lblArqueoMouseEnter
     OnMouseLeave = lblArqueoMouseLeave
     Height = 65
@@ -21355,7 +21339,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LabelEffect = cxleFun
     Properties.LabelStyle = cxlsRaised
     Properties.Orientation = cxoRight
-    TabOrder = 11
+    TabOrder = 10
     OnMouseEnter = lblF11MouseEnter
     OnMouseLeave = lblF11MouseLeave
     Height = 52
@@ -21379,7 +21363,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Alignment = cxllaTop
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 12
+    TabOrder = 11
     OnClick = lblESCClick
     OnMouseEnter = lblSalirMouseEnter
     OnMouseLeave = lblSalirMouseLeave
@@ -21404,7 +21388,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 13
+    TabOrder = 12
     OnClick = lblESCClick
     OnMouseEnter = lblESCMouseEnter
     OnMouseLeave = lblESCMouseLeave
@@ -21431,26 +21415,11 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 14
+    TabOrder = 13
     OnMouseEnter = lblFechaMouseEnter
     OnMouseLeave = lblFechaMouseLeave
     Height = 56
     Width = 249
-  end
-  object cxButton1: TcxButton
-    Left = 23
-    Top = 415
-    Width = 242
-    Height = 36
-    Caption = 'Ir a Fecha de Hoy'
-    TabOrder = 15
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    ParentFont = False
-    OnClick = cxButton1Click
   end
   object cxLabel2: TcxLabel
     Left = 23
@@ -21472,7 +21441,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 16
+    TabOrder = 14
     OnMouseEnter = lblVentasMouseEnter
     OnMouseLeave = lblVentasMouseLeave
     Height = 113
@@ -21498,7 +21467,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 17
+    TabOrder = 15
     OnMouseEnter = lblVentasMouseEnter
     OnMouseLeave = lblVentasMouseLeave
     Height = 207
@@ -21524,7 +21493,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LabelEffect = cxleFun
     Properties.LabelStyle = cxlsRaised
     Properties.Orientation = cxoRight
-    TabOrder = 18
+    TabOrder = 16
     OnMouseEnter = lblF3MouseEnter
     OnMouseLeave = lblF3MouseLeave
     Height = 36
@@ -21550,7 +21519,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 19
+    TabOrder = 17
     OnMouseEnter = lblTraspasosMouseEnter
     OnMouseLeave = lblTraspasosMouseLeave
     Height = 43
@@ -21575,12 +21544,34 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.LineOptions.Visible = True
     Properties.Orientation = cxoRight
     Properties.WordWrap = True
-    TabOrder = 20
+    TabOrder = 18
     OnDblClick = lblEmpresaDblClick
     OnMouseEnter = lblVentasMouseEnter
     OnMouseLeave = lblVentasMouseLeave
     Height = 43
     Width = 811
+  end
+  object JvMonthCalendar1: TJvMonthCalendar
+    Left = 28
+    Top = 444
+    Width = 244
+    Height = 205
+    AutoSize = True
+    Date = 46091.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 19
+    WeekNumbers = True
+    OnDblClick = JvMonthCalendar1DblClick
+    OnGetMonthBoldInfo = JvMonthCalendar1GetMonthBoldInfo
+    StyleElements = [seFont, seClient]
+    OnMouseMove = JvMonthCalendar1MouseMove
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
