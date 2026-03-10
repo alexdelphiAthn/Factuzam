@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -394,6 +394,12 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlparser.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlscanner.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.core.sqltree.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.core.utils.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.editor.codeformatters.pas"/>
+        <DCCReference Include="src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

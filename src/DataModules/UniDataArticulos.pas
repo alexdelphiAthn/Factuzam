@@ -37,8 +37,8 @@ type
     dsVariacionesArticulos: TDataSource;
     unqryVariacionesSlot: TUniQuery;
     dsVariacionesSlot: TDataSource;
-    unqryPropiedades: TUniQuery;
-    dsPropiedades: TDataSource;
+    unqryPropiedadesSlot: TUniQuery;
+    dsPropiedadesSlot: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);

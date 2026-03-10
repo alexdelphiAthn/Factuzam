@@ -8,79 +8,28 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
+  OnResize = FormResize
   OnShow = FormShow
   ExplicitLeft = 3
   ExplicitTop = 3
   ExplicitWidth = 1136
   ExplicitHeight = 612
   TextHeight = 19
-  object dxstsbr1: TdxStatusBar [0]
-    AlignWithMargins = True
-    Left = 3
-    Top = 528
-    Width = 1118
-    Height = 18
-    AutoSize = True
-    Panels = <
-      item
-        PanelStyleClassName = 'TdxStatusBarKeyboardStatePanelStyle'
-        PanelStyle.CapsLockKeyAppearance.ActiveCaption = 'CAPS'
-        PanelStyle.CapsLockKeyAppearance.InactiveCaption = 'CAPS'
-        PanelStyle.NumLockKeyAppearance.ActiveCaption = 'NUM'
-        PanelStyle.NumLockKeyAppearance.InactiveCaption = 'NUM'
-        PanelStyle.ScrollLockKeyAppearance.ActiveCaption = 'SCRL'
-        PanelStyle.ScrollLockKeyAppearance.InactiveCaption = 'SCRL'
-        PanelStyle.InsertKeyAppearance.ActiveCaption = 'OVR'
-        PanelStyle.InsertKeyAppearance.InactiveCaption = 'INS'
-      end
-      item
-        PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
-        Width = 250
-      end
-      item
-        PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
-        PanelStyle.Alignment = taRightJustify
-        PanelStyle.EllipsisType = dxetSmartPath
-        MinWidth = 150
-        Width = 250
-      end
-      item
-        PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
-        PanelStyle.Alignment = taCenter
-        MinWidth = 100
-        Width = 100
-      end
-      item
-        PanelStyleClassName = 'TdxStatusBarTextPanelStyle'
-        PanelStyle.Alignment = taRightJustify
-      end>
-    BorderWidth = 1
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Lucida Sans Unicode'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    Font.Quality = fqClearTypeNatural
-    ParentFont = False
-    ExplicitTop = 519
-    ExplicitWidth = 1112
-  end
-  object Panel1: TPanel [1]
+  object Panel1: TPanel [0]
     Left = 0
     Top = 0
     Width = 1124
-    Height = 525
+    Height = 530
     Align = alClient
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 0
     ExplicitWidth = 1118
     ExplicitHeight = 516
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
       Width = 1124
-      Height = 454
+      Height = 459
       Align = alClient
       TabOrder = 0
       Properties.CloseButtonMode = cbmActiveTab
@@ -88,14 +37,14 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       ExplicitWidth = 1118
       ExplicitHeight = 445
-      ClientRectBottom = 450
+      ClientRectBottom = 455
       ClientRectLeft = 4
       ClientRectRight = 1120
       ClientRectTop = 4
     end
     object pnlPPBottom: TPanel
       Left = 0
-      Top = 454
+      Top = 459
       Width = 1124
       Height = 71
       Align = alBottom
@@ -117,6 +66,40 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Width = 1122
       end
     end
+  end
+  object JvStatusBar1: TJvStatusBar [1]
+    Left = 0
+    Top = 530
+    Width = 1124
+    Height = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Lucida Sans'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    Font.Quality = fqClearTypeNatural
+    Panels = <
+      item
+        Width = 120
+      end
+      item
+        Width = 250
+      end
+      item
+        Alignment = taRightJustify
+        Width = 250
+      end
+      item
+        Alignment = taCenter
+        Width = 100
+      end
+      item
+        Alignment = taRightJustify
+        Width = 150
+      end>
+    UseSystemFont = False
+    ExplicitTop = 531
   end
   inherited Localizer1: TcxLocalizer
     Left = 528

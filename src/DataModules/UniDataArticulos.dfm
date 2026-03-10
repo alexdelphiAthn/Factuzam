@@ -681,7 +681,7 @@ inherited dmArticulos: TdmArticulos
     Left = 600
     Top = 264
   end
-  object unqryPropiedades: TUniQuery
+  object unqryPropiedadesSlot: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
@@ -700,8 +700,8 @@ inherited dmArticulos: TdmArticulos
         Value = 'ZAP-OXFORD'
       end>
   end
-  object dsPropiedades: TDataSource
-    DataSet = unqryPropiedades
+  object dsPropiedadesSlot: TDataSource
+    DataSet = unqryPropiedadesSlot
     Left = 728
     Top = 264
   end
