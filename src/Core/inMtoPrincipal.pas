@@ -180,30 +180,23 @@ var
   EstadoTeclas: string;
 begin
   EstadoTeclas := '';
-
   if (GetKeyState(VK_CAPITAL) and 1) <> 0 then
     EstadoTeclas := EstadoTeclas + 'CAPS  ';
-
   if (GetKeyState(VK_NUMLOCK) and 1) <> 0 then
     EstadoTeclas := EstadoTeclas + 'NUM  ';
-
   if (GetKeyState(VK_SCROLL) and 1) <> 0 then
     EstadoTeclas := EstadoTeclas + 'SCRL  ';
-
   if (GetKeyState(VK_INSERT) and 1) <> 0 then
     EstadoTeclas := EstadoTeclas + 'OVR'
   else
     EstadoTeclas := EstadoTeclas + 'INS';
-
   EstadoTeclas := Trim(EstadoTeclas);
-
   // LA MAGIA DE LA OPTIMIZACIÓN:
   // Solo se asigna (y por tanto se repinta en pantalla) si el usuario
   // acaba de pulsar o soltar una de las teclas.
   if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
 end;
-
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;

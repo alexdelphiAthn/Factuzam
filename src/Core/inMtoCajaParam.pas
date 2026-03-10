@@ -10,53 +10,20 @@ uses
   cxCheckBox, cxVGrid, cxInplaceContainer, cxTextEdit, cxContainer,
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
-  cxButtons;
+  cxButtons, JvComponentBase, JvInspector, JvExControls;
 
 type
   TfrmMtoCajaParam = class(TFrmBase)
     Panel1: TPanel;
     edtBusqueda: TcxButtonEdit;
-    Panel2: TPanel;
-    cxVerticalGrid1: TcxVerticalGrid;
-    
-    // GRUPO: Control de Artículos
-    vgerChkExistOnly: TcxEditorRow;          // Permitir sólo artículos que existan
-    vgerChkStockOnly: TcxEditorRow;          // Permitir vender sin stock
-    
-    // GRUPO: Configuración de Caja
-    vgerShowCajaSelection: TcxEditorRow;     // Presentar selección de caja
-    vgerFillEmpleadoDefecto: TcxEditorRow;   // Rellenar empleado por defecto al abrir
-    vgerDefTarifa: TcxEditorRow;             // Tarifa por defecto en caja
-    vgerMaxOpPending: TcxEditorRow;          // Número de operaciones pendientes
-    
-    // GRUPO: Devoluciones y Vales
-    vgerReqRefDevolucion: TcxEditorRow;      // Pedir referencia en devoluciones
-    vgerRecuperaValePIN: TcxEditorRow;       // Recuperar Vale sólo con PIN
-    vgerCaducidadDefVale: TcxEditorRow;      // Caducidad por defecto en vale
-    vgerDiasCaducidadVale: TcxEditorRow;     // Días hasta caducidad en vale
-    
-    // GRUPO: Avisos y Búsquedas
-    vgerAvisoStockWarning: TcxEditorRow;     // Aviso en artículos sin stock
-    vgerBusqArtStockOnly: TcxEditorRow;      // Búsqueda de artículos sólo con stock
-    vgerBusqArtTarifaOnly: TcxEditorRow;     // Búsqueda de artículos sólo con tarifa
-    vgerMoverLineaIdentif: TcxEditorRow;     // Mover linea al identificar artículo
-    
-    // GRUPO: Impresión
-    vgerDefPrinter: TcxEditorRow;            // Nombre impresora de tickets
-    vgerTipoImpresion: TcxEditorRow;         // Tipo de Impresión tickets
-    vgerFormatoImpPredet: TcxEditorRow;      // Formato de impresión predeterminado
-    
-    // GRUPO: Empleado
-    vgerCodEmpleadoDefecto: TcxEditorRow;    // Código de empleado por defecto
-    vgerShowEmpleadoLinea: TcxEditorRow;     // Mostrar empleado en linea de caja
+    Panel2: TPanel;     // Mostrar empleado en linea de caja
 
     // Otros componentes
     cmbGrupoUsuario: TcxComboBox;
     btnGuardar: TcxButton;
     btnChangeId: TcxButton;
-    vgerArqueoTarjetas: TcxEditorRow;
-    vgerVentasCredito: TcxEditorRow;
-    vgerDescuentos: TcxEditorRow;           //permite descuentos en ventas
+    JvInspector1: TJvInspector;
+    JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;           //permite descuentos en ventas
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
@@ -67,12 +34,54 @@ type
     procedure btnGuardarClick(Sender: TObject);
     procedure btnChangeIdClick(Sender: TObject);
   private
-    procedure FiltrarVerticalGrid(Grid: TcxVerticalGrid; Texto: string);
+    procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     function QuitarTildes(const Texto: string): string;
-    procedure CargarParametros(Grid: TcxVerticalGrid;
-                               const pUsuario, pGrupo: string);
-  public
+    procedure CargarParametros(Grid: TJvInspector;
+                           const pUsuario, pGrupo: string);
     { Public declarations }
+  private
+    // --- VARIABLES PARA EL INSPECTOR ---
+
+    // GRUPO: Control de Artículos
+    FvgerChkExistOnly: Boolean;
+    FvgerChkStockOnly: Boolean;
+
+    // GRUPO: Configuración de Caja
+    FvgerShowCajaSelection: Boolean;
+    FvgerFillEmpleadoDefecto: Boolean;
+    FvgerDefTarifa: string;
+    FvgerMaxOpPending: Integer;
+
+    // GRUPO: Devoluciones y Vales
+    FvgerReqRefDevolucion: Boolean;
+    FvgerRecuperaValePIN: Boolean;
+    FvgerCaducidadDefVale: Boolean;
+    FvgerDiasCaducidadVale: Integer;
+
+    // GRUPO: Avisos y Búsquedas
+    FvgerAvisoStockWarning: string;
+    FvgerBusqArtStockOnly: Boolean;
+    FvgerBusqArtTarifaOnly: Boolean;
+    FvgerMoverLineaIdentif: Boolean;
+
+    // GRUPO: Impresión
+    FvgerDefPrinter: string;
+    FvgerTipoImpresion: string;
+    FvgerFormatoImpPredet: string;
+
+    // GRUPO: Empleado
+    FvgerCodEmpleadoDefecto: string;
+    FvgerShowEmpleadoLinea: Boolean;
+
+    // GRUPO: Otros (Permisos extra)
+    FvgerArqueoTarjetas: Boolean;
+    FvgerVentasCredito: Boolean;
+    FvgerDescuentos: Boolean;
+
+    // Métodos que vamos a adaptar:
+    procedure ConstruirInspector;
+    procedure GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);
+    procedure CargarValoresPorDefecto;
   end;
 
 var
@@ -129,13 +138,100 @@ begin
   else
     Exit;
   end;
-  CargarParametros(cxVerticalGrid1, sUsuario, sGrupo);
+  CargarParametros(JvInspector1, sUsuario, sGrupo);
+end;
+
+procedure TfrmMtoCajaParam.ConstruirInspector;
+var
+  CatArticulos, CatCaja, CatDevoluciones, CatAvisos, CatImpresion, CatEmpleado, CatOtros: TJvInspectorCustomCategoryItem;
+  ItemCombo: TJvCustomInspectorItem;
+begin
+  JvInspector1.BeginUpdate;
+  try
+    JvInspector1.Root.Clear;
+
+    // --- GRUPO: Control de Artículos ---
+    CatArticulos := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatArticulos.DisplayName := 'Control de Artículos';
+    with TJvInspectorVarData.New(CatArticulos, 'vgerChkExistOnly', TypeInfo(Boolean), @FvgerChkExistOnly) do DisplayName := 'Permitir sólo artículos que existan';
+    with TJvInspectorVarData.New(CatArticulos, 'vgerChkStockOnly', TypeInfo(Boolean), @FvgerChkStockOnly) do DisplayName := 'Permitir vender sin stock';
+
+    // --- GRUPO: Configuración de Caja ---
+    CatCaja := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatCaja.DisplayName := 'Configuración de Caja';
+    with TJvInspectorVarData.New(CatCaja, 'vgerShowCajaSelection', TypeInfo(Boolean), @FvgerShowCajaSelection) do DisplayName := 'Presentar selección de caja';
+    with TJvInspectorVarData.New(CatCaja, 'vgerFillEmpleadoDefecto', TypeInfo(Boolean), @FvgerFillEmpleadoDefecto) do DisplayName := 'Rellenar empleado por defecto al abrir';
+    with TJvInspectorVarData.New(CatCaja, 'vgerDefTarifa', TypeInfo(string), @FvgerDefTarifa) do DisplayName := 'Tarifa por defecto en caja';
+    with TJvInspectorVarData.New(CatCaja, 'vgerMaxOpPending', TypeInfo(Integer), @FvgerMaxOpPending) do DisplayName := 'Número de operaciones pendientes';
+
+    // --- GRUPO: Devoluciones y Vales ---
+    CatDevoluciones := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatDevoluciones.DisplayName := 'Devoluciones y Vales';
+    with TJvInspectorVarData.New(CatDevoluciones, 'vgerReqRefDevolucion', TypeInfo(Boolean), @FvgerReqRefDevolucion) do DisplayName := 'Pedir referencia en devoluciones';
+    with TJvInspectorVarData.New(CatDevoluciones, 'vgerRecuperaValePIN', TypeInfo(Boolean), @FvgerRecuperaValePIN) do DisplayName := 'Recuperar Vale sólo con PIN';
+    with TJvInspectorVarData.New(CatDevoluciones, 'vgerCaducidadDefVale', TypeInfo(Boolean), @FvgerCaducidadDefVale) do DisplayName := 'Caducidad por defecto en vale';
+    with TJvInspectorVarData.New(CatDevoluciones, 'vgerDiasCaducidadVale', TypeInfo(Integer), @FvgerDiasCaducidadVale) do DisplayName := 'Días hasta caducidad en vale';
+
+    // --- GRUPO: Avisos y Búsquedas ---
+    CatAvisos := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatAvisos.DisplayName := 'Avisos y Búsquedas';
+    with TJvInspectorVarData.New(CatAvisos, 'vgerAvisoStockWarning', TypeInfo(String), @FvgerAvisoStockWarning) do DisplayName := 'Aviso en artículos sin stock';
+    with TJvInspectorVarData.New(CatAvisos, 'vgerBusqArtStockOnly', TypeInfo(Boolean), @FvgerBusqArtStockOnly) do DisplayName := 'Búsqueda de artículos sólo con stock';
+    with TJvInspectorVarData.New(CatAvisos, 'vgerBusqArtTarifaOnly', TypeInfo(Boolean), @FvgerBusqArtTarifaOnly) do DisplayName := 'Búsqueda de artículos sólo con tarifa';
+    with TJvInspectorVarData.New(CatAvisos, 'vgerMoverLineaIdentif', TypeInfo(Boolean), @FvgerMoverLineaIdentif) do DisplayName := 'Mover linea al identificar artículo';
+
+    // --- GRUPO: Impresión ---
+    CatImpresion := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatImpresion.DisplayName := 'Impresión';
+    with TJvInspectorVarData.New(CatImpresion, 'vgerDefPrinter', TypeInfo(string), @FvgerDefPrinter) do DisplayName := 'Nombre impresora de tickets';
+
+    ItemCombo := TJvInspectorVarData.New(CatImpresion, 'vgerTipoImpresion', TypeInfo(string), @FvgerTipoImpresion);
+    ItemCombo.DisplayName := 'Tipo de Impresión tickets';
+    ItemCombo.Flags := ItemCombo.Flags + [iifValueList]; // Combo desplegable
+    ItemCombo.OnGetValueList := GetTipoImpresionList;
+
+    with TJvInspectorVarData.New(CatImpresion, 'vgerFormatoImpPredet', TypeInfo(string), @FvgerFormatoImpPredet) do DisplayName := 'Formato de impresión predeterminado';
+
+    // --- GRUPO: Empleado ---
+    CatEmpleado := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatEmpleado.DisplayName := 'Empleado';
+    with TJvInspectorVarData.New(CatEmpleado, 'vgerCodEmpleadoDefecto', TypeInfo(string), @FvgerCodEmpleadoDefecto) do DisplayName := 'Código de empleado por defecto';
+    with TJvInspectorVarData.New(CatEmpleado, 'vgerShowEmpleadoLinea', TypeInfo(Boolean), @FvgerShowEmpleadoLinea) do DisplayName := 'Mostrar empleado en linea de caja';
+
+    // --- GRUPO: Otros ---
+    CatOtros := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    CatOtros.DisplayName := 'Permisos Extra';
+    with TJvInspectorVarData.New(CatOtros, 'vgerArqueoTarjetas', TypeInfo(Boolean), @FvgerArqueoTarjetas) do DisplayName := 'Permitir Arqueo de Tarjetas';
+    with TJvInspectorVarData.New(CatOtros, 'vgerVentasCredito', TypeInfo(Boolean), @FvgerVentasCredito) do DisplayName := 'Permitir Ventas a Crédito';
+    with TJvInspectorVarData.New(CatOtros, 'vgerDescuentos', TypeInfo(Boolean), @FvgerDescuentos) do DisplayName := 'Permite descuentos en ventas';
+
+    // (Opcional) Expandir todas las categorías por defecto
+    CatArticulos.Expanded := True;
+    CatCaja.Expanded := True;
+    CatDevoluciones.Expanded := True;
+    CatAvisos.Expanded := True;
+    CatImpresion.Expanded := True;
+    CatEmpleado.Expanded := True;
+    CatOtros.Expanded := True;
+
+  finally
+    JvInspector1.EndUpdate;
+  end;
+end;
+
+// Evento que rellena tu ComboBox de Tipo de Impresión
+procedure TfrmMtoCajaParam.GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);
+begin
+  Strings.Clear;
+  Strings.Add('ESC POS');
+  Strings.Add('ESC POS NOQR');
+  Strings.Add('EDITOR');
 end;
 
 procedure TfrmMtoCajaParam.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  FiltrarVerticalGrid(cxVerticalGrid1, edtBusqueda.Text);
+  FiltrarVerticalGrid(JvInspector1, edtBusqueda.Text);
 end;
 
 procedure TfrmMtoCajaParam.btnChangeIdClick(Sender: TObject);
@@ -185,15 +281,13 @@ begin
     end;
 
     // Cargar parámetros como si fuéramos ese usuario
-    CargarParametros(cxVerticalGrid1, sUsuario, '');
-
+    CargarParametros(JvInspector1, sUsuario, '');
     // Opcional: reflejar en el combo quién está "activo"
     // Añadir al combo si no estaba
     if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
       cmbGrupoUsuario.Properties.Items.Add(sUsuario);
     cmbGrupoUsuario.ItemIndex :=
       cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
-
   finally
     usuarios.Free;
     qry.Free;
@@ -203,53 +297,74 @@ end;
 procedure TfrmMtoCajaParam.btnGuardarClick(Sender: TObject);
 var
   qry: TUniQuery;
-  i: Integer;
-  Row: TcxCustomRow;
   sUsuarioGrupo: string;
+
+  // Función local para recorrer el árbol del Inspector y guardar
+  procedure GuardarNodos(ItemPadre: TJvCustomInspectorItem);
+  var i: Integer; ItemHijo: TJvCustomInspectorItem;
+  begin
+    for i := 0 to ItemPadre.Count - 1 do
+    begin
+      ItemHijo := ItemPadre.Items[i];
+      if ItemHijo is TJvInspectorCustomCategoryItem then
+        GuardarNodos(ItemHijo) // Si es categoría, entramos dentro
+      else
+      begin
+        // Si es un parámetro real, guardamos en BD
+        qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
+        qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
+        qry.ParamByName('p_subkey').AsString        := ItemHijo.Name; // Ej: 'vgerChkExistOnly'
+        qry.ParamByName('p_value').AsString         := ItemHijo.Data.AsString; // Valor del parámetro
+        qry.Execute;
+      end;
+    end;
+  end;
+
 begin
-  // CORRECCIÓN: Validar que haya algo seleccionado
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
-
-  // CORRECCIÓN: Tomamos el texto directamente del combo.
-  // Esto funcionará tanto para oUser, oGroup como para el usuario cargado por btnChangeId.
   sUsuarioGrupo := cmbGrupoUsuario.Text;
-
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    // Usamos el procedimiento almacenado para guardar
     qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, :p_formulario, :p_subkey, :p_value)';
-
-    for i := 0 to cxVerticalGrid1.Rows.Count - 1 do
-    begin
-      Row := cxVerticalGrid1.Rows[i];
-      if not (Row is TcxEditorRow) then
-        Continue;
-
-      qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
-      qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
-      qry.ParamByName('p_subkey').AsString        := Row.Name;
-      qry.ParamByName('p_value').AsString         := VarToStr(TcxEditorRow(Row).Properties.Value);
-      qry.Execute;
-    end;
-
+    // Inicia el proceso recursivo desde la raíz
+    GuardarNodos(JvInspector1.Root);
     ShowMessage('Parámetros guardados correctamente para: ' + sUsuarioGrupo);
   finally
     qry.Free;
   end;
-
-  // Refrescar variables globales si el guardado fue para el usuario actual
   if (sUsuarioGrupo = oUser) or (sUsuarioGrupo = oGroup) or (sUsuarioGrupo = oAll) then
     oCajaParams.Recargar(oUser, oGroup);
 end;
 
-procedure TfrmMtoCajaParam.CargarParametros(Grid: TcxVerticalGrid; const pUsuario, pGrupo: string);
+procedure TfrmMtoCajaParam.CargarParametros(Grid: TJvInspector; const pUsuario, pGrupo: string);
 var
   qry: TUniQuery;
-  i: Integer;
-  Row: TcxCustomRow;
-  SubKey: string;
+  SubKey, ValorStr: string;
+
+  function BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
+  var i: Integer; Encontrado: TJvCustomInspectorItem;
+  begin
+    Result := nil;
+    for i := 0 to ItemPadre.Count - 1 do
+    begin
+      if SameText(ItemPadre.Items[i].Name, Nombre) then Exit(ItemPadre.Items[i]);
+      if ItemPadre.Items[i] is TJvInspectorCustomCategoryItem then
+      begin
+        Encontrado := BuscarItemPorNombre(ItemPadre.Items[i], Nombre);
+        if Encontrado <> nil then Exit(Encontrado);
+      end;
+    end;
+  end;
+
+var
+  ItemData: TJvCustomInspectorItem;
 begin
+  // 1. Limpiamos las variables en memoria y refrescamos el grid
+  // para no heredar "basura" del usuario que estuviera seleccionado antes.
+  CargarValoresPorDefecto;
+  Grid.Refresh;
+
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
@@ -264,13 +379,21 @@ begin
       while not qry.Eof do
       begin
         SubKey := qry.FieldByName('SUBKEY_PERFILES').AsString;
-        for i := 0 to Grid.Rows.Count - 1 do
+        ValorStr := qry.FieldByName('VALUE_PERFILES').AsString;
+
+        ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
+        if (ItemData <> nil) and (ItemData.Data <> nil) then
         begin
-          Row := Grid.Rows[i];
-          if (Row is TcxEditorRow) and SameText(Row.Name, SubKey) then
-          begin
-            TcxEditorRow(Row).Properties.Value := qry.FieldByName('VALUE_PERFILES').Value;
-            Break;
+          try
+            // Si el destino es un Número y en la BD viene vacío, le forzamos un '0'
+            if (ValorStr = '') and (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
+              ValorStr := '0';
+
+            // Intentamos asignar el valor
+            ItemData.DisplayValue := ValorStr;
+          except
+            // Si algo falla (ej. BD corrupta), lo capturamos silenciosamente.
+            // Así el TcxComboBox no se entera del fallo y no se revierte.
           end;
         end;
         qry.Next;
@@ -283,62 +406,102 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaParam.FiltrarVerticalGrid(Grid: TcxVerticalGrid; Texto: string);
+procedure TfrmMtoCajaParam.CargarValoresPorDefecto;
+begin
+  // Booleans
+  FvgerChkExistOnly := False;
+  FvgerChkStockOnly := False;
+  FvgerShowCajaSelection := False;
+  FvgerFillEmpleadoDefecto := False;
+  FvgerReqRefDevolucion := False;
+  FvgerRecuperaValePIN := False;
+  FvgerCaducidadDefVale := False;
+  FvgerAvisoStockWarning := 'Artículo sin stock. Compruebe stock en almacén.';
+  FvgerBusqArtStockOnly := False;
+  FvgerBusqArtTarifaOnly := False;
+  FvgerMoverLineaIdentif := False;
+  FvgerShowEmpleadoLinea := False;
+  FvgerArqueoTarjetas := False;
+  FvgerVentasCredito := False;
+  FvgerDescuentos := False;
+
+  // Integers
+  FvgerMaxOpPending := 0;
+  FvgerDiasCaducidadVale := 0;
+
+  // Strings
+  FvgerDefTarifa := '';
+  FvgerDefPrinter := '';
+  FvgerTipoImpresion := 'ESC POS'; // Valor por defecto del combo
+  FvgerFormatoImpPredet := '';
+  FvgerCodEmpleadoDefecto := '';
+end;
+
+procedure TfrmMtoCajaParam.FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
 var
-  i: Integer;
   TextoBusquedaLimpio: string;
 
-  // Función local recursiva para revisar filas y sus hijos
-  function ProcesarFila(Row: TcxCustomRow): Boolean;
+  function ProcesarFila(Row: TJvCustomInspectorItem): Boolean;
   var
-    Coincide: Boolean;
-    TextoFila: string;
-    // j: Integer;
-    // HijoVisible: Boolean;
+    Coincide, HijoVisible: Boolean;
+    i: Integer;
   begin
-    TextoFila := '';
-    if Row is TcxEditorRow then
-      TextoFila := TcxEditorRow(Row).Properties.Caption
-    else if Row is TcxCategoryRow then
-      TextoFila := TcxCategoryRow(Row).Properties.Caption;
+    Coincide := (Texto = '') or (AnsiContainsText(QuitarTildes(Row.DisplayName), TextoBusquedaLimpio));
 
-    Coincide := (Texto = '') or
-               (AnsiContainsText(QuitarTildes(TextoFila), TextoBusquedaLimpio));
-    {// 3. Revisamos los hijos (recursividad)
     HijoVisible := False;
-    for j := 0 to Row.Count - 1 do
-    begin
-      if ProcesarFila(Row.Rows[j]) then
-        HijoVisible := True;
-    end;}
-    Row.Visible := Coincide;// or HijoVisible;
+    // Recursividad para comprobar si tiene hijos visibles (así mostramos la categoría si un hijo coincide)
+    if Row is TJvInspectorCustomCategoryItem then
+      for i := 0 to Row.Count - 1 do
+        if ProcesarFila(Row.Items[i]) then HijoVisible := True;
+
+    // El elemento es visible si él coincide o si alguno de sus hijos coincide
+    Row.Visible := Coincide or HijoVisible;
+
+    // Si la categoría tiene resultados, la expandimos automáticamente para verlos
+    if (Row is TJvInspectorCustomCategoryItem) and
+        HijoVisible and
+       (Texto <> '') then
+      Row.Expanded := True;
+
     Result := Row.Visible;
   end;
 
+var
+  i: Integer;
 begin
   Grid.BeginUpdate;
   try
     TextoBusquedaLimpio := QuitarTildes(Texto);
-    for i := 0 to Grid.Rows.Count - 1 do
-      ProcesarFila(Grid.Rows[i]);
+    for i := 0 to Grid.Root.Count - 1 do
+      ProcesarFila(Grid.Root.Items[i]);
   finally
     Grid.EndUpdate;
   end;
 end;
 
-
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
 begin
-  // Cargar combo con usuario, grupo y 'Todos'
+  // 1. Dar valores por defecto a la memoria
+  CargarValoresPorDefecto;
+
+  // 2. Construir el esqueleto visual del Inspector
+  ConstruirInspector;
+
+  // 3. Cargar combo con usuario, grupo y 'Todos'
   cmbGrupoUsuario.Properties.Items.Clear;
   cmbGrupoUsuario.Properties.Items.Add(oUser);
   cmbGrupoUsuario.Properties.Items.Add(oGroup);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
-  cmbGrupoUsuario.ItemIndex := 0; // Seleccionar usuario por defecto
+
+  // 4. ¡IMPORTANTE! Al asignar el ItemIndex a 0, se disparará automáticamente
+  // el evento OnChange del Combo, que es el que cargará los datos de la BD.
+  cmbGrupoUsuario.ItemIndex := 0;
+
   if oRootGroup = 'S' then
     btnChangeId.Visible := True
   else
     btnChangeId.Visible := False;
+
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
 end;

@@ -24,7 +24,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     BevelOuter = bvNone
     TabOrder = 0
     ExplicitWidth = 1118
-    ExplicitHeight = 516
+    ExplicitHeight = 521
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
@@ -36,7 +36,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       ExplicitWidth = 1118
-      ExplicitHeight = 445
+      ExplicitHeight = 450
       ClientRectBottom = 455
       ClientRectLeft = 4
       ClientRectRight = 1120
@@ -49,7 +49,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 445
+      ExplicitTop = 450
       ExplicitWidth = 1118
       object cxMemo1: TcxMemo
         Left = 1
@@ -99,7 +99,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Width = 150
       end>
     UseSystemFont = False
-    ExplicitTop = 531
+    ExplicitTop = 521
+    ExplicitWidth = 1118
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
