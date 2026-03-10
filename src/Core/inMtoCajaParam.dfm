@@ -19,233 +19,31 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 596
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 743
-    ExplicitHeight = 595
-    object cxVerticalGrid1: TcxVerticalGrid
+    ExplicitWidth = 741
+    ExplicitHeight = 587
+    object JvInspector1: TJvInspector
       Left = 1
       Top = 1
       Width = 745
       Height = 594
+      Style = isItemPainter
       Align = alClient
-      OptionsView.RowHeaderWidth = 327
+      BevelKind = bkSoft
+      BevelOuter = bvRaised
+      Divider = 300
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Lucida Sans'
+      Font.Style = []
+      ItemHeight = 20
+      Painter = JvInspectorDotNETPainter1
+      TabStop = True
       TabOrder = 0
-      ExplicitWidth = 741
-      ExplicitHeight = 593
-      Version = 1
-      object vgerChkExistOnly: TcxEditorRow
-        Properties.Caption = 'Permitir s'#243'lo art'#237'culos que existan'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 0
-        ParentID = -1
-        Index = 0
-        Version = 1
-      end
-      object vgerChkStockOnly: TcxEditorRow
-        Properties.Caption = 'Permitir vender sin stock'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.Value = 'True'
-        ID = 1
-        ParentID = -1
-        Index = 1
-        Version = 1
-      end
-      object vgerShowCajaSelection: TcxEditorRow
-        Properties.Caption = 'Presentar selecci'#243'n de caja'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.Value = 'True'
-        ID = 2
-        ParentID = -1
-        Index = 2
-        Version = 1
-      end
-      object vgerFillEmpleadoDefecto: TcxEditorRow
-        Properties.Caption = 'Rellenar empleado por defecto al abrir'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.Value = 'False'
-        ID = 3
-        ParentID = -1
-        Index = 3
-        Version = 1
-      end
-      object vgerDefTarifa: TcxEditorRow
-        Properties.Caption = 'Tarifa por defecto en caja'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = 'PVP'
-        ID = 4
-        ParentID = -1
-        Index = 4
-        Version = 1
-      end
-      object vgerMaxOpPending: TcxEditorRow
-        Properties.Caption = 'N'#250'mero de operaciones pendientes'
-        Properties.EditPropertiesClassName = 'TcxSpinEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = '5'
-        ID = 5
-        ParentID = -1
-        Index = 5
-        Version = 1
-      end
-      object vgerReqRefDevolucion: TcxEditorRow
-        Properties.Caption = 'Pedir referencia en devoluciones'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 6
-        ParentID = -1
-        Index = 6
-        Version = 1
-      end
-      object vgerRecuperaValePIN: TcxEditorRow
-        Properties.Caption = 'Recuperar vale s'#243'lo con PIN'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = False
-        ID = 7
-        ParentID = -1
-        Index = 7
-        Version = 1
-      end
-      object vgerCaducidadDefVale: TcxEditorRow
-        Properties.Caption = 'Caducidad por defecto en vale'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = False
-        ID = 8
-        ParentID = -1
-        Index = 8
-        Version = 1
-      end
-      object vgerDiasCaducidadVale: TcxEditorRow
-        Properties.Caption = 'D'#237'as hasta caducidad en vale'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.DataBinding.ValueType = 'Integer'
-        Properties.Value = 365
-        ID = 9
-        ParentID = -1
-        Index = 9
-        Version = 1
-      end
-      object vgerAvisoStockWarning: TcxEditorRow
-        Properties.Caption = 'Aviso en art'#237'culos sin stock'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = 'Art'#237'culo sin Stock. Compruebe Stock en almac'#233'n'
-        ID = 10
-        ParentID = -1
-        Index = 10
-        Version = 1
-      end
-      object vgerDefPrinter: TcxEditorRow
-        Properties.Caption = 'Nombre impresora de tickets'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = 'Generic'
-        ID = 11
-        ParentID = -1
-        Index = 11
-        Version = 1
-      end
-      object vgerTipoImpresion: TcxEditorRow
-        Properties.Caption = 'Tipo de Impresi'#243'n tickets'
-        Properties.EditPropertiesClassName = 'TcxComboBoxProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.EditProperties.Items.Strings = (
-          'ESC POS'
-          'ESC POS NOQR'
-          'EDITOR')
-        Properties.Value = 'ESC POS'
-        ID = 12
-        ParentID = -1
-        Index = 12
-        Version = 1
-      end
-      object vgerCodEmpleadoDefecto: TcxEditorRow
-        Properties.Caption = 'C'#243'digo de empleado por defecto'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = '1'
-        ID = 13
-        ParentID = -1
-        Index = 13
-        Version = 1
-      end
-      object vgerShowEmpleadoLinea: TcxEditorRow
-        Properties.Caption = 'Mostrar empleado en linea de caja'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 14
-        ParentID = -1
-        Index = 14
-        Version = 1
-      end
-      object vgerMoverLineaIdentif: TcxEditorRow
-        Properties.Caption = 'Mover linea al identificar art'#237'culo'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = False
-        ID = 15
-        ParentID = -1
-        Index = 15
-        Version = 1
-      end
-      object vgerBusqArtStockOnly: TcxEditorRow
-        Properties.Caption = 'B'#250'squeda de art'#237'culos s'#243'lo con stock'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 16
-        ParentID = -1
-        Index = 16
-        Version = 1
-      end
-      object vgerBusqArtTarifaOnly: TcxEditorRow
-        Properties.Caption = 'B'#250'squeda de art'#237'culos s'#243'lo con tarifa'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 17
-        ParentID = -1
-        Index = 17
-        Version = 1
-      end
-      object vgerFormatoImpPredet: TcxEditorRow
-        Properties.Caption = 'Formato de impresion predeterminado'
-        Properties.EditPropertiesClassName = 'TcxTextEditProperties'
-        Properties.EditProperties.Alignment.Horz = taCenter
-        Properties.Value = ''
-        ID = 18
-        ParentID = -1
-        Index = 18
-        Version = 1
-      end
-      object vgerArqueoTarjetas: TcxEditorRow
-        Properties.Caption = 'Hacer arqueo de todas formas de pago'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = False
-        ID = 19
-        ParentID = -1
-        Index = 19
-        Version = 1
-      end
-      object vgerVentasCredito: TcxEditorRow
-        Properties.Caption = 'Permitir pr'#233'stamos a clientes'
-        Properties.EditPropertiesClassName = 'TcxCheckBoxProperties'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 20
-        ParentID = -1
-        Index = 20
-        Version = 1
-      end
-      object vgerDescuentos: TcxEditorRow
-        Properties.Caption = 'Permitir descuentos a'#241'adidos'
-        Properties.DataBinding.ValueType = 'Boolean'
-        Properties.Value = True
-        ID = 22
-        ParentID = -1
-        Index = 21
-        Version = 1
-      end
+      ExplicitLeft = 224
+      ExplicitTop = 248
+      ExplicitWidth = 300
+      ExplicitHeight = 100
     end
   end
   object Panel1: TPanel
@@ -255,7 +53,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 57
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 743
+    ExplicitWidth = 741
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8
@@ -291,7 +89,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     object cmbGrupoUsuario: TcxComboBox
       Left = 455
       Top = 15
-      Properties.ReadOnly = True
+      Properties.ReadOnly = False
       Properties.OnChange = cmbGrupoUsuarioPropertiesChange
       TabOrder = 1
       Width = 169
@@ -332,5 +130,35 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       TabOrder = 3
       OnClick = btnChangeIdClick
     end
+  end
+  object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter
+    CategoryFont.Charset = DEFAULT_CHARSET
+    CategoryFont.Color = clBtnText
+    CategoryFont.Height = -13
+    CategoryFont.Name = 'Lucida Sans'
+    CategoryFont.Style = []
+    NameFont.Charset = DEFAULT_CHARSET
+    NameFont.Color = clWindowText
+    NameFont.Height = -13
+    NameFont.Name = 'Lucida Sans'
+    NameFont.Style = []
+    ValueFont.Charset = DEFAULT_CHARSET
+    ValueFont.Color = clWindowText
+    ValueFont.Height = -13
+    ValueFont.Name = 'Lucida Sans'
+    ValueFont.Style = []
+    DrawNameEndEllipsis = False
+    HideSelectFont.Charset = DEFAULT_CHARSET
+    HideSelectFont.Color = clHighlightText
+    HideSelectFont.Height = -15
+    HideSelectFont.Name = 'Segoe UI'
+    HideSelectFont.Style = []
+    SelectedFont.Charset = DEFAULT_CHARSET
+    SelectedFont.Color = clHighlightText
+    SelectedFont.Height = -15
+    SelectedFont.Name = 'Segoe UI'
+    SelectedFont.Style = []
+    Left = 368
+    Top = 328
   end
 end
