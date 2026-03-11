@@ -19,8 +19,6 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 596
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 741
-    ExplicitHeight = 587
     object JvInspector1: TJvInspector
       Left = 1
       Top = 1
@@ -49,7 +47,6 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 57
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 741
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8

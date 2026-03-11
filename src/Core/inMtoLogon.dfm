@@ -25,8 +25,6 @@ object frmLogon: TfrmLogon
     Height = 351
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 702
-    ExplicitHeight = 342
     object pnlLogin: TPanel
       Left = 14
       Top = 24
@@ -264,11 +262,6 @@ object frmLogon: TfrmLogon
     Server = '127.0.0.1'
     LoginPrompt = False
     Left = 72
-    Top = 312
-  end
-  object udDump: TUniDump
-    Connection = ucConexion
-    Left = 104
     Top = 312
   end
   object tbUsers: TUniTable

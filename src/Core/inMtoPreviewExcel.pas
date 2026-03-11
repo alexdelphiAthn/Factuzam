@@ -29,7 +29,7 @@ uses
   dxSpreadSheetClasses, dxSpreadSheetContainers, dxSpreadSheetFormulas,
   dxSpreadSheetHyperlinks, dxSpreadSheetFunctions, dxSpreadSheetStyles,
   dxSpreadSheetGraphics, dxSpreadSheetPrinting, dxSpreadSheetTypes,
-  dxSpreadSheetUtils, dxSpreadSheetFormattedTextUtils, dxBarBuiltInMenu,
+  dxSpreadSheetUtils, dxSpreadSheetFormattedTextUtils,
   Vcl.Menus, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSpreadSheet,
   JvComponentBase, JvEnterTab, cxClasses, cxLocalization, dxShellDialogs,
   dxSpreadSheetFormulaBar, dxSpreadSheetFunctionsStatistical,

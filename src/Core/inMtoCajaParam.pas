@@ -7,7 +7,7 @@ uses
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, cxFilter, dxScrollbarAnnotations, cxEdit,
-  cxCheckBox, cxVGrid, cxInplaceContainer, cxTextEdit, cxContainer,
+  cxCheckBox, cxInplaceContainer, cxTextEdit, cxContainer,
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls;
