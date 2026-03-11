@@ -110,6 +110,7 @@ type
     procedure JvMonthCalendar1Click(Sender: TObject);
   private
     VentasList: TVentasList;
+    FMesesCargados: TList<Integer>;
 //    FLastHintDate: TDateTime;
 //    FHintWindow: THintWindow;
     procedure CargarVentasPeriodoVisible(Month, Year: Cardinal);
@@ -137,6 +138,7 @@ type
                                     OriginalFKeyColor,
                                     OriginalDescColor: TColor);
     procedure AbrirSelectorCaja;
+    procedure RecargarCalendario;
   public
     { Public declarations }
 
@@ -189,6 +191,7 @@ procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
   FormatSettings: TFormatSettings;
 begin
+
   //CargarConfiguracionDesdeINI;
   //UniConnection1.Connect;
 //  FLastHintDate := 0;
@@ -262,6 +265,8 @@ procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
   if Assigned(VentasList) then
     VentasList.Free;
+  if Assigned(FMesesCargados) then
+    FMesesCargados.Free;
 end;
 procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
@@ -271,6 +276,7 @@ begin
     VK_ESCAPE : lblESCClick(Sender);
   end;
 end;
+
 procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
 begin
   with cxClock1 do
@@ -278,6 +284,7 @@ begin
     Time := Now;              // Hora actual
   end;
 end;
+
 procedure TfrmMtoMenuCaja.AbrirSelectorCaja;
 var
   frm: TfrmMtoModalCajDef;
@@ -299,10 +306,7 @@ begin
       FCaja    := frm.qrySeleccion.FieldByName('Caja').AsString;
       lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
                                   [FEmpresa, FAlmacen, FCaja]);
-//      if Assigned(VentasList) then
-//        VentasList.Clear;
-//      CargarVentasPeriodoVisible;
-//      cxDateNavigator1.Invalidate;
+      RecargarCalendario;
     end
     else
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);
@@ -314,52 +318,65 @@ end;
 procedure TfrmMtoMenuCaja.CargarVentasPeriodoVisible(Month, Year: Cardinal);
 var
   Query: TUniQuery;
-  FechaStr: string;
   PrimerDia, UltimoDia: TDateTime;
   VentaDia: TVentasDia;
+  IdMes: Integer;
 begin
- if not Assigned(VentasList) then
+  if not Assigned(VentasList) then
     VentasList := TVentasList.Create;
- VentasList.Clear; // limpiar antes de recargar
+  if not Assigned(FMesesCargados) then
+    FMesesCargados := TList<Integer>.Create;
+  // Creamos un código numérico para el mes (Ej: Año 2026, Mes 1 = 202601)
+  IdMes := (Year * 100) + Month;
+
+  // Si ya hemos consultado este mes a la BD en esta sesión, salimos sin hacer nada.
+  // ¡Esto evita saturar MySQL cuando el calendario nos pide 3 meses de golpe!
+  if FMesesCargados.Contains(IdMes) then
+    Exit;
+
+  // ATENCIÓN: Ya NO hacemos VentasList.Clear; para no borrar los otros meses.
 
   PrimerDia := EncodeDate(Year, Month, 1);
-  UltimoDia := EncodeDate(Year, Month, DaysInAMonth(Year, Month));
+  UltimoDia := IncMonth(PrimerDia, 1);
+
   Query := TUniQuery.Create(nil);
   try
-    Query.Connection := inLibGlobalVar.oConn; // Tu conexión
-    // Consulta para obtener fecha y cantidad de ventas
+    Query.Connection := inLibGlobalVar.oConn;
+
     Query.SQL.Text :=
-      ' SELECT FECHA_FACTURA AS FECHA, ' +
+      ' SELECT DATE(FECHA_FACTURA) AS FECHA, ' +
       '        COUNT(*) AS TOTAL_VENTAS, '+
-      '               0 AS TOTAL_COBRADO ' +
-//      '        SUM(TOTAL_LIQUIDO_FACTURA) AS TOTAL_COBRADO ' +
+      '        0 AS TOTAL_COBRADO ' +
       '    FROM fza_facturas ' +
       '   WHERE FECHA_FACTURA >= :fecha_inicio ' +
-      '     AND FECHA_FACTURA <= :fecha_fin ' +
-//      '     AND CODIGO_EMPRESA_FACTURA = :Empresa ' +
-//      '     AND TIPO_FACTURA = ''SIMPLIFICADA'' ' +
-      'GROUP BY FECHA_FACTURA ' +
-      'ORDER BY FECHA_FACTURA ';
-//    Query.ParamByName('Empresa').AsString := FEmpresa;
+      '     AND FECHA_FACTURA < :fecha_fin ' +
+      'GROUP BY DATE(FECHA_FACTURA) ' +
+      'ORDER BY DATE(FECHA_FACTURA) ';
+
     Query.ParamByName('fecha_inicio').AsDate := PrimerDia;
     Query.ParamByName('fecha_fin').AsDate := UltimoDia;
+
     Query.Open;
+
     while not Query.Eof do
     begin
       VentaDia := TVentasDia.Create(
-                                   Query.FieldByName('FECHA').AsDateTime,
-                                   Query.FieldByName('TOTAL_VENTAS').AsInteger,
-                                   Query.FieldByName('TOTAL_COBRADO').AsCurrency
-                                   );
+        Query.FieldByName('FECHA').AsDateTime,
+        Query.FieldByName('TOTAL_VENTAS').AsInteger,
+        Query.FieldByName('TOTAL_COBRADO').AsCurrency
+      );
+      // Simplemente añadimos los días a la lista general
       VentasList.Add(VentaDia);
       Query.Next;
     end;
+
+    // Una vez terminada la consulta, registramos que este mes ya está en memoria
+    FMesesCargados.Add(IdMes);
+
     Query.Close;
   finally
     Query.Free;
   end;
-  // Actualizar el calendario para refrescar el bold de los días
-  JvMonthCalendar1.Invalidate;
 end;
 
 procedure TfrmMtoMenuCaja.ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
@@ -421,6 +438,18 @@ begin
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', JvMonthCalendar1.Date);
   FFechaCaja := JvMonthCalendar1.Date;
 end;
+
+procedure TfrmMtoMenuCaja.RecargarCalendario;
+begin
+  if Assigned(FMesesCargados) then
+    FMesesCargados.Clear;
+
+  if Assigned(VentasList) then
+    VentasList.Clear;
+
+  JvMonthCalendar1.Invalidate;
+end;
+
 procedure TfrmMtoMenuCaja.RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel; OriginalFKeyColor, OriginalDescColor: TColor);
 begin
   FKeyLabel.Style.TextColor := OriginalFKeyColor;
@@ -445,6 +474,7 @@ begin
     frmMtoOpeCaja.Free;
   end;
 end;
+
 procedure TfrmMtoMenuCaja.lblVentasMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF5, lblVentas, clBlue); // Cambiar a azul al pasar el mouse

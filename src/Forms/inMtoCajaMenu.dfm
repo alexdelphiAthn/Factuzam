@@ -42,7 +42,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 814
+    FrameIndex = 601
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21560,7 +21560,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Date = 46091.000000000000000000
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -13
+    Font.Height = -15
     Font.Name = 'Segoe UI'
     Font.Style = []
     ParentFont = False

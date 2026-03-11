@@ -279,9 +279,6 @@ type
     txtIBAN_CLIENTE: TcxDBMaskEdit;
     btnValidar: TcxButton;
     cxButton1: TcxButton;
-    dxBarPopupMenu1: TdxBarPopupMenu;
-    dxBarManager1: TdxBarManager;
-    blbEtiqueta: TdxBarLargeButton;
     txtNOMBRE_PAIS_CLIENTE: TcxDBTextEdit;
     cbbPaises: TcxDBLookupComboBox;
     cxLabel1: TcxLabel;
