@@ -2,6 +2,7 @@ inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1141
   ExplicitHeight = 703
   TextHeight = 19
@@ -9,6 +10,7 @@ inherited frmMtoClientes: TfrmMtoClientes
     Width = 1001
     Height = 703
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1001
     ExplicitHeight = 703
     inherited pcPantalla: TcxPageControl
@@ -671,6 +673,10 @@ inherited frmMtoClientes: TfrmMtoClientes
             object tsMasDatos: TcxTabSheet
               Caption = '&2_M'#225's datos'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               DesignSize = (
                 985
                 408)
@@ -939,6 +945,10 @@ inherited frmMtoClientes: TfrmMtoClientes
             object tsHistoriaFacturacion: TcxTabSheet
               Caption = '&3_Historia Facturaci'#243'n'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlFacturaCli: TPanel
                 Left = 0
                 Top = 0
@@ -1169,9 +1179,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 115
                     end
@@ -1187,9 +1197,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -1211,9 +1221,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 133
                     end
@@ -1229,9 +1239,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 137
                     end
@@ -1253,9 +1263,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 186
                     end
@@ -1271,9 +1281,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 178
                     end
@@ -1294,9 +1304,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 112
                     end
@@ -1311,9 +1321,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -1550,6 +1560,10 @@ inherited frmMtoClientes: TfrmMtoClientes
               Caption = 'Historia Presupuestos'
               ImageIndex = 4
               TabVisible = False
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrd3: TcxGrid
                 Left = 0
                 Top = 0
@@ -1722,6 +1736,10 @@ inherited frmMtoClientes: TfrmMtoClientes
             object tsPrestamos: TcxTabSheet
               Caption = '&4_Pr'#233'stamos Caja'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 0
                 Top = 0
@@ -1952,9 +1970,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 115
                     end
@@ -1970,9 +1988,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -1994,9 +2012,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 133
                     end
@@ -2012,9 +2030,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 137
                     end
@@ -2036,9 +2054,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 186
                     end
@@ -2054,9 +2072,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 178
                     end
@@ -2077,9 +2095,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 112
                     end
@@ -2094,9 +2112,9 @@ inherited frmMtoClientes: TfrmMtoClientes
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.100000000000000000
-                      Properties.LargeIncrement = 1.000000000000000000
-                      Properties.MaxValue = 100.000000000000000000
+                      Properties.Increment = 0.10000000000000000
+                      Properties.LargeIncrement = 1.00000000000000000
+                      Properties.MaxValue = 100.00000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -2399,6 +2417,10 @@ inherited frmMtoClientes: TfrmMtoClientes
             object tsOtros: TcxTabSheet
               Caption = '&5_Otros'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 329
@@ -2577,6 +2599,7 @@ inherited frmMtoClientes: TfrmMtoClientes
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -2584,6 +2607,7 @@ inherited frmMtoClientes: TfrmMtoClientes
         ExplicitHeight = 629
         inherited pnlPerfilTop: TPanel
           Width = 993
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 993
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -2592,6 +2616,7 @@ inherited frmMtoClientes: TfrmMtoClientes
         inherited pnlPerfilDetail: TPanel
           Width = 993
           Height = 572
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 993
           ExplicitHeight = 572
           inherited cxgrdPerfil: TcxGrid
@@ -2606,9 +2631,11 @@ inherited frmMtoClientes: TfrmMtoClientes
     inherited pnlTopPage: TPanel
       Width = 1001
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 1001
       inherited pnlTopGrid: TPanel
         Width = 1001
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1001
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
@@ -2635,12 +2662,23 @@ inherited frmMtoClientes: TfrmMtoClientes
     Left = 1001
     Height = 703
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 1001
     ExplicitHeight = 703
     inherited pButtonGen: TPanel
       Top = 505
       TabOrder = 2
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 505
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
     end
     object btnNuevoCliente: TcxButton
       Left = 1

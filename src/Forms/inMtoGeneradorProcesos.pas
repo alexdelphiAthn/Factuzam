@@ -19,7 +19,7 @@ uses
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
-  dxBarBuiltInMenu, cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
+  cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   dxBevel, cxDBNavigator, cxGridExportLink,
@@ -27,7 +27,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
-  dxtree, dxdbtree, UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
+  UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView ;
 
@@ -434,7 +434,7 @@ begin
   pcPestana.ActivePage := tsSQL;
   pkFieldName := 'CODIGO_GENERADORPROCESO';
   // Asegúrate de que las opciones predeterminadas estén configuradas correctamente
-  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
+//  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
   IsColumnMode := False;
 end;
 

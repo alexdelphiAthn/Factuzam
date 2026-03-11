@@ -1,15 +1,15 @@
-{******************************************************************************}
+ï»¿{******************************************************************************}
 {                                                                              }
-{  Módulo:      inMtoBase                                                      }
-{  Versión:     1.0.0                                                          }
+{  Mï¿½dulo:      inMtoBase                                                      }
+{  Versiï¿½n:     1.0.0                                                          }
 {  Fecha:       06/02/2026                                                     }
 {  Autor:       Alejandro Laorden Hidalgo                                      }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripción:                                                                }
-{    Este formulario es el formulario base para todos los demás. Tiene la      }
-{    traducción al Español de Developer Express. Sólo sirve a propósito de     }
+{  Descripciï¿½n:                                                                }
+{    Este formulario es el formulario base para todos los demï¿½s. Tiene la      }
+{    traducciï¿½n al Espaï¿½ol de Developer Express. Sï¿½lo sirve a propï¿½sito de     }
 {    herencia para generar otros formularios                                   }
 {******************************************************************************}
 
@@ -21,7 +21,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
-  dxSkinsDefaultPainters, dxBarBuiltInMenu, cxGraphics, cxControls,
+  dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB, cxDBData,
   cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization, Vcl.StdCtrls,
@@ -89,7 +89,7 @@ type
     cxdbtxtdtTIPO_USO_ALM: TcxDBTextEdit;
     lblCodigoPadre: TcxLabel;
     cxdbtxtdtCODIGO_PADRE_ALM: TcxDBTextEdit;
-    tsDirección: TcxTabSheet;
+    tsDireccion: TcxTabSheet;
     lblTelefono: TcxLabel;
     cxdbtxtdtTELEFONO_ALM: TcxDBTextEdit;
     lblEmail: TcxLabel;

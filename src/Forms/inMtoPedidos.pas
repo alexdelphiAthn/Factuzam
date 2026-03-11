@@ -4,14 +4,14 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsdxBarPainter, dxBar,
+  Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB, cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons, dxBarExtItems, cxMaskEdit,
+  cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
-  cxSpinEdit, cxCurrencyEdit, UniDataPedidos, dxBarBuiltInMenu, cxNavigator,
+  cxSpinEdit, cxCurrencyEdit, UniDataPedidos, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations, Vcl.Menus, cxBlobEdit, dxShellDialogs,
   JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls, cxRadioGroup,
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,

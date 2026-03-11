@@ -19,7 +19,7 @@ uses
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
-  dxBarBuiltInMenu, cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
+  cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
