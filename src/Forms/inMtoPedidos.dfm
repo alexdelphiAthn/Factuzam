@@ -2,12 +2,14 @@ inherited frmMtoPedidos: TfrmMtoPedidos
   Caption = 'Mantenimiento de Pedidos'
   ClientHeight = 765
   ClientWidth = 1085
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1085
   ExplicitHeight = 765
   TextHeight = 19
   inherited pButtonPage: TPanel
     Width = 945
     Height = 765
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 945
     ExplicitHeight = 765
     inherited pcPantalla: TcxPageControl
@@ -367,6 +369,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Nro Factura'
+                TabOrder = 1
                 Transparent = True
               end
               object lblFechaFactura: TcxLabel
@@ -377,6 +380,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Fecha'
+                TabOrder = 3
                 Transparent = True
               end
               object dteFECHA_FACTURA: TcxDBDateEdit
@@ -400,6 +404,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'Serie Factura'
+                TabOrder = 6
                 Transparent = True
               end
               object btnCODIGO_CLIENTE: TcxDBButtonEdit
@@ -423,6 +428,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Caption = 'C'#243'digo Cliente'
+                TabOrder = 7
                 Transparent = True
               end
               object cxdblblRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel
@@ -430,6 +436,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 60
                 DataBinding.DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
                 DataBinding.DataSource = dsTablaG
+                TabOrder = 8
                 Transparent = True
                 Height = 21
                 Width = 332
@@ -440,7 +447,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
                 DataBinding.DataSource = dsTablaG
                 ParentFont = False
-                Style.StyleController = frmOpenApp2.EditStyleController
+                TabOrder = 9
                 Transparent = True
                 Height = 21
                 Width = 412
@@ -467,7 +474,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Bottom = 4
                 Caption = 'C'#243'digo Empresa'
                 ParentFont = False
-                Style.StyleController = frmOpenApp2.EditStyleController
+                TabOrder = 11
                 Transparent = True
               end
               object txtNRO_FACTURA: TcxDBTextEdit
@@ -589,6 +596,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Provincia'
+                  TabOrder = 10
                   Transparent = True
                 end
                 object lblPaisEmpresa: TcxLabel
@@ -599,6 +607,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Pa'#237's'
+                  TabOrder = 11
                   Transparent = True
                 end
                 object txtRAZONSOCIAL_EMPRESA_FACTURA: TcxDBTextEdit
@@ -634,7 +643,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Bottom = 4
                   Caption = 'NIF Empresa'
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
+                  TabOrder = 12
                   Transparent = True
                 end
                 object lblMovilEmpresa: TcxLabel
@@ -646,7 +655,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Bottom = 4
                   Caption = 'M'#243'vil Empresa'
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
+                  TabOrder = 13
                   Transparent = True
                 end
                 object txtMOVIL_EMPRESA_FACTURA: TcxDBTextEdit
@@ -682,7 +691,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Bottom = 4
                   Caption = 'Email Empresa'
                   ParentFont = False
-                  Style.StyleController = frmOpenApp2.EditStyleController
+                  TabOrder = 15
                   Transparent = True
                 end
                 object chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TcxDBCheckBox
@@ -745,6 +754,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Canal IVA'
+                  TabOrder = 17
                   Transparent = True
                 end
                 object txtNOMBRE_PAIS_EMPRESA_FACTURA: TcxDBTextEdit
@@ -789,6 +799,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Style.Font.Name = 'Lucida Sans'
                 Style.Font.Style = []
                 Style.IsFontAssigned = True
+                TabOrder = 3
                 Transparent = True
                 Height = 26
                 Width = 142
@@ -892,6 +903,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Provincia'
+                  TabOrder = 10
                   Transparent = True
                 end
                 object lblcxlbl13: TcxLabel
@@ -902,6 +914,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Pa'#237's'
+                  TabOrder = 11
                   Transparent = True
                 end
                 object txtRAZONSOCIAL_CLIENTE_FACTURA: TcxDBTextEdit
@@ -936,6 +949,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'NIF'
+                  TabOrder = 12
                   Transparent = True
                 end
                 object lblTelefonoMovil: TcxLabel
@@ -946,6 +960,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Tfno. M'#243'vil'
+                  TabOrder = 13
                   Transparent = True
                 end
                 object txtMOVIL_CLIENTE_FACTURA: TcxDBTextEdit
@@ -980,6 +995,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = 'Email'
+                  TabOrder = 14
                   Transparent = True
                 end
                 object chkESIVA_RECARGO_CLIENTE_FACTURA: TcxDBCheckBox
@@ -1060,6 +1076,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Bottom = 4
                   Caption = 'Tarifa Art'#237'culos'
                   Style.BorderStyle = ebsNone
+                  TabOrder = 20
                   Transparent = True
                 end
                 object chkIVA_EXENTO_CLIENTE_FACTURA: TcxDBCheckBox
@@ -1134,6 +1151,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Style.Font.Style = []
                 Style.TextColor = clPurple
                 Style.IsFontAssigned = True
+                TabOrder = 3
                 Transparent = True
                 Height = 27
                 Width = 131
@@ -1172,11 +1190,6 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               ExplicitWidth = 844
               ExplicitHeight = 346
               object tvPedidosLineas: TcxGridDBTableView
-                Navigator.Buttons.CustomButtons = <>
-                ScrollbarAnnotations.CustomAnnotations = <>
-                DataController.Summary.DefaultGroupSummaryItems = <>
-                DataController.Summary.FooterSummaryItems = <>
-                DataController.Summary.SummaryGroups = <>
               end
               object cxGrdPedidosLineasLevel1: TcxGridLevel
                 GridView = tvPedidosLineas
@@ -1190,14 +1203,13 @@ inherited frmMtoPedidos: TfrmMtoPedidos
         ExplicitHeight = 691
         inherited pnlPerfilTop: TPanel
           Width = 937
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 937
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 21
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 937
           Height = 634
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 852
           ExplicitHeight = 634
           inherited cxgrdPerfil: TcxGrid
@@ -1211,9 +1223,11 @@ inherited frmMtoPedidos: TfrmMtoPedidos
     end
     inherited pnlTopPage: TPanel
       Width = 945
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 945
       inherited pnlTopGrid: TPanel
         Width = 945
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 945
         inherited sbExportExcel: TSpeedButton
           Left = 815
@@ -1231,11 +1245,22 @@ inherited frmMtoPedidos: TfrmMtoPedidos
   inherited pButtonRightBar: TPanel
     Left = 945
     Height = 765
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 945
     ExplicitHeight = 765
     inherited pButtonGen: TPanel
       Top = 567
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 567
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
     end
   end
   inherited Localizer1: TcxLocalizer

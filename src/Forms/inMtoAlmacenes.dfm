@@ -1,7 +1,9 @@
-﻿inherited frmMtoAlmacenes: TfrmMtoAlmacenes
+inherited frmMtoAlmacenes: TfrmMtoAlmacenes
   Caption = 'Almacenes'
+  StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19
   inherited pButtonPage: TPanel
+    StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
       Properties.ActivePage = tsFicha
       inherited tsLista: TcxTabSheet
@@ -221,13 +223,13 @@
             Height = 355
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsUsosAlmacen
+            Properties.ActivePage = tsDireccion
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 351
             ClientRectLeft = 4
             ClientRectRight = 939
             ClientRectTop = 30
-            object tsDirección: TcxTabSheet
+            object tsDireccion: TcxTabSheet
               Caption = '&0_Direcci'#243'n f'#237'sica'
               ImageIndex = 3
               object lblTelefono: TcxLabel
@@ -571,17 +573,38 @@
       end
       inherited tsPerfil: TcxTabSheet
         inherited pnlPerfilTop: TPanel
+          StyleElements = [seFont, seClient, seBorder]
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
+        inherited pnlPerfilDetail: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+        end
       end
     end
     inherited pnlTopPage: TPanel
+      StyleElements = [seFont, seClient, seBorder]
       inherited pnlTopGrid: TPanel
+        StyleElements = [seFont, seClient, seBorder]
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
         end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    StyleElements = [seFont, seClient, seBorder]
+    inherited pButtonGen: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end

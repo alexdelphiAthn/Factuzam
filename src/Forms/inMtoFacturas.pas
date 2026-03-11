@@ -19,7 +19,7 @@ uses
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
-  cxSplitter, cxImage, cxDBEdit, dxBarBuiltInMenu, cxPC, cxLabel,
+  cxSplitter, cxImage, cxDBEdit, cxPC, cxLabel,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxMemo, cxDBLookupComboBox,
   cxGridBandedTableView, cxGridDBBandedTableView, cxLocalization,
   cxGroupBox, DBCtrls, cxCurrencyEdit, Menus, cxButtons, cxButtonEdit,

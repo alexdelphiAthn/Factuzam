@@ -12,7 +12,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxBarBuiltInMenu, cxGraphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, cxGraphics,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB,
   cxDBData, cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization,

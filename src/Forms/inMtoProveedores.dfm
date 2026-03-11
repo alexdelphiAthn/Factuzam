@@ -2,6 +2,7 @@
   Caption = 'Proveedores'
   ClientHeight = 525
   ClientWidth = 868
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 868
   ExplicitHeight = 525
   TextHeight = 19
@@ -9,6 +10,7 @@
     Width = 714
     Height = 525
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 714
     ExplicitHeight = 525
     inherited pcPantalla: TcxPageControl
@@ -495,6 +497,10 @@
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnl6: TPanel
                 Left = 580
                 Top = 0
@@ -663,6 +669,10 @@
             object tsVentas: TcxTabSheet
               Caption = '&3_Ventas'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -878,6 +888,10 @@
             object tsMasDatos: TcxTabSheet
               Caption = '&4_M'#225's datos'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object lblObservaciones: TcxLabel
                 Left = -8
                 Top = 105
@@ -1137,6 +1151,7 @@
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlDetailFicha
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1144,6 +1159,7 @@
         ExplicitHeight = 451
         inherited pnlPerfilTop: TPanel
           Width = 706
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 706
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -1152,6 +1168,7 @@
         inherited pnlPerfilDetail: TPanel
           Width = 706
           Height = 394
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 706
           ExplicitHeight = 394
           inherited cxgrdPerfil: TcxGrid
@@ -1166,9 +1183,11 @@
     inherited pnlTopPage: TPanel
       Width = 714
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 714
       inherited pnlTopGrid: TPanel
         Width = 714
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 714
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
@@ -1194,24 +1213,29 @@
     Width = 154
     Height = 525
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 714
     ExplicitWidth = 154
     ExplicitHeight = 525
     inherited pButtonGen: TPanel
       Top = 327
       Width = 154
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 327
       ExplicitWidth = 154
     end
     inherited pButtonBDStat: TPanel
       Width = 154
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 154
       inherited pnStateDataSet: TPanel
         Width = 154
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 154
       end
       inherited pnlDataSetName: TPanel
         Width = 154
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 154
       end
     end
