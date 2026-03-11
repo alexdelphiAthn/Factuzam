@@ -16,12 +16,12 @@ uses
   inMtoFrmBase, dxSkinsForm, cxClasses, cxContainer, cxEdit, cxLookAndFeels,
   cxLocalization, cxGraphics, cxControls, cxLookAndFeelPainters, cxLabel,
   cxTextEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons, dxCore, Vcl.ExtCtrls,
-  dxBarBuiltInMenu, cxPC, cxCustomListBox, cxCheckListBox, cxDBCheckListBox,
+  cxPC, cxCustomListBox, cxCheckListBox, cxDBCheckListBox,
   cxListBox, cxDBEdit, UniDataGenFilter, JvComponentBase, JvEnterTab, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, Data.DB, cxDBData, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridLevel, cxGridCustomView, cxGrid,
-  cxTL, cxMaskEdit, cxTLdxBarBuiltInMenu, cxInplaceContainer, cxDBTL, cxTLData;
+  cxTL, cxMaskEdit, cxDBTL, cxTLData, cxInplaceContainer;
 
 type
   TfrmModalGenFilter = class(TfrmBase)

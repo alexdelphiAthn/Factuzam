@@ -38,7 +38,8 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue,   dxSpreadSheet, dxSpreadSheetCore,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
-  dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList;
+  dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList,
+  frxExportBaseImageSettingsDialog, frCoreClasses;
 
 type
   TfrmPrintFac = class(TfrmPrint)
@@ -78,17 +79,19 @@ uses inMtoPreviewExcel, inLibFacturaExcel;
 procedure TfrmPrintFac.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
+  NombreSugerido: string;
 begin
-  fPreview := TfrmMtoPreviewExcel.Create(Application);
-  var ParentForm := TfrmMtoFacturas(Owner);
-  with (ParentForm.tdmDataModule as TdmFacturas) do
+  fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
-    var NombreSugerido := ObtenerNombreFactura(unqryTablaG,
-                                               '.xlsx');
-    fPreview.DialogoGuardar.FileName := NombreSugerido;
-    ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
-                               unqryTablaG,
-                               unqryLinFac);
+    fPreview.PopupParent := Self;
+    with dmFac do
+    begin
+      NombreSugerido := ObtenerNombreFactura(unqryTablaG, '.xlsx');
+      fPreview.DialogoGuardar.FileName := NombreSugerido;
+      ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
+                                 unqryTablaG,
+                                 unqryLinFac);
+    end;
     fPreview.ShowModal;
   finally
     fPreview.Free;
