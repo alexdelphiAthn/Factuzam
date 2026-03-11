@@ -255,6 +255,12 @@ begin
       end;
     end;
   end;
+  ConstruirConexionConnect(ucConexion,
+                           edtUserBD.Text,
+                           sPass,
+                           edtHostName.Text,
+                           edtPortBD.Text,
+                           edtNomBD.Text);
   if (IsInitializeAuto) then
     btnAceptarClick(Self);
 end;
@@ -693,8 +699,8 @@ procedure TfrmLogon.btnAceptarClick(Sender: TObject);
 var
   sGrupoAdmin: string;
 begin
-  if ucConexion.Connected then
-    ucConexion.Disconnect;
+//  if ucConexion.Connected then
+//    ucConexion.Disconnect;
 //  if CheckIfExistsDataBase then
 //  begin
 //    if ucConexion.Connected then
