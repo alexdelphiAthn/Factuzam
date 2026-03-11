@@ -1,0 +1,391 @@
+﻿unit Backup.Engine;
+
+interface
+
+uses
+  Core_Interfaces, Backup.Types, System.Classes, Core_Helpers,
+  Data.DB, System.SysUtils, Core_Engine;
+
+type
+  TDBBackupEngine = class
+  private
+    FProvider: IDBMetadataProvider;
+    FWriter: IScriptWriter;
+    FHelpers: IDBHelpers;
+    FOptions: TBackupOptions;
+    FIncludeTables: TStringList;
+    FExcludeTables: TStringList;
+    
+    procedure BackupTables;
+    procedure BackupTable(const TableName: string);
+    procedure BackupTableData(const TableName: string);
+    procedure BackupViews;
+    procedure BackupTriggers;
+    procedure BackupProcedures;
+    procedure BackupFunctions;
+    function ShouldProcessTable(const TableName: string): Boolean;
+  public
+    constructor Create(Provider: IDBMetadataProvider;
+                       Writer: IScriptWriter;
+                       Helpers: IDBHelpers;
+                       Options: TBackupOptions;
+                       IncludeTables, ExcludeTables: TStringList);
+    procedure GenerateBackup;
+  end;
+
+implementation
+
+constructor TDBBackupEngine.Create(Provider: IDBMetadataProvider;
+                                   Writer: IScriptWriter;
+                                   Helpers: IDBHelpers;
+                                   Options: TBackupOptions;
+                                   IncludeTables, ExcludeTables: TStringList);
+begin
+  FProvider := Provider;
+  FWriter := Writer;
+  FHelpers := Helpers;
+  FOptions := Options;
+  FIncludeTables := IncludeTables;
+  FExcludeTables := ExcludeTables;
+end;
+
+function TDBBackupEngine.ShouldProcessTable(const TableName: string): Boolean;
+begin
+  Result := True;
+  
+  // Si hay lista de inclusión, la tabla debe estar en ella
+  if (FIncludeTables.Count > 0) and 
+     (FIncludeTables.IndexOf(TableName) = -1) then
+    Result := False;
+    
+  // Si está en la lista de exclusión, no procesarla
+  if FExcludeTables.IndexOf(TableName) >= 0 then
+    Result := False;
+end;
+
+procedure TDBBackupEngine.GenerateBackup;
+begin
+  FWriter.AddComment('========================================');
+  FWriter.AddComment('Backup generado: ' + DateTimeToStr(Now));
+  FWriter.AddComment('Base de datos: ' + FProvider.GetDatabaseName);
+  FWriter.AddComment('========================================');
+  FWriter.AddCommand('');
+  
+  if FOptions.UseTransactions then
+  begin
+    FWriter.AddCommand('START TRANSACTION;');
+    FWriter.AddCommand('');
+  end;
+  
+  // Deshabilitar checks para importar más rápido
+  FWriter.AddCommand('SET FOREIGN_KEY_CHECKS=0;');
+  FWriter.AddCommand('SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";');
+  FWriter.AddCommand('SET AUTOCOMMIT=0;');
+  FWriter.AddCommand('');
+  
+  // Backup de tablas (estructura y datos)
+  BackupTables;
+  
+  // Backup de vistas
+  if FOptions.WithViews then
+    BackupViews;
+    
+  // Backup de procedures
+  if FOptions.WithProcedures then
+    BackupProcedures;
+    
+  // Backup de funciones
+  if FOptions.WithFunctions then
+    BackupFunctions;
+    
+  // Backup de triggers (al final porque dependen de las tablas)
+  if FOptions.WithTriggers then
+    BackupTriggers;
+  
+  // Restaurar checks
+  FWriter.AddCommand('');
+  FWriter.AddCommand('SET FOREIGN_KEY_CHECKS=1;');
+  
+  if FOptions.UseTransactions then
+  begin
+    FWriter.AddCommand('COMMIT;');
+  end;
+  
+  FWriter.AddCommand('');
+  FWriter.AddComment('Backup completado: ' + DateTimeToStr(Now));
+end;
+
+procedure TDBBackupEngine.BackupTables;
+var
+  Tables: TStringList;
+  i: Integer;
+begin
+  FWriter.AddComment('');
+  FWriter.AddComment('========================================');
+  FWriter.AddComment('TABLAS');
+  FWriter.AddComment('========================================');
+  FWriter.AddCommand('');
+  
+  Tables := FProvider.GetTables;
+  try
+    for i := 0 to Tables.Count - 1 do
+    begin
+      if ShouldProcessTable(Tables[i]) then
+        BackupTable(Tables[i]);
+    end;
+  finally
+    Tables.Free;
+  end;
+end;
+
+procedure TDBBackupEngine.BackupTable(const TableName: string);
+var
+  TableInfo: TTableInfo;
+  Indexes: TArray<TIndexInfo>;
+  Idx: TIndexInfo;
+begin
+  FWriter.AddComment('');
+  FWriter.AddComment('Tabla: ' + TableName);
+  FWriter.AddComment('');
+  
+  // Drop table si se especificó
+  if FOptions.DropTablesFirst then
+  begin
+    FWriter.AddCommand(Format('DROP TABLE IF EXISTS %s;', 
+                              [FHelpers.QuoteIdentifier(TableName)]));
+  end;
+  
+  // Obtener estructura
+  TableInfo := FProvider.GetTableStructure(TableName);
+  Indexes := FProvider.GetTableIndexes(TableName);
+  try
+    // Crear tabla
+    FWriter.AddCommand(FHelpers.GenerateCreateTableSQL(TableInfo, Indexes));
+    
+    // Crear índices secundarios (los que no son PK)
+    for Idx in Indexes do
+    begin
+      if not Idx.IsPrimary then
+        FWriter.AddCommand(FHelpers.GenerateIndexDefinition(TableName, Idx));
+    end;
+    
+    FWriter.AddCommand('');
+    
+    // Volcar datos si está habilitado
+    if FOptions.WithData then
+      BackupTableData(TableName);
+      
+  finally
+    TableInfo.Free;
+  end;
+end;
+
+procedure TDBBackupEngine.BackupTableData(const TableName: string);
+var
+  Data: TDataSet;
+  Fields, Values: TStringList;
+  i: Integer;
+  RowCount: Integer;
+  TableInfo: TTableInfo;
+  HasIdentity: Boolean;
+begin
+  // Verificar si tiene columna de autoincremento
+  TableInfo := FProvider.GetTableStructure(TableName);
+  try
+    HasIdentity := False;
+    for i := 0 to TableInfo.Columns.Count - 1 do
+    begin
+      // Buscamos 'auto_increment' dentro de la propiedad Extra
+      if Pos('auto_increment', LowerCase(TableInfo.Columns[i].Extra)) > 0 then
+      begin
+        HasIdentity := True;
+        Break;
+      end;
+    end;
+  finally
+    TableInfo.Free;
+  end;
+
+  Data := FProvider.GetData(TableName);
+  Fields := TStringList.Create;
+  Values := TStringList.Create;
+  try
+    RowCount := 0;
+    
+    if not Data.IsEmpty then
+    begin
+      FWriter.AddComment(Format('Datos de %s', [TableName]));
+      
+      // Si tiene identity, deshabilitar el check
+      if HasIdentity then
+        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s DISABLE KEYS */;', 
+                                  [FHelpers.QuoteIdentifier(TableName)]));
+      
+      while not Data.Eof do
+      begin
+        Fields.Clear;
+        Values.Clear;
+        
+        for i := 0 to Data.FieldCount - 1 do
+        begin
+          Fields.Add(FHelpers.QuoteIdentifier(Data.Fields[i].FieldName));
+          Values.Add(FHelpers.ValueToSQL(Data.Fields[i]));
+        end;
+        
+        FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
+        Inc(RowCount);
+        Data.Next;
+      end;
+      
+      // Restaurar keys
+      if HasIdentity then
+        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;', 
+                                  [FHelpers.QuoteIdentifier(TableName)]));
+      
+      FWriter.AddComment(Format('%d registros exportados', [RowCount]));
+      FWriter.AddCommand('');
+    end;
+  finally
+    Data.Free;
+    Fields.Free;
+    Values.Free;
+  end;
+end;
+
+procedure TDBBackupEngine.BackupViews;
+var
+  Views: TStringList;
+  i: Integer;
+  ViewDef: string;
+begin
+  Views := FProvider.GetViews;
+  try
+    if Views.Count = 0 then
+      Exit;
+      
+    FWriter.AddComment('');
+    FWriter.AddComment('========================================');
+    FWriter.AddComment('VISTAS');
+    FWriter.AddComment('========================================');
+    FWriter.AddCommand('');
+    
+    for i := 0 to Views.Count - 1 do
+    begin
+      FWriter.AddComment('Vista: ' + Views[i]);
+      
+      // Drop view si existe
+      FWriter.AddCommand(Format('DROP VIEW IF EXISTS %s;', 
+                                [FHelpers.QuoteIdentifier(Views[i])]));
+      
+      // Obtener definición y crear
+      ViewDef := FProvider.GetViewDefinition(Views[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateViewSQL(ViewDef));
+      FWriter.AddCommand('');
+    end;
+  finally
+    Views.Free;
+  end;
+end;
+
+procedure TDBBackupEngine.BackupTriggers;
+var
+  Triggers: TArray<TTriggerInfo>; // <-- Cambiado a TArray
+  i: Integer;
+  TriggerDef: string;
+begin
+  Triggers := FProvider.GetTriggers;
+
+  // Al ser un Array Dinámico, usamos Length() en lugar de .Count
+  if Length(Triggers) = 0 then
+    Exit;
+
+  FWriter.AddComment('');
+  FWriter.AddComment('========================================');
+  FWriter.AddComment('TRIGGERS');
+  FWriter.AddComment('========================================');
+  FWriter.AddCommand('');
+
+  // Usamos Low() y High() para recorrer arrays
+  for i := Low(Triggers) to High(Triggers) do
+  begin
+    FWriter.AddComment('Trigger: ' + Triggers[i].TriggerName);
+
+    // Drop trigger si existe (accediendo a .TriggerName)
+    FWriter.AddCommand(FHelpers.GenerateDropTrigger(Triggers[i].TriggerName));
+
+    // Obtener definición y crear
+    TriggerDef := FProvider.GetTriggerDefinition(Triggers[i].TriggerName);
+    FWriter.AddCommand(FHelpers.GenerateCreateTriggerSQL(TriggerDef));
+    FWriter.AddCommand('');
+  end;
+end;
+
+procedure TDBBackupEngine.BackupProcedures;
+var
+  Procedures: TStringList;
+  i: Integer;
+  ProcDef: string;
+begin
+  Procedures := FProvider.GetProcedures;
+  try
+    if Procedures.Count = 0 then
+      Exit;
+      
+    FWriter.AddComment('');
+    FWriter.AddComment('========================================');
+    FWriter.AddComment('PROCEDIMIENTOS ALMACENADOS');
+    FWriter.AddComment('========================================');
+    FWriter.AddCommand('');
+    
+    for i := 0 to Procedures.Count - 1 do
+    begin
+      FWriter.AddComment('Procedimiento: ' + Procedures[i]);
+      
+      // Drop procedure si existe
+      FWriter.AddCommand(FHelpers.GenerateDropProcedure(Procedures[i]));
+      
+      // Obtener definición y crear
+      ProcDef := FProvider.GetProcedureDefinition(Procedures[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateProcedureSQL(ProcDef));
+      FWriter.AddCommand('');
+    end;
+  finally
+    Procedures.Free;
+  end;
+end;
+
+procedure TDBBackupEngine.BackupFunctions;
+var
+  Functions: TStringList;
+  i: Integer;
+  FuncDef: string;
+begin
+  Functions := FProvider.GetFunctions;
+  try
+    if Functions.Count = 0 then
+      Exit;
+      
+    FWriter.AddComment('');
+    FWriter.AddComment('========================================');
+    FWriter.AddComment('FUNCIONES');
+    FWriter.AddComment('========================================');
+    FWriter.AddCommand('');
+    
+    for i := 0 to Functions.Count - 1 do
+    begin
+      FWriter.AddComment('Función: ' + Functions[i]);
+      
+      // Drop function si existe
+      FWriter.AddCommand(FHelpers.GenerateDropFunction(Functions[i]));
+      
+      // Obtener definición y crear
+      FuncDef := FProvider.GetFunctionDefinition(Functions[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateFunctionSQL(FuncDef));
+      FWriter.AddCommand('');
+    end;
+  finally
+    Functions.Free;
+  end;
+end;
+
+end.

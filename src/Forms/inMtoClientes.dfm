@@ -2,7 +2,6 @@ inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
-  ExplicitLeft = -47
   ExplicitWidth = 1141
   ExplicitHeight = 703
   TextHeight = 19
@@ -16,7 +15,7 @@ inherited frmMtoClientes: TfrmMtoClientes
       Width = 1001
       Height = 663
       TabOrder = 1
-      Properties.ActivePage = tsFicha
+      Properties.ActivePage = tsLista
       ExplicitWidth = 1001
       ExplicitHeight = 663
       ClientRectBottom = 659
@@ -379,7 +378,7 @@ inherited frmMtoClientes: TfrmMtoClientes
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsPrestamos
+            Properties.ActivePage = tsDomicilioFiscal
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 438
             ClientRectLeft = 4
@@ -2653,14 +2652,14 @@ inherited frmMtoClientes: TfrmMtoClientes
       OnClick = btnNuevoClienteClick
     end
     object cxButton1: TcxButton
-      Left = 1
-      Top = 253
-      Width = 138
-      Height = 25
-      Caption = '&Imprimir'
-      DropDownMenu = dxBarPopupMenu1
-      Kind = cxbkOfficeDropDown
+      Left = 7
+      Top = 229
+      Width = 128
+      Height = 52
+      Caption = '&Imprimir etiqueta'
       TabOrder = 3
+      WordWrap = True
+      OnClick = blbEtiquetaClick
     end
   end
   object ActionListClientes: TActionList [4]
@@ -2685,47 +2684,5 @@ inherited frmMtoClientes: TfrmMtoClientes
   inherited dsTablaG: TDataSource
     DataSet = dmClientes.unqryTablaG
     Left = 552
-  end
-  object dxBarPopupMenu1: TdxBarPopupMenu
-    BarManager = dxBarManager1
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -17
-    Font.Name = 'Lucida Sans'
-    Font.Style = []
-    ItemLinks = <
-      item
-        Visible = True
-        ItemName = 'blbEtiqueta'
-      end>
-    UseOwnFont = True
-    Left = 1080
-    Top = 304
-    PixelsPerInch = 96
-  end
-  object dxBarManager1: TdxBarManager
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Lucida Sans'
-    Font.Style = []
-    Categories.Strings = (
-      'Default')
-    Categories.ItemsVisibles = (
-      2)
-    Categories.Visibles = (
-      True)
-    PopupMenuLinks = <>
-    UseSystemFont = False
-    Left = 984
-    Top = 304
-    PixelsPerInch = 96
-    object blbEtiqueta: TdxBarLargeButton
-      Caption = 'Etiqueta'
-      Category = 0
-      Hint = 'Etiqueta'
-      Visible = ivAlways
-      OnClick = blbEtiquetaClick
-    end
   end
 end

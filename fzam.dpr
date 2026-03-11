@@ -103,7 +103,15 @@ uses
   ts.core.sqltree in 'src\Lib\sqlformatter\ts.core.sqltree.pas',
   ts.core.utils in 'src\Lib\sqlformatter\ts.core.utils.pas',
   ts.editor.codeformatters in 'src\Lib\sqlformatter\ts.editor.codeformatters.pas',
-  ts.editor.codeformatters.sql in 'src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas';
+  ts.editor.codeformatters.sql in 'src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas',
+  Backup.Engine in 'src\Lib\backup\Backup.Engine.pas',
+  Core_Engine in 'src\Lib\backup\Core_Engine.pas',
+  Core_Helpers in 'src\Lib\backup\Core_Helpers.pas',
+  Providers_MySQL in 'src\Lib\backup\Providers_MySQL.pas',
+  Providers_MySQL_Helpers in 'src\Lib\backup\Providers_MySQL_Helpers.pas',
+  Core_Interfaces in 'src\Lib\backup\Core_Interfaces.pas',
+  Backup.Types in 'src\Lib\backup\Backup.Types.pas',
+  ScriptWriters in 'src\Lib\backup\ScriptWriters.pas';
 
 var
   frmLogon: TfrmLogon;

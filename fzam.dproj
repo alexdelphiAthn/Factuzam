@@ -400,6 +400,14 @@
         <DCCReference Include="src\Lib\sqlformatter\ts.core.utils.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.editor.codeformatters.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas"/>
+        <DCCReference Include="src\Lib\backup\Backup.Engine.pas"/>
+        <DCCReference Include="src\Lib\backup\Core_Engine.pas"/>
+        <DCCReference Include="src\Lib\backup\Core_Helpers.pas"/>
+        <DCCReference Include="src\Lib\backup\Providers_MySQL.pas"/>
+        <DCCReference Include="src\Lib\backup\Providers_MySQL_Helpers.pas"/>
+        <DCCReference Include="src\Lib\backup\Core_Interfaces.pas"/>
+        <DCCReference Include="src\Lib\backup\Backup.Types.pas"/>
+        <DCCReference Include="src\Lib\backup\ScriptWriters.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

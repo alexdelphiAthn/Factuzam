@@ -44,7 +44,9 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
-  Vcl.ComCtrls, JvExComCtrls, JvStatusBar;
+  Vcl.ComCtrls, JvExComCtrls, JvStatusBar,
+  Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -147,6 +149,7 @@ type
     // procedure AppException(Sender: TObject; E: Exception);
     procedure CopiaSeguridad;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+    procedure EjecutarScriptSQL(const AFileName: string);
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -318,47 +321,110 @@ end;
 procedure TfrmMtoPrincipal.CopiaSeguridad;
 var
   iButtonSel: Integer;
-  s: string;
-  MyText: TStringlist;
+  Options: TBackupOptions;
+  Provider: IDBMetadataProvider;
+  Helpers: IDBHelpers;
+  Writer: IScriptWriter;
+  Engine: TDBBackupEngine;
+  IncludeTables, ExcludeTables: TStringList;
 begin
-  iButtonSel := 0;
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.InitialDir := GetCurrentDir;
-  savedialog.FileName := 'copiaseguridad' + FormatDateTime('_dd_mm', Now) +
-                                                                         '.sql';
-  undmp1.Connection := FDmConn.conUni;
-  if (saveDialog.Execute) then
+  saveDialog.FileName := 'copiaseguridad' + FormatDateTime('_dd_mm', Now) + '.sql';
+
+  if saveDialog.Execute then
   begin
-    if FileExists(savedialog.FileName) then
-    begin
-      iButtonSel := MessageDlg('¿Desea reemplazar el fichero existente?',
-        mtCustom, [mbYes, mbNo], 0);
-    end;
-    if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
-    begin
-      s:= 'DROP DATABASE IF EXISTS '+ FDmConn.conUni.Database +'; ' + sLineBreak +
-                       'CREATE DATABASE ' + FDmConn.conUni.Database + ' ' +
-                       '  CHARACTER SET utf8mb4 ' +
-                       '       COLLATE utf8mb4_spanish_ci; ' +  sLineBreak +
-                       'USE '+FDmConn.conUni.Database+';' + sLineBreak + sLineBreak + s;
-      //undmp1.SpecificOptions.Values['UseExtSyntax'] := 'False';
-      //To make TUniDump component generate an INSERT statement for each row
-      //La anterior orden genera un insert por cada fila.
-      undmp1.Backup;
-      s := s + undmp1.SQL.Text;
-      s := StringReplace(s, 'DEFINER=`'+ oConn.Username +
-                            '`@`localhost`', '', [rfReplaceAll, rfIgnoreCase]);
-      MyText := TStringlist.Create;
-      MyText.Text := s;
-      saveDialog.InitialDir := GetUserDeskFolder;
-      MyText.SaveToFile(saveDialog.FileName, TEncoding.UTF8);
-      inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
-        saveDialog.FileName);
-      MyText.Free;
-      ShowMessage('La copia se guardó exitosamente');
+    if FileExists(saveDialog.FileName) and
+       (MessageDlg('¿Desea reemplazar el fichero?', mtConfirmation, [mbYes, mbNo], 0) = mrNo) then
+      Exit;
+
+    // 1. Configurar Opciones de la librería
+    Options.WithData := True;
+    Options.WithTriggers := True;
+    Options.WithProcedures := True;
+    Options.WithFunctions := True;
+    Options.WithViews := True;
+    Options.DropTablesFirst := True; // Recomendado para backups completos
+    Options.UseTransactions := True;
+
+    IncludeTables := TStringList.Create;
+    ExcludeTables := TStringList.Create;
+
+    // 2. Inicializar el Provider usando tu conexión UniDAC existente
+    // La librería ya tiene un constructor que acepta TUniConnection
+    Provider := TMySQLMetadataProvider.Create(FDmConn.conUni,
+                                              FDmConn.conUni.Database);
+    Helpers := TMySQLHelpers.Create;
+    Writer := TScriptWriter.Create(saveDialog.FileName); // Escribe directo a archivo
+
+    try
+      Engine := TDBBackupEngine.Create(Provider,
+                                       Writer,
+                                       Helpers,
+                                       Options,
+                                       IncludeTables,
+                                       ExcludeTables);
+      try
+        // 3. Ejecutar el backup (Esto sustituye a undmp1.Backup)
+        Engine.GenerateBackup;
+
+        inLibLog.Log.LogInfo('Copia de seguridad creada en ' + saveDialog.FileName);
+        ShowMessage('La copia se guardó exitosamente');
+      finally
+        Engine.Free;
+      end;
+    finally
+      IncludeTables.Free;
+      ExcludeTables.Free;
+      // Las interfaces (Provider, Helpers, Writer) se liberan solas
     end;
   end;
 end;
+
+//procedure TfrmMtoPrincipal.CopiaSeguridad;
+//var
+//  iButtonSel: Integer;
+//  s: string;
+//  MyText: TStringlist;
+//begin
+//  iButtonSel := 0;
+//  saveDialog.Title := 'Guardar copia de seguridad';
+//  saveDialog.InitialDir := GetCurrentDir;
+//  savedialog.FileName := 'copiaseguridad' + FormatDateTime('_dd_mm', Now) +
+//                                                                         '.sql';
+//  undmp1.Connection := FDmConn.conUni;
+//  if (saveDialog.Execute) then
+//  begin
+//    if FileExists(savedialog.FileName) then
+//    begin
+//      iButtonSel := MessageDlg('¿Desea reemplazar el fichero existente?',
+//        mtCustom, [mbYes, mbNo], 0);
+//    end;
+//    if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
+//    begin
+//      s:= 'DROP DATABASE IF EXISTS '+ FDmConn.conUni.Database +'; ' + sLineBreak +
+//                       'CREATE DATABASE ' + FDmConn.conUni.Database + ' ' +
+//                       '  CHARACTER SET utf8mb4 ' +
+//                       '       COLLATE utf8mb4_spanish_ci; ' +  sLineBreak +
+//                       'USE '+FDmConn.conUni.Database+';' + sLineBreak + sLineBreak + s;
+//      //undmp1.SpecificOptions.Values['UseExtSyntax'] := 'False';
+//      //To make TUniDump component generate an INSERT statement for each row
+//      //La anterior orden genera un insert por cada fila.
+//      undmp1.Backup;
+//      s := s + undmp1.SQL.Text;
+//      s := StringReplace(s, 'DEFINER=`'+ oConn.Username +
+//                            '`@`localhost`', '', [rfReplaceAll, rfIgnoreCase]);
+//      MyText := TStringlist.Create;
+//      MyText.Text := s;
+//      saveDialog.InitialDir := GetUserDeskFolder;
+//      MyText.SaveToFile(saveDialog.FileName, TEncoding.UTF8);
+//      inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
+//        saveDialog.FileName);
+//      MyText.Free;
+//      ShowMessage('La copia se guardó exitosamente');
+//    end;
+//  end;
+//end;
 
 procedure TfrmMtoPrincipal.FormActivate(Sender: TObject);
 begin
@@ -516,26 +582,69 @@ begin
     Result := inherited IsShortCut(Message);
 end;
 
+//procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
+//begin
+//  if (mnuEjecutarScript.Visible) then
+//  begin
+//    openDialog.Title := 'Cargar script';
+//    openDialog.InitialDir := GetCurrentDir;
+//    undmp1.Connection := FDmConn.conUni;
+//    if openDialog.Execute then
+//    begin
+//      try
+//        undmp1.RestoreFromFile(openDialog.FileName, TEncoding.UTF8);
+//        ShowMessage('El script se ejecutó exitosamente');
+//      except
+//        on E: Exception do
+//        begin
+//          ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
+//            ' Mensaje:' + E.Message);
+//          raise;
+//          Exit;
+//        end;
+//      end;
+//    end;
+//  end;
+//end;
+
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
+var
+  SqlScript: TUniScript;
 begin
   if (mnuEjecutarScript.Visible) then
   begin
     openDialog.Title := 'Cargar script';
     openDialog.InitialDir := GetCurrentDir;
-    undmp1.Connection := FDmConn.conUni;
+
     if openDialog.Execute then
     begin
+      // Creamos el componente al vuelo en lugar de tenerlo en el formulario
+      SqlScript := TUniScript.Create(nil);
       try
-        undmp1.RestoreFromFile(openDialog.FileName, TEncoding.UTF8);
-        ShowMessage('El script se ejecutó exitosamente');
-      except
-        on E: Exception do
-        begin
-          ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
-            ' Mensaje:' + E.Message);
-          raise;
-          Exit;
+        SqlScript.Connection := FDmConn.conUni;
+        // NoPreprocess es crucial para que no falle con los DELIMITER de MySQL
+        SqlScript.NoPreconnect := True;
+
+        try
+          // Cargamos el archivo en la propiedad SQL
+          SqlScript.SQL.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
+
+          inLibLog.Log.LogInfo('Ejecutando script de restauración: ' + openDialog.FileName);
+          SqlScript.Execute;
+
+          ShowMessage('El script se ejecutó exitosamente');
+        except
+          on E: Exception do
+          begin
+            inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
+            ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
+              ' Mensaje:' + E.Message);
+            raise;
+          end;
         end;
+      finally
+        // Liberamos la memoria independientemente de si hubo error o no
+        SqlScript.Free;
       end;
     end;
   end;
