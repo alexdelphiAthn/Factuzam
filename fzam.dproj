@@ -142,6 +142,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="src\vcl37\Vcl.Consts.pas"/>
         <DCCReference Include="src\vcl\Vcl.Consts.pas"/>
         <DCCReference Include="src\vcl\System.SysConst.pas"/>
         <DCCReference Include="src\Lib\inLibDevExp.pas"/>
