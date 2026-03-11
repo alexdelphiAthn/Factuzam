@@ -3,8 +3,17 @@
 uses
   Forms,
   MidasLib,
-  Vcl.Consts in 'src\vcl\Vcl.Consts.pas',
-  System.SysConst in 'src\vcl\System.SysConst.pas',
+  {$IF CompilerVersion >= 37.0}
+    // Para Delphi 13
+  Vcl.Consts in 'src\vcl37\Vcl.Consts.pas',
+  System.SysConst in 'src\vcl37\System.SysConst.pas',
+  {$ELSE}
+    {$IFDEF VER350} // Para Delphi 11 Alexandria
+    // Para Delphi 11 Alexandria (CompilerVersion 35.0)
+      Vcl.Consts in 'src\vcl\Vcl.Consts.pas',
+      System.SysConst in 'src\vcl\System.SysConst.pas',
+    {$ENDIF}
+  {$ENDIF}
   Sysutils,
   dxCore,
   inLibDevExp in 'src\Lib\inLibDevExp.pas',
