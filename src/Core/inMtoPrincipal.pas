@@ -21,10 +21,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, System.Generics.Collections, Vcl.ActnList,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, dxBarBuiltInMenu, cxGraphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
-  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, DADump, UniDump,
-  Vcl.Menus, cxPC, cxTextEdit, cxMemo, dxStatusBar, inMtoFrmBase, UniDataConn,
+  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls,
+  Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
   UniDataPerfiles, cxLocalization, Vcl.Buttons, inLibUnitForm, JvMenus,
   System.UITypes, DAScript, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
   JvComponentBase, JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
@@ -70,7 +70,6 @@ type
   private
     // procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
   published
-    undmp1: TUniDump;
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
     StylCab: TcxStyle;
@@ -138,8 +137,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure mnuAcercadeClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
-    procedure undmp1Error(Sender: TObject; E: Exception; SQL: string;
-      var Action: TErrorAction);
+//    procedure undmp1Error(Sender: TObject; E: Exception; SQL: string;
+//      var Action: TErrorAction);
     procedure mnuLisVentasClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
@@ -149,7 +148,7 @@ type
     // procedure AppException(Sender: TObject; E: Exception);
     procedure CopiaSeguridad;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
-    procedure EjecutarScriptSQL(const AFileName: string);
+//    procedure EjecutarScriptSQL(const AFileName: string);
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -688,17 +687,17 @@ begin
 //  end;
 end;
 
-procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception;
-  SQL: string; var Action: TErrorAction);
-begin
-  inherited;
-  ShowMessage('Ha habido incidencias');
-  Action := eaAbort;
-  // https://forums.devart.com/viewtopic.php?t=21244
-  // Continúa a pesar de los errores, por ejemplo si hay filas duplicadas
-  // if (EUniError(E).ErrorCode = 1062) then // ER_DUP_ENTRY
-  // Action := eaContinue;
-end;
+//procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception;
+//  SQL: string; var Action: TErrorAction);
+//begin
+//  inherited;
+//  ShowMessage('Ha habido incidencias');
+//  Action := eaAbort;
+//  // https://forums.devart.com/viewtopic.php?t=21244
+//  // Continúa a pesar de los errores, por ejemplo si hay filas duplicadas
+//  // if (EUniError(E).ErrorCode = 1062) then // ER_DUP_ENTRY
+//  // Action := eaContinue;
+//end;
 
 procedure TfrmMtoPrincipal.WMFreeControl(var Msg: TMessage);
 var

@@ -26,7 +26,7 @@ uses
   Dialogs, cxLookAndFeelPainters, StdCtrls, cxButtons, rtti,
   UniDataConn, inLibUser, ImgList, Buttons, cxControls, cxContainer,
   Vcl.ExtCtrls, Data.DB, DBAccess, Uni, UniProvider, MySQLUniProvider, DADump,
-  UniDump, MemDS, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
+  MemDS, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
   cxTextEdit, dxSkinsCore, inMtoFrmBase, cxClasses, cxLocalization, cxMemo,
   DASQLMonitor, UniSQLMonitor, System.UITypes, dxShellDialogs, dxSkinBlue,
   dxCore, cxStyles, dxSkinsForm, dxSkinOffice2007Blue, cxGeometry,
@@ -58,7 +58,7 @@ type
     edtPass: TcxTextEdit;
     MySQLUniProvider1: TMySQLUniProvider;
     ucConexion: TUniConnection;
-    udDump: TUniDump;
+//    udDump: TUniDump;
     chkRememberPassword: TcxCheckBox;
     chkRememberUser: TcxCheckBox;
     tbUsers: TUniTable;
@@ -120,8 +120,8 @@ type
   public
     sSuccess:String;
     function IsInitializeAuto:Boolean;
-    function CheckIfExistsDataBase:Boolean;
-    function CheckIfDatabaseIsUpdated:Boolean;
+//    function CheckIfExistsDataBase:Boolean;
+//    function CheckIfDatabaseIsUpdated:Boolean;
   end;
 var
   frmLogon          : TfrmLogon;
@@ -134,9 +134,84 @@ uses  inLibWin,
       inlibtb,
       inLibMsg,
       inLibDir,
-      inLibLog;
-
+      inLibLog,
+      Backup.Engine,
+      Backup.Types,
+      Providers_MySQL,
+      Providers_MySQL_Helpers,
+      ScriptWriters,
+      Core_Interfaces,
+      Core_Helpers,
+      UniScript;
 {$R *.dfm}
+
+procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
+var
+  unqryTestBD: TUniQuery;
+  SqlScript: TUniScript; // <-- Declaramos el nuevo componente
+begin
+  sPass := InputBox('Introduzca password de la BBDD', '','');
+  ConstruirConexionConnect(ucConexion, edtUserBD.Text,
+    sPass,
+    edtHostName.Text,
+    edtPortBD.Text,
+    'information_schema');
+
+  unqryTestBD := TUniQuery.Create(nil);
+  unqryTestBD.Connection := ucConexion;
+  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
+                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
+                          ' WHERE SCHEMA_NAME = :BBDD ' ;
+  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
+  unqryTestBD.Open;
+
+  if (unqryTestBD.RecordCount > 0) then
+  begin
+     if ucConexion.Connected = true then
+     begin
+       ucConexion.Disconnect;
+       ConstruirConexionConnect(ucConexion,
+                             edtUserBD.Text,
+                             sPass,
+                             edtHostName.Text,
+                             edtPortBD.Text,
+                             edtNomBD.Text);
+     end;
+  end;
+
+  opendialog.Title := 'Cargar script';
+  opendialog.Filter := 'Fichero SQL (*.sql)|*.sql';
+  openDialog.InitialDir := GetUserDeskFolder;
+
+  if openDialog.Execute then
+  begin
+    SqlScript := TUniScript.Create(nil);
+    try
+      SqlScript.Connection := ucConexion;
+      SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
+
+      // Cargamos el fichero directamente al script
+      SqlScript.SQL.LoadFromFile(opendialog.FileName);
+
+      // Ejecutamos
+      SqlScript.Execute;
+
+      Log.LogInfo('El script se ejecutó exitosamente');
+      ShowMessage('El script se ejecutó exitosamente');
+    finally
+      SqlScript.Free;
+    end;
+  end
+  else
+  begin
+    Log.LogInfo('El script no fue ejecutado');
+    ShowMessage('El script no fue ejecutado');
+  end;
+
+  FreeAndNil(unqryTestBD);
+  if (ucConexion.Connected = true) then
+    ucConexion.Disconnect;
+end;
 
 procedure TfrmLogon.FormCreate(Sender: TObject);
 begin
@@ -200,10 +275,17 @@ end;
 
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
-  //savedialog: TSaveDialog;
   s         : string;
   MyText    : TStringlist;
-  iButtonSel:Integer;
+  iButtonSel: Integer;
+
+  // Variables para el nuevo motor de backup
+  Options: TBackupOptions;
+  Provider: IDBMetadataProvider;
+  Helpers: IDBHelpers;
+  Writer: IScriptWriter;
+  Engine: TDBBackupEngine;
+  IncludeTables, ExcludeTables: TStringList;
 begin
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
     sPass,
@@ -211,11 +293,12 @@ begin
     edtPortBD.Text,
     edtNomBD.Text);
   iButtonSel := 0;
-  //savedialog := TSaveDialog.Create(nil);
+
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.InitialDir := GetCurrentDir;
-  savedialog.FileName := 'copiaseguridad_' +sPassEn+
+  savedialog.FileName := 'copiaseguridad_' + sPassEn +
                                        FormatDateTime('_dd_mm', Now) + '.crypt';
+
   if (saveDialog.Execute) then
   begin
     if FileExists(savedialog.FileName) then
@@ -223,26 +306,52 @@ begin
       iButtonSel := MessageDlg('¿Desea reemplazar el fichero existente?',
         mtCustom, [mbYes, mbNo], 0);
     end;
+
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
-      udDump.Backup;
-      s := udDump.SQL.Text;
-      s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
-        [rfReplaceAll, rfIgnoreCase]);
-      s := 'DROP DATABASE IF EXISTS factuzam; ' + sLineBreak +
-           'CREATE DATABASE factuzam ' +
-           '  CHARACTER SET utf8mb4 ' +
-           '       COLLATE utf8mb4_spanish_ci; ' +  sLineBreak +
-           'USE factuzam;' + sLineBreak + sLineBreak + s;
-      s := EncriptAESPass(s, AnsiString(sPass));
-      MyText := TStringlist.Create;
-      MyText.Text := s;
-      saveDialog.InitialDir := GetUserDeskFolder;
-      MyText.SaveToFile(saveDialog.FileName);
-      MyText.Free;
-      Log.LogInfo(edtUser.Text + ' Guardó copia Encriptada en ' +
-        savedialog.FileName);
-      ShowMessage('La copia se guardó exitosamente');
+      // 1. Configurar Opciones del Backup
+      Options.WithData := True;
+      Options.WithTriggers := True;
+      Options.WithProcedures := True;
+      Options.WithFunctions := True;
+      Options.WithViews := True;
+      Options.DropTablesFirst := True;
+      Options.UseTransactions := True;
+      IncludeTables := TStringList.Create;
+      ExcludeTables := TStringList.Create;
+      Provider := TMySQLMetadataProvider.Create(ucConexion, edtNomBD.Text);
+      Helpers := TMySQLHelpers.Create;
+      Writer := TScriptWriter.Create('');
+      try
+        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
+        try
+          // 3. Ejecutar la generación del script
+          Engine.GenerateBackup;
+          // 4. Obtener el script en formato String
+          s := Writer.GetScript;
+          s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
+            [rfReplaceAll, rfIgnoreCase]);
+          // 6. Encriptar el resultado
+          s := EncriptAESPass(s, AnsiString(sPass));
+          // 7. Guardar el archivo encriptado
+          MyText := TStringlist.Create;
+          try
+            MyText.Text := s;
+            saveDialog.InitialDir := GetUserDeskFolder;
+            MyText.SaveToFile(saveDialog.FileName);
+          finally
+            MyText.Free;
+          end;
+          Log.LogInfo(edtUser.Text + ' Guardó copia Encriptada en ' +
+            savedialog.FileName);
+          ShowMessage('La copia se guardó exitosamente');
+        finally
+          Engine.Free;
+        end;
+      finally
+        IncludeTables.Free;
+        ExcludeTables.Free;
+      end;
     end;
   end
   else
@@ -250,20 +359,22 @@ begin
     Log.LogError('La copia se canceló');
     ShowMessage('La copia se canceló');
   end;
-  //FreeAndNil(savedialog);
 end;
 
-procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
+procedure TfrmLogon.btnRecoverClick(Sender: TObject);
 var
-  //openDialog        : TOpenDialog;
-  unqryTestBD: TUniQuery;
+  MyText            : TStringList;
+  s                 : string;
+  unqryTestBD       : TUniQuery;
+  SqlScript         : TUniScript;
 begin
-  sPass := InputBox('Introduzca password de la BBDD', '','');
+  sPass := InputBox(SGetPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
     sPass,
     edtHostName.Text,
     edtPortBD.Text,
     'information_schema');
+
   unqryTestBD := TUniQuery.Create(nil);
   unqryTestBD.Connection := ucConexion;
   unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
@@ -271,39 +382,66 @@ begin
                           ' WHERE SCHEMA_NAME = :BBDD ' ;
   unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
   unqryTestBD.Open;
+
   if (unqryTestBD.RecordCount > 0) then
   begin
      if ucConexion.Connected = true then
      begin
        ucConexion.Disconnect;
-       ConstruirConexionConnect(ucConexion,
-                             edtUserBD.Text,
-                             sPass,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             edtNomBD.Text);
+       ConstruirConexionConnect( ucConexion,
+                                 edtUserBD.Text,
+                                 sPass,
+                                 edtHostName.Text,
+                                 edtPortBD.Text,
+                                 edtNomBD.Text);
      end;
   end;
-//  opendialog := TOpenDialog.Create(Self);
-  opendialog.Title := 'Cargar script';
-  opendialog.Filter := 'Fichero SQL (*.sql)|*.sql';
+
+  opendialog.Title := 'Cargar copia';
+  opendialog.Filter := 'Copia encriptada (*.crypt)|*.crypt';
   openDialog.InitialDir := GetUserDeskFolder;
+
   if openDialog.Execute then
   begin
-    udDump.RestoreFromFile(opendialog.FileName);
-    Log.LogInfo('El script se ejecutó exitosamente');
-    ShowMessage('El script se ejecutó exitosamente');
+    MyText := TStringlist.create;
+    try
+      MyText.LoadFromFile(opendialog.FileName);
+      s := MyText.Text;
+    finally
+      MyText.Free;
+    end;
+
+    // Creamos y configuramos TUniScript
+    SqlScript := TUniScript.Create(nil);
+    try
+      SqlScript.Connection := ucConexion;
+      SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
+
+      try
+        // Desencriptamos y lo asignamos a la propiedad SQL del script
+        SqlScript.SQL.Text := DecriptAESPass(s, AnsiString(edtPassBD.Text));
+      except
+        on E: Exception do
+        begin
+          ShowMessage(SErrorPassMatchBBDD +' '+ E.ClassName +
+            ' Mensaje:' + E.Message);
+          raise;
+        end;
+      end;
+
+      // Ejecutamos la restauración
+      SqlScript.Execute;
+      ShowMessage(SScriptSuccess);
+
+    finally
+      SqlScript.Free; // Liberamos el componente
+    end;
   end
   else
-  begin
-    Log.LogInfo('El script no fue ejecutado');
-    ShowMessage('El script no fue ejecutado');
-  end;
+    ShowMessage('Se canceló la carga del script.');
 
-  //FreeAndNil(opendialog);
+  unqryTestBD.Close;
   FreeAndNil(unqryTestBD);
-  if (ucConexion.Connected = true) then
-    ucConexion.Disconnect;
 end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);
@@ -351,95 +489,95 @@ begin
   end;
 end;
 
-function TfrmLogon.CheckIfDatabaseIsUpdated: Boolean;
-var
-  unqryTestBD       : TUniQuery;
-  sFileUp:String;
-  bActualizar: boolean;
-begin
-  Result := false;
-  unqryTestBD := TUniQuery.Create(nil);
-  unqryTestBD.Connection := ucConexion;
-  unqryTestBD.SQL.Text := 'SELECT VALUE_PERFILES ' +
-                          '  FROM fza_usuarios_perfiles ' +
-                          ' WHERE SUBKEY_PERFILES = ' +
-                                                QuotedStr('DataBaseVersion')  +
-                          '   AND VALUE_PERFILES = :VerBBDD ' ;
-  unqryTestBD.ParamByName('VerBBDD').AsString := inLibGlobalVar.oVersion;
-  unqryTestBD.Open;
-  if (unqryTestBD.RecordCount = 1) then
-    Result := True;
-  bActualizar := (unqryTestBD.RecordCount = 0);
-  unqryTestBD.Close;
-  FreeAndNil(unqryTestBD);
-  if (bActualizar) then
-  begin
-    if ( Application.MessageBox(PWideChar(SAdviceUpdateBBDD),
-                                PWideChar(SAdvMsg),
-                                MB_YESNO ) = ID_YES ) then
-    begin
-      var MyText := TStringList.Create;
-      sFileUp := DirApp + '\factuzam_original_update_script.sql';
-      if (Not(FileExists(sFileUp))) then
-      begin
-        ShowMessageFmt(SNotExistsUpBBDDFile, [sFileUp]);
-        Exit;
-      end;
-      MyText.LoadFromFile(sFileUp);
-      var sScript :string := StringReplace(MyText.Text,
-                                   'factuzam',
-                                   edtNomBD.Text,
-                                   [rfReplaceAll,rfIgnoreCase]);
-      UdDump.SQL.Text := sScript;
-      UdDump.Restore;
-      ShowMessage(SBBDDUpdateTo + inLibGlobalVar.oVersion);
-      Result := True;
-      FreeAndNil(MyText);
-    end;
-  end;
-end;
+//function TfrmLogon.CheckIfDatabaseIsUpdated: Boolean;
+//var
+//  unqryTestBD       : TUniQuery;
+//  sFileUp:String;
+//  bActualizar: boolean;
+//begin
+//  Result := false;
+//  unqryTestBD := TUniQuery.Create(nil);
+//  unqryTestBD.Connection := ucConexion;
+//  unqryTestBD.SQL.Text := 'SELECT VALUE_PERFILES ' +
+//                          '  FROM fza_usuarios_perfiles ' +
+//                          ' WHERE SUBKEY_PERFILES = ' +
+//                                                QuotedStr('DataBaseVersion')  +
+//                          '   AND VALUE_PERFILES = :VerBBDD ' ;
+//  unqryTestBD.ParamByName('VerBBDD').AsString := inLibGlobalVar.oVersion;
+//  unqryTestBD.Open;
+//  if (unqryTestBD.RecordCount = 1) then
+//    Result := True;
+//  bActualizar := (unqryTestBD.RecordCount = 0);
+//  unqryTestBD.Close;
+//  FreeAndNil(unqryTestBD);
+//  if (bActualizar) then
+//  begin
+//    if ( Application.MessageBox(PWideChar(SAdviceUpdateBBDD),
+//                                PWideChar(SAdvMsg),
+//                                MB_YESNO ) = ID_YES ) then
+//    begin
+//      var MyText := TStringList.Create;
+//      sFileUp := DirApp + '\factuzam_original_update_script.sql';
+//      if (Not(FileExists(sFileUp))) then
+//      begin
+//        ShowMessageFmt(SNotExistsUpBBDDFile, [sFileUp]);
+//        Exit;
+//      end;
+//      MyText.LoadFromFile(sFileUp);
+//      var sScript :string := StringReplace(MyText.Text,
+//                                   'factuzam',
+//                                   edtNomBD.Text,
+//                                   [rfReplaceAll,rfIgnoreCase]);
+//      UdDump.SQL.Text := sScript;
+//      UdDump.Restore;
+//      ShowMessage(SBBDDUpdateTo + inLibGlobalVar.oVersion);
+//      Result := True;
+//      FreeAndNil(MyText);
+//    end;
+//  end;
+//end;
 
-function TfrmLogon.CheckIfExistsDataBase: Boolean;
-var
-  unqryTestBD       : TUniQuery;
-begin
-  Result := False;
-  ConstruirConexionConnect( ucConexion,
-                            edtUserBD.Text,
-                            sPass,
-                            edtHostName.Text,
-                            edtPortBD.Text,
-                            'information_schema');
-  unqryTestBD := TUniQuery.Create(nil);
-  unqryTestBD.Connection := ucConexion;
-  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-                          ' WHERE SCHEMA_NAME = :BBDD ' ;
-  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-  unqryTestBD.Open;
-  if (unqryTestBD.RecordCount > 0) then
-    Result := True
-  else
-    if (unqryTestBD.RecordCount = 0) then
-    begin
-       if Application.MessageBox(PWideChar(Format( SErrorCreateBBDD,
-                                                   [edtNomBD.Text])),
-         'Error',  MB_YESNO) = ID_YES then
-       begin
-         UdDump.SQL.Text := CrearBD(edtNomBD.Text);
-         if UdDump.SQL.Text <> '' then
-         begin
-           UdDump.Restore;
-           ShowMessage(SCreateSuccBBDD);
-           Log.LogInfo(SCreateSuccBBDD);
-           btChangePassRootClick(Self);
-           Result := True;
-         end;
-       end;
-    end;
-  unqryTestBD.Close;
-  FreeAndNil(unqryTestBD);
-end;
+//function TfrmLogon.CheckIfExistsDataBase: Boolean;
+//var
+//  unqryTestBD       : TUniQuery;
+//begin
+//  Result := False;
+//  ConstruirConexionConnect( ucConexion,
+//                            edtUserBD.Text,
+//                            sPass,
+//                            edtHostName.Text,
+//                            edtPortBD.Text,
+//                            'information_schema');
+//  unqryTestBD := TUniQuery.Create(nil);
+//  unqryTestBD.Connection := ucConexion;
+//  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
+//                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
+//                          ' WHERE SCHEMA_NAME = :BBDD ' ;
+//  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
+//  unqryTestBD.Open;
+//  if (unqryTestBD.RecordCount > 0) then
+//    Result := True
+//  else
+//    if (unqryTestBD.RecordCount = 0) then
+//    begin
+//       if Application.MessageBox(PWideChar(Format( SErrorCreateBBDD,
+//                                                   [edtNomBD.Text])),
+//         'Error',  MB_YESNO) = ID_YES then
+//       begin
+//         UdDump.SQL.Text := CrearBD(edtNomBD.Text);
+//         if UdDump.SQL.Text <> '' then
+//         begin
+//           UdDump.Restore;
+//           ShowMessage(SCreateSuccBBDD);
+//           Log.LogInfo(SCreateSuccBBDD);
+//           btChangePassRootClick(Self);
+//           Result := True;
+//         end;
+//       end;
+//    end;
+//  unqryTestBD.Close;
+//  FreeAndNil(unqryTestBD);
+//end;
 
 function TfrmLogon.CrearBD(sDatabaseN: string):String;
 var
@@ -483,70 +621,6 @@ end;
 //  inherited;
 //  ListClassesDeclaredInNamedUnit(edtUnit.Text);
 //end;
-
-procedure TfrmLogon.btnRecoverClick(Sender: TObject);
-var
-//  openDialog        : topendialog;
-  MyText            : TSTringList;
-  s                 : string;
-  unqryTestBD       : TUniQuery;
-begin
-  sPass := InputBox(SGetPassBBDD, '', '');
-  ConstruirConexionConnect(ucConexion, edtUserBD.Text,
-    sPass,
-    edtHostName.Text,
-    edtPortBD.Text,
-    'information_schema');
-  unqryTestBD := TUniQuery.Create(nil);
-  unqryTestBD.Connection := ucConexion;
-  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-                          ' WHERE SCHEMA_NAME = :BBDD ' ;
-  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-  unqryTestBD.Open;
-  if (unqryTestBD.RecordCount > 0) then
-  begin
-     if ucConexion.Connected = true then
-     begin
-       ucConexion.Disconnect;
-       ConstruirConexionConnect( ucConexion,
-                                 edtUserBD.Text,
-                                 sPass,
-                                 edtHostName.Text,
-                                 edtPortBD.Text,
-                                 edtNomBD.Text);
-     end;
-  end;
-  //opendialog := TOpenDialog.Create(Self);
-  opendialog.Title := 'Cargar copia';
-  opendialog.Filter := 'Copia encriptada (*.crypt)|*.crypt';
-  openDialog.InitialDir := GetUserDeskFolder;
-  if openDialog.Execute then
-  begin
-    MyText := TStringlist.create;
-    MyText.LoadFromFile(opendialog.FileName);
-    s := MyText.Text;
-    MyText.Free;
-    try
-      udDump.SQL.Text := DecriptAESPass(s, AnsiString(edtPassBD.Text));
-    except
-      on E: Exception do
-      begin
-        ShowMessage(SErrorPassMatchBBDD +' '+ E.ClassName +
-          ' Mensaje:' + E.Message);
-        raise;
-        Exit;
-      end;
-    end;
-    udDump.Restore;
-    ShowMessage(SScriptSuccess);
-  end
-  else
-    ShowMessage('Se canceló la carga del script.');
-  //FreeAndNil(opendialog);
-  unqryTestBD.Close;
-  FreeAndNil(unqryTestBD);
-end;
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);
 begin
@@ -621,23 +695,23 @@ var
 begin
   if ucConexion.Connected then
     ucConexion.Disconnect;
-  if CheckIfExistsDataBase then
-  begin
-    if ucConexion.Connected then
-      ucConexion.Disconnect;
-    ConstruirConexionConnect(ucConexion,
-                             edtUserBD.Text,
-                             sPass,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             edtNomBD.Text);
-    //Log(ucConexion, edtUser.Text, 'Intento de conexión');
-    if not CheckIfDatabaseIsUpdated then
-    begin
-      Log.LogError('No puede entrar a una base de datos sin actualizar');
-      ShowMessage('No puede entrar a una base de datos sin actualizar');
-      Exit;
-    end;
+//  if CheckIfExistsDataBase then
+//  begin
+//    if ucConexion.Connected then
+//      ucConexion.Disconnect;
+//    ConstruirConexionConnect(ucConexion,
+//                             edtUserBD.Text,
+//                             sPass,
+//                             edtHostName.Text,
+//                             edtPortBD.Text,
+//                             edtNomBD.Text);
+//    //Log(ucConexion, edtUser.Text, 'Intento de conexión');
+//    if not CheckIfDatabaseIsUpdated then
+//    begin
+//      Log.LogError('No puede entrar a una base de datos sin actualizar');
+//      ShowMessage('No puede entrar a una base de datos sin actualizar');
+//      Exit;
+//    end;
     if not ExisteUser(edtUser.Text, ucConexion) then
     begin
       Log.LogError('El nombre de usuario no existe');
@@ -669,7 +743,7 @@ begin
       PostMessage(Handle, WM_CLOSE, 0, 0);
       modalResult := mrOK;
     end;
-  end;
+//  end;
 end;
 
 function TfrmLogon.ExisteUser(sNom: string; f: TUniConnection): Boolean;
@@ -742,7 +816,7 @@ begin
   edtNomBD.Text := leCadIniDir('ConnData', 'Database', 'factuzam',
                                                                  GetUserFolder);
   edtUserBD.Text := leCadIniDir('ConnData', 'User', 'root', GetUserFolder);
-  edtPortBD.Text := leCadIniDir('ConnData', 'Puerto', '3310', GetUserFolder);
+  edtPortBD.Text := leCadIniDir('ConnData', 'Puerto', '3306', GetUserFolder);
 end;
 
 procedure TfrmLogon.FormKeyDown(Sender: TObject; var Key: Word;
