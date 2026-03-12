@@ -77,7 +77,9 @@ type
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
-    frLocalization: TfrLocalizationController;
+    {$IF CompilerVersion >= 37.0}
+      frLocalization: TfrLocalizationController;
+    {$ENDIF}
     { Private declarations }
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);

@@ -4,20 +4,19 @@ inherited frmPrint: TfrmPrint
   HorzScrollBar.Visible = False
   BorderStyle = bsSingle
   Caption = 'Imprimir'
-  ClientHeight = 266
-  ClientWidth = 355
+  ClientHeight = 265
+  ClientWidth = 351
   FormStyle = fsStayOnTop
   Scaled = False
-  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 371
-  ExplicitHeight = 305
+  ExplicitWidth = 367
+  ExplicitHeight = 304
   TextHeight = 19
   object pnl1: TPanel [0]
-    Left = 211
+    Left = 207
     Top = 0
     Width = 144
-    Height = 266
+    Height = 265
     Align = alRight
     TabOrder = 0
     ExplicitLeft = 209
@@ -80,7 +79,7 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frxrprt1: TfrxReport
-    Version = '2026.1.6'
+    Version = '2022.3'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -99,7 +98,6 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
-    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
@@ -123,11 +121,13 @@ inherited frmPrint: TfrmPrint
     DataOnly = False
     Compressed = False
     EmbeddedFonts = True
+    EmbedFontsIfProtected = False
     InteractiveFormsFontSubset = 'A-Z,a-z,0-9,#43-#47 '
     OpenAfterExport = False
     PrintOptimized = True
     Outline = False
     Background = False
+    HTMLTags = True
     Quality = 95
     Transparency = False
     Author = 'Alejandro Laorden Hidalgo'
@@ -144,7 +144,6 @@ inherited frmPrint: TfrmPrint
     PdfA = False
     PDFStandard = psNone
     PDFVersion = pv14
-    PDFColorSpace = csDeviceRGB
     Left = 88
     Top = 120
   end
@@ -223,7 +222,7 @@ inherited frmPrint: TfrmPrint
     Top = 120
   end
   object frxReportOrigen: TfrxReport
-    Version = '2026.1.6'
+    Version = '2022.3'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -242,7 +241,6 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
-    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
