@@ -36,7 +36,13 @@ uses
   dxSkinTheBezier, dxSkinsDefaultPainters, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList;
+  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList
+  //frxExportBaseImageSettingsDialog, frCoreClasses
+    {$IF CompilerVersion >= 37.0}
+    // Para Delphi 13
+    , frLocalization,
+  frLanguageSpanish, frCoreClasses, frxExportBaseImageSettingsDialog
+  {$ENDIF};
 type
   TfrmPrint = class(TfrmBase)
     pnl1: TPanel;
@@ -71,7 +77,7 @@ type
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
-
+    frLocalization: TfrLocalizationController;
     { Private declarations }
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
@@ -353,7 +359,11 @@ begin
   inherited;
   Action := caFree;
   unqryPerfiles.Close;
-//  FreeAndNil(unqryPerfiles);
+  {$IF CompilerVersion >= 37.0}
+    // Para Delphi 13
+  FreeAndNil(frLocalization);
+  {$ENDIF}
+
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);
@@ -365,6 +375,11 @@ begin
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
   unqryPerfiles.ParamByName('Todos').AsString := oAll;
   unqryPerfiles.Open;
+  {$IF CompilerVersion >= 37.0}
+    // Para Delphi 13
+  frLocalization := TfrLocalizationController.Create(nil);
+  frLocalization.Language := 'Spanish';
+  {$ENDIF}
 end;
 
 function TfrmPrint.frxdsgnr1SaveReport(Report: TfrxReport;

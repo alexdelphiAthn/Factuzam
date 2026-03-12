@@ -8,9 +8,10 @@ inherited frmPrint: TfrmPrint
   ClientWidth = 355
   FormStyle = fsStayOnTop
   Scaled = False
+  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 367
-  ExplicitHeight = 304
+  ExplicitWidth = 371
+  ExplicitHeight = 305
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 211
@@ -19,8 +20,8 @@ inherited frmPrint: TfrmPrint
     Height = 266
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 205
-    ExplicitHeight = 257
+    ExplicitLeft = 209
+    ExplicitHeight = 258
     object btnPDF: TcxButton
       Left = 0
       Top = 48
@@ -57,7 +58,7 @@ inherited frmPrint: TfrmPrint
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 231
+      ExplicitTop = 232
     end
     object btnEditar: TcxButton
       Left = 0
@@ -79,7 +80,7 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frxrprt1: TfrxReport
-    Version = '2022.3'
+    Version = '2026.1.6'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -98,6 +99,7 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
+    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
@@ -118,22 +120,19 @@ inherited frmPrint: TfrmPrint
     UseFileCache = True
     ShowProgress = True
     OverwritePrompt = False
-    CreationTime = 44864.742836030090000000
     DataOnly = False
     Compressed = False
     EmbeddedFonts = True
-    EmbedFontsIfProtected = False
     InteractiveFormsFontSubset = 'A-Z,a-z,0-9,#43-#47 '
     OpenAfterExport = False
     PrintOptimized = True
     Outline = False
     Background = False
-    HTMLTags = True
     Quality = 95
     Transparency = False
-    Author = 'Alejandro L, Hidalgo'
-    Subject = 'PDF FactuZam'
-    Creator = 'FactuZam Report System'
+    Author = 'Alejandro Laorden Hidalgo'
+    Subject = 'FactuZam'
+    Creator = 'FactuZam Software de Gesti'#243'n Retail'
     Producer = 'FactuZam Printing System'
     ProtectionFlags = [ePrint, eModify, eCopy, eAnnot]
     HideToolbar = False
@@ -145,6 +144,7 @@ inherited frmPrint: TfrmPrint
     PdfA = False
     PDFStandard = psNone
     PDFVersion = pv14
+    PDFColorSpace = csDeviceRGB
     Left = 88
     Top = 120
   end
@@ -223,7 +223,7 @@ inherited frmPrint: TfrmPrint
     Top = 120
   end
   object frxReportOrigen: TfrxReport
-    Version = '2022.3'
+    Version = '2026.1.6'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -242,6 +242,7 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
+    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
@@ -259,8 +260,8 @@ inherited frmPrint: TfrmPrint
     end
   end
   object ActionList1: TActionList
-    Left = 176
-    Top = 144
+    Left = 160
+    Top = 184
     object actSalir: TAction
       Caption = 'Salir'
       ShortCut = 27
