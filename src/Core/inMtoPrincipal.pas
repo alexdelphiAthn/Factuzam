@@ -334,9 +334,10 @@ begin
   if saveDialog.Execute then
   begin
     if FileExists(saveDialog.FileName) and
-       (MessageDlg('¿Desea reemplazar el fichero?', mtConfirmation, [mbYes, mbNo], 0) = mrNo) then
+       (MessageDlg('El fichero elegido existe. '+
+                   '¿Desea reemplazar el fichero?', mtConfirmation,
+                   [mbYes, mbNo], 0) = mrNo) then
       Exit;
-
     // 1. Configurar Opciones de la librería
     Options.WithData := True;
     Options.WithTriggers := True;
@@ -345,17 +346,16 @@ begin
     Options.WithViews := True;
     Options.DropTablesFirst := True; // Recomendado para backups completos
     Options.UseTransactions := True;
-
+    Options.ExtendedInsert   := True;   // Un INSERT con todos los VALUES
+    Options.ExtendedInsertRows := 500;
     IncludeTables := TStringList.Create;
     ExcludeTables := TStringList.Create;
-
     // 2. Inicializar el Provider usando tu conexión UniDAC existente
     // La librería ya tiene un constructor que acepta TUniConnection
     Provider := TMySQLMetadataProvider.Create(FDmConn.conUni,
                                               FDmConn.conUni.Database);
     Helpers := TMySQLHelpers.Create;
-    Writer := TScriptWriter.Create(saveDialog.FileName); // Escribe directo a archivo
-
+    Writer := TScriptWriter.Create(saveDialog.FileName);
     try
       Engine := TDBBackupEngine.Create(Provider,
                                        Writer,

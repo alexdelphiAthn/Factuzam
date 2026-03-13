@@ -15,9 +15,11 @@ type
     WithViews: Boolean;             // Incluir vistas
     DropTablesFirst: Boolean;       // Incluir DROP TABLE antes de CREATE
     UseTransactions: Boolean;       // Envolver en BEGIN/COMMIT
+    ExtendedInsert: Boolean;      // << NUEVO: un INSERT con todos los VALUES
+    ExtendedInsertRows: Integer;
   end;
 
-  TColumnInfo = record  // O class, según tu implementación actual
+  TColumnInfo = record  // O class, segï¿½n tu implementaciï¿½n actual
     ColumnName: string;
     DataType: string;
     IsNullable: string;
@@ -35,13 +37,13 @@ type
     destructor Destroy; override;
   end;
 
-  // Información de una columna dentro de un índice
+  // Informaciï¿½n de una columna dentro de un ï¿½ndice
   TIndexColumn = record
     ColumnName: string;
     SeqInIndex: Integer;
   end;
 
-  // Información de un índice completo (contiene un array de TIndexColumn)
+  // Informaciï¿½n de un ï¿½ndice completo (contiene un array de TIndexColumn)
   TIndexInfo = record
     IndexName: string;
     IsPrimary: Boolean;
@@ -49,7 +51,7 @@ type
     Columns: TArray<TIndexColumn>;
   end;
 
-  // Información de un trigger
+  // Informaciï¿½n de un trigger
   TTriggerInfo = record
     TriggerName: string;
     EventManipulation: string; // ej. INSERT, UPDATE, DELETE
