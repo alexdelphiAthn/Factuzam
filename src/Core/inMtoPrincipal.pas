@@ -330,7 +330,6 @@ begin
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.InitialDir := GetCurrentDir;
   saveDialog.FileName := 'copiaseguridad' + FormatDateTime('_dd_mm', Now) + '.sql';
-
   if saveDialog.Execute then
   begin
     if FileExists(saveDialog.FileName) and
