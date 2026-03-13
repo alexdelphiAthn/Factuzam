@@ -4,7 +4,7 @@ interface
 
 uses
   Core_Interfaces, Backup.Types, System.Classes, Core_Helpers,
-  Data.DB, System.SysUtils, Core_Engine;
+  Data.DB, System.SysUtils, Core_Engine, system.StrUtils;
 
 type
   TDBBackupEngine = class
@@ -174,7 +174,7 @@ begin
     // Volcar datos si está habilitado
     if FOptions.WithData then
       BackupTableData(TableName);
-      
+
   finally
     TableInfo.Free;
   end;
@@ -188,6 +188,32 @@ var
   RowCount: Integer;
   TableInfo: TTableInfo;
   HasIdentity: Boolean;
+  // Para extended insert
+  FieldList: string;       // La parte INSERT INTO `tabla` (`col1`,`col2`)
+  ValueRows: TStringList;  // Acumula los VALUE(...) de cada fila
+  RowsInBatch: Integer;
+  BatchSize: Integer;
+
+  // Escribe el INSERT acumulado y vacía el buffer
+  procedure FlushExtendedInsert;
+  var
+    j: Integer;
+    SQL: string;
+  begin
+    if ValueRows.Count = 0 then Exit;
+    SQL := FieldList + sLineBreak;
+    for j := 0 to ValueRows.Count - 1 do
+    begin
+      if j < ValueRows.Count - 1 then
+        SQL := SQL + '  (' + ValueRows[j] + '),' + sLineBreak
+      else
+        SQL := SQL + '  (' + ValueRows[j] + ');';
+    end;
+    FWriter.AddCommand(SQL);
+    ValueRows.Clear;
+    RowsInBatch := 0;
+  end;
+
 begin
   // Verificar si tiene columna de autoincremento
   TableInfo := FProvider.GetTableStructure(TableName);
@@ -195,8 +221,7 @@ begin
     HasIdentity := False;
     for i := 0 to TableInfo.Columns.Count - 1 do
     begin
-      // Buscamos 'auto_increment' dentro de la propiedad Extra
-      if Pos('auto_increment', LowerCase(TableInfo.Columns[i].Extra)) > 0 then
+      if ContainsText(TableInfo.Columns[i].Extra, 'auto_increment') then
       begin
         HasIdentity := True;
         Break;
@@ -205,43 +230,74 @@ begin
   finally
     TableInfo.Free;
   end;
-
   Data := FProvider.GetData(TableName);
-  Fields := TStringList.Create;
-  Values := TStringList.Create;
+  Fields  := TStringList.Create;
+  Values  := TStringList.Create;
+  ValueRows := TStringList.Create;
   try
-    RowCount := 0;
-    
+    RowCount    := 0;
+    RowsInBatch := 0;
+    FieldList   := '';
+    BatchSize   := FOptions.ExtendedInsertRows; // 0 = sin límite
     if not Data.IsEmpty then
     begin
       FWriter.AddComment(Format('Datos de %s', [TableName]));
-      
-      // Si tiene identity, deshabilitar el check
       if HasIdentity then
-        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s DISABLE KEYS */;', 
+        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s DISABLE KEYS */;',
                                   [FHelpers.QuoteIdentifier(TableName)]));
-      
       while not Data.Eof do
       begin
         Fields.Clear;
         Values.Clear;
-        
         for i := 0 to Data.FieldCount - 1 do
         begin
           Fields.Add(FHelpers.QuoteIdentifier(Data.Fields[i].FieldName));
           Values.Add(FHelpers.ValueToSQL(Data.Fields[i]));
         end;
-        
-        FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
+        if FOptions.ExtendedInsert then
+        begin
+          // ── Modo extended: acumular filas ──────────────────────────────
+          // Construir la cabecera una sola vez (los campos no cambian)
+          if FieldList = '' then
+          begin
+            var FieldPart := '';
+            for i := 0 to Fields.Count - 1 do
+            begin
+              if i > 0 then FieldPart := FieldPart + ', ';
+              FieldPart := FieldPart + Fields[i];
+            end;
+            FieldList := 'INSERT INTO ' + FHelpers.QuoteIdentifier(TableName) +
+                         ' (' + FieldPart + ') VALUES';
+          end;
+          // Construir la parte VALUES de esta fila
+          var RowValues := '';
+          for i := 0 to Values.Count - 1 do
+          begin
+            if i > 0 then RowValues := RowValues + ', ';
+            RowValues := RowValues + Values[i];
+          end;
+          ValueRows.Add(RowValues);
+          Inc(RowsInBatch);
+
+          // Si llegamos al límite de batch, volcar y resetear
+          if (BatchSize > 0) and (RowsInBatch >= BatchSize) then
+            FlushExtendedInsert;
+        end
+        else
+        begin
+          // ── Modo clásico: un INSERT por fila ───────────────────────────
+          FWriter.AddCommand(
+            FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
+        end;
         Inc(RowCount);
         Data.Next;
       end;
-      
-      // Restaurar keys
+      // Volcar las filas que queden pendientes en el buffer
+      if FOptions.ExtendedInsert then
+        FlushExtendedInsert;
       if HasIdentity then
-        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;', 
+        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;',
                                   [FHelpers.QuoteIdentifier(TableName)]));
-      
       FWriter.AddComment(Format('%d registros exportados', [RowCount]));
       FWriter.AddCommand('');
     end;
@@ -249,6 +305,7 @@ begin
     Data.Free;
     Fields.Free;
     Values.Free;
+    ValueRows.Free;
   end;
 end;
 
