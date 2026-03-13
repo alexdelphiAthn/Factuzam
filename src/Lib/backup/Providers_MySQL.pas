@@ -101,7 +101,7 @@ begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := FConn;
-    FConn.Database := SCHEMADB;
+//    FConn.Database := SCHEMADB;
     Query.SQL.Text := '   SELECT ROUTINE_NAME '+
                       '     FROM INFORMATION_SCHEMA.ROUTINES ' +
                       '    WHERE ROUTINE_SCHEMA = ' + QuotedStr(FDBName) +
@@ -198,7 +198,7 @@ begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := FConn;
-    FConn.Database := SCHEMADB;
+//    FConn.Database := SCHEMADB;
     Query.SQL.Text := '   SELECT ROUTINE_NAME '+
                       '     FROM INFORMATION_SCHEMA.ROUTINES ' +
                       '    WHERE ROUTINE_SCHEMA = ' + QuotedStr(FDBName) +
@@ -231,7 +231,7 @@ begin
     Query := TUniQuery.Create(nil);
     try
       Query.Connection := FConn;
-      FConn.Database := SCHEMADB;
+//      FConn.Database := SCHEMADB;
       Query.SQL.Text :=
         'SELECT INDEX_NAME, ' +
         '       NON_UNIQUE, ' +
@@ -406,7 +406,7 @@ begin
   try
     Query := TUniQuery.Create(nil);
     try
-      FConn.Database := SCHEMADB;
+//      FConn.Database := SCHEMADB;
       Query.Connection := FConn;
       // CORRECCIÓN: Concatenación y espacios
       Query.SQL.Text :=
