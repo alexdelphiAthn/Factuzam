@@ -46,7 +46,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, dascript,
+      UniScript;
 
 type
   EInvalidUser = class(Exception);
@@ -108,7 +109,8 @@ type
   private
     procedure CambiarPass(f:TUniConnection);
     function CrearBD(sDatabaseN:string):string;
-
+    procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
+                              var Action: TErrorAction);
     procedure escribirini;
     procedure SetIniValues;
 
@@ -141,9 +143,29 @@ uses  inLibWin,
       Providers_MySQL_Helpers,
       ScriptWriters,
       Core_Interfaces,
-      Core_Helpers,
-      UniScript;
+      Core_Helpers;
 {$R *.dfm}
+
+procedure TfrmLogon.UniScript1Error(Sender: TObject;
+                                    E: Exception;
+                                    SQL: string;
+                                    var Action: TErrorAction);
+var
+  Respuesta: Integer;
+begin
+  // Aquí podemos registrar el error en un log o preguntar al usuario
+  Respuesta := MessageDlg(
+    'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
+    SQL + sLineBreak + sLineBreak +
+    'Detalle del error: ' + E.Message + sLineBreak + sLineBreak +
+    '¿Deseas ignorar el error y continuar con el script?',
+    mtError, [mbYes, mbNo], 0);
+
+  if Respuesta = mrYes then
+    Action := eaContinue  // Ignora la sentencia fallida y continúa con la número 3
+  else
+    Action := eaFail;     // Detiene el script y pasa al bloque "except" principal
+end;
 
 procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
 var
@@ -186,6 +208,7 @@ begin
   if openDialog.Execute then
   begin
     SqlScript := TUniScript.Create(nil);
+    sqlscript.OnError := UniScript1Error;
     try
       SqlScript.Connection := ucConexion;
       SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
