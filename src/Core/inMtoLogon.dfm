@@ -4,8 +4,8 @@ object frmLogon: TfrmLogon
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Login FactuZam'
-  ClientHeight = 350
-  ClientWidth = 704
+  ClientHeight = 342
+  ClientWidth = 702
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,8 +21,8 @@ object frmLogon: TfrmLogon
   object pnlMain: TPanel
     Left = 0
     Top = 0
-    Width = 704
-    Height = 350
+    Width = 702
+    Height = 342
     Align = alClient
     TabOrder = 0
     object pnlLogin: TPanel
