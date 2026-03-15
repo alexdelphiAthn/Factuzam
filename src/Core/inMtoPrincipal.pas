@@ -203,28 +203,24 @@ begin
   if Assigned(FLogMemo) then
   begin
     FLogMemo.Lines.Add('Ejecutando: ' + Trim(SQL));
-    Application.ProcessMessages; 
+    Application.ProcessMessages;
   end;
-  
   // Iniciamos el cronómetro justo antes de que la BD reciba la sentencia
-  FStopwatch := TStopwatch.StartNew; 
+  FStopwatch := TStopwatch.StartNew;
 end;
 
 procedure TfrmMtoPrincipal.ScriptAfterExecute(Sender: TObject; SQL: string);
 begin
   // Detenemos el cronómetro lo antes posible
-  FStopwatch.Stop; 
-
+  FStopwatch.Stop;
   if Assigned(FLogMemo) then
   begin
     // Usamos Format para que quede limpio: Filas afectadas y el tiempo en milisegundos
-    FLogMemo.Lines.Add(Format('  [OK] Filas afectadas: %d | Tiempo: %d ms', 
+    FLogMemo.Lines.Add(Format('  [OK] Filas afectadas: %d | Tiempo: %d ms',
                              [(Sender as TUniScript).RowsAffected, FStopwatch.ElapsedMilliseconds]));
     FLogMemo.Lines.Add('--------------------------------------------------');
-    
     FLogMemo.SelStart := Length(FLogMemo.Text);
     SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
-    
     Application.ProcessMessages;
   end;
 end;

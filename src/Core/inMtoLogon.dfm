@@ -4,7 +4,7 @@ object frmLogon: TfrmLogon
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Login FactuZam'
-  ClientHeight = 350
+  ClientHeight = 430
   ClientWidth = 704
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object frmLogon: TfrmLogon
     Left = 0
     Top = 0
     Width = 704
-    Height = 350
+    Height = 430
     Align = alClient
     TabOrder = 0
     ExplicitWidth = 702
@@ -276,16 +276,22 @@ object frmLogon: TfrmLogon
     Left = 168
     Top = 312
   end
-  object saveDialog: TdxSaveFileDialog
-    Left = 200
-    Top = 312
-  end
-  object openDialog: TdxOpenFileDialog
-    Left = 232
-    Top = 312
-  end
   object JvEnterAsTab1: TJvEnterAsTab
     Left = 274
     Top = 313
+  end
+  object saveDialog: TFileSaveDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 160
+    Top = 376
+  end
+  object openDialog: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 240
+    Top = 368
   end
 end
