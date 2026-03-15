@@ -737,7 +737,7 @@ begin
             FdmConn.conUni.Rollback;
             inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
             ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
-              ' Mensaje:' + Copy(E.Message, 1, 200);
+              ' Mensaje:' + Copy(E.Message, 1, 200));
             raise;
           end;
       end;
