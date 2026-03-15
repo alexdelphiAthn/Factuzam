@@ -647,36 +647,11 @@ begin
     Result := inherited IsShortCut(Message);
 end;
 
-//procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
-//begin
-//  if (mnuEjecutarScript.Visible) then
-//  begin
-//    openDialog.Title := 'Cargar script';
-//    openDialog.InitialDir := GetCurrentDir;
-//    undmp1.Connection := FDmConn.conUni;
-//    if openDialog.Execute then
-//    begin
-//      try
-//        undmp1.RestoreFromFile(openDialog.FileName, TEncoding.UTF8);
-//        ShowMessage('El script se ejecutó exitosamente');
-//      except
-//        on E: Exception do
-//        begin
-//          ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
-//            ' Mensaje:' + E.Message);
-//          raise;
-//          Exit;
-//        end;
-//      end;
-//    end;
-//  end;
-//end;
-
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 var
   SqlScript: TUniScript;
 begin
-  if not mnuEjecutarScript.Visible then 
+  if not mnuEjecutarScript.Visible then
     Exit;
   openDialog.Title := 'Cargar script';
   openDialog.FileTypes.Clear;
@@ -703,9 +678,6 @@ begin
       if FdmConn.conuni.InTransaction then
         FdmConn.conuni.Commit;
       FdmConn.conUni.StartTransaction;
-      // NoPreprocess es crucial para que no falle con los DELIMITER de MySQL
-//      SqlScript.nopre := True;
-      // Cargamos el archivo en la propiedad SQL
       SqlScript.SQL.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
       if ContieneDDL(SqlScript.SQL.Text) then
       begin
@@ -751,15 +723,13 @@ begin
         FLogMemo.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
         FLogMemo.Font.Size := 12;
         FLogMemo.WordWrap := False; // Para que no corte las sentencias largas
-
         FLogMemo.Lines.Add('-- INICIO DE EJECUCIÓN DEL SCRIPT --');
         FLogMemo.Lines.Add('-- Archivo: ' + ExtractFileName(openDialog.FileName));
         FLogMemo.Lines.Add('--------------------------------------------------');
-
         // Mostramos la ventana de forma no modal para poder actualizarla
         FLogForm.Show;
         SqlScript.Execute;
-        FdmConn.conUni.Commit; 
+        FdmConn.conUni.Commit;
         ShowMessage('El script se ejecutó exitosamente');
       except
           on E: Exception do
@@ -767,7 +737,7 @@ begin
             FdmConn.conUni.Rollback;
             inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
             ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
-              ' Mensaje:' + E.Message);
+              ' Mensaje:' + Copy(E.Message, 1, 200);
             raise;
           end;
       end;
