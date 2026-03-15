@@ -144,6 +144,7 @@ uses  inLibWin,
       ScriptWriters,
       Core_Interfaces,
       Core_Helpers;
+
 {$R *.dfm}
 
 procedure TfrmLogon.UniScript1Error(Sender: TObject;
@@ -160,7 +161,6 @@ begin
     'Detalle del error: ' + E.Message + sLineBreak + sLineBreak +
     '¿Deseas ignorar el error y continuar con el script?',
     mtError, [mbYes, mbNo], 0);
-
   if Respuesta = mrYes then
     Action := eaContinue  // Ignora la sentencia fallida y continúa con la número 3
   else
@@ -445,9 +445,9 @@ begin
     try
       SqlScript.Connection := ucConexion;
       SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
-
       try
         // Desencriptamos y lo asignamos a la propiedad SQL del script
+
         SqlScript.SQL.Text := DecriptAESPass(s, AnsiString(edtPassBD.Text));
       except
         on E: Exception do

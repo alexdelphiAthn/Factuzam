@@ -2927,14 +2927,18 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
     end
   end
-  object openDialog: TdxOpenFileDialog
-    Left = 712
-    Top = 136
+  object saveDialog: TFileSaveDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 720
+    Top = 152
   end
-  object saveDialog: TdxSaveFileDialog
-    DefaultExt = 'sql'
-    Filter = 'Archivos SQL (*.sql)|*.sql'
-    Left = 816
-    Top = 136
+  object openDialog: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = []
+    Left = 824
+    Top = 144
   end
 end
