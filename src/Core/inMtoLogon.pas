@@ -65,8 +65,6 @@ type
     tbUsers: TUniTable;
     chkAuto: TcxCheckBox;
     UniSQLMonitor1: TUniSQLMonitor;
-    saveDialog: TdxSaveFileDialog;
-    openDialog: TdxOpenFileDialog;
     pnlBBDD: TPanel;
     lblBBDDConfig: TcxLabel;
     lblHostBBDD: TcxLabel;
@@ -87,6 +85,8 @@ type
     btnConf: TcxButton;
     btnAceptar:TButton;
     btnSalir:TButton;
+    saveDialog: TFileSaveDialog;
+    openDialog: TFileOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
@@ -202,8 +202,8 @@ begin
   end;
 
   opendialog.Title := 'Cargar script';
-  opendialog.Filter := 'Fichero SQL (*.sql)|*.sql';
-  openDialog.InitialDir := GetUserDeskFolder;
+  opendialog.DefaultExtension := 'sql';
+  openDialog.DefaultFolder := GetUserDeskFolder;
 
   if openDialog.Execute then
   begin
@@ -324,7 +324,8 @@ begin
   iButtonSel := 0;
 
   saveDialog.Title := 'Guardar copia de seguridad';
-  saveDialog.InitialDir := GetCurrentDir;
+  saveDialog.DefaultFolder := GetCurrentDir;
+  saveDialog.DefaultExtension := '.crypt';
   savedialog.FileName := 'copiaseguridad_' + sPassEn +
                                        FormatDateTime('_dd_mm', Now) + '.crypt';
 
@@ -366,7 +367,7 @@ begin
           MyText := TStringlist.Create;
           try
             MyText.Text := s;
-            saveDialog.InitialDir := GetUserDeskFolder;
+            saveDialog.DefaultFolder := GetUserDeskFolder;
             MyText.SaveToFile(saveDialog.FileName);
           finally
             MyText.Free;
@@ -426,9 +427,9 @@ begin
      end;
   end;
 
-  opendialog.Title := 'Cargar copia';
-  opendialog.Filter := 'Copia encriptada (*.crypt)|*.crypt';
-  openDialog.InitialDir := GetUserDeskFolder;
+  opendialog.Title := 'Cargar copia encriptada';
+  opendialog.DefaultExtension := 'crypt';
+  openDialog.DefaultFolder := GetUserDeskFolder;
 
   if openDialog.Execute then
   begin
@@ -439,7 +440,6 @@ begin
     finally
       MyText.Free;
     end;
-
     // Creamos y configuramos TUniScript
     SqlScript := TUniScript.Create(nil);
     try
@@ -447,7 +447,6 @@ begin
       SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
       try
         // Desencriptamos y lo asignamos a la propiedad SQL del script
-
         SqlScript.SQL.Text := DecriptAESPass(s, AnsiString(edtPassBD.Text));
       except
         on E: Exception do
@@ -457,18 +456,15 @@ begin
           raise;
         end;
       end;
-
       // Ejecutamos la restauración
       SqlScript.Execute;
       ShowMessage(SScriptSuccess);
-
     finally
       SqlScript.Free; // Liberamos el componente
     end;
   end
   else
     ShowMessage('Se canceló la carga del script.');
-
   unqryTestBD.Close;
   FreeAndNil(unqryTestBD);
 end;
