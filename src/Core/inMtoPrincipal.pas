@@ -46,7 +46,7 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript;
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -59,12 +59,15 @@ type
     mnuAlmacenes: TMenuItem;
     mnuCajaParam: TMenuItem;
     JvStatusBar1: TJvStatusBar;
+    saveDialog: TFileSaveDialog;
+    openDialog: TFileOpenDialog;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+
 //    procedure actSalirExecute(Sender: TObject);
 
   private
@@ -108,8 +111,6 @@ type
     mnuGrupos: TMenuItem;
     mnuPerfiles: TMenuItem;
     Acercade1: TMenuItem;
-    openDialog: TdxOpenFileDialog;
-    saveDialog: TdxSaveFileDialog;
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
     procedure mnuEmpresasClick(Sender: TObject);
@@ -142,15 +143,24 @@ type
     procedure mnuLisVentasClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
+    procedure LogFormClose(Sender: TObject; var Action: TCloseAction);
   private
     FIdleCount: Integer;
     FException: Boolean;
+    FStopwatch: TStopwatch;
+    FLogForm: TForm;
+    FLogMemo: TcxMemo; 
     // procedure AppException(Sender: TObject; E: Exception);
-    procedure CopiaSeguridad;
+    function CopiaSeguridad: Boolean;
+    function ContieneDDL(const ASQL: string): Boolean;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
-    //    procedure EjecutarScriptSQL(const AFileName: string);
+    procedure ScriptAfterExecute(Sender: TObject; 
+                                 SQL: string);
+    procedure ScriptBeforeExecute(Sender: TObject; 
+                                  var SQL: string; 
+                                  var Omit: Boolean);    
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -175,15 +185,76 @@ uses inLibUser,
   inMtoSplash,
   inMtoCajaMenu,
   inMtoCajaParam,
-  inMtoModalGenFilter, inLibCajaParam;
+  inMtoModalGenFilter,
+  inLibCajaParam,
+  System.RegularExpressions;
 
 {$R *.dfm}
+
+procedure TfrmMtoPrincipal.LogFormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  FLogForm := nil;
+  FLogMemo := nil;
+end;
+
+procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject; var SQL: string; var Omit: Boolean);
+begin
+  if Assigned(FLogMemo) then
+  begin
+    FLogMemo.Lines.Add('Ejecutando: ' + Trim(SQL));
+    Application.ProcessMessages; 
+  end;
+  
+  // Iniciamos el cronómetro justo antes de que la BD reciba la sentencia
+  FStopwatch := TStopwatch.StartNew; 
+end;
+
+procedure TfrmMtoPrincipal.ScriptAfterExecute(Sender: TObject; SQL: string);
+begin
+  // Detenemos el cronómetro lo antes posible
+  FStopwatch.Stop; 
+
+  if Assigned(FLogMemo) then
+  begin
+    // Usamos Format para que quede limpio: Filas afectadas y el tiempo en milisegundos
+    FLogMemo.Lines.Add(Format('  [OK] Filas afectadas: %d | Tiempo: %d ms', 
+                             [(Sender as TUniScript).RowsAffected, FStopwatch.ElapsedMilliseconds]));
+    FLogMemo.Lines.Add('--------------------------------------------------');
+    
+    FLogMemo.SelStart := Length(FLogMemo.Text);
+    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
+    
+    Application.ProcessMessages;
+  end;
+end;
+
+function TfrmMtoPrincipal.ContieneDDL(const ASQL: string): Boolean;
+var
+  Patron: string;
+begin
+  // \b indica "límite de palabra" para asegurar que es el comando exacto.
+  // Buscamos ignorando mayúsculas o minúsculas.
+  Patron := '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b';
+  Result := TRegEx.IsMatch(ASQL, Patron, [roIgnoreCase]);
+end;
 
 procedure TfrmMtoPrincipal.UniScript1Error(Sender: TObject; E: Exception;
                                   SQL: string; var Action: TErrorAction);
 var
   Respuesta: Integer;
 begin
+  if Assigned(FLogMemo) then
+  begin
+    FStopwatch.Stop;
+    FLogMemo.Lines.Add('  [ERROR] ' + E.Message + Format(' Tiempo: %d ms', 
+                                   [FStopwatch.ElapsedMilliseconds]));
+    FLogMemo.Lines.Add('--------------------------------------------------');    
+    FLogMemo.SelStart := Length(FLogMemo.Text);
+    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);    
+    Application.ProcessMessages;
+  end;
+
   // Aquí podemos registrar el error en un log o preguntar al usuario
   Respuesta := MessageDlg(
     'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
@@ -338,7 +409,7 @@ end;
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
 
-procedure TfrmMtoPrincipal.CopiaSeguridad;
+function TfrmMtoPrincipal.CopiaSeguridad: Boolean;
 var
   Options: TBackupOptions;
   Provider: IDBMetadataProvider;
@@ -347,15 +418,26 @@ var
   Engine: TDBBackupEngine;
   IncludeTables, ExcludeTables: TStringList;
 begin
+  // Asumimos por defecto que no se completará (ej. el usuario cancela)
+  Result := False; 
+
   // Configuración del diálogo
   saveDialog.Title := 'Guardar copia de seguridad';
-  saveDialog.InitialDir := GetCurrentDir;
-  saveDialog.Filter := 'Archivos SQL (*.sql)|*.sql'; // <-- FILTRO CORREGIDO
-  saveDialog.FileName := 'copiaseguridad' + FormatDateTime('_dd_mm', Now) + '.sql';
-
-  // Asegúrate de tener ofOverwritePrompt = True en el Object Inspector
-  // para que el diálogo avise automáticamente si el archivo existe.
-
+  saveDialog.DefaultExtension := 'sql';
+  saveDialog.DefaultFolder := GetCurrentDir;
+  with saveDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Archivos SQL';
+    FileMask := '*.sql';
+  end;
+  with saveDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Todos los archivos';
+    FileMask := '*.*';
+  end;
+  //saveDialog.FileTypes.Add(); := 'Archivos SQL (*.sql)|*.sql';
+  saveDialog.FileName := 'copiaseguridad' +
+                              FormatDateTime('_dd_mm_yyyy_HH_nn', Now) + '.sql';
   if saveDialog.Execute then
   begin
     // 1. Configurar Opciones de la librería
@@ -375,20 +457,31 @@ begin
     // 2. Inicializar el Provider
     Provider := TMySQLMetadataProvider.Create(FDmConn.conUni, FDmConn.conUni.Database);
     Helpers := TMySQLHelpers.Create;
-
-    // Aquí usamos la ruta confirmada por el saveDialog
     Writer := TScriptWriter.Create(saveDialog.FileName);
 
     try
-      Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
       try
-        // 3. Ejecutar el backup
-        Engine.GenerateBackup;
+        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
+        try
+          // 3. Ejecutar el backup
+          Engine.GenerateBackup;
 
-        inLibLog.Log.LogInfo('Copia de seguridad creada en ' + saveDialog.FileName);
-        ShowMessage('La copia se guardó exitosamente');
-      finally
-        Engine.Free;
+          inLibLog.Log.LogInfo('Copia de seguridad creada en ' + saveDialog.FileName);
+          ShowMessage('La copia se guardó exitosamente.');
+          
+          // Si llegamos hasta aquí sin errores, el backup fue un éxito
+          Result := True; 
+        finally
+          Engine.Free;
+        end;
+      except
+        on E: Exception do
+        begin
+          // Si algo falla al guardar (ej. disco lleno, sin permisos), lo capturamos
+          inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' + E.Message);
+          ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak + E.Message);
+          Result := False;
+        end;
       end;
     finally
       IncludeTables.Free;
@@ -582,38 +675,96 @@ procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 var
   SqlScript: TUniScript;
 begin
-  if (mnuEjecutarScript.Visible) then
+  if not mnuEjecutarScript.Visible then 
+    Exit;
+  openDialog.Title := 'Cargar script';
+  openDialog.FileTypes.Clear;
+  with openDialog.FileTypes.Add do
   begin
-    openDialog.Title := 'Cargar script';
-    openDialog.InitialDir := GetCurrentDir;
-    if openDialog.Execute then
-    begin
-      // Creamos el componente al vuelo en lugar de tenerlo en el formulario
-      SqlScript := TUniScript.Create(nil);
-      SqlScript.OnError := UniScript1Error;
+    DisplayName := 'Archivos SQL';
+    FileMask := '*.sql';
+  end;
+  with openDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Todos los archivos';
+    FileMask := '*.*';
+  end;
+  openDialog.DefaultExtension := 'sql';
+  openDialog.DefaultFolder := ExtractFilePath(Application.ExeName);
+  if openDialog.Execute then
+  begin
+    SqlScript := TUniScript.Create(nil);
+    SqlScript.OnError := UniScript1Error;
+    SqlScript.BeforeExecute := ScriptBeforeExecute;
+    SqlScript.AfterExecute := ScriptAfterExecute;
+    try
+      SqlScript.Connection := FDmConn.conUni;
+      if FdmConn.conuni.InTransaction then
+        FdmConn.conuni.Commit;
+      FdmConn.conUni.StartTransaction;
+      // NoPreprocess es crucial para que no falle con los DELIMITER de MySQL
+//      SqlScript.nopre := True;
+      // Cargamos el archivo en la propiedad SQL
+      SqlScript.SQL.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
+      if ContieneDDL(SqlScript.SQL.Text) then
+      begin
+        var Respuesta := MessageDlg(
+          'ATENCIÓN: El script contiene sentencias DDL (modifican la estructura de la base de datos).' + sLineBreak +
+          'En MySQL/MariaDB, estos cambios provocan un guardado automático y NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
+          '¿Deseas realizar una copia de seguridad antes de continuar?',
+            mtWarning, [mbYes, mbNo, mbCancel], 0);
+        case Respuesta of
+          mrYes:
+            begin
+              if not CopiaSeguridad then
+              begin
+                ShowMessage('Operación cancelada. El script no se ejecutará por seguridad.');
+                Exit; 
+              end;
+            end;
+          mrCancel:
+            Exit; // El usuario se arrepiente, abortamos todo
+          //mrNo: // El usuario es valiente y decide continuar sin copia
+        end;
+      end;
       try
-        SqlScript.Connection := FDmConn.conUni;
-        // NoPreprocess es crucial para que no falle con los DELIMITER de MySQL
-        SqlScript.NoPreconnect := True;
-        try
-          // Cargamos el archivo en la propiedad SQL
-          SqlScript.SQL.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
-          inLibLog.Log.LogInfo('Ejecutando script de restauración: ' + openDialog.FileName);
-          SqlScript.Execute;
-          ShowMessage('El script se ejecutó exitosamente');
-        except
+        FLogForm := TForm.Create(Self);
+        FLogForm.Caption := 'Progreso de Ejecución del Script';
+        FLogForm.Width := 750;
+        FLogForm.Height := 500;
+        FLogForm.Position := poMainFormCenter;
+        FLogForm.OnClose := LogFormClose; // Para que se destruya al cerrar
+
+        FLogMemo := TcxMemo.Create(FLogForm);
+        FLogMemo.Parent := FLogForm;
+        FLogMemo.Align := alClient;       
+        FLogMemo.Properties.ScrollBars := TScrollstyle.ssBoth;
+        FLogMemo.Properties.ReadOnly := True;
+        FLogMemo.style.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
+        FLogMemo.style.Font.Size := 10;
+        FLogMemo.Properties.WordWrap := False; // Para que no corte las sentencias largas
+
+        FLogMemo.Lines.Add('--- INICIO DE EJECUCIÓN DEL SCRIPT ---');
+        FLogMemo.Lines.Add('Archivo: ' + ExtractFileName(openDialog.FileName));
+        FLogMemo.Lines.Add('--------------------------------------------------');
+
+        // Mostramos la ventana de forma no modal para poder actualizarla
+        FLogForm.Show;
+        SqlScript.Execute;
+        FdmConn.conUni.Commit; 
+        ShowMessage('El script se ejecutó exitosamente');
+      except
           on E: Exception do
           begin
+            FdmConn.conUni.Rollback;
             inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
             ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
               ' Mensaje:' + E.Message);
             raise;
           end;
-        end;
-      finally
-        // Liberamos la memoria independientemente de si hubo error o no
-        SqlScript.Free;
       end;
+    finally
+      SqlScript.Free;
     end;
   end;
 end;
