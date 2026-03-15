@@ -215,9 +215,9 @@ begin
   FStopwatch.Stop;
   if Assigned(FLogMemo) then
   begin
-    // Usamos Format para que quede limpio: Filas afectadas y el tiempo en milisegundos
     FLogMemo.Lines.Add(Format('  [OK] Filas afectadas: %d | Tiempo: %d ms',
-                             [(Sender as TUniScript).RowsAffected, FStopwatch.ElapsedMilliseconds]));
+                             [(Sender as TUniScript).RowsAffected,
+                              FStopwatch.ElapsedMilliseconds]));
     FLogMemo.Lines.Add('--------------------------------------------------');
     FLogMemo.SelStart := Length(FLogMemo.Text);
     SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
@@ -235,34 +235,37 @@ begin
   Result := TRegEx.IsMatch(ASQL, Patron, [roIgnoreCase]);
 end;
 
-procedure TfrmMtoPrincipal.UniScript1Error(Sender: TObject; E: Exception;
-                                  SQL: string; var Action: TErrorAction);
+procedure TfrmMtoPrincipal.UniScript1Error(Sender: TObject;
+                                           E: Exception;
+                                           SQL: string;
+                                           var Action: TErrorAction);
 var
   Respuesta: Integer;
 begin
   if Assigned(FLogMemo) then
   begin
     FStopwatch.Stop;
-    FLogMemo.Lines.Add('  [ERROR] ' + E.Message + Format(' Tiempo: %d ms', 
+    FLogMemo.Lines.Add('  [ERROR] ' + E.Message + Format(' Tiempo: %d ms',
                                    [FStopwatch.ElapsedMilliseconds]));
-    FLogMemo.Lines.Add('--------------------------------------------------');    
+    FLogMemo.Lines.Add('--------------------------------------------------');
     FLogMemo.SelStart := Length(FLogMemo.Text);
-    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);    
+    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
     Application.ProcessMessages;
   end;
-
   // Aquí podemos registrar el error en un log o preguntar al usuario
+  var MsgCorta := E.Message;
+  if Length(MsgCorta) > 200 then
+    MsgCorta := Copy(MsgCorta, 1, 200) + '...';
   Respuesta := MessageDlg(
     'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
     SQL + sLineBreak + sLineBreak +
-    'Detalle del error: ' + E.Message + sLineBreak + sLineBreak +
+    'Detalle del error: ' + MsgCorta + sLineBreak + sLineBreak +
     '¿Deseas ignorar el error y continuar con el script?',
     mtError, [mbYes, mbNo], 0);
-
   if Respuesta = mrYes then
-    Action := eaContinue  // Ignora la sentencia fallida y continúa con la número 3
+    Action := eaContinue  // Ignora la sentencia fallida
   else
-    Action := eaFail;     // Detiene el script y pasa al bloque "except" principal
+    Action := eaFail;     // Detiene el script
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
