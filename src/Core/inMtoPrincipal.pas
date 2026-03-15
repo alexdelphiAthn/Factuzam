@@ -21,7 +21,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, System.Generics.Collections, Vcl.ActnList,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, SynEditHighlighter,
+  SynHighlighterSQL,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
@@ -150,17 +151,18 @@ type
     FStopwatch: TStopwatch;
     FLogForm: TForm;
     FLogMemo: TSynEdit;
+    FLogHigSQL: TSynSQLSyn;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
-    procedure ScriptAfterExecute(Sender: TObject; 
+    procedure ScriptAfterExecute(Sender: TObject;
                                  SQL: string);
-    procedure ScriptBeforeExecute(Sender: TObject; 
-                                  var SQL: string; 
-                                  var Omit: Boolean);    
+    procedure ScriptBeforeExecute(Sender: TObject;
+                                  var SQL: string;
+                                  var Omit: Boolean);
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -735,6 +737,11 @@ begin
         FLogForm.OnClose := LogFormClose; // Para que se destruya al cerrar
 
         FLogMemo := TSynEdit.Create(FLogForm);
+        FLogHigSQL := TSynSQLSyn.Create(FlogForm);
+        FlogMemo.Highlighter := FLogHigSQL;
+        FLogHigSQL.SQLDialect := sqlMySQL;
+        Floghigsql.Enabled := True;
+        FlogHigSQl.Options.AutoDetectEnabled := True;
         FLogMemo.Parent := FLogForm;
         FLogMemo.Align := alClient;
         FlogMemo.Gutter.AutoSize := True;
@@ -742,11 +749,11 @@ begin
         FLogMemo.ScrollBars := TScrollstyle.ssBoth;
         FLogMemo.ReadOnly := True;
         FLogMemo.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
-        FLogMemo.Font.Size := 10;
+        FLogMemo.Font.Size := 12;
         FLogMemo.WordWrap := False; // Para que no corte las sentencias largas
 
-        FLogMemo.Lines.Add('--- INICIO DE EJECUCIÓN DEL SCRIPT ---');
-        FLogMemo.Lines.Add('Archivo: ' + ExtractFileName(openDialog.FileName));
+        FLogMemo.Lines.Add('-- INICIO DE EJECUCIÓN DEL SCRIPT --');
+        FLogMemo.Lines.Add('-- Archivo: ' + ExtractFileName(openDialog.FileName));
         FLogMemo.Lines.Add('--------------------------------------------------');
 
         // Mostramos la ventana de forma no modal para poder actualizarla
