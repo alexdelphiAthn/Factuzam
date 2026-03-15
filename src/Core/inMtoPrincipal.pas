@@ -44,7 +44,7 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
-  Vcl.ComCtrls, JvExComCtrls, JvStatusBar,
+  Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
 
@@ -149,7 +149,7 @@ type
     FException: Boolean;
     FStopwatch: TStopwatch;
     FLogForm: TForm;
-    FLogMemo: TcxMemo; 
+    FLogMemo: TSynEdit;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
@@ -202,7 +202,7 @@ procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject; var SQL: string;
 begin
   if Assigned(FLogMemo) then
   begin
-    FLogMemo.Lines.Add('Ejecutando: ' + Trim(SQL));
+    FLogMemo.Lines.Add(' -- Ejecutando: ' + sLineBreak + Trim(SQL));
     Application.ProcessMessages;
   end;
   // Iniciamos el cronómetro justo antes de que la BD reciba la sentencia
@@ -215,8 +215,8 @@ begin
   FStopwatch.Stop;
   if Assigned(FLogMemo) then
   begin
-    FLogMemo.Lines.Add(Format('  [OK] Filas afectadas: %d | Tiempo: %d ms',
-                             [(Sender as TUniScript).RowsAffected,
+    FLogMemo.Lines.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
+                              [(Sender as TUniScript).RowsAffected,
                               FStopwatch.ElapsedMilliseconds]));
     FLogMemo.Lines.Add('--------------------------------------------------');
     FLogMemo.SelStart := Length(FLogMemo.Text);
@@ -718,7 +718,7 @@ begin
               if not CopiaSeguridad then
               begin
                 ShowMessage('Operación cancelada. El script no se ejecutará por seguridad.');
-                Exit; 
+                Exit;
               end;
             end;
           mrCancel:
@@ -734,14 +734,16 @@ begin
         FLogForm.Position := poMainFormCenter;
         FLogForm.OnClose := LogFormClose; // Para que se destruya al cerrar
 
-        FLogMemo := TcxMemo.Create(FLogForm);
+        FLogMemo := TSynEdit.Create(FLogForm);
         FLogMemo.Parent := FLogForm;
-        FLogMemo.Align := alClient;       
-        FLogMemo.Properties.ScrollBars := TScrollstyle.ssBoth;
-        FLogMemo.Properties.ReadOnly := True;
-        FLogMemo.style.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
-        FLogMemo.style.Font.Size := 10;
-        FLogMemo.Properties.WordWrap := False; // Para que no corte las sentencias largas
+        FLogMemo.Align := alClient;
+        FlogMemo.Gutter.AutoSize := True;
+        FlogMemo.Gutter.ShowLineNumbers := True;
+        FLogMemo.ScrollBars := TScrollstyle.ssBoth;
+        FLogMemo.ReadOnly := True;
+        FLogMemo.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
+        FLogMemo.Font.Size := 10;
+        FLogMemo.WordWrap := False; // Para que no corte las sentencias largas
 
         FLogMemo.Lines.Add('--- INICIO DE EJECUCIÓN DEL SCRIPT ---');
         FLogMemo.Lines.Add('Archivo: ' + ExtractFileName(openDialog.FileName));
