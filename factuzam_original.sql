@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 15/03/2026 18:52:45
+-- Backup generado: 16/03/2026 18:50:16
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 12, 3, 'S', 'S', '2023-10-28 13:39:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 16, 3, 'S', 'S', '2026-03-16 17:28:38', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1675,21 +1675,69 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADORPROCESO`, `NOMBRE_GENERADORPROCESO`, `PROCESO_GENERADORPROCESO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('001', 'INSERTAR CAMPOS GRID POR MTO', '  Select        USUARIO_GRUPO_PERFILES,
-                ''frmMtoFormasdePago'' AS KEY_PERFILES,
-                SUBKEY_PERFILES,
-                VALUE_PERFILES,
-                VALUE_TEXT_PERFILES,
-                TYPE_BLOB_PERFILES,
-                VALUE_BLOB_PERFILES,
-                INSTANTEMODIF,
-                INSTANTEALTA,
-                USUARIOMODIF,
-                USUARIOALTA
-	  from fza_usuarios_perfiles 
-	 where KEY_PERFILES = ''frmMtoEmpresas'' 
-	   and (SUBKEY_PERFILES like ''%tvFacturacion%'' or
-         SUBKEY_PERFILES like ''%tvLineasFacturacion%'') ', '2023-11-17 15:03:37', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('001', 'INSERTAR CAMPOS GRID POR MTO', 'CREATE OR REPLACE PROCEDURE PRC_BUSQUEDA_ARTICULOS(
+    IN p_tarifa      VARCHAR(50),
+    IN p_almacen     VARCHAR(50),
+    IN p_fecha       DATE,
+    IN p_token       VARCHAR(100),
+    IN p_solostock   TINYINT,
+    IN p_solotarifa  TINYINT
+)
+BEGIN
+    SET @busqueda = CONCAT(''%'', IFNULL(p_token, ''''), ''%'');
+
+    SELECT 
+        v.INPUT_BUSQUEDA,
+        v.TIPO_COINCIDENCIA,
+        v.CODIGO_PADRE,
+        v.CODIGO_SKU,
+        v.DESCRIPCION_ARTICULO,
+        v.TIPO_ARTICULO,
+        
+        -- ESTO ES LO QUE LEERÁ DELPHI:
+        -- Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU.
+        COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
+        
+        -- Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre)
+        COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
+        
+        -- Calculamos el stock disponible cruzando por el código definitivo
+        (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+         FROM fza_articulos_stockactual s 
+         WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+           AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
+
+    FROM vi_caja_busqueda_unificada v
+    
+    -- Buscamos el precio del SKU (si existe)
+    LEFT JOIN fza_articulos_tarifas t_sku 
+           ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
+          AND t_sku.CODIGO_TARIFA = p_tarifa
+          
+    -- Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio)
+    LEFT JOIN fza_articulos_tarifas t_padre 
+           ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
+          AND t_padre.CODIGO_TARIFA = p_tarifa 
+          AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '''')
+
+    WHERE 
+      -- Búsqueda por token (busca en el código exacto escaneado o en la descripción)
+      (p_token = '''' OR 
+       v.INPUT_BUSQUEDA LIKE @busqueda OR 
+       v.DESCRIPCION_ARTICULO LIKE @busqueda)
+      
+      -- Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre
+      AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
+      
+      -- Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0
+      AND (p_solostock = 0 OR 
+            (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+             FROM fza_articulos_stockactual s 
+             WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+               AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
+               
+    ORDER BY v.DESCRIPCION_ARTICULO ASC;
+END;', '2026-03-16 17:54:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('002', 'update cosas', 'UPDATE fza_ivas
    SET PORCENEXENTO_RE_IVA = 0', '2023-04-28 21:13:07', '2023-04-28 12:28:56', 'Administrador', 'Administrador'),
   ('003', 'ACTUALIZACION DE CAMPO FZA_IVAS', '           ALTER TABLE FZA_IVAS    MODIFY COLUMN   `GRUPO_ZONA_IVA` varchar(10) NOT NULL;', '2023-04-28 12:46:20', '2023-04-28 12:45:28', 'Administrador', 'Administrador'),
@@ -2117,8 +2165,58 @@ AND F.SERIE_FACTURA = L.SERIE_FACTURA_LINEA
 
 -- SET  CODIGO_TARIFA_FACTURA_LINEA = TARIFA_ARTICULO_CLIENTE_FACTURA
 
--- WHERE F.TARIFA_ARTICULO_CLIENTE_FACTURA <> L.CODIGO_TARIFA_FACTURA_LINEA', '2024-10-10 18:49:29', '2023-10-28 13:39:47', 'Administrador', 'Administrador');
--- 11 registros exportados
+-- WHERE F.TARIFA_ARTICULO_CLIENTE_FACTURA <> L.CODIGO_TARIFA_FACTURA_LINEA', '2024-10-10 18:49:29', '2023-10-28 13:39:47', 'Administrador', 'Administrador'),
+  ('012', 'Ejecutar PRC_CALCULAR_FACTURA_NETOS', 'CALL PRC_CALCULAR_FACTURA_NETOS(/* pSERIE_FACTURA varchar(12) */, /* pNRO_FACTURA varchar(12) */);', '2026-03-16 07:42:28', '2026-03-16 07:42:28', 'Administrador', 'Administrador'),
+  ('013', 'Ejecutar PRC_GET_CAJA_STOCK_PIVOTADO', 'CREATE OR REPLACE VIEW vi_caja_tarifa_sku_articulos AS
+SELECT 
+    skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD_TARIFA,
+    skus.CODIGO_ARTICULO_SKU AS CODIGO_ARTICULO,
+    tarifas.CODIGO_TARIFA AS CODIGO_TARIFA,
+    tarifas.NOMBRE_TARIFA AS NOMBRE_TARIFA,
+    -- Priorizamos el precio del SKU, si no existe usamos el del Padre
+    COALESCE(tarifa_sku.PRECIOFINAL_TARIFA, tarifa_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
+    COALESCE(tarifa_sku.PRECIOSALIDA_TARIFA, tarifa_padre.PRECIOSALIDA_TARIFA) AS PRECIOSALIDA_TARIFA,
+    -- Ya no necesitamos el ''SIN_PRECIO'' porque esta vista solo trae datos reales
+    CASE 
+        WHEN tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL THEN ''ESPECIFICO_SKU'' 
+        ELSE ''HEREDADO_PADRE'' 
+    END AS ORIGEN_PRECIO,
+    CONCAT(articulos.DESCRIPCION_ARTICULO, '' ('', skus.CODIGO_UNIDAD_SKU, '')'') AS DESCRIPCION_COMPLETA,
+    tarifas.ESIMP_INCL_TARIFA AS ESIMP_INCL_TARIFA,
+    articulos.TIPO_CANTIDAD_ARTICULO AS TIPO_CANTIDAD_ARTICULO,
+    articulos.CODIGO_FAMILIA_ARTICULO AS CODIGO_FAMILIA_ARTICULO 
+
+FROM fza_articulos_skus skus
+INNER JOIN fza_articulos articulos 
+    ON skus.CODIGO_ARTICULO_SKU = articulos.CODIGO_ARTICULO
+
+-- 1. LA CLAVE: Sacamos solo las combinaciones (Articulo + Tarifa) que existen en la BD
+INNER JOIN (
+    SELECT DISTINCT CODIGO_ARTICULO_TARIFA, CODIGO_TARIFA 
+    FROM fza_articulos_tarifas
+) t_existentes ON t_existentes.CODIGO_ARTICULO_TARIFA = articulos.CODIGO_ARTICULO
+
+-- 2. Traemos el nombre de la tarifa solo para las que pasaron el filtro anterior
+INNER JOIN fza_tarifas tarifas 
+    ON tarifas.CODIGO_TARIFA = t_existentes.CODIGO_TARIFA
+
+-- 3. Rescatamos el precio específico del SKU (si lo hay)
+LEFT JOIN fza_articulos_tarifas tarifa_sku 
+    ON skus.CODIGO_UNIDAD_SKU = tarifa_sku.CODIGO_UNIDAD_TARIFA 
+   AND tarifas.CODIGO_TARIFA = tarifa_sku.CODIGO_TARIFA
+
+-- 4. Rescatamos el precio del modelo Padre (si lo hay)
+LEFT JOIN fza_articulos_tarifas tarifa_padre 
+    ON articulos.CODIGO_ARTICULO = tarifa_padre.CODIGO_ARTICULO_TARIFA 
+   AND tarifas.CODIGO_TARIFA = tarifa_padre.CODIGO_TARIFA 
+   AND (tarifa_padre.CODIGO_UNIDAD_TARIFA IS NULL OR tarifa_padre.CODIGO_UNIDAD_TARIFA = '''')
+
+WHERE skus.ESACTIVO_SKU = ''S''
+  -- 5. Filtro de seguridad final: garantizar que al menos uno de los dos tiene precio
+  AND (tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL OR tarifa_padre.PRECIOFINAL_TARIFA IS NOT NULL)
+  
+ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-03-16 17:39:56', '2026-03-16 07:57:21', 'Administrador', 'Administrador');
+-- 13 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -2250,133 +2348,139 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (12, 'fza_articulos_stockactual', '1'),
   (13, 'fza_articulos_tarifas', '1'),
   (14, 'fza_articulos_vinculos', '1'),
-  (15, 'fza_atributos_conjuntos', '1'),
-  (16, 'fza_atributos_conjuntos_det', '1'),
-  (17, 'fza_atributos_sku', '1'),
-  (18, 'fza_atributos_valores', '1'),
-  (19, 'fza_atributos_valores_info', '1'),
-  (20, 'fza_caja_formas_pago', '1'),
-  (21, 'fza_caja_operaciones', '1'),
-  (22, 'fza_caja_pagos', '1'),
-  (23, 'fza_caja_vales', '1'),
-  (24, 'fza_clientes', '1'),
-  (25, 'fza_codigos_barras', '1'),
-  (26, 'fza_config_campos', '1'),
-  (27, 'fza_contadores', '1'),
-  (28, 'fza_depositos_cliente', '1'),
-  (29, 'fza_empresas', '1'),
-  (30, 'fza_empresas_retenciones', '1'),
-  (31, 'fza_empresas_series', '1'),
-  (32, 'fza_facturas', '1'),
-  (33, 'fza_facturas_consolidaciones', '1'),
-  (34, 'fza_facturas_lineas', '1'),
-  (35, 'fza_facturas_pagos', '1'),
-  (36, 'fza_formas_pago', '1'),
-  (37, 'fza_generadorprocesos', '1'),
-  (38, 'fza_ivas', '1'),
-  (39, 'fza_ivas_grupos', '1'),
-  (40, 'fza_ivas_tipos', '1'),
-  (41, 'fza_ivas_zonas', '1'),
-  (42, 'fza_metadatos', '1'),
-  (43, 'fza_movimientos_almacen', '1'),
-  (44, 'fza_paises', '1'),
-  (45, 'fza_pedidos', '1'),
-  (46, 'fza_pedidos_lineas', '1'),
-  (47, 'fza_pedidos_mensajes', '1'),
-  (48, 'fza_proveedores', '1'),
-  (49, 'fza_recibos', '1'),
-  (50, 'fza_tarifas', '1'),
-  (51, 'fza_tipos_documentos', '1'),
-  (52, 'fza_usuarios', '1'),
-  (53, 'fza_usuarios_grupos', '1'),
-  (54, 'fza_usuarios_perfiles', '1'),
-  (55, 'fza_valores_defecto', '1'),
-  (56, 'fza_variaciones', '1'),
-  (57, 'fza_variaciones_atributos', '1'),
-  (58, 'fza_verifactu_eventos', '1'),
-  (59, 'fza_winforms', '1'),
+  (15, 'fza_atributos_basicos', '1'),
+  (16, 'fza_atributos_conjuntos', '1'),
+  (17, 'fza_atributos_conjuntos_det', '1'),
+  (18, 'fza_atributos_sku', '1'),
+  (19, 'fza_atributos_valores', '1'),
+  (20, 'fza_atributos_valores_info', '1'),
+  (21, 'fza_caja_formas_pago', '1'),
+  (22, 'fza_caja_operaciones', '1'),
+  (23, 'fza_caja_pagos', '1'),
+  (24, 'fza_caja_vales', '1'),
+  (25, 'fza_clientes', '1'),
+  (26, 'fza_codigos_barras', '1'),
+  (27, 'fza_config_campos', '1'),
+  (28, 'fza_contadores', '1'),
+  (29, 'fza_depositos_cliente', '1'),
+  (30, 'fza_empresas', '1'),
+  (31, 'fza_empresas_retenciones', '1'),
+  (32, 'fza_empresas_series', '1'),
+  (33, 'fza_facturas', '1'),
+  (34, 'fza_facturas_consolidaciones', '1'),
+  (35, 'fza_facturas_lineas', '1'),
+  (36, 'fza_facturas_pagos', '1'),
+  (37, 'fza_formas_pago', '1'),
+  (38, 'fza_generadorprocesos', '1'),
+  (39, 'fza_ivas', '1'),
+  (40, 'fza_ivas_grupos', '1'),
+  (41, 'fza_ivas_tipos', '1'),
+  (42, 'fza_ivas_zonas', '1'),
+  (43, 'fza_metadatos', '1'),
+  (44, 'fza_movimientos_almacen', '1'),
+  (45, 'fza_paises', '1'),
+  (46, 'fza_pedidos', '1'),
+  (47, 'fza_pedidos_lineas', '1'),
+  (48, 'fza_pedidos_mensajes', '1'),
+  (49, 'fza_proveedores', '1'),
+  (50, 'fza_proveedores_familias', '1'),
+  (51, 'fza_proveedores_familias_conjuntos', '1'),
+  (52, 'fza_recibos', '1'),
+  (53, 'fza_tarifas', '1'),
+  (54, 'fza_tipos_documentos', '1'),
+  (55, 'fza_usuarios', '1'),
+  (56, 'fza_usuarios_grupos', '1'),
+  (57, 'fza_usuarios_perfiles', '1'),
+  (58, 'fza_valores_defecto', '1'),
+  (59, 'fza_variaciones', '1'),
+  (60, 'fza_variaciones_atributos', '1'),
+  (61, 'fza_verifactu_eventos', '1'),
+  (62, 'fza_winforms', '1'),
   (67, 'vi_articulos', '2'),
-  (68, 'vi_articulos_familias', '2'),
-  (69, 'vi_articulos_familias_list', '2'),
-  (70, 'vi_articulos_list', '2'),
-  (71, 'vi_articulos_proveedores', '2'),
-  (72, 'vi_articulos_tarifas', '2'),
-  (73, 'vi_art_busquedas', '2'),
-  (74, 'vi_atributos_nombres', '2'),
-  (75, 'vi_cajasdef', '2'),
-  (76, 'vi_caja_busqueda_unificada', '2'),
-  (77, 'vi_caja_tarifa_sku_articulos', '2'),
-  (78, 'vi_caja_totalventas', '2'),
-  (79, 'vi_caja_vales_ptes', '2'),
-  (80, 'vi_clientes', '2'),
-  (81, 'vi_cli_busquedas', '2'),
-  (82, 'vi_contadores', '2'),
-  (83, 'vi_empresas', '2'),
-  (84, 'vi_empresas_retenciones', '2'),
-  (85, 'vi_empresas_series', '2'),
-  (86, 'vi_emp_busquedas', '2'),
-  (87, 'vi_facturas', '2'),
-  (88, 'vi_facturas_lineas', '2'),
-  (89, 'vi_facturas_lineas_print', '2'),
-  (90, 'vi_facturas_print', '2'),
-  (91, 'vi_fac_busquedas', '2'),
-  (92, 'vi_fac_lin_busquedas', '2'),
-  (93, 'vi_formapago', '2'),
-  (94, 'vi_info_tpv_completa', '2'),
-  (95, 'vi_ivas', '2'),
-  (96, 'vi_ivas_empresa', '2'),
-  (97, 'vi_ivas_grupos', '2'),
-  (98, 'vi_ivas_zonas', '2'),
-  (99, 'vi_paises', '2'),
-  (100, 'vi_proveedores', '2'),
-  (101, 'vi_proveedores_articulos', '2'),
-  (102, 'vi_proveedores_busquedas', '2'),
-  (103, 'vi_recibos', '2'),
-  (104, 'vi_tarifas', '2'),
-  (105, 'vi_usuarios', '2'),
-  (106, 'vi_usuarios_grupos', '2'),
-  (107, 'vi_usuarios_perfiles', '2'),
-  (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
-  (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
-  (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
-  (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
-  (134, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
-  (135, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
-  (136, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
-  (137, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
-  (138, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
-  (139, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
-  (140, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
-  (141, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
-  (142, 'PRC_CREAR_FACTURA_ABONO', '3'),
-  (143, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
-  (144, 'PRC_CREAR_METADATOS', '3'),
-  (145, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
-  (146, 'PRC_CREAR_TRASPASO', '3'),
-  (147, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (148, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (149, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (150, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (151, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (152, 'PRC_GETPERFILFORMULARIO', '3'),
-  (153, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (154, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (155, 'PRC_GET_CREAR_VALOR', '3'),
-  (156, 'PRC_GET_DATA_ARTICULO', '3'),
-  (157, 'PRC_GET_DATA_CLIENTE', '3'),
-  (158, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (159, 'PRC_GET_NEXT_CONT', '3'),
-  (160, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (161, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (162, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (163, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (164, 'PRC_REALIZAR_TRASPASO', '3'),
-  (165, 'PRC_RECALCULAR_STOCK', '3'),
-  (166, 'PRC_SETPERFILFORMULARIO', '3'),
-  (167, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (168, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (68, 'vi_articulos_conjuntos_slots', '2'),
+  (69, 'vi_articulos_familias', '2'),
+  (70, 'vi_articulos_familias_list', '2'),
+  (71, 'vi_articulos_list', '2'),
+  (72, 'vi_articulos_propiedades_slots', '2'),
+  (73, 'vi_articulos_proveedores', '2'),
+  (74, 'vi_articulos_skus', '2'),
+  (75, 'vi_articulos_tarifas', '2'),
+  (76, 'vi_art_busquedas', '2'),
+  (77, 'vi_atributos_nombres', '2'),
+  (78, 'vi_cajasdef', '2'),
+  (79, 'vi_caja_busqueda_unificada', '2'),
+  (80, 'vi_caja_tarifa_sku_articulos', '2'),
+  (81, 'vi_caja_totalventas', '2'),
+  (82, 'vi_caja_vales_ptes', '2'),
+  (83, 'vi_clientes', '2'),
+  (84, 'vi_cli_busquedas', '2'),
+  (85, 'vi_contadores', '2'),
+  (86, 'vi_depositos_cliente', '2'),
+  (87, 'vi_empresas', '2'),
+  (88, 'vi_empresas_retenciones', '2'),
+  (89, 'vi_empresas_series', '2'),
+  (90, 'vi_emp_busquedas', '2'),
+  (91, 'vi_facturas', '2'),
+  (92, 'vi_facturas_lineas', '2'),
+  (93, 'vi_facturas_lineas_print', '2'),
+  (94, 'vi_facturas_print', '2'),
+  (95, 'vi_fac_busquedas', '2'),
+  (96, 'vi_fac_lin_busquedas', '2'),
+  (97, 'vi_formapago', '2'),
+  (98, 'vi_info_tpv_completa', '2'),
+  (99, 'vi_ivas', '2'),
+  (100, 'vi_ivas_empresa', '2'),
+  (101, 'vi_ivas_grupos', '2'),
+  (102, 'vi_ivas_zonas', '2'),
+  (103, 'vi_paises', '2'),
+  (104, 'vi_proveedores', '2'),
+  (105, 'vi_proveedores_articulos', '2'),
+  (106, 'vi_proveedores_busquedas', '2'),
+  (107, 'vi_recibos', '2'),
+  (108, 'vi_tarifas', '2'),
+  (109, 'vi_usuarios', '2'),
+  (110, 'vi_usuarios_grupos', '2'),
+  (111, 'vi_usuarios_perfiles', '2'),
+  (112, 'vi_variaciones', '2'),
+  (130, 'PRC_BUSQUEDA_ARTICULOS', '3'),
+  (131, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
+  (132, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
+  (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
+  (134, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
+  (135, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
+  (136, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
+  (137, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
+  (138, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
+  (139, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
+  (140, 'PRC_CREAR_FACTURA_ABONO', '3'),
+  (141, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
+  (142, 'PRC_CREAR_METADATOS', '3'),
+  (143, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
+  (144, 'PRC_CREAR_TRASPASO', '3'),
+  (145, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (146, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (147, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (148, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (149, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (150, 'PRC_GETPERFILFORMULARIO', '3'),
+  (151, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (152, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (153, 'PRC_GET_CREAR_VALOR', '3'),
+  (154, 'PRC_GET_DATA_ARTICULO', '3'),
+  (155, 'PRC_GET_DATA_CLIENTE', '3'),
+  (156, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (157, 'PRC_GET_NEXT_CONT', '3'),
+  (158, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (159, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (160, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (161, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (162, 'PRC_REALIZAR_TRASPASO', '3'),
+  (163, 'PRC_RECALCULAR_STOCK', '3'),
+  (164, 'PRC_SETPERFILFORMULARIO', '3'),
+  (165, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (166, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 139 registros exportados
+-- 145 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -3150,7 +3254,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-15 18:52:30', '2026-03-15 18:52:30', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-16 18:50:09', '2026-03-16 18:50:09', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -4653,7 +4757,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_busqueda_unificada` AS select `a`.`COD
 
 -- Vista: vi_caja_tarifa_sku_articulos
 DROP VIEW IF EXISTS `vi_caja_tarifa_sku_articulos`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_tarifa_sku_articulos` AS select `skus`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_TARIFA`,`skus`.`CODIGO_ARTICULO_SKU` AS `CODIGO_ARTICULO`,`tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,coalesce(`tarifa_sku`.`PRECIOFINAL_TARIFA`,`tarifa_padre`.`PRECIOFINAL_TARIFA`) AS `PRECIOFINAL_TARIFA`,coalesce(`tarifa_sku`.`PRECIOSALIDA_TARIFA`,`tarifa_padre`.`PRECIOSALIDA_TARIFA`) AS `PRECIOSALIDA_TARIFA`,case when `tarifa_sku`.`PRECIOFINAL_TARIFA` is not null then 'ESPECIFICO_SKU' when `tarifa_padre`.`PRECIOFINAL_TARIFA` is not null then 'HEREDADO_PADRE' else 'SIN_PRECIO' end AS `ORIGEN_PRECIO`,concat(`articulos`.`DESCRIPCION_ARTICULO`,' (',`skus`.`CODIGO_UNIDAD_SKU`,')') AS `DESCRIPCION_COMPLETA`,`tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO` from ((((`fza_articulos_skus` `skus` join `fza_articulos` `articulos` on(`skus`.`CODIGO_ARTICULO_SKU` = `articulos`.`CODIGO_ARTICULO`)) join `fza_tarifas` `tarifas`) left join `fza_articulos_tarifas` `tarifa_sku` on(`skus`.`CODIGO_UNIDAD_SKU` = `tarifa_sku`.`CODIGO_UNIDAD_TARIFA` and `tarifas`.`CODIGO_TARIFA` = `tarifa_sku`.`CODIGO_TARIFA`)) left join `fza_articulos_tarifas` `tarifa_padre` on(`articulos`.`CODIGO_ARTICULO` = `tarifa_padre`.`CODIGO_ARTICULO_TARIFA` and `tarifas`.`CODIGO_TARIFA` = `tarifa_padre`.`CODIGO_TARIFA` and (`tarifa_padre`.`CODIGO_UNIDAD_TARIFA` is null or `tarifa_padre`.`CODIGO_UNIDAD_TARIFA` = ''))) where `skus`.`ESACTIVO_SKU` = 'S' order by `skus`.`CODIGO_ARTICULO_SKU`,`skus`.`CODIGO_UNIDAD_SKU`,`tarifas`.`ORDEN_TARIFA`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_tarifa_sku_articulos` AS select `skus`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_TARIFA`,`skus`.`CODIGO_ARTICULO_SKU` AS `CODIGO_ARTICULO`,`tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,coalesce(`tarifa_sku`.`PRECIOFINAL_TARIFA`,`tarifa_padre`.`PRECIOFINAL_TARIFA`) AS `PRECIOFINAL_TARIFA`,coalesce(`tarifa_sku`.`PRECIOSALIDA_TARIFA`,`tarifa_padre`.`PRECIOSALIDA_TARIFA`) AS `PRECIOSALIDA_TARIFA`,case when `tarifa_sku`.`PRECIOFINAL_TARIFA` is not null then 'ESPECIFICO_SKU' else 'HEREDADO_PADRE' end AS `ORIGEN_PRECIO`,concat(`articulos`.`DESCRIPCION_ARTICULO`,' (',`skus`.`CODIGO_UNIDAD_SKU`,')') AS `DESCRIPCION_COMPLETA`,`tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO` from (((((`fza_articulos_skus` `skus` join `fza_articulos` `articulos` on(`skus`.`CODIGO_ARTICULO_SKU` = `articulos`.`CODIGO_ARTICULO`)) join (select distinct `fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA` from `fza_articulos_tarifas`) `t_existentes` on(`t_existentes`.`CODIGO_ARTICULO_TARIFA` = `articulos`.`CODIGO_ARTICULO`)) join `fza_tarifas` `tarifas` on(`tarifas`.`CODIGO_TARIFA` = `t_existentes`.`CODIGO_TARIFA`)) left join `fza_articulos_tarifas` `tarifa_sku` on(`skus`.`CODIGO_UNIDAD_SKU` = `tarifa_sku`.`CODIGO_UNIDAD_TARIFA` and `tarifas`.`CODIGO_TARIFA` = `tarifa_sku`.`CODIGO_TARIFA`)) left join `fza_articulos_tarifas` `tarifa_padre` on(`articulos`.`CODIGO_ARTICULO` = `tarifa_padre`.`CODIGO_ARTICULO_TARIFA` and `tarifas`.`CODIGO_TARIFA` = `tarifa_padre`.`CODIGO_TARIFA` and (`tarifa_padre`.`CODIGO_UNIDAD_TARIFA` is null or `tarifa_padre`.`CODIGO_UNIDAD_TARIFA` = ''))) where `skus`.`ESACTIVO_SKU` = 'S' and (`tarifa_sku`.`PRECIOFINAL_TARIFA` is not null or `tarifa_padre`.`PRECIOFINAL_TARIFA` is not null) order by `skus`.`CODIGO_ARTICULO_SKU`,`skus`.`CODIGO_UNIDAD_SKU`,`tarifas`.`ORDEN_TARIFA`;
 
 -- Vista: vi_caja_totalventas
 DROP VIEW IF EXISTS `vi_caja_totalventas`;
@@ -4787,6 +4891,74 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_variaciones` AS select `fza_variaciones`.`C
 -- ========================================
 -- PROCEDIMIENTOS ALMACENADOS
 -- ========================================
+
+-- Procedimiento: PRC_BUSQUEDA_ARTICULOS
+DROP PROCEDURE IF EXISTS `PRC_BUSQUEDA_ARTICULOS`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(
+    IN p_tarifa      VARCHAR(50),
+    IN p_almacen     VARCHAR(50),
+    IN p_fecha       DATE,
+    IN p_token       VARCHAR(100),
+    IN p_solostock   TINYINT,
+    IN p_solotarifa  TINYINT
+)
+BEGIN
+    SET @busqueda = CONCAT('%', IFNULL(p_token, ''), '%');
+
+    SELECT 
+        v.INPUT_BUSQUEDA,
+        v.TIPO_COINCIDENCIA,
+        v.CODIGO_PADRE,
+        v.CODIGO_SKU,
+        v.DESCRIPCION_ARTICULO,
+        v.TIPO_ARTICULO,
+        
+        /* ESTO ES LO QUE LEERÁ DELPHI: */
+        /* Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU. */
+        COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
+        
+        /* Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre) */
+        COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
+        
+        /* Calculamos el stock disponible cruzando por el código definitivo */
+        (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+         FROM fza_articulos_stockactual s 
+         WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+           AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
+
+    FROM vi_caja_busqueda_unificada v
+    
+    /* Buscamos el precio del SKU (si existe) */
+    LEFT JOIN fza_articulos_tarifas t_sku 
+           ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
+          AND t_sku.CODIGO_TARIFA = p_tarifa
+          
+    /* Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio) */
+    LEFT JOIN fza_articulos_tarifas t_padre 
+           ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
+          AND t_padre.CODIGO_TARIFA = p_tarifa 
+          AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '')
+
+    WHERE 
+      /* Búsqueda por token (busca en el código exacto escaneado o en la descripción) */
+      (p_token = '' OR 
+       v.INPUT_BUSQUEDA LIKE @busqueda OR 
+       v.DESCRIPCION_ARTICULO LIKE @busqueda)
+      
+      /* Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre */
+      AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
+      
+      /* Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0 */
+      AND (p_solostock = 0 OR 
+            (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+             FROM fza_articulos_stockactual s 
+             WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+               AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
+               
+    ORDER BY v.DESCRIPCION_ARTICULO ASC;
+END ;;
+DELIMITER ;
 
 -- Procedimiento: PRC_CALCULAR_FACTURA_NETOS
 DROP PROCEDURE IF EXISTS `PRC_CALCULAR_FACTURA_NETOS`;
@@ -7774,4 +7946,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 15/03/2026 18:52:46
+-- Backup completado: 16/03/2026 18:50:16
