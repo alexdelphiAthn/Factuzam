@@ -167,10 +167,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsSQL: TcxTabSheet
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnl6: TPanel
                 Left = 0
                 Top = 255
@@ -251,7 +247,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Highlighter = synsqlsyn2
                   OverwriteCaret = ctHorizontalLine
                   TabWidth = 2
-                  ExplicitWidth = 839
                   RemovedKeystrokes = <
                     item
                       Command = ecTab
@@ -280,15 +275,12 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Height = 253
                   Align = alRight
                   TabOrder = 1
-                  ExplicitLeft = 724
-                  ExplicitTop = 0
-                  ExplicitHeight = 340
                   object btnBonito: TButton
                     Left = 24
                     Top = 16
                     Width = 75
                     Height = 25
-                    Caption = 'Bonito'
+                    Caption = '&Bonito'
                     TabOrder = 0
                     OnClick = btnBonitoClick
                   end
@@ -299,10 +291,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&2_Metadatos'
               ImageIndex = 2
               OnEnter = tsMetadatosEnter
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxspltr2: TcxSplitter
                 Left = 377
                 Top = 0
@@ -335,10 +323,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object syndtEstructura: TSynEdit
                       Left = 0
                       Top = 0
@@ -418,10 +402,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsContenido: TcxTabSheet
                     Caption = '&Vista Contenido'
                     ImageIndex = 1
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
@@ -520,9 +500,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
-                          Properties.Increment = 0.10000000000000000
-                          Properties.LargeIncrement = 1.00000000000000000
-                          Properties.MaxValue = 100.00000000000000000
+                          Properties.Increment = 0.100000000000000000
+                          Properties.LargeIncrement = 1.000000000000000000
+                          Properties.MaxValue = 100.000000000000000000
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
@@ -630,10 +610,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsVistaDatos: TcxTabSheet
               Caption = '&3_VistaDatos'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
@@ -733,9 +709,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.Increment = 0.10000000000000000
-                    Properties.LargeIncrement = 1.00000000000000000
-                    Properties.MaxValue = 100.00000000000000000
+                    Properties.Increment = 0.100000000000000000
+                    Properties.LargeIncrement = 1.000000000000000000
+                    Properties.MaxValue = 100.000000000000000000
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'
@@ -908,7 +884,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1035,6 +1010,12 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Options.AutoDetectEnabled = False
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
+    CommentAttri.Background = clWhite
+    CommentAttri.Foreground = clGray
+    IdentifierAttri.Background = clWhite
+    IdentifierAttri.Foreground = clBlue
+    StringAttri.Background = clWhite
+    StringAttri.Foreground = clOlive
     SQLDialect = sqlMySQL
     Left = 176
     Top = 432
