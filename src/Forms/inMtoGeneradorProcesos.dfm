@@ -158,7 +158,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             Height = 374
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsSQL
+            Properties.ActivePage = tsMetadatos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 370
             ClientRectLeft = 4
@@ -1024,5 +1024,21 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     DataSet = dmGeneradorProcesos.unqryTablaG
     Left = 428
     Top = 287
+  end
+  object ActionList1: TActionList
+    Left = 488
+    Top = 272
+    object ActionSeleccionar: TAction
+      Caption = 'Seleccionar Todo'
+      ShortCut = 16449
+      OnExecute = ActionSeleccionarExecute
+      OnUpdate = ActionSeleccionarUpdate
+    end
+    object ActionEjecutar: TAction
+      Caption = 'ActionEjecutar'
+      ShortCut = 116
+      OnExecute = ActionEjecutarExecute
+      OnUpdate = ActionSeleccionarUpdate
+    end
   end
 end

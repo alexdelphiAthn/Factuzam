@@ -683,8 +683,12 @@ type
   { TSelectField }
 
   TSQLSelectElement = class(TSQLElement);
-  TSQLSelectAsterisk = class(TSQLSelectElement);
-
+//  TSQLSelectAsterisk = class(TSQLSelectElement);
+  { TSQLSelectAsterisk }
+  TSQLSelectAsterisk = class(TSQLSelectElement)
+  public
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
   { TSQLSelectField }
 
   TSQLSelectField = class(TSQLSelectElement)
@@ -5148,6 +5152,12 @@ begin
   end;
   Result := SQLKeyWord('REVOKE ', Options) + Result;
   Result := Result + GranteesAsSQL(Options, AIndent, True);
+end;
+
+function TSQLSelectAsterisk.GetAsSQL(Options: TSQLFormatOptions;
+  AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := '*';
 end;
 
 end.
