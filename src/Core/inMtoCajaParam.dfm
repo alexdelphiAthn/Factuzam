@@ -10,6 +10,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   Font.Height = -16
   Font.Name = 'Lucida Sans'
   Font.Style = []
+  OnClose = FormClose
   OnShow = FormShow
   TextHeight = 18
   object Panel2: TPanel
@@ -19,6 +20,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 596
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 745
+    ExplicitHeight = 588
     object JvInspector1: TJvInspector
       Left = 1
       Top = 1
@@ -47,6 +50,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 57
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 745
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8
@@ -80,19 +84,19 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Width = 292
     end
     object cmbGrupoUsuario: TcxComboBox
-      Left = 455
+      Left = 496
       Top = 15
       Properties.ReadOnly = False
       Properties.OnChange = cmbGrupoUsuarioPropertiesChange
       TabOrder = 1
-      Width = 169
+      Width = 176
     end
     object btnGuardar: TcxButton
       Left = 319
       Top = 15
-      Width = 114
+      Width = 154
       Height = 26
-      Caption = '&Guardar'
+      Caption = '&Guardar (F12)'
       TabOrder = 2
       OnClick = btnGuardarClick
     end
@@ -153,5 +157,19 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     SelectedFont.Style = []
     Left = 368
     Top = 328
+  end
+  object ActionList1: TActionList
+    Left = 608
+    Top = 104
+    object actGuardar: TAction
+      Caption = 'actGuardar'
+      ShortCut = 123
+      OnExecute = actGuardarExecute
+    end
+    object actSalir: TAction
+      Caption = 'actSalir'
+      ShortCut = 27
+      OnExecute = actSalirExecute
+    end
   end
 end

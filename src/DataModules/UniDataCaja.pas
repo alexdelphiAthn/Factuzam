@@ -362,92 +362,99 @@ uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas;
 
 function TdmCajaOpe.LeerCabecera: TDatosCabeceraFactura;
 begin
-  Result.Fecha              := cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
-  Result.CodigoCliente      := cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
-  Result.RazonSocialEmp     := cdsCabecera.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString;
-  Result.NifEmp             := cdsCabecera.FieldByName('NIF_EMPRESA_FACTURA').AsString;
-  Result.MovilEmp           := cdsCabecera.FieldByName('MOVIL_EMPRESA_FACTURA').AsString;
-  Result.EmailEmp           := cdsCabecera.FieldByName('EMAIL_EMPRESA_FACTURA').AsString;
-  Result.Direccion1Emp      := cdsCabecera.FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString;
-  Result.Direccion2Emp      := cdsCabecera.FieldByName('DIRECCION2_EMPRESA_FACTURA').AsString;
-  Result.PoblacionEmp       := cdsCabecera.FieldByName('POBLACION_EMPRESA_FACTURA').AsString;
-  Result.ProvinciaEmp       := cdsCabecera.FieldByName('PROVINCIA_EMPRESA_FACTURA').AsString;
-  Result.CPostalEmp         := cdsCabecera.FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString;
-  Result.CodigoPaisEmp      := cdsCabecera.FieldByName('CODIGO_PAIS_EMPRESA_FACTURA').AsString;
-  Result.NombrePaisEmp      := cdsCabecera.FieldByName('NOMBRE_PAIS_EMPRESA_FACTURA').AsString;
-  Result.EsRetencionesEmp   := cdsCabecera.FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString;
-  Result.GrupoZonaIvaEmp    := cdsCabecera.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
-  Result.RazonSocialCli     := cdsCabecera.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString;
-  Result.NifCli             := cdsCabecera.FieldByName('NIF_CLIENTE_FACTURA').AsString;
-  Result.MovilCli           := cdsCabecera.FieldByName('MOVIL_CLIENTE_FACTURA').AsString;
-  Result.EmailCli           := cdsCabecera.FieldByName('EMAIL_CLIENTE_FACTURA').AsString;
-  Result.Direccion1Cli      := cdsCabecera.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString;
-  Result.Direccion2Cli      := cdsCabecera.FieldByName('DIRECCION2_CLIENTE_FACTURA').AsString;
-  Result.PoblacionCli       := cdsCabecera.FieldByName('POBLACION_CLIENTE_FACTURA').AsString;
-  Result.ProvinciaCli       := cdsCabecera.FieldByName('PROVINCIA_CLIENTE_FACTURA').AsString;
-  Result.CPostalCli         := cdsCabecera.FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString;
-  Result.CodigoPaisCli      := cdsCabecera.FieldByName('CODIGO_PAIS_CLIENTE_FACTURA').AsString;
-  Result.NombrePaisCli      := cdsCabecera.FieldByName('NOMBRE_PAIS_CLIENTE_FACTURA').AsString;
-  Result.CodigoIva          := cdsCabecera.FieldByName('CODIGO_IVA_FACTURA').AsString;
-  Result.Tarifa             := cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-  Result.EsIvaRecargo       := cdsCabecera.FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString;
-  Result.EsIvaExento        := cdsCabecera.FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString;
-  Result.EsImpInclTarifa    := cdsCabecera.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString;
-  Result.PorcIvaN           := cdsCabecera.FieldByName('PORCEN_IVAN_FACTURA').AsCurrency;
-  Result.TotalIvaN          := cdsCabecera.FieldByName('TOTAL_IVAN_FACTURA').AsCurrency;
-  Result.PorcReN            := cdsCabecera.FieldByName('PORCEN_REN_FACTURA').AsCurrency;
-  Result.TotalReN           := cdsCabecera.FieldByName('TOTAL_REN_FACTURA').AsCurrency;
-  Result.BaseIN             := cdsCabecera.FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsCurrency;
-  Result.PorcIvaR           := cdsCabecera.FieldByName('PORCEN_IVAR_FACTURA').AsCurrency;
-  Result.TotalIvaR          := cdsCabecera.FieldByName('TOTAL_IVAR_FACTURA').AsCurrency;
-  Result.PorcReR            := cdsCabecera.FieldByName('PORCEN_RER_FACTURA').AsCurrency;
-  Result.TotalReR           := cdsCabecera.FieldByName('TOTAL_RER_FACTURA').AsCurrency;
-  Result.BaseIR             := cdsCabecera.FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsCurrency;
-  Result.PorcIvaS           := cdsCabecera.FieldByName('PORCEN_IVAS_FACTURA').AsCurrency;
-  Result.TotalIvaS          := cdsCabecera.FieldByName('TOTAL_IVAS_FACTURA').AsCurrency;
-  Result.PorcReS            := cdsCabecera.FieldByName('PORCEN_RES_FACTURA').AsCurrency;
-  Result.TotalReS           := cdsCabecera.FieldByName('TOTAL_RES_FACTURA').AsCurrency;
-  Result.BaseIS             := cdsCabecera.FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsCurrency;
-  Result.PorcIvaE           := cdsCabecera.FieldByName('PORCEN_IVAE_FACTURA').AsCurrency;
-  Result.TotalIvaE          := cdsCabecera.FieldByName('TOTAL_IVAE_FACTURA').AsCurrency;
-  Result.PorcReE            := cdsCabecera.FieldByName('PORCEN_REE_FACTURA').AsCurrency;
-  Result.TotalReE           := cdsCabecera.FieldByName('TOTAL_REE_FACTURA').AsCurrency;
-  Result.BaseIE             := cdsCabecera.FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsCurrency;
-  Result.TotalBases         := cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency;
-  Result.TotalImpuestos     := cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency;
-  Result.TotalRetencion     := cdsCabecera.FieldByName('TOTAL_RETENCION_FACTURA').AsCurrency;
-  Result.PorcRetencion      := cdsCabecera.FieldByName('PORCEN_RETENCION_FACTURA').AsCurrency;
-  Result.TotalLiquido       := cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency;
-  Result.FormaPago          := cdsCabecera.FieldByName('FORMA_PAGO_FACTURA').AsString;
-  Result.Comentarios        := cdsCabecera.FieldByName('COMENTARIOS_FACTURA').AsString;
+  with cdsCabecera do
+  begin
+    Result.Fecha           := FieldByName('FECHA_FACTURA').AsDateTime;
+    Result.CodigoCliente   := FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+    Result.RazonSocialEmp  := FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString;
+    Result.NifEmp          := FieldByName('NIF_EMPRESA_FACTURA').AsString;
+    Result.MovilEmp        := FieldByName('MOVIL_EMPRESA_FACTURA').AsString;
+    Result.EmailEmp        := FieldByName('EMAIL_EMPRESA_FACTURA').AsString;
+    Result.Direccion1Emp   := FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString;
+    Result.Direccion2Emp   := FieldByName('DIRECCION2_EMPRESA_FACTURA').AsString;
+    Result.PoblacionEmp    := FieldByName('POBLACION_EMPRESA_FACTURA').AsString;
+    Result.ProvinciaEmp    := FieldByName('PROVINCIA_EMPRESA_FACTURA').AsString;
+    Result.CPostalEmp      := FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString;
+    Result.CodigoPaisEmp   := FieldByName('CODIGO_PAIS_EMPRESA_FACTURA').AsString;
+    Result.NombrePaisEmp   := FieldByName('NOMBRE_PAIS_EMPRESA_FACTURA').AsString;
+    Result.EsRetencionesEmp:= FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString;
+    Result.GrupoZonaIvaEmp := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
+    Result.RazonSocialCli  := FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString;
+    Result.NifCli          := FieldByName('NIF_CLIENTE_FACTURA').AsString;
+    Result.MovilCli        := FieldByName('MOVIL_CLIENTE_FACTURA').AsString;
+    Result.EmailCli        := FieldByName('EMAIL_CLIENTE_FACTURA').AsString;
+    Result.Direccion1Cli   := FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString;
+    Result.Direccion2Cli   := FieldByName('DIRECCION2_CLIENTE_FACTURA').AsString;
+    Result.PoblacionCli    := FieldByName('POBLACION_CLIENTE_FACTURA').AsString;
+    Result.ProvinciaCli    := FieldByName('PROVINCIA_CLIENTE_FACTURA').AsString;
+    Result.CPostalCli      := FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString;
+    Result.CodigoPaisCli   := FieldByName('CODIGO_PAIS_CLIENTE_FACTURA').AsString;
+    Result.NombrePaisCli   := FieldByName('NOMBRE_PAIS_CLIENTE_FACTURA').AsString;
+    Result.CodigoIva       := FieldByName('CODIGO_IVA_FACTURA').AsString;
+    Result.Tarifa          := FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+    Result.EsIvaRecargo    := FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString;
+    Result.EsIvaExento     := FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString;
+    Result.EsImpInclTarifa := FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString;
+    Result.PorcIvaN        := FieldByName('PORCEN_IVAN_FACTURA').AsCurrency;
+    Result.TotalIvaN       := FieldByName('TOTAL_IVAN_FACTURA').AsCurrency;
+    Result.PorcReN         := FieldByName('PORCEN_REN_FACTURA').AsCurrency;
+    Result.TotalReN        := FieldByName('TOTAL_REN_FACTURA').AsCurrency;
+    Result.BaseIN          := FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsCurrency;
+    Result.PorcIvaR        := FieldByName('PORCEN_IVAR_FACTURA').AsCurrency;
+    Result.TotalIvaR       := FieldByName('TOTAL_IVAR_FACTURA').AsCurrency;
+    Result.PorcReR         := FieldByName('PORCEN_RER_FACTURA').AsCurrency;
+    Result.TotalReR        := FieldByName('TOTAL_RER_FACTURA').AsCurrency;
+    Result.BaseIR          := FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsCurrency;
+    Result.PorcIvaS        := FieldByName('PORCEN_IVAS_FACTURA').AsCurrency;
+    Result.TotalIvaS       := FieldByName('TOTAL_IVAS_FACTURA').AsCurrency;
+    Result.PorcReS         := FieldByName('PORCEN_RES_FACTURA').AsCurrency;
+    Result.TotalReS        := FieldByName('TOTAL_RES_FACTURA').AsCurrency;
+    Result.BaseIS          := FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsCurrency;
+    Result.PorcIvaE        := FieldByName('PORCEN_IVAE_FACTURA').AsCurrency;
+    Result.TotalIvaE       := FieldByName('TOTAL_IVAE_FACTURA').AsCurrency;
+    Result.PorcReE         := FieldByName('PORCEN_REE_FACTURA').AsCurrency;
+    Result.TotalReE        := FieldByName('TOTAL_REE_FACTURA').AsCurrency;
+    Result.BaseIE          := FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsCurrency;
+    Result.TotalBases      := FieldByName('TOTAL_BASES_FACTURA').AsCurrency;
+    Result.TotalImpuestos  := FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency;
+    Result.TotalRetencion  := FieldByName('TOTAL_RETENCION_FACTURA').AsCurrency;
+    Result.PorcRetencion   := FieldByName('PORCEN_RETENCION_FACTURA').AsCurrency;
+    Result.TotalLiquido    := FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency;
+    Result.FormaPago       := FieldByName('FORMA_PAGO_FACTURA').AsString;
+    Result.Comentarios     := FieldByName('COMENTARIOS_FACTURA').AsString;
+  end;
 end;
+
 function TdmCajaOpe.LeerLineaActual: TDatosLineaFactura;
 begin
-  Result.Linea               := cdsLineas.FieldByName('LINEA_FACTURA_LINEA').AsString;
-  Result.Articulo            := cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
-  Result.Sku                 := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-  Result.Descripcion         := cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
-  Result.DescripcionVariacion:= cdsLineas.FieldByName('DESCRIPCION_VARIACION_FACTURA_LINEA').AsString;
-  Result.Familia             := cdsLineas.FieldByName('CODIGO_FAMILIA_FACTURA_LINEA').AsString;
-  Result.NombreFamilia       := cdsLineas.FieldByName('NOMBRE_FAMILIA_FACTURA_LINEA').AsString;
-  Result.TipoArticulo        := cdsLineas.FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString;
-  Result.TipoCantidad        := cdsLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA').AsString;
-  Result.Cantidad            := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
-  Result.Tarifa              := cdsLineas.FieldByName('CODIGO_TARIFA_FACTURA_LINEA').AsString;
-  Result.EsImpIncl           := cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
-  Result.PrecioSalida        := cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-  Result.PorcDto             := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
-  Result.PrecioDto           := cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
-  Result.PrecioSIva          := cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
-  Result.PrecioCIva          := cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
-  Result.TipoIva             := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-  Result.PorcIva             := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
-  Result.TotalSIva           := cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-  Result.TotalCIva           := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-  Result.VieneDeDeposito     := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-  Result.AccionDeposito      := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
-  Result.PrecioOriginalDep   := cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
-  Result.AnticipoPrevio      := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
+  with cdsLineas do
+  begin
+    Result.Linea               := FieldByName('LINEA_FACTURA_LINEA').AsString;
+    Result.Articulo            := FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+    Result.Sku                 := FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+    Result.Descripcion         := FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+    Result.DescripcionVariacion:= FieldByName('DESCRIPCION_VARIACION_FACTURA_LINEA').AsString;
+    Result.Familia             := FieldByName('CODIGO_FAMILIA_FACTURA_LINEA').AsString;
+    Result.NombreFamilia       := FieldByName('NOMBRE_FAMILIA_FACTURA_LINEA').AsString;
+    Result.TipoArticulo        := FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString;
+    Result.TipoCantidad        := FieldByName('TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA').AsString;
+    Result.Cantidad            := FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+    Result.Tarifa              := FieldByName('CODIGO_TARIFA_FACTURA_LINEA').AsString;
+    Result.EsImpIncl           := FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
+    Result.PrecioSalida        := FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
+    Result.PorcDto             := FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
+    Result.PrecioDto           := FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency;
+    Result.PrecioSIva          := FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+    Result.PrecioCIva          := FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
+    Result.TipoIva             := FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+    Result.PorcIva             := FieldByName('PORCEN_IVA_FACTURA_LINEA').AsFloat;
+    Result.TotalSIva           := FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
+    Result.TotalCIva           := FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+    Result.VieneDeDeposito     := FieldByName('VIENE_DE_DEPOSITO').AsString;
+    Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
+    Result.PrecioOriginalDep   := FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+    Result.AnticipoPrevio      := FieldByName('ANTICIPO_PREVIO').AsCurrency;
+  end;
 end;
 
 // =============================================================================
@@ -1138,16 +1145,12 @@ begin
   NumeroGenerado := '0';
   ValeGenerado   := '';
   NumLineaPago   := 0;
-
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
-  UsuarioCaja     := inLibGlobalVar.oConn.Username;
-
+  UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
-
   if cdsLineas.IsEmpty then
     raise Exception.Create('No se puede grabar una operación sin líneas.');
-
   if DatosCobro.ImporteEntregado <
      cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency then
   begin
@@ -1165,7 +1168,6 @@ begin
     QryTrx.Connection := inLibGlobalVar.oConn;
     inLibGlobalVar.oConn.StartTransaction;
     try
-
       // =======================================================================
       // PASO 1: NÚMERO DE FACTURA
       // =======================================================================
@@ -1202,31 +1204,59 @@ begin
       // =======================================================================
       InsertarCabeceraFactura(
         QryTrx,
-        SerieGenerada, NumeroGenerado,
-        Cab.Fecha, 'SIMPLIFICADA', 'BORRADOR',
+        SerieGenerada,
+        NumeroGenerado,
+        Cab.Fecha,
+        'SIMPLIFICADA',
+        'BORRADOR',
         AEmpresa,
-        Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp, Cab.EmailEmp,
-        Cab.Direccion1Emp,  Cab.Direccion2Emp,
-        Cab.PoblacionEmp,   Cab.ProvinciaEmp,
-        Cab.CPostalEmp,     Cab.CodigoPaisEmp, Cab.NombrePaisEmp,
-        Cab.EsRetencionesEmp, Cab.GrupoZonaIvaEmp,
+        Cab.RazonSocialEmp,
+        Cab.NifEmp,
+        Cab.MovilEmp,
+        Cab.EmailEmp,
+        Cab.Direccion1Emp,
+        Cab.Direccion2Emp,
+        Cab.PoblacionEmp,
+        Cab.ProvinciaEmp,
+        Cab.CPostalEmp,
+        Cab.CodigoPaisEmp,
+        Cab.NombrePaisEmp,
+        Cab.EsRetencionesEmp,
+        Cab.GrupoZonaIvaEmp,
         Cab.CodigoCliente,
-        Cab.RazonSocialCli, Cab.NifCli, Cab.MovilCli, Cab.EmailCli,
-        Cab.Direccion1Cli,  Cab.Direccion2Cli,
-        Cab.PoblacionCli,   Cab.ProvinciaCli,
-        Cab.CPostalCli,     Cab.CodigoPaisCli, Cab.NombrePaisCli,
-        Cab.CodigoIva,      Cab.Tarifa,
-        Cab.EsIvaRecargo,   Cab.EsIvaExento, Cab.EsImpInclTarifa,
+        Cab.RazonSocialCli,
+        Cab.NifCli,
+        Cab.MovilCli,
+        Cab.EmailCli,
+        Cab.Direccion1Cli,
+        Cab.Direccion2Cli,
+        Cab.PoblacionCli,
+        Cab.ProvinciaCli,
+        Cab.CPostalCli,
+        Cab.CodigoPaisCli,
+        Cab.NombrePaisCli,
+        Cab.CodigoIva,
+        Cab.Tarifa,
+        Cab.EsIvaRecargo,
+        Cab.EsIvaExento,
+        Cab.EsImpInclTarifa,
         Cab.PorcIvaN,  Cab.TotalIvaN,  Cab.PorcReN,  Cab.TotalReN,  Cab.BaseIN,
         Cab.PorcIvaR,  Cab.TotalIvaR,  Cab.PorcReR,  Cab.TotalReR,  Cab.BaseIR,
         Cab.PorcIvaS,  Cab.TotalIvaS,  Cab.PorcReS,  Cab.TotalReS,  Cab.BaseIS,
         Cab.PorcIvaE,  Cab.TotalIvaE,  Cab.PorcReE,  Cab.TotalReE,  Cab.BaseIE,
-        Cab.TotalBases, Cab.TotalImpuestos,
-        Cab.TotalRetencion, Cab.PorcRetencion,
+        Cab.TotalBases,
+        Cab.TotalImpuestos,
+        Cab.TotalRetencion,
+        Cab.PorcRetencion,
         Cab.TotalLiquido,
-        Cab.FormaPago, Cab.Comentarios,
-        '', '',
-        AAlmacen, ACaja, UsuarioCaja, NumOperacionVE,
+        Cab.FormaPago,
+        Cab.Comentarios,
+        '',
+        '',
+        AAlmacen,
+        ACaja,
+        UsuarioCaja,
+        NumOperacionVE,
         UsuarioCaja);
 
       // =======================================================================

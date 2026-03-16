@@ -10,7 +10,8 @@ uses
   cxCheckBox, cxInplaceContainer, cxTextEdit, cxContainer,
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
-  cxButtons, JvComponentBase, JvInspector, JvExControls;
+  cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
+  Vcl.ActnList;
 
 type
   TfrmMtoCajaParam = class(TFrmBase)
@@ -23,7 +24,10 @@ type
     btnGuardar: TcxButton;
     btnChangeId: TcxButton;
     JvInspector1: TJvInspector;
-    JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;           //permite descuentos en ventas
+    JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;
+    ActionList1: TActionList;
+    actGuardar: TAction;
+    actSalir: TAction;           //permite descuentos en ventas
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
@@ -33,6 +37,9 @@ type
     procedure cmbGrupoUsuarioPropertiesChange(Sender: TObject);
     procedure btnGuardarClick(Sender: TObject);
     procedure btnChangeIdClick(Sender: TObject);
+    procedure actGuardarExecute(Sender: TObject);
+    procedure actSalirExecute(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     function QuitarTildes(const Texto: string): string;
@@ -215,6 +222,26 @@ begin
   FiltrarVerticalGrid(JvInspector1, edtBusqueda.Text);
 end;
 
+procedure TfrmMtoCajaParam.actGuardarExecute(Sender: TObject);
+begin
+  inherited;
+  btnGuardarClick(Sender);
+  ShowMessage('Parámetros guardados');
+  Close;
+end;
+
+procedure TfrmMtoCajaParam.actSalirExecute(Sender: TObject);
+begin
+  inherited;
+    if MessageDlg('¿Está seguro de que desea salir sin guardar?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0 ) = mrYes then
+  begin
+    Close;
+  end;
+end;
+
 procedure TfrmMtoCajaParam.btnChangeIdClick(Sender: TObject);
 var
   qry: TUniQuery;
@@ -382,7 +409,7 @@ end;
 procedure TfrmMtoCajaParam.CargarValoresPorDefecto;
 begin
   // Booleans
-  FvgerChkExistOnly := False;
+  FvgerChkExistOnly := True;
   FvgerChkStockOnly := False;
   FvgerShowCajaSelection := False;
   FvgerFillEmpleadoDefecto := False;
@@ -393,15 +420,15 @@ begin
   FvgerBusqArtStockOnly := False;
   FvgerBusqArtTarifaOnly := False;
   FvgerMoverLineaIdentif := False;
-  FvgerShowEmpleadoLinea := False;
+  FvgerShowEmpleadoLinea := True;
   FvgerArqueoTarjetas := False;
-  FvgerVentasCredito := False;
-  FvgerDescuentos := False;
+  FvgerVentasCredito := True;
+  FvgerDescuentos := True;
   // Integers
-  FvgerMaxOpPending := 0;
-  FvgerDiasCaducidadVale := 0;
+  FvgerMaxOpPending := 5;
+  FvgerDiasCaducidadVale := 365;
   // Strings
-  FvgerDefTarifa := '';
+  FvgerDefTarifa := 'PVP';
   FvgerDefPrinter := '';
   FvgerTipoImpresion := 'ESC POS'; // Valor por defecto del combo
   FvgerFormatoImpPredet := '';
@@ -442,6 +469,12 @@ begin
   finally
     Grid.EndUpdate;
   end;
+end;
+
+procedure TfrmMtoCajaParam.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  inherited;
+  Action := caFree;
 end;
 
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
