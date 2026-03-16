@@ -29,7 +29,7 @@ uses
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
   UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, JvExComCtrls, JvDBTreeView ;
+  dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList ;
 
 const
   ecSelColumnMode = 2577;
@@ -134,6 +134,9 @@ type
     TreeView1: TTreeView;
     Panel2: TPanel;
     btnBonito: TButton;
+    ActionList1: TActionList;
+    ActionSeleccionar: TAction;
+    ActionEjecutar: TAction;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -156,6 +159,9 @@ type
     procedure tsMetadatosEnter(Sender: TObject);
     procedure TreeView1Click(Sender: TObject);
     procedure btnBonitoClick(Sender: TObject);
+    procedure ActionSeleccionarExecute(Sender: TObject);
+    procedure ActionSeleccionarUpdate(Sender: TObject);
+    procedure ActionEjecutarExecute(Sender: TObject);
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
@@ -180,6 +186,25 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoGeneradorProcesos.ActionEjecutarExecute(Sender: TObject);
+begin
+  inherited;
+  btnEjecutarClick(Sender);
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionSeleccionarExecute(Sender: TObject);
+begin
+  inherited;
+  if screen.ActiveControl = dbsyndtTexto then
+    dbsyndtTexto.SelectAll;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionSeleccionarUpdate(Sender: TObject);
+begin
+  inherited;
+  (Sender as TAction).Enabled := (Screen.ActiveControl = dbsyndtTexto);
+end;
 
 procedure TfrmMtoGeneradorProcesos.btnBonitoClick(Sender: TObject);
 var
@@ -251,9 +276,12 @@ begin
           cxmResul.Lines.Add('Procedimiento/Consulta ejecutada. ' +
                              IntToStr(unqryVista.RecordCount) +
                              ' registros en ' + sformatteddt + ' seg:ms');
-          tvVista.DataController.CreateAllItems();
-          tvVista.ApplyBestFit();
-          pcPestana.ActivePage := tsVistaDatos;
+          if (tvVista.DataController.DataSource.dataset.RecordCount > 0) then
+          begin
+            pcPestana.ActivePage := tsVistaDatos;
+            tvVista.DataController.CreateAllItems();
+            tvVista.ApplyBestFit();
+          end;
         end
         else
         begin
