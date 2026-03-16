@@ -139,7 +139,10 @@ type
       AItem: TcxCustomGridTableItem; var AAllow: Boolean);
     procedure tvUdsPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+    procedure cxGrid1DBTableView1MouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
+    procedure AsegurarLineaNueva;
     procedure ActualizarFoco;
     function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
@@ -403,6 +406,7 @@ begin
                DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera,
                ActualizarLabelTotal);
+    AsegurarLineaNueva;
   end;
 end;
 
@@ -537,13 +541,13 @@ begin
     unqryCon.ParamByName('p_fecha').AsDate      := FFecha;
     unqryCon.ParamByName('p_token').AsString    := '';   // sin filtro inicial
     unqryCon.ParamByName('p_solostock').AsInteger :=
-      Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  True));
+      Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  False));
     unqryCon.ParamByName('p_solotarifa').AsInteger :=
-      Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', True));
+      Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
                                         unqryCon,
                                         'frmMtoArtFacSearch') then
-      Result := unqryCon.FieldByName('CODIGO_ARTICULO').AsString
+      Result := unqryCon.FieldByName('CODIGO_FINAL_CAJA').AsString
     else
       Result := '';
   finally
@@ -1377,6 +1381,14 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.cxGrid1DBTableView1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  // Solo actuamos si el clic es con el botón izquierdo
+  if Button = mbLeft then
+    AsegurarLineaNueva;
+end;
+
 procedure TfrmMtoOpeCaja.cxGrid1Enter(Sender: TObject);
 begin
   if not DatosCaja.cdsLineas.Active then Exit;
@@ -1450,13 +1462,27 @@ begin
       end;
       if RellenarDatosArticuloEnDataset(CodigoBuscado) then
       begin
-        var CodArticulo := DatosCaja.cdsLineas.FieldByName(
-                                'CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+        var CodArticulo := DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+        var SkuDetectado := DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString; // <-- Rescatamos el SKU
+
         ActualizarColumnasDinamicas(CodArticulo);
-        // CAMBIO: usar FNumAtributosActual
-        var NumAtributos := FNumAtributosActual;
+
+        var NumAtributos := FNumAtributosActual; // O puedes leerlo del Dataset como en el OnValidate
+
+        // ¡LA PIEZA QUE FALTABA! Rellenar visualmente los combos si es un SKU
+        if (Trim(SkuDetectado) <> '') and (NumAtributos > 0) then
+        begin
+           RellenarAtributosDesdeSku(SkuDetectado);
+        end;
+
         cxGrid1.SetFocus;
-        if NumAtributos > 0 then
+        // Comprobamos si es un SKU completo (el código de unidad es distinto al padre)
+        var EsSkuCompleto := (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo);
+        // Supongamos que lees tu parámetro global así (ajusta el nombre a tu variable real)
+        var AutoPasarLinea := oCajaParams.GetBool('vgerMoverLineaIdentif', False);
+
+        // Si necesita atributos Y NO ES un SKU ya cerrado, nos paramos en la columna de atributos
+        if (NumAtributos > 0) and not EsSkuCompleto then
         begin
           var PrimeraCol := ObtenerColumnaPorTag(1);
           if PrimeraCol <> nil then
@@ -1468,9 +1494,25 @@ begin
         end
         else
         begin
-          DatosCaja.cdsLineas.Append;
-          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          // El artículo ya está completo (sea simple o un SKU cerrado)
+          if AutoPasarLinea then
+          begin
+            // Forzamos el guardado de la línea actual (si está en edición) para evitar que se pierda
+            if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+              DatosCaja.cdsLineas.Post;
+
+            // Creamos línea nueva y ponemos el foco en el buscador de artículos
+            DatosCaja.cdsLineas.Append;
+            cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+            cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          end
+          else
+          begin
+            // Si el parámetro está desactivado, el cajero decide. Lo normal es dejarle en Cantidad.
+            // (Cambia 'tvCantidad' por el nombre real de tu columna de cantidad)
+            // cxGrid1DBTableView1.Controller.FocusedColumn := tvCantidad;
+            // cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          end;
         end;
       end;
     end;
@@ -1503,6 +1545,7 @@ begin
   else
     if DatosCaja.cdsLineas.State in [dsBrowse] then
       DatosCaja.cdsLineas.Delete;
+  AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
@@ -1684,6 +1727,34 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.AsegurarLineaNueva;
+begin
+  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  begin
+    // 1. Si no hay líneas en absoluto, insertamos una.
+    if DatosCaja.cdsLineas.IsEmpty then
+    begin
+      DatosCaja.cdsLineas.Append;
+    end
+    // 2. Si ya hay líneas, verificamos que no estemos YA insertando una nueva
+    else if not (DatosCaja.cdsLineas.State = dsInsert) then
+    begin
+      // Solo añadimos si la línea actual tiene un código de artículo.
+      // Así evitamos crear líneas en blanco repetidas si hacen varios clics.
+      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString) <> '' then
+      begin
+        DatosCaja.cdsLineas.Append;
+      end;
+    end;
+
+    // 3. Forzamos el foco visual a la celda del Artículo, lista para escanear
+    if cxGrid1.CanFocus then
+      cxGrid1.SetFocus;
+    cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+//    cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoExit(Sender: TObject);
 begin
   if Sender is TcxCustomEdit then
@@ -1698,13 +1769,16 @@ begin
   unqryClientes := TUniQuery.Create(nil);
   try
     unqryClientes.Connection := oConn;
-    unqryClientes.SQL.Text := 'SELECT CODIGO_CLIENTE as `Código`, ' +
-                              '       RAZONSOCIAL_CLIENTE as `Razón Social`, ' +
-                              '       NIF_CLIENTE as `NIF Cliente`, ' +
-                              '       MOVIL_CLIENTE as `Teléfono Cliente`' +
-                              '  FROM fza_clientes ' +
-                              ' WHERE ACTIVO_CLIENTE = ' + QuotedStr('S') +
-                              ' ORDER BY RAZONSOCIAL_CLIENTE';
+unqryClientes.SQL.Text := 'SELECT CODIGO_CLIENTE as `Código`, ' +
+                          '   RAZONSOCIAL_CLIENTE as `Razón Social`, ' +
+                          '   NIF_CLIENTE as `NIF Cliente`, ' +
+                          '   MOVIL_CLIENTE as `Teléfono Cliente`, ' +
+                          '   ESPERMITE_DEUDA_CLIENTE as `Cuenta Crédito`, ' +
+                       '   TOTAL_LIMITE_CREDITO_CLIENTE as `Límite Crédito`, ' +
+                          '   TOTAL_DEUDA_CLIENTE as `Deuda Usada` ' +
+                          '  FROM fza_clientes ' +
+                          ' WHERE ACTIVO_CLIENTE = ' + QuotedStr('S') +
+                          ' ORDER BY RAZONSOCIAL_CLIENTE';
     formulario := TfrmMtoSearch.Create(nil);
     try
       formulario.Name := 'frmMtoCliSearch';
