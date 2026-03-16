@@ -188,46 +188,9 @@ begin
   inherited;
   var sSQL := dbsyndtTexto.Lines.Text;
   sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
-      // 2. Quitar prefijos tabla. en los campos (fza_articulos.CAMPO -> CAMPO)
-  //    Usamos un bucle simple con expresión regular o StringReplace múltiple
-  //    Alternativa sin regex: quitar todo lo que sea "palabra." antes de un campo
-  var i := 1;
-  var sOut := '';
-  var sLen := Length(sSQL);
-  while i <= sLen do
-  begin
-    // Detectar patrón: identificador seguido de punto
-    if (sSQL[i] in ['A'..'Z','a'..'z','_','0'..'9']) then
-    begin
-      // Leer el identificador completo
-      var j := i;
-      while (j <= sLen) and (sSQL[j] in ['A'..'Z','a'..'z','_','0'..'9']) do
-        Inc(j);
-      // ¿Le sigue un punto?
-      if (j <= sLen) and (sSQL[j] = '.') then
-      begin
-        // Saltar el identificador y el punto (era un prefijo tabla.)
-        i := j + 1;
-      end
-      else
-      begin
-        // No le sigue punto, copiar el identificador
-        sOut := sOut + Copy(sSQL, i, j - i);
-        i := j;
-      end;
-    end
-    else
-    begin
-      sOut := sOut + sSQL[i];
-      Inc(i);
-    end;
-  end;
-  sSQL := sOut;
-
   // 3. Normalizar espacios múltiples
   while Pos('  ', sSQL) > 0 do
     sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
-  // --- NUEVO CÓDIGO CON LA LIBRERÍA NATIVA ---
   Formatter := GetSQLFormatter;
   dbsyndtTexto.Lines.Text := Formatter.Format(sSQL);
 end;
@@ -252,59 +215,86 @@ end;
 
 procedure TfrmMtoGeneradorProcesos.btnEjecutarClick(Sender: TObject);
 var
-  sTartTime: TDateTime;
+  startTime: TDateTime;
   iRowsAffected: Integer;
-  sFormatteddt,
-  sSQL:String;
+  sFormatteddt, sSQL: String;
+  bIsSelect: Boolean;
 begin
   inherited;
-  if ((dsTablaG.DataSet.State = dsInsert) or
-      (dsTablaG.DataSet.State = dsEdit)
-     ) then
+  if ((dsTablaG.DataSet.State = dsInsert) or (dsTablaG.DataSet.State = dsEdit)) then
     dsTablaG.DataSet.Post;
+
   with dmmGeneradorProcesos do
   begin
-  sSQL := unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString;
-  if Pos('SELECT', UpperCase(Trim(sSQL))) = 1 then
-  begin
-    unqryVista.Close;
-    tvVista.ClearItems;
-    unqryVista.SQL.Text := sSQL;
-    try
-      startTime := Now;
-      unqryVista.Open;
-      DateTimeToString(sformatteddt,'ss:zzz', (Now - startTime));
-      cxmResul.Lines.Add('Se recuperaron ' +
-                          IntToStr(unqryVista.RecordCount) +
-                         ' registros en ' + sformatteddt + ' seg:ms');
-      tvVista.DataController.CreateAllItems();
-      tvVista.ApplyBestFit();
-      pcPestana.ActivePage := tsVistaDatos;
-    except on E: Exception do
-      begin
-        cxmResul.Lines.Add(E.Message);
-        ShowMessage('Error en consulta SQL: ' + E.Message);
+    sSQL := unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+    sSQL := Trim(sSQL);
+
+    // Determinamos si es una consulta que espera filas
+    // Ahora incluimos 'CALL' como potencial generador de filas
+    bIsSelect := (Pos('SELECT', UpperCase(sSQL)) = 1) or
+                 (Pos('CALL', UpperCase(sSQL)) = 1) or
+                 (Pos('SHOW', UpperCase(sSQL)) = 1);
+
+    if bIsSelect then
+    begin
+      unqryVista.Close;
+      tvVista.ClearItems;
+      unqryVista.SQL.Text := sSQL;
+      try
+        startTime := Now;
+        unqryVista.Open; // Intentamos abrir como Dataset
+
+        // Verificamos si realmente devolvió columnas (útil para CALLs que no devuelven nada)
+        if unqryVista.FieldCount > 0 then
+        begin
+          DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
+          cxmResul.Lines.Add('Procedimiento/Consulta ejecutada. ' +
+                             IntToStr(unqryVista.RecordCount) +
+                             ' registros en ' + sformatteddt + ' seg:ms');
+          tvVista.DataController.CreateAllItems();
+          tvVista.ApplyBestFit();
+          pcPestana.ActivePage := tsVistaDatos;
+        end
+        else
+        begin
+          // Si es un CALL que no devuelve filas, se comporta como comando
+          iRowsAffected := unqryVista.RowsAffected;
+          cxmResul.Lines.Add('Comando ejecutado con éxito. Filas afectadas: ' + IntToStr(iRowsAffected));
+        end;
+      except on E: Exception do
+        begin
+          // Si falla el Open por no ser un SELECT/Resultset, reintentamos con ExecSQL
+          try
+            unqryVista.Execute;
+            cxmResul.Lines.Add('Comando ejecutado correctamente (sin filas de retorno).');
+          except on E2: Exception do
+            begin
+              cxmResul.Lines.Add('Error: ' + E2.Message);
+              ShowMessage('Error en ejecución: ' + E2.Message);
+            end;
+          end;
+        end;
       end;
     end
-  end
-  else
-  begin
-    unqryCommand.SQL.Text := sSQL;
-    try
-      sTartTime := Now;
-      unqryCommand.ExecSQL;
-      iRowsAffected := unqryCommand.RowsAffected;
-      DateTimeToString(sformatteddt,'ss:zzz', (Now - startTime));
-      cxmResul.Lines.Add('Se actualizaron ' + IntToStr(iRowsAffected) +
-                         ' registros en ' + sformatteddt + ' seg:ms');
+    else
+    begin
+      // Comandos directos (INSERT, UPDATE, DELETE)
+      unqryCommand.SQL.Text := sSQL;
+      try
+        startTime := Now;
+        unqryCommand.ExecSQL;
+        iRowsAffected := unqryCommand.RowsAffected;
+        DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
+        cxmResul.Lines.Add('Comando ejecutado. ' + IntToStr(iRowsAffected) +
+                           ' registros afectados en ' + sformatteddt + ' seg:ms');
       except on E: Exception do
         begin
           cxmResul.Lines.Add(E.Message);
-          ShowMessage('Error en consulta SQL: ' + E.Message);
+          ShowMessage('Error en comando SQL: ' + E.Message);
         end;
-      end
-  end; // end if
-  end; // end with
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnExportarExcelClick(Sender: TObject);
@@ -711,6 +701,9 @@ procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
 var
   nodo: TTreeNode;
   iCodigo: Integer;
+  sProcName: string;
+  sCallText: string;
+  qryParams: TUniQuery;
 begin
   nodo := TreeView1.Selected;
   if nodo = nil then Exit;
@@ -720,6 +713,7 @@ begin
 
   with dmmGeneradorProcesos do
   begin
+    // Si es una Tabla (1) o Vista (2), mostramos los datos
     if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '1') or
         (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '2')) then
     begin
@@ -731,6 +725,58 @@ begin
       unqryContenido.Open;
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
+    end
+    // Si es un Procedimiento Almacenado (3), generamos el CALL
+    else if (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3') then
+    begin
+      sProcName := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+      sCallText := 'CALL ' + sProcName + '(';
+
+      // Creamos un TUniQuery temporal para leer los parámetros del procedimiento
+      qryParams := TUniQuery.Create(nil);
+      try
+        // Usamos la misma conexión de tus metadatos
+        qryParams.Connection := unqryMetadatos.Connection;
+
+        // Consultamos la tabla del sistema para obtener los parámetros
+        qryParams.SQL.Text :=
+          'SELECT PARAMETER_NAME, DTD_IDENTIFIER ' +
+          'FROM information_schema.parameters ' +
+          'WHERE SPECIFIC_NAME = :ProcName AND ROUTINE_TYPE = ''PROCEDURE'' ' +
+          'ORDER BY ORDINAL_POSITION';
+        qryParams.ParamByName('ProcName').AsString := sProcName;
+        qryParams.Open;
+
+        // Construimos el esquema de parámetros comentados
+        while not qryParams.Eof do
+        begin
+          sCallText := sCallText + '/* ' +
+                       qryParams.FieldByName('PARAMETER_NAME').AsString + ' ' +
+                       qryParams.FieldByName('DTD_IDENTIFIER').AsString + ' */';
+
+          qryParams.Next;
+          if not qryParams.Eof then
+            sCallText := sCallText + ', ';
+        end;
+        sCallText := sCallText + ');';
+      finally
+        qryParams.Free;
+      end;
+
+      // Ponemos el dataset principal en modo Inserción
+      if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+        dsTablaG.DataSet.Append; // Usar Append o Insert según prefieras
+
+      // Asignamos el nombre al proceso (opcional)
+      unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Ejecutar ' + sProcName;
+
+      // Asignamos el comando SQL generado al campo memo del editor
+      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
+
+      // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor SynEdit
+      pcPestana.ActivePage := tsSQL;
+      if dbsyndtTexto.CanFocus then
+        dbsyndtTexto.SetFocus;
     end;
   end;
 end;
