@@ -375,6 +375,7 @@ begin
   TreeView1.Items.BeginUpdate;
   try
     TreeView1.Items.Clear;
+    dmmGeneradorProcesos.unqryMetadatos.DisableControls;
     // Pasar 1: nodos raíz (PARENT = '-1')
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
@@ -416,6 +417,7 @@ begin
     end;
 //    TreeView1.FullExpand;
   finally
+    dmmGeneradorProcesos.unqryMetadatos.EnableControls;
     TreeView1.Items.EndUpdate;
   end;
 end;
