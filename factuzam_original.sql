@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 17/03/2026 23:12:12
+-- Backup generado: 17/03/2026 23:17:47
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -3318,7 +3318,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-17 23:11:52', '2026-03-17 23:11:52', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-17 23:17:23', '2026-03-17 23:17:23', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -6728,10 +6728,10 @@ BEGIN
 
     -- Manejo de errores para asegurar la consistencia
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
+    kk: BEGIN
         ROLLBACK;
         RESIGNAL;
-    END;
+    END kk;
 
     START TRANSACTION;
 
@@ -6787,10 +6787,10 @@ BEGIN
     DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
+    kk: BEGIN
         ROLLBACK;
         RESIGNAL;
-    END;
+    END kk;
 
     START TRANSACTION;
 
@@ -6855,10 +6855,10 @@ BEGIN
 
     -- Activar manejo de errores para hacer Rollback si algo falla
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
+    kk: BEGIN
         ROLLBACK;
         RESIGNAL;
-    END;
+    END kk;
 
     START TRANSACTION;
 
@@ -8213,4 +8213,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 17/03/2026 23:12:12
+-- Backup completado: 17/03/2026 23:17:47
