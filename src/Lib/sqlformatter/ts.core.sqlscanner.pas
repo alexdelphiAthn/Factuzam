@@ -811,7 +811,7 @@ function TSQLScanner.DoIdentifier : TSQLToken;
     TokenStart := TokenStr;
     repeat
       Inc(TokenStr);
-    until not((TokenStr[0] in ['A' .. 'Z', 'a' .. 'z', '0' .. '9', '_', '$'])
+    until not((TokenStr[0] in ['A' .. 'Z', 'a' .. 'z', '0' .. '9', '_', '$', '@'])
               or (Ord(TokenStr[0]) > 127));
 
     Len := (TokenStr - TokenStart);
@@ -1002,8 +1002,9 @@ function TSQLScanner.DoIdentifier : TSQLToken;
             else
               Result := tsqlGT;
           end;
-        'a' .. 'z',
-          'A' .. 'Z':
+          'a' .. 'z',
+          'A' .. 'Z',
+          '@':
           Result := DoIdentifier;
       else
         if Ord(TokenStr[0]) > 127 then

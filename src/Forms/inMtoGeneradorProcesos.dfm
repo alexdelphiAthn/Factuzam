@@ -579,13 +579,13 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     Top = 6
                     Width = 217
                     Height = 25
-                    Caption = 'Refrescar MetaDatos'
+                    Caption = 'Refrescar &MetaDatos'
                     TabOrder = 0
                     OnClick = btRefreshClick
                   end
                   object cxdbtxtdtNOMBRE_METADATO: TcxDBTextEdit
-                    Left = 12
-                    Top = 20
+                    Left = 249
+                    Top = 6
                     DataBinding.DataField = 'NOMBRE_METADATO'
                     DataBinding.DataSource = dmGeneradorProcesos.dsMetadatos
                     Properties.OnChange = cxdbtxtdtNOMBRE_METADATOPropertiesChange

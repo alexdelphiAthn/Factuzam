@@ -197,13 +197,24 @@ procedure TfrmMtoGeneradorProcesos.ActionSeleccionarExecute(Sender: TObject);
 begin
   inherited;
   if screen.ActiveControl = dbsyndtTexto then
+  begin
     dbsyndtTexto.SelectAll;
+    dbsyndtTexto.CopyToClipboard;
+  end;
+  if (screen.ActiveControl = syndtEstructura) or
+     (screen.ActiveControl = TreeView1) then
+  begin
+    syndtEstructura.SelectAll;
+    syndtEstructura.CopyToClipboard;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarUpdate(Sender: TObject);
 begin
   inherited;
   (Sender as TAction).Enabled := (Screen.ActiveControl = dbsyndtTexto);
+  (Sender as TAction).Enabled := (Screen.ActiveControl = syndtEstructura);
+  (Sender as TAction).Enabled := (screen.ActiveControl = TreeView1);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnBonitoClick(Sender: TObject);
