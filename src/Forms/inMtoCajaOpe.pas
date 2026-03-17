@@ -245,37 +245,33 @@ begin
       EmpleadoAnterior := DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
       NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
     end;
-
     // 2. Vaciar las líneas de la venta anterior
     if DatosCaja.cdsLineas.Active then
       DatosCaja.cdsLineas.EmptyDataSet;
-
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
     begin
       DatosCaja.cdsCabecera.EmptyDataSet;
       DatosCaja.cdsCabecera.Append;
     end;
-
     // 4. Aplicar valores base
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
     AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
-
     DatosCaja.cdsCabecera.FieldByName('CODIGO_EMPRESA_FACTURA').AsString := FCodigoEmpresa;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
     DatosCaja.cdsCabecera.FieldByName('TIPO_FACTURA').AsString := 'SIMPLIFICADA';
-
     // --- 5. EVALUACIÓN DE PARÁMETROS DE INICIO ---
-
     // A) Tarifa por defecto (como tenías en FormShow)
-    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
-      oCajaParams.GetString('vgerDefTarifa', 'PVP');
-    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-
+    DatosCaja.cdsCabecera.FieldByName(
+                                  'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
+                                  oCajaParams.GetString('vgerDefTarifa', 'PVP');
+    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
+                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
     // B) Empleado: Mantenemos el anterior, o buscamos el parámetro por defecto
     if EmpleadoAnterior <> '' then
     begin
-      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString := EmpleadoAnterior;
+      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString :=
+                                                               EmpleadoAnterior;
       btnCodigoEmpleado.Text := EmpleadoAnterior;
       lblNombreEmpleado.Caption := NombreEmpleadoAnterior;
     end
@@ -285,17 +281,13 @@ begin
       if sCodEmpleadoDefecto <> '' then
       begin
         btnCodigoEmpleado.Text := sCodEmpleadoDefecto;
-        // Lanzamos ValidateEdit para que rellene el nombre y lo asigne a la cabecera
         btnCodigoEmpleado.ValidateEdit(True);
       end;
     end;
   end;
-
-  // 6. Limpiar el resto de la interfaz (Cliente y Totales)
   lblNombreCliente.Caption := 'VENTA CONTADO';
   btnCodigoCliente.Text := '';
   lblTotal.Caption := 'Total 0,00 €';
-
   if Self.Visible then
     ActualizarFoco;
 end;
