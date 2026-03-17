@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 16/03/2026 18:50:16
+-- Backup generado: 17/03/2026 23:12:12
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 16, 3, 'S', 'S', '2026-03-16 17:28:38', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 18, 3, 'S', 'S', '2026-03-17 08:43:50', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -2215,8 +2215,72 @@ WHERE skus.ESACTIVO_SKU = ''S''
   -- 5. Filtro de seguridad final: garantizar que al menos uno de los dos tiene precio
   AND (tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL OR tarifa_padre.PRECIOFINAL_TARIFA IS NOT NULL)
   
-ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-03-16 17:39:56', '2026-03-16 07:57:21', 'Administrador', 'Administrador');
--- 13 registros exportados
+ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-03-16 17:39:56', '2026-03-16 07:57:21', 'Administrador', 'Administrador'),
+  ('016', 'Ejecutar PRC_FNC_GET_NEXT_LINEA_FACTURA', 'CALL PRC_FNC_GET_NEXT_LINEA_FACTURA(/* pnumfac varchar(12) */, /* pserie varchar(12) */, /* presul varchar(3) */);', '2026-03-17 08:32:35', '2026-03-17 08:32:35', 'Administrador', 'Administrador'),
+  ('017', NULL, 'CREATE PROCEDURE PRC_BUSQUEDA_ARTICULOS(
+ IN p_tarifa VARCHAR(50),
+ IN p_almacen VARCHAR(50),
+ IN p_fecha DATE,
+ IN p_token VARCHAR(100),
+ IN p_solostock TINYINT,
+ IN p_solotarifa TINYINT
+)
+BEGIN
+ SET @busqueda = CONCAT(''%'', IFNULL(p_token, ''''), ''%'');
+
+ SELECT 
+ v.INPUT_BUSQUEDA,
+ v.TIPO_COINCIDENCIA,
+ v.CODIGO_PADRE,
+ v.CODIGO_SKU,
+ v.DESCRIPCION_ARTICULO,
+ v.TIPO_ARTICULO,
+ 
+ /* ESTO ES LO QUE LEERÁ DELPHI: */
+ /* Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU. */
+ COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
+ 
+ /* Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre) */
+ COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
+ 
+ /* Calculamos el stock disponible cruzando por el código definitivo */
+ (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+ FROM fza_articulos_stockactual s 
+ WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+ AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
+
+ FROM vi_caja_busqueda_unificada v
+ 
+ /* Buscamos el precio del SKU (si existe) */
+ LEFT JOIN fza_articulos_tarifas t_sku 
+ ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
+ AND t_sku.CODIGO_TARIFA = p_tarifa
+ 
+ /* Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio) */
+ LEFT JOIN fza_articulos_tarifas t_padre 
+ ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
+ AND t_padre.CODIGO_TARIFA = p_tarifa 
+ AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '''')
+
+ WHERE 
+ /* Búsqueda por token (busca en el código exacto escaneado o en la descripción) */
+ (p_token = '''' OR 
+ v.INPUT_BUSQUEDA LIKE @busqueda OR 
+ v.DESCRIPCION_ARTICULO LIKE @busqueda)
+ 
+ /* Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre */
+ AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
+ 
+ /* Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0 */
+ AND (p_solostock = 0 OR 
+ (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
+ FROM fza_articulos_stockactual s 
+ WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
+ AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
+ 
+ ORDER BY v.DESCRIPCION_ARTICULO ASC;
+END', '2026-03-17 08:43:50', '2026-03-17 08:43:50', 'Administrador', 'Administrador');
+-- 15 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3254,7 +3318,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-16 18:50:09', '2026-03-16 18:50:09', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-17 23:11:52', '2026-03-17 23:11:52', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -4895,68 +4959,62 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_variaciones` AS select `fza_variaciones`.`C
 -- Procedimiento: PRC_BUSQUEDA_ARTICULOS
 DROP PROCEDURE IF EXISTS `PRC_BUSQUEDA_ARTICULOS`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(
-    IN p_tarifa      VARCHAR(50),
-    IN p_almacen     VARCHAR(50),
-    IN p_fecha       DATE,
-    IN p_token       VARCHAR(100),
-    IN p_solostock   TINYINT,
-    IN p_solotarifa  TINYINT
-)
+CREATE  PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(IN p_tarifa     VARCHAR(10),
+    IN p_almacen    VARCHAR(10),
+    IN p_fecha      DATE,
+    IN p_token      VARCHAR(100),
+    IN p_solostock  TINYINT,
+    IN p_solotarifa TINYINT)
 BEGIN
-    SET @busqueda = CONCAT('%', IFNULL(p_token, ''), '%');
+    IF p_tarifa IS NULL OR TRIM(p_tarifa) = '' THEN
+        SET p_tarifa := 'PVP';
+    END IF;
+    IF p_fecha IS NULL THEN
+        SET p_fecha := CURDATE();
+    END IF;
 
-    SELECT 
-        v.INPUT_BUSQUEDA,
-        v.TIPO_COINCIDENCIA,
-        v.CODIGO_PADRE,
-        v.CODIGO_SKU,
-        v.DESCRIPCION_ARTICULO,
-        v.TIPO_ARTICULO,
-        
-        /* ESTO ES LO QUE LEERÁ DELPHI: */
-        /* Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU. */
-        COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
-        
-        /* Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre) */
-        COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
-        
-        /* Calculamos el stock disponible cruzando por el código definitivo */
-        (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
-         FROM fza_articulos_stockactual s 
-         WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
-           AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
+    SELECT
+        v.*,
+        COALESCE(stk.STOCK_DISPONIBLE, 0) AS STOCK_DISPONIBLE
+    FROM vi_art_busquedas v
 
-    FROM vi_caja_busqueda_unificada v
-    
-    /* Buscamos el precio del SKU (si existe) */
-    LEFT JOIN fza_articulos_tarifas t_sku 
-           ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
-          AND t_sku.CODIGO_TARIFA = p_tarifa
-          
-    /* Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio) */
-    LEFT JOIN fza_articulos_tarifas t_padre 
-           ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
-          AND t_padre.CODIGO_TARIFA = p_tarifa 
-          AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '')
+    -- Stock unificado: por SKU + por código directo
+    LEFT JOIN (
+        SELECT COD_ART, SUM(STOCK) AS STOCK_DISPONIBLE
+        FROM (
+            -- Artículos CON SKU: sumar por artículo padre
+            SELECT sku.CODIGO_ARTICULO_SKU AS COD_ART,
+                   s.CANTIDAD_STK          AS STOCK
+              FROM fza_articulos_stockactual s
+              JOIN fza_articulos_skus sku
+                ON s.CODIGO_UNIDAD_STK = sku.CODIGO_UNIDAD_SKU
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+            UNION ALL
+            -- Artículos SIN SKU: código directo no existe en fza_articulos_skus
+            SELECT s.CODIGO_UNIDAD_STK AS COD_ART,
+                   s.CANTIDAD_STK      AS STOCK
+              FROM fza_articulos_stockactual s
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+               AND NOT EXISTS (
+                   SELECT 1 FROM fza_articulos_skus sku2
+                    WHERE sku2.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK
+               )
+        ) t
+        GROUP BY COD_ART
+    ) stk ON v.CODIGO_ARTICULO = stk.COD_ART
 
-    WHERE 
-      /* Búsqueda por token (busca en el código exacto escaneado o en la descripción) */
-      (p_token = '' OR 
-       v.INPUT_BUSQUEDA LIKE @busqueda OR 
-       v.DESCRIPCION_ARTICULO LIKE @busqueda)
-      
-      /* Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre */
-      AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
-      
-      /* Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0 */
-      AND (p_solostock = 0 OR 
-            (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
-             FROM fza_articulos_stockactual s 
-             WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
-               AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
-               
-    ORDER BY v.DESCRIPCION_ARTICULO ASC;
+    WHERE (v.CODIGO_TARIFA = p_tarifa OR v.CODIGO_TARIFA IS NULL)
+      AND v.FECHA_DESDE_TARIFA <= p_fecha
+      AND (v.FECHA_HASTA_TARIFA IS NULL OR v.FECHA_HASTA_TARIFA >= p_fecha)
+      AND (p_token IS NULL OR p_token = ''
+           OR v.CODIGO_ARTICULO      LIKE p_token
+           OR v.DESCRIPCION_ARTICULO LIKE p_token
+           OR v.DESCRIPCION_FAMILIA  LIKE p_token)
+      AND (p_solostock  = 0 OR COALESCE(stk.STOCK_DISPONIBLE, 0) > 0)
+      AND (p_solotarifa = 0 OR v.CODIGO_TARIFA IS NOT NULL)
+
+    ORDER BY v.CODIGO_ARTICULO;
+
 END ;;
 DELIMITER ;
 
@@ -6654,6 +6712,213 @@ END IF;
 END ;;
 DELIMITER ;
 
+-- Procedimiento: PRC_FZA_DEPOSITOS_INSERT
+DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_INSERT`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(IN p_CODIGO_CLIENTE VARCHAR(20),
+    IN p_CODIGO_ARTICULO VARCHAR(20),
+    IN p_ESTADO_DEP VARCHAR(20),
+    IN p_PRECIO_VENTA_DEP DECIMAL(19,6),
+    IN p_CANTIDAD_PENDIENTE_DEP DECIMAL(19,6),
+    IN p_IMPORTE_ANTICIPO_DEP DECIMAL(19,6),
+    IN p_USUARIO VARCHAR(100),
+    OUT p_NUEVO_ID_DEPOSITO INT)
+BEGIN
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+
+    -- Manejo de errores para asegurar la consistencia
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- 1. Insertamos el depósito en la tabla
+    INSERT INTO fza_depositos_cliente (
+        CODIGO_CLIENTE, CODIGO_ARTICULO, ESTADO_DEP, 
+        PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP,
+        INSTANTEALTA, USUARIOALTA, INSTANTEMODIF, USUARIOMODIF
+    ) VALUES (
+        p_CODIGO_CLIENTE, p_CODIGO_ARTICULO, p_ESTADO_DEP,
+        p_PRECIO_VENTA_DEP, p_CANTIDAD_PENDIENTE_DEP, p_IMPORTE_ANTICIPO_DEP,
+        NOW(), p_USUARIO, NOW(), p_USUARIO
+    );
+
+    -- Obtenemos el ID autogenerado para devolverlo a la App (Opcional pero muy útil)
+    SET p_NUEVO_ID_DEPOSITO = LAST_INSERT_ID();
+
+    -- 2. Lógica del Trigger AFTER INSERT: Calculamos la nueva deuda
+    IF p_ESTADO_DEP = 'PENDIENTE' THEN
+        SET v_deuda_nueva = (p_PRECIO_VENTA_DEP * COALESCE(p_CANTIDAD_PENDIENTE_DEP, 1)) - COALESCE(p_IMPORTE_ANTICIPO_DEP, 0);
+    END IF;
+
+    -- 3. Si hay deuda generada, actualizamos el cliente
+    IF v_deuda_nueva > 0 AND p_CODIGO_CLIENTE IS NOT NULL THEN
+        UPDATE fza_clientes
+           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva
+         WHERE CODIGO_CLIENTE = p_CODIGO_CLIENTE;
+    END IF;
+
+    COMMIT;
+END ;;
+DELIMITER ;
+
+-- Procedimiento: PRC_FZA_DEPOSITOS_UPDATE
+DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(IN p_ID_DEPOSITO INT, -- O la PK que uses en fza_depositos_cliente
+    IN p_NUEVO_ESTADO VARCHAR(20),
+    IN p_NUEVO_PRECIO DECIMAL(19,6),
+    IN p_NUEVA_CANTIDAD_PTE DECIMAL(19,6),
+    IN p_NUEVO_ANTICIPO DECIMAL(19,6),
+    IN p_USUARIO VARCHAR(100))
+BEGIN
+    -- Variables para almacenar el estado OLD
+    DECLARE v_OLD_CODIGO_CLIENTE VARCHAR(20);
+    DECLARE v_OLD_ESTADO VARCHAR(20);
+    DECLARE v_OLD_PRECIO DECIMAL(19,6);
+    DECLARE v_OLD_CANTIDAD_PTE DECIMAL(19,6);
+    DECLARE v_OLD_ANTICIPO DECIMAL(19,6);
+
+    DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- 1. Leer los datos actuales (OLD) ANTES de actualizar
+    SELECT CODIGO_CLIENTE, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
+      INTO v_OLD_CODIGO_CLIENTE, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
+      FROM fza_depositos_cliente
+     WHERE ID_DEPOSITO = p_ID_DEPOSITO 
+       FOR UPDATE; -- FOR UPDATE bloquea la fila para evitar concurrencia
+
+    -- 2. Cálculos que antes hacía el trigger
+    IF v_OLD_ESTADO = 'PENDIENTE' THEN
+        SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
+    END IF;
+
+    IF p_NUEVO_ESTADO = 'PENDIENTE' THEN
+        SET v_deuda_nueva = (p_NUEVO_PRECIO * COALESCE(p_NUEVA_CANTIDAD_PTE, 1)) - p_NUEVO_ANTICIPO;
+    END IF;
+
+    SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+
+    -- 3. Actualizar la tabla principal (El UPDATE original)
+    UPDATE fza_depositos_cliente
+       SET ESTADO_DEP = p_NUEVO_ESTADO,
+           PRECIO_VENTA_DEP = p_NUEVO_PRECIO,
+           CANTIDAD_PENDIENTE_DEP = p_NUEVA_CANTIDAD_PTE,
+           IMPORTE_ANTICIPO_DEP = p_NUEVO_ANTICIPO,
+           USUARIOMODIF = p_USUARIO,
+           INSTANTEMODIF = NOW()
+     WHERE ID_DEPOSITO = p_ID_DEPOSITO;
+
+    -- 4. Actualizar la deuda en el cliente si hubo cambios de saldo
+    IF v_diferencia <> 0 AND v_OLD_CODIGO_CLIENTE IS NOT NULL THEN
+        UPDATE fza_clientes
+           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
+         WHERE CODIGO_CLIENTE = v_OLD_CODIGO_CLIENTE;
+    END IF;
+
+    COMMIT;
+END ;;
+DELIMITER ;
+
+-- Procedimiento: PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT
+DROP PROCEDURE IF EXISTS `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(IN p_TIPO_DOC_MOV VARCHAR(20),
+    IN p_SERIE_DOC_MOV VARCHAR(20),
+    IN p_NRO_DOC_MOV VARCHAR(20),
+    IN p_LINEA_MOV VARCHAR(10),
+    IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
+    IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
+    IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
+    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), -- 'E' (Entrada) o 'S' (Salida)
+    IN p_CANTIDAD_MOV DECIMAL(19,6),
+    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), -- Enviado desde App
+    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  -- Enviado desde App
+    IN p_USUARIO VARCHAR(100))
+BEGIN
+    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_PrecioFinal DECIMAL(19,6);
+    DECLARE v_CosteFinal DECIMAL(19,6);
+
+    -- Activar manejo de errores para hacer Rollback si algo falla
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- 1. Obtener el PMP actual del stock
+    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
+      INTO v_PMPActual
+      FROM fza_articulos_stockactual
+     WHERE CODIGO_ALMACEN_STK = p_CODIGO_ALMACEN_MOV
+       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
+     LIMIT 1;
+
+    -- 2. Lógica de re-cálculo (Reemplazo del BEFORE INSERT)
+    IF p_TIPO_MOVIMIENTO_MOV = 'S' THEN
+        -- Si es salida, ignoramos lo que envía la app y forzamos el PMP actual
+        SET v_PrecioFinal = v_PMPActual;
+        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
+    ELSE
+        -- Si es entrada, respetamos lo que manda la app
+        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
+        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
+    END IF;
+
+    -- 3. Insertar el Movimiento de Almacén real (El INSERT original)
+    INSERT INTO fza_movimientos_almacen (
+        TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
+        CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, 
+        TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
+        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
+        FECHA_MOV, USUARIOALTA, USUARIOMODIF
+    ) VALUES (
+        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
+        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_UNIDAD_MOV, 
+        p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
+        v_PrecioFinal, v_CosteFinal, 
+        NOW(), p_USUARIO, p_USUARIO
+    );
+
+    -- 4. Actualizar Stock (Reemplazo del trigger de actualización)
+    INSERT INTO fza_articulos_stockactual (
+        CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
+        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF
+    ) VALUES (
+        p_CODIGO_ALMACEN_MOV, 
+        p_CODIGO_UNIDAD_MOV,
+        IF(p_TIPO_MOVIMIENTO_MOV = 'E', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
+        IF(p_TIPO_MOVIMIENTO_MOV = 'E', v_CosteFinal, -v_CosteFinal),
+        v_PrecioFinal, 
+        NOW()
+    )
+    ON DUPLICATE KEY UPDATE
+        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
+        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
+        -- Cuidado de no dividir entre cero
+        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
+        INSTANTEMODIF = NOW();
+
+    COMMIT;
+END ;;
+DELIMITER ;
+
 -- Procedimiento: PRC_GENERAR_CODIGO_VALE
 DROP PROCEDURE IF EXISTS `PRC_GENERAR_CODIGO_VALE`;
 DELIMITER ;;
@@ -7862,9 +8127,11 @@ DELIMITER ;
 -- Procedimiento: SP_RECALCULAR_PMP_SKU_ALMACEN
 DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_SKU_ALMACEN`;
 DELIMITER ;;
-CREATE  PROCEDURE `SP_RECALCULAR_PMP_SKU_ALMACEN`(IN `p_CodigoEmpresa` VARCHAR(20),
-    IN `p_CodigoSKU` VARCHAR(50),
-    IN `p_CodigoAlmacen` VARCHAR(10))
+CREATE  PROCEDURE `SP_RECALCULAR_PMP_SKU_ALMACEN`(
+	IN `p_CodigoEmpresa` VARCHAR(20),
+	IN `p_CodigoSKU` VARCHAR(50),
+	IN `p_CodigoAlmacen` VARCHAR(10)
+)
 BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE vIdTipo, vIdSerie, vIdNro, vIdLinea VARCHAR(20);
@@ -7885,7 +8152,7 @@ BEGIN
         WHERE  CODIGO_EMPRESA_MOV = p_CodigoEmpresa
           AND  CODIGO_UNIDAD_MOV = p_CodigoSKU
           AND  CODIGO_ALMACEN_MOV = p_CodigoAlmacen
-        ORDER BY FECHA_MOV ASC, INSTANTEALTA ASC 
+        ORDER BY FECHA_MOV ASC 
           FOR UPDATE;
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
@@ -7946,4 +8213,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 16/03/2026 18:50:16
+-- Backup completado: 17/03/2026 23:12:12
