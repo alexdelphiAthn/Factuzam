@@ -36,13 +36,10 @@ uses
   dxSkinTheBezier, dxSkinsDefaultPainters, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList
-  //frxExportBaseImageSettingsDialog, frCoreClasses
-    {$IF CompilerVersion >= 37.0}
-    // Para Delphi 13
-    , frLocalization,
-  frLanguageSpanish, frCoreClasses, frxExportBaseImageSettingsDialog
-  {$ENDIF};
+  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList, frxSmartMemo,
+  frxExportBaseImageSettingsDialog, frCoreClasses,
+  frLocalization,
+  frLanguageSpanish;
 type
   TfrmPrint = class(TfrmBase)
     pnl1: TPanel;
@@ -61,6 +58,7 @@ type
     frxReportOrigen: TfrxReport;
     ActionList1: TActionList;
     actSalir: TAction;
+    frLocalizationController1: TfrLocalizationController;
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnPDFClick(Sender: TObject);
@@ -77,9 +75,7 @@ type
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
-    {$IF CompilerVersion >= 37.0}
-      frLocalization: TfrLocalizationController;
-    {$ENDIF}
+    frLocalization: TfrLocalizationController;
     { Private declarations }
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);

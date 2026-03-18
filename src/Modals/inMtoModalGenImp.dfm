@@ -9,8 +9,8 @@ inherited frmPrint: TfrmPrint
   FormStyle = fsStayOnTop
   Scaled = False
   OnClose = FormClose
-  ExplicitWidth = 367
-  ExplicitHeight = 304
+  ExplicitWidth = 363
+  ExplicitHeight = 303
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 207
@@ -19,8 +19,8 @@ inherited frmPrint: TfrmPrint
     Height = 265
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 209
-    ExplicitHeight = 258
+    ExplicitLeft = 201
+    ExplicitHeight = 256
     object btnPDF: TcxButton
       Left = 0
       Top = 48
@@ -50,14 +50,14 @@ inherited frmPrint: TfrmPrint
     end
     object btnSalir: TcxButton
       Left = 1
-      Top = 240
+      Top = 239
       Width = 142
       Height = 25
       Align = alBottom
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 232
+      ExplicitTop = 230
     end
     object btnEditar: TcxButton
       Left = 0
@@ -79,7 +79,7 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frxrprt1: TfrxReport
-    Version = '2022.3'
+    Version = '2025.1.1'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -222,7 +222,7 @@ inherited frmPrint: TfrmPrint
     Top = 120
   end
   object frxReportOrigen: TfrxReport
-    Version = '2022.3'
+    Version = '2025.1.1'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -265,5 +265,10 @@ inherited frmPrint: TfrmPrint
       ShortCut = 27
       OnExecute = actSalirExecute
     end
+  end
+  object frLocalizationController1: TfrLocalizationController
+    Language = 'Spanish'
+    Left = 64
+    Top = 184
   end
 end
