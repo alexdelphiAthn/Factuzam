@@ -5,7 +5,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   Menu = jvMnMenuPrin
   Position = poScreenCenter
   WindowState = wsMaximized
-  StyleElements = [seFont, seClient, seBorder]
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
@@ -13,8 +12,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnShow = FormShow
   ExplicitLeft = 3
   ExplicitTop = 3
-  ExplicitWidth = 1140
-  ExplicitHeight = 613
+  ExplicitWidth = 1136
+  ExplicitHeight = 612
   TextHeight = 19
   object Panel1: TPanel [0]
     Left = 0
@@ -24,8 +23,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1122
-    ExplicitHeight = 522
+    ExplicitWidth = 1118
+    ExplicitHeight = 521
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
@@ -36,8 +35,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
-      ExplicitWidth = 1122
-      ExplicitHeight = 451
+      ExplicitWidth = 1118
+      ExplicitHeight = 450
       ClientRectBottom = 455
       ClientRectLeft = 4
       ClientRectRight = 1120
@@ -50,8 +49,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 451
-      ExplicitWidth = 1122
+      ExplicitTop = 450
+      ExplicitWidth = 1118
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -62,7 +61,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1120
+        ExplicitWidth = 1116
         Height = 69
         Width = 1122
       end
@@ -100,8 +99,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Width = 150
       end>
     UseSystemFont = False
-    ExplicitTop = 522
-    ExplicitWidth = 1122
+    ExplicitTop = 521
+    ExplicitWidth = 1118
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
