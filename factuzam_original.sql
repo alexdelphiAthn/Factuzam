@@ -1,6 +1,6 @@
 ﻿-- ========================================
--- Backup generado: 17/03/2026 23:17:47
--- Base de datos: Factuzam
+-- Backup generado: 18/03/2026 7:15:54
+-- Base de datos: factuzam
 -- ========================================
 
 START TRANSACTION;
@@ -3318,7 +3318,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-17 23:17:23', '2026-03-17 23:17:23', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-18 07:15:31', '2026-03-18 07:15:31', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -4956,6 +4956,44 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_variaciones` AS select `fza_variaciones`.`C
 -- PROCEDIMIENTOS ALMACENADOS
 -- ========================================
 
+-- Procedimiento: PRC_AGREGAR_VALOR_CONJUNTO
+DROP PROCEDURE IF EXISTS `PRC_AGREGAR_VALOR_CONJUNTO`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_AGREGAR_VALOR_CONJUNTO`(IN `p_id_conjunto` INT,         -- ID de la Paleta (ej: 5 para 'Verano 2026')
+    IN `p_valor_texto` VARCHAR(100), -- Lo que escribió el usuario (ej: 'VERDE RADIOACTIVO')
+    IN `p_usuario` VARCHAR(100))
+BEGIN
+    DECLARE v_id_valor INT;
+    DECLARE v_tipo_variacion VARCHAR(20);
+    
+    -- 1. Averiguamos de qué tipo es esta paleta (¿Es de Colores CO o Tallas TC?)
+    SELECT ID_VA_AC INTO v_tipo_variacion
+    FROM fza_atributos_conjuntos
+    WHERE ID_CONJUNTO_AC = p_id_conjunto;
+    
+    -- 2. Usamos el truco del "Find or Create" que vimos antes
+    -- Esto busca el ID de 'VERDE RADIOACTIVO'. Si no existe, lo crea en fza_atributos_valores
+    CALL PRC_GET_CREAR_VALOR(v_tipo_variacion, p_valor_texto, p_usuario, v_id_valor);
+    
+    -- 3. Ahora que SEGURO tenemos un ID (v_id_valor), lo vinculamos a la paleta
+    -- Usamos INSERT IGNORE para que si ya estaba en la paleta, no de error
+    INSERT IGNORE INTO fza_atributos_conjuntos_det (
+        ID_CONJUNTO_ACD, 
+        ID_VALOR_ACD, 
+        USUARIOALTA, 
+        USUARIOMODIF, 
+        INSTANTEALTA
+    ) VALUES (
+        p_id_conjunto, 
+        v_id_valor, 
+        p_usuario, 
+        p_usuario, 
+        NOW()
+    );
+    
+END ;;
+DELIMITER ;
+
 -- Procedimiento: PRC_BUSQUEDA_ARTICULOS
 DROP PROCEDURE IF EXISTS `PRC_BUSQUEDA_ARTICULOS`;
 DELIMITER ;;
@@ -5810,6 +5848,25 @@ BEGIN
     
     COMMIT;
     
+END ;;
+DELIMITER ;
+
+-- Procedimiento: PRC_CREAR_ACTUALIZAR_TEST
+DROP PROCEDURE IF EXISTS `PRC_CREAR_ACTUALIZAR_TEST`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_TEST`()
+BEGIN
+  CALL PRC_FNC_GET_PRECIO_ARTICULO_FECHA('PAÑITOS', CURRENT_DATE, @PRECIOFINAL, @PRECIO_INICIAL, @PORCEN_DTO, @PRECIO_DTO);
+  /* SELECT @PRECIOFINAL, @PRECIO_INICIAL, @PORCEN_DTO, @PRECIO_DTO; */
+			IF (@PRECIOFINAL IS NULL) THEN
+			BEGIN
+			 SELECT 'HOLA';
+		 END;
+		 ELSE
+	   BEGIN
+		   SELECT 'NO HAY';
+		 END;
+		 END IF;
 END ;;
 DELIMITER ;
 
@@ -8213,4 +8270,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 17/03/2026 23:17:47
+-- Backup completado: 18/03/2026 7:15:55

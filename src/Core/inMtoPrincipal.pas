@@ -47,7 +47,8 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
+  dxBarBuiltInMenu;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -713,7 +714,7 @@ begin
         FlogMemo.Highlighter := FLogHigSQL;
         FLogHigSQL.SQLDialect := sqlMySQL;
         Floghigsql.Enabled := True;
-        FlogHigSQl.Options.AutoDetectEnabled := True;
+//        FlogHigSQl.Options.AutoDetectEnabled := True;
         FLogMemo.Parent := FLogForm;
         FLogMemo.Align := alClient;
         FlogMemo.Gutter.AutoSize := True;
