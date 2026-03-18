@@ -29,8 +29,7 @@ uses
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
   UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList,
-  dxBarBuiltInMenu ;
+  dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
 
 const
   ecSelColumnMode = 2577;

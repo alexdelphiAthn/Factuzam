@@ -36,7 +36,7 @@ uses
   dxSkinTheBezier, dxSkinsDefaultPainters, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList, frxSmartMemo,
+  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization,
   frLanguageSpanish;
