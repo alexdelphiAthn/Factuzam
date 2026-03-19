@@ -148,7 +148,8 @@ begin
   {$IFDEF DEBUG}
     // En debug mostramos el original SOLO si no lo hemos puesto ya en el 'else'
     if (not bEsErrorGenerico) and (E.ErrorCode <> 0) then
-      sMensaje := sMensaje + Format('%s(MySQL %d: %s)', [sLineBreak, E.ErrorCode, E.Message]);
+      sMensaje := sMensaje + Format('%s(MySQL %d: %s)',
+                                     [sLineBreak, E.ErrorCode, E.Message]);
   {$ENDIF}
   // Guardamos en el log siempre el error real
   inLibLog.Log.LogError(Format('MySQL %d: %s', [E.ErrorCode, E.Message]));
