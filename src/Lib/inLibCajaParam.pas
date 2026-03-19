@@ -139,46 +139,46 @@ end;
 procedure TCajaParams.InicializarParametrosCaja(const pUsuario, pGrupo: string);
 begin
   // --- Control de Artículos ---
-  oCajaParams.RegistrarParametro('Control de Artículos', 'vgerChkExistOnly', 'Permitir sólo artículos que existan', tpBoolean, 'True');
-  oCajaParams.RegistrarParametro('Control de Artículos', 'vgerChkStockOnly', 'Permitir vender sin stock', tpBoolean, 'False');
+  RegistrarParametro('Control de Artículos', 'vgerChkExistOnly', 'Permitir sólo artículos que existan', tpBoolean, 'True');
+  RegistrarParametro('Control de Artículos', 'vgerChkStockOnly', 'Permitir vender sin stock', tpBoolean, 'False');
 
   // --- Configuración de Caja ---
-  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerShowCajaSelection', 'Presentar selección de caja', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerFillEmpleadoDefecto', 'Rellenar empleado por defecto al abrir', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerDefTarifa', 'Tarifa por defecto en caja', tpString, 'PVP');
-  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerMaxOpPending', 'Número de operaciones pendientes', tpInteger, '5');
+  RegistrarParametro('Configuración de Caja', 'vgerShowCajaSelection', 'Presentar selección de caja', tpBoolean, 'False');
+  RegistrarParametro('Configuración de Caja', 'vgerFillEmpleadoDefecto', 'Rellenar empleado por defecto al abrir', tpBoolean, 'False');
+  RegistrarParametro('Configuración de Caja', 'vgerDefTarifa', 'Tarifa por defecto en caja', tpString, 'PVP');
+  RegistrarParametro('Configuración de Caja', 'vgerMaxOpPending', 'Número de operaciones pendientes', tpInteger, '5');
 
   // --- Devoluciones y Vales ---
-  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerReqRefDevolucion', 'Pedir referencia en devoluciones', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerRecuperaValePIN', 'Recuperar Vale sólo con PIN', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerCaducidadDefVale', 'Caducidad por defecto en vale', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerDiasCaducidadVale', 'Días hasta caducidad en vale', tpInteger, '365');
+  RegistrarParametro('Devoluciones y Vales', 'vgerReqRefDevolucion', 'Pedir referencia en devoluciones', tpBoolean, 'False');
+  RegistrarParametro('Devoluciones y Vales', 'vgerRecuperaValePIN', 'Recuperar Vale sólo con PIN', tpBoolean, 'False');
+  RegistrarParametro('Devoluciones y Vales', 'vgerCaducidadDefVale', 'Caducidad por defecto en vale', tpBoolean, 'False');
+  RegistrarParametro('Devoluciones y Vales', 'vgerDiasCaducidadVale', 'Días hasta caducidad en vale', tpInteger, '365');
 
   // --- Avisos y Búsquedas ---
-  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerAvisoStockWarning', 'Aviso en artículos sin stock', tpString, 'Artículo sin stock. Compruebe stock en almacén.');
-  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtStockOnly', 'Búsqueda de artículos sólo con stock', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtTarifaOnly', 'Búsqueda de artículos sólo con tarifa', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerMoverLineaIdentif', 'Mover linea al identificar artículo', tpBoolean, 'False');
+  RegistrarParametro('Avisos y Búsquedas', 'vgerAvisoStockWarning', 'Aviso en artículos sin stock', tpString, 'Artículo sin stock. Compruebe stock en almacén.');
+  RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtStockOnly', 'Búsqueda de artículos sólo con stock', tpBoolean, 'False');
+  RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtTarifaOnly', 'Búsqueda de artículos sólo con tarifa', tpBoolean, 'False');
+  RegistrarParametro('Avisos y Búsquedas', 'vgerMoverLineaIdentif', 'Mover linea al identificar artículo', tpBoolean, 'False');
 
   // --- Impresión ---
-  oCajaParams.RegistrarParametro('Impresión', 'vgerDefPrinter', 'Nombre impresora de tickets', tpString, '');
-  oCajaParams.RegistrarParametro('Impresión', 'vgerTipoImpresion', 'Tipo de Impresión tickets', tpString, 'ESC POS');
-  oCajaParams.RegistrarParametro('Impresión', 'vgerFormatoImpPredet', 'Formato de impresión predeterminado', tpString, '');
+  RegistrarParametro('Impresión', 'vgerDefPrinter', 'Nombre impresora de tickets', tpString, '');
+  RegistrarParametro('Impresión', 'vgerTipoImpresion', 'Tipo de Impresión tickets', tpString, 'ESC POS');
+  RegistrarParametro('Impresión', 'vgerFormatoImpPredet', 'Formato de impresión predeterminado', tpString, '');
 
   // --- Empleado ---
-  oCajaParams.RegistrarParametro('Empleado', 'vgerCodEmpleadoDefecto', 'Código de empleado por defecto', tpString, '');
-  oCajaParams.RegistrarParametro('Empleado', 'vgerShowEmpleadoLinea', 'Mostrar empleado en linea de caja', tpBoolean, 'True');
+  RegistrarParametro('Empleado', 'vgerCodEmpleadoDefecto', 'Código de empleado por defecto', tpString, '');
+  RegistrarParametro('Empleado', 'vgerShowEmpleadoLinea', 'Mostrar empleado en linea de caja', tpBoolean, 'True');
 
   // --- Permisos Extra ---
-  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerArqueoTarjetas', 'Permitir Arqueo de Tarjetas', tpBoolean, 'False');
-  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerVentasCredito', 'Permitir Ventas a Crédito', tpBoolean, 'True');
-  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerDescuentos', 'Permite descuentos en ventas', tpBoolean, 'True');
+  RegistrarParametro('Permisos Extra', 'vgerArqueoTarjetas', 'Permitir Arqueo de Tarjetas', tpBoolean, 'False');
+  RegistrarParametro('Permisos Extra', 'vgerVentasCredito', 'Permitir Ventas a Crédito', tpBoolean, 'True');
+  RegistrarParametro('Permisos Extra', 'vgerDescuentos', 'Permite descuentos en ventas', tpBoolean, 'True');
 
   // ----------------------------------------------------------------------------------
   // Una vez registrada toda la "estructura" en memoria, le decimos a la librería
   // que se conecte a la base de datos y cargue los valores reales del usuario.
   // ----------------------------------------------------------------------------------
-  oCajaParams.Inicializar(pUsuario, pGrupo);
+  Inicializar(pUsuario, pGrupo);
 end;
 
 procedure TCajaParams.Recargar(const pUsuario, pGrupo: string);

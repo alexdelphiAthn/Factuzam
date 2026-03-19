@@ -55,7 +55,7 @@ type
     function  ObtenerCategoria(const NombreCat: string): TJvInspectorCustomCategoryItem;
     function  QuitarTildes(const Texto: string): string;
     function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
-
+//    procedure GuardarNodos(ItemPadre: TJvCustomInspectorItem; qryS:TUniQuery);
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     procedure CargarParametros(Grid: TJvInspector; const pUsuario, pGrupo: string);
     procedure ConstruirInspector;
@@ -263,46 +263,67 @@ procedure TfrmMtoCajaParam.btnGuardarClick(Sender: TObject);
 var
   qry: TUniQuery;
   sUsuarioGrupo: string;
-
-  procedure GuardarNodos(ItemPadre: TJvCustomInspectorItem);
-  var i: Integer; ItemHijo: TJvCustomInspectorItem;
-  begin
-    for i := 0 to ItemPadre.Count - 1 do
-    begin
-      ItemHijo := ItemPadre.Items[i];
-      if ItemHijo is TJvInspectorCustomCategoryItem then
-        GuardarNodos(ItemHijo)
-      else
-      begin
-        qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
-        qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
-        qry.ParamByName('p_subkey').AsString        := ItemHijo.Name;
-        qry.ParamByName('p_value').AsString         := ItemHijo.Data.AsString;
-        qry.Execute;
-      end;
-    end;
-  end;
-
+  i, j: Integer;
+  NodoPrincipal, ParamItem: TJvCustomInspectorItem;
+  ValorAGuardar: string; // Variable auxiliar para extraer el valor seguro
 begin
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
   sUsuarioGrupo := cmbGrupoUsuario.Text;
+
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
     qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, :p_formulario, :p_subkey, :p_value)';
-    GuardarNodos(JvInspector1.Root);
+
+    for i := 0 to JvInspector1.Root.Count - 1 do
+    begin
+      NodoPrincipal := JvInspector1.Root.Items[i];
+
+      if NodoPrincipal is TJvInspectorCustomCategoryItem then
+      begin
+        for j := 0 to NodoPrincipal.Count - 1 do
+        begin
+          ParamItem := NodoPrincipal.Items[j];
+
+          // --- EXTRACCIÓN SEGURA SEGÚN EL TIPO DE DATO ---
+          if ParamItem.Data <> nil then
+          begin
+            case ParamItem.Data.TypeInfo.Kind of
+              tkEnumeration: // Los Booleanos entran aquí en RTTI
+                if ParamItem.Data.AsOrdinal <> 0 then
+                  ValorAGuardar := 'True'
+                else
+                  ValorAGuardar := 'False';
+
+              tkInteger: // Números enteros
+                ValorAGuardar := IntToStr(ParamItem.Data.AsOrdinal);
+
+              else // Para tkString, tkUString, tkWString, etc.
+                ValorAGuardar := ParamItem.Data.AsString;
+            end;
+          end
+          else
+            ValorAGuardar := ''; // Por si acaso algún nodo no tiene Data
+
+          // Guardamos en BD
+          qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
+          qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
+          qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
+          qry.ParamByName('p_value').AsString         := ValorAGuardar;
+          qry.Execute;
+        end;
+      end;
+      // Nota: He quitado el "else" del NodoPrincipal porque, como vimos,
+      // tu diseño siempre usa Categorías en el nivel 0.
+      // Si tuvieras nodos sueltos, la lógica de extracción sería exactamente la misma.
+    end;
     ShowMessage('Parámetros guardados correctamente para: ' + sUsuarioGrupo);
   finally
     qry.Free;
   end;
-
   if (sUsuarioGrupo = oUser) or (sUsuarioGrupo = oGroup) or (sUsuarioGrupo = oAll) then
     oCajaParams.Recargar(oUser, oGroup);
 end;
-
-// ----------------------------------------------------------------------
-// EVENTOS Y UTILIDADES
-// ----------------------------------------------------------------------
 
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
 begin
