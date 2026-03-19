@@ -331,7 +331,7 @@ begin
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
-  jvStatusBar1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
+  jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis + '';
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
   Self.Caption := oAppName + ' ' + oVersion;
   pnlPPBottom.Visible := False;
@@ -385,11 +385,11 @@ end;
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
 begin
   inherited;
-  jvStatusBar1.Panels[1].Width := jvStatusBar1.ClientWidth -
-                                  jvStatusBar1.Panels[0].Width -
-                                  jvStatusBar1.Panels[2].Width -
-                                  jvStatusBar1.Panels[3].Width -
-                                  jvStatusBar1.Panels[4].Width - 20;
+//  jvStatusBar1.Panels[1].Width := jvStatusBar1.ClientWidth -
+//                                  jvStatusBar1.Panels[0].Width -
+//                                  jvStatusBar1.Panels[2].Width -
+//                                  jvStatusBar1.Panels[3].Width -
+//                                  jvStatusBar1.Panels[4].Width - 20;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);

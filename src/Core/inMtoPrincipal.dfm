@@ -77,13 +77,15 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Width = 100
       end
       item
-        Width = 100
+        Width = 300
       end
       item
-        Width = 250
+        Alignment = taCenter
+        Width = 300
       end
       item
-        Width = 100
+        Alignment = taCenter
+        Width = 150
       end
       item
         Alignment = taRightJustify
