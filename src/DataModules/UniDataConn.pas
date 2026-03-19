@@ -133,6 +133,13 @@ begin
     2013: sMensaje := 'Se perdió la conexión durante la ejecución de la consulta.';
     1205: sMensaje := 'El servidor está ocupado (Tiempo de espera de bloqueo). Inténtalo de nuevo.';
     1213: sMensaje := 'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
+    1304:
+      begin
+        // Opción rápida y sencilla: Adjuntamos el mensaje original de MySQL
+        // que contiene el nombre del procedimiento.
+        sMensaje := 'El procedimiento o función ya existe en la base de datos.' + sLineBreak +
+                    'Detalle del servidor: ' + E.Message;
+      end;
   else
     // Errores no catalogados: mostrar mensaje original
     sMensaje := Format('Error en base de datos [%d]:%s%s', [E.ErrorCode, sLineBreak, E.Message]);
