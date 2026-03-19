@@ -6,42 +6,72 @@ uses
   System.Generics.Collections, System.SysUtils, Uni;
 
 type
+  // Enumerado para definir el tipo de dato del parámetro
+  TTipoParametro = (tpString, tpInteger, tpBoolean);
+
+  // Clase que contiene la definición, metadatos y valor actual de cada parámetro
+  TParamDef = class
+  public
+    Categoria: string; // <-- NUEVO: Agrupación visual
+    Nombre: string;
+    Descripcion: string;
+    Tipo: TTipoParametro;
+    ValorPorDefecto: string;
+    ValorActual: string;
+
+    // El constructor ahora pide la categoría
+    constructor Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
+  end;
+
   TCajaParams = class
   private
-    FParams: TDictionary<string, string>;
-    procedure CargarValoresPorDefecto; // NUEVO: Pre-carga los valores base
+    FParams: TObjectDictionary<string, TParamDef>;
     procedure CargarDesdeDB(const pUsuario, pGrupo: string);
   public
     constructor Create;
     destructor Destroy; override;
 
+    // --- INTERFAZ PARA REGISTRAR PARÁMETROS (Actualizada con Categoría) ---
+    procedure RegistrarParametro(const pCategoria, pNombre, pDesc: string; pTipo: TTipoParametro; const pDefecto: string);
+    procedure RegistrarDefectos;
+    procedure InicializarParametrosCaja(const pUsuario, pGrupo: string);
     procedure Inicializar(const pUsuario, pGrupo: string);
     procedure Recargar(const pUsuario, pGrupo: string);
 
-    // Acceso tipado a cada parámetro (los Default ahora actúan solo como red de seguridad extra)
+    // Acceso tipado
     function GetString (const Key: string; const Default: string  = ''   ): string;
     function GetBool   (const Key: string; const Default: Boolean = False): Boolean;
     function GetInt    (const Key: string; const Default: Integer = 0    ): Integer;
 
-    // Acceso directo al diccionario por si se necesita
-    property Params: TDictionary<string, string> read FParams;
+    property Params: TObjectDictionary<string, TParamDef> read FParams;
   end;
 
-// Instancia global accesible desde cualquier unidad
 var
   oCajaParams: TCajaParams;
 
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar; // Asumo que aquí tienes oConn
+
+{ TParamDef }
+
+constructor TParamDef.Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
+begin
+  Categoria := aCategoria; // <-- Asignamos la categoría
+  Nombre := aNombre;
+  Descripcion := aDesc;
+  Tipo := aTipo;
+  ValorPorDefecto := aDefecto;
+  ValorActual := aDefecto;
+end;
 
 { TCajaParams }
 
 constructor TCajaParams.Create;
 begin
   inherited;
-  FParams := TDictionary<string, string>.Create;
+  FParams := TObjectDictionary<string, TParamDef>.Create([doOwnsValues]);
 end;
 
 destructor TCajaParams.Destroy;
@@ -50,46 +80,27 @@ begin
   inherited;
 end;
 
-// Centralizamos todos los valores por defecto de la aplicación aquí
-procedure TCajaParams.CargarValoresPorDefecto;
+procedure TCajaParams.RegistrarParametro(const pCategoria, pNombre, pDesc: string; pTipo: TTipoParametro; const pDefecto: string);
 begin
-  FParams.Clear;
+  FParams.AddOrSetValue(pNombre, TParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));
+end;
 
-  // --- Booleans (guardamos como string 'False' o 'True') ---
-  FParams.Add('vgerChkExistOnly', 'True');
-  FParams.Add('vgerChkStockOnly', 'False');
-  FParams.Add('vgerShowCajaSelection', 'False');
-  FParams.Add('vgerFillEmpleadoDefecto', 'False');
-  FParams.Add('vgerReqRefDevolucion', 'False');
-  FParams.Add('vgerRecuperaValePIN', 'False');
-  FParams.Add('vgerCaducidadDefVale', 'False');
-  FParams.Add('vgerBusqArtStockOnly', 'False');
-  FParams.Add('vgerBusqArtTarifaOnly', 'False');
-  FParams.Add('vgerMoverLineaIdentif', 'False');
-  FParams.Add('vgerShowEmpleadoLinea', 'True');
-  FParams.Add('vgerArqueoTarjetas', 'False');
-  FParams.Add('vgerVentasCredito', 'True');
-  FParams.Add('vgerDescuentos', 'True');
-
-  // --- Integers ---
-  FParams.Add('vgerMaxOpPending', '5');
-  FParams.Add('vgerDiasCaducidadVale', '365');
-
-  // --- Strings ---
-  FParams.Add('vgerAvisoStockWarning', 'Artículo sin stock. Compruebe stock en almacén.');
-  FParams.Add('vgerDefTarifa', 'PVP');
-  FParams.Add('vgerDefPrinter', '');
-  FParams.Add('vgerTipoImpresion', 'ESC POS'); // Valor por defecto del combo
-  FParams.Add('vgerFormatoImpPredet', '');
-  FParams.Add('vgerCodEmpleadoDefecto', '');
+procedure TCajaParams.RegistrarDefectos;
+var
+  Param: TParamDef;
+begin
+  for Param in FParams.Values do
+    Param.ValorActual := Param.ValorPorDefecto;
 end;
 
 procedure TCajaParams.CargarDesdeDB(const pUsuario, pGrupo: string);
 var
   qry: TUniQuery;
+  KeyDB, ValueDB: string;
+  ParamObj: TParamDef;
 begin
-  // 1. Llenamos el diccionario con los valores seguros por defecto
-  CargarValoresPorDefecto;
+  // 1. Aseguramos que la base sea la de por defecto antes de sobreescribir
+  RegistrarDefectos;
 
   qry := TUniQuery.Create(nil);
   try
@@ -100,13 +111,24 @@ begin
     qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
     qry.Open;
 
-    // 2. Sobrescribimos los valores por defecto con los que tenga el usuario en la BD
+    // 2. Sobrescribimos los valores por defecto con los que tenga el usuario
     while not qry.Eof do
     begin
-      FParams.AddOrSetValue(
-        qry.FieldByName('SUBKEY_PERFILES').AsString,
-        qry.FieldByName('VALUE_PERFILES').AsString
-      );
+      KeyDB := qry.FieldByName('SUBKEY_PERFILES').AsString;
+      ValueDB := qry.FieldByName('VALUE_PERFILES').AsString;
+
+      if FParams.TryGetValue(KeyDB, ParamObj) then
+      begin
+        ParamObj.ValorActual := ValueDB;
+      end
+      else
+      begin
+        // Si hay un parámetro huérfano en la BD que no hemos registrado,
+        // lo metemos en una categoría genérica para que siga viéndose.
+        RegistrarParametro('Otros (Heredados de BD)', KeyDB, 'Parámetro sin descripción', tpString, ValueDB);
+        FParams.Items[KeyDB].ValorActual := ValueDB;
+      end;
+
       qry.Next;
     end;
   finally
@@ -119,35 +141,89 @@ begin
   CargarDesdeDB(pUsuario, pGrupo);
 end;
 
+procedure TCajaParams.InicializarParametrosCaja(const pUsuario, pGrupo: string);
+begin
+  // --- Control de Artículos ---
+  oCajaParams.RegistrarParametro('Control de Artículos', 'vgerChkExistOnly', 'Permitir sólo artículos que existan', tpBoolean, 'True');
+  oCajaParams.RegistrarParametro('Control de Artículos', 'vgerChkStockOnly', 'Permitir vender sin stock', tpBoolean, 'False');
+
+  // --- Configuración de Caja ---
+  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerShowCajaSelection', 'Presentar selección de caja', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerFillEmpleadoDefecto', 'Rellenar empleado por defecto al abrir', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerDefTarifa', 'Tarifa por defecto en caja', tpString, 'PVP');
+  oCajaParams.RegistrarParametro('Configuración de Caja', 'vgerMaxOpPending', 'Número de operaciones pendientes', tpInteger, '5');
+
+  // --- Devoluciones y Vales ---
+  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerReqRefDevolucion', 'Pedir referencia en devoluciones', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerRecuperaValePIN', 'Recuperar Vale sólo con PIN', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerCaducidadDefVale', 'Caducidad por defecto en vale', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Devoluciones y Vales', 'vgerDiasCaducidadVale', 'Días hasta caducidad en vale', tpInteger, '365');
+
+  // --- Avisos y Búsquedas ---
+  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerAvisoStockWarning', 'Aviso en artículos sin stock', tpString, 'Artículo sin stock. Compruebe stock en almacén.');
+  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtStockOnly', 'Búsqueda de artículos sólo con stock', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtTarifaOnly', 'Búsqueda de artículos sólo con tarifa', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Avisos y Búsquedas', 'vgerMoverLineaIdentif', 'Mover linea al identificar artículo', tpBoolean, 'False');
+
+  // --- Impresión ---
+  oCajaParams.RegistrarParametro('Impresión', 'vgerDefPrinter', 'Nombre impresora de tickets', tpString, '');
+  oCajaParams.RegistrarParametro('Impresión', 'vgerTipoImpresion', 'Tipo de Impresión tickets', tpString, 'ESC POS');
+  oCajaParams.RegistrarParametro('Impresión', 'vgerFormatoImpPredet', 'Formato de impresión predeterminado', tpString, '');
+
+  // --- Empleado ---
+  oCajaParams.RegistrarParametro('Empleado', 'vgerCodEmpleadoDefecto', 'Código de empleado por defecto', tpString, '');
+  oCajaParams.RegistrarParametro('Empleado', 'vgerShowEmpleadoLinea', 'Mostrar empleado en linea de caja', tpBoolean, 'True');
+
+  // --- Permisos Extra ---
+  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerArqueoTarjetas', 'Permitir Arqueo de Tarjetas', tpBoolean, 'False');
+  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerVentasCredito', 'Permitir Ventas a Crédito', tpBoolean, 'True');
+  oCajaParams.RegistrarParametro('Permisos Extra', 'vgerDescuentos', 'Permite descuentos en ventas', tpBoolean, 'True');
+
+  // ----------------------------------------------------------------------------------
+  // Una vez registrada toda la "estructura" en memoria, le decimos a la librería
+  // que se conecte a la base de datos y cargue los valores reales del usuario.
+  // ----------------------------------------------------------------------------------
+  oCajaParams.Inicializar(pUsuario, pGrupo);
+end;
+
 procedure TCajaParams.Recargar(const pUsuario, pGrupo: string);
 begin
   CargarDesdeDB(pUsuario, pGrupo);
 end;
 
+// --- Getters ---
+
 function TCajaParams.GetString(const Key: string; const Default: string): string;
+var
+  ParamObj: TParamDef;
 begin
-  // Si la clave no está (ej. un parámetro nuevo que olvidaste poner en CargarValoresPorDefecto), usa el Default del método
-  if not FParams.TryGetValue(Key, Result) then
+  if FParams.TryGetValue(Key, ParamObj) then
+    Result := ParamObj.ValorActual
+  else
     Result := Default;
 end;
 
 function TCajaParams.GetBool(const Key: string; const Default: Boolean): Boolean;
 var
+  ParamObj: TParamDef;
   sVal: string;
 begin
-  if FParams.TryGetValue(Key, sVal) then
-    Result := SameText(sVal, 'True') or (sVal = '1')
+  if FParams.TryGetValue(Key, ParamObj) then
+  begin
+    sVal := ParamObj.ValorActual;
+    Result := SameText(sVal, 'True') or (sVal = '1');
+  end
   else
     Result := Default;
 end;
 
 function TCajaParams.GetInt(const Key: string; const Default: Integer): Integer;
 var
-  sVal: string;
+  ParamObj: TParamDef;
 begin
-  if FParams.TryGetValue(Key, sVal) then
+  if FParams.TryGetValue(Key, ParamObj) then
   begin
-    if not TryStrToInt(sVal, Result) then
+    if not TryStrToInt(ParamObj.ValorActual, Result) then
       Result := Default;
   end
   else

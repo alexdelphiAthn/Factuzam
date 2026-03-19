@@ -156,12 +156,13 @@ type
     procedure dbsyndtTextoMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure TreeView1DblClick(Sender: TObject);
-    procedure tsMetadatosEnter(Sender: TObject);
-    procedure TreeView1Click(Sender: TObject);
+//    procedure TreeView1Click(Sender: TObject);
     procedure btnBonitoClick(Sender: TObject);
     procedure ActionSeleccionarExecute(Sender: TObject);
     procedure ActionSeleccionarUpdate(Sender: TObject);
     procedure ActionEjecutarExecute(Sender: TObject);
+    procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
+    procedure tsMetadatosShow(Sender: TObject);
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
@@ -212,9 +213,9 @@ end;
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarUpdate(Sender: TObject);
 begin
   inherited;
-  (Sender as TAction).Enabled := (Screen.ActiveControl = dbsyndtTexto);
-  (Sender as TAction).Enabled := (Screen.ActiveControl = syndtEstructura);
-  (Sender as TAction).Enabled := (screen.ActiveControl = TreeView1);
+  (Sender as TAction).Enabled := (Screen.ActiveControl = dbsyndtTexto)
+                                 or (Screen.ActiveControl = syndtEstructura)
+                                 or (screen.ActiveControl = TreeView1);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnBonitoClick(Sender: TObject);
@@ -298,17 +299,24 @@ begin
         begin
           // Si es un CALL que no devuelve filas, se comporta como comando
           iRowsAffected := unqryVista.RowsAffected;
-          cxmResul.Lines.Add('Comando ejecutado con éxito. Filas afectadas: ' + IntToStr(iRowsAffected));
+          cxmResul.Lines.Add('-- Comando('+FormatDateTime('hh:nn:ss.zzz', Now)+'): '
+                             +sLineBreak + sSQL + sLineBreak +
+           ' -- ejecutado con éxito. Filas afectadas: ' + IntToStr(iRowsAffected));
         end;
       except on E: Exception do
         begin
           // Si falla el Open por no ser un SELECT/Resultset, reintentamos con ExecSQL
           try
             unqryVista.Execute;
-            cxmResul.Lines.Add('Comando ejecutado correctamente (sin filas de retorno).');
+            cxmResul.Lines.Add('-- Comando('+
+                                       FormatDateTime('hh:nn:ss.zzz', Now)+'): '
+                               + sLineBreak + sSQL + sLineBreak +
+                         ' -- ejecutado correctamente (sin filas de retorno).');
           except on E2: Exception do
             begin
-              cxmResul.Lines.Add('Error: ' + E2.Message);
+              cxmResul.Lines.Add('-- Error('+FormatDateTime('hh:nn:ss.zzz', Now)+
+                                 '): ' + sLineBreak+ sSQL+ sLineBreak
+                                 + '-- '+ E2.Message);
               ShowMessage('Error en ejecución: ' + E2.Message);
             end;
           end;
@@ -721,20 +729,39 @@ begin
   end; *)
 end;
 
-procedure TfrmMtoGeneradorProcesos.TreeView1Click(Sender: TObject);
+procedure TfrmMtoGeneradorProcesos.TreeView1Change(Sender: TObject;
+  Node: TTreeNode);
 var
-  nodo: TTreeNode;
   iCodigo: Integer;
 begin
-  nodo := TreeView1.Selected;
-  if nodo = nil then Exit;
-  iCodigo := NativeInt(nodo.Data);
-  // Posicionar el dataset en el registro correspondiente
-  dmmGeneradorProcesos.unqryMetadatos.Locate(
-    'CODIGO_METADATO', iCodigo, []);
-  // Ahora llama a tu lógica existente
-  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+  // Si no hay nodo seleccionado (por ejemplo, al limpiar el árbol), salimos
+  if Node = nil then Exit;
+
+  // Recuperamos el código guardado en la propiedad Data del nodo
+  iCodigo := NativeInt(Node.Data);
+
+  // Posicionar el dataset de metadatos en el registro correspondiente
+  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
+
+  // Llama a tu lógica existente para actualizar la interfaz/datos
+//  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
 end;
+//end;
+//
+//procedure TfrmMtoGeneradorProcesos.TreeView1Click(Sender: TObject);
+//var
+//  nodo: TTreeNode;
+//  iCodigo: Integer;
+//begin
+//  nodo := TreeView1.Selected;
+//  if nodo = nil then Exit;
+//  iCodigo := NativeInt(nodo.Data);
+//  // Posicionar el dataset en el registro correspondiente
+//  dmmGeneradorProcesos.unqryMetadatos.Locate(
+//    'CODIGO_METADATO', iCodigo, []);
+//  // Ahora llama a tu lógica existente
+//  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+//end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
 var
@@ -820,10 +847,11 @@ begin
   end;
 end;
 
-procedure TfrmMtoGeneradorProcesos.tsMetadatosEnter(Sender: TObject);
+procedure TfrmMtoGeneradorProcesos.tsMetadatosShow(Sender: TObject);
 begin
   inherited;
-  btRefreshClick(nil);
+  if TreeView1.Items.Count = 0 then
+    btRefreshClick(nil);
 end;
 
 initialization

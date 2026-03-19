@@ -3,6 +3,7 @@ inherited frmPrintFac: TfrmPrintFac
   ClientHeight = 274
   ClientWidth = 422
   Position = poMainFormCenter
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 438
   ExplicitHeight = 313
   TextHeight = 19
@@ -10,6 +11,7 @@ inherited frmPrintFac: TfrmPrintFac
     Left = 268
     Width = 154
     Height = 274
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 266
     ExplicitWidth = 154
     ExplicitHeight = 266
@@ -26,7 +28,7 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 249
+      Top = 248
       Width = 152
       ExplicitTop = 240
       ExplicitWidth = 152
@@ -386,6 +388,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1001,6 +1004,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1059,8 +1063,8 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 525.354670000000100000
-        Width = 737.008350000000100000
+        Top = 525.354670000000000000
+        Width = 737.008350000000000000
         OnBeforePrint = 'DetailData1OnBeforePrint'
         DataSet = dmFacturas.fxdstPrintLinFac
         DataSetName = 'Lineas Facturas'
@@ -1298,7 +1302,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         Height = 400.630180000000000000
         Top = 18.897650000000000000
-        Width = 737.008350000000100000
+        Width = 737.008350000000000000
         object Memo7: TfrxMemoView
           AllowVectorExport = True
           Left = 13.559060000000000000
@@ -1828,6 +1832,31 @@ inherited frmPrintFac: TfrmPrintFac
             '[Facturas."EMAIL_EMPRESA_FACTURA"]')
           ParentFont = False
         end
+        object Barcode2D1: TfrxBarcode2DView
+          AllowVectorExport = True
+          Left = 540.472778320000000000
+          Top = 45.354356530000000000
+          Width = 84.000000000000000000
+          Height = 100.000000000000000000
+          StretchMode = smActualHeight
+          BarType = bcCodeQR
+          BarProperties.Encoding = qrAuto
+          BarProperties.QuietZone = 0
+          BarProperties.ErrorLevels = ecL
+          BarProperties.PixelSize = 4
+          BarProperties.CodePage = 0
+          BarProperties.GS1Rule = False
+          Frame.Typ = []
+          Rotation = 0
+          ShowText = True
+          HexData = '31003200330034003500360037003800'
+          Zoom = 1.000000000000000000
+          FontScaled = True
+          QuietZone = 0
+          ColorBar = clBlack
+          BarcodeText.TextSettings.BarTextPos = btpBottom
+          BarcodeText.SupSettings.BarTextPos = btpTop
+        end
       end
       object MasterData1: TfrxMasterData
         FillType = ftBrush
@@ -1839,7 +1868,7 @@ inherited frmPrintFac: TfrmPrintFac
         Height = 22.677180000000000000
         Top = 480.000310000000000000
         Visible = False
-        Width = 737.008350000000100000
+        Width = 737.008350000000000000
         DataSet = dmFacturas.fxdsPrintFac
         DataSetName = 'Facturas'
         RowCount = 0
@@ -1872,7 +1901,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         Height = 249.448980000000000000
         Top = 612.283860000000000000
-        Width = 737.008350000000100000
+        Width = 737.008350000000000000
         OnBeforePrint = 'PageFooter1OnBeforePrint'
         object CajaIVA: TfrxMemoView
           AllowVectorExport = True

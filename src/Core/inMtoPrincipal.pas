@@ -47,8 +47,7 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
-  dxBarBuiltInMenu;
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -205,7 +204,7 @@ procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject; var SQL: string;
 var
   TempList: TStringList;
 begin
-  FLogMemo.Lines.Add(' -- Ejecutando (' + DateTimeToStr(Now) + '): ');
+  FLogMemo.Lines.Add(' -- Ejecutando (' + FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
 
   // Usamos un StringList para que Delphi desglose los saltos de línea correctamente
   TempList := TStringList.Create;
@@ -327,7 +326,7 @@ begin
   // carga de todos los forms con sus propiedades y módulos de datos
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
-  oCajaParams.Inicializar(oUser, oGroup);
+  oCajaParams.InicializarParametrosCaja(oUser, oGroup);
 //  dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
 //    IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
 //  if oRootGroup = 'S' then
@@ -453,7 +452,7 @@ begin
   end;
   //saveDialog.FileTypes.Add(); := 'Archivos SQL (*.sql)|*.sql';
   saveDialog.FileName := 'copiaseguridad' +
-                              FormatDateTime('_dd_mm_yyyy_HH_nn', Now) + '.sql';
+                              FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
   if saveDialog.Execute then
   begin
     // 1. Configurar Opciones de la librería

@@ -167,10 +167,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsSQL: TcxTabSheet
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnl6: TPanel
                 Left = 0
                 Top = 255
@@ -182,6 +178,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Left = 1
                   Top = 1
                   Align = alClient
+                  Properties.ReadOnly = True
                   TabOrder = 0
                   Height = 83
                   Width = 839
@@ -294,11 +291,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsMetadatos: TcxTabSheet
               Caption = '&2_Metadatos'
               ImageIndex = 2
-              OnEnter = tsMetadatosEnter
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
+              OnShow = tsMetadatosShow
               object cxspltr2: TcxSplitter
                 Left = 377
                 Top = 0
@@ -331,10 +324,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object syndtEstructura: TSynEdit
                       Left = 0
                       Top = 0
@@ -414,10 +403,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsContenido: TcxTabSheet
                     Caption = '&Vista Contenido'
                     ImageIndex = 1
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
@@ -616,9 +601,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Width = 375
                   Height = 297
                   Align = alClient
+                  HideSelection = False
                   Indent = 19
                   TabOrder = 1
-                  OnClick = TreeView1Click
+                  OnChange = TreeView1Change
                   OnDblClick = TreeView1DblClick
                 end
               end
@@ -626,10 +612,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsVistaDatos: TcxTabSheet
               Caption = '&3_VistaDatos'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
@@ -904,7 +886,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1033,10 +1014,22 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Options.Visible = False
     CommentAttri.Background = clWhite
     CommentAttri.Foreground = clGray
+    ConditionalCommentAttri.Foreground = clRed
+    ConsoleOutputAttri.Foreground = clBlue
+    DataTypeAttri.Foreground = clBlack
+    DelimitedIdentifierAttri.Background = clWhite
+    DelimitedIdentifierAttri.Foreground = clGreen
     IdentifierAttri.Background = clWhite
-    IdentifierAttri.Foreground = clBlue
+    IdentifierAttri.Foreground = clGreen
+    KeyAttri.Foreground = clBlue
+    NumberAttri.Foreground = clNavy
+    PLSQLAttri.Foreground = clBlue
+    SQLPlusAttri.Foreground = clBlue
     StringAttri.Background = clWhite
     StringAttri.Foreground = clOlive
+    ProcNameAttri.Foreground = clBlue
+    TableNameAttri.Foreground = clLime
+    VariableAttri.Foreground = clLime
     SQLDialect = sqlMySQL
     Left = 176
     Top = 432
