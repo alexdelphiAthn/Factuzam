@@ -71,35 +71,26 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Top = 530
     Width = 1124
     Height = 19
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Lucida Sans'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    Font.Quality = fqClearTypeNatural
+    DoubleBuffered = False
     Panels = <
       item
-        Width = 120
+        Width = 100
+      end
+      item
+        Width = 100
       end
       item
         Width = 250
       end
       item
-        Alignment = taRightJustify
-        Width = 250
-      end
-      item
-        Alignment = taCenter
         Width = 100
       end
       item
         Alignment = taRightJustify
-        Width = 150
+        Width = 100
       end>
-    UseSystemFont = False
-    ExplicitTop = 522
-    ExplicitWidth = 1122
+    ParentDoubleBuffered = False
+    StyleName = 'Windows'
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
