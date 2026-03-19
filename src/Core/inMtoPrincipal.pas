@@ -318,6 +318,7 @@ begin
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
+  tmr1Timer(Sender);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   odmPerfiles := FdmDataPerfiles;
   oConn := FDmConn.conUni;
