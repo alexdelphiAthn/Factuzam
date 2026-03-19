@@ -200,13 +200,11 @@ begin
   if screen.ActiveControl = dbsyndtTexto then
   begin
     dbsyndtTexto.SelectAll;
-    dbsyndtTexto.CopyToClipboard;
   end;
   if (screen.ActiveControl = syndtEstructura) or
      (screen.ActiveControl = TreeView1) then
   begin
     syndtEstructura.SelectAll;
-    syndtEstructura.CopyToClipboard;
   end;
 end;
 
