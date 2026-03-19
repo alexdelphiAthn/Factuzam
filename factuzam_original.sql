@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 19/03/2026 18:25:45
+-- Backup generado: 19/03/2026 19:45:13
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1675,62 +1675,57 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADORPROCESO`, `NOMBRE_GENERADORPROCESO`, `PROCESO_GENERADORPROCESO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('001', 'INSERTAR CAMPOS GRID POR MTO', 'CREATE PROCEDURE `PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR`(
-    IN pCODIGO_ARTICULO               varchar(20),
-    IN pCODIGO_PROVEEDOR              varchar(20),
-    IN pESPROVEEDORPRINCIPAL          varchar(1),
-    IN pPRECIO_ULT_COMPRA             decimal(19,6),
-    IN pUSUARIO                       varchar(100)
+  ('001', 'INSERTAR CAMPOS GRID POR MTO', '
+CREATE OR REPLACE PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(
+    IN  `pnumfac` VARCHAR(12), 
+    IN  `pserie`  VARCHAR(12), 
+    OUT `presul`  VARCHAR(3)
 )
-BEGIN
-    START TRANSACTION;
+BEGIN    
+    DECLARE v_NextValue BIGINT;
 
-    IF ((TRIM(pCODIGO_PROVEEDOR) <> '''') AND (TRIM(pCODIGO_ARTICULO) <> '''')) THEN
-        
-        /* Comprobar si ya existe la relación artículo-proveedor */
-        IF ( EXISTS( SELECT *
-                     FROM fza_articulos_proveedores
-                     WHERE `CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = pCODIGO_PROVEEDOR
-                       AND CODIGO_ARTICULO_ARTICULO_PROVEEDOR = pCODIGO_ARTICULO )) THEN
-                       
-            UPDATE fza_articulos_proveedores
-            SET 
-                PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR    = pPRECIO_ULT_COMPRA,
-                ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = pESPROVEEDORPRINCIPAL,
-                USUARIOMODIF                            = pUSUARIO,
-                INSTANTEMODIF                           = CURRENT_TIMESTAMP             
-            WHERE `CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = pCODIGO_PROVEEDOR
-              AND CODIGO_ARTICULO_ARTICULO_PROVEEDOR = pCODIGO_ARTICULO;
-              
-        ELSE
-            /* Si no existe, insertar */
-            INSERT INTO fza_articulos_proveedores (
-                CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR, 
-                CODIGO_ARTICULO_ARTICULO_PROVEEDOR,                  
-                PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR,
-                ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR,                                                                                        
-                USUARIOMODIF,
-                INSTANTEMODIF,
-                USUARIOALTA,
-                INSTANTEALTA                     
-            ) VALUES (
-                pCODIGO_PROVEEDOR,
-                pCODIGO_ARTICULO,
-                pPRECIO_ULT_COMPRA,       
-                pESPROVEEDORPRINCIPAL,                                                                                                      
-                pUSUARIO,
-                CURRENT_TIMESTAMP,
-                pUSUARIO,
-                CURRENT_TIMESTAMP              
-            );
-            
-        END IF;
-        
-    END IF;        
-
-    COMMIT;
+    /* Manejo de errores para asegurar la consistencia (etiqueta para Uniscript) */    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN        
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
-END', '2026-03-19 09:28:15', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+    START TRANSACTION;
+    
+    /* 1 y 4 FUSIONADOS: Bloqueamos, calculamos y actualizamos de golpe */
+    UPDATE `fza_facturas`
+    SET `CONTADOR_LINEAS_FACTURA` = LPAD(
+        LAST_INSERT_ID(
+            CASE 
+                -- Si es la primera vez (nulo, vacío o 0), preparamos el TERRENO para el futuro (20)
+                WHEN `CONTADOR_LINEAS_FACTURA` IS NULL 
+                  OR `CONTADOR_LINEAS_FACTURA` = '''' 
+                  OR `CONTADOR_LINEAS_FACTURA` = ''0'' THEN 20
+                -- Si ya tiene valor, le sumamos 10
+                ELSE CAST(`CONTADOR_LINEAS_FACTURA` AS UNSIGNED) + 10
+            END
+        ), 3, ''0''
+    )
+    WHERE `SERIE_FACTURA` = pserie 
+      AND `NRO_FACTURA`   = pnumfac;
+    
+    /* Comprobamos si la factura existía y se actualizó */
+    IF ROW_COUNT() > 0 THEN
+        /* Si hemos guardado 20, nos toca devolver 10 (''010'')
+           Si hemos guardado 30, nos toca devolver 20 (''020'')
+        */
+        SET v_NextValue = LAST_INSERT_ID() - 10;
+        SET `presul` = LPAD(v_NextValue, 3, ''0'');
+    ELSE
+        /* Comportamiento de seguridad igual al tuyo: 
+           Si por algún motivo la factura aún no existe en fza_facturas, devolvemos ''010'' 
+        */
+        SET `presul` = ''010'';
+    END IF;
+    
+    COMMIT;
+END;', '2026-03-19 19:44:30', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('002', 'update cosas', 'UPDATE fza_ivas
    SET PORCENEXENTO_RE_IVA = 0', '2023-04-28 21:13:07', '2023-04-28 12:28:56', 'Administrador', 'Administrador'),
   ('003', 'ACTUALIZACION DE CAMPO FZA_IVAS', '           ALTER TABLE FZA_IVAS    MODIFY COLUMN   `GRUPO_ZONA_IVA` varchar(10) NOT NULL;', '2023-04-28 12:46:20', '2023-04-28 12:45:28', 'Administrador', 'Administrador'),
@@ -2836,34 +2831,33 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (143, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
   (144, 'PRC_CREAR_METADATOS', '3'),
   (145, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
-  (146, 'PRC_CREAR_TRASPASO', '3'),
-  (147, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (148, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (149, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (150, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (151, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
-  (152, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (153, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (154, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (155, 'PRC_GETPERFILFORMULARIO', '3'),
-  (156, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (157, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (158, 'PRC_GET_CREAR_VALOR', '3'),
-  (159, 'PRC_GET_DATA_ARTICULO', '3'),
-  (160, 'PRC_GET_DATA_CLIENTE', '3'),
-  (161, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (162, 'PRC_GET_NEXT_CONT', '3'),
-  (163, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (164, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (165, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (166, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (167, 'PRC_REALIZAR_TRASPASO', '3'),
-  (168, 'PRC_RECALCULAR_STOCK', '3'),
-  (169, 'PRC_SETPERFILFORMULARIO', '3'),
-  (170, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (171, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (146, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (147, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (148, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (149, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (150, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (151, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (152, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (153, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (154, 'PRC_GETPERFILFORMULARIO', '3'),
+  (155, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (156, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (157, 'PRC_GET_CREAR_VALOR', '3'),
+  (158, 'PRC_GET_DATA_ARTICULO', '3'),
+  (159, 'PRC_GET_DATA_CLIENTE', '3'),
+  (160, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (161, 'PRC_GET_NEXT_CONT', '3'),
+  (162, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (163, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (164, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (165, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (166, 'PRC_REALIZAR_TRASPASO', '3'),
+  (167, 'PRC_RECALCULAR_STOCK', '3'),
+  (168, 'PRC_SETPERFILFORMULARIO', '3'),
+  (169, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (170, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 150 registros exportados
+-- 149 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -3637,7 +3631,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-19 16:31:10', '2026-03-19 16:31:10', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-19 19:39:04', '2026-03-19 19:39:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7047,40 +7041,53 @@ DELIMITER ;
 -- Procedimiento: PRC_FNC_GET_NEXT_LINEA_FACTURA
 DROP PROCEDURE IF EXISTS `PRC_FNC_GET_NEXT_LINEA_FACTURA`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(IN  `pnumfac` VARCHAR(12), 
+CREATE  PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(
+    IN  `pnumfac` VARCHAR(12), 
     IN  `pserie`  VARCHAR(12), 
-    OUT `presul`  VARCHAR(3))
-BEGIN
-    DECLARE v_temp VARCHAR(3);
+    OUT `presul`  VARCHAR(3)
+)
+BEGIN    
+    DECLARE v_NextValue BIGINT;
 
-    /* Manejo de errores para asegurar la consistencia */
+    /* Manejo de errores para asegurar la consistencia (etiqueta para Uniscript) */    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
+    kk: BEGIN        
         ROLLBACK;
         RESIGNAL;
     END kk;
+    
     START TRANSACTION;
     
-    /* 1. Buscamos el valor actual */
-    SELECT `CONTADOR_LINEAS_FACTURA` INTO v_temp
-      FROM `fza_facturas`
-     WHERE `NRO_FACTURA`  = `pnumfac`
-       AND `SERIE_FACTURA` = `pserie`
-       FOR UPDATE;
-    
-    /* 2. Si es NULL, vacío o '0', la primera línea será '010' */
-    IF (v_temp IS NULL OR v_temp = '' OR v_temp = '0') THEN
-        SET v_temp = '010';
-    END IF;
-    
-    /* 3. Asignamos a la salida el valor que acabamos de leer/calcular */
-    SET `presul` = v_temp;
-    
-    /* 4. Actualizamos la tabla sumando 10 para la PRÓXIMA línea */
+    /* 1 y 4 FUSIONADOS: Bloqueamos, calculamos y actualizamos de golpe */
     UPDATE `fza_facturas`
-       SET `CONTADOR_LINEAS_FACTURA` = LPAD((CAST(v_temp AS UNSIGNED) + 10), 3, '0')
-     WHERE `SERIE_FACTURA` = `pserie`
-       AND `NRO_FACTURA`   = `pnumfac`;
+    SET `CONTADOR_LINEAS_FACTURA` = LPAD(
+        LAST_INSERT_ID(
+            CASE 
+                /* Si es la primera vez (nulo, vacío o 0), preparamos el TERRENO para el futuro (20) */
+                WHEN `CONTADOR_LINEAS_FACTURA` IS NULL 
+                  OR `CONTADOR_LINEAS_FACTURA` = '' 
+                  OR `CONTADOR_LINEAS_FACTURA` = '0' THEN 20
+                /* Si ya tiene valor, le sumamos 10 */
+                ELSE CAST(`CONTADOR_LINEAS_FACTURA` AS UNSIGNED) + 10
+            END
+        ), 3, '0'
+    )
+    WHERE `SERIE_FACTURA` = pserie 
+      AND `NRO_FACTURA`   = pnumfac;
+    
+    /* Comprobamos si la factura existía y se actualizó */
+    IF ROW_COUNT() > 0 THEN
+        /* Si hemos guardado 20, nos toca devolver 10 ('010')
+           Si hemos guardado 30, nos toca devolver 20 ('020')
+        */
+        SET v_NextValue = LAST_INSERT_ID() - 10;
+        SET `presul` = LPAD(v_NextValue, 3, '0');
+    ELSE
+        /* Comportamiento de seguridad igual al tuyo: 
+           Si por algún motivo la factura aún no existe en fza_facturas, devolvemos '010' 
+        */
+        SET `presul` = '010';
+    END IF;
     
     COMMIT;
 END ;;
@@ -8647,4 +8654,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 19/03/2026 18:25:45
+-- Backup completado: 19/03/2026 19:45:13
