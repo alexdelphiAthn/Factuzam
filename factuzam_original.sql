@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 19/03/2026 16:52:12
+-- Backup generado: 19/03/2026 18:25:45
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 22, 3, 'S', 'S', '2026-03-19 16:50:22', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 24, 3, 'S', 'S', '2026-03-19 18:19:00', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -2465,8 +2465,136 @@ BEGIN
     COMMIT;
 
     SELECT CONCAT(''Traspaso realizado. Doc: '', vSerie, ''-'', vNroDoc) AS MENSAJE;
-END;', '2026-03-19 16:51:44', '2026-03-19 16:50:22', 'Administrador', 'Administrador');
--- 19 registros exportados
+END;', '2026-03-19 16:51:44', '2026-03-19 16:50:22', 'Administrador', 'Administrador'),
+  ('022', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
+    IN pserie VARCHAR(12),
+    IN pTipoDoc VARCHAR(2),
+    IN pEMPRESA_CONTADOR VARCHAR(10),
+    IN pUSUARIOMODIF VARCHAR(100),
+    OUT pcont VARCHAR(12)
+)
+BEGIN
+    DECLARE pNUMDIGIT INT;
+    DECLARE v_NextValue BIGINT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    ManejoError: BEGIN ROLLBACK; RESIGNAL; END ManejoError;
+
+    START TRANSACTION;
+
+    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN
+        SET pEMPRESA_CONTADOR = ''-'';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM fza_contadores WHERE TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND SERIE_CONTADOR = pserie) THEN
+        INSERT INTO fza_contadores (
+            TIPODOC_CONTADOR, SERIE_CONTADOR, CONTADOR_CONTADOR, EMPRESA_CONTADOR, DEFAULT_CONTADOR, NUMDIGIT_CONTADOR, INSTANTEALTA, USUARIOALTA, USUARIOMODIF
+        ) VALUES (
+            pTipoDoc, pserie, 1, pEMPRESA_CONTADOR, ''N'', 6, CURRENT_TIMESTAMP, pUSUARIOMODIF, pUSUARIOMODIF
+        );
+    END IF;
+
+    -- LA MAGIA: Incrementamos y guardamos en memoria el valor EXACTO para este usuario
+    UPDATE fza_contadores 
+    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1), 
+        USUARIOMODIF = pUSUARIOMODIF 
+    WHERE SERIE_CONTADOR = pserie AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND TIPODOC_CONTADOR = pTipoDoc;
+
+    -- Obtenemos el valor seguro reservado para esta sesión (le restamos 1 porque la app necesita el número pre-incremento)
+    SET v_NextValue = LAST_INSERT_ID() - 1;
+
+    SELECT NUMDIGIT_CONTADOR INTO pNUMDIGIT 
+    FROM fza_contadores 
+    WHERE SERIE_CONTADOR = pserie AND TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR LIMIT 1;
+
+    IF (pNUMDIGIT IS NOT NULL AND pNUMDIGIT > 0) THEN
+        SET pcont = LPAD(v_NextValue, pNUMDIGIT, ''0'');
+    ELSE
+        SET pcont = CAST(v_NextValue AS CHAR);
+    END IF;
+
+    COMMIT;
+END;', '2026-03-19 18:17:24', '2026-03-19 18:16:05', 'Administrador', 'Administrador'),
+  ('023', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT`(
+    IN  pTipoDoc       varchar(2), 
+    IN  pUSUARIO_MODIF varchar(100),
+    OUT pcont          varchar(20)
+)
+BEGIN
+    DECLARE pPADD bigint;
+    DECLARE pEMPRESA_CONTADOR varchar(10) DEFAULT ''-'';
+    DECLARE v_NextValue BIGINT; -- Variable añadida para guardar el valor atómico
+
+    -- Añadido: Manejador de excepciones con etiqueta ''kk:''
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN 
+        ROLLBACK; 
+        RESIGNAL; 
+    END kk;
+    
+    START TRANSACTION;
+
+    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN 
+        SET pEMPRESA_CONTADOR = ''-''; 
+    END IF;
+
+    /* Si no existe el contador, lo creamos (lógica original intacta) */
+    IF NOT EXISTS (
+        SELECT 1
+        FROM fza_contadores
+        WHERE TIPODOC_CONTADOR = pTipoDoc
+          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
+    ) THEN
+        INSERT INTO fza_contadores (
+            TIPODOC_CONTADOR, 
+            SERIE_CONTADOR,
+            EMPRESA_CONTADOR,   
+            CONTADOR_CONTADOR, 
+            DEFAULT_CONTADOR,
+            NUMDIGIT_CONTADOR,
+            INSTANTEALTA, 
+            USUARIOALTA,
+            USUARIOMODIF
+        ) VALUES (
+            pTipoDoc, 
+            ''-'', 
+            pEMPRESA_CONTADOR,
+            1, 
+            ''S'', 
+            3,
+            CURRENT_TIMESTAMP,
+            pUSUARIO_MODIF, 
+            pUSUARIO_MODIF
+        );
+    END IF;
+
+    /* Obtenemos el número de dígitos / padding (lógica original intacta) */
+    SET pPADD = (
+        SELECT NUMDIGIT_CONTADOR 
+        FROM fza_contadores 
+        WHERE TIPODOC_CONTADOR = pTipoDoc 
+          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
+          AND DEFAULT_CONTADOR = ''S'' 
+        LIMIT 1
+    );
+     
+    /* Modificado: Sumamos 1 al contador usando LAST_INSERT_ID de forma atómica */
+    UPDATE fza_contadores 
+    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1),
+        USUARIOMODIF = pUSUARIO_MODIF
+    WHERE TIPODOC_CONTADOR = pTipoDoc
+      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR;            
+      
+    /* Modificado: Guardamos el valor exacto bloqueado para este usuario y le restamos 1 como en tu lógica original */
+    SET v_NextValue = LAST_INSERT_ID() - 1;
+
+    /* Modificado: Devolvemos el valor con el LPAD usando la variable segura */
+    SET pcont = LPAD(v_NextValue, pPADD, ''0'');
+
+    COMMIT;
+    
+END;', '2026-03-19 18:24:50', '2026-03-19 18:19:00', 'Administrador', 'Administrador');
+-- 21 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -7624,31 +7752,29 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `PRC_GET_DATA_ARTICULO`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_GET_DATA_ARTICULO`(
-    IN  pidcodarticulo varchar(200), 
-    OUT pidnomarticulo varchar(1000), 
-    OUT ptipoiva       varchar(2)
+    IN pidcodarticulo varchar(200),
+    OUT pidnomarticulo varchar(1000),
+    OUT ptipoiva varchar(2)
 )
 BEGIN
-
-    /* Comprobamos si el artículo existe (Usamos SELECT 1 que es más rápido que SELECT *) */
-    IF ( EXISTS( SELECT 1
-                 FROM fza_articulos
-                 WHERE CODIGO_ARTICULO = pidcodarticulo ) ) THEN
-                 
-        /* Si existe, guardamos los valores en las variables de salida (OUT) */
-        SELECT DESCRIPCION_ARTICULO, TIPOIVA_ARTICULO 
-        INTO pidnomarticulo, ptipoiva
-        FROM fza_articulos
-        WHERE CODIGO_ARTICULO = pidcodarticulo;
-        
-    ELSE
+    /* Declaramos una bandera para saber si lo encuentra o no */
+    DECLARE v_found INT DEFAULT 1;
     
-        /* Si no existe, devolvemos los valores por defecto */
+    /* Si el SELECT INTO no encuentra filas, baja esta bandera en vez de dar error */
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_found = 0;
+
+    /* Hacemos la consulta UNA SOLA VEZ */
+    SELECT DESCRIPCION_ARTICULO, TIPOIVA_ARTICULO 
+    INTO pidnomarticulo, ptipoiva 
+    FROM fza_articulos 
+    WHERE CODIGO_ARTICULO = pidcodarticulo;
+
+    /* Verificamos si la bandera cayó */
+    IF v_found = 0 THEN
         SET pidnomarticulo = 'NO EXISTE';
         SET ptipoiva = 'N';
-        
     END IF;
-
+    
 END ;;
 DELIMITER ;
 
@@ -7817,12 +7943,13 @@ CREATE  PROCEDURE `PRC_GET_NEXT_CONT`(
 BEGIN
     DECLARE pPADD bigint;
     DECLARE pEMPRESA_CONTADOR varchar(10) DEFAULT '-';
+    DECLARE v_NextValue BIGINT; /* Variable añadida para guardar el valor atómico */
 
-    /* Manejo de errores para asegurar la consistencia */
+    /* Añadido: Manejador de excepciones con etiqueta 'kk:' */
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
+    kk: BEGIN 
+        ROLLBACK; 
+        RESIGNAL; 
     END kk;
     
     START TRANSACTION;
@@ -7831,7 +7958,7 @@ BEGIN
         SET pEMPRESA_CONTADOR = '-'; 
     END IF;
 
-    /* Si no existe el contador, lo creamos */
+    /* Si no existe el contador, lo creamos (lógica original intacta) */
     IF NOT EXISTS (
         SELECT 1
         FROM fza_contadores
@@ -7861,7 +7988,7 @@ BEGIN
         );
     END IF;
 
-    /* Obtenemos el número de dígitos (padding) */
+    /* Obtenemos el número de dígitos / padding (lógica original intacta) */
     SET pPADD = (
         SELECT NUMDIGIT_CONTADOR 
         FROM fza_contadores 
@@ -7871,23 +7998,18 @@ BEGIN
         LIMIT 1
     );
      
-    /* Sumamos 1 al contador */
+    /* Modificado: Sumamos 1 al contador usando LAST_INSERT_ID de forma atómica */
     UPDATE fza_contadores 
-    SET CONTADOR_CONTADOR = CONTADOR_CONTADOR + 1,
+    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1),
         USUARIOMODIF = pUSUARIO_MODIF
     WHERE TIPODOC_CONTADOR = pTipoDoc
       AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR;            
       
-    /* Devolvemos el valor (con los ceros a la izquierda que correspondan) */
-    SET pcont = LPAD(
-        (SELECT CONTADOR_CONTADOR - 1 
-         FROM fza_contadores         
-         WHERE TIPODOC_CONTADOR = pTipoDoc 
-           AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-         LIMIT 1), 
-        pPADD, 
-        '0'
-    );
+    /* Modificado: Guardamos el valor exacto bloqueado para este usuario y le restamos 1 como en tu lógica original */
+    SET v_NextValue = LAST_INSERT_ID() - 1;
+
+    /* Modificado: Devolvemos el valor con el LPAD usando la variable segura */
+    SET pcont = LPAD(v_NextValue, pPADD, '0');
 
     COMMIT;
     
@@ -7898,85 +8020,53 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `PRC_GET_NEXT_CONT_FACT_SERIE`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
-    IN  pserie             VARCHAR(12), 
-    IN  pTipoDoc           VARCHAR(2), 
-    IN  pEMPRESA_CONTADOR  VARCHAR(10), 
-    IN  pUSUARIOMODIF      VARCHAR(100),
-    OUT pcont              VARCHAR(12)
+    IN pserie VARCHAR(12),
+    IN pTipoDoc VARCHAR(2),
+    IN pEMPRESA_CONTADOR VARCHAR(10),
+    IN pUSUARIOMODIF VARCHAR(100),
+    OUT pcont VARCHAR(12)
 )
 BEGIN
     DECLARE pNUMDIGIT INT;
-
-    /* Manejo de errores para asegurar la consistencia */
+    DECLARE v_NextValue BIGINT;
+    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-    
+    ManejoError: BEGIN ROLLBACK; RESIGNAL; END ManejoError;
+
     START TRANSACTION;
-    
-    IF (pEMPRESA_CONTADOR = '' OR pEMPRESA_CONTADOR IS NULL) THEN 
-        SET pEMPRESA_CONTADOR = '-'; 
-    END IF;
-    
-    /* Si no existe el contador, lo insertamos */
-    IF NOT EXISTS (
-        SELECT 1
-        FROM fza_contadores
-        WHERE TIPODOC_CONTADOR = pTipoDoc
-          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-          AND SERIE_CONTADOR = pserie
-    ) THEN
-    
-        INSERT INTO fza_contadores (
-            TIPODOC_CONTADOR, 
-            SERIE_CONTADOR, 
-            CONTADOR_CONTADOR, 
-            EMPRESA_CONTADOR,
-            DEFAULT_CONTADOR,
-            NUMDIGIT_CONTADOR,
-            INSTANTEALTA, 
-            USUARIOALTA,
-            USUARIOMODIF
-        ) VALUES (
-            pTipoDoc, 
-            pserie, 
-            1, 
-            pEMPRESA_CONTADOR,
-            'N', 
-            6,
-            CURRENT_TIMESTAMP,
-            pUSUARIOMODIF, 
-            pUSUARIOMODIF
-        );
-        
+
+    IF (pEMPRESA_CONTADOR = '' OR pEMPRESA_CONTADOR IS NULL) THEN
+        SET pEMPRESA_CONTADOR = '-';
     END IF;
 
-    /* Incrementamos el contador */
-    UPDATE fza_contadores
-    SET CONTADOR_CONTADOR = CONTADOR_CONTADOR + 1,
-        USUARIOMODIF = pUSUARIOMODIF
-    WHERE SERIE_CONTADOR = pserie
-      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-      AND TIPODOC_CONTADOR = pTipoDoc;
-      
-    /* Rescatamos el valor que acabamos de incrementar (restando 1) y los dígitos */
-    SELECT (CONTADOR_CONTADOR - 1), NUMDIGIT_CONTADOR
-    INTO pcont, pNUMDIGIT
-    FROM fza_contadores
-    WHERE SERIE_CONTADOR = pserie
-      AND TIPODOC_CONTADOR = pTipoDoc
-      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR 
-    LIMIT 1;
-         
-    /* Aplicamos el relleno de ceros a la izquierda si corresponde */
+    IF NOT EXISTS (SELECT 1 FROM fza_contadores WHERE TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND SERIE_CONTADOR = pserie) THEN
+        INSERT INTO fza_contadores (
+            TIPODOC_CONTADOR, SERIE_CONTADOR, CONTADOR_CONTADOR, EMPRESA_CONTADOR, DEFAULT_CONTADOR, NUMDIGIT_CONTADOR, INSTANTEALTA, USUARIOALTA, USUARIOMODIF
+        ) VALUES (
+            pTipoDoc, pserie, 1, pEMPRESA_CONTADOR, 'N', 6, CURRENT_TIMESTAMP, pUSUARIOMODIF, pUSUARIOMODIF
+        );
+    END IF;
+
+    /* LA MAGIA: Incrementamos y guardamos en memoria el valor EXACTO para este usuario */
+    UPDATE fza_contadores 
+    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1), 
+        USUARIOMODIF = pUSUARIOMODIF 
+    WHERE SERIE_CONTADOR = pserie AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND TIPODOC_CONTADOR = pTipoDoc;
+
+    /* Obtenemos el valor seguro reservado para esta sesión (le restamos 1 porque la app necesita el número pre-incremento) */
+    SET v_NextValue = LAST_INSERT_ID() - 1;
+
+    SELECT NUMDIGIT_CONTADOR INTO pNUMDIGIT 
+    FROM fza_contadores 
+    WHERE SERIE_CONTADOR = pserie AND TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR LIMIT 1;
+
     IF (pNUMDIGIT IS NOT NULL AND pNUMDIGIT > 0) THEN
-        SET pcont = LPAD(pcont, pNUMDIGIT, '0');
-    END IF;                                 
+        SET pcont = LPAD(v_NextValue, pNUMDIGIT, '0');
+    ELSE
+        SET pcont = CAST(v_NextValue AS CHAR);
+    END IF;
 
     COMMIT;
-    
 END ;;
 DELIMITER ;
 
@@ -7992,13 +8082,6 @@ CREATE  PROCEDURE `PRC_GET_NEXT_OP_CAJA`(IN  pEmpresa  VARCHAR(10),
 BEGIN
     DECLARE pPADD    BIGINT;
     DECLARE vSerie   VARCHAR(12);
-
-    /* Manejo de errores para asegurar la consistencia */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
 
     START TRANSACTION;
 
@@ -8564,4 +8647,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 19/03/2026 16:52:12
+-- Backup completado: 19/03/2026 18:25:45

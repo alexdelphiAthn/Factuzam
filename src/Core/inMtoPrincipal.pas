@@ -273,10 +273,9 @@ begin
   if Length(MsgCorta) > 200 then
     MsgCorta := Copy(MsgCorta, 1, 200) + '...';
   Respuesta := MessageDlg(
-    'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
-    SQL + sLineBreak + sLineBreak +
+    'Ocurrió un error ejecutando el script.' +  sLineBreak +
     'Detalle del error: ' + MsgCorta + sLineBreak + sLineBreak +
-    '¿Deseas ignorar el error y continuar con el script?',
+    '¿Desea ignorar el error y continuar con el script?',
     mtError, [mbYes, mbNo], 0);
   if Respuesta = mrYes then
     Action := eaContinue  // Ignora la sentencia fallida
