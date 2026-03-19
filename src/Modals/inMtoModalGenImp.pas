@@ -39,7 +39,7 @@ uses
   dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization,
-  frLanguageSpanish;
+  frLanguageSpanish, frxSmartMemo;
 type
   TfrmPrint = class(TfrmBase)
     pnl1: TPanel;

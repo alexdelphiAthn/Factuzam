@@ -47,7 +47,8 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
+  dxBarBuiltInMenu;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -201,12 +202,26 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject; var SQL: string; var Omit: Boolean);
+var
+  TempList: TStringList;
 begin
-  if Assigned(FLogMemo) then
-  begin
-    FLogMemo.Lines.Add(' -- Ejecutando: ' + sLineBreak + Trim(SQL));
-    Application.ProcessMessages;
+  FLogMemo.Lines.Add(' -- Ejecutando (' + DateTimeToStr(Now) + '): ');
+
+  // Usamos un StringList para que Delphi desglose los saltos de línea correctamente
+  TempList := TStringList.Create;
+  try
+    TempList.Text := SQL;
+    FLogMemo.Lines.AddStrings(TempList);
+  finally
+    TempList.Free;
   end;
+
+  // Mantenemos el autoscroll para que baje visualmente
+  FLogMemo.SelStart := Length(FLogMemo.Text);
+  SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
+
+  Application.ProcessMessages;
+
   // Iniciamos el cronómetro justo antes de que la BD reciba la sentencia
   FStopwatch := TStopwatch.StartNew;
 end;
