@@ -1,6 +1,6 @@
 ﻿-- ========================================
--- Backup generado: 18/03/2026 7:15:54
--- Base de datos: factuzam
+-- Backup generado: 19/03/2026 16:52:12
+-- Base de datos: Factuzam
 -- ========================================
 
 START TRANSACTION;
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 18, 3, 'S', 'S', '2026-03-17 08:43:50', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 22, 3, 'S', 'S', '2026-03-19 16:50:22', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1675,69 +1675,62 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADORPROCESO`, `NOMBRE_GENERADORPROCESO`, `PROCESO_GENERADORPROCESO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('001', 'INSERTAR CAMPOS GRID POR MTO', 'CREATE OR REPLACE PROCEDURE PRC_BUSQUEDA_ARTICULOS(
-    IN p_tarifa      VARCHAR(50),
-    IN p_almacen     VARCHAR(50),
-    IN p_fecha       DATE,
-    IN p_token       VARCHAR(100),
-    IN p_solostock   TINYINT,
-    IN p_solotarifa  TINYINT
+  ('001', 'INSERTAR CAMPOS GRID POR MTO', 'CREATE PROCEDURE `PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR`(
+    IN pCODIGO_ARTICULO               varchar(20),
+    IN pCODIGO_PROVEEDOR              varchar(20),
+    IN pESPROVEEDORPRINCIPAL          varchar(1),
+    IN pPRECIO_ULT_COMPRA             decimal(19,6),
+    IN pUSUARIO                       varchar(100)
 )
 BEGIN
-    SET @busqueda = CONCAT(''%'', IFNULL(p_token, ''''), ''%'');
+    START TRANSACTION;
 
-    SELECT 
-        v.INPUT_BUSQUEDA,
-        v.TIPO_COINCIDENCIA,
-        v.CODIGO_PADRE,
-        v.CODIGO_SKU,
-        v.DESCRIPCION_ARTICULO,
-        v.TIPO_ARTICULO,
+    IF ((TRIM(pCODIGO_PROVEEDOR) <> '''') AND (TRIM(pCODIGO_ARTICULO) <> '''')) THEN
         
-        -- ESTO ES LO QUE LEERÁ DELPHI:
-        -- Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU.
-        COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
+        /* Comprobar si ya existe la relación artículo-proveedor */
+        IF ( EXISTS( SELECT *
+                     FROM fza_articulos_proveedores
+                     WHERE `CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = pCODIGO_PROVEEDOR
+                       AND CODIGO_ARTICULO_ARTICULO_PROVEEDOR = pCODIGO_ARTICULO )) THEN
+                       
+            UPDATE fza_articulos_proveedores
+            SET 
+                PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR    = pPRECIO_ULT_COMPRA,
+                ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = pESPROVEEDORPRINCIPAL,
+                USUARIOMODIF                            = pUSUARIO,
+                INSTANTEMODIF                           = CURRENT_TIMESTAMP             
+            WHERE `CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = pCODIGO_PROVEEDOR
+              AND CODIGO_ARTICULO_ARTICULO_PROVEEDOR = pCODIGO_ARTICULO;
+              
+        ELSE
+            /* Si no existe, insertar */
+            INSERT INTO fza_articulos_proveedores (
+                CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR, 
+                CODIGO_ARTICULO_ARTICULO_PROVEEDOR,                  
+                PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR,
+                ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR,                                                                                        
+                USUARIOMODIF,
+                INSTANTEMODIF,
+                USUARIOALTA,
+                INSTANTEALTA                     
+            ) VALUES (
+                pCODIGO_PROVEEDOR,
+                pCODIGO_ARTICULO,
+                pPRECIO_ULT_COMPRA,       
+                pESPROVEEDORPRINCIPAL,                                                                                                      
+                pUSUARIO,
+                CURRENT_TIMESTAMP,
+                pUSUARIO,
+                CURRENT_TIMESTAMP              
+            );
+            
+        END IF;
         
-        -- Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre)
-        COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
-        
-        -- Calculamos el stock disponible cruzando por el código definitivo
-        (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
-         FROM fza_articulos_stockactual s 
-         WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
-           AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
+    END IF;        
 
-    FROM vi_caja_busqueda_unificada v
+    COMMIT;
     
-    -- Buscamos el precio del SKU (si existe)
-    LEFT JOIN fza_articulos_tarifas t_sku 
-           ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
-          AND t_sku.CODIGO_TARIFA = p_tarifa
-          
-    -- Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio)
-    LEFT JOIN fza_articulos_tarifas t_padre 
-           ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
-          AND t_padre.CODIGO_TARIFA = p_tarifa 
-          AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '''')
-
-    WHERE 
-      -- Búsqueda por token (busca en el código exacto escaneado o en la descripción)
-      (p_token = '''' OR 
-       v.INPUT_BUSQUEDA LIKE @busqueda OR 
-       v.DESCRIPCION_ARTICULO LIKE @busqueda)
-      
-      -- Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre
-      AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
-      
-      -- Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0
-      AND (p_solostock = 0 OR 
-            (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
-             FROM fza_articulos_stockactual s 
-             WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
-               AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
-               
-    ORDER BY v.DESCRIPCION_ARTICULO ASC;
-END;', '2026-03-16 17:54:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+END', '2026-03-19 09:28:15', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('002', 'update cosas', 'UPDATE fza_ivas
    SET PORCENEXENTO_RE_IVA = 0', '2023-04-28 21:13:07', '2023-04-28 12:28:56', 'Administrador', 'Administrador'),
   ('003', 'ACTUALIZACION DE CAMPO FZA_IVAS', '           ALTER TABLE FZA_IVAS    MODIFY COLUMN   `GRUPO_ZONA_IVA` varchar(10) NOT NULL;', '2023-04-28 12:46:20', '2023-04-28 12:45:28', 'Administrador', 'Administrador'),
@@ -2279,8 +2272,201 @@ BEGIN
  AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
  
  ORDER BY v.DESCRIPCION_ARTICULO ASC;
-END', '2026-03-17 08:43:50', '2026-03-17 08:43:50', 'Administrador', 'Administrador');
--- 15 registros exportados
+END', '2026-03-17 08:43:50', '2026-03-17 08:43:50', 'Administrador', 'Administrador'),
+  ('018', 'Ejecutar PRC_SETPERFILFORMULARIO', 'CALL PRC_SETPERFILFORMULARIO(''Todos'', ''frmMtoCajaParam'', ''vgerDiasCaducidadVale'', ''361'');', '2026-03-19 08:48:29', '2026-03-19 08:48:02', 'Administrador', 'Administrador'),
+  ('019', 'Ejecutar PRC_BUSQUEDA_ARTICULOS', 'CREATE PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(IN p_tarifa     VARCHAR(10),
+    IN p_almacen    VARCHAR(10),
+    IN p_fecha      DATE,
+    IN p_token      VARCHAR(100),
+    IN p_solostock  TINYINT,
+    IN p_solotarifa TINYINT)
+BEGIN
+    IF p_tarifa IS NULL OR TRIM(p_tarifa) = '''' THEN
+        SET p_tarifa := ''PVP'';
+    END IF;
+    IF p_fecha IS NULL THEN
+        SET p_fecha := CURDATE();
+    END IF;
+
+    SELECT
+        v.*,
+        COALESCE(stk.STOCK_DISPONIBLE, 0) AS STOCK_DISPONIBLE
+    FROM vi_art_busquedas v
+
+    /* Stock unificado: por SKU + por código directo */
+    LEFT JOIN (
+        SELECT COD_ART, SUM(STOCK) AS STOCK_DISPONIBLE
+        FROM (
+            /* Artículos CON SKU: sumar por artículo padre */
+            SELECT sku.CODIGO_ARTICULO_SKU AS COD_ART,
+                   s.CANTIDAD_STK          AS STOCK
+              FROM fza_articulos_stockactual s
+              JOIN fza_articulos_skus sku
+                ON s.CODIGO_UNIDAD_STK = sku.CODIGO_UNIDAD_SKU
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+            UNION ALL
+            /* Artículos SIN SKU: código directo no existe en fza_articulos_skus */
+            SELECT s.CODIGO_UNIDAD_STK AS COD_ART,
+                   s.CANTIDAD_STK      AS STOCK
+              FROM fza_articulos_stockactual s
+             WHERE s.CODIGO_ALMACEN_STK = p_almacen
+               AND NOT EXISTS (
+                   SELECT 1 FROM fza_articulos_skus sku2
+                    WHERE sku2.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK
+               )
+        ) t
+        GROUP BY COD_ART
+    ) stk ON v.CODIGO_ARTICULO = stk.COD_ART
+
+    WHERE (v.CODIGO_TARIFA = p_tarifa OR v.CODIGO_TARIFA IS NULL)
+      AND v.FECHA_DESDE_TARIFA <= p_fecha
+      AND (v.FECHA_HASTA_TARIFA IS NULL OR v.FECHA_HASTA_TARIFA >= p_fecha)
+      AND (p_token IS NULL OR p_token = ''''
+           OR v.CODIGO_ARTICULO      LIKE p_token
+           OR v.DESCRIPCION_ARTICULO LIKE p_token
+           OR v.DESCRIPCION_FAMILIA  LIKE p_token)
+      AND (p_solostock  = 0 OR COALESCE(stk.STOCK_DISPONIBLE, 0) > 0)
+      AND (p_solotarifa = 0 OR v.CODIGO_TARIFA IS NOT NULL)
+
+    ORDER BY v.CODIGO_ARTICULO;
+
+END', '2026-03-19 09:23:22', '2026-03-19 09:23:22', 'Administrador', 'Administrador'),
+  ('020', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
+    IN  pserie             VARCHAR(12), 
+    IN  pTipoDoc           VARCHAR(2), 
+    IN  pEMPRESA_CONTADOR  VARCHAR(10), 
+    IN  pUSUARIOMODIF      VARCHAR(100),
+    OUT pcont              VARCHAR(12)
+)
+BEGIN
+    DECLARE pNUMDIGIT INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        -- Si ocurre cualquier error, deshacer los cambios y emitir el error original
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+    
+    START TRANSACTION;
+    
+    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN 
+        SET pEMPRESA_CONTADOR = ''-''; 
+    END IF;
+    
+    /* Si no existe el contador, lo insertamos */
+    IF NOT EXISTS (
+        SELECT 1
+        FROM fza_contadores
+        WHERE TIPODOC_CONTADOR = pTipoDoc
+          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
+          AND SERIE_CONTADOR = pserie
+    ) THEN
+    
+        INSERT INTO fza_contadores (
+            TIPODOC_CONTADOR, 
+            SERIE_CONTADOR, 
+            CONTADOR_CONTADOR, 
+            EMPRESA_CONTADOR,
+            DEFAULT_CONTADOR,
+            NUMDIGIT_CONTADOR,
+            INSTANTEALTA, 
+            USUARIOALTA,
+            USUARIOMODIF
+        ) VALUES (
+            pTipoDoc, 
+            pserie, 
+            1, 
+            pEMPRESA_CONTADOR,
+            ''N'', 
+            6,
+            CURRENT_TIMESTAMP,
+            pUSUARIOMODIF, 
+            pUSUARIOMODIF
+        );
+        
+    END IF;
+
+    /* Incrementamos el contador */
+    UPDATE fza_contadores
+    SET CONTADOR_CONTADOR = CONTADOR_CONTADOR + 1,
+        USUARIOMODIF = pUSUARIOMODIF
+    WHERE SERIE_CONTADOR = pserie
+      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
+      AND TIPODOC_CONTADOR = pTipoDoc;
+      
+    /* Rescatamos el valor que acabamos de incrementar (restando 1) y los dígitos */
+    SELECT (CONTADOR_CONTADOR - 1), NUMDIGIT_CONTADOR
+    INTO pcont, pNUMDIGIT
+    FROM fza_contadores
+    WHERE SERIE_CONTADOR = pserie
+      AND TIPODOC_CONTADOR = pTipoDoc
+      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR 
+    LIMIT 1;
+         
+    /* Aplicamos el relleno de ceros a la izquierda si corresponde */
+    IF (pNUMDIGIT IS NOT NULL AND pNUMDIGIT > 0) THEN
+        SET pcont = LPAD(pcont, pNUMDIGIT, ''0'');
+    END IF;                                 
+
+    COMMIT;
+    
+END
+', '2026-03-19 16:36:21', '2026-03-19 16:32:07', 'Administrador', 'Administrador'),
+  ('021', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_REALIZAR_TRASPASO`(
+    IN pUsuario VARCHAR(50),
+    IN pEmpresa VARCHAR(20),
+    IN pAlmacenOrigen VARCHAR(10),
+    IN pAlmacenDestino VARCHAR(10),
+    IN pSku VARCHAR(50),
+    IN pCantidad DECIMAL(19,6))
+BEGIN
+    DECLARE vSerie VARCHAR(20) DEFAULT ''TRAS'';
+    DECLARE vNroDoc VARCHAR(20);
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    /* Generamos un número de documento único basado en la fecha y hora */
+    SET vNroDoc = DATE_FORMAT(NOW(), ''%Y%m%d%H%i%s'');
+
+    START TRANSACTION;
+
+    /* 1. SALIDA DEL ORIGEN (Resta stock en Origen) */
+    INSERT INTO `fza_movimientos_almacen` 
+    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
+      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
+      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
+      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF)
+    VALUES 
+    (''TR'', vSerie, vNroDoc, ''001'', pEmpresa,
+      pAlmacenOrigen, pAlmacenDestino, NOW(),
+      pSku, ''S'', pCantidad,
+      CONCAT(''Traspaso a '', pAlmacenDestino), pUsuario, pUsuario);
+
+    /* 2. ENTRADA EN DESTINO (Suma stock en Destino) */
+    INSERT INTO `fza_movimientos_almacen` 
+    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
+      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
+      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
+      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF,
+     TIPO_DOC_REF_MOV, SERIE_DOC_REF_MOV, NRO_DOC_REF_MOV, LINEA_REF_MOV)
+    VALUES 
+    (''TR'', vSerie, vNroDoc, ''002'', pEmpresa,
+      pAlmacenDestino, pAlmacenOrigen, NOW(),
+      pSku, ''E'', pCantidad,
+      CONCAT(''Traspaso desde '', pAlmacenOrigen), pUsuario, pUsuario,
+     ''TR'', vSerie, vNroDoc, ''001'');
+
+    COMMIT;
+
+    SELECT CONCAT(''Traspaso realizado. Doc: '', vSerie, ''-'', vNroDoc) AS MENSAJE;
+END;', '2026-03-19 16:51:44', '2026-03-19 16:50:22', 'Administrador', 'Administrador');
+-- 19 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -2506,45 +2692,50 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (110, 'vi_usuarios_grupos', '2'),
   (111, 'vi_usuarios_perfiles', '2'),
   (112, 'vi_variaciones', '2'),
-  (130, 'PRC_BUSQUEDA_ARTICULOS', '3'),
-  (131, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
-  (132, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
-  (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
-  (134, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
-  (135, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
-  (136, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
-  (137, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
-  (138, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
-  (139, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
-  (140, 'PRC_CREAR_FACTURA_ABONO', '3'),
-  (141, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
-  (142, 'PRC_CREAR_METADATOS', '3'),
-  (143, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
-  (144, 'PRC_CREAR_TRASPASO', '3'),
-  (145, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (146, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (147, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (148, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (149, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (150, 'PRC_GETPERFILFORMULARIO', '3'),
-  (151, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (152, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (153, 'PRC_GET_CREAR_VALOR', '3'),
-  (154, 'PRC_GET_DATA_ARTICULO', '3'),
-  (155, 'PRC_GET_DATA_CLIENTE', '3'),
-  (156, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (157, 'PRC_GET_NEXT_CONT', '3'),
-  (158, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (159, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (160, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (161, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (162, 'PRC_REALIZAR_TRASPASO', '3'),
-  (163, 'PRC_RECALCULAR_STOCK', '3'),
-  (164, 'PRC_SETPERFILFORMULARIO', '3'),
-  (165, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (166, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
+  (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
+  (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
+  (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
+  (134, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
+  (135, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
+  (136, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
+  (137, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
+  (138, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
+  (139, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
+  (140, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
+  (141, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
+  (142, 'PRC_CREAR_FACTURA_ABONO', '3'),
+  (143, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
+  (144, 'PRC_CREAR_METADATOS', '3'),
+  (145, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
+  (146, 'PRC_CREAR_TRASPASO', '3'),
+  (147, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (148, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (149, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (150, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (151, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (152, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (153, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (154, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (155, 'PRC_GETPERFILFORMULARIO', '3'),
+  (156, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (157, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (158, 'PRC_GET_CREAR_VALOR', '3'),
+  (159, 'PRC_GET_DATA_ARTICULO', '3'),
+  (160, 'PRC_GET_DATA_CLIENTE', '3'),
+  (161, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (162, 'PRC_GET_NEXT_CONT', '3'),
+  (163, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (164, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (165, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (166, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (167, 'PRC_REALIZAR_TRASPASO', '3'),
+  (168, 'PRC_RECALCULAR_STOCK', '3'),
+  (169, 'PRC_SETPERFILFORMULARIO', '3'),
+  (170, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (171, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 145 registros exportados
+-- 150 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -3318,7 +3509,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-18 07:15:31', '2026-03-18 07:15:31', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-19 16:31:10', '2026-03-19 16:31:10', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -3449,6 +3640,28 @@ FROM vi_tarifas
   ('Administrador', 'dmFacturas', 'unstrdprcGetDataArticulo', 'Procedure', 'PRC_GET_DATA_ARTICULO', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'dmFacturas', 'unstrdprcGetDataCliente', 'Procedure', 'PRC_GET_DATA_CLIENTE', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'dmFacturas', 'unstrdprcGetRecibos', 'Procedure', 'PRC_CREAR_RECIBOS_FACTURA', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerArqueoTarjetas', 'False', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerBusqArtTarifaOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerCaducidadDefVale', 'False', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerChkStockOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerCodEmpleadoDefecto', '1', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerDefPrinter', 'Generic', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerDefTarifa', 'PVP', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerDescuentos', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerDiasCaducidadVale', '365', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerFillEmpleadoDefecto', 'False', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerFormatoImpPredet', '', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerMaxOpPending', '5', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerMoverLineaIdentif', 'False', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerRecuperaValePIN', 'False', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerVentasCredito', 'True', NULL, NULL, NULL, '2026-03-19 09:20:00', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'btnCancelar_Caption', '&Cancelar', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'btnCancelarFactura_Caption', 'Cancelar &Factura', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'btnCargarCaptions_Caption', '&Cargar captions', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
@@ -3900,7 +4113,8 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoFacturas', 'lblTablaOrigen_Caption', 'vi_facturas', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'lblTarifaArticulosCliente_Caption', 'Tarifa Artículos', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'lblTelefonoMovil_Caption', 'Tfno. Móvil', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'lblTextoaBuscar_Caption', 'Texto a buscar', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas', 'lblTextoaBuscar_Caption', 'Texto a buscar', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas', 'lblTextoaBuscarPerfil_Caption', 'Texto a buscar', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'lblTotalaPagar_Caption', 'Total a pagar', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'lblTotalBaseImponible_Caption', 'Total Base Imponible', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
@@ -3922,8 +4136,7 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoFacturas', 'tsEmpresa_Caption', 'Datos E&mpresa Emisora -', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tsFicha_Caption', '&Ficha', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tsLineasFactura_Caption', '&1_Lineas de Factura - ', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'tsLista_Caption', '&Lista', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas', 'tsLista_Caption', '&Lista', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tsOtros_Caption', '&4_Otros', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tsPerfil_Caption', 'Perfil', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tsRecibos_Caption', '&3_Recibos', '', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
@@ -4339,25 +4552,28 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Index', '4', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Visible', 'True', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'tvPerfil_VALUE_TEXT_PERFILES_Width', '140', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerBusqArtTarifaOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerCaducidadDefVale', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerChkStockOnly', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerCodEmpleadoDefecto', '1', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerDefPrinter', 'Generic', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerDefTarifa', 'PVP', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerDiasCaducidadVale', '365', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerFillEmpleadoDefecto', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerFormatoImpPredet', '', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerMaxOpPending', '5', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerMoverLineaIdentif', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerRecuperaValePIN', 'False', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-02-21 07:32:45', '2026-02-21 07:32:45', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoCajaParam', 'vgerArqueoTarjetas', 'False', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-03-19 08:26:33', 'Todos', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerBusqArtTarifaOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerCaducidadDefVale', 'False', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerChkStockOnly', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerCodEmpleadoDefecto', '1', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerDefPrinter', 'Generic', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerDefTarifa', 'PVP', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerDescuentos', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-03-19 08:26:33', 'Todos', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerDiasCaducidadVale', '360', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerFillEmpleadoDefecto', 'False', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerFormatoImpPredet', '', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerMaxOpPending', '5', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerMoverLineaIdentif', 'False', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerRecuperaValePIN', 'False', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-02-21 07:32:45', 'Administrador', 'Todos'),
+  ('Todos', 'frmMtoCajaParam', 'vgerVentasCredito', 'True', NULL, NULL, NULL, '2026-03-19 09:19:08', '2026-03-19 08:26:33', 'Todos', 'Todos'),
   ('Todos', 'frmMtoCliFacSearch', 'btnAceptar_Caption', '&Aceptar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'btnCancelar_Caption', '&Cancelar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'btnCancelar1_Caption', '&Cancelar', '', NULL, NULL, '2023-01-24 19:26:16', '2023-01-24 19:26:16', 'Administrador', 'Administrador'),
@@ -4398,7 +4614,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_EMAIL_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_EMAIL_CLIENTE_Width', '249', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_Caption', 'Intracomunitario', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_Index', '22', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_Index', '22', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_Width', '256', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_Caption', 'IVA Exento', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
@@ -4423,8 +4640,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_IBAN_CLIENTE_Width', '143', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_INSTANTEALTA_Index', '28', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_INSTANTEALTA_Visible', 'False', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Index', '27', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Index', '27', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Visible', 'False', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_MOVIL_CLIENTE_Caption', 'Móvil', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_MOVIL_CLIENTE_Index', '4', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
@@ -4590,7 +4806,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Todos', 'frmPrintRecFac', 'frxrprt1_Buena', 'Buena', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22362E392E332220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E417574686F723D2266616374757A616D22205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234353033372C35353634323037303622205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D22626567696E262331333B262331303B262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F73222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2235222052696768744D617267696E3D22352220546F704D617267696E3D2232302220426F74746F6D4D617267696E3D2232302220436F6C756D6E57696474683D22302220436F6C756D6E506F736974696F6E732E546578743D2222204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223334332C393337323322204C6566743D22302220546F703D2231382C3839373635222057696474683D223735352C3930362220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D2235392C3235323031222057696474683D223334332C393337323322204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D22392C3839373635222057696474683D223135382C373430323622204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D2233362C3335343336222057696474683D223132342C373234343922204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D225B262336303B52656369626F732E262333343B53455249455F464143545552415F52454349424F262333343B262336323B5D5C5B262336303B52656369626F732E262333343B4E524F5F464143545552415F52454349424F262333343B262336323B5D5C5B496E74546F53747228262336303B52656369626F732E262333343B4E524F5F504C415A4F5F52454349424F262333343B262336323B295D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2231332C3637373138222057696474683D223131332C3338353922204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2252454349424F204E524F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223137382C393736352220546F703D22392C3839373635222057696474683D223332312C323630303522204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232302C35353133332220546F703D2233362C3335343336222057696474683D223232362C3737313822204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4C4F43414C494441445F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223139302C33313530392220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224C4F43414C49444144204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F372220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530302C32333635352220546F703D22392C3839373635222057696474683D223232322C393932323722204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532322C39313337332220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22494D504F5254452052454349424F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2236362C35393036222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224645434841204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223336342C31373334372220546F703D2235392C3033313534222057696474683D223335392C303535333522204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223337392C32393135392220546F703D2236362C3337303133222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2246454348412044452056454E43494D49454E544F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D223131332C33383539222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22534F4E2045553A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223135382C3231323734222057696474683D223730322C393932353822204865696768743D2233302C32333632342220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223136322C37373138222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22504147414445524F20454E202020262336303B4942414E262336323B20203A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223139352C3032333831222057696474683D223436382C363631373222204865696768743D223132342C37323434392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223230322C33363234222057696474683D223234312C383839393222204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22444F4D4943494C494F2059204E4F4D4252452044454C204C49425241444F3A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223232352C3236303035222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B52415A4F4E534F4349414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223234372C3933373233222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B444952454343494F4E315F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223236362C3833343838222057696474683D223132302C393434393622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B43504F5354414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F424C4143494F4E5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223135362C32393933322220546F703D223236362C3833343838222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B504F424C4143494F4E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223238392C3531323036222057696474683D223332382C383139313122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B50524F56494E4349415F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173434F4449474F5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223430352C373438332220546F703D223139382C3830333334222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B434F4449474F5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530362C34353730322220546F703D223139382C3433333231222057696474683D223138382C3937363522204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22434F4E464F524D452C20454C204C49425241444F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173494D504F5254455F4C45545241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223132302C39343439362220546F703D223131332C33383539222057696474683D223531342C303136303822204865696768743D2233372C373935332220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B494D504F5254455F4C455452415F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734942414E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D223136322C37373138222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B4942414E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F45585045444943494F4E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D2238312C35393036222057696474683D223130392C363036333722204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F56454E43494D49454E544F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223537342C34383835362220546F703D2238312C35393036222057696474683D223130322C303437333122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F56454E43494D49454E544F5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734555524F535F52454349424F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532312C35373531342220546F703D2233322C3435363731222057696474683D223137332C383538333822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4555524F535F52454349424F262333343B5D222F3E0D0A2020202020203C546672784C696E6556696577204E616D653D224C696E65312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22302220546F703D223333342C3831393131222057696474683D223735392C363835353322204865696768743D22302220436F6C6F723D223022204672616D652E5374796C653D2266734461736822204672616D652E5479703D2234222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2023-04-21 13:21:21', '2023-04-21 13:21:21', 'Administrador', 'Administrador'),
   ('Todos', 'frmPrintRecFac', 'frxrprt1_cola cao', 'cola cao', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22323032322E332220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E417574686F723D2246616374755A616D22205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234353639342C3836363236303532303822205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D22626567696E262331333B262331303B262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F73222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2235222052696768744D617267696E3D22352220546F704D617267696E3D2232302220426F74746F6D4D617267696E3D2232302220436F6C756D6E57696474683D22302220436F6C756D6E506F736974696F6E732E546578743D2222204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223334332C393337323322204C6566743D22302220546F703D2231382C3839373635222057696474683D223735352C3930362220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D2235392C3235323031222057696474683D223334332C393337323322204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D22392C3839373635222057696474683D223135382C373430323622204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D2233362C3335343336222057696474683D223132342C373234343922204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D225B262336303B52656369626F732E262333343B53455249455F464143545552415F52454349424F262333343B262336323B5D5C5B262336303B52656369626F732E262333343B4E524F5F464143545552415F52454349424F262333343B262336323B5D5C5B496E74546F53747228262336303B52656369626F732E262333343B4E524F5F504C415A4F5F52454349424F262333343B262336323B295D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2231332C3637373138222057696474683D223131332C3338353922204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2252454349424F204E524F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223137382C393736352220546F703D22392C3839373635222057696474683D223332312C323630303522204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232302C35353133332220546F703D2233362C3335343336222057696474683D223232362C3737313822204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4C4F43414C494441445F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223139302C33313530392220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224C4F43414C49444144204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F372220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530302C32333635352220546F703D22392C3839373635222057696474683D223232322C393932323722204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532322C39313337332220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22494D504F5254452052454349424F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2236362C35393036222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224645434841204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223336342C31373334372220546F703D2235392C3033313534222057696474683D223335392C303535333522204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223337392C32393135392220546F703D2236362C3337303133222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2246454348412044452056454E43494D49454E544F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D223131332C33383539222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22534F4E2045553A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223135382C3231323734222057696474683D223730322C393932353822204865696768743D2233302C32333632342220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223136322C37373138222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22504147414445524F20454E202020262336303B4942414E262336323B20203A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223139352C3032333831222057696474683D223436382C363631373222204865696768743D223132342C37323434392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223230322C33363234222057696474683D223234312C383839393222204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22444F4D4943494C494F2059204E4F4D4252452044454C204C49425241444F3A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223232352C3236303035222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B52415A4F4E534F4349414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223234372C3933373233222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B444952454343494F4E315F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223236362C3833343838222057696474683D223132302C393434393622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B43504F5354414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F424C4143494F4E5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223135362C32393933322220546F703D223236362C3833343838222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B504F424C4143494F4E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223238392C3531323036222057696474683D223332382C383139313122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B50524F56494E4349415F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173434F4449474F5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223430352C373438332220546F703D223139382C3830333334222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B434F4449474F5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530362C34353730322220546F703D223139382C3433333231222057696474683D223138382C3937363522204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22434F4E464F524D452C20454C204C49425241444F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173494D504F5254455F4C45545241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223132302C39343439362220546F703D223131332C33383539222057696474683D223531342C303136303822204865696768743D2233372C373935332220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B494D504F5254455F4C455452415F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734942414E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D223136322C37373138222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B4942414E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F45585045444943494F4E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D2238312C35393036222057696474683D223130392C363036333722204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F56454E43494D49454E544F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223537342C34383835362220546F703D2238312C35393036222057696474683D223130322C303437333122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F56454E43494D49454E544F5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734555524F535F52454349424F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532312C35373531342220546F703D2233322C3435363731222057696474683D223137332C383538333822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4555524F535F52454349424F262333343B5D222F3E0D0A2020202020203C546672784C696E6556696577204E616D653D224C696E65312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22302220546F703D223333342C3831393131222057696474683D223735392C363835353322204865696768743D22302220436F6C6F723D223022204672616D652E5374796C653D2266734461736822204672616D652E5479703D2234222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223533322C39313337332220546F703D223239342C3830333334222057696474683D223135312C3138313222204865696768743D2233302C32333632342220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22636F6C612063616F222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2025-02-06 20:47:48', '2025-02-06 20:47:48', 'Administrador', 'Administrador'),
   ('Todos', 'inLibtb', 'oSimbolosProhibidos', ',"''+-€%*', NULL, NULL, NULL, '2023-04-26 11:50:56', '2023-04-26 11:50:48', 'Administrador', 'Administrador');
--- 1165 registros exportados
+-- 1190 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -4959,24 +5175,24 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_variaciones` AS select `fza_variaciones`.`C
 -- Procedimiento: PRC_AGREGAR_VALOR_CONJUNTO
 DROP PROCEDURE IF EXISTS `PRC_AGREGAR_VALOR_CONJUNTO`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_AGREGAR_VALOR_CONJUNTO`(IN `p_id_conjunto` INT,         -- ID de la Paleta (ej: 5 para 'Verano 2026')
-    IN `p_valor_texto` VARCHAR(100), -- Lo que escribió el usuario (ej: 'VERDE RADIOACTIVO')
+CREATE  PROCEDURE `PRC_AGREGAR_VALOR_CONJUNTO`(IN `p_id_conjunto` INT,         /* ID de la Paleta (ej: 5 para 'Verano 2026') */
+    IN `p_valor_texto` VARCHAR(100), /* Lo que escribió el usuario (ej: 'VERDE RADIOACTIVO') */
     IN `p_usuario` VARCHAR(100))
 BEGIN
     DECLARE v_id_valor INT;
     DECLARE v_tipo_variacion VARCHAR(20);
     
-    -- 1. Averiguamos de qué tipo es esta paleta (¿Es de Colores CO o Tallas TC?)
+    /* 1. Averiguamos de qué tipo es esta paleta (¿Es de Colores CO o Tallas TC?) */
     SELECT ID_VA_AC INTO v_tipo_variacion
     FROM fza_atributos_conjuntos
     WHERE ID_CONJUNTO_AC = p_id_conjunto;
     
-    -- 2. Usamos el truco del "Find or Create" que vimos antes
-    -- Esto busca el ID de 'VERDE RADIOACTIVO'. Si no existe, lo crea en fza_atributos_valores
+    /* 2. Usamos el truco del "Find or Create" que vimos antes */
+    /* Esto busca el ID de 'VERDE RADIOACTIVO'. Si no existe, lo crea en fza_atributos_valores */
     CALL PRC_GET_CREAR_VALOR(v_tipo_variacion, p_valor_texto, p_usuario, v_id_valor);
     
-    -- 3. Ahora que SEGURO tenemos un ID (v_id_valor), lo vinculamos a la paleta
-    -- Usamos INSERT IGNORE para que si ya estaba en la paleta, no de error
+    /* 3. Ahora que SEGURO tenemos un ID (v_id_valor), lo vinculamos a la paleta */
+    /* Usamos INSERT IGNORE para que si ya estaba en la paleta, no de error */
     INSERT IGNORE INTO fza_atributos_conjuntos_det (
         ID_CONJUNTO_ACD, 
         ID_VALOR_ACD, 
@@ -5016,11 +5232,11 @@ BEGIN
         COALESCE(stk.STOCK_DISPONIBLE, 0) AS STOCK_DISPONIBLE
     FROM vi_art_busquedas v
 
-    -- Stock unificado: por SKU + por código directo
+    /* Stock unificado: por SKU + por código directo */
     LEFT JOIN (
         SELECT COD_ART, SUM(STOCK) AS STOCK_DISPONIBLE
         FROM (
-            -- Artículos CON SKU: sumar por artículo padre
+            /* Artículos CON SKU: sumar por artículo padre */
             SELECT sku.CODIGO_ARTICULO_SKU AS COD_ART,
                    s.CANTIDAD_STK          AS STOCK
               FROM fza_articulos_stockactual s
@@ -5028,7 +5244,7 @@ BEGIN
                 ON s.CODIGO_UNIDAD_STK = sku.CODIGO_UNIDAD_SKU
              WHERE s.CODIGO_ALMACEN_STK = p_almacen
             UNION ALL
-            -- Artículos SIN SKU: código directo no existe en fza_articulos_skus
+            /* Artículos SIN SKU: código directo no existe en fza_articulos_skus */
             SELECT s.CODIGO_UNIDAD_STK AS COD_ART,
                    s.CANTIDAD_STK      AS STOCK
               FROM fza_articulos_stockactual s
@@ -5128,6 +5344,13 @@ BEGIN
                  
   DECLARE CONTINUE HANDLER 
           FOR NOT FOUND SET finished = 1;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
           
   START TRANSACTION;
   
@@ -5260,6 +5483,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_ARTICULO`(
 )
 BEGIN
     DECLARE pCONT BIGINT;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
     START TRANSACTION;
 
@@ -5337,6 +5567,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR`(
     IN pUSUARIO                       varchar(100)
 )
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     START TRANSACTION;
 
     IF ((TRIM(pCODIGO_PROVEEDOR) <> '') AND (TRIM(pCODIGO_ARTICULO) <> '')) THEN
@@ -5412,6 +5649,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_CLIENTE`(
     IN `pUSUARIO`                           varchar(100)
 )
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     START TRANSACTION;
     
     /* Comprobar si el cliente ya existe */
@@ -5521,6 +5765,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_EMPRESA`(IN `pCODIGO_EMPRESA`           
 																																					 IN `pGRUPO_ZONA_IVA_EMPRESA`        varchar(10),
 																																					 IN `pUSUARIO`                       varchar(100))
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 START TRANSACTION;
  IF( EXISTS(
              SELECT *
@@ -5600,6 +5851,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_FAMILIA`(
 )
 BEGIN
     DECLARE pCONT BIGINT;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
     START TRANSACTION;
 
@@ -5663,6 +5921,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_KEY`(
     IN pUSUARIO_MODIF varchar(100)
 )
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     START TRANSACTION;    
     /* Comprobamos si el registro existe */
     IF ( EXISTS(
@@ -5720,6 +5985,13 @@ CREATE  PROCEDURE `PRC_CREAR_ACTUALIZAR_PROVEEDOR`(
 )
 BEGIN
     DECLARE pCONT BIGINT;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
     START TRANSACTION;
 
@@ -5786,6 +6058,13 @@ BEGIN
     DECLARE ppPRECIOFINAL_TARIFA  decimal(19,6);
     DECLARE ppPORCEN_DTO_TARIFA   decimal(19,6);
     DECLARE ppPRECIO_DTO_TARIFA   decimal(19,6);
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 
     START TRANSACTION;
 
@@ -5878,6 +6157,13 @@ CREATE  PROCEDURE `PRC_CREAR_FACTURA_ABONO`(IN `pidseriefactura`      varchar(20
                                       IN `pUSUARIO`             varchar(100))
 BEGIN
    DECLARE contadorped varchar(200);
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
    START TRANSACTION;
    CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, 'FC', pidcodigo_empresa, pUSUARIO, @cont);   
    SET @pFecha = (SELECT DATE_FORMAT(pfechafacturaabono, '%Y-%m-%d'));
@@ -6109,6 +6395,13 @@ CREATE  PROCEDURE `PRC_CREAR_FACTURA_DUPLICADA`(IN `pidseriefactura`      varcha
 BEGIN
    DECLARE `contadorped` varchar(200);
    DECLARE `pfecha` date;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
    START TRANSACTION;
    CALL PRC_GET_NEXT_CONT_FACT_SERIE(`pidseriefacturaabono`, 
                                      'FC', 
@@ -6334,6 +6627,13 @@ DROP PROCEDURE IF EXISTS `PRC_CREAR_METADATOS`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_CREAR_METADATOS`(IN `pDATABASENAME` varchar(100))
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 START TRANSACTION;
   DROP TABLE IF EXISTS `fza_metadatos`;
   CREATE TABLE `fza_metadatos`  (
@@ -6411,6 +6711,13 @@ BEGIN
     DECLARE pFECHA_VENCIMIENTO date;
     DECLARE pFECHA_FACTURA date;
     DECLARE finished INTEGER DEFAULT 0;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 
     START TRANSACTION;
 
@@ -6609,57 +6916,6 @@ BEGIN
 END ;;
 DELIMITER ;
 
--- Procedimiento: PRC_CREAR_TRASPASO
-DROP PROCEDURE IF EXISTS `PRC_CREAR_TRASPASO`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_CREAR_TRASPASO`(IN pUsuario VARCHAR(50),
-    IN pEmpresa VARCHAR(20),
-    IN pAlmacenOrigen VARCHAR(10),
-    IN pAlmacenDestino VARCHAR(10),
-    IN pSku VARCHAR(50),
-    IN pCantidad DECIMAL(19,6))
-BEGIN
-    DECLARE vSerie VARCHAR(20) DEFAULT 'TRAS';
-    DECLARE vNroDoc VARCHAR(20);
-    
-    /* Generamos un número de documento único basado en la fecha y hora (simplificado) */
-    SET vNroDoc = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s');
-
-    START TRANSACTION;
-
-    /* 1. SALIDA DEL ORIGEN (Resta stock en Origen) */
-    INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV, 
-     CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV, 
-     CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-     DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF)
-    VALUES 
-    ('TR', vSerie, vNroDoc, '001', pEmpresa, 
-     pAlmacenOrigen, pAlmacenDestino, NOW(), 
-     pSku, 'S', pCantidad, 
-     CONCAT('Traspaso a ', pAlmacenDestino), pUsuario, pUsuario);
-
-    /* 2. ENTRADA EN DESTINO (Suma stock en Destino) */
-    /* Referenciamos al movimiento anterior para trazabilidad */
-    INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV, 
-     CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV, 
-     CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-     DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF,
-     TIPO_DOC_REF_MOV, SERIE_DOC_REF_MOV, NRO_DOC_REF_MOV, LINEA_REF_MOV)
-    VALUES 
-    ('TR', vSerie, vNroDoc, '002', pEmpresa, 
-     pAlmacenDestino, pAlmacenOrigen, NOW(), 
-     pSku, 'E', pCantidad, 
-     CONCAT('Traspaso desde ', pAlmacenOrigen), pUsuario, pUsuario,
-     'TR', vSerie, vNroDoc, '001');
-
-    COMMIT;
-    
-    SELECT CONCAT('Traspaso realizado. Doc: ', vSerie, '-', vNroDoc) as MENSAJE;
-END ;;
-DELIMITER ;
-
 -- Procedimiento: PRC_FNC_GET_NEXT_LINEA_FACTURA
 DROP PROCEDURE IF EXISTS `PRC_FNC_GET_NEXT_LINEA_FACTURA`;
 DELIMITER ;;
@@ -6668,6 +6924,13 @@ CREATE  PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(IN  `pnumfac` VARCHAR(12),
     OUT `presul`  VARCHAR(3))
 BEGIN
     DECLARE v_temp VARCHAR(3);
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     START TRANSACTION;
     
     /* 1. Buscamos el valor actual */
@@ -6701,6 +6964,13 @@ DELIMITER ;;
 CREATE  PROCEDURE `PRC_FNC_GET_NEXT_NRO_DOC`(IN  `ptipodoc` VARCHAR(8), 
                                              INOUT `ppresul`   BIGINT)
 BEGIN
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 START TRANSACTION;
 UPDATE `fza_contadores`
    SET `CONTADOR_CONTADOR` = CONTADOR_CONTADOR + 1
@@ -6779,7 +7049,7 @@ CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(IN p_CODIGO_CLIENTE VARCHAR(20),
 BEGIN
     DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
 
-    -- Manejo de errores para asegurar la consistencia
+    /* Manejo de errores para asegurar la consistencia */
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     kk: BEGIN
         ROLLBACK;
@@ -6788,7 +7058,7 @@ BEGIN
 
     START TRANSACTION;
 
-    -- 1. Insertamos el depósito en la tabla
+    /* 1. Insertamos el depósito en la tabla */
     INSERT INTO fza_depositos_cliente (
         CODIGO_CLIENTE, CODIGO_ARTICULO, ESTADO_DEP, 
         PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP,
@@ -6799,15 +7069,15 @@ BEGIN
         NOW(), p_USUARIO, NOW(), p_USUARIO
     );
 
-    -- Obtenemos el ID autogenerado para devolverlo a la App (Opcional pero muy útil)
+    /* Obtenemos el ID autogenerado para devolverlo a la App (Opcional pero muy útil) */
     SET p_NUEVO_ID_DEPOSITO = LAST_INSERT_ID();
 
-    -- 2. Lógica del Trigger AFTER INSERT: Calculamos la nueva deuda
+    /* 2. Lógica del Trigger AFTER INSERT: Calculamos la nueva deuda */
     IF p_ESTADO_DEP = 'PENDIENTE' THEN
         SET v_deuda_nueva = (p_PRECIO_VENTA_DEP * COALESCE(p_CANTIDAD_PENDIENTE_DEP, 1)) - COALESCE(p_IMPORTE_ANTICIPO_DEP, 0);
     END IF;
 
-    -- 3. Si hay deuda generada, actualizamos el cliente
+    /* 3. Si hay deuda generada, actualizamos el cliente */
     IF v_deuda_nueva > 0 AND p_CODIGO_CLIENTE IS NOT NULL THEN
         UPDATE fza_clientes
            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva
@@ -6821,14 +7091,14 @@ DELIMITER ;
 -- Procedimiento: PRC_FZA_DEPOSITOS_UPDATE
 DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(IN p_ID_DEPOSITO INT, -- O la PK que uses en fza_depositos_cliente
+CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(IN p_ID_DEPOSITO INT, /* O la PK que uses en fza_depositos_cliente */
     IN p_NUEVO_ESTADO VARCHAR(20),
     IN p_NUEVO_PRECIO DECIMAL(19,6),
     IN p_NUEVA_CANTIDAD_PTE DECIMAL(19,6),
     IN p_NUEVO_ANTICIPO DECIMAL(19,6),
     IN p_USUARIO VARCHAR(100))
 BEGIN
-    -- Variables para almacenar el estado OLD
+    /* Variables para almacenar el estado OLD */
     DECLARE v_OLD_CODIGO_CLIENTE VARCHAR(20);
     DECLARE v_OLD_ESTADO VARCHAR(20);
     DECLARE v_OLD_PRECIO DECIMAL(19,6);
@@ -6847,14 +7117,14 @@ BEGIN
 
     START TRANSACTION;
 
-    -- 1. Leer los datos actuales (OLD) ANTES de actualizar
+    /* 1. Leer los datos actuales (OLD) ANTES de actualizar */
     SELECT CODIGO_CLIENTE, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
       INTO v_OLD_CODIGO_CLIENTE, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
       FROM fza_depositos_cliente
      WHERE ID_DEPOSITO = p_ID_DEPOSITO 
-       FOR UPDATE; -- FOR UPDATE bloquea la fila para evitar concurrencia
+       FOR UPDATE; /* FOR UPDATE bloquea la fila para evitar concurrencia */
 
-    -- 2. Cálculos que antes hacía el trigger
+    /* 2. Cálculos que antes hacía el trigger */
     IF v_OLD_ESTADO = 'PENDIENTE' THEN
         SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
     END IF;
@@ -6865,7 +7135,7 @@ BEGIN
 
     SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
 
-    -- 3. Actualizar la tabla principal (El UPDATE original)
+    /* 3. Actualizar la tabla principal (El UPDATE original) */
     UPDATE fza_depositos_cliente
        SET ESTADO_DEP = p_NUEVO_ESTADO,
            PRECIO_VENTA_DEP = p_NUEVO_PRECIO,
@@ -6875,7 +7145,7 @@ BEGIN
            INSTANTEMODIF = NOW()
      WHERE ID_DEPOSITO = p_ID_DEPOSITO;
 
-    -- 4. Actualizar la deuda en el cliente si hubo cambios de saldo
+    /* 4. Actualizar la deuda en el cliente si hubo cambios de saldo */
     IF v_diferencia <> 0 AND v_OLD_CODIGO_CLIENTE IS NOT NULL THEN
         UPDATE fza_clientes
            SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
@@ -6896,17 +7166,17 @@ CREATE  PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(IN p_TIPO_DOC_MOV VARCHAR
     IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
     IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
     IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
-    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), -- 'E' (Entrada) o 'S' (Salida)
+    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), /* 'E' (Entrada) o 'S' (Salida) */
     IN p_CANTIDAD_MOV DECIMAL(19,6),
-    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), -- Enviado desde App
-    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  -- Enviado desde App
+    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), /* Enviado desde App */
+    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  /* Enviado desde App */
     IN p_USUARIO VARCHAR(100))
 BEGIN
     DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
     DECLARE v_PrecioFinal DECIMAL(19,6);
     DECLARE v_CosteFinal DECIMAL(19,6);
 
-    -- Activar manejo de errores para hacer Rollback si algo falla
+    /* Activar manejo de errores para hacer Rollback si algo falla */
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     kk: BEGIN
         ROLLBACK;
@@ -6915,7 +7185,7 @@ BEGIN
 
     START TRANSACTION;
 
-    -- 1. Obtener el PMP actual del stock
+    /* 1. Obtener el PMP actual del stock */
     SELECT IFNULL(PRECIO_MEDIO_STK, 0)
       INTO v_PMPActual
       FROM fza_articulos_stockactual
@@ -6923,18 +7193,18 @@ BEGIN
        AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
      LIMIT 1;
 
-    -- 2. Lógica de re-cálculo (Reemplazo del BEFORE INSERT)
+    /* 2. Lógica de re-cálculo (Reemplazo del BEFORE INSERT) */
     IF p_TIPO_MOVIMIENTO_MOV = 'S' THEN
-        -- Si es salida, ignoramos lo que envía la app y forzamos el PMP actual
+        /* Si es salida, ignoramos lo que envía la app y forzamos el PMP actual */
         SET v_PrecioFinal = v_PMPActual;
         SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
     ELSE
-        -- Si es entrada, respetamos lo que manda la app
+        /* Si es entrada, respetamos lo que manda la app */
         SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
         SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
     END IF;
 
-    -- 3. Insertar el Movimiento de Almacén real (El INSERT original)
+    /* 3. Insertar el Movimiento de Almacén real (El INSERT original) */
     INSERT INTO fza_movimientos_almacen (
         TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
         CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, 
@@ -6949,7 +7219,7 @@ BEGIN
         NOW(), p_USUARIO, p_USUARIO
     );
 
-    -- 4. Actualizar Stock (Reemplazo del trigger de actualización)
+    /* 4. Actualizar Stock (Reemplazo del trigger de actualización) */
     INSERT INTO fza_articulos_stockactual (
         CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF
@@ -6964,7 +7234,7 @@ BEGIN
     ON DUPLICATE KEY UPDATE
         CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
         VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        -- Cuidado de no dividir entre cero
+        /* Cuidado de no dividir entre cero */
         PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
         INSTANTEMODIF = NOW();
 
@@ -7547,6 +7817,13 @@ CREATE  PROCEDURE `PRC_GET_NEXT_CONT`(
 BEGIN
     DECLARE pPADD bigint;
     DECLARE pEMPRESA_CONTADOR varchar(10) DEFAULT '-';
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
     START TRANSACTION;
 
@@ -7629,6 +7906,13 @@ CREATE  PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
 )
 BEGIN
     DECLARE pNUMDIGIT INT;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
     
     START TRANSACTION;
     
@@ -7708,6 +7992,13 @@ CREATE  PROCEDURE `PRC_GET_NEXT_OP_CAJA`(IN  pEmpresa  VARCHAR(10),
 BEGIN
     DECLARE pPADD    BIGINT;
     DECLARE vSerie   VARCHAR(12);
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
 
     START TRANSACTION;
 
@@ -7978,7 +8269,8 @@ DELIMITER ;
 -- Procedimiento: PRC_REALIZAR_TRASPASO
 DROP PROCEDURE IF EXISTS `PRC_REALIZAR_TRASPASO`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_REALIZAR_TRASPASO`(IN pUsuario VARCHAR(50),
+CREATE  PROCEDURE `PRC_REALIZAR_TRASPASO`(
+    IN pUsuario VARCHAR(50),
     IN pEmpresa VARCHAR(20),
     IN pAlmacenOrigen VARCHAR(10),
     IN pAlmacenDestino VARCHAR(10),
@@ -7987,42 +8279,48 @@ CREATE  PROCEDURE `PRC_REALIZAR_TRASPASO`(IN pUsuario VARCHAR(50),
 BEGIN
     DECLARE vSerie VARCHAR(20) DEFAULT 'TRAS';
     DECLARE vNroDoc VARCHAR(20);
-    
-    /* Generamos un número de documento único basado en la fecha y hora (simplificado) */
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    /* Generamos un número de documento único basado en la fecha y hora */
     SET vNroDoc = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s');
 
     START TRANSACTION;
 
     /* 1. SALIDA DEL ORIGEN (Resta stock en Origen) */
     INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV, 
-     CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV, 
-     CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-     DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF)
+    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
+      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
+      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
+      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF)
     VALUES 
-    ('TR', vSerie, vNroDoc, '001', pEmpresa, 
-     pAlmacenOrigen, pAlmacenDestino, NOW(), 
-     pSku, 'S', pCantidad, 
-     CONCAT('Traspaso a ', pAlmacenDestino), pUsuario, pUsuario);
+    ('TR', vSerie, vNroDoc, '001', pEmpresa,
+      pAlmacenOrigen, pAlmacenDestino, NOW(),
+      pSku, 'S', pCantidad,
+      CONCAT('Traspaso a ', pAlmacenDestino), pUsuario, pUsuario);
 
     /* 2. ENTRADA EN DESTINO (Suma stock en Destino) */
-    /* Referenciamos al movimiento anterior para trazabilidad */
     INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV, 
-     CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV, 
-     CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-     DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF,
+    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
+      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
+      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
+      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF,
      TIPO_DOC_REF_MOV, SERIE_DOC_REF_MOV, NRO_DOC_REF_MOV, LINEA_REF_MOV)
     VALUES 
-    ('TR', vSerie, vNroDoc, '002', pEmpresa, 
-     pAlmacenDestino, pAlmacenOrigen, NOW(), 
-     pSku, 'E', pCantidad, 
-     CONCAT('Traspaso desde ', pAlmacenOrigen), pUsuario, pUsuario,
+    ('TR', vSerie, vNroDoc, '002', pEmpresa,
+      pAlmacenDestino, pAlmacenOrigen, NOW(),
+      pSku, 'E', pCantidad,
+      CONCAT('Traspaso desde ', pAlmacenOrigen), pUsuario, pUsuario,
      'TR', vSerie, vNroDoc, '001');
 
     COMMIT;
-    
-    SELECT CONCAT('Traspaso realizado. Doc: ', vSerie, '-', vNroDoc) as MENSAJE;
+
+    SELECT CONCAT('Traspaso realizado. Doc: ', vSerie, '-', vNroDoc) AS MENSAJE;
 END ;;
 DELIMITER ;
 
@@ -8266,4 +8564,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 18/03/2026 7:15:55
+-- Backup completado: 19/03/2026 16:52:12
