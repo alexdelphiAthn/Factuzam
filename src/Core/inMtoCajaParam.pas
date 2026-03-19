@@ -267,6 +267,8 @@ var
   NodoPrincipal, ParamItem: TJvCustomInspectorItem;
   ValorAGuardar: string; // Variable auxiliar para extraer el valor seguro
 begin
+  // 1. Movemos el foco fuera para disparar el evento OnExit del editor
+  JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
   sUsuarioGrupo := cmbGrupoUsuario.Text;
 
