@@ -12,14 +12,13 @@ type
   // Clase que contiene la definición, metadatos y valor actual de cada parámetro
   TParamDef = class
   public
-    Categoria: string; // <-- NUEVO: Agrupación visual
+    Categoria: string;
     Nombre: string;
     Descripcion: string;
     Tipo: TTipoParametro;
     ValorPorDefecto: string;
     ValorActual: string;
 
-    // El constructor ahora pide la categoría
     constructor Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
   end;
 
@@ -58,7 +57,7 @@ uses
 
 constructor TParamDef.Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
 begin
-  Categoria := aCategoria; // <-- Asignamos la categoría
+  Categoria := aCategoria;
   Nombre := aNombre;
   Descripcion := aDesc;
   Tipo := aTipo;
@@ -101,7 +100,6 @@ var
 begin
   // 1. Aseguramos que la base sea la de por defecto antes de sobreescribir
   RegistrarDefectos;
-
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
@@ -110,13 +108,11 @@ begin
     qry.ParamByName('p_grupo').AsString      := pGrupo;
     qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
     qry.Open;
-
     // 2. Sobrescribimos los valores por defecto con los que tenga el usuario
     while not qry.Eof do
     begin
       KeyDB := qry.FieldByName('SUBKEY_PERFILES').AsString;
       ValueDB := qry.FieldByName('VALUE_PERFILES').AsString;
-
       if FParams.TryGetValue(KeyDB, ParamObj) then
       begin
         ParamObj.ValorActual := ValueDB;
@@ -128,7 +124,6 @@ begin
         RegistrarParametro('Otros (Heredados de BD)', KeyDB, 'Parámetro sin descripción', tpString, ValueDB);
         FParams.Items[KeyDB].ValorActual := ValueDB;
       end;
-
       qry.Next;
     end;
   finally
@@ -192,7 +187,6 @@ begin
 end;
 
 // --- Getters ---
-
 function TCajaParams.GetString(const Key: string; const Default: string): string;
 var
   ParamObj: TParamDef;
