@@ -306,6 +306,7 @@ begin
   if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
 end;
+
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;
@@ -323,27 +324,17 @@ begin
   oConn := FDmConn.conUni;
   odmConn := FDmConn;
   ofrmMto2 := Self;
-  // carga de todos los forms con sus propiedades y módulos de datos
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
-//  dxstsbr1.Panels[1].Text := FDmConn.conUni.Server + ':' +
-//    IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
-//  if oRootGroup = 'S' then
-//    sDis := ' ✪';
-//  dxstsbr1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
-//  dxstsbr1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
-
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
   jvStatusBar1.Panels[2].Text := oUser + '  (' + oGroup + ') : ' + sDis + ' : ';
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
-
   Self.Caption := oAppName + ' ' + oVersion;
   pnlPPBottom.Visible := False;
-
   cxMemo1.Visible := False;
 {$IFDEF DEBUG}
   pnlPPBottom.Visible := True;
