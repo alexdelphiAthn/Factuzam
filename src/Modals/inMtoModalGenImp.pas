@@ -38,8 +38,8 @@ uses
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
   dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   frxExportBaseImageSettingsDialog, frCoreClasses,
-  frLocalization,
-  frLanguageSpanish, frxSmartMemo;
+  frLocalization, frxBarcode,
+  frLanguageSpanish;
 type
   TfrmPrint = class(TfrmBase)
     pnl1: TPanel;

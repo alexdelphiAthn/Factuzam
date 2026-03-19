@@ -1,10 +1,20 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
+Ôªø{******************************************************************************}
+{                                                                              }
+{  M√≥dulo:       UniDataConn                                                   }
+{    Tipo:       DataModule                                                    }
+{ Versi√≥n:       1.0.0                                                         }
+{   Fecha:       19/03/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripci√≥n:                                                                }
+{    Esta unidad proporciona la l√≥gica necesaria para realizar la conexi√≥n     }
+{    principal de todos los datos, por aqu√≠ pasa todo desde que se hizo login  }
+{    Se declara inMtoPrincipal como FDmConn: TdmConn; y es accesible desde     }
+{    la biblioteca inLibGlobalVar como oConn                                   }
+{******************************************************************************}
+
 
 unit UniDataConn;
 
@@ -64,17 +74,17 @@ begin
   with Conuni do
   begin
     Pooling := True;
-    // IMPORTANTE: 0 significa que la conexiÛn fÌsica vive indefinidamente en el pool.
+    // IMPORTANTE: 0 significa que la conexi√≥n f√≠sica vive indefinidamente en el pool.
     //SpecificOptions.Values['ConnectionLifetime'] := '0';
     PoolingOptions.ConnectionLifetime := 0;
     PoolingOptions.Validate := True;
     // Pide al servidor usar 'interactive_timeout' en vez de 'wait_timeout'
     // Esto suele darte 8 horas (28800s) si el servidor lo permite.
     SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    // Tiempo m·ximo para intentar establecer la conexiÛn inicial
+    // Tiempo m√°ximo para intentar establecer la conexi√≥n inicial
     SpecificOptions.Values['ConnectionTimeout'] := '30';
-    // 3. LA CLAVE: AUTO-RECONEXI”N (LocalFailover)
-    // Esto hace que si se cae la red o el servidor patea la conexiÛn,
+    // 3. LA CLAVE: AUTO-RECONEXI√ìN (LocalFailover)
+    // Esto hace que si se cae la red o el servidor patea la conexi√≥n,
     // UniDAC se reconecta sola y reintenta la consulta sin dar error al usuario.
     Options.LocalFailover := True;
     Options.DisconnectedMode := True;
@@ -84,7 +94,7 @@ end;
 
 procedure TdmConn.conUniAfterConnect(Sender: TObject);
 begin
-  // Ejecutamos un comando SQL directo al servidor nada m·s conectar.
+  // Ejecutamos un comando SQL directo al servidor nada m√°s conectar.
   // 28800 segundos = 8 horas.
   try
     conUni.ExecSQL('SET SESSION wait_timeout = 28800, '+
@@ -111,18 +121,18 @@ begin
     1054: sMensaje := 'Campo desconocido en la consulta SQL.';
     1146: sMensaje := 'La tabla consultada no existe en la base de datos.';
     1142,
-    1143: sMensaje := 'No tiene permisos suficientes para realizar esta acciÛn en la base de datos.';
+    1143: sMensaje := 'No tiene permisos suficientes para realizar esta acci√≥n en la base de datos.';
     1216,
-    1452: sMensaje := 'El valor no existe en la tabla relacionada (clave for·nea).';
+    1452: sMensaje := 'El valor no existe en la tabla relacionada (clave for√°nea).';
     1217,
     1451: sMensaje := 'No se puede eliminar: existen registros que dependen de este.';
     1406: sMensaje := 'El dato introducido es demasiado largo para el campo.';
-    1045: sMensaje := 'Acceso denegado: usuario o contraseÒa incorrectos.';
+    1045: sMensaje := 'Acceso denegado: usuario o contrase√±a incorrectos.';
     2003: sMensaje := 'No se puede conectar al servidor MySQL. Comprueba la red y el puerto.';
-    2006: sMensaje := 'La conexiÛn con el servidor MySQL se ha perdido.';
-    2013: sMensaje := 'Se perdiÛ la conexiÛn durante la ejecuciÛn de la consulta.';
-    1205: sMensaje := 'El servidor est· ocupado (Tiempo de espera de bloqueo). IntÈntalo de nuevo.';
-    1213: sMensaje := 'Se ha producido un bloqueo cruzado (Deadlock). IntÈntalo de nuevo.';
+    2006: sMensaje := 'La conexi√≥n con el servidor MySQL se ha perdido.';
+    2013: sMensaje := 'Se perdi√≥ la conexi√≥n durante la ejecuci√≥n de la consulta.';
+    1205: sMensaje := 'El servidor est√° ocupado (Tiempo de espera de bloqueo). Int√©ntalo de nuevo.';
+    1213: sMensaje := 'Se ha producido un bloqueo cruzado (Deadlock). Int√©ntalo de nuevo.';
   else
     // Errores no catalogados: mostrar mensaje original
     sMensaje := Format('Error en base de datos [%d]:%s%s', [E.ErrorCode, sLineBreak, E.Message]);
