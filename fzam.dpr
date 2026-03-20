@@ -4,16 +4,12 @@ uses
   Forms,
   MidasLib,
   {$IF CompilerVersion >= 37.0}
-    // Para Delphi 13
-    Vcl.Consts in 'src\vcl37\Vcl.Consts.pas',
-    System.SysConst in 'src\vcl37\System.SysConst.pas',
+  Vcl.Consts in 'src\vcl37\Vcl.Consts.pas',
   {$ELSE}
-    {$IFDEF VER350} // Para Delphi 11 Alexandria
-      // Para Delphi 11 Alexandria (CompilerVersion 35.0)
-      Vcl.Consts in 'src\vcl\Vcl.Consts.pas',
-      System.SysConst in 'src\vcl\System.SysConst.pas',
-    {$ENDIF}
-  {$ENDIF}
+  {$IFDEF VER350}
+  Vcl.Consts in 'src\vcl\Vcl.Consts.pas',
+  {$ENDIF }
+  {$ENDIF }
   Sysutils,
   dxCore,
   inLibDevExp in 'src\Lib\inLibDevExp.pas',
@@ -120,7 +116,8 @@ uses
   Providers_MySQL_Helpers in 'src\Lib\backup\Providers_MySQL_Helpers.pas',
   Core_Interfaces in 'src\Lib\backup\Core_Interfaces.pas',
   Backup.Types in 'src\Lib\backup\Backup.Types.pas',
-  ScriptWriters in 'src\Lib\backup\ScriptWriters.pas';
+  ScriptWriters in 'src\Lib\backup\ScriptWriters.pas',
+  inLibEAN13 in 'src\Lib\inLibEAN13.pas';
 
 var
   frmLogon: TfrmLogon;

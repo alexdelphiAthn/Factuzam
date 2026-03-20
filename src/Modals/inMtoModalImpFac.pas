@@ -40,7 +40,7 @@ uses
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
   dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList,
   frLocalization, frLanguageSpanish, frCoreClasses,
-  frxExportBaseImageSettingsDialog, frxSmartMemo;
+  frxExportBaseImageSettingsDialog;
 //  frxExportBaseImageSettingsDialog, frCoreClasses;
 
 type

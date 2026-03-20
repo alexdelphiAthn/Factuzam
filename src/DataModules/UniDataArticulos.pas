@@ -13,7 +13,7 @@ interface
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
-  Vcl.ComCtrls, Winapi.Windows, system.strUtils;
+  Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView;
 
 type
   TdmArticulos = class(TdmBase)
@@ -39,12 +39,15 @@ type
     dsVariacionesSlot: TDataSource;
     unqryPropiedadesSlot: TUniQuery;
     dsPropiedadesSlot: TDataSource;
+    unqryStockArticulos: TUniQuery;
+    dsStockArticulos: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
     procedure unqryTarifasArticulosBeforePost(DataSet: TDataSet);
+    procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
   private
     { Private declarations }
   public
@@ -106,6 +109,56 @@ begin
       Abort;
     end;
   oDmConn.ActualizarUserTimeModif(DataSet);
+end;
+
+procedure TdmArticulos.unqryStockArticulosAfterScroll(DataSet: TDataSet);
+var
+  tvArticulosStock:TcxGridDBTableView;
+  i:Integer;
+begin
+  inherited;
+  if DataSet.ControlsDisabled then Exit;
+  if not DataSet.Active or DataSet.IsEmpty then Exit;
+
+  // 🛑 EL TRUCO ANTI-BUCLE: Desconectamos el evento de la tabla Maestra temporalmente
+  DataSet.AfterScroll := nil;
+
+  unqryStockArticulos.Close;
+  unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString :=
+                            unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+
+  if unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString <> '' then
+  begin
+    unqryStockArticulos.Open;
+
+    // --- MAGIA DE DEVEXPRESS ---
+    tvArticulosStock :=  (GetOwnerForm<TfrmMtoArticulos>).tvStock;
+    tvArticulosStock.BeginUpdate;
+     try
+    // 1. Borramos las columnas de la consulta anterior (ej: S, M, L)
+     tvArticulosStock.ClearItems;
+
+    // 2. Le decimos al DataController que lea el UniQuery y cree las nuevas (ej: 38, 39, 40)
+     tvArticulosStock.DataController.CreateAllItems;
+
+    // 3. Aplicamos el BestFit a todas las columnas para que se ajusten al texto perfecto
+//     (GetOwnerForm<TfrmMtoArticulos>).tvStock.ApplyBestFit;
+     finally
+      tvArticulosStock.EndUpdate;
+     end;
+     // puede recorrer los registros sin dar el error "RecordIndex out of range".
+  if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
+  begin
+    for i := 0 to tvArticulosStock.ColumnCount - 1 do
+    begin
+      tvArticulosStock.Columns[i].ApplyBestFit;
+    end;
+  end;
+  DataSet.AfterScroll := unqryStockArticulosAfterScroll;
+    // Opcional: Si además quieres que las columnas se estiren para ocupar todo el ancho
+    // visual del grid y no quede espacio en blanco a la derecha:
+    // cxGrid1DBTableView1.OptionsView.ColumnAutoWidth := True;
+  end;
 end;
 
 procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);
@@ -177,6 +230,11 @@ begin
   unqryProveedores.Connection := oConn;
   unqryTiposIVA.Connection := oConn;
   unqryTarifas.Connection := oConn;
+  unqryVariacionesArticulos.Connection := oConn;
+  unqryStockArticulos.Connection := oConn;
+//  unqryStockArticulos.MasterSource := (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  unqryVariacionesArticulos.MasterSource :=
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryLinFacturasArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryTarifasArticulos.MasterSource :=
@@ -189,6 +247,8 @@ begin
   unqryProveedoresArticulos.Open;
   unqryLinFacturasArticulos.Open;
   unqryVariaciones.Open;
+  unqryVariacionesArticulos.Open;
+  unqryStockArticulos.Open;
 end;
 
 procedure TdmArticulos.FillTarifas(lst: TcxListView);

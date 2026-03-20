@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 19/03/2026 19:45:13
+-- Backup generado: 20/03/2026 7:56:56
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1094,7 +1094,7 @@ INSERT INTO `fza_clientes` (`CODIGO_CLIENTE`, `ACTIVO_CLIENTE`, `ORDEN_CLIENTE`,
   ('311', 'S', 20, 'DAVID NAVARRO IBÁÑEZ', '90123456I', '644111111', 'd.navarro@gmail.com', 'C/ COLÓN, 18', '3ºC', 'ALICANTE', 'ALICANTE', '03001', '724', 'España', NULL, NULL, NULL, NULL, '965221122', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
   ('312', 'S', 21, 'ISABEL MORALES CANO', '01234567J', '655222222', 'isabel.morales@outlook.com', 'AVDA. CONSTITUCIÓN, 9', '', 'GRANADA', 'GRANADA', '18001', '724', 'España', NULL, NULL, NULL, NULL, '958332233', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
   ('313', 'S', 22, 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, 'ALBERT PUIG', '937333334', '937333333', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
-  ('314', 'S', 23, 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', NULL, NULL, NULL, NULL, '983445544', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
+  ('314', 'S', 23, 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', NULL, NULL, NULL, NULL, '983445544', NULL, 'N', 'S', NULL, 'N', NULL, 'N', 'N', 'N', '30_60_90', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'Administrador'),
   ('315', 'S', 24, 'ANTONIO GUTIÉRREZ REYES', '23455432L', '677555555', 'antonio.gutierrez@hotmail.com', 'C/ CORREDERA, 31', '', 'CÓRDOBA', 'CÓRDOBA', '14001', '724', 'España', NULL, NULL, NULL, NULL, '957556655', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
   ('316', 'S', 25, 'SOFÍA RAMÍREZ ORTEGA', '34566543M', '688666666', 'sofia.ramirez@gmail.com', 'AVDA. ARAGÓN, 14', '1ºD', 'VALENCIA', 'VALENCIA', '46021', '724', 'España', NULL, NULL, NULL, NULL, '963667766', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
   ('317', 'S', 26, 'IMPORTACIONES LA MODA SL', 'B99887766', '916777777', 'admin@importamoda.es', 'C/ ARTESANOS, 20', 'NAVE 3', 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', NULL, NULL, 'JAVIER OLMEDO', '916777778', '916777777', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
@@ -1189,7 +1189,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '008', 'ANA/2023', 5, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 6, 6, 'S', 'N', '2026-02-26 19:59:49', '2026-02-01 07:03:46', 'Administrador', 'Administrador'),
+  ('FC', '012', '2026.A1', 7, 6, 'S', 'N', '2026-03-19 23:21:09', '2026-02-01 07:03:46', 'Administrador', 'Administrador'),
   ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador'),
   ('FC', '1', 'A3', 0, 8, 'S', 'N', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador'),
   ('FC', '1', 'AGRO', 8, 6, 'S', 'N', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador'),
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 24, 3, 'S', 'S', '2026-03-19 18:19:00', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 29, 3, 'S', 'S', '2026-03-20 07:14:25', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1463,8 +1463,9 @@ ALTER TABLE `fza_facturas` ADD INDEX `IDX_FACTURAS_SERIE` (`SERIE_FACTURA`, `NRO
 INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ESCONSOLIDADA_FACTURA`, `INSTANTECONSO_FACTURA`, `TIPO_FACTURA`, `FASE_FACTURA`, `CODIGO_EMPRESA_FACTURA`, `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`, `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `NOMBRE_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`, `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`, `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`, `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_IVA_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`, `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`, `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`, `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`, `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`, `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`, `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`, `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`, `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`, `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`, `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`, `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`, `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, `XML_FACTURA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `CODIGO_CAJERO_FACTURA`, `CODIGO_ALMACEN_FACTURA`, `CODIGO_CAJA_FACTURA`, `NUMERO_OPERACION_FACTURA`) VALUES
   ('000002', '2026.A1', '2026-02-01 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'FRANCIA', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 9.45, 5.2, 2.34, 45, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 45, 11.79, 'CONTADO', 15, 6.75, 50.04, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-09 08:48:59', '2026-02-01 14:09:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000003', '2026.A1', '2026-02-01 00:00:00', 'S', '2026-02-23 06:23:26', 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 37.8, 5.2, 9.36, 180, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 180, 47.16, 'TRANSFERENCIA', 15, 27, 200.16, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-09 08:49:01', '2026-02-01 14:36:26', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000004', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 16.38, 5.2, 4.056, 78, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 78, 20.436, '60DIAS', 15, 11.7, 86.736, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-02-26 19:56:28', '2026-02-26 19:56:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000004', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 16.38, 5.2, 0, 78, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 78, 16.38, '60DIAS', 15, 11.7, 82.68, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-02-26 19:56:28', '2026-02-26 19:56:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'añlsdfkjañlsdkfj', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', NULL, '1', 'N', 'N', 'N', 'N', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 29.82, 5.2, 0, 142, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 142, 29.82, 'CONTADO', 15, 0, 171.82, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-26 20:32:10', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000006', '2026.A1', '2026-03-19 00:00:00', 'S', '2026-03-19 23:39:47', 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '314', 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.8595, 5.2, 0, 23.1405, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.1405, 4.8595, 'CONTADO', 15, 3.4711, 24.5289, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-03-19 23:21:09', '2026-03-19 23:21:09', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000026', 'A1', '2026-01-20 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '301', 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 11.34, 5.2, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 11.34, 'CONTADO', 15, 8.1, 57.24, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000027', 'A1', '2026-01-21 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 25.2, 5.2, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 120, 25.2, 'CONTADO', 0, 0, 145.2, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-21 11:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000028', 'A1', '2026-01-23 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '306', 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', '968606060', 'pedidos@distribuvelaz.es', 'POLÍGONO EL PINO, 5', 'NAVE 12', 'MURCIA', 'MURCIA', '30001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 126, 5.2, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 600, 126, '30DIAS', 0, 0, 726, NULL, NULL, NULL, 'Pedido PO-2026-0123', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-23 09:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
@@ -1475,7 +1476,7 @@ INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ES
   ('000033', 'A1', '2026-02-07 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '319', 'LUCÍA FLORES MENDOZA', '56788765O', '611999999', 'lucia.flores@gmail.com', 'PLAZA DEL SOL, 1', '', 'BURGOS', 'BURGOS', '09001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 12.6, 5.2, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65.95, 13.8495, 'TRANSFERENCIA', 0, 0, 79.7995, NULL, NULL, NULL, 'Pedido web #W2026-0289', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-02-07 18:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000034', 'A1', '2026-02-08 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', 'PUBLICO', 'PUBLICO', 'NIF CLIENTE', '', '', '', '', '', '', '', '724', 'España', '1', 'N', 'N', 'N', 'N', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 14.49, 5.2, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 14.49, 'CONTADO', 0, 0, 83.49, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-02-08 10:15:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', '002'),
   ('000035', 'A1', '2026-02-10 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 100.8, 5.2, 0, 480, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 480, 100.8, '60DIAS', 0, 0, 580.8, NULL, NULL, NULL, 'Pedido TN-Feb26-001', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL);
--- 14 registros exportados
+-- 15 registros exportados
 
 
 -- Tabla: fza_facturas_consolidaciones
@@ -1565,6 +1566,7 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000005', '2026.A1', '0', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-02-26 20:32:10', '2026-02-26 20:32:10', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 2, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 40, 0, 0, 40, 'N', 21, 48.4, 96.8, 80, NULL, '2026-02-26 19:59:49', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '020', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-02-26 20:11:53', '2026-02-26 20:11:53', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000006', '2026.A1', '010', 'CAMI-POLO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, 'PVP', 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-03-19 23:21:21', '2026-03-19 23:21:21', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000026', 'A1', '010', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000026', 'A1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 10, 2.2, 19.8, 'N', 21, 23.958, 47.916, 39.6, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000027', 'A1', '010', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 40, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'N', 89.9, 0, 0, 89.9, 'N', 21, 108.779, 108.779, 89.9, NULL, '2026-02-17 06:21:32', '2026-01-21 11:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
@@ -1591,7 +1593,7 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000035', 'A1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000035', 'A1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000035', 'A1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL);
--- 35 registros exportados
+-- 36 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -2588,8 +2590,367 @@ BEGIN
 
     COMMIT;
     
-END;', '2026-03-19 18:24:50', '2026-03-19 18:19:00', 'Administrador', 'Administrador');
--- 21 registros exportados
+END;', '2026-03-19 18:24:50', '2026-03-19 18:19:00', 'Administrador', 'Administrador'),
+  ('024', 'STOCK Y CB', 'SELECT 
+ -- Muestra el SKU, y si es nulo, muestra el Código del Artículo
+ COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO) AS SKU,
+ 
+ -- He añadido la descripción porque suele ser muy útil en las vistas
+ a.DESCRIPCION_ARTICULO,
+ 
+ cb.CODIGO_BARRAS_CB AS CODIGO_BARRAS,
+ 
+ -- Sumamos el stock total en caso de que esté repartido en varios almacenes/lotes
+ COALESCE(SUM(stk.CANTIDAD_STK), 0) AS STOCK_TOTAL
+
+FROM fza_articulos a
+-- Unimos con la tabla de SKUs
+LEFT JOIN fza_articulos_skus s 
+ ON a.CODIGO_ARTICULO = s.CODIGO_ARTICULO_SKU
+ 
+-- Unimos con los códigos de barras usando el SKU (o el Articulo si no hay SKU)
+LEFT JOIN fza_codigos_barras cb 
+ ON cb.CODIGO_UNIDAD_CB = COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO)
+ 
+-- Unimos con el stock usando también el SKU o el Artículo
+LEFT JOIN fza_articulos_stockactual stk 
+ ON stk.CODIGO_UNIDAD_STK = COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO)
+
+-- Agrupamos para poder sumar el stock correctamente
+GROUP BY 
+ COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO),
+ a.DESCRIPCION_ARTICULO,
+ cb.CODIGO_BARRAS_CB;', '2026-03-20 05:43:24', '2026-03-20 05:43:09', 'Administrador', 'Administrador'),
+  ('025', NULL, 'CREATE OR REPLACE VIEW vi_articulos_skus_extendida AS
+SELECT 
+  sku.CODIGO_UNIDAD_SKU,
+  sku.CODIGO_ARTICULO_SKU,
+  sku.CODIGO_VAR_SKU,
+  sku.ESACTIVO_SKU,
+  
+  -- Nuevo: Código de barras
+  cb.CODIGO_BARRAS_CB,
+  
+  -- Nuevo: Stock Total (si es nulo, mostramos 0)
+  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
+  
+  -- Campos de auditoría originales
+  sku.INSTANTEMODIF,
+  sku.INSTANTEALTA,
+  sku.USUARIOALTA,
+  sku.USUARIOMODIF
+
+FROM fza_articulos_skus sku
+
+-- Unimos con los códigos de barras asegurando un solo registro por SKU
+LEFT JOIN (
+    SELECT CODIGO_UNIDAD_CB, MAX(CODIGO_BARRAS_CB) AS CODIGO_BARRAS_CB
+    FROM fza_codigos_barras
+    GROUP BY CODIGO_UNIDAD_CB
+) cb ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB
+
+-- Unimos con el stock sumando todas las cantidades (por si hay varios lotes/almacenes)
+LEFT JOIN (
+    SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
+    FROM fza_articulos_stockactual
+    GROUP BY CODIGO_UNIDAD_STK
+) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-03-20 06:27:08', '2026-03-20 06:27:08', 'Administrador', 'Administrador'),
+  ('026', 'Ejecutar PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', 'CALL PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ(''ZAP-OXFORD'');', '2026-03-20 07:00:55', '2026-03-20 06:54:06', 'Administrador', 'Administrador'),
+  ('027', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
+BEGIN    
+    DECLARE v_codigo_articulo VARCHAR(20);
+    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
+    
+    -- Variables para las COLUMNAS (Pivot - Ej: Talla)
+    DECLARE v_id_atributo_pivot VARCHAR(20);
+    DECLARE v_nombre_atributo_pivot VARCHAR(50);
+    DECLARE v_columnas_dinamicas TEXT;
+    
+    -- Variables para las FILAS (Desglose - Ej: Color)
+    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
+    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
+    DECLARE v_select_fila TEXT DEFAULT '''';
+    DECLARE v_join_fila TEXT DEFAULT '''';
+    DECLARE v_groupby_fila TEXT DEFAULT '''';
+    DECLARE v_src_select_fila TEXT DEFAULT '''';
+    
+    DECLARE v_filtros_fijos TEXT DEFAULT '''';
+    DECLARE v_sql_query TEXT;
+
+    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
+    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
+    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
+
+    IF v_codigo_articulo IS NULL THEN        
+        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
+        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
+        
+        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
+    END IF;
+
+    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
+    IF v_codigo_articulo IS NOT NULL THEN        
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
+        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
+        ORDER BY va.ORDEN_VA DESC        
+        LIMIT 1;
+    END IF;
+
+    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
+    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
+        INTO v_id_atributo_fila, v_nombre_atributo_fila
+        FROM fza_articulos_skus sk
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
+        ORDER BY va.ORDEN_VA ASC
+        LIMIT 1;
+    END IF;
+
+    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
+    IF v_id_atributo_pivot IS NOT NULL THEN        
+        
+        /* Preparamos los textos dinámicos para desglosar el Color en filas */
+        IF v_id_atributo_fila IS NOT NULL THEN
+            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
+            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
+            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
+            SET v_groupby_fila = '', src.VALOR_FILA'';
+        END IF;
+
+        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
+        SELECT GROUP_CONCAT(DISTINCT            
+            CONCAT(
+                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
+                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
+            )
+            ORDER BY av.ID_VALOR_AV        
+        ) INTO v_columnas_dinamicas        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
+          AND av.ID_VA_AV = v_id_atributo_pivot;
+
+        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
+        IF v_es_sku = TRUE THEN            
+            SELECT GROUP_CONCAT(
+                CONCAT(
+                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
+                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
+                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
+                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
+                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
+                ) SEPARATOR '' ''            
+            ) INTO v_filtros_fijos            
+            FROM fza_atributos_sku ask            
+            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
+            WHERE ask.CODIGO_UNIDAD_SA = p_input 
+              AND av.ID_VA_AV <> v_id_atributo_pivot;
+        END IF;
+        
+        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
+
+        /* QUERY FINAL: Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
+        SET @sql = CONCAT(
+            ''SELECT 
+                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
+                v_select_fila, '', '',
+                v_columnas_dinamicas, '',
+                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
+             FROM fza_almacenes alm
+             LEFT JOIN (
+                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
+                FROM fza_articulos_stockactual stk
+                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
+                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
+                v_join_fila, ''
+                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
+                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
+                  v_filtros_fijos, ''
+             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
+             WHERE alm.ESACTIVO_ALM = ''''S'''' 
+             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
+             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
+        );
+
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    ELSE        
+        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
+        SELECT 
+            alm.NOMBRE_ALMACEN_ALM as Almacen, 
+            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
+        FROM fza_almacenes alm        
+        LEFT JOIN fza_articulos_stockactual stk 
+            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
+            AND stk.CODIGO_UNIDAD_STK = p_input 
+        WHERE alm.ESACTIVO_ALM = ''S''        
+        GROUP BY alm.NOMBRE_ALMACEN_ALM        
+        ORDER BY alm.NOMBRE_ALMACEN_ALM;
+        
+    END IF;
+END', '2026-03-20 07:00:27', '2026-03-20 07:00:27', 'Administrador', 'Administrador'),
+  ('028', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
+BEGIN    
+    DECLARE v_codigo_articulo VARCHAR(20);
+    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
+    
+    -- Variables para las COLUMNAS (Pivot - Ej: Talla)
+    DECLARE v_id_atributo_pivot VARCHAR(20);
+    DECLARE v_nombre_atributo_pivot VARCHAR(50);
+    DECLARE v_columnas_dinamicas TEXT;
+    
+    -- Variables para las FILAS (Desglose - Ej: Color)
+    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
+    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
+    DECLARE v_select_fila TEXT DEFAULT '''';
+    DECLARE v_join_fila TEXT DEFAULT '''';
+    DECLARE v_groupby_fila TEXT DEFAULT '''';
+    DECLARE v_src_select_fila TEXT DEFAULT '''';
+    
+    DECLARE v_filtros_fijos TEXT DEFAULT '''';
+    DECLARE v_sql_query TEXT;
+
+    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
+    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
+    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
+
+    IF v_codigo_articulo IS NULL THEN        
+        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
+        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
+        
+        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
+    END IF;
+
+    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
+    IF v_codigo_articulo IS NOT NULL THEN        
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
+        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
+        ORDER BY va.ORDEN_VA DESC        
+        LIMIT 1;
+    END IF;
+
+    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
+    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
+        INTO v_id_atributo_fila, v_nombre_atributo_fila
+        FROM fza_articulos_skus sk
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+        JOIN fza_variaciones_atributos va ON ID_VA_AV = va.ID_ATRIBUTO_VA
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
+        ORDER BY va.ORDEN_VA ASC
+        LIMIT 1;
+    END IF;
+
+    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
+    IF v_id_atributo_pivot IS NOT NULL THEN        
+        
+        /* Preparamos los textos dinámicos para desglosar el Color en filas */
+        IF v_id_atributo_fila IS NOT NULL THEN
+            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
+            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
+            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
+            SET v_groupby_fila = '', src.VALOR_FILA'';
+        END IF;
+
+        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
+        SELECT GROUP_CONCAT(DISTINCT            
+            CONCAT(
+                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
+                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
+            )
+            ORDER BY av.ID_VALOR_AV        
+        ) INTO v_columnas_dinamicas        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
+          AND av.ID_VA_AV = v_id_atributo_pivot;
+
+        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
+        IF v_es_sku = TRUE THEN            
+            SELECT GROUP_CONCAT(
+                CONCAT(
+                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
+                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
+                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
+                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
+                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
+                ) SEPARATOR '' ''            
+            ) INTO v_filtros_fijos            
+            FROM fza_atributos_sku ask            
+            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
+            WHERE ask.CODIGO_UNIDAD_SA = p_input 
+              AND av.ID_VA_AV <> v_id_atributo_pivot;
+        END IF;
+        
+        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
+
+        /* QUERY FINAL: CÓDIGO ARTÍCULO + Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
+        SET @sql = CONCAT(
+            ''SELECT 
+                '''''', v_codigo_articulo, '''''' AS CodigoArticulo,
+                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
+                v_select_fila, '', '',
+                v_columnas_dinamicas, '',
+                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
+             FROM fza_almacenes alm
+             LEFT JOIN (
+                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
+                FROM fza_articulos_stockactual stk
+                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
+                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
+                v_join_fila, ''
+                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
+                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
+                  v_filtros_fijos, ''
+             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
+             WHERE alm.ESACTIVO_ALM = ''''S'''' 
+             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
+             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
+        );
+
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    ELSE        
+        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
+        SELECT 
+            v_codigo_articulo AS CodigoArticulo,
+            alm.NOMBRE_ALMACEN_ALM as Almacen, 
+            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
+        FROM fza_almacenes alm        
+        LEFT JOIN fza_articulos_stockactual stk 
+            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
+            AND stk.CODIGO_UNIDAD_STK = p_input 
+        WHERE alm.ESACTIVO_ALM = ''S''        
+        GROUP BY alm.NOMBRE_ALMACEN_ALM        
+        ORDER BY alm.NOMBRE_ALMACEN_ALM;
+        
+    END IF;
+END', '2026-03-20 07:14:25', '2026-03-20 07:14:25', 'Administrador', 'Administrador');
+-- 26 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -2777,44 +3138,46 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (72, 'vi_articulos_propiedades_slots', '2'),
   (73, 'vi_articulos_proveedores', '2'),
   (74, 'vi_articulos_skus', '2'),
-  (75, 'vi_articulos_tarifas', '2'),
-  (76, 'vi_art_busquedas', '2'),
-  (77, 'vi_atributos_nombres', '2'),
-  (78, 'vi_cajasdef', '2'),
-  (79, 'vi_caja_busqueda_unificada', '2'),
-  (80, 'vi_caja_tarifa_sku_articulos', '2'),
-  (81, 'vi_caja_totalventas', '2'),
-  (82, 'vi_caja_vales_ptes', '2'),
-  (83, 'vi_clientes', '2'),
-  (84, 'vi_cli_busquedas', '2'),
-  (85, 'vi_contadores', '2'),
-  (86, 'vi_depositos_cliente', '2'),
-  (87, 'vi_empresas', '2'),
-  (88, 'vi_empresas_retenciones', '2'),
-  (89, 'vi_empresas_series', '2'),
-  (90, 'vi_emp_busquedas', '2'),
-  (91, 'vi_facturas', '2'),
-  (92, 'vi_facturas_lineas', '2'),
-  (93, 'vi_facturas_lineas_print', '2'),
-  (94, 'vi_facturas_print', '2'),
-  (95, 'vi_fac_busquedas', '2'),
-  (96, 'vi_fac_lin_busquedas', '2'),
-  (97, 'vi_formapago', '2'),
-  (98, 'vi_info_tpv_completa', '2'),
-  (99, 'vi_ivas', '2'),
-  (100, 'vi_ivas_empresa', '2'),
-  (101, 'vi_ivas_grupos', '2'),
-  (102, 'vi_ivas_zonas', '2'),
-  (103, 'vi_paises', '2'),
-  (104, 'vi_proveedores', '2'),
-  (105, 'vi_proveedores_articulos', '2'),
-  (106, 'vi_proveedores_busquedas', '2'),
-  (107, 'vi_recibos', '2'),
-  (108, 'vi_tarifas', '2'),
-  (109, 'vi_usuarios', '2'),
-  (110, 'vi_usuarios_grupos', '2'),
-  (111, 'vi_usuarios_perfiles', '2'),
-  (112, 'vi_variaciones', '2'),
+  (75, 'vi_articulos_skus_extendida', '2'),
+  (76, 'vi_articulos_tarifas', '2'),
+  (77, 'vi_art_busquedas', '2'),
+  (78, 'vi_atributos_nombres', '2'),
+  (79, 'vi_cajasdef', '2'),
+  (80, 'vi_caja_busqueda_unificada', '2'),
+  (81, 'vi_caja_tarifa_sku_articulos', '2'),
+  (82, 'vi_caja_totalventas', '2'),
+  (83, 'vi_caja_vales_ptes', '2'),
+  (84, 'vi_clientes', '2'),
+  (85, 'vi_cli_busquedas', '2'),
+  (86, 'vi_contadores', '2'),
+  (87, 'vi_depositos_cliente', '2'),
+  (88, 'vi_empresas', '2'),
+  (89, 'vi_empresas_retenciones', '2'),
+  (90, 'vi_empresas_series', '2'),
+  (91, 'vi_emp_busquedas', '2'),
+  (92, 'vi_facturas', '2'),
+  (93, 'vi_facturas_lineas', '2'),
+  (94, 'vi_facturas_lineas_print', '2'),
+  (95, 'vi_facturas_print', '2'),
+  (96, 'vi_fac_busquedas', '2'),
+  (97, 'vi_fac_lin_busquedas', '2'),
+  (98, 'vi_formapago', '2'),
+  (99, 'vi_info_tpv_completa', '2'),
+  (100, 'vi_ivas', '2'),
+  (101, 'vi_ivas_empresa', '2'),
+  (102, 'vi_ivas_grupos', '2'),
+  (103, 'vi_ivas_zonas', '2'),
+  (104, 'vi_paises', '2'),
+  (105, 'vi_proveedores', '2'),
+  (106, 'vi_proveedores_articulos', '2'),
+  (107, 'vi_proveedores_busquedas', '2'),
+  (108, 'vi_recibos', '2'),
+  (109, 'vi_tarifas', '2'),
+  (110, 'vi_usuarios', '2'),
+  (111, 'vi_usuarios_grupos', '2'),
+  (112, 'vi_usuarios_perfiles', '2'),
+  (113, 'vi_variaciones', '2'),
+  (114, 'v_articulos_stock_barras', '2'),
   (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
   (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
@@ -2857,7 +3220,7 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (169, 'SP_RECALCULAR_PMP_SKU', '3'),
   (170, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 149 registros exportados
+-- 151 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -3631,7 +3994,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-19 19:39:04', '2026-03-19 19:39:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-20 07:52:53', '2026-03-20 07:52:53', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5137,6 +5500,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_proveedores` AS select `fza_artic
 DROP VIEW IF EXISTS `vi_articulos_skus`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus` AS select `fza_articulos_skus`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`fza_articulos_skus`.`CODIGO_ARTICULO_SKU` AS `CODIGO_ARTICULO_SKU`,`fza_articulos_skus`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`fza_articulos_skus`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`fza_articulos_skus`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos_skus`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos_skus`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos_skus`.`USUARIOMODIF` AS `USUARIOMODIF` from `fza_articulos_skus`;
 
+-- Vista: vi_articulos_skus_extendida
+DROP VIEW IF EXISTS `vi_articulos_skus_extendida`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_ARTICULO_SKU` AS `CODIGO_ARTICULO_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`cb`.`CODIGO_BARRAS_CB` AS `CODIGO_BARRAS_CB`,coalesce(`stk`.`STOCK_TOTAL`,0) AS `STOCK_TOTAL`,`sku`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`sku`.`INSTANTEALTA` AS `INSTANTEALTA`,`sku`.`USUARIOALTA` AS `USUARIOALTA`,`sku`.`USUARIOMODIF` AS `USUARIOMODIF` from ((`fza_articulos_skus` `sku` left join (select `fza_codigos_barras`.`CODIGO_UNIDAD_CB` AS `CODIGO_UNIDAD_CB`,max(`fza_codigos_barras`.`CODIGO_BARRAS_CB`) AS `CODIGO_BARRAS_CB` from `fza_codigos_barras` group by `fza_codigos_barras`.`CODIGO_UNIDAD_CB`) `cb` on(`sku`.`CODIGO_UNIDAD_SKU` = `cb`.`CODIGO_UNIDAD_CB`)) left join (select `fza_articulos_stockactual`.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD_STK`,sum(`fza_articulos_stockactual`.`CANTIDAD_STK`) AS `STOCK_TOTAL` from `fza_articulos_stockactual` group by `fza_articulos_stockactual`.`CODIGO_UNIDAD_STK`) `stk` on(`sku`.`CODIGO_UNIDAD_SKU` = `stk`.`CODIGO_UNIDAD_STK`));
+
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `AS ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_articulos_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO` and `va`.`ESDEFINITORIO` = 'S') AS `NUM_ATRIBUTOS_REQ`,`fza_articulos_tarifas`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos_tarifas`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos_tarifas`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos_tarifas`.`USUARIOMODIF` AS `USUARIOMODIF` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_articulos_tarifas`.`CODIGO_TARIFA` = `fza_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
@@ -5288,6 +5655,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_usuarios_perfiles` AS select `fza_usuarios_
 -- Vista: vi_variaciones
 DROP VIEW IF EXISTS `vi_variaciones`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_variaciones` AS select `fza_variaciones`.`CODIGO_VAR` AS `CODIGO_VAR`,`fza_variaciones`.`NOMBRE_VAR` AS `NOMBRE_VAR`,`fza_variaciones`.`ESACTIVO_VAR` AS `ESACTIVO_VAR`,`fza_variaciones`.`ORDEN_VAR` AS `ORDEN_VAR`,`fza_variaciones`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_variaciones`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_variaciones`.`USUARIOALTA` AS `USUARIOALTA`,`fza_variaciones`.`USUARIOMODIF` AS `USUARIOMODIF` from `fza_variaciones`;
+
+-- Vista: v_articulos_stock_barras
+DROP VIEW IF EXISTS `v_articulos_stock_barras`;
+CREATE ALGORITHM=UNDEFINED  VIEW `v_articulos_stock_barras` AS select coalesce(`s`.`CODIGO_UNIDAD_SKU`,`a`.`CODIGO_ARTICULO`) AS `SKU`,`a`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`cb`.`CODIGO_BARRAS_CB` AS `CODIGO_BARRAS`,coalesce(sum(`stk`.`CANTIDAD_STK`),0) AS `STOCK_TOTAL` from (((`fza_articulos` `a` left join `fza_articulos_skus` `s` on(`a`.`CODIGO_ARTICULO` = `s`.`CODIGO_ARTICULO_SKU`)) left join `fza_codigos_barras` `cb` on(`cb`.`CODIGO_UNIDAD_CB` = coalesce(`s`.`CODIGO_UNIDAD_SKU`,`a`.`CODIGO_ARTICULO`))) left join `fza_articulos_stockactual` `stk` on(`stk`.`CODIGO_UNIDAD_STK` = coalesce(`s`.`CODIGO_UNIDAD_SKU`,`a`.`CODIGO_ARTICULO`))) group by coalesce(`s`.`CODIGO_UNIDAD_SKU`,`a`.`CODIGO_ARTICULO`),`a`.`DESCRIPCION_ARTICULO`,`cb`.`CODIGO_BARRAS_CB`;
 
 
 -- ========================================
@@ -7604,112 +7975,147 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
-BEGIN
+BEGIN    
     DECLARE v_codigo_articulo VARCHAR(20);
     DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
+    
+    /* Variables para las COLUMNAS (Pivot - Ej: Talla) */
     DECLARE v_id_atributo_pivot VARCHAR(20);
     DECLARE v_nombre_atributo_pivot VARCHAR(50);
     DECLARE v_columnas_dinamicas TEXT;
+    
+    /* Variables para las FILAS (Desglose - Ej: Color) */
+    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
+    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
+    DECLARE v_select_fila TEXT DEFAULT '';
+    DECLARE v_join_fila TEXT DEFAULT '';
+    DECLARE v_groupby_fila TEXT DEFAULT '';
+    DECLARE v_src_select_fila TEXT DEFAULT '';
+    
     DECLARE v_filtros_fijos TEXT DEFAULT '';
     DECLARE v_sql_query TEXT;
 
-    /* 1. IDENTIFICAR ARTÍCULO O SKU */
+    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
     SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
     FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
 
-    IF v_codigo_articulo IS NULL THEN
+    IF v_codigo_articulo IS NULL THEN        
         SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
         FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
         
         IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
     END IF;
 
-    /* 2. BUSCAR ATRIBUTO PIVOTE */
-    IF v_codigo_articulo IS NOT NULL THEN
+    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
+    IF v_codigo_articulo IS NOT NULL THEN        
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
+        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
+        ORDER BY va.ORDEN_VA DESC        
+        LIMIT 1;
+    END IF;
+
+    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
+    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
         SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot
+        INTO v_id_atributo_fila, v_nombre_atributo_fila
         FROM fza_articulos_skus sk
         JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
         JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
         JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
         WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-        ORDER BY va.ORDEN_VA DESC
+          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
+        ORDER BY va.ORDEN_VA ASC
         LIMIT 1;
     END IF;
 
-    /* 3. CONSTRUCCIÓN DE LA CONSULTA */
-    IF v_id_atributo_pivot IS NOT NULL THEN
-        /* CASO A: CON ATRIBUTOS (PIVOT) */
+    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
+    IF v_id_atributo_pivot IS NOT NULL THEN        
         
-        /* Generamos columnas dinámicas apuntando a la subconsulta 'src' */
-        SELECT GROUP_CONCAT(DISTINCT
+        /* Preparamos los textos dinámicos para desglosar el Color en filas */
+        IF v_id_atributo_fila IS NOT NULL THEN
+            SET v_select_fila = CONCAT(', COALESCE(src.VALOR_FILA, ''-'') AS `', v_nombre_atributo_fila, '`');
+            SET v_src_select_fila = ', av_fila.VALOR_AV AS VALOR_FILA';
+            SET v_join_fila = CONCAT(' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = ''', v_id_atributo_fila, ''' ');
+            SET v_groupby_fila = ', src.VALOR_FILA';
+        END IF;
+
+        /* Generamos columnas dinámicas apuntando a la subconsulta 'src' */        
+        SELECT GROUP_CONCAT(DISTINCT            
             CONCAT(
                 'SUM(CASE WHEN src.VALOR_AV = ''', av.VALOR_AV, 
-                ''' THEN src.CANTIDAD_STK ELSE 0 END) AS `', av.VALOR_AV, '`'
+                ''' THEN src.CANTIDAD_STK ELSE 0 END) AS `', av.VALOR_AV, '`'            
             )
-            ORDER BY av.ID_VALOR_AV
-        ) INTO v_columnas_dinamicas
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+            ORDER BY av.ID_VALOR_AV        
+        ) INTO v_columnas_dinamicas        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
           AND av.ID_VA_AV = v_id_atributo_pivot;
 
-        /* Filtros SKU */
-        IF v_es_sku = TRUE THEN
+        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
+        IF v_es_sku = TRUE THEN            
             SELECT GROUP_CONCAT(
                 CONCAT(
                     ' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask ',
                     ' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV ',
                     ' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU ',
                     ' AND f_av.ID_VA_AV = ''', av.ID_VA_AV, ''' ',
-                    ' AND f_av.VALOR_AV = ''', av.VALOR_AV, ''') '
-                ) SEPARATOR ' '
-            ) INTO v_filtros_fijos
-            FROM fza_atributos_sku ask
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+                    ' AND f_av.VALOR_AV = ''', av.VALOR_AV, ''') '                
+                ) SEPARATOR ' '            
+            ) INTO v_filtros_fijos            
+            FROM fza_atributos_sku ask            
+            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
             WHERE ask.CODIGO_UNIDAD_SA = p_input 
               AND av.ID_VA_AV <> v_id_atributo_pivot;
         END IF;
+        
         IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''; END IF;
 
-        /* QUERY FINAL: Desde Almacenes LEFT JOIN Subconsulta de Stock */
+        /* QUERY FINAL: Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
         SET @sql = CONCAT(
             'SELECT 
-                alm.NOMBRE_ALMACEN_ALM AS Almacen, ', 
+                alm.NOMBRE_ALMACEN_ALM AS Almacen', 
+                v_select_fila, ', ',
                 v_columnas_dinamicas, ',
                 COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
              FROM fza_almacenes alm
              LEFT JOIN (
-                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK
+                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK', v_src_select_fila, '
                 FROM fza_articulos_stockactual stk
                 JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
                 JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV',
+                v_join_fila, '
                 WHERE sk.CODIGO_ARTICULO_SKU = ''', v_codigo_articulo, '''
                   AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
                   v_filtros_fijos, '
              ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
              WHERE alm.ESACTIVO_ALM = ''S'' 
-             GROUP BY alm.NOMBRE_ALMACEN_ALM
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'
+             GROUP BY alm.NOMBRE_ALMACEN_ALM', v_groupby_fila, '
+             ORDER BY alm.NOMBRE_ALMACEN_ALM', v_groupby_fila
         );
 
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;
 
-    ELSE
-        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */
+    ELSE        
+        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
         SELECT 
             alm.NOMBRE_ALMACEN_ALM as Almacen, 
-            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`
-        FROM fza_almacenes alm
+            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
+        FROM fza_almacenes alm        
         LEFT JOIN fza_articulos_stockactual stk 
-            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK
-            AND stk.CODIGO_UNIDAD_STK = p_input /* Filtro en el ON para no romper el LEFT JOIN */
-        WHERE alm.ESACTIVO_ALM = 'S'
-        GROUP BY alm.NOMBRE_ALMACEN_ALM
+            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
+            AND stk.CODIGO_UNIDAD_STK = p_input 
+        WHERE alm.ESACTIVO_ALM = 'S'        
+        GROUP BY alm.NOMBRE_ALMACEN_ALM        
         ORDER BY alm.NOMBRE_ALMACEN_ALM;
         
     END IF;
@@ -8654,4 +9060,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 19/03/2026 19:45:13
+-- Backup completado: 20/03/2026 7:56:57

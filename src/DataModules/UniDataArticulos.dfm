@@ -60,6 +60,7 @@ inherited dmArticulos: TdmArticulos
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterDelete = unqryTablaGAfterDelete
+    AfterScroll = unqryStockArticulosAfterScroll
     Left = 48
   end
   inherited unqryPerfiles: TUniQuery
@@ -637,7 +638,7 @@ inherited dmArticulos: TdmArticulos
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
-      'from vi_articulos_skus')
+      'from vi_articulos_skus_extendida')
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ARTICULO'
     DetailFields = 'CODIGO_ARTICULO_SKU'
@@ -704,5 +705,27 @@ inherited dmArticulos: TdmArticulos
     DataSet = unqryPropiedadesSlot
     Left = 728
     Top = 264
+  end
+  object unqryStockArticulos: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'CALL '
+      'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ(:CODIGO_ARTICULO)')
+    ReadOnly = True
+    Active = True
+    Left = 888
+    Top = 176
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
+  end
+  object dsStockArticulos: TDataSource
+    DataSet = unqryStockArticulos
+    Left = 888
+    Top = 256
   end
 end
