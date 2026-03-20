@@ -3,13 +3,15 @@ inherited frmPrintFac: TfrmPrintFac
   ClientHeight = 274
   ClientWidth = 422
   Position = poMainFormCenter
-  ExplicitWidth = 434
-  ExplicitHeight = 312
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 438
+  ExplicitHeight = 313
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 268
     Width = 154
     Height = 274
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 264
     ExplicitWidth = 154
     ExplicitHeight = 273
@@ -386,6 +388,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1001,6 +1004,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1841,6 +1845,7 @@ inherited frmPrintFac: TfrmPrintFac
           BarProperties.ErrorLevels = ecL
           BarProperties.PixelSize = 4
           BarProperties.CodePage = 0
+          BarProperties.GS1Rule = False
           Frame.Typ = []
           Rotation = 0
           ShowText = True
