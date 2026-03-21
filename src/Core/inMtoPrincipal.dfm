@@ -93,6 +93,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end>
     ParentDoubleBuffered = False
     StyleName = 'Windows'
+    ExplicitTop = 522
+    ExplicitWidth = 1122
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
