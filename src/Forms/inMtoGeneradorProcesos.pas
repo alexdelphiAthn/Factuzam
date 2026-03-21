@@ -418,23 +418,29 @@ begin
     end
     else
     begin
-      // Comandos directos (INSERT, UPDATE, DELETE)
-      uScript.SQL.Text := sSQL;
+      uScript := TUniScript.Create(nil);
+      uScript.Connection := oConn;
       try
-        startTime := Now;
-        uScript.Execute;
-        iRowsAffected := uScript.RowsAffected;
-        DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-        var sCommand := Copy(sSQL,1,20);
-        if sSQL.Length > 20 then
-          sCommand := sCommand + '...';
-        cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(iRowsAffected) +
-                           ' registros afectados en ' + sformatteddt + ' seg:ms');
-      except on E: Exception do
-        begin
-          cxmResul.Lines.Add(E.Message);
-          ShowMessage('Error en comando SQL: ' + E.Message);
+        // Comandos directos (INSERT, UPDATE, DELETE)
+        uScript.SQL.Text := sSQL;
+        try
+          startTime := Now;
+          uScript.Execute;
+          iRowsAffected := uScript.RowsAffected;
+          DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
+          var sCommand := Copy(sSQL,1,20);
+          if sSQL.Length > 20 then
+            sCommand := sCommand + '...';
+          cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(iRowsAffected) +
+                             ' registros afectados en ' + sformatteddt + ' seg:ms');
+        except on E: Exception do
+          begin
+            cxmResul.Lines.Add(E.Message);
+            ShowMessage('Error en comando SQL: ' + E.Message);
+          end;
         end;
+      finally
+        uScript.Free;
       end;
     end;
   end;

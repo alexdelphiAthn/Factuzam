@@ -274,7 +274,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   OnScroll = SynEdit1Scroll
                   OnStatusChange = SynEdit1StatusChange
                   FontSmoothing = fsmNone
-                  ExplicitWidth = 722
                 end
                 object ScrollBar1: TScrollBar
                   Left = 704
@@ -348,10 +347,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       Align = alClient
                       BevelOuter = bvNone
                       TabOrder = 1
-                      ExplicitLeft = 128
-                      ExplicitTop = 136
-                      ExplicitWidth = 185
-                      ExplicitHeight = 41
                       object syndtEstructura: TSynEdit
                         Left = 0
                         Top = 0
@@ -398,10 +393,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         OnScroll = syndtEstructuraScroll
                         OnStatusChange = syndtEstructuraStatusChange
                         FontSmoothing = fsmNone
-                        ExplicitLeft = 2
-                        ExplicitTop = 9
-                        ExplicitWidth = 375
-                        ExplicitHeight = 297
                         RemovedKeystrokes = <
                           item
                             Command = ecTab
@@ -437,9 +428,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         TabOrder = 1
                         TabStop = False
                         OnChange = ScrollBar2Change
-                        ExplicitLeft = 704
-                        ExplicitTop = 1
-                        ExplicitHeight = 253
                       end
                     end
                   end
@@ -544,9 +532,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
-                          Properties.Increment = 0.10000000000000000
-                          Properties.LargeIncrement = 1.00000000000000000
-                          Properties.MaxValue = 100.00000000000000000
+                          Properties.Increment = 0.100000000000000000
+                          Properties.LargeIncrement = 1.000000000000000000
+                          Properties.MaxValue = 100.000000000000000000
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
@@ -750,9 +738,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.Increment = 0.10000000000000000
-                    Properties.LargeIncrement = 1.00000000000000000
-                    Properties.MaxValue = 100.00000000000000000
+                    Properties.Increment = 0.100000000000000000
+                    Properties.LargeIncrement = 1.000000000000000000
+                    Properties.MaxValue = 100.000000000000000000
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'
