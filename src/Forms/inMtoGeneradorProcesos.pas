@@ -12,8 +12,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math,
-  cxLookAndFeelPainters, cxStyles, dxSkinsCore,
+  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils,
+  cxLookAndFeelPainters, cxStyles, dxSkinsCore, System.Generics.Collections,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer,
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
@@ -26,7 +26,7 @@ uses
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
+  cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
   UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
@@ -77,7 +77,6 @@ type
     pnlTabs: TPanel;
     pcMetadato: TcxPageControl;
     tsEstructura: TcxTabSheet;
-    syndtEstructura: TSynEdit;
     mmo1: TMemo;
     tsContenido: TcxTabSheet;
     cxgrdMetadatos1: TcxGrid;
@@ -98,7 +97,6 @@ type
     pnlTree: TPanel;
     pnlTreeBotton: TPanel;
     btRefresh: TcxButton;
-    cxdbtxtdtNOMBRE_METADATO: TcxDBTextEdit;
     cxVista: TcxGrid;
     tvVista: TcxGridDBTableView;
     tv3: TcxGridDBTableView;
@@ -124,7 +122,6 @@ type
     cxlblInstanteModif: TcxLabel;
     cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit;
     cxlblUsuarioModif: TcxLabel;
-    dbsyndtTexto: TDBSynEdit;
     pnlFacturaOpts: TPanel;
     btnExportarExcel: TcxButton;
     btnEditar: TcxButton;
@@ -137,24 +134,22 @@ type
     ActionList1: TActionList;
     ActionSeleccionar: TAction;
     ActionEjecutar: TAction;
+    cxLabel1: TcxLabel;
+    SynEdit1: TSynEdit;
+    Panel3: TPanel;
+    syndtEstructura: TSynEdit;
+    ScrollBar1: TScrollBar;
+    ScrollBar2: TScrollBar;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
     procedure btnEjecutarClick(Sender: TObject);
     procedure btnExportarExcelClick(Sender: TObject);
-    procedure dbsyndtTextoKeyDown(Sender: TObject;
-      var Key: Word; Shift: TShiftState);
-    procedure syndtEstructuraKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnEditarClick(Sender: TObject);
     procedure btnEditarMetaClick(Sender: TObject);
     procedure btnExportarExcelMetaClick(Sender: TObject);
-    procedure dbsyndtTextoKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure dbsyndtTextoMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure TreeView1DblClick(Sender: TObject);
 //    procedure TreeView1Click(Sender: TObject);
     procedure btnBonitoClick(Sender: TObject);
@@ -163,9 +158,21 @@ type
     procedure ActionEjecutarExecute(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure tsMetadatosShow(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure ScrollBar1Change(Sender: TObject);
+    procedure SynEdit1Scroll(Sender: TObject; ScrollBar: TScrollBarKind);
+    procedure SynEdit1StatusChange(Sender: TObject; Changes: TSynStatusChanges);
+    procedure ScrollBar2Change(Sender: TObject);
+    procedure syndtEstructuraStatusChange(Sender: TObject;
+      Changes: TSynStatusChanges);
+    procedure syndtEstructuraScroll(Sender: TObject; ScrollBar: TScrollBarKind);
+    procedure tsSQLShow(Sender: TObject);
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
+  private
+    procedure SafeSetScrollBar(SB: TScrollBar;
+                               AMax, APageSize, APosition: Integer);
   end;
 
 var
@@ -186,6 +193,45 @@ uses
 
 {$R *.dfm}
 
+procedure TfrmMtoGeneradorProcesos.SafeSetScrollBar(SB: TScrollBar;
+                                           AMax, APageSize, APosition: Integer);
+begin
+  try
+    AMax      := Max(AMax, 1);
+    APageSize := Max(APageSize, 1);
+
+    // +1 para que el scroll pueda llegar a mostrar la última línea arriba
+    AMax      := Max(AMax + 1, APageSize + 1);
+
+    // Position puede llegar hasta AMax - APageSize (última línea visible)
+    APosition := Max(0, Min(APosition, AMax - APageSize));
+
+    if SB.Max < APageSize then
+    begin
+      SB.Max      := AMax;
+      SB.PageSize := APageSize;
+    end
+    else
+    begin
+      SB.PageSize := APageSize;
+      SB.Max      := AMax;
+    end;
+
+    SB.Position := APosition;
+
+  except on E: Exception do
+    ShowMessage(
+      'ScrollBar: ' + SB.Name         + sLineBreak +
+      'AMax='      + IntToStr(AMax)   + sLineBreak +
+      'APageSize=' + IntToStr(APageSize) + sLineBreak +
+      'APosition=' + IntToStr(APosition) + sLineBreak +
+      'SB.Max='    + IntToStr(SB.Max) + sLineBreak +
+      'SB.Min='    + IntToStr(SB.Min) + sLineBreak +
+      'Error: '    + E.Message
+    );
+  end;
+end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoGeneradorProcesos.ActionEjecutarExecute(Sender: TObject);
@@ -195,23 +241,71 @@ begin
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarExecute(Sender: TObject);
+var
+  sNombreMetadato, sScriptCompleto: string;
 begin
   inherited;
-  if screen.ActiveControl = dbsyndtTexto then
+
+  // 1. Si el foco está en los editores, mantenemos "Seleccionar Todo"
+  if Screen.ActiveControl = SynEdit1 then
   begin
-    dbsyndtTexto.SelectAll;
-  end;
-  if (screen.ActiveControl = syndtEstructura) or
-     (screen.ActiveControl = TreeView1) then
+    SynEdit1.SelectAll;
+  end
+  else if Screen.ActiveControl = syndtEstructura then
   begin
     syndtEstructura.SelectAll;
+  end
+
+  // 2. Si el foco está en el árbol, disparamos la magia de Ctrl + A
+  else if Screen.ActiveControl = TreeView1 then
+  begin
+    if TreeView1.Selected <> nil then
+    begin
+      with dmmGeneradorProcesos do
+      begin
+        sNombreMetadato := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+
+        // Recogemos el script completo
+        sScriptCompleto := Trim(syndtEstructura.Lines.Text);
+
+        if sScriptCompleto = '' then
+        begin
+          ShowMessage('No hay estructura o script disponible para este metadato.');
+          Exit;
+        end;
+
+        // 3. INYECTAMOS EL "OR REPLACE" MÁGICAMENTE
+        // Usamos rfIgnoreCase por si el motor devuelve 'create' en minúsculas
+        sScriptCompleto := StringReplace(sScriptCompleto,
+                     'CREATE TABLE', 'CREATE OR REPLACE TABLE', [rfIgnoreCase]);
+        sScriptCompleto := StringReplace(sScriptCompleto,
+                       'CREATE VIEW', 'CREATE OR REPLACE VIEW', [rfIgnoreCase]);
+        sScriptCompleto := StringReplace(sScriptCompleto,
+             'CREATE PROCEDURE', 'CREATE OR REPLACE PROCEDURE', [rfIgnoreCase]);
+        // Añadir punto y coma final si no lo tiene
+        if RightStr(Trim(sScriptCompleto), 1) <> ';' then
+          sScriptCompleto := Trim(sScriptCompleto) + ';';
+        // Ponemos la tabla en modo inserción
+        if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+          dsTablaG.DataSet.Append;
+
+        // Volcamos todo al editor principal
+        unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Modificar ' + sNombreMetadato;
+//        unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sScriptCompleto;
+        synedit1.text := sScriptCompleto;
+        // Cambiamos de pestaña y damos foco
+        pcPestana.ActivePage := tsSQL;
+        if SynEdit1.CanFocus then
+          SynEdit1.SetFocus;
+      end;
+    end;
   end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarUpdate(Sender: TObject);
 begin
   inherited;
-  (Sender as TAction).Enabled := (Screen.ActiveControl = dbsyndtTexto)
+  (Sender as TAction).Enabled := (Screen.ActiveControl = SynEdit1)
                                  or (Screen.ActiveControl = syndtEstructura)
                                  or (screen.ActiveControl = TreeView1);
 end;
@@ -221,13 +315,13 @@ var
   Formatter: ICodeFormatter;
 begin
   inherited;
-  var sSQL := dbsyndtTexto.Lines.Text;
-  sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
-  // 3. Normalizar espacios múltiples
-  while Pos('  ', sSQL) > 0 do
-    sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
-  Formatter := GetSQLFormatter;
-  dbsyndtTexto.Lines.Text := Formatter.Format(sSQL);
+//  var sSQL := dbsyndtTexto.Lines.Text;
+//  sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
+//  // 3. Normalizar espacios múltiples
+//  while Pos('  ', sSQL) > 0 do
+//    sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
+//  Formatter := GetSQLFormatter;
+//  dbsyndtTexto.Lines.Text := Formatter.Format(sSQL);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnEditarClick(Sender: TObject);
@@ -254,6 +348,7 @@ var
   iRowsAffected: Integer;
   sFormatteddt, sSQL: String;
   bIsSelect: Boolean;
+  uScript:TUniScript;
 begin
   inherited;
   if ((dsTablaG.DataSet.State = dsInsert) or (dsTablaG.DataSet.State = dsEdit)) then
@@ -324,13 +419,16 @@ begin
     else
     begin
       // Comandos directos (INSERT, UPDATE, DELETE)
-      unqryCommand.SQL.Text := sSQL;
+      uScript.SQL.Text := sSQL;
       try
         startTime := Now;
-        unqryCommand.ExecSQL;
-        iRowsAffected := unqryCommand.RowsAffected;
+        uScript.Execute;
+        iRowsAffected := uScript.RowsAffected;
         DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-        cxmResul.Lines.Add('Comando ejecutado. ' + IntToStr(iRowsAffected) +
+        var sCommand := Copy(sSQL,1,20);
+        if sSQL.Length > 20 then
+          sCommand := sCommand + '...';
+        cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(iRowsAffected) +
                            ' registros afectados en ' + sformatteddt + ' seg:ms');
       except on E: Exception do
         begin
@@ -406,52 +504,67 @@ procedure TfrmMtoGeneradorProcesos.CargarArbol;
 var
   nodeRaiz, nodeHijo: TTreeNode;
   sCodigo, sNombre, sParent: string;
+  iCodigo, iParent: Integer;
+  DictNodos: TDictionary<Integer, TTreeNode>;
 begin
   TreeView1.Items.BeginUpdate;
+
+  // Inicializamos el diccionario que actuará como caché de búsqueda ultra rápida
+  DictNodos := TDictionary<Integer, TTreeNode>.Create;
   try
     TreeView1.Items.Clear;
     dmmGeneradorProcesos.unqryMetadatos.DisableControls;
-    // Pasar 1: nodos raíz (PARENT = '-1')
+
+    // Pasada 1: nodos raíz (PARENT = '-1')
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
       sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
-      sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
-      sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
       if sParent = '-1' then
       begin
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+        iCodigo := StrToIntDef(sCodigo, 0);
+
+        // Creamos el nodo raíz
         nodeRaiz := TreeView1.Items.Add(nil, sNombre);
-        nodeRaiz.Data := Pointer(NativeInt(StrToInt(sCodigo))); // guardamos CODIGO
+        nodeRaiz.Data := Pointer(NativeInt(iCodigo));
+
+        // ¡Magia! Lo guardamos en el diccionario usando su código como llave
+        DictNodos.Add(iCodigo, nodeRaiz);
       end;
       dmmGeneradorProcesos.unqryMetadatos.Next;
     end;
-    // Pasar 2: nodos hijo
+
+    // Pasada 2: nodos hijo
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
       sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
-      sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
-      sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
       if sParent <> '-1' then
       begin
-        // Buscar el nodo padre por su CODIGO
-        nodeRaiz := nil;
-        for var i := 0 to TreeView1.Items.Count - 1 do
-          if NativeInt(TreeView1.Items[i].Data) = StrToIntDef(sParent, -1) then
-          begin
-            nodeRaiz := TreeView1.Items[i];
-            Break;
-          end;
-        if nodeRaiz <> nil then
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+        iCodigo := StrToIntDef(sCodigo, 0);
+        iParent := StrToIntDef(sParent, -1);
+
+        // Buscamos el nodo padre de forma instantánea, sin recorrer el árbol
+        if DictNodos.TryGetValue(iParent, nodeRaiz) then
         begin
           nodeHijo := TreeView1.Items.AddChild(nodeRaiz, sNombre);
-          nodeHijo.Data := Pointer(NativeInt(StrToInt(sCodigo)));
+          nodeHijo.Data := Pointer(NativeInt(iCodigo));
+
+          // Añadimos también este hijo al diccionario por si tiene subniveles
+          if not DictNodos.ContainsKey(iCodigo) then
+            DictNodos.Add(iCodigo, nodeHijo);
         end;
       end;
       dmmGeneradorProcesos.unqryMetadatos.Next;
     end;
-//    TreeView1.FullExpand;
+
   finally
+    // Es vital liberar el diccionario de la memoria
+    DictNodos.Free;
     dmmGeneradorProcesos.unqryMetadatos.EnableControls;
     TreeView1.Items.EndUpdate;
   end;
@@ -463,6 +576,8 @@ var
   nodeParent, nodeChild: TTreeNode;
   i: Integer;
 begin
+  SynEdit1.BeginUpdate;
+  syndtEstructura.BeginUpdate;
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
   tvMetadatostvVista.DataController.DataSource :=
@@ -473,6 +588,8 @@ begin
   // Asegúrate de que las opciones predeterminadas estén configuradas correctamente
 //  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
   IsColumnMode := False;
+  SynEdit1.EndUpdate;
+  syndtEstructura.EndUpdate;
 end;
 
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
@@ -481,6 +598,7 @@ var
   Formatter: ICodeFormatter; // <--- Sustituimos sExec por el interfaz del formateador
 begin
   inherited;
+  ScrollBar2.Position := 1;
   with dmmGeneradorProcesos do
   begin
     pcMetadato.ActivePage := tsEstructura;
@@ -550,7 +668,6 @@ begin
       Formatter := GetSQLFormatter;
       syndtEstructura.Lines.Text := Formatter.Format(sSQL);
       // -------------------------------------------
-
     end
     else
     if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3')) then
@@ -566,6 +683,7 @@ begin
     end
       else
         syndtEstructura.Lines.Clear;
+    syndtEstructuraStatusChange(nil, [scAll]);
   end;
 end;
 
@@ -585,146 +703,67 @@ begin
   inherited;
 end;
 
-procedure TfrmMtoGeneradorProcesos.dbsyndtTextoKeyDown(
-  Sender: TObject; var Key: Word; Shift: TShiftState);
-//var
-//  StartLine, EndLine, i: Integer;
-//  SelStart, SelEnd: TBufferCoord;
-//  NewCaretX, NewCaretY: Integer;
-//  s:String;
+procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
-  (*
-  if Key = VK_TAB then
-  begin
-    dbsyndtTexto.SelText := #9; // Insertar tabulador
-    Key := 0; // Prevenir que el control cambie el foco
-  end;
-  if (ssAlt in Shift) then
-  begin
-    if (ssShift in Shift) then
-    begin
-      if not IsColumnMode then
-      begin
-        IsColumnMode := True;
-        dbsyndtTexto.SelectionMode := smColumn;
-      end;
-    end;
-    // Manejar movimiento del cursor con Alt
-    if Key in [VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN] then
-    begin
-      Key := 0; // Prevenir comportamiento predeterminado
-      NewCaretX := dbsyndtTexto.CaretX;
-      NewCaretY := dbsyndtTexto.CaretY;
-      case Key of
-        VK_LEFT:  NewCaretX := Max(1, NewCaretX - 1);
-        VK_RIGHT: NewCaretX := Min(Length(dbsyndtTexto.Lines[NewCaretY - 1]) + 1, NewCaretX + 1);
-        VK_UP:    NewCaretY := Max(1, NewCaretY - 1);
-        VK_DOWN:  NewCaretY := Min(dbsyndtTexto.Lines.Count, NewCaretY + 1);
-      end;
-      dbsyndtTexto.CaretXY := BufferCoord(NewCaretX, NewCaretY);
-    end;
-  end
-  else if (ssShift in Shift) and not (ssAlt in Shift) then
-  begin
-    // Mantenemos el comportamiento normal de Shift
-    IsColumnMode := False;
-    dbsyndtTexto.SelectionMode := smNormal;
-  end
-  else if not (ssShift in Shift) and not (ssAlt in Shift) then
-  begin
-    IsColumnMode := False;
-    dbsyndtTexto.SelectionMode := smNormal;
-  end;
-  if (Key = VK_TAB) and (dbsyndtTexto.SelAvail) then
-  begin
-    Key := 0; // Previene el comportamiento predeterminado del tabulador
-    // Obtiene las líneas de inicio y fin de la selección
-    SelStart := dbsyndtTexto.BlockBegin;
-    SelEnd := dbsyndtTexto.BlockEnd;
-    StartLine := SelStart.Line;
-    EndLine := SelEnd.Line;
-    dbsyndtTexto.BeginUpdate;
-    try
-      // Añade un tabulador al inicio de cada línea seleccionada
-      for i := StartLine to EndLine do
-      begin
-        dbsyndtTexto.Lines[i - 1] := #9 + dbsyndtTexto.Lines[i - 1];
-      end;
-      // Ajusta la selección para incluir los tabuladores añadidos
-      dbsyndtTexto.BlockBegin := BufferCoord(SelStart.Char + 1, SelStart.Line);
-      dbsyndtTexto.BlockEnd := BufferCoord(SelEnd.Char + 1, SelEnd.Line);
-    finally
-      dbsyndtTexto.EndUpdate;
-    end;
-  end
-  else
-  begin
-    if (Key = VK_TAB) and (ssShift in Shift) then
-    begin
-      Key := 0; // Prevenir el comportamiento predeterminado
-      // Obtener las líneas de inicio y fin de la selección
-      StartLine := dbsyndtTexto.BlockBegin.Line - 1;
-      EndLine := dbsyndtTexto.BlockEnd.Line - 1;
-      // Si no hay selección, usar la línea actual
-      if StartLine = EndLine then
-      begin
-        StartLine := dbsyndtTexto.CaretY - 1;
-        EndLine := StartLine;
-      end;
-      dbsyndtTexto.BeginUpdate;
-      try
-        for i := StartLine to EndLine do
-        begin
-          s := dbsyndtTexto.Lines[i];
-          if (Length(s) > 0) and (s[1] = #9) then
-            // Eliminar el primer tabulador
-            dbsyndtTexto.Lines[i] := Copy(s, 2, Length(s))
-          else if (Length(s) >= dbsyndtTexto.TabWidth) and
-                  (Copy(s, 1, dbsyndtTexto.TabWidth) =
-                  StringOfChar(' ', dbsyndtTexto.TabWidth)) then
-            // Eliminar los espacios equivalentes a un tabulador
-            dbsyndtTexto.Lines[i] :=
-                                  Copy(s, dbsyndtTexto.TabWidth + 1, Length(s));
-        end;
-      finally
-        dbsyndtTexto.EndUpdate;
-      end;
-    end;
-  end;*)
+  SynEdit1.Visible := True;
+  syndtEstructura.Visible := True;
+  if synEdit1.CanFocus then
+        synEdit1.SetFocus;
 end;
 
-procedure TfrmMtoGeneradorProcesos.dbsyndtTextoKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
+procedure TfrmMtoGeneradorProcesos.SynEdit1StatusChange(Sender: TObject;
+  Changes: TSynStatusChanges);
 begin
   inherited;
-  (*if not (ssAlt in Shift) and not (ssShift in Shift) then
-  begin
-    IsColumnMode := False;
-    dbsyndtTexto.SelectionMode := smNormal;
-  end; *)
+  SafeSetScrollBar(
+    ScrollBar1,
+    SynEdit1.Lines.Count,
+    SynEdit1.LinesInWindow,
+    SynEdit1.TopLine
+  );
 end;
 
-procedure TfrmMtoGeneradorProcesos.dbsyndtTextoMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfrmMtoGeneradorProcesos.SynEdit1Scroll(Sender: TObject;
+  ScrollBar: TScrollBarKind);
 begin
   inherited;
-  (*if not (ssShift in Shift) and not (ssAlt in Shift) then
-  begin
-    IsColumnMode := False;
-    dbsyndtTexto.SelectionMode := smNormal;
-  end;*)
+  if ScrollBar = sbVertical then
+    SynEdit1StatusChange(Sender, [scAll]);
 end;
 
-procedure TfrmMtoGeneradorProcesos.syndtEstructuraKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
+procedure TfrmMtoGeneradorProcesos.ScrollBar1Change(Sender: TObject);
 begin
   inherited;
-  (*if Key = VK_TAB then
-  begin
-    syndtEstructura.SelText := #9; // Insertar tabulador
-    Key := 0; // Prevenir que el control cambie el foco
-  end; *)
+  if SynEdit1.TopLine <> ScrollBar1.Position then
+    SynEdit1.TopLine := ScrollBar1.Position;
+end;
+
+procedure TfrmMtoGeneradorProcesos.syndtEstructuraStatusChange(Sender: TObject;
+  Changes: TSynStatusChanges);
+begin
+  inherited;
+  SafeSetScrollBar(
+    ScrollBar2,
+    syndtEstructura.Lines.Count,
+    syndtEstructura.LinesInWindow,
+    syndtEstructura.TopLine
+  );
+end;
+
+procedure TfrmMtoGeneradorProcesos.syndtEstructuraScroll(Sender: TObject;
+  ScrollBar: TScrollBarKind);
+begin
+  inherited;
+  if ScrollBar = sbVertical then
+    syndtEstructuraStatusChange(Sender, [scAll]);
+end;
+
+procedure TfrmMtoGeneradorProcesos.ScrollBar2Change(Sender: TObject);
+begin
+  inherited;
+  if syndtEstructura.TopLine <> ScrollBar2.Position then
+    syndtEstructura.TopLine := ScrollBar2.Position;
 end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1Change(Sender: TObject;
@@ -732,6 +771,9 @@ procedure TfrmMtoGeneradorProcesos.TreeView1Change(Sender: TObject;
 var
   iCodigo: Integer;
 begin
+  ScrollBar2.PageSize := 1;
+  ScrollBar2.Max      := 1;
+  ScrollBar2.Position := 0;
   // Si no hay nodo seleccionado (por ejemplo, al limpiar el árbol), salimos
   if Node = nil then Exit;
 
@@ -742,7 +784,7 @@ begin
   dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
 
   // Llama a tu lógica existente para actualizar la interfaz/datos
-//  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
 end;
 //end;
 //
@@ -771,10 +813,8 @@ var
 begin
   nodo := TreeView1.Selected;
   if nodo = nil then Exit;
-
   iCodigo := NativeInt(nodo.Data);
   dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
-
   with dmmGeneradorProcesos do
   begin
     // Si es una Tabla (1) o Vista (2), mostramos los datos
@@ -795,13 +835,11 @@ begin
     begin
       sProcName := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
       sCallText := 'CALL ' + sProcName + '(';
-
       // Creamos un TUniQuery temporal para leer los parámetros del procedimiento
       qryParams := TUniQuery.Create(nil);
       try
         // Usamos la misma conexión de tus metadatos
         qryParams.Connection := unqryMetadatos.Connection;
-
         // Consultamos la tabla del sistema para obtener los parámetros
         qryParams.SQL.Text :=
           'SELECT PARAMETER_NAME, DTD_IDENTIFIER ' +
@@ -810,14 +848,12 @@ begin
           'ORDER BY ORDINAL_POSITION';
         qryParams.ParamByName('ProcName').AsString := sProcName;
         qryParams.Open;
-
         // Construimos el esquema de parámetros comentados
         while not qryParams.Eof do
         begin
           sCallText := sCallText + '/* ' +
                        qryParams.FieldByName('PARAMETER_NAME').AsString + ' ' +
                        qryParams.FieldByName('DTD_IDENTIFIER').AsString + ' */';
-
           qryParams.Next;
           if not qryParams.Eof then
             sCallText := sCallText + ', ';
@@ -826,21 +862,18 @@ begin
       finally
         qryParams.Free;
       end;
-
       // Ponemos el dataset principal en modo Inserción
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
         dsTablaG.DataSet.Append; // Usar Append o Insert según prefieras
-
       // Asignamos el nombre al proceso (opcional)
       unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Ejecutar ' + sProcName;
-
       // Asignamos el comando SQL generado al campo memo del editor
-      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
-
+//      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
+      synEdit1.Text := sCallText;
       // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor SynEdit
       pcPestana.ActivePage := tsSQL;
-      if dbsyndtTexto.CanFocus then
-        dbsyndtTexto.SetFocus;
+      if synEdit1.CanFocus then
+        synEdit1.SetFocus;
     end;
   end;
 end;
@@ -850,6 +883,12 @@ begin
   inherited;
   if TreeView1.Items.Count = 0 then
     btRefreshClick(nil);
+end;
+
+procedure TfrmMtoGeneradorProcesos.tsSQLShow(Sender: TObject);
+begin
+  inherited;
+  SynEdit1StatusChange(nil, [scAll]);
 end;
 
 initialization

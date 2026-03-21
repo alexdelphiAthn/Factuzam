@@ -41,8 +41,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
-  dxBarBuiltInMenu;
+  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -560,6 +559,7 @@ var
   sModoBusq:String;
 begin
   inherited;
+  Self.HandleNeeded; //da problemas
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;

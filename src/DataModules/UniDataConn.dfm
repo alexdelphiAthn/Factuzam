@@ -1,10 +1,11 @@
 object dmConn: TdmConn
   OnCreate = DataModuleCreate
-  Height = 239
-  Width = 405
+  Height = 299
+  Width = 506
+  PixelsPerInch = 120
   object conUni: TUniConnection
     ProviderName = 'MySQL'
-    Port = 3310
+    Port = 3306
     Database = 'factuzam'
     SpecificOptions.Strings = (
       'MySQL.UseUnicode=True')
@@ -13,18 +14,17 @@ object dmConn: TdmConn
     PoolingOptions.Validate = True
     Username = 'root'
     Server = '127.0.0.1'
-    Connected = True
     LoginPrompt = False
     AfterConnect = conUniAfterConnect
     BeforeConnect = connBeforeConnect
     OnError = conUniError
-    Left = 216
-    Top = 120
+    Left = 270
+    Top = 150
     EncryptedPassword = 'A5FF9EFF92FF90FF8DFF9EFFCDFFCFFFCDFFCCFF'
   end
   object mysqlnprvdr1: TMySQLUniProvider
-    Left = 152
-    Top = 120
+    Left = 190
+    Top = 150
   end
   object UniSQLMonitor1: TUniSQLMonitor
     Active = False
@@ -35,7 +35,7 @@ object dmConn: TdmConn
     DBMonitorOptions.SendTimeout = 0
     TraceFlags = [tfQPrepare, tfQExecute, tfQFetch, tfError, tfStmt, tfConnect, tfTransact, tfBlob, tfService, tfMisc, tfParams, tfObjDestroy, tfPool]
     OnSQL = UniSQLMonitor1SQL
-    Left = 296
-    Top = 119
+    Left = 370
+    Top = 149
   end
 end
