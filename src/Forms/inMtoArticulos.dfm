@@ -4,9 +4,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
   Caption = 'Articulos'
   ClientHeight = 711
   ClientWidth = 1217
-  StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 1217
   ExplicitHeight = 711
   TextHeight = 19
@@ -14,15 +11,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
     Width = 1077
     Height = 711
     TabOrder = 0
-    StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 856
+    ExplicitWidth = 1077
     ExplicitHeight = 711
     inherited pcPantalla: TcxPageControl
       Width = 1077
       Height = 671
       TabOrder = 1
       Properties.ActivePage = tsFicha
-      ExplicitWidth = 856
+      ExplicitWidth = 1077
       ExplicitHeight = 671
       ClientRectBottom = 667
       ClientRectRight = 1073
@@ -78,7 +74,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       inherited tsFicha: TcxTabSheet
         ExplicitLeft = 4
         ExplicitTop = 30
-        ExplicitWidth = 848
+        ExplicitWidth = 1069
         ExplicitHeight = 637
         object pnlTopFicha: TPanel
           Left = 0
@@ -88,7 +84,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 0
-          ExplicitWidth = 848
           object pnlBodyFicha: TPanel
             Left = 0
             Top = 0
@@ -97,7 +92,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Align = alClient
             BevelOuter = bvNone
             TabOrder = 0
-            ExplicitWidth = 848
             object txtCODIGO_ARTICULO: TcxDBTextEdit
               Left = 100
               Top = 13
@@ -204,7 +198,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitWidth = 848
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
@@ -214,7 +207,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             TabOrder = 0
             Properties.ActivePage = cxTabSheet2
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 848
             ClientRectBottom = 451
             ClientRectLeft = 4
             ClientRectRight = 1065
@@ -223,7 +215,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Caption = '&0_Variaciones'
               ImageIndex = 4
               TabVisible = False
-              ExplicitWidth = 840
               object pnlUpVariaciones: TPanel
                 Left = 0
                 Top = 0
@@ -231,7 +222,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 73
                 Align = alTop
                 TabOrder = 0
-                ExplicitWidth = 840
                 object lbl11: TcxLabel
                   Left = 6
                   Top = 26
@@ -388,7 +378,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet1: TcxTabSheet
               Caption = '&1_General'
               ImageIndex = 4
-              ExplicitWidth = 840
               object rgTipoIVA: TcxDBRadioGroup
                 Left = 408
                 Top = 19
@@ -472,7 +461,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet2: TcxTabSheet
               Caption = '&2_Variaciones'
               ImageIndex = 5
-              ExplicitWidth = 840
               object cxLabel1: TcxLabel
                 Left = 14
                 Top = 6
@@ -757,7 +745,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSKUS: TcxTabSheet
               Caption = '&3_SKUS'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
               ExplicitWidth = 840
+              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 940
                 Top = 0
@@ -922,7 +913,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&3_Tarifas'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
               ExplicitWidth = 840
+              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -1182,7 +1176,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&4_Proveedores'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
               ExplicitWidth = 840
+              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1353,7 +1350,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&5_Lineas de Venta - '
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
               ExplicitWidth = 840
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1485,7 +1485,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.MaxValue = 100.00000000000000000
+                    Properties.MaxValue = 100.000000000000000000
                     Properties.ValueType = vtFloat
                     Width = 80
                   end
@@ -1575,6 +1575,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&6_Stock'
               ImageIndex = 7
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0
@@ -1726,6 +1730,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&7_Movimientos'
               ImageIndex = 8
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrid6: TcxGrid
                 Left = 0
                 Top = 0
@@ -1899,7 +1907,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsOtros: TcxTabSheet
               Caption = '&8_Otros'
               ImageIndex = 3
-              ExplicitWidth = 840
               object pnl3: TPanel
                 Left = 0
                 Top = 342
@@ -1907,7 +1914,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 79
                 Align = alBottom
                 TabOrder = 3
-                ExplicitWidth = 840
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -2046,16 +2052,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitWidth = 848
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 848
+        ExplicitWidth = 1069
         ExplicitHeight = 637
         inherited pnlPerfilTop: TPanel
           Width = 1069
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 848
+          ExplicitWidth = 1069
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
@@ -2063,7 +2067,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         inherited pnlPerfilDetail: TPanel
           Width = 1069
           Height = 580
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 848
           ExplicitHeight = 580
           inherited cxgrdPerfil: TcxGrid
@@ -2078,12 +2081,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
     inherited pnlTopPage: TPanel
       Width = 1077
       TabOrder = 0
-      StyleElements = [seFont, seClient, seBorder]
-      ExplicitWidth = 856
+      ExplicitWidth = 1077
       inherited pnlTopGrid: TPanel
         Width = 1077
-        StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 856
+        ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 1
           ExplicitHeight = 27
@@ -2112,24 +2113,19 @@ inherited frmMtoArticulos: TfrmMtoArticulos
     Left = 1077
     Height = 711
     TabOrder = 1
-    StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 856
+    ExplicitLeft = 1077
     ExplicitHeight = 711
     inherited pButtonGen: TPanel
       Top = 513
       TabOrder = 2
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 513
     end
     inherited pButtonBDStat: TPanel
-      StyleElements = [seFont, seClient, seBorder]
       inherited pnStateDataSet: TPanel
         TabOrder = 1
-        StyleElements = [seFont, seClient, seBorder]
       end
       inherited pnlDataSetName: TPanel
         TabOrder = 0
-        StyleElements = [seFont, seClient, seBorder]
       end
     end
     object btnNuevoArticulo: TcxButton

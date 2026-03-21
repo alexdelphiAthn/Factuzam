@@ -1,20 +1,18 @@
 inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
-  ClientHeight = 274
-  ClientWidth = 422
+  ClientHeight = 273
+  ClientWidth = 418
   Position = poMainFormCenter
-  StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 438
-  ExplicitHeight = 313
+  ExplicitWidth = 430
+  ExplicitHeight = 311
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 268
+    Left = 264
     Width = 154
-    Height = 274
-    StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 264
+    Height = 273
+    ExplicitLeft = 260
     ExplicitWidth = 154
-    ExplicitHeight = 273
+    ExplicitHeight = 272
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,9 +26,9 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 248
+      Top = 247
       Width = 152
-      ExplicitTop = 247
+      ExplicitTop = 246
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -388,7 +386,6 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
-    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1004,7 +1001,6 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
-    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -1845,7 +1841,6 @@ inherited frmPrintFac: TfrmPrintFac
           BarProperties.ErrorLevels = ecL
           BarProperties.PixelSize = 4
           BarProperties.CodePage = 0
-          BarProperties.GS1Rule = False
           Frame.Typ = []
           Rotation = 0
           ShowText = True

@@ -8,10 +8,9 @@ inherited frmPrint: TfrmPrint
   ClientWidth = 351
   FormStyle = fsStayOnTop
   Scaled = False
-  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 367
-  ExplicitHeight = 304
+  ExplicitWidth = 363
+  ExplicitHeight = 303
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 207
@@ -20,8 +19,8 @@ inherited frmPrint: TfrmPrint
     Height = 265
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 205
-    ExplicitHeight = 257
+    ExplicitLeft = 203
+    ExplicitHeight = 264
     object btnPDF: TcxButton
       Left = 0
       Top = 48
@@ -58,7 +57,7 @@ inherited frmPrint: TfrmPrint
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 231
+      ExplicitTop = 238
     end
     object btnEditar: TcxButton
       Left = 0
@@ -80,16 +79,16 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frxrprt1: TfrxReport
-    Version = '2026.1.7'
+    Version = '2025.1.1'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
-    PreviewOptions.Zoom = 1.00000000000000000
+    PreviewOptions.Zoom = 1.000000000000000000
     PrintOptions.Printer = 'Por defecto'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.Author = 'FactuZam'
-    ReportOptions.CreateDate = 42481.63467574070000000
-    ReportOptions.LastChange = 43706.46955840281000000
+    ReportOptions.CreateDate = 42481.634675740700000000
+    ReportOptions.LastChange = 43706.469558402810000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'begin'
@@ -99,19 +98,18 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
-    Watermarks = <>
     object Data: TfrxDataPage
-      Height = 1000.00000000000000000
-      Width = 1000.00000000000000000
+      Height = 1000.000000000000000000
+      Width = 1000.000000000000000000
     end
     object Page1: TfrxReportPage
-      PaperWidth = 210.00000000000000000
-      PaperHeight = 297.00000000000000000
+      PaperWidth = 210.000000000000000000
+      PaperHeight = 297.000000000000000000
       PaperSize = 9
-      LeftMargin = 5.00000000000000000
-      RightMargin = 5.00000000000000000
-      TopMargin = 20.00000000000000000
-      BottomMargin = 20.00000000000000000
+      LeftMargin = 5.000000000000000000
+      RightMargin = 5.000000000000000000
+      TopMargin = 20.000000000000000000
+      BottomMargin = 20.000000000000000000
       Frame.Typ = []
       MirrorMode = []
     end
@@ -123,11 +121,13 @@ inherited frmPrint: TfrmPrint
     DataOnly = False
     Compressed = False
     EmbeddedFonts = True
+    EmbedFontsIfProtected = False
     InteractiveFormsFontSubset = 'A-Z,a-z,0-9,#43-#47 '
     OpenAfterExport = False
     PrintOptimized = True
     Outline = False
     Background = False
+    HTMLTags = True
     Quality = 95
     Transparency = False
     Author = 'Alejandro Laorden Hidalgo'
@@ -144,7 +144,6 @@ inherited frmPrint: TfrmPrint
     PdfA = False
     PDFStandard = psNone
     PDFVersion = pv14
-    PDFColorSpace = csDeviceRGB
     Left = 88
     Top = 120
   end
@@ -152,7 +151,7 @@ inherited frmPrint: TfrmPrint
     UseFileCache = True
     ShowProgress = True
     OverwritePrompt = False
-    CreationTime = 44864.74243649306000000
+    CreationTime = 44864.742436493060000000
     DataOnly = False
     ChunkSize = 0
     OpenAfterExport = False
@@ -206,10 +205,10 @@ inherited frmPrint: TfrmPrint
     DefaultFont.Height = -13
     DefaultFont.Name = 'Arial'
     DefaultFont.Style = []
-    DefaultLeftMargin = 10.00000000000000000
-    DefaultRightMargin = 10.00000000000000000
-    DefaultTopMargin = 10.00000000000000000
-    DefaultBottomMargin = 10.00000000000000000
+    DefaultLeftMargin = 10.000000000000000000
+    DefaultRightMargin = 10.000000000000000000
+    DefaultTopMargin = 10.000000000000000000
+    DefaultBottomMargin = 10.000000000000000000
     DefaultPaperSize = 9
     DefaultOrientation = poPortrait
     GradientEnd = 11982554
@@ -223,16 +222,16 @@ inherited frmPrint: TfrmPrint
     Top = 120
   end
   object frxReportOrigen: TfrxReport
-    Version = '2026.1.7'
+    Version = '2025.1.1'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
-    PreviewOptions.Zoom = 1.00000000000000000
+    PreviewOptions.Zoom = 1.000000000000000000
     PrintOptions.Printer = 'Por defecto'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.Author = 'FactuZam'
-    ReportOptions.CreateDate = 42481.63467574070000000
-    ReportOptions.LastChange = 43706.46955840281000000
+    ReportOptions.CreateDate = 42481.634675740700000000
+    ReportOptions.LastChange = 43706.469558402810000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'begin'
@@ -242,19 +241,18 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
-    Watermarks = <>
     object Data: TfrxDataPage
-      Height = 1000.00000000000000000
-      Width = 1000.00000000000000000
+      Height = 1000.000000000000000000
+      Width = 1000.000000000000000000
     end
     object Page1: TfrxReportPage
-      PaperWidth = 210.00000000000000000
-      PaperHeight = 297.00000000000000000
+      PaperWidth = 210.000000000000000000
+      PaperHeight = 297.000000000000000000
       PaperSize = 9
-      LeftMargin = 5.00000000000000000
-      RightMargin = 5.00000000000000000
-      TopMargin = 20.00000000000000000
-      BottomMargin = 20.00000000000000000
+      LeftMargin = 5.000000000000000000
+      RightMargin = 5.000000000000000000
+      TopMargin = 20.000000000000000000
+      BottomMargin = 20.000000000000000000
       Frame.Typ = []
       MirrorMode = []
     end
