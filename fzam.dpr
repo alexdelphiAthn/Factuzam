@@ -117,7 +117,9 @@ uses
   Core_Interfaces in 'src\Lib\backup\Core_Interfaces.pas',
   Backup.Types in 'src\Lib\backup\Backup.Types.pas',
   ScriptWriters in 'src\Lib\backup\ScriptWriters.pas',
-  inLibEAN13 in 'src\Lib\inLibEAN13.pas';
+  inLibEAN13 in 'src\Lib\inLibEAN13.pas',
+  Vcl.Themes,
+  Vcl.Styles;
 
 var
   frmLogon: TfrmLogon;

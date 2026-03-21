@@ -288,6 +288,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Position = 1
                   TabOrder = 2
                   TabStop = False
+                  StyleName = 'Windows'
                   OnChange = ScrollBar1Change
                 end
               end
@@ -427,6 +428,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         Position = 1
                         TabOrder = 1
                         TabStop = False
+                        StyleName = 'Windows'
                         OnChange = ScrollBar2Change
                       end
                     end
@@ -922,6 +924,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           Width = 851
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 851
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 851
@@ -990,6 +995,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         Width = 859
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
         inherited nvNavegador: TcxDBNavigator
           Width = 282
           ExplicitWidth = 282
