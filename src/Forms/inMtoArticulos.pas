@@ -31,7 +31,7 @@ uses
   dxScrollbarAnnotations, dxCore, System.Actions, Vcl.ActnList,
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  cxDBLabel, dxShellDialogs, dxBarBuiltInMenu;
+  cxDBLabel, dxShellDialogs;
 
 type
   TfrmMtoArticulos = class(TfrmMtoGen)

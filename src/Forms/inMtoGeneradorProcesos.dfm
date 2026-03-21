@@ -167,6 +167,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsSQL: TcxTabSheet
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
+              OnShow = tsSQLShow
               object pnl6: TPanel
                 Left = 0
                 Top = 255
@@ -191,41 +192,46 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                 Height = 255
                 Align = alClient
                 TabOrder = 1
-                object dbsyndtTexto: TDBSynEdit
+                object Panel2: TPanel
+                  Left = 723
+                  Top = 1
+                  Width = 117
+                  Height = 253
+                  Align = alRight
+                  TabOrder = 0
+                  object btnBonito: TButton
+                    Left = 24
+                    Top = 16
+                    Width = 75
+                    Height = 25
+                    Caption = '&Bonito'
+                    TabOrder = 0
+                    OnClick = btnBonitoClick
+                  end
+                end
+                object SynEdit1: TSynEdit
                   Left = 1
                   Top = 1
-                  Width = 722
+                  Width = 703
                   Height = 253
-                  Cursor = crIBeam
-                  DataField = 'PROCESO_GENERADORPROCESO'
-                  DataSource = dsTablaG
                   Align = alClient
-                  Color = clWhite
-                  Ctl3D = False
-                  Font.Charset = ANSI_CHARSET
+                  Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
-                  Font.Height = -17
-                  Font.Name = 'JetBrains Mono Medium'
+                  Font.Height = -16
+                  Font.Name = 'JetBrains Mono'
                   Font.Style = []
                   Font.Quality = fqClearTypeNatural
-                  ParentColor = False
-                  ParentCtl3D = False
-                  ParentFont = False
-                  TabOrder = 0
-                  OnKeyDown = dbsyndtTextoKeyDown
-                  OnKeyUp = dbsyndtTextoKeyUp
-                  OnMouseDown = dbsyndtTextoMouseDown
-                  BorderStyle = bsNone
-                  ExtraLineSpacing = 0
-                  Gutter.BorderStyle = gbsRight
+                  TabOrder = 1
+                  Visible = False
+                  CodeFolding.IndentGuidesColor = clBlack
+                  CodeFolding.IndentGuides = False
+                  UseCodeFolding = False
                   Gutter.Font.Charset = DEFAULT_CHARSET
                   Gutter.Font.Color = clWindowText
-                  Gutter.Font.Height = -13
+                  Gutter.Font.Height = -11
                   Gutter.Font.Name = 'Consolas'
-                  Gutter.Font.Pitch = fpFixed
                   Gutter.Font.Style = []
                   Gutter.Font.Quality = fqClearTypeNatural
-                  Gutter.ShowLineNumbers = True
                   Gutter.Width = 0
                   Gutter.Bands = <
                     item
@@ -246,45 +252,44 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       Width = 3
                     end>
                   Highlighter = synsqlsyn2
-                  OverwriteCaret = ctHorizontalLine
-                  TabWidth = 2
-                  RemovedKeystrokes = <
+                  Lines.Strings = (
+                    'SynEdit1')
+                  ScrollBars = ssNone
+                  ScrollbarAnnotations = <
                     item
-                      Command = ecTab
-                      ShortCut = 9
+                      AnnType = sbaCarets
+                      AnnPos = sbpFullWidth
+                      FullRow = False
                     end
                     item
-                      Command = ecShiftTab
-                      ShortCut = 8201
-                    end>
-                  AddedKeystrokes = <
-                    item
-                      Command = ecTab
-                      ShortCut = 9
-                      ShortCut2 = 9
+                      AnnType = sbaBookmark
+                      AnnPos = sbpLeft
+                      FullRow = True
                     end
                     item
-                      Command = ecShiftTab
-                      ShortCut = 8201
-                      ShortCut2 = 8201
+                      AnnType = sbaTrackChanges
+                      AnnPos = sbpRight
+                      FullRow = True
                     end>
+                  OnScroll = SynEdit1Scroll
+                  OnStatusChange = SynEdit1StatusChange
+                  FontSmoothing = fsmNone
+                  ExplicitWidth = 722
                 end
-                object Panel2: TPanel
-                  Left = 723
+                object ScrollBar1: TScrollBar
+                  Left = 704
                   Top = 1
-                  Width = 117
+                  Width = 19
                   Height = 253
                   Align = alRight
-                  TabOrder = 1
-                  object btnBonito: TButton
-                    Left = 24
-                    Top = 16
-                    Width = 75
-                    Height = 25
-                    Caption = '&Bonito'
-                    TabOrder = 0
-                    OnClick = btnBonitoClick
-                  end
+                  Kind = sbVertical
+                  Max = 10
+                  Min = 1
+                  PageSize = 0
+                  Position = 1
+                  TabOrder = 2
+                  TabStop = False
+                  OnChange = ScrollBar1Change
                 end
               end
             end
@@ -292,10 +297,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&2_Metadatos'
               ImageIndex = 2
               OnShow = tsMetadatosShow
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxspltr2: TcxSplitter
                 Left = 377
                 Top = 0
@@ -328,74 +329,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
-                    object syndtEstructura: TSynEdit
-                      Left = 0
-                      Top = 0
-                      Width = 446
-                      Height = 304
-                      Align = alClient
-                      ParentColor = True
-                      ParentFont = True
-                      TabOrder = 0
-                      OnKeyDown = syndtEstructuraKeyDown
-                      CodeFolding.IndentGuidesColor = clBlack
-                      CodeFolding.IndentGuides = False
-                      UseCodeFolding = False
-                      BorderStyle = bsNone
-                      Gutter.Font.Charset = DEFAULT_CHARSET
-                      Gutter.Font.Color = clWindowText
-                      Gutter.Font.Height = -11
-                      Gutter.Font.Name = 'Courier New'
-                      Gutter.Font.Style = []
-                      Gutter.Font.Quality = fqClearTypeNatural
-                      Gutter.ShowLineNumbers = True
-                      Gutter.Width = 0
-                      Gutter.Bands = <
-                        item
-                          Kind = gbkMarks
-                          Width = 13
-                        end
-                        item
-                          Kind = gbkLineNumbers
-                        end
-                        item
-                          Kind = gbkFold
-                        end
-                        item
-                          Kind = gbkTrackChanges
-                        end
-                        item
-                          Kind = gbkMargin
-                          Width = 3
-                        end>
-                      Highlighter = synsqlsyn2
-                      ScrollbarAnnotations = <>
-                      FontSmoothing = fsmNone
-                      RemovedKeystrokes = <
-                        item
-                          Command = ecTab
-                          ShortCut = 9
-                        end
-                        item
-                          Command = ecShiftTab
-                          ShortCut = 8201
-                        end>
-                      AddedKeystrokes = <
-                        item
-                          Command = ecTab
-                          ShortCut = 9
-                          ShortCut2 = 9
-                        end
-                        item
-                          Command = ecShiftTab
-                          ShortCut = 8201
-                          ShortCut2 = 8201
-                        end>
-                    end
                     object mmo1: TMemo
                       Left = 488
                       Top = 344
@@ -404,17 +337,115 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       Lines.Strings = (
                         'mm'
                         'o1')
-                      TabOrder = 1
+                      TabOrder = 0
                       Visible = False
+                    end
+                    object Panel3: TPanel
+                      Left = 0
+                      Top = 0
+                      Width = 446
+                      Height = 304
+                      Align = alClient
+                      BevelOuter = bvNone
+                      TabOrder = 1
+                      ExplicitLeft = 128
+                      ExplicitTop = 136
+                      ExplicitWidth = 185
+                      ExplicitHeight = 41
+                      object syndtEstructura: TSynEdit
+                        Left = 0
+                        Top = 0
+                        Width = 427
+                        Height = 304
+                        Align = alClient
+                        ParentColor = True
+                        ParentFont = True
+                        TabOrder = 0
+                        Visible = False
+                        CodeFolding.IndentGuidesColor = clBlack
+                        CodeFolding.IndentGuides = False
+                        UseCodeFolding = False
+                        BorderStyle = bsNone
+                        Gutter.Font.Charset = DEFAULT_CHARSET
+                        Gutter.Font.Color = clWindowText
+                        Gutter.Font.Height = -11
+                        Gutter.Font.Name = 'Courier New'
+                        Gutter.Font.Style = []
+                        Gutter.Font.Quality = fqClearTypeNatural
+                        Gutter.ShowLineNumbers = True
+                        Gutter.Width = 0
+                        Gutter.Bands = <
+                          item
+                            Kind = gbkMarks
+                            Width = 13
+                          end
+                          item
+                            Kind = gbkLineNumbers
+                          end
+                          item
+                            Kind = gbkFold
+                          end
+                          item
+                            Kind = gbkTrackChanges
+                          end
+                          item
+                            Kind = gbkMargin
+                            Width = 3
+                          end>
+                        Highlighter = synsqlsyn2
+                        ScrollBars = ssNone
+                        ScrollbarAnnotations = <>
+                        OnScroll = syndtEstructuraScroll
+                        OnStatusChange = syndtEstructuraStatusChange
+                        FontSmoothing = fsmNone
+                        ExplicitLeft = 2
+                        ExplicitTop = 9
+                        ExplicitWidth = 375
+                        ExplicitHeight = 297
+                        RemovedKeystrokes = <
+                          item
+                            Command = ecTab
+                            ShortCut = 9
+                          end
+                          item
+                            Command = ecShiftTab
+                            ShortCut = 8201
+                          end>
+                        AddedKeystrokes = <
+                          item
+                            Command = ecTab
+                            ShortCut = 9
+                            ShortCut2 = 9
+                          end
+                          item
+                            Command = ecShiftTab
+                            ShortCut = 8201
+                            ShortCut2 = 8201
+                          end>
+                      end
+                      object ScrollBar2: TScrollBar
+                        Left = 427
+                        Top = 0
+                        Width = 19
+                        Height = 304
+                        Align = alRight
+                        Kind = sbVertical
+                        Max = 10
+                        Min = 1
+                        PageSize = 0
+                        Position = 1
+                        TabOrder = 1
+                        TabStop = False
+                        OnChange = ScrollBar2Change
+                        ExplicitLeft = 704
+                        ExplicitTop = 1
+                        ExplicitHeight = 253
+                      end
                     end
                   end
                   object tsContenido: TcxTabSheet
                     Caption = '&Vista Contenido'
                     ImageIndex = 1
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
@@ -513,9 +544,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
-                          Properties.Increment = 0.100000000000000000
-                          Properties.LargeIncrement = 1.000000000000000000
-                          Properties.MaxValue = 100.000000000000000000
+                          Properties.Increment = 0.10000000000000000
+                          Properties.LargeIncrement = 1.00000000000000000
+                          Properties.MaxValue = 100.00000000000000000
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
@@ -590,21 +621,17 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object btRefresh: TcxButton
                     Left = 5
                     Top = 6
-                    Width = 217
+                    Width = 188
                     Height = 25
                     Caption = 'Refrescar &MetaDatos'
                     TabOrder = 0
                     OnClick = btRefreshClick
                   end
-                  object cxdbtxtdtNOMBRE_METADATO: TcxDBTextEdit
-                    Left = 249
-                    Top = 6
-                    DataBinding.DataField = 'NOMBRE_METADATO'
-                    DataBinding.DataSource = dmGeneradorProcesos.dsMetadatos
-                    Properties.OnChange = cxdbtxtdtNOMBRE_METADATOPropertiesChange
+                  object cxLabel1: TcxLabel
+                    Left = 199
+                    Top = 8
+                    Caption = 'Control+A al editor'
                     TabOrder = 1
-                    Visible = False
-                    Width = 121
                   end
                 end
                 object TreeView1: TTreeView
@@ -624,10 +651,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsVistaDatos: TcxTabSheet
               Caption = '&3_VistaDatos'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
@@ -727,9 +750,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.Increment = 0.100000000000000000
-                    Properties.LargeIncrement = 1.000000000000000000
-                    Properties.MaxValue = 100.000000000000000000
+                    Properties.Increment = 0.10000000000000000
+                    Properties.LargeIncrement = 1.00000000000000000
+                    Properties.MaxValue = 100.00000000000000000
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'
@@ -911,9 +934,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           Width = 851
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 851
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 851
@@ -982,9 +1002,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         Width = 859
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
         inherited nvNavegador: TcxDBNavigator
           Width = 282
           ExplicitWidth = 282

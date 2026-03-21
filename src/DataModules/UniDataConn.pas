@@ -172,8 +172,12 @@ procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;
   Flag: TDATraceFlag);
 begin
   {$IFDEF DEBUG}
+    oMemoSQL.Lines.Add('-- begin-- ' +
+                       FormatDateTime('hh:nn:ss.zzz', Now));
     oMemoSQL.Lines.Add(Text);
     inLibLog.Log.LogSQL(Text);
+    oMemoSQL.Lines.Add('-- end-- ' +
+                       FormatDateTime('hh:nn:ss.zzz', Now));
   {$ENDIF }
 end;
 

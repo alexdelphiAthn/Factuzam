@@ -9,6 +9,7 @@ inherited dmGeneradorProcesos: TdmGeneradorProcesos
       '  FROM fza_generadorprocesos'
       '')
     AfterInsert = unqryTablaGAfterInsert
+    AfterScroll = unqryTablaGAfterScroll
   end
   inherited unqryPerfiles: TUniQuery
     SQL.Strings = ()

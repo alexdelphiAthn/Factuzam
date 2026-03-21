@@ -12,7 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn;
+  Uni, inLibUser, UniDataConn, SynEdit;
 
 type
   TdmGeneradorProcesos = class(TdmBase)
@@ -30,6 +30,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGAfterScroll(DataSet: TDataSet);
   private
     { Private declarations }
   public
@@ -55,6 +56,14 @@ procedure TdmGeneradorProcesos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   unqryTablaG.FindField('CODIGO_GENERADORPROCESO').AsString := '0';
+end;
+
+procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);
+begin
+  inherited;
+  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
+                       DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1StatusChange(nil, [scAll]);
 end;
 
 procedure TdmGeneradorProcesos.DataModuleCreate(Sender: TObject);
@@ -90,7 +99,10 @@ procedure TdmGeneradorProcesos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   GetCodigoAutoGeneradorProcesos;
+  DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString :=
+     (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text;
 end;
+
 initialization
   ForceReferenceToClass(TdmGeneradorProcesos);
 end.

@@ -47,8 +47,7 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
-  dxBarBuiltInMenu;
+  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics;
 
 const
   WM_FREECONTROL = WM_USER;
