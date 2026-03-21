@@ -40,8 +40,7 @@ uses
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
   dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList,
   frLocalization, frLanguageSpanish, frCoreClasses,
-  frxExportBaseImageSettingsDialog;
-//  frxExportBaseImageSettingsDialog, frCoreClasses;
+  frxExportBaseImageSettingsDialog, frxSmartMemo;
 
 type
   TfrmPrintFac = class(TfrmPrint)

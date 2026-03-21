@@ -8,7 +8,6 @@ inherited frmMtoGen: TfrmMtoGen
   Font.Pitch = fpDefault
   Font.Quality = fqDefault
   Visible = True
-  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnKeyUp = FormKeyUp
   OnShow = FormShow

@@ -31,7 +31,7 @@ uses
   dxScrollbarAnnotations, dxCore, System.Actions, Vcl.ActnList,
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  cxDBLabel, dxShellDialogs;
+  cxDBLabel, dxShellDialogs, dxBarBuiltInMenu;
 
 type
   TfrmMtoArticulos = class(TfrmMtoGen)
@@ -732,10 +732,10 @@ procedure TfrmMtoArticulos.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   if (dsTablaG.state = dsInsert) then
-    txtCODIGO_ARTICULO.Enabled := True
+    txtCODIGO_ARTICULO.Properties.ReadOnly := False
   else
   begin
-    txtCODIGO_ARTICULO.Enabled := False;
+    txtCODIGO_ARTICULO.Properties.ReadOnly := True;
   end;
 end;
 
