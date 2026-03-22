@@ -15,12 +15,12 @@ uses
   Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
-  cxEdit, cxNavigator, DB, cxDBData, cxContainer,
+  cxEdit, cxNavigator, DB, cxDBData, cxContainer, Generics.Collections,
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
   cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
-  cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
+  cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel, inLibArticulosPropiedades,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
   dxBevel, cxDBNavigator, UniDataArticulos,
@@ -276,19 +276,6 @@ type
     tvMovimientosRAZONSOCIAL_CLIENTE: TcxGridDBColumn;
     tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
     tsPropiedades: TcxTabSheet;
-    cxGrid4: TcxGrid;
-    cxGridDBTableView3: TcxGridDBTableView;
-    cxGridDBColumn1: TcxGridDBColumn;
-    cxGridDBColumn2: TcxGridDBColumn;
-    cxGridDBColumn3: TcxGridDBColumn;
-    cxGridDBColumn4: TcxGridDBColumn;
-    cxGridDBColumn5: TcxGridDBColumn;
-    cxGridDBColumn6: TcxGridDBColumn;
-    cxGridDBColumn7: TcxGridDBColumn;
-    cxGridDBColumn8: TcxGridDBColumn;
-    cxGridDBColumn9: TcxGridDBColumn;
-    cxGridLevel3: TcxGridLevel;
-    cxLabel4: TcxLabel;
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -319,10 +306,18 @@ type
     procedure btnBuscarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
      procedure IterateCheckedListArt(lst:TcxListView);
+  private
+    FGestorProp  : TGestorPropiedades;    // [AÑADIR]
+    FScrollProp  : TScrollBox;            // [AÑADIR]
+    FBtnAddProp  : TcxButton;             // [AÑADIR]
+    procedure InicializarPestanyaPropiedades;   // [AÑADIR]
+    procedure OnAfterScrollArticulos(DataSet: TDataSet);  // [AÑADIR]
+    procedure BtnAddPropClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
@@ -346,7 +341,7 @@ uses
   inMtoFamilias,
   inMtoEmpresas,
   inMtoFacturas,
-  inMtoModalArtTar;
+  inMtoModalArtTar, inLibGlobalVar;
 
 {$R *.dfm}
 
@@ -547,6 +542,16 @@ begin
   begin
     dmmArticulos.unqryTarifasArticulos.Post;
   end;
+  if Assigned(FGestorProp) then
+  try
+    FGestorProp.GuardarPropiedades;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Error al guardar propiedades: ' + E.Message);
+      Exit;
+    end;
+  end;
 end;
 
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
@@ -639,6 +644,67 @@ begin
   tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
   pkFieldName := 'CODIGO_ARTICULO';
+  InicializarPestanyaPropiedades;
+  dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
+  if dmmArticulos.unqryTablaG.Active and
+   (dmmArticulos.unqryTablaG.RecordCount > 0) then
+    FGestorProp.CargarPropiedades(
+      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+end;
+
+procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
+var
+  pnlTop: TPanel;
+begin
+  // Ocultar el grid estático si existe en el DFM
+
+  // Panel superior con botón "+ Añadir propiedad"
+  pnlTop := TPanel.Create(Self);
+  pnlTop.Parent     := tsPropiedades;
+  pnlTop.Align      := alTop;
+  pnlTop.Height     := 36;
+  pnlTop.BevelOuter := bvNone;
+  pnlTop.Color      := tsPropiedades.Color;
+
+  FBtnAddProp := TcxButton.Create(Self);
+  FBtnAddProp.Parent  := pnlTop;
+  FBtnAddProp.Caption := '+ Añadir propiedad';
+  FBtnAddProp.Left    := 8;
+  FBtnAddProp.Top     := 4;
+  FBtnAddProp.Width   := 200;
+  FBtnAddProp.Height  := 26;
+  FBtnAddProp.OnClick := BtnAddPropClick;   // ver punto 7
+
+  // ScrollBox que ocupa el resto de la pestaña
+  FScrollProp := TScrollBox.Create(Self);
+  FScrollProp.Parent      := tsPropiedades;
+  FScrollProp.Align       := alClient;
+  FScrollProp.BorderStyle := bsNone;
+  FScrollProp.Color       := clWindow;
+
+  // Crear el gestor
+  FGestorProp := TGestorPropiedades.Create(
+    FScrollProp,
+    oConn,   // <-- ajusta al nombre real de tu TUniConnection
+    oUser               // <-- ajusta a tu función/variable de usuario
+  );
+end;
+
+procedure TfrmMtoArticulos.BtnAddPropClick(Sender: TObject);
+begin
+  // Si hay cambios no guardados en el artículo, grabar primero
+  if (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
+    dmmArticulos.unqryTablaG.Post;
+
+  if Assigned(FGestorProp) then
+    FGestorProp.AbrirSelectorPropiedades;
+end;
+
+procedure TfrmMtoArticulos.OnAfterScrollArticulos(DataSet: TDataSet);
+begin
+  if Assigned(FGestorProp) then
+    FGestorProp.CargarPropiedades(
+      DataSet.FieldByName('CODIGO_ARTICULO').AsString);
 end;
 
 procedure
@@ -764,6 +830,13 @@ begin
   begin
     txtCODIGO_ARTICULO.Properties.ReadOnly := True;
   end;
+end;
+
+procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  if Assigned(FGestorProp) then
+    FreeAndNil(FGestorProp);
 end;
 
 procedure TfrmMtoArticulos.FormShow(Sender: TObject);

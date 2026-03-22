@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 22/03/2026 16:45:08
+-- Backup generado: 22/03/2026 19:22:11
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -183,18 +183,106 @@ INSERT INTO `fza_articulos_familias` (`CODIGO_FAMILIA`, `ACTIVO_FAMILIA`, `ORDEN
 
 DROP TABLE IF EXISTS `fza_articulos_propiedades`;
 CREATE TABLE `fza_articulos_propiedades` (
-  `CODIGO_ARTICULO_AP` varchar(20) NOT NULL,
-  `ID_VALOR_AP` int(11) NOT NULL COMMENT 'FK hacia fza_atributos_valores',
+  `CODIGO_ARTICULO` varchar(20) NOT NULL,
+  `CODIGO_PROPIEDAD` varchar(20) NOT NULL COMMENT 'FK a fza_propiedades (ej: MATERIAL, EDAD_MAX)',
+  `ID_VALOR_PV` int(11) NULL DEFAULT NULL COMMENT 'Si es tipo LISTA, guardas aquí el ID de fza_propiedades_valores',
+  `VALOR_LIBRE` varchar(255) NULL DEFAULT NULL COMMENT 'Si es tipo TEXTO o NUMERO, escribes el dato directamente aquí',
   `INSTANTEALTA` timestamp NOT NULL DEFAULT current_timestamp(),
   `USUARIOALTA` varchar(100) NOT NULL,
-  PRIMARY KEY (`CODIGO_ARTICULO_AP`,`ID_VALOR_AP`)
+  PRIMARY KEY (`CODIGO_ARTICULO`,`CODIGO_PROPIEDAD`)
 );
-ALTER TABLE `fza_articulos_propiedades` ADD INDEX `IDX_VALOR_AP` (`ID_VALOR_AP`);
+ALTER TABLE `fza_articulos_propiedades` ADD INDEX `IDX_VALOR_LISTA` (`ID_VALOR_PV`);
 
 -- Datos de fza_articulos_propiedades
-INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO_AP`, `ID_VALOR_AP`, `INSTANTEALTA`, `USUARIOALTA`) VALUES
-  ('BLUS-SEDA', 203, '2026-01-06 12:31:02', 'Sistema');
--- 1 registros exportados
+INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`) VALUES
+  ('ABRIGO-PAÑO', 'ES_ECO', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'ESTILO', 37, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'GENERO', 29, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'LAVADO', 43, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'MARCA', 1, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'MATERIAL', 26, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'ORIGEN', NULL, 'Portugal', '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'COMPOSICION', NULL, '100% Seda natural', '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'ES_ECO', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'ESTILO', 34, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'LAVADO', 40, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'MARCA', 2, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'MATERIAL', 18, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
+  ('BLUS-SEDA', 'TEMPORADA', 11, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'CAPACIDAD_L', NULL, '8', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'CIERRE', 50, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'MARCA', 7, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'ORIGEN', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'PESO_GR', NULL, '620', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSO-PIEL', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'ALTURA_TAC', NULL, '4', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'MARCA', 6, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'MATERIAL', 22, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'ORIGEN', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOTIN-ANIT', 'TIPO_SUELA', 45, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'COMPOSICION', NULL, '100% Algodón orgánico', '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'ES_ECO', NULL, 'S', '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'ESTILO', 33, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'GENERO', 30, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'LAVADO', 42, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'MARCA', 8, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'MATERIAL', 14, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-BASICA', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CARTERA-PIEL', 'CIERRE', 53, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CARTERA-PIEL', 'MARCA', 3, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CARTERA-PIEL', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CARTERA-PIEL', 'ORIGEN', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
+  ('CARTERA-PIEL', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'ESTILO', 38, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'LAVADO', 44, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'MARCA', 1, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'MATERIAL', 21, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'ACTIVIDAD', 56, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'MARCA', 4, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'MATERIAL', 24, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'PESO_GR', NULL, '185', '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('LEGGING-SPORT', 'TRANSPIRABLE', NULL, 'S', '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'CAPACIDAD_L', NULL, '30', '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'CIERRE', 50, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'MARCA', 5, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'MATERIAL', 27, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'PESO_GR', NULL, '850', '2026-03-22 18:32:14', 'DEMO'),
+  ('MOCHILA-SPORT', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'ACTIVIDAD', 60, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'GENERO', 30, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'MARCA', 5, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'MATERIAL', 15, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'PESO_GR', NULL, '420', '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('SUDADERA-HOOD', 'TRANSPIRABLE', NULL, 'S', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'ALTURA_TAC', NULL, '0', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'GENERO', 30, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'MARCA', 4, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'MATERIAL', 27, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-DEPOR', 'TIPO_SUELA', 47, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'ALTURA_TAC', NULL, '4', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'GENERO', 29, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'MARCA', 3, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'ORIGEN', NULL, 'Portugal', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'TIPO_SUELA', 46, NULL, '2026-03-22 18:32:14', 'DEMO');
+-- 87 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -1198,7 +1286,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 38, 3, 'S', 'S', '2026-03-22 16:41:05', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 46, 3, 'S', 'S', '2026-03-22 18:38:10', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1634,12 +1722,52 @@ INSERT INTO `fza_facturas_pagos` (`SERIE_FACTURA_PAGO`, `NRO_FACTURA_PAGO`, `LIN
 DROP TABLE IF EXISTS `fza_familias_atributos`;
 CREATE TABLE `fza_familias_atributos` (
   `CODIGO_FAMILIA` varchar(20) NOT NULL COMMENT 'FK hacia fza_articulos_familias',
-  `ID_ATRIBUTO_VA` varchar(20) NOT NULL COMMENT 'FK hacia fza_variaciones_atributos',
-  `ES_REQUERIDO` varchar(1) NULL DEFAULT 'N' COMMENT 'S para indicar si es obligatorio rellenarlo',
-  `ORDEN_MOSTRAR` int(11) NULL DEFAULT '0' COMMENT 'Para ordenar el formulario dinámico',
-  PRIMARY KEY (`CODIGO_FAMILIA`,`ID_ATRIBUTO_VA`)
+  `CODIGO_PROPIEDAD` varchar(20) NOT NULL COMMENT 'FK hacia fza_propiedades',
+  `ES_REQUERIDO` varchar(1) NULL DEFAULT 'N' COMMENT 'S para obligatorio',
+  `ORDEN_MOSTRAR` int(11) NULL DEFAULT '0' COMMENT 'Para ordenar el formulario',
+  PRIMARY KEY (`CODIGO_FAMILIA`,`CODIGO_PROPIEDAD`)
 );
-ALTER TABLE `fza_familias_atributos` ADD INDEX `IDX_FAM_ATR_ATR` (`ID_ATRIBUTO_VA`);
+ALTER TABLE `fza_familias_atributos` ADD INDEX `IDX_FAM_ATR_ATR` (`CODIGO_PROPIEDAD`);
+
+-- Datos de fza_familias_atributos
+INSERT INTO `fza_familias_atributos` (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`) VALUES
+  ('BOLSOS', 'CAPACIDAD_L', 'N', 5),
+  ('BOLSOS', 'CIERRE', 'N', 4),
+  ('BOLSOS', 'MARCA', 'S', 1),
+  ('BOLSOS', 'MATERIAL', 'N', 3),
+  ('BOLSOS', 'ORIGEN', 'N', 7),
+  ('BOLSOS', 'PESO_GR', 'N', 6),
+  ('BOLSOS', 'TEMPORADA', 'S', 2),
+  ('CALZADO', 'ALTURA_TAC', 'N', 7),
+  ('CALZADO', 'GENERO', 'S', 3),
+  ('CALZADO', 'IMPERMEAB', 'N', 6),
+  ('CALZADO', 'MARCA', 'S', 1),
+  ('CALZADO', 'MATERIAL', 'N', 4),
+  ('CALZADO', 'ORIGEN', 'N', 8),
+  ('CALZADO', 'TEMPORADA', 'S', 2),
+  ('CALZADO', 'TIPO_SUELA', 'N', 5),
+  ('COMPLEMENTOS', 'CIERRE', 'N', 4),
+  ('COMPLEMENTOS', 'MARCA', 'S', 1),
+  ('COMPLEMENTOS', 'MATERIAL', 'N', 3),
+  ('COMPLEMENTOS', 'ORIGEN', 'N', 5),
+  ('COMPLEMENTOS', 'TEMPORADA', 'N', 2),
+  ('DEPORTIVO', 'ACTIVIDAD', 'S', 2),
+  ('DEPORTIVO', 'GENERO', 'S', 3),
+  ('DEPORTIVO', 'MARCA', 'S', 1),
+  ('DEPORTIVO', 'MATERIAL', 'N', 4),
+  ('DEPORTIVO', 'PESO_GR', 'N', 7),
+  ('DEPORTIVO', 'TEMPORADA', 'N', 5),
+  ('DEPORTIVO', 'TRANSPIRABLE', 'N', 6),
+  ('ROPA', 'COMPOSICION', 'N', 7),
+  ('ROPA', 'ES_ECO', 'N', 9),
+  ('ROPA', 'ESTILO', 'N', 5),
+  ('ROPA', 'GENERO', 'S', 3),
+  ('ROPA', 'LAVADO', 'N', 6),
+  ('ROPA', 'MARCA', 'S', 1),
+  ('ROPA', 'MATERIAL', 'N', 4),
+  ('ROPA', 'ORIGEN', 'N', 8),
+  ('ROPA', 'TEMPORADA', 'S', 2);
+-- 36 registros exportados
 
 
 -- Tabla: fza_formas_pago
@@ -2169,1200 +2297,545 @@ AND F.SERIE_FACTURA = L.SERIE_FACTURA_LINEA
 -- SET  CODIGO_TARIFA_FACTURA_LINEA = TARIFA_ARTICULO_CLIENTE_FACTURA
 
 -- WHERE F.TARIFA_ARTICULO_CLIENTE_FACTURA <> L.CODIGO_TARIFA_FACTURA_LINEA', '2024-10-10 18:49:29', '2023-10-28 13:39:47', 'Administrador', 'Administrador'),
-  ('012', 'Ejecutar PRC_CALCULAR_FACTURA_NETOS', 'CALL PRC_CALCULAR_FACTURA_NETOS(/* pSERIE_FACTURA varchar(12) */, /* pNRO_FACTURA varchar(12) */);', '2026-03-16 07:42:28', '2026-03-16 07:42:28', 'Administrador', 'Administrador'),
-  ('013', 'Ejecutar PRC_GET_CAJA_STOCK_PIVOTADO', 'CREATE OR REPLACE VIEW vi_caja_tarifa_sku_articulos AS
-SELECT 
-    skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD_TARIFA,
-    skus.CODIGO_ARTICULO_SKU AS CODIGO_ARTICULO,
-    tarifas.CODIGO_TARIFA AS CODIGO_TARIFA,
-    tarifas.NOMBRE_TARIFA AS NOMBRE_TARIFA,
-    -- Priorizamos el precio del SKU, si no existe usamos el del Padre
-    COALESCE(tarifa_sku.PRECIOFINAL_TARIFA, tarifa_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
-    COALESCE(tarifa_sku.PRECIOSALIDA_TARIFA, tarifa_padre.PRECIOSALIDA_TARIFA) AS PRECIOSALIDA_TARIFA,
-    -- Ya no necesitamos el ''SIN_PRECIO'' porque esta vista solo trae datos reales
-    CASE 
-        WHEN tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL THEN ''ESPECIFICO_SKU'' 
-        ELSE ''HEREDADO_PADRE'' 
-    END AS ORIGEN_PRECIO,
-    CONCAT(articulos.DESCRIPCION_ARTICULO, '' ('', skus.CODIGO_UNIDAD_SKU, '')'') AS DESCRIPCION_COMPLETA,
-    tarifas.ESIMP_INCL_TARIFA AS ESIMP_INCL_TARIFA,
-    articulos.TIPO_CANTIDAD_ARTICULO AS TIPO_CANTIDAD_ARTICULO,
-    articulos.CODIGO_FAMILIA_ARTICULO AS CODIGO_FAMILIA_ARTICULO 
-
-FROM fza_articulos_skus skus
-INNER JOIN fza_articulos articulos 
-    ON skus.CODIGO_ARTICULO_SKU = articulos.CODIGO_ARTICULO
-
--- 1. LA CLAVE: Sacamos solo las combinaciones (Articulo + Tarifa) que existen en la BD
-INNER JOIN (
-    SELECT DISTINCT CODIGO_ARTICULO_TARIFA, CODIGO_TARIFA 
-    FROM fza_articulos_tarifas
-) t_existentes ON t_existentes.CODIGO_ARTICULO_TARIFA = articulos.CODIGO_ARTICULO
-
--- 2. Traemos el nombre de la tarifa solo para las que pasaron el filtro anterior
-INNER JOIN fza_tarifas tarifas 
-    ON tarifas.CODIGO_TARIFA = t_existentes.CODIGO_TARIFA
-
--- 3. Rescatamos el precio específico del SKU (si lo hay)
-LEFT JOIN fza_articulos_tarifas tarifa_sku 
-    ON skus.CODIGO_UNIDAD_SKU = tarifa_sku.CODIGO_UNIDAD_TARIFA 
-   AND tarifas.CODIGO_TARIFA = tarifa_sku.CODIGO_TARIFA
-
--- 4. Rescatamos el precio del modelo Padre (si lo hay)
-LEFT JOIN fza_articulos_tarifas tarifa_padre 
-    ON articulos.CODIGO_ARTICULO = tarifa_padre.CODIGO_ARTICULO_TARIFA 
-   AND tarifas.CODIGO_TARIFA = tarifa_padre.CODIGO_TARIFA 
-   AND (tarifa_padre.CODIGO_UNIDAD_TARIFA IS NULL OR tarifa_padre.CODIGO_UNIDAD_TARIFA = '''')
-
-WHERE skus.ESACTIVO_SKU = ''S''
-  -- 5. Filtro de seguridad final: garantizar que al menos uno de los dos tiene precio
-  AND (tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL OR tarifa_padre.PRECIOFINAL_TARIFA IS NOT NULL)
+  ('040', NULL, 'CREATE OR REPLACE VIEW vi_articulos_propiedades_slots AS 
+SELECT  
+  a.CODIGO_ARTICULO,
+  fa.CODIGO_FAMILIA,
+  p.CODIGO_PROPIEDAD,
+  p.NOMBRE_PROPIEDAD,
+  p.TIPO_VALOR, 
+  fa.ES_REQUERIDO,
+  fa.ORDEN_MOSTRAR,
   
-ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-03-16 17:39:56', '2026-03-16 07:57:21', 'Administrador', 'Administrador'),
-  ('016', 'Ejecutar PRC_FNC_GET_NEXT_LINEA_FACTURA', 'CALL PRC_FNC_GET_NEXT_LINEA_FACTURA(/* pnumfac varchar(12) */, /* pserie varchar(12) */, /* presul varchar(3) */);', '2026-03-17 08:32:35', '2026-03-17 08:32:35', 'Administrador', 'Administrador'),
-  ('017', NULL, 'CREATE PROCEDURE PRC_BUSQUEDA_ARTICULOS(
- IN p_tarifa VARCHAR(50),
- IN p_almacen VARCHAR(50),
- IN p_fecha DATE,
- IN p_token VARCHAR(100),
- IN p_solostock TINYINT,
- IN p_solotarifa TINYINT
-)
-BEGIN
- SET @busqueda = CONCAT(''%'', IFNULL(p_token, ''''), ''%'');
-
- SELECT 
- v.INPUT_BUSQUEDA,
- v.TIPO_COINCIDENCIA,
- v.CODIGO_PADRE,
- v.CODIGO_SKU,
- v.DESCRIPCION_ARTICULO,
- v.TIPO_ARTICULO,
- 
- /* ESTO ES LO QUE LEERÁ DELPHI: */
- /* Si CODIGO_SKU es Nulo, devuelve el CODIGO_PADRE. Si no, devuelve el SKU. */
- COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE) AS CODIGO_FINAL_CAJA,
- 
- /* Traemos el precio (prioriza el específico del SKU, si no, toma el del Padre) */
- COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) AS PRECIOFINAL_TARIFA,
- 
- /* Calculamos el stock disponible cruzando por el código definitivo */
- (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
- FROM fza_articulos_stockactual s 
- WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
- AND s.CODIGO_ALMACEN_STK = p_almacen) AS STOCK_DISPONIBLE
-
- FROM vi_caja_busqueda_unificada v
- 
- /* Buscamos el precio del SKU (si existe) */
- LEFT JOIN fza_articulos_tarifas t_sku 
- ON t_sku.CODIGO_UNIDAD_TARIFA = v.CODIGO_SKU 
- AND t_sku.CODIGO_TARIFA = p_tarifa
- 
- /* Buscamos el precio del Padre (para los que no tienen SKU o heredan el precio) */
- LEFT JOIN fza_articulos_tarifas t_padre 
- ON t_padre.CODIGO_ARTICULO_TARIFA = v.CODIGO_PADRE 
- AND t_padre.CODIGO_TARIFA = p_tarifa 
- AND (t_padre.CODIGO_UNIDAD_TARIFA IS NULL OR t_padre.CODIGO_UNIDAD_TARIFA = '''')
-
- WHERE 
- /* Búsqueda por token (busca en el código exacto escaneado o en la descripción) */
- (p_token = '''' OR 
- v.INPUT_BUSQUEDA LIKE @busqueda OR 
- v.DESCRIPCION_ARTICULO LIKE @busqueda)
- 
- /* Filtro de Tarifa: Exige que exista precio en el SKU o en el Padre */
- AND (p_solotarifa = 0 OR COALESCE(t_sku.PRECIOFINAL_TARIFA, t_padre.PRECIOFINAL_TARIFA) IS NOT NULL)
- 
- /* Filtro de Stock: Exige que el sumatorio de lotes sea mayor a 0 */
- AND (p_solostock = 0 OR 
- (SELECT COALESCE(SUM(s.CANTIDAD_STK), 0) 
- FROM fza_articulos_stockactual s 
- WHERE s.CODIGO_UNIDAD_STK = COALESCE(v.CODIGO_SKU, v.CODIGO_PADRE)
- AND s.CODIGO_ALMACEN_STK = p_almacen) > 0)
- 
- ORDER BY v.DESCRIPCION_ARTICULO ASC;
-END', '2026-03-17 08:43:50', '2026-03-17 08:43:50', 'Administrador', 'Administrador'),
-  ('018', 'Ejecutar PRC_SETPERFILFORMULARIO', 'CALL PRC_SETPERFILFORMULARIO(''Todos'', ''frmMtoCajaParam'', ''vgerDiasCaducidadVale'', ''361'');', '2026-03-19 08:48:29', '2026-03-19 08:48:02', 'Administrador', 'Administrador'),
-  ('019', 'Ejecutar PRC_BUSQUEDA_ARTICULOS', 'CREATE PROCEDURE `PRC_BUSQUEDA_ARTICULOS`(IN p_tarifa     VARCHAR(10),
-    IN p_almacen    VARCHAR(10),
-    IN p_fecha      DATE,
-    IN p_token      VARCHAR(100),
-    IN p_solostock  TINYINT,
-    IN p_solotarifa TINYINT)
-BEGIN
-    IF p_tarifa IS NULL OR TRIM(p_tarifa) = '''' THEN
-        SET p_tarifa := ''PVP'';
-    END IF;
-    IF p_fecha IS NULL THEN
-        SET p_fecha := CURDATE();
-    END IF;
-
-    SELECT
-        v.*,
-        COALESCE(stk.STOCK_DISPONIBLE, 0) AS STOCK_DISPONIBLE
-    FROM vi_art_busquedas v
-
-    /* Stock unificado: por SKU + por código directo */
-    LEFT JOIN (
-        SELECT COD_ART, SUM(STOCK) AS STOCK_DISPONIBLE
-        FROM (
-            /* Artículos CON SKU: sumar por artículo padre */
-            SELECT sku.CODIGO_ARTICULO_SKU AS COD_ART,
-                   s.CANTIDAD_STK          AS STOCK
-              FROM fza_articulos_stockactual s
-              JOIN fza_articulos_skus sku
-                ON s.CODIGO_UNIDAD_STK = sku.CODIGO_UNIDAD_SKU
-             WHERE s.CODIGO_ALMACEN_STK = p_almacen
-            UNION ALL
-            /* Artículos SIN SKU: código directo no existe en fza_articulos_skus */
-            SELECT s.CODIGO_UNIDAD_STK AS COD_ART,
-                   s.CANTIDAD_STK      AS STOCK
-              FROM fza_articulos_stockactual s
-             WHERE s.CODIGO_ALMACEN_STK = p_almacen
-               AND NOT EXISTS (
-                   SELECT 1 FROM fza_articulos_skus sku2
-                    WHERE sku2.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK
-               )
-        ) t
-        GROUP BY COD_ART
-    ) stk ON v.CODIGO_ARTICULO = stk.COD_ART
-
-    WHERE (v.CODIGO_TARIFA = p_tarifa OR v.CODIGO_TARIFA IS NULL)
-      AND v.FECHA_DESDE_TARIFA <= p_fecha
-      AND (v.FECHA_HASTA_TARIFA IS NULL OR v.FECHA_HASTA_TARIFA >= p_fecha)
-      AND (p_token IS NULL OR p_token = ''''
-           OR v.CODIGO_ARTICULO      LIKE p_token
-           OR v.DESCRIPCION_ARTICULO LIKE p_token
-           OR v.DESCRIPCION_FAMILIA  LIKE p_token)
-      AND (p_solostock  = 0 OR COALESCE(stk.STOCK_DISPONIBLE, 0) > 0)
-      AND (p_solotarifa = 0 OR v.CODIGO_TARIFA IS NOT NULL)
-
-    ORDER BY v.CODIGO_ARTICULO;
-
-END', '2026-03-19 09:23:22', '2026-03-19 09:23:22', 'Administrador', 'Administrador'),
-  ('020', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
-    IN  pserie             VARCHAR(12), 
-    IN  pTipoDoc           VARCHAR(2), 
-    IN  pEMPRESA_CONTADOR  VARCHAR(10), 
-    IN  pUSUARIOMODIF      VARCHAR(100),
-    OUT pcont              VARCHAR(12)
-)
-BEGIN
-    DECLARE pNUMDIGIT INT;
-    
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        -- Si ocurre cualquier error, deshacer los cambios y emitir el error original
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-    
-    START TRANSACTION;
-    
-    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN 
-        SET pEMPRESA_CONTADOR = ''-''; 
-    END IF;
-    
-    /* Si no existe el contador, lo insertamos */
-    IF NOT EXISTS (
-        SELECT 1
-        FROM fza_contadores
-        WHERE TIPODOC_CONTADOR = pTipoDoc
-          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-          AND SERIE_CONTADOR = pserie
-    ) THEN
-    
-        INSERT INTO fza_contadores (
-            TIPODOC_CONTADOR, 
-            SERIE_CONTADOR, 
-            CONTADOR_CONTADOR, 
-            EMPRESA_CONTADOR,
-            DEFAULT_CONTADOR,
-            NUMDIGIT_CONTADOR,
-            INSTANTEALTA, 
-            USUARIOALTA,
-            USUARIOMODIF
-        ) VALUES (
-            pTipoDoc, 
-            pserie, 
-            1, 
-            pEMPRESA_CONTADOR,
-            ''N'', 
-            6,
-            CURRENT_TIMESTAMP,
-            pUSUARIOMODIF, 
-            pUSUARIOMODIF
-        );
-        
-    END IF;
-
-    /* Incrementamos el contador */
-    UPDATE fza_contadores
-    SET CONTADOR_CONTADOR = CONTADOR_CONTADOR + 1,
-        USUARIOMODIF = pUSUARIOMODIF
-    WHERE SERIE_CONTADOR = pserie
-      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-      AND TIPODOC_CONTADOR = pTipoDoc;
-      
-    /* Rescatamos el valor que acabamos de incrementar (restando 1) y los dígitos */
-    SELECT (CONTADOR_CONTADOR - 1), NUMDIGIT_CONTADOR
-    INTO pcont, pNUMDIGIT
-    FROM fza_contadores
-    WHERE SERIE_CONTADOR = pserie
-      AND TIPODOC_CONTADOR = pTipoDoc
-      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR 
-    LIMIT 1;
-         
-    /* Aplicamos el relleno de ceros a la izquierda si corresponde */
-    IF (pNUMDIGIT IS NOT NULL AND pNUMDIGIT > 0) THEN
-        SET pcont = LPAD(pcont, pNUMDIGIT, ''0'');
-    END IF;                                 
-
-    COMMIT;
-    
-END
-', '2026-03-19 16:36:21', '2026-03-19 16:32:07', 'Administrador', 'Administrador'),
-  ('021', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_REALIZAR_TRASPASO`(
-    IN pUsuario VARCHAR(50),
-    IN pEmpresa VARCHAR(20),
-    IN pAlmacenOrigen VARCHAR(10),
-    IN pAlmacenDestino VARCHAR(10),
-    IN pSku VARCHAR(50),
-    IN pCantidad DECIMAL(19,6))
-BEGIN
-    DECLARE vSerie VARCHAR(20) DEFAULT ''TRAS'';
-    DECLARE vNroDoc VARCHAR(20);
-
-    /* Manejo de errores para asegurar la consistencia */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-
-    /* Generamos un número de documento único basado en la fecha y hora */
-    SET vNroDoc = DATE_FORMAT(NOW(), ''%Y%m%d%H%i%s'');
-
-    START TRANSACTION;
-
-    /* 1. SALIDA DEL ORIGEN (Resta stock en Origen) */
-    INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
-      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
-      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
-      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF)
-    VALUES 
-    (''TR'', vSerie, vNroDoc, ''001'', pEmpresa,
-      pAlmacenOrigen, pAlmacenDestino, NOW(),
-      pSku, ''S'', pCantidad,
-      CONCAT(''Traspaso a '', pAlmacenDestino), pUsuario, pUsuario);
-
-    /* 2. ENTRADA EN DESTINO (Suma stock en Destino) */
-    INSERT INTO `fza_movimientos_almacen` 
-    (TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV, CODIGO_EMPRESA_MOV,
-      CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, FECHA_MOV,
-      CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV,
-      DESCRIPCION_ARTICULO_MOV, USUARIOALTA, USUARIOMODIF,
-     TIPO_DOC_REF_MOV, SERIE_DOC_REF_MOV, NRO_DOC_REF_MOV, LINEA_REF_MOV)
-    VALUES 
-    (''TR'', vSerie, vNroDoc, ''002'', pEmpresa,
-      pAlmacenDestino, pAlmacenOrigen, NOW(),
-      pSku, ''E'', pCantidad,
-      CONCAT(''Traspaso desde '', pAlmacenOrigen), pUsuario, pUsuario,
-     ''TR'', vSerie, vNroDoc, ''001'');
-
-    COMMIT;
-
-    SELECT CONCAT(''Traspaso realizado. Doc: '', vSerie, ''-'', vNroDoc) AS MENSAJE;
-END;', '2026-03-19 16:51:44', '2026-03-19 16:50:22', 'Administrador', 'Administrador'),
-  ('022', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT_FACT_SERIE`(
-    IN pserie VARCHAR(12),
-    IN pTipoDoc VARCHAR(2),
-    IN pEMPRESA_CONTADOR VARCHAR(10),
-    IN pUSUARIOMODIF VARCHAR(100),
-    OUT pcont VARCHAR(12)
-)
-BEGIN
-    DECLARE pNUMDIGIT INT;
-    DECLARE v_NextValue BIGINT;
-    
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    ManejoError: BEGIN ROLLBACK; RESIGNAL; END ManejoError;
-
-    START TRANSACTION;
-
-    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN
-        SET pEMPRESA_CONTADOR = ''-'';
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM fza_contadores WHERE TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND SERIE_CONTADOR = pserie) THEN
-        INSERT INTO fza_contadores (
-            TIPODOC_CONTADOR, SERIE_CONTADOR, CONTADOR_CONTADOR, EMPRESA_CONTADOR, DEFAULT_CONTADOR, NUMDIGIT_CONTADOR, INSTANTEALTA, USUARIOALTA, USUARIOMODIF
-        ) VALUES (
-            pTipoDoc, pserie, 1, pEMPRESA_CONTADOR, ''N'', 6, CURRENT_TIMESTAMP, pUSUARIOMODIF, pUSUARIOMODIF
-        );
-    END IF;
-
-    -- LA MAGIA: Incrementamos y guardamos en memoria el valor EXACTO para este usuario
-    UPDATE fza_contadores 
-    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1), 
-        USUARIOMODIF = pUSUARIOMODIF 
-    WHERE SERIE_CONTADOR = pserie AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR AND TIPODOC_CONTADOR = pTipoDoc;
-
-    -- Obtenemos el valor seguro reservado para esta sesión (le restamos 1 porque la app necesita el número pre-incremento)
-    SET v_NextValue = LAST_INSERT_ID() - 1;
-
-    SELECT NUMDIGIT_CONTADOR INTO pNUMDIGIT 
-    FROM fza_contadores 
-    WHERE SERIE_CONTADOR = pserie AND TIPODOC_CONTADOR = pTipoDoc AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR LIMIT 1;
-
-    IF (pNUMDIGIT IS NOT NULL AND pNUMDIGIT > 0) THEN
-        SET pcont = LPAD(v_NextValue, pNUMDIGIT, ''0'');
-    ELSE
-        SET pcont = CAST(v_NextValue AS CHAR);
-    END IF;
-
-    COMMIT;
-END;', '2026-03-19 18:17:24', '2026-03-19 18:16:05', 'Administrador', 'Administrador'),
-  ('023', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_CONT`(
-    IN  pTipoDoc       varchar(2), 
-    IN  pUSUARIO_MODIF varchar(100),
-    OUT pcont          varchar(20)
-)
-BEGIN
-    DECLARE pPADD bigint;
-    DECLARE pEMPRESA_CONTADOR varchar(10) DEFAULT ''-'';
-    DECLARE v_NextValue BIGINT; -- Variable añadida para guardar el valor atómico
-
-    -- Añadido: Manejador de excepciones con etiqueta ''kk:''
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN 
-        ROLLBACK; 
-        RESIGNAL; 
-    END kk;
-    
-    START TRANSACTION;
-
-    IF (pEMPRESA_CONTADOR = '''' OR pEMPRESA_CONTADOR IS NULL) THEN 
-        SET pEMPRESA_CONTADOR = ''-''; 
-    END IF;
-
-    /* Si no existe el contador, lo creamos (lógica original intacta) */
-    IF NOT EXISTS (
-        SELECT 1
-        FROM fza_contadores
-        WHERE TIPODOC_CONTADOR = pTipoDoc
-          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-    ) THEN
-        INSERT INTO fza_contadores (
-            TIPODOC_CONTADOR, 
-            SERIE_CONTADOR,
-            EMPRESA_CONTADOR,   
-            CONTADOR_CONTADOR, 
-            DEFAULT_CONTADOR,
-            NUMDIGIT_CONTADOR,
-            INSTANTEALTA, 
-            USUARIOALTA,
-            USUARIOMODIF
-        ) VALUES (
-            pTipoDoc, 
-            ''-'', 
-            pEMPRESA_CONTADOR,
-            1, 
-            ''S'', 
-            3,
-            CURRENT_TIMESTAMP,
-            pUSUARIO_MODIF, 
-            pUSUARIO_MODIF
-        );
-    END IF;
-
-    /* Obtenemos el número de dígitos / padding (lógica original intacta) */
-    SET pPADD = (
-        SELECT NUMDIGIT_CONTADOR 
-        FROM fza_contadores 
-        WHERE TIPODOC_CONTADOR = pTipoDoc 
-          AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR
-          AND DEFAULT_CONTADOR = ''S'' 
-        LIMIT 1
-    );
-     
-    /* Modificado: Sumamos 1 al contador usando LAST_INSERT_ID de forma atómica */
-    UPDATE fza_contadores 
-    SET CONTADOR_CONTADOR = LAST_INSERT_ID(CONTADOR_CONTADOR + 1),
-        USUARIOMODIF = pUSUARIO_MODIF
-    WHERE TIPODOC_CONTADOR = pTipoDoc
-      AND EMPRESA_CONTADOR = pEMPRESA_CONTADOR;            
-      
-    /* Modificado: Guardamos el valor exacto bloqueado para este usuario y le restamos 1 como en tu lógica original */
-    SET v_NextValue = LAST_INSERT_ID() - 1;
-
-    /* Modificado: Devolvemos el valor con el LPAD usando la variable segura */
-    SET pcont = LPAD(v_NextValue, pPADD, ''0'');
-
-    COMMIT;
-    
-END;', '2026-03-19 18:24:50', '2026-03-19 18:19:00', 'Administrador', 'Administrador'),
-  ('024', 'STOCK Y CB', 'SELECT 
- -- Muestra el SKU, y si es nulo, muestra el Código del Artículo
- COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO) AS SKU,
- 
- -- He añadido la descripción porque suele ser muy útil en las vistas
- a.DESCRIPCION_ARTICULO,
- 
- cb.CODIGO_BARRAS_CB AS CODIGO_BARRAS,
- 
- -- Sumamos el stock total en caso de que esté repartido en varios almacenes/lotes
- COALESCE(SUM(stk.CANTIDAD_STK), 0) AS STOCK_TOTAL
+  ap.ID_VALOR_PV,
+  ap.VALOR_LIBRE,
+  
+  COALESCE(pv.VALOR_PV, ap.VALOR_LIBRE) AS VALOR_FINAL_MOSTRAR
 
 FROM fza_articulos a
--- Unimos con la tabla de SKUs
-LEFT JOIN fza_articulos_skus s 
- ON a.CODIGO_ARTICULO = s.CODIGO_ARTICULO_SKU
- 
--- Unimos con los códigos de barras usando el SKU (o el Articulo si no hay SKU)
-LEFT JOIN fza_codigos_barras cb 
- ON cb.CODIGO_UNIDAD_CB = COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO)
- 
--- Unimos con el stock usando también el SKU o el Artículo
-LEFT JOIN fza_articulos_stockactual stk 
- ON stk.CODIGO_UNIDAD_STK = COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO)
 
--- Agrupamos para poder sumar el stock correctamente
-GROUP BY 
- COALESCE(s.CODIGO_UNIDAD_SKU, a.CODIGO_ARTICULO),
- a.DESCRIPCION_ARTICULO,
- cb.CODIGO_BARRAS_CB;', '2026-03-20 05:43:24', '2026-03-20 05:43:09', 'Administrador', 'Administrador'),
-  ('025', NULL, 'CREATE OR REPLACE VIEW vi_articulos_skus_extendida AS
-SELECT 
-  sku.CODIGO_UNIDAD_SKU,
-  sku.CODIGO_ARTICULO_SKU,
-  sku.CODIGO_VAR_SKU,
-  sku.ESACTIVO_SKU,
-  
-  -- Nuevo: Código de barras
-  cb.CODIGO_BARRAS_CB,
-  
-  -- Nuevo: Stock Total (si es nulo, mostramos 0)
-  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
-  
-  -- Campos de auditoría originales
-  sku.INSTANTEMODIF,
-  sku.INSTANTEALTA,
-  sku.USUARIOALTA,
-  sku.USUARIOMODIF
+-- Usando el nombre correcto: fza_familias_atributos (plural)
+JOIN fza_familias_atributos fa 
+  ON a.CODIGO_FAMILIA_ARTICULO = fa.CODIGO_FAMILIA
 
-FROM fza_articulos_skus sku
+JOIN fza_propiedades p 
+  ON fa.CODIGO_PROPIEDAD = p.CODIGO_PROPIEDAD
 
--- Unimos con los códigos de barras asegurando un solo registro por SKU
-LEFT JOIN (
-    SELECT CODIGO_UNIDAD_CB, MAX(CODIGO_BARRAS_CB) AS CODIGO_BARRAS_CB
-    FROM fza_codigos_barras
-    GROUP BY CODIGO_UNIDAD_CB
-) cb ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB
+LEFT JOIN fza_articulos_propiedades ap 
+  ON a.CODIGO_ARTICULO = ap.CODIGO_ARTICULO 
+ AND p.CODIGO_PROPIEDAD = ap.CODIGO_PROPIEDAD
 
--- Unimos con el stock sumando todas las cantidades (por si hay varios lotes/almacenes)
-LEFT JOIN (
-    SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
-    FROM fza_articulos_stockactual
-    GROUP BY CODIGO_UNIDAD_STK
-) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-03-20 06:27:08', '2026-03-20 06:27:08', 'Administrador', 'Administrador'),
-  ('026', 'Ejecutar PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', 'CALL PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ(''ZAP-OXFORD'');', '2026-03-20 07:00:55', '2026-03-20 06:54:06', 'Administrador', 'Administrador'),
-  ('027', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
-BEGIN    
-    DECLARE v_codigo_articulo VARCHAR(20);
-    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
-    
-    -- Variables para las COLUMNAS (Pivot - Ej: Talla)
-    DECLARE v_id_atributo_pivot VARCHAR(20);
-    DECLARE v_nombre_atributo_pivot VARCHAR(50);
-    DECLARE v_columnas_dinamicas TEXT;
-    
-    -- Variables para las FILAS (Desglose - Ej: Color)
-    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
-    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
-    DECLARE v_select_fila TEXT DEFAULT '''';
-    DECLARE v_join_fila TEXT DEFAULT '''';
-    DECLARE v_groupby_fila TEXT DEFAULT '''';
-    DECLARE v_src_select_fila TEXT DEFAULT '''';
-    
-    DECLARE v_filtros_fijos TEXT DEFAULT '''';
-    DECLARE v_sql_query TEXT;
-
-    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
-    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
-    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
-
-    IF v_codigo_articulo IS NULL THEN        
-        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
-        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
-        
-        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
-    END IF;
-
-    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
-    IF v_codigo_articulo IS NOT NULL THEN        
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
-        ORDER BY va.ORDEN_VA DESC        
-        LIMIT 1;
-    END IF;
-
-    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
-    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_fila, v_nombre_atributo_fila
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
-        ORDER BY va.ORDEN_VA ASC
-        LIMIT 1;
-    END IF;
-
-    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
-    IF v_id_atributo_pivot IS NOT NULL THEN        
-        
-        /* Preparamos los textos dinámicos para desglosar el Color en filas */
-        IF v_id_atributo_fila IS NOT NULL THEN
-            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
-            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
-            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
-            SET v_groupby_fila = '', src.VALOR_FILA'';
-        END IF;
-
-        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
-        SELECT GROUP_CONCAT(DISTINCT            
-            CONCAT(
-                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
-                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
-            )
-            ORDER BY av.ID_VALOR_AV        
-        ) INTO v_columnas_dinamicas        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
-          AND av.ID_VA_AV = v_id_atributo_pivot;
-
-        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
-        IF v_es_sku = TRUE THEN            
-            SELECT GROUP_CONCAT(
-                CONCAT(
-                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
-                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
-                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
-                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
-                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
-                ) SEPARATOR '' ''            
-            ) INTO v_filtros_fijos            
-            FROM fza_atributos_sku ask            
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
-            WHERE ask.CODIGO_UNIDAD_SA = p_input 
-              AND av.ID_VA_AV <> v_id_atributo_pivot;
-        END IF;
-        
-        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
-
-        /* QUERY FINAL: Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
-        SET @sql = CONCAT(
-            ''SELECT 
-                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
-                v_select_fila, '', '',
-                v_columnas_dinamicas, '',
-                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
-             FROM fza_almacenes alm
-             LEFT JOIN (
-                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
-                FROM fza_articulos_stockactual stk
-                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
-                v_join_fila, ''
-                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
-                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
-                  v_filtros_fijos, ''
-             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
-             WHERE alm.ESACTIVO_ALM = ''''S'''' 
-             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-    ELSE        
-        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
-        SELECT 
-            alm.NOMBRE_ALMACEN_ALM as Almacen, 
-            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
-        FROM fza_almacenes alm        
-        LEFT JOIN fza_articulos_stockactual stk 
-            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
-            AND stk.CODIGO_UNIDAD_STK = p_input 
-        WHERE alm.ESACTIVO_ALM = ''S''        
-        GROUP BY alm.NOMBRE_ALMACEN_ALM        
-        ORDER BY alm.NOMBRE_ALMACEN_ALM;
-        
-    END IF;
-END', '2026-03-20 07:00:27', '2026-03-20 07:00:27', 'Administrador', 'Administrador'),
-  ('028', NULL, 'CREATE OR REPLACE PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
-BEGIN    
-    DECLARE v_codigo_articulo VARCHAR(20);
-    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
-    
-    -- Variables para las COLUMNAS (Pivot - Ej: Talla)
-    DECLARE v_id_atributo_pivot VARCHAR(20);
-    DECLARE v_nombre_atributo_pivot VARCHAR(50);
-    DECLARE v_columnas_dinamicas TEXT;
-    
-    -- Variables para las FILAS (Desglose - Ej: Color)
-    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
-    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
-    DECLARE v_select_fila TEXT DEFAULT '''';
-    DECLARE v_join_fila TEXT DEFAULT '''';
-    DECLARE v_groupby_fila TEXT DEFAULT '''';
-    DECLARE v_src_select_fila TEXT DEFAULT '''';
-    
-    DECLARE v_filtros_fijos TEXT DEFAULT '''';
-    DECLARE v_sql_query TEXT;
-
-    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
-    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
-    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
-
-    IF v_codigo_articulo IS NULL THEN        
-        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
-        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
-        
-        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
-    END IF;
-
-    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
-    IF v_codigo_articulo IS NOT NULL THEN        
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
-        ORDER BY va.ORDEN_VA DESC        
-        LIMIT 1;
-    END IF;
-
-    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
-    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_fila, v_nombre_atributo_fila
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        JOIN fza_variaciones_atributos va ON ID_VA_AV = va.ID_ATRIBUTO_VA
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
-        ORDER BY va.ORDEN_VA ASC
-        LIMIT 1;
-    END IF;
-
-    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
-    IF v_id_atributo_pivot IS NOT NULL THEN        
-        
-        /* Preparamos los textos dinámicos para desglosar el Color en filas */
-        IF v_id_atributo_fila IS NOT NULL THEN
-            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
-            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
-            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
-            SET v_groupby_fila = '', src.VALOR_FILA'';
-        END IF;
-
-        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
-        SELECT GROUP_CONCAT(DISTINCT            
-            CONCAT(
-                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
-                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
-            )
-            ORDER BY av.ID_VALOR_AV        
-        ) INTO v_columnas_dinamicas        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
-          AND av.ID_VA_AV = v_id_atributo_pivot;
-
-        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
-        IF v_es_sku = TRUE THEN            
-            SELECT GROUP_CONCAT(
-                CONCAT(
-                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
-                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
-                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
-                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
-                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
-                ) SEPARATOR '' ''            
-            ) INTO v_filtros_fijos            
-            FROM fza_atributos_sku ask            
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
-            WHERE ask.CODIGO_UNIDAD_SA = p_input 
-              AND av.ID_VA_AV <> v_id_atributo_pivot;
-        END IF;
-        
-        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
-
-        /* QUERY FINAL: CÓDIGO ARTÍCULO + Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
-        SET @sql = CONCAT(
-            ''SELECT 
-                '''''', v_codigo_articulo, '''''' AS CodigoArticulo,
-                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
-                v_select_fila, '', '',
-                v_columnas_dinamicas, '',
-                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
-             FROM fza_almacenes alm
-             LEFT JOIN (
-                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
-                FROM fza_articulos_stockactual stk
-                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
-                v_join_fila, ''
-                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
-                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
-                  v_filtros_fijos, ''
-             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
-             WHERE alm.ESACTIVO_ALM = ''''S'''' 
-             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-    ELSE        
-        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
-        SELECT 
-            v_codigo_articulo AS CodigoArticulo,
-            alm.NOMBRE_ALMACEN_ALM as Almacen, 
-            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
-        FROM fza_almacenes alm        
-        LEFT JOIN fza_articulos_stockactual stk 
-            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
-            AND stk.CODIGO_UNIDAD_STK = p_input 
-        WHERE alm.ESACTIVO_ALM = ''S''        
-        GROUP BY alm.NOMBRE_ALMACEN_ALM        
-        ORDER BY alm.NOMBRE_ALMACEN_ALM;
-        
-    END IF;
-END', '2026-03-20 07:14:25', '2026-03-20 07:14:25', 'Administrador', 'Administrador'),
-  ('029', NULL, 'DROP VIEW IF EXISTS vi_articulos_propiedades_slots;
-CREATE VIEW vi_articulos_propiedades_slots AS 
-select 
-  CODIGO_ARTICULO AS CODIGO_ARTICULO_AP,
-  ID_ATRIBUTO_VA AS ID_ATRIBUTO_VA,
-  coalesce(NOMBRE_VA,ID_ATRIBUTO_VA) AS NOMBRE_ATRIBUTO,
-  ORDEN_VA AS ORDEN_ATRIBUTO,
-  ID_VA AS ID_VARIACION_ATRIB,
-  ID_VALOR_AP AS ID_VALOR_AP,
-  VALOR_AV AS VALOR_AV,
-  DESCRIPCION_AV AS DESCRIPCION_AV,
-  FACTOR_CONVERSION_AV AS FACTOR_CONVERSION_AV 
-from (((fza_articulos a 
-       join (
-         select distinct ID_VA AS ID_VA, ID_ATRIBUTO_VA AS ID_ATRIBUTO_VA, NOMBRE_VA AS NOMBRE_VA, ESDEFINITORIO AS ESDEFINITORIO, ORDEN_VA AS ORDEN_VA 
-         from fza_variaciones_atributos va2 
-         where ESDEFINITORIO = ''N''
-       ) va ON a.TIPO_VARIACION_ARTICULO = va.ID_VA) /* <--- AÑADE EL ON AQUÍ */
-       left join fza_articulos_propiedades ap on(CODIGO_ARTICULO_AP = CODIGO_ARTICULO)) 
-       left join fza_atributos_valores av on(ID_VALOR_AV = ID_VALOR_AP and ID_VA_AV = ID_ATRIBUTO_VA)) 
-where ESVARIACION_ARTICULO = ''S''', '2026-03-22 08:18:48', '2026-03-22 07:46:14', 'Administrador', 'Administrador'),
-  ('030', NULL, 'DROP VIEW IF EXISTS vi_articulos_tarifas;
-
-CREATE VIEW vi_articulos_tarifas AS 
-select 
-  CODIGO_UNICO_TARIFA AS CODIGO_UNICO_TARIFA,
-  CODIGO_ARTICULO_TARIFA AS CODIGO_ARTICULO_TARIFA,
-  ESIMP_INCL_TARIFA AS ESIMP_INCL_TARIFA,
-  ESDEFAULT_TARIFA AS ESDEFAULT_TARIFA,
-  DESCRIPCION_ARTICULO AS DESCRIPCION_ARTICULO,
-  TIPO_CANTIDAD_ARTICULO AS TIPO_CANTIDAD_ARTICULO,
-  ESVARIACION_ARTICULO AS ESVARIACION_ARTICULO, /* <-- CORREGIDO AQUÍ */
-  CODIGO_ABREVIATURA_TIPO_IVA AS TIPO_IVA_ARTICULO,
-  fza_tarifas.ACTIVO_TARIFA AS ACTIVO_TARIFA,
-  fza_tarifas.CODIGO_TARIFA AS CODIGO_TARIFA,
-  fza_tarifas.NOMBRE_TARIFA AS NOMBRE_TARIFA,
-  FECHA_DESDE_TARIFA AS FECHA_DESDE_TARIFA,
-  FECHA_HASTA_TARIFA AS FECHA_HASTA_TARIFA,
-  PRECIOFINAL_TARIFA AS PRECIOFINAL_TARIFA,
-  PRECIOSALIDA_TARIFA AS PRECIOSALIDA_TARIFA,
-  PORCEN_DTO_TARIFA AS PORCEN_DTO_TARIFA,
-  PRECIO_DTO_TARIFA AS PRECIO_DTO_TARIFA,
-  CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR AS CODIGO_PROVEEDOR,
-  RAZONSOCIAL_PROVEEDOR AS RAZONSOCIAL_PROVEEDOR,
-  PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR AS PRECIO_ULT_COMPRA,
-  FECHA_VALIDEZ_ARTICULO_PROVEEDOR AS FECHA_VALIDEZ,
-  CODIGO_FAMILIA_ARTICULO AS CODIGO_FAMILIA_ARTICULO,
-  DESCRIPCION_FAMILIA AS DESCRIPCION_FAMILIA,
-  (select count(distinct ID_ATRIBUTO_VA) 
-   from (fza_articulos_skus sk join fza_variaciones_atributos va on(CODIGO_VAR_SKU = ID_VA)) 
-   where CODIGO_ARTICULO_SKU = CODIGO_ARTICULO and ESDEFINITORIO = ''S'') AS NUM_ATRIBUTOS_REQ
-  from ((((((fza_articulos_tarifas 
-       left join fza_articulos_proveedores on(CODIGO_ARTICULO_TARIFA = CODIGO_ARTICULO_ARTICULO_PROVEEDOR and ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = ''S'')) 
-       left join fza_tarifas on (fza_tarifas.CODIGO_TARIFA = fza_articulos_tarifas.CODIGO_TARIFA)) 
-       left join fza_articulos on(CODIGO_ARTICULO_TARIFA = CODIGO_ARTICULO)) 
-       left join fza_articulos_familias on(CODIGO_FAMILIA_ARTICULO = CODIGO_FAMILIA)) 
-       left join fza_proveedores on(CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = CODIGO_PROVEEDOR)) 
-       left join fza_ivas_tipos on(TIPOIVA_ARTICULO = CODIGO_ABREVIATURA_TIPO_IVA)) 
-order by ORDEN_TARIFA, ORDEN_ARTICULO;', '2026-03-22 08:25:17', '2026-03-22 08:22:08', 'Administrador', 'Administrador'),
-  ('031', NULL, ' CREATE VIEW vi_facturas_print AS 
-select 
-  FECHA_FACTURA AS FECHA_FACTURA,
-  NRO_FACTURA AS NRO_FACTURA,
-  SERIE_FACTURA AS SERIE_FACTURA,
-  TOTAL_LIQUIDO_FACTURA AS TOTAL_LIQUIDO_FACTURA,
-  PORCEN_RETENCION_FACTURA AS PORCEN_RETENCION_FACTURA,
-  TOTAL_RETENCION_FACTURA AS TOTAL_RETENCION_FACTURA,
-  TOTAL_IMPUESTOS_FACTURA AS TOTAL_IMPUESTOS_FACTURA,
-  TOTAL_BASES_FACTURA AS TOTAL_BASES_FACTURA,
-  FORMA_PAGO_FACTURA AS FORMA_PAGO_FACTURA,
-  CODIGO_EMPRESA_FACTURA AS CODIGO_EMPRESA_FACTURA,
-  RAZONSOCIAL_EMPRESA_FACTURA AS RAZONSOCIAL_EMPRESA_FACTURA,
-  NIF_EMPRESA_FACTURA AS NIF_EMPRESA_FACTURA,
-  MOVIL_EMPRESA_FACTURA AS MOVIL_EMPRESA_FACTURA,
-  EMAIL_EMPRESA_FACTURA AS EMAIL_EMPRESA_FACTURA,
-  DIRECCION1_EMPRESA_FACTURA AS DIRECCION1_EMPRESA_FACTURA,
-  DIRECCION2_EMPRESA_FACTURA AS DIRECCION2_EMPRESA_FACTURA,
-  POBLACION_EMPRESA_FACTURA AS POBLACION_EMPRESA_FACTURA,
-  PROVINCIA_EMPRESA_FACTURA AS PROVINCIA_EMPRESA_FACTURA,
-  NOMBRE_PAIS_EMPRESA_FACTURA AS NOMBRE_PAIS_EMPRESA_FACTURA,
-  CODIGO_PAIS_EMPRESA_FACTURA AS CODIGO_PAIS_EMPRESA_FACTURA,
-  CPOSTAL_EMPRESA_FACTURA AS CPOSTAL_EMPRESA_FACTURA,
-  ESRETENCIONES_EMPRESA_FACTURA AS ESRETENCIONES_EMPRESA_FACTURA,
-  GRUPO_ZONA_IVA_EMPRESA_FACTURA AS GRUPO_ZONA_IVA_EMPRESA_FACTURA,
-  ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA AS ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA,
-  CODIGO_CLIENTE_FACTURA AS CODIGO_CLIENTE_FACTURA,
-  RAZONSOCIAL_CLIENTE_FACTURA AS RAZONSOCIAL_CLIENTE_FACTURA,
-  NIF_CLIENTE_FACTURA AS NIF_CLIENTE_FACTURA,
-  MOVIL_CLIENTE_FACTURA AS MOVIL_CLIENTE_FACTURA,
-  EMAIL_CLIENTE_FACTURA AS EMAIL_CLIENTE_FACTURA,
-  DIRECCION1_CLIENTE_FACTURA AS DIRECCION1_CLIENTE_FACTURA,
-  DIRECCION2_CLIENTE_FACTURA AS DIRECCION2_CLIENTE_FACTURA,
-  POBLACION_CLIENTE_FACTURA AS POBLACION_CLIENTE_FACTURA,
-  PROVINCIA_CLIENTE_FACTURA AS PROVINCIA_CLIENTE_FACTURA,
-  CPOSTAL_CLIENTE_FACTURA AS CPOSTAL_CLIENTE_FACTURA,
-  NOMBRE_PAIS_CLIENTE_FACTURA AS NOMBRE_PAIS_CLIENTE_FACTURA,
-  CODIGO_PAIS_CLIENTE_FACTURA AS CODIGO_PAIS_CLIENTE_FACTURA,
-  ESIVA_RECARGO_CLIENTE_FACTURA AS ESIVA_RECARGO_CLIENTE_FACTURA,
-  ESIVA_EXENTO_CLIENTE_FACTURA AS ESIVA_EXENTO_CLIENTE_FACTURA,
-  ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA AS ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA,
-  ESRETENCIONES_CLIENTE_FACTURA AS ESRETENCIONES_CLIENTE_FACTURA,
-  TARIFA_ARTICULO_CLIENTE_FACTURA AS TARIFA_ARTICULO_CLIENTE_FACTURA,
-  ESIMP_INCL_TARIFA_CLIENTE_FACTURA AS ESIMP_INCL_TARIFA_CLIENTE_FACTURA,
-  ESINTRACOMUNITARIO_CLIENTE_FACTURA AS ESINTRACOMUNITARIO_CLIENTE_FACTURA,
-  ESIRPF_IMP_INCL_ZONA_IVA_FACTURA AS ESIRPF_IMP_INCL_ZONA_IVA_FACTURA,
-  ESAPLICA_RE_ZONA_IVA_FACTURA AS ESAPLICA_RE_ZONA_IVA_FACTURA,
-  ESIVAAGRICOLA_ZONA_IVA_FACTURA AS ESIVAAGRICOLA_ZONA_IVA_FACTURA,
-  PALABRA_REPORTS_ZONA_IVA_FACTURA AS PALABRA_REPORTS_ZONA_IVA_FACTURA,
-  CODIGO_IVA_FACTURA AS CODIGO_IVA_FACTURA,
-  ESVENTA_ACTIVO_FIJO_FACTURA AS ESVENTA_ACTIVO_FIJO_FACTURA,
-  PORCEN_IVAN_FACTURA AS PORCEN_IVAN_FACTURA,
-  TOTAL_IVAN_FACTURA AS TOTAL_IVAN_FACTURA,
-  PORCEN_REN_FACTURA AS PORCEN_REN_FACTURA,
-  TOTAL_REN_FACTURA AS TOTAL_REN_FACTURA,
-  TOTAL_BASEI_IVAN_FACTURA AS TOTAL_BASEI_IVAN_FACTURA,
-  PORCEN_IVAR_FACTURA AS PORCEN_IVAR_FACTURA,
-  TOTAL_IVAR_FACTURA AS TOTAL_IVAR_FACTURA,
-  PORCEN_RER_FACTURA AS PORCEN_RER_FACTURA,
-  TOTAL_RER_FACTURA AS TOTAL_RER_FACTURA,
-  TOTAL_BASEI_IVAR_FACTURA AS TOTAL_BASEI_IVAR_FACTURA,
-  PORCEN_IVAS_FACTURA AS PORCEN_IVAS_FACTURA,
-  TOTAL_IVAS_FACTURA AS TOTAL_IVAS_FACTURA,
-  PORCEN_RES_FACTURA AS PORCEN_RES_FACTURA,
-  TOTAL_RES_FACTURA AS TOTAL_RES_FACTURA,
-  TOTAL_BASEI_IVAS_FACTURA AS TOTAL_BASEI_IVAS_FACTURA,
-  PORCEN_IVAE_FACTURA AS PORCEN_IVAE_FACTURA,
-  TOTAL_IVAE_FACTURA AS TOTAL_IVAE_FACTURA,
-  PORCEN_REE_FACTURA AS PORCEN_REE_FACTURA,
-  TOTAL_REE_FACTURA AS TOTAL_REE_FACTURA,
-  TOTAL_BASEI_IVAE_FACTURA AS TOTAL_BASEI_IVAE_FACTURA,
-  NRO_FACTURA_ABONO_FACTURA AS NRO_FACTURA_ABONO_FACTURA,
-  SERIE_FACTURA_ABONO_FACTURA AS SERIE_FACTURA_ABONO_FACTURA,
-  TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA AS TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA,
-  TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA AS TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA,
-  DOCUMENTO_FACTURA AS DOCUMENTO_FACTURA,
-  COMENTARIOS_FACTURA AS COMENTARIOS_FACTURA,
-  CONTADOR_LINEAS_FACTURA AS CONTADOR_LINEAS_FACTURA,
-  ESCREARARTICULOS_FACTURA AS ESCREARARTICULOS_FACTURA,
-  ESDESCRIPCIONES_AMP_FACTURA AS ESDESCRIPCIONES_AMP_FACTURA,
-  ESFECHADEENTREGA_FACTURA AS ESFECHADEENTREGA_FACTURA,
-  DESCRIPCION_FORMAPAGO AS DESCRIPCION_FORMAPAGO,
-  ESCONTADO_FORMAPAGO AS ESCONTADO_FORMAPAGO,
-  (select group_concat('' '',date_format(FECHA_VENCIMIENTO_RECIBO,''%d/%m/%Y''),''=> '',format(EUROS_RECIBO,2),''€'') /* <-- ELIMINADO EL SEPARATOR '','' */
-   from fza_recibos 
-   where NRO_FACTURA_RECIBO = NRO_FACTURA and SERIE_FACTURA_RECIBO = SERIE_FACTURA) AS VENCIMIENTOS_RECIBOS,
-  IBAN_EMPRESA AS IBAN_EMPRESA,
-  IBAN_CLIENTE AS IBAN_CLIENTE,
-  ESVERBANCOEMPRESA_FORMAPAGO AS ESVERBANCOEMPRESA_FORMAPAGO 
-from (((fza_facturas 
-       left join fza_formas_pago on(FORMA_PAGO_FACTURA = CODIGO_FORMAPAGO)) 
-       left join fza_empresas on(CODIGO_EMPRESA_FACTURA = CODIGO_EMPRESA)) 
-       left join fza_clientes on(CODIGO_CLIENTE_FACTURA = CODIGO_CLIENTE)) 
-order by FECHA_FACTURA desc;
-', '2026-03-22 09:03:43', '2026-03-22 08:43:52', 'Administrador', 'Administrador'),
-  ('032', NULL, 'drop view if exists vi_facturas_print;
- CREATE VIEW vi_facturas_print AS 
-select 
-  FECHA_FACTURA AS FECHA_FACTURA,
-  NRO_FACTURA AS NRO_FACTURA,
-  SERIE_FACTURA AS SERIE_FACTURA,
-  TOTAL_LIQUIDO_FACTURA AS TOTAL_LIQUIDO_FACTURA,
-  PORCEN_RETENCION_FACTURA AS PORCEN_RETENCION_FACTURA,
-  TOTAL_RETENCION_FACTURA AS TOTAL_RETENCION_FACTURA,
-  TOTAL_IMPUESTOS_FACTURA AS TOTAL_IMPUESTOS_FACTURA,
-  TOTAL_BASES_FACTURA AS TOTAL_BASES_FACTURA,
-  FORMA_PAGO_FACTURA AS FORMA_PAGO_FACTURA,
-  CODIGO_EMPRESA_FACTURA AS CODIGO_EMPRESA_FACTURA,
-  RAZONSOCIAL_EMPRESA_FACTURA AS RAZONSOCIAL_EMPRESA_FACTURA,
-  NIF_EMPRESA_FACTURA AS NIF_EMPRESA_FACTURA,
-  MOVIL_EMPRESA_FACTURA AS MOVIL_EMPRESA_FACTURA,
-  EMAIL_EMPRESA_FACTURA AS EMAIL_EMPRESA_FACTURA,
-  DIRECCION1_EMPRESA_FACTURA AS DIRECCION1_EMPRESA_FACTURA,
-  DIRECCION2_EMPRESA_FACTURA AS DIRECCION2_EMPRESA_FACTURA,
-  POBLACION_EMPRESA_FACTURA AS POBLACION_EMPRESA_FACTURA,
-  PROVINCIA_EMPRESA_FACTURA AS PROVINCIA_EMPRESA_FACTURA,
-  NOMBRE_PAIS_EMPRESA_FACTURA AS NOMBRE_PAIS_EMPRESA_FACTURA,
-  CODIGO_PAIS_EMPRESA_FACTURA AS CODIGO_PAIS_EMPRESA_FACTURA,
-  CPOSTAL_EMPRESA_FACTURA AS CPOSTAL_EMPRESA_FACTURA,
-  ESRETENCIONES_EMPRESA_FACTURA AS ESRETENCIONES_EMPRESA_FACTURA,
-  GRUPO_ZONA_IVA_EMPRESA_FACTURA AS GRUPO_ZONA_IVA_EMPRESA_FACTURA,
-  ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA AS ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA,
-  CODIGO_CLIENTE_FACTURA AS CODIGO_CLIENTE_FACTURA,
-  RAZONSOCIAL_CLIENTE_FACTURA AS RAZONSOCIAL_CLIENTE_FACTURA,
-  NIF_CLIENTE_FACTURA AS NIF_CLIENTE_FACTURA,
-  MOVIL_CLIENTE_FACTURA AS MOVIL_CLIENTE_FACTURA,
-  EMAIL_CLIENTE_FACTURA AS EMAIL_CLIENTE_FACTURA,
-  DIRECCION1_CLIENTE_FACTURA AS DIRECCION1_CLIENTE_FACTURA,
-  DIRECCION2_CLIENTE_FACTURA AS DIRECCION2_CLIENTE_FACTURA,
-  POBLACION_CLIENTE_FACTURA AS POBLACION_CLIENTE_FACTURA,
-  PROVINCIA_CLIENTE_FACTURA AS PROVINCIA_CLIENTE_FACTURA,
-  CPOSTAL_CLIENTE_FACTURA AS CPOSTAL_CLIENTE_FACTURA,
-  NOMBRE_PAIS_CLIENTE_FACTURA AS NOMBRE_PAIS_CLIENTE_FACTURA,
-  CODIGO_PAIS_CLIENTE_FACTURA AS CODIGO_PAIS_CLIENTE_FACTURA,
-  ESIVA_RECARGO_CLIENTE_FACTURA AS ESIVA_RECARGO_CLIENTE_FACTURA,
-  ESIVA_EXENTO_CLIENTE_FACTURA AS ESIVA_EXENTO_CLIENTE_FACTURA,
-  ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA AS ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA,
-  ESRETENCIONES_CLIENTE_FACTURA AS ESRETENCIONES_CLIENTE_FACTURA,
-  TARIFA_ARTICULO_CLIENTE_FACTURA AS TARIFA_ARTICULO_CLIENTE_FACTURA,
-  ESIMP_INCL_TARIFA_CLIENTE_FACTURA AS ESIMP_INCL_TARIFA_CLIENTE_FACTURA,
-  ESINTRACOMUNITARIO_CLIENTE_FACTURA AS ESINTRACOMUNITARIO_CLIENTE_FACTURA,
-  ESIRPF_IMP_INCL_ZONA_IVA_FACTURA AS ESIRPF_IMP_INCL_ZONA_IVA_FACTURA,
-  ESAPLICA_RE_ZONA_IVA_FACTURA AS ESAPLICA_RE_ZONA_IVA_FACTURA,
-  ESIVAAGRICOLA_ZONA_IVA_FACTURA AS ESIVAAGRICOLA_ZONA_IVA_FACTURA,
-  PALABRA_REPORTS_ZONA_IVA_FACTURA AS PALABRA_REPORTS_ZONA_IVA_FACTURA,
-  CODIGO_IVA_FACTURA AS CODIGO_IVA_FACTURA,
-  ESVENTA_ACTIVO_FIJO_FACTURA AS ESVENTA_ACTIVO_FIJO_FACTURA,
-  PORCEN_IVAN_FACTURA AS PORCEN_IVAN_FACTURA,
-  TOTAL_IVAN_FACTURA AS TOTAL_IVAN_FACTURA,
-  PORCEN_REN_FACTURA AS PORCEN_REN_FACTURA,
-  TOTAL_REN_FACTURA AS TOTAL_REN_FACTURA,
-  TOTAL_BASEI_IVAN_FACTURA AS TOTAL_BASEI_IVAN_FACTURA,
-  PORCEN_IVAR_FACTURA AS PORCEN_IVAR_FACTURA,
-  TOTAL_IVAR_FACTURA AS TOTAL_IVAR_FACTURA,
-  PORCEN_RER_FACTURA AS PORCEN_RER_FACTURA,
-  TOTAL_RER_FACTURA AS TOTAL_RER_FACTURA,
-  TOTAL_BASEI_IVAR_FACTURA AS TOTAL_BASEI_IVAR_FACTURA,
-  PORCEN_IVAS_FACTURA AS PORCEN_IVAS_FACTURA,
-  TOTAL_IVAS_FACTURA AS TOTAL_IVAS_FACTURA,
-  PORCEN_RES_FACTURA AS PORCEN_RES_FACTURA,
-  TOTAL_RES_FACTURA AS TOTAL_RES_FACTURA,
-  TOTAL_BASEI_IVAS_FACTURA AS TOTAL_BASEI_IVAS_FACTURA,
-  PORCEN_IVAE_FACTURA AS PORCEN_IVAE_FACTURA,
-  TOTAL_IVAE_FACTURA AS TOTAL_IVAE_FACTURA,
-  PORCEN_REE_FACTURA AS PORCEN_REE_FACTURA,
-  TOTAL_REE_FACTURA AS TOTAL_REE_FACTURA,
-  TOTAL_BASEI_IVAE_FACTURA AS TOTAL_BASEI_IVAE_FACTURA,
-  NRO_FACTURA_ABONO_FACTURA AS NRO_FACTURA_ABONO_FACTURA,
-  SERIE_FACTURA_ABONO_FACTURA AS SERIE_FACTURA_ABONO_FACTURA,
-  TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA AS TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA,
-  TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA AS TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA,
-  DOCUMENTO_FACTURA AS DOCUMENTO_FACTURA,
-  COMENTARIOS_FACTURA AS COMENTARIOS_FACTURA,
-  CONTADOR_LINEAS_FACTURA AS CONTADOR_LINEAS_FACTURA,
-  ESCREARARTICULOS_FACTURA AS ESCREARARTICULOS_FACTURA,
-  ESDESCRIPCIONES_AMP_FACTURA AS ESDESCRIPCIONES_AMP_FACTURA,
-  ESFECHADEENTREGA_FACTURA AS ESFECHADEENTREGA_FACTURA,
-  DESCRIPCION_FORMAPAGO AS DESCRIPCION_FORMAPAGO,
-  ESCONTADO_FORMAPAGO AS ESCONTADO_FORMAPAGO,
-  (select group_concat('' '',date_format(FECHA_VENCIMIENTO_RECIBO,''%d/%m/%Y''),''=> '',format(EUROS_RECIBO,2),''€'') 
-   from fza_recibos 
-   where NRO_FACTURA_RECIBO = NRO_FACTURA and SERIE_FACTURA_RECIBO = SERIE_FACTURA) AS VENCIMIENTOS_RECIBOS,
-  IBAN_EMPRESA AS IBAN_EMPRESA,
-  IBAN_CLIENTE AS IBAN_CLIENTE,
-  ESVERBANCOEMPRESA_FORMAPAGO AS ESVERBANCOEMPRESA_FORMAPAGO 
-from (((fza_facturas 
-       left join fza_formas_pago on(FORMA_PAGO_FACTURA = CODIGO_FORMAPAGO)) 
-       left join fza_empresas on(CODIGO_EMPRESA_FACTURA = CODIGO_EMPRESA)) 
-       left join fza_clientes on(CODIGO_CLIENTE_FACTURA = CODIGO_CLIENTE)) 
-order by FECHA_FACTURA desc;', '2026-03-22 09:00:22', '2026-03-22 09:00:22', 'Administrador', 'Administrador'),
-  ('033', 'Modificar vi_facturas_print', 'DROP VIEW vi_facturas_print;', '2026-03-22 09:05:22', '2026-03-22 09:05:22', 'Administrador', 'Administrador'),
-  ('034', NULL, 'CREATE OR REPLACE VIEW vi_movimientos AS
-SELECT 
-    m.*, 
-    ao.NOMBRE_ALMACEN_ALM AS NOMBRE_ALMACEN_ORIGEN,
-    ad.NOMBRE_ALMACEN_ALM AS NOMBRE_ALMACEN_DESTINO,
-    td.DESCRIPCION_TIPODOCUMENTO,
-    c.RAZONSOCIAL_CLIENTE,
-    p.RAZONSOCIAL_PROVEEDOR
-FROM 
-    fza_movimientos_almacen m
-LEFT JOIN 
-    fza_almacenes ao ON m.CODIGO_ALMACEN_MOV = ao.CODIGO_ALMACEN_ALM
-LEFT JOIN 
-    fza_almacenes ad ON m.CODIGO_ALMACEN_CONTRA_MOV = ad.CODIGO_ALMACEN_ALM
-LEFT JOIN 
-    fza_tipos_documentos td ON m.TIPO_DOC_MOV = td.CODIGO_TIPODOCUMENTO
-LEFT JOIN 
-    fza_clientes c ON m.CODIGO_CLIENTE_MOV = c.CODIGO_CLIENTE
-LEFT JOIN 
-    fza_proveedores p ON m.CODIGO_PROVEEDOR_MOV = p.CODIGO_PROVEEDOR ORDER BY FECHA_MOV, NUMERO_MOV;', '2026-03-22 13:34:44', '2026-03-22 13:33:35', 'Administrador', 'Administrador'),
-  ('035', NULL, 'DROP PROCEDURE IF EXISTS PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT;
- DELIMITER //
-
-CREATE OR REPLACE PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
-    IN p_NUMERO_MOV VARCHAR(20), /* AÑADIDO: Clave primaria */
-    IN p_TIPO_DOC_MOV VARCHAR(20),
-    IN p_SERIE_DOC_MOV VARCHAR(20),
-    IN p_NRO_DOC_MOV VARCHAR(20),
-    IN p_LINEA_MOV VARCHAR(10),
-    IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
-    IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
-    IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
-    IN p_CODIGO_ARTICULO_MOV VARCHAR(20), /* AÑADIDO: Artículo padre */
-    IN p_CODIGO_ALMACEN_CONTRA_MOV VARCHAR(10), /* AÑADIDO: Almacén destino/origen */
-    IN p_CODIGO_CLIENTE_MOV VARCHAR(20), /* AÑADIDO: Cliente */
-    IN p_CODIGO_PROVEEDOR_MOV VARCHAR(20), /* AÑADIDO: Proveedor */
-    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), /* ''E'' (Entrada) o ''S'' (Salida) */
-    IN p_CANTIDAD_MOV DECIMAL(19,6),
-    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), /* Enviado desde App */
-    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  /* Enviado desde App */
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_PrecioFinal DECIMAL(19,6);
-    DECLARE v_CosteFinal DECIMAL(19,6);
-
-    /* Activar manejo de errores para hacer Rollback si algo falla */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-
-    START TRANSACTION;
-
-    /* 1. Obtener el PMP actual del stock */
-    /* Nota: Si no hay stock previo, v_PMPActual se quedará en 0 (DEFAULT 0) */
-    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
-      INTO v_PMPActual
-      FROM fza_articulos_stockactual
-     WHERE CODIGO_ALMACEN_STK = p_CODIGO_ALMACEN_MOV
-       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
-     LIMIT 1;
-
-    /* 2. Lógica de re-cálculo */
-    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
-        /* Si es salida, ignoramos lo que envía la app y forzamos el PMP actual */
-        SET v_PrecioFinal = v_PMPActual;
-        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
-    ELSE
-        /* Si es entrada, respetamos lo que manda la app */
-        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
-        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
-    END IF;
-
-    /* 3. Insertar el Movimiento de Almacén real */
-    INSERT INTO fza_movimientos_almacen (
-        NUMERO_MOV, /* AÑADIDO */
-        TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
-        CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, CODIGO_ARTICULO_MOV, /* AÑADIDO */
-        CODIGO_ALMACEN_CONTRA_MOV, CODIGO_CLIENTE_MOV, CODIGO_PROVEEDOR_MOV, /* AÑADIDOS */
-        TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
-        FECHA_MOV, USUARIOALTA, USUARIOMODIF
-    ) VALUES (
-        p_NUMERO_MOV, /* AÑADIDO */
-        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
-        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_UNIDAD_MOV, p_CODIGO_ARTICULO_MOV, /* AÑADIDO */
-        p_CODIGO_ALMACEN_CONTRA_MOV, p_CODIGO_CLIENTE_MOV, p_CODIGO_PROVEEDOR_MOV, /* AÑADIDOS */
-        p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
-        v_PrecioFinal, v_CosteFinal, 
-        NOW(), p_USUARIO, p_USUARIO
-    );
-
-    /* 4. Actualizar Stock */
-    INSERT INTO fza_articulos_stockactual (
-        CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
-        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF
-    ) VALUES (
-        p_CODIGO_ALMACEN_MOV, 
-        p_CODIGO_UNIDAD_MOV,
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
-        v_PrecioFinal, 
-        NOW()
-    )
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        /* Cuidado de no dividir entre cero */
-        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
-        INSTANTEMODIF = NOW();
-
-    COMMIT;
-END //
-
-DELIMITER ;', '2026-03-22 16:20:02', '2026-03-22 16:19:11', 'Administrador', 'Administrador'),
-  ('036', NULL, 'CREATE TABLE `fza_familias_atributos` (
-  `CODIGO_FAMILIA` varchar(20) NOT NULL COMMENT ''FK hacia fza_articulos_familias'',
-  `ID_ATRIBUTO_VA` varchar(20) NOT NULL COMMENT ''FK hacia fza_variaciones_atributos'',
-  `ES_REQUERIDO` varchar(1) DEFAULT ''N'' COMMENT ''S para indicar si es obligatorio rellenarlo'',
-  `ORDEN_MOSTRAR` int(11) DEFAULT 0 COMMENT ''Para ordenar el formulario dinámico'',
-  PRIMARY KEY (`CODIGO_FAMILIA`, `ID_ATRIBUTO_VA`),
-  KEY `IDX_FAM_ATR_ATR` (`ID_ATRIBUTO_VA`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;', '2026-03-22 16:39:52', '2026-03-22 16:39:52', 'Administrador', 'Administrador'),
-  ('037', NULL, 'drop view if exists vi_articulos_propiedades_slots;
+LEFT JOIN fza_propiedades_valores pv 
+  ON ap.ID_VALOR_PV = pv.ID_VALOR_PV;', '2026-03-22 17:33:22', '2026-03-22 17:14:56', 'Administrador', 'Administrador'),
+  ('041', NULL, 'ALTER TABLE `fza_variaciones_atributos` 
+DROP COLUMN `ESDEFINITORIO`;', '2026-03-22 17:20:28', '2026-03-22 17:20:28', 'Administrador', 'Administrador'),
+  ('042', NULL, ' -- drop view vi_articulos_propiedades_slots;
 CREATE OR REPLACE VIEW vi_articulos_propiedades_slots AS 
 SELECT  
-  a.CODIGO_ARTICULO AS CODIGO_ARTICULO_AP,
+  -- Datos del artículo base
+  a.CODIGO_ARTICULO,
   fa.CODIGO_FAMILIA,
-  va.ID_ATRIBUTO_VA AS ID_ATRIBUTO_VA,
-  COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA) AS NOMBRE_ATRIBUTO,
-  fa.ORDEN_MOSTRAR AS ORDEN_ATRIBUTO,
-  ap.ID_VALOR_AP AS ID_VALOR_AP,
-  av.VALOR_AV AS VALOR_AV,
-  av.DESCRIPCION_AV AS DESCRIPCION_AV,
-  av.FACTOR_CONVERSION_AV AS FACTOR_CONVERSION_AV,
-  fa.ES_REQUERIDO
+  
+  -- Datos de la propiedad (El "Hueco" a rellenar)
+  p.CODIGO_PROPIEDAD,
+  p.NOMBRE_PROPIEDAD,
+  p.TIPO_VALOR, 
+  fa.ORDEN_MOSTRAR,
+  
+  -- Datos guardados en el artículo (si los hay)
+  ap.ID_VALOR_PV,
+  ap.VALOR_LIBRE,
+  
+  -- EL DATO MÁGICO: Resuelve si muestra el texto de la lista o el texto libre
+  COALESCE(pv.VALOR_PV, ap.VALOR_LIBRE) AS VALOR_FINAL_MOSTRAR
+
 FROM fza_articulos a
--- 1. Obtenemos los atributos que corresponden a la familia de este artículo
-JOIN fza_familias_atributos fa ON a.CODIGO_FAMILIA_ARTICULO = fa.CODIGO_FAMILIA
-JOIN fza_variaciones_atributos va ON fa.ID_ATRIBUTO_VA = va.ID_ATRIBUTO_VA AND va.ESDEFINITORIO = ''N''
 
--- 2. Buscamos si el artículo ya tiene un valor guardado para ese atributo
-LEFT JOIN fza_articulos_propiedades ap ON ap.CODIGO_ARTICULO_AP = a.CODIGO_ARTICULO
-LEFT JOIN fza_atributos_valores av ON av.ID_VALOR_AV = ap.ID_VALOR_AP AND av.ID_VA_AV = va.ID_ATRIBUTO_VA
+-- 1. Buscamos qué propiedades exige la familia (con el nombre correcto de la tabla)
+JOIN fza_familia_atributos fa 
+  ON a.CODIGO_FAMILIA = fa.CODIGO_FAMILIA
 
-WHERE a.ESVARIACION_ARTICULO = ''S'';', '2026-03-22 16:44:58', '2026-03-22 16:41:05', 'Administrador', 'Administrador');
--- 35 registros exportados
+-- 2. Traemos el diccionario para saber cómo se llama la propiedad y de qué tipo es
+JOIN fza_propiedades p 
+  ON fa.CODIGO_PROPIEDAD = p.CODIGO_PROPIEDAD
+
+-- 3. Miramos si el artículo ya tiene esa propiedad guardada
+LEFT JOIN fza_articulos_propiedades ap 
+  ON a.CODIGO_ARTICULO = ap.CODIGO_ARTICULO 
+ AND p.CODIGO_PROPIEDAD = ap.CODIGO_PROPIEDAD
+
+-- 4. Si lo guardado era un ID de una lista, cruzamos para sacar el texto real
+LEFT JOIN fza_propiedades_valores pv 
+  ON ap.ID_VALOR_PV = pv.ID_VALOR_PV;', '2026-03-22 17:29:42', '2026-03-22 17:27:00', 'Administrador', 'Administrador'),
+  ('043', NULL, 'DROP TABLE IF EXISTS `fza_familias_atributos`;
+
+CREATE TABLE `fza_familias_atributos` (
+  `CODIGO_FAMILIA` varchar(20) NOT NULL COMMENT ''FK hacia fza_articulos_familias'',
+  `CODIGO_PROPIEDAD` varchar(20) NOT NULL COMMENT ''FK hacia fza_propiedades'',
+  `ES_REQUERIDO` varchar(1) DEFAULT ''N'' COMMENT ''S para obligatorio'',
+  `ORDEN_MOSTRAR` int(11) DEFAULT 0 COMMENT ''Para ordenar el formulario'',
+  PRIMARY KEY (`CODIGO_FAMILIA`,`CODIGO_PROPIEDAD`),
+  KEY `IDX_FAM_ATR_ATR` (`CODIGO_PROPIEDAD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;', '2026-03-22 17:31:18', '2026-03-22 17:31:18', 'Administrador', 'Administrador'),
+  ('044', NULL, '-- ============================================================
+-- DATOS DEMO - Sistema de Propiedades - Factuzam
+-- Compatible con los artículos y familias existentes en la BD
+-- Familias: ROPA, CALZADO, BOLSOS, COMPLEMENTOS, DEPORTIVO
+-- ============================================================
+
+SET NAMES utf8mb4;
+
+-- ============================================================
+-- 1. PROPIEDADES (catálogo general)
+-- ============================================================
+
+INSERT INTO `fza_propiedades`
+  (`CODIGO_PROPIEDAD`, `NOMBRE_PROPIEDAD`, `TIPO_VALOR`, `ACTIVO_PROPIEDAD`,
+   `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  -- Comunes a varias familias
+  (''MARCA'',       ''Marca'',              ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''TEMPORADA'',   ''Temporada'',          ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''ORIGEN'',      ''País de origen'',     ''TEXTO_LIBRE'', ''S'', ''DEMO'', ''DEMO''),
+  (''ES_ECO'',      ''Producto Eco/BIO'',   ''BOOLEANO'',    ''S'', ''DEMO'', ''DEMO''),
+  (''PESO_GR'',     ''Peso (gramos)'',       ''NUMERO'',      ''S'', ''DEMO'', ''DEMO''),
+  -- Ropa
+  (''MATERIAL'',    ''Material'',           ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''GENERO'',      ''Género'',             ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''ESTILO'',      ''Estilo'',             ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''LAVADO'',      ''Instruc. de lavado'', ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''COMPOSICION'', ''Composición textil'', ''TEXTO_LIBRE'', ''S'', ''DEMO'', ''DEMO''),
+  -- Calzado
+  (''TIPO_SUELA'',  ''Tipo de suela'',      ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''IMPERMEAB'',   ''Impermeable'',        ''BOOLEANO'',    ''S'', ''DEMO'', ''DEMO''),
+  (''ALTURA_TAC'',  ''Altura tacón (cm)'',  ''NUMERO'',      ''S'', ''DEMO'', ''DEMO''),
+  -- Bolsos / Complementos
+  (''CIERRE'',      ''Tipo de cierre'',     ''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''CAPACIDAD_L'', ''Capacidad (litros)'', ''NUMERO'',      ''S'', ''DEMO'', ''DEMO''),
+  -- Deportivo
+  (''ACTIVIDAD'',   ''Actividad deportiva'',''LISTA'',       ''S'', ''DEMO'', ''DEMO''),
+  (''TRANSPIRABLE'',''Transpirable'',        ''BOOLEANO'',    ''S'', ''DEMO'', ''DEMO'')
+ON DUPLICATE KEY UPDATE `NOMBRE_PROPIEDAD` = VALUES(`NOMBRE_PROPIEDAD`);
+
+
+-- ============================================================
+-- 2. VALORES DE PROPIEDADES TIPO LISTA
+-- ============================================================
+
+-- MARCA
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''MARCA'', ''Zara'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Mango'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''El Corte Inglés'',''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Nike'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Adidas'',        ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Camper'',        ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Loewe'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MARCA'', ''Marca propia'',  ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- TEMPORADA
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''TEMPORADA'', ''Primavera/Verano 2025'', ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TEMPORADA'', ''Otoño/Invierno 2025'',   ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TEMPORADA'', ''Primavera/Verano 2026'', ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TEMPORADA'', ''Otoño/Invierno 2026'',   ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TEMPORADA'', ''Todo el año'',           ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- MATERIAL
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''MATERIAL'', ''Algodón 100%'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Algodón/Poliéster'',    ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Lana'',                 ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Lana merino'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Seda'',                 ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Piel natural'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Piel sintética'',       ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Cuero'',                ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Ante'',                 ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Denim / Vaquero'',      ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Poliéster reciclado'',  ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Lino'',                 ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Paño'',                 ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''MATERIAL'', ''Tejido técnico'',       ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- GENERO
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''GENERO'', ''Mujer'',   ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''GENERO'', ''Hombre'',  ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''GENERO'', ''Unisex'',  ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''GENERO'', ''Niña'',    ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''GENERO'', ''Niño'',    ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- ESTILO
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''ESTILO'', ''Casual'',      ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Elegante'',    ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Deportivo'',   ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Bohemio'',     ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Clásico'',     ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Urban'',       ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ESTILO'', ''Outdoor'',     ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- LAVADO
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''LAVADO'', ''Lavado a mano'',        ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''LAVADO'', ''Lavadora 30°'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''LAVADO'', ''Lavadora 40°'',         ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''LAVADO'', ''Limpieza en seco'',     ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''LAVADO'', ''No lavar con agua'',    ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- TIPO_SUELA
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''TIPO_SUELA'', ''Goma'',            ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TIPO_SUELA'', ''Cuero'',           ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TIPO_SUELA'', ''EVA / Foam'',      ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TIPO_SUELA'', ''Vibram'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''TIPO_SUELA'', ''Tpu antidesliz.'', ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- CIERRE
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''CIERRE'', ''Cremallera'',       ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''CIERRE'', ''Imán'',             ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''CIERRE'', ''Hebilla'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''CIERRE'', ''Solapa abatible'',  ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''CIERRE'', ''Sin cierre'',       ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+-- ACTIVIDAD
+INSERT INTO `fza_propiedades_valores`
+  (`ID_PROPIEDAD_PV`, `VALOR_PV`, `ESACTIVO_PV`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)
+VALUES
+  (''ACTIVIDAD'', ''Running'',           ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ACTIVIDAD'', ''Yoga / Pilates'',    ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ACTIVIDAD'', ''Ciclismo'',          ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ACTIVIDAD'', ''Senderismo'',        ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ACTIVIDAD'', ''Fitness / Gym'',     ''S'', NOW(), ''DEMO'', ''DEMO''),
+  (''ACTIVIDAD'', ''Multideporte'',      ''S'', NOW(), ''DEMO'', ''DEMO'');
+
+
+-- ============================================================
+-- 3. ASIGNACIÓN DE PROPIEDADES A FAMILIAS (fza_familias_atributos)
+-- ============================================================
+
+-- Familia ROPA
+INSERT INTO `fza_familias_atributos`
+  (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`)
+VALUES
+  (''ROPA'', ''MARCA'',       ''S'', 1),
+  (''ROPA'', ''TEMPORADA'',   ''S'', 2),
+  (''ROPA'', ''GENERO'',      ''S'', 3),
+  (''ROPA'', ''MATERIAL'',    ''N'', 4),
+  (''ROPA'', ''ESTILO'',      ''N'', 5),
+  (''ROPA'', ''LAVADO'',      ''N'', 6),
+  (''ROPA'', ''COMPOSICION'', ''N'', 7),
+  (''ROPA'', ''ORIGEN'',      ''N'', 8),
+  (''ROPA'', ''ES_ECO'',      ''N'', 9)
+ON DUPLICATE KEY UPDATE `ORDEN_MOSTRAR` = VALUES(`ORDEN_MOSTRAR`);
+
+-- Familia CALZADO
+INSERT INTO `fza_familias_atributos`
+  (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`)
+VALUES
+  (''CALZADO'', ''MARCA'',      ''S'', 1),
+  (''CALZADO'', ''TEMPORADA'',  ''S'', 2),
+  (''CALZADO'', ''GENERO'',     ''S'', 3),
+  (''CALZADO'', ''MATERIAL'',   ''N'', 4),
+  (''CALZADO'', ''TIPO_SUELA'', ''N'', 5),
+  (''CALZADO'', ''IMPERMEAB'',  ''N'', 6),
+  (''CALZADO'', ''ALTURA_TAC'', ''N'', 7),
+  (''CALZADO'', ''ORIGEN'',     ''N'', 8)
+ON DUPLICATE KEY UPDATE `ORDEN_MOSTRAR` = VALUES(`ORDEN_MOSTRAR`);
+
+-- Familia BOLSOS
+INSERT INTO `fza_familias_atributos`
+  (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`)
+VALUES
+  (''BOLSOS'', ''MARCA'',       ''S'', 1),
+  (''BOLSOS'', ''TEMPORADA'',   ''S'', 2),
+  (''BOLSOS'', ''MATERIAL'',    ''N'', 3),
+  (''BOLSOS'', ''CIERRE'',      ''N'', 4),
+  (''BOLSOS'', ''CAPACIDAD_L'', ''N'', 5),
+  (''BOLSOS'', ''PESO_GR'',     ''N'', 6),
+  (''BOLSOS'', ''ORIGEN'',      ''N'', 7)
+ON DUPLICATE KEY UPDATE `ORDEN_MOSTRAR` = VALUES(`ORDEN_MOSTRAR`);
+
+-- Familia COMPLEMENTOS
+INSERT INTO `fza_familias_atributos`
+  (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`)
+VALUES
+  (''COMPLEMENTOS'', ''MARCA'',     ''S'', 1),
+  (''COMPLEMENTOS'', ''TEMPORADA'', ''N'', 2),
+  (''COMPLEMENTOS'', ''MATERIAL'',  ''N'', 3),
+  (''COMPLEMENTOS'', ''CIERRE'',    ''N'', 4),
+  (''COMPLEMENTOS'', ''ORIGEN'',    ''N'', 5)
+ON DUPLICATE KEY UPDATE `ORDEN_MOSTRAR` = VALUES(`ORDEN_MOSTRAR`);
+
+-- Familia DEPORTIVO
+INSERT INTO `fza_familias_atributos`
+  (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`)
+VALUES
+  (''DEPORTIVO'', ''MARCA'',        ''S'', 1),
+  (''DEPORTIVO'', ''ACTIVIDAD'',    ''S'', 2),
+  (''DEPORTIVO'', ''GENERO'',       ''S'', 3),
+  (''DEPORTIVO'', ''MATERIAL'',     ''N'', 4),
+  (''DEPORTIVO'', ''TEMPORADA'',    ''N'', 5),
+  (''DEPORTIVO'', ''TRANSPIRABLE'', ''N'', 6),
+  (''DEPORTIVO'', ''PESO_GR'',      ''N'', 7)
+ON DUPLICATE KEY UPDATE `ORDEN_MOSTRAR` = VALUES(`ORDEN_MOSTRAR`);
+
+
+-- ============================================================
+-- 4. VALORES ASIGNADOS A ARTÍCULOS (fza_articulos_propiedades)
+--    Usamos subconsultas para no depender del AUTO_INCREMENT
+-- ============================================================
+
+-- ABRIGO-PAÑO (ROPA - Abrigo de Paño Caballero)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''ABRIGO-PAÑO'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Zara'' LIMIT 1),           NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Otoño/Invierno 2025'' LIMIT 1), NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''GENERO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Hombre'' LIMIT 1),          NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Paño'' LIMIT 1),            NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''ESTILO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ESTILO''    AND VALOR_PV=''Clásico'' LIMIT 1),         NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''LAVADO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''LAVADO''    AND VALOR_PV=''Limpieza en seco'' LIMIT 1),NULL, NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''ORIGEN'',    NULL, ''Portugal'',                                                                                                                  NOW(), ''DEMO''),
+  (''ABRIGO-PAÑO'', ''ES_ECO'',    NULL, ''N'',                                                                                                                         NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- BLUS-SEDA (ROPA - Blusa de Seda Cuello V)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''BLUS-SEDA'', ''MARCA'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Mango'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''TEMPORADA'',   (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Primavera/Verano 2026'' LIMIT 1),NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''GENERO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Mujer'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''MATERIAL'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Seda'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''ESTILO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ESTILO''    AND VALOR_PV=''Elegante'' LIMIT 1),           NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''LAVADO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''LAVADO''    AND VALOR_PV=''Lavado a mano'' LIMIT 1),      NULL, NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''COMPOSICION'', NULL, ''100% Seda natural'',                                                                                                             NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''ORIGEN'',      NULL, ''Italia'',                                                                                                                        NOW(), ''DEMO''),
+  (''BLUS-SEDA'', ''ES_ECO'',      NULL, ''N'',                                                                                                                            NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- BOLSO-PIEL (BOLSOS - Bolso de Piel Mujer Grande)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''BOLSO-PIEL'', ''MARCA'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Loewe'' LIMIT 1),             NULL,    NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''TEMPORADA'',   (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),       NULL,    NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''MATERIAL'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Piel natural'' LIMIT 1),      NULL,    NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''CIERRE'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''CIERRE''    AND VALOR_PV=''Cremallera'' LIMIT 1),        NULL,    NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''CAPACIDAD_L'', NULL, ''8'',                                                                                                                              NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''PESO_GR'',     NULL, ''620'',                                                                                                                           NOW(), ''DEMO''),
+  (''BOLSO-PIEL'', ''ORIGEN'',      NULL, ''España'',                                                                                                                         NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- BOTIN-ANIT (CALZADO - Botín Ante Mujer)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''BOTIN-ANIT'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Camper'' LIMIT 1),              NULL,  NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Otoño/Invierno 2025'' LIMIT 1), NULL,  NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''GENERO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Mujer'' LIMIT 1),               NULL,  NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Ante'' LIMIT 1),               NULL,  NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''TIPO_SUELA'',(SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TIPO_SUELA''AND VALOR_PV=''Goma'' LIMIT 1),               NULL,  NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''IMPERMEAB'', NULL, ''N'',                                                                                                                              NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''ALTURA_TAC'',NULL, ''4'',                                                                                                                              NOW(), ''DEMO''),
+  (''BOTIN-ANIT'', ''ORIGEN'',    NULL, ''España'',                                                                                                                          NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- CAMI-BASICA (ROPA - Camiseta de Algodón Básica)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''CAMI-BASICA'', ''MARCA'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Marca propia'' LIMIT 1),         NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''TEMPORADA'',   (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),          NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''GENERO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Unisex'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''MATERIAL'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Algodón 100%'' LIMIT 1),         NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''ESTILO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ESTILO''    AND VALOR_PV=''Casual'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''LAVADO'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''LAVADO''    AND VALOR_PV=''Lavadora 40°'' LIMIT 1),         NULL, NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''COMPOSICION'', NULL, ''100% Algodón orgánico'',                                                                                                          NOW(), ''DEMO''),
+  (''CAMI-BASICA'', ''ES_ECO'',      NULL, ''S'',                                                                                                                              NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- CHAQ-CUERO (ROPA - Chaqueta Biker Cuero)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''CHAQ-CUERO'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Zara'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Otoño/Invierno 2025'' LIMIT 1), NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''GENERO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Mujer'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Cuero'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''ESTILO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ESTILO''    AND VALOR_PV=''Urban'' LIMIT 1),               NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''LAVADO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''LAVADO''    AND VALOR_PV=''No lavar con agua'' LIMIT 1),   NULL, NOW(), ''DEMO''),
+  (''CHAQ-CUERO'', ''ORIGEN'',    NULL, ''Italia'',                                                                                                                          NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- LEGGING-SPORT (DEPORTIVO - Legging Deportivo Mujer)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''LEGGING-SPORT'', ''MARCA'',        (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Nike'' LIMIT 1),               NULL,  NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''ACTIVIDAD'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ACTIVIDAD'' AND VALOR_PV=''Yoga / Pilates'' LIMIT 1),     NULL,  NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''GENERO'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Mujer'' LIMIT 1),              NULL,  NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''MATERIAL'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Poliéster reciclado'' LIMIT 1),NULL,  NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''TEMPORADA'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),        NULL,  NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''TRANSPIRABLE'', NULL, ''S'',                                                                                                                              NOW(), ''DEMO''),
+  (''LEGGING-SPORT'', ''PESO_GR'',      NULL, ''185'',                                                                                                                           NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- MOCHILA-SPORT (BOLSOS - Mochila Deportiva 30L)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''MOCHILA-SPORT'', ''MARCA'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Adidas'' LIMIT 1),            NULL,  NOW(), ''DEMO''),
+  (''MOCHILA-SPORT'', ''TEMPORADA'',   (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),       NULL,  NOW(), ''DEMO''),
+  (''MOCHILA-SPORT'', ''MATERIAL'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Tejido técnico'' LIMIT 1),    NULL,  NOW(), ''DEMO''),
+  (''MOCHILA-SPORT'', ''CIERRE'',      (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''CIERRE''    AND VALOR_PV=''Cremallera'' LIMIT 1),        NULL,  NOW(), ''DEMO''),
+  (''MOCHILA-SPORT'', ''CAPACIDAD_L'', NULL, ''30'',                                                                                                                            NOW(), ''DEMO''),
+  (''MOCHILA-SPORT'', ''PESO_GR'',     NULL, ''850'',                                                                                                                           NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- ZAP-DEPOR (CALZADO - Zapatilla Deportiva Running)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''ZAP-DEPOR'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Nike'' LIMIT 1),               NULL,  NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),        NULL,  NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''GENERO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Unisex'' LIMIT 1),             NULL,  NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Tejido técnico'' LIMIT 1),     NULL,  NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''TIPO_SUELA'',(SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TIPO_SUELA''AND VALOR_PV=''EVA / Foam'' LIMIT 1),         NULL,  NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''IMPERMEAB'', NULL, ''N'',                                                                                                                              NOW(), ''DEMO''),
+  (''ZAP-DEPOR'', ''ALTURA_TAC'',NULL, ''0'',                                                                                                                              NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- ZAP-OXFORD (CALZADO - Zapato Oxford Piel Hombre)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''ZAP-OXFORD'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''El Corte Inglés'' LIMIT 1),     NULL,  NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),         NULL,  NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''GENERO'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Hombre'' LIMIT 1),              NULL,  NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Piel natural'' LIMIT 1),       NULL,  NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''TIPO_SUELA'',(SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TIPO_SUELA''AND VALOR_PV=''Cuero'' LIMIT 1),              NULL,  NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''IMPERMEAB'', NULL, ''N'',                                                                                                                              NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''ALTURA_TAC'',NULL, ''2'',                                                                                                                              NOW(), ''DEMO''),
+  (''ZAP-OXFORD'', ''ORIGEN'',    NULL, ''Portugal'',                                                                                                                         NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- SUDADERA-HOOD (DEPORTIVO - Sudadera con Capucha Unisex)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''SUDADERA-HOOD'', ''MARCA'',        (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''Adidas'' LIMIT 1),              NULL,  NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''ACTIVIDAD'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''ACTIVIDAD'' AND VALOR_PV=''Multideporte'' LIMIT 1),        NULL,  NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''GENERO'',       (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''GENERO''    AND VALOR_PV=''Unisex'' LIMIT 1),             NULL,  NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''MATERIAL'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Algodón/Poliéster'' LIMIT 1),  NULL,  NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''TEMPORADA'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Otoño/Invierno 2025'' LIMIT 1),NULL,  NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''TRANSPIRABLE'', NULL, ''S'',                                                                                                                              NOW(), ''DEMO''),
+  (''SUDADERA-HOOD'', ''PESO_GR'',      NULL, ''420'',                                                                                                                           NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+-- CARTERA-PIEL (COMPLEMENTOS - Cartera Piel Caballero)
+INSERT INTO `fza_articulos_propiedades`
+  (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, `ID_VALOR_PV`, `VALOR_LIBRE`, `INSTANTEALTA`, `USUARIOALTA`)
+VALUES
+  (''CARTERA-PIEL'', ''MARCA'',     (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MARCA''     AND VALOR_PV=''El Corte Inglés'' LIMIT 1),   NULL, NOW(), ''DEMO''),
+  (''CARTERA-PIEL'', ''TEMPORADA'', (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''TEMPORADA'' AND VALOR_PV=''Todo el año'' LIMIT 1),       NULL, NOW(), ''DEMO''),
+  (''CARTERA-PIEL'', ''MATERIAL'',  (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''MATERIAL''  AND VALOR_PV=''Piel natural'' LIMIT 1),      NULL, NOW(), ''DEMO''),
+  (''CARTERA-PIEL'', ''CIERRE'',    (SELECT ID_VALOR_PV FROM fza_propiedades_valores WHERE ID_PROPIEDAD_PV=''CIERRE''    AND VALOR_PV=''Solapa abatible'' LIMIT 1),   NULL, NOW(), ''DEMO''),
+  (''CARTERA-PIEL'', ''ORIGEN'',    NULL, ''España'',                                                                                                                         NOW(), ''DEMO'')
+ON DUPLICATE KEY UPDATE `ID_VALOR_PV` = VALUES(`ID_VALOR_PV`), `VALOR_LIBRE` = VALUES(`VALOR_LIBRE`);
+
+
+-- ============================================================
+-- 5. CONSULTA DE VERIFICACIÓN
+-- ============================================================
+/*
+-- Ver todas las propiedades de un artículo con su valor resuelto:
+SELECT
+  ap.CODIGO_ARTICULO,
+  p.NOMBRE_PROPIEDAD,
+  p.TIPO_VALOR,
+  COALESCE(pv.VALOR_PV, ap.VALOR_LIBRE) AS VALOR_FINAL
+FROM fza_articulos_propiedades ap
+JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = ap.CODIGO_PROPIEDAD
+LEFT JOIN fza_propiedades_valores pv ON pv.ID_VALOR_PV = ap.ID_VALOR_PV
+WHERE ap.CODIGO_ARTICULO = ''CAMI-BASICA''
+ORDER BY p.NOMBRE_PROPIEDAD;
+
+-- Resumen de propiedades por familia:
+SELECT
+  fa.CODIGO_FAMILIA,
+  GROUP_CONCAT(p.NOMBRE_PROPIEDAD ORDER BY fa.ORDEN_MOSTRAR SEPARATOR '', '') AS PROPIEDADES
+FROM fza_familias_atributos fa
+JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = fa.CODIGO_PROPIEDAD
+GROUP BY fa.CODIGO_FAMILIA;
+*/
+', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'Administrador', 'Administrador'),
+  ('045', NULL, 'CREATE OR REPLACE VIEW `vi_articulos_tarifas` AS
+SELECT
+  fza_articulos_tarifas.CODIGO_UNICO_TARIFA,
+  fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA,
+  fza_tarifas.ESIMP_INCL_TARIFA,
+  fza_tarifas.ESDEFAULT_TARIFA,
+  fza_articulos.DESCRIPCION_ARTICULO,
+  fza_articulos.TIPO_CANTIDAD_ARTICULO,
+  fza_articulos.ESVARIACION_ARTICULO,
+  fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA AS TIPO_IVA_ARTICULO,
+  fza_tarifas.ACTIVO_TARIFA,
+  fza_tarifas.CODIGO_TARIFA,
+  fza_tarifas.NOMBRE_TARIFA,
+  fza_articulos_tarifas.FECHA_DESDE_TARIFA,
+  fza_articulos_tarifas.FECHA_HASTA_TARIFA,
+  fza_articulos_tarifas.PRECIOFINAL_TARIFA,
+  fza_articulos_tarifas.PRECIOSALIDA_TARIFA,
+  fza_articulos_tarifas.PORCEN_DTO_TARIFA,
+  fza_articulos_tarifas.PRECIO_DTO_TARIFA,
+  fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR AS CODIGO_PROVEEDOR,
+  fza_proveedores.RAZONSOCIAL_PROVEEDOR,
+  fza_articulos_proveedores.PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR AS PRECIO_ULT_COMPRA,
+  fza_articulos_proveedores.FECHA_VALIDEZ_ARTICULO_PROVEEDOR AS FECHA_VALIDEZ,
+  fza_articulos.CODIGO_FAMILIA_ARTICULO,
+  fza_articulos_familias.DESCRIPCION_FAMILIA,
+  (
+    SELECT COUNT(DISTINCT va.ID_ATRIBUTO_VA)
+    FROM fza_articulos_skus sk
+    JOIN fza_variaciones_atributos va ON sk.CODIGO_VAR_SKU = va.ID_VA
+    WHERE sk.CODIGO_ARTICULO_SKU = fza_articulos.CODIGO_ARTICULO
+  ) AS NUM_ATRIBUTOS_REQ
+FROM fza_articulos_tarifas
+LEFT JOIN fza_articulos_proveedores
+       ON fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos_proveedores.CODIGO_ARTICULO_ARTICULO_PROVEEDOR
+      AND fza_articulos_proveedores.ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = ''S''
+LEFT JOIN fza_tarifas
+       ON fza_tarifas.CODIGO_TARIFA = fza_articulos_tarifas.CODIGO_TARIFA
+LEFT JOIN fza_articulos
+       ON fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos.CODIGO_ARTICULO
+LEFT JOIN fza_articulos_familias
+       ON fza_articulos.CODIGO_FAMILIA_ARTICULO = fza_articulos_familias.CODIGO_FAMILIA
+LEFT JOIN fza_proveedores
+       ON fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR
+LEFT JOIN fza_ivas_tipos
+       ON fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA
+ORDER BY fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-22 18:38:10', '2026-03-22 18:38:10', 'Administrador', 'Administrador');
+-- 17 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3529,68 +3002,71 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (47, 'fza_pedidos', '1'),
   (48, 'fza_pedidos_lineas', '1'),
   (49, 'fza_pedidos_mensajes', '1'),
-  (50, 'fza_proveedores', '1'),
-  (51, 'fza_proveedores_familias', '1'),
-  (52, 'fza_proveedores_familias_conjuntos', '1'),
-  (53, 'fza_recibos', '1'),
-  (54, 'fza_tarifas', '1'),
-  (55, 'fza_tipos_documentos', '1'),
-  (56, 'fza_usuarios', '1'),
-  (57, 'fza_usuarios_grupos', '1'),
-  (58, 'fza_usuarios_perfiles', '1'),
-  (59, 'fza_valores_defecto', '1'),
-  (60, 'fza_variaciones', '1'),
-  (61, 'fza_variaciones_atributos', '1'),
-  (62, 'fza_verifactu_eventos', '1'),
-  (63, 'fza_winforms', '1'),
+  (50, 'fza_propiedades', '1'),
+  (51, 'fza_propiedades_valores', '1'),
+  (52, 'fza_proveedores', '1'),
+  (53, 'fza_proveedores_familias', '1'),
+  (54, 'fza_proveedores_familias_conjuntos', '1'),
+  (55, 'fza_recibos', '1'),
+  (56, 'fza_tarifas', '1'),
+  (57, 'fza_tipos_documentos', '1'),
+  (58, 'fza_usuarios', '1'),
+  (59, 'fza_usuarios_grupos', '1'),
+  (60, 'fza_usuarios_perfiles', '1'),
+  (61, 'fza_valores_defecto', '1'),
+  (62, 'fza_variaciones', '1'),
+  (63, 'fza_variaciones_atributos', '1'),
+  (64, 'fza_verifactu_eventos', '1'),
+  (65, 'fza_winforms', '1'),
   (67, 'vi_articulos', '2'),
   (68, 'vi_articulos_conjuntos_slots', '2'),
   (69, 'vi_articulos_familias', '2'),
   (70, 'vi_articulos_familias_list', '2'),
   (71, 'vi_articulos_list', '2'),
-  (72, 'vi_articulos_proveedores', '2'),
-  (73, 'vi_articulos_skus', '2'),
-  (74, 'vi_articulos_skus_extendida', '2'),
-  (75, 'vi_articulos_tarifas', '2'),
-  (76, 'vi_art_busquedas', '2'),
-  (77, 'vi_atributos_nombres', '2'),
-  (78, 'vi_cajasdef', '2'),
-  (79, 'vi_caja_busqueda_unificada', '2'),
-  (80, 'vi_caja_tarifa_sku_articulos', '2'),
-  (81, 'vi_caja_totalventas', '2'),
-  (82, 'vi_caja_vales_ptes', '2'),
-  (83, 'vi_clientes', '2'),
-  (84, 'vi_cli_busquedas', '2'),
-  (85, 'vi_contadores', '2'),
-  (86, 'vi_depositos_cliente', '2'),
-  (87, 'vi_empresas', '2'),
-  (88, 'vi_empresas_retenciones', '2'),
-  (89, 'vi_empresas_series', '2'),
-  (90, 'vi_emp_busquedas', '2'),
-  (91, 'vi_facturas', '2'),
-  (92, 'vi_facturas_lineas', '2'),
-  (93, 'vi_facturas_lineas_print', '2'),
-  (94, 'vi_facturas_print', '2'),
-  (95, 'vi_fac_busquedas', '2'),
-  (96, 'vi_fac_lin_busquedas', '2'),
-  (97, 'vi_formapago', '2'),
-  (98, 'vi_info_tpv_completa', '2'),
-  (99, 'vi_ivas', '2'),
-  (100, 'vi_ivas_empresa', '2'),
-  (101, 'vi_ivas_grupos', '2'),
-  (102, 'vi_ivas_zonas', '2'),
-  (103, 'vi_movimientos', '2'),
-  (104, 'vi_paises', '2'),
-  (105, 'vi_proveedores', '2'),
-  (106, 'vi_proveedores_articulos', '2'),
-  (107, 'vi_proveedores_busquedas', '2'),
-  (108, 'vi_recibos', '2'),
-  (109, 'vi_tarifas', '2'),
-  (110, 'vi_usuarios', '2'),
-  (111, 'vi_usuarios_grupos', '2'),
-  (112, 'vi_usuarios_perfiles', '2'),
-  (113, 'vi_variaciones', '2'),
-  (114, 'v_articulos_stock_barras', '2'),
+  (72, 'vi_articulos_propiedades_slots', '2'),
+  (73, 'vi_articulos_proveedores', '2'),
+  (74, 'vi_articulos_skus', '2'),
+  (75, 'vi_articulos_skus_extendida', '2'),
+  (76, 'vi_articulos_tarifas', '2'),
+  (77, 'vi_art_busquedas', '2'),
+  (78, 'vi_atributos_nombres', '2'),
+  (79, 'vi_cajasdef', '2'),
+  (80, 'vi_caja_busqueda_unificada', '2'),
+  (81, 'vi_caja_tarifa_sku_articulos', '2'),
+  (82, 'vi_caja_totalventas', '2'),
+  (83, 'vi_caja_vales_ptes', '2'),
+  (84, 'vi_clientes', '2'),
+  (85, 'vi_cli_busquedas', '2'),
+  (86, 'vi_contadores', '2'),
+  (87, 'vi_depositos_cliente', '2'),
+  (88, 'vi_empresas', '2'),
+  (89, 'vi_empresas_retenciones', '2'),
+  (90, 'vi_empresas_series', '2'),
+  (91, 'vi_emp_busquedas', '2'),
+  (92, 'vi_facturas', '2'),
+  (93, 'vi_facturas_lineas', '2'),
+  (94, 'vi_facturas_lineas_print', '2'),
+  (95, 'vi_facturas_print', '2'),
+  (96, 'vi_fac_busquedas', '2'),
+  (97, 'vi_fac_lin_busquedas', '2'),
+  (98, 'vi_formapago', '2'),
+  (99, 'vi_info_tpv_completa', '2'),
+  (100, 'vi_ivas', '2'),
+  (101, 'vi_ivas_empresa', '2'),
+  (102, 'vi_ivas_grupos', '2'),
+  (103, 'vi_ivas_zonas', '2'),
+  (104, 'vi_movimientos', '2'),
+  (105, 'vi_paises', '2'),
+  (106, 'vi_proveedores', '2'),
+  (107, 'vi_proveedores_articulos', '2'),
+  (108, 'vi_proveedores_busquedas', '2'),
+  (109, 'vi_recibos', '2'),
+  (110, 'vi_tarifas', '2'),
+  (111, 'vi_usuarios', '2'),
+  (112, 'vi_usuarios_grupos', '2'),
+  (113, 'vi_usuarios_perfiles', '2'),
+  (114, 'vi_variaciones', '2'),
+  (115, 'v_articulos_stock_barras', '2'),
   (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
   (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
@@ -3634,7 +3110,7 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (170, 'SP_RECALCULAR_PMP_SKU', '3'),
   (171, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 153 registros exportados
+-- 156 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -4185,6 +3661,127 @@ CREATE TABLE `fza_pedidos_mensajes` (
 );
 
 
+-- Tabla: fza_propiedades
+
+DROP TABLE IF EXISTS `fza_propiedades`;
+CREATE TABLE `fza_propiedades` (
+  `CODIGO_PROPIEDAD` varchar(20) NOT NULL COMMENT 'Identificador único (ej: MATERIAL, MARCA, EDAD_MAX)',
+  `NOMBRE_PROPIEDAD` varchar(100) NOT NULL COMMENT 'Nombre público para la web o app (ej: Material, Marca, Edad Recomendada)',
+  `TIPO_VALOR` varchar(20) NULL DEFAULT 'LISTA' COMMENT 'Cómo se rellena: LISTA, TEXTO_LIBRE, NUMERO, BOOLEANO',
+  `ACTIVO_PROPIEDAD` varchar(1) NULL DEFAULT 'S' COMMENT 'S para activo, N para inactivo',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT current_timestamp(),
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_PROPIEDAD`)
+);
+
+-- Datos de fza_propiedades
+INSERT INTO `fza_propiedades` (`CODIGO_PROPIEDAD`, `NOMBRE_PROPIEDAD`, `TIPO_VALOR`, `ACTIVO_PROPIEDAD`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('ACTIVIDAD', 'Actividad deportiva', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('ALTURA_TAC', 'Altura tacón (cm)', 'NUMERO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('CAPACIDAD_L', 'Capacidad (litros)', 'NUMERO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('CIERRE', 'Tipo de cierre', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('COMPOSICION', 'Composición textil', 'TEXTO_LIBRE', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('ES_ECO', 'Producto Eco/BIO', 'BOOLEANO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('ESTILO', 'Estilo', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('GENERO', 'Género', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('IMPERMEAB', 'Impermeable', 'BOOLEANO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('LAVADO', 'Instruc. de lavado', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('MARCA', 'Marca', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('MATERIAL', 'Material', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('ORIGEN', 'País de origen', 'TEXTO_LIBRE', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('PESO_GR', 'Peso (gramos)', 'NUMERO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('TEMPORADA', 'Temporada', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('TIPO_SUELA', 'Tipo de suela', 'LISTA', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  ('TRANSPIRABLE', 'Transpirable', 'BOOLEANO', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
+-- 17 registros exportados
+
+
+-- Tabla: fza_propiedades_valores
+
+DROP TABLE IF EXISTS `fza_propiedades_valores`;
+CREATE TABLE `fza_propiedades_valores` (
+  `ID_VALOR_PV` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del valor de la propiedad',
+  `ID_PROPIEDAD_PV` varchar(20) NOT NULL COMMENT 'FK hacia fza_propiedades (ej: MATERIAL, EDAD_MAX)',
+  `VALOR_PV` varchar(100) NOT NULL COMMENT 'El valor real (ej: Acero Inoxidable, +3 años, Lego)',
+  `DESCRIPCION_PV` varchar(255) NULL DEFAULT NULL COMMENT 'Descripción comercial ampliada si es necesaria',
+  `ESACTIVO_PV` varchar(1) NULL DEFAULT 'S' COMMENT 'S para activo, N para inactivo',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`ID_VALOR_PV`)
+);
+ALTER TABLE `fza_propiedades_valores` ADD INDEX `IDX_PROPIEDAD_PV` (`ID_PROPIEDAD_PV`);
+
+-- Datos de fza_propiedades_valores
+/*!40000 ALTER TABLE `fza_propiedades_valores` DISABLE KEYS */;
+INSERT INTO `fza_propiedades_valores` (`ID_VALOR_PV`, `ID_PROPIEDAD_PV`, `VALOR_PV`, `DESCRIPCION_PV`, `ESACTIVO_PV`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  (1, 'MARCA', 'Zara', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (2, 'MARCA', 'Mango', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (3, 'MARCA', 'El Corte Inglés', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (4, 'MARCA', 'Nike', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (5, 'MARCA', 'Adidas', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (6, 'MARCA', 'Camper', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (7, 'MARCA', 'Loewe', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (8, 'MARCA', 'Marca propia', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (9, 'TEMPORADA', 'Primavera/Verano 2025', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (10, 'TEMPORADA', 'Otoño/Invierno 2025', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (11, 'TEMPORADA', 'Primavera/Verano 2026', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (12, 'TEMPORADA', 'Otoño/Invierno 2026', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (13, 'TEMPORADA', 'Todo el año', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (14, 'MATERIAL', 'Algodón 100%', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (15, 'MATERIAL', 'Algodón/Poliéster', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (16, 'MATERIAL', 'Lana', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (17, 'MATERIAL', 'Lana merino', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (18, 'MATERIAL', 'Seda', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (19, 'MATERIAL', 'Piel natural', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (20, 'MATERIAL', 'Piel sintética', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (21, 'MATERIAL', 'Cuero', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (22, 'MATERIAL', 'Ante', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (23, 'MATERIAL', 'Denim / Vaquero', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (24, 'MATERIAL', 'Poliéster reciclado', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (25, 'MATERIAL', 'Lino', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (26, 'MATERIAL', 'Paño', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (27, 'MATERIAL', 'Tejido técnico', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (28, 'GENERO', 'Mujer', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (29, 'GENERO', 'Hombre', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (30, 'GENERO', 'Unisex', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (31, 'GENERO', 'Niña', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (32, 'GENERO', 'Niño', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (33, 'ESTILO', 'Casual', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (34, 'ESTILO', 'Elegante', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (35, 'ESTILO', 'Deportivo', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (36, 'ESTILO', 'Bohemio', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (37, 'ESTILO', 'Clásico', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (38, 'ESTILO', 'Urban', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (39, 'ESTILO', 'Outdoor', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (40, 'LAVADO', 'Lavado a mano', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (41, 'LAVADO', 'Lavadora 30°', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (42, 'LAVADO', 'Lavadora 40°', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (43, 'LAVADO', 'Limpieza en seco', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (44, 'LAVADO', 'No lavar con agua', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (45, 'TIPO_SUELA', 'Goma', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (46, 'TIPO_SUELA', 'Cuero', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (47, 'TIPO_SUELA', 'EVA / Foam', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (48, 'TIPO_SUELA', 'Vibram', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (49, 'TIPO_SUELA', 'Tpu antidesliz.', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (50, 'CIERRE', 'Cremallera', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (51, 'CIERRE', 'Imán', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (52, 'CIERRE', 'Hebilla', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (53, 'CIERRE', 'Solapa abatible', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (54, 'CIERRE', 'Sin cierre', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (55, 'ACTIVIDAD', 'Running', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (56, 'ACTIVIDAD', 'Yoga / Pilates', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (57, 'ACTIVIDAD', 'Ciclismo', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (58, 'ACTIVIDAD', 'Senderismo', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (59, 'ACTIVIDAD', 'Fitness / Gym', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO'),
+  (60, 'ACTIVIDAD', 'Multideporte', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
+/*!40000 ALTER TABLE `fza_propiedades_valores` ENABLE KEYS */;
+-- 60 registros exportados
+
+
 -- Tabla: fza_proveedores
 
 DROP TABLE IF EXISTS `fza_proveedores`;
@@ -4414,7 +4011,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-22 16:43:24', '2026-03-22 16:43:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-22 19:04:54', '2026-03-22 19:04:54', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5820,9 +5417,8 @@ CREATE TABLE `fza_variaciones` (
 
 -- Datos de fza_variaciones
 INSERT INTO `fza_variaciones` (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('TC', 'TALLAS Y COLORES', 'S', 1, '2026-01-04 07:47:35', '2026-01-04 07:39:32', 'Administrador', 'Administrador'),
-  ('TEMP', 'Temporadas y Colecciones', 'S', 2, '2026-01-06 12:28:59', '2026-03-11 22:27:55', 'Admin', 'Admin');
--- 2 registros exportados
+  ('TC', 'TALLAS Y COLORES', 'S', 1, '2026-01-04 07:47:35', '2026-01-04 07:39:32', 'Administrador', 'Administrador');
+-- 1 registros exportados
 
 
 -- Tabla: fza_variaciones_atributos
@@ -5832,17 +5428,15 @@ CREATE TABLE `fza_variaciones_atributos` (
   `ID_VA` varchar(20) NOT NULL,
   `ID_ATRIBUTO_VA` varchar(20) NOT NULL,
   `NOMBRE_VA` varchar(50) NULL DEFAULT NULL,
-  `ESDEFINITORIO` char(1) NULL DEFAULT NULL,
   `ORDEN_VA` int(11) NULL DEFAULT NULL,
   PRIMARY KEY (`ID_VA`,`ID_ATRIBUTO_VA`)
 );
 
 -- Datos de fza_variaciones_atributos
-INSERT INTO `fza_variaciones_atributos` (`ID_VA`, `ID_ATRIBUTO_VA`, `NOMBRE_VA`, `ESDEFINITORIO`, `ORDEN_VA`) VALUES
-  ('TC', 'CO', 'Color', 'S', 1),
-  ('TC', 'TAL', 'Talla', 'S', 2),
-  ('TEMP', 'TEMP', 'Temporada', 'N', 3);
--- 3 registros exportados
+INSERT INTO `fza_variaciones_atributos` (`ID_VA`, `ID_ATRIBUTO_VA`, `NOMBRE_VA`, `ORDEN_VA`) VALUES
+  ('TC', 'CO', 'Color', 1),
+  ('TC', 'TAL', 'Talla', 2);
+-- 2 registros exportados
 
 
 -- Tabla: fza_verifactu_eventos
@@ -5932,7 +5526,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_list` AS select `fza_articulos`.`
 
 -- Vista: vi_articulos_propiedades_slots
 DROP VIEW IF EXISTS `vi_articulos_propiedades_slots`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_propiedades_slots` AS select `a`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO_AP`,`fa`.`CODIGO_FAMILIA` AS `CODIGO_FAMILIA`,`va`.`ID_ATRIBUTO_VA` AS `ID_ATRIBUTO_VA`,coalesce(`va`.`NOMBRE_VA`,`va`.`ID_ATRIBUTO_VA`) AS `NOMBRE_ATRIBUTO`,`fa`.`ORDEN_MOSTRAR` AS `ORDEN_ATRIBUTO`,`ap`.`ID_VALOR_AP` AS `ID_VALOR_AP`,`av`.`VALOR_AV` AS `VALOR_AV`,`av`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`av`.`FACTOR_CONVERSION_AV` AS `FACTOR_CONVERSION_AV`,`fa`.`ES_REQUERIDO` AS `ES_REQUERIDO` from ((((`fza_articulos` `a` join `fza_familias_atributos` `fa` on(`a`.`CODIGO_FAMILIA_ARTICULO` = `fa`.`CODIGO_FAMILIA`)) join `fza_variaciones_atributos` `va` on(`fa`.`ID_ATRIBUTO_VA` = `va`.`ID_ATRIBUTO_VA` and `va`.`ESDEFINITORIO` = 'N')) left join `fza_articulos_propiedades` `ap` on(`ap`.`CODIGO_ARTICULO_AP` = `a`.`CODIGO_ARTICULO`)) left join `fza_atributos_valores` `av` on(`av`.`ID_VALOR_AV` = `ap`.`ID_VALOR_AP` and `av`.`ID_VA_AV` = `va`.`ID_ATRIBUTO_VA`)) where `a`.`ESVARIACION_ARTICULO` = 'S';
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_propiedades_slots` AS select `a`.`CODIGO_ARTICULO` AS `CODIGO_ARTICULO`,`fa`.`CODIGO_FAMILIA` AS `CODIGO_FAMILIA`,`p`.`CODIGO_PROPIEDAD` AS `CODIGO_PROPIEDAD`,`p`.`NOMBRE_PROPIEDAD` AS `NOMBRE_PROPIEDAD`,`p`.`TIPO_VALOR` AS `TIPO_VALOR`,`fa`.`ES_REQUERIDO` AS `ES_REQUERIDO`,`fa`.`ORDEN_MOSTRAR` AS `ORDEN_MOSTRAR`,`ap`.`ID_VALOR_PV` AS `ID_VALOR_PV`,`ap`.`VALOR_LIBRE` AS `VALOR_LIBRE`,coalesce(`pv`.`VALOR_PV`,`ap`.`VALOR_LIBRE`) AS `VALOR_FINAL_MOSTRAR` from ((((`fza_articulos` `a` join `fza_familias_atributos` `fa` on(`a`.`CODIGO_FAMILIA_ARTICULO` = `fa`.`CODIGO_FAMILIA`)) join `fza_propiedades` `p` on(`fa`.`CODIGO_PROPIEDAD` = `p`.`CODIGO_PROPIEDAD`)) left join `fza_articulos_propiedades` `ap` on(`a`.`CODIGO_ARTICULO` = `ap`.`CODIGO_ARTICULO` and `p`.`CODIGO_PROPIEDAD` = `ap`.`CODIGO_PROPIEDAD`)) left join `fza_propiedades_valores` `pv` on(`ap`.`ID_VALOR_PV` = `pv`.`ID_VALOR_PV`));
 
 -- Vista: vi_articulos_proveedores
 DROP VIEW IF EXISTS `vi_articulos_proveedores`;
@@ -5948,7 +5542,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO` and `va`.`ESDEFINITORIO` = 'S') AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO`) AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -9569,4 +9163,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 22/03/2026 16:45:09
+-- Backup completado: 22/03/2026 19:22:14
