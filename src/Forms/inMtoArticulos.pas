@@ -31,7 +31,7 @@ uses
   dxScrollbarAnnotations, dxCore, System.Actions, Vcl.ActnList,
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  cxDBLabel, dxShellDialogs;
+  cxDBLabel, dxShellDialogs, inLibArticulosVariaciones;
 
 type
   TfrmMtoArticulos = class(TfrmMtoGen)
@@ -181,21 +181,6 @@ type
     cxTabSheet2: TcxTabSheet;
     tvProveedoresColumn1: TcxGridDBColumn;
     cxDBCheckBox1: TcxDBCheckBox;
-    cxLabel1: TcxLabel;
-    cxDBLookupComboBox1: TcxDBLookupComboBox;
-    cxDBCheckBox2: TcxDBCheckBox;
-    cxGrid3: TcxGrid;
-    cxGridDBTableView2: TcxGridDBTableView;
-    cxGridLevel2: TcxGridLevel;
-    cxGridDBTableView2ID_CONJUNTO_ACA: TcxGridDBColumn;
-    cxGridDBTableView2ID_ATRIBUTO_ACA: TcxGridDBColumn;
-    cxGridDBTableView2ES_GENERACION_AUTO: TcxGridDBColumn;
-    cxGridDBTableView2NOMBRE_AC: TcxGridDBColumn;
-    cxGridDBTableView2ID_VARIACION_AC: TcxGridDBColumn;
-    cxGridDBTableView2ID_ATRIBUTO_AC: TcxGridDBColumn;
-    cxGridDBTableView2NOMBRE_ATRIBUTO: TcxGridDBColumn;
-    cxGridDBTableView2ORDEN_ATRIBUTO: TcxGridDBColumn;
-    cxGridDBTableView2NOMBRE_VARIACION: TcxGridDBColumn;
     tsSKUS: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
@@ -210,7 +195,6 @@ type
     tvSkusUSUARIOALTA: TcxGridDBColumn;
     tvSkusUSUARIOMODIF: TcxGridDBColumn;
     cxGridLevel1: TcxGridLevel;
-    cxLabel3: TcxLabel;
     cxTabSheet3: TcxTabSheet;
     tsMovimientos: TcxTabSheet;
     tvSkusCODIGO_BARRAS_CB: TcxGridDBColumn;
@@ -276,6 +260,7 @@ type
     tvMovimientosRAZONSOCIAL_CLIENTE: TcxGridDBColumn;
     tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
     tsPropiedades: TcxTabSheet;
+    cxDBCheckBox2: TcxDBCheckBox;
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -315,6 +300,9 @@ type
     FGestorProp  : TGestorPropiedades;    // [AÑADIR]
     FScrollProp  : TScrollBox;            // [AÑADIR]
     FBtnAddProp  : TcxButton;             // [AÑADIR]
+    FGestorVar      : TGestorVariaciones;      // [AÑADIR]
+    FScrollVarAtrib : TScrollBox;              // [AÑADIR] zona superior conjuntos
+    procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;   // [AÑADIR]
     procedure OnAfterScrollArticulos(DataSet: TDataSet);  // [AÑADIR]
     procedure BtnAddPropClick(Sender: TObject);
@@ -552,6 +540,16 @@ begin
       Exit;
     end;
   end;
+  if Assigned(FGestorVar) then
+  try
+    FGestorVar.GuardarVariaciones;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Error al guardar variaciones: ' + E.Message);
+      Exit;
+    end;
+  end;
 end;
 
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
@@ -650,6 +648,9 @@ begin
    (dmmArticulos.unqryTablaG.RecordCount > 0) then
     FGestorProp.CargarPropiedades(
       dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+  InicializarPestanyaVariaciones;
+  FGestorVar.CargarVariaciones(                // [AÑADIR]
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -690,6 +691,70 @@ begin
   );
 end;
 
+procedure TfrmMtoArticulos.InicializarPestanyaVariaciones;
+var
+  pnlTop   : TPanel;
+  splitter : TSplitter;
+begin
+  // Ocultar el grid estático de variaciones si existe en el DFM
+  // (tvVariaciones, cxGrid1, etc.)
+//  if Assigned(cxGrid1) then cxGrid1.Visible := False;
+
+  // ── Panel superior: conjuntos asignados ──
+  pnlTop := TPanel.Create(Self);
+  pnlTop.Parent     := tsVariaciones;
+  pnlTop.Align      := alTop;
+  pnlTop.Height     := 36;
+  pnlTop.BevelOuter := bvNone;
+  pnlTop.Caption    := '';
+
+  with TcxLabel.Create(Self) do
+  begin
+    Parent  := pnlTop;
+    Left    := 8;
+    Top     := 8;
+    Caption := 'Conjuntos de valores asignados al artículo:';
+    Style.Font.Style := [fsBold];
+  end;
+
+  FScrollVarAtrib := TScrollBox.Create(Self);
+  FScrollVarAtrib.Parent      := tsVariaciones;
+  FScrollVarAtrib.Align       := alTop;
+  FScrollVarAtrib.Height      := 120;   // altura fija — pocos atributos
+  FScrollVarAtrib.BorderStyle := bsNone;
+  FScrollVarAtrib.Color       := clWindow;
+  FScrollVarAtrib.AutoScroll  := True;
+
+  // Splitter entre las dos zonas
+  splitter := TSplitter.Create(Self);
+  splitter.Parent := tsVariaciones;
+  splitter.Align  := alTop;
+  splitter.Height := 5;
+
+//  // ── Panel inferior: SKUs ──
+//  with TcxLabel.Create(Self) do
+//  begin
+//    Parent  := tsVariaciones;
+//    Align   := alNone;  // lo ponemos manualmente o en un panel
+//    // Nota: se incrusta en el ScrollBox directamente con cabecera
+//  end;
+
+//  FScrollVarSkus := TScrollBox.Create(Self);
+//  FScrollVarSkus.Parent      := tsVariaciones;
+//  FScrollVarSkus.Align       := alClient;
+//  FScrollVarSkus.BorderStyle := bsNone;
+//  FScrollVarSkus.Color       := clWindow;
+//  FScrollVarSkus.AutoScroll  := True;
+
+  // Crear el gestor
+  FGestorVar := TGestorVariaciones.Create(
+    FScrollVarAtrib,
+//    FScrollVarSkus,
+    oConn,   // <-- ajusta al nombre real de tu TUniConnection
+    oUser               // <-- ajusta a tu función de usuario
+  );
+end;
+
 procedure TfrmMtoArticulos.BtnAddPropClick(Sender: TObject);
 begin
   // Si hay cambios no guardados en el artículo, grabar primero
@@ -705,6 +770,9 @@ begin
   if Assigned(FGestorProp) then
     FGestorProp.CargarPropiedades(
       DataSet.FieldByName('CODIGO_ARTICULO').AsString);
+  if Assigned(FGestorVar) then
+    FGestorVar.CargarVariaciones(                // [AÑADIR]
+      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
 end;
 
 procedure
@@ -837,6 +905,8 @@ begin
   inherited;
   if Assigned(FGestorProp) then
     FreeAndNil(FGestorProp);
+  if Assigned(FGestorVar) then
+    FreeAndNil(FGestorVar);
 end;
 
 procedure TfrmMtoArticulos.FormShow(Sender: TObject);

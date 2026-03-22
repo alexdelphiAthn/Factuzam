@@ -121,7 +121,8 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   inLibArticulosPropiedades in 'src\Lib\inLibArticulosPropiedades.pas',
-  uGenericIfThen in 'src\Lib\uGenericIfThen.pas';
+  uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
+  inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas';
 
 var
   frmLogon: TfrmLogon;
