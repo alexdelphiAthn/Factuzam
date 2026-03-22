@@ -209,29 +209,47 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     OnClick = btnBonitoClick
                   end
                 end
-                object SynEdit1: TSynEdit
+                object ScrollBar1: TScrollBar
+                  Left = 704
+                  Top = 1
+                  Width = 19
+                  Height = 253
+                  Align = alRight
+                  Kind = sbVertical
+                  Max = 10
+                  Min = 1
+                  PageSize = 0
+                  Position = 1
+                  TabOrder = 1
+                  TabStop = False
+                  StyleName = 'Windows'
+                  OnChange = ScrollBar1Change
+                end
+                object DBSynEdit1: TDBSynEdit
                   Left = 1
                   Top = 1
                   Width = 703
                   Height = 253
+                  Cursor = crIBeam
+                  DataField = 'PROCESO_GENERADORPROCESO'
+                  DataSource = dsTablaG
                   Align = alClient
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
-                  Font.Height = -16
-                  Font.Name = 'JetBrains Mono'
+                  Font.Height = -15
+                  Font.Name = 'Consolas'
                   Font.Style = []
                   Font.Quality = fqClearTypeNatural
-                  TabOrder = 1
-                  Visible = False
-                  CodeFolding.IndentGuidesColor = clBlack
-                  CodeFolding.IndentGuides = False
-                  UseCodeFolding = False
+                  ParentColor = False
+                  ParentFont = False
+                  TabOrder = 2
                   Gutter.Font.Charset = DEFAULT_CHARSET
                   Gutter.Font.Color = clWindowText
-                  Gutter.Font.Height = -11
+                  Gutter.Font.Height = -15
                   Gutter.Font.Name = 'Consolas'
                   Gutter.Font.Style = []
                   Gutter.Font.Quality = fqClearTypeNatural
+                  Gutter.ShowLineNumbers = True
                   Gutter.Width = 0
                   Gutter.Bands = <
                     item
@@ -252,44 +270,12 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       Width = 3
                     end>
                   Highlighter = synsqlsyn2
-                  Lines.Strings = (
-                    'SynEdit1')
                   ScrollBars = ssNone
-                  ScrollbarAnnotations = <
-                    item
-                      AnnType = sbaCarets
-                      AnnPos = sbpFullWidth
-                      FullRow = False
-                    end
-                    item
-                      AnnType = sbaBookmark
-                      AnnPos = sbpLeft
-                      FullRow = True
-                    end
-                    item
-                      AnnType = sbaTrackChanges
-                      AnnPos = sbpRight
-                      FullRow = True
-                    end>
-                  OnScroll = SynEdit1Scroll
                   OnStatusChange = SynEdit1StatusChange
-                  FontSmoothing = fsmNone
-                end
-                object ScrollBar1: TScrollBar
-                  Left = 704
-                  Top = 1
-                  Width = 19
-                  Height = 253
-                  Align = alRight
-                  Kind = sbVertical
-                  Max = 10
-                  Min = 1
-                  PageSize = 0
-                  Position = 1
-                  TabOrder = 2
-                  TabStop = False
-                  StyleName = 'Windows'
-                  OnChange = ScrollBar1Change
+                  ExplicitLeft = 149
+                  ExplicitTop = 105
+                  ExplicitWidth = 200
+                  ExplicitHeight = 150
                 end
               end
             end
@@ -534,9 +520,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
-                          Properties.Increment = 0.100000000000000000
-                          Properties.LargeIncrement = 1.000000000000000000
-                          Properties.MaxValue = 100.000000000000000000
+                          Properties.Increment = 0.10000000000000000
+                          Properties.LargeIncrement = 1.00000000000000000
+                          Properties.MaxValue = 100.00000000000000000
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
@@ -740,9 +726,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.Increment = 0.100000000000000000
-                    Properties.LargeIncrement = 1.000000000000000000
-                    Properties.MaxValue = 100.000000000000000000
+                    Properties.Increment = 0.10000000000000000
+                    Properties.LargeIncrement = 1.00000000000000000
+                    Properties.MaxValue = 100.00000000000000000
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'

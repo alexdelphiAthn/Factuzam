@@ -12,7 +12,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils,
+  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils, DAScript,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, System.Generics.Collections,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer,
@@ -135,11 +135,11 @@ type
     ActionSeleccionar: TAction;
     ActionEjecutar: TAction;
     cxLabel1: TcxLabel;
-    SynEdit1: TSynEdit;
     Panel3: TPanel;
     syndtEstructura: TSynEdit;
     ScrollBar1: TScrollBar;
     ScrollBar2: TScrollBar;
+    DBSynEdit1: TDBSynEdit;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -173,6 +173,11 @@ type
   private
     procedure SafeSetScrollBar(SB: TScrollBar;
                                AMax, APageSize, APosition: Integer);
+    procedure UniScript1Error(Sender: TObject;
+                              E: Exception;
+                              SQL: string;
+                              var Action: TErrorAction);
+    procedure ScriptAfterExecute(Sender: TObject; SQL: string);
   end;
 
 var
@@ -193,10 +198,44 @@ uses
 
 {$R *.dfm}
 
+procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject; SQL: string);
+begin
+  // Detenemos el cronómetro lo antes posible
+    cxmResul.Lines.Add(Format(' -- [OK] Filas afectadas: %d ',
+                              [(Sender as TUniScript).RowsAffected]));
+    cxmResul.Lines.Add('--------------------------------------------------');
+end;
+
+procedure TfrmMtoGeneradorProcesos.UniScript1Error(Sender: TObject;
+                                           E: Exception;
+                                           SQL: string;
+                                           var Action: TErrorAction);
+var
+  Respuesta: Integer;
+begin
+
+    cxmResul.Lines.Add('  [ERROR] ' + E.Message );
+    cxmResul.Lines.Add('--------------------------------------------------');
+    Application.ProcessMessages;
+  // Aquí podemos registrar el error en un log o preguntar al usuario
+  var MsgCorta := E.Message;
+  if Length(MsgCorta) > 20 then
+    MsgCorta := Copy(MsgCorta, 1, 20) + '...';
+  Respuesta := MessageDlg(
+    'Ocurrió un error ejecutando el script.' +  sLineBreak +
+    'Detalle del error: ' + MsgCorta + sLineBreak + sLineBreak +
+    '¿Desea ignorar el error y continuar con el script?',
+    mtError, [mbYes, mbNo], 0);
+  if Respuesta = mrYes then
+    Action := eaContinue  // Ignora la sentencia fallida
+  else
+    Action := eaFail;     // Detiene el script
+end;
+
 procedure TfrmMtoGeneradorProcesos.SafeSetScrollBar(SB: TScrollBar;
                                            AMax, APageSize, APosition: Integer);
 begin
-  try
+//  try
     AMax      := Max(AMax, 1);
     APageSize := Max(APageSize, 1);
 
@@ -219,17 +258,17 @@ begin
 
     SB.Position := APosition;
 
-  except on E: Exception do
-    ShowMessage(
-      'ScrollBar: ' + SB.Name         + sLineBreak +
-      'AMax='      + IntToStr(AMax)   + sLineBreak +
-      'APageSize=' + IntToStr(APageSize) + sLineBreak +
-      'APosition=' + IntToStr(APosition) + sLineBreak +
-      'SB.Max='    + IntToStr(SB.Max) + sLineBreak +
-      'SB.Min='    + IntToStr(SB.Min) + sLineBreak +
-      'Error: '    + E.Message
-    );
-  end;
+//  except on E: Exception do
+//    ShowMessage(
+//      'ScrollBar: ' + SB.Name         + sLineBreak +
+//      'AMax='      + IntToStr(AMax)   + sLineBreak +
+//      'APageSize=' + IntToStr(APageSize) + sLineBreak +
+//      'APosition=' + IntToStr(APosition) + sLineBreak +
+//      'SB.Max='    + IntToStr(SB.Max) + sLineBreak +
+//      'SB.Min='    + IntToStr(SB.Min) + sLineBreak +
+//      'Error: '    + E.Message
+//    );
+//  end;
 end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -247,9 +286,9 @@ begin
   inherited;
 
   // 1. Si el foco está en los editores, mantenemos "Seleccionar Todo"
-  if Screen.ActiveControl = SynEdit1 then
+  if Screen.ActiveControl = DBSynEdit1 then
   begin
-    SynEdit1.SelectAll;
+    DBSynEdit1.SelectAll;
   end
   else if Screen.ActiveControl = syndtEstructura then
   begin
@@ -291,12 +330,12 @@ begin
 
         // Volcamos todo al editor principal
         unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Modificar ' + sNombreMetadato;
-//        unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sScriptCompleto;
-        synedit1.text := sScriptCompleto;
+        unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sScriptCompleto;
+//        DBsynedit1.text := sScriptCompleto;
         // Cambiamos de pestaña y damos foco
         pcPestana.ActivePage := tsSQL;
-        if SynEdit1.CanFocus then
-          SynEdit1.SetFocus;
+        if DBSynEdit1.CanFocus then
+          DBSynEdit1.SetFocus;
       end;
     end;
   end;
@@ -305,7 +344,7 @@ end;
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarUpdate(Sender: TObject);
 begin
   inherited;
-  (Sender as TAction).Enabled := (Screen.ActiveControl = SynEdit1)
+  (Sender as TAction).Enabled := (Screen.ActiveControl = DBSynEdit1)
                                  or (Screen.ActiveControl = syndtEstructura)
                                  or (screen.ActiveControl = TreeView1);
 end;
@@ -420,6 +459,8 @@ begin
     begin
       uScript := TUniScript.Create(nil);
       uScript.Connection := oConn;
+      uScript.OnError := UniScript1Error;
+      uScript.AfterExecute := ScriptAfterExecute;
       try
         // Comandos directos (INSERT, UPDATE, DELETE)
         uScript.SQL.Text := sSQL;
@@ -582,7 +623,7 @@ var
   nodeParent, nodeChild: TTreeNode;
   i: Integer;
 begin
-  SynEdit1.BeginUpdate;
+  DBSynEdit1.BeginUpdate;
   syndtEstructura.BeginUpdate;
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
@@ -594,7 +635,7 @@ begin
   // Asegúrate de que las opciones predeterminadas estén configuradas correctamente
 //  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
   IsColumnMode := False;
-  SynEdit1.EndUpdate;
+  DBSynEdit1.EndUpdate;
   syndtEstructura.EndUpdate;
 end;
 
@@ -629,43 +670,12 @@ begin
                            'SQL SECURITY DEFINER',
                            '',
                            [rfReplaceAll]);
+      mmo1.Lines.Text := StringReplace(mmo1.Lines.Text,
+                           ' separator '',''',
+                           '',
+                           [rfReplaceAll, rfIgnoreCase]);
       var sSQL := mmo1.Lines.Text;
       sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
-        // 2. Quitar prefijos tabla. en los campos (fza_articulos.CAMPO -> CAMPO)
-  //    Usamos un bucle simple con expresión regular o StringReplace múltiple
-  //    Alternativa sin regex: quitar todo lo que sea "palabra." antes de un campo
-      var i := 1;
-      var sOut := '';
-      var sLen := Length(sSQL);
-      while i <= sLen do
-      begin
-        // Detectar patrón: identificador seguido de punto
-        if (sSQL[i] in ['A'..'Z','a'..'z','_','0'..'9']) then
-        begin
-          // Leer el identificador completo
-          var j := i;
-          while (j <= sLen) and (sSQL[j] in ['A'..'Z','a'..'z','_','0'..'9']) do
-            Inc(j);
-          // ¿Le sigue un punto?
-          if (j <= sLen) and (sSQL[j] = '.') then
-          begin
-            // Saltar el identificador y el punto (era un prefijo tabla.)
-            i := j + 1;
-          end
-          else
-          begin
-            // No le sigue punto, copiar el identificador
-            sOut := sOut + Copy(sSQL, i, j - i);
-            i := j;
-          end;
-        end
-        else
-        begin
-          sOut := sOut + sSQL[i];
-          Inc(i);
-        end;
-      end;
-      sSQL := sOut;
 
       // 3. Normalizar espacios múltiples
       while Pos('  ', sSQL) > 0 do
@@ -712,10 +722,10 @@ end;
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
-  SynEdit1.Visible := True;
+  DBSynEdit1.Visible := True;
   syndtEstructura.Visible := True;
-  if synEdit1.CanFocus then
-        synEdit1.SetFocus;
+  if DBsynEdit1.CanFocus then
+        DBsynEdit1.SetFocus;
 end;
 
 procedure TfrmMtoGeneradorProcesos.SynEdit1StatusChange(Sender: TObject;
@@ -724,9 +734,9 @@ begin
   inherited;
   SafeSetScrollBar(
     ScrollBar1,
-    SynEdit1.Lines.Count,
-    SynEdit1.LinesInWindow,
-    SynEdit1.TopLine
+    DBSynEdit1.Lines.Count,
+    DBSynEdit1.LinesInWindow,
+    DBSynEdit1.TopLine
   );
 end;
 
@@ -741,8 +751,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.ScrollBar1Change(Sender: TObject);
 begin
   inherited;
-  if SynEdit1.TopLine <> ScrollBar1.Position then
-    SynEdit1.TopLine := ScrollBar1.Position;
+  if DBSynEdit1.TopLine <> ScrollBar1.Position then
+    DBSynEdit1.TopLine := ScrollBar1.Position;
 end;
 
 procedure TfrmMtoGeneradorProcesos.syndtEstructuraStatusChange(Sender: TObject;
@@ -874,12 +884,12 @@ begin
       // Asignamos el nombre al proceso (opcional)
       unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Ejecutar ' + sProcName;
       // Asignamos el comando SQL generado al campo memo del editor
-//      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
-      synEdit1.Text := sCallText;
+      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
+//      DBsynEdit1.Text := sCallText;
       // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor SynEdit
       pcPestana.ActivePage := tsSQL;
-      if synEdit1.CanFocus then
-        synEdit1.SetFocus;
+      if DBsynEdit1.CanFocus then
+        DBsynEdit1.SetFocus;
     end;
   end;
 end;

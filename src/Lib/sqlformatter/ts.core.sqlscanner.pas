@@ -6,15 +6,15 @@ uses
    SysUtils, Classes, Contnrs, System.Generics.Collections;
 
 resourcestring
-  SErrInvalidCharacter         = 'Invalid character''%s''';
-  SErrOpenString               = 'string exceeds end of line';
-  SErrIncludeFileNotFound      = 'Could not find include file''%s''';
-  SErrIfXXXNestingLimitReached = 'Nesting of$IFxxx too deep';
-  SErrInvalidPPElse            = '$ELSE without matching$IFxxx';
-  SErrInvalidPPEndif           = '$ENDIF without matching$IFxxx';
-  SInvalidHexadecimalNumber    = 'Invalid decimal number';
-  SErrInvalidNonEqual          = 'SyntaxError:!=or!==expected';
-  SBarExpected                 = '|character expected';
+  SErrInvalidCharacter         = 'Carácter inválido ''%s''';
+  SErrOpenString               = 'La cadena excede el final de linea';
+  SErrIncludeFileNotFound      = 'No se puede encontrar el fichero include ''%s''';
+  SErrIfXXXNestingLimitReached = 'Anidación of$IFxxx demasiado profunda';
+  SErrInvalidPPElse            = '$ELSE sin matching$IFxxx';
+  SErrInvalidPPEndif           = '$ENDIF sin matching$IFxxx';
+  SInvalidHexadecimalNumber    = 'Número decimal inválido';
+  SErrInvalidNonEqual          = 'Error de sintáxis:!=or!==expected';
+  SBarExpected                 = '|Carácter esperado';
 
 type
 
@@ -34,7 +34,7 @@ type
     tsqlBETWEEN, tsqlBY, tsqlBLOB, tsqlBegin, tsqlBefore,
     tsqlCOLLATE, tsqlCONTAINING, tsqlCOUNT, tsqlCREATE, tsqlCOLUMN,
     tsqlCONSTRAINT, tsqlChar, tsqlCHARACTER, tsqlCHECK, tsqlComputed,
-    tsqlCASCADE, tsqlCast, tsqlCommit, tsqlConnect, tsqlCache, tsqlConditional,
+    tsqlCASCADE, tsqlCase, tsqlCast, tsqlCommit, tsqlConnect, tsqlCache, tsqlConditional,
     tsqlCString,
     tsqlDESC, tsqlDESCENDING, tsqlDISTINCT, tsqlDEFAULT, tsqlDELETE, tsqlDO,
     tsqlDECLARE, tsqlDROP, tsqlDomain, tsqlDecimal, tsqlDate, tsqlDatabase,
@@ -87,9 +87,9 @@ const
        // Identifiers last
     'ALL', 'AND', 'ANY', 'ASC', 'ASCENDING', 'AVG', 'ALTER', 'ADD', 'ACTIVE',
     'ACTION', 'AS', 'AT', 'AUTO', 'AFTER', 'ADMIN',
-    'BETWEEN', 'BY', 'BLOB', 'BEGIN', 'BEFORE',
+    'BETWEEN', 'BY', 'BLgOB', 'BEGIN', 'BEFORE',
     'COLLATE', 'CONTAINING', 'COUNT', 'CREATE', 'COLUMN', 'CONSTRAINT', 'CHAR',
-    'CHARACTER', 'CHECK', 'COMPUTED', 'CASCADE', 'CAST', 'COMMIT', 'CONNECT',
+    'CHARACTER', 'CHECK', 'COMPUTED', 'CASCADE', 'CASE', 'CAST', 'COMMIT', 'CONNECT',
     'CACHE', 'CONDITIONAL', 'CSTRING',
     'DESC', 'DESCENDING', 'DISTINCT', 'DEFAULT', 'DELETE', 'DO', 'DECLARE',
     'DROP', 'DOMAIN', 'DECIMAL', 'DATE', 'DATABASE',
@@ -104,7 +104,7 @@ const
     'KEY',
     'LEFT', 'LIKE', 'LENGTH',
     'MAX', 'MIN', 'MERGE', 'MANUAL', 'MODULE_NAME',
-    'not', 'NULL', 'NUMERIC', 'NCHAR', 'NATIONAL', 'NO', 'NATURAL',
+    'NOT', 'NULL', 'NUMERIC', 'NCHAR', 'NATIONAL', 'NO', 'NATURAL',
     'ON', 'OR', 'ORDER', 'OUTER', 'OPTION',
     'PRIMARY', 'PROCEDURE', 'POSITION', 'PLAN', 'PASSWORD', 'PAGE', 'PAGES',
     'PAGE_SIZE', 'POST_EVENT', 'PRIVILEGES', 'PUBLIC',
@@ -508,9 +508,8 @@ begin
   if FKeyWords.Count > 0 then
     FKeyWords.Clear;
   for I := FirstKeyword to LastKeyWord do
-    if (not Assigned(FExclude)) or (FExclude.INdexOf(TokenInfos[I]) = -1) then
-      FKeyWords.Add(TokenInfos[I], I);
-      //FKeyWords.Add(TokenInfos[I], @IdentifierTokens[I]);
+    if (not Assigned(FExclude)) or (FExclude.IndexOf(TokenInfos[I]) = -1) then
+      FKeyWords.Add(UpperCase(TokenInfos[I]), I);
 end;
 
 {function TSQLScanner.DoStringLiteral: TSQLToken;
@@ -1025,7 +1024,10 @@ function TSQLScanner.DoIdentifier : TSQLToken;
 
   function TSQLScanner.GetCurColumn: Integer;
   begin
-    Result := TokenStr - PChar(FCurLine);
+    if TokenStr = nil then
+      Result := Length(FCurLine)
+    else
+      Result := TokenStr - PChar(FCurLine);
   end;
 
   procedure TSQLScanner.ClearKeywords(Sender : TObject);

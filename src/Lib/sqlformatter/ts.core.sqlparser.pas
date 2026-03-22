@@ -338,6 +338,7 @@ begin
     else
       ErrAt := Format('Error: line %d, pos %d: ',
         [FScanner.CurRow, FScanner.CurColumn]);
+
   E := ESQLParser.Create(ErrAt + Msg);
   if Assigned(FScanner) then
   begin
@@ -345,6 +346,7 @@ begin
     E.Col := FScanner.CurColumn;
     E.FileName := FScanner.CurFilename;
   end;
+  raise E;
 end;
 
 procedure TSQLParser.Error(Fmt: string; Args: array of const );
@@ -366,18 +368,61 @@ function TSQLParser.ParseTableRef(AParent : TSQLSelectStatement)
 var
   T : TSQLSimpleTablereference;
   J : TSQLJoinTableReference;
+  PCount: Integer;
+  SubQueryStr: string;
 begin
   if (CurrentToken = tsqlBraceOpen) then
   begin
     GetNextToken;
-    Result := ParseTableRef(AParent);
-    Consume(tsqlBraceClose)
+
+    // --- INICIO SOPORTE PARA DERIVED TABLES (Subconsultas en FROM/JOIN) ---
+    if (CurrentToken = tsqlSelect) then
+    begin
+      SubQueryStr := '(';
+      PCount := 1;
+
+      // Capturar de forma segura todos los tokens de la subconsulta respetando paréntesis anidados
+      while (PCount > 0) and (CurrentToken <> tsqlEOF) do
+      begin
+        SubQueryStr := SubQueryStr + ' ' + CurrentTokenString;
+        GetNextToken;
+        if CurrentToken = tsqlBraceOpen then
+          Inc(PCount)
+        else if CurrentToken = tsqlBraceClose then
+          Dec(PCount);
+      end;
+      SubQueryStr := SubQueryStr + ' )';
+      GetNextToken; // Consumir el tsqlBraceClose final
+
+      // Engañamos al AST encapsulando la subconsulta como si fuera un nombre de tabla
+      T := TSQLSimpleTablereference(CreateElement(TSQLSimpleTablereference, AParent));
+      Result := T;
+      T.ObjectName := CreateIdentifier(T, SubQueryStr);
+
+      // Capturar la palabra reservada "AS" si la base de datos la usa (ej: AS cb)
+      if (CurrentToken = tsqlAs) then
+        GetNextToken;
+
+      // Capturar el Alias de la subconsulta (ej: cb o stk)
+      if (CurrentToken = tsqlIdentifier) then
+      begin
+        T.AliasName := CreateIdentifier(T, CurrentTokenString);
+        GetNextToken;
+      end;
+    end
+    // --- FIN SOPORTE PARA DERIVED TABLES ---
+    else
+    begin
+      // Flujo original para paréntesis de anidación de Joins normales
+      Result := ParseTableRef(AParent);
+      Consume(tsqlBraceClose);
+    end;
   end
   else
   begin
+    // Flujo original para tablas simples
     Expect(tsqlIdentifier);
-    T := TSQLSimpleTablereference(CreateElement(TSQLSimpleTablereference,
-      AParent));
+    T := TSQLSimpleTablereference(CreateElement(TSQLSimpleTablereference, AParent));
     Result := T;
     T.ObjectName := CreateIdentifier(T, CurrentTokenString);
     GetNextToken;
@@ -386,41 +431,42 @@ begin
       T.Params := ParseValueList(AParent, [eoParamValue]);
       GetNextToken;
     end;
+
+    // Soporte para palabra "AS" en tablas simples
+    if (CurrentToken = tsqlAs) then
+      GetNextToken;
+
     if (CurrentToken = tsqlIdentifier) then
     begin
       T.AliasName := CreateIdentifier(T, CurrentTokenString);
       GetNextToken;
     end;
   end;
+
+  // Procesamiento estándar de los JOINs
   Repeat
-    if CurrentToken in [tsqlInner, tsqlJoin, tsqlOuter, tsqlLeft,
-      tsqlRight] then
+    if CurrentToken in [tsqlInner, tsqlJoin, tsqlOuter, tsqlLeft, tsqlRight] then
     begin
-      J := TSQLJoinTableReference(CreateElement(TSQLJoinTableReference,
-        AParent));
+      J := TSQLJoinTableReference(CreateElement(TSQLJoinTableReference, AParent));
       J.Left := Result;
       Result := J;
       case CurrentToken of
-        tsqlInner :
-          J.JoinType := jtInner;
-        tsqlJoin :
-          J.JoinType := jtNone;
-        tsqlOuter :
-          J.JoinType := jtOuter;
-        tsqlLeft :
-          J.JoinType := jtLeft;
-        tsqlRight :
-          J.JoinType := jtRight;
+        tsqlInner : J.JoinType := jtInner;
+        tsqlJoin  : J.JoinType := jtNone;
+        tsqlOuter : J.JoinType := jtOuter;
+        tsqlLeft  : J.JoinType := jtLeft;
+        tsqlRight : J.JoinType := jtRight;
       end;
+
       if CurrentToken <> tsqlJoin then
         GetNextToken;
+
       Consume(tsqlJoin);
-      J.Right := ParseTableRef(AParent);
+      J.Right := ParseTableRef(AParent); // Aquí puede volver a llamar recursivamente a nuestra subconsulta
       Consume(tsqlOn);
       J.JoinClause := ParseExprLevel1(J, [eoJoin]);
     end;
-  until Not(CurrentToken in [tsqlInner, tsqlJoin, tsqlOuter, tsqlLeft,
-    tsqlRight]);
+  until Not(CurrentToken in [tsqlInner, tsqlJoin, tsqlOuter, tsqlLeft, tsqlRight]);
 end;
 
 procedure TSQLParser.ParseFromClause(AParent : TSQLSelectStatement;
@@ -491,27 +537,12 @@ end;
 
 procedure TSQLParser.ParseGroupBy(AParent : TSQLSelectStatement;
   AList : TSQLelementList);
-var
-  N : TSQLStringType;
-
 begin
-  // On entry we're on the GROUP token.
   Consume(tsqlGroup);
   Expect(tsqlBy);
   Repeat
     GetNextToken;
-    Expect(tsqlIdentifier);
-    N := CurrentTokenString;
-    GetNextToken;
-    if (CurrentToken = tsqlDot) then
-    begin
-      GetNextToken;
-      Expect(tsqlIdentifier);
-      N := N + '.' + CurrentTokenString;
-      GetNextToken;
-    end;
-    AList.Add(CreateIdentifier(AParent, N));
-
+    AList.Add(ParseExprLevel1(AParent, []));
   until (CurrentToken <> tsqlComma);
 end;
 
@@ -538,34 +569,22 @@ procedure TSQLParser.ParseOrderBy(AParent : TSQLSelectStatement;
   AList : TSQLelementList);
 var
   O : TSQLOrderByElement;
-  F : TSQLElement;
 begin
-  // On entry we're on the ORDER token.
+  // Al entrar, estamos en el token ORDER
   Consume(tsqlOrder);
   Expect(tsqlBy);
   Repeat
-    GetNextToken;
-    case CurrentToken of
-      tsqlIdentifier :
-        F := CreateIdentifier(AParent, CurrentTokenString);
-      tsqlIntegerNumber :
-        begin
-          F := TSQLIntegerLiteral(CreateElement(TSQLIntegerLiteral, AParent));
-          TSQLIntegerLiteral(F).Value := StrToInt(CurrentTokenString);
-        end
-    else
-      UnexpectedToken([tsqlIdentifier, tsqlIntegerNumber]);
-    end;
-    try
-      O := TSQLOrderByElement(CreateElement(TSQLOrderByElement, AParent));
-      AList.Add(O);
-      O.Field := F;
-      F := nil;
-    except
-      FreeAndNil(F);
-      raise;
-    end;
-    GetNextToken;
+    GetNextToken; // Avanzamos al primer token del campo
+
+    O := TSQLOrderByElement(CreateElement(TSQLOrderByElement, AParent));
+    AList.Add(O);
+
+    // Novedad: Usar el parseador de expresiones para soportar "tabla.campo"
+    O.Field := ParseExprLevel1(O, []);
+
+    // OJO: Ya no hacemos GetNextToken aquí porque ParseExprLevel1 ya se encargó
+    // de consumir todos los puntos e identificadores y avanzar el escáner.
+
     if (CurrentToken = tsqlCollate) then
     begin
       GetNextToken;
@@ -573,6 +592,7 @@ begin
       O.Collation := CreateIdentifier(O, CurrentTokenString);
       GetNextToken;
     end;
+
     if (CurrentToken in [tsqlDesc, tsqlAsc, tsqlDescending, tsqlAscending]) then
     begin
       if (CurrentToken in [tsqlDesc, tsqlDescending]) then
@@ -581,6 +601,7 @@ begin
         O.OrderBy := obAscending;
       GetNextToken;
     end;
+
   until (CurrentToken <> tsqlComma);
 end;
 
@@ -727,6 +748,12 @@ begin
         ParseOrderBy(Result, Result.OrderBy);
       if (CurrentToken = tsqlFor) then
         Result.ForUpdate := ParseForUpdate(Result);
+    end;
+    if (CurrentToken = tsqlIdentifier) and
+       SameText(CurrentTokenString, 'LIMIT') then
+    begin
+      GetNextToken; // Consumir la palabra "LIMIT"
+      Result.Limit := ParseExprLevel1(Result, []); // Leer el número (ej: 1)
     end;
     if (sfInto in Flags) then
     begin
@@ -2156,12 +2183,10 @@ end;
 
 function TSQLParser.ParseExprLevel1(AParent : TSQLElement;
   EO : TExpressionOptions) : TSQLExpression;
-
 var
   tt   : TSQLToken;
   B    : TSQLBinaryExpression;
   L    : TSQLLiteralExpression;
-
 begin
   Result := ParseExprLevel2(AParent, EO);
   Try
@@ -2182,7 +2207,11 @@ begin
         end
         else
           B.Operation := boIs;
-        Expect(tsqlNull);
+        if (CurrentToken = tsqlNull) or
+           ((CurrentToken = tsqlIdentifier) and SameText(CurrentTokenString, 'NULL')) then
+          GetNextToken
+        else
+          Expect(tsqlNull);
         L := TSQLLiteralExpression(CreateElement(TSQLLiteralExpression,
           AParent));
         L.Literal := CreateLiteral(AParent);
@@ -2278,13 +2307,12 @@ begin
       end
       else
         if (CurrentToken = tsqlNot) then
-      begin
-        GetNextToken;
-        if not(tt = tsqlIs) then
-          UnexpectedToken;
-        I := True;
-      end;
-
+        begin
+          GetNextToken;
+          if not(tt = tsqlIs) then
+            UnexpectedToken;
+          I := True;
+        end;
       bw := False;
       doin := False;
       case tt of
@@ -2506,11 +2534,7 @@ end;
 
 function TSQLParser.ParseExprLevel6(AParent : TSQLElement;
   EO : TExpressionOptions) : TSQLExpression;
-
 begin
-
-{$IFDEF debugexpr} Writeln('Level 6 ', TokenInfos[CurrentToken], ': ', CurrentTokenString); {$ENDIF debugexpr}
-
   if (CurrentToken = tsqlBraceOpen) then
   begin
     GetNextToken;
@@ -2520,18 +2544,18 @@ begin
     begin
       Result := TSQLExpression(CreateElement(TSQLSelectExpression, AParent));
       try
-        TSQLSelectExpression(Result).Select := ParseSelectStatement(Result,
-          [sfSingleTon]);
+        TSQLSelectExpression(Result).Select := ParseSelectStatement(Result, [sfSingleTon]);
       except
         FreeAndNil(Result);
         raise;
       end;
     end;
     try
+      // CORRECCIÓN: Evitar falla fatal si hay múltiples paréntesis y se comió uno de más
       if (CurrentToken <> tsqlBraceClose) then
         Error(SerrUnmatchedBrace);
       GetNextToken;
-    Except
+    except
       Result.free;
       raise;
     end;
@@ -2661,13 +2685,12 @@ end;
 
 function TSQLParser.ParseExprPrimitive(AParent : TSQLElement;
   EO : TExpressionOptions) : TSQLExpression;
-
 var
   L : TSQLelementList;
   N : string;
   C : TSQLElementClass;
   E : TSQLExtractElement;
-
+  WhenNode: TSQLCaseWhenNode;
 begin
   Result := nil;
   try
@@ -2721,16 +2744,11 @@ begin
         tsqlSingular:
         begin
           case CurrentToken of
-            tsqlExists :
-              C := TSQLexistsExpression;
-            tsqlAll :
-              C := TSQLAllExpression;
-            tsqlAny :
-              C := TSQLAnyExpression;
-            tsqlSome :
-              C := TSQLSomeExpression;
-            tsqlSingular :
-              C := TSQLSingularExpression;
+            tsqlExists : C := TSQLexistsExpression;
+            tsqlAll : C := TSQLAllExpression;
+            tsqlAny : C := TSQLAnyExpression;
+            tsqlSome : C := TSQLSomeExpression;
+            tsqlSingular : C := TSQLSingularExpression;
           end;
           GetNextToken;
           Consume(tsqlBraceOpen);
@@ -2758,11 +2776,51 @@ begin
             FreeAndNil(L);
             Error(SErrUpperOneArgument);
           end;
-          GetNextToken; // Consume );
+
+          // CORRECCIÓN: Comprobación segura para no comerse el siguiente token
+          if CurrentToken = tsqlBraceClose then
+            GetNextToken;
+
           Result := TSQLFunctionCallExpression
             (CreateElement(TSQLFunctionCallExpression, AParent));
           TSQLFunctionCallExpression(Result).IDentifier := 'UPPER';
           TSQLFunctionCallExpression(Result).Arguments := L;
+        end;
+      tsqlCase:
+        begin
+          GetNextToken; // Consumimos la palabra 'CASE'
+          Result := TSQLCaseExpression(CreateElement(TSQLCaseExpression, AParent));
+
+          // Verificamos si es un CASE con operando base (ej. CASE MIVARIABLE WHEN...)
+          if CurrentToken <> tsqlWhen then
+            TSQLCaseExpression(Result).CaseOperand := ParseExprLevel1(Result, EO);
+
+          // Procesamos todos los bloques WHEN ... THEN
+          while CurrentToken = tsqlWhen do
+          begin
+            GetNextToken; // Consumimos 'WHEN'
+            WhenNode := TSQLCaseWhenNode(CreateElement(TSQLCaseWhenNode, Result));
+            TSQLCaseExpression(Result).WhenList.Add(WhenNode);
+
+            // Parseamos la condición del WHEN
+            WhenNode.WhenExpr := ParseExprLevel1(WhenNode, EO);
+
+            Expect(tsqlThen);
+            GetNextToken; // Consumimos 'THEN'
+
+            // Parseamos el resultado del THEN
+            WhenNode.ThenExpr := ParseExprLevel1(WhenNode, EO);
+          end;
+
+          // Procesamos el ELSE opcional
+          if CurrentToken = tsqlElse then
+          begin
+            GetNextToken; // Consumimos 'ELSE'
+            TSQLCaseExpression(Result).ElseExpr := ParseExprLevel1(Result, EO);
+          end;
+
+          Expect(tsqlEnd);
+          GetNextToken; // Consumimos 'END'
         end;
       tsqlGenID :
         begin
@@ -2799,18 +2857,22 @@ begin
           begin
             if (eoCheckConstraint in EO) and not(eoTableConstraint in EO) then
               Error(SErrUnexpectedToken, [CurrentTokenString]);
-            if (CurrentToken = tsqlDot) then
+
+            // CORRECCIÓN: Bucle "while" para soportar múltiples puntos anidados (esquema.tabla.campo)
+            while (CurrentToken = tsqlDot) do
             begin
               GetNextToken;
               Expect(tsqlIdentifier);
               N := N + '.' + CurrentTokenString;
               GetNextToken;
             end;
+
           // plain identifier
             Result := TSQLIdentifierExpression
               (CreateElement(TSQLIdentifierExpression, AParent));
             TSQLIdentifierExpression(Result).IDentifier :=
               CreateIdentifier(Result, N);
+
           // array access ?
             if (CurrentToken = tsqlSquareBraceOpen) then
             begin
@@ -2825,7 +2887,13 @@ begin
           else
           begin
             L := ParseValueList(AParent, EO);
-            GetNextToken; // Consume );
+
+            // CORRECCIÓN CRÍTICA: Consumo seguro en lugar de GetNextToken ciego.
+            // Si ParseValueList ya avanzó el escáner (por ejemplo, dejándolo sobre un "AS" sin espacios),
+            // el chequeo de seguridad impide saltarse el AS y arruinar el árbol AST.
+            if CurrentToken = tsqlBraceClose then
+              GetNextToken;
+
           // function call
             Result := TSQLFunctionCallExpression
               (CreateElement(TSQLFunctionCallExpression, AParent));
@@ -4057,6 +4125,21 @@ end;
 function TSQLParser.Parse: TSQLElement;
 begin
   GetNextToken;
+
+  // 1. Limpiar puntos y comas vacíos o caracteres sueltos al final
+  while CurrentToken = tsqlSemicolon do
+    GetNextToken;
+
+  // 2. LA VALIDACIÓN DEBE IR EXACTAMENTE AQUÍ (ANTES DEL CASE)
+  // Añadimos tsqlUnknown por si el string termina con saltos de línea invisibles
+  while CurrentToken in [tsqlSemicolon,
+                         tsqlWhiteSpace,
+                         tsqlComment,
+                         tsqlUnknown] do
+    GetNextToken;
+  if CurrentToken = tsqlEOF then
+    Exit(nil);
+  // 3. Inicio del Case
   case CurrentToken of
     tsqlSelect :
       Result := ParseSelectStatement(nil, []);
@@ -4088,8 +4171,9 @@ begin
     tsqlRevoke :
       Result := ParseRevokeStatement(nil);
   else
-    UnexpectedToken;
+    UnexpectedToken; // Si la validación estuviera después del case, fallaría aquí.
   end;
+
   if Not(CurrentToken in [tsqlEOF, tsqlSemicolon]) then
   begin
     FreeAndNil(Result);
