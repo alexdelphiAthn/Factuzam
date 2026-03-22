@@ -1,4 +1,4 @@
-unit ts.Editor.CodeFormatters.SQL;
+﻿unit ts.Editor.CodeFormatters.SQL;
 
 interface
 
@@ -28,66 +28,55 @@ var
   P  : TSQLParser;
   S  : TSQLScanner;
   E  : TSQLElement;
+  FormattedSQL: string;
 begin
   Result := AString;
-  // Si la cadena está vacía, salimos rápido
   if Trim(AString) = '' then Exit;
 
-  // 1. Crear el stream con codificación UTF8 explícita
   SS := TStringStream.Create(AString, TEncoding.UTF8);
-
-  // 2. Crear el lector de líneas (asegúrate que tu ts.Core.SQLScanner tenga la corrección de TStreamReader)
   LR := TStreamLineReader.Create(SS);
-
-  // 3. Crear el Escáner y el Parser
   S  := TSQLScanner.Create(LR);
   P  := TSQLParser.Create(S);
 
   try
     try
-      // Opciones del Scanner
       S.Options := [soBackslashEscapes, soBackQuoteIdentifier];
+      FormattedSQL := '';
 
-      // Intentar parsear
-      E := P.Parse;
+      // Bucle para parsear y formatear TODOS los comandos del script
+      repeat
+        E := P.Parse; // Leemos un comando
+
+        if Assigned(E) then
+        begin
+          // Si ya hay comandos acumulados, le ponemos un punto y coma y salto de línea
+          if FormattedSQL <> '' then
+            FormattedSQL := FormattedSQL + ';' + sLineBreak + sLineBreak;
+
+          // Acumulamos el comando formateado
+          FormattedSQL := FormattedSQL + E.GetAsSQL([
+            sfoLowercaseKeyword, sfoOneFieldPerLine, sfoIndentFields,
+            sfoOneTablePerLine, sfoIndentTables, sfoWhereOnSeparateLine,
+            sfoIndentWhere // (Pon aquí las opciones que usabas)
+          ]);
+
+          E.Free; // Importante: liberar la memoria del nodo que ya hemos usado
+        end;
+      until (E = nil); // Repetimos hasta que el parser no devuelva nada (fin del texto)
+
+      // Si logramos formatear algo, le añadimos el punto y coma final
+      if FormattedSQL <> '' then
+        Result := FormattedSQL + ';';
+
     except
       on Ex: Exception do
       begin
-        // Si falla el parseo (SQL inválido), devolvemos el texto original sin tocar
-        E := nil;
-        Result := AString;
+        // Si CUALQUIER comando del bloque da error, devolvemos el texto original
+        // intacto con el comentario de error arriba para no perder código.
+        Result := '/* ERROR DEL PARSER: ' + Ex.Message + ' */' + sLineBreak + AString;
       end;
     end;
-
-    // Si se creó el árbol de elementos (E), formateamos
-    if Assigned(E) then
-    begin
-       // Aquí aplicas tus preferencias de formato definidas en ts.Core.SQLTree
-       Result := E.GetAsSQL([
-          sfoLowercaseKeyword,
-          sfoOneFieldPerLine,
-          sfoIndentFields,
-          sfoOneTablePerLine,
-          sfoIndentTables,
-          sfoNoBracketRightJoin,
-          sfoWhereOnSeparateLine,
-          sfoIndentWhere,
-          sfoOneGroupByFieldPerLine,
-          sfoIndentGroupByFields,
-          sfoHavingOnSeparateLine,
-          sfoIndentHaving,
-          sfoUnionOnSeparateLine,
-          sfoOneOrderByFieldPerLine,
-          sfoIndentOrderByFields,
-          sfoOneLogicalPerLine,
-          sfoListNoSpaceBeforeComma,
-          sfoForceAscending
-       ], 2); // Indentación de 2 espacios
-    end;
-
   finally
-    // Liberar memoria en orden inverso a creación
-    if Assigned(E) then E.Free;
     P.Free;
     S.Free;
     LR.Free;

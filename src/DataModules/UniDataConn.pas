@@ -133,6 +133,7 @@ begin
     2013: sMensaje := 'Se perdió la conexión durante la ejecución de la consulta.';
     1205: sMensaje := 'El servidor está ocupado (Tiempo de espera de bloqueo). Inténtalo de nuevo.';
     1213: sMensaje := 'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
+    1050: sMensaje := 'La tabla o vista ya existe en la base de datos. ' + E.Message;
     1304:
       begin
         // Opción rápida y sencilla: Adjuntamos el mensaje original de MySQL

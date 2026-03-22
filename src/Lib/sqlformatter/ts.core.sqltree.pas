@@ -852,7 +852,7 @@ type
     FUnion: TSQLSelectStatement;
     FUnionAll: Boolean;
     FWhere: TSQLExpression;
-
+    FLimit: TSQLExpression;
   public
     constructor Create(AParent: TSQLElement); override;
     destructor Destroy; override;
@@ -874,9 +874,37 @@ type
     property StartAt: TSQLExpression read FStartAt write FStartAt;
     property EndAt: TSQLExpression read FEndAt write FEndAt;
     property Into: TSQLElementList read FInto write FInto;
+    property Limit: TSQLExpression read FLimit write FLimit;
   end;
 
   { TSQLInsertStatement }
+
+  { TSQLCaseWhenNode }
+  TSQLCaseWhenNode = class(TSQLElement)
+  private
+    FWhenExpr: TSQLExpression;
+    FThenExpr: TSQLExpression;
+  public
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+    property WhenExpr: TSQLExpression read FWhenExpr write FWhenExpr;
+    property ThenExpr: TSQLExpression read FThenExpr write FThenExpr;
+  end;
+
+  { TSQLCaseExpression }
+  TSQLCaseExpression = class(TSQLExpression)
+  private
+    FCaseOperand: TSQLExpression; // Para cuando es: CASE campo WHEN ...
+    FWhenList: TSQLElementList;
+    FElseExpr: TSQLExpression;
+  public
+    constructor Create(AParent: TSQLElement); override;
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+    property CaseOperand: TSQLExpression read FCaseOperand write FCaseOperand;
+    property WhenList: TSQLElementList read FWhenList;
+    property ElseExpr: TSQLExpression read FElseExpr write FElseExpr;
+  end;
 
   { TSQLTableDMLStatement }
 
@@ -2233,6 +2261,7 @@ begin
   FreeAndNil(FForUpdate);
   FreeAndNil(FTN);
   FreeAndNil(FInto);
+  FreeAndNil(FLimit);
   inherited Destroy;
 end;
 
@@ -2323,6 +2352,7 @@ begin
     (sfoIndentPlan in Options));
   AddList('ORDER BY', OrderBy, (sfoOneOrderByFieldPerLine in Options),
     (sfoIndentOrderByFields in Options));
+  AddExpression('LIMIT', Limit, False, False);
 end;
 
 { TSQLInsertStatement }
@@ -5158,6 +5188,55 @@ function TSQLSelectAsterisk.GetAsSQL(Options: TSQLFormatOptions;
   AIndent: Integer = 0): TSQLStringType;
 begin
   Result := '*';
+end;
+
+{ TSQLCaseWhenNode }
+
+destructor TSQLCaseWhenNode.Destroy;
+begin
+  FreeAndNil(FWhenExpr);
+  FreeAndNil(FThenExpr);
+  inherited Destroy;
+end;
+
+function TSQLCaseWhenNode.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer): TSQLStringType;
+begin
+  Result := SQLKeyWord('WHEN ', Options) + FWhenExpr.GetAsSQL(Options, AIndent) +
+            SQLKeyWord(' THEN ', Options) + FThenExpr.GetAsSQL(Options, AIndent);
+end;
+
+{ TSQLCaseExpression }
+
+constructor TSQLCaseExpression.Create(AParent: TSQLElement);
+begin
+  inherited Create(AParent);
+  FWhenList := TSQLElementList.Create(True);
+end;
+
+destructor TSQLCaseExpression.Destroy;
+begin
+  FreeAndNil(FCaseOperand);
+  FreeAndNil(FWhenList);
+  FreeAndNil(FElseExpr);
+  inherited Destroy;
+end;
+
+function TSQLCaseExpression.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer): TSQLStringType;
+var
+  I: Integer;
+begin
+  Result := SQLKeyWord('CASE', Options);
+
+  if Assigned(FCaseOperand) then
+    Result := Result + ' ' + FCaseOperand.GetAsSQL(Options, AIndent);
+
+  for I := 0 to FWhenList.Count - 1 do
+    Result := Result + ' ' + FWhenList[I].GetAsSQL(Options, AIndent);
+
+  if Assigned(FElseExpr) then
+    Result := Result + SQLKeyWord(' ELSE ', Options) + FElseExpr.GetAsSQL(Options, AIndent);
+
+  Result := Result + SQLKeyWord(' END', Options);
 end;
 
 end.

@@ -61,8 +61,8 @@ end;
 procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
   inherited;
-  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
-                       DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+//  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
+//                       DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString;
   (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1StatusChange(nil, [scAll]);
 end;
 
@@ -99,8 +99,8 @@ procedure TdmGeneradorProcesos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   GetCodigoAutoGeneradorProcesos;
-  DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString :=
-     (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text;
+//  DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString :=
+//     (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text;
 end;
 
 initialization
