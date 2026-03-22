@@ -118,7 +118,7 @@ begin
     1062: sMensaje := 'Ya existe un registro con ese valor (entrada duplicada).';
     1048,
     1364: sMensaje := 'Hay campos obligatorios sin rellenar.';
-    1054: sMensaje := 'Campo desconocido en la consulta SQL.';
+    1054: sMensaje := 'Campo desconocido en la consulta SQL: ' + E.Message;
     1146: sMensaje := 'La tabla consultada no existe en la base de datos.';
     1142,
     1143: sMensaje := 'No tiene permisos suficientes para realizar esta acción en la base de datos.';
