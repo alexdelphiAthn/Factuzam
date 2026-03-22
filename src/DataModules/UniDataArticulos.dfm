@@ -667,54 +667,6 @@ inherited dmArticulos: TdmArticulos
     Left = 144
     Top = 296
   end
-  object unqryVariacionesSlot: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'select *'
-      'from vi_articulos_conjuntos_slots')
-    MasterSource = frmMtoArticulos.dsTablaG
-    MasterFields = 'CODIGO_ARTICULO'
-    DetailFields = 'CODIGO_ARTICULO_ACA'
-    Active = True
-    Left = 600
-    Top = 176
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'CODIGO_ARTICULO'
-        ParamType = ptInput
-        Value = 'ZAP-OXFORD'
-      end>
-  end
-  object dsVariacionesSlot: TDataSource
-    DataSet = unqryVariacionesSlot
-    Left = 600
-    Top = 264
-  end
-  object unqryPropiedadesSlot: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'select *'
-      'from vi_articulos_propiedades_slots')
-    MasterSource = frmMtoArticulos.dsTablaG
-    MasterFields = 'CODIGO_ARTICULO'
-    DetailFields = 'CODIGO_ARTICULO_AP'
-    Active = True
-    Left = 728
-    Top = 176
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'CODIGO_ARTICULO'
-        ParamType = ptInput
-        Value = 'ZAP-OXFORD'
-      end>
-  end
-  object dsPropiedadesSlot: TDataSource
-    DataSet = unqryPropiedadesSlot
-    Left = 728
-    Top = 264
-  end
   object unqryStockArticulos: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
@@ -747,8 +699,8 @@ inherited dmArticulos: TdmArticulos
     DetailFields = 'CODIGO_ARTICULO_MOV'
     ReadOnly = True
     Active = True
-    Left = 1016
-    Top = 176
+    Left = 744
+    Top = 184
     ParamData = <
       item
         DataType = ftWideString
@@ -759,7 +711,7 @@ inherited dmArticulos: TdmArticulos
   end
   object dsMovimientosArticulos: TDataSource
     DataSet = unqryMovimientosArticulos
-    Left = 1016
-    Top = 256
+    Left = 744
+    Top = 264
   end
 end

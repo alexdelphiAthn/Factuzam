@@ -35,10 +35,6 @@ type
     dsVariaciones: TDataSource;
     unqryVariacionesArticulos: TUniQuery;
     dsVariacionesArticulos: TDataSource;
-    unqryVariacionesSlot: TUniQuery;
-    dsVariacionesSlot: TDataSource;
-    unqryPropiedadesSlot: TUniQuery;
-    dsPropiedadesSlot: TDataSource;
     unqryStockArticulos: TUniQuery;
     dsStockArticulos: TDataSource;
     unqryMovimientosArticulos: TUniQuery;
