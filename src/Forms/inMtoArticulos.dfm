@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsPropiedades
+            Properties.ActivePage = cxTabSheet2
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
@@ -456,173 +456,23 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Style.TransparentBorder = False
                 TabOrder = 2
               end
-            end
-            object cxTabSheet2: TcxTabSheet
-              Caption = '&2_Variaciones'
-              ImageIndex = 5
-              object cxLabel1: TcxLabel
-                Left = 14
-                Top = 6
-                Caption = 'Tipo de Variaci'#243'n'
-                TabOrder = 0
-                Transparent = True
-              end
-              object cxDBLookupComboBox1: TcxDBLookupComboBox
-                Left = 48
-                Top = 31
-                DataBinding.DataField = 'TIPO_VARIACION_ARTICULO'
-                DataBinding.DataSource = dsTablaG
-                Properties.DropDownListStyle = lsFixedList
-                Properties.KeyFieldNames = 'CODIGO_VAR'
-                Properties.ListColumns = <
-                  item
-                    FieldName = 'NOMBRE_VAR'
-                  end
-                  item
-                    FieldName = 'CODIGO_VAR'
-                  end>
-                Properties.ListOptions.ShowHeader = False
-                Properties.ListSource = dmArticulos.dsVariaciones
-                TabOrder = 1
-                Width = 312
-              end
               object cxDBCheckBox2: TcxDBCheckBox
-                Left = 14
-                Top = 64
-                Caption = 'Trazabilidad/Serializaci'#243'n por unidad'
+                Left = 23
+                Top = 184
+                Caption = 
+                  'Trazabilidad/Serializaci'#243'n por unidad y/o LOTE/Fecha de Caducida' +
+                  'd'
                 DataBinding.DataField = 'ESTRAZABLE_ARTICULO'
                 DataBinding.DataSource = dsTablaG
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 Style.TransparentBorder = False
-                TabOrder = 2
-              end
-              object cxGrid3: TcxGrid
-                Left = 14
-                Top = 118
-                Width = 845
-                Height = 135
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
                 TabOrder = 3
-                object cxGridDBTableView2: TcxGridDBTableView
-                  OnDblClick = cxGrdDBTabPrinDblClick
-                  Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.First.Hint = 'Va al primer Registro'
-                  Navigator.Buttons.First.Visible = False
-                  Navigator.Buttons.PriorPage.Hint = 'Va a la p'#225'gina anterior'
-                  Navigator.Buttons.PriorPage.Visible = False
-                  Navigator.Buttons.Prior.Hint = 'Va al Registro Anterior'
-                  Navigator.Buttons.Prior.Visible = False
-                  Navigator.Buttons.Next.Hint = 'Va al siguiente Registro'
-                  Navigator.Buttons.Next.Visible = False
-                  Navigator.Buttons.NextPage.Hint = 'Va a la p'#225'gina siguiente'
-                  Navigator.Buttons.NextPage.Visible = False
-                  Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
-                  Navigator.Buttons.Last.Visible = False
-                  Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
-                  Navigator.Buttons.Insert.Visible = True
-                  Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
-                  Navigator.Buttons.Delete.Visible = True
-                  Navigator.Buttons.Edit.Enabled = False
-                  Navigator.Buttons.Edit.Hint = 'Edita registro Actual'
-                  Navigator.Buttons.Edit.Visible = False
-                  Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
-                  Navigator.Buttons.Post.Visible = True
-                  Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
-                  Navigator.Buttons.Cancel.Visible = True
-                  Navigator.Buttons.Refresh.Hint = 'Refresca Datos Activos'
-                  Navigator.Buttons.SaveBookmark.Enabled = False
-                  Navigator.Buttons.SaveBookmark.Hint = 'Marca Registro Actual'
-                  Navigator.Buttons.SaveBookmark.Visible = False
-                  Navigator.Buttons.GotoBookmark.Enabled = False
-                  Navigator.Buttons.GotoBookmark.Hint = 'Va al registro Marcado'
-                  Navigator.Buttons.GotoBookmark.Visible = False
-                  Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
-                  Navigator.Visible = True
-                  DataController.DataSource = dmArticulos.dsVariacionesSlot
-                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.FooterSummaryItems = <
-                    item
-                      Format = '#.##'
-                      Kind = skSum
-                    end
-                    item
-                      Format = '##,##.00 '#8364
-                      Kind = skSum
-                    end>
-                  OptionsBehavior.AlwaysShowEditor = True
-                  OptionsBehavior.GoToNextCellOnEnter = True
-                  OptionsBehavior.IncSearch = True
-                  OptionsCustomize.ColumnFiltering = False
-                  OptionsCustomize.ColumnGrouping = False
-                  OptionsCustomize.ColumnHidingOnGrouping = False
-                  OptionsCustomize.ColumnHorzSizing = False
-                  OptionsCustomize.ColumnMoving = False
-                  OptionsCustomize.ColumnSorting = False
-                  OptionsData.CancelOnExit = False
-                  OptionsData.Deleting = False
-                  OptionsData.DeletingConfirmation = False
-                  OptionsData.Editing = False
-                  OptionsData.Inserting = False
-                  OptionsView.GroupByBox = False
-                  OptionsView.Header = False
-                  OptionsView.Indicator = True
-                  object cxGridDBTableView2NOMBRE_VARIACION: TcxGridDBColumn
-                    DataBinding.FieldName = 'NOMBRE_VARIACION'
-                    Visible = False
-                    Width = 181
-                  end
-                  object cxGridDBTableView2NOMBRE_ATRIBUTO: TcxGridDBColumn
-                    DataBinding.FieldName = 'NOMBRE_ATRIBUTO'
-                    Width = 171
-                  end
-                  object cxGridDBTableView2ID_CONJUNTO_ACA: TcxGridDBColumn
-                    DataBinding.FieldName = 'ID_CONJUNTO_ACA'
-                    PropertiesClassName = 'TcxLookupComboBoxProperties'
-                    Properties.ListColumns = <>
-                    Width = 144
-                  end
-                  object cxGridDBTableView2ID_ATRIBUTO_ACA: TcxGridDBColumn
-                    DataBinding.FieldName = 'ID_ATRIBUTO_ACA'
-                    Visible = False
-                  end
-                  object cxGridDBTableView2ES_GENERACION_AUTO: TcxGridDBColumn
-                    DataBinding.FieldName = 'ES_GENERACION_AUTO'
-                    Visible = False
-                    Width = 137
-                  end
-                  object cxGridDBTableView2NOMBRE_AC: TcxGridDBColumn
-                    DataBinding.FieldName = 'NOMBRE_AC'
-                    Visible = False
-                    Width = 153
-                  end
-                  object cxGridDBTableView2ID_VARIACION_AC: TcxGridDBColumn
-                    DataBinding.FieldName = 'ID_VARIACION_AC'
-                    Visible = False
-                  end
-                  object cxGridDBTableView2ID_ATRIBUTO_AC: TcxGridDBColumn
-                    DataBinding.FieldName = 'ID_ATRIBUTO_AC'
-                    Visible = False
-                  end
-                  object cxGridDBTableView2ORDEN_ATRIBUTO: TcxGridDBColumn
-                    DataBinding.FieldName = 'ORDEN_ATRIBUTO'
-                    Visible = False
-                  end
-                end
-                object cxGridLevel2: TcxGridLevel
-                  GridView = cxGridDBTableView2
-                end
               end
-              object cxLabel3: TcxLabel
-                Left = 14
-                Top = 93
-                Caption = 'Conjunto definitorio'
-                TabOrder = 4
-                Transparent = True
-              end
+            end
+            object cxTabSheet2: TcxTabSheet
+              Caption = '&2_Variaciones'
+              ImageIndex = 5
             end
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
