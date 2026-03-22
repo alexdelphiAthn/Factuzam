@@ -119,7 +119,9 @@ uses
   ScriptWriters in 'src\Lib\backup\ScriptWriters.pas',
   inLibEAN13 in 'src\Lib\inLibEAN13.pas',
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  inLibArticulosPropiedades in 'src\Lib\inLibArticulosPropiedades.pas',
+  uGenericIfThen in 'src\Lib\uGenericIfThen.pas';
 
 var
   frmLogon: TfrmLogon;
