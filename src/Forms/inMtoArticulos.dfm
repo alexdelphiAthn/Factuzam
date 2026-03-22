@@ -499,7 +499,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrid3: TcxGrid
                 Left = 14
                 Top = 118
-                Width = 797
+                Width = 845
                 Height = 135
                 Margins.Left = 4
                 Margins.Top = 4
@@ -615,16 +615,27 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   GridView = cxGridDBTableView2
                 end
               end
+              object cxLabel3: TcxLabel
+                Left = 14
+                Top = 93
+                Caption = 'Conjunto definitorio'
+                TabOrder = 4
+                Transparent = True
+              end
+            end
+            object tsPropiedades: TcxTabSheet
+              Caption = '&3_Propiedades'
+              ImageIndex = 9
               object cxGrid4: TcxGrid
                 Left = 14
-                Top = 286
-                Width = 797
-                Height = 131
+                Top = 54
+                Width = 923
+                Height = 339
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                TabOrder = 4
+                TabOrder = 0
                 object cxGridDBTableView3: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -725,23 +736,16 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   GridView = cxGridDBTableView3
                 end
               end
-              object cxLabel3: TcxLabel
-                Left = 14
-                Top = 93
-                Caption = 'Conjunto definitorio'
-                TabOrder = 5
-                Transparent = True
-              end
               object cxLabel4: TcxLabel
-                Left = 14
-                Top = 260
+                Left = 21
+                Top = 24
                 Caption = 'Propiedades informativas'
-                TabOrder = 6
+                TabOrder = 1
                 Transparent = True
               end
             end
             object tsSKUS: TcxTabSheet
-              Caption = '&3_SKUS'
+              Caption = '&4_SKUS'
               ImageIndex = 6
               object Panel1: TPanel
                 Left = 940
@@ -903,7 +907,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsTarifas: TcxTabSheet
-              Caption = '&3_Tarifas'
+              Caption = '&5_Tarifas'
               ImageIndex = 1
               object cxgrdTarifas: TcxGrid
                 Left = 0
@@ -1160,7 +1164,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsProveedores: TcxTabSheet
-              Caption = '&4_Proveedores'
+              Caption = '&6_Proveedores'
               ImageIndex = 2
               object cxgrdProveedores: TcxGrid
                 Left = 0
@@ -1328,7 +1332,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsLineasFactura: TcxTabSheet
-              Caption = '&5_Lineas de Venta - '
+              Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
               object cxgrdLinFac: TcxGrid
                 Left = 0
@@ -1548,7 +1552,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object cxTabSheet3: TcxTabSheet
-              Caption = '&6_Stock'
+              Caption = '&8_Stock'
               ImageIndex = 7
               object cxGrid5: TcxGrid
                 Left = 0
@@ -1697,7 +1701,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsMovimientos: TcxTabSheet
-              Caption = '&7_Movimientos'
+              Caption = '&9_Movimientos'
               ImageIndex = 8
               object cxGrid6: TcxGrid
                 Left = 0
@@ -1982,7 +1986,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsOtros: TcxTabSheet
-              Caption = '&8_Otros'
+              Caption = '&0_Otros'
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
