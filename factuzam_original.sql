@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 22/03/2026 10:04:12
+-- Backup generado: 22/03/2026 14:02:17
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1198,7 +1198,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 34, 3, 'S', 'S', '2026-03-22 09:05:22', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 35, 3, 'S', 'S', '2026-03-22 13:33:35', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -3199,8 +3199,28 @@ from (((fza_facturas
        left join fza_empresas on(CODIGO_EMPRESA_FACTURA = CODIGO_EMPRESA)) 
        left join fza_clientes on(CODIGO_CLIENTE_FACTURA = CODIGO_CLIENTE)) 
 order by FECHA_FACTURA desc;', '2026-03-22 09:00:22', '2026-03-22 09:00:22', 'Administrador', 'Administrador'),
-  ('033', 'Modificar vi_facturas_print', 'DROP VIEW vi_facturas_print;', '2026-03-22 09:05:22', '2026-03-22 09:05:22', 'Administrador', 'Administrador');
--- 31 registros exportados
+  ('033', 'Modificar vi_facturas_print', 'DROP VIEW vi_facturas_print;', '2026-03-22 09:05:22', '2026-03-22 09:05:22', 'Administrador', 'Administrador'),
+  ('034', NULL, 'CREATE OR REPLACE VIEW vi_movimientos AS
+SELECT 
+    m.*, 
+    ao.NOMBRE_ALMACEN_ALM AS NOMBRE_ALMACEN_ORIGEN,
+    ad.NOMBRE_ALMACEN_ALM AS NOMBRE_ALMACEN_DESTINO,
+    td.DESCRIPCION_TIPODOCUMENTO,
+    c.RAZONSOCIAL_CLIENTE,
+    p.RAZONSOCIAL_PROVEEDOR
+FROM 
+    fza_movimientos_almacen m
+LEFT JOIN 
+    fza_almacenes ao ON m.CODIGO_ALMACEN_MOV = ao.CODIGO_ALMACEN_ALM
+LEFT JOIN 
+    fza_almacenes ad ON m.CODIGO_ALMACEN_CONTRA_MOV = ad.CODIGO_ALMACEN_ALM
+LEFT JOIN 
+    fza_tipos_documentos td ON m.TIPO_DOC_MOV = td.CODIGO_TIPODOCUMENTO
+LEFT JOIN 
+    fza_clientes c ON m.CODIGO_CLIENTE_MOV = c.CODIGO_CLIENTE
+LEFT JOIN 
+    fza_proveedores p ON m.CODIGO_PROVEEDOR_MOV = p.CODIGO_PROVEEDOR ORDER BY FECHA_MOV, NUMERO_MOV;', '2026-03-22 13:34:44', '2026-03-22 13:33:35', 'Administrador', 'Administrador');
+-- 32 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3417,17 +3437,18 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (101, 'vi_ivas_empresa', '2'),
   (102, 'vi_ivas_grupos', '2'),
   (103, 'vi_ivas_zonas', '2'),
-  (104, 'vi_paises', '2'),
-  (105, 'vi_proveedores', '2'),
-  (106, 'vi_proveedores_articulos', '2'),
-  (107, 'vi_proveedores_busquedas', '2'),
-  (108, 'vi_recibos', '2'),
-  (109, 'vi_tarifas', '2'),
-  (110, 'vi_usuarios', '2'),
-  (111, 'vi_usuarios_grupos', '2'),
-  (112, 'vi_usuarios_perfiles', '2'),
-  (113, 'vi_variaciones', '2'),
-  (114, 'v_articulos_stock_barras', '2'),
+  (104, 'vi_movimientos', '2'),
+  (105, 'vi_paises', '2'),
+  (106, 'vi_proveedores', '2'),
+  (107, 'vi_proveedores_articulos', '2'),
+  (108, 'vi_proveedores_busquedas', '2'),
+  (109, 'vi_recibos', '2'),
+  (110, 'vi_tarifas', '2'),
+  (111, 'vi_usuarios', '2'),
+  (112, 'vi_usuarios_grupos', '2'),
+  (113, 'vi_usuarios_perfiles', '2'),
+  (114, 'vi_variaciones', '2'),
+  (115, 'v_articulos_stock_barras', '2'),
   (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
   (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
@@ -3471,7 +3492,7 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (170, 'SP_RECALCULAR_PMP_SKU', '3'),
   (171, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 152 registros exportados
+-- 153 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -4201,8 +4222,11 @@ CREATE TABLE `fza_tipos_documentos` (
 
 -- Datos de fza_tipos_documentos
 INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPODOCUMENTO`, `DESCRIPCION_TIPODOCUMENTO`, `TABLAORIGEN_TIPODOCUMENTO`) VALUES
+  ('AE', 'ALBARÁN DE ENTRADA', 'fza_albaran_compra'),
+  ('AL', 'VENTA PRÉSTAMO', 'fza_caja_operaciones'),
   ('AO', 'ORDEN ARTICULOS', 'fza_articulos'),
   ('AR', 'ARTICULOS', 'fza_articulos'),
+  ('AT', 'TRASPASOS EMPRESA', 'fza_caja_operaciones'),
   ('CL', 'CLIENTES', 'fza_clientes'),
   ('CO', 'ORDEN CLIENTES', 'fza_clientes'),
   ('EM', 'EMPRESAS', 'fza_empresas'),
@@ -4214,12 +4238,15 @@ INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPODOCUMENTO`, `DESCRIPCION_TIPODOC
   ('GO', 'ORDEN DE FORMAS DE PAGO', 'fza_formas_pago'),
   ('GP', 'GENERADOR DE PROCESOS', 'fza_generadorprocesos'),
   ('IG', 'ZONAS IVA', 'fza_iva_grupos'),
+  ('IN', 'INVENTARIOS', 'fza_inventarios'),
   ('IV', 'IVAS', 'fza_ivas'),
   ('PG', 'FORMAS DE PAGO', 'fza_formas_pago'),
   ('PO', 'ORDEN PROVEEDORES', 'fza_proveedores'),
   ('PV', 'PROVEEDORES', 'fza_proveedores'),
-  ('RT', 'RETENCIONES POR EMPRESA', 'fza_empresas_retenciones');
--- 18 registros exportados
+  ('RT', 'RETENCIONES POR EMPRESA', 'fza_empresas_retenciones'),
+  ('TR', 'TRASPASOS ALMACÉN', 'fza_caja_operaciones'),
+  ('VE', 'VENTAS CONTADO', 'fza_caja_operaciones');
+-- 24 registros exportados
 
 
 -- Tabla: fza_usuarios
@@ -4245,7 +4272,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-22 10:03:00', '2026-03-22 10:03:00', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-22 14:02:05', '2026-03-22 14:02:05', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5866,6 +5893,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_ivas_grupos` AS select `fza_ivas_grupos`.`G
 -- Vista: vi_ivas_zonas
 DROP VIEW IF EXISTS `vi_ivas_zonas`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_ivas_zonas` AS select `fza_ivas_zonas`.`CODIGO_ZONA_IVA` AS `CODIGO_ZONA_IVA`,`fza_ivas_zonas`.`DESCRIPCION_ZONA_IVA` AS `DESCRIPCION_ZONA_IVA`,`fza_ivas_zonas`.`ESDEFAULT_ZONA_IVA` AS `ESDEFAULT_ZONA_IVA` from `fza_ivas_zonas`;
+
+-- Vista: vi_movimientos
+DROP VIEW IF EXISTS `vi_movimientos`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_movimientos` AS select `m`.`NUMERO_MOV` AS `NUMERO_MOV`,`m`.`TIPO_DOC_MOV` AS `TIPO_DOC_MOV`,`m`.`SERIE_DOC_MOV` AS `SERIE_DOC_MOV`,`m`.`NRO_DOC_MOV` AS `NRO_DOC_MOV`,`m`.`LINEA_MOV` AS `LINEA_MOV`,`m`.`CODIGO_EMPRESA_MOV` AS `CODIGO_EMPRESA_MOV`,`m`.`CODIGO_ALMACEN_MOV` AS `CODIGO_ALMACEN_MOV`,`m`.`FECHA_MOV` AS `FECHA_MOV`,`m`.`CODIGO_ARTICULO_MOV` AS `CODIGO_ARTICULO_MOV`,`m`.`CODIGO_UNIDAD_MOV` AS `CODIGO_UNIDAD_MOV`,`m`.`DESCRIPCION_ARTICULO_MOV` AS `DESCRIPCION_ARTICULO_MOV`,`m`.`TIPO_MOVIMIENTO_MOV` AS `TIPO_MOVIMIENTO_MOV`,`m`.`CANTIDAD_MOV` AS `CANTIDAD_MOV`,`m`.`PRECIO_COSTE_UNITARIO_MOV` AS `PRECIO_COSTE_UNITARIO_MOV`,`m`.`TOTAL_COSTE_MOV` AS `TOTAL_COSTE_MOV`,`m`.`PRECIO_MEDIO_MOV` AS `PRECIO_MEDIO_MOV`,`m`.`CODIGO_ALMACEN_CONTRA_MOV` AS `CODIGO_ALMACEN_CONTRA_MOV`,`m`.`CODIGO_CLIENTE_MOV` AS `CODIGO_CLIENTE_MOV`,`m`.`CODIGO_PROVEEDOR_MOV` AS `CODIGO_PROVEEDOR_MOV`,`m`.`ESACTIVO_MOV` AS `ESACTIVO_MOV`,`m`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`m`.`INSTANTEALTA` AS `INSTANTEALTA`,`m`.`USUARIOALTA` AS `USUARIOALTA`,`m`.`USUARIOMODIF` AS `USUARIOMODIF`,`m`.`TIPO_DOC_REF_MOV` AS `TIPO_DOC_REF_MOV`,`m`.`SERIE_DOC_REF_MOV` AS `SERIE_DOC_REF_MOV`,`m`.`NRO_DOC_REF_MOV` AS `NRO_DOC_REF_MOV`,`m`.`LINEA_REF_MOV` AS `LINEA_REF_MOV`,`m`.`LOTE_MOV` AS `LOTE_MOV`,`m`.`FECHA_CADUCIDAD_MOV` AS `FECHA_CADUCIDAD_MOV`,`ao`.`NOMBRE_ALMACEN_ALM` AS `NOMBRE_ALMACEN_ORIGEN`,`ad`.`NOMBRE_ALMACEN_ALM` AS `NOMBRE_ALMACEN_DESTINO`,`td`.`DESCRIPCION_TIPODOCUMENTO` AS `DESCRIPCION_TIPODOCUMENTO`,`c`.`RAZONSOCIAL_CLIENTE` AS `RAZONSOCIAL_CLIENTE`,`p`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR` from (((((`fza_movimientos_almacen` `m` left join `fza_almacenes` `ao` on(`m`.`CODIGO_ALMACEN_MOV` = `ao`.`CODIGO_ALMACEN_ALM`)) left join `fza_almacenes` `ad` on(`m`.`CODIGO_ALMACEN_CONTRA_MOV` = `ad`.`CODIGO_ALMACEN_ALM`)) left join `fza_tipos_documentos` `td` on(`m`.`TIPO_DOC_MOV` = `td`.`CODIGO_TIPODOCUMENTO`)) left join `fza_clientes` `c` on(`m`.`CODIGO_CLIENTE_MOV` = `c`.`CODIGO_CLIENTE`)) left join `fza_proveedores` `p` on(`m`.`CODIGO_PROVEEDOR_MOV` = `p`.`CODIGO_PROVEEDOR`)) order by `m`.`FECHA_MOV`,`m`.`NUMERO_MOV`;
 
 -- Vista: vi_paises
 DROP VIEW IF EXISTS `vi_paises`;
@@ -9362,4 +9393,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 22/03/2026 10:04:12
+-- Backup completado: 22/03/2026 14:02:17

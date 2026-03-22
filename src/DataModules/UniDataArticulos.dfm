@@ -314,11 +314,20 @@ inherited dmArticulos: TdmArticulos
       'INNER JOIN vi_fac_busquedas f'
       'ON l.NRO_FACTURA_LINEA = f.NRO_FACTURA'
       'AND l.SERIE_FACTURA_LINEA = f.SERIE_FACTURA')
+    MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ARTICULO'
     DetailFields = 'CODIGO_ARTICULO_FACTURA_LINEA'
+    Active = True
     BeforePost = unqryPerfilesBeforePost
     Left = 656
     Top = 16
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
   end
   object dsLinFacturasArticulos: TDataSource
     DataSet = unqryLinFacturasArticulos
@@ -726,6 +735,31 @@ inherited dmArticulos: TdmArticulos
   object dsStockArticulos: TDataSource
     DataSet = unqryStockArticulos
     Left = 888
+    Top = 256
+  end
+  object unqryMovimientosArticulos: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM '
+      'vi_movimientos')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ARTICULO'
+    DetailFields = 'CODIGO_ARTICULO_MOV'
+    ReadOnly = True
+    Active = True
+    Left = 1016
+    Top = 176
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
+  end
+  object dsMovimientosArticulos: TDataSource
+    DataSet = unqryMovimientosArticulos
+    Left = 1016
     Top = 256
   end
 end

@@ -41,6 +41,8 @@ type
     dsPropiedadesSlot: TDataSource;
     unqryStockArticulos: TUniQuery;
     dsStockArticulos: TDataSource;
+    unqryMovimientosArticulos: TUniQuery;
+    dsMovimientosArticulos: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
@@ -119,26 +121,17 @@ begin
   inherited;
   if DataSet.ControlsDisabled then Exit;
   if not DataSet.Active or DataSet.IsEmpty then Exit;
-
-  // 🛑 EL TRUCO ANTI-BUCLE: Desconectamos el evento de la tabla Maestra temporalmente
   DataSet.AfterScroll := nil;
-
   unqryStockArticulos.Close;
   unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString :=
                             unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
-
   if unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString <> '' then
   begin
     unqryStockArticulos.Open;
-
-    // --- MAGIA DE DEVEXPRESS ---
     tvArticulosStock :=  (GetOwnerForm<TfrmMtoArticulos>).tvStock;
     tvArticulosStock.BeginUpdate;
      try
-    // 1. Borramos las columnas de la consulta anterior (ej: S, M, L)
      tvArticulosStock.ClearItems;
-
-    // 2. Le decimos al DataController que lea el UniQuery y cree las nuevas (ej: 38, 39, 40)
      tvArticulosStock.DataController.CreateAllItems;
 
     // 3. Aplicamos el BestFit a todas las columnas para que se ajusten al texto perfecto
@@ -146,15 +139,14 @@ begin
      finally
       tvArticulosStock.EndUpdate;
      end;
-     // puede recorrer los registros sin dar el error "RecordIndex out of range".
-  if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
-  begin
-    for i := 0 to tvArticulosStock.ColumnCount - 1 do
-    begin
-      tvArticulosStock.Columns[i].ApplyBestFit;
-    end;
-  end;
-  DataSet.AfterScroll := unqryStockArticulosAfterScroll;
+     if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
+     begin
+       for i := 0 to tvArticulosStock.ColumnCount - 1 do
+       begin
+         tvArticulosStock.Columns[i].ApplyBestFit;
+       end;
+     end;
+     DataSet.AfterScroll := unqryStockArticulosAfterScroll;
     // Opcional: Si además quieres que las columnas se estiren para ocupar todo el ancho
     // visual del grid y no quede espacio en blanco a la derecha:
     // cxGrid1DBTableView1.OptionsView.ColumnAutoWidth := True;
@@ -232,6 +224,7 @@ begin
   unqryTarifas.Connection := oConn;
   unqryVariacionesArticulos.Connection := oConn;
   unqryStockArticulos.Connection := oConn;
+  unqryMovimientosArticulos.Connection := oConn;
 //  unqryStockArticulos.MasterSource := (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryVariacionesArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
@@ -241,6 +234,8 @@ begin
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryProveedoresArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  unqryMovimientosArticulos.MasterSource :=
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryTiposIVA.Open;
   unqryFamiliaArticulos.Open;
   unqryTarifasArticulos.Open;
@@ -249,6 +244,7 @@ begin
   unqryVariaciones.Open;
   unqryVariacionesArticulos.Open;
   unqryStockArticulos.Open;
+  unqryMovimientosArticulos.Open;
 end;
 
 procedure TdmArticulos.FillTarifas(lst: TcxListView);
