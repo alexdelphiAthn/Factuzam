@@ -27,12 +27,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
         ExplicitTop = 30
-        ExplicitWidth = 848
+        ExplicitWidth = 1069
         ExplicitHeight = 637
         inherited cxGrdPrincipal: TcxGrid
           Width = 1069
           Height = 637
-          ExplicitWidth = 848
+          ExplicitWidth = 1069
           ExplicitHeight = 637
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
@@ -262,7 +262,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 348
                 Align = alClient
                 TabOrder = 1
-                ExplicitWidth = 840
                 object pnlRightVariacion: TPanel
                   Left = 852
                   Top = 1
@@ -270,7 +269,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Height = 346
                   Align = alRight
                   TabOrder = 1
-                  ExplicitLeft = 631
                 end
                 object pnlBodyVariacion: TPanel
                   Left = 1
@@ -279,7 +277,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Height = 346
                   Align = alClient
                   TabOrder = 0
-                  ExplicitWidth = 630
                   object cxGrid1: TcxGrid
                     Left = 1
                     Top = 1
@@ -291,7 +288,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Margins.Bottom = 4
                     Align = alClient
                     TabOrder = 0
-                    ExplicitWidth = 628
                     object tvVariaciones: TcxGridDBTableView
                       OnDblClick = cxGrdDBTabPrinDblClick
                       Navigator.Buttons.ConfirmDelete = True
@@ -747,10 +743,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSKUS: TcxTabSheet
               Caption = '&3_SKUS'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 840
-              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 940
                 Top = 0
@@ -758,7 +750,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 421
                 Align = alRight
                 TabOrder = 0
-                ExplicitLeft = 719
                 object cxButton2: TcxButton
                   Left = 0
                   Top = 165
@@ -807,7 +798,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 1
-                ExplicitWidth = 719
                 object tvSkus: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -915,10 +905,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&3_Tarifas'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 840
-              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -930,7 +916,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 724
                 object tvTarifas: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1145,7 +1130,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
-                ExplicitLeft = 724
                 object btnIraTarifa: TcxButton
                   Left = 6
                   Top = 16
@@ -1178,10 +1162,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&4_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 840
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1193,7 +1173,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 719
                 object tvProveedores: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1319,7 +1298,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 421
                 Align = alRight
                 TabOrder = 1
-                ExplicitLeft = 719
                 object btnIraProveedor: TcxButton
                   Left = 5
                   Top = 61
@@ -1352,10 +1330,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&5_Lineas de Venta - '
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 840
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1367,7 +1341,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 727
                 object tvLinFac: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1403,6 +1376,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
+                  DataController.DataSource = dmArticulos.dsLinFacturasArticulos
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   DataController.Summary.FooterSummaryItems = <
                     item
@@ -1536,7 +1510,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 421
                 Align = alRight
                 TabOrder = 1
-                ExplicitLeft = 727
                 object btnIraFactura: TcxButton
                   Left = 6
                   Top = 16
@@ -1577,10 +1550,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&6_Stock'
               ImageIndex = 7
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0
@@ -1592,7 +1561,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 719
                 object tvStock: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1681,7 +1649,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 421
                 Align = alRight
                 TabOrder = 1
-                ExplicitLeft = 719
                 object cxButton6: TcxButton
                   Left = 7
                   Top = 165
@@ -1732,10 +1699,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&7_Movimientos'
               ImageIndex = 8
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid6: TcxGrid
                 Left = 0
                 Top = 0
@@ -1747,8 +1710,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 719
-                object cxGridDBTableView1: TcxGridDBTableView
+                object tvMovimientos: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
@@ -1783,7 +1745,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
-                  DataController.DataSource = dmArticulos.dsVariacionesArticulos
+                  DataController.DataSource = dmArticulos.dsMovimientosArticulos
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   DataController.Summary.FooterSummaryItems = <
                     item
@@ -1806,49 +1768,163 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
-                  object cxGridDBColumn19: TcxGridDBColumn
-                    Caption = 'C'#243'digo SKU'
-                    DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
-                    Width = 328
+                  object tvMovimientosCODIGO_UNIDAD_MOV: TcxGridDBColumn
+                    Caption = 'Sku'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_MOV'
+                    Width = 228
                   end
-                  object cxGridDBColumn20: TcxGridDBColumn
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_SKU'
+                  object tvMovimientosCANTIDAD_MOV: TcxGridDBColumn
+                    Caption = 'Ctd'
+                    DataBinding.FieldName = 'CANTIDAD_MOV'
+                    Width = 50
+                  end
+                  object tvMovimientosCODIGO_EMPRESA_MOV: TcxGridDBColumn
+                    Caption = 'C'#243'd Empresa'
+                    DataBinding.FieldName = 'CODIGO_EMPRESA_MOV'
+                    Width = 121
+                  end
+                  object tvMovimientosCODIGO_ALMACEN_MOV: TcxGridDBColumn
+                    Caption = 'Alm Origen'
+                    DataBinding.FieldName = 'CODIGO_ALMACEN_MOV'
+                  end
+                  object tvMovimientosNUMERO_MOV: TcxGridDBColumn
+                    Caption = 'Nro. Mov'
+                    DataBinding.FieldName = 'NUMERO_MOV'
+                    Width = 92
+                  end
+                  object tvMovimientosTIPO_DOC_MOV: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO_DOC_MOV'
+                    Width = 44
+                  end
+                  object tvMovimientosTIPO_MOVIMIENTO_MOV: TcxGridDBColumn
+                    Caption = 'E/S'
+                    DataBinding.FieldName = 'TIPO_MOVIMIENTO_MOV'
+                    Width = 38
+                  end
+                  object tvMovimientosSERIE_DOC_MOV: TcxGridDBColumn
+                    Caption = 'Serie'
+                    DataBinding.FieldName = 'SERIE_DOC_MOV'
+                    Width = 54
+                  end
+                  object tvMovimientosNRO_DOC_MOV: TcxGridDBColumn
+                    Caption = 'Nro Doc'
+                    DataBinding.FieldName = 'NRO_DOC_MOV'
+                    Width = 83
+                  end
+                  object tvMovimientosLINEA_MOV: TcxGridDBColumn
+                    Caption = 'NroLinea'
+                    DataBinding.FieldName = 'LINEA_MOV'
+                    Width = 94
+                  end
+                  object tvMovimientosFECHA_MOV: TcxGridDBColumn
+                    Caption = 'Fecha Hora'
+                    DataBinding.FieldName = 'FECHA_MOV'
+                  end
+                  object tvMovimientosCODIGO_ARTICULO_MOV: TcxGridDBColumn
+                    Caption = 'C'#243'd Art.'
+                    DataBinding.FieldName = 'CODIGO_ARTICULO_MOV'
                     Visible = False
+                    Width = 114
                   end
-                  object cxGridDBColumn21: TcxGridDBColumn
+                  object tvMovimientosDESCRIPCION_ARTICULO_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_MOV'
+                    Width = 261
+                  end
+                  object tvMovimientosPRECIO_COSTE_UNITARIO_MOV: TcxGridDBColumn
+                    Caption = 'Coste Ud'
+                    DataBinding.FieldName = 'PRECIO_COSTE_UNITARIO_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Width = 82
+                  end
+                  object tvMovimientosTOTAL_COSTE_MOV: TcxGridDBColumn
+                    Caption = 'Total Coste'
+                    DataBinding.FieldName = 'TOTAL_COSTE_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                  end
+                  object tvMovimientosPRECIO_MEDIO_MOV: TcxGridDBColumn
+                    Caption = 'Precio MP'
+                    DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+                  end
+                  object tvMovimientosCODIGO_ALMACEN_CONTRA_MOV: TcxGridDBColumn
+                    Caption = 'Almac'#233'n Dest'
+                    DataBinding.FieldName = 'CODIGO_ALMACEN_CONTRA_MOV'
+                  end
+                  object tvMovimientosCODIGO_CLIENTE_MOV: TcxGridDBColumn
+                    Caption = 'C'#243'digo Cliente'
+                    DataBinding.FieldName = 'CODIGO_CLIENTE_MOV'
+                    Width = 132
+                  end
+                  object tvMovimientosCODIGO_PROVEEDOR_MOV: TcxGridDBColumn
+                    Caption = 'C'#243'digo Prov'
+                    DataBinding.FieldName = 'CODIGO_PROVEEDOR_MOV'
+                    Width = 114
+                  end
+                  object tvMovimientosESACTIVO_MOV: TcxGridDBColumn
                     Caption = 'Activo'
-                    DataBinding.FieldName = 'ESACTIVO_SKU'
-                    Width = 80
+                    DataBinding.FieldName = 'ESACTIVO_MOV'
+                    Width = 100
                   end
-                  object cxGridDBColumn22: TcxGridDBColumn
+                  object tvMovimientosINSTANTEMODIF: TcxGridDBColumn
                     DataBinding.FieldName = 'INSTANTEMODIF'
                     Visible = False
                   end
-                  object cxGridDBColumn23: TcxGridDBColumn
+                  object tvMovimientosINSTANTEALTA: TcxGridDBColumn
                     DataBinding.FieldName = 'INSTANTEALTA'
                     Visible = False
                   end
-                  object cxGridDBColumn24: TcxGridDBColumn
+                  object tvMovimientosUSUARIOALTA: TcxGridDBColumn
                     DataBinding.FieldName = 'USUARIOALTA'
                     Visible = False
                   end
-                  object cxGridDBColumn25: TcxGridDBColumn
+                  object tvMovimientosUSUARIOMODIF: TcxGridDBColumn
                     DataBinding.FieldName = 'USUARIOMODIF'
                     Visible = False
                   end
-                  object cxGridDBColumn26: TcxGridDBColumn
-                    Caption = 'C'#243'digo de Barras'
-                    DataBinding.FieldName = 'CODIGO_BARRAS_CB'
-                    Width = 194
+                  object tvMovimientosTIPO_DOC_REF_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPO_DOC_REF_MOV'
+                    Width = 183
                   end
-                  object cxGridDBColumn27: TcxGridDBColumn
-                    Caption = 'Stock Total'
-                    DataBinding.FieldName = 'STOCK_TOTAL'
-                    Width = 134
+                  object tvMovimientosSERIE_DOC_REF_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'SERIE_DOC_REF_MOV'
+                  end
+                  object tvMovimientosNRO_DOC_REF_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'NRO_DOC_REF_MOV'
+                  end
+                  object tvMovimientosLINEA_REF_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'LINEA_REF_MOV'
+                    Width = 148
+                  end
+                  object tvMovimientosLOTE_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'LOTE_MOV'
+                    Width = 96
+                  end
+                  object tvMovimientosFECHA_CADUCIDAD_MOV: TcxGridDBColumn
+                    DataBinding.FieldName = 'FECHA_CADUCIDAD_MOV'
+                  end
+                  object tvMovimientosNOMBRE_ALMACEN_ORIGEN: TcxGridDBColumn
+                    DataBinding.FieldName = 'NOMBRE_ALMACEN_ORIGEN'
+                    Width = 241
+                  end
+                  object tvMovimientosNOMBRE_ALMACEN_DESTINO: TcxGridDBColumn
+                    DataBinding.FieldName = 'NOMBRE_ALMACEN_DESTINO'
+                    Width = 250
+                  end
+                  object tvMovimientosDESCRIPCION_TIPODOCUMENTO: TcxGridDBColumn
+                    DataBinding.FieldName = 'DESCRIPCION_TIPODOCUMENTO'
+                    Width = 278
+                  end
+                  object tvMovimientosRAZONSOCIAL_CLIENTE: TcxGridDBColumn
+                    DataBinding.FieldName = 'RAZONSOCIAL_CLIENTE'
+                    Width = 223
+                  end
+                  object tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn
+                    DataBinding.FieldName = 'RAZONSOCIAL_PROVEEDOR'
+                    Width = 231
                   end
                 end
                 object cxGridLevel5: TcxGridLevel
-                  GridView = cxGridDBTableView1
+                  GridView = tvMovimientos
                 end
               end
               object Panel3: TPanel
@@ -1858,7 +1934,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 421
                 Align = alRight
                 TabOrder = 1
-                ExplicitLeft = 719
                 object cxButton11: TcxButton
                   Left = 7
                   Top = 165
@@ -2054,7 +2129,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -2072,12 +2146,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Width = 1069
           Height = 580
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 848
+          ExplicitWidth = 1069
           ExplicitHeight = 580
           inherited cxgrdPerfil: TcxGrid
             Width = 1069
             Height = 580
-            ExplicitWidth = 848
+            ExplicitWidth = 1069
             ExplicitHeight = 580
           end
         end
