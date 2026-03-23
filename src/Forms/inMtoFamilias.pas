@@ -214,6 +214,11 @@ begin
   begin
     dsTablaG.DataSet.Post;
   end;
+  if ( (dmmFamilias.unqryArticulosFamilias.State = dsInsert) or
+       (dmmFamilias.unqryArticulosFamilias.State = dsEdit) ) then
+  begin
+    dmmFamilias.unqryArticulosFamilias.Post;
+  end;
 end;
 
 procedure TfrmMtoFamilias.btnNuevaFamiliaClick(Sender: TObject);
@@ -226,16 +231,15 @@ begin
   end;
   dmmFamilias.unqryTablaG.Insert;
   pcPantalla.Properties.ActivePage := tsFicha;
-  tsFicha.SetFocus;
+//  tsFicha.SetFocus;
   ResetForm;
-  txtNOMBRE_FAMILIA.SetFocus;
+//  txtNOMBRE_FAMILIA.SetFocus;
 end;
 
 procedure TfrmMtoFamilias.CrearTablaPrincipal;
 begin
   inherited;
   dmmFamilias := tdmDataModule as tdmFamilias;
-
   tvArticulos.DataController.DataSource := dmmFamilias.dsArticulosFamilias;
   cbbFamilia.Properties.ListSource := dmmFamilias.dsSubfamilias;
   ResetForm;
@@ -256,7 +260,7 @@ end;
 procedure TfrmMtoFamilias.ResetForm;
 begin
   inherited;
-  pcDetail.ActivePage := tsMasDatos;
+  //pcDetail.ActivePage := tsMasDatos;
 end;
 
 initialization
