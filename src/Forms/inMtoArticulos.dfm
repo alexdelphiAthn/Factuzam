@@ -209,7 +209,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet1
+            Properties.ActivePage = tsVariaciones
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
