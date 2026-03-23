@@ -123,10 +123,6 @@ type
     tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn;
     tvAtributosES_REQUERIDO: TcxGridDBColumn;
     tvAtributosORDEN_MOSTRAR: TcxGridDBColumn;
-    Panel1: TPanel;
-    btnAddAtributo: TcxButton;
-    btnDelAtributo: TcxButton;
-    btnNuevaPropiedadGlobal: TcxButton;
     procedure btnGrabarClick(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actProveedoresExecute(Sender: TObject);

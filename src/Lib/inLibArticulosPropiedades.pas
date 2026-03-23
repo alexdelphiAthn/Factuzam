@@ -557,6 +557,8 @@ begin
   lbl.Top     := ATop + 4;
   lbl.Width   := ANCHO_LABEL;
   lbl.AutoSize:= True;
+  if S.EsRequerido then
+    S.NombrePropiedad := S.NombrePropiedad + '*';
   lbl.Caption := S.NombrePropiedad;
 
   cb := TcxComboBox.Create(FScrollBox);
@@ -599,6 +601,8 @@ begin
   lbl.Top      := ATop + 4;
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
+  if S.EsRequerido then
+    S.NombrePropiedad := S.NombrePropiedad + '*';
   lbl.Caption  := S.NombrePropiedad;
 
   ed := TcxTextEdit.Create(FScrollBox);
@@ -624,6 +628,8 @@ begin
   lbl.Top      := ATop + 4;
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
+  if S.EsRequerido then
+    S.NombrePropiedad := S.NombrePropiedad + '*';
   lbl.Caption  := S.NombrePropiedad;
 
   sp := TcxSpinEdit.Create(FScrollBox);
@@ -651,6 +657,8 @@ begin
   lbl.Top      := ATop + 4;
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
+  if S.EsRequerido then
+    S.NombrePropiedad := S.NombrePropiedad + '*';
   lbl.Caption  := S.NombrePropiedad;
 
   chk := TcxCheckBox.Create(FScrollBox);
@@ -826,7 +834,7 @@ begin
       if not TieneValor then
       begin
         Result := 'La propiedad "' + S.NombrePropiedad +
-                                          '" es obligatoria para esta familia.';
+                                       '" es obligatoria para esta familia.';
         Exit;
       end;
     end;
