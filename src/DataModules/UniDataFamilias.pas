@@ -12,7 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn;
+  Uni, inLibUser, UniDataConn, Windows, Dialogs, Variants;
 
 type
   TdmFamilias = class(TdmBase)
@@ -23,11 +23,16 @@ type
     dsSubFamilias: TDataSource;
     unqryFamiliasAtributos: TUniQuery;
     dsFamiliasAtributos: TDataSource;
+    unqryPropiedades: TUniQuery;
+    dsPropiedades: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryFamiliasAtributosAfterPost(DataSet: TDataSet);
+    procedure unqryFamiliasAtributosAfterInsert(DataSet: TDataSet);
+    procedure unqryFamiliasAtributosBeforePost(DataSet: TDataSet);
   private
-    { Private declarations }
+    function PropiedadExisteEnFamilia(sPropiedad, sFamilia:String):Boolean;
   public
     procedure GetCodigoAutoFamilia;
     //procedure GetCodigoAutoRetencion;
@@ -47,6 +52,50 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+procedure TdmFamilias.unqryFamiliasAtributosAfterInsert(DataSet: TDataSet);
+begin
+  inherited;
+  unqryFamiliasAtributos.FindField('ES_REQUERIDO').AsString := 'N';
+end;
+
+procedure TdmFamilias.unqryFamiliasAtributosAfterPost(DataSet: TDataSet);
+begin
+  inherited;
+  unqryFamiliasAtributos.Refresh;
+end;
+
+procedure TdmFamilias.unqryFamiliasAtributosBeforePost(DataSet: TDataSet);
+var
+  CampoPropiedad: TField;
+  DebeValidar: Boolean;
+begin
+  // Evitamos llamar a FindField varias veces guardándolo en una variable
+  CampoPropiedad := unqryFamiliasAtributos.FindField('CODIGO_PROPIEDAD');
+  DebeValidar := False;
+
+  // 1. Si es un registro nuevo, validamos siempre
+  if DataSet.State = dsInsert then
+    DebeValidar := True
+  // 2. Si estamos editando, validamos SOLO si el usuario modificó el campo
+  else if DataSet.State = dsEdit then
+  begin
+    // VarToStr previene errores si el OldValue era Null (requiere 'uses Variants')
+    if CampoPropiedad.AsString <> VarToStr(CampoPropiedad.OldValue) then
+      DebeValidar := True;
+  end;
+
+  // 3. Ejecutamos tu validación si se dio alguna de las dos condiciones
+  if DebeValidar then
+  begin
+    if PropiedadExisteEnFamilia(CampoPropiedad.AsString,
+                                unqryTablaG.FindField('CODIGO_FAMILIA').AsString) then
+    begin
+      ShowMessage('Propiedad Duplicada');
+      Abort;
+    end;
+  end;
+end;
+
 procedure TdmFamilias.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
@@ -59,6 +108,7 @@ end;
 procedure TdmFamilias.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  unqryPropiedades.Connection := oConn;
   unstrdprcContador.Connection := oConn;
   unqryArticulosFamilias.Connection := oConn;
   unqrySubFamilias.Connection := oConn;
@@ -66,7 +116,7 @@ begin
                                        (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
   unqryArticulosFamilias.Open;
   unqrySubFamilias.Open;
-
+  unqryPropiedades.Open;
 end;
 
 procedure TdmFamilias.GetCodigoAutoFamilia;
@@ -101,7 +151,25 @@ begin
                                                   ParamByName('pcont').AsString;
     end;
   end;
+end;
 
+function TdmFamilias.PropiedadExisteEnFamilia(sPropiedad,
+                                              sFamilia:String): Boolean;
+begin
+  var unqryFamProp:TUniQuery := TUniQuery.Create(nil);
+  try
+    unqryFamProp.Connection := oConn;
+    unqryFamProp.sql.Text := 'SELECT CODIGO_PROPIEDAD '+
+                             '  FROM fza_familias_atributos ' +
+                             ' WHERE CODIGO_FAMILIA = :CODIGO_FAMILIA ' +
+                             '   AND CODIGO_PROPIEDAD = :CODIGO_PROPIEDAD';
+    unqryFamProp.ParamByName('CODIGO_FAMILIA').AsString := sFamilia;
+    unqryFamProp.ParamByName('CODIGO_PROPIEDAD').AsString := sPropiedad;
+    unqryFamProp.Open;
+    Result := (unqryFamProp.RecordCount > 0);
+  finally
+    unqryFamProp.Free;
+  end;
 end;
 
 procedure TdmFamilias.unqryTablaGBeforePost(DataSet: TDataSet);

@@ -691,8 +691,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
-  if edtBusqGlobal.CanFocus then
-    edtBusqGlobal.SetFocus;
+//  if edtBusqGlobal.CanFocus then
+//    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);

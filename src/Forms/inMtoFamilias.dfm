@@ -174,6 +174,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Top = 111
               DataBinding.DataField = 'CODIGO_SUBFAMILIA'
               DataBinding.DataSource = dsTablaG
+              Properties.DropDownAutoSize = True
               Properties.KeyFieldNames = 'CODIGO_FAMILIA'
               Properties.ListColumns = <
                 item
@@ -457,8 +458,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitTop = 0
-                ExplicitHeight = 311
                 object tvAtributos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Visible = True
@@ -496,9 +495,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                     end>
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
-                  OptionsData.Deleting = False
-                  OptionsData.Editing = False
-                  OptionsData.Inserting = False
+                  OptionsData.Appending = True
                   OptionsSelection.InvertSelect = False
                   OptionsView.NoDataToDisplayInfoText = '<No hay datos a mostrar>'
                   OptionsView.Footer = True
@@ -511,6 +508,21 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   object tvAtributosCODIGO_PROPIEDAD: TcxGridDBColumn
                     Caption = 'Cod Propiedad'
                     DataBinding.FieldName = 'CODIGO_PROPIEDAD'
+                    PropertiesClassName = 'TcxLookupComboBoxProperties'
+                    Properties.DropDownAutoSize = True
+                    Properties.DropDownSizeable = True
+                    Properties.ImmediatePost = True
+                    Properties.KeyFieldNames = 'CODIGO_PROPIEDAD'
+                    Properties.ListColumns = <
+                      item
+                        FieldName = 'CODIGO_PROPIEDAD'
+                      end
+                      item
+                        FieldName = 'NOMBRE_PROPIEDAD'
+                      end>
+                    Properties.ListOptions.ShowHeader = False
+                    Properties.ListSource = dmFamilias.dsPropiedades
+                    Width = 130
                   end
                   object tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn
                     Caption = 'Nombre Propiedad'
@@ -795,9 +807,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           Width = 732
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 732
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 732
@@ -823,9 +832,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         Width = 740
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 740
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
       end
     end
   end
