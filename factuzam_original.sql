@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 22/03/2026 19:22:11
+-- Backup generado: 23/03/2026 8:21:39
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -126,7 +126,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:31', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
-  ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
+  ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC');
 -- 24 registros exportados
 
@@ -146,6 +146,12 @@ CREATE TABLE `fza_articulos_conjuntos_asign` (
   PRIMARY KEY (`CODIGO_ARTICULO_ACA`,`ID_CONJUNTO_ACA`)
 );
 ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_ATRIBUTO` (`CODIGO_ARTICULO_ACA`, `ID_ATRIBUTO_ACA`);
+
+-- Datos de fza_articulos_conjuntos_asign
+INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
+  ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador');
+-- 2 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -275,14 +281,15 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('ZAP-DEPOR', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-DEPOR', 'TIPO_SUELA', 47, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'ALTURA_TAC', NULL, '4', '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'ES_ECO', NULL, 'S', '2026-03-22 19:29:30', 'Administrador'),
   ('ZAP-OXFORD', 'GENERO', 29, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
-  ('ZAP-OXFORD', 'MARCA', 3, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-OXFORD', 'MARCA', 6, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'ORIGEN', NULL, 'Portugal', '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'TIPO_SUELA', 46, NULL, '2026-03-22 18:32:14', 'DEMO');
--- 87 registros exportados
+-- 88 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -1286,7 +1293,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 46, 3, 'S', 'S', '2026-03-22 18:38:10', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 47, 3, 'S', 'S', '2026-03-23 06:51:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -2834,8 +2841,49 @@ LEFT JOIN fza_proveedores
        ON fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR
 LEFT JOIN fza_ivas_tipos
        ON fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA
-ORDER BY fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-22 18:38:10', '2026-03-22 18:38:10', 'Administrador', 'Administrador');
--- 17 registros exportados
+ORDER BY fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-22 18:38:10', '2026-03-22 18:38:10', 'Administrador', 'Administrador'),
+  ('046', 'Modificar vi_articulos_tarifas', 'CREATE OR REPLACE VIEW vi_articulos_tarifas as select
+  fza_articulos_tarifas.CODIGO_UNICO_TARIFA as CODIGO_UNICO_TARIFA,
+  fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA as CODIGO_ARTICULO_TARIFA,
+  fza_articulos_tarifas.CODIGO_UNIDAD_TARIFA as CODIGO_UNIDAD_TARIFA,
+  fza_tarifas.ESIMP_INCL_TARIFA as ESIMP_INCL_TARIFA,
+  fza_tarifas.ESDEFAULT_TARIFA as ESDEFAULT_TARIFA,
+  fza_articulos.DESCRIPCION_ARTICULO as DESCRIPCION_ARTICULO,
+  fza_articulos.TIPO_CANTIDAD_ARTICULO as TIPO_CANTIDAD_ARTICULO,
+  fza_articulos.ESVARIACION_ARTICULO as ESVARIACION_ARTICULO,
+  fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA as TIPO_IVA_ARTICULO,
+  fza_tarifas.ACTIVO_TARIFA as ACTIVO_TARIFA,
+  fza_tarifas.CODIGO_TARIFA as CODIGO_TARIFA,
+  fza_tarifas.NOMBRE_TARIFA as NOMBRE_TARIFA,
+  fza_articulos_tarifas.FECHA_DESDE_TARIFA as FECHA_DESDE_TARIFA,
+  fza_articulos_tarifas.FECHA_HASTA_TARIFA as FECHA_HASTA_TARIFA,
+  fza_articulos_tarifas.PRECIOFINAL_TARIFA as PRECIOFINAL_TARIFA,
+  fza_articulos_tarifas.PRECIOSALIDA_TARIFA as PRECIOSALIDA_TARIFA,
+  fza_articulos_tarifas.PORCEN_DTO_TARIFA as PORCEN_DTO_TARIFA,
+  fza_articulos_tarifas.PRECIO_DTO_TARIFA as PRECIO_DTO_TARIFA,
+  fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR as CODIGO_PROVEEDOR,
+  fza_proveedores.RAZONSOCIAL_PROVEEDOR as RAZONSOCIAL_PROVEEDOR,
+  fza_articulos_proveedores.PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR as PRECIO_ULT_COMPRA,
+  fza_articulos_proveedores.FECHA_VALIDEZ_ARTICULO_PROVEEDOR as FECHA_VALIDEZ,
+  fza_articulos.CODIGO_FAMILIA_ARTICULO as CODIGO_FAMILIA_ARTICULO,
+  fza_articulos_familias.DESCRIPCION_FAMILIA as DESCRIPCION_FAMILIA,
+  (select
+  count(distinct va.ID_ATRIBUTO_VA)
+from
+  fza_articulos_skus sk
+  join fza_variaciones_atributos va on (sk.CODIGO_VAR_SKU = va.ID_VA)
+where
+  sk.CODIGO_ARTICULO_SKU = fza_articulos.CODIGO_ARTICULO) as NUM_ATRIBUTOS_REQ
+from
+  fza_articulos_tarifas
+  left join fza_articulos_proveedores on ((fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos_proveedores.CODIGO_ARTICULO_ARTICULO_PROVEEDOR) and (fza_articulos_proveedores.ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = ''S''))
+  left join fza_tarifas on (fza_tarifas.CODIGO_TARIFA = fza_articulos_tarifas.CODIGO_TARIFA)
+  left join fza_articulos on (fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos.CODIGO_ARTICULO)
+  left join fza_articulos_familias on (fza_articulos.CODIGO_FAMILIA_ARTICULO = fza_articulos_familias.CODIGO_FAMILIA)
+  left join fza_proveedores on (fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR)
+  left join fza_ivas_tipos on (fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA)
+order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-23 06:51:49', '2026-03-23 06:51:49', 'Administrador', 'Administrador');
+-- 18 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4011,7 +4059,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-22 19:04:54', '2026-03-22 19:04:54', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-23 06:54:51', '2026-03-23 06:54:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5542,7 +5590,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO`) AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_UNIDAD_TARIFA` AS `CODIGO_UNIDAD_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO`) AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -9163,4 +9211,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 22/03/2026 19:22:14
+-- Backup completado: 23/03/2026 8:21:39

@@ -117,7 +117,7 @@ begin
   inherited;
   if DataSet.ControlsDisabled then Exit;
   if not DataSet.Active or DataSet.IsEmpty then Exit;
-  DataSet.AfterScroll := nil;
+//  DataSet.AfterScroll := nil;
   unqryStockArticulos.Close;
   unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString :=
                             unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
@@ -142,7 +142,7 @@ begin
          tvArticulosStock.Columns[i].ApplyBestFit;
        end;
      end;
-     DataSet.AfterScroll := unqryStockArticulosAfterScroll;
+    //DataSet.AfterScroll := unqryStockArticulosAfterScroll;
     // Opcional: Si además quieres que las columnas se estiren para ocupar todo el ancho
     // visual del grid y no quede espacio en blanco a la derecha:
     // cxGrid1DBTableView1.OptionsView.ColumnAutoWidth := True;

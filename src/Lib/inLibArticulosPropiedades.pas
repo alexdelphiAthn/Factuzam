@@ -100,7 +100,7 @@ type
 
     { Carga las propiedades ya asignadas al artículo }
     procedure CargarPropiedades(const CodigoArticulo: string);
-
+    procedure CargarPropiedadesPorFamilia(const CodigoFamilia: string);
     { Añade propiedades seleccionadas por el usuario desde el diálogo }
     procedure AbrirSelectorPropiedades;
 
@@ -424,9 +424,83 @@ begin
   ReconstruirVista;
 end;
 
-{ ═══════════════════════════════════════════════════════════════════════════ }
-{ Construcción de controles visuales                                          }
-{ ═══════════════════════════════════════════════════════════════════════════ }
+procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
+                                                   const CodigoFamilia: string);
+var
+  qProp : TUniQuery;
+  qOpc  : TUniQuery;
+  S     : TSlotProp;
+  cod   : string;
+  idx   : Integer;
+begin
+  if CodigoFamilia = '' then Exit;
+  qProp := TUniQuery.Create(nil);
+  qOpc  := TUniQuery.Create(nil);
+  try
+    qProp.Connection := FConexion;
+    qProp.SQL.Text   :=
+      'SELECT p.CODIGO_PROPIEDAD, p.NOMBRE_PROPIEDAD, p.TIPO_VALOR, fa.ES_REQUERIDO ' +
+      'FROM fza_familias_atributos fa ' +
+      'JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = fa.CODIGO_PROPIEDAD ' +
+      'WHERE fa.CODIGO_FAMILIA = :fam ' +
+      '  AND p.ACTIVO_PROPIEDAD = ''S'' ' +
+      'ORDER BY fa.ORDEN_MOSTRAR, p.NOMBRE_PROPIEDAD';
+    qProp.ParamByName('fam').AsString := CodigoFamilia;
+    qProp.Open;
+    qOpc.Connection := FConexion;
+    qOpc.SQL.Text   :=
+      'SELECT ID_VALOR_PV, VALOR_PV ' +
+      'FROM fza_propiedades_valores ' +
+      'WHERE ID_PROPIEDAD_PV = :cod AND ESACTIVO_PV = ''S'' ' +
+      'ORDER BY VALOR_PV';
+    while not qProp.Eof do
+    begin
+      cod := qProp.FieldByName('CODIGO_PROPIEDAD').AsString;
+      idx := IndexOfCodigo(cod);
+      if idx < 0 then
+      begin
+        FillChar(S, SizeOf(S), 0);
+        S.CodigoPropiedad := cod;
+        S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROPIEDAD').AsString;
+        S.TipoValor       := TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR').AsString);
+        S.EsRequerido     := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
+        S.IdValorPV       := 0;
+        S.ValorLibre      := '';
+        S.Ctrl            := nil;
+        S.Opciones        := nil;
+        S.Eliminar        := False;
+        if S.TipoValor = tvpLista then
+        begin
+          S.Opciones := TDictionary<Integer, string>.Create;
+          qOpc.Close;
+          qOpc.ParamByName('cod').AsString := S.CodigoPropiedad;
+          qOpc.Open;
+          while not qOpc.Eof do
+          begin
+            S.Opciones.Add(qOpc.FieldByName('ID_VALOR_PV').AsInteger,
+                           qOpc.FieldByName('VALOR_PV').AsString);
+            qOpc.Next;
+          end;
+        end;
+        FSlots.Add(S);
+        FModificado := True;
+      end
+      else
+      begin
+        S := FSlots[idx];
+        S.EsRequerido := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
+        if S.Eliminar then S.Eliminar := False;
+        FSlots[idx] := S;
+      end;
+      qProp.Next;
+    end;
+    // Redibujamos los controles si hubo cambios
+    ReconstruirVista;
+  finally
+    qProp.Free;
+    qOpc.Free;
+  end;
+end;
 
 procedure TGestorPropiedades.ReconstruirVista;
 var
@@ -673,7 +747,6 @@ begin
           'SELECT CODIGO_PROPIEDAD, NOMBRE_PROPIEDAD, TIPO_VALOR ' +
           'FROM   fza_propiedades ' +
           'WHERE  CODIGO_PROPIEDAD = :cod';
-
         qOpc.Connection := FConexion;
         qOpc.SQL.Text   :=
           'SELECT ID_VALOR_PV, VALOR_PV ' +
@@ -681,25 +754,23 @@ begin
           'WHERE  ID_PROPIEDAD_PV = :cod ' +
           '  AND  ESACTIVO_PV = ''S'' ' +
           'ORDER  BY VALOR_PV';
-
         for cod in dlg.CodigosSeleccionados do
         begin
           qProp.Close;
           qProp.ParamByName('cod').AsString := cod;
           qProp.Open;
           if qProp.Eof then Continue;
-
           FillChar(S, SizeOf(S), 0);
           S.CodigoPropiedad := qProp.FieldByName('CODIGO_PROPIEDAD').AsString;
           S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROPIEDAD').AsString;
-          S.TipoValor       := TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR').AsString);
+          S.TipoValor       :=
+                      TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR').AsString);
           S.EsRequerido     := False;
           S.IdValorPV       := 0;
           S.ValorLibre      := '';
           S.Ctrl            := nil;
           S.Opciones        := nil;
           S.Eliminar        := False;
-
           if S.TipoValor = tvpLista then
           begin
             S.Opciones := TDictionary<Integer, string>.Create;
@@ -714,7 +785,6 @@ begin
               qOpc.Next;
             end;
           end;
-
           FSlots.Add(S);
           FModificado := True;
         end;
@@ -722,7 +792,6 @@ begin
         qProp.Free;
         qOpc.Free;
       end;
-
       ReconstruirVista;
     finally
       dlg.Free;
@@ -732,14 +801,36 @@ begin
   end;
 end;
 
-{ ═══════════════════════════════════════════════════════════════════════════ }
-{ Validación y guardado                                                       }
-{ ═══════════════════════════════════════════════════════════════════════════ }
-
 function TGestorPropiedades.Validar: string;
+var
+  i: Integer;
+  S: TSlotProp;
+  TieneValor: Boolean;
 begin
-  // En modo "usuario elige" no hay obligatorios — se puede extender aquí
   Result := '';
+  for i := 0 to FSlots.Count - 1 do
+  begin
+    S := FSlots[i];
+    if S.Eliminar then Continue;
+    if S.EsRequerido and Assigned(S.Ctrl) then
+    begin
+      TieneValor := False;
+      case S.TipoValor of
+        tvpLista:
+          TieneValor := (S.Ctrl as TcxComboBox).ItemIndex >= 0;
+        tvpTextoLibre:
+          TieneValor := Trim((S.Ctrl as TcxTextEdit).Text) <> '';
+        tvpNumero, tvpBooleano:
+          TieneValor := True;
+      end;
+      if not TieneValor then
+      begin
+        Result := 'La propiedad "' + S.NombrePropiedad +
+                                          '" es obligatoria para esta familia.';
+        Exit;
+      end;
+    end;
+  end;
 end;
 
 function TGestorPropiedades.GuardarPropiedades: Boolean;

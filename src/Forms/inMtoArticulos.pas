@@ -163,7 +163,7 @@ type
     tsVariaciones: TcxTabSheet;
     tvProveedoresColumn1: TcxGridDBColumn;
     cxDBCheckBox1: TcxDBCheckBox;
-    tsSKUS: TcxTabSheet;
+    tsSKUs: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
     cxButton3: TcxButton;
@@ -243,6 +243,10 @@ type
     tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
     tsPropiedades: TcxTabSheet;
     cxDBCheckBox2: TcxDBCheckBox;
+    tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn;
+    tvTarifasESVARIACION_ARTICULO: TcxGridDBColumn;
+    tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
+    cxButton4: TcxButton;
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -274,22 +278,25 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
+    procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
      procedure IterateCheckedListArt(lst:TcxListView);
   private
-    FGestorProp  : TGestorPropiedades;    // [AÑADIR]
-    FScrollProp  : TScrollBox;            // [AÑADIR]
-    FBtnAddProp  : TcxButton;             // [AÑADIR]
-    FGestorVar      : TGestorVariaciones;      // [AÑADIR]
-    FScrollVarAtrib : TScrollBox;              // [AÑADIR] zona superior conjuntos
+    FGestorProp  : TGestorPropiedades;
+    FScrollProp  : TScrollBox;
+    FBtnAddProp  : TcxButton;
+    FGestorVar      : TGestorVariaciones;
+    FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
     procedure InicializarPestanyaVariaciones;
-    procedure InicializarPestanyaPropiedades;   // [AÑADIR]
-    procedure OnAfterScrollArticulos(DataSet: TDataSet);  // [AÑADIR]
+    procedure InicializarPestanyaPropiedades;
+    procedure OnAfterScrollArticulos(DataSet: TDataSet);
     procedure BtnAddPropClick(Sender: TObject);
   public
+    procedure ActualizarVisibilidadVariaciones;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
   end;
@@ -317,6 +324,17 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
+var
+  HayVars: Boolean;
+begin
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
+    HayVars := dmmArticulos.unqryTablaG.FieldByName(
+                                     'ESVARIACION_ARTICULO').AsWideString = 'S';
+  tsVariaciones.TabVisible := HayVars;
+  tsSKUS.TabVisible := HayVars;
+end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
 begin
@@ -497,7 +515,19 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
+var
+  sErrorProp: string;
 begin
+  if Assigned(FGestorProp) then
+  begin
+    sErrorProp := FGestorProp.Validar;
+    if sErrorProp <> '' then
+    begin
+      ShowMessage('Revisión requerida: ' + sErrorProp);
+      pcDetail.ActivePage := tsPropiedades;
+      Exit;
+    end;
+  end;
   if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
        (dmmArticulos.unqryTablaG.State = dsEdit)) then
   begin
@@ -608,9 +638,24 @@ end;
 procedure TfrmMtoArticulos.BuscarProveedores;
 begin
   if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Proveedores en Articulos',
-                                       dmmArticulos.unqryProveedores,
-                                       'frmMtoArtProvSearch') then
+                                     dmmArticulos.unqryProveedores,
+                                     'frmMtoArtProvSearch') then
     dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
+end;
+
+procedure TfrmMtoArticulos.cbbFamiliaPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  // Verificamos que el gestor esté creado y estemos en modo inserción o edición
+  if Assigned(FGestorProp) and
+     (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
+  begin
+    // Forzamos a que el control actualice su EditValue
+    cbbFamilia.PostEditValue;
+    if not VarIsNull(cbbFamilia.EditValue) then
+      FGestorProp.CargarPropiedadesPorFamilia(VarToStr(cbbFamilia.EditValue));
+  end;
 end;
 
 procedure TfrmMtoArticulos.CrearTablaPrincipal;
@@ -625,8 +670,8 @@ begin
   tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
   pkFieldName := 'CODIGO_ARTICULO';
-  InicializarPestanyaPropiedades;
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
+  InicializarPestanyaPropiedades;
   if dmmArticulos.unqryTablaG.Active and
    (dmmArticulos.unqryTablaG.RecordCount > 0) then
     FGestorProp.CargarPropiedades(
@@ -634,6 +679,7 @@ begin
   InicializarPestanyaVariaciones;
   FGestorVar.CargarVariaciones(                // [AÑADIR]
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+  ActualizarVisibilidadVariaciones;
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -758,6 +804,22 @@ begin
   if Assigned(FGestorVar) then
     FGestorVar.CargarVariaciones(                // [AÑADIR]
       dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+  ActualizarVisibilidadVariaciones;
+  dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+end;
+
+procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
+
+  if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
+  begin
+    // Esto sincroniza el valor visual con el campo del dataset
+    (Sender as TcxDBCheckBox).PostEditValue;
+    ActualizarVisibilidadVariaciones;
+  end;
 end;
 
 procedure

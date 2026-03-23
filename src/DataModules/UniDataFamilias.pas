@@ -21,6 +21,8 @@ type
     dsArticulosFamilias: TDataSource;
     unqrySubFamilias: TUniQuery;
     dsSubFamilias: TDataSource;
+    unqryFamiliasAtributos: TUniQuery;
+    dsFamiliasAtributos: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
