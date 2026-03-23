@@ -449,15 +449,17 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               ImageIndex = 3
               object cxGrid1: TcxGrid
                 Left = 0
-                Top = 57
+                Top = 0
                 Width = 724
-                Height = 254
+                Height = 311
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
+                ExplicitTop = 57
+                ExplicitHeight = 254
                 object tvAtributos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Visible = True
@@ -610,57 +612,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 end
                 object cxGridLevel1: TcxGridLevel
                   GridView = tvAtributos
-                end
-              end
-              object Panel1: TPanel
-                Left = 0
-                Top = 0
-                Width = 724
-                Height = 57
-                Align = alTop
-                TabOrder = 1
-                object btnAddAtributo: TcxButton
-                  Left = 17
-                  Top = 7
-                  Width = 176
-                  Height = 34
-                  Caption = '&Asignar Propiedad'
-                  TabOrder = 0
-                  Font.Charset = ANSI_CHARSET
-                  Font.Color = clWindowText
-                  Font.Height = -17
-                  Font.Name = 'Lucida Sans'
-                  Font.Style = []
-                  ParentFont = False
-                  OnClick = btnGrabarClick
-                end
-                object btnDelAtributo: TcxButton
-                  Left = 233
-                  Top = 7
-                  Width = 168
-                  Height = 34
-                  Caption = '&Quitar Propiedad'
-                  TabOrder = 1
-                  Font.Charset = ANSI_CHARSET
-                  Font.Color = clWindowText
-                  Font.Height = -17
-                  Font.Name = 'Lucida Sans'
-                  Font.Style = []
-                  ParentFont = False
-                end
-                object btnNuevaPropiedadGlobal: TcxButton
-                  Left = 441
-                  Top = 7
-                  Width = 216
-                  Height = 34
-                  Caption = '&Crear Nueva Propiedad'
-                  TabOrder = 2
-                  Font.Charset = ANSI_CHARSET
-                  Font.Color = clWindowText
-                  Font.Height = -17
-                  Font.Name = 'Lucida Sans'
-                  Font.Style = []
-                  ParentFont = False
                 end
               end
             end
