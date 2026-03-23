@@ -1,5 +1,6 @@
 inherited dmFamilias: TdmFamilias
-  Width = 407
+  Width = 742
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_articulos_familias`'
@@ -125,32 +126,110 @@ inherited dmFamilias: TdmFamilias
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
-    Left = 192
-    Top = 24
+    Left = 256
+    Top = 32
     ParamData = <
       item
         DataType = ftWideString
         Name = 'CODIGO_FAMILIA'
         ParamType = ptInput
-        Value = 'ANI'
+        Value = 'BOLSOS'
       end>
   end
   object dsArticulosFamilias: TDataSource
     DataSet = unqryArticulosFamilias
-    Left = 192
-    Top = 80
+    Left = 256
+    Top = 104
   end
   object unqrySubFamilias: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
       'from vi_articulos_familias_list')
-    Left = 312
-    Top = 24
+    Left = 424
+    Top = 32
   end
   object dsSubFamilias: TDataSource
     DataSet = unqrySubFamilias
-    Left = 312
-    Top = 80
+    Left = 424
+    Top = 96
+  end
+  object unqryFamiliasAtributos: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_familias_atributos'
+      
+        '  (CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOSTRAR' +
+        ')'
+      'VALUES'
+      
+        '  (:CODIGO_FAMILIA, :CODIGO_PROPIEDAD, :ES_REQUERIDO, :ORDEN_MOS' +
+        'TRAR)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_familias_atributos'
+      'WHERE'
+      
+        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
+        'ld_CODIGO_PROPIEDAD')
+    SQLUpdate.Strings = (
+      'UPDATE fza_familias_atributos'
+      'SET'
+      
+        '  CODIGO_FAMILIA = :CODIGO_FAMILIA, CODIGO_PROPIEDAD = :CODIGO_P' +
+        'ROPIEDAD, ES_REQUERIDO = :ES_REQUERIDO, ORDEN_MOSTRAR = :ORDEN_M' +
+        'OSTRAR'
+      'WHERE'
+      
+        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
+        'ld_CODIGO_PROPIEDAD')
+    SQLLock.Strings = (
+      
+        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
+        'TRAR FROM fza_familias_atributos'
+      'WHERE'
+      
+        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
+        'ld_CODIGO_PROPIEDAD'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      
+        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
+        'TRAR FROM fza_familias_atributos'
+      'WHERE'
+      
+        '  CODIGO_FAMILIA = :CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :CODIG' +
+        'O_PROPIEDAD')
+    SQLRecCount.Strings = (
+      'SELECT COUNT(*) FROM fza_familias_atributos')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      
+        'SELECT fa.CODIGO_FAMILIA, fa.CODIGO_PROPIEDAD, p.NOMBRE_PROPIEDA' +
+        'D, '
+      '       fa.ES_REQUERIDO, fa.ORDEN_MOSTRAR'
+      'FROM fza_familias_atributos fa'
+      
+        'JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = fa.CODIGO_PROPIED' +
+        'AD'
+      'ORDER BY fa.ORDEN_MOSTRAR, p.NOMBRE_PROPIEDAD')
+    MasterSource = frmMtoFamilias.dsTablaG
+    MasterFields = 'CODIGO_FAMILIA'
+    DetailFields = 'CODIGO_FAMILIA'
+    Active = True
+    BeforeInsert = unqryTablaGBeforeInsert
+    BeforePost = unqryTablaGBeforePost
+    Left = 648
+    Top = 32
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_FAMILIA'
+        ParamType = ptInput
+        Value = 'BOLSOS'
+      end>
+  end
+  object dsFamiliasAtributos: TDataSource
+    DataSet = unqryFamiliasAtributos
+    Left = 648
+    Top = 104
   end
 end

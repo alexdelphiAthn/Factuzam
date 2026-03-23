@@ -4,6 +4,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
   Caption = 'Familias'
   ClientHeight = 592
   ClientWidth = 880
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 880
   ExplicitHeight = 592
   TextHeight = 19
@@ -11,13 +12,14 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     Width = 740
     Height = 592
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 740
     ExplicitHeight = 592
     inherited pcPantalla: TcxPageControl
       Width = 740
       Height = 552
       TabOrder = 1
-      Properties.ActivePage = tsLista
+      Properties.ActivePage = tsFicha
       ExplicitWidth = 740
       ExplicitHeight = 552
       ClientRectBottom = 548
@@ -229,7 +231,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             Height = 345
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMasDatos
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 341
             ClientRectLeft = 4
@@ -441,8 +443,217 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 end
               end
             end
+            object cxTabSheet1: TcxTabSheet
+              Caption = '&3_Propiedades Art'#237'culos'
+              ImageIndex = 3
+              object cxGrid1: TcxGrid
+                Left = 0
+                Top = 57
+                Width = 724
+                Height = 254
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                Align = alClient
+                TabOrder = 0
+                ExplicitTop = 0
+                ExplicitHeight = 311
+                object tvAtributos: TcxGridDBTableView
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Visible = True
+                  DataController.DataModeController.SmartRefresh = True
+                  DataController.DataSource = dmFamilias.dsFamiliasAtributos
+                  DataController.Summary.DefaultGroupSummaryItems = <
+                    item
+                      Kind = skSum
+                    end
+                    item
+                      Kind = skSum
+                    end
+                    item
+                      Kind = skSum
+                    end
+                    item
+                      Kind = skSum
+                    end>
+                  DataController.Summary.FooterSummaryItems = <
+                    item
+                      Format = '0.00 '#8364';-0.00 '#8364
+                      Kind = skSum
+                    end
+                    item
+                      Format = '0.00 '#8364';-0.00 '#8364
+                      Kind = skSum
+                    end
+                    item
+                      Format = '0.00 '#8364';-0.00 '#8364
+                      Kind = skSum
+                    end
+                    item
+                      Format = '0.00 '#8364';-0.00 '#8364
+                      Kind = skSum
+                    end>
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsCustomize.ColumnGrouping = False
+                  OptionsData.Deleting = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsSelection.InvertSelect = False
+                  OptionsView.NoDataToDisplayInfoText = '<No hay datos a mostrar>'
+                  OptionsView.Footer = True
+                  OptionsView.GroupByBox = False
+                  OptionsView.GroupFooters = gfAlwaysVisible
+                  object tvAtributosCODIGO_FAMILIA: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_FAMILIA'
+                    Visible = False
+                  end
+                  object tvAtributosCODIGO_PROPIEDAD: TcxGridDBColumn
+                    Caption = 'Cod Propiedad'
+                    DataBinding.FieldName = 'CODIGO_PROPIEDAD'
+                  end
+                  object tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn
+                    Caption = 'Nombre Propiedad'
+                    DataBinding.FieldName = 'NOMBRE_PROPIEDAD'
+                    Width = 193
+                  end
+                  object tvAtributosES_REQUERIDO: TcxGridDBColumn
+                    Caption = 'Obligatorio'
+                    DataBinding.FieldName = 'ES_REQUERIDO'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 109
+                  end
+                  object tvAtributosORDEN_MOSTRAR: TcxGridDBColumn
+                    Caption = 'Orden'
+                    DataBinding.FieldName = 'ORDEN_MOSTRAR'
+                    HeaderAlignmentHorz = taRightJustify
+                  end
+                end
+                object cxGridDBTableView2: TcxGridDBTableView
+                  DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
+                  DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
+                  DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
+                  OptionsBehavior.ColumnHeaderHints = False
+                  OptionsCustomize.ColumnFiltering = False
+                  OptionsCustomize.ColumnGrouping = False
+                  OptionsCustomize.ColumnMoving = False
+                  OptionsCustomize.ColumnsQuickCustomizationShowCommands = False
+                  OptionsData.Deleting = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  object cxGridDBColumn11: TcxGridDBColumn
+                    DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                    Width = 28
+                  end
+                  object cxGridDBColumn12: TcxGridDBColumn
+                    Caption = 'C'#243'digo Tratamiento'
+                    DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                    Width = 164
+                  end
+                  object cxGridDBColumn13: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n Tratamiento'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                    Width = 162
+                  end
+                  object cxGridDBColumn14: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                  end
+                  object cxGridDBColumn15: TcxGridDBColumn
+                    Caption = 'Cantidad'
+                    DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                    Width = 84
+                  end
+                  object cxGridDBColumn16: TcxGridDBColumn
+                    DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                  end
+                  object cxGridDBColumn17: TcxGridDBColumn
+                    Caption = 'Porcentaje IVA'
+                    DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                    PropertiesClassName = 'TcxSpinEditProperties'
+                    Properties.EditFormat = '0.00 %'
+                  end
+                  object cxGridDBColumn18: TcxGridDBColumn
+                    Caption = 'Precio'
+                    DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Width = 84
+                  end
+                  object cxGridDBColumn19: TcxGridDBColumn
+                    Caption = 'Total'
+                    DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Width = 84
+                  end
+                  object cxGridDBColumn20: TcxGridDBColumn
+                    Caption = 'Fecha de Entrega'
+                    DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                    PropertiesClassName = 'TcxDateEditProperties'
+                  end
+                  object cxGridDBColumn21: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+                  end
+                end
+                object cxGridLevel1: TcxGridLevel
+                  GridView = tvAtributos
+                end
+              end
+              object Panel1: TPanel
+                Left = 0
+                Top = 0
+                Width = 724
+                Height = 57
+                Align = alTop
+                TabOrder = 1
+                object btnAddAtributo: TcxButton
+                  Left = 17
+                  Top = 7
+                  Width = 176
+                  Height = 34
+                  Caption = '&Asignar Propiedad'
+                  TabOrder = 0
+                  Font.Charset = ANSI_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -17
+                  Font.Name = 'Lucida Sans'
+                  Font.Style = []
+                  ParentFont = False
+                  OnClick = btnGrabarClick
+                end
+                object btnDelAtributo: TcxButton
+                  Left = 233
+                  Top = 7
+                  Width = 168
+                  Height = 34
+                  Caption = '&Quitar Propiedad'
+                  TabOrder = 1
+                  Font.Charset = ANSI_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -17
+                  Font.Name = 'Lucida Sans'
+                  Font.Style = []
+                  ParentFont = False
+                end
+                object btnNuevaPropiedadGlobal: TcxButton
+                  Left = 441
+                  Top = 7
+                  Width = 216
+                  Height = 34
+                  Caption = '&Crear Nueva Propiedad'
+                  TabOrder = 2
+                  Font.Charset = ANSI_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -17
+                  Font.Name = 'Lucida Sans'
+                  Font.Style = []
+                  ParentFont = False
+                end
+              end
+            end
             object tsOtros: TcxTabSheet
-              Caption = '&3_Otros'
+              Caption = '&4_Otros'
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
@@ -582,6 +793,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         ExplicitHeight = 518
         inherited pnlPerfilTop: TPanel
           Width = 732
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 732
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -590,6 +802,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         inherited pnlPerfilDetail: TPanel
           Width = 732
           Height = 461
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 732
           ExplicitHeight = 461
           inherited cxgrdPerfil: TcxGrid
@@ -604,9 +817,11 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     inherited pnlTopPage: TPanel
       Width = 740
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 740
       inherited pnlTopGrid: TPanel
         Width = 740
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 740
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
@@ -618,13 +833,24 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     Left = 740
     Height = 592
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 740
     ExplicitHeight = 592
     inherited pButtonGen: TPanel
       Top = 394
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 394
       inherited btnGrabar: TcxButton
         ParentFont = False
+      end
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
     object btnNuevaFamilia: TcxButton
@@ -638,12 +864,17 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     end
   end
   inherited dsTablaG: TDataSource
-    Left = 428
-    Top = 287
+    DataSet = dmFamilias.unqryTablaG
+    Left = 604
+    Top = 399
+  end
+  inherited saveDialog: TdxSaveFileDialog
+    Left = 600
+    Top = 344
   end
   object ActionListFamilias: TActionList
-    Left = 424
-    Top = 416
+    Left = 608
+    Top = 456
     object actArticulo: TAction
       Caption = 'Articulos'
       ShortCut = 16449
