@@ -209,7 +209,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsGeneral
+            Properties.ActivePage = tsSKUs
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
@@ -335,14 +335,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 1
                   OnClick = btnExportarProveedorClick
                 end
-                object cxButton3: TcxButton
+                object addSkuAll: TcxButton
                   Left = 0
                   Top = 21
                   Width = 116
                   Height = 34
                   Caption = '&A'#241'adir SKU'
                   TabOrder = 0
-                  OnClick = btnAddProveedorClick
+                  OnClick = addSkuAllClick
                 end
                 object cxButton1: TcxButton
                   Left = 0
@@ -424,11 +424,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
                   OptionsCustomize.ColumnHiding = True
-                  OptionsData.CancelOnExit = False
-                  OptionsData.Deleting = False
-                  OptionsData.DeletingConfirmation = False
-                  OptionsData.Editing = False
-                  OptionsData.Inserting = False
+                  OptionsData.Appending = True
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
