@@ -39,6 +39,8 @@ type
     dsStockArticulos: TDataSource;
     unqryMovimientosArticulos: TUniQuery;
     dsMovimientosArticulos: TDataSource;
+    unqryDetallesAtributos: TUniQuery;
+    dsDetallesAtributos: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
