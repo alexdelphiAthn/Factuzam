@@ -209,7 +209,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsSKUs
+            Properties.ActivePage = tsGeneral
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
@@ -440,6 +440,9 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object tvSkusESACTIVO_SKU: TcxGridDBColumn
                     Caption = 'Activo'
                     DataBinding.FieldName = 'ESACTIVO_SKU'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
                     Width = 80
                   end
                   object tvSkusINSTANTEMODIF: TcxGridDBColumn
@@ -466,6 +469,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object tvSkusSTOCK_TOTAL: TcxGridDBColumn
                     Caption = 'Stock Total'
                     DataBinding.FieldName = 'STOCK_TOTAL'
+                    HeaderAlignmentHorz = taRightJustify
                     Width = 134
                   end
                 end
