@@ -19,7 +19,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
       Width = 740
       Height = 552
       TabOrder = 1
-      Properties.ActivePage = tsFicha
+      Properties.ActivePage = tsLista
       ExplicitWidth = 740
       ExplicitHeight = 552
       ClientRectBottom = 548
@@ -51,6 +51,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object dbcGrdDBTabPrinESDEFAULT_FAMILIA: TcxGridDBColumn
               Caption = 'Por Defecto'
               DataBinding.FieldName = 'ESDEFAULT_FAMILIA'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
               Width = 107
             end
             object cxgrdbclmnGrdDBTabPrinNOMBRE_FAMILIA: TcxGridDBColumn
@@ -61,22 +64,22 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object dbcGrdDBTabPrinCODIGO_SUBFAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Subfamilia'
               DataBinding.FieldName = 'CODIGO_SUBFAMILIA'
-              Width = 178
+              Width = 174
             end
             object dbcGrdDBTabPrinNOMBRE_SUBFAMILIA: TcxGridDBColumn
               Caption = 'Nombre Subfamilia'
               DataBinding.FieldName = 'NOMBRE_SUBFAMILIA'
-              Width = 247
+              Width = 167
             end
             object cxgrdbclmnGrdDBTabPrinDESCRIPCION_FAMILIA: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
               DataBinding.FieldName = 'DESCRIPCION_FAMILIA'
-              Width = 496
+              Width = 309
             end
             object cxgrdbclmnGrdDBTabPrinORDEN_FAMILIA: TcxGridDBColumn
               Caption = 'Orden en listados'
               DataBinding.FieldName = 'ORDEN_FAMILIA'
-              Width = 164
+              Width = 162
             end
           end
         end
@@ -232,7 +235,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             Height = 345
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet1
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 341
             ClientRectLeft = 4
@@ -458,8 +461,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitTop = 57
-                ExplicitHeight = 254
                 object tvAtributos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Visible = True
@@ -783,6 +784,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         Width = 740
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 740
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end
