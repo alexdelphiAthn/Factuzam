@@ -720,4 +720,97 @@ inherited dmArticulos: TdmArticulos
     Left = 744
     Top = 264
   end
+  object unqryDetallesAtributos: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_articulos_variaciones_def'
+      
+        '  (CODIGO_VARIACION_VARIACION, CODIGO_VARIACION, CODIGO_ARTICULO' +
+        '_VARIACION, CODIGO_COLUMNA_VARIACION, CODIGO_UNIDAD_VARIACION, C' +
+        'ODIGO_UNICO_UNIDAD_VARIACION, VALOR_VARIACION, VALOR2_VARIACION,' +
+        ' INSTANTEMODIF, INSTANTEALTA, USUARIOALTA, USUARIOMODIF)'
+      'VALUES'
+      
+        '  (:CODIGO_VARIACION_VARIACION, :CODIGO_VARIACION, :CODIGO_ARTIC' +
+        'ULO_VARIACION, :CODIGO_COLUMNA_VARIACION, :CODIGO_UNIDAD_VARIACI' +
+        'ON, :CODIGO_UNICO_UNIDAD_VARIACION, :VALOR_VARIACION, :VALOR2_VA' +
+        'RIACION, :INSTANTEMODIF, :INSTANTEALTA, :USUARIOALTA, :USUARIOMO' +
+        'DIF)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_articulos_variaciones_def'
+      'WHERE'
+      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION')
+    SQLUpdate.Strings = (
+      'UPDATE fza_articulos_variaciones_def'
+      'SET'
+      
+        '  CODIGO_VARIACION_VARIACION = :CODIGO_VARIACION_VARIACION, CODI' +
+        'GO_VARIACION = :CODIGO_VARIACION, CODIGO_ARTICULO_VARIACION = :C' +
+        'ODIGO_ARTICULO_VARIACION, CODIGO_COLUMNA_VARIACION = :CODIGO_COL' +
+        'UMNA_VARIACION, CODIGO_UNIDAD_VARIACION = :CODIGO_UNIDAD_VARIACI' +
+        'ON, CODIGO_UNICO_UNIDAD_VARIACION = :CODIGO_UNICO_UNIDAD_VARIACI' +
+        'ON, VALOR_VARIACION = :VALOR_VARIACION, VALOR2_VARIACION = :VALO' +
+        'R2_VARIACION, INSTANTEMODIF = :INSTANTEMODIF, INSTANTEALTA = :IN' +
+        'STANTEALTA, USUARIOALTA = :USUARIOALTA, USUARIOMODIF = :USUARIOM' +
+        'ODIF'
+      'WHERE'
+      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION')
+    SQLLock.Strings = (
+      'SELECT * FROM fza_articulos_variaciones_def'
+      'WHERE'
+      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      
+        'SELECT CODIGO_VARIACION_VARIACION, CODIGO_VARIACION, CODIGO_ARTI' +
+        'CULO_VARIACION, CODIGO_COLUMNA_VARIACION, CODIGO_UNIDAD_VARIACIO' +
+        'N, CODIGO_UNICO_UNIDAD_VARIACION, VALOR_VARIACION, VALOR2_VARIAC' +
+        'ION, INSTANTEMODIF, INSTANTEALTA, USUARIOALTA, USUARIOMODIF FROM' +
+        ' fza_articulos_variaciones_def'
+      'WHERE'
+      '  CODIGO_UNIDAD_VARIACION = :CODIGO_UNIDAD_VARIACION')
+    SQLRecCount.Strings = (
+      'SELECT COUNT(*) FROM fza_articulos_variaciones_def')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT '
+      '    sku.CODIGO_ARTICULO_SKU,'
+      '    sku.CODIGO_UNIDAD_SKU,'
+      
+        '    val.ID_VA_AV AS ATRIBUTO,        -- Ej: '#39'CO'#39' (Color) o '#39'TAL'#39 +
+        ' (Talla)'
+      '    val.VALOR_AV AS VALOR_INTERNO,   -- Ej: '#39'ROJO'#39
+      '    inf.CLAVE_INFO AS META_CLAVE,    -- Ej: '#39'COLOR_PROVEEDOR'#39
+      '    inf.VALOR_INFO AS META_VALOR     -- Ej: '#39'RED-01'#39
+      'FROM fza_articulos_skus sku'
+      
+        '-- 1. Enlazamos con la tabla intermedia para saber qu'#233' valores c' +
+        'omponen el SKU'
+      'INNER JOIN fza_atributos_sku rel '
+      '    ON sku.CODIGO_UNIDAD_SKU = rel.CODIGO_UNIDAD_SA'
+      
+        '-- 2. Enlazamos con la tabla maestra de valores para sacar el no' +
+        'mbre del valor'
+      'INNER JOIN fza_atributos_valores val '
+      '    ON rel.ID_VALOR_SA = val.ID_VALOR_AV'
+      '-- 3. Enlazamos con tu tabla detalle de informaci'#243'n extra'
+      'LEFT JOIN fza_atributos_valores_info inf '
+      '    ON val.ID_VALOR_AV = inf.ID_VALOR_AV_INFO;')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ARTICULO'
+    DetailFields = 'CODIGO_ARTICULO_SKU'
+    Left = 1040
+    Top = 184
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ARTICULO'
+        ParamType = ptInput
+        Value = 'ZAP-OXFORD'
+      end>
+  end
+  object dsDetallesAtributos: TDataSource
+    DataSet = unqryDetallesAtributos
+    Left = 1040
+    Top = 264
+  end
 end

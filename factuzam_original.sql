@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 23/03/2026 8:21:39
+-- Backup generado: 24/03/2026 20:12:50
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -109,7 +109,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('BOLSO-PIEL', 'S', 'ESTANDAR', 'Bolso de Piel Mujer Grande', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
   ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:05', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:04', '2026-03-11 22:27:51', 'ADMIN', 'ADMIN', 'TC'),
-  ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:03', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
+  ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:03', '2026-01-10 08:00:00', 'DEMO', 'Administrador', 'TC'),
   ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '2026-03-11 22:27:51', 'DEMO', 'DEMO', NULL),
   ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
@@ -118,7 +118,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:50', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('LEGGING-SPORT', 'S', 'ESTANDAR', 'Legging Deportivo Mujer', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:49', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('MOCHILA-SPORT', 'S', 'ESTANDAR', 'Mochila Deportiva 30L', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
-  ('PANT-CHIN', 'S', 'ESTANDAR', 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:41', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
+  ('PANT-CHIN', 'S', 'ESTANDAR', 'Pantalón Chino Slim', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:41', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('SOMBRERO-PJM', 'S', 'ESTANDAR', 'Sombrero Panamá Verano', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
   ('SRV-ARREGLOS', 'S', 'SERVICIO', 'Arreglos y Modificaciones', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
   ('SRV-ENVIO', 'S', 'SERVICIO', 'Gastos de Envío', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
@@ -127,7 +127,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
-  ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC');
+  ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC');
 -- 24 registros exportados
 
 
@@ -149,9 +149,11 @@ ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_ATRIBUTO` (`CODIG
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
+  ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador');
--- 2 registros exportados
+-- 4 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -241,6 +243,15 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('CAMI-BASICA', 'MARCA', 8, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CAMI-BASICA', 'MATERIAL', 14, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CAMI-BASICA', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CAMI-POLO', 'COMPOSICION', NULL, '100% Algodón', '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'ES_ECO', NULL, 'N', '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'ESTILO', NULL, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'GENERO', 29, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'LAVADO', NULL, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'MARCA', 4, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'MATERIAL', 15, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'ORIGEN', NULL, NULL, '2026-03-24 07:33:21', 'Administrador'),
+  ('CAMI-POLO', 'TEMPORADA', 13, NULL, '2026-03-24 07:33:21', 'Administrador'),
   ('CARTERA-PIEL', 'CIERRE', 53, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CARTERA-PIEL', 'MARCA', 3, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CARTERA-PIEL', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -249,7 +260,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('CHAQ-CUERO', 'ESTILO', 38, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'LAVADO', 44, NULL, '2026-03-22 18:32:14', 'DEMO'),
-  ('CHAQ-CUERO', 'MARCA', 1, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CHAQ-CUERO', 'MARCA', 7, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'MATERIAL', 21, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -266,6 +277,15 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('MOCHILA-SPORT', 'MATERIAL', 27, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('MOCHILA-SPORT', 'PESO_GR', NULL, '850', '2026-03-22 18:32:14', 'DEMO'),
   ('MOCHILA-SPORT', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('PANT-CHIN', 'COMPOSICION', NULL, '100% plástico', '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'ES_ECO', NULL, 'N', '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'ESTILO', 39, NULL, '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'GENERO', 29, NULL, '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'IMPERMEAB', NULL, 'N', '2026-03-23 20:45:32', 'Administrador'),
+  ('PANT-CHIN', 'LAVADO', 42, NULL, '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'MARCA', 4, NULL, '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'ORIGEN', NULL, 'Sri Lanka', '2026-03-23 20:37:39', 'Administrador'),
+  ('PANT-CHIN', 'TEMPORADA', 12, NULL, '2026-03-23 20:37:39', 'Administrador'),
   ('SUDADERA-HOOD', 'ACTIVIDAD', 60, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('SUDADERA-HOOD', 'GENERO', 30, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('SUDADERA-HOOD', 'MARCA', 5, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -288,8 +308,17 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('ZAP-OXFORD', 'MATERIAL', 19, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'ORIGEN', NULL, 'Portugal', '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-OXFORD', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
-  ('ZAP-OXFORD', 'TIPO_SUELA', 46, NULL, '2026-03-22 18:32:14', 'DEMO');
--- 88 registros exportados
+  ('ZAP-OXFORD', 'TIPO_SUELA', 46, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ZAP-TACÓN', 'ALTURA_TAC', NULL, '5', '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'CIERRE', 52, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'GENERO', 28, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'IMPERMEAB', NULL, 'N', '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'MARCA', 7, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'MATERIAL', 20, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'ORIGEN', NULL, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'TEMPORADA', 10, NULL, '2026-03-24 07:06:54', 'Administrador'),
+  ('ZAP-TACÓN', 'TIPO_SUELA', 49, NULL, '2026-03-24 07:06:54', 'Administrador');
+-- 115 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -1293,7 +1322,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 47, 3, 'S', 'S', '2026-03-23 06:51:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 51, 3, 'S', 'S', '2026-03-24 20:12:27', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1740,11 +1769,12 @@ ALTER TABLE `fza_familias_atributos` ADD INDEX `IDX_FAM_ATR_ATR` (`CODIGO_PROPIE
 INSERT INTO `fza_familias_atributos` (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_REQUERIDO`, `ORDEN_MOSTRAR`) VALUES
   ('BOLSOS', 'CAPACIDAD_L', 'N', 5),
   ('BOLSOS', 'CIERRE', 'N', 4),
-  ('BOLSOS', 'MARCA', 'S', 1),
-  ('BOLSOS', 'MATERIAL', 'N', 3),
-  ('BOLSOS', 'ORIGEN', 'N', 7),
+  ('BOLSOS', 'COMPOSICION', 'N', 7),
+  ('BOLSOS', 'ESTILO', 'N', 9),
+  ('BOLSOS', 'MARCA', 'S', 3),
+  ('BOLSOS', 'MATERIAL', 'N', 2),
   ('BOLSOS', 'PESO_GR', 'N', 6),
-  ('BOLSOS', 'TEMPORADA', 'S', 2),
+  ('BOLSOS', 'TEMPORADA', 'S', 1),
   ('CALZADO', 'ALTURA_TAC', 'N', 7),
   ('CALZADO', 'GENERO', 'S', 3),
   ('CALZADO', 'IMPERMEAB', 'N', 6),
@@ -1765,16 +1795,39 @@ INSERT INTO `fza_familias_atributos` (`CODIGO_FAMILIA`, `CODIGO_PROPIEDAD`, `ES_
   ('DEPORTIVO', 'PESO_GR', 'N', 7),
   ('DEPORTIVO', 'TEMPORADA', 'N', 5),
   ('DEPORTIVO', 'TRANSPIRABLE', 'N', 6),
-  ('ROPA', 'COMPOSICION', 'N', 7),
+  ('ROPA', 'COMPOSICION', 'S', 4),
   ('ROPA', 'ES_ECO', 'N', 9),
   ('ROPA', 'ESTILO', 'N', 5),
   ('ROPA', 'GENERO', 'S', 3),
   ('ROPA', 'LAVADO', 'N', 6),
   ('ROPA', 'MARCA', 'S', 1),
-  ('ROPA', 'MATERIAL', 'N', 4),
   ('ROPA', 'ORIGEN', 'N', 8),
   ('ROPA', 'TEMPORADA', 'S', 2);
 -- 36 registros exportados
+
+
+-- Tabla: fza_familias_atributos_defecto
+
+DROP TABLE IF EXISTS `fza_familias_atributos_defecto`;
+CREATE TABLE `fza_familias_atributos_defecto` (
+  `CODIGO_FAMILIA_FAD` varchar(20) NOT NULL,
+  `ID_VA_BASICO_FAD` varchar(20) NOT NULL,
+  `OBLIGATORIO_FAD` varchar(1) NULL DEFAULT 'N',
+  PRIMARY KEY (`CODIGO_FAMILIA_FAD`,`ID_VA_BASICO_FAD`)
+);
+
+
+-- Tabla: fza_familias_claves_info_defecto
+
+DROP TABLE IF EXISTS `fza_familias_claves_info_defecto`;
+CREATE TABLE `fza_familias_claves_info_defecto` (
+  `CODIGO_FAMILIA_FCI` varchar(20) NOT NULL,
+  `ID_VA_BASICO_FCI` varchar(20) NOT NULL,
+  `CLAVE_INFO_FCI` varchar(50) NOT NULL,
+  `VALOR_DEFECTO_FCI` varchar(100) NULL DEFAULT NULL,
+  `OBLIGATORIO_FCI` varchar(1) NULL DEFAULT 'N',
+  PRIMARY KEY (`CODIGO_FAMILIA_FCI`,`ID_VA_BASICO_FCI`,`CLAVE_INFO_FCI`)
+);
 
 
 -- Tabla: fza_formas_pago
@@ -2882,8 +2935,40 @@ from
   left join fza_articulos_familias on (fza_articulos.CODIGO_FAMILIA_ARTICULO = fza_articulos_familias.CODIGO_FAMILIA)
   left join fza_proveedores on (fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR)
   left join fza_ivas_tipos on (fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA)
-order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-23 06:51:49', '2026-03-23 06:51:49', 'Administrador', 'Administrador');
--- 18 registros exportados
+order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-23 06:51:49', '2026-03-23 06:51:49', 'Administrador', 'Administrador'),
+  ('048', NULL, 'SELECT 
+    sku.CODIGO_ARTICULO_SKU,
+    sku.CODIGO_UNIDAD_SKU,
+    val.ID_VA_AV AS ATRIBUTO,        -- Ej: ''CO'' (Color) o ''TAL'' (Talla)
+    val.VALOR_AV AS VALOR_INTERNO,   -- Ej: ''ROJO''
+    inf.CLAVE_INFO AS META_CLAVE,    -- Ej: ''COLOR_PROVEEDOR''
+    inf.VALOR_INFO AS META_VALOR     -- Ej: ''RED-01''
+FROM fza_articulos_skus sku
+-- 1. Enlazamos con la tabla intermedia para saber qué valores componen el SKU
+LEFT JOIN fza_atributos_sku rel 
+    ON sku.CODIGO_UNIDAD_SKU = rel.CODIGO_UNIDAD_SA
+-- 2. Enlazamos con la tabla maestra de valores para sacar el nombre del valor
+LEFT JOIN fza_atributos_valores val 
+    ON rel.ID_VALOR_SA = val.ID_VALOR_AV
+-- 3. Enlazamos con tu tabla detalle de información extra
+LEFT JOIN fza_atributos_valores_info inf 
+    ON val.ID_VALOR_AV = inf.ID_VALOR_AV_INFO
+WHERE sku.CODIGO_UNIDAD_SKU = ''ZAP-OXFORD/MARRON/43''', '2026-03-24 20:01:49', '2026-03-24 19:59:13', 'Administrador', 'Administrador'),
+  ('049', NULL, 'CREATE TABLE fza_familias_claves_info_defecto (
+  CODIGO_FAMILIA_FCI VARCHAR(20) NOT NULL,
+  ID_VA_BASICO_FCI VARCHAR(20) NOT NULL,  -- Ej: ''TAL'' o ''COL''
+  CLAVE_INFO_FCI VARCHAR(50) NOT NULL,    -- Ej: ''CM'', ''COLOR_PROVEEDOR'', ''COLOR_PALETA''
+  VALOR_DEFECTO_FCI VARCHAR(100) NULL,    -- Opcional: Si quieres sugerir un valor inicial
+  OBLIGATORIO_FCI VARCHAR(1) DEFAULT ''N'', -- Para forzar al usuario a rellenarlo
+  PRIMARY KEY (CODIGO_FAMILIA_FCI, ID_VA_BASICO_FCI, CLAVE_INFO_FCI)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;', '2026-03-24 20:12:01', '2026-03-24 20:12:01', 'Administrador', 'Administrador'),
+  ('050', NULL, 'CREATE TABLE fza_familias_atributos_defecto (
+  CODIGO_FAMILIA_FAD VARCHAR(20) NOT NULL,
+  ID_VA_BASICO_FAD VARCHAR(20) NOT NULL,
+  OBLIGATORIO_FAD VARCHAR(1) DEFAULT ''N'', -- Opcional: para forzar que el usuario no lo pueda quitar
+  PRIMARY KEY (CODIGO_FAMILIA_FAD, ID_VA_BASICO_FAD)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;', '2026-03-24 20:12:39', '2026-03-24 20:12:27', 'Administrador', 'Administrador');
+-- 21 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4059,7 +4144,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-23 06:54:51', '2026-03-23 06:54:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-24 19:48:02', '2026-03-24 19:48:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -9211,4 +9296,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 23/03/2026 8:21:39
+-- Backup completado: 24/03/2026 20:12:51
