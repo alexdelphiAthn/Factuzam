@@ -165,7 +165,7 @@ type
     tsSKUs: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
-    cxButton3: TcxButton;
+    addSkuAll: TcxButton;
     cxGrid2: TcxGrid;
     tvSkus: TcxGridDBTableView;
     tvSkusCODIGO_UNIDAD_SKU: TcxGridDBColumn;
@@ -279,6 +279,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
     procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
+    procedure addSkuAllClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -336,6 +337,12 @@ begin
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
   tsSKUS.TabVisible := HayVars;
+end;
+
+procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
+begin
+  inherited;
+  //
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
