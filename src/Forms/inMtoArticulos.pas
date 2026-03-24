@@ -153,14 +153,13 @@ type
     dbcTarifasESDEFAULT_TARIFA: TcxGridDBColumn;
     cxDBLabel1: TcxDBLabel;
     cxDBLabel2: TcxDBLabel;
-    cxTabSheet1: TcxTabSheet;
+    tsGeneral: TcxTabSheet;
     rgTipoIVA: TcxDBRadioGroup;
     cxGroupBox2: TcxGroupBox;
     lblNombre1: TcxLabel;
     cxdbtxtdtTIPO_CANTIDAD_ARTICULO: TcxDBTextEdit;
     cxLabel2: TcxLabel;
     cxDBComboBox1: TcxDBComboBox;
-    tsVariaciones: TcxTabSheet;
     tvProveedoresColumn1: TcxGridDBColumn;
     cxDBCheckBox1: TcxDBCheckBox;
     tsSKUs: TcxTabSheet;
@@ -286,9 +285,11 @@ type
      procedure IterateCheckedListArt(lst:TcxListView);
   private
     FGestorProp  : TGestorPropiedades;
+    FArticuloCargado: string;
     FScrollProp  : TScrollBox;
     FBtnAddProp  : TcxButton;
     FGestorVar      : TGestorVariaciones;
+    FPnlTopVariaciones:TPanel;
     FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
     procedure InicializarPestanyaVariaciones;
@@ -332,7 +333,8 @@ begin
   if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
     HayVars := dmmArticulos.unqryTablaG.FieldByName(
                                      'ESVARIACION_ARTICULO').AsWideString = 'S';
-  tsVariaciones.TabVisible := HayVars;
+  FPnlTopVariaciones.Visible := HayVars;
+  FScrollVarAtrib.Visible := HayVars;
   tsSKUS.TabVisible := HayVars;
 end;
 
@@ -527,6 +529,15 @@ begin
       pcDetail.ActivePage := tsPropiedades;
       Exit;
     end;
+    try
+      FGestorProp.GuardarPropiedades;
+    except
+      on E: Exception do
+      begin
+        ShowMessage('Error al guardar propiedades: ' + E.Message);
+        Exit;
+      end;
+    end;
   end;
   if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
        (dmmArticulos.unqryTablaG.State = dsEdit)) then
@@ -542,16 +553,6 @@ begin
        (dmmArticulos.unqryTarifasArticulos.State = dsEdit)) then
   begin
     dmmArticulos.unqryTarifasArticulos.Post;
-  end;
-  if Assigned(FGestorProp) then
-  try
-    FGestorProp.GuardarPropiedades;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Error al guardar propiedades: ' + E.Message);
-      Exit;
-    end;
   end;
   if Assigned(FGestorVar) then
   try
@@ -672,11 +673,13 @@ begin
   pkFieldName := 'CODIGO_ARTICULO';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
-  if dmmArticulos.unqryTablaG.Active and
-   (dmmArticulos.unqryTablaG.RecordCount > 0) then
-    FGestorProp.CargarPropiedades(
-      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
   InicializarPestanyaVariaciones;
+  if dmmArticulos.unqryTablaG.Active and (dmmArticulos.unqryTablaG.RecordCount > 0) then
+  begin
+    FArticuloCargado := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+    FGestorProp.CargarPropiedades(FArticuloCargado);
+  end else
+    FArticuloCargado := ''; // Por si acaso arranca vacío
   FGestorVar.CargarVariaciones(                // [AÑADIR]
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
   ActualizarVisibilidadVariaciones;
@@ -722,21 +725,21 @@ end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaVariaciones;
 var
-  pnlTop  : TPanel;
+//  pnlTop  : TPanel;
   lbl     : TcxLabel;
-  splitter: TSplitter;
+//  splitter: TSplitter;
 begin
 
   // ── Panel superior con label + combo de tipo variación ──
-  pnlTop := TPanel.Create(Self);
-  pnlTop.Parent     := tsVariaciones;
-  pnlTop.Align      := alTop;
-  pnlTop.Height     := 40;
-  pnlTop.BevelOuter := bvNone;
-  pnlTop.Caption    := '';
+  FPnlTopVariaciones := TPanel.Create(Self);
+  FPnlTopVariaciones.Parent     := tsGeneral;
+  FPnlTopVariaciones.Align      := alBottom;
+  FPnlTopVariaciones.Height     := 40;
+  FPnlTopVariaciones.BevelOuter := bvNone;
+  FPnlTopVariaciones.Caption    := '';
 
   lbl := TcxLabel.Create(Self);
-  lbl.Parent  := pnlTop;
+  lbl.Parent  := FPnlTopVariaciones;
   lbl.Left    := 8;
   lbl.Top     := 10;
   lbl.Caption := 'Tipo de variación: ';
@@ -744,7 +747,7 @@ begin
 
   // Combo enlazado al campo TIPO_VARIACION_ARTICULO del dataset principal
   FCbbTipoVariacion := TcxDBLookupComboBox.Create(Self);
-  FCbbTipoVariacion.Parent          := pnlTop;
+  FCbbTipoVariacion.Parent          := FPnlTopVariaciones;
   FCbbTipoVariacion.Left            := 170;
   FCbbTipoVariacion.Top             := 6;
   FCbbTipoVariacion.Width           := 260;
@@ -759,17 +762,17 @@ begin
   FCbbTipoVariacion.Properties.ListOptions.ShowHeader := False;
   // ── Zona atributos (scroll) ──
   FScrollVarAtrib := TScrollBox.Create(Self);
-  FScrollVarAtrib.Parent      := tsVariaciones;
-  FScrollVarAtrib.Align       := alTop;
+  FScrollVarAtrib.Parent      := tsGeneral;
+  FScrollVarAtrib.Align       := alBottom;
   FScrollVarAtrib.Height      := 120;
   FScrollVarAtrib.BorderStyle := bsNone;
   FScrollVarAtrib.Color       := clWindow;
   FScrollVarAtrib.AutoScroll  := True;
 
-  splitter := TSplitter.Create(Self);
-  splitter.Parent := tsVariaciones;
-  splitter.Align  := alTop;
-  splitter.Height := 5;
+//  splitter := TSplitter.Create(Self);
+//  splitter.Parent := tsVariaciones;
+//  splitter.Align  := alTop;
+//  splitter.Height := 5;
 
 //  // ── Zona SKUs (scroll) ──
 //  FScrollVarSkus := TScrollBox.Create(Self);
@@ -786,6 +789,7 @@ begin
     oUser
   );
 end;
+
 procedure TfrmMtoArticulos.BtnAddPropClick(Sender: TObject);
 begin
   // Si hay cambios no guardados en el artículo, grabar primero
@@ -797,13 +801,41 @@ begin
 end;
 
 procedure TfrmMtoArticulos.OnAfterScrollArticulos(DataSet: TDataSet);
+var
+  CodArticulo: string;
 begin
+  if DataSet.ControlsDisabled then Exit;
+  // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez y salimos
+  if DataSet.State = dsInsert then
+  begin
+    if FArticuloCargado <> '' then
+    begin
+      FArticuloCargado := ''; // Marcamos como vacío
+      if Assigned(FGestorProp) then FGestorProp.CargarPropiedades('');
+      if Assigned(FGestorVar) then FGestorVar.CargarVariaciones('');
+      ActualizarVisibilidadVariaciones;
+    end;
+    Exit;
+  end;
+
+  // 2. Si estamos editando, ignoramos los scrolls fantasma
+  if DataSet.State = dsEdit then Exit;
+
+  CodArticulo := DataSet.FieldByName('CODIGO_ARTICULO').AsString;
+
+  // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado, ¡no hagas nada!
+  if FArticuloCargado = CodArticulo then Exit;
+
+  // Actualizamos nuestra memoria
+  FArticuloCargado := CodArticulo;
+
+  // 4. Ahora sí, cargamos la interfaz visual de forma segura
   if Assigned(FGestorProp) then
-    FGestorProp.CargarPropiedades(
-      DataSet.FieldByName('CODIGO_ARTICULO').AsString);
+    FGestorProp.CargarPropiedades(CodArticulo);
+
   if Assigned(FGestorVar) then
-    FGestorVar.CargarVariaciones(                // [AÑADIR]
-      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+    FGestorVar.CargarVariaciones(CodArticulo);
+
   ActualizarVisibilidadVariaciones;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
 end;
@@ -812,14 +844,14 @@ procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
-
-  if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
-  begin
-    // Esto sincroniza el valor visual con el campo del dataset
-    (Sender as TcxDBCheckBox).PostEditValue;
-    ActualizarVisibilidadVariaciones;
-  end;
+  if Assigned(dmmArticulos) then
+  if (dmmArticulos.unqryTablaG.Active = True) then
+    if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
+    begin
+      // Esto sincroniza el valor visual con el campo del dataset
+      (Sender as TcxDBCheckBox).PostEditValue;
+      ActualizarVisibilidadVariaciones;
+    end;
 end;
 
 procedure

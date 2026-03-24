@@ -386,7 +386,6 @@ begin
   finally
     q.Free;
   end;
-
   // ── 2. Opciones para slots tipo LISTA ─────────────────────────────────
   qOpc := TUniQuery.Create(nil);
   try
@@ -397,7 +396,6 @@ begin
       'WHERE  ID_PROPIEDAD_PV = :cod ' +
       '  AND  ESACTIVO_PV = ''S'' ' +
       'ORDER  BY VALOR_PV';
-
     for i := 0 to FSlots.Count - 1 do
     begin
       if FSlots[i].TipoValor = tvpLista then
@@ -420,20 +418,74 @@ begin
   finally
     qOpc.Free;
   end;
-
   ReconstruirVista;
 end;
 
-procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
-                                                   const CodigoFamilia: string);
+procedure TGestorPropiedades.CargarPropiedadesPorFamilia(const CodigoFamilia: string);
 var
-  qProp : TUniQuery;
-  qOpc  : TUniQuery;
-  S     : TSlotProp;
-  cod   : string;
-  idx   : Integer;
+  qProp     : TUniQuery;
+  qOpc      : TUniQuery;
+  S         : TSlotProp;
+  cod       : string;
+  idx, i    : Integer;
+  EstaVacia : Boolean;
 begin
   if CodigoFamilia = '' then Exit;
+
+  // 1. SINCRONIZAR PANTALLA -> MEMORIA
+  // Guardamos lo que el usuario haya escrito en los controles visuales
+  // para no perderlo ni evaluarlo mal.
+  for i := 0 to FSlots.Count - 1 do
+  begin
+    S := FSlots[i];
+    if (not S.Eliminar) and Assigned(S.Ctrl) then
+    begin
+      case S.TipoValor of
+        tvpLista:
+          if (S.Ctrl as TcxComboBox).ItemIndex > 0 then
+            S.IdValorPV := Integer((S.Ctrl as TcxComboBox).Properties.Items.Objects[(S.Ctrl as TcxComboBox).ItemIndex])
+          else
+            S.IdValorPV := 0;
+        tvpTextoLibre:
+          S.ValorLibre := Trim((S.Ctrl as TcxTextEdit).Text);
+        tvpNumero:
+          if Trim((S.Ctrl as TcxSpinEdit).Text) = '' then
+            S.ValorLibre := ''
+          else
+            S.ValorLibre := FloatToStr((S.Ctrl as TcxSpinEdit).Value);
+        tvpBooleano:
+          if (S.Ctrl as TcxCheckBox).Checked then
+            S.ValorLibre := 'S'
+          else
+            S.ValorLibre := 'N';
+      end;
+    end;
+    FSlots[i] := S;
+  end;
+
+  // 2. MARCAR PARA ELIMINAR SOLO LAS QUE ESTÉN VACÍAS
+  for i := 0 to FSlots.Count - 1 do
+  begin
+    S := FSlots[i];
+
+    EstaVacia := False;
+    case S.TipoValor of
+      tvpLista:      EstaVacia := (S.IdValorPV <= 0);
+      tvpTextoLibre: EstaVacia := (S.ValorLibre = '');
+      tvpNumero:     EstaVacia := (S.ValorLibre = '') or (S.ValorLibre = '0');
+      tvpBooleano:   EstaVacia := (S.ValorLibre <> 'S') and (S.ValorLibre <> '1');
+    end;
+
+    if EstaVacia then
+      S.Eliminar := True;
+      // Si tiene datos (EstaVacia = False), NO tocamos S.Eliminar,
+      // por lo que sobrevive al cambio de familia.
+
+    FSlots[i] := S;
+  end;
+  FModificado := True;
+
+  // 3. CARGAR LAS PROPIEDADES DE LA NUEVA FAMILIA
   qProp := TUniQuery.Create(nil);
   qOpc  := TUniQuery.Create(nil);
   try
@@ -447,18 +499,22 @@ begin
       'ORDER BY fa.ORDEN_MOSTRAR, p.NOMBRE_PROPIEDAD';
     qProp.ParamByName('fam').AsString := CodigoFamilia;
     qProp.Open;
+
     qOpc.Connection := FConexion;
     qOpc.SQL.Text   :=
       'SELECT ID_VALOR_PV, VALOR_PV ' +
       'FROM fza_propiedades_valores ' +
       'WHERE ID_PROPIEDAD_PV = :cod AND ESACTIVO_PV = ''S'' ' +
       'ORDER BY VALOR_PV';
+
     while not qProp.Eof do
     begin
       cod := qProp.FieldByName('CODIGO_PROPIEDAD').AsString;
       idx := IndexOfCodigo(cod);
+
       if idx < 0 then
       begin
+        // AÑADIR NUEVA PROPIEDAD
         FillChar(S, SizeOf(S), 0);
         S.CodigoPropiedad := cod;
         S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROPIEDAD').AsString;
@@ -469,6 +525,7 @@ begin
         S.Ctrl            := nil;
         S.Opciones        := nil;
         S.Eliminar        := False;
+
         if S.TipoValor = tvpLista then
         begin
           S.Opciones := TDictionary<Integer, string>.Create;
@@ -483,18 +540,19 @@ begin
           end;
         end;
         FSlots.Add(S);
-        FModificado := True;
       end
       else
       begin
+        // RESCATAR EXISTENTE (Pertenece a la nueva familia)
         S := FSlots[idx];
         S.EsRequerido := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
-        if S.Eliminar then S.Eliminar := False;
+        S.Eliminar := False; // La salvamos, esté vacía o llena
         FSlots[idx] := S;
       end;
       qProp.Next;
     end;
-    // Redibujamos los controles si hubo cambios
+
+    // Redibujamos la vista con las supervivientes y las nuevas
     ReconstruirVista;
   finally
     qProp.Free;
@@ -558,7 +616,7 @@ begin
   lbl.Width   := ANCHO_LABEL;
   lbl.AutoSize:= True;
   if S.EsRequerido then
-    S.NombrePropiedad := S.NombrePropiedad + '*';
+    lbl.Style.Font.Style := [fsBold];
   lbl.Caption := S.NombrePropiedad;
 
   cb := TcxComboBox.Create(FScrollBox);
@@ -602,7 +660,7 @@ begin
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
   if S.EsRequerido then
-    S.NombrePropiedad := S.NombrePropiedad + '*';
+    lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
 
   ed := TcxTextEdit.Create(FScrollBox);
@@ -629,7 +687,7 @@ begin
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
   if S.EsRequerido then
-    S.NombrePropiedad := S.NombrePropiedad + '*';
+    lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
 
   sp := TcxSpinEdit.Create(FScrollBox);
@@ -658,7 +716,7 @@ begin
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := True;
   if S.EsRequerido then
-    S.NombrePropiedad := S.NombrePropiedad + '*';
+    lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
 
   chk := TcxCheckBox.Create(FScrollBox);
@@ -706,12 +764,16 @@ begin
   if MessageDlg('¿Quitar la propiedad "' + FSlots[idx].NombrePropiedad +
                 '" de este artículo?',
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-
   S := FSlots[idx];
   S.Eliminar := True;
   FSlots[idx] := S;
   FModificado := True;
-  ReconstruirVista;
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      ReconstruirVista;
+    end
+  );
 end;
 
 { ═══════════════════════════════════════════════════════════════════════════ }
