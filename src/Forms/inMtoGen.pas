@@ -583,11 +583,42 @@ procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   inherited;
+  if (Key = VK_ESCAPE) then
+  begin
+    CancelarGrids(Owner);
+    key := 0;
+//    if ((pcPantalla.ActivePage = tsFicha)) then
+//        pcPantalla.ActivePage := tsLista;
+  end;
   if ((Key = VK_RETURN) and (ActiveControl = nil)) then
     begin
       key := 0;
       SimulateTabKey;
     end;
+  if (dsTablaG.State = dsBrowse) then
+  begin
+
+    if (Key = VK_PRIOR) then
+       nvNavegador.Buttons.Prior.Click;
+    if (Key = VK_NEXT) then
+       nvNavegador.Buttons.Next.Click;
+    if (Key = VK_INSERT) then
+      dsTablaG.DataSet.Insert;
+    if (key = VK_HOME) then
+      dsTablaG.DataSet.First;
+    if (key = VK_END) then
+      dsTablaG.DataSet.Last;
+    if (key = VK_F2) then
+      dsTablaG.DataSet.Edit;
+    key := 0;
+  end;
+  if (key = VK_F12) then
+  begin
+    if ((dsTablaG.State = dsEdit) or
+        (dsTablaG.State = dsInsert)) then
+      dsTablaG.DataSet.Post;
+    key := 0;
+  end;
 end;
 
 procedure TfrmMtoGen.SimulateTabKey;
@@ -607,31 +638,12 @@ procedure TfrmMtoGen.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   inherited;
-  if (Key = VK_ESCAPE) then
-  begin
-    CancelarGrids(Owner);
-    if ((pcPantalla.ActivePage = tsFicha)) then
-        pcPantalla.ActivePage := tsLista;
-  end;
-  if (dsTablaG.State = dsBrowse) then
-  begin
-    if (Key = VK_PRIOR) then
-       nvNavegador.Buttons.Prior.Click;
-    if (Key = VK_NEXT) then
-       nvNavegador.Buttons.Next.Click;
-    if (Key = VK_INSERT) then
-      dsTablaG.DataSet.Insert;
-    if (key = VK_HOME) then
-      dsTablaG.DataSet.First;
-    if (key = VK_END) then
-      dsTablaG.DataSet.Last;
-    if (key = VK_F2) then
-      dsTablaG.DataSet.Edit;
-  end;
-    if (key = VK_F12) then
-      if ((dsTablaG.State = dsEdit) or
-          (dsTablaG.State = dsInsert)) then
-        dsTablaG.DataSet.Post;
+//  if (Key = VK_ESCAPE) then
+//  begin
+//    CancelarGrids(Owner);
+//    if ((pcPantalla.ActivePage = tsFicha)) then
+//        pcPantalla.ActivePage := tsLista;
+//  end;
 end;
 
 procedure TfrmMtoGen.FormShow(Sender: TObject);

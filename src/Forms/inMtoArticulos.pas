@@ -851,6 +851,8 @@ procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
+  if (csLoading in ComponentState) or (csDestroying in ComponentState) then
+    Exit;
   if Assigned(dmmArticulos) then
   if (dmmArticulos.unqryTablaG.Active = True) then
     if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then

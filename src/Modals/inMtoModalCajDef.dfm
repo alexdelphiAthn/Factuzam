@@ -3,10 +3,11 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
   Caption = 'Seleccionar Caja'
   ClientHeight = 184
   ClientWidth = 758
+  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnShow = FormShow
-  ExplicitWidth = 770
-  ExplicitHeight = 222
+  ExplicitWidth = 774
+  ExplicitHeight = 223
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 0
@@ -15,8 +16,8 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 134
-    ExplicitWidth = 752
+    ExplicitTop = 135
+    ExplicitWidth = 756
     object btnCancelar1: TcxButton
       Left = 130
       Top = 9
@@ -47,8 +48,8 @@ inherited frmMtoModalCajDef: TfrmMtoModalCajDef
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 752
-    ExplicitHeight = 134
+    ExplicitWidth = 756
+    ExplicitHeight = 135
     object tvAlmacenesCajas: TcxGridDBTableView
       Navigator.Buttons.ConfirmDelete = True
       Navigator.Buttons.First.Hint = 'Va al primer Registro'
