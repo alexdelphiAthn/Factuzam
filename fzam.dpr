@@ -122,7 +122,8 @@ uses
   Vcl.Styles,
   inLibArticulosPropiedades in 'src\Lib\inLibArticulosPropiedades.pas',
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
-  inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas';
+  inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
+  inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel};
 
 var
   frmLogon: TfrmLogon;

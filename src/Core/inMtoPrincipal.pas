@@ -598,6 +598,18 @@ begin
   end;
   if (Message.CharCode = VK_ESCAPE) then
   begin
+    if Application.ModalLevel > 0 then
+    begin
+      Result := inherited IsShortCut(Message);
+      Exit;
+    end;
+    if Assigned(Screen.ActiveForm) and
+       (Screen.ActiveForm <> Self) and
+       (Screen.ActiveForm.Parent = nil) then
+    begin
+      Result := inherited IsShortCut(Message);
+      Exit;
+    end;
     if (pcPrincipal.PageCount = 0) then
     begin
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);

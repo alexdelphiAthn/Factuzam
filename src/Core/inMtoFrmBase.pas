@@ -1,16 +1,16 @@
-{******************************************************************************}
+锘縶******************************************************************************}
 {                                                                              }
-{  M骴ulo:       inMtoBase                                                     }
+{  M贸dulo:       inMtoBase                                                     }
 {    Tipo:       Formulario (Core)                                             }
-{ Versi髇:       1.0.0                                                         }
+{ Versi贸n:       1.0.0                                                         }
 {   Fecha:       06/02/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripci髇:                                                                }
-{    Este formulario es el formulario base para todos los dem醩. Tiene la      }
-{    traducci髇 al Espa駉l de Developer Express. S髄o sirve a prop髎ito de     }
+{  Descripci贸n:                                                                }
+{    Este formulario es el formulario base para todos los dem谩s. Tiene la      }
+{    traducci贸n al Espa帽ol de Developer Express. S贸lo sirve a prop贸sito de     }
 {    herencia para generar otros formularios                                   }
 {******************************************************************************}
 
@@ -68,10 +68,10 @@ begin
 end;
 
 {
-C髆o heredar un form sin haber pasado por File New Others Inheritance.....
-Primero poniendo en la definici髇 de la clase, a馻diendo el unit a uses y luego
+C贸mo heredar un form sin haber pasado por File New Others Inheritance.....
+Primero poniendo en la definici贸n de la clase, a帽adiendo el unit a uses y luego
 TFormOtherType = class(InheritedFormType)
-y despu閟 pasando por el dfm coomo se explica a continuaci髇
+y despu茅s pasando por el dfm coomo se explica a continuaci贸n
 
 https://stackoverflow.com/questions/70742195/
                                     how-to-make-an-old-form-inherit-from-another

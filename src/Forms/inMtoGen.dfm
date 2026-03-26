@@ -10,6 +10,7 @@ inherited frmMtoGen: TfrmMtoGen
   Visible = True
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
+  OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
   OnShow = FormShow
   ExplicitWidth = 1091

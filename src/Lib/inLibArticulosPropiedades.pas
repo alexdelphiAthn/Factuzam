@@ -22,7 +22,7 @@ uses
   Winapi.Windows,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics,
-  Vcl.Dialogs,
+  Vcl.Dialogs, inMtoModalAceptCancel, Messages,
   cxControls, cxContainer, cxEdit, cxTextEdit, cxSpinEdit,
   cxCheckBox, cxLabel, cxDropDownEdit, cxButtons,
   cxPC, cxLookAndFeels, cxLookAndFeelPainters,
@@ -48,21 +48,23 @@ type
   end;
 
   { Diálogo selector de propiedades disponibles }
-  TfrmSelPropiedades = class(TForm)
+  TfrmSelPropiedades = class(TFrmModalAceptCancel)
   private
     FConexion       : TUniConnection;
     FExcluirCodigos : TStringList;
     FListBox        : TListBox;
-    FBtnAceptar     : TcxButton;
-    FBtnCancelar    : TcxButton;
+//    FBtnAceptar     : TcxButton;
+//    FBtnCancelar    : TcxButton;
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   public
     CodigosSeleccionados : TStringList;
     constructor Create(AOwner: TComponent; AConexion: TUniConnection;
                        AExcluir: TStringList); reintroduce;
     destructor Destroy; override;
     procedure CargarLista;
+    function IsShortCut(var Message: TWMKey): Boolean; override;
   end;
 
   { Gestor principal — instanciar uno por formulario de artículo }
@@ -125,7 +127,7 @@ const
   ALTO_FILA      = 26;
   MARGEN_V       = 6;
   MARGEN_H       = 8;
-  ANCHO_LABEL    = 160;
+  ANCHO_LABEL    = 180;
   ANCHO_CTRL     = 260;
   ANCHO_BTN_DEL  = 24;
   COLOR_REQUERIDO = clMaroon;
@@ -139,20 +141,20 @@ constructor TfrmSelPropiedades.Create(AOwner: TComponent;
 var
   pnlBtn: TPanel;
 begin
-  inherited CreateNew(AOwner);
+  inherited Create(AOwner);
   FConexion       := AConexion;
   FExcluirCodigos := AExcluir;
   CodigosSeleccionados := TStringList.Create;
 
   Caption    := 'Añadir propiedades al artículo';
-  Width      := 380;
-  Height     := 440;
+  Width      := 542;
+  Height     := 400;
   Position   := poOwnerFormCenter;
   BorderStyle:= bsDialog;
   Font.name := 'Lucida Sans';
 
   FListBox := TListBox.Create(Self);
-  FListBox.Parent      := Self;
+  FListBox.Parent      := pnlBody;
   FListBox.Align       := alClient;
   FListBox.MultiSelect := True;
   FListBox.Style       := lbOwnerDrawFixed;
@@ -160,37 +162,42 @@ begin
   FListBox.BorderStyle := bsNone;
   FListBox.ParentFont := True;
 
-  pnlBtn := TPanel.Create(Self);
-  pnlBtn.Parent := Self;
-  pnlBtn.Align  := alBottom;
-  pnlBtn.Height := 40;
-  pnlBtn.BevelOuter := bvNone;
-  pnlBtn.Font.name := 'Lucida Sans';
-  pnlBtn.Font.Height := -13;
+  if Assigned(btnAceptar) then
+    btnAceptar.OnClick := BtnAceptarClick;
 
-  FBtnAceptar := TcxButton.Create(Self);
-  FBtnAceptar.Parent  := pnlBtn;
-  FBtnAceptar.Caption := '&Aceptar';
-  FBtnAceptar.Width   := 90;
-  FBtnAceptar.Height  := 28;
-  FBtnAceptar.Left    := pnlBtn.Width - 200;
-  FBtnAceptar.Top     := 6;
-  FBtnAceptar.Anchors := [akRight, akTop];
-  FBtnAceptar.ModalResult := mrNone;
-  FbtnAceptar.ParentFont := True;
-  FBtnAceptar.OnClick := BtnAceptarClick;
+  if Assigned(btnCancelar) then
+    btnCancelar.OnClick := BtnCancelarClick;
+//  pnlBtn := TPanel.Create(Self);
+//  pnlBtn.Parent := Self;
+//  pnlBtn.Align  := alBottom;
+//  pnlBtn.Height := 40;
+//  pnlBtn.BevelOuter := bvNone;
+//  pnlBtn.Font.name := 'Lucida Sans';
+//  pnlBtn.Font.Height := -13;
 
-  FBtnCancelar := TcxButton.Create(Self);
-  FBtnCancelar.Parent  := pnlBtn;
-  FBtnCancelar.Caption := '&Cancelar';
-  FBtnCancelar.Width   := 90;
-  FBtnCancelar.Height  := 28;
-  FBtnCancelar.Left    := pnlBtn.Width - 100;
-  FBtnCancelar.Top     := 6;
-  FBtnCancelar.ParentFont := True;
-  FBtnCancelar.Anchors := [akRight, akTop];
-  FBtnCancelar.ModalResult := mrNone;
-  FBtnCancelar.OnClick := BtnCancelarClick;
+//  FBtnAceptar := TcxButton.Create(Self);
+//  FBtnAceptar.Parent  := pnlBtn;
+//  FBtnAceptar.Caption := '&Aceptar';
+//  FBtnAceptar.Width   := 90;
+//  FBtnAceptar.Height  := 28;
+//  FBtnAceptar.Left    := pnlBtn.Width - 200;
+//  FBtnAceptar.Top     := 6;
+//  FBtnAceptar.Anchors := [akRight, akTop];
+//  FBtnAceptar.ModalResult := mrNone;
+//  FbtnAceptar.ParentFont := True;
+//  FBtnAceptar.OnClick := BtnAceptarClick;
+
+//  FBtnCancelar := TcxButton.Create(Self);
+//  FBtnCancelar.Parent  := pnlBtn;
+//  FBtnCancelar.Caption := '&Cancelar';
+//  FBtnCancelar.Width   := 90;
+//  FBtnCancelar.Height  := 28;
+//  FBtnCancelar.Left    := pnlBtn.Width - 100;
+//  FBtnCancelar.Top     := 6;
+//  FBtnCancelar.ParentFont := True;
+//  FBtnCancelar.Anchors := [akRight, akTop];
+//  FBtnCancelar.ModalResult := mrNone;
+//  FBtnCancelar.OnClick := BtnCancelarClick;
 
   CargarLista;
 end;
@@ -199,6 +206,29 @@ destructor TfrmSelPropiedades.Destroy;
 begin
   CodigosSeleccionados.Free;
   inherited;
+end;
+
+procedure TfrmSelPropiedades.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caHide;
+end;
+
+function TfrmSelPropiedades.IsShortCut(var Message: TWMKey): Boolean;
+begin
+  if Message.CharCode = VK_ESCAPE then
+  begin
+    // Ejecutamos el botón cancelar y cerramos la modal
+    BtnCancelarClick(Self);
+
+    // Al devolver True, le decimos a Delphi: "Ya me he encargado de esta tecla,
+    // córtala aquí y NO la pases al formulario principal".
+    Result := True;
+    Exit;
+  end;
+
+  // Para el resto de teclas, comportamiento normal
+  Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmSelPropiedades.CargarLista;
@@ -722,7 +752,7 @@ begin
   chk := TcxCheckBox.Create(FScrollBox);
   chk.Parent   := FScrollBox;
   chk.Left     := MARGEN_H + ANCHO_LABEL + 6;
-  chk.Top      := ATop;
+  chk.Top      := ATop + 4;
   chk.Width    := ALTO_FILA;
   chk.Height   := ALTO_FILA;
   chk.Caption  := '';
