@@ -126,13 +126,12 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
             DataBinding.FieldName = 'NOMBRE_AC'
             Width = 168
           end
-          object tvDetalleYA_USADO: TcxGridDBColumn
-            DataBinding.FieldName = 'YA_USADO'
-            Width = 141
-          end
-          object tvDetalleMARCAR_NUEVO: TcxGridDBColumn
-            DataBinding.FieldName = 'MARCAR_NUEVO'
-            Width = 133
+          object tvDetalleASIGNADO: TcxGridDBColumn
+            DataBinding.FieldName = 'ASIGNADO'
+            PropertiesClassName = 'TcxCheckBoxProperties'
+            Properties.Alignment = taRightJustify
+            Properties.ValueChecked = '1'
+            Properties.ValueUnchecked = '0'
           end
         end
         object cxGridLevel1: TcxGridLevel
@@ -165,28 +164,24 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   object unqryDetalle: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT '
+      '    SELECT  '
+      '      val.ID_ATRIBUTO_AC,  '
+      '      val.ID_CONJUNTO_AC,  '
+      '      val.NOMBRE_AC,  '
       
-        '  val.ID_ATRIBUTO_AC, -- A'#241'adimos el ID del atributo para enlaza' +
-        'r con el Maestro'
-      '  val.ID_CONJUNTO_AC, '
-      '  val.NOMBRE_AC, '
+        '      CASE WHEN asign.ID_CONJUNTO_ACA IS NOT NULL THEN 1 ELSE 0 ' +
+        'END AS ASIGNADO  '
+      '    FROM fza_atributos_conjuntos val  '
+      '    LEFT JOIN fza_articulos_conjuntos_asign asign  '
+      '           ON asign.ID_CONJUNTO_ACA = val.ID_CONJUNTO_AC  '
+      '          AND asign.CODIGO_ARTICULO_ACA = :Articulo  '
+      '    WHERE val.ID_ATRIBUTO_AC IN (  '
       
-        '  CASE WHEN asign.ID_CONJUNTO_ACA IS NOT NULL THEN '#39'S'#39' ELSE '#39'N'#39' ' +
-        'END AS YA_USADO, '
-      '  0 AS MARCAR_NUEVO '
-      'FROM fza_atributos_conjuntos val '
-      'LEFT JOIN fza_articulos_conjuntos_asign asign '
-      '       ON asign.ID_CONJUNTO_ACA = val.ID_CONJUNTO_AC '
-      '      AND asign.CODIGO_ARTICULO_ACA = :Articulo '
-      
-        '-- Filtramos por todas las dimensiones que pertenezcan a esta va' +
-        'riaci'#243'n (ej. '#39'TC'#39')'
-      
-        'WHERE val.ID_ATRIBUTO_AC IN (SELECT ID_ATRIBUTO_VA FROM fza_vari' +
-        'aciones_atributos WHERE ID_VA = :Variacion)'
-      '  AND val.ESACTIVO_AC = '#39'S'#39' '
-      'ORDER BY val.NOMBRE_AC')
+        '            SELECT ID_ATRIBUTO_VA FROM fza_variaciones_atributos' +
+        ' WHERE ID_VA = :Variacion  '
+      '          )  '
+      '    ORDER BY val.NOMBRE_AC;'
+      '')
     MasterSource = dsMaestro
     MasterFields = 'ID_ATRIBUTO_VA'
     DetailFields = 'ID_ATRIBUTO_AC'
