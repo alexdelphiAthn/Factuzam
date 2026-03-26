@@ -11,9 +11,22 @@ uses
   cxControls, cxSplitter, cxStyles, cxDBData, cxGridLevel, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   UniDataConn, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit,
-  cxNavigator, dxDateRanges, dxScrollbarAnnotations;
+  cxNavigator, dxDateRanges, dxScrollbarAnnotations, system.Generics.Collections;
 
 type
+    TValorAtributo = record
+    IdConjunto: Integer; // ej: 1004
+    NombreValor: string; // ej: 'XL'
+  end;
+
+  TDimensionSKU = class
+    IdAtributo: string;      // ej: 'TAL'
+    NombreAtributo: string;  // ej: 'Talla'
+    Valores: TList<TValorAtributo>;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
   TfrmMtoModalGenerarSKUS = class(TfrmModalAceptCancel)
     unqryMaestro: TUniQuery;
     unqryDetalle: TUniQuery;
@@ -41,14 +54,20 @@ type
     procedure tvMaestroFocusedRecordChanged(Sender: TcxCustomGridTableView;
       APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
+    procedure btnAceptarClick(Sender: TObject);
   private
+    private
+    FDimensiones: TObjectList<TDimensionSKU>;
     FCodigoArticulo: string;
     FTipoVariacion: string;
     procedure CargarDimensionesMaestro;
     procedure CargarValoresDetalle(const IdAtributo: string);
+    procedure GenerarCombinaciones(Nivel: Integer;
+                                   NombreSKU, IdsValores: string);
   public
     // Método para llamar a esta pantalla desde el formulario principal
-    class function Ejecutar(const ACodigoArticulo, ATipoVariacion: string): Boolean;
+    class function Ejecutar(const ACodigoArticulo,
+                                  ATipoVariacion: string): Boolean;
   end;
 
 var
@@ -57,6 +76,48 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
+                                                 NombreSKU, IdsValores: string);
+var
+  DimActual: TDimensionSKU;
+  ValActual: TValorAtributo;
+  NuevoNombre, NuevosIds: string;
+begin
+  // CONDICIÓN DE PARADA: Hemos llegado al final de las dimensiones
+  if Nivel = FDimensiones.Count then
+  begin
+    // ¡AQUÍ NACE UN SKU!
+    // En este punto tienes la combinación completa.
+    // Aquí es donde lo insertas en una tabla temporal (MemTable),
+    // en un TcxGrid o directamente en la BD.
+
+    // Ej: MemTableSKU.AppendRecord([NuevoCodigo, NombreSKU, PrecioPorDefecto...]);
+    Writeln('Generado SKU: ', NombreSKU, ' (IDs: ', IdsValores, ')');
+    Exit;
+  end;
+
+  // Tomamos la dimensión actual (ej: Talla)
+  DimActual := FDimensiones[Nivel];
+
+  // Iteramos por todos sus valores (S, M, L...)
+  for ValActual in DimActual.Valores do
+  begin
+    // Construimos los textos para el siguiente salto
+    if NombreSKU = '' then
+      NuevoNombre := ValActual.NombreValor
+    else
+      NuevoNombre := NombreSKU + ' - ' + ValActual.NombreValor;
+
+    if IdsValores = '' then
+      NuevosIds := IntToStr(ValActual.IdConjunto)
+    else
+      NuevosIds := IdsValores + ';' + IntToStr(ValActual.IdConjunto);
+
+    // LLAMADA RECURSIVA: Saltamos a la siguiente dimensión (ej: Color)
+    GenerarCombinaciones(Nivel + 1, NuevoNombre, NuevosIds);
+  end;
+end;
 
 class function TfrmMtoModalGenerarSKUS.Ejecutar(const ACodigoArticulo, ATipoVariacion: string): Boolean;
 var
@@ -82,6 +143,85 @@ begin
 end;
 
 { 1. CARGA DEL GRID MAESTRO (Izquierda) }
+procedure TfrmMtoModalGenerarSKUS.btnAceptarClick(Sender: TObject);
+var
+  DimDict: TObjectDictionary<string, TDimensionSKU>;
+  DimActual: TDimensionSKU;
+  ValorActual: TValorAtributo;
+  IdAtr: string;
+begin
+  // 1. Forzamos que se guarde cualquier check que esté a medias de editar en el grid
+  if tvDetalle.DataController.IsEditing then
+    tvDetalle.DataController.Post;
+
+  // Creamos un diccionario para agrupar las dimensiones y sus valores seleccionados
+  DimDict := TObjectDictionary<string, TDimensionSKU>.Create([doOwnsValues]);
+  try
+    // 2. TRUCO: Desconectamos el Maestro-Detalle temporalmente para ver TODOS los registros
+    unqryDetalle.MasterSource := nil;
+    unqryDetalle.First;
+
+    // 3. Recorremos el dataset en memoria buscando lo que tiene el check (MARCAR_NUEVO = 1)
+    while not unqryDetalle.Eof do
+    begin
+      if unqryDetalle.FieldByName('MARCAR_NUEVO').AsInteger = 1 then
+      begin
+        IdAtr := unqryDetalle.FieldByName('ID_ATRIBUTO_AC').AsString;
+
+        // Si esta dimensión aún no está en nuestro diccionario, la creamos
+        if not DimDict.TryGetValue(IdAtr, DimActual) then
+        begin
+          DimActual := TDimensionSKU.Create;
+          DimActual.IdAtributo := IdAtr;
+          // Buscamos el nombre de la dimensión en el grid maestro para que quede bonito
+          if unqryMaestro.Locate('ID_ATRIBUTO_VA', IdAtr, []) then
+            DimActual.NombreAtributo := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+
+          DimDict.Add(IdAtr, DimActual);
+        end;
+
+        // Añadimos el valor marcado (Ej: "XL") a esta dimensión
+        ValorActual.IdConjunto := unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
+        ValorActual.NombreValor := unqryDetalle.FieldByName('NOMBRE_AC').AsString;
+        DimActual.Valores.Add(ValorActual);
+      end;
+      unqryDetalle.Next;
+    end;
+
+    // Volvemos a conectar el Maestro-Detalle para dejar la pantalla como estaba
+    unqryDetalle.MasterSource := dsMaestro;
+
+    // 4. PREPARAMOS LA LLAMADA
+    if DimDict.Count = 0 then
+    begin
+      ShowMessage('No has marcado ningún valor nuevo para generar SKUs.');
+      Exit;
+    end;
+
+    // Pasamos los valores del diccionario a tu lista global de la clase (FDimensiones)
+    // para que la función recursiva pueda leerla fácilmente por índice (0, 1, 2...)
+    if not Assigned(FDimensiones) then
+      FDimensiones := TObjectList<TDimensionSKU>.Create(False); // False = no destruye los objetos, lo hace el dict
+    FDimensiones.Clear;
+
+    for DimActual in DimDict.Values do
+      FDimensiones.Add(DimActual);
+
+    // =================================================================
+    // 5. ¡LA GRAN LLAMADA A LA RECURSIVIDAD!
+    // =================================================================
+    GenerarCombinaciones(0, '', '');
+
+    // Si la recursividad lo mete en una MemTable visual, el usuario
+    // verá aquí aparecer las combinaciones mágicamente.
+    ShowMessage('¡Combinaciones generadas con éxito!');
+
+  finally
+    DimDict.Free;
+  end;
+  inherited;
+end;
+
 procedure TfrmMtoModalGenerarSKUS.CargarDimensionesMaestro;
 begin
   unqryMaestro.Close;
