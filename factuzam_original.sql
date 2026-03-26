@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 24/03/2026 20:12:50
+-- Backup generado: 26/03/2026 19:40:40
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -113,6 +113,9 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '2026-03-11 22:27:51', 'DEMO', 'DEMO', NULL),
   ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
+  ('DEMO-BASICO', 'S', 'ESTANDAR', 'Camiseta Algodón Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-26 17:34:00', '2026-03-26 17:34:00', 'Admin', '', 'TC_BASICO'),
+  ('DEMO-CAMISA', 'S', 'ESTANDAR', 'Camisa Lino Demo', 'ROPA', '', 'N', 'Uds', 'S', 'N', NULL, '2026-03-26 19:12:40', '2026-03-26 19:15:56', '', 'Administrador', 'TC_DEMO'),
+  ('DEMO-PRO', 'S', 'ESTANDAR', 'Cinturón Piel Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-26 17:34:00', '2026-03-26 17:34:00', 'Admin', '', 'TC_PRO'),
   ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:54', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:51', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:50', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
@@ -128,7 +131,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC');
--- 24 registros exportados
+-- 27 registros exportados
 
 
 -- Tabla: fza_articulos_conjuntos_asign
@@ -149,11 +152,15 @@ ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_ATRIBUTO` (`CODIG
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('DEMO-CAMISA', 9001, 'TAL', 'S', '2026-03-26 19:15:56', NULL, '', 'Administrador'),
+  ('DEMO-CAMISA', 9002, 'COL', 'S', '2026-03-26 19:15:56', NULL, '', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
+  ('ZAP-BOTA-MT', 1, 'CO', 'S', '2026-03-26 17:54:27', '2026-03-26 17:54:27', 'Administrador', 'Administrador'),
+  ('ZAP-BOTA-MT', 2, 'TAL', 'S', '2026-03-26 18:09:58', '2026-03-26 18:09:58', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador');
--- 4 registros exportados
+-- 8 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -264,6 +271,14 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('CHAQ-CUERO', 'MATERIAL', 21, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('DEMO-CAMISA', 'COMPOSICION', NULL, '100% ALGODÓN', '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'ES_ECO', NULL, 'N', '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'ESTILO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'GENERO', 32, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'LAVADO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'MARCA', 5, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'ORIGEN', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'TEMPORADA', 10, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('LEGGING-SPORT', 'ACTIVIDAD', 56, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'MARCA', 4, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -318,7 +333,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('ZAP-TACÓN', 'ORIGEN', NULL, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TEMPORADA', 10, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TIPO_SUELA', 49, NULL, '2026-03-24 07:06:54', 'Administrador');
--- 115 registros exportados
+-- 123 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -409,6 +424,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('CHAQ-CUERO/NEGRO/L', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:51', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/M', 'CHAQ-CUERO', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/BLANCO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-26 19:36:46', NULL, '', ''),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('FALD-JEAN/VAQUERO/S', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:10', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
@@ -461,7 +477,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 84 registros exportados
+-- 85 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -710,11 +726,14 @@ ALTER TABLE `fza_atributos_conjuntos` ADD INDEX `IDX_VAR_AC` (`ID_VARIACION_AC`)
 -- Datos de fza_atributos_conjuntos
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
 INSERT INTO `fza_atributos_conjuntos` (`ID_CONJUNTO_AC`, `NOMBRE_AC`, `ID_VARIACION_AC`, `ID_ATRIBUTO_AC`, `ESACTIVO_AC`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (1, 'COLORES BÁSICOS', 'TC', 'CO', 'S', '2026-03-09 07:07:15', '2026-01-04 12:17:51', 'Administrador', 'Adminstrador'),
-  (2, 'TALLAS CABALLERO (42-46)', 'TC', 'TAL', 'S', '2026-03-09 07:07:42', '2026-01-10 17:42:19', 'ADMIN', 'ADMIN'),
-  (3, 'TALLAS AMERICANAS (S-XL)', 'TC', 'TAL', 'S', '2026-03-09 07:07:43', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
+  (1001, 'S', '', 'TAL', 'S', '2026-03-26 17:34:00', NULL, '', ''),
+  (1002, 'M', '', 'TAL', 'S', '2026-03-26 17:34:00', NULL, '', ''),
+  (1003, 'L', '', 'TAL', 'S', '2026-03-26 17:34:00', NULL, '', ''),
+  (1004, 'XL', '', 'TAL', 'S', '2026-03-26 17:34:00', NULL, '', ''),
+  (9001, 'Tallas Hombre Standard', '', 'TAL', 'S', '2026-03-26 19:12:40', NULL, '', ''),
+  (9002, 'Colores Básicos Verano', '', 'COL', 'S', '2026-03-26 19:12:40', NULL, '', '');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
--- 3 registros exportados
+-- 6 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos_det
@@ -737,10 +756,16 @@ INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `I
   (2, 126, '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN'),
   (2, 127, '2026-01-10 17:42:50', '2026-01-10 17:42:50', 'ADMIN', 'ADMIN'),
   (3, 206, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (3, 207, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
   (3, 208, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (3, 209, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA');
--- 7 registros exportados
+  (3, 209, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (9001, 9101, '2026-03-26 19:12:40', NULL, '', ''),
+  (9001, 9102, '2026-03-26 19:12:40', NULL, '', ''),
+  (9001, 9103, '2026-03-26 19:12:40', NULL, '', ''),
+  (9001, 9104, '2026-03-26 19:12:40', NULL, '', ''),
+  (9002, 9201, '2026-03-26 19:12:40', NULL, '', ''),
+  (9002, 9202, '2026-03-26 19:12:40', NULL, '', ''),
+  (9002, 9203, '2026-03-26 19:12:40', NULL, '', '');
+-- 13 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -823,6 +848,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('CHAQ-CUERO/NEGRO/M', 100, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('CHAQ-CUERO/NEGRO/XL', 100, '2026-01-08 18:55:08', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/M/B', 9102, '2026-03-26 19:15:05', '2026-03-26 00:00:00', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/M/B', 9201, '2026-03-26 19:15:14', '2026-03-26 00:00:00', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/L', 4, '2026-01-08 18:55:32', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/L', 105, '2026-01-08 18:55:38', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -927,7 +954,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 168 registros exportados
+-- 170 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -983,9 +1010,16 @@ INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `DES
   (224, 'TAL', '41', 'Talla 41', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   (225, 'TAL', '40', 'Talla 40', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   (226, 'TAL', '44', 'Talla 44', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (227, 'TAL', '39', 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
+  (227, 'TAL', '39', 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  (9101, '', 'S', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9102, '', 'M', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9103, '', 'L', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9104, '', 'XL', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9201, '', 'BLANCO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9202, '', 'NEGRO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9203, '', 'AZUL MARINO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', '');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 31 registros exportados
+-- 38 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -1322,7 +1356,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 51, 3, 'S', 'S', '2026-03-24 20:12:27', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 52, 3, 'S', 'S', '2026-03-26 17:31:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -2967,8 +3001,63 @@ WHERE sku.CODIGO_UNIDAD_SKU = ''ZAP-OXFORD/MARRON/43''', '2026-03-24 20:01:49', 
   ID_VA_BASICO_FAD VARCHAR(20) NOT NULL,
   OBLIGATORIO_FAD VARCHAR(1) DEFAULT ''N'', -- Opcional: para forzar que el usuario no lo pueda quitar
   PRIMARY KEY (CODIGO_FAMILIA_FAD, ID_VA_BASICO_FAD)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;', '2026-03-24 20:12:39', '2026-03-24 20:12:27', 'Administrador', 'Administrador');
--- 21 registros exportados
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;', '2026-03-24 20:12:39', '2026-03-24 20:12:27', 'Administrador', 'Administrador'),
+  ('051', 'datos demo', '-- =========================================================================
+-- SCRIPT DE DATOS DEMO: CONJUNTOS, VALORES Y SKUs (MODELO NORMALIZADO)
+-- =========================================================================
+
+-- 1. CREAMOS EL ESQUEMA DE VARIACIÓN Y SUS ATRIBUTOS
+INSERT IGNORE INTO fza_variaciones (CODIGO_VAR, NOMBRE_VAR, ESACTIVO_VAR) VALUES
+(''TC_DEMO'', ''Talla y Color Demo'', ''S'');
+
+INSERT IGNORE INTO fza_variaciones_atributos (ID_VA, ID_ATRIBUTO_VA, NOMBRE_VA, ORDEN_VA) VALUES
+(''TC_DEMO'', ''TAL'', ''Talla'', 1),
+(''TC_DEMO'', ''COL'', ''Color'', 2);
+
+-- 2. CREAMOS LOS GRUPOS / CONJUNTOS (Los nombres de las agrupaciones)
+INSERT IGNORE INTO fza_atributos_conjuntos (ID_CONJUNTO_AC, ID_ATRIBUTO_AC, NOMBRE_AC, ESACTIVO_AC) VALUES
+(9001, ''TAL'', ''Tallas Hombre Standard'', ''S''),
+(9002, ''COL'', ''Colores Básicos Verano'', ''S'');
+
+-- 3. CREAMOS LOS VALORES REALES DE LOS ATRIBUTOS
+INSERT IGNORE INTO fza_atributos_valores (ID_VALOR_AV, VALOR_AV) VALUES
+(9101, ''S''), (9102, ''M''), (9103, ''L''), (9104, ''XL''),
+(9201, ''BLANCO''), (9202, ''NEGRO''), (9203, ''AZUL MARINO'');
+
+-- 4. METEMOS LOS VALORES DENTRO DE SUS GRUPOS (El detalle del conjunto)
+INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD) VALUES
+(9001, 9101), -- Tallas Hombre -> S
+(9001, 9102), -- Tallas Hombre -> M
+(9001, 9103), -- Tallas Hombre -> L
+(9001, 9104), -- Tallas Hombre -> XL
+(9002, 9201), -- Colores Básicos -> BLANCO
+(9002, 9202), -- Colores Básicos -> NEGRO
+(9002, 9203); -- Colores Básicos -> AZUL MARINO
+
+-- 5. CREAMOS EL ARTÍCULO DE PRUEBA
+INSERT IGNORE INTO fza_articulos 
+(CODIGO_ARTICULO, DESCRIPCION_ARTICULO, ACTIVO_ARTICULO, ESVARIACION_ARTICULO, TIPO_VARIACION_ARTICULO) 
+VALUES
+(''DEMO-CAMISA'', ''Camisa Lino Demo'', ''S'', ''S'', ''TC_DEMO'');
+
+-- 6. ASIGNAMOS LOS GRUPOS AL ARTÍCULO (Esta es la condición que pusimos para abrir la pantalla)
+INSERT IGNORE INTO fza_articulos_conjuntos_asign (CODIGO_ARTICULO_ACA, ID_ATRIBUTO_ACA, ID_CONJUNTO_ACA) VALUES
+(''DEMO-CAMISA'', ''TAL'', 9001), -- Le asignamos el grupo de Tallas Hombre
+(''DEMO-CAMISA'', ''COL'', 9002); -- Le asignamos el grupo de Colores Básicos
+
+-- =========================================================================
+-- LA MAGIA: SIMULAMOS QUE YA SE GENERÓ UN SKU EN EL PASADO
+-- =========================================================================
+
+-- Creamos el código del SKU final
+INSERT IGNORE INTO fza_articulos_skus (CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU) VALUES
+(''DEMO-CAMISA/M/B'', ''DEMO-CAMISA'');
+
+-- Le decimos a la BD que este SKU corresponde a la talla M (9102) y color BLANCO (9201)
+INSERT IGNORE INTO fza_atributos_sku (CODIGO_UNIDAD_SA, ID_VALOR_SA) VALUES
+(''DEMO-CAMISA/M/B'', 9102), 
+(''DEMO-CAMISA/M/B'', 9201);', '2026-03-26 19:13:54', '2026-03-26 17:31:32', 'Administrador', 'Administrador');
+-- 22 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3123,127 +3212,129 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (35, 'fza_facturas_lineas', '1'),
   (36, 'fza_facturas_pagos', '1'),
   (37, 'fza_familias_atributos', '1'),
-  (38, 'fza_formas_pago', '1'),
-  (39, 'fza_generadorprocesos', '1'),
-  (40, 'fza_ivas', '1'),
-  (41, 'fza_ivas_grupos', '1'),
-  (42, 'fza_ivas_tipos', '1'),
-  (43, 'fza_ivas_zonas', '1'),
-  (44, 'fza_metadatos', '1'),
-  (45, 'fza_movimientos_almacen', '1'),
-  (46, 'fza_paises', '1'),
-  (47, 'fza_pedidos', '1'),
-  (48, 'fza_pedidos_lineas', '1'),
-  (49, 'fza_pedidos_mensajes', '1'),
-  (50, 'fza_propiedades', '1'),
-  (51, 'fza_propiedades_valores', '1'),
-  (52, 'fza_proveedores', '1'),
-  (53, 'fza_proveedores_familias', '1'),
-  (54, 'fza_proveedores_familias_conjuntos', '1'),
-  (55, 'fza_recibos', '1'),
-  (56, 'fza_tarifas', '1'),
-  (57, 'fza_tipos_documentos', '1'),
-  (58, 'fza_usuarios', '1'),
-  (59, 'fza_usuarios_grupos', '1'),
-  (60, 'fza_usuarios_perfiles', '1'),
-  (61, 'fza_valores_defecto', '1'),
-  (62, 'fza_variaciones', '1'),
-  (63, 'fza_variaciones_atributos', '1'),
-  (64, 'fza_verifactu_eventos', '1'),
-  (65, 'fza_winforms', '1'),
-  (67, 'vi_articulos', '2'),
-  (68, 'vi_articulos_conjuntos_slots', '2'),
-  (69, 'vi_articulos_familias', '2'),
-  (70, 'vi_articulos_familias_list', '2'),
-  (71, 'vi_articulos_list', '2'),
-  (72, 'vi_articulos_propiedades_slots', '2'),
-  (73, 'vi_articulos_proveedores', '2'),
-  (74, 'vi_articulos_skus', '2'),
-  (75, 'vi_articulos_skus_extendida', '2'),
-  (76, 'vi_articulos_tarifas', '2'),
-  (77, 'vi_art_busquedas', '2'),
-  (78, 'vi_atributos_nombres', '2'),
-  (79, 'vi_cajasdef', '2'),
-  (80, 'vi_caja_busqueda_unificada', '2'),
-  (81, 'vi_caja_tarifa_sku_articulos', '2'),
-  (82, 'vi_caja_totalventas', '2'),
-  (83, 'vi_caja_vales_ptes', '2'),
-  (84, 'vi_clientes', '2'),
-  (85, 'vi_cli_busquedas', '2'),
-  (86, 'vi_contadores', '2'),
-  (87, 'vi_depositos_cliente', '2'),
-  (88, 'vi_empresas', '2'),
-  (89, 'vi_empresas_retenciones', '2'),
-  (90, 'vi_empresas_series', '2'),
-  (91, 'vi_emp_busquedas', '2'),
-  (92, 'vi_facturas', '2'),
-  (93, 'vi_facturas_lineas', '2'),
-  (94, 'vi_facturas_lineas_print', '2'),
-  (95, 'vi_facturas_print', '2'),
-  (96, 'vi_fac_busquedas', '2'),
-  (97, 'vi_fac_lin_busquedas', '2'),
-  (98, 'vi_formapago', '2'),
-  (99, 'vi_info_tpv_completa', '2'),
-  (100, 'vi_ivas', '2'),
-  (101, 'vi_ivas_empresa', '2'),
-  (102, 'vi_ivas_grupos', '2'),
-  (103, 'vi_ivas_zonas', '2'),
-  (104, 'vi_movimientos', '2'),
-  (105, 'vi_paises', '2'),
-  (106, 'vi_proveedores', '2'),
-  (107, 'vi_proveedores_articulos', '2'),
-  (108, 'vi_proveedores_busquedas', '2'),
-  (109, 'vi_recibos', '2'),
-  (110, 'vi_tarifas', '2'),
-  (111, 'vi_usuarios', '2'),
-  (112, 'vi_usuarios_grupos', '2'),
-  (113, 'vi_usuarios_perfiles', '2'),
-  (114, 'vi_variaciones', '2'),
-  (115, 'v_articulos_stock_barras', '2'),
-  (130, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
-  (131, 'PRC_BUSQUEDA_ARTICULOS', '3'),
-  (132, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
-  (133, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
-  (134, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
-  (135, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
-  (136, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
-  (137, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
-  (138, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
-  (139, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
-  (140, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
-  (141, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
-  (142, 'PRC_CREAR_FACTURA_ABONO', '3'),
-  (143, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
-  (144, 'PRC_CREAR_METADATOS', '3'),
-  (145, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
-  (146, 'PRC_CREAR_TRASPASO', '3'),
-  (147, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (148, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (149, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (150, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (151, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
-  (152, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (153, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (154, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (155, 'PRC_GETPERFILFORMULARIO', '3'),
-  (156, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (157, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (158, 'PRC_GET_CREAR_VALOR', '3'),
-  (159, 'PRC_GET_DATA_ARTICULO', '3'),
-  (160, 'PRC_GET_DATA_CLIENTE', '3'),
-  (161, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (162, 'PRC_GET_NEXT_CONT', '3'),
-  (163, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (164, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (165, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (166, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (167, 'PRC_REALIZAR_TRASPASO', '3'),
-  (168, 'PRC_RECALCULAR_STOCK', '3'),
-  (169, 'PRC_SETPERFILFORMULARIO', '3'),
-  (170, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (171, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (38, 'fza_familias_atributos_defecto', '1'),
+  (39, 'fza_familias_claves_info_defecto', '1'),
+  (40, 'fza_formas_pago', '1'),
+  (41, 'fza_generadorprocesos', '1'),
+  (42, 'fza_ivas', '1'),
+  (43, 'fza_ivas_grupos', '1'),
+  (44, 'fza_ivas_tipos', '1'),
+  (45, 'fza_ivas_zonas', '1'),
+  (46, 'fza_metadatos', '1'),
+  (47, 'fza_movimientos_almacen', '1'),
+  (48, 'fza_paises', '1'),
+  (49, 'fza_pedidos', '1'),
+  (50, 'fza_pedidos_lineas', '1'),
+  (51, 'fza_pedidos_mensajes', '1'),
+  (52, 'fza_propiedades', '1'),
+  (53, 'fza_propiedades_valores', '1'),
+  (54, 'fza_proveedores', '1'),
+  (55, 'fza_proveedores_familias', '1'),
+  (56, 'fza_proveedores_familias_conjuntos', '1'),
+  (57, 'fza_recibos', '1'),
+  (58, 'fza_tarifas', '1'),
+  (59, 'fza_tipos_documentos', '1'),
+  (60, 'fza_usuarios', '1'),
+  (61, 'fza_usuarios_grupos', '1'),
+  (62, 'fza_usuarios_perfiles', '1'),
+  (63, 'fza_valores_defecto', '1'),
+  (64, 'fza_variaciones', '1'),
+  (65, 'fza_variaciones_atributos', '1'),
+  (66, 'fza_verifactu_eventos', '1'),
+  (67, 'fza_winforms', '1'),
+  (131, 'vi_articulos', '2'),
+  (132, 'vi_articulos_conjuntos_slots', '2'),
+  (133, 'vi_articulos_familias', '2'),
+  (134, 'vi_articulos_familias_list', '2'),
+  (135, 'vi_articulos_list', '2'),
+  (136, 'vi_articulos_propiedades_slots', '2'),
+  (137, 'vi_articulos_proveedores', '2'),
+  (138, 'vi_articulos_skus', '2'),
+  (139, 'vi_articulos_skus_extendida', '2'),
+  (140, 'vi_articulos_tarifas', '2'),
+  (141, 'vi_art_busquedas', '2'),
+  (142, 'vi_atributos_nombres', '2'),
+  (143, 'vi_cajasdef', '2'),
+  (144, 'vi_caja_busqueda_unificada', '2'),
+  (145, 'vi_caja_tarifa_sku_articulos', '2'),
+  (146, 'vi_caja_totalventas', '2'),
+  (147, 'vi_caja_vales_ptes', '2'),
+  (148, 'vi_clientes', '2'),
+  (149, 'vi_cli_busquedas', '2'),
+  (150, 'vi_contadores', '2'),
+  (151, 'vi_depositos_cliente', '2'),
+  (152, 'vi_empresas', '2'),
+  (153, 'vi_empresas_retenciones', '2'),
+  (154, 'vi_empresas_series', '2'),
+  (155, 'vi_emp_busquedas', '2'),
+  (156, 'vi_facturas', '2'),
+  (157, 'vi_facturas_lineas', '2'),
+  (158, 'vi_facturas_lineas_print', '2'),
+  (159, 'vi_facturas_print', '2'),
+  (160, 'vi_fac_busquedas', '2'),
+  (161, 'vi_fac_lin_busquedas', '2'),
+  (162, 'vi_formapago', '2'),
+  (163, 'vi_info_tpv_completa', '2'),
+  (164, 'vi_ivas', '2'),
+  (165, 'vi_ivas_empresa', '2'),
+  (166, 'vi_ivas_grupos', '2'),
+  (167, 'vi_ivas_zonas', '2'),
+  (168, 'vi_movimientos', '2'),
+  (169, 'vi_paises', '2'),
+  (170, 'vi_proveedores', '2'),
+  (171, 'vi_proveedores_articulos', '2'),
+  (172, 'vi_proveedores_busquedas', '2'),
+  (173, 'vi_recibos', '2'),
+  (174, 'vi_tarifas', '2'),
+  (175, 'vi_usuarios', '2'),
+  (176, 'vi_usuarios_grupos', '2'),
+  (177, 'vi_usuarios_perfiles', '2'),
+  (178, 'vi_variaciones', '2'),
+  (179, 'v_articulos_stock_barras', '2'),
+  (194, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
+  (195, 'PRC_BUSQUEDA_ARTICULOS', '3'),
+  (196, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
+  (197, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
+  (198, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
+  (199, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
+  (200, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
+  (201, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
+  (202, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
+  (203, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
+  (204, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
+  (205, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
+  (206, 'PRC_CREAR_FACTURA_ABONO', '3'),
+  (207, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
+  (208, 'PRC_CREAR_METADATOS', '3'),
+  (209, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
+  (210, 'PRC_CREAR_TRASPASO', '3'),
+  (211, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (212, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (213, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (214, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (215, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (216, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (217, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (218, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (219, 'PRC_GETPERFILFORMULARIO', '3'),
+  (220, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (221, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (222, 'PRC_GET_CREAR_VALOR', '3'),
+  (223, 'PRC_GET_DATA_ARTICULO', '3'),
+  (224, 'PRC_GET_DATA_CLIENTE', '3'),
+  (225, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (226, 'PRC_GET_NEXT_CONT', '3'),
+  (227, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (228, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (229, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (230, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (231, 'PRC_REALIZAR_TRASPASO', '3'),
+  (232, 'PRC_RECALCULAR_STOCK', '3'),
+  (233, 'PRC_SETPERFILFORMULARIO', '3'),
+  (234, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (235, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 156 registros exportados
+-- 158 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -4144,7 +4235,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-24 19:48:02', '2026-03-24 19:48:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-26 19:35:45', '2026-03-26 19:35:45', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5550,8 +5641,9 @@ CREATE TABLE `fza_variaciones` (
 
 -- Datos de fza_variaciones
 INSERT INTO `fza_variaciones` (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('TC', 'TALLAS Y COLORES', 'S', 1, '2026-01-04 07:47:35', '2026-01-04 07:39:32', 'Administrador', 'Administrador');
--- 1 registros exportados
+  ('TC', 'TALLAS Y COLORES', 'S', 1, '2026-01-04 07:47:35', '2026-01-04 07:39:32', 'Administrador', 'Administrador'),
+  ('TC_DEMO', 'Talla y Color Demo', 'S', NULL, '2026-03-26 19:12:40', NULL, '', '');
+-- 2 registros exportados
 
 
 -- Tabla: fza_variaciones_atributos
@@ -5568,8 +5660,10 @@ CREATE TABLE `fza_variaciones_atributos` (
 -- Datos de fza_variaciones_atributos
 INSERT INTO `fza_variaciones_atributos` (`ID_VA`, `ID_ATRIBUTO_VA`, `NOMBRE_VA`, `ORDEN_VA`) VALUES
   ('TC', 'CO', 'Color', 1),
-  ('TC', 'TAL', 'Talla', 2);
--- 2 registros exportados
+  ('TC', 'TAL', 'Talla', 2),
+  ('TC_DEMO', 'COL', 'Color', 2),
+  ('TC_DEMO', 'TAL', 'Talla', 1);
+-- 4 registros exportados
 
 
 -- Tabla: fza_verifactu_eventos
@@ -9296,4 +9390,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 24/03/2026 20:12:51
+-- Backup completado: 26/03/2026 19:40:45
