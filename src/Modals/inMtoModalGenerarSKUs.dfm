@@ -17,6 +17,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     inherited btnCancelar: TcxButton
       Left = 50
       Top = 6
+      OnClick = btnCancelarClick
       ExplicitLeft = 50
       ExplicitTop = 6
     end
@@ -149,11 +150,17 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         'UTO, '
       '       va.ORDEN_VA '
       '    FROM fza_variaciones_atributos va '
-      '    -- WHERE va.ID_VA = :var '
+      '    WHERE va.ID_VA = :var '
       '    ORDER BY va.ORDEN_VA')
     Active = True
     Left = 600
     Top = 64
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'var'
+        Value = nil
+      end>
   end
   object unqryDetalle: TUniQuery
     Connection = dmConn.conUni
@@ -201,7 +208,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         DataType = ftWideString
         Name = 'ID_ATRIBUTO_VA'
         ParamType = ptInput
-        Value = 'CO'
+        Value = nil
       end>
   end
   object dsMaestro: TDataSource

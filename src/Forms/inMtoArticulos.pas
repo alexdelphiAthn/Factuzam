@@ -321,7 +321,9 @@ uses
   inMtoFamilias,
   inMtoEmpresas,
   inMtoFacturas,
-  inMtoModalArtTar, inLibGlobalVar;
+  inMtoModalArtTar,
+  inLibGlobalVar,
+  inMtoModalGenerarSKUs;
 
 {$R *.dfm}
 
@@ -340,9 +342,34 @@ begin
 end;
 
 procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
+var
+  CodArticulo, TipoVariacion: string;
 begin
-  inherited;
-  //
+  // 1. Nos aseguramos de que el artículo no esté a medias de editar
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
+
+  // 2. Leemos los datos clave del dataset principal
+  CodArticulo   := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+  TipoVariacion := dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ARTICULO').AsString;
+
+  // 3. Validamos que haya un esquema de variación asignado
+  if (CodArticulo = '') or (TipoVariacion = '') then
+  begin
+    ShowMessage('El artículo debe tener asignado un "Tipo de variación" y estar guardado para poder generar SKUs.');
+    FCbbTipoVariacion.SetFocus; // Mandamos al usuario al combo para que lo elija
+    Exit;
+  end;
+
+  // 4. Llamamos a nuestra pantalla mágica
+  if TfrmMtoModalGenerarSKUs.Ejecutar(CodArticulo, TipoVariacion) then
+  begin
+    // Si la pantalla devuelve True (es decir, el usuario le dio a "Generar" y se guardaron los SKUs),
+    // refrescamos el dataset que alimenta el Grid de SKUs para que aparezcan al instante.
+
+    // Asumiendo que el nombre de tu query es este según tu nomenclatura:
+    dmmArticulos.dsVariacionesArticulos.DataSet.Refresh;
+  end;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -847,20 +874,34 @@ begin
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
 end;
 
-procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
 begin
   inherited;
+
+  // 1. Comprobaciones básicas del estado del formulario
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
     Exit;
-  if Assigned(dmmArticulos) then
-  if (dmmArticulos.unqryTablaG.Active = True) then
-    if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
+
+  // 2. Asegurar que los objetos de datos existen
+  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
+    Exit;
+
+  // 3. Comprobar que el dataset está activo, no está vacío y no está bloqueado
+
+  if dmmArticulos.unqryTablaG.IsEmpty then Exit;
+  if dmmArticulos.unqryTablaG.ControlsDisabled then Exit;
+  if not dmmArticulos.unqryTablaG.Active then Exit;
+
+  // 4. Validar el estado de edición y la interacción REAL del usuario
+  if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
+  begin
+    // El Focus garantiza que el evento lo ha disparado el usuario y no un refresco del dataset
+    if (Sender as TcxDBCheckBox).Focused then
     begin
-      // Esto sincroniza el valor visual con el campo del dataset
       (Sender as TcxDBCheckBox).PostEditValue;
       ActualizarVisibilidadVariaciones;
     end;
+  end;
 end;
 
 procedure
@@ -997,6 +1038,7 @@ begin
     FreeAndNil(FGestorProp);
   if Assigned(FGestorVar) then
     FreeAndNil(FGestorVar);
+  dmmArticulos := nil;
 end;
 
 procedure TfrmMtoArticulos.FormShow(Sender: TObject);
