@@ -209,7 +209,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 455
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsGeneral
+            Properties.ActivePage = tsSKUs
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 451
             ClientRectLeft = 4
@@ -1736,9 +1736,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Width = 1069
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1069
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1069
@@ -1766,7 +1763,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 1
-          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324
