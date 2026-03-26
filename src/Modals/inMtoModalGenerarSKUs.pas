@@ -55,6 +55,7 @@ type
       APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure btnAceptarClick(Sender: TObject);
+    procedure btnCancelarClick(Sender: TObject);
   private
     private
     FDimensiones: TObjectList<TDimensionSKU>;
@@ -76,6 +77,8 @@ var
 implementation
 
 {$R *.dfm}
+
+uses inLibGlobalVar;
 
 procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
                                                  NombreSKU, IdsValores: string);
@@ -135,14 +138,54 @@ end;
 
 procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
-  // IMPORTANTE: El query de detalle debe permitir edición en memoria (CachedUpdates)
-  // para que los CheckBox funcionen sin hacer UPDATEs reales en la BD.
-  unqryDetalle.CachedUpdates := True;
+  unqryMaestro.Connection := oConn;
+  unqryDetalle.Connection := oConn;
+  // 1. Cargamos el grid Maestro (Talla, Color...)
+  unqryMaestro.Close;
+  unqryMaestro.SQL.Text :=
+    'SELECT va.ID_ATRIBUTO_VA, ' +
+    '       COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA) AS NOMBRE_ATRIBUTO, ' +
+    '       va.ORDEN_VA ' +
+    'FROM fza_variaciones_atributos va ' +
+    'WHERE va.ID_VA = :var ' +
+    'ORDER BY va.ORDEN_VA';
+  unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
+  unqryMaestro.Open;
 
-  CargarDimensionesMaestro;
+  // 2. Cargamos el grid Detalle (S, M, Azul, Verde...) de GOLPE y configuramos el enlace
+  unqryDetalle.Close;
+  unqryDetalle.SQL.Text :=
+    'SELECT ' +
+    '  val.ID_ATRIBUTO_AC, ' +
+    '  val.ID_CONJUNTO_AC, ' +
+    '  val.NOMBRE_AC, ' +
+    '  CASE WHEN asign.ID_CONJUNTO_ACA IS NOT NULL THEN 1 ELSE 0 END AS ASIGNADO ' +
+    'FROM fza_atributos_conjuntos val ' +
+    'LEFT JOIN fza_articulos_conjuntos_asign asign ' +
+    '       ON asign.ID_CONJUNTO_ACA = val.ID_CONJUNTO_AC ' +
+    '      AND asign.CODIGO_ARTICULO_ACA = :Articulo ' +
+    'WHERE val.ID_ATRIBUTO_AC IN ( ' +
+    '        SELECT ID_ATRIBUTO_VA FROM fza_variaciones_atributos WHERE ID_VA = :Variacion ' +
+    '      ) ' +
+    '  AND val.ESACTIVO_AC = ''S'' ' +
+    'ORDER BY val.NOMBRE_AC';
+
+  // La magia automática:
+  unqryDetalle.MasterSource := dsMaestro;
+  unqryDetalle.MasterFields := 'ID_ATRIBUTO_VA';
+  unqryDetalle.DetailFields := 'ID_ATRIBUTO_AC';
+
+  unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
+  unqryDetalle.ParamByName('Variacion').AsString := FTipoVariacion;
+
+  // Activamos el modo memoria y abrimos
+  unqryDetalle.CachedUpdates := True;
+  unqryDetalle.Open;
+
+  // Hacemos que el check sea clickeable
+  unqryDetalle.FieldByName('ASIGNADO').ReadOnly := False;
 end;
 
-{ 1. CARGA DEL GRID MAESTRO (Izquierda) }
 procedure TfrmMtoModalGenerarSKUS.btnAceptarClick(Sender: TObject);
 var
   DimDict: TObjectDictionary<string, TDimensionSKU>;
@@ -222,6 +265,12 @@ begin
   inherited;
 end;
 
+procedure TfrmMtoModalGenerarSKUS.btnCancelarClick(Sender: TObject);
+begin
+  inherited;
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
 procedure TfrmMtoModalGenerarSKUS.CargarDimensionesMaestro;
 begin
   unqryMaestro.Close;
@@ -241,18 +290,18 @@ end;
 procedure TfrmMtoModalGenerarSKUS.tvMaestroFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord; ANewItemRecordFocusingChanged: Boolean);
-var
-  IdAtributoSel: string;
+//var
+//  IdAtributoSel: string;
 begin
-  if unqryMaestro.IsEmpty or (AFocusedRecord = nil) then
-  begin
-    unqryDetalle.Close;
-    Exit;
-  end;
-
-  // Obtenemos el ID del atributo seleccionado (ej. 'TAL' o 'CO')
-  //IdAtributoSel := AFocusedRecord.Values[tvMaestroID_ATRIBUTO_VA.Index];
-  CargarValoresDetalle(IdAtributoSel);
+//  if unqryMaestro.IsEmpty or (AFocusedRecord = nil) then
+//  begin
+//    unqryDetalle.Close;
+//    Exit;
+//  end;
+//
+//  // Obtenemos el ID del atributo seleccionado (ej. 'TAL' o 'CO')
+//  //IdAtributoSel := AFocusedRecord.Values[tvMaestroID_ATRIBUTO_VA.Index];
+//  CargarValoresDetalle(IdAtributoSel);
 end;
 
 { 3. CARGA DEL GRID DETALLE (Derecha) }
@@ -261,21 +310,50 @@ begin
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
     'SELECT ' +
+    '  val.ID_ATRIBUTO_AC, ' + // <-- ¡VITAL! Hay que traerlo para que DetailFields funcione
     '  val.ID_CONJUNTO_AC, ' +
     '  val.NOMBRE_AC, ' +
     '  CASE WHEN asign.ID_CONJUNTO_ACA IS NOT NULL THEN ''S'' ELSE ''N'' END AS YA_USADO, ' +
-    '  0 AS MARCAR_NUEVO ' + // <-- Nuestro campo falso para el CheckBox
+    '  0 AS MARCAR_NUEVO ' +
     'FROM fza_atributos_conjuntos val ' +
     'LEFT JOIN fza_articulos_conjuntos_asign asign ' +
     '       ON asign.ID_CONJUNTO_ACA = val.ID_CONJUNTO_AC ' +
     '      AND asign.CODIGO_ARTICULO_ACA = :Articulo ' +
-    'WHERE val.ID_ATRIBUTO_AC = :Atributo ' +
+
+    // <-- CAMBIO MÁGICO: En lugar de pedir un atributo concreto, pedimos TODOS los
+    // de este esquema de variación (ej. los del 'TC_BASICO') de un solo golpe.
+    'WHERE val.ID_ATRIBUTO_AC IN ( ' +
+    '        SELECT ID_ATRIBUTO_VA FROM fza_variaciones_atributos WHERE ID_VA = :Variacion ' +
+    '      ) ' +
     '  AND val.ESACTIVO_AC = ''S'' ' +
     'ORDER BY val.NOMBRE_AC';
 
-  unqryDetalle.ParamByName('Articulo').AsString := FCodigoArticulo;
-  unqryDetalle.ParamByName('Atributo').AsString := IdAtributo;
+  // Vinculamos Maestro-Detalle por código
+  unqryDetalle.MasterSource := dsMaestro;        // El DataSource del grid izquierdo
+  unqryDetalle.MasterFields := 'ID_ATRIBUTO_VA'; // El campo del maestro
+  unqryDetalle.DetailFields := 'ID_ATRIBUTO_AC'; // El campo del detalle (ahora sí existe en el SELECT)
+
+  // Pasamos los parámetros
+  unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
+  unqryDetalle.ParamByName('Variacion').AsString := FTipoVariacion; // Ej: 'TC_BASICO'
+
+  // Abrimos y configuramos caché
+  unqryDetalle.CachedUpdates := True;
   unqryDetalle.Open;
+end;
+
+{ TDimensionSKU }
+
+constructor TDimensionSKU.Create;
+begin
+  Valores := TList<TValorAtributo>.Create;
+end;
+
+destructor TDimensionSKU.Destroy;
+begin
+  if Assigned(Valores) then
+    Valores.Free;
+  inherited;
 end;
 
 end.
