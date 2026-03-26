@@ -123,7 +123,8 @@ uses
   inLibArticulosPropiedades in 'src\Lib\inLibArticulosPropiedades.pas',
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
-  inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel};
+  inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
+  inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS};
 
 var
   frmLogon: TfrmLogon;
@@ -159,5 +160,6 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmMtoModalGenerarSKUS, frmMtoModalGenerarSKUS);
   Application.Run;
 end.
