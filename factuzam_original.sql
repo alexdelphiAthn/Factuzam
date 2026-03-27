@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 27/03/2026 7:19:13
+-- Backup generado: 27/03/2026 17:36:15
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -126,7 +126,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ARTICULO`, `ACTIVO_ARTICULO`, `TIPO_ARTICUL
   ('SRV-ARREGLOS', 'S', 'SERVICIO', 'Arreglos y Modificaciones', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
   ('SRV-ENVIO', 'S', 'SERVICIO', 'Gastos de Envío', 'OTR', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
   ('SUDADERA-HOOD', 'S', 'ESTANDAR', 'Sudadera con Capucha Unisex', 'DEPORTIVO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:30', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
-  ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:31', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
+  ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:31', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
@@ -152,15 +152,19 @@ ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_ATRIBUTO` (`CODIG
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('DEMO-CAMISA', 1, 'COL', 'S', '2026-03-27 07:07:39', NULL, '', 'Administrador'),
+  ('DEMO-CAMISA', 1, 'CO', 'S', '2026-03-27 07:23:10', NULL, '', 'Administrador'),
   ('DEMO-CAMISA', 2, 'TAL', 'S', '2026-03-27 07:07:39', NULL, '', 'Administrador'),
+  ('DEMO-CAMISA', 9001, 'TAL', 'S', '2026-03-27 07:25:13', '2026-03-27 07:25:13', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 9002, 'CO', 'S', '2026-03-27 07:25:13', '2026-03-27 07:25:13', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9001, 'TAL', 'S', '2026-03-27 07:34:44', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9002, 'CO', 'S', '2026-03-27 07:34:44', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 1, 'CO', 'S', '2026-03-26 17:54:27', '2026-03-26 17:54:27', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 2, 'TAL', 'S', '2026-03-26 18:09:58', '2026-03-26 18:09:58', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador');
--- 8 registros exportados
+-- 12 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -308,6 +312,14 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('SUDADERA-HOOD', 'PESO_GR', NULL, '420', '2026-03-22 18:32:14', 'DEMO'),
   ('SUDADERA-HOOD', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('SUDADERA-HOOD', 'TRANSPIRABLE', NULL, 'S', '2026-03-22 18:32:14', 'DEMO'),
+  ('VEST-FLOR', 'COMPOSICION', NULL, 'PLASTICO DEL BUENO', '2026-03-27 07:41:38', 'Administrador'),
+  ('VEST-FLOR', 'ES_ECO', NULL, 'N', '2026-03-27 07:41:38', 'Administrador'),
+  ('VEST-FLOR', 'ESTILO', NULL, NULL, '2026-03-27 07:41:38', 'Administrador'),
+  ('VEST-FLOR', 'GENERO', 28, NULL, '2026-03-27 07:41:37', 'Administrador'),
+  ('VEST-FLOR', 'LAVADO', NULL, NULL, '2026-03-27 07:41:38', 'Administrador'),
+  ('VEST-FLOR', 'MARCA', 5, NULL, '2026-03-27 07:41:37', 'Administrador'),
+  ('VEST-FLOR', 'ORIGEN', NULL, NULL, '2026-03-27 07:41:37', 'Administrador'),
+  ('VEST-FLOR', 'TEMPORADA', 13, NULL, '2026-03-27 07:41:37', 'Administrador'),
   ('ZAP-DEPOR', 'ALTURA_TAC', NULL, '0', '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-DEPOR', 'GENERO', 30, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ZAP-DEPOR', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
@@ -333,7 +345,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('ZAP-TACÓN', 'ORIGEN', NULL, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TEMPORADA', 10, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TIPO_SUELA', 49, NULL, '2026-03-24 07:06:54', 'Administrador');
--- 123 registros exportados
+-- 131 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -424,8 +436,16 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('CHAQ-CUERO/NEGRO/L', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:51', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/M', 'CHAQ-CUERO', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/AMARILLO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:36:52', '2026-03-27 07:36:52', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/AZULMARINO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:08:05', '2026-03-27 06:55:47', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/BLANCO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:25:37', '2026-03-27 07:25:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/BLANCO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-26 19:36:46', NULL, '', ''),
+  ('DEMO-CAMISA/COLORAO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:32:34', '2026-03-27 07:32:34', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/COLORAO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:37:49', '2026-03-27 07:37:49', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/NEGRO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/NEGRO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/NEGRO/S', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/NEGRO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('FALD-JEAN/VAQUERO/S', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:10', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
@@ -451,9 +471,13 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('SUDADERA-HOOD/GRIS/M', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/GRIS/S', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/NEGRO/L', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
+  ('VEST-FLOR/AMARILLO/XL', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:39:33', '2026-03-27 07:39:33', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/AZUL/L', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/AZUL/M', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/AZUL/S', 'VEST-FLOR', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('VEST-FLOR/BONIATO/L', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
+  ('VEST-FLOR/BONIATO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
+  ('VEST-FLOR/BONIATO/XL', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:36:02', '2026-03-27 07:36:02', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/ROJO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/VERDE/M', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
@@ -478,7 +502,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 86 registros exportados
+-- 98 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -728,7 +752,7 @@ ALTER TABLE `fza_atributos_conjuntos` ADD INDEX `IDX_VAR_AC` (`ID_VARIACION_AC`)
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
 INSERT INTO `fza_atributos_conjuntos` (`ID_CONJUNTO_AC`, `NOMBRE_AC`, `ID_VARIACION_AC`, `ID_ATRIBUTO_AC`, `ESACTIVO_AC`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   (9001, 'Tallas Hombre Standard', 'TC', 'TAL', 'S', '2026-03-27 07:06:11', NULL, '', ''),
-  (9002, 'Colores Básicos Verano', 'TC', 'COL', 'S', '2026-03-27 07:06:12', NULL, '', '');
+  (9002, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-27 07:24:44', NULL, '', '');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
 -- 2 registros exportados
 
@@ -749,14 +773,20 @@ ALTER TABLE `fza_atributos_conjuntos_det` ADD INDEX `IDX_VALOR_ACD` (`ID_VALOR_A
 
 -- Datos de fza_atributos_conjuntos_det
 INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  (1, 102, '2026-03-27 07:28:29', NULL, '', ''),
+  (1, 9204, '2026-03-27 07:30:10', NULL, '', ''),
+  (1, 9205, '2026-03-27 07:30:32', NULL, '', ''),
+  (1, 9206, '2026-03-27 07:32:27', NULL, '', ''),
   (9001, 9101, '2026-03-26 19:12:40', NULL, '', ''),
   (9001, 9102, '2026-03-26 19:12:40', NULL, '', ''),
   (9001, 9103, '2026-03-26 19:12:40', NULL, '', ''),
   (9001, 9104, '2026-03-26 19:12:40', NULL, '', ''),
   (9002, 9201, '2026-03-26 19:12:40', NULL, '', ''),
   (9002, 9202, '2026-03-26 19:12:40', NULL, '', ''),
-  (9002, 9203, '2026-03-26 19:12:40', NULL, '', '');
--- 7 registros exportados
+  (9002, 9203, '2026-03-26 19:12:40', NULL, '', ''),
+  (9002, 9204, '2026-03-27 07:39:28', NULL, '', ''),
+  (9002, 9207, '2026-03-27 07:35:12', NULL, '', '');
+-- 13 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -839,10 +869,26 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('CHAQ-CUERO/NEGRO/M', 100, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('CHAQ-CUERO/NEGRO/XL', 100, '2026-01-08 18:55:08', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/AMARILLO/XL', 9104, '2026-03-27 07:36:52', NULL, '', ''),
+  ('DEMO-CAMISA/AMARILLO/XL', 9204, '2026-03-27 07:36:52', NULL, '', ''),
+  ('DEMO-CAMISA/BLANCO/L', 9103, '2026-03-27 07:25:37', NULL, '', ''),
+  ('DEMO-CAMISA/BLANCO/L', 9201, '2026-03-27 07:25:37', NULL, '', ''),
+  ('DEMO-CAMISA/COLORAO/L', 9103, '2026-03-27 07:32:34', NULL, '', ''),
+  ('DEMO-CAMISA/COLORAO/L', 9206, '2026-03-27 07:32:34', NULL, '', ''),
+  ('DEMO-CAMISA/COLORAO/XL', 9104, '2026-03-27 07:37:49', NULL, '', ''),
+  ('DEMO-CAMISA/COLORAO/XL', 9206, '2026-03-27 07:37:49', NULL, '', ''),
   ('DEMO-CAMISA/L/AZULMARINO', 9103, '2026-03-27 06:55:47', NULL, '', ''),
   ('DEMO-CAMISA/L/AZULMARINO', 9203, '2026-03-27 06:55:47', NULL, '', ''),
   ('DEMO-CAMISA/M/B', 9102, '2026-03-26 19:15:05', '2026-03-26 00:00:00', 'DEMO', 'DEMO'),
   ('DEMO-CAMISA/M/B', 9201, '2026-03-26 19:15:14', '2026-03-26 00:00:00', 'DEMO', 'DEMO'),
+  ('DEMO-CAMISA/NEGRO/L', 9103, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/L', 9202, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/M', 9102, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/M', 9202, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/S', 9101, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/S', 9202, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/XL', 9104, '2026-03-27 07:26:37', NULL, '', ''),
+  ('DEMO-CAMISA/NEGRO/XL', 9202, '2026-03-27 07:26:37', NULL, '', ''),
   ('FALD-JEAN/VAQUERO/L', 4, '2026-01-08 18:55:32', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/L', 105, '2026-01-08 18:55:38', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -893,12 +939,20 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('SUDADERA-HOOD/GRIS/S', 219, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/NEGRO/L', 4, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/NEGRO/L', 100, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  ('VEST-FLOR/AMARILLO/XL', 9104, '2026-03-27 07:39:33', NULL, '', ''),
+  ('VEST-FLOR/AMARILLO/XL', 9204, '2026-03-27 07:39:33', NULL, '', ''),
   ('VEST-FLOR/AZUL/L', 4, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/AZUL/L', 218, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/AZUL/M', 3, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/AZUL/M', 218, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/AZUL/S', 110, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/AZUL/S', 218, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('VEST-FLOR/BONIATO/L', 9103, '2026-03-27 07:35:19', NULL, '', ''),
+  ('VEST-FLOR/BONIATO/L', 9207, '2026-03-27 07:35:19', NULL, '', ''),
+  ('VEST-FLOR/BONIATO/M', 9102, '2026-03-27 07:35:19', NULL, '', ''),
+  ('VEST-FLOR/BONIATO/M', 9207, '2026-03-27 07:35:19', NULL, '', ''),
+  ('VEST-FLOR/BONIATO/XL', 9104, '2026-03-27 07:36:02', NULL, '', ''),
+  ('VEST-FLOR/BONIATO/XL', 9207, '2026-03-27 07:36:02', NULL, '', ''),
   ('VEST-FLOR/ROJO/M', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/M', 3, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 1, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -947,7 +1001,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 172 registros exportados
+-- 196 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -1010,9 +1064,13 @@ INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `DES
   (9104, '', 'XL', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
   (9201, '', 'BLANCO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
   (9202, '', 'NEGRO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9203, '', 'AZUL MARINO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', '');
+  (9203, '', 'AZUL MARINO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9204, 'CO', 'AMARILLO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
+  (9205, 'CO', 'CACAO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
+  (9206, 'CO', 'COLORAO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
+  (9207, 'CO', 'BONIATO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 38 registros exportados
+-- 42 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -1340,7 +1398,8 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '008', 'ANA/2023', 5, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 7, 6, 'S', 'N', '2026-03-19 23:21:09', '2026-02-01 07:03:46', 'Administrador', 'Administrador'),
+  ('FC', '012', '2026.A1', 13, 6, 'S', 'N', '2026-03-27 17:34:14', '2026-02-01 07:03:46', 'Administrador', 'Administrador'),
+  ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
   ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador'),
   ('FC', '1', 'A3', 0, 8, 'S', 'N', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador'),
   ('FC', '1', 'AGRO', 8, 6, 'S', 'N', '2025-09-07 17:01:12', '2023-06-01 13:45:24', 'Administrador', 'Administrador'),
@@ -1349,14 +1408,14 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 52, 3, 'S', 'S', '2026-03-26 17:31:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 54, 3, 'S', 'S', '2026-03-27 17:35:43', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
--- 27 registros exportados
+-- 28 registros exportados
 
 
 -- Tabla: fza_depositos_cliente
@@ -1617,6 +1676,7 @@ INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ES
   ('000004', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 16.38, 5.2, 0, 78, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 78, 16.38, '60DIAS', 15, 11.7, 82.68, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-02-26 19:56:28', '2026-02-26 19:56:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'añlsdfkjañlsdkfj', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', NULL, '1', 'N', 'N', 'N', 'N', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 29.82, 5.2, 0, 142, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 142, 29.82, 'CONTADO', 15, 0, 171.82, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-02-26 20:32:10', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000006', '2026.A1', '2026-03-19 00:00:00', 'S', '2026-03-19 23:39:47', 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '314', 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.8595, 5.2, 0, 23.1405, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.1405, 4.8595, 'CONTADO', 15, 3.4711, 24.5289, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-03-19 23:21:09', '2026-03-19 23:21:09', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000009', '2026.A1', '2026-03-27 00:00:00', 'N', NULL, 'NORMAL', NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '314', 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.8595, 5.2, 0, 23.1405, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.1405, 4.8595, 'CONTADO', 15, 3.4711, 24.5289, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-03-27 17:32:45', '2026-03-27 17:32:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000026', 'A1', '2026-01-20 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '301', 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 11.34, 5.2, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 11.34, 'CONTADO', 15, 8.1, 57.24, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000027', 'A1', '2026-01-21 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 25.2, 5.2, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 120, 25.2, 'CONTADO', 0, 0, 145.2, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-21 11:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000028', 'A1', '2026-01-23 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '306', 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', '968606060', 'pedidos@distribuvelaz.es', 'POLÍGONO EL PINO, 5', 'NAVE 12', 'MURCIA', 'MURCIA', '30001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 126, 5.2, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 600, 126, '30DIAS', 0, 0, 726, NULL, NULL, NULL, 'Pedido PO-2026-0123', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-01-23 09:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
@@ -1627,7 +1687,7 @@ INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ES
   ('000033', 'A1', '2026-02-07 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '319', 'LUCÍA FLORES MENDOZA', '56788765O', '611999999', 'lucia.flores@gmail.com', 'PLAZA DEL SOL, 1', '', 'BURGOS', 'BURGOS', '09001', '724', 'España', '1', 'N', 'N', 'N', 'S', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 12.6, 5.2, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65.95, 13.8495, 'TRANSFERENCIA', 0, 0, 79.7995, NULL, NULL, NULL, 'Pedido web #W2026-0289', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-02-07 18:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL),
   ('000034', 'A1', '2026-02-08 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', 'PUBLICO', 'PUBLICO', 'NIF CLIENTE', '', '', '', '', '', '', '', '724', 'España', '1', 'N', 'N', 'N', 'N', 'PVP', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 14.49, 5.2, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 14.49, 'CONTADO', 0, 0, 83.49, NULL, NULL, NULL, '', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-02-08 10:15:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', '002'),
   ('000035', 'A1', '2026-02-10 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '1', 'MODA EJEMPLO SL', 'B11111111', '911000001', 'info@modaejemplo.es', 'AV. EUROPA, 10', '', 'MADRID', 'MADRID', '724', 'España', '28020', 'S', '1', 'N', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 100.8, 5.2, 0, 480, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 480, 100.8, '60DIAS', 0, 0, 580.8, NULL, NULL, NULL, 'Pedido TN-Feb26-001', NULL, NULL, NULL, 'N', 'S', 'N', NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', NULL, 'GEN', '1', NULL);
--- 15 registros exportados
+-- 16 registros exportados
 
 
 -- Tabla: fza_facturas_consolidaciones
@@ -1718,6 +1778,7 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000005', '2026.A1', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 2, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 40, 0, 0, 40, 'N', 21, 48.4, 96.8, 80, NULL, '2026-02-26 19:59:49', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '020', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-02-26 20:11:53', '2026-02-26 20:11:53', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000006', '2026.A1', '010', 'CAMI-POLO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, 'PVP', 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-03-19 23:21:21', '2026-03-19 23:21:21', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000009', '2026.A1', '010', 'CAMI-POLO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', NULL, NULL, NULL, 23.1405, 'N', 21, 28, 28, NULL, NULL, '2026-03-27 17:32:45', '2026-03-27 17:32:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000026', 'A1', '010', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000026', 'A1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 10, 2.2, 19.8, 'N', 21, 23.958, 47.916, 39.6, NULL, '2026-02-17 06:21:32', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000027', 'A1', '010', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 40, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'N', 89.9, 0, 0, 89.9, 'N', 21, 108.779, 108.779, 89.9, NULL, '2026-02-17 06:21:32', '2026-01-21 11:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
@@ -1744,7 +1805,7 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000035', 'A1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000035', 'A1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
   ('000035', 'A1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-02-17 06:21:32', '2026-02-10 09:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL);
--- 36 registros exportados
+-- 37 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -3049,8 +3110,226 @@ INSERT IGNORE INTO fza_articulos_skus (CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU) V
 -- Le decimos a la BD que este SKU corresponde a la talla M (9102) y color BLANCO (9201)
 INSERT IGNORE INTO fza_atributos_sku (CODIGO_UNIDAD_SA, ID_VALOR_SA) VALUES
 (''DEMO-CAMISA/M/B'', 9102), 
-(''DEMO-CAMISA/M/B'', 9201);', '2026-03-26 19:13:54', '2026-03-26 17:31:32', 'Administrador', 'Administrador');
--- 22 registros exportados
+(''DEMO-CAMISA/M/B'', 9201);', '2026-03-26 19:13:54', '2026-03-26 17:31:32', 'Administrador', 'Administrador'),
+  ('052', 'Ejecutar PRC_CREAR_FACTURA_DUPLICADA', 'DROP PROCEDURE PRC_CREAR_FACTURA_DUPLICADA;
+
+CREATE PROCEDURE `PRC_CREAR_FACTURA_DUPLICADA`(
+    IN pidseriefactura      varchar(200),
+    IN pidnumfactura        varchar(200),
+    IN pidseriefacturaabono varchar(200),
+    IN pidcodigo_empresa    varchar(200),
+    IN pfechafacturaabono   date,
+    IN pUSUARIO             varchar(100),
+    OUT pidnumfacturaabono  varchar(200)
+)
+BEGIN   
+    DECLARE contadorped varchar(200);
+    DECLARE pfecha date;
+
+    /* Manejo de errores para asegurar la consistencia */    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN        
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    START TRANSACTION;
+    
+    CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, 
+                                      ''FC'', 
+                                      pidcodigo_empresa,
+                                      pUSUARIO,
+                                      contadorped);
+                                      
+    SET pFecha = pfechafacturaabono;
+    SET pidnumfacturaabono = contadorped;
+
+    INSERT INTO fza_facturas (
+        `NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `CODIGO_EMPRESA_FACTURA`,
+        `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, `INSTANTEMODIF`,
+        `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )
+    SELECT 
+        contadorped,                  
+        pidseriefacturaabono,         
+        pFecha,                       
+        `CODIGO_EMPRESA_FACTURA`, `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                     
+        pUSUARIO                      
+    FROM `fza_facturas` 
+    WHERE `NRO_FACTURA` = pidnumfactura     
+      AND `SERIE_FACTURA` = pidseriefactura;  
+
+    INSERT INTO fza_facturas_lineas (
+        `NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )
+    SELECT 
+        contadorped,                  
+        pidseriefacturaabono,         
+        `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                     
+        pUSUARIO                      
+    FROM `fza_facturas_lineas`                            
+    WHERE `SERIE_FACTURA_LINEA` = pidseriefactura   
+      AND `NRO_FACTURA_LINEA` = pidnumfactura;      
+      
+    COMMIT;
+END;', '2026-03-27 17:26:45', '2026-03-27 17:24:45', 'Administrador', 'Administrador'),
+  ('053', NULL, 'DROP PROCEDURE PRC_CREAR_FACTURA_ABONO;
+CREATE PROCEDURE `PRC_CREAR_FACTURA_ABONO`(
+    IN `pidseriefactura`      varchar(200),
+    IN `pidnumfactura`        varchar(200),
+    IN `pidseriefacturaabono` varchar(200),
+    IN `pidcodigo_empresa`    varchar(200),
+    IN `pfechafacturaabono`   date,
+    OUT `pidnumfacturaabono`  varchar(200),
+    IN `pUSUARIO`             varchar(100)
+)
+BEGIN   
+    DECLARE contadorped varchar(200);
+    DECLARE pFecha date;
+
+    /* Manejo de errores para asegurar la consistencia */    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN        
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    START TRANSACTION;
+    
+    -- Pasamos contadorped directamente sin usar @cont
+    CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, ''FC'', pidcodigo_empresa, pUSUARIO, contadorped);   
+    
+    -- Asignación limpia sin DATE_FORMAT innecesario
+    SET pFecha = pfechafacturaabono;
+    SET pidnumfacturaabono = contadorped;
+
+    INSERT INTO fza_facturas (
+        `NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `CODIGO_EMPRESA_FACTURA`,
+        `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )                                 
+    SELECT 
+        contadorped,                 -- SIN comillas
+        pidseriefacturaabono,        -- SIN comillas
+        pFecha,                      -- SIN comillas (y sin la arroba)
+        `CODIGO_EMPRESA_FACTURA`, `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                    -- SIN comillas
+        pUSUARIO                     -- SIN comillas
+    FROM `fza_facturas` 
+    WHERE `NRO_FACTURA`   = pidnumfactura     -- SIN comillas
+      AND `SERIE_FACTURA` = pidseriefactura;  -- SIN comillas
+
+    INSERT INTO `fza_facturas_lineas` (
+        `NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    ) 
+    SELECT 
+        contadorped,                 -- SIN comillas
+        pidseriefacturaabono,        -- SIN comillas
+        `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`, `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`,
+        `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`, `DESCRIPCION_ARTICULO_FACTURA_LINEA`,
+        (`CANTIDAD_FACTURA_LINEA` * -1),  -- ¡Perfecto esto para el abono!
+        `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`, `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`,
+        (`TOTAL_FACTURA_LINEA` * -1),     -- ¡Perfecto esto para el abono!
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                    -- SIN comillas
+        pUSUARIO                     -- SIN comillas
+    FROM `fza_facturas_lineas` 
+    WHERE `SERIE_FACTURA_LINEA` = pidseriefactura   -- SIN comillas
+      AND `NRO_FACTURA_LINEA`   = pidnumfactura;    -- SIN comillas
+
+    CALL `PRC_CALCULAR_FACTURA_NETOS`(pidseriefacturaabono, contadorped);
+   
+    COMMIT;
+END;', '2026-03-27 17:36:00', '2026-03-27 17:35:43', 'Administrador', 'Administrador');
+-- 24 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4228,7 +4507,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-27 07:18:17', '2026-03-27 07:18:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-27 17:33:40', '2026-03-27 17:33:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -6898,476 +7177,224 @@ DELIMITER ;
 -- Procedimiento: PRC_CREAR_FACTURA_ABONO
 DROP PROCEDURE IF EXISTS `PRC_CREAR_FACTURA_ABONO`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_CREAR_FACTURA_ABONO`(IN `pidseriefactura`      varchar(200),
-                                      IN `pidnumfactura`        varchar(200),
-                                      IN `pidseriefacturaabono` varchar(200),
-																			IN `pidcodigo_empresa`    varchar(200),
-                                      IN `pfechafacturaabono`   date,
-                                     OUT `pidnumfacturaabono`   varchar(200),
-                                      IN `pUSUARIO`             varchar(100))
-BEGIN
-   DECLARE contadorped varchar(200);
+CREATE  PROCEDURE `PRC_CREAR_FACTURA_ABONO`(
+    IN `pidseriefactura`      varchar(200),
+    IN `pidnumfactura`        varchar(200),
+    IN `pidseriefacturaabono` varchar(200),
+    IN `pidcodigo_empresa`    varchar(200),
+    IN `pfechafacturaabono`   date,
+    OUT `pidnumfacturaabono`  varchar(200),
+    IN `pUSUARIO`             varchar(100)
+)
+BEGIN   
+    DECLARE contadorped varchar(200);
+    DECLARE pFecha date;
 
-    /* Manejo de errores para asegurar la consistencia */
+    /* Manejo de errores para asegurar la consistencia */    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
+    kk: BEGIN        
         ROLLBACK;
         RESIGNAL;
     END kk;
-   START TRANSACTION;
-   CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, 'FC', pidcodigo_empresa, pUSUARIO, @cont);   
-   SET @pFecha = (SELECT DATE_FORMAT(pfechafacturaabono, '%Y-%m-%d'));
-   SET contadorped = @cont;     
-   SET pidnumfacturaabono = contadorped;
-   INSERT INTO fza_facturas  (`NRO_FACTURA`                                  ,
-                              `SERIE_FACTURA`                                ,
-                              `FECHA_FACTURA`                                ,
-                              `CODIGO_EMPRESA_FACTURA`                       ,
-                              `RAZONSOCIAL_EMPRESA_FACTURA`                  ,
-                              `NIF_EMPRESA_FACTURA`                          ,
-                              `MOVIL_EMPRESA_FACTURA`                        ,
-                              `EMAIL_EMPRESA_FACTURA`                        ,
-                              `DIRECCION1_EMPRESA_FACTURA`                   ,
-                              `DIRECCION2_EMPRESA_FACTURA`                   ,
-                              `POBLACION_EMPRESA_FACTURA`                    ,
-                              `PROVINCIA_EMPRESA_FACTURA`                    ,
-                              `NOMBRE_PAIS_EMPRESA_FACTURA`                         ,
-															`CODIGO_PAIS_EMPRESA_FACTURA`                         ,
-                              `CPOSTAL_EMPRESA_FACTURA`                      ,
-                              `ESRETENCIONES_EMPRESA_FACTURA`                ,
-                              `GRUPO_ZONA_IVA_EMPRESA_FACTURA`               ,
-                              `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`    ,
-                              `CODIGO_CLIENTE_FACTURA`                       ,
-                              `RAZONSOCIAL_CLIENTE_FACTURA`                  ,
-                              `NIF_CLIENTE_FACTURA`                          ,
-                              `MOVIL_CLIENTE_FACTURA`                        ,
-                              `EMAIL_CLIENTE_FACTURA`                        ,
-                              `DIRECCION1_CLIENTE_FACTURA`                   ,
-                              `DIRECCION2_CLIENTE_FACTURA`                   ,
-                              `POBLACION_CLIENTE_FACTURA`                    ,
-                              `PROVINCIA_CLIENTE_FACTURA`                    ,
-                              `CPOSTAL_CLIENTE_FACTURA`                      ,
-                              `NOMBRE_PAIS_CLIENTE_FACTURA`                         ,
-															`CODIGO_PAIS_CLIENTE_FACTURA`                         ,
-                              `ESIVA_RECARGO_CLIENTE_FACTURA`                ,
-                              `ESIVA_EXENTO_CLIENTE_FACTURA`                 ,
-                              `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`    ,
-                              `ESRETENCIONES_CLIENTE_FACTURA`                ,
-                              `TARIFA_ARTICULO_CLIENTE_FACTURA`              ,
-                              `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`            ,
-                              `ESINTRACOMUNITARIO_CLIENTE_FACTURA`           ,
-                              `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`             ,
-                              `ESAPLICA_RE_ZONA_IVA_FACTURA`                 ,
-                              `ESIVAAGRICOLA_ZONA_IVA_FACTURA`               ,
-                              `PALABRA_REPORTS_ZONA_IVA_FACTURA`             ,
-                              `CODIGO_IVA_FACTURA`                           ,
-                              `ESVENTA_ACTIVO_FIJO_FACTURA`                  ,
-                              `PORCEN_IVAN_FACTURA`                          ,
-                              `TOTAL_IVAN_FACTURA`                           ,
-                              `PORCEN_REN_FACTURA`                           ,
-                              `TOTAL_REN_FACTURA`                            ,
-                              `TOTAL_BASEI_IVAN_FACTURA`                     ,
-                              `PORCEN_IVAR_FACTURA`                          ,
-                              `TOTAL_IVAR_FACTURA`                           ,
-                              `PORCEN_RER_FACTURA`                           ,
-                              `TOTAL_RER_FACTURA`                            ,
-                              `TOTAL_BASEI_IVAR_FACTURA`                     ,
-                              `PORCEN_IVAS_FACTURA`                          ,
-                              `TOTAL_IVAS_FACTURA`                           ,
-                              `PORCEN_RES_FACTURA`                           ,
-                              `TOTAL_RES_FACTURA`                            ,
-                              `TOTAL_BASEI_IVAS_FACTURA`                     ,
-                              `PORCEN_IVAE_FACTURA`                          ,
-                              `TOTAL_IVAE_FACTURA`                           ,
-                              `PORCEN_REE_FACTURA`                           ,
-                              `TOTAL_REE_FACTURA`                            ,
-                              `TOTAL_BASEI_IVAE_FACTURA`                     ,
-                              `TOTAL_BASES_FACTURA`                          ,
-                              `TOTAL_IMPUESTOS_FACTURA`                      ,
-                              `FORMA_PAGO_FACTURA`                           ,
-                              `PORCEN_RETENCION_FACTURA`                     ,
-                              `TOTAL_RETENCION_FACTURA`                      ,
-                              `TOTAL_LIQUIDO_FACTURA`                        ,
-                              `NRO_FACTURA_ABONO_FACTURA`                    ,
-                              `SERIE_FACTURA_ABONO_FACTURA`                  ,
-                              `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`          ,
-                              `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`          ,
-                              `DOCUMENTO_FACTURA`                            ,
-                              `COMENTARIOS_FACTURA`                          ,
-                              `CONTADOR_LINEAS_FACTURA`                      ,
-															`ESCREARARTICULOS_FACTURA`										 ,	
-                              `ESDESCRIPCIONES_AMP_FACTURA`	                 ,
-                              `ESFECHADEENTREGA_FACTURA`	                   ,
-                              `INSTANTEMODIF`                                ,
-                              `INSTANTEALTA`                                 ,
-                              `USUARIOALTA`                                  ,                        
-                              `USUARIOMODIF`
-                             )                                 
-                     SELECT `contadorped`                                    ,
-                            `pidseriefacturaabono`                           ,
-                            `@pFecha`                                        ,
-                            `CODIGO_EMPRESA_FACTURA`                         ,
-                            `RAZONSOCIAL_EMPRESA_FACTURA`                    ,
-                            `NIF_EMPRESA_FACTURA`                            ,
-                            `MOVIL_EMPRESA_FACTURA`                          ,
-                            `EMAIL_EMPRESA_FACTURA`                          ,
-                            `DIRECCION1_EMPRESA_FACTURA`                     ,
-                            `DIRECCION2_EMPRESA_FACTURA`                     ,
-                            `POBLACION_EMPRESA_FACTURA`                      ,
-                            `PROVINCIA_EMPRESA_FACTURA`                      ,
-                            `NOMBRE_PAIS_EMPRESA_FACTURA`                           ,
-														`CODIGO_PAIS_EMPRESA_FACTURA`                           ,
-                            `CPOSTAL_EMPRESA_FACTURA`                        ,
-                            `ESRETENCIONES_EMPRESA_FACTURA`                  ,
-                            `GRUPO_ZONA_IVA_EMPRESA_FACTURA`                 ,
-                            `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`      ,
-                            `CODIGO_CLIENTE_FACTURA`                         ,
-                            `RAZONSOCIAL_CLIENTE_FACTURA`                    ,
-                            `NIF_CLIENTE_FACTURA`                            ,
-                            `MOVIL_CLIENTE_FACTURA`                          ,
-                            `EMAIL_CLIENTE_FACTURA`                          ,
-                            `DIRECCION1_CLIENTE_FACTURA`                     ,
-                            `DIRECCION2_CLIENTE_FACTURA`                     ,
-                            `POBLACION_CLIENTE_FACTURA`                      ,
-                            `PROVINCIA_CLIENTE_FACTURA`                      ,
-                            `CPOSTAL_CLIENTE_FACTURA`                        ,
-                            `NOMBRE_PAIS_CLIENTE_FACTURA`                           ,
-														`CODIGO_PAIS_CLIENTE_FACTURA`                           ,
-                            `ESIVA_RECARGO_CLIENTE_FACTURA`                  ,
-                            `ESIVA_EXENTO_CLIENTE_FACTURA`                   ,
-                            `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`      ,
-                            `ESRETENCIONES_CLIENTE_FACTURA`                  ,
-                            `TARIFA_ARTICULO_CLIENTE_FACTURA`                ,
-                            `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`              ,
-                            `ESINTRACOMUNITARIO_CLIENTE_FACTURA`             ,
-                            `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`               ,
-                            `ESAPLICA_RE_ZONA_IVA_FACTURA`                   ,
-                            `ESIVAAGRICOLA_ZONA_IVA_FACTURA`                 ,
-                            `PALABRA_REPORTS_ZONA_IVA_FACTURA`               ,
-                            `CODIGO_IVA_FACTURA`                             ,
-                            `ESVENTA_ACTIVO_FIJO_FACTURA`                    ,
-                            `PORCEN_IVAN_FACTURA`                            ,
-                            `TOTAL_IVAN_FACTURA`                             ,
-                            `PORCEN_REN_FACTURA`                             ,
-                            `TOTAL_REN_FACTURA`                              ,
-                            `TOTAL_BASEI_IVAN_FACTURA`                       ,
-                            `PORCEN_IVAR_FACTURA`                            ,
-                            `TOTAL_IVAR_FACTURA`                             ,
-                            `PORCEN_RER_FACTURA`                             ,
-                            `TOTAL_RER_FACTURA`                              ,
-                            `TOTAL_BASEI_IVAR_FACTURA`                       ,
-                            `PORCEN_IVAS_FACTURA`                            ,
-                            `TOTAL_IVAS_FACTURA`                             ,
-                            `PORCEN_RES_FACTURA`                             ,
-                            `TOTAL_RES_FACTURA`                              ,
-                            `TOTAL_BASEI_IVAS_FACTURA`                       ,
-                            `PORCEN_IVAE_FACTURA`                            ,
-                            `TOTAL_IVAE_FACTURA`                             ,
-                            `PORCEN_REE_FACTURA`                             ,
-                            `TOTAL_REE_FACTURA`                              ,
-                            `TOTAL_BASEI_IVAE_FACTURA`                       ,
-                            `TOTAL_BASES_FACTURA`                            ,
-                            `TOTAL_IMPUESTOS_FACTURA`                        ,
-                            `FORMA_PAGO_FACTURA`                             ,
-                            `PORCEN_RETENCION_FACTURA`                       ,
-                            `TOTAL_RETENCION_FACTURA`                        ,
-                            `TOTAL_LIQUIDO_FACTURA`                          ,
-                            `NRO_FACTURA_ABONO_FACTURA`                      ,
-                            `SERIE_FACTURA_ABONO_FACTURA`                    ,
-                            `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`            ,
-                            `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`            ,
-                            `DOCUMENTO_FACTURA`                              ,
-                            `COMENTARIOS_FACTURA`                            ,
-                            `CONTADOR_LINEAS_FACTURA`                        ,
-														`ESCREARARTICULOS_FACTURA`											 ,	
-                            `ESDESCRIPCIONES_AMP_FACTURA`	                   ,
-                            `ESFECHADEENTREGA_FACTURA`	                     , 
-                            CURRENT_TIMESTAMP                                 ,
-                            CURRENT_TIMESTAMP                                 ,
-                            `pUSUARIO`                                       ,
-                            `pUSUARIO`
-                       FROM `fza_facturas` 
-                      WHERE `NRO_FACTURA`   = `pidnumfactura` 
-                        AND `SERIE_FACTURA` = `pidseriefactura`;  
-  INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`                      ,
-                                     `SERIE_FACTURA_LINEA`                    ,
-                                     `LINEA_FACTURA_LINEA`                    ,
-                                     `CODIGO_ARTICULO_FACTURA_LINEA`          ,
-                                     `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`   ,
-                                     `ESIMP_INCL_TARIFA_FACTURA_LINEA`        ,
-                                     `TIPOIVA_ARTICULO_FACTURA_LINEA`         ,
-                                     `DESCRIPCION_ARTICULO_FACTURA_LINEA`     ,
-                                     `CANTIDAD_FACTURA_LINEA`                 ,
-                                     `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
-                                     `PORCEN_IVA_FACTURA_LINEA`               ,
-                                     `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`,
-                                     `TOTAL_FACTURA_LINEA`                    ,
-                                     `INSTANTEMODIF`                          ,
-                                     `INSTANTEALTA`                           ,
-                                     `USUARIOALTA`                            ,                        
-                                     `USUARIOMODIF`                  
-                                      ) 
-                              SELECT `contadorped`                             ,
-                                     `pidseriefacturaabono`                    ,
-                                     `LINEA_FACTURA_LINEA`                     ,
-                                     `CODIGO_ARTICULO_FACTURA_LINEA`           ,
-                                     `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`    ,
-                                     `ESIMP_INCL_TARIFA_FACTURA_LINEA`         ,
-                                     `TIPOIVA_ARTICULO_FACTURA_LINEA`          ,
-                                     `DESCRIPCION_ARTICULO_FACTURA_LINEA`      ,
-                                     (`CANTIDAD_FACTURA_LINEA`*-1)             ,
-                                     `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA` ,
-                                     `PORCEN_IVA_FACTURA_LINEA`                ,
-                                     `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA` ,
-                                     (`TOTAL_FACTURA_LINEA` * -1)              ,
-                                     CURRENT_TIMESTAMP                          ,
-                                     CURRENT_TIMESTAMP                          ,
-                                     `pUSUARIO`                                ,
-                                     `pUSUARIO`
-                               FROM  `fza_facturas_lineas` 
-                              WHERE  `SERIE_FACTURA_LINEA`  = `pidseriefactura`
-                                AND  `NRO_FACTURA_LINEA`    = `pidnumfactura`  ;                 
-   CALL `PRC_CALCULAR_FACTURA_NETOS`(`pidseriefacturaabono`, `contadorped`);
-   COMMIT;
+
+    START TRANSACTION;
+    
+    /* Pasamos contadorped directamente sin usar @cont */
+    CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, 'FC', pidcodigo_empresa, pUSUARIO, contadorped);   
+    
+    /* Asignación limpia sin DATE_FORMAT innecesario */
+    SET pFecha = pfechafacturaabono;
+    SET pidnumfacturaabono = contadorped;
+
+    INSERT INTO fza_facturas (
+        `NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `CODIGO_EMPRESA_FACTURA`,
+        `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )                                 
+    SELECT 
+        contadorped,                 /* SIN comillas */
+        pidseriefacturaabono,        /* SIN comillas */
+        pFecha,                      /* SIN comillas (y sin la arroba) */
+        `CODIGO_EMPRESA_FACTURA`, `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                    /* SIN comillas */
+        pUSUARIO                     /* SIN comillas */
+    FROM `fza_facturas` 
+    WHERE `NRO_FACTURA`   = pidnumfactura     /* SIN comillas */
+      AND `SERIE_FACTURA` = pidseriefactura;  /* SIN comillas */
+
+    INSERT INTO `fza_facturas_lineas` (
+        `NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    ) 
+    SELECT 
+        contadorped,                 /* SIN comillas */
+        pidseriefacturaabono,        /* SIN comillas */
+        `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`, `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`,
+        `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`, `DESCRIPCION_ARTICULO_FACTURA_LINEA`,
+        (`CANTIDAD_FACTURA_LINEA` * -1),  /* ¡Perfecto esto para el abono! */
+        `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`, `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`,
+        (`TOTAL_FACTURA_LINEA` * -1),     /* ¡Perfecto esto para el abono! */
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                    /* SIN comillas */
+        pUSUARIO                     /* SIN comillas */
+    FROM `fza_facturas_lineas` 
+    WHERE `SERIE_FACTURA_LINEA` = pidseriefactura   /* SIN comillas */
+      AND `NRO_FACTURA_LINEA`   = pidnumfactura;    /* SIN comillas */
+
+    CALL `PRC_CALCULAR_FACTURA_NETOS`(pidseriefacturaabono, contadorped);
+   
+    COMMIT;
 END ;;
 DELIMITER ;
 
 -- Procedimiento: PRC_CREAR_FACTURA_DUPLICADA
 DROP PROCEDURE IF EXISTS `PRC_CREAR_FACTURA_DUPLICADA`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_CREAR_FACTURA_DUPLICADA`(IN `pidseriefactura`      varchar(200),
-                                        IN `pidnumfactura`        varchar(200),
-                                        IN `pidseriefacturaabono` varchar(200),
-																				IN `pidcodigo_empresa`    varchar(200),
-                                        IN `pfechafacturaabono`   date,
-                                        IN `pUSUARIO`             varchar(100),
-                                       OUT `pidnumfacturaabono`   varchar(200))
-BEGIN
-   DECLARE `contadorped` varchar(200);
-   DECLARE `pfecha` date;
+CREATE  PROCEDURE `PRC_CREAR_FACTURA_DUPLICADA`(
+    IN pidseriefactura      varchar(200),
+    IN pidnumfactura        varchar(200),
+    IN pidseriefacturaabono varchar(200),
+    IN pidcodigo_empresa    varchar(200),
+    IN pfechafacturaabono   date,
+    IN pUSUARIO             varchar(100),
+    OUT pidnumfacturaabono  varchar(200)
+)
+BEGIN   
+    DECLARE contadorped varchar(200);
+    DECLARE pfecha date;
 
-    /* Manejo de errores para asegurar la consistencia */
+    /* Manejo de errores para asegurar la consistencia */    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
+    kk: BEGIN        
         ROLLBACK;
         RESIGNAL;
     END kk;
-   START TRANSACTION;
-   CALL PRC_GET_NEXT_CONT_FACT_SERIE(`pidseriefacturaabono`, 
-                                     'FC', 
-																		 pidcodigo_empresa,
-																		 pUSUARIO,
-                                     `contadorped`);
-   SET pFecha = (SELECT DATE_FORMAT(`pfechafacturaabono`, '%Y-%m-%d'));
-   SET pidnumfacturaabono = contadorped;
-   INSERT INTO fza_facturas (`NRO_FACTURA`                                  ,
-                             `SERIE_FACTURA`                                ,
-                             `FECHA_FACTURA`                                ,
-                             `CODIGO_EMPRESA_FACTURA`                       ,
-                             `RAZONSOCIAL_EMPRESA_FACTURA`                  ,
-                             `NIF_EMPRESA_FACTURA`                          ,
-                             `MOVIL_EMPRESA_FACTURA`                        ,
-                             `EMAIL_EMPRESA_FACTURA`                        ,
-                             `DIRECCION1_EMPRESA_FACTURA`                   ,
-                             `DIRECCION2_EMPRESA_FACTURA`                   ,
-                             `POBLACION_EMPRESA_FACTURA`                    ,
-                             `PROVINCIA_EMPRESA_FACTURA`                    ,
-                             `NOMBRE_PAIS_EMPRESA_FACTURA`                  ,
-														 `CODIGO_PAIS_EMPRESA_FACTURA`                  ,
-                             `CPOSTAL_EMPRESA_FACTURA`                      ,
-                             `ESRETENCIONES_EMPRESA_FACTURA`                ,
-                             `GRUPO_ZONA_IVA_EMPRESA_FACTURA`               ,
-                             `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`    ,
-                             `CODIGO_CLIENTE_FACTURA`                       ,
-                             `RAZONSOCIAL_CLIENTE_FACTURA`                  ,
-                             `NIF_CLIENTE_FACTURA`                          ,
-                             `MOVIL_CLIENTE_FACTURA`                        ,
-                             `EMAIL_CLIENTE_FACTURA`                        ,
-                             `DIRECCION1_CLIENTE_FACTURA`                   ,
-                             `DIRECCION2_CLIENTE_FACTURA`                   ,
-                             `POBLACION_CLIENTE_FACTURA`                    ,
-                             `PROVINCIA_CLIENTE_FACTURA`                    ,
-                             `CPOSTAL_CLIENTE_FACTURA`                      ,
-                             `NOMBRE_PAIS_CLIENTE_FACTURA`                         ,
-														 `CODIGO_PAIS_CLIENTE_FACTURA`                         ,
-                             `ESIVA_RECARGO_CLIENTE_FACTURA`                ,
-                             `ESIVA_EXENTO_CLIENTE_FACTURA`                 ,
-                             `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`    ,
-                             `ESRETENCIONES_CLIENTE_FACTURA`                ,
-                             `TARIFA_ARTICULO_CLIENTE_FACTURA`              ,
-                             `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`            ,
-                             `ESINTRACOMUNITARIO_CLIENTE_FACTURA`           ,
-                             `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`             ,
-                             `ESAPLICA_RE_ZONA_IVA_FACTURA`                 ,
-                             `ESIVAAGRICOLA_ZONA_IVA_FACTURA`               ,
-                             `PALABRA_REPORTS_ZONA_IVA_FACTURA`             ,
-                             `CODIGO_IVA_FACTURA`                           ,
-                             `ESVENTA_ACTIVO_FIJO_FACTURA`                  ,
-                             `PORCEN_IVAN_FACTURA`                          ,
-                             `TOTAL_IVAN_FACTURA`                           ,
-                             `PORCEN_REN_FACTURA`                           ,
-                             `TOTAL_REN_FACTURA`                            ,
-                             `TOTAL_BASEI_IVAN_FACTURA`                     ,
-                             `PORCEN_IVAR_FACTURA`                          ,
-                             `TOTAL_IVAR_FACTURA`                           ,
-                             `PORCEN_RER_FACTURA`                           ,
-                             `TOTAL_RER_FACTURA`                            ,
-                             `TOTAL_BASEI_IVAR_FACTURA`                     ,
-                             `PORCEN_IVAS_FACTURA`                          ,
-                             `TOTAL_IVAS_FACTURA`                           ,
-                             `PORCEN_RES_FACTURA`                           ,
-                             `TOTAL_RES_FACTURA`                            ,
-                             `TOTAL_BASEI_IVAS_FACTURA`                     ,
-                             `PORCEN_IVAE_FACTURA`                          ,
-                             `TOTAL_IVAE_FACTURA`                           ,
-                             `PORCEN_REE_FACTURA`                           ,
-                             `TOTAL_REE_FACTURA`                            ,
-                             `TOTAL_BASEI_IVAE_FACTURA`                     ,
-                             `TOTAL_BASES_FACTURA`                          ,
-                             `TOTAL_IMPUESTOS_FACTURA`                      ,
-                             `FORMA_PAGO_FACTURA`                           ,
-                             `PORCEN_RETENCION_FACTURA`                     ,
-                             `TOTAL_RETENCION_FACTURA`                      ,
-                             `TOTAL_LIQUIDO_FACTURA`                        ,
-                             `NRO_FACTURA_ABONO_FACTURA`                    ,
-                             `SERIE_FACTURA_ABONO_FACTURA`                  ,
-                             `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`          ,
-                             `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`          ,
-                             `DOCUMENTO_FACTURA`                            ,
-                             `COMENTARIOS_FACTURA`                          ,
-                             `CONTADOR_LINEAS_FACTURA`                      ,
-														 `ESCREARARTICULOS_FACTURA`											,	
-                             `ESDESCRIPCIONES_AMP_FACTURA`	                ,
-                             `ESFECHADEENTREGA_FACTURA`	                    ,
-                             `INSTANTEMODIF`                                ,
-                             `INSTANTEALTA`                                 ,
-                             `USUARIOALTA`                                  ,
-                             `USUARIOMODIF`
-                        )
-                          SELECT `contadorped`                                ,
-                                 `pidseriefacturaabono`                       ,
-                                 `pFecha`                                     ,
-                                 `CODIGO_EMPRESA_FACTURA`                     ,
-                                 `RAZONSOCIAL_EMPRESA_FACTURA`                ,
-                                 `NIF_EMPRESA_FACTURA`                        ,
-                                 `MOVIL_EMPRESA_FACTURA`                      ,
-                                 `EMAIL_EMPRESA_FACTURA`                      ,
-                                 `DIRECCION1_EMPRESA_FACTURA`                 ,
-                                 `DIRECCION2_EMPRESA_FACTURA`                 ,
-                                 `POBLACION_EMPRESA_FACTURA`                  ,
-                                 `PROVINCIA_EMPRESA_FACTURA`                  ,
-                                 `NOMBRE_PAIS_EMPRESA_FACTURA`                       ,
-																 `CODIGO_PAIS_EMPRESA_FACTURA`                       ,
-                                 `CPOSTAL_EMPRESA_FACTURA`                    ,
-                                 `ESRETENCIONES_EMPRESA_FACTURA`              ,
-                                 `GRUPO_ZONA_IVA_EMPRESA_FACTURA`             ,
-                                 `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`  ,
-                                 `CODIGO_CLIENTE_FACTURA`                     ,
-                                 `RAZONSOCIAL_CLIENTE_FACTURA`                ,
-                                 `NIF_CLIENTE_FACTURA`                        ,
-                                 `MOVIL_CLIENTE_FACTURA`                      ,
-                                 `EMAIL_CLIENTE_FACTURA`                      ,
-                                 `DIRECCION1_CLIENTE_FACTURA`                 ,
-                                 `DIRECCION2_CLIENTE_FACTURA`                 ,
-                                 `POBLACION_CLIENTE_FACTURA`                  ,
-                                 `PROVINCIA_CLIENTE_FACTURA`                  ,
-                                 `CPOSTAL_CLIENTE_FACTURA`                    ,
-                                 `NOMBRE_PAIS_CLIENTE_FACTURA`                       ,
-																 `CODIGO_PAIS_CLIENTE_FACTURA`                       ,
-                                 `ESIVA_RECARGO_CLIENTE_FACTURA`              ,
-                                 `ESIVA_EXENTO_CLIENTE_FACTURA`               ,
-                                 `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`  ,
-                                 `ESRETENCIONES_CLIENTE_FACTURA`              ,
-                                 `TARIFA_ARTICULO_CLIENTE_FACTURA`            ,
-                                 `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`          ,
-                                 `ESINTRACOMUNITARIO_CLIENTE_FACTURA`         ,
-                                 `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`           ,
-                                 `ESAPLICA_RE_ZONA_IVA_FACTURA`               ,
-                                 `ESIVAAGRICOLA_ZONA_IVA_FACTURA`             ,
-                                 `PALABRA_REPORTS_ZONA_IVA_FACTURA`           ,
-                                 `CODIGO_IVA_FACTURA`                         ,
-                                 `ESVENTA_ACTIVO_FIJO_FACTURA`                ,
-                                 `PORCEN_IVAN_FACTURA`                        ,
-                                 `TOTAL_IVAN_FACTURA`                         ,
-                                 `PORCEN_REN_FACTURA`                         ,
-                                 `TOTAL_REN_FACTURA`                          ,
-                                 `TOTAL_BASEI_IVAN_FACTURA`                   ,
-                                 `PORCEN_IVAR_FACTURA`                        ,
-                                 `TOTAL_IVAR_FACTURA`                         ,
-                                 `PORCEN_RER_FACTURA`                         ,
-                                 `TOTAL_RER_FACTURA`                          ,
-                                 `TOTAL_BASEI_IVAR_FACTURA`                   ,
-                                 `PORCEN_IVAS_FACTURA`                        ,
-                                 `TOTAL_IVAS_FACTURA`                         ,
-                                 `PORCEN_RES_FACTURA`                         ,
-                                 `TOTAL_RES_FACTURA`                          ,
-                                 `TOTAL_BASEI_IVAS_FACTURA`                   ,
-                                 `PORCEN_IVAE_FACTURA`                        ,
-                                 `TOTAL_IVAE_FACTURA`                         ,
-                                 `PORCEN_REE_FACTURA`                         ,
-                                 `TOTAL_REE_FACTURA`                          ,
-                                 `TOTAL_BASEI_IVAE_FACTURA`                   ,
-                                 `TOTAL_BASES_FACTURA`                        ,
-                                 `TOTAL_IMPUESTOS_FACTURA`                    ,
-                                 `FORMA_PAGO_FACTURA`                         ,
-                                 `PORCEN_RETENCION_FACTURA`                   ,
-                                 `TOTAL_RETENCION_FACTURA`                    ,
-                                 `TOTAL_LIQUIDO_FACTURA`                      ,
-                                 `NRO_FACTURA_ABONO_FACTURA`                  ,
-                                 `SERIE_FACTURA_ABONO_FACTURA`                ,
-                                 `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`        ,
-                                 `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`        ,
-                                 `DOCUMENTO_FACTURA`                          ,
-                                 `COMENTARIOS_FACTURA`                        ,
-                                 `CONTADOR_LINEAS_FACTURA`                    ,
-																 `ESCREARARTICULOS_FACTURA`										,	
-                                 `ESDESCRIPCIONES_AMP_FACTURA`	              ,
-                                 `ESFECHADEENTREGA_FACTURA`	                  ,
-                                 CURRENT_TIMESTAMP                             ,
-                                 CURRENT_TIMESTAMP                            ,
-                                 `pUSUARIO`                                   ,
-                                 `pUSUARIO`
-                            FROM `fza_facturas` 
-                           WHERE `NRO_FACTURA`   = `pidnumfactura` 
-                             AND `SERIE_FACTURA` = `pidseriefactura`;  
-  INSERT INTO fza_facturas_lineas (`NRO_FACTURA_LINEA`                        ,
-                                   `SERIE_FACTURA_LINEA`                      ,
-                                   `LINEA_FACTURA_LINEA`                      ,
-                                   `CODIGO_ARTICULO_FACTURA_LINEA`            ,
-                                   `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`     ,
-                                   `ESIMP_INCL_TARIFA_FACTURA_LINEA`          ,
-                                   `TIPOIVA_ARTICULO_FACTURA_LINEA`           ,
-                                   `DESCRIPCION_ARTICULO_FACTURA_LINEA`       ,
-                                   `CANTIDAD_FACTURA_LINEA`                   ,
-                                   `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`  ,
-                                   `PORCEN_IVA_FACTURA_LINEA`                 ,
-                                   `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`  ,
-                                   `TOTAL_FACTURA_LINEA`                      ,
-                                   `INSTANTEMODIF`                            ,
-                                   `INSTANTEALTA`                             ,
-                                   `USUARIOALTA`                              ,
-                                   `USUARIOMODIF`
-                                  )
-                           SELECT `contadorped`                               ,
-                                  `pidseriefacturaabono`                      ,
-                                  `LINEA_FACTURA_LINEA`                       ,
-                                  `CODIGO_ARTICULO_FACTURA_LINEA`             ,
-                                  `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`      ,
-                                  `ESIMP_INCL_TARIFA_FACTURA_LINEA`           ,
-                                  `TIPOIVA_ARTICULO_FACTURA_LINEA`            ,
-                                  `DESCRIPCION_ARTICULO_FACTURA_LINEA`        ,
-                                  `CANTIDAD_FACTURA_LINEA`                    ,
-                                  `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`   ,
-                                  `PORCEN_IVA_FACTURA_LINEA`                  ,
-                                  `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`   ,
-                                  `TOTAL_FACTURA_LINEA`                       ,
-                                  CURRENT_TIMESTAMP                           ,
-                                  CURRENT_TIMESTAMP                           ,
-                                  `pUSUARIO`                                  ,
-                                  `pUSUARIO`
-                             FROM `fza_facturas_lineas`
-                            WHERE `SERIE_FACTURA_LINEA`      = `pidseriefactura`
-                              AND `NRO_FACTURA_LINEA`        = `pidnumfactura` ;
+
+    START TRANSACTION;
+    
+    CALL PRC_GET_NEXT_CONT_FACT_SERIE(pidseriefacturaabono, 
+                                      'FC', 
+                                      pidcodigo_empresa,
+                                      pUSUARIO,
+                                      contadorped);
+                                      
+    SET pFecha = pfechafacturaabono;
+    SET pidnumfacturaabono = contadorped;
+
+    INSERT INTO fza_facturas (
+        `NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `CODIGO_EMPRESA_FACTURA`,
+        `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, `INSTANTEMODIF`,
+        `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )
+    SELECT 
+        contadorped,                  
+        pidseriefacturaabono,         
+        pFecha,                       
+        `CODIGO_EMPRESA_FACTURA`, `RAZONSOCIAL_EMPRESA_FACTURA`, `NIF_EMPRESA_FACTURA`, `MOVIL_EMPRESA_FACTURA`, `EMAIL_EMPRESA_FACTURA`,
+        `DIRECCION1_EMPRESA_FACTURA`, `DIRECCION2_EMPRESA_FACTURA`, `POBLACION_EMPRESA_FACTURA`, `PROVINCIA_EMPRESA_FACTURA`,
+        `NOMBRE_PAIS_EMPRESA_FACTURA`, `CODIGO_PAIS_EMPRESA_FACTURA`, `CPOSTAL_EMPRESA_FACTURA`, `ESRETENCIONES_EMPRESA_FACTURA`,
+        `GRUPO_ZONA_IVA_EMPRESA_FACTURA`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA`, `CODIGO_CLIENTE_FACTURA`, `RAZONSOCIAL_CLIENTE_FACTURA`,
+        `NIF_CLIENTE_FACTURA`, `MOVIL_CLIENTE_FACTURA`, `EMAIL_CLIENTE_FACTURA`, `DIRECCION1_CLIENTE_FACTURA`,
+        `DIRECCION2_CLIENTE_FACTURA`, `POBLACION_CLIENTE_FACTURA`, `PROVINCIA_CLIENTE_FACTURA`, `CPOSTAL_CLIENTE_FACTURA`,
+        `NOMBRE_PAIS_CLIENTE_FACTURA`, `CODIGO_PAIS_CLIENTE_FACTURA`, `ESIVA_RECARGO_CLIENTE_FACTURA`, `ESIVA_EXENTO_CLIENTE_FACTURA`,
+        `ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA`, `ESRETENCIONES_CLIENTE_FACTURA`, `TARIFA_ARTICULO_CLIENTE_FACTURA`, `ESIMP_INCL_TARIFA_CLIENTE_FACTURA`,
+        `ESINTRACOMUNITARIO_CLIENTE_FACTURA`, `ESIRPF_IMP_INCL_ZONA_IVA_FACTURA`, `ESAPLICA_RE_ZONA_IVA_FACTURA`, `ESIVAAGRICOLA_ZONA_IVA_FACTURA`,
+        `PALABRA_REPORTS_ZONA_IVA_FACTURA`, `CODIGO_IVA_FACTURA`, `ESVENTA_ACTIVO_FIJO_FACTURA`, `PORCEN_IVAN_FACTURA`,
+        `TOTAL_IVAN_FACTURA`, `PORCEN_REN_FACTURA`, `TOTAL_REN_FACTURA`, `TOTAL_BASEI_IVAN_FACTURA`,
+        `PORCEN_IVAR_FACTURA`, `TOTAL_IVAR_FACTURA`, `PORCEN_RER_FACTURA`, `TOTAL_RER_FACTURA`,
+        `TOTAL_BASEI_IVAR_FACTURA`, `PORCEN_IVAS_FACTURA`, `TOTAL_IVAS_FACTURA`, `PORCEN_RES_FACTURA`,
+        `TOTAL_RES_FACTURA`, `TOTAL_BASEI_IVAS_FACTURA`, `PORCEN_IVAE_FACTURA`, `TOTAL_IVAE_FACTURA`,
+        `PORCEN_REE_FACTURA`, `TOTAL_REE_FACTURA`, `TOTAL_BASEI_IVAE_FACTURA`, `TOTAL_BASES_FACTURA`,
+        `TOTAL_IMPUESTOS_FACTURA`, `FORMA_PAGO_FACTURA`, `PORCEN_RETENCION_FACTURA`, `TOTAL_RETENCION_FACTURA`,
+        `TOTAL_LIQUIDO_FACTURA`, `NRO_FACTURA_ABONO_FACTURA`, `SERIE_FACTURA_ABONO_FACTURA`, `TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA`,
+        `TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA`, `DOCUMENTO_FACTURA`, `COMENTARIOS_FACTURA`, `CONTADOR_LINEAS_FACTURA`,
+        `ESCREARARTICULOS_FACTURA`, `ESDESCRIPCIONES_AMP_FACTURA`, `ESFECHADEENTREGA_FACTURA`, 
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                     
+        pUSUARIO                      
+    FROM `fza_facturas` 
+    WHERE `NRO_FACTURA` = pidnumfactura     
+      AND `SERIE_FACTURA` = pidseriefactura;  
+
+    INSERT INTO fza_facturas_lineas (
+        `NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`
+    )
+    SELECT 
+        contadorped,                  
+        pidseriefacturaabono,         
+        `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`,
+        `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`,
+        `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`,
+        `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+        pUSUARIO,                     
+        pUSUARIO                      
+    FROM `fza_facturas_lineas`                            
+    WHERE `SERIE_FACTURA_LINEA` = pidseriefactura   
+      AND `NRO_FACTURA_LINEA` = pidnumfactura;      
+      
     COMMIT;
 END ;;
 DELIMITER ;
@@ -9380,4 +9407,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 27/03/2026 7:19:13
+-- Backup completado: 27/03/2026 17:36:16

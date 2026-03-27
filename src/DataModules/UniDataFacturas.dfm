@@ -1,6 +1,7 @@
 inherited dmFacturas: TdmFacturas
-  Height = 510
-  Width = 1156
+  Height = 590
+  Width = 1241
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_facturas`'
@@ -305,12 +306,12 @@ inherited dmFacturas: TdmFacturas
   object dsFacPrint: TDataSource
     DataSet = unqryFacPrint
     Left = 454
-    Top = 397
+    Top = 429
   end
   object dsLinFacPrint: TDataSource
     DataSet = unqryLinFacPrint
-    Left = 518
-    Top = 397
+    Left = 574
+    Top = 429
   end
   object dsSeries: TDataSource
     DataSet = unqrySeries
@@ -321,160 +322,475 @@ inherited dmFacturas: TdmFacturas
     Description = 'Facturas'
     UserName = 'Facturas'
     CloseDataSource = False
-    FieldAliases.Strings = (
-      'FECHA_FACTURA=FECHA_FACTURA'
-      'NRO_FACTURA=NRO_FACTURA'
-      'SERIE_FACTURA=SERIE_FACTURA'
-      'TOTAL_LIQUIDO_FACTURA=TOTAL_LIQUIDO_FACTURA'
-      'PORCEN_RETENCION_FACTURA=PORCEN_RETENCION_FACTURA'
-      'TOTAL_RETENCION_FACTURA=TOTAL_RETENCION_FACTURA'
-      'TOTAL_IMPUESTOS_FACTURA=TOTAL_IMPUESTOS_FACTURA'
-      'TOTAL_BASES_FACTURA=TOTAL_BASES_FACTURA'
-      'FORMA_PAGO_FACTURA=FORMA_PAGO_FACTURA'
-      'CODIGO_EMPRESA_FACTURA=CODIGO_EMPRESA_FACTURA'
-      'RAZONSOCIAL_EMPRESA_FACTURA=RAZONSOCIAL_EMPRESA_FACTURA'
-      'NIF_EMPRESA_FACTURA=NIF_EMPRESA_FACTURA'
-      'MOVIL_EMPRESA_FACTURA=MOVIL_EMPRESA_FACTURA'
-      'EMAIL_EMPRESA_FACTURA=EMAIL_EMPRESA_FACTURA'
-      'DIRECCION1_EMPRESA_FACTURA=DIRECCION1_EMPRESA_FACTURA'
-      'DIRECCION2_EMPRESA_FACTURA=DIRECCION2_EMPRESA_FACTURA'
-      'POBLACION_EMPRESA_FACTURA=POBLACION_EMPRESA_FACTURA'
-      'PROVINCIA_EMPRESA_FACTURA=PROVINCIA_EMPRESA_FACTURA'
-      'NOMBRE_PAIS_EMPRESA_FACTURA=NOMBRE_PAIS_EMPRESA_FACTURA'
-      'CODIGO_PAIS_EMPRESA_FACTURA=CODIGO_PAIS_EMPRESA_FACTURA'
-      'CPOSTAL_EMPRESA_FACTURA=CPOSTAL_EMPRESA_FACTURA'
-      'ESRETENCIONES_EMPRESA_FACTURA=ESRETENCIONES_EMPRESA_FACTURA'
-      'GRUPO_ZONA_IVA_EMPRESA_FACTURA=GRUPO_ZONA_IVA_EMPRESA_FACTURA'
-      
-        'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA=ESREGIMENESPECIALAGRIC' +
-        'OLA_EMPRESA_FACTURA'
-      'CODIGO_CLIENTE_FACTURA=CODIGO_CLIENTE_FACTURA'
-      'RAZONSOCIAL_CLIENTE_FACTURA=RAZONSOCIAL_CLIENTE_FACTURA'
-      'NIF_CLIENTE_FACTURA=NIF_CLIENTE_FACTURA'
-      'MOVIL_CLIENTE_FACTURA=MOVIL_CLIENTE_FACTURA'
-      'EMAIL_CLIENTE_FACTURA=EMAIL_CLIENTE_FACTURA'
-      'DIRECCION1_CLIENTE_FACTURA=DIRECCION1_CLIENTE_FACTURA'
-      'DIRECCION2_CLIENTE_FACTURA=DIRECCION2_CLIENTE_FACTURA'
-      'POBLACION_CLIENTE_FACTURA=POBLACION_CLIENTE_FACTURA'
-      'PROVINCIA_CLIENTE_FACTURA=PROVINCIA_CLIENTE_FACTURA'
-      'CPOSTAL_CLIENTE_FACTURA=CPOSTAL_CLIENTE_FACTURA'
-      'NOMBRE_PAIS_CLIENTE_FACTURA=NOMBRE_PAIS_CLIENTE_FACTURA'
-      'CODIGO_PAIS_CLIENTE_FACTURA=CODIGO_PAIS_CLIENTE_FACTURA'
-      'ESIVA_RECARGO_CLIENTE_FACTURA=ESIVA_RECARGO_CLIENTE_FACTURA'
-      'ESIVA_EXENTO_CLIENTE_FACTURA=ESIVA_EXENTO_CLIENTE_FACTURA'
-      
-        'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA=ESREGIMENESPECIALAGRIC' +
-        'OLA_CLIENTE_FACTURA'
-      'ESRETENCIONES_CLIENTE_FACTURA=ESRETENCIONES_CLIENTE_FACTURA'
-      'TARIFA_ARTICULO_CLIENTE_FACTURA=TARIFA_ARTICULO_CLIENTE_FACTURA'
-      
-        'ESIMP_INCL_TARIFA_CLIENTE_FACTURA=ESIMP_INCL_TARIFA_CLIENTE_FACT' +
-        'URA'
-      
-        'ESINTRACOMUNITARIO_CLIENTE_FACTURA=ESINTRACOMUNITARIO_CLIENTE_FA' +
-        'CTURA'
-      
-        'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA=ESIRPF_IMP_INCL_ZONA_IVA_FACTUR' +
-        'A'
-      'ESAPLICA_RE_ZONA_IVA_FACTURA=ESAPLICA_RE_ZONA_IVA_FACTURA'
-      'ESIVAAGRICOLA_ZONA_IVA_FACTURA=ESIVAAGRICOLA_ZONA_IVA_FACTURA'
-      
-        'PALABRA_REPORTS_ZONA_IVA_FACTURA=PALABRA_REPORTS_ZONA_IVA_FACTUR' +
-        'A'
-      'CODIGO_IVA_FACTURA=CODIGO_IVA_FACTURA'
-      'ESVENTA_ACTIVO_FIJO_FACTURA=ESVENTA_ACTIVO_FIJO_FACTURA'
-      'PORCEN_IVAN_FACTURA=PORCEN_IVAN_FACTURA'
-      'TOTAL_IVAN_FACTURA=TOTAL_IVAN_FACTURA'
-      'PORCEN_REN_FACTURA=PORCEN_REN_FACTURA'
-      'TOTAL_REN_FACTURA=TOTAL_REN_FACTURA'
-      'TOTAL_BASEI_IVAN_FACTURA=TOTAL_BASEI_IVAN_FACTURA'
-      'PORCEN_IVAR_FACTURA=PORCEN_IVAR_FACTURA'
-      'TOTAL_IVAR_FACTURA=TOTAL_IVAR_FACTURA'
-      'PORCEN_RER_FACTURA=PORCEN_RER_FACTURA'
-      'TOTAL_RER_FACTURA=TOTAL_RER_FACTURA'
-      'TOTAL_BASEI_IVAR_FACTURA=TOTAL_BASEI_IVAR_FACTURA'
-      'PORCEN_IVAS_FACTURA=PORCEN_IVAS_FACTURA'
-      'TOTAL_IVAS_FACTURA=TOTAL_IVAS_FACTURA'
-      'PORCEN_RES_FACTURA=PORCEN_RES_FACTURA'
-      'TOTAL_RES_FACTURA=TOTAL_RES_FACTURA'
-      'TOTAL_BASEI_IVAS_FACTURA=TOTAL_BASEI_IVAS_FACTURA'
-      'PORCEN_IVAE_FACTURA=PORCEN_IVAE_FACTURA'
-      'TOTAL_IVAE_FACTURA=TOTAL_IVAE_FACTURA'
-      'PORCEN_REE_FACTURA=PORCEN_REE_FACTURA'
-      'TOTAL_REE_FACTURA=TOTAL_REE_FACTURA'
-      'TOTAL_BASEI_IVAE_FACTURA=TOTAL_BASEI_IVAE_FACTURA'
-      'NRO_FACTURA_ABONO_FACTURA=NRO_FACTURA_ABONO_FACTURA'
-      'SERIE_FACTURA_ABONO_FACTURA=SERIE_FACTURA_ABONO_FACTURA'
-      
-        'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA=TEXTO_LEGAL_FACTURA_CLIENTE_' +
-        'FACTURA'
-      
-        'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA=TEXTO_LEGAL_FACTURA_EMPRESA_' +
-        'FACTURA'
-      'DOCUMENTO_FACTURA=DOCUMENTO_FACTURA'
-      'COMENTARIOS_FACTURA=COMENTARIOS_FACTURA'
-      'CONTADOR_LINEAS_FACTURA=CONTADOR_LINEAS_FACTURA'
-      'ESCREARARTICULOS_FACTURA=ESCREARARTICULOS_FACTURA'
-      'ESDESCRIPCIONES_AMP_FACTURA=ESDESCRIPCIONES_AMP_FACTURA'
-      'ESFECHADEENTREGA_FACTURA=ESFECHADEENTREGA_FACTURA'
-      'INSTANTEMODIF=INSTANTEMODIF'
-      'INSTANTEALTA=INSTANTEALTA'
-      'USUARIOALTA=USUARIOALTA'
-      'USUARIOMODIF=USUARIOMODIF'
-      'DESCRIPCION_FORMAPAGO=DESCRIPCION_FORMAPAGO'
-      'ESCONTADO_FORMAPAGO=ESCONTADO_FORMAPAGO'
-      'VENCIMIENTOS_RECIBOS=VENCIMIENTOS_RECIBOS'
-      'IBAN_EMPRESA=IBAN_EMPRESA'
-      'IBAN_CLIENTE=IBAN_CLIENTE'
-      'ESVERBANCOEMPRESA_FORMAPAGO=ESVERBANCOEMPRESA_FORMAPAGO')
     DataSource = dsFacPrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 454
     Top = 346
+    FieldDefs = <
+      item
+        FieldName = 'FECHA_FACTURA'
+        FieldAlias = 'FECHA_FACTURA'
+      end
+      item
+        FieldName = 'NRO_FACTURA'
+        FieldAlias = 'NRO_FACTURA'
+      end
+      item
+        FieldName = 'SERIE_FACTURA'
+        FieldAlias = 'SERIE_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_LIQUIDO_FACTURA'
+        FieldAlias = 'TOTAL_LIQUIDO_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_RETENCION_FACTURA'
+        FieldAlias = 'PORCEN_RETENCION_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_RETENCION_FACTURA'
+        FieldAlias = 'TOTAL_RETENCION_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_IMPUESTOS_FACTURA'
+        FieldAlias = 'TOTAL_IMPUESTOS_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_BASES_FACTURA'
+        FieldAlias = 'TOTAL_BASES_FACTURA'
+      end
+      item
+        FieldName = 'FORMA_PAGO_FACTURA'
+        FieldAlias = 'FORMA_PAGO_FACTURA'
+      end
+      item
+        FieldName = 'CODIGO_EMPRESA_FACTURA'
+        FieldAlias = 'CODIGO_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'RAZONSOCIAL_EMPRESA_FACTURA'
+        FieldAlias = 'RAZONSOCIAL_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'NIF_EMPRESA_FACTURA'
+        FieldAlias = 'NIF_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'MOVIL_EMPRESA_FACTURA'
+        FieldAlias = 'MOVIL_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'EMAIL_EMPRESA_FACTURA'
+        FieldAlias = 'EMAIL_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'DIRECCION1_EMPRESA_FACTURA'
+        FieldAlias = 'DIRECCION1_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'DIRECCION2_EMPRESA_FACTURA'
+        FieldAlias = 'DIRECCION2_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'POBLACION_EMPRESA_FACTURA'
+        FieldAlias = 'POBLACION_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'PROVINCIA_EMPRESA_FACTURA'
+        FieldAlias = 'PROVINCIA_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+        FieldAlias = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'CODIGO_PAIS_EMPRESA_FACTURA'
+        FieldAlias = 'CODIGO_PAIS_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'CPOSTAL_EMPRESA_FACTURA'
+        FieldAlias = 'CPOSTAL_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'ESRETENCIONES_EMPRESA_FACTURA'
+        FieldAlias = 'ESRETENCIONES_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+        FieldAlias = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+        FieldAlias = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'CODIGO_CLIENTE_FACTURA'
+        FieldAlias = 'CODIGO_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'RAZONSOCIAL_CLIENTE_FACTURA'
+        FieldAlias = 'RAZONSOCIAL_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'NIF_CLIENTE_FACTURA'
+        FieldAlias = 'NIF_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'MOVIL_CLIENTE_FACTURA'
+        FieldAlias = 'MOVIL_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'EMAIL_CLIENTE_FACTURA'
+        FieldAlias = 'EMAIL_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'DIRECCION1_CLIENTE_FACTURA'
+        FieldAlias = 'DIRECCION1_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'DIRECCION2_CLIENTE_FACTURA'
+        FieldAlias = 'DIRECCION2_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'POBLACION_CLIENTE_FACTURA'
+        FieldAlias = 'POBLACION_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'PROVINCIA_CLIENTE_FACTURA'
+        FieldAlias = 'PROVINCIA_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'CPOSTAL_CLIENTE_FACTURA'
+        FieldAlias = 'CPOSTAL_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+        FieldAlias = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'CODIGO_PAIS_CLIENTE_FACTURA'
+        FieldAlias = 'CODIGO_PAIS_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+        FieldAlias = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+        FieldAlias = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+        FieldAlias = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESRETENCIONES_CLIENTE_FACTURA'
+        FieldAlias = 'ESRETENCIONES_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+        FieldAlias = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+        FieldAlias = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+        FieldAlias = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+        FieldAlias = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+      end
+      item
+        FieldName = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
+        FieldAlias = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
+      end
+      item
+        FieldName = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
+        FieldAlias = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
+      end
+      item
+        FieldName = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
+        FieldAlias = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
+      end
+      item
+        FieldName = 'CODIGO_IVA_FACTURA'
+        FieldAlias = 'CODIGO_IVA_FACTURA'
+      end
+      item
+        FieldName = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+        FieldAlias = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_IVAN_FACTURA'
+        FieldAlias = 'PORCEN_IVAN_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_IVAN_FACTURA'
+        FieldAlias = 'TOTAL_IVAN_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_REN_FACTURA'
+        FieldAlias = 'PORCEN_REN_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_REN_FACTURA'
+        FieldAlias = 'TOTAL_REN_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_BASEI_IVAN_FACTURA'
+        FieldAlias = 'TOTAL_BASEI_IVAN_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_IVAR_FACTURA'
+        FieldAlias = 'PORCEN_IVAR_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_IVAR_FACTURA'
+        FieldAlias = 'TOTAL_IVAR_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_RER_FACTURA'
+        FieldAlias = 'PORCEN_RER_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_RER_FACTURA'
+        FieldAlias = 'TOTAL_RER_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_BASEI_IVAR_FACTURA'
+        FieldAlias = 'TOTAL_BASEI_IVAR_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_IVAS_FACTURA'
+        FieldAlias = 'PORCEN_IVAS_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_IVAS_FACTURA'
+        FieldAlias = 'TOTAL_IVAS_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_RES_FACTURA'
+        FieldAlias = 'PORCEN_RES_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_RES_FACTURA'
+        FieldAlias = 'TOTAL_RES_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_BASEI_IVAS_FACTURA'
+        FieldAlias = 'TOTAL_BASEI_IVAS_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_IVAE_FACTURA'
+        FieldAlias = 'PORCEN_IVAE_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_IVAE_FACTURA'
+        FieldAlias = 'TOTAL_IVAE_FACTURA'
+      end
+      item
+        FieldName = 'PORCEN_REE_FACTURA'
+        FieldAlias = 'PORCEN_REE_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_REE_FACTURA'
+        FieldAlias = 'TOTAL_REE_FACTURA'
+      end
+      item
+        FieldName = 'TOTAL_BASEI_IVAE_FACTURA'
+        FieldAlias = 'TOTAL_BASEI_IVAE_FACTURA'
+      end
+      item
+        FieldName = 'NRO_FACTURA_ABONO_FACTURA'
+        FieldAlias = 'NRO_FACTURA_ABONO_FACTURA'
+      end
+      item
+        FieldName = 'SERIE_FACTURA_ABONO_FACTURA'
+        FieldAlias = 'SERIE_FACTURA_ABONO_FACTURA'
+      end
+      item
+        FieldName = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
+        FieldAlias = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
+      end
+      item
+        FieldName = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
+        FieldAlias = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
+      end
+      item
+        FieldName = 'DOCUMENTO_FACTURA'
+        FieldAlias = 'DOCUMENTO_FACTURA'
+      end
+      item
+        FieldName = 'COMENTARIOS_FACTURA'
+        FieldAlias = 'COMENTARIOS_FACTURA'
+      end
+      item
+        FieldName = 'CONTADOR_LINEAS_FACTURA'
+        FieldAlias = 'CONTADOR_LINEAS_FACTURA'
+      end
+      item
+        FieldName = 'ESCREARARTICULOS_FACTURA'
+        FieldAlias = 'ESCREARARTICULOS_FACTURA'
+      end
+      item
+        FieldName = 'ESDESCRIPCIONES_AMP_FACTURA'
+        FieldAlias = 'ESDESCRIPCIONES_AMP_FACTURA'
+      end
+      item
+        FieldName = 'ESFECHADEENTREGA_FACTURA'
+        FieldAlias = 'ESFECHADEENTREGA_FACTURA'
+      end
+      item
+        FieldName = 'INSTANTEMODIF'
+        FieldAlias = 'INSTANTEMODIF'
+      end
+      item
+        FieldName = 'INSTANTEALTA'
+        FieldAlias = 'INSTANTEALTA'
+      end
+      item
+        FieldName = 'USUARIOALTA'
+        FieldAlias = 'USUARIOALTA'
+      end
+      item
+        FieldName = 'USUARIOMODIF'
+        FieldAlias = 'USUARIOMODIF'
+      end
+      item
+        FieldName = 'DESCRIPCION_FORMAPAGO'
+        FieldAlias = 'DESCRIPCION_FORMAPAGO'
+      end
+      item
+        FieldName = 'ESCONTADO_FORMAPAGO'
+        FieldAlias = 'ESCONTADO_FORMAPAGO'
+      end
+      item
+        FieldName = 'VENCIMIENTOS_RECIBOS'
+        FieldAlias = 'VENCIMIENTOS_RECIBOS'
+      end
+      item
+        FieldName = 'IBAN_EMPRESA'
+        FieldAlias = 'IBAN_EMPRESA'
+      end
+      item
+        FieldName = 'IBAN_CLIENTE'
+        FieldAlias = 'IBAN_CLIENTE'
+      end
+      item
+        FieldName = 'ESVERBANCOEMPRESA_FORMAPAGO'
+        FieldAlias = 'ESVERBANCOEMPRESA_FORMAPAGO'
+      end>
   end
   object fxdstPrintLinFac: TfrxDBDataset
     Description = 'Lineas Facturas'
     UserName = 'Lineas Facturas'
     CloseDataSource = False
-    FieldAliases.Strings = (
-      'NRO_FACTURA_LINEA=NRO_FACTURA_LINEA'
-      'SERIE_FACTURA_LINEA=SERIE_FACTURA_LINEA'
-      'LINEA_FACTURA_LINEA=LINEA_FACTURA_LINEA'
-      'CODIGO_ARTICULO_FACTURA_LINEA=CODIGO_ARTICULO_FACTURA_LINEA'
-      'CODIGO_FAMILIA_FACTURA_LINEA=CODIGO_FAMILIA_FACTURA_LINEA'
-      'NOMBRE_FAMILIA_FACTURA_LINEA=NOMBRE_FAMILIA_FACTURA_LINEA'
-      'FECHA_ENTREGA_FACTURA_LINEA=FECHA_ENTREGA_FACTURA_LINEA'
-      
-        'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA=TIPO_CANTIDAD_ARTICULO_FACT' +
-        'URA_LINEA'
-      'ESIMP_INCL_TARIFA_FACTURA_LINEA=ESIMP_INCL_TARIFA_FACTURA_LINEA'
-      'TIPOIVA_ARTICULO_FACTURA_LINEA=TIPOIVA_ARTICULO_FACTURA_LINEA'
-      
-        'DESCRIPCION_ARTICULO_FACTURA_LINEA=DESCRIPCION_ARTICULO_FACTURA_' +
-        'LINEA'
-      'CODIGO_TARIFA_FACTURA_LINEA=CODIGO_TARIFA_FACTURA_LINEA'
-      'CANTIDAD_FACTURA_LINEA=CANTIDAD_FACTURA_LINEA'
-      'PRECIOSALIDA_FACTURA_LINEA=PRECIOSALIDA_FACTURA_LINEA'
-      'PORCEN_DTO_FACTURA_LINEA=PORCEN_DTO_FACTURA_LINEA'
-      'PRECIO_DTO_FACTURA_LINEA=PRECIO_DTO_FACTURA_LINEA'
-      
-        'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA=PRECIOVENTA_SIVA_ARTICUL' +
-        'O_FACTURA_LINEA'
-      'PORCEN_IVA_FACTURA_LINEA=PORCEN_IVA_FACTURA_LINEA'
-      
-        'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA=PRECIOVENTA_CIVA_ARTICUL' +
-        'O_FACTURA_LINEA'
-      'TOTAL_FACTURA_LINEA=TOTAL_FACTURA_LINEA'
-      'INSTANTEMODIF=INSTANTEMODIF'
-      'INSTANTEALTA=INSTANTEALTA'
-      'USUARIOALTA=USUARIOALTA'
-      'USUARIOMODIF=USUARIOMODIF')
     DataSource = dsLinFacPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 518
+    Left = 574
     Top = 346
+    FieldDefs = <
+      item
+        FieldName = 'NRO_FACTURA_LINEA'
+        FieldAlias = 'NRO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'SERIE_FACTURA_LINEA'
+        FieldAlias = 'SERIE_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'LINEA_FACTURA_LINEA'
+        FieldAlias = 'LINEA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'CODIGO_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'CODIGO_FAMILIA_FACTURA_LINEA'
+        FieldAlias = 'CODIGO_FAMILIA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'NOMBRE_FAMILIA_FACTURA_LINEA'
+        FieldAlias = 'NOMBRE_FAMILIA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+        FieldAlias = 'FECHA_ENTREGA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
+        FieldAlias = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'CODIGO_TARIFA_FACTURA_LINEA'
+        FieldAlias = 'CODIGO_TARIFA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'CANTIDAD_FACTURA_LINEA'
+        FieldAlias = 'CANTIDAD_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PRECIOSALIDA_FACTURA_LINEA'
+        FieldAlias = 'PRECIOSALIDA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PORCEN_DTO_FACTURA_LINEA'
+        FieldAlias = 'PORCEN_DTO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PRECIO_DTO_FACTURA_LINEA'
+        FieldAlias = 'PRECIO_DTO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+        FieldAlias = 'PORCEN_IVA_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+        FieldAlias = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'TOTAL_FACTURA_LINEA'
+        FieldAlias = 'TOTAL_FACTURA_LINEA'
+      end
+      item
+        FieldName = 'INSTANTEMODIF'
+        FieldAlias = 'INSTANTEMODIF'
+      end
+      item
+        FieldName = 'INSTANTEALTA'
+        FieldAlias = 'INSTANTEALTA'
+      end
+      item
+        FieldName = 'USUARIOALTA'
+        FieldAlias = 'USUARIOALTA'
+      end
+      item
+        FieldName = 'USUARIOMODIF'
+        FieldAlias = 'USUARIOMODIF'
+      end>
   end
   object unqryFacPrint: TUniQuery
     Connection = dmConn.conUni
@@ -485,7 +801,7 @@ inherited dmFacturas: TdmFacturas
       'AND NRO_FACTURA = '#39'000003'#39
       'order by NRO_FACTURA Asc')
     Left = 454
-    Top = 442
+    Top = 506
   end
   object unqryLinFacPrint: TUniQuery
     SQLInsert.Strings = (
@@ -555,8 +871,8 @@ inherited dmFacturas: TdmFacturas
     MasterSource = dsFacPrint
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'SERIE_FACTURA_LINEA;NRO_FACTURA_LINEA'
-    Left = 518
-    Top = 442
+    Left = 574
+    Top = 506
     ParamData = <
       item
         DataType = ftWideString
@@ -1492,44 +1808,111 @@ inherited dmFacturas: TdmFacturas
   end
   object dsRecibosPrint: TDataSource
     DataSet = unqryRecibosPrint
-    Left = 621
-    Top = 397
+    Left = 701
+    Top = 429
   end
   object fxdsRecibos: TfrxDBDataset
     Description = 'Recibos'
     UserName = 'Recibos'
     CloseDataSource = False
-    FieldAliases.Strings = (
-      'NRO_FACTURA_RECIBO=NRO_FACTURA_RECIBO'
-      'SERIE_FACTURA_RECIBO=SERIE_FACTURA_RECIBO'
-      'NRO_PLAZO_RECIBO=NRO_PLAZO_RECIBO'
-      'FORMA_PAGO_ORIGEN_RECIBO=FORMA_PAGO_ORIGEN_RECIBO'
-      
-        'FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO=FORMA_PAGO_DESCRIPCION_ORIG' +
-        'EN_RECIBO'
-      'EUROS_RECIBO=EUROS_RECIBO'
-      'ESTADO_RECIBO=ESTADO_RECIBO'
-      'FECHA_EXPEDICION_RECIBO=FECHA_EXPEDICION_RECIBO'
-      'FECHA_VENCIMIENTO_RECIBO=FECHA_VENCIMIENTO_RECIBO'
-      'IBAN_CLIENTE_RECIBO=IBAN_CLIENTE_RECIBO'
-      'FECHA_PAGO_RECIBO=FECHA_PAGO_RECIBO'
-      'LOCALIDAD_EXPEDICION_RECIBO=LOCALIDAD_EXPEDICION_RECIBO'
-      'CODIGO_CLIENTE_RECIBO=CODIGO_CLIENTE_RECIBO'
-      'RAZONSOCIAL_CLIENTE_RECIBO=RAZONSOCIAL_CLIENTE_RECIBO'
-      'DIRECCION1_CLIENTE_RECIBO=DIRECCION1_CLIENTE_RECIBO'
-      'POBLACION_CLIENTE_RECIBO=POBLACION_CLIENTE_RECIBO'
-      'PROVINCIA_CLIENTE_RECIBO=PROVINCIA_CLIENTE_RECIBO'
-      'CPOSTAL_CLIENTE_RECIBO=CPOSTAL_CLIENTE_RECIBO'
-      'IMPORTE_LETRA_RECIBO=IMPORTE_LETRA_RECIBO'
-      'INSTANTEMODIF=INSTANTEMODIF'
-      'INSTANTEALTA=INSTANTEALTA'
-      'USUARIOALTA=USUARIOALTA'
-      'USUARIOMODIF=USUARIOMODIF')
     DataSource = dsRecibosPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 621
+    Left = 701
     Top = 346
+    FieldDefs = <
+      item
+        FieldName = 'NRO_FACTURA_RECIBO'
+        FieldAlias = 'NRO_FACTURA_RECIBO'
+      end
+      item
+        FieldName = 'SERIE_FACTURA_RECIBO'
+        FieldAlias = 'SERIE_FACTURA_RECIBO'
+      end
+      item
+        FieldName = 'NRO_PLAZO_RECIBO'
+        FieldAlias = 'NRO_PLAZO_RECIBO'
+      end
+      item
+        FieldName = 'FORMA_PAGO_ORIGEN_RECIBO'
+        FieldAlias = 'FORMA_PAGO_ORIGEN_RECIBO'
+      end
+      item
+        FieldName = 'FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO'
+        FieldAlias = 'FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO'
+      end
+      item
+        FieldName = 'EUROS_RECIBO'
+        FieldAlias = 'EUROS_RECIBO'
+      end
+      item
+        FieldName = 'ESTADO_RECIBO'
+        FieldAlias = 'ESTADO_RECIBO'
+      end
+      item
+        FieldName = 'FECHA_EXPEDICION_RECIBO'
+        FieldAlias = 'FECHA_EXPEDICION_RECIBO'
+      end
+      item
+        FieldName = 'FECHA_VENCIMIENTO_RECIBO'
+        FieldAlias = 'FECHA_VENCIMIENTO_RECIBO'
+      end
+      item
+        FieldName = 'IBAN_CLIENTE_RECIBO'
+        FieldAlias = 'IBAN_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'FECHA_PAGO_RECIBO'
+        FieldAlias = 'FECHA_PAGO_RECIBO'
+      end
+      item
+        FieldName = 'LOCALIDAD_EXPEDICION_RECIBO'
+        FieldAlias = 'LOCALIDAD_EXPEDICION_RECIBO'
+      end
+      item
+        FieldName = 'CODIGO_CLIENTE_RECIBO'
+        FieldAlias = 'CODIGO_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'RAZONSOCIAL_CLIENTE_RECIBO'
+        FieldAlias = 'RAZONSOCIAL_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'DIRECCION1_CLIENTE_RECIBO'
+        FieldAlias = 'DIRECCION1_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'POBLACION_CLIENTE_RECIBO'
+        FieldAlias = 'POBLACION_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'PROVINCIA_CLIENTE_RECIBO'
+        FieldAlias = 'PROVINCIA_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'CPOSTAL_CLIENTE_RECIBO'
+        FieldAlias = 'CPOSTAL_CLIENTE_RECIBO'
+      end
+      item
+        FieldName = 'IMPORTE_LETRA_RECIBO'
+        FieldAlias = 'IMPORTE_LETRA_RECIBO'
+      end
+      item
+        FieldName = 'INSTANTEMODIF'
+        FieldAlias = 'INSTANTEMODIF'
+      end
+      item
+        FieldName = 'INSTANTEALTA'
+        FieldAlias = 'INSTANTEALTA'
+      end
+      item
+        FieldName = 'USUARIOALTA'
+        FieldAlias = 'USUARIOALTA'
+      end
+      item
+        FieldName = 'USUARIOMODIF'
+        FieldAlias = 'USUARIOMODIF'
+      end>
   end
   object unqryRecibosPrint: TUniQuery
     SQLInsert.Strings = (
@@ -1619,8 +2002,8 @@ inherited dmFacturas: TdmFacturas
       'from vi_recibos'
       '')
     DMLRefresh = True
-    Left = 621
-    Top = 442
+    Left = 701
+    Top = 506
   end
   object unstrdprcGetRecibos: TUniStoredProc
     StoredProcName = 'PRC_CREAR_RECIBOS_FACTURA'
@@ -2271,8 +2654,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsConsolidacion: TDataSource
     DataSet = unqryConsolidacion
-    Left = 973
-    Top = 38
+    Left = 1045
+    Top = 54
   end
   object unqryConsolidacion: TUniQuery
     SQLInsert.Strings = (
@@ -2359,8 +2742,8 @@ inherited dmFacturas: TdmFacturas
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'ID_CONSOLIDACION;NRO_FACTURA_CONSOLIDACION'
     ReadOnly = True
-    Left = 973
-    Top = 115
+    Left = 1045
+    Top = 131
     ParamData = <
       item
         DataType = ftWideString
@@ -2377,8 +2760,8 @@ inherited dmFacturas: TdmFacturas
   end
   object dsErrores: TDataSource
     DataSet = unqryErrores
-    Left = 1043
-    Top = 64
+    Left = 1155
+    Top = 56
   end
   object unqryErrores: TUniQuery
     Connection = dmConn.conUni
@@ -2391,8 +2774,8 @@ inherited dmFacturas: TdmFacturas
     DetailFields = 'NRO_FACTURA_LOG;SERIE_FACTURA_LOG'
     ReadOnly = True
     AutoCalcFields = False
-    Left = 1043
-    Top = 134
+    Left = 1155
+    Top = 126
     ParamData = <
       item
         DataType = ftWideString

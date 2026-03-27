@@ -186,6 +186,7 @@ begin
       cmbSerieFactura.Text :=
               cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
       edtNumFacOrigen.Text := unqryTablaG.FieldByName('NRO_FACTURA').AsString;
+      edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FACTURA').AsString;
     end;
     dtFecha.Date := Trunc(Now);
   end;

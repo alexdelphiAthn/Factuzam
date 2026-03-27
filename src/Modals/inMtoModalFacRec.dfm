@@ -9,8 +9,9 @@ inherited frmGenFacRec: TfrmGenFacRec
   FormStyle = fsStayOnTop
   Position = poMainFormCenter
   Scaled = False
-  ExplicitWidth = 437
-  ExplicitHeight = 398
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 435
+  ExplicitHeight = 390
   TextHeight = 19
   object cxlbl1: TcxLabel [0]
     Left = 9
