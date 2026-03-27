@@ -14,7 +14,7 @@ uses
   SysUtils, Classes,  DB,
    inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, Dialogs, System.Variants, MemDS, DBAccess, Uni,
-   UniDataGen;
+   UniDataGen, frCoreClasses;
 
 type
   TdmFacturas = class(TdmBase)
