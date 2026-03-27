@@ -368,8 +368,10 @@ begin
     // refrescamos el dataset que alimenta el Grid de SKUs para que aparezcan al instante.
 
     // Asumiendo que el nombre de tu query es este según tu nomenclatura:
-    dmmArticulos.dsVariacionesArticulos.DataSet.Refresh;
+//    dmmArticulos.unqryVariacionesArticulos.Close;
+//    dmmArticulos.unqryVariacionesArticulos.Open;
   end;
+  dmmArticulos.unqryVariacionesArticulos.Refresh;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
