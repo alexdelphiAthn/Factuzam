@@ -27,6 +27,16 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
       ExplicitLeft = 533
       ExplicitTop = 6
     end
+    object btnAddValue: TcxButton
+      Left = 290
+      Top = 6
+      Width = 177
+      Height = 40
+      Cancel = True
+      Caption = '&A'#241'adir Valor (F3)'
+      TabOrder = 2
+      OnClick = btnAddValueClick
+    end
   end
   inherited pnlBody: TPanel
     Width = 732

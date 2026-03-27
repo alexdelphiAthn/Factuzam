@@ -50,9 +50,11 @@ type
     tvDetalleID_CONJUNTO_AC: TcxGridDBColumn;
     tvDetalleNOMBRE_AC: TcxGridDBColumn;
     tvDetalleASIGNADO: TcxGridDBColumn;
+    btnAddValue: TcxButton;
     procedure FormShow(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
+    procedure btnAddValueClick(Sender: TObject);
   private
     FDimensiones: TObjectList<TDimensionSKU>;
     FCodigoArticulo: string;
@@ -98,13 +100,15 @@ begin
     // 2. INSERTAMOS EN LA TABLA MAESTRA DE SKUs
     // Usamos INSERT IGNORE para que si el usuario le da a "Generar" dos veces y
     // el SKU ya existía, la BD lo ignore pacíficamente sin dar error.
+// 2. INSERTAMOS EN LA TABLA MAESTRA DE SKUs (Adaptado a tu tabla real)
     unqryMaestro.Connection.ExecSQL(
       'INSERT IGNORE INTO fza_articulos_skus ' +
-      '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, ACTIVO_SKU) ' +
-      'VALUES (:cod, :art, :desc, ''S'')',
-      [CodigoNuevoSKU, FCodigoArticulo, NombreSKU]
+      '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
+      ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      'VALUES (:cod, :art, :var, ''S'', ' +
+      ' CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')',
+      [CodigoNuevoSKU, FCodigoArticulo, FTipoVariacion]
     );
-
     // 3. INSERTAMOS EN LA TABLA DETALLE DE ATRIBUTOS (El desglose)
     // IdsValores trae los IDs separados por punto y coma (ej: '9102;9201')
     ArrayIds := IdsValores.Split([';']);
@@ -208,8 +212,12 @@ unqryDetalle.Close;
   unqryDetalle.ParamByName('Variacion').AsString := FTipoVariacion;
 
   unqryDetalle.CachedUpdates := True;
+  unqryDetalle.Options.LocalMasterDetail := True;
   unqryDetalle.Open;
   unqryDetalle.FieldByName('ASIGNADO').ReadOnly := False;
+  unqryDetalle.FieldByName('ID_ATRIBUTO_VA').ReadOnly := False;
+  unqryDetalle.FieldByName('ID_CONJUNTO_AC').ReadOnly := False;
+  unqryDetalle.FieldByName('NOMBRE_AC').ReadOnly := False;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.btnAceptarClick(Sender: TObject);
@@ -219,89 +227,91 @@ var
   ValorActual: TValorAtributo;
   IdAtr: string;
   i: Integer;
+  BmMaestro: TBookmark; // Para recordar dónde estaba el usuario
 begin
-  // 1. Forzamos que se guarde cualquier check que esté a medias de editar
+  // 1. Asegurar que lo que el usuario acaba de hacer clic se guarda en memoria
   if tvDetalle.DataController.IsEditing then
     tvDetalle.DataController.Post;
-
-  // 2. FUNDAMENTAL: Asegurar que el buffer del Dataset está aceptado
   if unqryDetalle.State in [dsEdit, dsInsert] then
     unqryDetalle.Post;
 
-  // Preparamos la lista global que usará la recursividad (sin destruir objetos automáticamente)
   if not Assigned(FDimensiones) then
     FDimensiones := TObjectList<TDimensionSKU>.Create(False);
   FDimensiones.Clear;
 
-  // El diccionario será el dueño real de la memoria
   DimDict := TObjectDictionary<string, TDimensionSKU>.Create([doOwnsValues]);
   try
-    // =======================================================================
-    // 2. EL ARREGLO DEL ORDEN: Leemos primero el Maestro ordenado (1, 2...)
-    // =======================================================================
-    unqryMaestro.First;
-    while not unqryMaestro.Eof do
-    begin
-      DimActual := TDimensionSKU.Create;
-      DimActual.IdAtributo := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
-      DimActual.NombreAtributo := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+    // Guardamos la posición actual para no volver loco al Grid visual
+    BmMaestro := unqryMaestro.GetBookmark;
 
-      // Lo añadimos al diccionario para buscar rápido, Y A LA LISTA PARA MANTENER EL ORDEN
-      DimDict.Add(DimActual.IdAtributo, DimActual);
-      FDimensiones.Add(DimActual); // ¡Aquí se guardan ordenados 1, 2, 3!
-
-      unqryMaestro.Next;
-    end;
-
-    // 3. Recorremos el detalle para meter los checks marcados dentro de su dimensión
-    unqryDetalle.MasterSource := nil;
-    unqryDetalle.First;
-
-    while not unqryDetalle.Eof do
-    begin
-      if unqryDetalle.FieldByName('ASIGNADO').AsInteger = 1 then
+    // Apagamos los grids temporalmente para que el usuario no vea "parpadeos"
+//    unqryMaestro.DisableControls;
+//    unqryDetalle.DisableControls;
+    tvMaestro.BeginUpdate;
+    tvDetalle.BeginUpdate;
+    try
+      // =================================================================
+      // 2. RECORREMOS EL MAESTRO (Sin romper el MasterSource)
+      // =================================================================
+      unqryMaestro.First;
+      while not unqryMaestro.Eof do
       begin
-        IdAtr := unqryDetalle.FieldByName('ID_ATRIBUTO_VA').AsString;
+        // Creamos la dimensión (Talla, Color...)
+        DimActual := TDimensionSKU.Create;
+        DimActual.IdAtributo := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
+        DimActual.NombreAtributo := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
 
-        // Buscamos la dimensión (que ya creamos en el paso 2) y le añadimos el valor
-        if DimDict.TryGetValue(IdAtr, DimActual) then
+        DimDict.Add(DimActual.IdAtributo, DimActual);
+        FDimensiones.Add(DimActual);
+
+        // Como nos hemos movido en el maestro, el unqryDetalle AHORA SOLO TIENE
+        // los valores de esta dimensión. ¡Los leemos con total seguridad!
+        unqryDetalle.First;
+        while not unqryDetalle.Eof do
         begin
-          ValorActual.IdConjunto := unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
-          ValorActual.NombreValor := unqryDetalle.FieldByName('NOMBRE_AC').AsString;
-          DimActual.Valores.Add(ValorActual);
+          // Si está marcado, lo metemos a la lista
+          if unqryDetalle.FieldByName('ASIGNADO').AsInteger = 1 then
+          begin
+            ValorActual.IdConjunto := unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
+            ValorActual.NombreValor := unqryDetalle.FieldByName('NOMBRE_AC').AsString;
+            DimActual.Valores.Add(ValorActual);
+          end;
+          unqryDetalle.Next;
         end;
-      end;
-      unqryDetalle.Next;
-    end;
-    unqryDetalle.MasterSource := dsMaestro;
 
-    // 4. LIMPIEZA DE SEGURIDAD:
-    // Si el usuario marcó colores pero no marcó ninguna talla, tenemos que quitar la dimensión
-    // Talla de la lista para que la recursividad no se bloquee ni genere códigos con saltos nulos.
+        unqryMaestro.Next; // Pasamos a la siguiente dimensión
+      end;
+    finally
+      // Restauramos todo para que la pantalla quede como estaba
+      if unqryMaestro.BookmarkValid(BmMaestro) then
+        unqryMaestro.GotoBookmark(BmMaestro);
+      unqryMaestro.FreeBookmark(BmMaestro);
+//      unqryDetalle.EnableControls;
+//      unqryMaestro.EnableControls;
+        tvDetalle.EndUpdate;
+        tvMaestro.EndUpdate;
+    end;
+
+    // 3. LIMPIEZA: Borrar las dimensiones donde no marcó ningún check
     for i := FDimensiones.Count - 1 downto 0 do
     begin
       if FDimensiones[i].Valores.Count = 0 then
         FDimensiones.Delete(i);
     end;
 
-    // 5. PREPARAMOS LA LLAMADA
+    // 4. GENERAR SKUS
     if FDimensiones.Count = 0 then
     begin
-      ShowMessage('No has marcado ningún valor nuevo para generar SKUs.');
+      ShowMessage('No has marcado ningún valor para generar SKUs.');
       Exit;
     end;
 
-    // =================================================================
-    // 6. ¡LA GRAN LLAMADA A LA RECURSIVIDAD!
-    // =================================================================
     GenerarCombinaciones(0, '', '');
-
     ShowMessage('¡Combinaciones generadas con éxito!');
 
   finally
-    DimDict.Free; // Esto destruirá todos los TDimensionSKU limpiamente de la memoria
+    DimDict.Free;
   end;
-
   inherited;
 end;
 
@@ -311,6 +321,97 @@ begin
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
+
+procedure TfrmMtoModalGenerarSKUS.btnAddValueClick(Sender: TObject);
+var
+  NuevoNombre, IdAtrSel: string;
+  IdConjuntoAsignado, IdNuevoValor: Integer;
+  qTemp: TUniQuery;
+begin
+  // 1. EL INPUTBOX: Muestra un pequeño popup pidiendo el nombre de la nueva talla/color
+  NuevoNombre := Trim(InputBox('Añadir nuevo valor', 'Introduce el nombre (Ej: XXL, Turquesa):', ''));
+
+  // Si el usuario le da a Cancelar o lo deja en blanco, nos salimos sin hacer nada
+  if NuevoNombre = '' then Exit;
+
+  // 2. Obtenemos qué dimensión está seleccionada en el grid Maestro (ej. 'TAL' para Talla)
+  IdAtrSel := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
+
+  qTemp := TUniQuery.Create(nil);
+  try
+    qTemp.Connection := unqryMaestro.Connection;
+
+    // =========================================================================
+    // FASE 1: GUARDADO FÍSICO EN LA BASE DE DATOS
+    // =========================================================================
+
+    // A. Averiguamos qué "Grupo" (Conjunto) usa el artículo para esta dimensión
+    qTemp.SQL.Text :=
+      'SELECT ID_CONJUNTO_ACA FROM fza_articulos_conjuntos_asign ' +
+      'WHERE CODIGO_ARTICULO_ACA = :Articulo AND ID_ATRIBUTO_ACA = :Atributo';
+    qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
+    qTemp.ParamByName('Atributo').AsString := IdAtrSel;
+    qTemp.Open;
+
+    if qTemp.IsEmpty then
+    begin
+      ShowMessage('Error: El artículo no tiene un grupo asignado para esta dimensión.');
+      Exit;
+    end;
+    IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
+    qTemp.Close;
+
+    // B. Comprobamos si el valor (ej. "XXL") ya existe en la base de datos global
+    qTemp.SQL.Text := 'SELECT ID_VALOR_AV FROM fza_atributos_valores WHERE VALOR_AV = :Valor';
+    qTemp.ParamByName('Valor').AsString := NuevoNombre;
+    qTemp.Open;
+
+    if not qTemp.IsEmpty then
+      IdNuevoValor := qTemp.FieldByName('ID_VALOR_AV').AsInteger
+    else
+    begin
+      // Si es totalmente nuevo, lo insertamos
+      qTemp.Close;
+      qTemp.SQL.Text :=
+        'INSERT INTO fza_atributos_valores ' +
+        '(ID_VA_AV, VALOR_AV, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:IdVa, :Valor, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+      qTemp.ParamByName('IdVa').AsString := IdAtrSel;
+      qTemp.ParamByName('Valor').AsString := NuevoNombre;
+      qTemp.Execute;
+      // Obtenemos el ID que MySQL le acaba de asignar mágicamente
+      qTemp.Close;
+      qTemp.SQL.Text := 'SELECT LAST_INSERT_ID() AS NUEVO_ID';
+      qTemp.Open;
+      IdNuevoValor := qTemp.FieldByName('NUEVO_ID').AsInteger;
+    end;
+    qTemp.Close;
+    // C. Vinculamos el valor al grupo del artículo
+    qTemp.SQL.Text :=
+      'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD) ' +
+      'VALUES (:Conj, :Val)';
+    qTemp.ParamByName('Conj').AsInteger := IdConjuntoAsignado;
+    qTemp.ParamByName('Val').AsInteger  := IdNuevoValor;
+    qTemp.Execute;
+
+  finally
+    qTemp.Free;
+  end;
+
+  // =========================================================================
+  // FASE 2: MAGIA EN MEMORIA (Para no perder los checks)
+  // =========================================================================
+
+  // "Inyectamos" la nueva fila en la RAM sin recargar la consulta
+  unqryDetalle.Append;
+  unqryDetalle.FieldByName('ID_ATRIBUTO_VA').AsString := IdAtrSel;
+  unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger := IdNuevoValor;
+  unqryDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
+
+  // ¡Lo dejamos marcado con el check automáticamente por comodidad!
+  unqryDetalle.FieldByName('ASIGNADO').AsInteger := 1;
+  unqryDetalle.Post;
+end;
 
 { TDimensionSKU }
 
