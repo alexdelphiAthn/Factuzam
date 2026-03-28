@@ -3,8 +3,6 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   ClientHeight = 485
   ClientWidth = 732
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 748
   ExplicitHeight = 524
   TextHeight = 19
@@ -12,8 +10,8 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     Top = 426
     Width = 732
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitTop = 341
-    ExplicitWidth = 524
+    ExplicitTop = 418
+    ExplicitWidth = 730
     inherited btnCancelar: TcxButton
       Left = 50
       Top = 6
@@ -42,8 +40,8 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     Width = 732
     Height = 426
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 524
-    ExplicitHeight = 341
+    ExplicitWidth = 730
+    ExplicitHeight = 418
     object pnlBodyCab: TPanel
       Left = 1
       Top = 1
@@ -51,6 +49,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
       Height = 120
       Align = alTop
       TabOrder = 0
+      ExplicitWidth = 728
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
@@ -58,10 +57,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         Height = 118
         Align = alClient
         TabOrder = 0
-        ExplicitLeft = 200
-        ExplicitTop = 2
-        ExplicitWidth = 250
-        ExplicitHeight = 200
+        ExplicitWidth = 726
         object tvMaestro: TcxGridDBTableView
           DataController.DataSource = dsMaestro
           OptionsView.GroupByBox = False
@@ -95,10 +91,8 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
       Height = 304
       Align = alClient
       TabOrder = 1
-      ExplicitLeft = 304
-      ExplicitTop = 240
-      ExplicitWidth = 185
-      ExplicitHeight = 41
+      ExplicitWidth = 728
+      ExplicitHeight = 296
       object cxSplitter1: TcxSplitter
         Left = 1
         Top = 1
@@ -107,7 +101,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         HotZoneClassName = 'TcxMediaPlayer9Style'
         AlignSplitter = salTop
         Control = pnlBodyCab
-        ExplicitWidth = 246
+        ExplicitWidth = 726
       end
       object cxGrid2: TcxGrid
         Left = 1
@@ -116,10 +110,8 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         Height = 294
         Align = alClient
         TabOrder = 1
-        ExplicitLeft = 200
-        ExplicitTop = 2
-        ExplicitWidth = 250
-        ExplicitHeight = 200
+        ExplicitWidth = 726
+        ExplicitHeight = 286
         object tvDetalle: TcxGridDBTableView
           DataController.DataSource = dsDetalle
           OptionsView.GroupByBox = False
@@ -133,15 +125,26 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
             Width = 167
           end
           object tvDetalleNOMBRE_AC: TcxGridDBColumn
+            Caption = 'Nombre Atr'
             DataBinding.FieldName = 'NOMBRE_AC'
             Width = 168
           end
           object tvDetalleASIGNADO: TcxGridDBColumn
+            Caption = 'Asignar'
             DataBinding.FieldName = 'ASIGNADO'
             PropertiesClassName = 'TcxCheckBoxProperties'
             Properties.Alignment = taRightJustify
             Properties.ValueChecked = '1'
             Properties.ValueUnchecked = '0'
+          end
+          object tvDetalleID_ATRIBUTO_VA: TcxGridDBColumn
+            DataBinding.FieldName = 'ID_ATRIBUTO_VA'
+            Visible = False
+          end
+          object tvDetalleORDEN_AV: TcxGridDBColumn
+            Caption = 'Orden'
+            DataBinding.FieldName = 'ORDEN_AV'
+            HeaderAlignmentHorz = taRightJustify
           end
         end
         object cxGridLevel1: TcxGridLevel
@@ -159,61 +162,42 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
         'UTO, '
       '       va.ORDEN_VA '
       '    FROM fza_variaciones_atributos va '
-      '    WHERE va.ID_VA = :var '
       '    ORDER BY va.ORDEN_VA')
     Active = True
     Left = 600
     Top = 64
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'var'
-        Value = nil
-      end>
   end
   object unqryDetalle: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      '    SELECT  '
-      '      val.ID_ATRIBUTO_AC,  '
-      '      val.ID_CONJUNTO_AC,  '
-      '      val.NOMBRE_AC,  '
-      
-        '      CASE WHEN asign.ID_CONJUNTO_ACA IS NOT NULL THEN 1 ELSE 0 ' +
-        'END AS ASIGNADO  '
-      '    FROM fza_atributos_conjuntos val  '
-      '    LEFT JOIN fza_articulos_conjuntos_asign asign  '
-      '           ON asign.ID_CONJUNTO_ACA = val.ID_CONJUNTO_AC  '
-      '          AND asign.CODIGO_ARTICULO_ACA = :Articulo  '
-      '    WHERE val.ID_ATRIBUTO_AC IN (  '
-      
-        '            SELECT ID_ATRIBUTO_VA FROM fza_variaciones_atributos' +
-        ' WHERE ID_VA = :Variacion  '
-      '          )  '
-      '    ORDER BY val.NOMBRE_AC;'
+      'SELECT  '
+      '             atr.ID_ATRIBUTO_VA,  '
+      '             val.ID_VALOR_AV AS ID_CONJUNTO_AC,  '
+      '             val.VALOR_AV AS NOMBRE_AC,  '
+      '             val.ORDEN_AV,  '
+      '             0 AS ASIGNADO  '
+      '        FROM fza_variaciones_atributos atr  '
+      '        JOIN fza_articulos_conjuntos_asign asign  '
+      '          ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA  '
+      '         AND asign.CODIGO_ARTICULO_ACA = '#39'DEMO-CAMISA'#39'  '
+      '        JOIN fza_atributos_conjuntos_det det  '
+      '          ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA  '
+      '        JOIN fza_atributos_valores val  '
+      '          ON val.ID_VALOR_AV = det.ID_VALOR_ACD  '
+      '       '
       '')
     MasterSource = dsMaestro
     MasterFields = 'ID_ATRIBUTO_VA'
-    DetailFields = 'ID_ATRIBUTO_AC'
+    DetailFields = 'ID_ATRIBUTO_VA'
     Active = True
     Left = 680
     Top = 56
     ParamData = <
       item
-        DataType = ftUnknown
-        Name = 'Articulo'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'Variacion'
-        Value = nil
-      end
-      item
         DataType = ftWideString
         Name = 'ID_ATRIBUTO_VA'
         ParamType = ptInput
-        Value = nil
+        Value = 'CO'
       end>
   end
   object dsMaestro: TDataSource

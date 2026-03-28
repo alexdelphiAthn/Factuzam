@@ -262,10 +262,9 @@ begin
     qSlots.ParamByName('art').AsString := FCodigoArticulo;
     qSlots.ParamByName('var').AsString := FTipoVariacion;
     qSlots.Open;
-
     while not qSlots.Eof do
     begin
-      FillChar(S, SizeOf(S), 0);
+      S := Default(TSlotVariacion);
       S.IdAtributo     := qSlots.FieldByName('ID_ATRIBUTO_VA').AsString;
       S.NombreAtributo := qSlots.FieldByName('NOMBRE_ATRIBUTO').AsString;
       S.OrdenAtributo  := qSlots.FieldByName('ORDEN_VA').AsInteger;
@@ -276,8 +275,8 @@ begin
       FSlotsVar.Add(S);
       qSlots.Next;
     end;
-  finally
-    qSlots.Free;
+    finally
+      qSlots.Free;
   end;
 
   // ── 2. Cargar opciones de conjuntos disponibles para cada atributo ──────
@@ -419,7 +418,6 @@ begin
   lbl.Width    := ANCHO_LABEL;
   lbl.AutoSize := False;
   lbl.Caption  := S.NombreAtributo;
-
   cb := TcxComboBox.Create(FPanelAtributos);
   cb.Parent  := FPanelAtributos;
   cb.Left    := MARGEN_H + ANCHO_LABEL + 6;
@@ -427,27 +425,22 @@ begin
   cb.Width   := ANCHO_COMBO;
   cb.Height  := ALTO_FILA;
   cb.Properties.DropDownListStyle := lsFixedList;
-
-  // Opción vacía = sin conjunto asignado
   cb.Properties.Items.AddObject('— Sin conjunto —', TObject(0));
-
   if Assigned(S.Opciones) then
     for IdV in S.Opciones.Keys do
     begin
       Txt := S.Opciones[IdV];
       cb.Properties.Items.AddObject(Txt, TObject(IdV));
     end;
-
-  // Seleccionar el conjunto actual
   cb.ItemIndex := 0;
   if S.IdConjunto > 0 then
     for Idx := 1 to cb.Properties.Items.Count - 1 do
-      if Integer(cb.Properties.Items.Objects[Idx]) = S.IdConjunto then
+      // CORRECTO: Uso de NativeInt para compatibilidad con punteros a 32/64 bits
+      if Integer(NativeInt(cb.Properties.Items.Objects[Idx])) = S.IdConjunto then
       begin
         cb.ItemIndex := Idx;
         Break;
       end;
-
   S.Ctrl := cb;
 end;
 
@@ -541,43 +534,18 @@ function TGestorVariaciones.GuardarVariaciones: Boolean;
 var
   i      : Integer;
   S      : TSlotVariacion;
-  SK     : TSlotSku;
   NuevoId: Integer;
-  CodReal: string;
 begin
   Result := False;
-
-  // ── 1. Guardar conjuntos asignados ──────────────────────────────────────
   for i := 0 to FSlotsVar.Count - 1 do
   begin
     S := FSlotsVar[i];
     if not Assigned(S.Ctrl) then Continue;
-
-    NuevoId := Integer(S.Ctrl.Properties.Items.Objects[S.Ctrl.ItemIndex]);
-
+    NuevoId := Integer(NativeInt(S.Ctrl.Properties.Items.Objects[S.Ctrl.ItemIndex]));
+    BorrarConjunto(S.IdAtributo);
     if NuevoId > 0 then
-      UpsertConjunto(S)
-    else
-      BorrarConjunto(S.IdAtributo);
+      UpsertConjunto(S);
   end;
-
-//  // ── 2. Actualizar ESACTIVO de SKUs que hayan cambiado ───────────────────
-//  for i := 0 to FSlotsSkus.Count - 1 do
-//  begin
-//    SK := FSlotsSkus[i];
-//    if not Assigned(SK.Chk) then Continue;
-//
-//    if SK.Chk.Checked <> SK.ActiveOriginal then
-//    begin
-//      // Extraer el código real (está entre paréntesis al final si tiene descripción)
-//      CodReal := SK.CodigoUnidad;
-//      if Pos('(', CodReal) > 0 then
-//        CodReal := Copy(CodReal, Pos('(', CodReal) + 1,
-//                        Pos(')', CodReal) - Pos('(', CodReal) - 1);
-//      ActualizarSku(CodReal, SK.Chk.Checked);
-//    end;
-//  end;
-
   FModificado := False;
   Result := True;
 end;

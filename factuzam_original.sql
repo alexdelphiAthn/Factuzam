@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 27/03/2026 17:36:15
+-- Backup generado: 28/03/2026 17:35:39
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -146,25 +146,23 @@ CREATE TABLE `fza_articulos_conjuntos_asign` (
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) NOT NULL,
   `USUARIOMODIF` varchar(100) NOT NULL,
-  PRIMARY KEY (`CODIGO_ARTICULO_ACA`,`ID_CONJUNTO_ACA`)
+  PRIMARY KEY (`CODIGO_ARTICULO_ACA`,`ID_ATRIBUTO_ACA`)
 );
-ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_ATRIBUTO` (`CODIGO_ARTICULO_ACA`, `ID_ATRIBUTO_ACA`);
+ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_CONJUNTO` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`);
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('DEMO-CAMISA', 1, 'CO', 'S', '2026-03-27 07:23:10', NULL, '', 'Administrador'),
-  ('DEMO-CAMISA', 2, 'TAL', 'S', '2026-03-27 07:07:39', NULL, '', 'Administrador'),
-  ('DEMO-CAMISA', 9001, 'TAL', 'S', '2026-03-27 07:25:13', '2026-03-27 07:25:13', 'Administrador', 'Administrador'),
-  ('DEMO-CAMISA', 9002, 'CO', 'S', '2026-03-27 07:25:13', '2026-03-27 07:25:13', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 2, 'CO', 'S', '2026-03-28 17:34:50', '2026-03-28 17:34:50', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-28 17:34:50', '2026-03-28 17:34:50', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 9001, 'TAL', 'S', '2026-03-27 07:34:44', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 9002, 'CO', 'S', '2026-03-27 07:34:44', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 2, 'CO', 'S', '2026-03-28 16:40:59', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 1, 'TAL', 'S', '2026-03-28 16:40:58', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 1, 'CO', 'S', '2026-03-26 17:54:27', '2026-03-26 17:54:27', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 2, 'TAL', 'S', '2026-03-26 18:09:58', '2026-03-26 18:09:58', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 2, 'TAL', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador');
--- 12 registros exportados
+-- 10 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -276,7 +274,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ARTICULO`, `CODIGO_PROPIEDAD`, 
   ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('DEMO-CAMISA', 'COMPOSICION', NULL, '100% ALGODÓN', '2026-03-26 19:15:56', 'Administrador'),
-  ('DEMO-CAMISA', 'ES_ECO', NULL, 'N', '2026-03-26 19:15:56', 'Administrador'),
+  ('DEMO-CAMISA', 'ES_ECO', NULL, 'S', '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ESTILO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'GENERO', 32, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'LAVADO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
@@ -751,8 +749,8 @@ ALTER TABLE `fza_atributos_conjuntos` ADD INDEX `IDX_VAR_AC` (`ID_VARIACION_AC`)
 -- Datos de fza_atributos_conjuntos
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
 INSERT INTO `fza_atributos_conjuntos` (`ID_CONJUNTO_AC`, `NOMBRE_AC`, `ID_VARIACION_AC`, `ID_ATRIBUTO_AC`, `ESACTIVO_AC`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (9001, 'Tallas Hombre Standard', 'TC', 'TAL', 'S', '2026-03-27 07:06:11', NULL, '', ''),
-  (9002, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-27 07:24:44', NULL, '', '');
+  (1, 'Tallas Hombre Standard', 'TC', 'TAL', 'S', '2026-03-28 16:55:24', NULL, '', ''),
+  (2, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-28 16:55:25', NULL, '', '');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
 -- 2 registros exportados
 
@@ -763,6 +761,7 @@ DROP TABLE IF EXISTS `fza_atributos_conjuntos_det`;
 CREATE TABLE `fza_atributos_conjuntos_det` (
   `ID_CONJUNTO_ACD` int(11) NOT NULL COMMENT 'FK a la cabecera del conjunto',
   `ID_VALOR_ACD` int(11) NOT NULL COMMENT 'FK al valor individual (fza_atributos_valores)',
+  `ORDEN_ACD` int(11) NOT NULL DEFAULT '0' COMMENT 'Orden de visualización dentro de este conjunto específico',
   `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) NOT NULL,
@@ -772,21 +771,17 @@ CREATE TABLE `fza_atributos_conjuntos_det` (
 ALTER TABLE `fza_atributos_conjuntos_det` ADD INDEX `IDX_VALOR_ACD` (`ID_VALOR_ACD`);
 
 -- Datos de fza_atributos_conjuntos_det
-INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (1, 102, '2026-03-27 07:28:29', NULL, '', ''),
-  (1, 9204, '2026-03-27 07:30:10', NULL, '', ''),
-  (1, 9205, '2026-03-27 07:30:32', NULL, '', ''),
-  (1, 9206, '2026-03-27 07:32:27', NULL, '', ''),
-  (9001, 9101, '2026-03-26 19:12:40', NULL, '', ''),
-  (9001, 9102, '2026-03-26 19:12:40', NULL, '', ''),
-  (9001, 9103, '2026-03-26 19:12:40', NULL, '', ''),
-  (9001, 9104, '2026-03-26 19:12:40', NULL, '', ''),
-  (9002, 9201, '2026-03-26 19:12:40', NULL, '', ''),
-  (9002, 9202, '2026-03-26 19:12:40', NULL, '', ''),
-  (9002, 9203, '2026-03-26 19:12:40', NULL, '', ''),
-  (9002, 9204, '2026-03-27 07:39:28', NULL, '', ''),
-  (9002, 9207, '2026-03-27 07:35:12', NULL, '', '');
--- 13 registros exportados
+INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `ORDEN_ACD`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  (1, 9101, 10, '2026-03-28 17:27:17', NULL, '', ''),
+  (1, 9102, 20, '2026-03-28 17:27:18', NULL, '', ''),
+  (1, 9103, 30, '2026-03-28 17:27:18', NULL, '', ''),
+  (1, 9104, 40, '2026-03-28 17:27:19', NULL, '', ''),
+  (2, 9201, 10, '2026-03-28 17:27:20', NULL, '', ''),
+  (2, 9202, 20, '2026-03-28 17:27:20', NULL, '', ''),
+  (2, 9203, 30, '2026-03-28 17:27:20', NULL, '', ''),
+  (2, 9204, 40, '2026-03-28 17:27:20', NULL, '', ''),
+  (2, 9207, 50, '2026-03-28 17:27:21', NULL, '', '');
+-- 9 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -1011,6 +1006,7 @@ CREATE TABLE `fza_atributos_valores` (
   `ID_VALOR_AV` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del valor',
   `ID_VA_AV` varchar(20) NOT NULL COMMENT 'Relación con fza_variaciones_atributos (ej: CO)',
   `VALOR_AV` varchar(100) NOT NULL COMMENT 'El valor real (ej: Azul, XL, 42)',
+  `ORDEN_AV` int(11) NOT NULL DEFAULT '0' COMMENT 'Orden de visualización global (usar saltos de 10: 10, 20, 30...)',
   `DESCRIPCION_AV` varchar(255) NULL DEFAULT NULL,
   `ESACTIVO_AV` varchar(1) NULL DEFAULT 'S',
   `FACTOR_CONVERSION_AV` decimal(19,6) NULL DEFAULT '1.000000' COMMENT 'Multiplicador respecto a la unidad base',
@@ -1026,51 +1022,48 @@ ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
 
 -- Datos de fza_atributos_valores
 /*!40000 ALTER TABLE `fza_atributos_valores` DISABLE KEYS */;
-INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `DESCRIPCION_AV`, `ESACTIVO_AV`, `FACTOR_CONVERSION_AV`, `UNIDAD_MEDIDA_AV`, `CODIGO_ARTICULO_EXTRA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (1, 'CO', 'ROJO', 'Color ROJO', 'S', 1, NULL, NULL, '2026-01-28 07:21:56', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
-  (3, 'TAL', 'M', 'Talla M', 'S', 1, NULL, NULL, '2026-01-28 07:22:01', '2026-01-04 12:11:37', 'Sistema', 'Sistema'),
-  (4, 'TAL', 'L', 'Talla L (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:33', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (100, 'CO', 'NEGRO', 'Color Negro (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:34', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (101, 'CO', 'BLANCO', 'Color Blanco (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:35', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (102, 'CO', 'VERDE', 'Color Verde (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:36', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (103, 'CO', 'MARRON', 'Color Marron (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:37', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (105, 'CO', 'VAQUERO', 'Color/Acabado Vaquero (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:38', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (110, 'TAL', 'S', 'Talla S (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:40', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (111, 'TAL', 'XL', 'Talla XL (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:41', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (121, 'TAL', '37', 'Talla 37 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (122, 'TAL', '38', 'Talla 38 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:43', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (126, 'TAL', '42', 'Talla 42 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:44', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (127, 'TAL', '43', 'Talla 43 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:46', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (203, 'TEMP', 'PV26', 'Primavera/Verano 2026', 'S', 1, NULL, NULL, '2026-01-06 12:29:59', '2026-03-11 22:27:52', 'Admin', 'Admin'),
-  (204, 'TEMP', 'OI26', 'Otoño/Invierno 2026', 'S', 1, NULL, NULL, '2026-01-06 12:29:59', '2026-03-11 22:27:52', 'Admin', 'Admin'),
-  (205, 'TEMP', 'ATEMPORAL', 'Básicos / Continuidad', 'S', 1, NULL, NULL, '2026-01-06 12:29:59', '2026-03-11 22:27:52', 'Admin', 'Admin'),
-  (206, 'TAL', 'S', 'Small - Pequeña', 'S', 1, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (207, 'TAL', 'M', 'Medium - Mediana', 'S', 1, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (208, 'TAL', 'L', 'Large - Grande', 'S', 1, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (209, 'TAL', 'XL', 'Extra Large - Extra G.', 'S', 1, NULL, NULL, '2026-01-28 07:43:41', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (218, 'CO', 'AZUL', 'Color Azul', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (219, 'CO', 'GRIS', 'Color Gris', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (220, 'CO', 'BEIGE', 'Color Beige', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (221, 'CO', 'ROSA', 'Color Rosa', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (222, 'CO', 'CAMEL', 'Color Camel', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (223, 'CO', 'ROJO', 'Color Rojo (alias)', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (224, 'TAL', '41', 'Talla 41', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (225, 'TAL', '40', 'Talla 40', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (226, 'TAL', '44', 'Talla 44', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (227, 'TAL', '39', 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
-  (9101, '', 'S', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9102, '', 'M', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9103, '', 'L', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9104, '', 'XL', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9201, '', 'BLANCO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9202, '', 'NEGRO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9203, '', 'AZUL MARINO', NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9204, 'CO', 'AMARILLO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
-  (9205, 'CO', 'CACAO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
-  (9206, 'CO', 'COLORAO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
-  (9207, 'CO', 'BONIATO', NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `ORDEN_AV`, `DESCRIPCION_AV`, `ESACTIVO_AV`, `FACTOR_CONVERSION_AV`, `UNIDAD_MEDIDA_AV`, `CODIGO_ARTICULO_EXTRA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  (1, 'CO', 'ROJO', 0, 'Color ROJO', 'S', 1, NULL, NULL, '2026-01-28 07:21:56', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
+  (3, 'TAL', 'M', 20, 'Talla M', 'S', 1, NULL, NULL, '2026-03-28 17:33:52', '2026-01-04 12:11:37', 'Sistema', 'Sistema'),
+  (4, 'TAL', 'L', 30, 'Talla L (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:33:54', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (100, 'CO', 'NEGRO', 0, 'Color Negro (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:34', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (101, 'CO', 'BLANCO', 0, 'Color Blanco (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:35', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (102, 'CO', 'VERDE', 0, 'Color Verde (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:36', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (103, 'CO', 'MARRON', 0, 'Color Marron (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:37', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (105, 'CO', 'VAQUERO', 0, 'Color/Acabado Vaquero (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:38', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (110, 'TAL', 'S', 10, 'Talla S (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:33:49', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (111, 'TAL', 'XL', 40, 'Talla XL (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:34:00', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (121, 'TAL', '37', 0, 'Talla 37 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (122, 'TAL', '38', 0, 'Talla 38 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:43', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (126, 'TAL', '42', 0, 'Talla 42 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:44', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (127, 'TAL', '43', 0, 'Talla 43 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:46', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (206, 'TAL', 'S', 10, 'Small - Pequeña', 'S', 1, NULL, NULL, '2026-03-28 17:34:04', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (207, 'TAL', 'M', 20, 'Medium - Mediana', 'S', 1, NULL, NULL, '2026-03-28 17:34:06', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (208, 'TAL', 'L', 30, 'Large - Grande', 'S', 1, NULL, NULL, '2026-03-28 17:34:07', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (209, 'TAL', 'XL', 40, 'Extra Large - Extra G.', 'S', 1, NULL, NULL, '2026-03-28 17:34:09', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (218, 'CO', 'AZUL', 0, 'Color Azul', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (219, 'CO', 'GRIS', 0, 'Color Gris', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (220, 'CO', 'BEIGE', 0, 'Color Beige', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (221, 'CO', 'ROSA', 0, 'Color Rosa', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (222, 'CO', 'CAMEL', 0, 'Color Camel', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (223, 'CO', 'ROJO', 0, 'Color Rojo (alias)', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (224, 'TAL', '41', 0, 'Talla 41', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (225, 'TAL', '40', 0, 'Talla 40', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (226, 'TAL', '44', 0, 'Talla 44', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (227, 'TAL', '39', 0, 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  (9101, '', 'S', 10, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:13', NULL, '', ''),
+  (9102, '', 'M', 20, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:15', NULL, '', ''),
+  (9103, '', 'L', 30, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:16', NULL, '', ''),
+  (9104, '', 'XL', 40, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:18', NULL, '', ''),
+  (9201, '', 'BLANCO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9202, '', 'NEGRO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9203, '', 'AZUL MARINO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9204, 'CO', 'AMARILLO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
+  (9205, 'CO', 'CACAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
+  (9206, 'CO', 'COLORAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
+  (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 42 registros exportados
+-- 39 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -1408,7 +1401,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 54, 3, 'S', 'S', '2026-03-27 17:35:43', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 60, 3, 'S', 'S', '2026-03-28 17:18:24', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -3328,8 +3321,64 @@ BEGIN
     CALL `PRC_CALCULAR_FACTURA_NETOS`(pidseriefacturaabono, contadorped);
    
     COMMIT;
-END;', '2026-03-27 17:36:00', '2026-03-27 17:35:43', 'Administrador', 'Administrador');
--- 24 registros exportados
+END;', '2026-03-27 17:36:00', '2026-03-27 17:35:43', 'Administrador', 'Administrador'),
+  ('054', 'Modificar fza_atributos_conjuntos_det', 'CREATE OR REPLACE TABLE `fza_atributos_conjuntos_det` (
+  `ID_CONJUNTO_ACD` int(11) NOT NULL COMMENT ''FK a la cabecera del conjunto'',
+  `ID_VALOR_ACD` int(11) NOT NULL COMMENT ''FK al valor individual (fza_atributos_valores)'',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`ID_CONJUNTO_ACD`,`ID_VALOR_ACD`),
+  KEY `IDX_VALOR_ACD` (`ID_VALOR_ACD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;', '2026-03-28 16:17:15', '2026-03-28 16:17:15', 'Administrador', 'Administrador'),
+  ('055', 'añade orden a atributos_valores', 'ALTER TABLE `fza_atributos_valores` 
+ADD COLUMN `ORDEN_AV` int(11) NOT NULL DEFAULT 0 
+COMMENT ''Orden de visualización global (usar saltos de 10: 10, 20, 30...)'' 
+AFTER `VALOR_AV`;', '2026-03-28 16:17:27', '2026-03-28 16:17:27', 'Administrador', 'Administrador'),
+  ('056', NULL, 'ALTER TABLE `fza_atributos_conjuntos_det` 
+ADD COLUMN `ORDEN_ACD` int(11) NOT NULL DEFAULT 0 
+COMMENT ''Orden de visualización dentro de este conjunto específico'' 
+AFTER `ID_VALOR_ACD`;', '2026-03-28 16:17:53', '2026-03-28 16:17:53', 'Administrador', 'Administrador'),
+  ('057', 'Modificar fza_articulos_conjuntos_asign', 'CREATE OR REPLACE TABLE `fza_articulos_conjuntos_asign` (
+  `CODIGO_ARTICULO_ACA` varchar(20) NOT NULL COMMENT ''FK fza_articulos'',
+  `ID_CONJUNTO_ACA` int(11) NOT NULL COMMENT ''FK fza_atributos_conjuntos'',
+  `ID_ATRIBUTO_ACA` varchar(20) NOT NULL COMMENT ''Posición del atributo (CO, TAL...) – denormalizado del conjunto para índice directo'',
+  `ES_GENERACION_AUTO` char(1) NOT NULL DEFAULT ''S'' COMMENT ''S=genera SKUs automáticamente al procesar'',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_ARTICULO_ACA`,`ID_CONJUNTO_ACA`),
+  KEY `IDX_ACA_ATRIBUTO` (`CODIGO_ARTICULO_ACA`,`ID_ATRIBUTO_ACA`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;', '2026-03-28 16:56:49', '2026-03-28 16:56:49', 'Administrador', 'Administrador'),
+  ('058', NULL, 'SELECT  
+         atr.ID_ATRIBUTO_VA,  
+         val.ID_VALOR_AV AS ID_CONJUNTO_AC,  
+         val.VALOR_AV AS NOMBRE_AC,  
+         val.ORDEN_AV,  
+         0 AS ASIGNADO  
+    FROM fza_variaciones_atributos atr  
+    JOIN fza_articulos_conjuntos_asign asign  
+      ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA  
+     AND asign.CODIGO_ARTICULO_ACA = ''DEMO-CAMISA''  
+
+
+ORDER BY atr.ORDEN_VA, val.ORDEN_AV', '2026-03-28 17:06:57', '2026-03-28 16:57:04', 'Administrador', 'Administrador'),
+  ('059', 'Modificar fza_articulos_conjuntos_asign', 'SELECT 
+       atr.ID_ATRIBUTO_VA, 
+       val.ID_VALOR_AV AS ID_CONJUNTO_AC, 
+       val.VALOR_AV AS NOMBRE_AC, 
+       val.ORDEN_AV, 
+       0 AS ASIGNADO 
+  FROM fza_variaciones_atributos atr 
+  JOIN fza_articulos_conjuntos_asign asign 
+    ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA 
+   AND asign.CODIGO_ARTICULO_ACA = ''DEMO-CAMISA''
+  JOIN fza_atributos_conjuntos_det det 
+    ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA 
+  JOIN fza_atributos_valores val     ON val.ID_VALOR_AV = det.ID_VALOR_ACD ', '2026-03-28 17:24:25', '2026-03-28 17:18:24', 'Administrador', 'Administrador');
+-- 30 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4507,7 +4556,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-27 17:33:40', '2026-03-27 17:33:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-28 17:32:04', '2026-03-28 17:32:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -9407,4 +9456,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 27/03/2026 17:36:16
+-- Backup completado: 28/03/2026 17:35:43
