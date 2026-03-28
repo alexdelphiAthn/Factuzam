@@ -102,7 +102,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               DataBinding.DataSource = dsTablaG
               Properties.ReadOnly = False
               TabOrder = 0
-              Width = 121
+              Width = 231
             end
             object lblCodigo: TcxLabel
               Left = 25
@@ -124,11 +124,11 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               DataBinding.DataField = 'DESCRIPCION_ARTICULO'
               DataBinding.DataSource = dsTablaG
               TabOrder = 3
-              Width = 322
+              Width = 597
             end
             object chkActivo: TcxDBCheckBox
-              Left = 230
-              Top = 16
+              Left = 348
+              Top = 10
               Caption = 'Activo'
               DataBinding.DataField = 'ACTIVO_ARTICULO'
               DataBinding.DataSource = dsTablaG
@@ -315,10 +315,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_SKUS'
@@ -485,10 +481,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&5_Tarifas'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -768,10 +760,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -940,10 +928,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1164,10 +1148,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0
@@ -1317,10 +1297,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid6: TcxGrid
                 Left = 0
                 Top = 0
@@ -1760,6 +1736,9 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Width = 1069
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1069
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1069
@@ -1787,6 +1766,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 1
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324
