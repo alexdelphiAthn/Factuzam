@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 28/03/2026 17:35:39
+-- Backup generado: 28/03/2026 18:16:26
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -156,7 +156,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO
   ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-28 17:34:50', '2026-03-28 17:34:50', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 2, 'CO', 'S', '2026-03-28 16:40:59', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9004, 'CO', 'S', '2026-03-28 18:04:49', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 1, 'TAL', 'S', '2026-03-28 16:40:58', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 1, 'CO', 'S', '2026-03-26 17:54:27', '2026-03-26 17:54:27', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 2, 'TAL', 'S', '2026-03-26 18:09:58', '2026-03-26 18:09:58', 'Administrador', 'Administrador'),
@@ -476,6 +476,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('VEST-FLOR/BONIATO/L', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/BONIATO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/BONIATO/XL', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:36:02', '2026-03-27 07:36:02', 'SISTEMA', 'SISTEMA'),
+  ('VEST-FLOR/BURDEOS/L', 'VEST-FLOR', 'TC', 'S', '2026-03-28 18:04:57', '2026-03-28 18:04:57', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/ROJO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/VERDE/M', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
@@ -500,7 +501,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 98 registros exportados
+-- 99 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -750,9 +751,11 @@ ALTER TABLE `fza_atributos_conjuntos` ADD INDEX `IDX_VAR_AC` (`ID_VARIACION_AC`)
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
 INSERT INTO `fza_atributos_conjuntos` (`ID_CONJUNTO_AC`, `NOMBRE_AC`, `ID_VARIACION_AC`, `ID_ATRIBUTO_AC`, `ESACTIVO_AC`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   (1, 'Tallas Hombre Standard', 'TC', 'TAL', 'S', '2026-03-28 16:55:24', NULL, '', ''),
-  (2, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-28 16:55:25', NULL, '', '');
+  (2, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-28 16:55:25', NULL, '', ''),
+  (9003, 'Colores Básicos Verano (VEST-FLOR)', 'TC', 'CO', 'S', '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9004, 'Colores Básicos Verano (VEST-FLOR) (VEST-FLOR)', 'TC', 'CO', 'S', '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
--- 2 registros exportados
+-- 4 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos_det
@@ -780,8 +783,21 @@ INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `O
   (2, 9202, 20, '2026-03-28 17:27:20', NULL, '', ''),
   (2, 9203, 30, '2026-03-28 17:27:20', NULL, '', ''),
   (2, 9204, 40, '2026-03-28 17:27:20', NULL, '', ''),
-  (2, 9207, 50, '2026-03-28 17:27:21', NULL, '', '');
--- 9 registros exportados
+  (2, 9207, 50, '2026-03-28 17:27:21', NULL, '', ''),
+  (9003, 9201, 10, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9003, 9202, 20, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9003, 9203, 30, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9003, 9204, 40, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9003, 9207, 50, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9003, 9208, 100, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
+  (9004, 9201, 10, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9202, 20, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9203, 30, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9204, 40, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9207, 50, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9208, 100, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
+  (9004, 9209, 100, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA');
+-- 22 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -948,6 +964,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('VEST-FLOR/BONIATO/M', 9207, '2026-03-27 07:35:19', NULL, '', ''),
   ('VEST-FLOR/BONIATO/XL', 9104, '2026-03-27 07:36:02', NULL, '', ''),
   ('VEST-FLOR/BONIATO/XL', 9207, '2026-03-27 07:36:02', NULL, '', ''),
+  ('VEST-FLOR/BURDEOS/L', 9103, '2026-03-28 18:04:57', NULL, '', ''),
+  ('VEST-FLOR/BURDEOS/L', 9209, '2026-03-28 18:04:57', NULL, '', ''),
   ('VEST-FLOR/ROJO/M', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/M', 3, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 1, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -996,7 +1014,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 196 registros exportados
+-- 198 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -1061,9 +1079,11 @@ INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `ORD
   (9204, 'CO', 'AMARILLO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
   (9205, 'CO', 'CACAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
   (9206, 'CO', 'COLORAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
-  (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA');
+  (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA'),
+  (9208, 'CO', 'FUCSIA', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:01:00', '2026-03-28 18:01:00', 'SISTEMA', 'SISTEMA'),
+  (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:04:43', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 39 registros exportados
+-- 41 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -4556,7 +4576,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-28 17:32:04', '2026-03-28 17:32:04', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-28 18:04:17', '2026-03-28 18:04:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -9456,4 +9476,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 28/03/2026 17:35:43
+-- Backup completado: 28/03/2026 18:16:26

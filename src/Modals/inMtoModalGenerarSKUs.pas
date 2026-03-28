@@ -289,30 +289,31 @@ end;
 
 procedure TfrmMtoModalGenerarSKUS.btnAddValueClick(Sender: TObject);
 var
-  NuevoNombre, IdAtrSel: string;
-  IdConjuntoAsignado, IdNuevoValor: Integer;
+  NuevoNombre, IdAtrSel, OrdenStr: string;
+  IdConjuntoAsignado, IdNuevoValor, OrdenVal: Integer;
   qTemp: TUniQuery;
+  Respuesta, IdNuevoConjunto: Integer;
+  EsConjuntoNuevo: Boolean;
 begin
-  // 1. EL INPUTBOX: Muestra un pequeño popup pidiendo el nombre de la nueva talla/color
+  // 1. INPUTS
   NuevoNombre := Trim(InputBox('Añadir nuevo valor',
-            'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
+             'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
   if NuevoNombre = '' then Exit;
-  var OrdenStr := Trim(InputBox('Añadir nuevo valor', 'Introduce el ORDEN (Ej: 10, 20, 30...):', '100'));
-  if OrdenStr = '' then Exit;
-  var OrdenVal := StrToIntDef(OrdenStr, 100); // Valor por defecto 100 si mete letras sin querer
 
-  // 2. Obtenemos qué dimensión está seleccionada en el grid Maestro (ej. 'TAL' para Talla)
+  OrdenStr := Trim(InputBox('Añadir nuevo valor', 'Introduce el ORDEN (Ej: 10, 20, 30...):', '100'));
+  if OrdenStr = '' then Exit;
+  OrdenVal := StrToIntDef(OrdenStr, 100);
+
+  // 2. Dimensión seleccionada en el grid superior
   IdAtrSel := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
 
   qTemp := TUniQuery.Create(nil);
   try
     qTemp.Connection := unqryMaestro.Connection;
-
+    EsConjuntoNuevo := False;
     // =========================================================================
-    // FASE 1: GUARDADO FÍSICO EN LA BASE DE DATOS
+    // FASE 1: GESTIÓN DEL CONJUNTO (Crear si no existe)
     // =========================================================================
-
-    // A. Averiguamos qué "Grupo" (Conjunto) usa el artículo para esta dimensión
     qTemp.SQL.Text :=
       'SELECT ID_CONJUNTO_ACA FROM fza_articulos_conjuntos_asign ' +
       'WHERE CODIGO_ARTICULO_ACA = :Articulo AND ID_ATRIBUTO_ACA = :Atributo';
@@ -320,13 +321,44 @@ begin
     qTemp.ParamByName('Atributo').AsString := IdAtrSel;
     qTemp.Open;
 
-    if qTemp.IsEmpty then
+    // CORRECCIÓN 1: Comprobamos si está vacío o si es un registro zombi (ID <= 0)
+    if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0) then
     begin
-      ShowMessage('Error: El artículo no tiene un grupo asignado para esta' +
-                  ' dimensión. Debe asignarlo en Artículos -> pestaña General');
-      Exit;
+      EsConjuntoNuevo := True;
+
+      qTemp.Close;
+      qTemp.SQL.Text :=
+        'INSERT INTO fza_atributos_conjuntos (NOMBRE_AC, ID_VARIACION_AC, ID_ATRIBUTO_AC, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:Nombre, :Variacion, :Atributo, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+      qTemp.ParamByName('Nombre').AsString    := 'Personalizado (' + FCodigoArticulo + ')';
+      qTemp.ParamByName('Variacion').AsString := FTipoVariacion;
+      qTemp.ParamByName('Atributo').AsString  := IdAtrSel;
+      qTemp.Execute;
+
+      qTemp.Close;
+      qTemp.SQL.Text := 'SELECT LAST_INSERT_ID() AS NUEVO_ID';
+      qTemp.Open;
+      IdConjuntoAsignado := qTemp.FieldByName('NUEVO_ID').AsInteger;
+
+      qTemp.Close;
+      // CORRECCIÓN 2: Usamos ON DUPLICATE KEY por si había un registro zombi, para machacarlo
+      qTemp.SQL.Text :=
+        'INSERT INTO fza_articulos_conjuntos_asign (CODIGO_ARTICULO_ACA, ID_CONJUNTO_ACA, ID_ATRIBUTO_ACA, ES_GENERACION_AUTO, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:Articulo, :Conjunto, :Atributo, ''S'', CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'') ' +
+        'ON DUPLICATE KEY UPDATE ID_CONJUNTO_ACA = :Conjunto2';
+      qTemp.ParamByName('Articulo').AsString  := FCodigoArticulo;
+      qTemp.ParamByName('Conjunto').AsInteger := IdConjuntoAsignado;
+      qTemp.ParamByName('Atributo').AsString  := IdAtrSel;
+      qTemp.ParamByName('Conjunto2').AsInteger:= IdConjuntoAsignado;
+      qTemp.Execute;
+    end
+    else
+    begin
+      IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
     end;
-    IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
+    // =========================================================================
+    // FASE 2: GESTIÓN DEL VALOR (Crear el "Color/Talla" en el sistema si no existe)
+    // =========================================================================
     qTemp.Close;
     qTemp.SQL.Text :=
       'SELECT ID_VALOR_AV FROM fza_atributos_valores ' +
@@ -334,22 +366,56 @@ begin
     qTemp.ParamByName('IdVa').AsString := IdAtrSel;
     qTemp.ParamByName('Valor').AsString := NuevoNombre;
     qTemp.Open;
+
     if not qTemp.IsEmpty then
       IdNuevoValor := qTemp.FieldByName('ID_VALOR_AV').AsInteger
     else
     begin
-      var Respuesta: Integer;
-      var IdNuevoConjunto: Integer;
+      // CORRECCIÓN DEL BUG: Si el valor no existía, lo registramos primero.
+      qTemp.Close;
+      qTemp.SQL.Text :=
+        'INSERT INTO fza_atributos_valores (ID_VA_AV, VALOR_AV, ORDEN_AV, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:IdVa, :Valor, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+      qTemp.ParamByName('IdVa').AsString   := IdAtrSel;
+      qTemp.ParamByName('Valor').AsString  := NuevoNombre;
+      qTemp.ParamByName('Orden').AsInteger := OrdenVal;
+      qTemp.Execute;
+
+      qTemp.Close;
+      qTemp.SQL.Text := 'SELECT LAST_INSERT_ID() AS NUEVO_ID';
+      qTemp.Open;
+      IdNuevoValor := qTemp.FieldByName('NUEVO_ID').AsInteger;
+    end;
+
+    // =========================================================================
+    // FASE 3: VINCULAR EL VALOR AL CONJUNTO DEL ARTÍCULO
+    // =========================================================================
+    if EsConjuntoNuevo then
+    begin
+      // Si acabamos de crear un conjunto para este artículo, no preguntamos nada,
+      // lo insertamos directamente porque ya es privado para él.
+      qTemp.Close;
+      qTemp.SQL.Text :=
+        'INSERT INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+      qTemp.ParamByName('Conj').AsInteger  := IdConjuntoAsignado;
+      qTemp.ParamByName('Val').AsInteger   := IdNuevoValor;
+      qTemp.ParamByName('Orden').AsInteger := OrdenVal;
+      qTemp.Execute;
+    end
+    else
+    begin
+      // Si ya existía un conjunto, preguntamos si alterar el global o bifurcar
       Respuesta := MessageDlg(
         '¿Desea añadir "' + NuevoNombre + '" a TODO el conjunto actual (afectará a otros artículos) ' +
         #13#10 + 'o crear una excepción SOLO para este artículo?',
         mtConfirmation, [mbYes, mbNo, mbCancel], 0);
 
-      if Respuesta = mrCancel then
-        Exit; // Abortamos la operación
+      if Respuesta = mrCancel then Exit;
+
       if Respuesta = mrYes then
       begin
-        // OPCIÓN A: Añadir al conjunto global (AÑADIMOS ORDEN_ACD)
+        // Añadir al global
         qTemp.Close;
         qTemp.SQL.Text :=
           'INSERT IGNORE INTO fza_atributos_conjuntos_det ' +
@@ -357,14 +423,12 @@ begin
           'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
         qTemp.ParamByName('Conj').AsInteger  := IdConjuntoAsignado;
         qTemp.ParamByName('Val').AsInteger   := IdNuevoValor;
-        qTemp.ParamByName('Orden').AsInteger := OrdenVal; // <-- ¡Pasamos el orden aquí!
+        qTemp.ParamByName('Orden').AsInteger := OrdenVal;
         qTemp.Execute;
       end
       else if Respuesta = mrNo then
       begin
-        // OPCIÓN B: Crear un conjunto específico solo para este artículo
-
-        // 1. Clonar la cabecera del conjunto (Igual que antes)
+        // Bifurcar: Crear un clon del conjunto solo para el artículo
         qTemp.Close;
         qTemp.SQL.Text :=
           'INSERT INTO fza_atributos_conjuntos (NOMBRE_AC, ID_VARIACION_AC, ID_ATRIBUTO_AC, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
@@ -374,39 +438,32 @@ begin
         qTemp.ParamByName('OldConj').AsInteger := IdConjuntoAsignado;
         qTemp.Execute;
 
-        // Obtener el ID del conjunto recién creado
         qTemp.Close;
         qTemp.SQL.Text := 'SELECT LAST_INSERT_ID() AS NUEVO_ID';
         qTemp.Open;
         IdNuevoConjunto := qTemp.FieldByName('NUEVO_ID').AsInteger;
 
-        // 2. Copiar todos los valores al nuevo conjunto (IMPORTANTE: Copiamos también su ORDEN_ACD original)
         qTemp.Close;
         qTemp.SQL.Text :=
-          'INSERT INTO fza_atributos_conjuntos_det ' +
-          '(ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+          'INSERT INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
           'SELECT :NewConj, ID_VALOR_ACD, ORDEN_ACD, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'' ' +
           'FROM fza_atributos_conjuntos_det WHERE ID_CONJUNTO_ACD = :OldConj';
         qTemp.ParamByName('NewConj').AsInteger := IdNuevoConjunto;
         qTemp.ParamByName('OldConj').AsInteger := IdConjuntoAsignado;
         qTemp.Execute;
 
-        // 3. Añadir el NUEVO valor que acabamos de crear a este nuevo conjunto (AÑADIMOS ORDEN_ACD)
         qTemp.Close;
         qTemp.SQL.Text :=
-          'INSERT INTO fza_atributos_conjuntos_det ' +
-          '(ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+          'INSERT INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
           'VALUES (:NewConj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
         qTemp.ParamByName('NewConj').AsInteger := IdNuevoConjunto;
         qTemp.ParamByName('Val').AsInteger     := IdNuevoValor;
-        qTemp.ParamByName('Orden').AsInteger   := OrdenVal; // <-- ¡Pasamos el orden aquí!
+        qTemp.ParamByName('Orden').AsInteger   := OrdenVal;
         qTemp.Execute;
 
-        // 4. Desvincular el artículo del conjunto antiguo y vincularlo al nuevo (Igual que antes)
         qTemp.Close;
         qTemp.SQL.Text :=
-          'UPDATE fza_articulos_conjuntos_asign ' +
-          'SET ID_CONJUNTO_ACA = :NewConj ' +
+          'UPDATE fza_articulos_conjuntos_asign SET ID_CONJUNTO_ACA = :NewConj ' +
           'WHERE CODIGO_ARTICULO_ACA = :Articulo AND ID_ATRIBUTO_ACA = :Atributo';
         qTemp.ParamByName('NewConj').AsInteger := IdNuevoConjunto;
         qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
@@ -414,29 +471,29 @@ begin
         qTemp.Execute;
       end;
     end;
+
   finally
     qTemp.Free;
   end;
 
   // =========================================================================
-  // FASE 2: MAGIA EN MEMORIA (Para no perder los checks)
+  // FASE 4: MAGIA EN MEMORIA (Para que aparezca en el Grid sin recargar todo)
   // =========================================================================
-
-  // "Inyectamos" la nueva fila en la RAM sin recargar la consulta
   unqryDetalle.Append;
   unqryDetalle.FieldByName('ID_ATRIBUTO_VA').AsString := IdAtrSel;
   unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger := IdNuevoValor;
   unqryDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
 
-  // NUEVO: Inyectamos el orden en memoria
   if unqryDetalle.FindField('ORDEN_AV') <> nil then
+  begin
+    // CORRECCIÓN 3: Desbloqueamos el campo temporalmente antes de asignarle el valor en memoria
+    unqryDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
     unqryDetalle.FieldByName('ORDEN_AV').AsInteger := OrdenVal;
+  end;
 
   unqryDetalle.FieldByName('ASIGNADO').AsInteger := 1;
   unqryDetalle.Post;
 end;
-
-{ TDimensionSKU }
 
 constructor TDimensionSKU.Create;
 begin
