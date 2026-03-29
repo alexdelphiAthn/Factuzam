@@ -160,6 +160,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmMtoModalGenerarSKUS, frmMtoModalGenerarSKUS);
   Application.Run;
 end.

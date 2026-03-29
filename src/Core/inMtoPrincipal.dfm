@@ -11,6 +11,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnCloseQuery = FormCloseQuery
   OnResize = FormResize
   OnShow = FormShow
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1140
   ExplicitHeight = 613
   TextHeight = 19
