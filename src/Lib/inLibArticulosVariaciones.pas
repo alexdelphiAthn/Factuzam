@@ -388,7 +388,8 @@ begin
   lbl.Parent  := FPanelAtributos;
   lbl.Left    := MARGEN_H;
   lbl.Top     := MARGEN_V;
-  lbl.Caption := 'Tipo de variación: ' + FTipoVariacion + ' — ' + FNombreVariacion;
+  lbl.Caption := 'Tipo de variación: ' + FTipoVariacion + ' — ' +
+                                                               FNombreVariacion;
   lbl.Style.Font.Style := [fsBold];
   lbl.AutoSize := True;
 
@@ -403,7 +404,8 @@ begin
   end;
 end;
 
-procedure TGestorVariaciones.CrearFilaAtributo(var S: TSlotVariacion; ATop: Integer);
+procedure TGestorVariaciones.CrearFilaAtributo(var S: TSlotVariacion;
+                                               ATop: Integer);
 var
   lbl : TcxLabel;
   cb  : TcxComboBox;
@@ -541,7 +543,8 @@ begin
   begin
     S := FSlotsVar[i];
     if not Assigned(S.Ctrl) then Continue;
-    NuevoId := Integer(NativeInt(S.Ctrl.Properties.Items.Objects[S.Ctrl.ItemIndex]));
+    NuevoId := Integer(NativeInt(S.Ctrl.Properties.Items.Objects[
+                                                            S.Ctrl.ItemIndex]));
     BorrarConjunto(S.IdAtributo);
     if NuevoId > 0 then
       UpsertConjunto(S);

@@ -451,7 +451,8 @@ begin
   ReconstruirVista;
 end;
 
-procedure TGestorPropiedades.CargarPropiedadesPorFamilia(const CodigoFamilia: string);
+procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
+                                                   const CodigoFamilia: string);
 var
   qProp     : TUniQuery;
   qOpc      : TUniQuery;
@@ -473,7 +474,8 @@ begin
       case S.TipoValor of
         tvpLista:
           if (S.Ctrl as TcxComboBox).ItemIndex > 0 then
-            S.IdValorPV := Integer((S.Ctrl as TcxComboBox).Properties.Items.Objects[(S.Ctrl as TcxComboBox).ItemIndex])
+            S.IdValorPV := Integer((S.Ctrl as TcxComboBox).Properties.Items.
+                                     Objects[(S.Ctrl as TcxComboBox).ItemIndex])
           else
             S.IdValorPV := 0;
         tvpTextoLibre:
@@ -503,7 +505,8 @@ begin
       tvpLista:      EstaVacia := (S.IdValorPV <= 0);
       tvpTextoLibre: EstaVacia := (S.ValorLibre = '');
       tvpNumero:     EstaVacia := (S.ValorLibre = '') or (S.ValorLibre = '0');
-      tvpBooleano:   EstaVacia := (S.ValorLibre <> 'S') and (S.ValorLibre <> '1');
+      tvpBooleano:   EstaVacia := (S.ValorLibre <> 'S') and
+                                                          (S.ValorLibre <> '1');
     end;
 
     if EstaVacia then
@@ -521,7 +524,8 @@ begin
   try
     qProp.Connection := FConexion;
     qProp.SQL.Text   :=
-      'SELECT p.CODIGO_PROPIEDAD, p.NOMBRE_PROPIEDAD, p.TIPO_VALOR, fa.ES_REQUERIDO ' +
+      'SELECT p.CODIGO_PROPIEDAD, p.NOMBRE_PROPIEDAD, p.TIPO_VALOR, ' +
+                                                            'fa.ES_REQUERIDO ' +
       'FROM fza_familias_atributos fa ' +
       'JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = fa.CODIGO_PROPIEDAD ' +
       'WHERE fa.CODIGO_FAMILIA = :fam ' +
@@ -529,33 +533,29 @@ begin
       'ORDER BY fa.ORDEN_MOSTRAR, p.NOMBRE_PROPIEDAD';
     qProp.ParamByName('fam').AsString := CodigoFamilia;
     qProp.Open;
-
     qOpc.Connection := FConexion;
     qOpc.SQL.Text   :=
       'SELECT ID_VALOR_PV, VALOR_PV ' +
       'FROM fza_propiedades_valores ' +
       'WHERE ID_PROPIEDAD_PV = :cod AND ESACTIVO_PV = ''S'' ' +
       'ORDER BY VALOR_PV';
-
     while not qProp.Eof do
     begin
       cod := qProp.FieldByName('CODIGO_PROPIEDAD').AsString;
       idx := IndexOfCodigo(cod);
-
       if idx < 0 then
       begin
-        // AÑADIR NUEVA PROPIEDAD
         FillChar(S, SizeOf(S), 0);
         S.CodigoPropiedad := cod;
         S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROPIEDAD').AsString;
-        S.TipoValor       := TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR').AsString);
+        S.TipoValor       :=
+                      TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR').AsString);
         S.EsRequerido     := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
         S.IdValorPV       := 0;
         S.ValorLibre      := '';
         S.Ctrl            := nil;
         S.Opciones        := nil;
         S.Eliminar        := False;
-
         if S.TipoValor = tvpLista then
         begin
           S.Opciones := TDictionary<Integer, string>.Create;
@@ -573,16 +573,13 @@ begin
       end
       else
       begin
-        // RESCATAR EXISTENTE (Pertenece a la nueva familia)
         S := FSlots[idx];
         S.EsRequerido := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
-        S.Eliminar := False; // La salvamos, esté vacía o llena
+        S.Eliminar := False;
         FSlots[idx] := S;
       end;
       qProp.Next;
     end;
-
-    // Redibujamos la vista con las supervivientes y las nuevas
     ReconstruirVista;
   finally
     qProp.Free;
@@ -596,12 +593,10 @@ var
   Top : Integer;
   S   : TSlotProp;
 begin
-  // Destruir controles viejos SIN borrar los slots
   FScrollBox.DisableAlign;
   try
     while FScrollBox.ControlCount > 0 do
       FScrollBox.Controls[0].Free;
-    // Limpiar referencias a controles en los slots
     for i := 0 to FSlots.Count - 1 do
     begin
       S := FSlots[i];
@@ -611,13 +606,11 @@ begin
   finally
     FScrollBox.EnableAlign;
   end;
-
   Top := MARGEN_V;
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
     if S.Eliminar then Continue;
-
     case S.TipoValor of
       tvpLista      : CrearFilaLista   (S, Top);
       tvpTextoLibre : CrearFilaTexto   (S, Top);
@@ -630,7 +623,6 @@ begin
   end;
 end;
 
-{ ── Fila LISTA ──────────────────────────────────────────────────────────── }
 procedure TGestorPropiedades.CrearFilaLista(var S: TSlotProp; ATop: Integer);
 var
   lbl : TcxLabel;
@@ -648,7 +640,6 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption := S.NombrePropiedad;
-
   cb := TcxComboBox.Create(FScrollBox);
   cb.Parent  := FScrollBox;
   cb.Left    := MARGEN_H + ANCHO_LABEL + 6;
@@ -657,15 +648,12 @@ begin
   cb.Height  := ALTO_FILA;
   cb.Properties.DropDownListStyle := lsFixedList;
   cb.Properties.Items.Add('');   // opción vacía
-
   if Assigned(S.Opciones) then
     for IdV in S.Opciones.Keys do
     begin
       Txt := S.Opciones[IdV];
       cb.Properties.Items.AddObject(Txt, TObject(IdV));
     end;
-
-  // Seleccionar valor actual
   if S.IdValorPV > 0 then
     for Idx := 1 to cb.Properties.Items.Count - 1 do
       if Integer(cb.Properties.Items.Objects[Idx]) = S.IdValorPV then
@@ -673,11 +661,9 @@ begin
         cb.ItemIndex := Idx;
         Break;
       end;
-
   S.Ctrl := cb;
 end;
 
-{ ── Fila TEXTO LIBRE ────────────────────────────────────────────────────── }
 procedure TGestorPropiedades.CrearFilaTexto(var S: TSlotProp; ATop: Integer);
 var
   lbl: TcxLabel;
@@ -692,7 +678,6 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
-
   ed := TcxTextEdit.Create(FScrollBox);
   ed.Parent := FScrollBox;
   ed.Left   := MARGEN_H + ANCHO_LABEL + 6;
@@ -700,11 +685,9 @@ begin
   ed.Width  := ANCHO_CTRL;
   ed.Height := ALTO_FILA;
   ed.Text   := S.ValorLibre;
-
   S.Ctrl := ed;
 end;
 
-{ ── Fila NUMERO ─────────────────────────────────────────────────────────── }
 procedure TGestorPropiedades.CrearFilaNumero(var S: TSlotProp; ATop: Integer);
 var
   lbl: TcxLabel;
@@ -719,7 +702,6 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
-
   sp := TcxSpinEdit.Create(FScrollBox);
   sp.Parent  := FScrollBox;
   sp.Left    := MARGEN_H + ANCHO_LABEL + 6;
@@ -729,11 +711,9 @@ begin
   sp.Properties.EditFormat := '0.00';
   if S.ValorLibre <> '' then
     sp.Value := StrToFloatDef(StringReplace(S.ValorLibre, ',', '.', []), 0);
-
   S.Ctrl := sp;
 end;
 
-{ ── Fila BOOLEANO ───────────────────────────────────────────────────────── }
 procedure TGestorPropiedades.CrearFilaBooleano(var S: TSlotProp; ATop: Integer);
 var
   lbl: TcxLabel;
@@ -748,7 +728,6 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
-
   chk := TcxCheckBox.Create(FScrollBox);
   chk.Parent   := FScrollBox;
   chk.Left     := MARGEN_H + ANCHO_LABEL + 6;
@@ -756,16 +735,13 @@ begin
   chk.Width    := ALTO_FILA;
   chk.Height   := ALTO_FILA;
   chk.Caption  := '';
-  // Eliminar cualquier texto que DevExpress muestre dentro del control
   chk.Properties.DisplayChecked   := '';
   chk.Properties.DisplayUnchecked := '';
   chk.Properties.DisplayGrayed    := '';
   chk.Checked  := (S.ValorLibre = 'S') or (S.ValorLibre = '1');
-
   S.Ctrl := chk;
 end;
 
-{ ── Botón eliminar (×) a la derecha de cada fila ───────────────────────── }
 procedure TGestorPropiedades.CrearBtnEliminar(SlotIdx: Integer; ATop: Integer);
 var
   btn: TcxButton;
@@ -806,10 +782,6 @@ begin
   );
 end;
 
-{ ═══════════════════════════════════════════════════════════════════════════ }
-{ Selector de nuevas propiedades                                              }
-{ ═══════════════════════════════════════════════════════════════════════════ }
-
 procedure TGestorPropiedades.AbrirSelectorPropiedades;
 var
   dlg          : TfrmSelPropiedades;
@@ -825,20 +797,15 @@ begin
     ShowMessage('Primero guarde el artículo antes de añadir propiedades.');
     Exit;
   end;
-
-  // Construir lista de propiedades ya presentes (no eliminadas)
   Excluidos := TStringList.Create;
   try
     for i := 0 to FSlots.Count - 1 do
       if not FSlots[i].Eliminar then
         Excluidos.Add(FSlots[i].CodigoPropiedad);
-
     dlg := TfrmSelPropiedades.Create(nil, FConexion, Excluidos);
     try
       if dlg.ShowModal <> mrOk then Exit;
       if dlg.CodigosSeleccionados.Count = 0 then Exit;
-
-      // Cargar datos de cada propiedad seleccionada y añadir slot
       qProp := TUniQuery.Create(nil);
       qOpc  := TUniQuery.Create(nil);
       try
@@ -943,20 +910,15 @@ begin
   sE := Validar;
   if sE <> '' then
     raise Exception.Create(sE);
-
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
-
     if S.Eliminar then
     begin
       DeleteSlot(S.CodigoPropiedad);
       Continue;
     end;
-
     if not Assigned(S.Ctrl) then Continue;
-
-    // Leer valor del control
     case S.TipoValor of
       tvpLista:
       begin
@@ -984,11 +946,9 @@ begin
         S.ValorLibre := TGenUtils.IfThen<String>((S.Ctrl as TcxCheckBox).Checked, 'S', 'N');
       end;
     end;
-
     UpsertSlot(S);
     FSlots[i] := S;
   end;
-
   FModificado := False;
   Result := True;
 end;
@@ -1009,20 +969,16 @@ begin
       'ON DUPLICATE KEY UPDATE ' +
       '  ID_VALOR_PV = VALUES(ID_VALOR_PV), ' +
       '  VALOR_LIBRE = VALUES(VALOR_LIBRE)';
-
     q.ParamByName('art').AsString  := FCodigoArticulo;
     q.ParamByName('prop').AsString := S.CodigoPropiedad;
-
     if S.IdValorPV > 0 then
       q.ParamByName('idval').AsInteger := S.IdValorPV
     else
       q.ParamByName('idval').Clear;
-
     if S.ValorLibre <> '' then
       q.ParamByName('libre').AsString := S.ValorLibre
     else
       q.ParamByName('libre').Clear;
-
     q.ParamByName('usr').AsString := FUsuario;
     q.Execute;
   finally

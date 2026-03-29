@@ -1,14 +1,14 @@
 inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   Caption = 'Generar SKUS'
-  ClientHeight = 485
-  ClientWidth = 732
+  ClientHeight = 477
+  ClientWidth = 730
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 748
   ExplicitHeight = 524
   TextHeight = 19
   inherited pnlButton: TPanel
-    Top = 426
-    Width = 732
+    Top = 418
+    Width = 730
     StyleElements = [seFont, seClient, seBorder]
     ExplicitTop = 418
     ExplicitWidth = 730
@@ -37,8 +37,8 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     end
   end
   inherited pnlBody: TPanel
-    Width = 732
-    Height = 426
+    Width = 730
+    Height = 418
     StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 730
     ExplicitHeight = 418
