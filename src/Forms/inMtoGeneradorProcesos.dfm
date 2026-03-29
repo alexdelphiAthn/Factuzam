@@ -271,11 +271,8 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     end>
                   Highlighter = synsqlsyn2
                   ScrollBars = ssNone
+                  WantTabs = True
                   OnStatusChange = SynEdit1StatusChange
-                  ExplicitLeft = 149
-                  ExplicitTop = 105
-                  ExplicitWidth = 200
-                  ExplicitHeight = 150
                 end
               end
             end
@@ -520,9 +517,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
-                          Properties.Increment = 0.10000000000000000
-                          Properties.LargeIncrement = 1.00000000000000000
-                          Properties.MaxValue = 100.00000000000000000
+                          Properties.Increment = 0.100000000000000000
+                          Properties.LargeIncrement = 1.000000000000000000
+                          Properties.MaxValue = 100.000000000000000000
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
@@ -726,9 +723,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
-                    Properties.Increment = 0.10000000000000000
-                    Properties.LargeIncrement = 1.00000000000000000
-                    Properties.MaxValue = 100.00000000000000000
+                    Properties.Increment = 0.100000000000000000
+                    Properties.LargeIncrement = 1.000000000000000000
+                    Properties.MaxValue = 100.000000000000000000
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'
@@ -910,9 +907,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           Width = 851
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 851
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 851
@@ -981,9 +975,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         Width = 859
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
         inherited nvNavegador: TcxDBNavigator
           Width = 282
           ExplicitWidth = 282

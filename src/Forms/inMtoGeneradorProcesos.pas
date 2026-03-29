@@ -171,6 +171,9 @@ type
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
   private
+    procedure ActivarEnterComoTab(Activo: Boolean);
+    procedure EditorEnter(Sender: TObject);
+    procedure EditorExit(Sender: TObject);
     procedure SafeSetScrollBar(SB: TScrollBar;
                                AMax, APageSize, APosition: Integer);
     procedure UniScript1Error(Sender: TObject;
@@ -197,6 +200,33 @@ uses
   ts.Editor.CodeFormatters;
 
 {$R *.dfm}
+
+procedure TfrmMtoGeneradorProcesos.ActivarEnterComoTab(Activo: Boolean);
+  procedure CambiarEn(AOwner: TComponent);
+  var
+    i: Integer;
+  begin
+    if Assigned(AOwner) then
+      for i := 0 to AOwner.ComponentCount - 1 do
+        if AOwner.Components[i] is TJvEnterAsTab then
+          TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := Activo;
+  end;
+begin
+  // Buscamos el componente problemático en los 3 niveles posibles y lo apagamos/encendemos
+  CambiarEn(Self);
+  CambiarEn(Self.Owner);
+  CambiarEn(Application.MainForm);
+end;
+
+procedure TfrmMtoGeneradorProcesos.EditorEnter(Sender: TObject);
+begin
+  ActivarEnterComoTab(False); // Al entrar al editor, apagamos la transformación de Enter a Tab
+end;
+
+procedure TfrmMtoGeneradorProcesos.EditorExit(Sender: TObject);
+begin
+  ActivarEnterComoTab(True); // Al salir del editor, lo volveos a encender para el resto del programa
+end;
 
 procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject; SQL: string);
 begin
@@ -703,9 +733,15 @@ begin
   end;
 end;
 
-procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
+  if (Key = VK_RETURN) then
+  begin
+    if DBSynEdit1.Focused or syndtEstructura.Focused then
+    begin
+      Exit;
+    end;
+  end;
   inherited;
   if (Key = VK_F5) then
     btnEjecutarClick(Sender);
@@ -722,6 +758,16 @@ end;
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
+  DBSynEdit1.WantTabs := True;
+  syndtEstructura.WantTabs := True;
+  DBSynEdit1.WantReturns := True;
+  syndtEstructura.WantReturns := True;
+  DBSynEdit1.TabWidth := 4;
+  // Asignamos nuestros vigilantes de foco
+  DBSynEdit1.OnEnter := EditorEnter;
+  DBSynEdit1.OnExit  := EditorExit;
+  syndtEstructura.OnEnter := EditorEnter;
+  syndtEstructura.OnExit  := EditorExit;
   DBSynEdit1.Visible := True;
   syndtEstructura.Visible := True;
   if DBsynEdit1.CanFocus then
