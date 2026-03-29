@@ -771,7 +771,7 @@ begin
   DBSynEdit1.Visible := True;
   syndtEstructura.Visible := True;
   if DBsynEdit1.CanFocus then
-        DBsynEdit1.SetFocus;
+    DBsynEdit1.SetFocus;
 end;
 
 procedure TfrmMtoGeneradorProcesos.SynEdit1StatusChange(Sender: TObject;
