@@ -22,7 +22,7 @@ uses
   cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
-  dxBevel, cxDBNavigator, cxGridExportLink,
+  dxBevel, cxDBNavigator, cxGridExportLink, SynEditSearch,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
@@ -171,6 +171,23 @@ type
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
   private
+    FFindDialog: TFindDialog;
+    FReplaceDialog: TReplaceDialog;
+    FPopMenuEditores: TPopupMenu;
+    FSearchEngine: TSynEditSearch;
+    FEditorActualBusqueda: TCustomSynEdit;
+    FAppEvents: TApplicationEvents;
+    procedure AppEventsMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure ActionBuscarExecute(Sender: TObject);
+    procedure ActionReemplazarExecute(Sender: TObject);
+    procedure ActionBuscarGlobalExecute(Sender: TObject);
+    procedure DoFind(Sender: TObject);
+    procedure DoReplace(Sender: TObject);
+    procedure BuscarGlobal;
+    procedure mnuCortarClick(Sender: TObject);
+    procedure mnuCopiarClick(Sender: TObject);
+    procedure mnuPegarClick(Sender: TObject);
+    procedure CrearMenuContextual;
     procedure ActivarEnterComoTab(Activo: Boolean);
     procedure EditorEnter(Sender: TObject);
     procedure EditorExit(Sender: TObject);
@@ -200,6 +217,158 @@ uses
   ts.Editor.CodeFormatters;
 
 {$R *.dfm}
+
+procedure TfrmMtoGeneradorProcesos.AppEventsMessage(var Msg: TMsg; var Handled: Boolean);
+begin
+  // Si la tecla pulsada es ESCAPE
+  if (Msg.message = WM_KEYDOWN) and (Msg.wParam = VK_ESCAPE) then
+  begin
+    // Comprobamos si el diálogo de Buscar está abierto y es la ventana activa
+    if Assigned(FFindDialog) and (FFindDialog.Handle <> 0) and
+       (GetActiveWindow = FFindDialog.Handle) then
+    begin
+      FFindDialog.CloseDialog; // Cerramos la ventanita
+      Handled := True;         // ¡Evitamos que se ejecute el botón Cancelar!
+    end
+    // Hacemos lo mismo para el diálogo de Reemplazar
+    else if Assigned(FReplaceDialog) and (FReplaceDialog.Handle <> 0) and
+            (GetActiveWindow = FReplaceDialog.Handle) then
+    begin
+      FReplaceDialog.CloseDialog;
+      Handled := True;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.DoFind(Sender: TObject);
+var
+  Opciones: TSynSearchOptions;
+  Dialog: TFindDialog;
+begin
+  Dialog := Sender as TFindDialog;
+
+  // Si por lo que sea no hay un editor memorizado, salimos
+  if not Assigned(FEditorActualBusqueda) then Exit;
+
+  Opciones := [];
+  if frMatchCase in Dialog.Options then Include(Opciones, ssoMatchCase);
+  if not (frDown in Dialog.Options) then Include(Opciones, ssoBackwards);
+
+  // Buscamos en el editor que memorizamos
+  if FEditorActualBusqueda.SearchReplace(Dialog.FindText, '', Opciones) = 0 then
+    MessageDlg('Texto no encontrado.', mtInformation, [mbOK], 0);
+end;
+
+procedure TfrmMtoGeneradorProcesos.DoReplace(Sender: TObject);
+var
+  Opciones: TSynSearchOptions;
+  Dialog: TReplaceDialog;
+begin
+  Dialog := Sender as TReplaceDialog;
+
+  if not Assigned(FEditorActualBusqueda) then Exit;
+
+  Opciones := [ssoReplace];
+  if frMatchCase in Dialog.Options then Include(Opciones, ssoMatchCase);
+  if not (frDown in Dialog.Options) then Include(Opciones, ssoBackwards);
+  if frReplaceAll in Dialog.Options then Include(Opciones, ssoReplaceAll);
+
+  // Reemplazamos en el editor que memorizamos
+  if FEditorActualBusqueda.SearchReplace(Dialog.FindText, Dialog.ReplaceText, Opciones) = 0 then
+    MessageDlg('Texto no encontrado.', mtInformation, [mbOK], 0);
+end;
+
+procedure TfrmMtoGeneradorProcesos.BuscarGlobal;
+var
+  TextoBuscar: string;
+begin
+  if InputQuery('Búsqueda Global', 'Introduce el texto a buscar en todos los procesos:', TextoBuscar) then
+  begin
+    if Trim(TextoBuscar) = '' then Exit;
+
+    // Nos pasamos a la pestaña de la lista de procesos
+    pcPantalla.ActivePage := tsLista;
+
+    with dsTablaG.DataSet do
+    begin
+      DisableControls;
+      try
+        Filtered := False;
+        // Filtramos por el contenido del proceso o por el nombre
+        Filter := 'PROCESO_GENERADORPROCESO LIKE ' + QuotedStr('%' + TextoBuscar + '%') +
+                  ' OR NOMBRE_GENERADORPROCESO LIKE ' + QuotedStr('%' + TextoBuscar + '%');
+        Filtered := True;
+
+        if RecordCount = 0 then
+        begin
+          MessageDlg('No se encontraron procesos que contengan: ' + TextoBuscar, mtInformation, [mbOK], 0);
+          Filtered := False; // Quitamos el filtro si no hay resultados
+        end;
+      finally
+        EnableControls;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.mnuCortarClick(Sender: TObject);
+begin
+  if (FPopMenuEditores.PopupComponent is TSynEdit) then
+    (FPopMenuEditores.PopupComponent as TSynEdit).CutToClipboard
+  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
+    (FPopMenuEditores.PopupComponent as TDBSynEdit).CutToClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.mnuCopiarClick(Sender: TObject);
+begin
+  if (FPopMenuEditores.PopupComponent is TSynEdit) then
+    (FPopMenuEditores.PopupComponent as TSynEdit).CopyToClipboard
+  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
+    (FPopMenuEditores.PopupComponent as TDBSynEdit).CopyToClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.mnuPegarClick(Sender: TObject);
+begin
+  if (FPopMenuEditores.PopupComponent is TSynEdit) then
+    (FPopMenuEditores.PopupComponent as TSynEdit).PasteFromClipboard
+  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
+    (FPopMenuEditores.PopupComponent as TDBSynEdit).PasteFromClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.CrearMenuContextual;
+var
+  Item: TMenuItem;
+begin
+  if Assigned(FPopMenuEditores) then Exit;
+
+  // Creamos el componente menú
+  FPopMenuEditores := TPopupMenu.Create(Self);
+
+  // Botón Cortar
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '&Cortar';
+  Item.ShortCut := TextToShortCut('Ctrl+X');
+  Item.OnClick := mnuCortarClick;
+  FPopMenuEditores.Items.Add(Item);
+
+  // Botón Copiar
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := 'C&opiar';
+  Item.ShortCut := TextToShortCut('Ctrl+C');
+  Item.OnClick := mnuCopiarClick;
+  FPopMenuEditores.Items.Add(Item);
+
+  // Botón Pegar
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '&Pegar';
+  Item.ShortCut := TextToShortCut('Ctrl+V');
+  Item.OnClick := mnuPegarClick;
+  FPopMenuEditores.Items.Add(Item);
+
+  // Asignamos el menú a tus dos editores
+  DBSynEdit1.PopupMenu := FPopMenuEditores;
+  syndtEstructura.PopupMenu := FPopMenuEditores;
+end;
 
 procedure TfrmMtoGeneradorProcesos.ActivarEnterComoTab(Activo: Boolean);
   procedure CambiarEn(AOwner: TComponent);
@@ -425,11 +594,24 @@ begin
 
   with dmmGeneradorProcesos do
   begin
-    sSQL := unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+    // 1. Miramos si hay texto seleccionado en alguno de los dos editores
+    sSQL := '';
+    if DBSynEdit1.Focused and (Trim(DBSynEdit1.SelText) <> '') then
+      sSQL := DBSynEdit1.SelText
+    else if syndtEstructura.Focused and (Trim(syndtEstructura.SelText) <> '') then
+      sSQL := syndtEstructura.SelText;
+
+    // 2. Si no hay selección (o el foco está en un botón/grid), cogemos todo el texto del campo
+    if sSQL = '' then
+      sSQL := unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+
     sSQL := Trim(sSQL);
 
+    // Si está totalmente vacío, salimos para evitar errores de base de datos
+    if sSQL = '' then
+      Exit;
+
     // Determinamos si es una consulta que espera filas
-    // Ahora incluimos 'CALL' como potencial generador de filas
     bIsSelect := (Pos('SELECT', UpperCase(sSQL)) = 1) or
                  (Pos('CALL', UpperCase(sSQL)) = 1) or
                  (Pos('SHOW', UpperCase(sSQL)) = 1);
@@ -735,14 +917,24 @@ end;
 
 procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if (Key = VK_RETURN) then
+  // 1. Comprobamos si es una de las teclas de navegación o el Enter
+  if (Key = VK_RETURN) or (Key = VK_PRIOR) or (Key = VK_NEXT) or
+     (Key = VK_HOME) or (Key = VK_END) then
   begin
+    // 2. Si el foco está en los editores, secuestramos la tecla para ellos
     if DBSynEdit1.Focused or syndtEstructura.Focused then
     begin
+      // Al salir con Exit, el formulario padre (inMtoGen) NO se entera de la pulsación.
+      // Así evitamos que cambie de registro o haga cosas raras, y el SynEdit hace
+      // su scroll o salto de línea de forma 100% nativa.
       Exit;
     end;
   end;
+
+  // Si no estábamos en el editor, o es otra tecla, que siga su curso normal
   inherited;
+
+  // Tu ejecución con F5
   if (Key = VK_F5) then
     btnEjecutarClick(Sender);
 end;
@@ -755,9 +947,78 @@ begin
   inherited;
 end;
 
+procedure TfrmMtoGeneradorProcesos.ActionBuscarGlobalExecute(Sender: TObject);
+begin
+  BuscarGlobal;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionBuscarExecute(Sender: TObject);
+begin
+  if Assigned(FFindDialog) then
+  begin
+    // 1. Memorizamos qué editor disparó la búsqueda
+    if syndtEstructura.Focused then
+      FEditorActualBusqueda := syndtEstructura
+    else
+      FEditorActualBusqueda := DBSynEdit1;
+
+    // 2. Si hay texto seleccionado, lo metemos en la caja
+    if FEditorActualBusqueda.SelText <> '' then
+      FFindDialog.FindText := FEditorActualBusqueda.SelText;
+
+    FFindDialog.Execute;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionReemplazarExecute(Sender: TObject);
+begin
+  if Assigned(FReplaceDialog) then
+  begin
+    // 1. Memorizamos qué editor disparó el reemplazo
+    if syndtEstructura.Focused then
+      FEditorActualBusqueda := syndtEstructura
+    else
+      FEditorActualBusqueda := DBSynEdit1;
+
+    // 2. Si hay texto seleccionado, lo metemos en la caja
+    if FEditorActualBusqueda.SelText <> '' then
+      FReplaceDialog.FindText := FEditorActualBusqueda.SelText;
+
+    FReplaceDialog.Execute;
+  end;
+end;
+
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
+  if not Assigned(FAppEvents) then
+  begin
+    FAppEvents := TApplicationEvents.Create(Self);
+    FAppEvents.OnMessage := AppEventsMessage;
+  end;
+
+  if not Assigned(FFindDialog) then
+  begin
+    FFindDialog := TFindDialog.Create(Self);
+    FFindDialog.Options := [frDown, frHideUpDown, frHideWholeWord];
+    FFindDialog.OnFind := DoFind;
+  end;
+
+  // 2. Creamos el diálogo de Reemplazar
+  if not Assigned(FReplaceDialog) then
+  begin
+    FReplaceDialog := TReplaceDialog.Create(Self);
+    FReplaceDialog.Options := [frDown, frHideUpDown, frHideWholeWord];
+    FReplaceDialog.OnFind := DoFind;
+    FReplaceDialog.OnReplace := DoReplace;
+  end;
+  if not Assigned(FSearchEngine) then
+  begin
+    FSearchEngine := TSynEditSearch.Create(Self);
+    DBSynEdit1.SearchEngine := FSearchEngine;
+    syndtEstructura.SearchEngine := FSearchEngine;
+  end;
+  CrearMenuContextual;
   DBSynEdit1.WantTabs := True;
   syndtEstructura.WantTabs := True;
   DBSynEdit1.WantReturns := True;
@@ -770,6 +1031,31 @@ begin
   syndtEstructura.OnExit  := EditorExit;
   DBSynEdit1.Visible := True;
   syndtEstructura.Visible := True;
+
+  if DBsynEdit1.CanFocus then
+    DBsynEdit1.SetFocus;
+
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+F');
+    OnExecute := ActionBuscarExecute;
+  end;
+
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+R');
+    OnExecute := ActionReemplazarExecute;
+  end;
+
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+Shift+F');
+    OnExecute := ActionBuscarGlobalExecute;
+  end;
+
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
 end;
