@@ -36,25 +36,20 @@ type
     NombrePropiedad : string;
     TipoValor       : TTipoValorProp;
     EsRequerido     : Boolean;
-    // Valor actual
-    IdValorPV       : Integer;    // tipo LISTA
-    ValorLibre      : string;     // tipos TEXTO, NUMERO, BOOLEANO
-    // Control visual
+    IdValorPV       : Integer;
+    ValorLibre      : string;
     Ctrl            : TControl;
-    // Solo para LISTA: ID → Texto
     Opciones        : TDictionary<Integer, string>;
-    // Marcado para eliminar
     Eliminar        : Boolean;
+    OriginalIdValorPV : Integer;
+    OriginalValorLibre: string;
   end;
 
-  { Diálogo selector de propiedades disponibles }
   TfrmSelPropiedades = class(TFrmModalAceptCancel)
   private
     FConexion       : TUniConnection;
     FExcluirCodigos : TStringList;
     FListBox        : TListBox;
-//    FBtnAceptar     : TcxButton;
-//    FBtnCancelar    : TcxButton;
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -67,11 +62,10 @@ type
     function IsShortCut(var Message: TWMKey): Boolean; override;
   end;
 
-  { Gestor principal — instanciar uno por formulario de artículo }
   TGestorPropiedades = class
   private
     FConexion       : TUniConnection;
-    FScrollBox      : TScrollBox;     // panel contenedor en tsPropiedades
+    FScrollBox      : TScrollBox;
     FCodigoArticulo : string;
     FUsuario        : string;
     FSlots          : TList<TSlotProp>;
@@ -80,48 +74,31 @@ type
     function  TipoDesdeCadena(const s: string): TTipoValorProp;
     procedure LimpiarControles;
     procedure ReconstruirVista;
-
-    // Creación de controles por tipo
     procedure CrearFilaLista      (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaTexto      (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaNumero     (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaBooleano   (var S: TSlotProp; ATop: Integer);
     procedure CrearBtnEliminar    (SlotIdx: Integer; ATop: Integer);
-
     procedure BtnEliminarClick(Sender: TObject);
-
     procedure UpsertSlot(const S: TSlotProp);
     procedure DeleteSlot(const CodigoPropiedad: string);
-
     function IndexOfCodigo(const Cod: string): Integer;
   public
     constructor Create(AScrollBox: TScrollBox;
                        AConexion: TUniConnection;
                        const AUsuario: string);
     destructor Destroy; override;
-
-    { Carga las propiedades ya asignadas al artículo }
     procedure CargarPropiedades(const CodigoArticulo: string);
     procedure CargarPropiedadesPorFamilia(const CodigoFamilia: string);
-    { Añade propiedades seleccionadas por el usuario desde el diálogo }
     procedure AbrirSelectorPropiedades;
-
-    { Persiste todos los cambios pendientes; llamar desde btnGrabarClick }
     function GuardarPropiedades: Boolean;
-
-    { Validación: devuelve '' si OK, mensaje de error si hay requeridos vacíos }
     function Validar: string;
-
     property Modificado: Boolean read FModificado;
   end;
 
 implementation
 
-{ ═══════════════════════════════════════════════════════════════════════════ }
-
 uses uGenericIfThen;
-{ Constantes de layout                                                        }
-{ ═══════════════════════════════════════════════════════════════════════════ }
 
 const
   ALTO_FILA      = 26;
@@ -132,10 +109,6 @@ const
   ANCHO_BTN_DEL  = 24;
   COLOR_REQUERIDO = clMaroon;
 
-{ ═══════════════════════════════════════════════════════════════════════════ }
-{ TfrmSelPropiedades                                                          }
-{ ═══════════════════════════════════════════════════════════════════════════ }
-
 constructor TfrmSelPropiedades.Create(AOwner: TComponent;
   AConexion: TUniConnection; AExcluir: TStringList);
 var
@@ -145,14 +118,12 @@ begin
   FConexion       := AConexion;
   FExcluirCodigos := AExcluir;
   CodigosSeleccionados := TStringList.Create;
-
   Caption    := 'Añadir propiedades al artículo';
   Width      := 542;
   Height     := 400;
   Position   := poOwnerFormCenter;
   BorderStyle:= bsDialog;
   Font.name := 'Lucida Sans';
-
   FListBox := TListBox.Create(Self);
   FListBox.Parent      := pnlBody;
   FListBox.Align       := alClient;
@@ -161,10 +132,8 @@ begin
   FListBox.ItemHeight  := 22;
   FListBox.BorderStyle := bsNone;
   FListBox.ParentFont := True;
-
   if Assigned(btnAceptar) then
     btnAceptar.OnClick := BtnAceptarClick;
-
   if Assigned(btnCancelar) then
     btnCancelar.OnClick := BtnCancelarClick;
 //  pnlBtn := TPanel.Create(Self);
@@ -407,6 +376,8 @@ begin
       S.EsRequerido     := q.FieldByName('ES_REQUERIDO').AsString = 'S';
       S.IdValorPV       := q.FieldByName('ID_VALOR_PV').AsInteger;
       S.ValorLibre      := q.FieldByName('VALOR_LIBRE').AsString;
+      S.OriginalIdValorPV  := S.IdValorPV;
+      S.OriginalValorLibre := S.ValorLibre;
       S.Ctrl            := nil;
       S.Opciones        := nil;
       S.Eliminar        := False;
@@ -463,9 +434,6 @@ var
 begin
   if CodigoFamilia = '' then Exit;
 
-  // 1. SINCRONIZAR PANTALLA -> MEMORIA
-  // Guardamos lo que el usuario haya escrito en los controles visuales
-  // para no perderlo ni evaluarlo mal.
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
@@ -491,15 +459,14 @@ begin
           else
             S.ValorLibre := 'N';
       end;
+      S.OriginalIdValorPV  := S.IdValorPV;
+      S.OriginalValorLibre := S.ValorLibre;
     end;
     FSlots[i] := S;
   end;
-
-  // 2. MARCAR PARA ELIMINAR SOLO LAS QUE ESTÉN VACÍAS
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
-
     EstaVacia := False;
     case S.TipoValor of
       tvpLista:      EstaVacia := (S.IdValorPV <= 0);
@@ -508,17 +475,11 @@ begin
       tvpBooleano:   EstaVacia := (S.ValorLibre <> 'S') and
                                                           (S.ValorLibre <> '1');
     end;
-
     if EstaVacia then
       S.Eliminar := True;
-      // Si tiene datos (EstaVacia = False), NO tocamos S.Eliminar,
-      // por lo que sobrevive al cambio de familia.
-
     FSlots[i] := S;
   end;
   FModificado := True;
-
-  // 3. CARGAR LAS PROPIEDADES DE LA NUEVA FAMILIA
   qProp := TUniQuery.Create(nil);
   qOpc  := TUniQuery.Create(nil);
   try
@@ -553,6 +514,8 @@ begin
         S.EsRequerido     := qProp.FieldByName('ES_REQUERIDO').AsString = 'S';
         S.IdValorPV       := 0;
         S.ValorLibre      := '';
+        S.OriginalIdValorPV  := S.IdValorPV;
+        S.OriginalValorLibre := S.ValorLibre;
         S.Ctrl            := nil;
         S.Opciones        := nil;
         S.Eliminar        := False;
@@ -835,6 +798,8 @@ begin
           S.EsRequerido     := False;
           S.IdValorPV       := 0;
           S.ValorLibre      := '';
+          S.OriginalIdValorPV  := S.IdValorPV;
+          S.OriginalValorLibre := S.ValorLibre;
           S.Ctrl            := nil;
           S.Opciones        := nil;
           S.Eliminar        := False;
@@ -943,10 +908,17 @@ begin
       tvpBooleano:
       begin
         S.IdValorPV  := 0;
-        S.ValorLibre := TGenUtils.IfThen<String>((S.Ctrl as TcxCheckBox).Checked, 'S', 'N');
+        S.ValorLibre :=
+            TGenUtils.IfThen<String>((S.Ctrl as TcxCheckBox).Checked, 'S', 'N');
       end;
     end;
-    UpsertSlot(S);
+    if (S.IdValorPV <> S.OriginalIdValorPV) or
+       (S.ValorLibre <> S.OriginalValorLibre) then
+    begin
+      UpsertSlot(S);
+      S.OriginalIdValorPV  := S.IdValorPV;
+      S.OriginalValorLibre := S.ValorLibre;
+    end;
     FSlots[i] := S;
   end;
   FModificado := False;

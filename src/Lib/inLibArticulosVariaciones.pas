@@ -517,20 +517,10 @@ begin
 //  end;
 end;
 
-{ ══════════════════════════════════════════════════════════════════════════ }
-{ Validación                                                                 }
-{ ══════════════════════════════════════════════════════════════════════════ }
-
 function TGestorVariaciones.Validar: string;
 begin
   Result := '';
-  // Aquí se podría validar que todos los atributos tengan conjunto asignado
-  // si se considera obligatorio. De momento sin restricción.
 end;
-
-{ ══════════════════════════════════════════════════════════════════════════ }
-{ Guardado                                                                   }
-{ ══════════════════════════════════════════════════════════════════════════ }
 
 function TGestorVariaciones.GuardarVariaciones: Boolean;
 var
@@ -545,9 +535,14 @@ begin
     if not Assigned(S.Ctrl) then Continue;
     NuevoId := Integer(NativeInt(S.Ctrl.Properties.Items.Objects[
                                                             S.Ctrl.ItemIndex]));
-    BorrarConjunto(S.IdAtributo);
-    if NuevoId > 0 then
-      UpsertConjunto(S);
+    if NuevoId <> S.IdConjunto then
+    begin
+      BorrarConjunto(S.IdAtributo);
+      if NuevoId > 0 then
+        UpsertConjunto(S);
+      S.IdConjunto := NuevoId;
+      FSlotsVar[i] := S;
+    end;
   end;
   FModificado := False;
   Result := True;
