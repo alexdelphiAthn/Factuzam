@@ -1,14 +1,14 @@
 inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   Caption = 'Generar SKUS'
-  ClientHeight = 477
-  ClientWidth = 730
+  ClientHeight = 485
+  ClientWidth = 732
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 748
   ExplicitHeight = 524
   TextHeight = 19
   inherited pnlButton: TPanel
-    Top = 418
-    Width = 730
+    Top = 426
+    Width = 732
     StyleElements = [seFont, seClient, seBorder]
     ExplicitTop = 418
     ExplicitWidth = 730
@@ -37,9 +37,11 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     end
   end
   inherited pnlBody: TPanel
-    Width = 730
-    Height = 418
+    Width = 732
+    Height = 426
     StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 0
+    ExplicitTop = 0
     ExplicitWidth = 730
     ExplicitHeight = 418
     object pnlBodyCab: TPanel
@@ -117,9 +119,11 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_ATRIBUTO_AC'
+            Visible = False
           end
           object tvDetalleID_CONJUNTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_CONJUNTO_AC'
+            Visible = False
             Width = 167
           end
           object tvDetalleNOMBRE_AC: TcxGridDBColumn
@@ -137,6 +141,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           end
           object tvDetalleID_ATRIBUTO_VA: TcxGridDBColumn
             DataBinding.FieldName = 'ID_ATRIBUTO_VA'
+            Visible = False
           end
           object tvDetalleORDEN_AV: TcxGridDBColumn
             Caption = 'Orden'
