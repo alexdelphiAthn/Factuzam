@@ -575,11 +575,6 @@ begin
       end;
     end;
   end;
-  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
-       (dmmArticulos.unqryTablaG.State = dsEdit)) then
-  begin
-    dmmArticulos.unqryTablaG.Post;
-  end;
   if ( (dmmArticulos.unqryProveedoresArticulos.State = dsInsert) or
        (dmmArticulos.unqryProveedoresArticulos.State = dsEdit)) then
   begin
@@ -589,6 +584,11 @@ begin
        (dmmArticulos.unqryTarifasArticulos.State = dsEdit)) then
   begin
     dmmArticulos.unqryTarifasArticulos.Post;
+  end;
+  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
+       (dmmArticulos.unqryTablaG.State = dsEdit)) then
+  begin
+    dmmArticulos.unqryTablaG.Post;
   end;
   if Assigned(FGestorVar) then
   try
@@ -656,6 +656,7 @@ begin
         FieldByName('FECHA_DESDE_TARIFA').AsDateTime := Now;
         FieldByName('PRECIOSALIDA_TARIFA').AsInteger := 0;
         FieldByName('PRECIOFINAL_TARIFA').AsInteger := 0;
+        FieldByName('CODIGO_UNIDAD_TARIFA').AsString := '';
         Post;
         bAdded := True;
       end;

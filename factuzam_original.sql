@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 28/03/2026 18:16:26
+-- Backup generado: 29/03/2026 5:50:58
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -152,12 +152,12 @@ ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_CONJUNTO` (`CODIG
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('DEMO-CAMISA', 2, 'CO', 'S', '2026-03-28 17:34:50', '2026-03-28 17:34:50', 'Administrador', 'Administrador'),
-  ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-28 17:34:50', '2026-03-28 17:34:50', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 2, 'CO', 'S', '2026-03-29 05:47:53', '2026-03-29 05:47:53', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-29 05:47:53', '2026-03-29 05:47:53', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 9004, 'CO', 'S', '2026-03-28 18:04:49', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 1, 'TAL', 'S', '2026-03-28 16:40:58', '2026-03-27 07:34:44', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 2, 'CO', 'S', '2026-03-28 18:57:09', '2026-03-28 18:57:09', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 1, 'TAL', 'S', '2026-03-28 18:57:09', '2026-03-28 18:57:09', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 1, 'CO', 'S', '2026-03-26 17:54:27', '2026-03-26 17:54:27', 'Administrador', 'Administrador'),
   ('ZAP-BOTA-MT', 2, 'TAL', 'S', '2026-03-26 18:09:58', '2026-03-26 18:09:58', 'Administrador', 'Administrador'),
   ('ZAP-OXFORD', 1, 'CO', 'S', '2026-03-22 20:30:18', '2026-03-22 20:30:18', 'Administrador', 'Administrador'),
@@ -371,6 +371,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`, 
   ('000', '016', NULL, 2, NULL, 'S', '2025-04-12 16:27:40', '2024-10-06 20:27:00', 'Administrador', 'Administrador', NULL),
   ('000', 'MANO', NULL, 2, NULL, 'S', '2025-04-18 12:05:44', '2025-04-18 12:05:44', 'Administrador', 'Administrador', NULL),
   ('000', 'MANODEOBRA', NULL, 2, NULL, 'S', '2025-04-18 12:04:33', '2025-04-18 12:04:33', 'Administrador', 'Administrador', NULL),
+  ('010', 'DEMO-CAMISA', NULL, 1, '2025-12-25 00:00:00', 'S', '2026-03-29 05:28:38', '2026-03-29 05:28:38', 'Administrador', 'Administrador', NULL),
   ('010', 'PAÑITOS', NULL, 1, NULL, 'S', '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador', NULL),
   ('10', '016', NULL, 3, NULL, 'N', '2024-10-06 20:13:41', '2024-10-06 20:13:41', 'Administrador', 'Administrador', NULL),
   ('10', 'CEBADA', NULL, 0.08, '2023-03-16 00:00:00', 'S', '2023-11-04 17:27:48', '2023-03-16 15:34:56', 'Administrador', 'Administrador', NULL),
@@ -382,7 +383,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR`, 
   ('FER', '016', NULL, 25, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador', NULL),
   ('LAIBENSE', 'PATITORICO', NULL, 1.5, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador', NULL),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador', NULL);
--- 16 registros exportados
+-- 17 registros exportados
 
 
 -- Tabla: fza_articulos_skus
@@ -473,6 +474,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('VEST-FLOR/AZUL/L', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/AZUL/M', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/AZUL/S', 'VEST-FLOR', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('VEST-FLOR/AZUL/XXL', 'VEST-FLOR', 'TC', 'S', '2026-03-28 19:22:37', '2026-03-28 19:22:37', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/BONIATO/L', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/BONIATO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:35:19', '2026-03-27 07:35:19', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/BONIATO/XL', 'VEST-FLOR', 'TC', 'S', '2026-03-27 07:36:02', '2026-03-27 07:36:02', 'SISTEMA', 'SISTEMA'),
@@ -501,7 +503,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 99 registros exportados
+-- 100 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -559,6 +561,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 4, '2026-02-22 06:13:04', 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 3, '2026-01-08 18:34:30', 0, 0),
   ('GEN', 'CINTURON-PIEL', '', NULL, 16, '2026-02-17 06:21:32', 144, 9),
+  ('GEN', 'DEMO-CAMISA/NEGRO/L', '', NULL, 10, '2026-03-28 19:26:38', 10, 1),
   ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 15, '2026-01-08 18:34:03', 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/M', '', NULL, 18, '2026-02-22 06:13:04', 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/S', '', NULL, 0, '2026-03-07 08:00:00', 0, 0),
@@ -612,7 +615,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'ZAP-TACÓN/NEGRO/40', '', NULL, 5, '2026-02-22 06:13:04', 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-01-08 18:34:22', 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/38', '', NULL, 7, '2026-02-22 06:13:04', 0, 0);
--- 91 registros exportados
+-- 92 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -687,9 +690,10 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ARTICULO_TARIFA`, `CODIGO_UNICO_TAR
   ('LEGGING-SPORT', 44, '', 'VENTAMAYOR', 'S', 12.5, 12.5, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('MOCHILA-SPORT', 45, '', 'VENTAMAYOR', 'S', 25, 25, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('CINTURON-PIEL', 46, '', 'VENTAMAYOR', 'S', 14, 14, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
-  ('SOMBRERO-PJM', 47, '', 'VENTAMAYOR', 'S', 22, 22, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
+  ('SOMBRERO-PJM', 47, '', 'VENTAMAYOR', 'S', 22, 22, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  ('DEMO-CAMISA', 48, '', 'PVP', 'S', 10, 10, NULL, NULL, '2026-03-29 00:00:00', NULL, '2026-03-29 05:47:38', '2026-03-29 05:47:38', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 47 registros exportados
+-- 48 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -751,11 +755,9 @@ ALTER TABLE `fza_atributos_conjuntos` ADD INDEX `IDX_VAR_AC` (`ID_VARIACION_AC`)
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
 INSERT INTO `fza_atributos_conjuntos` (`ID_CONJUNTO_AC`, `NOMBRE_AC`, `ID_VARIACION_AC`, `ID_ATRIBUTO_AC`, `ESACTIVO_AC`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   (1, 'Tallas Hombre Standard', 'TC', 'TAL', 'S', '2026-03-28 16:55:24', NULL, '', ''),
-  (2, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-28 16:55:25', NULL, '', ''),
-  (9003, 'Colores Básicos Verano (VEST-FLOR)', 'TC', 'CO', 'S', '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9004, 'Colores Básicos Verano (VEST-FLOR) (VEST-FLOR)', 'TC', 'CO', 'S', '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA');
+  (2, 'Colores Básicos Verano', 'TC', 'CO', 'S', '2026-03-28 16:55:25', NULL, '', '');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
--- 4 registros exportados
+-- 2 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos_det
@@ -783,21 +785,8 @@ INSERT INTO `fza_atributos_conjuntos_det` (`ID_CONJUNTO_ACD`, `ID_VALOR_ACD`, `O
   (2, 9202, 20, '2026-03-28 17:27:20', NULL, '', ''),
   (2, 9203, 30, '2026-03-28 17:27:20', NULL, '', ''),
   (2, 9204, 40, '2026-03-28 17:27:20', NULL, '', ''),
-  (2, 9207, 50, '2026-03-28 17:27:21', NULL, '', ''),
-  (9003, 9201, 10, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9003, 9202, 20, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9003, 9203, 30, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9003, 9204, 40, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9003, 9207, 50, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9003, 9208, 100, '2026-03-28 18:01:09', '2026-03-28 18:01:09', 'SISTEMA', 'SISTEMA'),
-  (9004, 9201, 10, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9202, 20, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9203, 30, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9204, 40, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9207, 50, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9208, 100, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA'),
-  (9004, 9209, 100, '2026-03-28 18:04:49', '2026-03-28 18:04:49', 'SISTEMA', 'SISTEMA');
--- 22 registros exportados
+  (2, 9207, 50, '2026-03-28 17:27:21', NULL, '', '');
+-- 9 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -882,6 +871,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('DEMO-CAMISA/AMARILLO/XL', 9104, '2026-03-27 07:36:52', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/XL', 9204, '2026-03-27 07:36:52', NULL, '', ''),
+  ('DEMO-CAMISA/AZULMARINO/L', 9103, '2026-03-28 19:35:03', NULL, '', ''),
+  ('DEMO-CAMISA/AZULMARINO/L', 9203, '2026-03-28 19:35:03', NULL, '', ''),
   ('DEMO-CAMISA/BLANCO/L', 9103, '2026-03-27 07:25:37', NULL, '', ''),
   ('DEMO-CAMISA/BLANCO/L', 9201, '2026-03-27 07:25:37', NULL, '', ''),
   ('DEMO-CAMISA/COLORAO/L', 9103, '2026-03-27 07:32:34', NULL, '', ''),
@@ -958,6 +949,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('VEST-FLOR/AZUL/M', 218, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/AZUL/S', 110, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/AZUL/S', 218, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('VEST-FLOR/AZUL/XXL', 218, '2026-03-28 19:22:37', NULL, '', ''),
+  ('VEST-FLOR/AZUL/XXL', 9210, '2026-03-28 19:22:37', NULL, '', ''),
   ('VEST-FLOR/BONIATO/L', 9103, '2026-03-27 07:35:19', NULL, '', ''),
   ('VEST-FLOR/BONIATO/L', 9207, '2026-03-27 07:35:19', NULL, '', ''),
   ('VEST-FLOR/BONIATO/M', 9102, '2026-03-27 07:35:19', NULL, '', ''),
@@ -1014,7 +1007,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 198 registros exportados
+-- 202 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -1069,21 +1062,22 @@ INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `ORD
   (225, 'TAL', '40', 0, 'Talla 40', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   (226, 'TAL', '44', 0, 'Talla 44', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
   (227, 'TAL', '39', 0, 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
-  (9101, '', 'S', 10, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:13', NULL, '', ''),
-  (9102, '', 'M', 20, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:15', NULL, '', ''),
-  (9103, '', 'L', 30, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:16', NULL, '', ''),
-  (9104, '', 'XL', 40, NULL, 'S', 1, NULL, NULL, '2026-03-28 17:34:18', NULL, '', ''),
-  (9201, '', 'BLANCO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9202, '', 'NEGRO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
-  (9203, '', 'AZUL MARINO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-26 19:12:40', NULL, '', ''),
+  (9101, 'TAL', 'S', 10, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:10', NULL, '', ''),
+  (9102, 'TAL', 'M', 20, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:05', NULL, '', ''),
+  (9103, 'TAL', 'L', 30, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:03', NULL, '', ''),
+  (9104, 'TAL', 'XL', 40, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:59', NULL, '', ''),
+  (9201, 'CO', 'BLANCO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:53', NULL, '', ''),
+  (9202, 'CO', 'NEGRO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:47', NULL, '', ''),
+  (9203, 'CO', 'AZUL MARINO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:41', NULL, '', ''),
   (9204, 'CO', 'AMARILLO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
   (9205, 'CO', 'CACAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
   (9206, 'CO', 'COLORAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
   (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA'),
   (9208, 'CO', 'FUCSIA', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:01:00', '2026-03-28 18:01:00', 'SISTEMA', 'SISTEMA'),
-  (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:04:43', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA');
+  (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:04:43', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA'),
+  (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, '2026-03-28 19:22:26', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 41 registros exportados
+-- 42 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -1421,7 +1415,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 60, 3, 'S', 'S', '2026-03-28 17:18:24', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 63, 3, 'S', 'S', '2026-03-29 05:46:52', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -3397,8 +3391,206 @@ ORDER BY atr.ORDEN_VA, val.ORDEN_AV', '2026-03-28 17:06:57', '2026-03-28 16:57:0
    AND asign.CODIGO_ARTICULO_ACA = ''DEMO-CAMISA''
   JOIN fza_atributos_conjuntos_det det 
     ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA 
-  JOIN fza_atributos_valores val     ON val.ID_VALOR_AV = det.ID_VALOR_ACD ', '2026-03-28 17:24:25', '2026-03-28 17:18:24', 'Administrador', 'Administrador');
--- 30 registros exportados
+  JOIN fza_atributos_valores val     ON val.ID_VALOR_AV = det.ID_VALOR_ACD ', '2026-03-28 17:24:25', '2026-03-28 17:18:24', 'Administrador', 'Administrador'),
+  ('060', NULL, 'SELECT VALOR_AV 
+FROM fza_atributos_valores 
+WHERE ID_VALOR_AV IN (9101, 9102, 9103, 9104);', '2026-03-28 19:13:16', '2026-03-28 19:10:53', 'Administrador', 'Administrador'),
+  ('061', 'Modificar PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', 'DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
+BEGIN    
+    DECLARE v_codigo_articulo VARCHAR(20);
+    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
+    
+    /* Variables para las COLUMNAS (Pivot - Ej: Talla) */
+    DECLARE v_id_atributo_pivot VARCHAR(20);
+    DECLARE v_nombre_atributo_pivot VARCHAR(50);
+    DECLARE v_columnas_dinamicas TEXT;
+    
+    /* Variables para las FILAS (Desglose - Ej: Color) */
+    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
+    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
+    DECLARE v_select_fila TEXT DEFAULT '''';
+    DECLARE v_join_fila TEXT DEFAULT '''';
+    DECLARE v_groupby_fila TEXT DEFAULT '''';
+    DECLARE v_src_select_fila TEXT DEFAULT '''';
+    
+    DECLARE v_filtros_fijos TEXT DEFAULT '''';
+    DECLARE v_sql_query TEXT;
+
+    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
+    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
+    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
+
+    IF v_codigo_articulo IS NULL THEN        
+        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
+        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
+        
+        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
+    END IF;
+
+    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
+    IF v_codigo_articulo IS NOT NULL THEN        
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
+        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
+        ORDER BY va.ORDEN_VA DESC        
+        LIMIT 1;
+    END IF;
+
+    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
+    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
+        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
+        INTO v_id_atributo_fila, v_nombre_atributo_fila
+        FROM fza_articulos_skus sk
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
+        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
+          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
+        ORDER BY va.ORDEN_VA ASC
+        LIMIT 1;
+    END IF;
+
+    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
+    IF v_id_atributo_pivot IS NOT NULL THEN        
+        
+        /* Preparamos los textos dinámicos para desglosar el Color en filas */
+        IF v_id_atributo_fila IS NOT NULL THEN
+            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
+            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
+            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
+            SET v_groupby_fila = '', src.VALOR_FILA'';
+        END IF;
+
+        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
+        SELECT GROUP_CONCAT(DISTINCT            
+            CONCAT(
+                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
+                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
+            )
+            ORDER BY av.ID_VALOR_AV        
+        ) INTO v_columnas_dinamicas        
+        FROM fza_articulos_skus sk        
+        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
+        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
+        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
+          AND av.ID_VA_AV = v_id_atributo_pivot;
+
+        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
+        IF v_es_sku = TRUE THEN            
+            SELECT GROUP_CONCAT(
+                CONCAT(
+                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
+                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
+                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
+                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
+                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
+                ) SEPARATOR '' ''            
+            ) INTO v_filtros_fijos            
+            FROM fza_atributos_sku ask            
+            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
+            WHERE ask.CODIGO_UNIDAD_SA = p_input 
+              AND av.ID_VA_AV <> v_id_atributo_pivot;
+        END IF;
+        
+        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
+
+        /* QUERY FINAL: Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
+        SET @sql = CONCAT(
+            ''SELECT 
+                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
+                v_select_fila, '', '',
+                v_columnas_dinamicas, '',
+                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
+             FROM fza_almacenes alm
+             LEFT JOIN (
+                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
+                FROM fza_articulos_stockactual stk
+                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
+                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
+                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
+                v_join_fila, ''
+                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
+                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
+                  v_filtros_fijos, ''
+             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
+             WHERE alm.ESACTIVO_ALM = ''''S'''' 
+             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
+             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
+        );
+
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    ELSE        
+        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
+        SELECT 
+            alm.NOMBRE_ALMACEN_ALM as Almacen, 
+            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
+        FROM fza_almacenes alm        
+        LEFT JOIN fza_articulos_stockactual stk 
+            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
+            AND stk.CODIGO_UNIDAD_STK = p_input 
+        WHERE alm.ESACTIVO_ALM = ''S''        
+        GROUP BY alm.NOMBRE_ALMACEN_ALM        
+        ORDER BY alm.NOMBRE_ALMACEN_ALM;
+        
+    END IF;
+END ;;
+DELIMITER ;
+', '2026-03-28 19:40:54', '2026-03-28 19:31:41', 'Administrador', 'Administrador'),
+  ('062', 'Modificar vi_articulos_tarifas', 'CREATE OR REPLACE VIEW vi_articulos_tarifas as select
+  fza_articulos_tarifas.CODIGO_UNICO_TARIFA as CODIGO_UNICO_TARIFA,
+  fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA as CODIGO_ARTICULO_TARIFA,
+  fza_articulos_tarifas.CODIGO_UNIDAD_TARIFA as CODIGO_UNIDAD_TARIFA,
+  fza_tarifas.ESIMP_INCL_TARIFA as ESIMP_INCL_TARIFA,
+  fza_tarifas.ESDEFAULT_TARIFA as ESDEFAULT_TARIFA,
+  fza_articulos.DESCRIPCION_ARTICULO as DESCRIPCION_ARTICULO,
+  fza_articulos.TIPO_CANTIDAD_ARTICULO as TIPO_CANTIDAD_ARTICULO,
+  fza_articulos.ESVARIACION_ARTICULO as ESVARIACION_ARTICULO,
+  fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA as TIPO_IVA_ARTICULO,
+  fza_tarifas.ACTIVO_TARIFA as ACTIVO_TARIFA,
+  fza_tarifas.CODIGO_TARIFA as CODIGO_TARIFA,
+  fza_tarifas.NOMBRE_TARIFA as NOMBRE_TARIFA,
+  fza_articulos_tarifas.FECHA_DESDE_TARIFA as FECHA_DESDE_TARIFA,
+  fza_articulos_tarifas.FECHA_HASTA_TARIFA as FECHA_HASTA_TARIFA,
+  fza_articulos_tarifas.PRECIOFINAL_TARIFA as PRECIOFINAL_TARIFA,
+  fza_articulos_tarifas.PRECIOSALIDA_TARIFA as PRECIOSALIDA_TARIFA,
+  fza_articulos_tarifas.PORCEN_DTO_TARIFA as PORCEN_DTO_TARIFA,
+  fza_articulos_tarifas.PRECIO_DTO_TARIFA as PRECIO_DTO_TARIFA,
+  fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR as CODIGO_PROVEEDOR,
+  fza_proveedores.RAZONSOCIAL_PROVEEDOR as RAZONSOCIAL_PROVEEDOR,
+  fza_articulos_proveedores.PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR as PRECIO_ULT_COMPRA,
+  fza_articulos_proveedores.FECHA_VALIDEZ_ARTICULO_PROVEEDOR as FECHA_VALIDEZ,
+  fza_articulos.CODIGO_FAMILIA_ARTICULO as CODIGO_FAMILIA_ARTICULO,
+  fza_articulos_familias.DESCRIPCION_FAMILIA as DESCRIPCION_FAMILIA,
+  fza_articulos_tarifas.INSTANTEMODIF, 
+  fza_articulos_tarifas.INSTANTEALTA, 
+  fza_articulos_tarifas.USUARIOALTA, 
+  fza_articulos_tarifas.USUARIOMODIF,
+  (select
+  count(distinct va.ID_ATRIBUTO_VA)
+from
+  fza_articulos_skus sk
+  join fza_variaciones_atributos va on (sk.CODIGO_VAR_SKU = va.ID_VA)
+where
+  sk.CODIGO_ARTICULO_SKU = fza_articulos.CODIGO_ARTICULO) as NUM_ATRIBUTOS_REQ
+from
+  fza_articulos_tarifas
+  left join fza_articulos_proveedores on ((fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos_proveedores.CODIGO_ARTICULO_ARTICULO_PROVEEDOR) and (fza_articulos_proveedores.ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = ''S''))
+  left join fza_tarifas on (fza_tarifas.CODIGO_TARIFA = fza_articulos_tarifas.CODIGO_TARIFA)
+  left join fza_articulos on (fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA = fza_articulos.CODIGO_ARTICULO)
+  left join fza_articulos_familias on (fza_articulos.CODIGO_FAMILIA_ARTICULO = fza_articulos_familias.CODIGO_FAMILIA)
+  left join fza_proveedores on (fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR)
+  left join fza_ivas_tipos on (fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA)
+order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-29 05:46:52', '2026-03-29 05:46:52', 'Administrador', 'Administrador');
+-- 33 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4576,7 +4768,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-28 18:04:17', '2026-03-28 18:04:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-29 05:50:49', '2026-03-29 05:50:49', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -6107,7 +6299,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_UNIDAD_TARIFA` AS `CODIGO_UNIDAD_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO`) AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `fza_articulos_tarifas`.`CODIGO_UNICO_TARIFA` AS `CODIGO_UNICO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` AS `CODIGO_ARTICULO_TARIFA`,`fza_articulos_tarifas`.`CODIGO_UNIDAD_TARIFA` AS `CODIGO_UNIDAD_TARIFA`,`fza_tarifas`.`ESIMP_INCL_TARIFA` AS `ESIMP_INCL_TARIFA`,`fza_tarifas`.`ESDEFAULT_TARIFA` AS `ESDEFAULT_TARIFA`,`fza_articulos`.`DESCRIPCION_ARTICULO` AS `DESCRIPCION_ARTICULO`,`fza_articulos`.`TIPO_CANTIDAD_ARTICULO` AS `TIPO_CANTIDAD_ARTICULO`,`fza_articulos`.`ESVARIACION_ARTICULO` AS `ESVARIACION_ARTICULO`,`fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA` AS `TIPO_IVA_ARTICULO`,`fza_tarifas`.`ACTIVO_TARIFA` AS `ACTIVO_TARIFA`,`fza_tarifas`.`CODIGO_TARIFA` AS `CODIGO_TARIFA`,`fza_tarifas`.`NOMBRE_TARIFA` AS `NOMBRE_TARIFA`,`fza_articulos_tarifas`.`FECHA_DESDE_TARIFA` AS `FECHA_DESDE_TARIFA`,`fza_articulos_tarifas`.`FECHA_HASTA_TARIFA` AS `FECHA_HASTA_TARIFA`,`fza_articulos_tarifas`.`PRECIOFINAL_TARIFA` AS `PRECIOFINAL_TARIFA`,`fza_articulos_tarifas`.`PRECIOSALIDA_TARIFA` AS `PRECIOSALIDA_TARIFA`,`fza_articulos_tarifas`.`PORCEN_DTO_TARIFA` AS `PORCEN_DTO_TARIFA`,`fza_articulos_tarifas`.`PRECIO_DTO_TARIFA` AS `PRECIO_DTO_TARIFA`,`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` AS `CODIGO_PROVEEDOR`,`fza_proveedores`.`RAZONSOCIAL_PROVEEDOR` AS `RAZONSOCIAL_PROVEEDOR`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_ARTICULO_PROVEEDOR` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_ARTICULO_PROVEEDOR` AS `FECHA_VALIDEZ`,`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` AS `CODIGO_FAMILIA_ARTICULO`,`fza_articulos_familias`.`DESCRIPCION_FAMILIA` AS `DESCRIPCION_FAMILIA`,`fza_articulos_tarifas`.`INSTANTEMODIF` AS `INSTANTEMODIF`,`fza_articulos_tarifas`.`INSTANTEALTA` AS `INSTANTEALTA`,`fza_articulos_tarifas`.`USUARIOALTA` AS `USUARIOALTA`,`fza_articulos_tarifas`.`USUARIOMODIF` AS `USUARIOMODIF`,(select count(distinct `va`.`ID_ATRIBUTO_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VA`)) where `sk`.`CODIGO_ARTICULO_SKU` = `fza_articulos`.`CODIGO_ARTICULO`) AS `NUM_ATRIBUTOS_REQ` from ((((((`fza_articulos_tarifas` left join `fza_articulos_proveedores` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos_proveedores`.`CODIGO_ARTICULO_ARTICULO_PROVEEDOR` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR` = 'S')) left join `fza_tarifas` on(`fza_tarifas`.`CODIGO_TARIFA` = `fza_articulos_tarifas`.`CODIGO_TARIFA`)) left join `fza_articulos` on(`fza_articulos_tarifas`.`CODIGO_ARTICULO_TARIFA` = `fza_articulos`.`CODIGO_ARTICULO`)) left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAMILIA_ARTICULO` = `fza_articulos_familias`.`CODIGO_FAMILIA`)) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR` = `fza_proveedores`.`CODIGO_PROVEEDOR`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPOIVA_ARTICULO` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_TIPO_IVA`)) order by `fza_tarifas`.`ORDEN_TARIFA`,`fza_articulos`.`ORDEN_ARTICULO`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -9476,4 +9668,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 28/03/2026 18:16:26
+-- Backup completado: 29/03/2026 5:50:59
