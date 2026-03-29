@@ -721,10 +721,10 @@ procedure esCadINI (clave, cadena, valor : string);
 var
    sIniFile:string;
 begin
-  if (SameText(ParamStr(2), '')) then
+  if (SameText(ParamStr(1), '')) then
     sIniFile := ExtractFilePath(ParamStr(0)) + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(2);
+    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(1);
   with tinifile.create (sIniFile) do
   try
     writeString (clave, cadena, valor);
@@ -737,10 +737,10 @@ procedure esCadINIDir (clave, cadena, valor, sDir : string);
 var
    sIniFile:string;
 begin
-  if SameText(ParamStr(3), '') then
+  if SameText(ParamStr(1), '') then
     sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := sDir + ParamStr(3);
+    sIniFile := sDir + ParamStr(1);
   with tinifile.create (sIniFile) do
   try
     writeString (clave, cadena, valor);
@@ -759,11 +759,11 @@ function leCadINI (clave, cadena : string; defecto : string) : string;
 var
   sIniFile:string;
 begin
-  if ParamStr(2) = '' then
+  if ParamStr(1) = '' then
     sIniFile := ExtractFilePath(ParamStr(0)) +
                          FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(2);
+    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(1);
   with tinifile.create (sIniFile) do
   try
     result := readString (clave, cadena, defecto);
@@ -780,10 +780,10 @@ function leCadINIDir (clave, cadena : string;
 var
   sIniFile:string;
 begin
-  if ParamStr(3) = '' then
+  if ParamStr(1) = '' then
     sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := sDir + ParamStr(3);
+    sIniFile := sDir + ParamStr(1);
   with tinifile.create (sIniFile) do
   try
     result := readString (clave, cadena, defecto);
