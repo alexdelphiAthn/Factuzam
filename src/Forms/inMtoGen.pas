@@ -591,26 +591,42 @@ begin
 //        pcPantalla.ActivePage := tsLista;
   end;
   if ((Key = VK_RETURN) and (ActiveControl = nil)) then
-    begin
-      key := 0;
-      SimulateTabKey;
-    end;
+  begin
+    key := 0;
+    SimulateTabKey;
+  end;
   if (dsTablaG.State = dsBrowse) then
   begin
-
     if (Key = VK_PRIOR) then
-       nvNavegador.Buttons.Prior.Click;
-    if (Key = VK_NEXT) then
-       nvNavegador.Buttons.Next.Click;
-    if (Key = VK_INSERT) then
+    begin
+      nvNavegador.Buttons.Prior.Click;
+      Key := 0;
+    end
+    else if (Key = VK_NEXT) then
+    begin
+      nvNavegador.Buttons.Next.Click;
+      Key := 0;
+    end
+    else if (Key = VK_INSERT) then
+    begin
       dsTablaG.DataSet.Insert;
-    if (key = VK_HOME) then
+      Key := 0;
+    end
+    else if (Key = VK_HOME) then
+    begin
       dsTablaG.DataSet.First;
-    if (key = VK_END) then
+      Key := 0;
+    end
+    else if (Key = VK_END) then
+    begin
       dsTablaG.DataSet.Last;
-    if (key = VK_F2) then
+      Key := 0;
+    end
+    else if (Key = VK_F2) then
+    begin
       dsTablaG.DataSet.Edit;
-    key := 0;
+      Key := 0;
+    end;
   end;
   if (key = VK_F12) then
   begin
