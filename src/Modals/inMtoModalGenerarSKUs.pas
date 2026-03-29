@@ -83,26 +83,14 @@ var
   DimActual: TDimensionSKU;
   ValActual: TValorAtributo;
   NuevoNombre, NuevosIds: string;
-
-  // Variables nuevas para la inserción
   CodigoNuevoSKU: string;
   ArrayIds: TArray<string>;
   IdStr: string;
 begin
-  // CONDICIÓN DE PARADA: Hemos llegado al final de las dimensiones
   if Nivel = FDimensiones.Count then
   begin
-    // 1. Fabricamos el código único del SKU (Ej: 'DEMO-CAMISA-M-BLANCO')
-    // Usamos el código del artículo y le pegamos el nombre de la combinación reemplazando ' - ' por '-'
     CodigoNuevoSKU := FCodigoArticulo + '/' + NombreSKU;
-
-    // (Opcional) Si quieres quitar espacios en blanco del código de barras/SKU:
-    CodigoNuevoSKU := StringReplace(CodigoNuevoSKU, ' ', '', [rfReplaceAll]);
-
-    // 2. INSERTAMOS EN LA TABLA MAESTRA DE SKUs
-    // Usamos INSERT IGNORE para que si el usuario le da a "Generar" dos veces y
-    // el SKU ya existía, la BD lo ignore pacíficamente sin dar error.
-// 2. INSERTAMOS EN LA TABLA MAESTRA DE SKUs (Adaptado a tu tabla real)
+//    CodigoNuevoSKU := StringReplace(CodigoNuevoSKU, ' ', '', [rfReplaceAll]);
     unqryMaestro.Connection.ExecSQL(
       'INSERT IGNORE INTO fza_articulos_skus ' +
       '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
@@ -111,8 +99,6 @@ begin
       ' CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')',
       [CodigoNuevoSKU, FCodigoArticulo, FTipoVariacion]
     );
-    // 3. INSERTAMOS EN LA TABLA DETALLE DE ATRIBUTOS (El desglose)
-    // IdsValores trae los IDs separados por punto y coma (ej: '9102;9201')
     ArrayIds := IdsValores.Split([';']);
     for IdStr in ArrayIds do
     begin
@@ -126,28 +112,19 @@ begin
         );
       end;
     end;
-
-    // Salimos porque ya hemos terminado esta rama de la recursividad
     Exit;
   end;
-
-  // =========================================================
-  // EL RESTO DE TU FUNCIÓN SE QUEDA EXACTAMENTE IGUAL
-  // =========================================================
   DimActual := FDimensiones[Nivel];
-
   for ValActual in DimActual.Valores do
   begin
     if NombreSKU = '' then
       NuevoNombre := ValActual.NombreValor
     else
       NuevoNombre := NombreSKU + '/' + ValActual.NombreValor;
-
     if IdsValores = '' then
       NuevosIds := IntToStr(ValActual.IdConjunto)
     else
       NuevosIds := IdsValores + ';' + IntToStr(ValActual.IdConjunto);
-
     GenerarCombinaciones(Nivel + 1, NuevoNombre, NuevosIds);
   end;
 end;
@@ -182,7 +159,7 @@ begin
   unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
   unqryMaestro.Open;
   unqryDetalle.Close;
-unqryDetalle.SQL.Text :=
+  unqryDetalle.SQL.Text :=
     'SELECT ID_ATRIBUTO_VA, MAX(ID_CONJUNTO_AC) AS ID_CONJUNTO_AC, NOMBRE_AC, MIN(ORDEN_AV) AS ORDEN_AV, 0 AS ASIGNADO ' +
     'FROM ( ' +
     '    /* 1. Valores que vienen del conjunto global asignado */ ' +
@@ -207,7 +184,6 @@ unqryDetalle.SQL.Text :=
     ') AS combinados ' +
     'GROUP BY ID_ATRIBUTO_VA, NOMBRE_AC ' +
     'ORDER BY ORDEN_AV';
-  // Asegúrate de que estas tres propiedades están así justo debajo:
   unqryDetalle.Options.LocalMasterDetail := True;
   unqryDetalle.CachedUpdates := True;
   unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
@@ -326,7 +302,7 @@ begin
     qTemp.Open;
     if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0) then
     begin
-      IdConjuntoAsignado := 0; // Marcamos que NO hay conjunto
+      IdConjuntoAsignado := 0;
       NombreConjunto     := '';
     end
     else
@@ -361,7 +337,6 @@ begin
       qTemp.Open;
       IdNuevoValor := qTemp.FieldByName('NUEVO_ID').AsInteger;
     end;
-
     // =========================================================================
     // FASE 3 y 4: LA PREGUNTA Y EL GUARDADO GLOBAL (Depende de si hay conjunto)
     // =========================================================================
@@ -370,20 +345,23 @@ begin
       // TIENE CONJUNTO: Preguntamos si lo quiere global o de usar y tirar
       Respuesta := MessageDlg(
         'Va a utilizar el valor "' + NuevoNombre + '".' + #13#10#13#10 +
-        '¿Desea guardarlo de forma permanente en el conjunto global "' + NombreConjunto + '" ' +
-        'para que aparezca disponible siempre para otros artículos?' + #13#10#13#10 +
+        '¿Desea guardarlo de forma permanente en el conjunto global "' +
+        NombreConjunto + '" ' +
+        'para que aparezca disponible siempre para otros artículos?' +
+        #13#10#13#10 +
         '[SÍ] -> Añadir al conjunto global' + #13#10 +
-        '[NO] -> Usar SOLO ESTA VEZ para generar el SKU (no se guarda en el conjunto)',
+        '[NO] -> Usar SOLO ESTA VEZ para generar el SKU (no se guarda en el' +
+        ' conjunto)',
         mtConfirmation, [mbYes, mbNo, mbCancel], 0);
-
       if Respuesta = mrCancel then Exit;
-
       if Respuesta = mrYes then
       begin
         qTemp.Close;
         qTemp.SQL.Text :=
-          'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
-          'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+          'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ' +
+          'ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+          'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'',' +
+          ' ''SISTEMA'')';
         qTemp.ParamByName('Conj').AsInteger  := IdConjuntoAsignado;
         qTemp.ParamByName('Val').AsInteger   := IdNuevoValor;
         qTemp.ParamByName('Orden').AsInteger := OrdenVal;
@@ -400,14 +378,11 @@ begin
         'pero no se guardará en ninguna lista de conjuntos.' + #13#10#13#10 +
         '¿Desea continuar?',
         mtConfirmation, [mbYes, mbNo], 0);
-
       if Respuesta <> mrYes then Exit;
     end;
-
   finally
     qTemp.Free;
   end;
-
   // =========================================================================
   // FASE 5: INYECCIÓN EN MEMORIA PARA GENERAR EL SKU (Ocurre siempre)
   // =========================================================================
