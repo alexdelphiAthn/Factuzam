@@ -117,11 +117,9 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_ATRIBUTO_AC'
-            Visible = False
           end
           object tvDetalleID_CONJUNTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_CONJUNTO_AC'
-            Visible = False
             Width = 167
           end
           object tvDetalleNOMBRE_AC: TcxGridDBColumn
@@ -139,7 +137,6 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           end
           object tvDetalleID_ATRIBUTO_VA: TcxGridDBColumn
             DataBinding.FieldName = 'ID_ATRIBUTO_VA'
-            Visible = False
           end
           object tvDetalleORDEN_AV: TcxGridDBColumn
             Caption = 'Orden'

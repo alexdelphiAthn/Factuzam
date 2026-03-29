@@ -99,14 +99,15 @@ procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
 begin
   inherited;
   with unqryProveedoresArticulos do
-  if (unqryProveedoresARticulos.State = dsInsert) then
+  if (State = dsInsert) then
     if Trim(FindField('ESPROVEEDORPRINCIPAL').AsString) = 'S' then
     begin
       if (ArticuloTieneProvPrin(FindField('CODIGO_ARTICULO').AsString)) then
+      begin
         raise ERangeError.CreateFmt('%s ya tiene un proveedor principal ' +
-                                    'asociado a este Artículos.',
+                                    'asociado a este artículo.',
                                        [FindField('CODIGO_ARTICULO').AsString]);
-      Abort;
+      end;
     end;
   oDmConn.ActualizarUserTimeModif(DataSet);
 end;
@@ -309,8 +310,8 @@ begin
   inherited;
   with unqryTarifasArticulos do
   begin
-    if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
-      unqryTablaG.Post;
+//    if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
+//      unqryTablaG.Post;
     if State = dsInsert then
     begin
       FieldByName('CODIGO_UNICO_TARIFA').Required := False;

@@ -88,7 +88,7 @@ inherited dmArticulos: TdmArticulos
   object unqryTarifasArticulos: TUniQuery
     KeyFields = 'CODIGO_UNICO_TARIFA'
     SQLInsert.Strings = (
-      'INSERT INTO fza_articulos_tarifas'
+      'INSERT INTO FZA_articulos_tarifas'
       
         '  (CODIGO_ARTICULO_TARIFA, CODIGO_UNICO_TARIFA, CODIGO_UNIDAD_TA' +
         'RIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOSALIDA_TARIFA, PRECIOF' +
@@ -103,11 +103,11 @@ inherited dmArticulos: TdmArticulos
         'HA_DESDE_TARIFA, :FECHA_HASTA_TARIFA, :INSTANTEMODIF, :INSTANTEA' +
         'LTA, :USUARIOALTA, :USUARIOMODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM fza_articulos_tarifas'
+      'DELETE FROM FZA_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA')
     SQLUpdate.Strings = (
-      'UPDATE fza_articulos_tarifas'
+      'UPDATE FZA_articulos_tarifas'
       'SET'
       
         '  CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO_TARIFA, CODIGO_UNICO' +
@@ -127,7 +127,7 @@ inherited dmArticulos: TdmArticulos
         'D_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOSALIDA_TARIFA, PRE' +
         'CIOFINAL_TARIFA, PRECIO_DTO_TARIFA, PORCEN_DTO_TARIFA, FECHA_DES' +
         'DE_TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USUA' +
-        'RIOALTA, USUARIOMODIF FROM fza_articulos_tarifas'
+        'RIOALTA, USUARIOMODIF FROM FZA_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA'
       'FOR UPDATE')
@@ -137,11 +137,11 @@ inherited dmArticulos: TdmArticulos
         'D_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOSALIDA_TARIFA, PRE' +
         'CIOFINAL_TARIFA, PRECIO_DTO_TARIFA, PORCEN_DTO_TARIFA, FECHA_DES' +
         'DE_TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USUA' +
-        'RIOALTA, USUARIOMODIF FROM fza_articulos_tarifas'
+        'RIOALTA, USUARIOMODIF FROM FZA_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_TARIFA = :CODIGO_UNICO_TARIFA')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM fza_articulos_tarifas')
+      'SELECT COUNT(*) FROM FZA_articulos_tarifas')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
@@ -260,7 +260,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'ZAP-OXFORD'
+        Value = 'VEST-FLOR'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -332,7 +332,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'ZAP-OXFORD'
+        Value = 'VEST-FLOR'
       end>
   end
   object dsLinFacturasArticulos: TDataSource
@@ -665,7 +665,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'ZAP-OXFORD'
+        Value = 'VEST-FLOR'
       end>
   end
   object dsVariacionesArticulos: TDataSource
@@ -712,7 +712,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'ZAP-OXFORD'
+        Value = 'VEST-FLOR'
       end>
   end
   object dsMovimientosArticulos: TDataSource
