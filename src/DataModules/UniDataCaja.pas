@@ -246,6 +246,7 @@ type
                                        const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure AnularDepositoCliente(QryTrx:           TUniQuery;
+                                    const ACliente:    string;
                                     const ASku:        string;
                                     const AUsuario:    string;
                                     const AAlmacenTienda:   string;
@@ -679,6 +680,7 @@ var
       (cdsLineas as TClientDataSet).GotoBookmark(Bkm);
     (cdsLineas as TClientDataSet).FreeBookmark(Bkm);
   end;
+
   procedure ProcesarLinea;
   var
     AnticipoPrevio: Currency;
@@ -843,6 +845,7 @@ end;
 // -----------------------------------------------------------------------------
 // NUEVO MÉTODO AUXILIAR — añadir a la sección private de TdmCajaOpe
 // -----------------------------------------------------------------------------
+
 procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
                           ATipoDoc:   string;   // 'VE' venta, 'TR' traspaso
@@ -869,7 +872,6 @@ begin
     '  :ALMCONTRA, :CLI, :PROV,' +
     '  :TIPOMOV, :CANT, :PRECIOMEDIO, :TOTALCOSTE, :USUARIO' +
     ')';
-
   QryTrx.ParamByName('NUMOV').AsString       := ObtenerSiguienteContador('MV');
   QryTrx.ParamByName('TIPODOC').AsString     := ATipoDoc;
   QryTrx.ParamByName('SERIE').AsString       := ASerie;
@@ -879,40 +881,29 @@ begin
   QryTrx.ParamByName('ALM').AsString         := AAlmacen;
   QryTrx.ParamByName('SKU').AsString         := ASku;
   QryTrx.ParamByName('ART').AsString         := AArticulo;
-
   // Tratamiento de nulos para IDs vacíos
   if AAlmContra = '' then
     QryTrx.ParamByName('ALMCONTRA').Clear
   else
     QryTrx.ParamByName('ALMCONTRA').AsString := AAlmContra;
-
   if ACliente = '' then
     QryTrx.ParamByName('CLI').Clear
   else
     QryTrx.ParamByName('CLI').AsString       := ACliente;
-
   // El SP requiere Proveedor, pero no está en los parámetros de la función Delphi.
   // Lo enviamos como NULL por defecto.
   QryTrx.ParamByName('PROV').Clear;
-
   QryTrx.ParamByName('TIPOMOV').AsString     := ATipoMov;
   QryTrx.ParamByName('CANT').AsFloat         := Abs(ACantidad);
-
   // Costes enviados desde la App (el SP los ignorará si es salida 'S')
   QryTrx.ParamByName('PRECIOMEDIO').AsCurrency := ACoste;
   QryTrx.ParamByName('TOTALCOSTE').AsCurrency  := ACoste * Abs(ACantidad);
-
   QryTrx.ParamByName('USUARIO').AsString     := AUsuario;
-
   QryTrx.Execute;
 end;
 
-// -----------------------------------------------------------------------------
-// MODIFICADO: AnularDepositoCliente
-// Firma ampliada con AEmpresa y AArticulo para poder rellenar los movimientos.
-// Actualizar también la llamada correspondiente en GrabarFacturaSimplificada.
-// -----------------------------------------------------------------------------
 procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
+                                           const Acliente:    string;
                                            const ASku:        string;
                                            const AUsuario:    string;
                                            const AAlmacenTienda:   string;
@@ -923,13 +914,14 @@ procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
                                            ACantidad: Double);
 begin
   ImporteADevolver := 0;
-  // 1. Averiguar el anticipo entregado
   QryTrx.SQL.Text :=
     'SELECT IMPORTE_ANTICIPO_DEP ' +
     '  FROM fza_depositos_cliente ' +
     ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
+    '   AND CODIGO_CLIENTE_DEP = :CLIENTE ' +
     '   AND ESTADO_DEP = ''PENDIENTE''';
   QryTrx.ParamByName('SKU').AsString := ASku;
+  QryTrx.ParamByName('CLIENTE').AsString := ACliente;
   QryTrx.Open;
   if not QryTrx.IsEmpty then
     ImporteADevolver := QryTrx.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
@@ -940,9 +932,11 @@ begin
     '   SET ESTADO_DEP   = ''CANCELADO'', ' +
     '       USUARIOMODIF = :USUARIO ' +
     ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
+    '   AND CODIGO_CLIENTE_DEP = :CLIENTE ' +
     '   AND ESTADO_DEP = ''PENDIENTE''';
   QryTrx.ParamByName('USUARIO').AsString := AUsuario;
   QryTrx.ParamByName('SKU').AsString     := ASku;
+  QryTrx.ParamByName('CLIENTE').AsString     := ACliente;
   QryTrx.Execute;
   // 3. Traspaso de stock: Salida del almacén depósito → Entrada a tienda
   //    Coste = 0 en ambos lados: el trigger TRG_MOVIMIENTOS_BI (v2) toma el PMP vigente.
@@ -1013,7 +1007,7 @@ begin
   // 3. Crear registro de depósito llamando al Procedimiento Almacenado
   QryTrx.SQL.Text :=
     'CALL PRC_FZA_DEPOSITOS_INSERT(' +
-    '  :ID_DEP, :EMP, :CLI, :ART, :SKU, :PRECIO, :CANTIDAD, :ANTICIPO,' +
+    '  :ID_DEP, :EMP, :ALM_DEP, :CLI, :ART, :SKU, :PRECIO, :CANTIDAD, :ANTICIPO,' + // <-- Añadido :ALM_DEP
     '  :TIPOIVA, :PORCIVA, :IMPINCL, :USUARIO' +
     ')';
 
@@ -1023,6 +1017,7 @@ begin
   QryTrx.ParamByName('ART').AsString        := AArticulo;
   QryTrx.ParamByName('SKU').AsString        := ASku;
   QryTrx.ParamByName('PRECIO').AsCurrency   := APrecioVenta;
+  QryTrx.ParamByName('ALM_DEP').AsString    := AAlmacenDestino;
   QryTrx.ParamByName('CANTIDAD').AsFloat    := ACantidad;
   QryTrx.ParamByName('ANTICIPO').AsCurrency := AAnticipo;
   QryTrx.ParamByName('TIPOIVA').AsString    := ATipoIVA;
@@ -1305,7 +1300,7 @@ begin
               '', UsuarioCaja);
 
             AnularDepositoCliente(
-              QryTrx,
+              QryTrx, CAB.CodigoCliente,
               Lin.Sku, UsuarioCaja,
               AAlmacen, AlmacenDeposito,
               AEmpresa, Lin.Articulo,
@@ -1395,7 +1390,9 @@ begin
             NumMovGenerado := '';
           if Lin.VieneDeDeposito = 'S' then
           begin
-            AlmacenOrigenSalida := AlmacenDeposito;
+//            AlmacenOrigenSalida := AlmacenDeposito;
+            AlmacenOrigenSalida :=
+                     cdsLineas.FieldByName('ALMACEN_ORIGEN_DEP_LINEA').AsString;
             CerrarDepositoCliente(QryTrx,
                                   Cab.CodigoCliente,
                                   Lin.Sku,
