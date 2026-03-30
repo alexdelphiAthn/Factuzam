@@ -129,7 +129,8 @@ end;
 
 procedure TfrmMtoSearch.FormCreate(Sender: TObject);
 begin
-Self.Position := poScreenCenter;
+  Self.Position := poScreenCenter;
+  Self.KeyPreview := True;
   sUso := 'Busq';
   sFicha := 'N';
   FConfigAlta.Activo := False;
@@ -144,11 +145,9 @@ end;
 procedure TfrmMtoSearch.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  inherited;
   case Key of
     VK_F12:
     begin
-      // Evita que el sistema procese la tecla después de nosotros
       Key := 0;
       btnAceptarClick(Self);
     end;
@@ -158,6 +157,7 @@ begin
       btnCancelarClick(Self);
     end;
   end;
+  inherited;
 end;
 
 function TfrmMtoSearch.MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
@@ -196,7 +196,7 @@ begin
     ControlWidth := 380;    // Ancho grande para llenar la ventana
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
-    lbl.Caption := 'Código:';
+    lbl.Caption := 'Cï¿½digo:';
     lbl.Left := LeftMargin;
     lbl.Top := TopPos;
     lbl.Style.Font.Style := [fsBold]; // Negrita para destacar
@@ -204,12 +204,12 @@ begin
     edtCod.Parent := ScrollBox;
     edtCod.Left := LeftMargin;
     edtCod.Top := TopPos + 20; // 20px debajo de la etiqueta
-    edtCod.Width := 150;       // El código suele ser corto
+    edtCod.Width := 150;       // El cï¿½digo suele ser corto
     edtCod.Text := sCod;
     TopPos := TopPos + 55;
     lbl := TcxLabel.Create(FormAlta);
     lbl.Parent := ScrollBox;
-    lbl.Caption := 'Descripción:';
+    lbl.Caption := 'Descripciï¿½n:';
     lbl.Left := LeftMargin;
     lbl.Top := TopPos;
     lbl.Style.Font.Style := [fsBold];
@@ -335,7 +335,7 @@ begin
       begin
         sCodigoFinal := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
         if sCodigoFinal = '' then
-          raise Exception.Create('No se pudo obtener el contador automático.');
+          raise Exception.Create('No se pudo obtener el contador automï¿½tico.');
       end;
       Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
       Qry.Open;
@@ -371,7 +371,7 @@ begin
       begin
         inLibGlobalVar.oConn.Rollback;
         if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
-        ShowMessage('Error al insertar (se ha cancelado la operación): ' +
+        ShowMessage('Error al insertar (se ha cancelado la operaciï¿½n): ' +
                                                                      E.Message);
         Result := False;
       end;
