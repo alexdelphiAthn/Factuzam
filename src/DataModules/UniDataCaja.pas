@@ -1024,7 +1024,6 @@ begin
   QryTrx.ParamByName('PORCIVA').AsCurrency  := APorcIVA;
   QryTrx.ParamByName('IMPINCL').AsString    := AEsImpIncl;
   QryTrx.ParamByName('USUARIO').AsString    := AUsuario;
-
   QryTrx.Execute;
 end;
 
