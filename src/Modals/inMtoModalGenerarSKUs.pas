@@ -16,13 +16,13 @@ uses
 
 type
   TValorAtributo = record
-    IdConjunto: Integer; // ej: 1004
-    NombreValor: string; // ej: 'XL'
+    IdConjunto: Integer;
+    NombreValor: string;
   end;
 
   TDimensionSKU = class
-    IdAtributo: string;      // ej: 'TAL'
-    NombreAtributo: string;  // ej: 'Talla'
+    IdAtributo: string;
+    NombreAtributo: string;
     Valores: TList<TValorAtributo>;
     constructor Create;
     destructor Destroy; override;
@@ -114,7 +114,6 @@ begin
     end;
     Exit;
   end;
-
   DimActual := FDimensiones[Nivel];
   for ValActual in DimActual.Valores do
   begin
@@ -122,12 +121,10 @@ begin
       NuevoNombre := ValActual.NombreValor
     else
       NuevoNombre := NombreSKU + '/' + ValActual.NombreValor;
-
     if IdsValores = '' then
       NuevosIds := IntToStr(ValActual.IdConjunto)
     else
       NuevosIds := IdsValores + ';' + IntToStr(ValActual.IdConjunto);
-
     GenerarCombinaciones(Nivel + 1, NuevoNombre, NuevosIds);
   end;
 end;
@@ -151,7 +148,6 @@ procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
   unqryMaestro.Connection := oConn;
   unqryDetalle.Connection := oConn;
-
   unqryMaestro.Close;
   unqryMaestro.SQL.Text :=
     'SELECT va.ID_ATRIBUTO_VA, ' +
@@ -162,7 +158,6 @@ begin
     'ORDER BY va.ORDEN_VA';
   unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
   unqryMaestro.Open;
-
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
     'SELECT ID_ATRIBUTO_VA, MAX(ID_CONJUNTO_AC) AS ID_CONJUNTO_AC, ' +
@@ -196,7 +191,6 @@ begin
     ') AS combinados ' +
     'GROUP BY ID_ATRIBUTO_VA, NOMBRE_AC ' +
     'ORDER BY ORDEN_AV';
-
   unqryDetalle.Options.LocalMasterDetail := True;
   unqryDetalle.CachedUpdates := True;
   unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
@@ -204,7 +198,6 @@ begin
   unqryDetalle.MasterSource := dsMaestro;
   unqryDetalle.MasterFields := 'ID_ATRIBUTO_VA';
   unqryDetalle.Open;
-
   unqryDetalle.FieldByName('ASIGNADO').ReadOnly := False;
   unqryDetalle.FieldByName('ID_ATRIBUTO_VA').ReadOnly := False;
   unqryDetalle.FieldByName('ID_CONJUNTO_AC').ReadOnly := False;
@@ -223,11 +216,9 @@ begin
     tvDetalle.DataController.Post;
   if unqryDetalle.State in [dsEdit, dsInsert] then
     unqryDetalle.Post;
-
   if not Assigned(FDimensiones) then
     FDimensiones := TObjectList<TDimensionSKU>.Create(False);
   FDimensiones.Clear;
-
   DimDict := TObjectDictionary<string, TDimensionSKU>.Create([doOwnsValues]);
   try
     BmMaestro := unqryMaestro.GetBookmark;
@@ -242,10 +233,8 @@ begin
           unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
         DimActual.NombreAtributo :=
           unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
-
         DimDict.Add(DimActual.IdAtributo, DimActual);
         FDimensiones.Add(DimActual);
-
         unqryDetalle.First;
         while not unqryDetalle.Eof do
         begin
@@ -268,19 +257,16 @@ begin
       tvDetalle.EndUpdate;
       tvMaestro.EndUpdate;
     end;
-
     for i := FDimensiones.Count - 1 downto 0 do
     begin
       if FDimensiones[i].Valores.Count = 0 then
         FDimensiones.Delete(i);
     end;
-
     if FDimensiones.Count = 0 then
     begin
       ShowMessage('No has marcado ningún valor para generar SKUs.');
       Exit;
     end;
-
     GenerarCombinaciones(0, '', '');
     ShowMessage('¡Combinaciones generadas con éxito!');
   finally
@@ -305,14 +291,12 @@ begin
   NuevoNombre := Trim(InputBox('Añadir nuevo valor',
     'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
   if NuevoNombre = '' then Exit;
-
   OrdenStr := Trim(InputBox('Añadir nuevo valor',
     'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
     'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
     'artículos que usen este valor en el futuro.', '100'));
   if OrdenStr = '' then Exit;
   OrdenVal := StrToIntDef(OrdenStr, 100);
-
   // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
   IdAtrSel := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
   qTemp := TUniQuery.Create(nil);
@@ -331,7 +315,6 @@ begin
     qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
     qTemp.ParamByName('Atributo').AsString := IdAtrSel;
     qTemp.Open;
-
     if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0)
     then begin
       IdConjuntoAsignado := 0;
@@ -342,7 +325,6 @@ begin
       IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
       NombreConjunto     := qTemp.FieldByName('NOMBRE_AC').AsString;
     end;
-
     // =========================================================================
     // FASE 2: ASEGURARNOS DE QUE EL VALOR EXISTE EN EL DICCIONARIO MAESTRO
     // =========================================================================
@@ -353,7 +335,6 @@ begin
     qTemp.ParamByName('IdVa').AsString := IdAtrSel;
     qTemp.ParamByName('Valor').AsString := NuevoNombre;
     qTemp.Open;
-
     if not qTemp.IsEmpty then
       IdNuevoValor := qTemp.FieldByName('ID_VALOR_AV').AsInteger
     else
