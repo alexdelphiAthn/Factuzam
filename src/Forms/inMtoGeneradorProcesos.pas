@@ -188,9 +188,9 @@ type
     procedure DoFind(Sender: TObject);
     procedure DoReplace(Sender: TObject);
     procedure BuscarGlobal;
-    procedure mnuCortarClick(Sender: TObject);
-    procedure mnuCopiarClick(Sender: TObject);
-    procedure mnuPegarClick(Sender: TObject);
+    procedure ActionCortarExecute(Sender: TObject);
+    procedure ActionCopiarExecute(Sender: TObject);
+    procedure ActionPegarExecute(Sender: TObject);
     procedure CrearMenuContextual;
     procedure ActivarEnterComoTab(Activo: Boolean);
     procedure EditorEnter(Sender: TObject);
@@ -221,6 +221,30 @@ uses
   ts.Editor.CodeFormatters;
 
 {$R *.dfm}
+
+procedure TfrmMtoGeneradorProcesos.ActionCortarExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.CutToClipboard
+  else if syndtEstructura.Focused then
+    syndtEstructura.CutToClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionCopiarExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.CopyToClipboard
+  else if syndtEstructura.Focused then
+    syndtEstructura.CopyToClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionPegarExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.PasteFromClipboard
+  else if syndtEstructura.Focused then
+    syndtEstructura.PasteFromClipboard;
+end;
 
 procedure TfrmMtoGeneradorProcesos.ActionEditoresUpdate(Sender: TObject);
 begin
@@ -344,30 +368,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoGeneradorProcesos.mnuCortarClick(Sender: TObject);
-begin
-  if (FPopMenuEditores.PopupComponent is TSynEdit) then
-    (FPopMenuEditores.PopupComponent as TSynEdit).CutToClipboard
-  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
-    (FPopMenuEditores.PopupComponent as TDBSynEdit).CutToClipboard;
-end;
-
-procedure TfrmMtoGeneradorProcesos.mnuCopiarClick(Sender: TObject);
-begin
-  if (FPopMenuEditores.PopupComponent is TSynEdit) then
-    (FPopMenuEditores.PopupComponent as TSynEdit).CopyToClipboard
-  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
-    (FPopMenuEditores.PopupComponent as TDBSynEdit).CopyToClipboard;
-end;
-
-procedure TfrmMtoGeneradorProcesos.mnuPegarClick(Sender: TObject);
-begin
-  if (FPopMenuEditores.PopupComponent is TSynEdit) then
-    (FPopMenuEditores.PopupComponent as TSynEdit).PasteFromClipboard
-  else if (FPopMenuEditores.PopupComponent is TDBSynEdit) then
-    (FPopMenuEditores.PopupComponent as TDBSynEdit).PasteFromClipboard;
-end;
-
 procedure TfrmMtoGeneradorProcesos.CrearMenuContextual;
 var
   Item: TMenuItem;
@@ -403,25 +403,25 @@ begin
   Item.Caption := '-';
   FPopMenuEditores.Items.Add(Item);
 
-  // Botón Cortar
+// Botón Cortar
   Item := TMenuItem.Create(FPopMenuEditores);
   Item.Caption := 'Cor&tar';
   Item.ShortCut := TextToShortCut('Ctrl+X');
-  Item.OnClick := mnuCortarClick;
+  Item.OnClick := ActionCortarExecute;
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Copiar
   Item := TMenuItem.Create(FPopMenuEditores);
   Item.Caption := '&Copiar';
   Item.ShortCut := TextToShortCut('Ctrl+C');
-  Item.OnClick := mnuCopiarClick;
+  Item.OnClick := ActionCopiarExecute;
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Pegar
   Item := TMenuItem.Create(FPopMenuEditores);
   Item.Caption := '&Pegar';
   Item.ShortCut := TextToShortCut('Ctrl+V');
-  Item.OnClick := mnuPegarClick;
+  Item.OnClick := ActionPegarExecute;
   FPopMenuEditores.Items.Add(Item);
 
   // Asignamos el menú a tus dos editores
@@ -1065,6 +1065,32 @@ end;
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
+  // [Ctrl + X] Cortar
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+X');
+    OnExecute := ActionCortarExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
+
+  // [Ctrl + C] Copiar
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+C');
+    OnExecute := ActionCopiarExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
+
+  // [Ctrl + V] Pegar
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+V');
+    OnExecute := ActionPegarExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
