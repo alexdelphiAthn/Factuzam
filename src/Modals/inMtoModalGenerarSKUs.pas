@@ -3,19 +3,19 @@
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoModalAceptCancel, cxGraphics,
-  cxLookAndFeels, cxLookAndFeelPainters, Vcl.Menus, System.Actions,
-  Vcl.ActnList, JvComponentBase, JvEnterTab, cxClasses, cxLocalization,
-  Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, Data.DB, MemDS, DBAccess, Uni,
-  cxControls, cxSplitter, cxStyles, cxDBData, cxGridLevel, cxGridCustomView,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  UniDataConn, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit,
-  cxNavigator, dxDateRanges, dxScrollbarAnnotations, system.Generics.Collections,
-  cxCheckBox;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  inMtoModalAceptCancel, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
+  Vcl.Menus, System.Actions, Vcl.ActnList, JvComponentBase, JvEnterTab,
+  cxClasses, cxLocalization, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, Data.DB,
+  MemDS, DBAccess, Uni, cxControls, cxSplitter, cxStyles, cxDBData,
+  cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
+  cxGridDBTableView, cxGrid, UniDataConn, cxCustomData, cxFilter, cxData,
+  cxDataStorage, cxEdit, cxNavigator, dxDateRanges, dxScrollbarAnnotations,
+  system.Generics.Collections, cxCheckBox;
 
 type
-    TValorAtributo = record
+  TValorAtributo = record
     IdConjunto: Integer; // ej: 1004
     NombreValor: string; // ej: 'XL'
   end;
@@ -66,7 +66,7 @@ type
   public
     // Método para llamar a esta pantalla desde el formulario principal
     class function Ejecutar(const ACodigoArticulo,
-                                  ATipoVariacion: string): Boolean;
+                            ATipoVariacion: string): Boolean;
   end;
 
 var
@@ -78,7 +78,8 @@ implementation
 
 uses inLibGlobalVar;
 
-procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer; NombreSKU, IdsValores: string);
+procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
+  NombreSKU, IdsValores: string);
 var
   DimActual: TDimensionSKU;
   ValActual: TValorAtributo;
@@ -90,11 +91,10 @@ begin
   if Nivel = FDimensiones.Count then
   begin
     CodigoNuevoSKU := FCodigoArticulo + '/' + NombreSKU;
-//    CodigoNuevoSKU := StringReplace(CodigoNuevoSKU, ' ', '', [rfReplaceAll]);
     unqryMaestro.Connection.ExecSQL(
       'INSERT IGNORE INTO fza_articulos_skus ' +
-      '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
-      ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, CODIGO_VAR_SKU, ' +
+      'ESACTIVO_SKU, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
       'VALUES (:cod, :art, :var, ''S'', ' +
       ' CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')',
       [CodigoNuevoSKU, FCodigoArticulo, FTipoVariacion]
@@ -114,6 +114,7 @@ begin
     end;
     Exit;
   end;
+
   DimActual := FDimensiones[Nivel];
   for ValActual in DimActual.Valores do
   begin
@@ -121,16 +122,18 @@ begin
       NuevoNombre := ValActual.NombreValor
     else
       NuevoNombre := NombreSKU + '/' + ValActual.NombreValor;
+
     if IdsValores = '' then
       NuevosIds := IntToStr(ValActual.IdConjunto)
     else
       NuevosIds := IdsValores + ';' + IntToStr(ValActual.IdConjunto);
+
     GenerarCombinaciones(Nivel + 1, NuevoNombre, NuevosIds);
   end;
 end;
 
 class function TfrmMtoModalGenerarSKUS.Ejecutar(const ACodigoArticulo,
-                                               ATipoVariacion: string): Boolean;
+  ATipoVariacion: string): Boolean;
 var
   frm: TfrmMtoModalGenerarSKUS;
 begin
@@ -148,6 +151,7 @@ procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
   unqryMaestro.Connection := oConn;
   unqryDetalle.Connection := oConn;
+
   unqryMaestro.Close;
   unqryMaestro.SQL.Text :=
     'SELECT va.ID_ATRIBUTO_VA, ' +
@@ -158,32 +162,41 @@ begin
     'ORDER BY va.ORDEN_VA';
   unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
   unqryMaestro.Open;
+
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
-    'SELECT ID_ATRIBUTO_VA, MAX(ID_CONJUNTO_AC) AS ID_CONJUNTO_AC, NOMBRE_AC, MIN(ORDEN_AV) AS ORDEN_AV, 0 AS ASIGNADO ' +
+    'SELECT ID_ATRIBUTO_VA, MAX(ID_CONJUNTO_AC) AS ID_CONJUNTO_AC, ' +
+    'NOMBRE_AC, MIN(ORDEN_AV) AS ORDEN_AV, 0 AS ASIGNADO ' +
     'FROM ( ' +
-    '    /* 1. Valores que vienen del conjunto global asignado */ ' +
-    '    SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, val.VALOR_AV AS NOMBRE_AC, det.ORDEN_ACD AS ORDEN_AV ' +
-    '    FROM fza_variaciones_atributos atr ' +
-    '    JOIN fza_articulos_conjuntos_asign asign ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA ' +
-    '     AND asign.CODIGO_ARTICULO_ACA = :Articulo ' +
-    '    JOIN fza_atributos_conjuntos_det det ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA ' +
-    '    JOIN fza_atributos_valores val ON val.ID_VALOR_AV = det.ID_VALOR_ACD ' +
-    '    WHERE atr.ID_VA = :Variacion ' +
-    '    ' +
-    '    UNION ' +
-    '    ' +
-    '    /* 2. Valores personalizados que ya forman parte de algún SKU de este artículo */ ' +
-    '    SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, val.VALOR_AV AS NOMBRE_AC, val.ORDEN_AV AS ORDEN_AV ' +
-    '    FROM fza_variaciones_atributos atr ' +
-    '    JOIN fza_atributos_valores val ON val.ID_VA_AV = atr.ID_ATRIBUTO_VA ' +
-    '    JOIN fza_atributos_sku asku ON asku.ID_VALOR_SA = val.ID_VALOR_AV ' +
-    '    JOIN fza_articulos_skus skus ON skus.CODIGO_UNIDAD_SKU = asku.CODIGO_UNIDAD_SA ' +
-    '     AND skus.CODIGO_ARTICULO_SKU = :Articulo ' +
-    '    WHERE atr.ID_VA = :Variacion ' +
+    '  /* 1. Valores que vienen del conjunto global asignado */ ' +
+    '  SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, ' +
+    '  val.VALOR_AV AS NOMBRE_AC, det.ORDEN_ACD AS ORDEN_AV ' +
+    '  FROM fza_variaciones_atributos atr ' +
+    '  JOIN fza_articulos_conjuntos_asign asign ' +
+    '    ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA ' +
+    '   AND asign.CODIGO_ARTICULO_ACA = :Articulo ' +
+    '  JOIN fza_atributos_conjuntos_det det ' +
+    '    ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA ' +
+    '  JOIN fza_atributos_valores val ' +
+    '    ON val.ID_VALOR_AV = det.ID_VALOR_ACD ' +
+    '  WHERE atr.ID_VA = :Variacion ' +
+    '  UNION ' +
+    '  /* 2. Valores que ya forman parte de algún SKU de este artículo */ ' +
+    '  SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, ' +
+    '  val.VALOR_AV AS NOMBRE_AC, val.ORDEN_AV AS ORDEN_AV ' +
+    '  FROM fza_variaciones_atributos atr ' +
+    '  JOIN fza_atributos_valores val ' +
+    '    ON val.ID_VA_AV = atr.ID_ATRIBUTO_VA ' +
+    '  JOIN fza_atributos_sku asku ' +
+    '    ON asku.ID_VALOR_SA = val.ID_VALOR_AV ' +
+    '  JOIN fza_articulos_skus skus ' +
+    '    ON skus.CODIGO_UNIDAD_SKU = asku.CODIGO_UNIDAD_SA ' +
+    '   AND skus.CODIGO_ARTICULO_SKU = :Articulo ' +
+    '  WHERE atr.ID_VA = :Variacion ' +
     ') AS combinados ' +
     'GROUP BY ID_ATRIBUTO_VA, NOMBRE_AC ' +
     'ORDER BY ORDEN_AV';
+
   unqryDetalle.Options.LocalMasterDetail := True;
   unqryDetalle.CachedUpdates := True;
   unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
@@ -191,6 +204,7 @@ begin
   unqryDetalle.MasterSource := dsMaestro;
   unqryDetalle.MasterFields := 'ID_ATRIBUTO_VA';
   unqryDetalle.Open;
+
   unqryDetalle.FieldByName('ASIGNADO').ReadOnly := False;
   unqryDetalle.FieldByName('ID_ATRIBUTO_VA').ReadOnly := False;
   unqryDetalle.FieldByName('ID_CONJUNTO_AC').ReadOnly := False;
@@ -202,7 +216,6 @@ var
   DimDict: TObjectDictionary<string, TDimensionSKU>;
   DimActual: TDimensionSKU;
   ValorActual: TValorAtributo;
-  IdAtr: string;
   i: Integer;
   BmMaestro: TBookmark;
 begin
@@ -210,9 +223,11 @@ begin
     tvDetalle.DataController.Post;
   if unqryDetalle.State in [dsEdit, dsInsert] then
     unqryDetalle.Post;
+
   if not Assigned(FDimensiones) then
     FDimensiones := TObjectList<TDimensionSKU>.Create(False);
   FDimensiones.Clear;
+
   DimDict := TObjectDictionary<string, TDimensionSKU>.Create([doOwnsValues]);
   try
     BmMaestro := unqryMaestro.GetBookmark;
@@ -223,17 +238,23 @@ begin
       while not unqryMaestro.Eof do
       begin
         DimActual := TDimensionSKU.Create;
-        DimActual.IdAtributo := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
-        DimActual.NombreAtributo := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+        DimActual.IdAtributo :=
+          unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
+        DimActual.NombreAtributo :=
+          unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+
         DimDict.Add(DimActual.IdAtributo, DimActual);
         FDimensiones.Add(DimActual);
+
         unqryDetalle.First;
         while not unqryDetalle.Eof do
         begin
           if unqryDetalle.FieldByName('ASIGNADO').AsInteger = 1 then
           begin
-            ValorActual.IdConjunto := unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
-            ValorActual.NombreValor := unqryDetalle.FieldByName('NOMBRE_AC').AsString;
+            ValorActual.IdConjunto :=
+              unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
+            ValorActual.NombreValor :=
+              unqryDetalle.FieldByName('NOMBRE_AC').AsString;
             DimActual.Valores.Add(ValorActual);
           end;
           unqryDetalle.Next;
@@ -247,16 +268,19 @@ begin
       tvDetalle.EndUpdate;
       tvMaestro.EndUpdate;
     end;
+
     for i := FDimensiones.Count - 1 downto 0 do
     begin
       if FDimensiones[i].Valores.Count = 0 then
         FDimensiones.Delete(i);
     end;
+
     if FDimensiones.Count = 0 then
     begin
       ShowMessage('No has marcado ningún valor para generar SKUs.');
       Exit;
     end;
+
     GenerarCombinaciones(0, '', '');
     ShowMessage('¡Combinaciones generadas con éxito!');
   finally
@@ -279,11 +303,16 @@ var
 begin
   // 1. INPUTS DEL USUARIO
   NuevoNombre := Trim(InputBox('Añadir nuevo valor',
-             'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
+    'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
   if NuevoNombre = '' then Exit;
-  OrdenStr := Trim(InputBox('Añadir nuevo valor', 'Introduce el ORDEN (Ej: 10, 20, 30...):', '100'));
+
+  OrdenStr := Trim(InputBox('Añadir nuevo valor',
+    'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
+    'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
+    'artículos que usen este valor en el futuro.', '100'));
   if OrdenStr = '' then Exit;
   OrdenVal := StrToIntDef(OrdenStr, 100);
+
   // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
   IdAtrSel := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
   qTemp := TUniQuery.Create(nil);
@@ -295,13 +324,16 @@ begin
     qTemp.SQL.Text :=
       'SELECT aca.ID_CONJUNTO_ACA, ac.NOMBRE_AC ' +
       'FROM fza_articulos_conjuntos_asign aca ' +
-      'LEFT JOIN fza_atributos_conjuntos ac ON ac.ID_CONJUNTO_AC = aca.ID_CONJUNTO_ACA ' +
-      'WHERE aca.CODIGO_ARTICULO_ACA = :Articulo AND aca.ID_ATRIBUTO_ACA = :Atributo';
+      'LEFT JOIN fza_atributos_conjuntos ac ' +
+      '  ON ac.ID_CONJUNTO_AC = aca.ID_CONJUNTO_ACA ' +
+      'WHERE aca.CODIGO_ARTICULO_ACA = :Articulo ' +
+      '  AND aca.ID_ATRIBUTO_ACA = :Atributo';
     qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
     qTemp.ParamByName('Atributo').AsString := IdAtrSel;
     qTemp.Open;
-    if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0) then
-    begin
+
+    if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0)
+    then begin
       IdConjuntoAsignado := 0;
       NombreConjunto     := '';
     end
@@ -310,6 +342,7 @@ begin
       IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
       NombreConjunto     := qTemp.FieldByName('NOMBRE_AC').AsString;
     end;
+
     // =========================================================================
     // FASE 2: ASEGURARNOS DE QUE EL VALOR EXISTE EN EL DICCIONARIO MAESTRO
     // =========================================================================
@@ -320,46 +353,53 @@ begin
     qTemp.ParamByName('IdVa').AsString := IdAtrSel;
     qTemp.ParamByName('Valor').AsString := NuevoNombre;
     qTemp.Open;
+
     if not qTemp.IsEmpty then
       IdNuevoValor := qTemp.FieldByName('ID_VALOR_AV').AsInteger
     else
     begin
       qTemp.Close;
       qTemp.SQL.Text :=
-        'INSERT INTO fza_atributos_valores (ID_VA_AV, VALOR_AV, ORDEN_AV, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
-        'VALUES (:IdVa, :Valor, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')';
+        'INSERT INTO fza_atributos_valores (ID_VA_AV, VALOR_AV, ORDEN_AV, ' +
+        'INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES (:IdVa, :Valor, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ' +
+        '''SISTEMA'')';
       qTemp.ParamByName('IdVa').AsString   := IdAtrSel;
       qTemp.ParamByName('Valor').AsString  := NuevoNombre;
       qTemp.ParamByName('Orden').AsInteger := OrdenVal;
       qTemp.Execute;
+
       qTemp.Close;
       qTemp.SQL.Text := 'SELECT LAST_INSERT_ID() AS NUEVO_ID';
       qTemp.Open;
       IdNuevoValor := qTemp.FieldByName('NUEVO_ID').AsInteger;
     end;
+
     // =========================================================================
-    // FASE 3 y 4: LA PREGUNTA Y EL GUARDADO GLOBAL (Depende de si hay conjunto)
+    // FASE 3 y 4: LA PREGUNTA Y EL GUARDADO GLOBAL
     // =========================================================================
     if IdConjuntoAsignado > 0 then
     begin
-      // TIENE CONJUNTO: Preguntamos si lo quiere global o de usar y tirar
       Respuesta := MessageDlg(
-        'Va a utilizar el valor "' + NuevoNombre + '".' + #13#10#13#10 +
+        'Va a utilizar el valor "' + NuevoNombre + '".' + sLineBreak +
+        sLineBreak +
         '¿Desea guardarlo de forma permanente en el conjunto global "' +
         NombreConjunto + '" ' +
         'para que aparezca disponible siempre para otros artículos?' +
-        #13#10#13#10 +
-        '[SÍ] -> Añadir al conjunto global' + #13#10 +
+        sLineBreak + sLineBreak +
+        '[SÍ] -> Añadir al conjunto global' + sLineBreak +
         '[NO] -> Usar SOLO ESTA VEZ para generar el SKU (no se guarda en el' +
         ' conjunto)',
         mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+
       if Respuesta = mrCancel then Exit;
       if Respuesta = mrYes then
       begin
         qTemp.Close;
         qTemp.SQL.Text :=
           'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ' +
-          'ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+          'ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, ' +
+          'USUARIOMODIF) ' +
           'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'',' +
           ' ''SISTEMA'')';
         qTemp.ParamByName('Conj').AsInteger  := IdConjuntoAsignado;
@@ -370,12 +410,11 @@ begin
     end
     else
     begin
-      // NO TIENE CONJUNTO: Avisamos de que será de usar y tirar
       Respuesta := MessageDlg(
-        'El artículo no tiene un conjunto global asignado.' + #13#10#13#10 +
-        'El valor "' + NuevoNombre +
-        '" se utilizará SOLO ESTA VEZ para generar el SKU de este artículo, ' +
-        'pero no se guardará en ninguna lista de conjuntos.' + #13#10#13#10 +
+        'El artículo no tiene un conjunto global asignado.' + sLineBreak +
+        sLineBreak + 'El valor "' + NuevoNombre + '" se utilizará SOLO ESTA ' +
+        'VEZ para generar el SKU de este artículo, pero no se guardará en ' +
+        'ninguna lista de conjuntos.' + sLineBreak + sLineBreak +
         '¿Desea continuar?',
         mtConfirmation, [mbYes, mbNo], 0);
       if Respuesta <> mrYes then Exit;
@@ -383,18 +422,21 @@ begin
   finally
     qTemp.Free;
   end;
+
   // =========================================================================
-  // FASE 5: INYECCIÓN EN MEMORIA PARA GENERAR EL SKU (Ocurre siempre)
+  // FASE 5: INYECCIÓN EN MEMORIA PARA GENERAR EL SKU
   // =========================================================================
   unqryDetalle.Append;
   unqryDetalle.FieldByName('ID_ATRIBUTO_VA').AsString := IdAtrSel;
   unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger := IdNuevoValor;
   unqryDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
+
   if unqryDetalle.FindField('ORDEN_AV') <> nil then
   begin
     unqryDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
     unqryDetalle.FieldByName('ORDEN_AV').AsInteger := OrdenVal;
   end;
+
   unqryDetalle.FieldByName('ASIGNADO').AsInteger := 1; // Ya sale marcadito
   unqryDetalle.Post;
 end;
