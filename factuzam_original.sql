@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 29/03/2026 5:50:58
+-- Backup generado: 30/03/2026 16:59:25
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -152,8 +152,8 @@ ALTER TABLE `fza_articulos_conjuntos_asign` ADD INDEX `IDX_ACA_CONJUNTO` (`CODIG
 
 -- Datos de fza_articulos_conjuntos_asign
 INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ARTICULO_ACA`, `ID_CONJUNTO_ACA`, `ID_ATRIBUTO_ACA`, `ES_GENERACION_AUTO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('DEMO-CAMISA', 2, 'CO', 'S', '2026-03-29 05:47:53', '2026-03-29 05:47:53', 'Administrador', 'Administrador'),
-  ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-29 05:47:53', '2026-03-29 05:47:53', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 2, 'CO', 'S', '2026-03-29 06:18:13', '2026-03-29 06:18:13', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 1, 'TAL', 'S', '2026-03-29 06:18:13', '2026-03-29 06:18:13', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 1, 'CO', 'S', '2026-03-23 20:14:47', '2026-03-23 20:14:47', 'Administrador', 'Administrador'),
   ('PANT-CHIN', 2, 'TAL', 'S', '2026-03-23 20:14:49', '2026-03-23 20:14:49', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 2, 'CO', 'S', '2026-03-28 18:57:09', '2026-03-28 18:57:09', 'Administrador', 'Administrador'),
@@ -481,6 +481,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('VEST-FLOR/BURDEOS/L', 'VEST-FLOR', 'TC', 'S', '2026-03-28 18:04:57', '2026-03-28 18:04:57', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/ROJO/M', 'VEST-FLOR', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  ('VEST-FLOR/ROJO/XL', 'VEST-FLOR', 'TC', 'S', '2026-03-30 07:35:59', '2026-03-30 07:35:59', 'SISTEMA', 'SISTEMA'),
   ('VEST-FLOR/VERDE/M', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('VEST-FLOR/VERDE/S', 'VEST-FLOR', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-BOTA-MT/MARRON/43', 'ZAP-BOTA-MT', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
@@ -503,7 +504,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ARTICULO_SKU`, `C
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 100 registros exportados
+-- 101 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -963,6 +964,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('VEST-FLOR/ROJO/M', 3, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('VEST-FLOR/ROJO/S', 1, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/ROJO/S', 110, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
+  ('VEST-FLOR/ROJO/XL', 1, '2026-03-30 07:35:59', NULL, '', ''),
+  ('VEST-FLOR/ROJO/XL', 9104, '2026-03-30 07:35:59', NULL, '', ''),
   ('VEST-FLOR/VERDE/M', 3, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/VERDE/M', 102, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('VEST-FLOR/VERDE/S', 102, '2026-02-22 06:26:50', '2026-02-22 06:26:50', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -1007,7 +1010,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SA`, `ID_VALOR_SA`, `INSTANTEMOD
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 202 registros exportados
+-- 204 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -1034,7 +1037,7 @@ ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
 -- Datos de fza_atributos_valores
 /*!40000 ALTER TABLE `fza_atributos_valores` DISABLE KEYS */;
 INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `ORDEN_AV`, `DESCRIPCION_AV`, `ESACTIVO_AV`, `FACTOR_CONVERSION_AV`, `UNIDAD_MEDIDA_AV`, `CODIGO_ARTICULO_EXTRA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (1, 'CO', 'ROJO', 0, 'Color ROJO', 'S', 1, NULL, NULL, '2026-01-28 07:21:56', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
+  (1, 'CO', 'ROJO', 10, 'Color ROJO', 'S', 1, NULL, NULL, '2026-03-30 07:35:21', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
   (3, 'TAL', 'M', 20, 'Talla M', 'S', 1, NULL, NULL, '2026-03-28 17:33:52', '2026-01-04 12:11:37', 'Sistema', 'Sistema'),
   (4, 'TAL', 'L', 30, 'Talla L (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:33:54', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
   (100, 'CO', 'NEGRO', 0, 'Color Negro (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:34', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
@@ -1075,9 +1078,10 @@ INSERT INTO `fza_atributos_valores` (`ID_VALOR_AV`, `ID_VA_AV`, `VALOR_AV`, `ORD
   (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA'),
   (9208, 'CO', 'FUCSIA', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:01:00', '2026-03-28 18:01:00', 'SISTEMA', 'SISTEMA'),
   (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:04:43', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA'),
-  (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, '2026-03-28 19:22:26', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA');
+  (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, '2026-03-28 19:22:26', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA'),
+  (9211, 'CO', 'PEPINO', 20, NULL, 'S', 1, NULL, NULL, '2026-03-29 07:37:23', '2026-03-29 07:37:23', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 42 registros exportados
+-- 43 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -1415,7 +1419,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 63, 3, 'S', 'S', '2026-03-29 05:46:52', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 66, 3, 'S', 'S', '2026-03-30 16:51:34', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -1974,14 +1978,13 @@ CREATE TABLE `fza_generadorprocesos` (
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADORPROCESO`, `NOMBRE_GENERADORPROCESO`, `PROCESO_GENERADORPROCESO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('001', 'INSERTAR CAMPOS GRID POR MTO', '
-CREATE OR REPLACE PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(
+CREATE OR REPLACE PROCEDURE `prueba`(
     IN  `pnumfac` VARCHAR(12), 
     IN  `pserie`  VARCHAR(12), 
     OUT `presul`  VARCHAR(3)
 )
 BEGIN    
     DECLARE v_NextValue BIGINT;
-
     /* Manejo de errores para asegurar la consistencia (etiqueta para Uniscript) */    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     kk: BEGIN        
@@ -2023,7 +2026,7 @@ BEGIN
     END IF;
     
     COMMIT;
-END;', '2026-03-19 19:44:30', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+END;', '2026-03-29 08:28:08', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('002', 'update cosas', 'UPDATE fza_ivas
    SET PORCENEXENTO_RE_IVA = 0', '2023-04-28 21:13:07', '2023-04-28 12:28:56', 'Administrador', 'Administrador'),
   ('003', 'ACTUALIZACION DE CAMPO FZA_IVAS', '           ALTER TABLE FZA_IVAS    MODIFY COLUMN   `GRUPO_ZONA_IVA` varchar(10) NOT NULL;', '2023-04-28 12:46:20', '2023-04-28 12:45:28', 'Administrador', 'Administrador'),
@@ -3227,8 +3230,8 @@ BEGIN
       
     COMMIT;
 END;', '2026-03-27 17:26:45', '2026-03-27 17:24:45', 'Administrador', 'Administrador'),
-  ('053', NULL, 'DROP PROCEDURE PRC_CREAR_FACTURA_ABONO;
-CREATE PROCEDURE `PRC_CREAR_FACTURA_ABONO`(
+  ('053', NULL, 'DROP PROCEDURE prueba;
+CREATE PROCEDURE `prueba`(
     IN `pidseriefactura`      varchar(200),
     IN `pidnumfactura`        varchar(200),
     IN `pidseriefacturaabono` varchar(200),
@@ -3243,10 +3246,10 @@ BEGIN
 
     /* Manejo de errores para asegurar la consistencia */    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN        
+    BEGIN        
         ROLLBACK;
         RESIGNAL;
-    END kk;
+    END;
 
     START TRANSACTION;
     
@@ -3335,7 +3338,7 @@ BEGIN
     CALL `PRC_CALCULAR_FACTURA_NETOS`(pidseriefacturaabono, contadorped);
    
     COMMIT;
-END;', '2026-03-27 17:36:00', '2026-03-27 17:35:43', 'Administrador', 'Administrador'),
+END;', '2026-03-29 17:53:31', '2026-03-27 17:35:43', 'Administrador', 'Administrador'),
   ('054', 'Modificar fza_atributos_conjuntos_det', 'CREATE OR REPLACE TABLE `fza_atributos_conjuntos_det` (
   `ID_CONJUNTO_ACD` int(11) NOT NULL COMMENT ''FK a la cabecera del conjunto'',
   `ID_VALOR_ACD` int(11) NOT NULL COMMENT ''FK al valor individual (fza_atributos_valores)'',
@@ -3395,156 +3398,8 @@ ORDER BY atr.ORDEN_VA, val.ORDEN_AV', '2026-03-28 17:06:57', '2026-03-28 16:57:0
   ('060', NULL, 'SELECT VALOR_AV 
 FROM fza_atributos_valores 
 WHERE ID_VALOR_AV IN (9101, 9102, 9103, 9104);', '2026-03-28 19:13:16', '2026-03-28 19:10:53', 'Administrador', 'Administrador'),
-  ('061', 'Modificar PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', 'DROP PROCEDURE IF EXISTS `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ`(IN p_input VARCHAR(50))
-BEGIN    
-    DECLARE v_codigo_articulo VARCHAR(20);
-    DECLARE v_es_sku BOOLEAN DEFAULT FALSE;
-    
-    /* Variables para las COLUMNAS (Pivot - Ej: Talla) */
-    DECLARE v_id_atributo_pivot VARCHAR(20);
-    DECLARE v_nombre_atributo_pivot VARCHAR(50);
-    DECLARE v_columnas_dinamicas TEXT;
-    
-    /* Variables para las FILAS (Desglose - Ej: Color) */
-    DECLARE v_id_atributo_fila VARCHAR(20) DEFAULT NULL;
-    DECLARE v_nombre_atributo_fila VARCHAR(50) DEFAULT NULL;
-    DECLARE v_select_fila TEXT DEFAULT '''';
-    DECLARE v_join_fila TEXT DEFAULT '''';
-    DECLARE v_groupby_fila TEXT DEFAULT '''';
-    DECLARE v_src_select_fila TEXT DEFAULT '''';
-    
-    DECLARE v_filtros_fijos TEXT DEFAULT '''';
-    DECLARE v_sql_query TEXT;
-
-    /* 1. IDENTIFICAR ARTÍCULO O SKU */    
-    SELECT CODIGO_ARTICULO INTO v_codigo_articulo 
-    FROM fza_articulos WHERE CODIGO_ARTICULO = p_input;
-
-    IF v_codigo_articulo IS NULL THEN        
-        SELECT CODIGO_ARTICULO_SKU INTO v_codigo_articulo 
-        FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = p_input;
-        
-        IF v_codigo_articulo IS NOT NULL THEN SET v_es_sku = TRUE; END IF;
-    END IF;
-
-    /* 2. BUSCAR ATRIBUTO PIVOTE (Para las columnas) */    
-    IF v_codigo_articulo IS NOT NULL THEN        
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA        
-        INTO v_id_atributo_pivot, v_nombre_atributo_pivot        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo        
-        ORDER BY va.ORDEN_VA DESC        
-        LIMIT 1;
-    END IF;
-
-    /* 2.1 BUSCAR ATRIBUTO DE FILA (Ej: Color) SI ES UN ARTÍCULO GENÉRICO */
-    IF v_codigo_articulo IS NOT NULL AND v_es_sku = FALSE THEN
-        SELECT va.ID_ATRIBUTO_VA, va.NOMBRE_VA
-        INTO v_id_atributo_fila, v_nombre_atributo_fila
-        FROM fza_articulos_skus sk
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV
-        JOIN fza_variaciones_atributos va ON av.ID_VA_AV = va.ID_ATRIBUTO_VA
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo
-          AND va.ID_ATRIBUTO_VA <> v_id_atributo_pivot
-        ORDER BY va.ORDEN_VA ASC
-        LIMIT 1;
-    END IF;
-
-    /* 3. CONSTRUCCIÓN DE LA CONSULTA */    
-    IF v_id_atributo_pivot IS NOT NULL THEN        
-        
-        /* Preparamos los textos dinámicos para desglosar el Color en filas */
-        IF v_id_atributo_fila IS NOT NULL THEN
-            SET v_select_fila = CONCAT('', COALESCE(src.VALOR_FILA, ''''-'''') AS `'', v_nombre_atributo_fila, ''`'');
-            SET v_src_select_fila = '', av_fila.VALOR_AV AS VALOR_FILA'';
-            SET v_join_fila = CONCAT('' LEFT JOIN fza_atributos_sku ask_fila ON sk.CODIGO_UNIDAD_SKU = ask_fila.CODIGO_UNIDAD_SA LEFT JOIN fza_atributos_valores av_fila ON ask_fila.ID_VALOR_SA = av_fila.ID_VALOR_AV AND av_fila.ID_VA_AV = '''''', v_id_atributo_fila, '''''' '');
-            SET v_groupby_fila = '', src.VALOR_FILA'';
-        END IF;
-
-        /* Generamos columnas dinámicas apuntando a la subconsulta ''src'' */        
-        SELECT GROUP_CONCAT(DISTINCT            
-            CONCAT(
-                ''SUM(CASE WHEN src.VALOR_AV = '''''', av.VALOR_AV, 
-                '''''' THEN src.CANTIDAD_STK ELSE 0 END) AS `'', av.VALOR_AV, ''`''            
-            )
-            ORDER BY av.ID_VALOR_AV        
-        ) INTO v_columnas_dinamicas        
-        FROM fza_articulos_skus sk        
-        JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA        
-        JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV        
-        WHERE sk.CODIGO_ARTICULO_SKU = v_codigo_articulo          
-          AND av.ID_VA_AV = v_id_atributo_pivot;
-
-        /* Filtros SKU (Solo aplica si buscas un SKU específico) */        
-        IF v_es_sku = TRUE THEN            
-            SELECT GROUP_CONCAT(
-                CONCAT(
-                    '' AND EXISTS (SELECT 1 FROM fza_atributos_sku f_ask '',
-                    '' JOIN fza_atributos_valores f_av ON f_ask.ID_VALOR_SA = f_av.ID_VALOR_AV '',
-                    '' WHERE f_ask.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU '',
-                    '' AND f_av.ID_VA_AV = '''''', av.ID_VA_AV, '''''' '',
-                    '' AND f_av.VALOR_AV = '''''', av.VALOR_AV, '''''') ''                
-                ) SEPARATOR '' ''            
-            ) INTO v_filtros_fijos            
-            FROM fza_atributos_sku ask            
-            JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV            
-            WHERE ask.CODIGO_UNIDAD_SA = p_input 
-              AND av.ID_VA_AV <> v_id_atributo_pivot;
-        END IF;
-        
-        IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''''; END IF;
-
-        /* QUERY FINAL: Almacén + Atributo Fila (Color) + Columnas Dinámicas (Talla) */        
-        SET @sql = CONCAT(
-            ''SELECT 
-                alm.NOMBRE_ALMACEN_ALM AS Almacen'', 
-                v_select_fila, '', '',
-                v_columnas_dinamicas, '',
-                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
-             FROM fza_almacenes alm
-             LEFT JOIN (
-                SELECT stk.CODIGO_ALMACEN_STK, av.VALOR_AV, stk.CANTIDAD_STK'', v_src_select_fila, ''
-                FROM fza_articulos_stockactual stk
-                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SA
-                JOIN fza_atributos_valores av ON ask.ID_VALOR_SA = av.ID_VALOR_AV'',
-                v_join_fila, ''
-                WHERE sk.CODIGO_ARTICULO_SKU = '''''', v_codigo_articulo, ''''''
-                  AND av.ID_VA_AV = '''''', v_id_atributo_pivot, '''''' '',
-                  v_filtros_fijos, ''
-             ) src ON alm.CODIGO_ALMACEN_ALM = src.CODIGO_ALMACEN_STK
-             WHERE alm.ESACTIVO_ALM = ''''S'''' 
-             GROUP BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila, ''
-             ORDER BY alm.NOMBRE_ALMACEN_ALM'', v_groupby_fila
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-    ELSE        
-        /* CASO B: ARTÍCULO SIMPLE (Sin atributos) */        
-        SELECT 
-            alm.NOMBRE_ALMACEN_ALM as Almacen, 
-            COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`        
-        FROM fza_almacenes alm        
-        LEFT JOIN fza_articulos_stockactual stk 
-            ON alm.CODIGO_ALMACEN_ALM = stk.CODIGO_ALMACEN_STK            
-            AND stk.CODIGO_UNIDAD_STK = p_input 
-        WHERE alm.ESACTIVO_ALM = ''S''        
-        GROUP BY alm.NOMBRE_ALMACEN_ALM        
-        ORDER BY alm.NOMBRE_ALMACEN_ALM;
-        
-    END IF;
-END ;;
-DELIMITER ;
-', '2026-03-28 19:40:54', '2026-03-28 19:31:41', 'Administrador', 'Administrador'),
+  ('061', 'Modificar PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', 'DROP PROCEDURE IF EXISTS `prueba`;
+', '2026-03-29 08:31:00', '2026-03-28 19:31:41', 'Administrador', 'Administrador'),
   ('062', 'Modificar vi_articulos_tarifas', 'CREATE OR REPLACE VIEW vi_articulos_tarifas as select
   fza_articulos_tarifas.CODIGO_UNICO_TARIFA as CODIGO_UNICO_TARIFA,
   fza_articulos_tarifas.CODIGO_ARTICULO_TARIFA as CODIGO_ARTICULO_TARIFA,
@@ -3589,8 +3444,171 @@ from
   left join fza_articulos_familias on (fza_articulos.CODIGO_FAMILIA_ARTICULO = fza_articulos_familias.CODIGO_FAMILIA)
   left join fza_proveedores on (fza_articulos_proveedores.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR = fza_proveedores.CODIGO_PROVEEDOR)
   left join fza_ivas_tipos on (fza_articulos.TIPOIVA_ARTICULO = fza_ivas_tipos.CODIGO_ABREVIATURA_TIPO_IVA)
-order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-29 05:46:52', '2026-03-29 05:46:52', 'Administrador', 'Administrador');
--- 33 registros exportados
+order by fza_tarifas.ORDEN_TARIFA, fza_articulos.ORDEN_ARTICULO;', '2026-03-29 05:46:52', '2026-03-29 05:46:52', 'Administrador', 'Administrador'),
+  ('063', 'Modificar vi_articulos_skus_extendida', 'CREATE OR REPLACE VIEW vi_articulos_skus_extendida AS 
+SELECT  
+  sku.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD_SKU,
+  sku.CODIGO_ARTICULO_SKU AS CODIGO_ARTICULO_SKU,
+  sku.CODIGO_VAR_SKU AS CODIGO_VAR_SKU,
+  sku.ESACTIVO_SKU AS ESACTIVO_SKU,
+  cb.CODIGO_BARRAS_CB AS CODIGO_BARRAS_CB,
+  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
+  sku.INSTANTEMODIF AS INSTANTEMODIF,
+  sku.INSTANTEALTA AS INSTANTEALTA,
+  sku.USUARIOALTA AS USUARIOALTA,
+  sku.USUARIOMODIF AS USUARIOMODIF
+FROM fza_articulos_skus sku  
+LEFT JOIN ( 
+  SELECT 
+    CODIGO_UNIDAD_CB,  
+    MAX(CODIGO_BARRAS_CB) AS CODIGO_BARRAS_CB 
+  FROM fza_codigos_barras 
+  GROUP BY CODIGO_UNIDAD_CB 
+) cb ON (sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB)
+LEFT JOIN ( 
+  SELECT 
+    CODIGO_UNIDAD_STK,  
+    SUM(CANTIDAD_STK) AS STOCK_TOTAL 
+  FROM fza_articulos_stockactual 
+  GROUP BY CODIGO_UNIDAD_STK 
+) stk ON (sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK);', '2026-03-30 07:54:51', '2026-03-29 17:52:18', 'Administrador', 'Administrador'),
+  ('064', NULL, 'DELIMITER $$
+
+CREATE OR REPLACE PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(
+    IN p_ID_DEPOSITO_DEP VARCHAR(20),
+    IN p_CODIGO_EMPRESA_DEP VARCHAR(20),
+    IN p_CODIGO_CLIENTE_DEP VARCHAR(20),
+    IN p_CODIGO_ARTICULO_DEP VARCHAR(50),
+    IN p_CODIGO_UNIDAD_DEP VARCHAR(50),
+    IN p_PRECIO_VENTA_DEP DECIMAL(19,6),
+    IN p_CANTIDAD_PENDIENTE_DEP DECIMAL(19,6),
+    IN p_IMPORTE_ANTICIPO_DEP DECIMAL(19,6),
+    IN p_TIPO_IVA_DEP CHAR(1),
+    IN p_PORCEN_IVA_DEP DECIMAL(19,6),
+    IN p_ESIMP_INCL_DEP CHAR(1),
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    START TRANSACTION;
+
+    /* 1. Insertamos el depósito en la tabla con TODOS los campos */
+    INSERT INTO fza_depositos_cliente (
+        ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_CLIENTE_DEP, 
+        CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP, PRECIO_VENTA_DEP, 
+        CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP, ESTADO_DEP,
+        TIPO_IVA_DEP, PORCEN_IVA_DEP, ESIMP_INCL_DEP,
+        INSTANTEALTA, USUARIOALTA, INSTANTEMODIF, USUARIOMODIF
+    ) VALUES (
+        p_ID_DEPOSITO_DEP, p_CODIGO_EMPRESA_DEP, p_CODIGO_CLIENTE_DEP, 
+        p_CODIGO_ARTICULO_DEP, p_CODIGO_UNIDAD_DEP, p_PRECIO_VENTA_DEP, 
+        p_CANTIDAD_PENDIENTE_DEP, p_IMPORTE_ANTICIPO_DEP, ''PENDIENTE'',
+        p_TIPO_IVA_DEP, p_PORCEN_IVA_DEP, p_ESIMP_INCL_DEP,
+        NOW(), p_USUARIO, NOW(), p_USUARIO
+    );
+
+    /* 2. Lógica del Trigger: Calculamos la nueva deuda generada por este depósito */
+    SET v_deuda_nueva = (p_PRECIO_VENTA_DEP * COALESCE(p_CANTIDAD_PENDIENTE_DEP, 1)) - COALESCE(p_IMPORTE_ANTICIPO_DEP, 0);
+
+    /* 3. Si hay deuda y el cliente es válido, actualizamos el saldo del cliente */
+    IF v_deuda_nueva > 0 AND p_CODIGO_CLIENTE_DEP IS NOT NULL AND p_CODIGO_CLIENTE_DEP != '''' THEN
+        UPDATE fza_clientes 
+           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva 
+         WHERE CODIGO_CLIENTE = p_CODIGO_CLIENTE_DEP;
+    END IF;
+
+    COMMIT;
+END$$
+
+DELIMITER ;', '2026-03-30 16:48:20', '2026-03-30 16:47:48', 'Administrador', 'Administrador'),
+  ('065', NULL, 'DELIMITER $$
+
+CREATE or replace  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(
+    IN p_CODIGO_UNIDAD_DEP VARCHAR(50),      /* Buscamos por SKU... */
+    IN p_CODIGO_CLIENTE_DEP VARCHAR(20),     /* ... Y por Cliente para evitar cruces */
+    IN p_NUEVO_ESTADO VARCHAR(15),           /* NULL para no cambiar, o ''CERRADO'' */
+    IN p_INCREMENTO_ANTICIPO DECIMAL(19,6),  /* Cantidad a sumar. 0 si no hay abono nuevo */
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_ID_DEPOSITO VARCHAR(20);
+    DECLARE v_OLD_CODIGO_CLIENTE VARCHAR(20);
+    DECLARE v_OLD_ESTADO VARCHAR(15);
+    DECLARE v_OLD_PRECIO DECIMAL(19,6);
+    DECLARE v_OLD_CANTIDAD_PTE DECIMAL(19,6);
+    DECLARE v_OLD_ANTICIPO DECIMAL(19,6);
+    
+    DECLARE v_NUEVO_ESTADO VARCHAR(15);
+    DECLARE v_NUEVO_ANTICIPO DECIMAL(19,6);
+    
+    DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    START TRANSACTION;
+
+    /* 1. Buscar y bloquear el depósito PENDIENTE usando SKU + Cliente */
+    SELECT ID_DEPOSITO_DEP, CODIGO_CLIENTE_DEP, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
+      INTO v_ID_DEPOSITO, v_OLD_CODIGO_CLIENTE, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
+      FROM fza_depositos_cliente
+     WHERE CODIGO_UNIDAD_DEP = p_CODIGO_UNIDAD_DEP 
+       AND CODIGO_CLIENTE_DEP = p_CODIGO_CLIENTE_DEP  /* FILTRO CLAVE AÑADIDO AQUÍ */
+       AND ESTADO_DEP = ''PENDIENTE''
+     LIMIT 1
+       FOR UPDATE;
+
+    /* Si existe un depósito pendiente para este SKU y Cliente, procedemos */
+    IF v_ID_DEPOSITO IS NOT NULL THEN
+        /* 2. Preparar los nuevos valores */
+        SET v_NUEVO_ESTADO = IFNULL(p_NUEVO_ESTADO, v_OLD_ESTADO);
+        SET v_NUEVO_ANTICIPO = v_OLD_ANTICIPO + COALESCE(p_INCREMENTO_ANTICIPO, 0);
+
+        /* 3. Calcular la variación de deuda */
+        SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
+        
+        IF v_NUEVO_ESTADO = ''PENDIENTE'' THEN
+            SET v_deuda_nueva = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_NUEVO_ANTICIPO;
+        ELSE
+            SET v_deuda_nueva = 0; 
+        END IF;
+
+        SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+
+        /* 4. Actualizar el registro del depósito */
+        UPDATE fza_depositos_cliente
+           SET ESTADO_DEP = v_NUEVO_ESTADO,
+               IMPORTE_ANTICIPO_DEP = v_NUEVO_ANTICIPO,
+               USUARIOMODIF = p_USUARIO,
+               INSTANTEMODIF = NOW()
+         WHERE ID_DEPOSITO_DEP = v_ID_DEPOSITO;
+
+        /* 5. Actualizar la deuda en el cliente si hubo variación */
+        IF v_diferencia <> 0 AND v_OLD_CODIGO_CLIENTE IS NOT NULL AND v_OLD_CODIGO_CLIENTE != '''' THEN
+            UPDATE fza_clientes
+               SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
+             WHERE CODIGO_CLIENTE = v_OLD_CODIGO_CLIENTE;
+        END IF;
+    END IF;
+
+    COMMIT;
+END$$
+
+DELIMITER ;', '2026-03-30 16:54:55', '2026-03-30 16:51:34', 'Administrador', 'Administrador');
+-- 36 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -4768,7 +4786,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-29 05:50:49', '2026-03-29 05:50:49', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-30 16:59:16', '2026-03-30 16:59:16', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -9668,4 +9686,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 29/03/2026 5:50:59
+-- Backup completado: 30/03/2026 16:59:26
