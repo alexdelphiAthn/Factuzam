@@ -389,12 +389,12 @@ end;
 
 procedure TfrmMtoGeneradorProcesos.EditorEnter(Sender: TObject);
 begin
-  ActivarEnterComoTab(False); // Al entrar al editor, apagamos la transformación de Enter a Tab
+  ActivarEnterComoTab(False);
 end;
 
 procedure TfrmMtoGeneradorProcesos.EditorExit(Sender: TObject);
 begin
-  ActivarEnterComoTab(True); // Al salir del editor, lo volveos a encender para el resto del programa
+  ActivarEnterComoTab(True);
 end;
 
 procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject; SQL: string);
