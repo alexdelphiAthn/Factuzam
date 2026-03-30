@@ -539,7 +539,7 @@ begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
                                         unqryCon,
                                         'frmMtoArtFacSearch') then
-      Result := unqryCon.FieldByName('CODIGO_FINAL_CAJA').AsString
+      Result := unqryCon.FieldByName('CODIGO_ARTICULO').AsString
     else
       Result := '';
   finally
