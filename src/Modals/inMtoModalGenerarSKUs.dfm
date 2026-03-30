@@ -98,7 +98,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
       object cxSplitter1: TcxSplitter
         Left = 1
         Top = 1
-        Width = 728
+        Width = 8
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer9Style'
         AlignSplitter = salTop
