@@ -73,7 +73,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Top = 530
     Width = 1124
     Height = 19
-    DoubleBuffered = False
     Panels = <
       item
         Width = 100
@@ -93,10 +92,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Alignment = taRightJustify
         Width = 100
       end>
-    ParentDoubleBuffered = False
-    StyleName = 'Windows'
-    ExplicitTop = 522
-    ExplicitWidth = 1122
+    ParentFont = True
+    UseSystemFont = False
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
