@@ -280,6 +280,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&2_Metadatos'
               ImageIndex = 2
               OnShow = tsMetadatosShow
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxspltr2: TcxSplitter
                 Left = 377
                 Top = 0
@@ -312,6 +316,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
+                    ExplicitLeft = 0
+                    ExplicitTop = 0
+                    ExplicitWidth = 0
+                    ExplicitHeight = 0
                     object mmo1: TMemo
                       Left = 488
                       Top = 344

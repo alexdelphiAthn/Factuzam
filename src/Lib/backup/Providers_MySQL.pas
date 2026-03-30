@@ -79,15 +79,18 @@ function TMySQLMetadataProvider.GetFunctionDefinition(
 var
   Query: TUniQuery;
   OldDB: string;
+  DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := FConn;
     Query.Connection.Database := FDBName;
-    Query.SQL.Text := 'SHOW CREATE FUNCTION `' + FunctionName + '`';
+    Query.SQL.Text := 'SHOW CREATE FUNCTION `' + FunctionName + '`'; //
     Query.Open;
-    Result := Query.Fields[2].AsString;
-    Result := StripDefiner(Result);
+    Result := Query.Fields[2].AsString; //
+    Result := StripDefiner(Result); //
+    DBPrefix := '`' + FDBName + '`.';
+    Result := StringReplace(Result, DBPrefix, '', [rfReplaceAll, rfIgnoreCase]);
   finally
     Query.Free;
   end;
@@ -176,15 +179,18 @@ function TMySQLMetadataProvider.GetProcedureDefinition(
 var
   Query: TUniQuery;
   OldDB: string;
+  DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := FConn;
     Query.Connection.Database := FDBName;
-    Query.SQL.Text := 'SHOW CREATE PROCEDURE `' + ProcedureName + '`';
+    Query.SQL.Text := 'SHOW CREATE PROCEDURE `' + ProcedureName + '`'; //
     Query.Open;
-    Result := Query.Fields[2].AsString;
-    Result := StripDefiner(Result);
+    Result := Query.Fields[2].AsString; //
+    Result := StripDefiner(Result); //
+    DBPrefix := '`' + FDBName + '`.';
+    Result := StringReplace(Result, DBPrefix, '', [rfReplaceAll, rfIgnoreCase]);
   finally
     Query.Free;
   end;
@@ -382,15 +388,18 @@ function TMySQLMetadataProvider.GetTriggerDefinition(
 var
   Query: TUniQuery;
   OldDB: string;
+  DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := FConn;
     FConn.Database := FDBName;
-    Query.SQL.Text := 'SHOW CREATE TRIGGER `' + TriggerName + '`';
+    Query.SQL.Text := 'SHOW CREATE TRIGGER `' + TriggerName + '`'; //
     Query.Open;
-    Result := Query.Fields[2].AsString;
-    Result := StripDefiner(Result);
+    Result := Query.Fields[2].AsString; //
+    Result := StripDefiner(Result); //
+    DBPrefix := '`' + FDBName + '`.';
+    Result := StringReplace(Result, DBPrefix, '', [rfReplaceAll, rfIgnoreCase]);
   finally
     Query.Free;
   end;
@@ -446,6 +455,7 @@ function TMySQLMetadataProvider.GetViewDefinition(
 var
   Query: TUniQuery;
   OldDB: string;
+  DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
   try
@@ -455,6 +465,8 @@ begin
     Query.Open;
     Result := Query.Fields[1].AsString;
     Result := StripDefiner(Result);
+    DBPrefix := '`' + FDBName + '`.';
+    Result := StringReplace(Result, DBPrefix, '', [rfReplaceAll, rfIgnoreCase]);
   finally
     Query.Free;
   end;
