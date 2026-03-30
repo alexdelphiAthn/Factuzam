@@ -241,9 +241,9 @@ type
                                         APorcIVA: Currency;
                                         AEsImpIncl: string);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
-                                    const ASku, AUsuario: string);
+                                    const ACliente, ASku, AUsuario: string);
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
-                                       const ASku, AUsuario: string;
+                                       const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure AnularDepositoCliente(QryTrx:           TUniQuery;
                                     const ASku:        string;
@@ -620,34 +620,36 @@ end;
 //  QryTrx.Execute;
 //end;
 
-procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery; const ASku, AUsuario: string);
+procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery;
+                                           const ACliente, ASku, AUsuario: string);
 begin
-  // Cuando una prenda en depósito se paga al 100%, se cierra el préstamo.
-  // Nota: El stock no se toca aquí porque ya salió físicamente del depósito en la Venta (VE)
-  QryTrx.SQL.Text :=
-    'UPDATE fza_depositos_cliente ' +
-    '   SET ESTADO_DEP = ''CERRADO'', ' +
-    '       USUARIOMODIF = :USUARIO ' +
-    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
-    '   AND ESTADO_DEP = ''PENDIENTE''';
-  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
-  QryTrx.ParamByName('SKU').AsString := ASku;
+  // Llamamos al SP para forzar el estado a CERRADO. El anticipo no se incrementa (0).
+  QryTrx.SQL.Text := 'CALL PRC_FZA_DEPOSITOS_UPDATE(:SKU, :CLI, :ESTADO, :INC_ANTICIPO, :USUARIO)';
+
+  QryTrx.ParamByName('SKU').AsString          := ASku;
+  QryTrx.ParamByName('CLI').AsString          := ACliente;
+  QryTrx.ParamByName('ESTADO').AsString       := 'CERRADO';
+  QryTrx.ParamByName('INC_ANTICIPO').AsCurrency := 0;
+  QryTrx.ParamByName('USUARIO').AsString      := AUsuario;
+
   QryTrx.Execute;
 end;
-procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery; const ASku, AUsuario: string;
+
+procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
+                                              const ACliente, ASku, AUsuario: string;
                                               ANuevoAbono: Currency);
 begin
-  // Cuando el cliente da un cobro parcial sobre una prenda que YA estaba en depósito
   if ANuevoAbono <= 0 then Exit;
-  QryTrx.SQL.Text :=
-    'UPDATE fza_depositos_cliente ' +
-    '   SET IMPORTE_ANTICIPO_DEP = IMPORTE_ANTICIPO_DEP + :NUEVO_ABONO, ' +
-    '       USUARIOMODIF = :USUARIO ' +
-    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
-    '   AND ESTADO_DEP = ''PENDIENTE''';
-  QryTrx.ParamByName('NUEVO_ABONO').AsCurrency := ANuevoAbono;
-  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
-  QryTrx.ParamByName('SKU').AsString := ASku;
+
+  // Llamamos al SP pasando NULL al estado (se queda PENDIENTE) y pasamos el incremento.
+  QryTrx.SQL.Text := 'CALL PRC_FZA_DEPOSITOS_UPDATE(:SKU, :CLI, :ESTADO, :INC_ANTICIPO, :USUARIO)';
+
+  QryTrx.ParamByName('SKU').AsString          := ASku;
+  QryTrx.ParamByName('CLI').AsString          := ACliente;
+  QryTrx.ParamByName('ESTADO').Clear; // Enviamos NULL para que el SP respete el estado actual
+  QryTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
+  QryTrx.ParamByName('USUARIO').AsString      := AUsuario;
+
   QryTrx.Execute;
 end;
 
@@ -855,47 +857,56 @@ procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           ASku:       string;   // código unidad / SKU
                           ADesc:      string;   // descripción
                           ACantidad:  Double;   // siempre positivo; el tipo de mov indica el signo
-                          ACoste:     Currency; // 0 en salidas y traspasos → trigger usa PMP vigente
+                          ACoste:     Currency; // 0 en salidas y traspasos
                           ACliente:   string;   // código cliente ('' si no aplica)
                           AUsuario:   string);
 begin
+  // Llamada al Procedimiento Almacenado
   QryTrx.SQL.Text :=
-    'INSERT INTO fza_movimientos_almacen (' +
-    '  NUMERO_MOV,' +
-    '  TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,' +
-    '  CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, FECHA_MOV,' +
-    '  CODIGO_ARTICULO_MOV, CODIGO_UNIDAD_MOV, DESCRIPCION_ARTICULO_MOV,' +
-    '  TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, PRECIO_COSTE_UNITARIO_MOV,' +
-    '  CODIGO_ALMACEN_CONTRA_MOV,' +
-    '  CODIGO_CLIENTE_MOV,' +
-    '  USUARIOALTA, USUARIOMODIF, INSTANTEALTA) ' +
-    'VALUES (' +
-    '  :NUMOV,' +
-    '  :TIPODOC, :SERIE, :NRO, :LINEA,' +
-    '  :EMP, :ALM, NOW(),' +
-    '  :ART, :SKU, :DESC,' +
-    '  :TIPOMOV, :CANT, :COSTE,' +
-    '  NULLIF(:ALMCONTRA, ''''),' +
-    '  NULLIF(:CLI, ''''),' +
-    '  :USUARIO, :USUARIO, NOW())';
-  QryTrx.ParamByName('NUMOV').AsString     := ObtenerSiguienteContador('MV');
-  QryTrx.ParamByName('TIPODOC').AsString   := ATipoDoc;
-  QryTrx.ParamByName('SERIE').AsString     := ASerie;
-  QryTrx.ParamByName('NRO').AsString       := ANro;
-  QryTrx.ParamByName('LINEA').AsString     := ALinea;
-  QryTrx.ParamByName('EMP').AsString       := AEmpresa;
-  QryTrx.ParamByName('ALM').AsString       := AAlmacen;
-  QryTrx.ParamByName('ART').AsString       := AArticulo;
-  QryTrx.ParamByName('SKU').AsString       := ASku;
-  QryTrx.ParamByName('DESC').AsString      := ADesc;
-  QryTrx.ParamByName('TIPOMOV').AsString   := ATipoMov;
-  QryTrx.ParamByName('CANT').AsFloat       := Abs(ACantidad);
-  QryTrx.ParamByName('COSTE').AsCurrency   := ACoste;
-  QryTrx.ParamByName('ALMCONTRA').AsString := AAlmContra;
-  QryTrx.ParamByName('CLI').AsString       := ACliente;
-  QryTrx.ParamByName('USUARIO').AsString   := AUsuario;
+    'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(' +
+    '  :NUMOV, :TIPODOC, :SERIE, :NRO, :LINEA,' +
+    '  :EMP, :ALM, :SKU, :ART,' +
+    '  :ALMCONTRA, :CLI, :PROV,' +
+    '  :TIPOMOV, :CANT, :PRECIOMEDIO, :TOTALCOSTE, :USUARIO' +
+    ')';
+
+  QryTrx.ParamByName('NUMOV').AsString       := ObtenerSiguienteContador('MV');
+  QryTrx.ParamByName('TIPODOC').AsString     := ATipoDoc;
+  QryTrx.ParamByName('SERIE').AsString       := ASerie;
+  QryTrx.ParamByName('NRO').AsString         := ANro;
+  QryTrx.ParamByName('LINEA').AsString       := ALinea;
+  QryTrx.ParamByName('EMP').AsString         := AEmpresa;
+  QryTrx.ParamByName('ALM').AsString         := AAlmacen;
+  QryTrx.ParamByName('SKU').AsString         := ASku;
+  QryTrx.ParamByName('ART').AsString         := AArticulo;
+
+  // Tratamiento de nulos para IDs vacíos
+  if AAlmContra = '' then
+    QryTrx.ParamByName('ALMCONTRA').Clear
+  else
+    QryTrx.ParamByName('ALMCONTRA').AsString := AAlmContra;
+
+  if ACliente = '' then
+    QryTrx.ParamByName('CLI').Clear
+  else
+    QryTrx.ParamByName('CLI').AsString       := ACliente;
+
+  // El SP requiere Proveedor, pero no está en los parámetros de la función Delphi.
+  // Lo enviamos como NULL por defecto.
+  QryTrx.ParamByName('PROV').Clear;
+
+  QryTrx.ParamByName('TIPOMOV').AsString     := ATipoMov;
+  QryTrx.ParamByName('CANT').AsFloat         := Abs(ACantidad);
+
+  // Costes enviados desde la App (el SP los ignorará si es salida 'S')
+  QryTrx.ParamByName('PRECIOMEDIO').AsCurrency := ACoste;
+  QryTrx.ParamByName('TOTALCOSTE').AsCurrency  := ACoste * Abs(ACantidad);
+
+  QryTrx.ParamByName('USUARIO').AsString     := AUsuario;
+
   QryTrx.Execute;
 end;
+
 // -----------------------------------------------------------------------------
 // MODIFICADO: AnularDepositoCliente
 // Firma ampliada con AEmpresa y AArticulo para poder rellenar los movimientos.
@@ -986,63 +997,39 @@ begin
   // 1. Traspaso de stock: Salida de tienda → Entrada al almacén depósito
   // 1a. Salida de tienda
   InsertarMovimientoAlmacen(
-    QryTrx,
-    'TR',
-    '', '', '0001',
-    AEmpresa,
-    AAlmacenOrigen,    // tienda — pierde stock
-    AAlmacenDestino,   // depósito — recibe stock
-    'S',
-    AArticulo, ASku, '',
-    ACantidad,
-    0,                 // salida → trigger usa PMP vigente
-    ACliente, AUsuario);
+    QryTrx, 'TR', '', '', '0001', AEmpresa, AAlmacenOrigen, AAlmacenDestino, 'S',
+    AArticulo, ASku, '', ACantidad, 0, ACliente, AUsuario);
+
   // 1b. Entrada al almacén depósito
   InsertarMovimientoAlmacen(
-    QryTrx,
-    'TR',
-    '', '', '0002',
-    AEmpresa,
-    AAlmacenDestino,   // depósito — recibe stock
-    AAlmacenOrigen,    // tienda — procedencia
-    'E',
-    AArticulo, ASku, '',
-    ACantidad,
-    0,                 // entrada sin coste → trigger toma PMP del almacén tienda
-    ACliente, AUsuario);
-  // 2. Crear registro en fza_depositos_cliente
+    QryTrx, 'TR', '', '', '0002', AEmpresa, AAlmacenDestino, AAlmacenOrigen, 'E',
+    AArticulo, ASku, '', ACantidad, 0, ACliente, AUsuario);
+
+  // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
+  NuevoIdDep := Copy(NuevoIdDep, 1, 20); // Aseguramos longitud máxima
+
+  // 3. Crear registro de depósito llamando al Procedimiento Almacenado
   QryTrx.SQL.Text :=
-    'INSERT INTO fza_depositos_cliente (' +
-    '  ID_DEPOSITO_DEP,' +
-    '  CODIGO_EMPRESA_DEP,' +
-    '  CODIGO_CLIENTE_DEP,' +
-    '  CODIGO_ARTICULO_DEP,' +
-    '  CODIGO_UNIDAD_DEP,' +
-    '  PRECIO_VENTA_DEP,' +
-    '  IMPORTE_ANTICIPO_DEP,' +
-    '  ESTADO_DEP,' +
-    '  TIPO_IVA_DEP,' +
-    '  PORCEN_IVA_DEP,' +
-    '  ESIMP_INCL_DEP,' +
-    '  INSTANTEALTA,' +
-    '  USUARIOALTA, USUARIOMODIF) ' +
-    'VALUES (' +
-    '  :ID_DEP, :EMP, :CLI, :ART, :SKU, :PRECIO,' +
-    '  :ABONO, ''PENDIENTE'', :TIPOIVA, :PORCIVA, :IMPINCL,' +
-    '  NOW(), :USUARIO, :USUARIO)';
-  QryTrx.ParamByName('ID_DEP').AsString    := Copy(NuevoIdDep, 1, 20);
-  QryTrx.ParamByName('EMP').AsString       := AEmpresa;
-  QryTrx.ParamByName('CLI').AsString       := ACliente;
-  QryTrx.ParamByName('ART').AsString       := AArticulo;
-  QryTrx.ParamByName('SKU').AsString       := ASku;
-  QryTrx.ParamByName('PRECIO').AsCurrency  := APrecioVenta;
-  QryTrx.ParamByName('ABONO').AsCurrency   := AAnticipo;
-  QryTrx.ParamByName('USUARIO').AsString   := AUsuario;
-  QryTrx.ParamByName('TIPOIVA').AsString   := ATipoIVA;
-  QryTrx.ParamByName('PORCIVA').AsCurrency := APorcIVA;
-  QryTrx.ParamByName('IMPINCL').AsString   := AEsImpIncl;
+    'CALL PRC_FZA_DEPOSITOS_INSERT(' +
+    '  :ID_DEP, :EMP, :CLI, :ART, :SKU, :PRECIO, :CANTIDAD, :ANTICIPO,' +
+    '  :TIPOIVA, :PORCIVA, :IMPINCL, :USUARIO' +
+    ')';
+
+  QryTrx.ParamByName('ID_DEP').AsString     := NuevoIdDep;
+  QryTrx.ParamByName('EMP').AsString        := AEmpresa;
+  QryTrx.ParamByName('CLI').AsString        := ACliente;
+  QryTrx.ParamByName('ART').AsString        := AArticulo;
+  QryTrx.ParamByName('SKU').AsString        := ASku;
+  QryTrx.ParamByName('PRECIO').AsCurrency   := APrecioVenta;
+  QryTrx.ParamByName('CANTIDAD').AsFloat    := ACantidad;
+  QryTrx.ParamByName('ANTICIPO').AsCurrency := AAnticipo;
+  QryTrx.ParamByName('TIPOIVA').AsString    := ATipoIVA;
+  QryTrx.ParamByName('PORCIVA').AsCurrency  := APorcIVA;
+  QryTrx.ParamByName('IMPINCL').AsString    := AEsImpIncl;
+  QryTrx.ParamByName('USUARIO').AsString    := AUsuario;
+
   QryTrx.Execute;
 end;
 
@@ -1356,9 +1343,11 @@ begin
 
             if Lin.AccionDeposito = 'AUMENTAR_DEP' then
             begin
-              AumentarAnticipoDeposito(
-                QryTrx, Lin.Sku, UsuarioCaja, Lin.TotalCIva);
-
+              AumentarAnticipoDeposito(QryTrx,
+                                       Cab.CodigoCliente,
+                                       Lin.Sku,
+                                       UsuarioCaja,
+                                       Lin.TotalCIva);
               if Lin.TotalCIva > 0 then
                 InsertarOperacionCaja(
                   QryTrx,
@@ -1407,7 +1396,10 @@ begin
           if Lin.VieneDeDeposito = 'S' then
           begin
             AlmacenOrigenSalida := AlmacenDeposito;
-            CerrarDepositoCliente(QryTrx, Lin.Sku, UsuarioCaja);
+            CerrarDepositoCliente(QryTrx,
+                                  Cab.CodigoCliente,
+                                  Lin.Sku,
+                                  UsuarioCaja);
             // Cierre del depósito: cancela el compromiso total
             InsertarOperacionCaja(
               QryTrx,
