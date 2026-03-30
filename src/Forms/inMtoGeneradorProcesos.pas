@@ -27,7 +27,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
-  UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal,
+  UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
 
@@ -181,6 +181,10 @@ type
     procedure ActionBuscarExecute(Sender: TObject);
     procedure ActionReemplazarExecute(Sender: TObject);
     procedure ActionBuscarGlobalExecute(Sender: TObject);
+    procedure ActionEditoresUpdate(Sender: TObject);
+    procedure ActionDeshacerExecute(Sender: TObject);
+    procedure ActionRehacerExecute(Sender: TObject);
+    procedure ActionBorrarLineaExecute(Sender: TObject);
     procedure DoFind(Sender: TObject);
     procedure DoReplace(Sender: TObject);
     procedure BuscarGlobal;
@@ -217,6 +221,35 @@ uses
   ts.Editor.CodeFormatters;
 
 {$R *.dfm}
+
+procedure TfrmMtoGeneradorProcesos.ActionEditoresUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled := DBSynEdit1.Focused or syndtEstructura.Focused;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionDeshacerExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.Undo
+  else if syndtEstructura.Focused then
+    syndtEstructura.Undo;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionRehacerExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.Redo
+  else if syndtEstructura.Focused then
+    syndtEstructura.Redo;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionBorrarLineaExecute(Sender: TObject);
+begin
+  if DBSynEdit1.Focused then
+    DBSynEdit1.CommandProcessor(ecDeleteLine, #0, nil)
+  else if syndtEstructura.Focused then
+    syndtEstructura.CommandProcessor(ecDeleteLine, #0, nil);
+end;
 
 procedure TfrmMtoGeneradorProcesos.AppEventsMessage(var Msg: TMsg; var Handled: Boolean);
 begin
@@ -344,16 +377,42 @@ begin
   // Creamos el componente menú
   FPopMenuEditores := TPopupMenu.Create(Self);
 
+  // Botón Deshacer
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '&Deshacer';
+  Item.ShortCut := TextToShortCut('Ctrl+Z');
+  Item.OnClick := ActionDeshacerExecute; // Apunta al método de la acción
+  FPopMenuEditores.Items.Add(Item);
+
+  // Botón Rehacer
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '&Rehacer';
+  Item.ShortCut := TextToShortCut('Shift+Ctrl+Z');
+  Item.OnClick := ActionRehacerExecute; // Apunta al método de la acción
+  FPopMenuEditores.Items.Add(Item);
+
+  // Botón Borrar Línea
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '&Borrar Línea';
+  Item.ShortCut := TextToShortCut('Ctrl+Y');
+  Item.OnClick := ActionBorrarLineaExecute; // Apunta al método de la acción
+  FPopMenuEditores.Items.Add(Item);
+
+  // Añadimos un separador visual
+  Item := TMenuItem.Create(FPopMenuEditores);
+  Item.Caption := '-';
+  FPopMenuEditores.Items.Add(Item);
+
   // Botón Cortar
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Cortar';
+  Item.Caption := 'Cor&tar';
   Item.ShortCut := TextToShortCut('Ctrl+X');
   Item.OnClick := mnuCortarClick;
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Copiar
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := 'C&opiar';
+  Item.Caption := '&Copiar';
   Item.ShortCut := TextToShortCut('Ctrl+C');
   Item.OnClick := mnuCopiarClick;
   FPopMenuEditores.Items.Add(Item);
@@ -481,6 +540,7 @@ end;
 procedure TfrmMtoGeneradorProcesos.ActionSeleccionarExecute(Sender: TObject);
 var
   sNombreMetadato, sScriptCompleto: string;
+  bEsProcedimiento: Boolean;
 begin
   inherited;
 
@@ -503,6 +563,9 @@ begin
       begin
         sNombreMetadato := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
 
+        // Comprobamos si el metadato actual es un procedimiento (tipo 3)
+        bEsProcedimiento := (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3');
+
         // Recogemos el script completo
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
 
@@ -513,16 +576,27 @@ begin
         end;
 
         // 3. INYECTAMOS EL "OR REPLACE" MÁGICAMENTE
-        // Usamos rfIgnoreCase por si el motor devuelve 'create' en minúsculas
         sScriptCompleto := StringReplace(sScriptCompleto,
                      'CREATE TABLE', 'CREATE OR REPLACE TABLE', [rfIgnoreCase]);
         sScriptCompleto := StringReplace(sScriptCompleto,
                        'CREATE VIEW', 'CREATE OR REPLACE VIEW', [rfIgnoreCase]);
         sScriptCompleto := StringReplace(sScriptCompleto,
              'CREATE PROCEDURE', 'CREATE OR REPLACE PROCEDURE', [rfIgnoreCase]);
+
         // Añadir punto y coma final si no lo tiene
         if RightStr(Trim(sScriptCompleto), 1) <> ';' then
           sScriptCompleto := Trim(sScriptCompleto) + ';';
+
+        // --- MAGIA NUEVA: ENVOLVEMOS EN DELIMITERS SI ES PROCEDURE ---
+        if bEsProcedimiento then
+        begin
+          sScriptCompleto := 'DELIMITER $$' + sLineBreak +
+                             sScriptCompleto + sLineBreak +
+                             '$$' + sLineBreak +
+                             'DELIMITER ;';
+        end;
+        // -------------------------------------------------------------
+
         // Ponemos la tabla en modo inserción
         if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
           dsTablaG.DataSet.Append;
@@ -530,7 +604,7 @@ begin
         // Volcamos todo al editor principal
         unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Modificar ' + sNombreMetadato;
         unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sScriptCompleto;
-//        DBsynedit1.text := sScriptCompleto;
+
         // Cambiamos de pestaña y damos foco
         pcPestana.ActivePage := tsSQL;
         if DBSynEdit1.CanFocus then
@@ -991,6 +1065,31 @@ end;
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+Z');
+    OnExecute := ActionDeshacerExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
+
+  // [Shift + Ctrl + Z] Rehacer
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Shift+Ctrl+Z');
+    OnExecute := ActionRehacerExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
+
+  // [Ctrl + Y] Borrar Línea
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+Y');
+    OnExecute := ActionBorrarLineaExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
   if not Assigned(FAppEvents) then
   begin
     FAppEvents := TApplicationEvents.Create(Self);
