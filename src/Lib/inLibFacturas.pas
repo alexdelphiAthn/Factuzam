@@ -963,11 +963,9 @@ begin
   // 1. Calcular base imponible y total de la línea forzando el redondeo a 2 decimales
   baseImponible := SimpleRoundTo(linea.TotSiva, -2);
   totalLineaCIVA := SimpleRoundTo(linea.TotCiva, -2);
-
   // Obtener porcentajes según el tipo de IVA
   porcentajeIVA := ObtenerPorcentajePorTipo(linea.TipoIva);
   porcentajeRE := ObtenerPorcentajeREPorTipo(linea.TipoIva);
-
   // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA incluido
   if SameText(linea.Impcl, 'S') then
   begin
@@ -979,13 +977,11 @@ begin
     importeIVA := SimpleRoundTo(baseImponible * (porcentajeIVA / 100), -2);
     importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
   end;
-
   // Acumuladores generales
   _totales.TotalCantidades := _totales.TotalCantidades + linea.Cant;
   _totales.TotalBruto := _totales.TotalBruto + (linea.PrecioSal * linea.Cant);
   _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
                                     (linea.Dto * linea.Cant);
-
   // Acumuladores fiscales por bloque de IVA
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
