@@ -686,96 +686,66 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
-    Qry.SQL.Text := 'SELECT * ' +
-                    '  FROM vi_caja_busqueda_unificada ' +
-                    ' WHERE (INPUT_BUSQUEDA = :COD) ' +
-                    '    OR (CODIGO_SKU = :COD) ' +
-                    '    OR (CODIGO_PADRE = :COD) ' +
-                    ' LIMIT 1';
+    Qry.SQL.Text := 'SELECT * FROM vi_caja_busqueda_unificada ' +
+                    ' WHERE (INPUT_BUSQUEDA = :COD) OR (CODIGO_SKU = :COD) OR (CODIGO_PADRE = :COD) LIMIT 1';
     Qry.ParamByName('COD').AsString := CodigoLimpio;
     Qry.Open;
+
     if not Qry.IsEmpty then
     begin
       SkuDetectado := Qry.FieldByName('CODIGO_SKU').AsString;
       CodigoPadre := Qry.FieldByName('CODIGO_PADRE').AsString;
-      with DatosCaja.cdsLineas do
-      begin
-        if State = dsBrowse then Edit;
-        FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
-                               Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
-        FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString :=
-                                      Qry.FieldByName('TIPO_ARTICULO').AsString;
-        FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
-      end;
-      if SkuDetectado <> '' then
-      begin
-        ConsultarStock(SkuDetectado);
-        DatosCaja.cdsLineas.FieldByName(
-                        'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
-        RecalcularPrecioDesdeSku(SkuDetectado);
-        Result := True;
-      end
-      else if CodigoPadre <> '' then
-      begin
-        ConsultarStock(CodigoPadre);
-        DatosCaja.cdsLineas.FieldByName(
-                         'CODIGO_UNIDAD_FACTURA_LINEA').AsString := CodigoPadre;
-        sql := TUniQuery.Create(nil);
-        try
-          sql.Connection := oConn;
-          sql.SQL.Text := 'SELECT PRECIOSALIDA_TARIFA, ' +
-                          '       ESIMP_INCL_TARIFA, ' +
-                          '       TIPO_IVA_ARTICULO, ' +
-                          '       PORCEN_DTO_TARIFA, ' +
-                          '       NUM_ATRIBUTOS_REQ    ' +
-                          '  FROM vi_articulos_tarifas ' +
-                          ' WHERE CODIGO_TARIFA = :CODTARIFA ' +
-                          '   AND CODIGO_ARTICULO_TARIFA = :CODIGOARTICULO ' +
-                          ' LIMIT 1';
-          sql.ParamByName('CODTARIFA').AsString :=
-               DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-          sql.ParamByName('CODIGOARTICULO').AsString := CodigoPadre;
-          sql.Open;
-          if not sql.IsEmpty then
-          begin
-             var NumAtributosReq :=
-                                 sql.FieldByName('NUM_ATRIBUTOS_REQ').AsInteger;
-             DatosCaja.cdsLineas.FieldByName(
-                                 'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
-                                                                NumAtributosReq;
-             DatosCaja.cdsLineas.FieldByName(
-                                  'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString :=
-                                  sql.FieldByName('TIPO_IVA_ARTICULO').AsString;
-             DatosCaja.cdsLineas.FieldByName(
-                                  'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString :=
-                                  sql.FieldByName('ESIMP_INCL_TARIFA').AsString;
-              if NumAtributosReq = 0 then
-                DatosCaja.cdsLineas.FieldByName(
-                                     'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
-                              sql.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
-             if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
-                DatosCaja.cdsLineas.FieldByName(
-                                          'PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-                                   sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat;
-          end
-          else
-          begin
-             DatosCaja.cdsLineas.FieldByName(
-                                  'PRECIOSALIDA_FACTURA_LINEA').AsCurrency := 0;
+      DatosCaja.cdsLineas.DisableControls;
+      try
+        if DatosCaja.cdsLineas.State = dsBrowse then DatosCaja.cdsLineas.Edit;
+
+        DatosCaja.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('TIPO_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
+        if SkuDetectado <> '' then
+        begin
+          ConsultarStock(SkuDetectado);
+          DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
+          RecalcularPrecioDesdeSku(SkuDetectado); // CUIDADO: Asegúrate de que aquí dentro NO haya otro GridRecalc si puedes evitarlo
+          Result := True;
+        end
+        else if CodigoPadre <> '' then
+        begin
+          ConsultarStock(CodigoPadre);
+          DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString := CodigoPadre;
+          sql := TUniQuery.Create(nil);
+          try
+            sql.Connection := oConn;
+            sql.SQL.Text := 'SELECT PRECIOSALIDA_TARIFA, ESIMP_INCL_TARIFA, TIPO_IVA_ARTICULO, PORCEN_DTO_TARIFA, NUM_ATRIBUTOS_REQ ' +
+                            '  FROM vi_articulos_tarifas WHERE CODIGO_TARIFA = :CODTARIFA AND CODIGO_ARTICULO_TARIFA = :CODIGOARTICULO LIMIT 1';
+            sql.ParamByName('CODTARIFA').AsString := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+            sql.ParamByName('CODIGOARTICULO').AsString := CodigoPadre;
+            sql.Open;
+            if not sql.IsEmpty then
+            begin
+               var NumAtributosReq := sql.FieldByName('NUM_ATRIBUTOS_REQ').AsInteger;
+               DatosCaja.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NumAtributosReq;
+               DatosCaja.cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString := sql.FieldByName('TIPO_IVA_ARTICULO').AsString;
+               DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString := sql.FieldByName('ESIMP_INCL_TARIFA').AsString;
+               if NumAtributosReq = 0 then
+                  DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := sql.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
+               if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
+                  DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat;
+            end
+            else
+            begin
+               DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := 0;
+            end;
+            DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
+          finally
+            sql.Free;
           end;
-          DatosCaja.cdsLineas.FieldByName(
-                                      'CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
-          GridRecalc(nil,
-                     cxGrid1DBTableView1,
-                     DatosCaja.cdsLineas,
-                     DatosCaja.cdsCabecera,
-                     ActualizarLabelTotal);
-        finally
-          sql.Free;
+          Result := True;
         end;
-        Result := True;
+      finally
+        DatosCaja.cdsLineas.EnableControls;
       end;
+      GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
     end;
   finally
     Qry.Free;
