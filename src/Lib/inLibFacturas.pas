@@ -397,7 +397,10 @@ begin
   begin
     _sNumLin := FieldByName(fnrolin).AsString;
     _dCant := FieldByName(fcant).AsFloat;
-    _sImpcl := FieldByName(fImpcl).AsString;
+    if FieldByName(fImpcl).AsString = '' then
+      _sImpcl := 'S'
+    else
+      _sImpcl := FieldByName(fImpcl).AsString;
     _sTipIVA := FieldByName(fTipIva).AsString;
     _dPorIVa := FieldByName(fPorIva).AsFloat;
     _dPrecioSal := FieldByName(fpreciosal).AsFloat;
@@ -955,24 +958,39 @@ procedure TFacturaTotales.AcumularTotalesPorTipoIVA(linea: TLinFac);
 var
   porcentajeIVA, porcentajeRE: Currency;
   baseImponible, importeIVA, importeRE: Currency;
+  totalLineaCIVA: Currency;
 begin
-  // Calcular base imponible de la línea
-  baseImponible := linea.TotSiva;
+  // 1. Calcular base imponible y total de la línea forzando el redondeo a 2 decimales
+  baseImponible := SimpleRoundTo(linea.TotSiva, -2);
+  totalLineaCIVA := SimpleRoundTo(linea.TotCiva, -2);
+
   // Obtener porcentajes según el tipo de IVA
   porcentajeIVA := ObtenerPorcentajePorTipo(linea.TipoIva);
   porcentajeRE := ObtenerPorcentajeREPorTipo(linea.TipoIva);
-  // Calcular importes
-  importeIVA := baseImponible * (porcentajeIVA / 100);
-  importeRE := baseImponible * (porcentajeRE / 100);
-  _totales.TotalCantidades := _totales.TotalCantidades + linea._dCant;
+
+  // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA incluido
+  if SameText(linea.Impcl, 'S') then
+  begin
+    importeIVA := totalLineaCIVA - baseImponible;
+    importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
+  end
+  else
+  begin
+    importeIVA := SimpleRoundTo(baseImponible * (porcentajeIVA / 100), -2);
+    importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
+  end;
+
+  // Acumuladores generales
+  _totales.TotalCantidades := _totales.TotalCantidades + linea.Cant;
   _totales.TotalBruto := _totales.TotalBruto + (linea.PrecioSal * linea.Cant);
   _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
                                     (linea.Dto * linea.Cant);
+
+  // Acumuladores fiscales por bloque de IVA
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
       begin
-        _totales.IVAN.BaseImponible := _totales.IVAN.BaseImponible +
-                                                                  baseImponible;
+        _totales.IVAN.BaseImponible := _totales.IVAN.BaseImponible + baseImponible;
         _totales.IVAN.PorcentajeIVA := porcentajeIVA;
         _totales.IVAN.PorcentajeRE := porcentajeRE;
         _totales.IVAN.ImporteIVA := _totales.IVAN.ImporteIVA + importeIVA;
@@ -980,8 +998,7 @@ begin
       end;
     1: // IVA Reducido
       begin
-        _totales.IVAR.BaseImponible := _totales.IVAR.BaseImponible +
-                                                                  baseImponible;
+        _totales.IVAR.BaseImponible := _totales.IVAR.BaseImponible + baseImponible;
         _totales.IVAR.PorcentajeIVA := porcentajeIVA;
         _totales.IVAR.PorcentajeRE := porcentajeRE;
         _totales.IVAR.ImporteIVA := _totales.IVAR.ImporteIVA + importeIVA;
@@ -989,8 +1006,7 @@ begin
       end;
     2: // IVA SuperReducido
       begin
-        _totales.IVAS.BaseImponible :=
-                                    _totales.IVAS.BaseImponible + baseImponible;
+        _totales.IVAS.BaseImponible := _totales.IVAS.BaseImponible + baseImponible;
         _totales.IVAS.PorcentajeIVA := porcentajeIVA;
         _totales.IVAS.PorcentajeRE := porcentajeRE;
         _totales.IVAS.ImporteIVA := _totales.IVAS.ImporteIVA + importeIVA;
