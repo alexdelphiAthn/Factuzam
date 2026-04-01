@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 485
-  ClientWidth = 1186
+  ClientHeight = 477
+  ClientWidth = 1184
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1186
+    Width = 1184
     Height = 89
     Align = alTop
     TabOrder = 0
@@ -120,8 +120,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1186
-    Height = 396
+    Width = 1184
+    Height = 388
     Align = alClient
     TabOrder = 3
     object Panel1: TPanel
@@ -131,8 +131,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 289
+      ExplicitWidth = 1182
       DesignSize = (
-        1184
+        1182
         98)
       object btnF12: TcxButton
         Left = 10
@@ -252,7 +254,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 736
+        Left = 732
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -276,7 +278,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         Height = 80
         Width = 423
-        AnchorX = 1159
+        AnchorX = 1155
       end
       object btnF8: TcxButton
         Left = 224
@@ -328,8 +330,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1184
-      Height = 296
+      Width = 1182
+      Height = 288
       Align = alClient
       TabOrder = 0
       object cxGrid1: TcxGrid
@@ -347,6 +349,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
+        ExplicitWidth = 1180
+        ExplicitHeight = 162
         object cxGrid1DBTableView1: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -440,6 +444,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Height = 116
         Align = alBottom
         TabOrder = 1
+        ExplicitTop = 171
+        ExplicitWidth = 1180
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
@@ -455,6 +461,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
+          ExplicitWidth = 1178
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
@@ -487,6 +494,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
+        ExplicitTop = 163
+        ExplicitWidth = 1180
       end
     end
   end

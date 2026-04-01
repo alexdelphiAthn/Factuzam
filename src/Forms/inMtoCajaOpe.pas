@@ -537,8 +537,8 @@ begin
     unqryCon.ParamByName('p_solotarifa').AsInteger :=
       Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
-                                        unqryCon,
-                                        'frmMtoArtFacSearch') then
+                                       unqryCon,
+                                       'frmMtoArtFacSearch') then
       Result := unqryCon.FieldByName('CODIGO_ARTICULO').AsString
     else
       Result := '';
