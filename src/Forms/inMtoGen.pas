@@ -590,11 +590,33 @@ begin
 //    if ((pcPantalla.ActivePage = tsFicha)) then
 //        pcPantalla.ActivePage := tsLista;
   end;
+
   if ((Key = VK_RETURN) and (ActiveControl = nil)) then
   begin
     key := 0;
     SimulateTabKey;
   end;
+
+  // -------------------------------------------------------------------
+  // NUEVO BLOQUE: Control + Supr para eliminar el registro actual
+  // -------------------------------------------------------------------
+  if (Key = VK_DELETE) and (ssCtrl in Shift) then
+  begin
+    if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and not
+       dsTablaG.DataSet.IsEmpty and (dsTablaG.State = dsBrowse) then
+    begin
+      if Application.MessageBox('¿Estás seguro de que deseas eliminar este registro?',
+                                'Confirmar eliminación',
+                                MB_YESNO + MB_ICONWARNING) = ID_YES then
+      begin
+        dsTablaG.DataSet.Delete;
+      end;
+    end;
+    Key := 0; // Evitamos que la pulsación se propague
+    Exit;     // Salimos para no evaluar más condiciones
+  end;
+  // -------------------------------------------------------------------
+
   if (dsTablaG.State = dsBrowse) then
   begin
     if (Key = VK_PRIOR) then
