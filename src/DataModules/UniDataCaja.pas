@@ -1133,30 +1133,23 @@ begin
   NumeroGenerado := '0';
   ValeGenerado   := '';
   NumLineaPago   := 0;
-
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
-
   // Generamos el número global de caja que agrupará toda la operación
 //  NumOperacionVE := sOpeCaja;
-
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
-
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
-
   if cdsLineas.IsEmpty then
     raise Exception.Create('No se puede grabar una operación sin líneas.');
-
   if DatosCobro.ImporteEntregado < cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency then
   begin
+    //es una operación de préstamo
     TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
     if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
       raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
   end;
-
   Cab          := LeerCabecera;
   TotalFactura := DatosCobro.ImporteEntregado;
-
   // =======================================================================
   // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
   // =======================================================================
@@ -1167,16 +1160,14 @@ begin
     while not cdsLineas.Eof do
     begin
       var Accion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
-
       if (Accion = '') or (Accion = 'COBRAR') or (Accion = 'CANCELAR') then
       begin
         RequiereFactura := True;
         Break;
       end;
-
       if (Accion = 'NUEVO_DEP') or (Accion = 'AUMENTAR_DEP') then
       begin
-        if  DatosCobro.ImporteEntregado > 0.001 then
+        if DatosCobro.ImporteEntregado > 0.001 then
         begin
           RequiereFactura := True;
           Break;
@@ -1187,7 +1178,6 @@ begin
   finally
     cdsLineas.EnableControls;
   end;
-
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================
@@ -1209,7 +1199,6 @@ begin
         uspQryTrx.Prepare;
         uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
         uspQryTrx.ParamByName('pTipoDoc').AsString := 'FC';
-        uspQryTrx.ParamByName('pUSUARIO').AsString := UsuarioCaja;
         uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
         uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
         uspQryTrx.Execute;
@@ -1645,30 +1634,31 @@ end;
 function TdmCajaOpe.SiguienteOpCaja(AEmpresa,
                                       AAlmacen,
                                       ACaja,
-                                      AEmpleado:string): string;
+                                      AEmpleado: string): string;
 var
-    NumOp: string;
+  SpTrx: TUniStoredProc;
 begin
-  var QryTrx : TUniQuery := TUniQuery.Create(nil);
+  SpTrx := TUniStoredProc.Create(nil);
   try
-    QryTrx.Connection := oConn;
-    QryTrx.SQL.Text :=
-      'CALL PRC_GET_NEXT_OP_CAJA(:pEmpresa, :pAlmacen, :pCaja, :pUsuario, :pSerie, :pcont)';
-    QryTrx.ParamByName('pEmpresa').AsString  := AEmpresa;
-    QryTrx.ParamByName('pAlmacen').AsString  := AAlmacen;
-    QryTrx.ParamByName('pCaja').AsString     := ACaja;
-    QryTrx.ParamByName('pUsuario').AsString  := AEmpleado;
-    QryTrx.ParamByName('pSerie').ParamType   := ptOutput;
-    QryTrx.ParamByName('pSerie').DataType    := ftString;
-    QryTrx.ParamByName('pSerie').Size        := 12;
-    QryTrx.ParamByName('pcont').ParamType    := ptOutput;
-    QryTrx.ParamByName('pcont').DataType     := ftString;
-    QryTrx.ParamByName('pcont').Size         := 20;
-    QryTrx.Execute;
-//    SerieOperacion := QryTrx.ParamByName('pSerie').AsString;  // misma en todas las llamadas
-    Result         := QryTrx.ParamByName('pcont').AsString;
+    SpTrx.Connection := oConn;
+    SpTrx.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
+    // 1. Creación y asignación explícita de parámetros IN
+    SpTrx.Params.CreateParam(ftString, 'pEmpresa', ptInput).AsString := AEmpresa;
+    SpTrx.Params.CreateParam(ftString, 'pAlmacen', ptInput).AsString := AAlmacen;
+    SpTrx.Params.CreateParam(ftString, 'pCaja',    ptInput).AsString := ACaja;
+    SpTrx.Params.CreateParam(ftString, 'pUsuario', ptInput).AsString := AEmpleado;
+    // 2. Creación explícita de parámetros OUT
+    SpTrx.Params.CreateParam(ftString, 'pSerie', ptOutput).Size := 12;
+    SpTrx.Params.CreateParam(ftString, 'pcont',  ptOutput).Size := 20;
+    // 3. Preparar el SP en el motor de base de datos
+    SpTrx.Prepare;
+    // 4. Ejecutar
+    SpTrx.Execute;
+    // SerieOperacion := SpTrx.ParamByName('pSerie').AsString;  // misma en todas las llamadas
+    Result := SpTrx.ParamByName('pcont').AsString;
   finally
-    QryTrx.Free;
+    // Al liberar el componente también se hace el UnPrepare automáticamente
+    SpTrx.Free;
   end;
 end;
 
@@ -2433,7 +2423,7 @@ begin
     '  NULLIF(:COMENT,  ''''),' +
     '  NULLIF(:SERIEABO, ''''), NULLIF(:NROABO, ''''),' +
     '  NULLIF(:ALM,  ''''), NULLIF(:CAJA,  ''''),' +
-    '  NULLIF(:CAJERO, ''''), NULLIF(:NUMOP, 0),' +
+    '  NULLIF(:CAJERO, ''''), NULLIF(:NUMOP, ''''),' +
     '  :USUARIO, :USUARIO, NOW())';
 
   // — identificación —
@@ -2587,7 +2577,7 @@ begin
     '  :TOTALSIVA, :TOTALCIVA,' +
     '  NULLIF(:VENDEDOR,  ''''),' +
     '  NULLIF(:ALM,       ''''), NULLIF(:CAJA, ''''),' +
-    '  NULLIF(:NUMOP, 0),' +
+    '  NULLIF(:NUMOP, ''''),' +
     '  NULLIF(:NUMMOV,    ''''),' +
     '  :USUARIO, :USUARIO, NOW())';
   QryTrx.ParamByName('SERIE').AsString    := ASerie;
