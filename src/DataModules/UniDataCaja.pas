@@ -438,7 +438,7 @@ begin
     Result.Articulo            := FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
     Result.Sku                 := FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
     Result.Descripcion         := FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
-    Result.DescripcionVariacion:= FieldByName('DESCRIPCION_VARIACION_FACTURA_LINEA').AsString;
+    // Result.DescripcionVariacion:= FieldByName('DESCRIPCION_VARIACION_FACTURA_LINEA').AsString;
     Result.Familia             := FieldByName('CODIGO_FAMILIA_FACTURA_LINEA').AsString;
     Result.NombreFamilia       := FieldByName('NOMBRE_FAMILIA_FACTURA_LINEA').AsString;
     Result.TipoArticulo        := FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString;
@@ -2545,7 +2545,7 @@ begin
     'INSERT INTO fza_facturas_lineas (' +
     '  SERIE_FACTURA_LINEA, NRO_FACTURA_LINEA, LINEA_FACTURA_LINEA,' +
     '  CODIGO_ARTICULO_FACTURA_LINEA, CODIGO_UNIDAD_FACTURA_LINEA,' +
-    '  DESCRIPCION_ARTICULO_FACTURA_LINEA, DESCRIPCION_VARIACION_FACTURA_LINEA,' +
+    '  DESCRIPCION_ARTICULO_FACTURA_LINEA, ' + //DESCRIPCION_VARIACION_FACTURA_LINEA,' +
     '  CODIGO_FAMILIA_FACTURA_LINEA, NOMBRE_FAMILIA_FACTURA_LINEA,' +
     '  TIPO_ARTICULO_FACTURA_LINEA, TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA,' +
     '  CANTIDAD_FACTURA_LINEA,' +
@@ -2564,7 +2564,7 @@ begin
     'VALUES (' +
     '  :SERIE, :NRO, :LINEA,' +
     '  NULLIF(:ART,   ''''), NULLIF(:SKU,    ''''),' +
-    '  NULLIF(:DESC,  ''''), NULLIF(:DESCVAR,''''),' +
+    '  NULLIF(:DESC,  ''''),' + //NULLIF(:DESCVAR,''''),' +
     '  NULLIF(:FAM,   ''''), NULLIF(:NOMFAM, ''''),' +
     '  :TIPOART, :TIPOCANT,' +
     '  :CANT,' +
