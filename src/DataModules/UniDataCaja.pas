@@ -1103,18 +1103,6 @@ var
   NumLineaPago:        Integer;
 
   // ---------------------------------------------------------------------------
-  // Siguiente número de operación de caja
-  // ---------------------------------------------------------------------------
-//  function SiguienteOpCaja: Integer;
-//  begin
-//    QryTrx.SQL.Text := 'SELECT GET_NEXT_OP_CAJA(:CAJA) AS NUEVO_OP';
-//    QryTrx.ParamByName('CAJA').AsString := ACaja;
-//    QryTrx.Open;
-//    Result := QryTrx.FieldByName('NUEVO_OP').AsInteger;
-//    QryTrx.Close;
-//  end;
-
-  // ---------------------------------------------------------------------------
   // Inserta línea de factura de anticipo (casos C)
   // No genera movimiento de almacén — ANumMovAlmacen = ''
   // ---------------------------------------------------------------------------
@@ -1127,7 +1115,6 @@ var
       PrecioBase := AImporte
     else
       PrecioBase := AImporte / (1 + Lin.PorcIva / 100);
-
     InsertarLineaFactura(
       QryTrx,
       SerieGenerada, NumeroGenerado,
@@ -1164,6 +1151,9 @@ begin
   if DatosCobro.ImporteEntregado <
      cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency then
   begin
+    if DatosCobro.ImporteEntregado <= 0 then
+      raise Exception.Create('Violación de regla de negocio: '+
+        'No se puede generar un depósito sin un anticipo previo.');
     TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
     if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
       raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
@@ -1172,27 +1162,26 @@ begin
   // Leer cabecera una sola vez
   Cab           := LeerCabecera;
   TotalFactura  := DatosCobro.ImporteEntregado;
-
-  QryTrx := TUniQuery.Create(nil);
+  // Instanciamos TUniStoredProc en lugar de TUniQuery
+  var uspQryTrx := TUniStoredProc.Create(nil);
   try
-    QryTrx.Connection := inLibGlobalVar.oConn;
+    uspQryTrx.Connection := inLibGlobalVar.oConn;
     inLibGlobalVar.oConn.StartTransaction;
     try
       // =======================================================================
-      // PASO 1: NÚMERO DE FACTURA
+      // PASO 1: NÚMERO DE FACTURA (CON TUniStoredProc)
       // =======================================================================
-      QryTrx.SQL.Text :=
-        'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMP, :pUSUARIO, :pcont)';
-      QryTrx.ParamByName('pserie').AsString   := SerieGenerada;
-      QryTrx.ParamByName('pTipoDoc').AsString := 'FC';
-      QryTrx.ParamByName('pEMP').AsString     := AEmpresa;
-      QryTrx.ParamByName('pUSUARIO').AsString := UsuarioCaja;
-      QryTrx.ParamByName('pcont').ParamType   := ptOutput;
-      QryTrx.ParamByName('pcont').DataType    := ftString;
-      QryTrx.ParamByName('pcont').Size        := 12;
-      QryTrx.Execute;
-      NumeroGenerado := QryTrx.ParamByName('pcont').AsString;
-
+      uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      uspQryTrx.Prepare;
+      uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
+      uspQryTrx.ParamByName('pTipoDoc').AsString := 'FC';
+      uspQryTrx.ParamByName('pUSUARIO').AsString := UsuarioCaja;
+      uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
+      uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
+      uspQryTrx.Execute;
+      NumeroGenerado := uspQryTrx.ParamByName('pcont').AsString;
+      QryTrx := TUniQuery.Create(nil);
+      QryTrx.Connection := inLibGlobalVar.oConn;
       // =======================================================================
       // PASO 2: OPERACIÓN VE GLOBAL EN CAJA
       // Se crea antes de la cabecera para tener NumOperacionVE disponible

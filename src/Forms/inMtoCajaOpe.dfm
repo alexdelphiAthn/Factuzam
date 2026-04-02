@@ -126,13 +126,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     TabOrder = 3
     object Panel1: TPanel
       Left = 1
-      Top = 297
-      Width = 1184
+      Top = 289
+      Width = 1182
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 289
-      ExplicitWidth = 1182
       DesignSize = (
         1182
         98)

@@ -243,6 +243,7 @@ type
     function BuscarPorcenRetencion(CodEmpresa: string): Currency;
     function BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
   public
+    FTieneLineasNegativas:Boolean;
     constructor Create(unqryFac: TDataset;
                        unqryLineas: TDataset;
                        LineaEnEdicion:TLinFac = nil);
@@ -977,12 +978,12 @@ begin
     importeIVA := SimpleRoundTo(baseImponible * (porcentajeIVA / 100), -2);
     importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
   end;
-  // Acumuladores generales
+  if linea._dCant < 0 then
+    Self.FTieneLineasNegativas := True;
   _totales.TotalCantidades := _totales.TotalCantidades + linea.Cant;
   _totales.TotalBruto := _totales.TotalBruto + (linea.PrecioSal * linea.Cant);
   _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
                                     (linea.Dto * linea.Cant);
-  // Acumuladores fiscales por bloque de IVA
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
       begin

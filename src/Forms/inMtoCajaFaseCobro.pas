@@ -381,12 +381,12 @@ var
 begin
   if not (FMemTablePagos.Active and not FMemTablePagos.IsEmpty) then
     Exit;
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
     Pendiente := FDatosCobro.ImporteDevolucionPendiente
   else
     Pendiente := FDatosCobro.ImportePendiente;
   if Pendiente <= 0.01 then Exit;
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
     EscribirImporteEnFormaActual(-Pendiente)
   else
     EscribirImporteEnFormaActual(Pendiente);
@@ -416,7 +416,7 @@ begin
   end;
   if Abs(ImporteActual) < 0.0000000001 then
     Exit;
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
   begin
     FDatosCobro.Recalcular; // actualiza pendiente antes de abrir diálogo
     EscribirImporteEnFormaActual(-Abs(ImporteActual));
@@ -613,7 +613,7 @@ begin
     FActualizandoVale := False;
   end;
   EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
     txtPendienteCuenta.Value := 0;
@@ -646,7 +646,7 @@ begin
   EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
   if EsTotal0 then
     Result := True
-  else if FDatosCobro.EsDevolucion then
+  else if FDatosCobro.EsDevolucionEconomica then
     Result := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
   else
     Result := (txtPendienteCobro.Value <= 0.01);
@@ -659,7 +659,7 @@ begin
   txtCambio.Value         := FDatosCobro.ImporteCambio;
   txtValeRecogido.Value   := FDatosCobro.ImporteValeRecogido;
   txtValeEmitido.Value    := FDatosCobro.ImporteValeEmitido;
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
     txtPendienteCuenta.Value := 0;
@@ -672,7 +672,7 @@ begin
     btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
   end;
   btnF12.Enabled := btnConTicket.Enabled;
-  if FDatosCobro.EsDevolucion then
+  if FDatosCobro.EsDevolucionEconomica then
     ConfigurarModoDevolucion
   else
     ConfigurarModoCobroNormal;
@@ -708,7 +708,7 @@ end;
 procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(
   Sender: TObject);
 begin
-  if not FDatosCobro.EsDevolucion then Exit;
+  if not FDatosCobro.EsDevolucionEconomica then Exit;
   if FActualizandoVale then Exit;
   FActualizandoVale := True;
   try
@@ -806,7 +806,7 @@ begin
   if TfrmMtoCajaSeleccionVale.Ejecutar(ValeSeleccionado) then
   begin
     // 1. Averiguamos cuánto se debe antes de aplicar el vale
-    if FDatosCobro.EsDevolucion then
+    if FDatosCobro.EsDevolucionEconomica then
       PendienteActual := FDatosCobro.ImporteDevolucionPendiente
     else
       PendienteActual := FDatosCobro.ImportePendiente;
