@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 30/03/2026 17:29:17
+-- Backup generado: 02/04/2026 19:08:17
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1136,6 +1136,7 @@ INSERT INTO `fza_caja_formas_pago` (`CODIGO_FORMAP`, `DESCRIPCION_FORMAP`, `ES_R
 
 DROP TABLE IF EXISTS `fza_caja_operaciones`;
 CREATE TABLE `fza_caja_operaciones` (
+  `ID_OPCAJA` bigint(20) NOT NULL AUTO_INCREMENT,
   `CODIGO_EMPRESA_OPCAJA` varchar(10) NOT NULL,
   `CODIGO_ALMACEN_OPCAJA` varchar(10) NOT NULL,
   `CODIGO_CAJA_OPCAJA` varchar(10) NOT NULL COMMENT 'Terminal físico (TPV1, TPV2...)',
@@ -1161,8 +1162,9 @@ CREATE TABLE `fza_caja_operaciones` (
   `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIOALTA` varchar(100) NOT NULL,
   `USUARIOMODIF` varchar(100) NOT NULL,
-  PRIMARY KEY (`CODIGO_EMPRESA_OPCAJA`,`CODIGO_ALMACEN_OPCAJA`,`CODIGO_CAJA_OPCAJA`,`NUMERO_OPERACION_OPCAJA`)
+  PRIMARY KEY (`ID_OPCAJA`)
 );
+ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_AGRUPACION_OPCAJA` (`CODIGO_EMPRESA_OPCAJA`, `CODIGO_ALMACEN_OPCAJA`, `CODIGO_CAJA_OPCAJA`, `NUMERO_OPERACION_OPCAJA`);
 ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_CIERRE_OPCAJA` (`CODIGO_ARQUEO_OPCAJA`);
 ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_REF_ORIGEN_OPCAJA` (`SERIE_REF_ORIGEN_OPCAJA`, `NUMERO_REF_ORIGEN_OPCAJA`);
 
@@ -1419,7 +1421,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 73, 3, 'S', 'S', '2026-03-30 17:28:51', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 75, 3, 'S', 'S', '2026-04-02 19:06:21', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -2005,167 +2007,15 @@ SELECT SERIE_CONTADOR_EMPRESA AS SERIE_CONTADOR
    FROM vi_contadores                           
   WHERE tipodoc_contador = ''FC''
   ', '2023-05-13 13:53:12', '2023-05-13 13:47:20', 'Administrador', 'Administrador'),
-  ('007', 'BORRADO DE SKINS EN PERFILES', 'DELETE FROM fza_usuarios_perfiles
-where SUBKEY_PERFILES LIKE ''%skin%''                                               ', '2023-10-19 11:51:26', '2023-10-19 11:50:25', 'Administrador', 'Administrador'),
-  ('070', NULL, 'ALTER TABLE fza_depositos_cliente 
-ADD COLUMN CODIGO_ALMACEN_DEP VARCHAR(10) NULL COMMENT ''Almacén de depósito donde está físicamente la prenda'' AFTER CODIGO_UNIDAD_DEP;', '2026-03-30 17:21:05', '2026-03-30 17:21:05', 'Administrador', 'Administrador'),
-  ('071', NULL, 'DELIMITER $$
+  ('074', NULL, '-- 1. Quitamos la Primary Key actual
+ALTER TABLE `fza_caja_operaciones` DROP PRIMARY KEY;
 
-CREATE or replace PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(
-    IN p_ID_DEPOSITO_DEP VARCHAR(20),
-    IN p_CODIGO_EMPRESA_DEP VARCHAR(20),
-    IN p_CODIGO_ALMACEN_DEP VARCHAR(10),     /* <-- NUEVO: Almacén físico del depósito */
-    IN p_CODIGO_CLIENTE_DEP VARCHAR(20),
-    IN p_CODIGO_ARTICULO_DEP VARCHAR(50), 
-    IN p_CODIGO_UNIDAD_DEP VARCHAR(50),
-    IN p_PRECIO_VENTA_DEP DECIMAL(19,6),
-    IN p_CANTIDAD_PENDIENTE_DEP DECIMAL(19,6),
-    IN p_IMPORTE_ANTICIPO_DEP DECIMAL(19,6),
-    IN p_TIPO_IVA_DEP CHAR(1),
-    IN p_PORCEN_IVA_DEP DECIMAL(19,6),
-    IN p_ESIMP_INCL_DEP CHAR(1),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+-- 2. Añadimos el nuevo campo autonumérico como Primary Key
+ALTER TABLE `fza_caja_operaciones` ADD COLUMN `ID_OPCAJA` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
 
-    /* 1. Insertamos el depósito registrando exactamente en qué almacén se queda la prenda */
-    INSERT INTO fza_depositos_cliente (
-        ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_ALMACEN_DEP, CODIGO_CLIENTE_DEP, 
-        CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP, PRECIO_VENTA_DEP, 
-        CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP, ESTADO_DEP,
-        TIPO_IVA_DEP, PORCEN_IVA_DEP, ESIMP_INCL_DEP,
-        INSTANTEALTA, USUARIOALTA, INSTANTEMODIF, USUARIOMODIF
-    ) VALUES (
-        p_ID_DEPOSITO_DEP, p_CODIGO_EMPRESA_DEP, p_CODIGO_ALMACEN_DEP, p_CODIGO_CLIENTE_DEP, 
-        p_CODIGO_ARTICULO_DEP, p_CODIGO_UNIDAD_DEP, p_PRECIO_VENTA_DEP, 
-        p_CANTIDAD_PENDIENTE_DEP, p_IMPORTE_ANTICIPO_DEP, ''PENDIENTE'',
-        p_TIPO_IVA_DEP, p_PORCEN_IVA_DEP, p_ESIMP_INCL_DEP,
-        NOW(), p_USUARIO, NOW(), p_USUARIO
-    );
-
-    /* 2. Calculamos la nueva deuda generada */
-    SET v_deuda_nueva = (p_PRECIO_VENTA_DEP * COALESCE(p_CANTIDAD_PENDIENTE_DEP, 1)) - COALESCE(p_IMPORTE_ANTICIPO_DEP, 0);
-
-    /* 3. Actualizamos saldo del cliente si hay deuda y el cliente es válido */
-    IF v_deuda_nueva > 0 AND p_CODIGO_CLIENTE_DEP IS NOT NULL AND p_CODIGO_CLIENTE_DEP != '''' THEN
-        UPDATE fza_clientes 
-           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva 
-         WHERE CODIGO_CLIENTE = p_CODIGO_CLIENTE_DEP;
-    END IF;
-
-END$$
-
-DELIMITER ;', '2026-03-30 17:23:33', '2026-03-30 17:23:33', 'Administrador', 'Administrador'),
-  ('072', NULL, 'DELIMITER $$
-
-CREATE or replace PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
-    IN p_NUMERO_MOV VARCHAR(20),
-    IN p_TIPO_DOC_MOV VARCHAR(20),
-    IN p_SERIE_DOC_MOV VARCHAR(20),
-    IN p_NRO_DOC_MOV VARCHAR(20),
-    IN p_LINEA_MOV VARCHAR(10),
-    IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
-    IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
-    IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
-    IN p_CODIGO_ARTICULO_MOV VARCHAR(20),
-    IN p_CODIGO_ALMACEN_CONTRA_MOV VARCHAR(10), /* Vital para los traspasos */
-    IN p_CODIGO_CLIENTE_MOV VARCHAR(20),
-    IN p_CODIGO_PROVEEDOR_MOV VARCHAR(20),
-    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), /* ''E'' o ''S'' */
-    IN p_CANTIDAD_MOV DECIMAL(19,6),
-    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6),
-    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_PrecioFinal DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_CosteFinal DECIMAL(19,6) DEFAULT 0;
-
-    /* 1. Obtener el PMP actual del almacén local */
-    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
-      INTO v_PMPActual
-      FROM fza_articulos_stockactual
-     WHERE CODIGO_ALMACEN_STK = p_CODIGO_ALMACEN_MOV
-       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
-     LIMIT 1
-       FOR UPDATE; /* Bloqueo de concurrencia */
-
-    /* 2. LÓGICA DE VALORACIÓN (EL CEREBRO DEL PMP) */
-    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
-        /* CASO A: Cualquier Salida (Ventas, Traspasos Origen, Mermas).
-           Siempre salen al coste medio actual del almacén. */
-        SET v_PrecioFinal = v_PMPActual;
-        
-    ELSEIF p_TIPO_MOVIMIENTO_MOV = ''E'' THEN
-        /* CASO B: Entradas. Depende del tipo de documento. */
-        
-        IF p_TIPO_DOC_MOV = ''TR'' THEN
-            /* Es una entrada por traspaso. El coste debe ser el PMP del almacén de origen. */
-            /* Vamos a buscar cuánto valía la prenda en el almacén de donde viene. */
-            SELECT IFNULL(PRECIO_MEDIO_STK, 0) 
-              INTO v_PrecioFinal
-              FROM fza_articulos_stockactual
-             WHERE CODIGO_ALMACEN_STK = p_CODIGO_ALMACEN_CONTRA_MOV
-               AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV 
-             LIMIT 1;
-             
-        ELSEIF p_TIPO_DOC_MOV = ''VE'' THEN
-            /* Es una devolución de un cliente. 
-               Reingresa al PMP actual para neutralizar el impacto en la media. */
-            SET v_PrecioFinal = v_PMPActual;
-            
-        ELSE
-            /* Es una compra a proveedor, inventario inicial, etc.
-               Nos fiamos 100% de lo que envía la app (Delphi). */
-            SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
-        END IF;
-    END IF;
-
-    /* Calculamos el coste total de la línea */
-    SET v_CosteFinal = p_CANTIDAD_MOV * v_PrecioFinal;
-
-    /* 3. Insertar el Movimiento de Almacén real */
-    INSERT INTO fza_movimientos_almacen (
-        NUMERO_MOV, TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
-        CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, CODIGO_UNIDAD_MOV, CODIGO_ARTICULO_MOV,
-        CODIGO_ALMACEN_CONTRA_MOV, CODIGO_CLIENTE_MOV, CODIGO_PROVEEDOR_MOV,
-        TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
-        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
-        FECHA_MOV, USUARIOALTA, USUARIOMODIF
-    ) VALUES (
-        p_NUMERO_MOV, p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
-        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_UNIDAD_MOV, p_CODIGO_ARTICULO_MOV,
-        p_CODIGO_ALMACEN_CONTRA_MOV, p_CODIGO_CLIENTE_MOV, p_CODIGO_PROVEEDOR_MOV,
-        p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
-        v_PrecioFinal, v_CosteFinal, 
-        NOW(), p_USUARIO, p_USUARIO
-    );
-
-    /* 4. Actualizar Stock y recalcular PMP de la ficha */
-    INSERT INTO fza_articulos_stockactual (
-        CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
-        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF
-    ) VALUES (
-        p_CODIGO_ALMACEN_MOV, 
-        p_CODIGO_UNIDAD_MOV,
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
-        v_PrecioFinal, 
-        NOW()
-    )
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        /* Prevención de división por cero al recalcular el PMP */
-        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
-        INSTANTEMODIF = NOW();
-
-END$$
-
-DELIMITER ;', '2026-03-30 17:28:51', '2026-03-30 17:28:51', 'Administrador', 'Administrador');
--- 7 registros exportados
+-- 3. Volvemos a crear tu antigua PK como un índice para no perder rendimiento
+ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_AGRUPACION_OPCAJA` (`CODIGO_EMPRESA_OPCAJA`, `CODIGO_ALMACEN_OPCAJA`, `CODIGO_CAJA_OPCAJA`, `NUMERO_OPERACION_OPCAJA`);', '2026-04-02 19:06:21', '2026-04-02 19:06:21', 'Administrador', 'Administrador');
+-- 4 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3343,7 +3193,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-03-30 17:03:30', '2026-03-30 17:03:30', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-02 17:40:38', '2026-04-02 17:40:38', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -8243,4 +8093,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 30/03/2026 17:29:18
+-- Backup completado: 02/04/2026 19:08:20

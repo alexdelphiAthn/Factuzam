@@ -688,10 +688,12 @@ begin
   try
     Qry.Connection := inLibGlobalVar.oConn;
     Qry.SQL.Text := 'SELECT * FROM vi_caja_busqueda_unificada ' +
-                    ' WHERE (INPUT_BUSQUEDA = :COD) OR (CODIGO_SKU = :COD) OR (CODIGO_PADRE = :COD) LIMIT 1';
+                    ' WHERE (INPUT_BUSQUEDA = :COD) ' +
+                    '    OR (CODIGO_SKU = :COD) ' +
+                    '    OR (CODIGO_PADRE = :COD)' +
+                    ' LIMIT 1';
     Qry.ParamByName('COD').AsString := CodigoLimpio;
     Qry.Open;
-
     if not Qry.IsEmpty then
     begin
       SkuDetectado := Qry.FieldByName('CODIGO_SKU').AsString;
@@ -699,15 +701,20 @@ begin
       DatosCaja.cdsLineas.DisableControls;
       try
         if DatosCaja.cdsLineas.State = dsBrowse then DatosCaja.cdsLineas.Edit;
-
-        DatosCaja.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
-        DatosCaja.cdsLineas.FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('TIPO_ARTICULO').AsString;
-        DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
+        DatosCaja.cdsLineas.FieldByName(
+                               'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
+                               Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName(
+                                      'TIPO_ARTICULO_FACTURA_LINEA').AsString :=
+                                      Qry.FieldByName('TIPO_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName(
+                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
         if SkuDetectado <> '' then
         begin
           ConsultarStock(SkuDetectado);
-          DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
-          RecalcularPrecioDesdeSku(SkuDetectado); // CUIDADO: Asegúrate de que aquí dentro NO haya otro GridRecalc si puedes evitarlo
+          DatosCaja.cdsLineas.FieldByName(
+                        'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
+          RecalcularPrecioDesdeSku(SkuDetectado);
           Result := True;
         end
         else if CodigoPadre <> '' then
