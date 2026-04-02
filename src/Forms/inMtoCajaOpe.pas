@@ -520,22 +520,23 @@ begin
     unqryCon.Connection := oConn;
     unqryCon.SQL.Text :=
       'CALL PRC_BUSQUEDA_ARTICULOS(' +
-      '  :p_tarifa,'   +
-      '  :p_almacen,'  +
-      '  :p_fecha,'    +
-      '  :p_token,'    +
-      '  :p_solostock,' +
-      '  :p_solotarifa)';
+      '                            :p_tarifa,'   +
+      '                            :p_almacen,'  +
+      '                            :p_fecha,'    +
+      '                            :p_token,'    +
+      '                            :p_solostock,' +
+      '                            :p_solotarifa)';
 
     unqryCon.ParamByName('p_tarifa').AsString :=
-      DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
     unqryCon.ParamByName('p_almacen').AsString  := FCodigoAlmacen;
     unqryCon.ParamByName('p_fecha').AsDate      := FFecha;
     unqryCon.ParamByName('p_token').AsString    := '';   // sin filtro inicial
     unqryCon.ParamByName('p_solostock').AsInteger :=
-      Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  False));
+                       Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  False));
     unqryCon.ParamByName('p_solotarifa').AsInteger :=
-      Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
+                       Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
                                        unqryCon,
                                        'frmMtoArtFacSearch') then

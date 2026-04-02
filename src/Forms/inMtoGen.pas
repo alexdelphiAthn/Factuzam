@@ -97,7 +97,6 @@ type
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure cxGrdDBTabPrinDblClick(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure sbExportExcelClick(Sender: TObject);
     procedure btnCargarColumnasClick(Sender: TObject);
@@ -112,14 +111,12 @@ type
     procedure sbResetGridClick(Sender: TObject);
     procedure sbGrabarGridClick(Sender: TObject);
     procedure btnBusqClick(Sender: TObject);
-    procedure pcPantallaEnter(Sender: TObject);
     procedure tsFichaShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
-    procedure SimulateTabKey;
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -128,6 +125,7 @@ type
     pkFieldName:string;
     tsFichCab:TcxTabSheet;
     tsFichBut:TcxTabSheet;
+    procedure SimulateTabKey;
     procedure ProcesarPerfiles;
     procedure AplicarEtiquetas;     virtual;
     procedure CrearTablaPrincipal;  virtual;
@@ -587,19 +585,17 @@ begin
   begin
     CancelarGrids(Owner);
     key := 0;
-//    if ((pcPantalla.ActivePage = tsFicha)) then
-//        pcPantalla.ActivePage := tsLista;
   end;
-
   if ((Key = VK_RETURN) and (ActiveControl = nil)) then
   begin
     key := 0;
     SimulateTabKey;
+    Exit;
   end;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
 
-  // -------------------------------------------------------------------
-  // NUEVO BLOQUE: Control + Supr para eliminar el registro actual
-  // -------------------------------------------------------------------
+  end;
   if (Key = VK_DELETE) and (ssCtrl in Shift) then
   begin
     if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and not
@@ -672,47 +668,24 @@ begin
   SendInput(2, Inputs[0], SizeOf(TInput));
 end;
 
-procedure TfrmMtoGen.FormKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  inherited;
-//  if (Key = VK_ESCAPE) then
-//  begin
-//    CancelarGrids(Owner);
-//    if ((pcPantalla.ActivePage = tsFicha)) then
-//        pcPantalla.ActivePage := tsLista;
-//  end;
-end;
-
 procedure TfrmMtoGen.FormShow(Sender: TObject);
 begin
   inherited;
-  if (tsLista.TabVisible = true) then
-    pcPantalla.ActivePage := tsLista;
   ResetForm;
-
-end;
-
-procedure TfrmMtoGen.pcPantallaEnter(Sender: TObject);
-begin
-  inherited;
-  //
 end;
 
 procedure TfrmMtoGen.pcPantallaPageChanging(Sender: TObject;
   NewPage: TcxTabSheet; var AllowChange: Boolean);
-
 begin
   inherited;
   if ( (not NewPage.Visible) and
        (not NewPage.Enabled) and
        (NewPage.Name = 'tsFicha')) then
-      AllowChange := False;
+    AllowChange := False;
 end;
 
 procedure TfrmMtoGen.ProcesarPerfiles;
 begin
-  //inLibUser.GetFormUserProfile(oPerfilDic, Self.Name);
   inLibUser.GetFormUserProfile(oPerfilDic,
                                Self.Name,
                                inLibGlobalVar.oUser,
@@ -741,6 +714,8 @@ end;
 
 procedure TfrmMtoGen.ResetForm;
 begin
+  if ((pcPantalla.ActivePage <> tsLista) and (tsLista.TabVisible = true)) then
+    pcPantalla.ActivePage := tsLista;
 //  if edtBusqGlobal.CanFocus then
 //    edtBusqGlobal.SetFocus;
 end;
@@ -748,8 +723,8 @@ end;
 procedure TfrmMtoGen.btnBusqClick(Sender: TObject);
 begin
   inherited;
-    BusqAllGrid(cxGrdDBTabPrin,
-                edtBusqGlobal.Text);
+  BusqAllGrid(cxGrdDBTabPrin,
+              edtBusqGlobal.Text);
   if ((pcPantalla.ActivePage <> tsLista) and (tsLista.TabVisible = true)) then
     pcPantalla.ActivePage := tsLista;
 end;
@@ -770,7 +745,6 @@ begin
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
 end;
-
 
 initialization
 

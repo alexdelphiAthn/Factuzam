@@ -995,20 +995,19 @@ begin
   if (Key = VK_RETURN) or (Key = VK_PRIOR) or (Key = VK_NEXT) or
      (Key = VK_HOME) or (Key = VK_END) then
   begin
-    // 2. Si el foco está en los editores, secuestramos la tecla para ellos
-    if DBSynEdit1.Focused or syndtEstructura.Focused then
+    if (Key = VK_RETURN) and (ssCtrl in Shift) then
     begin
-      // Al salir con Exit, el formulario padre (inMtoGen) NO se entera de la pulsación.
-      // Así evitamos que cambie de registro o haga cosas raras, y el SynEdit hace
-      // su scroll o salto de línea de forma 100% nativa.
-      Exit;
-    end;
+         SelectNext(ActiveControl as TWinControl, True, True);
+         key := 0;
+         Exit;
+    end
+    else
+      if DBSynEdit1.Focused or syndtEstructura.Focused then
+      begin
+        Exit;
+      end;
   end;
-
-  // Si no estábamos en el editor, o es otra tecla, que siga su curso normal
   inherited;
-
-  // Tu ejecución con F5
   if (Key = VK_F5) then
     btnEjecutarClick(Sender);
 end;

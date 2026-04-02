@@ -11,7 +11,6 @@ inherited frmMtoGen: TfrmMtoGen
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnKeyDown = FormKeyDown
-  OnKeyUp = FormKeyUp
   OnShow = FormShow
   ExplicitWidth = 1091
   ExplicitHeight = 558
@@ -36,9 +35,8 @@ inherited frmMtoGen: TfrmMtoGen
       Height = 518
       Align = alClient
       TabOrder = 0
-      Properties.ActivePage = tsPerfil
+      Properties.ActivePage = tsFicha
       Properties.CustomButtons.Buttons = <>
-      OnEnter = pcPantallaEnter
       OnPageChanging = pcPantallaPageChanging
       ClientRectBottom = 514
       ClientRectLeft = 4
@@ -118,10 +116,6 @@ inherited frmMtoGen: TfrmMtoGen
         Caption = '&Ficha'
         ImageIndex = 1
         OnShow = tsFichaShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
       end
       object tsPerfil: TcxTabSheet
         Caption = 'Perfil'

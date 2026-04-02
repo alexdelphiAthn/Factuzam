@@ -133,7 +133,8 @@ type
     function PuedeEmitirVale: Boolean;
     function EmitirVale(AImporte: Currency): TResultadoValidacion;
     procedure RegistrarValeRecogido(ACodigoVale: string; AImporte: Currency);
-    function EsDevolucion: Boolean;
+    function EsDevolucionEconomica: Boolean;
+    function TieneArticulosDevueltos: Boolean;
     function ValidarParaCobro: TResultadoValidacion;
     function ObtenerDatosPagosParaGrabar: TArray<TFormaPagoItem>;
     procedure Recalcular;
@@ -458,14 +459,14 @@ begin
   Result := TResultadoValidacion.OK;
 end;
 
-function TDatosFaseCobro.EsDevolucion: Boolean;
+function TDatosFaseCobro.EsDevolucionEconomica: Boolean;
 begin
   Result := FImporteTotalPagar < 0;
 end;
 
 function TDatosFaseCobro.PuedeEmitirVale: Boolean;
 begin
-  Result := EsDevolucion or (FImportePendiente < 0) or
+  Result := EsDevolucionEconomica or (FImportePendiente < 0) or
             (FImporteValeEmitido > 0);
 end;
 
@@ -507,6 +508,14 @@ begin
   FMemTablePagos.FieldByName('INSTANTEMODIF').AsDateTime := Now;
   FMemTablePagos.Post;
 //  Recalcular;
+end;
+
+function TDatosFaseCobro.TieneArticulosDevueltos: Boolean;
+begin
+  if Assigned(FTotalesFactura) then
+    Result := FTotalesFactura.FTieneLineasNegativas
+  else
+    Result := False;
 end;
 
 function TDatosFaseCobro.ObtenerCurrencySafe(const ANombreCampo: string;
@@ -819,7 +828,7 @@ var
   TotalCobrado: Currency;
 begin
   CalcularTotales;
-  if EsDevolucion then
+  if EsDevolucionEconomica then
   begin
     if FImportePendiente > 0.01 then
       Result := TResultadoValidacion.Error(
