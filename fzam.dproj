@@ -425,6 +425,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
+        <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
+        <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

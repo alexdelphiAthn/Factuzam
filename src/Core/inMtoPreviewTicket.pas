@@ -1,94 +1,706 @@
 ﻿unit inMtoPreviewTicket;
 
 interface
-
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, cxGraphics, cxControls,
-  cxLookAndFeels, cxLookAndFeelPainters, dxCore, dxCoreClasses, dxHashUtils,
-  Vcl.Menus, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSpreadSheet,
-  JvComponentBase, JvEnterTab, cxClasses, cxLocalization, dxShellDialogs,
-  System.Actions, Vcl.ActnList, inLibFaseCobro;
-
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.ExtCtrls, Vcl.StdCtrls, System.Math, DelphiZXingQRCode;
 type
-  TfrmMtoPreviewTicket = class(TfrmBase)
+  TFormVisualizador = class(TForm)
+    ScrollBox1: TScrollBox;
+    Image1: TImage;
     Panel1: TPanel;
-    btnGuardar: TcxButton;
-    btnCerrar: TcxButton;
-    DialogoGuardar: TdxSaveFileDialog;
-    ActionList1: TActionList;
-    actSalir: TAction;
-    procedure btnGuardarClick(Sender: TObject);
+    btnCerrar: TButton;
+    btnGuardar: TButton;
+    SaveDialog1: TSaveDialog;
+    procedure FormCreate(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
-    procedure actSalirExecute(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+    procedure btnGuardarClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
+    FCanvas: TCanvas;
+    FCurrentY: Integer;
+    FFuenteActual: Integer; // 0=A(12x24), 1=B(9x17), 2=C(7x14)
+    FNegrita: Boolean;
+    FSubrayado: Boolean;
+    FAlineacion: Integer; // 0=Izq, 1=Centro, 2=Derecha
+    FTamanoAncho: Integer; // Multiplicador ancho (1-8)
+    FTamanoAlto: Integer; // Multiplicador alto (1-8)
+    FInverso: Boolean;
+    FQRTexto: string;
+    FQRTamanoModulo: Integer;
+    FQRNivelError: Integer;
+    procedure ProcesarComandosESCPOS(const Comandos: string);
+    procedure ImprimirTexto(const Texto: string);
+    procedure ImprimirImagenRaster(const Datos: string; Ancho, Alto: Integer);
+    procedure NuevaLinea;
+    procedure AjustarFuente;
+    function ObtenerAnchoCaracter: Integer;
+    function ObtenerAltoLinea: Integer;
+    procedure DibujarQRCode;
+
   public
-    { Public declarations }
+    procedure ExportarAPDF(const Comandos: string; const RutaArchivo: string);
+    procedure CargarYMostrar(const Comandos: string);
   end;
 
-var
-  frmMtoPreviewTicket: TfrmMtoPreviewTicket;
+procedure VisualizarTicket(const Comandos: string);
 
-procedure ImprimirT(FCodigoEmpresa,
-                    FCodigoAlmacen,
-                    FCodigoCaja,
-                    NumeroGenerado: string;
-                    DatosCobro: TDatosFaseCobro);
+var
+  FormVisualizador:TFormVisualizador;
 
 implementation
 
 {$R *.dfm}
 
-uses inLibFTicket,
-     inLibBuscarImpresora,
-     inLibGlobalVar,
-     inlibCajaParam;
+uses
+  SynPdf, inLibDir; // Añadir esto arriba
 
-procedure ImprimirT(FCodigoEmpresa,
-                    FCodigoAlmacen,
-                    FCodigoCaja,
-                    NumeroGenerado: string;
-                    DatosCobro: TDatosFaseCobro);
+const
+  ANCHO_PAPEL_MM = 80;
+  DPI = 203;
+  // Ajustado a 512 para que cuadre exacto con las 42 columnas de tu ticket
+  ANCHO_PAPEL_PIXELS = 512;
+  MARGEN_PIXELS = 4;
+  //
+//  ANCHO_PAPEL_MM = 80; // Papel de 80mm
+//  DPI = 203; // DPI típico de impresoras térmicas
+//  ANCHO_PAPEL_PIXELS = 384; // <-- CAMBIAR a 384 (ancho real utilizable)
+//  MARGEN_PIXELS = 8;
+  // Tamaños de fuentes en pixels (aproximado)
+  FUENTE_A_ANCHO = 12;
+  FUENTE_A_ALTO = 24;
+  FUENTE_B_ANCHO = 9;
+  FUENTE_B_ALTO = 17;
+  FUENTE_C_ANCHO = 7;
+  FUENTE_C_ALTO = 14;
+
+procedure TFormVisualizador.ExportarAPDF(const Comandos: string; const RutaArchivo: string);
 var
-  sNombreImpresora:String;
+  Pdf: TPdfDocumentGDI;
+  CanvasBackup: TCanvas;
+  AltoPuntos, AnchoPuntos: Integer;
 begin
-  if DatosCobro.FRequiereFactura then
-  begin
-    if (oNomImpresoraCaja = '') then
-      oNomImpresoraCaja := GetImpresoraCaja;
-    //'vgerDefPrinter vgerTipoImpresion';
+  Pdf := TPdfDocumentGDI.Create;
+  try
+    Pdf.DefaultPaperSize := psUserDefined;
+
+    // Convertimos los píxeles de nuestra previsualización a puntos para el PDF
+    // 72 es la resolución estándar de PDF, 203 son los DPI de tu impresora térmica
+    AnchoPuntos := MulDiv(Image1.Picture.Bitmap.Width, 72, 203);
+    AltoPuntos := MulDiv(Image1.Picture.Bitmap.Height, 72, 203);
+
+    Pdf.DefaultPageWidth := AnchoPuntos;
+    Pdf.DefaultPageHeight := AltoPuntos; // ¡Esto evita el metro de papel en blanco!
+
+    Pdf.AddPage;
+
+    CanvasBackup := FCanvas;
+    FCanvas := Pdf.VCLCanvas;
+    try
+      // Reiniciamos estado y dibujamos directamente en el PDF
+      FCurrentY := MARGEN_PIXELS;
+      FFuenteActual := 1;
+      FNegrita := False;
+      FSubrayado := False;
+      FAlineacion := 0;
+      FTamanoAncho := 1;
+      FTamanoAlto := 1;
+      FInverso := False;
+
+      ProcesarComandosESCPOS(Comandos);
+    finally
+      FCanvas := CanvasBackup;
+    end;
+
+    Pdf.SaveToFile(RutaArchivo);
+  finally
+    Pdf.Free;
   end;
 end;
 
-
-procedure TfrmMtoPreviewTicket.actSalirExecute(Sender: TObject);
+procedure VisualizarTicket(const Comandos: string);
+var
+  Form: TFormVisualizador;
 begin
-  inherited;
-  btnCerrarClick(Sender);
+  Form := TFormVisualizador.Create(nil);
+  try
+    Form.CargarYMostrar(Comandos);
+    //Form.ShowModal;
+    Form.Image1.Picture.SaveToFile(GetUserFolderTickets + 'Ticket_' +
+                                   FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
+                                   '.bmp');
+  finally
+    Form.Free;
+  end;
 end;
 
-procedure TfrmMtoPreviewTicket.btnCerrarClick(Sender: TObject);
+procedure TFormVisualizador.DibujarQRCode;
+var
+  QRCode: TDelphiZXIngQRCode;
+  Row, Column: Integer;
+  Scale: Integer;
+  QRBitmap: TBitmap;
+  x, y: Integer;
+  StartX: Integer;
+  QRWidth, QRHeight: Integer;
 begin
-  inherited;
+  if FQRTexto = '' then Exit;
+  QRCode := TDelphiZXIngQRCode.Create;
+  QRBitmap := TBitmap.Create;
+  try
+    // Configurar QR
+    QRCode.Data := FQRTexto;
+    QRCode.Encoding := TQRCodeEncoding(qrUTF8NoBOM);
+    QRCode.QuietZone := 1;
+    // Escala basada en el tamaño del módulo (ajustado para visualizaci�n)
+    Scale := FQRTamanoModulo div 2;
+    if Scale < 2 then Scale := 2;
+    // Crear bitmap del QR
+    QRBitmap.Width := QRCode.Columns * Scale;
+    QRBitmap.Height := QRCode.Rows * Scale;
+    QRBitmap.PixelFormat := pf24bit;
+    // Fondo blanco
+    QRBitmap.Canvas.Brush.Color := clWhite;
+    QRBitmap.Canvas.FillRect(Rect(0, 0, QRBitmap.Width, QRBitmap.Height));
+    QRBitmap.Canvas.Brush.Color := clBlack;
+    // Dibujar módulos del QR
+    for Row := 0 to QRCode.Rows - 1 do
+    begin
+      for Column := 0 to QRCode.Columns - 1 do
+      begin
+        if QRCode.IsBlack[Row, Column] then
+        begin
+          x := Column * Scale;
+          y := Row * Scale;
+          QRBitmap.Canvas.FillRect(Rect(x, y, x + Scale, y + Scale));
+        end;
+      end;
+    end;
+    // Calcular posición según alineación
+    QRWidth := QRBitmap.Width;
+    QRHeight := QRBitmap.Height;
+    case FAlineacion of
+      1: StartX := (ANCHO_PAPEL_PIXELS - QRWidth) div 2; // Centro
+      2: StartX := ANCHO_PAPEL_PIXELS - QRWidth - MARGEN_PIXELS; // Derecha
+    else
+      StartX := MARGEN_PIXELS; // Izquierda
+    end;
+    // Dibujar en el canvas principal
+    FCanvas.Draw(StartX, FCurrentY, QRBitmap);
+    FCurrentY := FCurrentY + QRHeight;
+  finally
+    QRBitmap.Free;
+    QRCode.Free;
+  end;
+end;
+
+procedure TFormVisualizador.ImprimirImagenRaster(const Datos: string; Ancho, Alto: Integer);
+var
+  X, Y: Integer;
+  ByteIndex, BitIndex: Integer;
+  StartX: Integer;
+begin
+  // Verificar que tenemos suficientes datos
+  if Length(Datos) = 0 then
+  begin
+    FCurrentY := FCurrentY + Alto;
+    Exit;
+  end;
+  // Calcular posici�n X seg�n alineaci�n
+  case FAlineacion of
+    1: StartX := (ANCHO_PAPEL_PIXELS - Ancho) div 2; // Centro
+    2: StartX := ANCHO_PAPEL_PIXELS - Ancho - MARGEN_PIXELS; // Derecha
+  else
+    StartX := MARGEN_PIXELS; // Izquierda
+  end;
+  // Asegurarnos de no salirnos de los l�mites
+  if StartX < 0 then StartX := 0;
+  if StartX + Ancho > ANCHO_PAPEL_PIXELS then
+    Ancho := ANCHO_PAPEL_PIXELS - StartX;
+  for Y := 0 to Alto - 1 do
+  begin
+    for X := 0 to Ancho - 1 do
+    begin
+      ByteIndex := (X div 8) + 1;
+      BitIndex := 7 - (X mod 8);
+      if (ByteIndex <= Length(Datos)) and (ByteIndex > 0) then
+      begin
+        if ((Ord(Datos[ByteIndex]) and (1 shl BitIndex)) <> 0) then
+        begin
+          if (StartX + X < ANCHO_PAPEL_PIXELS) and (FCurrentY + Y < Image1.Picture.Bitmap.Height) then
+            FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
+        end;
+      end;
+    end;
+  end;
+  FCurrentY := FCurrentY + Alto;
+end;
+
+procedure TFormVisualizador.FormCreate(Sender: TObject);
+begin
+  Self.ClientWidth := ANCHO_PAPEL_PIXELS + 30;
+  Image1.Picture.Bitmap.Width := ANCHO_PAPEL_PIXELS;
+  Image1.Picture.Bitmap.Height := 2000; // Altura inicial
+  Image1.Width := ANCHO_PAPEL_PIXELS;
+  Image1.Height := 2000;
+  FCanvas := Image1.Picture.Bitmap.Canvas;
+  // Fondo blanco (papel)
+  FCanvas.Brush.Color := clWhite;
+  FCanvas.FillRect(Rect(0, 0, Image1.Picture.Bitmap.Width, Image1.Picture.Bitmap.Height));
+  // DIBUJAR BORDE DEL PAPEL PARA DEBUG
+  FCanvas.Pen.Color := clRed;
+  FCanvas.Pen.Width := 1;
+  FCanvas.Rectangle(0, 0, ANCHO_PAPEL_PIXELS, Image1.Picture.Bitmap.Height);
+  // Estado inicial
+  FCurrentY := MARGEN_PIXELS;
+  FFuenteActual := 1; // RasterB por defecto
+  FNegrita := False;
+  FSubrayado := False;
+  FAlineacion := 0; // Izquierda
+  FTamanoAncho := 1;
+  FTamanoAlto := 1;
+  FInverso := False;
+  FQRTexto := '';
+  FQRTamanoModulo := 8;
+  FQRNivelError := 48;
+end;
+
+procedure TFormVisualizador.FormDestroy(Sender: TObject);
+begin
+  // Limpieza automática
+end;
+
+procedure TFormVisualizador.CargarYMostrar(const Comandos: string);
+begin
+  ProcesarComandosESCPOS(Comandos);
+  // Ajustar altura de la imagen al contenido
+  Image1.Picture.Bitmap.Height := FCurrentY + 50;
+  Image1.Height := FCurrentY + 50;
+end;
+
+procedure TFormVisualizador.ProcesarComandosESCPOS(const Comandos: string);
+var
+  i: Integer;
+  BufferTexto: string;
+  function LeerByte: Byte;
+  begin
+    Inc(i);
+    if i <= Length(Comandos) then
+      Result := Ord(Comandos[i])
+    else
+      Result := 0;
+  end;
+  function LeerWord: Word;
+  var
+    Lo, Hi: Byte;
+  begin
+    Lo := LeerByte;
+    Hi := LeerByte;
+    Result := Lo + (Hi shl 8);
+  end;
+begin
+  i := 1;
+  BufferTexto := '';
+  while i <= Length(Comandos) do
+  begin
+    case Comandos[i] of
+      #27: // ESC
+        begin
+          Inc(i);
+          if i > Length(Comandos) then Break;
+          case Comandos[i] of
+            '@': // Inicializar
+              begin
+                FFuenteActual := 1;
+                FNegrita := False;
+                FSubrayado := False;
+                FAlineacion := 0;
+                FTamanoAncho := 1;
+                FTamanoAlto := 1;
+                FInverso := False;
+              end;
+            'M', 'm': // Seleccionar fuente
+              begin
+                FFuenteActual := LeerByte;
+                if FFuenteActual > 2 then FFuenteActual := 1;
+              end;
+            'E': // Negrita on/off
+              begin
+                FNegrita := LeerByte <> 0;
+              end;
+            '-': // Subrayado on/off
+              begin
+                var Modo := LeerByte;
+                FSubrayado := Modo <> 0;
+              end;
+            'a': // Alineaci�n
+              begin
+                FAlineacion := LeerByte;
+                if FAlineacion > 2 then FAlineacion := 0;
+              end;
+            'd': // Saltar n l�neas
+              begin
+                if BufferTexto <> '' then
+                begin
+                  ImprimirTexto(BufferTexto);
+                  BufferTexto := '';
+                end;
+                var Lineas := LeerByte;
+                FCurrentY := FCurrentY + (Lineas * ObtenerAltoLinea);
+              end;
+            '*': // Gr�ficos raster
+              begin
+                if BufferTexto <> '' then
+                begin
+                  ImprimirTexto(BufferTexto);
+                  BufferTexto := '';
+                end;
+                var Modo := LeerByte;
+                var Ancho := LeerWord;
+                var BytesPorLinea := (Ancho + 7) div 8;
+                // Leer datos de imagen (una l�nea)
+                var DatosImagen := '';
+                for var j := 1 to BytesPorLinea do
+                  DatosImagen := DatosImagen + Char(LeerByte);
+                ImprimirImagenRaster(DatosImagen, Ancho, 1);
+              end;
+            'i': // Cortar papel
+              begin
+                // Visual: dibujar l�nea de corte
+                FCanvas.Pen.Color := clGray;
+                FCanvas.Pen.Style := psDash;
+                FCanvas.MoveTo(0, FCurrentY + 10);
+                FCanvas.LineTo(ANCHO_PAPEL_PIXELS, FCurrentY + 10);
+                FCurrentY := FCurrentY + 20;
+              end;
+            'p': // Abrir caj�n (ignorar)
+              begin
+                Inc(i, 3); // Saltar par�metros
+              end;
+          end;
+        end;
+      #29: // GS
+        begin
+          Inc(i);
+          if i > Length(Comandos) then Break;
+          case Comandos[i] of
+            '!': // Tama�o de car�cter
+              begin
+                var Valor := LeerByte;
+                FTamanoAncho := (Valor and $0F) + 1;
+                FTamanoAlto := ((Valor shr 4) and $07) + 1;
+                if FTamanoAncho > 8 then FTamanoAncho := 1;
+                if FTamanoAlto > 8 then FTamanoAlto := 1;
+              end;
+            'B': // Modo blanco/negro invertido
+              begin
+                FInverso := LeerByte <> 0;
+              end;
+             '(': // Comandos funci�n (incluye QR)
+              begin
+                Inc(i);
+                if i > Length(Comandos) then Break;
+                if Comandos[i] = 'k' then // Comando QR
+                begin
+                  var pL := LeerByte;
+                  var pH := LeerByte;
+                  var DataLength := pL + (pH * 256);
+                  var Fn := LeerByte; // Funci�n
+                  var Cn := LeerByte; // C�digo de funci�n
+                  case Cn of
+                    65: // 'A' - Seleccionar modelo (ignorar)
+                      begin
+                        for var j := 1 to DataLength - 2 do
+                          LeerByte;
+                      end;
+                    67: // 'C' - Tama�o del m�dulo
+                      begin
+                        FQRTamanoModulo := LeerByte;
+                        for var j := 1 to DataLength - 3 do
+                          LeerByte;
+                      end;
+                    69: // 'E' - Nivel de correcci�n de errores
+                      begin
+                        FQRNivelError := LeerByte;
+                        for var j := 1 to DataLength - 3 do
+                          LeerByte;
+                      end;
+                    80: // 'P' - Almacenar datos
+                      begin
+                        // Leer el texto del QR (saltar primeros 3 bytes de cabecera)
+                        LeerByte; // Saltar byte adicional
+                        FQRTexto := '';
+                        for var j := 1 to DataLength - 3 do
+                          FQRTexto := FQRTexto + Char(LeerByte);
+                      end;
+                    81: // 'Q' - Imprimir QR
+                      begin
+                        for var j := 1 to DataLength - 2 do
+                          LeerByte;
+                        // Imprimir texto pendiente
+                        if BufferTexto <> '' then
+                        begin
+                          ImprimirTexto(BufferTexto);
+                          BufferTexto := '';
+                        end;
+                        // Dibujar el QR
+                        DibujarQRCode;
+                        FQRTexto := ''; // Limpiar despu�s de imprimir
+                      end;
+                  else
+                    // Comando desconocido, saltar datos
+                    for var j := 1 to DataLength - 2 do
+                      LeerByte;
+                  end;
+                end
+                else
+                begin
+                  // Otro comando con par�ntesis, saltar
+                  var pL := LeerByte;
+                  var pH := LeerByte;
+                  var DataLength := pL + (pH * 256);
+                  for var j := 1 to DataLength do
+                    LeerByte;
+                end;
+              end;
+            'v': // Imprimir imagen raster (formato GS v 0)
+              begin
+                Inc(i);
+                if i > Length(Comandos) then Break;
+                if Comandos[i] = '0' then
+                begin
+                  var Modo := LeerByte;
+                  var AnchoBytes := LeerWord;
+                  var Alto := LeerWord;
+                  if BufferTexto <> '' then
+                  begin
+                    ImprimirTexto(BufferTexto);
+                    BufferTexto := '';
+                  end;
+                  // Leer datos completos de imagen
+                  var DatosImagen := '';
+                  for var j := 1 to AnchoBytes * Alto do
+                    DatosImagen := DatosImagen + Char(LeerByte);
+                  // Procesar imagen completa
+                  var AnchoPixels := AnchoBytes * 8;
+                  var X, Y: Integer;
+                  var StartX: Integer;
+                  // Calcular posici�n X seg�n alineaci�n
+                  case FAlineacion of
+                    1: StartX := (ANCHO_PAPEL_PIXELS - AnchoPixels) div 2; // Centro
+                    2: StartX := ANCHO_PAPEL_PIXELS - AnchoPixels - MARGEN_PIXELS; // Derecha
+                  else
+                    StartX := MARGEN_PIXELS; // Izquierda
+                  end;
+                  for Y := 0 to Alto - 1 do
+                  begin
+                    for X := 0 to AnchoPixels - 1 do
+                    begin
+                      var ByteIndex := Y * AnchoBytes + (X div 8);
+                      var BitIndex := 7 - (X mod 8);
+                      if (ByteIndex < Length(DatosImagen)) and
+                         ((Ord(DatosImagen[ByteIndex + 1]) and (1 shl BitIndex)) <> 0) then
+                      begin
+                        FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
+                      end;
+                    end;
+                  end;
+                  FCurrentY := FCurrentY + Alto;
+                end;
+              end;
+          end;
+        end;
+      #10: // LF - Nueva l�nea
+        begin
+          if BufferTexto <> '' then
+          begin
+            ImprimirTexto(BufferTexto);
+            BufferTexto := '';
+          end;
+          NuevaLinea;
+        end;
+      #13: // CR - Retorno de carro (ignorar en este contexto)
+        begin
+          // Normalmente se ignora
+        end;
+      #9: // TAB
+        begin
+          BufferTexto := BufferTexto + '    '; // 4 espacios
+        end;
+    else
+      // Caracteres imprimibles
+      if Ord(Comandos[i]) >= 32 then
+        BufferTexto := BufferTexto + Comandos[i];
+    end;
+    Inc(i);
+  end;
+  // Imprimir texto restante
+  if BufferTexto <> '' then
+    ImprimirTexto(BufferTexto);
+end;
+
+//procedure TFormVisualizador.AjustarFuente;
+//var
+//  TamanoBase: Integer;
+//begin
+//  FCanvas.Font.Name := 'Courier New';
+//  // Calcular tamaño base según fuente
+//  case FFuenteActual of
+//    0: TamanoBase := 8; // Fuente A
+//    1: TamanoBase := 5;  // Fuente B
+//    2: TamanoBase := 7;  // Fuente C
+//  else
+//    TamanoBase := 9;
+//  end;
+//  // Aplicar multiplicadores de tamaño
+//  FCanvas.Font.Size := TamanoBase * Max(FTamanoAncho, FTamanoAlto);
+//  // Aplicar estilos
+//  FCanvas.Font.Style := [];
+//  if FNegrita then
+//    FCanvas.Font.Style := FCanvas.Font.Style + [fsBold];
+//  if FSubrayado then
+//    FCanvas.Font.Style := FCanvas.Font.Style + [fsUnderline];
+//  FCanvas.Font.Color := clBlack;
+//  FCanvas.Brush.Style := bsClear;
+//end;
+
+procedure TFormVisualizador.AjustarFuente;
+var
+  LogFont: TLogFont;
+  AlturaPixels: Integer;
+begin
+  // 1. Determinar altura en PIXELES reales (no puntos)
+  // Fuente A suele ser 24px alto, B 17px alto
+  case FFuenteActual of
+    0: AlturaPixels := 24; // Fuente A (12x24)
+    1: AlturaPixels := 17; // Fuente B (9x17)
+    2: AlturaPixels := 14; // Fuente C
+  else
+    AlturaPixels := 17;
+  end;
+  // Aplicar multiplicadores de tamaño ESC/POS
+  AlturaPixels := AlturaPixels * FTamanoAlto;
+  // 2. Obtener la estructura LogFont actual del Canvas
+  if GetObject(FCanvas.Font.Handle, SizeOf(TLogFont), @LogFont) = 0 then
+  begin
+    // Fallback si falla, llenamos lo básico
+    FillChar(LogFont, SizeOf(LogFont), 0);
+    StrPCopy(LogFont.lfFaceName, 'Courier New');
+  end;
+  // 3. Configuración CRÍTICA para nitidez
+  LogFont.lfHeight := -AlturaPixels; // Negativo para indicar píxeles exactos
+  LogFont.lfWidth  := 0; // Dejar que Windows decida el ancho proporcional, o forzar si es necesario
+  // Fuerza a NO usar suavizado (bordes duros, como la impresora térmica)
+  LogFont.lfQuality := NONANTIALIASED_QUALITY;
+  // Peso de la fuente (Negrita)
+  if FNegrita then
+    LogFont.lfWeight := FW_BOLD
+  else
+    LogFont.lfWeight := FW_NORMAL;
+  // Subrayado
+  if FSubrayado then
+    LogFont.lfUnderline := 1
+  else
+    LogFont.lfUnderline := 0;
+  // Nombre de la fuente (Courier New o Consolas van bien para monoespaciado)
+  StrPCopy(LogFont.lfFaceName, 'Consolas');
+  // 4. Asignar la nueva fuente al Canvas
+  FCanvas.Font.Handle := CreateFontIndirect(LogFont);
+  FCanvas.Font.Color := clBlack;
+  FCanvas.Brush.Style := bsClear;
+end;
+
+//function TFormVisualizador.ObtenerAnchoCaracter: Integer;
+//begin
+//  case FFuenteActual of
+//    0: Result := 12; // Fuente A
+//    1: Result := 9;  // Fuente B
+//    2: Result := 7;  // Fuente C
+//  else
+//    Result := 9;
+//  end;
+//  Result := Result * FTamanoAncho;
+//end;
+
+function TFormVisualizador.ObtenerAnchoCaracter: Integer;
+begin
+  case FFuenteActual of
+    0: Result := 12; // Fuente A (Estándar: 12 px ancho)
+    1: Result := 9;  // Fuente B (Estándar: 9 px ancho)
+    2: Result := 7;  // Fuente C
+  else
+    Result := 9;
+  end;
+  Result := Result * FTamanoAncho;
+end;
+
+function TFormVisualizador.ObtenerAltoLinea: Integer;
+begin
+  case FFuenteActual of
+    0: Result := FUENTE_A_ALTO;
+    1: Result := FUENTE_B_ALTO;
+    2: Result := FUENTE_C_ALTO;
+  else
+    Result := FUENTE_B_ALTO;
+  end;
+  Result := Result * FTamanoAlto;
+end;
+
+procedure TFormVisualizador.ImprimirTexto(const Texto: string);
+var
+  X: Integer;
+  TextoWidth: Integer;
+  AnchoCaracterActual: Integer;
+begin
+  if Texto = '' then Exit;
+  AjustarFuente;
+  // Calcular ancho basado en caracteres, no en pixels
+  AnchoCaracterActual := ObtenerAnchoCaracter;
+  TextoWidth := Length(Texto) * AnchoCaracterActual;
+  // Calcular posici�n X seg�n alineaci�n
+  case FAlineacion of
+    0: X := MARGEN_PIXELS; // Izquierda
+    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2; // Centro
+    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
+  else
+    X := MARGEN_PIXELS;
+  end;
+  // Aplicar inversión de colores si está activada
+  if FInverso then
+  begin
+    FCanvas.Brush.Style := bsSolid;
+    FCanvas.Brush.Color := clBlack;
+    FCanvas.Font.Color := clWhite;
+  end
+  else
+  begin
+    FCanvas.Brush.Style := bsClear;
+    FCanvas.Font.Color := clBlack;
+  end;
+  FCanvas.TextOut(X, FCurrentY, Texto);
+  // Restaurar
+  FCanvas.Brush.Style := bsClear;
+end;
+
+procedure TFormVisualizador.NuevaLinea;
+begin
+  FCurrentY := FCurrentY + ObtenerAltoLinea;
+end;
+
+procedure TFormVisualizador.btnCerrarClick(Sender: TObject);
+begin
   Close;
 end;
 
-procedure TfrmMtoPreviewTicket.btnGuardarClick(Sender: TObject);
+procedure TFormVisualizador.btnGuardarClick(Sender: TObject);
 begin
-  inherited;
-//  DialogoGuardar.DefaultExt := 'xlsx';
-//  DialogoGuardar.Filter := 'Libro de Excel (*.xlsx)|*.xlsx';
-//  if DialogoGuardar.Execute then
-//    dxSpreadSheet1.SaveToFile(DialogoGuardar.FileName);
+  SaveDialog1.Filter := 'Imagen BMP|*.bmp';
+  if SaveDialog1.Execute then
+  begin
+    Image1.Picture.SaveToFile(SaveDialog1.FileName);
+    ShowMessage('Imagen guardada correctamente');
+  end;
 end;
-
-procedure TfrmMtoPreviewTicket.FormShow(Sender: TObject);
-begin
-  inherited;
-  Self.WindowState := wsMaximized;
-end;
-
 
 end.

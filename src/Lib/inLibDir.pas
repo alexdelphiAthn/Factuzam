@@ -88,6 +88,7 @@ function GetUserFolder:String;
 function GetUserDeskFolder:String;
 function GetTempPath:String;
 function GetLogFolder:String;
+function GetUserFolderTickets:String;
 
 implementation
 
@@ -106,6 +107,12 @@ var
 begin
   SHGetFolderPath(0, CSIDLFolder, 0, 0, FilePath);
   Result := FilePath;
+end;
+
+function GetUserFolderTickets:String;
+begin
+  ForceDirectories(GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\');
+  Result := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\';
 end;
 
 function GetUserFolder:String;

@@ -321,8 +321,6 @@ type
                   ACajero:       string;
             ANumOperacion:       string;
             const AUsuario:      string);
-    function LeerCabecera: TDatosCabeceraFactura;
-    function LeerLineaActual: TDatosLineaFactura;
     procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
                                                 DineroEntregado: Currency);
   public
@@ -354,6 +352,9 @@ type
                                   write FOnRellenarAtributos;
   end;
 
+    function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
+    function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
+
 var
   dmCajaOpe: TdmCajaOpe;
 
@@ -365,7 +366,7 @@ uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas;
 
 {$R *.dfm}
 
-function TdmCajaOpe.LeerCabecera: TDatosCabeceraFactura;
+function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
 begin
   with cdsCabecera do
   begin
@@ -430,7 +431,7 @@ begin
   end;
 end;
 
-function TdmCajaOpe.LeerLineaActual: TDatosLineaFactura;
+function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
 begin
   with cdsLineas do
   begin
@@ -1148,7 +1149,7 @@ begin
     if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
       raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
   end;
-  Cab          := LeerCabecera;
+  Cab          := LeerCabecera(cdsCabecera);
   TotalFactura := DatosCobro.ImporteEntregado;
   // =======================================================================
   // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
@@ -1239,7 +1240,7 @@ begin
       cdsLineas.First;
       while not cdsLineas.Eof do
       begin
-        Lin := LeerLineaActual;
+        Lin := LeerLineaActual(cdsLineas);
 
         // -------------------------------------------------------------------
         // CASO A: ABONO DE ANTICIPO PREVIO

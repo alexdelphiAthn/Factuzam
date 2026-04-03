@@ -257,6 +257,8 @@ type
     property Porcentajes: TPorcentajesImpuestos read _porcentajes;
     property PorcentajeRetencion: Currency read _dPorRetencion write _dPorRetencion;
     property MensajeError: string read _mensajeError;
+    property Cabecera:TDataSet read _unqryFac;
+    property Lineas:TDataset read _unqryLineas;
   end;
   function IfThen(AValue: Boolean;
                 const ATrue: string;

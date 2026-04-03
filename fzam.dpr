@@ -127,7 +127,9 @@ uses
   inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
   inLibFTicket in 'src\Lib\inLibFTicket.pas',
   inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket},
-  inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas';
+  inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
+  DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
+  inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas';
 
 var
   frmLogon: TfrmLogon;
@@ -163,6 +165,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmMtoPreviewTicket, frmMtoPreviewTicket);
   Application.Run;
 end.

@@ -193,7 +193,7 @@ implementation
 
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  inLibFacturas, inLibGenBusq, inLibCajaParam, inMtoPreviewTicket;
+  inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
