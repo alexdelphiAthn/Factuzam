@@ -205,8 +205,6 @@ var
   TempList: TStringList;
 begin
   FLogMemo.Lines.Add(' -- Ejecutando (' + FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
-
-  // Usamos un StringList para que Delphi desglose los saltos de línea correctamente
   TempList := TStringList.Create;
   try
     TempList.Text := SQL;
@@ -214,20 +212,14 @@ begin
   finally
     TempList.Free;
   end;
-
-  // Mantenemos el autoscroll para que baje visualmente
   FLogMemo.SelStart := Length(FLogMemo.Text);
   SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
-
   Application.ProcessMessages;
-
-  // Iniciamos el cronómetro justo antes de que la BD reciba la sentencia
   FStopwatch := TStopwatch.StartNew;
 end;
 
 procedure TfrmMtoPrincipal.ScriptAfterExecute(Sender: TObject; SQL: string);
 begin
-  // Detenemos el cronómetro lo antes posible
   FStopwatch.Stop;
   if Assigned(FLogMemo) then
   begin
@@ -268,7 +260,6 @@ begin
     SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
     Application.ProcessMessages;
   end;
-  // Aquí podemos registrar el error en un log o preguntar al usuario
   var MsgCorta := E.Message;
   if Length(MsgCorta) > 200 then
     MsgCorta := Copy(MsgCorta, 1, 200) + '...';
@@ -278,9 +269,9 @@ begin
     '¿Desea ignorar el error y continuar con el script?',
     mtError, [mbYes, mbNo], 0);
   if Respuesta = mrYes then
-    Action := eaContinue  // Ignora la sentencia fallida
+    Action := eaContinue
   else
-    Action := eaFail;     // Detiene el script
+    Action := eaFail;
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
@@ -299,9 +290,6 @@ begin
   else
     EstadoTeclas := EstadoTeclas + 'INS';
   EstadoTeclas := Trim(EstadoTeclas);
-  // LA MAGIA DE LA OPTIMIZACIÓN:
-  // Solo se asigna (y por tanto se repinta en pantalla) si el usuario
-  // acaba de pulsar o soltar una de las teclas.
   if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
 end;
