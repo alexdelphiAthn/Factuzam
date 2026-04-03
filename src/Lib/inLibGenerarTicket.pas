@@ -88,12 +88,12 @@ begin
 
     // === DATOS EMPRESA ===
 //    Ticket.Alinear(alIzquierda);
-    Ticket.EscribirLinea('        ' + Cab.RazonSocialEmp);
-    Ticket.EscribirLinea('        ' + Cab.Direccion1Emp);
-    Ticket.EscribirLinea('        ' + Cab.CPostalEmp + ' ' + Cab.PoblacionEmp);
-    Ticket.EscribirLinea('        ' + 'CIF/NIF: ' + Cab.NifEmp);
+    Ticket.EscribirLinea(Cab.RazonSocialEmp);
+    Ticket.EscribirLinea(Cab.Direccion1Emp);
+    Ticket.EscribirLinea(Cab.CPostalEmp + ' ' + Cab.PoblacionEmp);
+    Ticket.EscribirLinea('CIF/NIF: ' + Cab.NifEmp);
     if Trim(Cab.MovilEmp) <> '' then
-      Ticket.EscribirLinea('        ' + 'TELÉFONO: ' + Cab.MovilEmp);
+      Ticket.EscribirLinea('TELÉFONO: ' + Cab.MovilEmp);
     Ticket.SaltarLineas(1);
     // Formatear línea de operación y tienda
     Ticket.Alinear(alIzquierda);
@@ -103,28 +103,26 @@ begin
                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');
-    Ticket.EscribirLinea('Artículo/Color/Tall  Uds   Total');
-    Ticket.LineaSeparadora('-');
+    Ticket.EscribirLinea('Artículo/Sku                Uds       Total');
+
+
     CantidadTotal := 0;
     dLin.DisableControls;
     try
       dLin.First;
       while not dLin.Eof do
       begin
-        Lin := LeerLineaActual(dLin);
-
-        // Nota: En TDatosLineaFactura ya no tienes campos separados "color" y "talla".
-        // Si tu código Sku (ej: ZAP/ROJO/42) lo contiene, puedes ajustarlo con Copy, o extraerlo de los ATTR.
-        // Aquí uso una aproximación directa extrayendo los primeros 8 chars del artículo.
-        var Art := Format('%-14s', [Copy(Lin.Sku, 1, 29)]);
-//        var Col := Format('%-9s',  ['']);
-//        var Tal := Format('%-6s',  ['']); // <--- Ajustar si lees la talla de Lin.Sku
+        var sArt := Format('%-26s', [Copy(dLin.FieldByName(
+                              'CODIGO_UNIDAD_FACTURA_LINEA').AsString, 1, 26)]);
+        var sUds := Format('%4s',
+             [FloatToStr(dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat)]);
         var Des := Format('%-38s', [Copy(Lin.Descripcion, 1, 38)]);
-        var Pre := Format('%7.2f', [Lin.TotalCIva]); // Total bruto línea (con IVA)
-        var Uds := Format('%-2s',  [FloatToStr(Lin.Cantidad)]);
-        Ticket.TextoColumnas(Art + Uds, Pre + ' €');
-        Ticket.EscribirLinea(Des);
-        CantidadTotal := CantidadTotal + Lin.Cantidad;
+        var sPre := FormatFloat('#,##0.00',
+                    dLin.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency) + ' €';
+        Ticket.TextoColumnas(sArt + sUds, sPre);
+        Ticket.EscribirLinea(Copy(dLin.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString, 1, 42));
+//        CantidadTotal := CantidadTotal +
+//                             dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
         dLin.Next;
       end;
     finally
@@ -173,8 +171,8 @@ begin
                                        [DatosCobro.ImporteValeEmitido]) + ' €');
       Ticket.Negrita(False);
     end;
-    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
-                                                          [CantidadTotal]), 42);
+//    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
+//                                                          [CantidadTotal]), 42);
     Ticket.SaltarLineas(1);
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
     if Cab.TotalIvaN > 0 then

@@ -59,9 +59,9 @@ uses
 const
   ANCHO_PAPEL_MM = 80;
   DPI = 203;
-  // Ajustado a 512 para que cuadre exacto con las 42 columnas de tu ticket
-  ANCHO_PAPEL_PIXELS = 512;
-  MARGEN_PIXELS = 4;
+  // Cambiado de 576 a 520 para envolver exactamente las 42 columnas de 12px
+  ANCHO_PAPEL_PIXELS = 520;
+  MARGEN_PIXELS = 8;
   //
 //  ANCHO_PAPEL_MM = 80; // Papel de 80mm
 //  DPI = 203; // DPI típico de impresoras térmicas
@@ -78,29 +78,26 @@ const
 procedure TFormVisualizador.ExportarAPDF(const Comandos: string; const RutaArchivo: string);
 var
   Pdf: TPdfDocumentGDI;
+  Metafile: TMetafile;
+  MetaCanvas: TMetafileCanvas;
   CanvasBackup: TCanvas;
-  AltoPuntos, AnchoPuntos: Integer;
+  AnchoPDF, AltoPDF: Integer;
 begin
   Pdf := TPdfDocumentGDI.Create;
+  Metafile := TMetafile.Create;
   try
-    Pdf.DefaultPaperSize := psUserDefined;
-
-    // Convertimos los píxeles de nuestra previsualización a puntos para el PDF
-    // 72 es la resolución estándar de PDF, 203 son los DPI de tu impresora térmica
-    AnchoPuntos := MulDiv(Image1.Picture.Bitmap.Width, 72, 203);
-    AltoPuntos := MulDiv(Image1.Picture.Bitmap.Height, 72, 203);
-
-    Pdf.DefaultPageWidth := AnchoPuntos;
-    Pdf.DefaultPageHeight := AltoPuntos; // ¡Esto evita el metro de papel en blanco!
-
-    Pdf.AddPage;
+    // 1. Crear el lienzo vectorial (Metafile) con las medidas de tu pantalla
+    Metafile.Width := Image1.Picture.Bitmap.Width;
+    Metafile.Height := Image1.Picture.Bitmap.Height;
+    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
 
     CanvasBackup := FCanvas;
-    FCanvas := Pdf.VCLCanvas;
+    FCanvas := MetaCanvas;
     try
-      // Reiniciamos estado y dibujamos directamente en el PDF
+      // 2. Procesamos el texto. Ahora las funciones TextOut y MoveTo
+      // se graban como operaciones matemáticas (vectores), no como píxeles.
       FCurrentY := MARGEN_PIXELS;
-      FFuenteActual := 1;
+      FFuenteActual := 0;
       FNegrita := False;
       FSubrayado := False;
       FAlineacion := 0;
@@ -110,11 +107,29 @@ begin
 
       ProcesarComandosESCPOS(Comandos);
     finally
+      // IMPORTANTE: Liberar el MetaCanvas cierra el archivo y consolida los vectores
+      MetaCanvas.Free;
       FCanvas := CanvasBackup;
     end;
 
+    // 3. Configuramos la página del PDF convirtiendo a puntos de impresión (72 DPI)
+    Pdf.DefaultPaperSize := psUserDefined;
+    AnchoPDF := MulDiv(Metafile.Width, 72, 203);
+    AltoPDF  := MulDiv(Metafile.Height, 72, 203);
+
+    Pdf.DefaultPageWidth := AnchoPDF;
+    Pdf.DefaultPageHeight := AltoPDF;
+    Pdf.AddPage;
+
+    // 4. ¡LA MAGIA!
+    // StretchDraw coge el Metafile, lee las operaciones vectoriales y las
+    // incrusta como texto nativo en el PDF ajustándose a la página perfectamente.
+    Pdf.VCLCanvas.StretchDraw(Rect(0, 0, AnchoPDF, AltoPDF), Metafile);
+
+    // 5. Guardar el resultado final
     Pdf.SaveToFile(RutaArchivo);
   finally
+    Metafile.Free;
     Pdf.Free;
   end;
 end;
@@ -254,7 +269,7 @@ begin
   FCanvas.Rectangle(0, 0, ANCHO_PAPEL_PIXELS, Image1.Picture.Bitmap.Height);
   // Estado inicial
   FCurrentY := MARGEN_PIXELS;
-  FFuenteActual := 1; // RasterB por defecto
+  FFuenteActual := 0;
   FNegrita := False;
   FSubrayado := False;
   FAlineacion := 0; // Izquierda
@@ -312,7 +327,7 @@ begin
           case Comandos[i] of
             '@': // Inicializar
               begin
-                FFuenteActual := 1;
+                FFuenteActual := 0;
                 FNegrita := False;
                 FSubrayado := False;
                 FAlineacion := 0;
@@ -590,7 +605,7 @@ begin
   end;
   // 3. Configuración CRÍTICA para nitidez
   LogFont.lfHeight := -AlturaPixels; // Negativo para indicar píxeles exactos
-  LogFont.lfWidth  := 0; // Dejar que Windows decida el ancho proporcional, o forzar si es necesario
+  LogFont.lfWidth  := ObtenerAnchoCaracter; // Dejar que Windows decida el ancho proporcional, o forzar si es necesario
   // Fuerza a NO usar suavizado (bordes duros, como la impresora térmica)
   LogFont.lfQuality := NONANTIALIASED_QUALITY;
   // Peso de la fuente (Negrita)
@@ -651,22 +666,19 @@ procedure TFormVisualizador.ImprimirTexto(const Texto: string);
 var
   X: Integer;
   TextoWidth: Integer;
-  AnchoCaracterActual: Integer;
 begin
   if Texto = '' then Exit;
   AjustarFuente;
-  // Calcular ancho basado en caracteres, no en pixels
-  AnchoCaracterActual := ObtenerAnchoCaracter;
-  TextoWidth := Length(Texto) * AnchoCaracterActual;
-  // Calcular posici�n X seg�n alineaci�n
+  // Le preguntamos al Canvas los píxeles reales que ocupa la frase
+  TextoWidth := FCanvas.TextWidth(Texto);
+  // Alineación usando el ancho TOTAL del papel, igual que hace el QR
   case FAlineacion of
     0: X := MARGEN_PIXELS; // Izquierda
-    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2; // Centro
-    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
+    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2; // Centro absoluto perfecto
+    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS; // Derecha
   else
     X := MARGEN_PIXELS;
   end;
-  // Aplicar inversión de colores si está activada
   if FInverso then
   begin
     FCanvas.Brush.Style := bsSolid;
@@ -678,8 +690,8 @@ begin
     FCanvas.Brush.Style := bsClear;
     FCanvas.Font.Color := clBlack;
   end;
+
   FCanvas.TextOut(X, FCurrentY, Texto);
-  // Restaurar
   FCanvas.Brush.Style := bsClear;
 end;
 
