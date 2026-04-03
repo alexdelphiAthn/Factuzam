@@ -75,19 +75,11 @@ begin
       Ticket.ImprimirQRNativo(QRTexto, 6);
     end;
     Ticket.SaltarLineas(1);
-
-    // === ENCABEZADO TICKET ===
     Ticket.Negrita(True);
     Ticket.EscribirLinea('  FACTURA SIMPLIFICADA Nro. ' + ANumeroGenerado);
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
-
-    // === DATOS EMPRESA ===
     Ticket.Alinear(alCentro);
-//    Ticket.SaltarLineas(1);
-
-    // === DATOS EMPRESA ===
-//    Ticket.Alinear(alIzquierda);
     Ticket.EscribirLinea(Cab.RazonSocialEmp);
     Ticket.EscribirLinea(Cab.Direccion1Emp);
     Ticket.EscribirLinea(Cab.CPostalEmp + ' ' + Cab.PoblacionEmp);
@@ -103,9 +95,7 @@ begin
                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');
-    Ticket.EscribirLinea('Artículo/Sku                Uds       Total');
-
-
+    Ticket.EscribirLinea('Artículo/Sku                Uds    Total');
     CantidadTotal := 0;
     dLin.DisableControls;
     try
@@ -120,9 +110,10 @@ begin
         var sPre := FormatFloat('#,##0.00',
                     dLin.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency) + ' €';
         Ticket.TextoColumnas(sArt + sUds, sPre);
-        Ticket.EscribirLinea(Copy(dLin.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString, 1, 42));
+        Ticket.EscribirLinea(Copy(dLin.FieldByName(
+                        'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString, 1, 42));
 //        CantidadTotal := CantidadTotal +
-//                             dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+//                           dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
         dLin.Next;
       end;
     finally

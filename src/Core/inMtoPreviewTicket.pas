@@ -59,14 +59,8 @@ uses
 const
   ANCHO_PAPEL_MM = 80;
   DPI = 203;
-  // Cambiado de 576 a 520 para envolver exactamente las 42 columnas de 12px
-  ANCHO_PAPEL_PIXELS = 520;
+  ANCHO_PAPEL_PIXELS = 576; // Estándar real de 80mm
   MARGEN_PIXELS = 8;
-  //
-//  ANCHO_PAPEL_MM = 80; // Papel de 80mm
-//  DPI = 203; // DPI típico de impresoras térmicas
-//  ANCHO_PAPEL_PIXELS = 384; // <-- CAMBIAR a 384 (ancho real utilizable)
-//  MARGEN_PIXELS = 8;
   // Tamaños de fuentes en pixels (aproximado)
   FUENTE_A_ANCHO = 12;
   FUENTE_A_ALTO = 24;
@@ -82,51 +76,62 @@ var
   MetaCanvas: TMetafileCanvas;
   CanvasBackup: TCanvas;
   AnchoPDF, AltoPDF: Integer;
+  AlturaReal: Integer;
 begin
+  // PASO 1: Calcular la altura real procesando los comandos primero
+  // (CargarYMostrar ya habrá ajustado FCurrentY si se llamó antes)
+  // Si no, hacemos un dry-run para obtener la altura:
+  AlturaReal := Image1.Picture.Bitmap.Height; // Ya ajustado por CargarYMostrar
+
   Pdf := TPdfDocumentGDI.Create;
   Metafile := TMetafile.Create;
   try
-    // 1. Crear el lienzo vectorial (Metafile) con las medidas de tu pantalla
-    Metafile.Width := Image1.Picture.Bitmap.Width;
-    Metafile.Height := Image1.Picture.Bitmap.Height;
-    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
+    // Usar dimensiones reales del bitmap ya renderizado
+    Metafile.Width  := ANCHO_PAPEL_PIXELS;
+    Metafile.Height := AlturaReal;
 
+    // Ajustar DPI del metafile para que coincida con nuestra resolución
+    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS, 2540, DPI); // en 0.01mm
+    Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
+
+    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
     FCanvas := MetaCanvas;
     try
-      // 2. Procesamos el texto. Ahora las funciones TextOut y MoveTo
-      // se graban como operaciones matemáticas (vectores), no como píxeles.
-      FCurrentY := MARGEN_PIXELS;
+      // Reset de estado
+      FCurrentY    := MARGEN_PIXELS;
       FFuenteActual := 0;
-      FNegrita := False;
-      FSubrayado := False;
-      FAlineacion := 0;
+      FNegrita     := False;
+      FSubrayado   := False;
+      FAlineacion  := 0;
       FTamanoAncho := 1;
-      FTamanoAlto := 1;
-      FInverso := False;
+      FTamanoAlto  := 1;
+      FInverso     := False;
+      FQRTexto     := '';
+
+      // Fondo blanco en el metafile
+      MetaCanvas.Brush.Color := clWhite;
+      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, AlturaReal));
 
       ProcesarComandosESCPOS(Comandos);
     finally
-      // IMPORTANTE: Liberar el MetaCanvas cierra el archivo y consolida los vectores
       MetaCanvas.Free;
       FCanvas := CanvasBackup;
     end;
 
-    // 3. Configuramos la página del PDF convirtiendo a puntos de impresión (72 DPI)
-    Pdf.DefaultPaperSize := psUserDefined;
-    AnchoPDF := MulDiv(Metafile.Width, 72, 203);
-    AltoPDF  := MulDiv(Metafile.Height, 72, 203);
+    // PASO 2: Convertir píxeles → puntos PDF (72 DPI)
+    // 80mm de papel = 226.77 puntos PDF
+    // Usamos la conversión correcta: pixels * 72 / DPI_impresora
+    AnchoPDF := MulDiv(ANCHO_PAPEL_PIXELS, 72, DPI); // 576 * 72 / 203 ≈ 204 pts
+    AltoPDF  := MulDiv(AlturaReal, 72, DPI);
 
-    Pdf.DefaultPageWidth := AnchoPDF;
-    Pdf.DefaultPageHeight := AltoPDF;
+    Pdf.DefaultPaperSize   := psUserDefined;
+    Pdf.DefaultPageWidth   := AnchoPDF;
+    Pdf.DefaultPageHeight  := AltoPDF;
     Pdf.AddPage;
 
-    // 4. ¡LA MAGIA!
-    // StretchDraw coge el Metafile, lee las operaciones vectoriales y las
-    // incrusta como texto nativo en el PDF ajustándose a la página perfectamente.
     Pdf.VCLCanvas.StretchDraw(Rect(0, 0, AnchoPDF, AltoPDF), Metafile);
 
-    // 5. Guardar el resultado final
     Pdf.SaveToFile(RutaArchivo);
   finally
     Metafile.Free;
@@ -137,14 +142,19 @@ end;
 procedure VisualizarTicket(const Comandos: string);
 var
   Form: TFormVisualizador;
+  RutaPDF: string;
 begin
   Form := TFormVisualizador.Create(nil);
   try
     Form.CargarYMostrar(Comandos);
-    //Form.ShowModal;
-    Form.Image1.Picture.SaveToFile(GetUserFolderTickets + 'Ticket_' +
-                                   FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
-                                   '.bmp');
+//    Form.Image1.Picture.SaveToFile(
+//      GetUserFolderTickets + 'Ticket_' +
+//      FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.bmp');
+
+    // 3. Generar PDF con dimensiones ya conocidas
+    RutaPDF := GetUserFolderTickets + 'Ticket_' +
+               FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+    Form.ExportarAPDF(Comandos, RutaPDF);
   finally
     Form.Free;
   end;
@@ -604,8 +614,8 @@ begin
     StrPCopy(LogFont.lfFaceName, 'Courier New');
   end;
   // 3. Configuración CRÍTICA para nitidez
-  LogFont.lfHeight := -AlturaPixels; // Negativo para indicar píxeles exactos
-  LogFont.lfWidth  := ObtenerAnchoCaracter; // Dejar que Windows decida el ancho proporcional, o forzar si es necesario
+  LogFont.lfHeight := -AlturaPixels;
+  LogFont.lfWidth  := 0;
   // Fuerza a NO usar suavizado (bordes duros, como la impresora térmica)
   LogFont.lfQuality := NONANTIALIASED_QUALITY;
   // Peso de la fuente (Negrita)
@@ -669,13 +679,12 @@ var
 begin
   if Texto = '' then Exit;
   AjustarFuente;
-  // Le preguntamos al Canvas los píxeles reales que ocupa la frase
+  // Windows nos dice el ancho real exacto de la frase
   TextoWidth := FCanvas.TextWidth(Texto);
-  // Alineación usando el ancho TOTAL del papel, igual que hace el QR
   case FAlineacion of
-    0: X := MARGEN_PIXELS; // Izquierda
-    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2; // Centro absoluto perfecto
-    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS; // Derecha
+    0: X := MARGEN_PIXELS;
+    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2;
+    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
   else
     X := MARGEN_PIXELS;
   end;
@@ -690,7 +699,6 @@ begin
     FCanvas.Brush.Style := bsClear;
     FCanvas.Font.Color := clBlack;
   end;
-
   FCanvas.TextOut(X, FCurrentY, Texto);
   FCanvas.Brush.Style := bsClear;
 end;
