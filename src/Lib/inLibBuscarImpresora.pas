@@ -44,7 +44,6 @@ var
 begin
   Result := '';
   CacheValida := False;
-
   Partes := TStringList.Create;
   Partes.Delimiter := ',';
   Partes.StrictDelimiter := True;
@@ -65,16 +64,13 @@ begin
             SesionCache := Trim(Partes[0]);
             ModoCache := Trim(Partes[1]);
             ImpresoraCache := Trim(Partes[2]);
-
-            // La caché es válida si no está vacía y (es DEBUG o la impresora existe en el sistema)
             CacheValida := (ImpresoraCache <> '') and
                            ((SameText(ImpresoraCache, 'DEBUG')) or
                             (Printer.Printers.IndexOf(ImpresoraCache) >= 0));
-
             if CacheValida then
             begin
               Result := ImpresoraCache;
-              Exit; // Si es válida, devolvemos el resultado y salimos
+              Exit;
             end;
           end;
         end;
@@ -87,20 +83,15 @@ begin
       Result := 'DEBUG'
     else
       Result := BuscarImpresoraPorPatrones(PatronBusqueda);
-    // 3. Si encontramos la impresora, la guardamos en la caché
-    //    para la próxima vez
     if Result <> '' then
     begin
       if Result = 'DEBUG' then
         Sesion := '0'
       else
         Sesion := ObtenerSesionImpresora(Result);
-
       AssignFile(FCache, ArchivoCache);
       Rewrite(FCache);
       try
-        // Formato guardado: Sesion,ModoImpresion,NombreImpresora
-//        Writeln(FCache, Sesion + ',' + ModoImpresion + ',' + Result);
       finally
         CloseFile(FCache);
       end;
@@ -168,6 +159,9 @@ begin
       NombreImpresora := ListaImpresoras[i];
       CoincideConTodos := True;
       PatronesCoincidentes := 0;
+
+
+
       for j := 0 to ListaSubcadenas.Count - 1 do
       begin
         Subcadena := ListaSubcadenas[j];
@@ -187,7 +181,6 @@ begin
       end
       else
     end;
-    if Result = '' then
   finally
     if Assigned(ListaSubcadenas) then
       ListaSubcadenas.Free;
@@ -372,7 +365,8 @@ begin
   begin
     Contenido := Copy(NombreImpresora, PosAbre + 1, PosCierra - PosAbre - 1);
     ContenidoUpper := UpperCase(Contenido);
-    if (Pos('COPIA', ContenidoUpper) > 0) or (Pos('COPY', ContenidoUpper) > 0) then
+    if (Pos('COPIA', ContenidoUpper) > 0) or
+       (Pos('COPY', ContenidoUpper) > 0) then
     begin
       Result := '0';
       Exit;
