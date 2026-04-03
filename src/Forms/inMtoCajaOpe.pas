@@ -1982,7 +1982,7 @@ begin
            tiConTicket: ImprimirT(FCodigoEmpresa,
                                   FCodigoAlmacen,
                                   FCodigoCaja,
-                                  NumeroGenerado;
+                                  NumeroGenerado,
                                   frmFaseCobro.DatosCobro);
            tiTicketRegalo:
              ;

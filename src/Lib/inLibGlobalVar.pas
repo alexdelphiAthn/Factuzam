@@ -22,6 +22,7 @@ var
   odmConn    :TdmConn;
   oMemoSQL   :TcxMemo;
   ofrmMto2   :TfrmMtoPrincipal;
+  oNomImpresoraCaja:String;
   oUser      :String;
   oGroup     :String;
   orootGroup :String;
@@ -39,6 +40,7 @@ initialization
   oVersion         := '1.0.0.20231204.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
+  oNomImpresoraCaja:='';
   orootGroup       := 'N';
   odmPerfiles      := nil;
   odmConn          := nil;

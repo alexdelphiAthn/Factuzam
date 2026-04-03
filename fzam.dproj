@@ -424,6 +424,7 @@
             <Form>frmMtoPreviewTicket</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

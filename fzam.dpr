@@ -126,7 +126,8 @@ uses
   inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
   inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
   inLibFTicket in 'src\Lib\inLibFTicket.pas',
-  inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket};
+  inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket},
+  inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas';
 
 var
   frmLogon: TfrmLogon;

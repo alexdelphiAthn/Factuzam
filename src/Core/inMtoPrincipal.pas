@@ -169,6 +169,7 @@ type
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
     oFzaWinf: TfzaWinF;
+
   end;
 
 var
@@ -189,6 +190,7 @@ uses inLibUser,
   inMtoCajaParam,
   inMtoModalGenFilter,
   inLibCajaParam,
+  inLibBuscarImpresora,
   System.RegularExpressions;
 
 {$R *.dfm}
@@ -315,6 +317,7 @@ begin
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
+  oNomImpresoraCaja := GetImpresoraCaja;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
@@ -444,27 +447,22 @@ begin
     Options.UseTransactions := True;
     Options.ExtendedInsert   := True;
     Options.ExtendedInsertRows := 500;
-
     IncludeTables := TStringList.Create;
     ExcludeTables := TStringList.Create;
-
     // 2. Inicializar el Provider
     Provider := TMySQLMetadataProvider.Create(FDmConn.conUni, FDmConn.conUni.Database);
     Helpers := TMySQLHelpers.Create;
     Writer := TScriptWriter.Create(saveDialog.FileName);
-
     try
       try
         Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
         try
           // 3. Ejecutar el backup
           Engine.GenerateBackup;
-
           inLibLog.Log.LogInfo('Copia de seguridad creada en ' + saveDialog.FileName);
           ShowMessage('La copia se guardó exitosamente.');
-          
           // Si llegamos hasta aquí sin errores, el backup fue un éxito
-          Result := True; 
+          Result := True;
         finally
           Engine.Free;
         end;
@@ -498,7 +496,6 @@ begin
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
     tmr1.Enabled := False;
-
     if Assigned(FormManager) then
     try
       FormManager.CloseAll;
@@ -687,8 +684,10 @@ begin
       if ContieneDDL(SqlScript.SQL.Text) then
       begin
         var Respuesta := MessageDlg(
-          'ATENCIÓN: El script contiene sentencias DDL (modifican la estructura de la base de datos).' + sLineBreak +
-          'En MySQL/MariaDB, estos cambios provocan un guardado automático y NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
+          'ATENCIÓN: El script contiene sentencias DDL (modifican la ' +
+          'estructura de la base de datos).' + sLineBreak +
+          'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
+          'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
           '¿Deseas realizar una copia de seguridad antes de continuar?',
             mtWarning, [mbYes, mbNo, mbCancel], 0);
         case Respuesta of
@@ -696,7 +695,7 @@ begin
             begin
               if not CopiaSeguridad then
               begin
-                ShowMessage('Operación cancelada. El script no se ejecutará por seguridad.');
+                ShowMessage('Operación cancelada. El script no se ejecutará.');
                 Exit;
               end;
             end;
@@ -712,7 +711,6 @@ begin
         FLogForm.Height := 500;
         FLogForm.Position := poMainFormCenter;
         FLogForm.OnClose := LogFormClose; // Para que se destruya al cerrar
-
         FLogMemo := TSynEdit.Create(FLogForm);
         FLogHigSQL := TSynSQLSyn.Create(FlogForm);
         FlogMemo.Highlighter := FLogHigSQL;
@@ -725,12 +723,13 @@ begin
         FlogMemo.Gutter.ShowLineNumbers := True;
         FLogMemo.ScrollBars := TScrollstyle.ssBoth;
         FLogMemo.ReadOnly := True;
-        FLogMemo.Font.Name := 'Consolas'; // Fuente monoespaciada ideal para SQL
+        FLogMemo.Font.Name := 'Consolas';
         FLogMemo.Font.Size := 12;
-        FLogMemo.WordWrap := False; // Para que no corte las sentencias largas
+        FLogMemo.WordWrap := False;
         FLogMemo.Lines.Add('-- INICIO DE EJECUCIÓN DEL SCRIPT --');
-        FLogMemo.Lines.Add('-- Archivo: ' + ExtractFileName(openDialog.FileName));
-        FLogMemo.Lines.Add('--------------------------------------------------');
+        FLogMemo.Lines.Add('-- Archivo: ' +
+                                          ExtractFileName(openDialog.FileName));
+        FLogMemo.Lines.Add('-------------------------------------------------');
         // Mostramos la ventana de forma no modal para poder actualizarla
         FLogForm.Show;
         SqlScript.Execute;
@@ -741,7 +740,8 @@ begin
           begin
             FdmConn.conUni.Rollback;
             inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
-            ShowMessage('Hubo problemas al ejecutar el script. E:' + E.ClassName +
+            ShowMessage('Hubo problemas al ejecutar el script. E:' +
+                                                                   E.ClassName +
               ' Mensaje:' + Copy(E.Message, 1, 200));
             raise;
           end;
