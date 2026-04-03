@@ -4,8 +4,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'Fase de cobro'
-  ClientHeight = 680
-  ClientWidth = 834
+  ClientHeight = 688
+  ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,13 +20,15 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object pnlPrincipal: TPanel
     Left = 65
     Top = 0
-    Width = 769
-    Height = 680
+    Width = 771
+    Height = 688
     Align = alClient
     BevelOuter = bvNone
     Color = clCream
     ParentBackground = False
     TabOrder = 0
+    ExplicitWidth = 769
+    ExplicitHeight = 680
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -910,9 +912,10 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Left = 0
     Top = 0
     Width = 65
-    Height = 680
+    Height = 688
     Align = alLeft
     TabOrder = 1
+    ExplicitHeight = 680
     object cxLabel3: TcxLabel
       Left = 1
       Top = 172
@@ -983,6 +986,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Caption = 'BuscarVale'
       ShortCut = 117
       OnExecute = actBuscarValeExecute
+    end
+    object actSinTicket: TAction
+      Caption = 'SinTicket'
+      ShortCut = 122
+      OnExecute = actSinTicketExecute
     end
   end
   object cxStyleRepository1: TcxStyleRepository
