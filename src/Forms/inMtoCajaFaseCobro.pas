@@ -94,6 +94,7 @@ type
     dbtvFormasPagoColumn3: TcxGridDBColumn;
     actBuscarT: TAction;
     actBuscarVale: TAction;
+    actSinTicket: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -119,6 +120,7 @@ type
     procedure btnConTicketClick(Sender: TObject);
     procedure btnSinPreciosClick(Sender: TObject);
     procedure btnF7Click(Sender: TObject);
+    procedure actSinTicketExecute(Sender: TObject);
   private
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
@@ -893,6 +895,12 @@ procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
 begin
   inherited;
   btnAtrasClick(Sender);
+end;
+
+procedure TfrmMtoCajaFaseCobro.actSinTicketExecute(Sender: TObject);
+begin
+  inherited;
+  btnSinTicketClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(

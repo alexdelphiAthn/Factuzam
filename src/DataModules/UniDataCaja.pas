@@ -1183,10 +1183,11 @@ begin
   // =======================================================================
   inLibGlobalVar.oConn.StartTransaction;
   var sOpeCaja := SiguienteOpCaja(AEmpresa, AAlmacen, ACaja, UsuarioCaja);
+  NumOperacionVE := sOpeCaja;
+  NumeroGenerado := sOpeCaja;
   QryTrx := TUniQuery.Create(nil);
   try try
     QryTrx.Connection := inLibGlobalVar.oConn;
-
     // =======================================================================
     // PASO 1 Y 3: NÚMERO Y CABECERA (SOLO SI REQUIERE FACTURA)
     // =======================================================================
@@ -1206,7 +1207,6 @@ begin
       finally
         uspQryTrx.Free;
       end;
-
       InsertarCabeceraFactura(
         QryTrx, SerieGenerada, NumeroGenerado, Cab.Fecha, 'SIMPLIFICADA', 'BORRADOR',
         AEmpresa, Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp, Cab.EmailEmp,
@@ -1230,7 +1230,6 @@ begin
       SerieGenerada := '';
       NumeroGenerado := '0';
     end;
-
     // =======================================================================
     // PASO 4: LÍNEAS
     // =======================================================================
@@ -1308,8 +1307,6 @@ begin
               QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku, UsuarioCaja,
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
               Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl);
-
-            // CORRECCIÓN: El importe de caja es Lin.TotalCIva (lo que dejan a cuenta), NO el precio de la prenda
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
               UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
@@ -1318,7 +1315,6 @@ begin
           cdsLineas.Next;
           Continue;
         end;
-
         // -------------------------------------------------------------------
         // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
         // -------------------------------------------------------------------
@@ -1326,17 +1322,14 @@ begin
           NumMovGenerado := ObtenerSiguienteContador('MV')
         else
           NumMovGenerado := '';
-
         if Lin.VieneDeDeposito = 'S' then
         begin
           AlmacenOrigenSalida := cdsLineas.FieldByName('ALMACEN_ORIGEN_DEP_LINEA').AsString;
           CerrarDepositoCliente(QryTrx, Cab.CodigoCliente, Lin.Sku, UsuarioCaja);
-
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', -Lin.PrecioOriginalDep,
             UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
             'Cierre depósito: ' + Lin.Descripcion);
-
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
             UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
@@ -1344,10 +1337,10 @@ begin
         end
         else
           AlmacenOrigenSalida := AAlmacen;
-
-        if Lin.Cantidad < 0 then TipoMov := 'E' else TipoMov := 'S';
-
-        // Solo inserta en fza_facturas_lineas si hay factura
+        if Lin.Cantidad < 0 then
+          TipoMov := 'E'
+        else
+          TipoMov := 'S';
         if RequiereFactura then
         begin
           InsertarLineaFactura(
@@ -1358,14 +1351,12 @@ begin
             Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
             AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
         end;
-
         // Pero el movimiento de almacén (fza_movimientos_almacen) se hace SIEMPRE
         if Lin.TipoArticulo = 'ESTANDAR' then
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumeroGenerado, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Articulo, Lin.Sku, Lin.Descripcion,
             Lin.Cantidad, 0, Cab.CodigoCliente, UsuarioCaja);
-
         cdsLineas.Next;
       end;
     finally
@@ -1394,6 +1385,7 @@ begin
     // =======================================================================
     // PASO 6: VALES
     // =======================================================================
+    if DatosCobro.ValesRecogidos <> nil then
     for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
     begin
       if Abs(DatosCobro.ValesRecogidos[i].ImporteAplicado) > 0.001 then
@@ -2135,31 +2127,31 @@ begin
     Add('ESIVAAGRICOLA_ZONA_IVA_FACTURA', ftString, 1);
     Add('PALABRA_REPORTS_ZONA_IVA_FACTURA', ftString, 10);
     Add('ESVENTA_ACTIVO_FIJO_FACTURA', ftString, 1);
-    Add('PORCEN_IVAN_FACTURA', ftBCD, 0);
-    Add('TOTAL_IVAN_FACTURA', ftBCD, 0);
-    Add('PORCEN_REN_FACTURA', ftBCD, 0);
-    Add('TOTAL_REN_FACTURA', ftBCD, 0);
-    Add('TOTAL_BASEI_IVAN_FACTURA', ftBCD, 0);
-    Add('PORCEN_IVAR_FACTURA', ftBCD, 0);
-    Add('TOTAL_IVAR_FACTURA', ftBCD, 0);
-    Add('PORCEN_RER_FACTURA', ftBCD, 0);
-    Add('TOTAL_RER_FACTURA', ftBCD, 0);
-    Add('TOTAL_BASEI_IVAR_FACTURA', ftBCD, 0);
-    Add('PORCEN_IVAS_FACTURA', ftBCD, 0);
-    Add('TOTAL_IVAS_FACTURA', ftBCD, 0);
-    Add('PORCEN_RES_FACTURA', ftBCD, 0);
-    Add('TOTAL_RES_FACTURA', ftBCD, 0);
-    Add('TOTAL_BASEI_IVAS_FACTURA', ftBCD, 0);
-    Add('PORCEN_IVAE_FACTURA', ftBCD, 0);
-    Add('TOTAL_IVAE_FACTURA', ftBCD, 0);
-    Add('PORCEN_REE_FACTURA', ftBCD, 0);
-    Add('TOTAL_REE_FACTURA', ftBCD, 0);
-    Add('TOTAL_BASEI_IVAE_FACTURA', ftBCD, 0);
-    Add('TOTAL_BASES_FACTURA', ftBCD, 0);
-    Add('TOTAL_IMPUESTOS_FACTURA', ftBCD, 0);
-    Add('PORCEN_RETENCION_FACTURA', ftBCD, 0);
-    Add('TOTAL_RETENCION_FACTURA', ftBCD, 0);
-    Add('TOTAL_LIQUIDO_FACTURA', ftBCD, 0); // Lo que paga el cliente
+    Add('PORCEN_IVAN_FACTURA', ftFloat, 0);
+    Add('TOTAL_IVAN_FACTURA', ftCurrency, 0);
+    Add('PORCEN_REN_FACTURA', ftFloat, 0);
+    Add('TOTAL_REN_FACTURA', ftCurrency, 0);
+    Add('TOTAL_BASEI_IVAN_FACTURA', ftCurrency, 0);
+    Add('PORCEN_IVAR_FACTURA', ftFloat, 0);
+    Add('TOTAL_IVAR_FACTURA', ftCurrency, 0);
+    Add('PORCEN_RER_FACTURA', ftFloat, 0);
+    Add('TOTAL_RER_FACTURA', ftCurrency, 0);
+    Add('TOTAL_BASEI_IVAR_FACTURA', ftCurrency, 0);
+    Add('PORCEN_IVAS_FACTURA', ftFloat, 0);
+    Add('TOTAL_IVAS_FACTURA', ftCurrency, 0);
+    Add('PORCEN_RES_FACTURA', ftFloat, 0);
+    Add('TOTAL_RES_FACTURA', ftCurrency, 0);
+    Add('TOTAL_BASEI_IVAS_FACTURA', ftCurrency, 0);
+    Add('PORCEN_IVAE_FACTURA', ftFloat, 0);
+    Add('TOTAL_IVAE_FACTURA', ftCurrency, 0);
+    Add('PORCEN_REE_FACTURA', ftFloat, 0);
+    Add('TOTAL_REE_FACTURA', ftCurrency, 0);
+    Add('TOTAL_BASEI_IVAE_FACTURA', ftCurrency, 0);
+    Add('TOTAL_BASES_FACTURA', ftCurrency, 0);
+    Add('TOTAL_IMPUESTOS_FACTURA', ftCurrency, 0);
+    Add('PORCEN_RETENCION_FACTURA', ftFloat, 0);
+    Add('TOTAL_RETENCION_FACTURA', ftCurrency, 0);
+    Add('TOTAL_LIQUIDO_FACTURA', ftCurrency, 0); // Lo que paga el cliente
     Add('FORMA_PAGO_FACTURA', ftString, 200);
     Add('NRO_FACTURA_ABONO_FACTURA', ftString, 8);
     Add('SERIE_FACTURA_ABONO_FACTURA', ftString, 8);
@@ -2229,18 +2221,18 @@ begin
     Add('ESIMP_INCL_TARIFA_FACTURA_LINEA', ftString, 1);
     Add('CODIGO_TARIFA_FACTURA_LINEA', ftString, 10);
     // IMPORTANTE: ftBCD maneja bien los decimales de MySQL (Decimal 19,6)
-    Add('CANTIDAD_FACTURA_LINEA', ftBCD, 0);
+    Add('CANTIDAD_FACTURA_LINEA', ftFloat, 0);
     // -- PRECIOS Y DESCUENTOS --
-    Add('PRECIOSALIDA_FACTURA_LINEA', ftBCD, 0);
-    Add('PORCEN_DTO_FACTURA_LINEA', ftBCD, 0);
-    Add('PRECIO_DTO_FACTURA_LINEA', ftBCD, 0);
+    Add('PRECIOSALIDA_FACTURA_LINEA', ftCurrency, 0);
+    Add('PORCEN_DTO_FACTURA_LINEA', ftFloat, 0);
+    Add('PRECIO_DTO_FACTURA_LINEA', ftFloat, 0);
     // -- IMPORTES Y TOTALES --
-    Add('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA', ftBCD, 0);
+    Add('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA', ftCurrency, 0);
     Add('TIPOIVA_ARTICULO_FACTURA_LINEA', ftString, 2);
-    Add('PORCEN_IVA_FACTURA_LINEA', ftBCD, 0);
-    Add('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA', ftBCD, 0);
-    Add('TOTAL_FACTURA_LINEA', ftBCD, 0);
-    Add('TOTAL_FACTURASIVA_LINEA', ftBCD, 0);
+    Add('PORCEN_IVA_FACTURA_LINEA', ftFloat, 0);
+    Add('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA', ftCurrency, 0);
+    Add('TOTAL_FACTURA_LINEA', ftCurrency, 0);
+    Add('TOTAL_FACTURASIVA_LINEA', ftCurrency, 0);
     // -- CAMPOS DE AUDITORÍA --
     Add('INSTANTEMODIF', ftDateTime, 0);
     Add('INSTANTEALTA', ftDateTime, 0);
@@ -2586,7 +2578,7 @@ begin
   QryTrx.ParamByName('ART').AsString      := AArticulo;
   QryTrx.ParamByName('SKU').AsString      := ASku;
   QryTrx.ParamByName('DESC').AsString     := ADesc;
-  QryTrx.ParamByName('DESCVAR').AsString  := ADescVariacion;
+//  QryTrx.ParamByName('DESCVAR').AsString  := ADescVariacion;
   QryTrx.ParamByName('FAM').AsString      := AFamilia;
   QryTrx.ParamByName('NOMFAM').AsString   := ANombreFamilia;
   QryTrx.ParamByName('TIPOART').AsString  := ATipoArticulo;

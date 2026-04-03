@@ -285,6 +285,7 @@ begin
       end;
     end;
   end;
+  dbtvStock.ClearItems;
   lblNombreCliente.Caption := 'VENTA CONTADO';
   btnCodigoCliente.Text := '';
   lblTotal.Caption := 'Total 0,00 €';
@@ -1981,20 +1982,18 @@ begin
        begin
          case frmFaseCobro.TipoImpresion of
            tiConTicket:
-             ; // Llamar a tu función de impresión normal FastReport pasando SerieGenerada y NumeroGenerado
+             ;
            tiTicketRegalo:
-             ; // Llamar a impresión ocultando importes y totales
+             ;
            tiSinTicket:
-             ; // Simplemente no hacer nada, saltar impresión
+             ;
          end;
-
          // 3. Imprimir el ticket del vale (Si se emitió alguno por devoluciones o cambio sobrante)
          if CodigoValeGenerado <> '' then
          begin
            // ImprimirTicketVale(CodigoValeGenerado, frmFaseCobro.DatosCobro.ImporteValeEmitido);
            // ShowMessage('Entregue el vale generado al cliente: ' + CodigoValeGenerado);
          end;
-
          // 4. Limpiar la interfaz y los datasets para el siguiente cliente
          PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Now);
        end;

@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 477
-  ClientWidth = 1184
+  ClientHeight = 485
+  ClientWidth = 1186
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,10 +19,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1184
+    Width = 1186
     Height = 89
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1184
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -120,19 +121,23 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1184
-    Height = 388
+    Width = 1186
+    Height = 396
     Align = alClient
     TabOrder = 3
+    ExplicitWidth = 1184
+    ExplicitHeight = 388
     object Panel1: TPanel
       Left = 1
-      Top = 289
-      Width = 1182
+      Top = 297
+      Width = 1184
       Height = 98
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 289
+      ExplicitWidth = 1182
       DesignSize = (
-        1182
+        1184
         98)
       object btnF12: TcxButton
         Left = 10
@@ -252,7 +257,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 732
+        Left = 734
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -274,9 +279,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
+        ExplicitLeft = 732
         Height = 80
         Width = 423
-        AnchorX = 1155
+        AnchorX = 1157
       end
       object btnF8: TcxButton
         Left = 224
@@ -328,10 +334,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1182
-      Height = 288
+      Width = 1184
+      Height = 296
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1182
+      ExplicitHeight = 288
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
