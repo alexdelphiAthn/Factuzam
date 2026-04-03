@@ -124,7 +124,9 @@ uses
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
   inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
-  inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS};
+  inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
+  inLibFTicket in 'src\Lib\inLibFTicket.pas',
+  inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket};
 
 var
   frmLogon: TfrmLogon;
@@ -160,5 +162,6 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmMtoPreviewTicket, frmMtoPreviewTicket);
   Application.Run;
 end.

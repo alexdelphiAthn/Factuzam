@@ -1178,6 +1178,7 @@ begin
   finally
     cdsLineas.EnableControls;
   end;
+  DatosCobro.FRequiereFactura := RequiereFactura;
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================

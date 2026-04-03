@@ -349,6 +349,7 @@ begin
   Strings.Add('ESC POS');
   Strings.Add('ESC POS NOQR');
   Strings.Add('EDITOR');
+  Strings.Add('DEBUG');
 end;
 
 function TfrmMtoCajaParam.BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
