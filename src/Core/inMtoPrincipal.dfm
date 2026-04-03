@@ -94,6 +94,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end>
     ParentFont = True
     UseSystemFont = False
+    ExplicitTop = 522
+    ExplicitWidth = 1122
   end
   inherited Localizer1: TcxLocalizer
     Left = 528
