@@ -1,59 +1,61 @@
-inherited frmMtoPreviewTicket: TfrmMtoPreviewTicket
-  BorderIcons = []
-  Caption = 'Previsualizaci'#243'n Excel'
+object FormVisualizador: TFormVisualizador
+  Left = 0
+  Top = 0
+  Caption = 'Visualizador de Ticket T'#233'rmico - ESC/POS'
   ClientHeight = 581
-  ClientWidth = 528
-  StyleElements = [seFont, seClient]
-  OnShow = FormShow
-  ExplicitLeft = 3
-  ExplicitTop = 3
-  ExplicitWidth = 546
-  ExplicitHeight = 628
-  TextHeight = 19
-  object Panel1: TPanel [0]
+  ClientWidth = 408
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  TextHeight = 13
+  object Panel1: TPanel
     Left = 0
-    Top = 0
-    Width = 528
-    Height = 41
-    Align = alTop
+    Top = 531
+    Width = 408
+    Height = 50
+    Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 970
-    object btnGuardar: TcxButton
-      Left = 6
-      Top = 3
-      Width = 193
-      Height = 34
-      Caption = 'Guardar Excel'
+    object btnCerrar: TButton
+      Left = 16
+      Top = 10
+      Width = 100
+      Height = 30
+      Caption = 'Cerrar'
       TabOrder = 0
-      OnClick = btnGuardarClick
-    end
-    object btnCerrar: TcxButton
-      Left = 238
-      Top = 3
-      Width = 193
-      Height = 34
-      Caption = 'Cerrar (ESC)'
-      TabOrder = 1
       OnClick = btnCerrarClick
     end
-  end
-  inherited Localizer1: TcxLocalizer
-    Active = False
-  end
-  object DialogoGuardar: TdxSaveFileDialog
-    DefaultExt = 'xlsx'
-    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
-    Title = 'Guardar Excel'
-    Left = 72
-    Top = 56
-  end
-  object ActionList1: TActionList
-    Left = 480
-    Top = 288
-    object actSalir: TAction
-      Caption = 'Salir'
-      ShortCut = 27
-      OnExecute = actSalirExecute
+    object btnGuardar: TButton
+      Left = 130
+      Top = 10
+      Width = 150
+      Height = 30
+      Caption = 'Guardar como Imagen'
+      TabOrder = 1
+      OnClick = btnGuardarClick
     end
+  end
+  object ScrollBox1: TScrollBox
+    Left = 0
+    Top = 0
+    Width = 408
+    Height = 531
+    Align = alClient
+    TabOrder = 1
+    object Image1: TImage
+      Left = 14
+      Top = 3
+      Width = 384
+      Height = 3500
+    end
+  end
+  object SaveDialog1: TSaveDialog
+    Left = 344
+    Top = 560
   end
 end

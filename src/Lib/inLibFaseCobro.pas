@@ -162,6 +162,7 @@ type
                                    write FOnRequiereReferencia;
     property MemTablePagos: TVirtualTable read FMemTablePagos;
     property ValesRecogidos: TList<TValeAplicado> read FValesRecogidos;
+    property TotalesFactura:TFacturaTotales read FTotalesFactura;
   end;
 
 implementation
