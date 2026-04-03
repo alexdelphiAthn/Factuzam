@@ -20,11 +20,13 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 588
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 743
+    ExplicitHeight = 580
     object JvInspector1: TJvInspector
       Left = 1
       Top = 1
-      Width = 745
-      Height = 594
+      Width = 743
+      Height = 586
       Style = isItemPainter
       Align = alClient
       BevelKind = bkSoft
@@ -39,8 +41,6 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
-      ExplicitWidth = 743
-      ExplicitHeight = 586
     end
   end
   object Panel1: TPanel
@@ -50,6 +50,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     Height = 57
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 743
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8

@@ -48,10 +48,10 @@ type
     FBools: TList<PBoolean>;
     FInts:  TList<PInteger>;
     FStrs:  TList<PString>;
-
+    FValoresOriginales: TDictionary<string, string>;
+    procedure CapturarValoresOriginales;
     procedure LimpiarMemoria;
     procedure ResetearADefectos;
-
     function  ObtenerCategoria(const NombreCat: string): TJvInspectorCustomCategoryItem;
     function  QuitarTildes(const Texto: string): string;
     function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
@@ -82,6 +82,7 @@ begin
   FBools := TList<PBoolean>.Create;
   FInts  := TList<PInteger>.Create;
   FStrs  := TList<PString>.Create;
+  FValoresOriginales := TDictionary<string, string>.Create;
 end;
 
 procedure TfrmMtoCajaParam.FormDestroy(Sender: TObject);
@@ -90,7 +91,40 @@ begin
   FBools.Free;
   FInts.Free;
   FStrs.Free;
+  FValoresOriginales.Free;
   inherited;
+end;
+
+procedure TfrmMtoCajaParam.CapturarValoresOriginales;
+var
+  i, j: Integer;
+  NodoPrincipal, ParamItem: TJvCustomInspectorItem;
+  ValorExtraido: string;
+begin
+  FValoresOriginales.Clear;
+  for i := 0 to JvInspector1.Root.Count - 1 do
+  begin
+    NodoPrincipal := JvInspector1.Root.Items[i];
+    if NodoPrincipal is TJvInspectorCustomCategoryItem then
+    begin
+      for j := 0 to NodoPrincipal.Count - 1 do
+      begin
+        ParamItem := NodoPrincipal.Items[j];
+        if ParamItem.Data <> nil then
+        begin
+          case ParamItem.Data.TypeInfo.Kind of
+            tkEnumeration:
+              if ParamItem.Data.AsOrdinal <> 0 then ValorExtraido := 'True' else ValorExtraido := 'False';
+            tkInteger:
+              ValorExtraido := IntToStr(ParamItem.Data.AsOrdinal);
+            else
+              ValorExtraido := ParamItem.Data.AsString;
+          end;
+          FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorExtraido);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaParam.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -254,6 +288,7 @@ begin
     finally
       Grid.EndUpdate;
     end;
+    CapturarValoresOriginales;
   finally
     qry.Free;
   end;
@@ -265,66 +300,73 @@ var
   sUsuarioGrupo: string;
   i, j: Integer;
   NodoPrincipal, ParamItem: TJvCustomInspectorItem;
-  ValorAGuardar: string; // Variable auxiliar para extraer el valor seguro
+  ValorAGuardar: string;
+  GuardadosCount: Integer; // NUEVO: Para saber si ha habido cambios
 begin
-  // 1. Movemos el foco fuera para disparar el evento OnExit del editor
   JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
   sUsuarioGrupo := cmbGrupoUsuario.Text;
 
+  GuardadosCount := 0;
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, :p_formulario, :p_subkey, :p_value)';
-
+    qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, ' +
+                    '                             :p_formulario, ' +
+                    '                             :p_subkey, ' +
+                    '                             :p_value)';
     for i := 0 to JvInspector1.Root.Count - 1 do
     begin
       NodoPrincipal := JvInspector1.Root.Items[i];
-
       if NodoPrincipal is TJvInspectorCustomCategoryItem then
       begin
         for j := 0 to NodoPrincipal.Count - 1 do
         begin
           ParamItem := NodoPrincipal.Items[j];
-
-          // --- EXTRACCIÓN SEGURA SEGÚN EL TIPO DE DATO ---
           if ParamItem.Data <> nil then
           begin
             case ParamItem.Data.TypeInfo.Kind of
-              tkEnumeration: // Los Booleanos entran aquí en RTTI
-                if ParamItem.Data.AsOrdinal <> 0 then
-                  ValorAGuardar := 'True'
-                else
-                  ValorAGuardar := 'False';
-
-              tkInteger: // Números enteros
+              tkEnumeration:
+                if ParamItem.Data.AsOrdinal <> 0 then ValorAGuardar := 'True' else ValorAGuardar := 'False';
+              tkInteger:
                 ValorAGuardar := IntToStr(ParamItem.Data.AsOrdinal);
-
-              else // Para tkString, tkUString, tkWString, etc.
+              else
                 ValorAGuardar := ParamItem.Data.AsString;
             end;
           end
           else
-            ValorAGuardar := ''; // Por si acaso algún nodo no tiene Data
-
-          // Guardamos en BD
+            ValorAGuardar := '';
+          if FValoresOriginales.ContainsKey(ParamItem.Name) then
+          begin
+            // SameText protege contra posibles variaciones de mayúsculas/minúsculas
+            if SameText(FValoresOriginales[ParamItem.Name], ValorAGuardar) then
+              Continue;
+          end;
           qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
           qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
           qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
           qry.ParamByName('p_value').AsString         := ValorAGuardar;
           qry.Execute;
+          Inc(GuardadosCount); // Contamos un guardado real
+          FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
         end;
       end;
-      // Nota: He quitado el "else" del NodoPrincipal porque, como vimos,
-      // tu diseño siempre usa Categorías en el nivel 0.
-      // Si tuvieras nodos sueltos, la lógica de extracción sería exactamente la misma.
     end;
-    ShowMessage('Parámetros guardados correctamente para: ' + sUsuarioGrupo);
+    if GuardadosCount > 0 then
+    begin
+      ShowMessage(Format('Se han guardado %d parámetros correctamente para: %s', [GuardadosCount, sUsuarioGrupo]));
+      if (sUsuarioGrupo = oUser) or
+         (sUsuarioGrupo = oGroup) or
+         (sUsuarioGrupo = oAll) then
+        oCajaParams.Recargar(oUser, oGroup);
+    end
+    else
+    begin
+      ShowMessage('No se han detectado cambios para guardar.');
+    end;
   finally
     qry.Free;
   end;
-  if (sUsuarioGrupo = oUser) or (sUsuarioGrupo = oGroup) or (sUsuarioGrupo = oAll) then
-    oCajaParams.Recargar(oUser, oGroup);
 end;
 
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
