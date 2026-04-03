@@ -169,7 +169,6 @@ type
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
     oFzaWinf: TfzaWinF;
-
   end;
 
 var

@@ -60,6 +60,7 @@ const
   ANCHO_PAPEL_MM = 80;
   DPI = 203;
   ANCHO_PAPEL_PIXELS = 576; // Estándar real de 80mm
+  ANCHO_PAPEL_PIXELS_PDF = 594;
   MARGEN_PIXELS = 8;
   // Tamaños de fuentes en pixels (aproximado)
   FUENTE_A_ANCHO = 12;
@@ -76,61 +77,56 @@ var
   MetaCanvas: TMetafileCanvas;
   CanvasBackup: TCanvas;
   AnchoPDF, AltoPDF: Integer;
+  AnchoPDFConMargen: Integer;
   AlturaReal: Integer;
+  MargenPDF: Integer;
 begin
-  // PASO 1: Calcular la altura real procesando los comandos primero
-  // (CargarYMostrar ya habrá ajustado FCurrentY si se llamó antes)
-  // Si no, hacemos un dry-run para obtener la altura:
-  AlturaReal := Image1.Picture.Bitmap.Height; // Ya ajustado por CargarYMostrar
+  AlturaReal := Image1.Picture.Bitmap.Height;
+  MargenPDF  := 10; // 10 puntos PDF de margen (~3.5mm) en cada lado
+
+  AnchoPDF          := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 72, DPI); // ancho del contenido
+  AnchoPDFConMargen := AnchoPDF + (MargenPDF * 2);          // página más ancha
+  AltoPDF           := MulDiv(AlturaReal, 72, DPI);
 
   Pdf := TPdfDocumentGDI.Create;
   Metafile := TMetafile.Create;
   try
-    // Usar dimensiones reales del bitmap ya renderizado
-    Metafile.Width  := ANCHO_PAPEL_PIXELS;
-    Metafile.Height := AlturaReal;
-
-    // Ajustar DPI del metafile para que coincida con nuestra resolución
-    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS, 2540, DPI); // en 0.01mm
+    Metafile.Width    := ANCHO_PAPEL_PIXELS_PDF;
+    Metafile.Height   := AlturaReal;
+    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 2540, DPI);
     Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
 
     MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
     FCanvas := MetaCanvas;
     try
-      // Reset de estado
-      FCurrentY    := MARGEN_PIXELS;
+      FCurrentY     := MARGEN_PIXELS;
       FFuenteActual := 0;
-      FNegrita     := False;
-      FSubrayado   := False;
-      FAlineacion  := 0;
-      FTamanoAncho := 1;
-      FTamanoAlto  := 1;
-      FInverso     := False;
-      FQRTexto     := '';
+      FNegrita      := False;
+      FSubrayado    := False;
+      FAlineacion   := 0;
+      FTamanoAncho  := 1;
+      FTamanoAlto   := 1;
+      FInverso      := False;
+      FQRTexto      := '';
 
-      // Fondo blanco en el metafile
       MetaCanvas.Brush.Color := clWhite;
-      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, AlturaReal));
-
+      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
     finally
       MetaCanvas.Free;
       FCanvas := CanvasBackup;
     end;
 
-    // PASO 2: Convertir píxeles → puntos PDF (72 DPI)
-    // 80mm de papel = 226.77 puntos PDF
-    // Usamos la conversión correcta: pixels * 72 / DPI_impresora
-    AnchoPDF := MulDiv(ANCHO_PAPEL_PIXELS, 72, DPI); // 576 * 72 / 203 ≈ 204 pts
-    AltoPDF  := MulDiv(AlturaReal, 72, DPI);
-
-    Pdf.DefaultPaperSize   := psUserDefined;
-    Pdf.DefaultPageWidth   := AnchoPDF;
-    Pdf.DefaultPageHeight  := AltoPDF;
+    Pdf.DefaultPaperSize  := psUserDefined;
+    Pdf.DefaultPageWidth  := AnchoPDFConMargen; // página con margen
+    Pdf.DefaultPageHeight := AltoPDF;
     Pdf.AddPage;
 
-    Pdf.VCLCanvas.StretchDraw(Rect(0, 0, AnchoPDF, AltoPDF), Metafile);
+    // Dibujar el contenido desplazado MargenPDF puntos a la derecha
+    PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
+                    Metafile.Handle,
+                    Rect(MargenPDF, 0, AnchoPDF + MargenPDF, AltoPDF));
 
     Pdf.SaveToFile(RutaArchivo);
   finally
@@ -556,7 +552,7 @@ begin
     else
       // Caracteres imprimibles
       if Ord(Comandos[i]) >= 32 then
-        BufferTexto := BufferTexto + Comandos[i];
+          BufferTexto := BufferTexto + Comandos[i];
     end;
     Inc(i);
   end;
@@ -684,7 +680,7 @@ begin
   case FAlineacion of
     0: X := MARGEN_PIXELS;
     1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2;
-    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
+    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS - 18;
   else
     X := MARGEN_PIXELS;
   end;
