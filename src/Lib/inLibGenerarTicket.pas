@@ -96,6 +96,7 @@ begin
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');
     Ticket.EscribirLinea('Artículo/Sku                Uds    Total');
+    Ticket.LineaSeparadora('-');
     CantidadTotal := 0;
     dLin.DisableControls;
     try
