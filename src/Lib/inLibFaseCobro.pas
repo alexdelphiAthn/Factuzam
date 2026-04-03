@@ -115,6 +115,7 @@ type
     function ObtenerIntegerSafe(const ANombreCampo: string;
                                 const ADefault: Integer = 0): Integer;
   public
+    FRequiereFactura:Boolean;
     constructor Create(AMemTable: TVirtualTable);
     destructor Destroy; override;
     procedure CargarDatosFactura(ATotales: TFacturaTotales);

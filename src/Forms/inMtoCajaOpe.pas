@@ -193,7 +193,7 @@ implementation
 
 uses
   inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  inLibFacturas, inLibGenBusq, inLibCajaParam;
+  inLibFacturas, inLibGenBusq, inLibCajaParam, inMtoPreviewTicket;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -938,7 +938,6 @@ var
 begin
   // Si ForzarDespliegue está asignando ItemIndex := 0, no procesamos
   if FInicializandoCombo then Exit;
-
   Edit := Sender as TcxCustomEdit;
   if not DatosCaja.cdsLineas.Active then Exit;
   Edit.PostEditValue;
@@ -1970,19 +1969,21 @@ begin
                                 frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
          ObjTotales.ProcesarFacturaCompleta;
        end;
-       if DatosCaja.GrabarFacturaSimplificada(
-            FCodigoEmpresa,
-            FCodigoAlmacen,
-            FCodigoCaja,
-            frmFaseCobro.cbbSerie1.Text,
-            frmFaseCobro.DatosCobro,
-            SerieGenerada,
-            NumeroGenerado,
-            CodigoValeGenerado) then
+       if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
+                                              FCodigoAlmacen,
+                                              FCodigoCaja,
+                                              frmFaseCobro.cbbSerie1.Text,
+                                              frmFaseCobro.DatosCobro,
+                                              SerieGenerada,
+                                              NumeroGenerado,
+                                              CodigoValeGenerado) then
        begin
          case frmFaseCobro.TipoImpresion of
-           tiConTicket:
-             ;
+           tiConTicket: ImprimirT(FCodigoEmpresa,
+                                  FCodigoAlmacen,
+                                  FCodigoCaja,
+                                  NumeroGenerado;
+                                  frmFaseCobro.DatosCobro);
            tiTicketRegalo:
              ;
            tiSinTicket:
