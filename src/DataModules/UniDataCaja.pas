@@ -243,7 +243,8 @@ type
                                         ACantidad: Double;
                                         ATipoIVA: string;
                                         APorcIVA: Currency;
-                                        AEsImpIncl: string);
+                                        AEsImpIncl: string;
+                                        const ACaja, ANumOperacion: string);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
                                     const ACliente, ASku, AUsuario: string);
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
@@ -362,7 +363,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas;
+uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas, inLibGenerarTicketBD;
 
 {$R *.dfm}
 
@@ -999,9 +1000,12 @@ procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                                ACantidad:         Double;
                                                ATipoIVA:          string;
                                                APorcIVA:          Currency;
-                                               AEsImpIncl:        string);
+                                               AEsImpIncl:        string;
+                                               const ACaja,
+                                               ANumOperacion: string);
 var
   NuevoIdDep: string;
+  uspDep: TUniStoredProc;
 begin
   // 1. Traspaso de stock: Salida de tienda → Entrada al almacén depósito
   // 1a. Salida de tienda
@@ -1039,33 +1043,39 @@ begin
                             0,
                             ACliente,
                             AUsuario);
-
   // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
   NuevoIdDep := Copy(NuevoIdDep, 1, 20); // Aseguramos longitud máxima
+  uspDep := TUniStoredProc.Create(nil);
+  try
+    // Enganchamos el SP a la misma conexión/transacción que traemos
+    uspDep.Connection := QryTrx.Connection;
+    uspDep.StoredProcName := 'PRC_FZA_DEPOSITOS_INSERT';
+    uspDep.Prepare; // Descarga la estructura de parámetros del servidor
+    // Asignamos los parámetros (OJO: Nombres idénticos a los del SP en MySQL)
+    uspDep.ParamByName('p_ID_DEP').AsString     := NuevoIdDep;
+    uspDep.ParamByName('p_EMP').AsString        := AEmpresa;
+    uspDep.ParamByName('p_ALM_DEP').AsString    := AAlmacenDestino;
+    uspDep.ParamByName('p_CLI').AsString        := ACliente;
+    uspDep.ParamByName('p_ART').AsString        := AArticulo;
+    uspDep.ParamByName('p_SKU').AsString        := ASku;
+    uspDep.ParamByName('p_PRECIO').AsCurrency   := APrecioVenta;
+    uspDep.ParamByName('p_CANTIDAD').AsFloat    := ACantidad;
+    uspDep.ParamByName('p_ANTICIPO').AsCurrency := AAnticipo;
+    uspDep.ParamByName('p_TIPOIVA').AsString    := ATipoIVA;
+    uspDep.ParamByName('p_PORCIVA').AsCurrency  := APorcIVA;
+    uspDep.ParamByName('p_IMPINCL').AsString    := AEsImpIncl;
+    uspDep.ParamByName('p_CAJA').AsString       := ACaja;
+    uspDep.ParamByName('p_NUMOP').AsString      := ANumOperacion;
+    uspDep.ParamByName('p_USUARIO').AsString    := AUsuario;
 
-  // 3. Crear registro de depósito llamando al Procedimiento Almacenado
-  QryTrx.SQL.Text :=
-    'CALL PRC_FZA_DEPOSITOS_INSERT(' +
-    '  :ID_DEP, :EMP, :ALM_DEP, :CLI, :ART, :SKU, :PRECIO, :CANTIDAD, :ANTICIPO,' + // <-- Añadido :ALM_DEP
-    '  :TIPOIVA, :PORCIVA, :IMPINCL, :USUARIO' +
-    ')';
+    // Ejecutamos el procedimiento
+    uspDep.Execute;
 
-  QryTrx.ParamByName('ID_DEP').AsString     := NuevoIdDep;
-  QryTrx.ParamByName('EMP').AsString        := AEmpresa;
-  QryTrx.ParamByName('CLI').AsString        := ACliente;
-  QryTrx.ParamByName('ART').AsString        := AArticulo;
-  QryTrx.ParamByName('SKU').AsString        := ASku;
-  QryTrx.ParamByName('PRECIO').AsCurrency   := APrecioVenta;
-  QryTrx.ParamByName('ALM_DEP').AsString    := AAlmacenDestino;
-  QryTrx.ParamByName('CANTIDAD').AsFloat    := ACantidad;
-  QryTrx.ParamByName('ANTICIPO').AsCurrency := AAnticipo;
-  QryTrx.ParamByName('TIPOIVA').AsString    := ATipoIVA;
-  QryTrx.ParamByName('PORCIVA').AsCurrency  := APorcIVA;
-  QryTrx.ParamByName('IMPINCL').AsString    := AEsImpIncl;
-  QryTrx.ParamByName('USUARIO').AsString    := AUsuario;
-  QryTrx.Execute;
+  finally
+    uspDep.Free;
+  end;
 end;
 
 // =============================================================================
@@ -1136,7 +1146,6 @@ begin
   NumLineaPago   := 0;
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
   // Generamos el número global de caja que agrupará toda la operación
-//  NumOperacionVE := sOpeCaja;
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
@@ -1263,7 +1272,6 @@ begin
           cdsLineas.Next;
           Continue;
         end;
-
         // -------------------------------------------------------------------
         // CASO B: CANCELACIÓN DE DEPÓSITO
         // -------------------------------------------------------------------
@@ -1277,43 +1285,42 @@ begin
               Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
               AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
-
           AnularDepositoCliente(
             QryTrx, CAB.CodigoCliente, Lin.Sku, UsuarioCaja, AAlmacen, AlmacenDeposito,
             AEmpresa, Lin.Articulo, ImporteDevuelto, Abs(Lin.Cantidad));
-
           if ImporteDevuelto > 0 then
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV', -ImporteDevuelto,
               UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
               'Devolución anticipo: ' + Lin.Descripcion, SerieGenerada, NumeroGenerado);
-
           cdsLineas.Next;
           Continue;
         end;
-
         // -------------------------------------------------------------------
         // CASO C: NUEVO DEPÓSITO O AUMENTO DE ANTICIPO
         // -------------------------------------------------------------------
-        if (Lin.AccionDeposito = 'NUEVO_DEP') or (Lin.AccionDeposito = 'AUMENTAR_DEP') then
+        if (Lin.AccionDeposito = 'NUEVO_DEP') or
+           (Lin.AccionDeposito = 'AUMENTAR_DEP') then
         begin
           if Lin.TotalCIva > 0 then InsertarLineaAnticipo(Lin, Lin.TotalCIva);
-
           if Lin.AccionDeposito = 'AUMENTAR_DEP' then
           begin
-            AumentarAnticipoDeposito(QryTrx, Cab.CodigoCliente, Lin.Sku, UsuarioCaja, Lin.TotalCIva);
+            AumentarAnticipoDeposito(QryTrx, Cab.CodigoCliente,
+                                     Lin.Sku, UsuarioCaja, Lin.TotalCIva);
             if Lin.TotalCIva > 0 then
               InsertarOperacionCaja(
-                QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB', Lin.TotalCIva,
-                UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
-                'Cobro a cuenta: ' + Lin.Descripcion);
+                QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
+                Lin.TotalCIva, UsuarioCaja, NumeroGenerado, SerieGenerada,
+                Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion);
           end
-          else  // NUEVO_DEP
+          else
           begin
             CrearNuevoDepositoCliente(
-              QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku, UsuarioCaja,
+              QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku,
+              UsuarioCaja,
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
-              Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl);
+              Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl, ACaja,
+              sOpeCaja);
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
               UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
@@ -1369,7 +1376,24 @@ begin
     finally
       cdsLineas.EnableControls;
     end;
-
+    // =======================================================================
+    // PASO 4.5: REGISTRAR EL TOTAL DE LA VENTA NORMAL EN CAJA
+    // =======================================================================
+    if RequiereFactura then
+    begin
+      if datosCobro.EsDevolucionEconomica then
+        InsertarOperacionCaja(
+        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE',
+        datosCobro.TotalesFactura.Totales.TotalLiquido,
+        UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
+         'Devolución de Venta')
+      else
+        InsertarOperacionCaja(
+        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
+        datosCobro.TotalesFactura.Totales.TotalLiquido,
+        UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
+         'Venta');
+    end;
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
     // =======================================================================
@@ -1441,22 +1465,13 @@ begin
       end;
       cdsLineas.Next;
     end;
-
     if TieneDepositosPendientes then
     begin
-      QryTrx.SQL.Text :=
-        'SELECT d.CODIGO_UNIDAD_DEP, d.CODIGO_ARTICULO_DEP, a.DESCRIPCION_ARTICULO, ' +
-        '       d.PRECIO_VENTA_DEP, d.IMPORTE_ANTICIPO_DEP, ' +
-        '       d.PRECIO_VENTA_DEP - d.IMPORTE_ANTICIPO_DEP AS PENDIENTE ' +
-        '  FROM fza_depositos_cliente d ' +
-        '  JOIN fza_articulos a ON a.CODIGO_ARTICULO = d.CODIGO_ARTICULO_DEP ' +
-        ' WHERE d.CODIGO_CLIENTE_DEP = :CLI ' +
-        '   AND d.ESTADO_DEP = ''PENDIENTE'' ' +
-        ' ORDER BY d.INSTANTEALTA';
-      QryTrx.ParamByName('CLI').AsString := Cab.CodigoCliente;
-      QryTrx.Open;
-      // TODO: ImprimirAlbaranDeposito(QryTrx, Cab.CodigoCliente, ACaja);
-      QryTrx.Close;
+      ImprimirResguardoDeposito(AEmpresa,
+                                AAlmacen,
+                                ACaja,
+                                sOpeCaja,
+                                'DEBUG');
     end;
     // =======================================================================
     // CONFIRMAR
