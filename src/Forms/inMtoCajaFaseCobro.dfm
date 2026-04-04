@@ -977,10 +977,10 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ShortCut = 27
       OnExecute = actSalirExecute
     end
-    object actBuscarT: TAction
-      Caption = 'actBuscarT'
+    object actRellenar: TAction
+      Caption = 'Rellenar'
       ShortCut = 114
-      OnExecute = actBuscarTExecute
+      OnExecute = actRellenarExecute
     end
     object actBuscarVale: TAction
       Caption = 'BuscarVale'
@@ -991,6 +991,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Caption = 'SinTicket'
       ShortCut = 122
       OnExecute = actSinTicketExecute
+    end
+    object actConTicket: TAction
+      Caption = 'ConTicket'
+      ShortCut = 123
+      OnExecute = actConTicketExecute
     end
   end
   object cxStyleRepository1: TcxStyleRepository

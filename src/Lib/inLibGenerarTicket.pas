@@ -199,25 +199,24 @@ begin
     Ticket.CortarPapel;
     Ticket.AbrirCajon;
     ComandosESC := Ticket.ObtenerComandos;
-    if UpperCase(NombreImpresora) = 'DEBUG' then
-    begin
-      RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
+    RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
                         FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      FormPreview := TFormVisualizador.Create(nil);
-      try
-        FormPreview.CargarYMostrar(ComandosESC);
-        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
+    FormPreview := TFormVisualizador.Create(nil);
+    FormPreview.Hide;
+    try
+      FormPreview.CargarYMostrar(ComandosESC);
+      FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
+      if UpperCase(NombreImpresora) = 'DEBUG' then
+      begin
         FormPreview.ShowModal;
-      finally
-        FormPreview.Free;
+      end
+      else
+      begin
+        Ticket.Imprimir;
       end;
-    end
-    else
-    begin
-      // Modo Normal: Enviar RAW a la cola de impresión de Windows
-      Ticket.Imprimir;
+    finally
+      FormPreview.Free;
     end;
-
   finally
     Ticket.Free;
   end;

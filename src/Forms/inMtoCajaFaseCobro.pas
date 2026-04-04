@@ -92,9 +92,10 @@ type
     dbtvFormasPagoColumn1: TcxGridDBColumn;
     dbtvFormasPagoColumn2: TcxGridDBColumn;
     dbtvFormasPagoColumn3: TcxGridDBColumn;
-    actBuscarT: TAction;
+    actRellenar: TAction;
     actBuscarVale: TAction;
     actSinTicket: TAction;
+    actConTicket: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -110,7 +111,7 @@ type
       AItem: TcxCustomGridTableItem);
     procedure btnBuscarTClick(Sender: TObject);
     procedure btnF3Click(Sender: TObject);
-    procedure actBuscarTExecute(Sender: TObject);
+    procedure actRellenarExecute(Sender: TObject);
     procedure btnBuscarValeClick(Sender: TObject);
     procedure btnF6Click(Sender: TObject);
     procedure dbtvFormasPagoEditing(Sender: TcxCustomGridTableView;
@@ -121,6 +122,7 @@ type
     procedure btnSinPreciosClick(Sender: TObject);
     procedure btnF7Click(Sender: TObject);
     procedure actSinTicketExecute(Sender: TObject);
+    procedure actConTicketExecute(Sender: TObject);
   private
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
@@ -879,7 +881,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.actBuscarTExecute(Sender: TObject);
+procedure TfrmMtoCajaFaseCobro.actRellenarExecute(Sender: TObject);
 begin
   inherited;
   RellenarPendienteEnFormaActual;
@@ -889,6 +891,12 @@ procedure TfrmMtoCajaFaseCobro.actBuscarValeExecute(Sender: TObject);
 begin
   inherited;
   btnBuscarValeClick(Sender);
+end;
+
+procedure TfrmMtoCajaFaseCobro.actConTicketExecute(Sender: TObject);
+begin
+  inherited;
+  btnConTicketClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
