@@ -92,9 +92,11 @@ begin
     Ticket.SaltarLineas(1);
     // Formatear línea de operación y tienda
     Ticket.Alinear(alIzquierda);
-    Ticket.EscribirLinea('Venta ' + FormatDateTime('dd/mm/yyyy', Cab.Fecha) +
-                         ' ' + FormatDateTime('hh:nn', Now) + '   ' +
-                         LPAD(ACodigoEmpresa, 3) + '   Tda.' +
+    Ticket.TextoColumnas('OPERACIÓN NRO.', ANumeroGenerado);
+    Ticket.SaltarLineas(1);
+    Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy', Cab.Fecha) +
+                         ' ' + FormatDateTime('hh:nn', Now),
+                         LPAD(ACodigoEmpresa, 3) + ' Tda.' +
                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');
@@ -155,7 +157,7 @@ begin
       DatosCobro.MemTablePagos.Next;
     end;
     if DatosCobro.ImporteCambio > 0 then
-      Ticket.TextoColumnas('CAMBIO', Format('%.2f',
+      Ticket.TextoColumnas('CAMBIO EFECTIVO', Format('%.2f',
                                             [DatosCobro.ImporteCambio]) + ' €');
     Ticket.Negrita(False);
     if DatosCobro.ImporteValeEmitido > 0 then
