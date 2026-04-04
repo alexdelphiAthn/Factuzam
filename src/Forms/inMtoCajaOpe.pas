@@ -1974,7 +1974,7 @@ begin
                                               FCodigoCaja,
                                               frmFaseCobro.cbbSerie1.Text,
                                               frmFaseCobro.DatosCobro,
-                                              SerieGenerada,
+                                              frmFaseCobro.cbbSerie1.Text,
                                               NumeroGenerado,
                                               CodigoValeGenerado) then
        begin

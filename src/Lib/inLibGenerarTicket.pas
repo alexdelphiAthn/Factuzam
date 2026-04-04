@@ -164,6 +164,7 @@ begin
       Ticket.Negrita(True);
       Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR', Format('%.2f',
                                        [DatosCobro.ImporteValeEmitido]) + ' €');
+      Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ', DatosCobro.CodigoValeEmitido );
       Ticket.Negrita(False);
     end;
 //    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',

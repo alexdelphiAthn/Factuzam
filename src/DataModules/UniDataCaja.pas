@@ -337,7 +337,7 @@ type
     function GetTarifaDefault : string;
     function GrabarFacturaSimplificada(const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
                                      DatosCobro: TDatosFaseCobro;
-                                     out SerieGenerada: string;
+                                     SerieGenerada: string;
                                      out NumeroGenerado: String;
                                      out ValeGenerado:String): Boolean;
 //    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
@@ -1085,7 +1085,7 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                                 ACaja,
                                 ASerieElegida: string;
                           DatosCobro:          TDatosFaseCobro;
-                          out SerieGenerada:   string;
+                          SerieGenerada:   string;
                           out NumeroGenerado:  string;
                           out ValeGenerado:    string): Boolean;
 var
@@ -1186,7 +1186,6 @@ begin
   inLibGlobalVar.oConn.StartTransaction;
   var sOpeCaja := SiguienteOpCaja(AEmpresa, AAlmacen, ACaja, UsuarioCaja);
   NumOperacionVE := sOpeCaja;
-  NumeroGenerado := sOpeCaja;
   QryTrx := TUniQuery.Create(nil);
   try try
     QryTrx.Connection := inLibGlobalVar.oConn;
@@ -1206,6 +1205,12 @@ begin
         uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
         uspQryTrx.Execute;
         NumeroGenerado := uspQryTrx.ParamByName('pcont').AsString;
+        DatosCobro.TotalesFactura.Cabecera.Edit;
+        DatosCobro.TotalesFactura.Cabecera.FieldByName('SERIE_FACTURA').AsString:=
+          ASerieElegida;
+        DatosCobro.TotalesFactura.Cabecera.FieldByName('NRO_FACTURA').AsString:=
+          NumeroGenerado;
+        DatosCobro.TotalesFactura.Cabecera.Post;
       finally
         uspQryTrx.Free;
       end;
@@ -1413,7 +1418,7 @@ begin
       ValeGenerado := EmitirNuevoVale(
         AEmpresa, AAlmacen, ACaja, NumOperacionVE, SerieGenerada, NumeroGenerado,
         DatosCobro.ImporteValeEmitido);
-
+      DatosCobro.CodigoValeEmitido := ValeGenerado;
       InsertarOperacionCaja(
         QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VL',
         -DatosCobro.ImporteValeEmitido, UsuarioCaja,
@@ -1504,50 +1509,57 @@ function TdmCajaOpe.EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
                                     ASerieFactura, ANumFactura: string;
                                     AImporte: Currency): string;
 var
-  qry: TUniQuery;
+  qrySP: TUniStoredProc;
+  qry:TUniQuery;
 begin
   qry := TUniQuery.Create(nil);
+  qrySP := TUniStoredProc.Create(nil);
   try
-    qry.Connection := inLibGlobalVar.oConn;
+    qrySP.Connection := inLibGlobalVar.oConn;
     // =======================================================================
     // 1. OBTENER EL CÓDIGO FORMATEADO DESDE EL NUEVO PROCEDURE
     // =======================================================================
-    qry.SQL.Text := 'CALL PRC_GENERAR_CODIGO_VALE(:pEmp, :pAlm, :pCaja, :pOp, :pUsu, :pCodigo)';
-    qry.ParamByName('pEmp').AsString   := AEmpresa;
-    qry.ParamByName('pAlm').AsString   := AAlmacen;
-    qry.ParamByName('pCaja').AsString  := ACaja;
-    qry.ParamByName('pOp').AsString   := ANumOperacion;
+    qrySP.StoredProcName := 'PRC_GENERAR_CODIGO_VALE';
+    qrySP.Prepare;
+    qrySP.ParamByName('pEmpresa').AsString   := AEmpresa;
+    qrySP.ParamByName('pAlmacen').AsString   := AAlmacen;
+    qrySP.ParamByName('pCaja').AsString  := ACaja;
+    qrySP.ParamByName('pNumOperacion').AsString   := ANumOperacion;
     // Le pasamos el nombre del cajero. Si quieres puedes leerlo del cdsCabecera:
     // cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString
-    qry.ParamByName('pUsu').AsString   := oUser;
+    qrySP.ParamByName('pUsuario').AsString   := oUser;
     // Parámetro de salida (OUT) para recoger el código generado (VARCHAR 100)
-    qry.ParamByName('pCodigo').ParamType := ptOutput;
-    qry.ParamByName('pCodigo').DataType  := ftString;
-    qry.ParamByName('pCodigo').Size      := 100;
-    qry.Execute;
-    Result := qry.ParamByName('pCodigo').AsString;
+    qrySP.Execute;
+    Result := qrySP.ParamByName('pCodigoFinal').AsString;
     // =======================================================================
     // 2. INSERTAR EL NUEVO VALE EN LA BASE DE DATOS
     // =======================================================================
+    qry.Connection := oConn;
     qry.SQL.Text :=
       'INSERT INTO fza_caja_vales ' +
-      '(CODIGO_VL, IMPORTE_VL, FECHA_EMISION_VL, ESTADO_VL, ' +
-      ' CODIGO_CAJA_EMISION_VL, CODIGO_ALMACEN_EMISION_VL, ' +
-      ' NUMERO_OPERACION_EMISION_VL, SERIE_FACTURA_EMISION_VL, NRO_FACTURA_EMISION_VL) ' +
+      '(CODIGO_VL, IMPORTE_NOMINAL_VL, FECHA_EMISION_VL, ESTADO_VL, ' +
+      ' CODIGO_CAJA_EMI_VL, CODIGO_ALMACEN_EMI_VL, CODIGO_EMPRESA_EMI_VL, ' +
+      ' NUMERO_OPERACION_EMI_VL, SERIE_FACTURA_EMI_VL, NRO_FACTURA_EMI_VL, ' +
+      ' USUARIOALTA, USUARIOMODIF, INSTANTEALTA, INSTANTEMODIF)' +
       'VALUES ' +
       '(:COD, :IMPORTE, :FECHA, ''PENDIENTE'', ' +
-      ' :CAJA, :ALMACEN, :NUMOP, :SERIE, :NUMFAC)';
+      ' :CAJA, :ALMACEN, :EMPRESA, :NUMOP, :SERIE, :NUMFAC, ' +
+      ' :USUARIO, :USUARIO, :INSTANTE, :INSTANTE )';
     qry.ParamByName('COD').AsString        := Result;
     qry.ParamByName('IMPORTE').AsCurrency  := AImporte;
     qry.ParamByName('FECHA').AsDateTime    := Now;
     qry.ParamByName('CAJA').AsString       := ACaja;
     qry.ParamByName('ALMACEN').AsString    := AAlmacen;
-    qry.ParamByName('NUMOP').AsString     := ANumOperacion;
+    qry.ParamByName('EMPRESA').AsString    := AEmpresa;
+    qry.ParamByName('NUMOP').AsString      := ANumOperacion;
     qry.ParamByName('SERIE').AsString      := ASerieFactura;
     qry.ParamByName('NUMFAC').AsString     := ANumFactura;
+    qry.ParamByName('USUARIO').AsString     := oUser;
+    qry.ParamByName('INSTANTE').AsDateTime  := Now;
     qry.Execute;
   finally
     qry.Free;
+    qrySP.Free;
   end;
 end;
 
