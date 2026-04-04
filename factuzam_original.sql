@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 04/04/2026 23:50:22
+-- Backup generado: 05/04/2026 0:11:55
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1486,7 +1486,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 81, 3, 'S', 'S', '2026-04-04 22:44:59', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 82, 3, 'S', 'S', '2026-04-05 00:07:35', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -2456,8 +2456,19 @@ BEGIN
 
     COMMIT;
 END $$
-delimiter ;', '2026-04-04 23:46:04', '2026-04-04 22:44:59', 'Administrador', 'Administrador');
--- 10 registros exportados
+delimiter ;', '2026-04-04 23:46:04', '2026-04-04 22:44:59', 'Administrador', 'Administrador'),
+  ('081', NULL, 'DELIMITER $$
+
+-- 2. Creamos el procedimiento. El motor ignorará los ; internos.
+CREATE OR REPLACE PROCEDURE pr_demo_silenciosa()
+BEGIN
+    SELECT ''Esta es una prueba exitosa'' AS mensaje;
+END $$
+-- 3. Aquí usamos $$ para indicar que el CREATE PROCEDURE ha terminado.
+
+-- 4. (Opcional pero muy recomendado) Devolvemos el delimitador a la normalidad.
+DELIMITER ;', '2026-04-05 00:07:35', '2026-04-05 00:07:35', 'Administrador', 'Administrador');
+-- 11 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3672,7 +3683,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-04 23:38:21', '2026-04-04 23:38:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 00:11:47', '2026-04-05 00:11:47', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7176,35 +7187,35 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
-    IN p_NUMERO_MOV VARCHAR(20),
-    IN p_TIPO_DOC_MOV VARCHAR(20),
-    IN p_SERIE_DOC_MOV VARCHAR(20),
-    IN p_NRO_DOC_MOV VARCHAR(20),
-    IN p_LINEA_MOV VARCHAR(10),
-    IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
-    IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
-    IN p_CODIGO_ALMACEN_CONTRA_MOV VARCHAR(10),  /* <--- AÑADIDO: Almacén Contra */
-    IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
-    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), 
-    IN p_CANTIDAD_MOV DECIMAL(19,6),
-    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), 
-    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  
-    IN p_USUARIO VARCHAR(100),
-    IN p_ALMACEN_DOC VARCHAR(10),        
-    IN p_NUMOP_DOC VARCHAR(20)           
+	IN `p_NUMERO_MOV` VARCHAR(20),
+	IN `p_TIPO_DOC_MOV` VARCHAR(20),
+	IN `p_SERIE_DOC_MOV` VARCHAR(20),
+	IN `p_NRO_DOC_MOV` VARCHAR(20),
+	IN `p_LINEA_MOV` VARCHAR(10),
+	IN `p_CODIGO_EMPRESA_MOV` VARCHAR(20),
+	IN `p_CODIGO_ALMACEN_MOV` VARCHAR(10),
+	IN `p_CODIGO_ALMACEN_CONTRA_MOV` VARCHAR(10),
+	IN `p_CODIGO_UNIDAD_MOV` VARCHAR(50),
+	IN `p_TIPO_MOVIMIENTO_MOV` VARCHAR(1),
+	IN `p_CANTIDAD_MOV` DECIMAL(19,6),
+	IN `p_PRECIO_MEDIO_MOV` DECIMAL(19,6),
+	IN `p_TOTAL_COSTE_MOV` DECIMAL(19,6),
+	IN `p_USUARIO` VARCHAR(100),
+	IN `p_ALMACEN_DOC` VARCHAR(10),
+	IN `p_NUMOP_DOC` VARCHAR(20)
 )
 BEGIN
     DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
     DECLARE v_PrecioFinal DECIMAL(19,6);
     DECLARE v_CosteFinal DECIMAL(19,6);
 
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
+--     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+--     BEGIN
+--         ROLLBACK;
+--         RESIGNAL;
+--     END;
+-- 
+--     START TRANSACTION;
 
     /* 1. Obtener el PMP actual del stock */
     SELECT IFNULL(PRECIO_MEDIO_STK, 0)
@@ -7260,7 +7271,7 @@ BEGIN
         PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
         INSTANTEMODIF = NOW();
 
-    COMMIT;
+--    COMMIT;
 END ;;
 DELIMITER ;
 
@@ -8419,6 +8430,15 @@ BEGIN
 END ;;
 DELIMITER ;
 
+-- Procedimiento: pr_demo_silenciosa
+DROP PROCEDURE IF EXISTS `pr_demo_silenciosa`;
+DELIMITER ;;
+CREATE  PROCEDURE `pr_demo_silenciosa`()
+BEGIN
+    SELECT 'Esta es una prueba exitosa' AS mensaje;
+END ;;
+DELIMITER ;
+
 -- Procedimiento: SP_RECALCULAR_PMP_SKU
 DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_SKU`;
 DELIMITER ;;
@@ -8602,4 +8622,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 04/04/2026 23:50:22
+-- Backup completado: 05/04/2026 0:11:56
