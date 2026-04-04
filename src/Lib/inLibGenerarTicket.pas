@@ -76,7 +76,10 @@ begin
     end;
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('  FACTURA SIMPLIFICADA Nro. ' + ANumeroGenerado);
+    Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' +
+      DatosCobro.TotalesFactura.Cabecera.FieldByName('SERIE_FACTURA').AsString +
+      '\' +
+      DatosCobro.TotalesFactura.Cabecera.FieldByName('NRO_FACTURA').AsString);
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
@@ -90,8 +93,8 @@ begin
     // Formatear línea de operación y tienda
     Ticket.Alinear(alIzquierda);
     Ticket.EscribirLinea('Venta ' + FormatDateTime('dd/mm/yyyy', Cab.Fecha) +
-                         ' ' + FormatDateTime('hh:nn', Now) + ' ' +
-                         LPAD(ACodigoEmpresa, 3) + ' Tda.' +
+                         ' ' + FormatDateTime('hh:nn', Now) + '   ' +
+                         LPAD(ACodigoEmpresa, 3) + '   Tda.' +
                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');

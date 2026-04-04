@@ -327,41 +327,6 @@ begin
   end;
 end;
 
-//procedure TDatosFaseCobro.CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
-//var
-//  FormaPago: TFormaPagoInfo;
-//begin
-//  if not Assigned(FMemTablePagos) then
-//    Exit;
-//  FMemTablePagos.DisableControls;
-//  try
-//    FMemTablePagos.Close;
-//    FMemTablePagos.Open;
-//    FMemTablePagos.Clear;
-//    for FormaPago in AFormasPago do
-//    begin
-//      FMemTablePagos.Append;
-////      FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
-////        FMemTablePagos.RecordCount;
-//      FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := FormaPago.Codigo;
-//      FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString :=
-//                                                          FormaPago.Descripcion;
-//      FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString :=
-//        IfThen(FormaPago.DevuelveCambio, 'S', 'N');
-//      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
-//      FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
-//      FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
-//      FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
-//      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency := 0;
-//      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
-//      FMemTablePagos.Post;
-//    end;
-//    FMemTablePagos.First;
-//  finally
-//    FMemTablePagos.EnableControls;
-//  end;
-//end;
-
 function TDatosFaseCobro.ActualizarImportePago(ALineaPago: Integer;
   AImporte: Currency; ADatosRef: TDatosReferencia): Boolean;
 var
@@ -406,10 +371,6 @@ var
   BaseImponible: Currency;
 begin
   FPorcentajeDescuentoGlobal := APorcentaje;
-
-//  BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-//  FImporteDescuentoGlobal := BaseImponible * (APorcentaje / 100);
-//
   Recalcular;
 end;
 
@@ -490,8 +451,6 @@ procedure TDatosFaseCobro.RegistrarValeRecogido(ACodigoVale: string;
 begin
   if not Assigned(FMemTablePagos) then Exit;
   FMemTablePagos.Append;
-//  FMemTablePagos.FieldByName('NUMERO_LINEA').AsInteger :=
-//                                                FMemTablePagos.RecordCount *100;
   FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString := 'VALE';
   FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString := ACodigoVale;
   FMemTablePagos.FieldByName('ES_DEVUELVE_CAMBIO_FORMAP').AsString := 'N';
@@ -509,7 +468,6 @@ begin
   FMemTablePagos.FieldByName('INSTANTEALTA').AsDateTime := Now;
   FMemTablePagos.FieldByName('INSTANTEMODIF').AsDateTime := Now;
   FMemTablePagos.Post;
-//  Recalcular;
 end;
 
 function TDatosFaseCobro.TieneArticulosDevueltos: Boolean;
