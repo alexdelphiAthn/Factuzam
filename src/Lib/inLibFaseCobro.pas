@@ -87,6 +87,7 @@ type
     FDatosCliente: TDatosCliente;
     FMemTablePagos: TVirtualTable;
     FValesRecogidos: TList<TValeAplicado>;
+    FCodigoValeEmitido:String;
     FImporteBruto: Currency;
     FImporteDescuentoLineal: Currency;
     FPorcentajeDescuentoGlobal: Currency;
@@ -150,6 +151,8 @@ type
     property ImporteDejarCuenta: Currency read FImporteDejarCuenta;
     property ImporteValeRecogido: Currency read FImporteValeRecogido;
     property ImporteValeEmitido: Currency read FImporteValeEmitido;
+    property CodigoValeEmitido:String read FCodigoValeEmitido
+                                      write FCodigoValeEmitido;
     property HayCliente: Boolean read FHayCliente;
     property PermiteDeuda: Boolean read FPermiteDeuda;
     property ImporteDevolucionPendiente: Currency read FImportePendiente;
@@ -752,8 +755,8 @@ begin
   try
     qry.Connection := inLibGlobalVar.oConn;
     qry.SQL.Text := 'SELECT * ' +
-                    '  FROM fza_vales ' +
-                    ' WHERE CODIGO_VALE = :CODIGO ' +
+                    '  FROM fza_caja_vales ' +
+                    ' WHERE CODIGO_VL = :CODIGO ' +
                     '   AND ESTADO_VL = ' + QuotedStr('PENDIENTE');
     FMemTablePagos.First;
     while not FMemTablePagos.Eof do
