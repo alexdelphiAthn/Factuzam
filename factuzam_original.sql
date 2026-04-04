@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 04/04/2026 8:13:03
+-- Backup generado: 04/04/2026 8:22:42
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1486,7 +1486,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 76, 3, 'S', 'S', '2026-04-02 20:03:04', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 77, 3, 'S', 'S', '2026-04-04 08:22:06', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -2279,8 +2279,28 @@ BEGIN
     COMMIT;
 END //
 
-DELIMITER ;', '2026-04-02 20:03:14', '2026-04-02 20:03:04', 'Administrador', 'Administrador');
--- 5 registros exportados
+DELIMITER ;', '2026-04-02 20:03:14', '2026-04-02 20:03:04', 'Administrador', 'Administrador'),
+  ('076', 'Modificar PRC_GENERAR_CODIGO_VALE', 'DELIMITER $$
+CREATE OR REPLACE PROCEDURE `PRC_GENERAR_CODIGO_VALE`(IN pEmpresa VARCHAR(10),
+    IN pAlmacen VARCHAR(10),
+    IN pCaja VARCHAR(10),
+    IN pNumOperacion VARCHAR(20),
+    IN pUsuario VARCHAR(100),
+    OUT pCodigoFinal VARCHAR(100))
+BEGIN
+    /* DECLARE vContador VARCHAR(20); */
+    
+    /* 1. Obtenemos el contador secuencial (Le pasamos ''VL'' y el Usuario) */
+    /* CALL PRC_GET_NEXT_CONT(''VL'', pUsuario, vContador); */
+    
+    /* 2. Construimos el código final concatenando todo */
+    /* Resultado ejemplo: 00014_VL_1_ALM01_CAJ1_4509 */
+    SET pCodigoFinal = CONCAT(pEmpresa, ''_'', pAlmacen, ''_'', pCaja, ''_'', pNumOperacion);
+    
+END;
+$$
+DELIMITER ;', '2026-04-04 08:22:06', '2026-04-04 08:22:06', 'Administrador', 'Administrador');
+-- 6 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3493,7 +3513,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-04 08:09:33', '2026-04-04 08:09:33', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-04 08:21:21', '2026-04-04 08:21:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7098,7 +7118,7 @@ BEGIN
     
     /* 2. Construimos el código final concatenando todo */
     /* Resultado ejemplo: 00014_VL_1_ALM01_CAJ1_4509 */
-    SET pCodigoFinal = CONCAT('VALE_', pEmpresa, '_', pAlmacen, '_', pCaja, '_', pNumOperacion);
+    SET pCodigoFinal = CONCAT(pEmpresa, '_', pAlmacen, '_', pCaja, '_', pNumOperacion);
     
 END ;;
 DELIMITER ;
@@ -8419,4 +8439,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 04/04/2026 8:13:04
+-- Backup completado: 04/04/2026 8:22:42
