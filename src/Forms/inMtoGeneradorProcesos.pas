@@ -471,7 +471,6 @@ procedure TfrmMtoGeneradorProcesos.UniScript1Error(Sender: TObject;
 var
   Respuesta: Integer;
 begin
-
     cxmResul.Lines.Add('  [ERROR] ' + E.Message );
     cxmResul.Lines.Add('--------------------------------------------------');
     Application.ProcessMessages;
@@ -745,6 +744,7 @@ begin
     begin
       uScript := TUniScript.Create(nil);
       uScript.Connection := oConn;
+      showMessage(oConn.Database);
       uScript.OnError := UniScript1Error;
       uScript.AfterExecute := ScriptAfterExecute;
       try
