@@ -997,6 +997,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       ShortCut = 123
       OnExecute = actConTicketExecute
     end
+    object actSinPrecios: TAction
+      Caption = 'SinPrecios'
+      ShortCut = 121
+      OnExecute = actSinPreciosExecute
+    end
   end
   object cxStyleRepository1: TcxStyleRepository
     PixelsPerInch = 96
