@@ -164,11 +164,12 @@ begin
       Ticket.Negrita(True);
       Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR', Format('%.2f',
                                        [DatosCobro.ImporteValeEmitido]) + ' €');
-      Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ', DatosCobro.CodigoValeEmitido );
+      Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ',
+                                                 DatosCobro.CodigoValeEmitido );
       Ticket.Negrita(False);
     end;
 //    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
-//                                                          [CantidadTotal]), 42);
+//                                                        [CantidadTotal]), 42);
     Ticket.SaltarLineas(1);
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
     if Cab.TotalIvaN > 0 then
