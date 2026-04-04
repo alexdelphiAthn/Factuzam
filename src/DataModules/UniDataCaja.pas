@@ -135,22 +135,22 @@ type
                              AAlmacen,
                              ACaja,
                              AEmpleado:string): string;
-    procedure InsertarMovimientoAlmacen(QryTrx:     TUniQuery;
-                          ATipoDoc:   string;  // 'VE', 'TR'
-                          ASerie:     string;  // serie factura/doc origen
-                          ANro:       string;  // número doc origen
-                          ALinea:     string;  // línea doc origen
+    procedure InsertarMovimientoAlmacen(
+                          QryTrx:     TUniQuery;
+                          ATipoDoc:   string;
+                          ASerie:     string;
+                          ANro:       string;
+                          ALinea:     string;
                           AEmpresa:   string;
-                          AAlmacen:   string;  // almacén que mueve
-                          AAlmContra: string;  // almacén destino (solo traspasos)
-                          ATipoMov:   string;  // 'E' o 'S'
-                          AArticulo:  string;
+                          AAlmacen:   string;
+                          AAlmacenContra: string; // <--- AÑADIDO AQUÍ
+                          ATipoMov:   string;
                           ASku:       string;
-                          ADesc:      string;
                           ACantidad:  Double;
-                          ACoste:     Currency; // 0 en salidas y traspasos
-                          ACliente:   string;
-                          AUsuario:   string);
+                          ACoste:     Currency;
+                          AUsuario:   string;
+                          const AAlmacenDoc: string = '';
+                          const ANumOperacion: string = '');
     procedure InsertarOperacionCaja(
                         QryTrx:          TUniQuery;
                         const AEmpresa:  string;
@@ -251,12 +251,14 @@ type
                                        const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure AnularDepositoCliente(QryTrx:           TUniQuery;
-                                    const ACliente:    string;
+                                    const Acliente:    string;
                                     const ASku:        string;
                                     const AUsuario:    string;
                                     const AAlmacenTienda:   string;
                                     const AAlmacenDeposito: string;
                                     const AEmpresa:    string;
+                                    const ACaja: string;
+                                    const ANumOpe:string;
                                     const AArticulo:   string;
                                     out   ImporteADevolver: Currency;
                                     ACantidad: Double);
@@ -862,59 +864,57 @@ end;
 
 procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
-                          ATipoDoc:   string;   // 'VE' venta, 'TR' traspaso
-                          ASerie:     string;   // serie doc origen
-                          ANro:       string;   // número doc origen
-                          ALinea:     string;   // línea doc origen
+                          ATipoDoc:   string;
+                          ASerie:     string;
+                          ANro:       string;
+                          ALinea:     string;
                           AEmpresa:   string;
-                          AAlmacen:   string;   // almacén que ejecuta el mov.
-                          AAlmContra: string;   // almacén destino (solo tras)
-                          ATipoMov:   string;   // 'E' entrada  /  'S' salida
-                          AArticulo:  string;   // código artículo padre
-                          ASku:       string;   // código unidad / SKU
-                          ADesc:      string;   // descripción
-                          ACantidad:  Double;   // siempre positivo;
-                          ACoste:     Currency; // 0 en salidas y traspasos
-                          ACliente:   string;   // código cliente
-                          AUsuario:   string);
+                          AAlmacen:   string;
+                          AAlmacenContra: string; // <--- AÑADIDO AQUÍ
+                          ATipoMov:   string;
+                          ASku:       string;
+                          ACantidad:  Double;
+                          ACoste:     Currency;
+                          AUsuario:   string;
+                          const AAlmacenDoc: string = '';
+                          const ANumOperacion: string = '');
+var
+  uspMov: TUniStoredProc;
 begin
-  // Llamada al Procedimiento Almacenado
-  QryTrx.SQL.Text :=
-    'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(' +
-    '  :NUMOV, :TIPODOC, :SERIE, :NRO, :LINEA,' +
-    '  :EMP, :ALM, :SKU, :ART,' +
-    '  :ALMCONTRA, :CLI, :PROV,' +
-    '  :TIPOMOV, :CANT, :PRECIOMEDIO, :TOTALCOSTE, :USUARIO' +
-    ')';
-  QryTrx.ParamByName('NUMOV').AsString       := ObtenerSiguienteContador('MV');
-  QryTrx.ParamByName('TIPODOC').AsString     := ATipoDoc;
-  QryTrx.ParamByName('SERIE').AsString       := ASerie;
-  QryTrx.ParamByName('NRO').AsString         := ANro;
-  QryTrx.ParamByName('LINEA').AsString       := ALinea;
-  QryTrx.ParamByName('EMP').AsString         := AEmpresa;
-  QryTrx.ParamByName('ALM').AsString         := AAlmacen;
-  QryTrx.ParamByName('SKU').AsString         := ASku;
-  QryTrx.ParamByName('ART').AsString         := AArticulo;
-  // Tratamiento de nulos para IDs vacíos
-  if AAlmContra = '' then
-    QryTrx.ParamByName('ALMCONTRA').Clear
-  else
-    QryTrx.ParamByName('ALMCONTRA').AsString := AAlmContra;
-  if ACliente = '' then
-    QryTrx.ParamByName('CLI').Clear
-  else
-    QryTrx.ParamByName('CLI').AsString       := ACliente;
-  // El SP requiere Proveedor,
-  // pero no está en los parámetros de la función Delphi.
-  // Lo enviamos como NULL por defecto.
-  QryTrx.ParamByName('PROV').Clear;
-  QryTrx.ParamByName('TIPOMOV').AsString     := ATipoMov;
-  QryTrx.ParamByName('CANT').AsFloat         := Abs(ACantidad);
-  // Costes enviados desde la App (el SP los ignorará si es salida 'S')
-  QryTrx.ParamByName('PRECIOMEDIO').AsCurrency := ACoste;
-  QryTrx.ParamByName('TOTALCOSTE').AsCurrency  := ACoste * Abs(ACantidad);
-  QryTrx.ParamByName('USUARIO').AsString     := AUsuario;
-  QryTrx.Execute;
+  uspMov := TUniStoredProc.Create(nil);
+  try
+    uspMov.Connection := QryTrx.Connection;
+    uspMov.StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
+    uspMov.Prepare;
+    uspMov.ParamByName('p_NUMERO_MOV').AsString              :=
+                                                 ObtenerSiguienteContador('MV');
+    uspMov.ParamByName('p_TIPO_DOC_MOV').AsString            := ATipoDoc;
+    uspMov.ParamByName('p_SERIE_DOC_MOV').AsString           := ASerie;
+    uspMov.ParamByName('p_NRO_DOC_MOV').AsString             := ANro;
+    uspMov.ParamByName('p_LINEA_MOV').AsString               := ALinea;
+    uspMov.ParamByName('p_CODIGO_EMPRESA_MOV').AsString      := AEmpresa;
+    uspMov.ParamByName('p_CODIGO_ALMACEN_MOV').AsString      := AAlmacen;
+
+    // Tratamiento del Almacén Contra (si es vacío, mandamos un NULL nativo)
+    if Trim(AAlmacenContra) = '' then
+      uspMov.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear
+    else
+      uspMov.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').AsString := AAlmacenContra;
+
+    uspMov.ParamByName('p_CODIGO_UNIDAD_MOV').AsString       := ASku;
+    uspMov.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString     := ATipoMov;
+    uspMov.ParamByName('p_CANTIDAD_MOV').AsFloat             := Abs(ACantidad);
+    uspMov.ParamByName('p_PRECIO_MEDIO_MOV').AsCurrency      := ACoste;
+    uspMov.ParamByName('p_TOTAL_COSTE_MOV').AsCurrency       := ACoste * Abs(ACantidad);
+    uspMov.ParamByName('p_USUARIO').AsString                 := AUsuario;
+
+    uspMov.ParamByName('p_ALMACEN_DOC').AsString             := AAlmacenDoc;
+    uspMov.ParamByName('p_NUMOP_DOC').AsString               := ANumOperacion;
+
+    uspMov.Execute;
+  finally
+    uspMov.Free;
+  end;
 end;
 
 procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
@@ -924,6 +924,8 @@ procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
                                            const AAlmacenTienda:   string;
                                            const AAlmacenDeposito: string;
                                            const AEmpresa:    string;
+                                           const ACaja: string;
+                                           const ANumOpe:string;
                                            const AArticulo:   string;
                                            out   ImporteADevolver: Currency;
                                            ACantidad: Double);
@@ -954,21 +956,24 @@ begin
   QryTrx.ParamByName('CLIENTE').AsString     := ACliente;
   QryTrx.Execute;
   // 3. Traspaso de stock: Salida del almacén depósito → Entrada a tienda
-  //    Coste = 0 en ambos lados: el trigger TRG_MOVIMIENTOS_BI (v2) toma el
-  //    PMP vigente.
+  //    Coste = 0 en ambos lados:
   // 3a. Salida del almacén depósito
   InsertarMovimientoAlmacen(
     QryTrx,
     'TR',                  // traspaso interno
-    '', '', '0001',        // sin doc factura asociado
+    '',
+    '',
+    '0001',        // sin doc factura asociado
     AEmpresa,
     AAlmacenDeposito,      // almacén que pierde stock
     AAlmacenTienda,        // almacén que recibe stock
     'S',
-    AArticulo, ASku, '',
-    ACantidad,
-    0,                     // salida → trigger usa PMP vigente
-    '', AUsuario);
+    ASku,
+    ACantidad,                     // salida → trigger usa PMP vigente
+    0,
+    AUsuario,
+    AAlmacenTienda,
+    ANumOpe);
   // 3b. Entrada al almacén tienda
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -978,10 +983,10 @@ begin
     AAlmacenTienda,        // almacén que recibe stock
     AAlmacenDeposito,      // almacén de procedencia
     'E',
-    AArticulo, ASku, '',
+    ASku,
     ACantidad,
     0,              // entrada sin coste → trigger toma PMP del almacén depósito
-    '', AUsuario);
+    AUsuario, AAlmacenTienda, ANumOpe);
 end;
 // -----------------------------------------------------------------------------
 // MODIFICADO: CrearNuevoDepositoCliente
@@ -1018,14 +1023,12 @@ begin
                             AAlmacenOrigen,
                             AAlmacenDestino,
                             'S',
-                            AArticulo,
                             ASku,
-                            '',
                             ACantidad,
                             0,
-                            ACliente,
-                            AUsuario);
-
+                            AUsuario,
+                            AAlmacenOrigen,
+                            ANumOperacion);
   // 1b. Entrada al almacén depósito
   InsertarMovimientoAlmacen(QryTrx,
                             'TR',
@@ -1036,13 +1039,12 @@ begin
                             AAlmacenDestino,
                             AAlmacenOrigen,
                             'E',
-                            AArticulo,
                             ASku,
-                            '',
                             ACantidad,
                             0,
-                            ACliente,
-                            AUsuario);
+                            AUsuario,
+                            AAlmacenOrigen,
+                            ANumOperacion);
   // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
@@ -1286,8 +1288,10 @@ begin
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
               AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
           AnularDepositoCliente(
-            QryTrx, CAB.CodigoCliente, Lin.Sku, UsuarioCaja, AAlmacen, AlmacenDeposito,
-            AEmpresa, Lin.Articulo, ImporteDevuelto, Abs(Lin.Cantidad));
+            QryTrx, CAB.CodigoCliente, Lin.Sku, UsuarioCaja, AAlmacen,
+            AlmacenDeposito,
+            AEmpresa, ACaja, NumOperacionVE, Lin.Articulo, ImporteDevuelto,
+            Abs(Lin.Cantidad));
           if ImporteDevuelto > 0 then
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV', -ImporteDevuelto,
@@ -1369,8 +1373,8 @@ begin
         if Lin.TipoArticulo = 'ESTANDAR' then
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumeroGenerado, Lin.Linea,
-            AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Articulo, Lin.Sku, Lin.Descripcion,
-            Lin.Cantidad, 0, Cab.CodigoCliente, UsuarioCaja);
+            AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Sku,
+            Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE);
         cdsLineas.Next;
       end;
     finally
