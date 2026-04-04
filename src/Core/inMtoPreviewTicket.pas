@@ -561,31 +561,6 @@ begin
     ImprimirTexto(BufferTexto);
 end;
 
-//procedure TFormVisualizador.AjustarFuente;
-//var
-//  TamanoBase: Integer;
-//begin
-//  FCanvas.Font.Name := 'Courier New';
-//  // Calcular tamaño base según fuente
-//  case FFuenteActual of
-//    0: TamanoBase := 8; // Fuente A
-//    1: TamanoBase := 5;  // Fuente B
-//    2: TamanoBase := 7;  // Fuente C
-//  else
-//    TamanoBase := 9;
-//  end;
-//  // Aplicar multiplicadores de tamaño
-//  FCanvas.Font.Size := TamanoBase * Max(FTamanoAncho, FTamanoAlto);
-//  // Aplicar estilos
-//  FCanvas.Font.Style := [];
-//  if FNegrita then
-//    FCanvas.Font.Style := FCanvas.Font.Style + [fsBold];
-//  if FSubrayado then
-//    FCanvas.Font.Style := FCanvas.Font.Style + [fsUnderline];
-//  FCanvas.Font.Color := clBlack;
-//  FCanvas.Brush.Style := bsClear;
-//end;
-
 procedure TFormVisualizador.AjustarFuente;
 var
   LogFont: TLogFont;
@@ -631,18 +606,6 @@ begin
   FCanvas.Font.Color := clBlack;
   FCanvas.Brush.Style := bsClear;
 end;
-
-//function TFormVisualizador.ObtenerAnchoCaracter: Integer;
-//begin
-//  case FFuenteActual of
-//    0: Result := 12; // Fuente A
-//    1: Result := 9;  // Fuente B
-//    2: Result := 7;  // Fuente C
-//  else
-//    Result := 9;
-//  end;
-//  Result := Result * FTamanoAncho;
-//end;
 
 function TFormVisualizador.ObtenerAnchoCaracter: Integer;
 begin
