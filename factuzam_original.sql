@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 04/04/2026 8:22:42
+-- Backup generado: 04/04/2026 19:14:34
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1486,7 +1486,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 77, 3, 'S', 'S', '2026-04-04 08:22:06', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 79, 3, 'S', 'S', '2026-04-04 19:12:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -1521,21 +1521,23 @@ CREATE TABLE `fza_depositos_cliente` (
   `ESIMP_INCL_DEP` char(1) NOT NULL DEFAULT 'S',
   `CANTIDAD_PENDIENTE_DEP` decimal(19,6) NULL DEFAULT NULL COMMENT 'Cantidad de artículos comprados',
   `FECHA_ENTREGA_DEP` date NULL DEFAULT NULL,
+  `CODIGO_CAJA_DEP` varchar(10) NULL DEFAULT NULL COMMENT 'Caja donde se realizó el depósito',
+  `NUMERO_OPERACION_DEP` varchar(20) NULL DEFAULT NULL COMMENT 'Número de operación de caja en la creación',
   PRIMARY KEY (`ID_DEPOSITO_DEP`)
 );
 ALTER TABLE `fza_depositos_cliente` ADD INDEX `IDX_DEP_CLIENTE` (`CODIGO_CLIENTE_DEP`, `ESTADO_DEP`);
 ALTER TABLE `fza_depositos_cliente` ADD INDEX `IDX_DEP_UNIDAD` (`CODIGO_UNIDAD_DEP`, `ESTADO_DEP`);
 
 -- Datos de fza_depositos_cliente
-INSERT INTO `fza_depositos_cliente` (`ID_DEPOSITO_DEP`, `CODIGO_EMPRESA_DEP`, `CODIGO_CLIENTE_DEP`, `CODIGO_ARTICULO_DEP`, `CODIGO_UNIDAD_DEP`, `CODIGO_ALMACEN_DEP`, `PRECIO_VENTA_DEP`, `IMPORTE_ANTICIPO_DEP`, `ESTADO_DEP`, `FECHA_CREACION_DEP`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `TIPO_IVA_DEP`, `PORCEN_IVA_DEP`, `ESIMP_INCL_DEP`, `CANTIDAD_PENDIENTE_DEP`, `FECHA_ENTREGA_DEP`) VALUES
-  ('DEP-001', '1', '301', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, 189, 94.5, 'PENDIENTE', '2026-02-10 10:30:00', '2026-03-03 17:55:37', '2026-02-10 10:30:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-15 00:00:00'),
-  ('DEP-002', '1', '302', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 299, 0, 'PENDIENTE', '2026-02-14 16:00:00', '2026-03-03 17:55:37', '2026-02-14 16:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-03-20 00:00:00'),
-  ('DEP-003', '1', '303', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', NULL, 125, 37.5, 'PENDIENTE', '2026-02-18 11:15:00', '2026-03-03 17:55:37', '2026-02-18 11:15:00', 'ANA', 'ANA', 'N', 21, 'S', 1, '2026-03-10 00:00:00'),
-  ('DEP-004', '1', '301', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, 79, 79, 'CERRADO', '2026-01-20 09:00:00', '2026-03-03 17:55:37', '2026-01-20 09:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, NULL),
-  ('DEP-005', '1', '302', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 159, 39.75, 'PENDIENTE', '2026-02-20 17:30:00', '2026-03-03 17:55:37', '2026-02-20 17:30:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-04-01 00:00:00'),
-  ('DEP-006', '1', '303', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, 95, 20, 'CANCELADO', '2026-01-28 12:00:00', '2026-03-03 17:55:37', '2026-01-28 12:00:00', 'ANA', 'ANA', 'N', 21, 'S', 1, NULL),
-  ('DEP-007', '1', '301', 'VEST-FLOR', 'VEST-FLOR/AZUL/L', NULL, 115, 0, 'PENDIENTE', '2026-03-01 10:00:00', '2026-03-03 17:55:37', '2026-03-01 10:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-25 00:00:00'),
-  ('DEP-008', '1', '302', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, 49, 49, 'CERRADO', '2026-02-05 15:00:00', '2026-03-03 17:55:37', '2026-02-05 15:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, NULL);
+INSERT INTO `fza_depositos_cliente` (`ID_DEPOSITO_DEP`, `CODIGO_EMPRESA_DEP`, `CODIGO_CLIENTE_DEP`, `CODIGO_ARTICULO_DEP`, `CODIGO_UNIDAD_DEP`, `CODIGO_ALMACEN_DEP`, `PRECIO_VENTA_DEP`, `IMPORTE_ANTICIPO_DEP`, `ESTADO_DEP`, `FECHA_CREACION_DEP`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `TIPO_IVA_DEP`, `PORCEN_IVA_DEP`, `ESIMP_INCL_DEP`, `CANTIDAD_PENDIENTE_DEP`, `FECHA_ENTREGA_DEP`, `CODIGO_CAJA_DEP`, `NUMERO_OPERACION_DEP`) VALUES
+  ('DEP-001', '1', '301', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, 189, 94.5, 'PENDIENTE', '2026-02-10 10:30:00', '2026-03-03 17:55:37', '2026-02-10 10:30:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-15 00:00:00', NULL, NULL),
+  ('DEP-002', '1', '302', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 299, 0, 'PENDIENTE', '2026-02-14 16:00:00', '2026-03-03 17:55:37', '2026-02-14 16:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-03-20 00:00:00', NULL, NULL),
+  ('DEP-003', '1', '303', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', NULL, 125, 37.5, 'PENDIENTE', '2026-02-18 11:15:00', '2026-03-03 17:55:37', '2026-02-18 11:15:00', 'ANA', 'ANA', 'N', 21, 'S', 1, '2026-03-10 00:00:00', NULL, NULL),
+  ('DEP-004', '1', '301', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, 79, 79, 'CERRADO', '2026-01-20 09:00:00', '2026-03-03 17:55:37', '2026-01-20 09:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, NULL, NULL, NULL),
+  ('DEP-005', '1', '302', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 159, 39.75, 'PENDIENTE', '2026-02-20 17:30:00', '2026-03-03 17:55:37', '2026-02-20 17:30:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-04-01 00:00:00', NULL, NULL),
+  ('DEP-006', '1', '303', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, 95, 20, 'CANCELADO', '2026-01-28 12:00:00', '2026-03-03 17:55:37', '2026-01-28 12:00:00', 'ANA', 'ANA', 'N', 21, 'S', 1, NULL, NULL, NULL),
+  ('DEP-007', '1', '301', 'VEST-FLOR', 'VEST-FLOR/AZUL/L', NULL, 115, 0, 'PENDIENTE', '2026-03-01 10:00:00', '2026-03-03 17:55:37', '2026-03-01 10:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-25 00:00:00', NULL, NULL),
+  ('DEP-008', '1', '302', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, 49, 49, 'CERRADO', '2026-02-05 15:00:00', '2026-03-03 17:55:37', '2026-02-05 15:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, NULL, NULL, NULL);
 -- 8 registros exportados
 
 
@@ -2299,8 +2301,71 @@ BEGIN
     
 END;
 $$
-DELIMITER ;', '2026-04-04 08:22:06', '2026-04-04 08:22:06', 'Administrador', 'Administrador');
--- 6 registros exportados
+DELIMITER ;', '2026-04-04 08:22:06', '2026-04-04 08:22:06', 'Administrador', 'Administrador'),
+  ('077', NULL, 'ALTER TABLE fza_depositos_cliente
+  ADD COLUMN CODIGO_CAJA_DEP varchar(10) DEFAULT NULL COMMENT ''Caja donde se realizó el depósito'',
+  ADD COLUMN NUMERO_OPERACION_DEP varchar(20) DEFAULT NULL COMMENT ''Número de operación de caja en la creación'';', '2026-04-04 19:12:24', '2026-04-04 19:12:24', 'Administrador', 'Administrador'),
+  ('078', NULL, 'DELIMITER $$
+CREATE OR REPLACE PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(
+    IN p_ID_DEP VARCHAR(20),
+    IN p_EMP VARCHAR(20),
+    IN p_ALM_DEP VARCHAR(10),
+    IN p_CLI VARCHAR(20),
+    IN p_ART VARCHAR(50),
+    IN p_SKU VARCHAR(50),
+    IN p_PRECIO DECIMAL(19,6),
+    IN p_CANTIDAD DECIMAL(19,6),
+    IN p_ANTICIPO DECIMAL(19,6),
+    IN p_TIPOIVA CHAR(1),
+    IN p_PORCIVA DECIMAL(19,6),
+    IN p_IMPINCL CHAR(1),
+    IN p_CAJA VARCHAR(10),        -- NUEVO
+    IN p_NUMOP VARCHAR(20),       -- NUEVO
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+
+    /* Manejo de errores para asegurar la consistencia */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    kk: BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END kk;
+
+    START TRANSACTION;
+
+    /* 1. Insertamos el depósito en la tabla */
+    INSERT INTO fza_depositos_cliente (
+        ID_DEPOSITO_DEP, CODIGO_EMPRESA_DEP, CODIGO_ALMACEN_DEP,
+        CODIGO_CLIENTE_DEP, CODIGO_ARTICULO_DEP, CODIGO_UNIDAD_DEP,
+        ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP,
+        TIPO_IVA_DEP, PORCEN_IVA_DEP, ESIMP_INCL_DEP,
+        CODIGO_CAJA_DEP, NUMERO_OPERACION_DEP, /* NUEVOS CAMPOS */
+        INSTANTEALTA, USUARIOALTA, INSTANTEMODIF, USUARIOMODIF
+    ) VALUES (
+        p_ID_DEP, p_EMP, p_ALM_DEP,
+        p_CLI, p_ART, p_SKU, 
+        ''PENDIENTE'', p_PRECIO, p_CANTIDAD, p_ANTICIPO,
+        p_TIPOIVA, p_PORCIVA, p_IMPINCL,
+        p_CAJA, p_NUMOP, /* NUEVOS VALORES */
+        NOW(), p_USUARIO, NOW(), p_USUARIO
+    );
+
+    /* 2. Calculamos la nueva deuda (Lógica adaptada de tu trigger) */
+    SET v_deuda_nueva = (p_PRECIO * COALESCE(p_CANTIDAD, 1)) - COALESCE(p_ANTICIPO, 0);
+
+    /* 3. Si hay deuda generada, actualizamos el cliente */
+    IF v_deuda_nueva > 0 AND p_CLI IS NOT NULL THEN
+        UPDATE fza_clientes 
+           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva 
+         WHERE CODIGO_CLIENTE = p_CLI;
+    END IF;
+
+    COMMIT;
+END$$ 
+DELIMITER ;', '2026-04-04 19:14:13', '2026-04-04 19:12:47', 'Administrador', 'Administrador');
+-- 8 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3513,7 +3578,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-04 08:21:21', '2026-04-04 08:21:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-04 13:04:02', '2026-04-04 13:04:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -6882,59 +6947,6 @@ END IF;
 END ;;
 DELIMITER ;
 
--- Procedimiento: PRC_FZA_DEPOSITOS_INSERT
-DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_INSERT`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_INSERT`(IN p_CODIGO_CLIENTE VARCHAR(20),
-    IN p_CODIGO_ARTICULO VARCHAR(20),
-    IN p_ESTADO_DEP VARCHAR(20),
-    IN p_PRECIO_VENTA_DEP DECIMAL(19,6),
-    IN p_CANTIDAD_PENDIENTE_DEP DECIMAL(19,6),
-    IN p_IMPORTE_ANTICIPO_DEP DECIMAL(19,6),
-    IN p_USUARIO VARCHAR(100),
-    OUT p_NUEVO_ID_DEPOSITO INT)
-BEGIN
-    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
-
-    /* Manejo de errores para asegurar la consistencia */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-
-    START TRANSACTION;
-
-    /* 1. Insertamos el depósito en la tabla */
-    INSERT INTO fza_depositos_cliente (
-        CODIGO_CLIENTE, CODIGO_ARTICULO, ESTADO_DEP, 
-        PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP,
-        INSTANTEALTA, USUARIOALTA, INSTANTEMODIF, USUARIOMODIF
-    ) VALUES (
-        p_CODIGO_CLIENTE, p_CODIGO_ARTICULO, p_ESTADO_DEP,
-        p_PRECIO_VENTA_DEP, p_CANTIDAD_PENDIENTE_DEP, p_IMPORTE_ANTICIPO_DEP,
-        NOW(), p_USUARIO, NOW(), p_USUARIO
-    );
-
-    /* Obtenemos el ID autogenerado para devolverlo a la App (Opcional pero muy útil) */
-    SET p_NUEVO_ID_DEPOSITO = LAST_INSERT_ID();
-
-    /* 2. Lógica del Trigger AFTER INSERT: Calculamos la nueva deuda */
-    IF p_ESTADO_DEP = 'PENDIENTE' THEN
-        SET v_deuda_nueva = (p_PRECIO_VENTA_DEP * COALESCE(p_CANTIDAD_PENDIENTE_DEP, 1)) - COALESCE(p_IMPORTE_ANTICIPO_DEP, 0);
-    END IF;
-
-    /* 3. Si hay deuda generada, actualizamos el cliente */
-    IF v_deuda_nueva > 0 AND p_CODIGO_CLIENTE IS NOT NULL THEN
-        UPDATE fza_clientes
-           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_deuda_nueva
-         WHERE CODIGO_CLIENTE = p_CODIGO_CLIENTE;
-    END IF;
-
-    COMMIT;
-END ;;
-DELIMITER ;
-
 -- Procedimiento: PRC_FZA_DEPOSITOS_UPDATE
 DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`;
 DELIMITER ;;
@@ -8439,4 +8451,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 04/04/2026 8:22:42
+-- Backup completado: 04/04/2026 19:14:34

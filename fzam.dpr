@@ -129,7 +129,8 @@ uses
   inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket},
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
-  inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas';
+  inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
+  inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas';
 
 var
   frmLogon: TfrmLogon;
