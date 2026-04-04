@@ -96,6 +96,7 @@ type
     actBuscarVale: TAction;
     actSinTicket: TAction;
     actConTicket: TAction;
+    actSinPrecios: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -123,6 +124,7 @@ type
     procedure btnF7Click(Sender: TObject);
     procedure actSinTicketExecute(Sender: TObject);
     procedure actConTicketExecute(Sender: TObject);
+    procedure actSinPreciosExecute(Sender: TObject);
   private
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
@@ -903,6 +905,12 @@ procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);
 begin
   inherited;
   btnAtrasClick(Sender);
+end;
+
+procedure TfrmMtoCajaFaseCobro.actSinPreciosExecute(Sender: TObject);
+begin
+  inherited;
+  btnSinPreciosClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.actSinTicketExecute(Sender: TObject);
