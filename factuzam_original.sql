@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 05/04/2026 0:11:55
+-- Backup generado: 05/04/2026 6:22:21
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1486,7 +1486,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 82, 3, 'S', 'S', '2026-04-05 00:07:35', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 84, 3, 'S', 'S', '2026-04-05 06:20:41', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -2467,8 +2467,102 @@ END $$
 -- 3. Aquí usamos $$ para indicar que el CREATE PROCEDURE ha terminado.
 
 -- 4. (Opcional pero muy recomendado) Devolvemos el delimitador a la normalidad.
-DELIMITER ;', '2026-04-05 00:07:35', '2026-04-05 00:07:35', 'Administrador', 'Administrador');
--- 11 registros exportados
+DELIMITER ;', '2026-04-05 00:07:35', '2026-04-05 00:07:35', 'Administrador', 'Administrador'),
+  ('082', NULL, 'drop PROCEDURE `pr_demo_silenciosa`', '2026-04-05 06:16:05', '2026-04-05 06:16:05', 'Administrador', 'Administrador'),
+  ('083', 'Modificar PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', 'DELIMITER $$
+CREATE OR REPLACE PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
+	IN `p_NUMERO_MOV` VARCHAR(20),
+	IN `p_TIPO_DOC_MOV` VARCHAR(20),
+	IN `p_SERIE_DOC_MOV` VARCHAR(20),
+	IN `p_NRO_DOC_MOV` VARCHAR(20),
+	IN `p_LINEA_MOV` VARCHAR(10),
+	IN `p_CODIGO_EMPRESA_MOV` VARCHAR(20),
+	IN `p_CODIGO_ALMACEN_MOV` VARCHAR(10),
+	IN `p_CODIGO_ALMACEN_CONTRA_MOV` VARCHAR(10),
+	IN `p_CODIGO_UNIDAD_MOV` VARCHAR(50),
+	IN `p_TIPO_MOVIMIENTO_MOV` VARCHAR(1),
+	IN `p_CANTIDAD_MOV` DECIMAL(19,6),
+	IN `p_PRECIO_MEDIO_MOV` DECIMAL(19,6),
+	IN `p_TOTAL_COSTE_MOV` DECIMAL(19,6),
+	IN `p_USUARIO` VARCHAR(100),
+	IN `p_ALMACEN_DOC` VARCHAR(10),
+	IN `p_NUMOP_DOC` VARCHAR(20),
+    IN `p_CODCLIENTE` VARCHAR(20),
+    IN `p_CODARTICULO` VARCHAR(20)
+)
+BEGIN
+    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_PrecioFinal DECIMAL(19,6);
+    DECLARE v_CosteFinal DECIMAL(19,6);
+
+--     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+--     BEGIN
+--         ROLLBACK;
+--         RESIGNAL;
+--     END;
+-- 
+--     START TRANSACTION;
+
+    /* 1. Obtener el PMP actual del stock */
+    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
+      INTO v_PMPActual
+      FROM fza_articulos_stockactual
+     WHERE CODIGO_ALMACEN_STK = p_CODIGO_ALMACEN_MOV
+       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
+     LIMIT 1;
+
+    /* 2. Lógica de re-cálculo */
+    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
+        SET v_PrecioFinal = v_PMPActual;
+        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
+    ELSE
+        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
+        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
+    END IF;
+
+    /* 3. Insertar el Movimiento de Almacén real */
+    INSERT INTO fza_movimientos_almacen (
+        NUMERO_MOV,                                       
+        TIPO_DOC_MOV, SERIE_DOC_MOV, NRO_DOC_MOV, LINEA_MOV,
+        CODIGO_EMPRESA_MOV, CODIGO_ALMACEN_MOV, CODIGO_ALMACEN_CONTRA_MOV, /* <--- AÑADIDO */
+        CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
+        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
+        FECHA_MOV, USUARIOALTA, USUARIOMODIF,
+        CODIGO_ALMACEN_DOC_MOV, NUMERO_OPERACION_DOC_MOV, CODIGO_CLIENTE_MOV, 
+        CODIGO_ARTICULO_MOV  
+    ) VALUES (
+        p_NUMERO_MOV,                                     
+        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
+        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_ALMACEN_CONTRA_MOV, /* <--- AÑADIDO */
+        p_CODIGO_UNIDAD_MOV, p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
+        v_PrecioFinal, v_CosteFinal, 
+        NOW(), p_USUARIO, p_USUARIO,
+        p_ALMACEN_DOC, p_NUMOP_DOC, p_CODCLIENTE, p_CODARTICULO                        
+    );
+
+    /* 4. Actualizar Stock */
+    INSERT INTO fza_articulos_stockactual (
+        CODIGO_ALMACEN_STK, CODIGO_UNIDAD_STK,
+        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTEMODIF
+    ) VALUES (
+        p_CODIGO_ALMACEN_MOV, 
+        p_CODIGO_UNIDAD_MOV,
+        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
+        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
+        v_PrecioFinal, 
+        NOW()
+    )
+    ON DUPLICATE KEY UPDATE
+        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
+        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
+        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
+        INSTANTEMODIF = NOW();
+
+--    COMMIT;
+END
+$$
+DELIMITER ;', '2026-04-05 06:20:41', '2026-04-05 06:20:41', 'Administrador', 'Administrador');
+-- 13 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3683,7 +3777,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 00:11:47', '2026-04-05 00:11:47', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 06:15:24', '2026-04-05 06:15:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7202,20 +7296,22 @@ CREATE  PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
 	IN `p_TOTAL_COSTE_MOV` DECIMAL(19,6),
 	IN `p_USUARIO` VARCHAR(100),
 	IN `p_ALMACEN_DOC` VARCHAR(10),
-	IN `p_NUMOP_DOC` VARCHAR(20)
+	IN `p_NUMOP_DOC` VARCHAR(20),
+    IN `p_CODCLIENTE` VARCHAR(20),
+    IN `p_CODARTICULO` VARCHAR(20)
 )
 BEGIN
     DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
     DECLARE v_PrecioFinal DECIMAL(19,6);
     DECLARE v_CosteFinal DECIMAL(19,6);
 
---     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
---     BEGIN
---         ROLLBACK;
---         RESIGNAL;
---     END;
--- 
---     START TRANSACTION;
+/*     DECLARE EXIT HANDLER FOR SQLEXCEPTION  */
+/*     BEGIN */
+/*         ROLLBACK; */
+/*         RESIGNAL; */
+/*     END; */
+/*  */
+/*     START TRANSACTION; */
 
     /* 1. Obtener el PMP actual del stock */
     SELECT IFNULL(PRECIO_MEDIO_STK, 0)
@@ -7242,7 +7338,8 @@ BEGIN
         CODIGO_UNIDAD_MOV, TIPO_MOVIMIENTO_MOV, CANTIDAD_MOV, 
         PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
         FECHA_MOV, USUARIOALTA, USUARIOMODIF,
-        CODIGO_ALMACEN_DOC_MOV, NUMERO_OPERACION_DOC_MOV  
+        CODIGO_ALMACEN_DOC_MOV, NUMERO_OPERACION_DOC_MOV, CODIGO_CLIENTE_MOV, 
+        CODIGO_ARTICULO_MOV  
     ) VALUES (
         p_NUMERO_MOV,                                     
         p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
@@ -7250,7 +7347,7 @@ BEGIN
         p_CODIGO_UNIDAD_MOV, p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
         v_PrecioFinal, v_CosteFinal, 
         NOW(), p_USUARIO, p_USUARIO,
-        p_ALMACEN_DOC, p_NUMOP_DOC                        
+        p_ALMACEN_DOC, p_NUMOP_DOC, p_CODCLIENTE, p_CODARTICULO                        
     );
 
     /* 4. Actualizar Stock */
@@ -7271,7 +7368,7 @@ BEGIN
         PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
         INSTANTEMODIF = NOW();
 
---    COMMIT;
+/*    COMMIT; */
 END ;;
 DELIMITER ;
 
@@ -8430,15 +8527,6 @@ BEGIN
 END ;;
 DELIMITER ;
 
--- Procedimiento: pr_demo_silenciosa
-DROP PROCEDURE IF EXISTS `pr_demo_silenciosa`;
-DELIMITER ;;
-CREATE  PROCEDURE `pr_demo_silenciosa`()
-BEGIN
-    SELECT 'Esta es una prueba exitosa' AS mensaje;
-END ;;
-DELIMITER ;
-
 -- Procedimiento: SP_RECALCULAR_PMP_SKU
 DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_SKU`;
 DELIMITER ;;
@@ -8622,4 +8710,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 05/04/2026 0:11:56
+-- Backup completado: 05/04/2026 6:22:22

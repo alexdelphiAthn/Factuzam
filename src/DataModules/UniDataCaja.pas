@@ -150,7 +150,9 @@ type
                           ACoste:     Currency;
                           AUsuario:   string;
                           const AAlmacenDoc: string = '';
-                          const ANumOperacion: string = '');
+                          const ANumOperacion: string = '';
+                          const ACodCliente:string = '';
+                          const ACodArticulo:string='');
     procedure InsertarOperacionCaja(
                         QryTrx:          TUniQuery;
                         const AEmpresa:  string;
@@ -877,7 +879,9 @@ procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           ACoste:     Currency;
                           AUsuario:   string;
                           const AAlmacenDoc: string = '';
-                          const ANumOperacion: string = '');
+                          const ANumOperacion: string = '';
+                          const ACodCliente:string = '';
+                          const ACodArticulo:string='');
 var
   uspMov: TUniStoredProc;
 begin
@@ -894,23 +898,21 @@ begin
     uspMov.ParamByName('p_LINEA_MOV').AsString               := ALinea;
     uspMov.ParamByName('p_CODIGO_EMPRESA_MOV').AsString      := AEmpresa;
     uspMov.ParamByName('p_CODIGO_ALMACEN_MOV').AsString      := AAlmacen;
-
     // Tratamiento del Almacén Contra (si es vacío, mandamos un NULL nativo)
     if Trim(AAlmacenContra) = '' then
       uspMov.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear
     else
       uspMov.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').AsString := AAlmacenContra;
-
     uspMov.ParamByName('p_CODIGO_UNIDAD_MOV').AsString       := ASku;
     uspMov.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString     := ATipoMov;
     uspMov.ParamByName('p_CANTIDAD_MOV').AsFloat             := Abs(ACantidad);
     uspMov.ParamByName('p_PRECIO_MEDIO_MOV').AsCurrency      := ACoste;
     uspMov.ParamByName('p_TOTAL_COSTE_MOV').AsCurrency       := ACoste * Abs(ACantidad);
     uspMov.ParamByName('p_USUARIO').AsString                 := AUsuario;
-
     uspMov.ParamByName('p_ALMACEN_DOC').AsString             := AAlmacenDoc;
     uspMov.ParamByName('p_NUMOP_DOC').AsString               := ANumOperacion;
-
+    uspMov.ParamByName('p_CODCLIENTE').AsString             := ACodCliente;
+    uspMov.ParamByName('p_CODARTICULO').AsString               := ACodArticulo;
     uspMov.Execute;
   finally
     uspMov.Free;
@@ -973,7 +975,7 @@ begin
     0,
     AUsuario,
     AAlmacenTienda,
-    ANumOpe);
+    ANumOpe, ACliente, AArticulo);
   // 3b. Entrada al almacén tienda
   InsertarMovimientoAlmacen(
     QryTrx,
@@ -986,7 +988,7 @@ begin
     ASku,
     ACantidad,
     0,              // entrada sin coste → trigger toma PMP del almacén depósito
-    AUsuario, AAlmacenTienda, ANumOpe);
+    AUsuario, AAlmacenTienda, ANumOpe, ACliente, AArticulo);
 end;
 // -----------------------------------------------------------------------------
 // MODIFICADO: CrearNuevoDepositoCliente
@@ -1028,7 +1030,9 @@ begin
                             0,
                             AUsuario,
                             AAlmacenOrigen,
-                            ANumOperacion);
+                            ANumOperacion,
+                            ACliente,
+                            AArticulo);
   // 1b. Entrada al almacén depósito
   InsertarMovimientoAlmacen(QryTrx,
                             'TR',
@@ -1044,7 +1048,9 @@ begin
                             0,
                             AUsuario,
                             AAlmacenOrigen,
-                            ANumOperacion);
+                            ANumOperacion,
+                            ACliente,
+                            AArticulo);
   // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
@@ -1374,7 +1380,8 @@ begin
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumeroGenerado, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Sku,
-            Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE);
+            Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE,
+            Cab.CodigoCliente, Lin.Articulo);
         cdsLineas.Next;
       end;
     finally
