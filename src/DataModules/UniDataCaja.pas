@@ -1201,9 +1201,9 @@ begin
         Cab.PorcIvaR, Cab.TotalIvaR, Cab.PorcReR, Cab.TotalReR, Cab.BaseIR,
         Cab.PorcIvaS, Cab.TotalIvaS, Cab.PorcReS, Cab.TotalReS, Cab.BaseIS,
         Cab.PorcIvaE, Cab.TotalIvaE, Cab.PorcReE, Cab.TotalReE, Cab.BaseIE,
-        Cab.TotalBases, Cab.TotalImpuestos, Cab.TotalRetencion, Cab.PorcRetencion,
-        Cab.TotalLiquido, Cab.FormaPago, Cab.Comentarios, '', '',
-        AAlmacen, ACaja, UsuarioCaja, NumOperacionVE, UsuarioCaja);
+        Cab.TotalBases, Cab.TotalImpuestos, Cab.TotalRetencion,
+        Cab.PorcRetencion, Cab.TotalLiquido, Cab.FormaPago, Cab.Comentarios,
+        '', '', AAlmacen, ACaja, UsuarioCaja, NumOperacionVE, UsuarioCaja);
     end
     else
     begin
@@ -1227,12 +1227,13 @@ begin
         begin
           if RequiereFactura then
             InsertarLineaFactura(
-              QryTrx, SerieGenerada, NumeroGenerado, Lin.Linea, Lin.Articulo, Lin.Sku,
-              Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia, Lin.NombreFamilia,
-              Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl,
-              Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
-              Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
-              AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
+              QryTrx, SerieGenerada, NumeroGenerado, Lin.Linea, Lin.Articulo,
+              Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
+              Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
+              Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
+              Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
+              Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
+              UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
           cdsLineas.Next;
           Continue;
         end;
@@ -1354,7 +1355,7 @@ begin
     begin
       if datosCobro.EsDevolucionEconomica then
         InsertarOperacionCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE',
+        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
         datosCobro.TotalesFactura.Totales.TotalLiquido,
         UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
          'Devolución de Venta')
