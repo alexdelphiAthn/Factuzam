@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 05/04/2026 6:22:21
+-- Backup generado: 05/04/2026 8:16:54
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1486,7 +1486,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 84, 3, 'S', 'S', '2026-04-05 06:20:41', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 85, 3, 'S', 'S', '2026-04-05 08:16:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -2561,8 +2561,97 @@ BEGIN
 --    COMMIT;
 END
 $$
-DELIMITER ;', '2026-04-05 06:20:41', '2026-04-05 06:20:41', 'Administrador', 'Administrador');
--- 13 registros exportados
+DELIMITER ;', '2026-04-05 06:20:41', '2026-04-05 06:20:41', 'Administrador', 'Administrador'),
+  ('084', NULL, 'DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`$$
+
+CREATE PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(
+    IN SKU VARCHAR(50),
+    IN CLI VARCHAR(20),
+    IN ESTADO VARCHAR(15),
+    IN INC_ANTICIPO DECIMAL(19,6),
+    IN USUARIO VARCHAR(100)
+)
+BEGIN
+    /* Variables para almacenar los datos actuales del depósito */
+    DECLARE v_ID_DEPOSITO VARCHAR(20);
+    DECLARE v_OLD_ESTADO VARCHAR(15);
+    DECLARE v_OLD_PRECIO DECIMAL(19,6);
+    DECLARE v_OLD_CANTIDAD_PTE DECIMAL(19,6);
+    DECLARE v_OLD_ANTICIPO DECIMAL(19,6);
+
+    /* Variables para calcular los nuevos valores y la deuda */
+    DECLARE v_NUEVO_ESTADO VARCHAR(15);
+    DECLARE v_NUEVO_ANTICIPO DECIMAL(19,6);
+    DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
+
+    /* Manejador de errores: Deshace todo si algo falla */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    /* 1. Buscar el depósito que coincide con el Cliente y el SKU */
+    /* Buscamos el que esté ''PENDIENTE'' y lo bloqueamos para evitar concurrencia */
+    SELECT ID_DEPOSITO_DEP, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
+      INTO v_ID_DEPOSITO, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
+      FROM fza_depositos_cliente
+     WHERE CODIGO_CLIENTE_DEP = CLI
+       AND CODIGO_UNIDAD_DEP = SKU
+       AND ESTADO_DEP = ''PENDIENTE''
+     LIMIT 1 /* Por seguridad, nos quedamos con uno en caso de anomalía de datos */
+       FOR UPDATE;
+
+    /* Solo procedemos si encontramos un depósito válido */
+    IF v_ID_DEPOSITO IS NOT NULL THEN
+
+        /* 2. Calcular los nuevos valores a guardar */
+        /* Sumamos el anticipo actual con el incremento que viene de Delphi */
+        SET v_NUEVO_ANTICIPO = v_OLD_ANTICIPO + COALESCE(INC_ANTICIPO, 0);
+        
+        /* Si Delphi manda NULL (ParamByName(''ESTADO'').Clear), mantenemos el estado anterior */
+        SET v_NUEVO_ESTADO = COALESCE(ESTADO, v_OLD_ESTADO); 
+
+        /* 3. Calcular la variación de la deuda para actualizar al cliente */
+        IF v_OLD_ESTADO = ''PENDIENTE'' THEN
+            SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
+        END IF;
+
+        IF v_NUEVO_ESTADO = ''PENDIENTE'' THEN
+            SET v_deuda_nueva = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_NUEVO_ANTICIPO;
+        END IF;
+
+        SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+
+        /* 4. Actualizar la tabla del depósito */
+        UPDATE fza_depositos_cliente
+           SET IMPORTE_ANTICIPO_DEP = v_NUEVO_ANTICIPO,
+               ESTADO_DEP = v_NUEVO_ESTADO,
+               USUARIOMODIF = USUARIO,
+               INSTANTEMODIF = NOW()
+         WHERE ID_DEPOSITO_DEP = v_ID_DEPOSITO;
+
+        /* 5. Actualizar la deuda total en el cliente si hubo cambios */
+        IF v_diferencia <> 0 THEN
+            UPDATE fza_clientes
+               SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
+             WHERE CODIGO_CLIENTE = CLI;
+        END IF;
+
+    END IF;
+
+    COMMIT;
+END
+$$
+
+DELIMITER ;', '2026-04-05 08:16:32', '2026-04-05 08:16:32', 'Administrador', 'Administrador');
+-- 14 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3777,7 +3866,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 06:15:24', '2026-04-05 06:15:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 08:09:25', '2026-04-05 08:09:25', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7212,65 +7301,84 @@ DELIMITER ;
 -- Procedimiento: PRC_FZA_DEPOSITOS_UPDATE
 DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(IN p_ID_DEPOSITO INT, /* O la PK que uses en fza_depositos_cliente */
-    IN p_NUEVO_ESTADO VARCHAR(20),
-    IN p_NUEVO_PRECIO DECIMAL(19,6),
-    IN p_NUEVA_CANTIDAD_PTE DECIMAL(19,6),
-    IN p_NUEVO_ANTICIPO DECIMAL(19,6),
-    IN p_USUARIO VARCHAR(100))
+CREATE  PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(
+    IN SKU VARCHAR(50),
+    IN CLI VARCHAR(20),
+    IN ESTADO VARCHAR(15),
+    IN INC_ANTICIPO DECIMAL(19,6),
+    IN USUARIO VARCHAR(100)
+)
 BEGIN
-    /* Variables para almacenar el estado OLD */
-    DECLARE v_OLD_CODIGO_CLIENTE VARCHAR(20);
-    DECLARE v_OLD_ESTADO VARCHAR(20);
+    /* Variables para almacenar los datos actuales del depósito */
+    DECLARE v_ID_DEPOSITO VARCHAR(20);
+    DECLARE v_OLD_ESTADO VARCHAR(15);
     DECLARE v_OLD_PRECIO DECIMAL(19,6);
     DECLARE v_OLD_CANTIDAD_PTE DECIMAL(19,6);
     DECLARE v_OLD_ANTICIPO DECIMAL(19,6);
 
+    /* Variables para calcular los nuevos valores y la deuda */
+    DECLARE v_NUEVO_ESTADO VARCHAR(15);
+    DECLARE v_NUEVO_ANTICIPO DECIMAL(19,6);
     DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
     DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
     DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
 
+    /* Manejador de errores: Deshace todo si algo falla */
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
+    BEGIN
         ROLLBACK;
         RESIGNAL;
-    END kk;
+    END;
 
     START TRANSACTION;
 
-    /* 1. Leer los datos actuales (OLD) ANTES de actualizar */
-    SELECT CODIGO_CLIENTE, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
-      INTO v_OLD_CODIGO_CLIENTE, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
+    /* 1. Buscar el depósito que coincide con el Cliente y el SKU */
+    /* Buscamos el que esté 'PENDIENTE' y lo bloqueamos para evitar concurrencia */
+    SELECT ID_DEPOSITO_DEP, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
+      INTO v_ID_DEPOSITO, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
       FROM fza_depositos_cliente
-     WHERE ID_DEPOSITO = p_ID_DEPOSITO 
-       FOR UPDATE; /* FOR UPDATE bloquea la fila para evitar concurrencia */
+     WHERE CODIGO_CLIENTE_DEP = CLI
+       AND CODIGO_UNIDAD_DEP = SKU
+       AND ESTADO_DEP = 'PENDIENTE'
+     LIMIT 1 /* Por seguridad, nos quedamos con uno en caso de anomalía de datos */
+       FOR UPDATE;
 
-    /* 2. Cálculos que antes hacía el trigger */
-    IF v_OLD_ESTADO = 'PENDIENTE' THEN
-        SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
-    END IF;
+    /* Solo procedemos si encontramos un depósito válido */
+    IF v_ID_DEPOSITO IS NOT NULL THEN
 
-    IF p_NUEVO_ESTADO = 'PENDIENTE' THEN
-        SET v_deuda_nueva = (p_NUEVO_PRECIO * COALESCE(p_NUEVA_CANTIDAD_PTE, 1)) - p_NUEVO_ANTICIPO;
-    END IF;
+        /* 2. Calcular los nuevos valores a guardar */
+        /* Sumamos el anticipo actual con el incremento que viene de Delphi */
+        SET v_NUEVO_ANTICIPO = v_OLD_ANTICIPO + COALESCE(INC_ANTICIPO, 0);
+        
+        /* Si Delphi manda NULL (ParamByName('ESTADO').Clear), mantenemos el estado anterior */
+        SET v_NUEVO_ESTADO = COALESCE(ESTADO, v_OLD_ESTADO); 
 
-    SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+        /* 3. Calcular la variación de la deuda para actualizar al cliente */
+        IF v_OLD_ESTADO = 'PENDIENTE' THEN
+            SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
+        END IF;
 
-    /* 3. Actualizar la tabla principal (El UPDATE original) */
-    UPDATE fza_depositos_cliente
-       SET ESTADO_DEP = p_NUEVO_ESTADO,
-           PRECIO_VENTA_DEP = p_NUEVO_PRECIO,
-           CANTIDAD_PENDIENTE_DEP = p_NUEVA_CANTIDAD_PTE,
-           IMPORTE_ANTICIPO_DEP = p_NUEVO_ANTICIPO,
-           USUARIOMODIF = p_USUARIO,
-           INSTANTEMODIF = NOW()
-     WHERE ID_DEPOSITO = p_ID_DEPOSITO;
+        IF v_NUEVO_ESTADO = 'PENDIENTE' THEN
+            SET v_deuda_nueva = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_NUEVO_ANTICIPO;
+        END IF;
 
-    /* 4. Actualizar la deuda en el cliente si hubo cambios de saldo */
-    IF v_diferencia <> 0 AND v_OLD_CODIGO_CLIENTE IS NOT NULL THEN
-        UPDATE fza_clientes
-           SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
-         WHERE CODIGO_CLIENTE = v_OLD_CODIGO_CLIENTE;
+        SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
+
+        /* 4. Actualizar la tabla del depósito */
+        UPDATE fza_depositos_cliente
+           SET IMPORTE_ANTICIPO_DEP = v_NUEVO_ANTICIPO,
+               ESTADO_DEP = v_NUEVO_ESTADO,
+               USUARIOMODIF = USUARIO,
+               INSTANTEMODIF = NOW()
+         WHERE ID_DEPOSITO_DEP = v_ID_DEPOSITO;
+
+        /* 5. Actualizar la deuda total en el cliente si hubo cambios */
+        IF v_diferencia <> 0 THEN
+            UPDATE fza_clientes
+               SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) + v_diferencia
+             WHERE CODIGO_CLIENTE = CLI;
+        END IF;
+
     END IF;
 
     COMMIT;
@@ -8710,4 +8818,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 05/04/2026 6:22:22
+-- Backup completado: 05/04/2026 8:16:54
