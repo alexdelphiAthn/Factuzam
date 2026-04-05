@@ -875,6 +875,39 @@ begin
   end;
 end;
 
+procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
+                                              const ACliente,
+                                                    ASku,
+                                                    AUsuario: string;
+                                              ANuevoAbono: Currency);
+var
+  SpTrx:TUniStoredProc;
+begin
+  if ANuevoAbono <= 0 then Exit;
+  SpTrx := TUniStoredProc.Create(nil);
+  SpTrx.Connection := QryTrx.Connection;
+  // Asignamos el nombre del Procedimiento Almacenado
+  SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
+
+  // PrepareSQL recupera automáticamente la definición de los parámetros desde la BD.
+  // (Si los parámetros ya están creados en tiempo de diseño, puedes omitir esta línea).
+  SpTrx.PrepareSQL;
+
+  // Asignación de parámetros
+  SpTrx.ParamByName('SKU').AsString           := ASku;
+  SpTrx.ParamByName('CLI').AsString           := ACliente;
+
+  // Enviamos NULL para que el SP respete el estado actual
+  SpTrx.ParamByName('ESTADO').Clear;
+
+  SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
+  SpTrx.ParamByName('USUARIO').AsString       := AUsuario;
+
+  // Ejecutamos el SP
+  SpTrx.Execute;
+  SpTrx.Free;
+end;
+
 procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
                                            const Acliente:    string;
                                            const ASku:        string;
