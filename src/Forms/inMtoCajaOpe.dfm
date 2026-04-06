@@ -23,7 +23,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1182
+    ExplicitWidth = 1186
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -125,8 +125,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 388
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 1182
-    ExplicitHeight = 380
+    ExplicitWidth = 1186
     object Panel1: TPanel
       Left = 1
       Top = 289
@@ -134,8 +133,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 281
-      ExplicitWidth = 1180
+      ExplicitWidth = 1184
       DesignSize = (
         1182
         98)
@@ -257,7 +255,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 726
+        Left = 724
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -279,10 +277,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 724
+        ExplicitLeft = 726
         Height = 80
         Width = 423
-        AnchorX = 1149
+        AnchorX = 1147
       end
       object btnF8: TcxButton
         Left = 224
@@ -495,7 +493,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       object cxspltr1: TcxSplitter
         Left = 1
         Top = 163
-        Width = 1180
+        Width = 8
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
