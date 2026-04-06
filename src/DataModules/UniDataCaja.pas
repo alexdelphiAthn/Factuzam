@@ -625,11 +625,11 @@ begin
 end;
 
 procedure TdmCajaOpe.TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
-                                                       DineroEntregado: Currency);
+                                                     DineroEntregado: Currency);
 var
   TotalLinea, DineroDisponible: Currency;
   VieneDeDep, AccionDep: string;
-  AnticipoRecuperado: Currency; // <-- NUEVA VARIABLE para rescatar el dinero a cuenta
+  AnticipoRecuperado: Currency;
 
   procedure EliminarLineaAbono(const ASkuLinea: string);
   var
@@ -662,12 +662,15 @@ var
   begin
     TotalLinea     := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
     AnticipoPrevio := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
-    SkuLinea       := cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-    TipoIVALinea   := cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
-    PorcIVALinea   := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-    EsImpInclLinea := cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
+    SkuLinea       := cdsLineas.FieldByName(
+                                        'CODIGO_UNIDAD_FACTURA_LINEA').AsString;
+    TipoIVALinea   := cdsLineas.FieldByName(
+                                     'TIPOIVA_ARTICULO_FACTURA_LINEA').AsString;
+    PorcIVALinea   := cdsLineas.FieldByName(
+                                         'PORCEN_IVA_FACTURA_LINEA').AsCurrency;
+    EsImpInclLinea := cdsLineas.FieldByName(
+                                    'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString;
     DineroReal := DineroDisponible + AnticipoPrevio;
-
     if DineroReal >= TotalLinea then
     begin
       DineroDisponible := DineroDisponible - (TotalLinea - AnticipoPrevio);
@@ -680,30 +683,34 @@ var
         cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'AUMENTAR_DEP'
       else
         cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'NUEVO_DEP';
+      var sDesc :=
+           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
+      if Pos('Adelanto ', sDesc) <> 1 then
+        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
+                                                            'Adelanto ' + sDesc;
       cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency := TotalLinea;
       cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
-                                                       DineroDisponible;
+                                                               DineroDisponible;
       cdsLineas.FieldByName(
-                        'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
-                                                       DineroDisponible;
+      'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := DineroDisponible;
       if PorcIVALinea = 0 then
         cdsLineas.FieldByName(
           'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
-                                                        DineroDisponible
+                                                                DineroDisponible
       else
         cdsLineas.FieldByName(
           'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency :=
             DineroDisponible / (1 + (PorcIVALinea / 100));
+
       cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat         := 1;
       cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat       := 0;
       cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency    := 0;
       cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency         :=
-                                                       DineroDisponible;
+                                                               DineroDisponible;
       cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency     :=
-                                                  cdsLineas.FieldByName(
+          cdsLineas.FieldByName(
                           'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
       cdsLineas.Post;
-      // Eliminar la línea de abono porque el cliente no recoge la prenda
       EliminarLineaAbono(SkuLinea);
       DineroDisponible := 0;
       cdsLineas.Next;
@@ -715,7 +722,7 @@ begin
   cdsLineas.DisableControls;
   try
     // =========================================================================
-    // PASO 0: Sumar SOLO abonos de devoluciones reales, no anticipos de depósit
+    // PASO 0: Sumar SOLO abonos de devoluciones reales
     // =========================================================================
     cdsLineas.First;
     while not cdsLineas.Eof do
@@ -726,11 +733,8 @@ begin
                         cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
       cdsLineas.Next;
     end;
-
     // =========================================================================
-    // PASO 0.5 (OPCIONAL): Cancelaciones explícitas
-    // Si tu sistema permite marcar una línea como 'CANCELAR',
-    // liberamos su dinero.
+    // PASO 0.5: Cancelaciones explícitas de la interfaz
     // =========================================================================
     cdsLineas.First;
     while not cdsLineas.Eof do
@@ -739,14 +743,12 @@ begin
       AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
       if (VieneDeDep = 'S') and (AccionDep = 'CANCELAR') then
       begin
-        AnticipoRecuperado :=
-                            cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
+        AnticipoRecuperado := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
         if AnticipoRecuperado > 0 then
           DineroDisponible := DineroDisponible + AnticipoRecuperado;
       end;
       cdsLineas.Next;
     end;
-
     // =========================================================================
     // PASO 1: Prioridad absoluta — depósitos existentes del cliente
     // =========================================================================
@@ -759,24 +761,11 @@ begin
       if (VieneDeDep = 'S') and (AccionDep = 'COBRAR') and
          (cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency > 0) then
       begin
-        if DineroDisponible > 0 then
-          ProcesarLinea
-        else
-        begin
-          AnticipoRecuperado :=
-                            cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
-          var SkuEliminar :=
-                  cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString;
-          cdsLineas.Delete;
-          EliminarLineaAbono(SkuEliminar);
-          if AnticipoRecuperado > 0 then
-            DineroDisponible := DineroDisponible + AnticipoRecuperado;
-        end;
+        ProcesarLinea;
       end
       else
         cdsLineas.Next;
     end;
-
     // =========================================================================
     // PASO 2: Prendas nuevas de hoy
     // =========================================================================
@@ -793,15 +782,14 @@ begin
           ProcesarLinea
         else
         begin
+          // Sin dinero pero la prenda se aparta → NUEVO_DEP con anticipo 0
           cdsLineas.Edit;
           cdsLineas.FieldByName('ACCION_DEPOSITO').AsString      := 'NUEVO_DEP';
           cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency    :=
                         cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
           cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency   := 0;
-          cdsLineas.FieldByName(
-                     'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
-          cdsLineas.FieldByName(
-                     'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+          cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+          cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
           cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency          := 0;
           cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency      := 0;
           cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat        := 0;
@@ -1143,7 +1131,7 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
     InsertarLineaFactura(
       QryTrx, SerieGenerada, NumeroGenerado,
       Lin.Linea, 'ANTICIPO', 'ANTICIPO',
-      'Adelanto ' + Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds', // <-- CAMBIO A "Adelanto "
+      Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds',
       1, '', 'S', PrecioBase, 0, 0, PrecioBase, AImporte,
       Lin.TipoIva, Lin.PorcIva, PrecioBase, AImporte,
       UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
@@ -1237,12 +1225,12 @@ begin
         uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
         uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
         uspQryTrx.Execute;
-        NumeroFactura := uspQryTrx.ParamByName('pcont').AsString;
+        NumFactura := uspQryTrx.ParamByName('pcont').AsString;
         DatosCobro.TotalesFactura.Cabecera.Edit;
         DatosCobro.TotalesFactura.Cabecera.FieldByName(
                                       'SERIE_FACTURA').AsString:= ASerieElegida;
         DatosCobro.TotalesFactura.Cabecera.FieldByName('NRO_FACTURA').AsString:=
-                                                                 NumeroFactura;
+                                                                 NumFactura;
         DatosCobro.TotalesFactura.Cabecera.Post;
         // =======================================================================
         // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
@@ -1251,7 +1239,7 @@ begin
         uspQryTrx.Free;
       end;
       InsertarCabeceraFactura(
-        QryTrx, SerieGenerada, NumeroFactura, Cab.Fecha, 'SIMPLIFICADA',
+        QryTrx, SerieGenerada, NumFactura, Cab.Fecha, 'SIMPLIFICADA',
         'BORRADOR', AEmpresa, Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp,
         Cab.EmailEmp,Cab.Direccion1Emp, Cab.Direccion2Emp, Cab.PoblacionEmp,
         Cab.ProvinciaEmp, Cab.CPostalEmp, Cab.CodigoPaisEmp, Cab.NombrePaisEmp,
@@ -1272,7 +1260,7 @@ begin
     else
     begin
       SerieGenerada := '';
-      NumeroFactura := '0';
+      NumFactura := '0';
     end;
     // =======================================================================
     // PASO 4: LÍNEAS
@@ -1290,7 +1278,7 @@ begin
         begin
           if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
             InsertarLineaFactura(
-              QryTrx, SerieGenerada, NumeroFactura, Lin.Linea, Lin.Articulo,
+              QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
               Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
               Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
               Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
@@ -1308,7 +1296,7 @@ begin
           //EMITIR LA DEVOLUCIÓN DEL ANTICIPO (SI LO HAY)
           if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
             InsertarLineaFactura(
-              QryTrx, SerieGenerada, NumeroFactura, Lin.Linea, Lin.Articulo, Lin.Sku,
+              QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo, Lin.Sku,
               'Devolución anticipo ' + Lin.Descripcion, '', Lin.Familia, Lin.NombreFamilia,
               Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl,
               Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
@@ -1363,7 +1351,7 @@ begin
             if Lin.TotalCIva > 0 then
               InsertarOperacionCaja(
                 QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-                Lin.TotalCIva, UsuarioCaja, NumeroFactura, SerieGenerada,
+                Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
                 Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion);
           end
           else
@@ -1376,7 +1364,7 @@ begin
               sOpeCaja);
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
-              UsuarioCaja, NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+              UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
               'Depósito: ' + Lin.Descripcion);
           end;
           cdsLineas.Next;
@@ -1397,12 +1385,12 @@ begin
                                 Lin.Sku,
                                 UsuarioCaja);
           InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
-            'DE', -Lin.PrecioOriginalDep, UsuarioCaja, NumeroFactura,
+            'DE', -Lin.PrecioOriginalDep, UsuarioCaja, NumFactura,
             SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' +
             Lin.Descripcion);
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
-            UsuarioCaja, NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+            UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
             'Venta depósito: ' + Lin.Descripcion);
         end
         else
@@ -1414,7 +1402,7 @@ begin
         if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
         begin
           InsertarLineaFactura(
-            QryTrx, SerieGenerada, NumeroFactura, Lin.Linea, Lin.Articulo,
+            QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
             Lin.Sku,
             Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
             Lin.NombreFamilia,
@@ -1427,7 +1415,7 @@ begin
         end;
         if Lin.TipoArticulo = 'ESTANDAR' then
           InsertarMovimientoAlmacen(
-            QryTrx, 'VE', SerieGenerada, NumeroFactura, Lin.Linea,
+            QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Sku,
             Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE,
             Cab.CodigoCliente, Lin.Articulo);
@@ -1445,13 +1433,13 @@ begin
         InsertarOperacionCaja(
         QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
         datosCobro.TotalesFactura.Totales.TotalLiquido,
-        UsuarioCaja, NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+        UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
          'Devolución de Venta')
       else
         InsertarOperacionCaja(
         QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
         datosCobro.TotalesFactura.Totales.TotalLiquido,
-        UsuarioCaja, NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+        UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
          'Venta');
     end;
     // =======================================================================
@@ -1489,24 +1477,24 @@ begin
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
           DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
-          NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+          NumFactura, SerieGenerada, Cab.CodigoCliente,
           'Vale canjeado: ' + DatosCobro.ValesRecogidos[i].CodigoVale);
       end;
       MarcarValeComoCanjeado(
         DatosCobro.ValesRecogidos[i].CodigoVale, ACaja, AAlmacen, NumOperacionVE,
-        SerieGenerada, NumeroFactura);
+        SerieGenerada, NumFactura);
     end;
 
     if DatosCobro.ImporteValeEmitido > 0 then
     begin
       ValeGenerado := EmitirNuevoVale(
-        AEmpresa, AAlmacen, ACaja, NumOperacionVE, SerieGenerada, NumeroFactura,
+        AEmpresa, AAlmacen, ACaja, NumOperacionVE, SerieGenerada, NumFactura,
         DatosCobro.ImporteValeEmitido);
       DatosCobro.CodigoValeEmitido := ValeGenerado;
       InsertarOperacionCaja(
         QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VL',
         -DatosCobro.ImporteValeEmitido, UsuarioCaja,
-        NumeroFactura, SerieGenerada, Cab.CodigoCliente,
+        NumFactura, SerieGenerada, Cab.CodigoCliente,
         'Vale emitido: ' + ValeGenerado);
     end;
     // =======================================================================
@@ -1538,6 +1526,20 @@ begin
                                 sOpeCaja,
                                 'DEBUG');
       ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
+    end;
+    try
+      cdsLineas.DisableControls;
+      cdsLineas.First;
+      while not cdsLineas.Eof do
+      begin
+        if (Abs(cdsLineas.FieldByName(
+                                'TOTAL_FACTURA_LINEA').AsCurrency)) < 0.001 then
+          cdsLineas.Delete
+        else
+          cdsLineas.Next;
+      end;
+    finally
+      cdsLineas.EnableControls;
     end;
     Result := True;
   except
