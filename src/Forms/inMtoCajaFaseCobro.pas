@@ -97,6 +97,7 @@ type
     actSinTicket: TAction;
     actConTicket: TAction;
     actSinPrecios: TAction;
+    actDepositoCliente: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -125,6 +126,8 @@ type
     procedure actSinTicketExecute(Sender: TObject);
     procedure actConTicketExecute(Sender: TObject);
     procedure actSinPreciosExecute(Sender: TObject);
+    procedure actDepositoClienteExecute(Sender: TObject);
+    procedure btnDepositoClick(Sender: TObject);
   private
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
@@ -217,6 +220,12 @@ begin
     FTipoImpresion := tiConTicket;
     ModalResult := mrOk;
   end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnDepositoClick(Sender: TObject);
+begin
+  inherited;
+  btnF7Click(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject); // F11
@@ -774,10 +783,8 @@ begin
     ShowMessage('No hay importe pendiente para pasar a crédito.');
     Exit;
   end;
-
   // 3. Aplicar TODO el total pendiente a la cuenta del cliente
   Res := FDatosCobro.EstablecerDejarEnCuenta(FDatosCobro.ImportePendiente);
-
   if not Res.Valido then
   begin
     // Muestra el error de la librería (ej: "Límite de crédito excedido...")
@@ -787,8 +794,7 @@ begin
   begin
     // 4. Éxito: Reflejar en la interfaz visual para que se vea el cuadre
     ActualizarInterfaz;
-    if btnConTicket.Enabled then
-      btnConTicketClick(Sender);
+    btnConTicketClick(Sender);
   end;
 end;
 
@@ -899,6 +905,12 @@ procedure TfrmMtoCajaFaseCobro.actConTicketExecute(Sender: TObject);
 begin
   inherited;
   btnConTicketClick(Sender);
+end;
+
+procedure TfrmMtoCajaFaseCobro.actDepositoClienteExecute(Sender: TObject);
+begin
+  inherited;
+  btnDepositoClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.actSalirExecute(Sender: TObject);

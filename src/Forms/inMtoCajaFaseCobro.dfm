@@ -616,6 +616,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnDepositoClick
         end
         object btnF7: TcxButton
           Left = 18
@@ -1001,6 +1002,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Caption = 'SinPrecios'
       ShortCut = 121
       OnExecute = actSinPreciosExecute
+    end
+    object actDepositoCliente: TAction
+      Caption = 'DepositoCliente'
+      ShortCut = 118
+      OnExecute = actDepositoClienteExecute
     end
   end
   object cxStyleRepository1: TcxStyleRepository

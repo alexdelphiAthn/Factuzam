@@ -656,23 +656,48 @@ var
 begin
   if (DatosCaja = nil) or not DatosCaja.cdsLineas.Active then
     Exit;
-
   VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
   if VieneDeDep = 'S' then
   begin
     // Convertimos de forma segura el valor tecleado a float
     NuevaCant := StrToFloatDef(VarToStrDef(DisplayValue, '0'), 0);
-    CantOriginal := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
-
+    CantOriginal := DatosCaja.cdsLineas.FieldByName(
+                                              'CANTIDAD_FACTURA_LINEA').AsFloat;
     // Verificamos que la magnitud sea idéntica (solo permite cambiar signo)
     if Abs(NuevaCant) <> Abs(CantOriginal) then
     begin
       Error := True;
-      ErrorText := 'En artículos de depósito solo está permitido cambiar el signo de la cantidad (ej. cambiar de 1 a -1).';
+      ErrorText := 'En artículos de depósito solo está permitido cambiar el ' +
+                   'signo de la cantidad.';
     end
     else
     begin
       Error := False;
+
+      // NUEVA LÓGICA: Si cambia a negativo, es una CANCELACIÓN
+      if NuevaCant < 0 then
+      begin
+        DatosCaja.cdsLineas.FieldByName('ACCION_DEPOSITO').AsString :=
+                                                                     'CANCELAR';
+        // Ponemos el precio a 0 para no devolver el dinero de la prenda
+        DatosCaja.cdsLineas.FieldByName(
+                                  'PRECIOSALIDA_FACTURA_LINEA').AsCurrency := 0;
+        DatosCaja.cdsLineas.FieldByName(
+                     'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+        DatosCaja.cdsLineas.FieldByName(
+                     'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+        DatosCaja.cdsLineas.FieldByName(
+                                       'PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+        DatosCaja.cdsLineas.FieldByName(
+                                    'PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
+      end
+      else
+      begin
+        // Si lo vuelve a poner en positivo, restauramos la acción y su precio
+        DatosCaja.cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
+        DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
+          DatosCaja.cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
+      end;
     end;
   end;
 end;

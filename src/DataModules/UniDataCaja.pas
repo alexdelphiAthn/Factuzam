@@ -757,8 +757,8 @@ begin
       VieneDeDep := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
       AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
       if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
-         (AccionDep = 'COBRAR') and
-         (cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency > 0) then
+           ((AccionDep = 'COBRAR') or (AccionDep = '')) and
+           (cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency > 0) then
       begin
         if DineroDisponible > 0 then
           ProcesarLinea
@@ -1184,6 +1184,8 @@ begin
   finally
     cdsLineas.EnableControls;
   end;
+  if DatosCobro.ImporteEntregado = 0 then
+    RequiereFactura := false;
   DatosCobro.FRequiereFactura := RequiereFactura;
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
@@ -1288,11 +1290,12 @@ begin
             AlmacenDeposito,
             AEmpresa, ACaja, NumOperacionVE, Lin.Articulo, ImporteDevuelto,
             Abs(Lin.Cantidad));
-          if ImporteDevuelto > 0 then
-            InsertarOperacionCaja(
-              QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV', -ImporteDevuelto,
-              UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
-              'Devolución anticipo: ' + Lin.Descripcion, SerieGenerada, NumeroGenerado);
+          // --- ELIMINAR O COMENTAR ESTO ---
+          // if ImporteDevuelto > 0 then
+          //  InsertarOperacionCaja(
+          //    QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV', -ImporteDevuelto,
+          //    UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
+          //    'Devolución anticipo: ' + Lin.Descripcion, SerieGenerada, NumeroGenerado);
           cdsLineas.Next;
           Continue;
         end;

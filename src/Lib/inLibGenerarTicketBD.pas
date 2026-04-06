@@ -53,24 +53,24 @@ procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
 var
   QrySec, QryEmp: TUniQuery;
   Ticket: TTicketTermico;
+  CodigoCliente:string;
   FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   TotalNuevos, TotalEntregas, TotalDevoluciones, NetoOperacion: Currency;
 begin
   if Trim(AOperacion) = '' then
     Exit;
-
   QrySec := TUniQuery.Create(nil);
   QryEmp := TUniQuery.Create(nil);
   try
     QrySec.Connection := inLibGlobalVar.oConn;
     QryEmp.Connection := inLibGlobalVar.oConn;
-
     // 1. Datos de la empresa para la cabecera
-    QryEmp.SQL.Text := 'SELECT RAZONSOCIAL_EMPRESA FROM fza_empresas WHERE CODIGO_EMPRESA = :EMP';
+    QryEmp.SQL.Text := 'SELECT RAZONSOCIAL_EMPRESA ' +
+                       '  FROM fza_empresas ' +
+                       ' WHERE CODIGO_EMPRESA = :EMP';
     QryEmp.ParamByName('EMP').AsString := ACodigoEmpresa;
     QryEmp.Open;
-
     Ticket := TTicketTermico.Create(ANombreImpresora);
     try
       Ticket.Inicializar;
@@ -87,25 +87,31 @@ begin
       Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn', Now));
       Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
       Ticket.SaltarLineas(1);
-
       TotalNuevos := 0;
       TotalEntregas := 0;
       TotalDevoluciones := 0;
-
       // =======================================================================
       // SECCIÓN 1: NUEVOS DEPÓSITOS
       // =======================================================================
       QrySec.Close;
       QrySec.SQL.Text :=
-        'SELECT d.CODIGO_UNIDAD_DEP, a.DESCRIPCION_ARTICULO, ' +
-        '       (d.PRECIO_VENTA_DEP * d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
-        'FROM fza_depositos_cliente d ' +
-        'LEFT JOIN fza_articulos a ON a.CODIGO_ARTICULO = d.CODIGO_ARTICULO_DEP ' +
-        'WHERE d.CODIGO_EMPRESA_DEP = :EMP AND d.NUMERO_OPERACION_DEP = :OPE';
+        '   SELECT d.CODIGO_UNIDAD_DEP, ' +
+        '          a.DESCRIPCION_ARTICULO, ' +
+        '          d.CODIGO_CLIENTE_DEP, ' +
+        '          (d.PRECIO_VENTA_DEP * ' +
+        '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
+        '     FROM fza_depositos_cliente d ' +
+        'LEFT JOIN fza_articulos a ' +
+        '       ON a.CODIGO_ARTICULO = d.CODIGO_ARTICULO_DEP' +
+        '    WHERE d.CODIGO_EMPRESA_DEP = :EMP ' +
+        '      AND d.CODIGO_ALMACEN_DEP = :ALM ' +
+        '      AND d.CODIGO_CAJA_DEP = :CAJ ' +
+        '      AND d.NUMERO_OPERACION_DEP = :OPE';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
+      QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
+      QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
       QrySec.ParamByName('OPE').AsString := AOperacion;
       QrySec.Open;
-
       if not QrySec.IsEmpty then
       begin
         Ticket.LineaSeparadora('=');
@@ -115,19 +121,16 @@ begin
         Ticket.Negrita(False);
         Ticket.LineaSeparadora('-');
         Ticket.Alinear(alIzquierda);
-
         while not QrySec.Eof do
         begin
           var Desc := QrySec.FieldByName('DESCRIPCION_ARTICULO').AsString;
           var Sku := QrySec.FieldByName('CODIGO_UNIDAD_DEP').AsString;
           var Pvp := QrySec.FieldByName('TOTAL_PVP').AsCurrency;
           TotalNuevos := TotalNuevos + Pvp;
-
           if Desc <> '' then
             Ticket.EscribirLinea(Copy(Desc + ' (' + Sku + ')', 1, 40))
           else
             Ticket.EscribirLinea(Sku);
-
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea('Valor Artículo: ' + FormatFloat('#,##0.00', Pvp) + ' €');
           Ticket.Alinear(alIzquierda);
@@ -135,20 +138,23 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-
       // =======================================================================
       // SECCIÓN 2: ENTREGAS A CUENTA
       // =======================================================================
       QrySec.Close;
       QrySec.SQL.Text :=
-        'SELECT CONCEPTO_OPERACION, IMPORTE_OPERACION ' +
-        'FROM fza_operaciones_caja ' +
-        'WHERE CODIGO_EMPRESA = :EMP AND NUMERO_OPERACION = :OPE ' +
-        '  AND TIPO_OPERACION IN (''DE'', ''CB'') AND IMPORTE_OPERACION > 0';
+        'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
+        'FROM fza_caja_operaciones ' +
+        'WHERE CODIGO_EMPRESA_OPCAJA = :EMP ' +
+        '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
+        '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
+        '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
+        '  AND TIPO_OPERACION_OPCAJA IN (''CB'')';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
+      QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
+      QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
       QrySec.ParamByName('OPE').AsString := AOperacion;
       QrySec.Open;
-
       if not QrySec.IsEmpty then
       begin
         Ticket.LineaSeparadora('=');
@@ -158,13 +164,11 @@ begin
         Ticket.Negrita(False);
         Ticket.LineaSeparadora('-');
         Ticket.Alinear(alIzquierda);
-
         while not QrySec.Eof do
         begin
-          var Concepto := QrySec.FieldByName('CONCEPTO_OPERACION').AsString;
-          var Importe := QrySec.FieldByName('IMPORTE_OPERACION').AsCurrency;
+          var Concepto := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+          var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
           TotalEntregas := TotalEntregas + Importe;
-
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
@@ -173,20 +177,23 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-
       // =======================================================================
       // SECCIÓN 3: DEVOLUCIONES
       // =======================================================================
       QrySec.Close;
       QrySec.SQL.Text :=
-        'SELECT CONCEPTO_OPERACION, IMPORTE_OPERACION ' +
-        'FROM fza_operaciones_caja ' +
-        'WHERE CODIGO_EMPRESA = :EMP AND NUMERO_OPERACION = :OPE ' +
-        '  AND TIPO_OPERACION = ''DV''';
+        'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
+        'FROM fza_caja_operaciones ' +
+        'WHERE CODIGO_EMPRESA_OPCAJA = :EMP ' +
+        '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
+        '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
+        '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
+        '  AND TIPO_OPERACION_OPCAJA IN (''DV'')';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
+      QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
+      QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
       QrySec.ParamByName('OPE').AsString := AOperacion;
       QrySec.Open;
-
       if not QrySec.IsEmpty then
       begin
         Ticket.LineaSeparadora('=');
@@ -196,12 +203,11 @@ begin
         Ticket.Negrita(False);
         Ticket.LineaSeparadora('-');
         Ticket.Alinear(alIzquierda);
-
         while not QrySec.Eof do
         begin
-          var Concepto := QrySec.FieldByName('CONCEPTO_OPERACION').AsString;
-          var Importe := QrySec.FieldByName('IMPORTE_OPERACION').AsCurrency;
-          TotalDevoluciones := TotalDevoluciones + Importe; // Como se guardó en negativo, sumamos el negativo.
+          var Concepto := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+          var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+          TotalDevoluciones := TotalDevoluciones + Importe;
 
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
@@ -211,35 +217,33 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-
       // =======================================================================
       // CIFRA FINAL DE LA OPERACIÓN
       // =======================================================================
-      // TotalEntregas es positivo, TotalDevoluciones viene en negativo desde tu función InsertarOperacionCaja('DV', -ImporteDevuelto...)
+      // TotalEntregas es positivo, TotalDevoluciones viene en negativo desde tu
+      // función InsertarOperacionCaja('DV', -ImporteDevuelto...)
       NetoOperacion := TotalEntregas + TotalDevoluciones;
-
       Ticket.LineaSeparadora('=');
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alDerecha);
-
-      Ticket.EscribirLinea('VALOR TOTAL NUEVOS DEPÓSITOS: ' + FormatFloat('#,##0.00', TotalNuevos) + ' €');
-      Ticket.EscribirLinea('ENTREGADO EN ESTA OPERACIÓN: ' + FormatFloat('#,##0.00', TotalEntregas) + ' €');
-
+      Ticket.EscribirLinea('VALOR TOTAL NUEVOS DEPÓSITOS: ' +
+                                   FormatFloat('#,##0.00', TotalNuevos) + ' €');
+      Ticket.EscribirLinea('ENTREGADO EN ESTA OPERACIÓN: ' +
+                                 FormatFloat('#,##0.00', TotalEntregas) + ' €');
       if TotalDevoluciones < 0 then
-        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' + FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
-
+        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' +
+                             FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
       Ticket.SaltarLineas(1);
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('NETO ABONADO HOY: ' + FormatFloat('#,##0.00', NetoOperacion) + ' €');
+      Ticket.EscribirLinea('NETO ABONADO HOY: ' +
+                                 FormatFloat('#,##0.00', NetoOperacion) + ' €');
       Ticket.Negrita(False);
-
       Ticket.SaltarLineas(2);
       Ticket.Alinear(alCentro);
-      Ticket.EscribirLinea('Acepto el compromiso de pago. Firma del cliente');
+      Ticket.EscribirLinea('Conforme, el cliente');
       Ticket.SaltarLineas(4);
       Ticket.LineaSeparadora('-');
       Ticket.CortarPapel;
-
       // =======================================================================
       // IMPRESIÓN / VISUALIZACIÓN
       // =======================================================================
@@ -258,7 +262,7 @@ begin
       finally
         FormPreview.Free;
       end;
-
+      ImprimirRecordatorio(Ticket, CodigoCliente);
     finally
       Ticket.Free;
     end;
@@ -515,7 +519,7 @@ begin
         Ticket.LineaSeparadora('=');
         Ticket.Alinear(alCentro);
         Ticket.Negrita(True);
-        Ticket.EscribirLinea('ESTADO DE SUS APARTADOS / DEPÓSITOS');
+        Ticket.EscribirLinea('ESTADO DE SUS PRÉSTAMOS / DEPÓSITOS');
         Ticket.Negrita(False);
         Ticket.LineaSeparadora('-');
         Ticket.Alinear(alIzquierda);

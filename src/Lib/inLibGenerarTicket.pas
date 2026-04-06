@@ -49,11 +49,12 @@ var
   end;
 
 begin
-  // 1. OBTENER CONFIGURACIONES
-  // (Sustituye esto por las lecturas reales de tu configuración, ej. oCajaParams)
+  if DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                             'SERIE_FACTURA').AsString = '' then
+    Exit;
   NombreImpresora := 'DEBUG';
   ModoQR := 'NATIVO';
-  QRTexto := 'http://hacienda.com'; // <--- Añadir la generación del texto QR
+  QRTexto := 'http://hacienda.com';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
   dLin := DatosCobro.TotalesFactura.Lineas;
   Ticket := TTicketTermico.Create(NombreImpresora);
@@ -62,7 +63,6 @@ begin
     // === QR AL PRINCIPIO ===
     Ticket.Alinear(alCentro);
     Ticket.SaltarLineas(1);
-
     if ModoQR = 'IE' then
     begin
       // Modo IMAGEN: Descomentar si usas la generación de Bitmap
