@@ -1157,37 +1157,6 @@ begin
   Cab          := LeerCabecera(cdsCabecera);
   TotalFactura := DatosCobro.ImporteEntregado;
   // =======================================================================
-  // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
-  // =======================================================================
-  RequiereFactura := False;
-  cdsLineas.DisableControls;
-  try
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      var Accion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
-      if (Accion = '') or (Accion = 'COBRAR') or (Accion = 'CANCELAR') then
-      begin
-        RequiereFactura := True;
-        Break;
-      end;
-      if (Accion = 'NUEVO_DEP') or (Accion = 'AUMENTAR_DEP') then
-      begin
-        if DatosCobro.ImporteEntregado > 0.001 then
-        begin
-          RequiereFactura := True;
-          Break;
-        end;
-      end;
-      cdsLineas.Next;
-    end;
-  finally
-    cdsLineas.EnableControls;
-  end;
-  if DatosCobro.ImporteEntregado = 0 then
-    RequiereFactura := false;
-  DatosCobro.FRequiereFactura := RequiereFactura;
-  // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================
   inLibGlobalVar.oConn.StartTransaction;
@@ -1218,6 +1187,49 @@ begin
         DatosCobro.TotalesFactura.Cabecera.FieldByName('NRO_FACTURA').AsString:=
                                                                  NumeroGenerado;
         DatosCobro.TotalesFactura.Cabecera.Post;
+        // =======================================================================
+        // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
+        // =======================================================================
+        RequiereFactura := False;
+        cdsLineas.DisableControls;
+        try
+          cdsLineas.First;
+          while not cdsLineas.Eof do
+          begin
+            var Accion := Trim(cdsLineas.FieldByName(
+                                                   'ACCION_DEPOSITO').AsString);
+            // 1. Ventas normales siempre requieren ticket fiscal
+            if (Accion = '') or (Accion = 'COBRAR') then
+            begin
+              RequiereFactura := True;
+              Break;
+            end;
+            // 2. Cancelaciones: Solo requieren ticket si hay que
+            //    devolver dinero (anticipo)
+            if (Accion = 'CANCELAR') then
+            begin
+              if cdsCabecera.FieldByName(
+                                   'TOTAL_LIQUIDO_FACTURA').AsCurrency <> 0 then
+              begin
+                RequiereFactura := True;
+                Break;
+              end;
+            end;
+            if (Accion = 'NUEVO_DEP') or (Accion = 'AUMENTAR_DEP') then
+            begin
+              if cdsCabecera.FieldByName(
+                                'TOTAL_LIQUIDO_FACTURA').AsCurrency > 0.001 then
+              begin
+                RequiereFactura := True;
+                Break;
+              end;
+            end;
+            cdsLineas.Next;
+          end;
+        finally
+          cdsLineas.EnableControls;
+        end;
+        DatosCobro.FRequiereFactura := RequiereFactura;
       finally
         uspQryTrx.Free;
       end;
@@ -1254,7 +1266,6 @@ begin
       while not cdsLineas.Eof do
       begin
         Lin := LeerLineaActual(cdsLineas);
-
         // -------------------------------------------------------------------
         // CASO A: ABONO DE ANTICIPO PREVIO
         // -------------------------------------------------------------------
@@ -1277,6 +1288,7 @@ begin
         // -------------------------------------------------------------------
         if Lin.AccionDeposito = 'CANCELAR' then
         begin
+          //EMITIR LA DEVOLUCIÓN DEL ANTICIPO (SI LO HAY)
           if RequiereFactura then
             InsertarLineaFactura(
               QryTrx, SerieGenerada, NumeroGenerado, Lin.Linea, Lin.Articulo, Lin.Sku,
@@ -1285,11 +1297,32 @@ begin
               Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
               AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
+          //SACAR LA PRENDA DE DEPÓSITOS PENDIENTES
           AnularDepositoCliente(
             QryTrx, CAB.CodigoCliente, Lin.Sku, UsuarioCaja, AAlmacen,
             AlmacenDeposito,
             AEmpresa, ACaja, NumOperacionVE, Lin.Articulo, ImporteDevuelto,
             Abs(Lin.Cantidad));
+          // =================================================================
+          // RESTAR LA DEUDA EN LA FICHA DEL CLIENTE
+          // =================================================================
+          if CAB.CodigoCliente <> '' then
+          begin
+            // Asumiendo que tu tabla es fza_clientes y el campo de deuda es DEUDA_CLIENTE.
+            // Cámbialos si en tu base de datos se llaman diferente.
+            QryTrx.SQL.Text :=
+              'UPDATE fza_clientes ' +
+              'SET DEUDA_CLIENTE = COALESCE(DEUDA_CLIENTE, 0) - :ImporteDeuda ' +
+              'WHERE CODIGO_CLIENTE = :CodCli';
+
+            // Calculamos cuánto valía realmente la prenda para descontarlo
+            // Usamos PRECIO_ORIGINAL_DEP porque PRECIOSALIDA lo pusimos a 0 en la interfaz
+            QryTrx.ParamByName('ImporteDeuda').AsCurrency :=
+              cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency * Abs(Lin.Cantidad);
+            QryTrx.ParamByName('CodCli').AsString := CAB.CodigoCliente;
+            QryTrx.Execute;
+          end;
+          // =================================================================
           // --- ELIMINAR O COMENTAR ESTO ---
           // if ImporteDevuelto > 0 then
           //  InsertarOperacionCaja(

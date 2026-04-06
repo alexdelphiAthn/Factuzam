@@ -769,16 +769,16 @@ var
   Res: TResultadoValidacion;
 begin
   inherited;
-
   // 1. Validar que tenemos un cliente válido y con permisos para dejar a deber
   if not FDatosCobro.PuedeDejarEnCuenta then
   begin
-    ShowMessage('Operación denegada: Identifique a un cliente que tenga el crédito permitido.');
+    ShowMessage('Operación denegada: Este cliente no tiene crédito permitido.');
     Exit;
   end;
-
   // 2. Comprobar que realmente hay algo que prestar
-  if FDatosCobro.ImportePendiente <= 0 then
+  if (FDatosCobro.ImportePendiente <= 0) and
+     (not FDatosCobro.EsDevolucionEconomica) and
+     (FDatosCobro.ImporteTotalPagar > 0) then
   begin
     ShowMessage('No hay importe pendiente para pasar a crédito.');
     Exit;
