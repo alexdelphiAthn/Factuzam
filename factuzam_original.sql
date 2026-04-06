@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 05/04/2026 8:16:54
+-- Backup generado: 06/04/2026 20:49:58
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -527,10 +527,22 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-02-17 06:21:32', 80, 8),
   ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-02-22 06:13:04', 300, 30),
   ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-02-22 06:13:04', 240, 30),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, -6, '2026-04-04 07:58:35', 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-02-17 06:21:32', 240, 80),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 4, '2026-02-17 06:21:32', 320, 80),
-  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 7, '2026-04-03 22:08:46', 182, 26),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 0, '2026-04-06 17:50:59', 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 1, '2026-04-06 20:35:59', 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-04-06 20:00:01', 0, 0),
+  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-04-06 17:14:37', 0, 0),
+  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-04-06 19:45:16', 0, 0),
+  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 0, '2026-04-06 17:13:04', 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 1, '2026-04-06 18:45:19', 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-04-06 18:34:39', 0, 0),
+  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 1, '2026-04-06 20:35:59', 0, 0),
+  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-04-06 08:04:22', 0, 0),
+  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-04-06 20:00:01', 0, 0),
+  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-04-06 17:08:09', 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, -6, '2026-04-06 17:50:59', 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 2, '2026-04-06 20:35:59', 160, 80),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-04-06 20:00:01', 160, 53.333333),
+  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 7, '2026-04-06 17:14:37', 156, 22.285714),
   ('GEN', 'BLUS-SEDA/BLANCO/M', '', NULL, 12, '2026-02-22 06:13:04', 312, 26),
   ('GEN', 'BLUS-SEDA/BLANCO/S', '', NULL, 8, '2026-02-22 06:13:04', 208, 26),
   ('GEN', 'BLUS-SEDA/NEGRO/M', '', NULL, 15, '2026-02-22 06:13:04', 390, 26),
@@ -542,7 +554,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 6, '2026-02-22 06:13:04', 270, 45),
   ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 11, '2026-02-22 06:13:04', 495, 45),
   ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 8, '2026-02-22 06:13:04', 360, 45),
-  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 19, '2026-04-04 07:18:33', 133, 7),
+  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 17, '2026-04-06 19:45:16', 119, 7),
   ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-02-17 06:21:32', 175, 7),
   ('GEN', 'CAMI-BASICA/BLANCO/S', '', NULL, 30, '2026-02-22 06:13:04', 210, 7),
   ('GEN', 'CAMI-BASICA/NEGRO/L', '', NULL, 19, '2026-02-22 06:13:04', 133, 7),
@@ -555,14 +567,14 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-02-17 06:21:32', 216, 12),
   ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-02-17 06:21:32', 120, 12),
   ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-02-17 06:21:32', 180, 12),
-  ('GEN', 'CARTERA-PIEL', '', NULL, 6, '2026-04-04 00:23:27', 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 0, '2026-04-03 21:45:58', 0, 0),
+  ('GEN', 'CARTERA-PIEL', '', NULL, 6, '2026-04-06 17:13:04', 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, -1, '2026-04-06 18:45:19', 0, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 1, '2026-04-03 20:39:29', 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 1, '2026-04-04 00:06:17', 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 4, '2026-02-22 06:13:04', 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, -2, '2026-04-04 07:43:57', 0, 0),
-  ('GEN', 'CINTURON-PIEL', '', NULL, 14, '2026-04-04 07:40:38', 126, 9),
-  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-04-03 21:23:51', 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, -4, '2026-04-06 17:17:31', 0, 0),
+  ('GEN', 'CINTURON-PIEL', '', NULL, 12, '2026-04-06 20:35:59', 99.692308, 8.307692),
+  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-04-06 08:04:22', 0, 0),
   ('GEN', 'DEMO-CAMISA/NEGRO/L', '', NULL, 10, '2026-03-28 19:26:38', 10, 1),
   ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 14, '2026-04-04 07:24:24', 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/M', '', NULL, 18, '2026-02-22 06:13:04', 0, 0),
@@ -574,12 +586,12 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 20, '2026-01-08 18:33:56', 0, 0),
   ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-04-04 00:07:42', 0, 0),
   ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 3, '2026-02-17 06:21:32', 75, 25),
-  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 6, '2026-02-17 06:21:32', 150, 25),
+  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-04-06 20:00:01', 125, 25),
   ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 8, '2026-02-17 06:21:32', 200, 25),
   ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 19, '2026-04-04 00:10:16', 152, 8),
   ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 18, '2026-02-17 06:21:32', 144, 8),
   ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-02-17 06:21:32', 0, 8),
-  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-04-04 07:31:01', 36, 18),
+  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-04-06 17:08:09', 18, 9),
   ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 12, '2026-02-17 06:21:32', 480, 40),
   ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-02-17 06:21:32', 400, 40),
   ('GEN', 'PANT-CHIN/BEIGE/42', '', NULL, 14, '2026-02-22 06:13:04', 560, 40),
@@ -618,7 +630,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'ZAP-TACÓN/NEGRO/40', '', NULL, 5, '2026-02-22 06:13:04', 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-01-08 18:34:22', 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/38', '', NULL, 7, '2026-02-22 06:13:04', 0, 0);
--- 94 registros exportados
+-- 106 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -1173,10 +1185,11 @@ ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_REF_ORIGEN_OPCAJA` (`SERIE_REF
 -- Datos de fza_caja_operaciones
 /*!40000 ALTER TABLE `fza_caja_operaciones` DISABLE KEYS */;
 INSERT INTO `fza_caja_operaciones` (`ID_OPCAJA`, `CODIGO_EMPRESA_OPCAJA`, `CODIGO_ALMACEN_OPCAJA`, `CODIGO_CAJA_OPCAJA`, `NUMERO_OPERACION_OPCAJA`, `NRO_FACTURA_OPCAJA`, `SERIE_FACTURA_OPCAJA`, `FECHA_OPERACION_OPCAJA`, `CODIGO_EMPLEADO_OPCAJA`, `TIPO_OPERACION_OPCAJA`, `IMPORTE_TOTAL_OPCAJA`, `CODIGO_CLIENTE_OPCAJA`, `ESTADO_DEVOLUCION_OPCAJA`, `IMPORTE_DEVUELTO_ACUM_OPCAJA`, `CONCEPTO_GASTO_INGRESO_OPCAJA`, `SERIE_REF_ORIGEN_OPCAJA`, `NUMERO_REF_ORIGEN_OPCAJA`, `MOTIVO_DEVOLUCION_OPCAJA`, `CODIGO_EMPRESA_CONTRA_OPCAJA`, `CODIGO_ALMACEN_CONTRA_OPCAJA`, `ES_TRASPASO_OPCAJA`, `CODIGO_ARQUEO_OPCAJA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  (1, '012', 'GEN', '1', '00000041', '000052', '2026.A1', '2026-04-04 07:43:57', '1', 'VL', -20, '0', 'N', 0, 'Vale emitido: VALE_012_GEN_1_00000041', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-04 07:43:57', '2026-04-04 07:43:57', 'Administrador', 'Administrador'),
-  (2, '012', 'GEN', '1', '00000042', '000053', '2026.A1', '2026-04-04 07:58:35', '1', 'VL', -10, '0', 'N', 0, 'Vale emitido: VALE_012_GEN_1_00000042', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', 'Administrador', 'Administrador');
+  (37, '012', 'GEN', '1', '00000072', '000067', '2026.A1', '2026-04-06 20:35:59', '1', 'DE', 102, '321', 'N', 0, 'Depósito: Adelanto Abrigo de Paño Caballero', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-06 20:35:59', '2026-04-06 20:35:59', 'Administrador', 'Administrador'),
+  (38, '012', 'GEN', '1', '00000072', '000067', '2026.A1', '2026-04-06 20:35:59', '1', 'DE', 0, '321', 'N', 0, 'Depósito: Cinturón Piel Reversible', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-06 20:35:59', '2026-04-06 20:35:59', 'Administrador', 'Administrador'),
+  (39, '012', 'GEN', '1', '00000072', '000067', '2026.A1', '2026-04-06 20:35:59', '1', 'VE', 202, '321', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-06 20:35:59', '2026-04-06 20:35:59', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
--- 2 registros exportados
+-- 3 registros exportados
 
 
 -- Tabla: fza_caja_pagos
@@ -1207,6 +1220,10 @@ ALTER TABLE `fza_caja_pagos` ADD INDEX `FK_PAGO_FORMAP` (`CODIGO_FORMAP`);
 
 -- Datos de fza_caja_pagos
 INSERT INTO `fza_caja_pagos` (`CODIGO_EMPRESA_PAGO`, `CODIGO_ALMACEN_PAGO`, `CODIGO_CAJA_PAGO`, `SERIE_OPERACION_PAGO`, `NUMERO_OPERACION_PAGO`, `NUMERO_LINEA_PAGO`, `CODIGO_FORMAP`, `CODIGO_DIVISA_PAGO`, `RED_BLOCKCHAIN`, `FACTOR_CAMBIO_PAGO`, `IMPORTE_DIVISA_PAGO`, `IMPORTE_ENTREGADO_PAGO`, `IMPORTE_CAMBIO_PAGO`, `REFERENCIA_PAGO`, `OBSERVACIONES_PAGO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`) VALUES
+  ('012', 'GEN', '1', '', '00000054', 1, 'EFE', NULL, NULL, 1, 0, 80, 0, NULL, NULL, '2026-04-06 17:13:04', '2026-04-06 17:13:04', 'Administrador'),
+  ('012', 'GEN', '1', '', '00000056', 1, 'EFE', NULL, NULL, 1, 0, -80, 0, NULL, NULL, '2026-04-06 17:15:58', '2026-04-06 17:15:58', 'Administrador'),
+  ('012', 'GEN', '1', '', '00000057', 1, 'EFE', NULL, NULL, 1, 0, 10, 0, NULL, NULL, '2026-04-06 17:17:31', '2026-04-06 17:17:31', 'Administrador'),
+  ('012', 'GEN', '1', '', '00000058', 1, 'EFE', NULL, NULL, 1, 0, 10, 0, NULL, NULL, '2026-04-06 17:36:51', '2026-04-06 17:36:51', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000007', 1, 'EFE', NULL, NULL, 1, 0, 180, 0, NULL, NULL, '2026-04-03 05:36:46', '2026-04-03 05:36:46', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000008', 1, 'EFE', NULL, NULL, 1, 0, 180, 0, NULL, NULL, '2026-04-03 05:38:59', '2026-04-03 05:38:59', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000009', 1, 'EFE', NULL, NULL, 1, 0, 180, 0, NULL, NULL, '2026-04-03 05:40:39', '2026-04-03 05:40:39', 'Administrador'),
@@ -1255,8 +1272,16 @@ INSERT INTO `fza_caja_pagos` (`CODIGO_EMPRESA_PAGO`, `CODIGO_ALMACEN_PAGO`, `COD
   ('012', 'GEN', '1', '2026.A1', '00000041', 1, 'BONO', NULL, NULL, 1, 0, 150, 0, NULL, NULL, '2026-04-04 07:43:57', '2026-04-04 07:43:57', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000042', 1, 'EFE', NULL, NULL, 1, 0, 20, 0, NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000042', 2, 'TARJ', NULL, NULL, 1, 0, 40, 0, NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', 'Administrador'),
-  ('012', 'GEN', '1', '2026.A1', '00000042', 3, 'BONO', NULL, NULL, 1, 0, 150, 0, NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', 'Administrador');
--- 49 registros exportados
+  ('012', 'GEN', '1', '2026.A1', '00000042', 3, 'BONO', NULL, NULL, 1, 0, 150, 0, NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000062', 1, 'EFE', NULL, NULL, 1, 0, 10, 0, NULL, NULL, '2026-04-06 18:12:07', '2026-04-06 18:12:07', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000063', 1, 'EFE', NULL, NULL, 1, 0, 10, 0, NULL, NULL, '2026-04-06 18:17:03', '2026-04-06 18:17:03', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000065', 1, 'EFE', NULL, NULL, 1, 0, 100, 0, NULL, NULL, '2026-04-06 18:34:57', '2026-04-06 18:34:57', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000067', 1, 'EFE', NULL, NULL, 1, 0, 10, 0, NULL, NULL, '2026-04-06 18:50:27', '2026-04-06 18:50:27', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000068', 1, 'EFE', NULL, NULL, 1, 0, 50, 0, NULL, NULL, '2026-04-06 19:14:01', '2026-04-06 19:14:01', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000069', 1, 'EFE', NULL, NULL, 1, 0, 97, 0, NULL, NULL, '2026-04-06 19:33:37', '2026-04-06 19:33:37', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000070', 1, 'EFE', NULL, NULL, 1, 0, 37, 0, NULL, NULL, '2026-04-06 19:45:38', '2026-04-06 19:45:38', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000072', 1, 'EFE', NULL, NULL, 1, 0, 102, 0, NULL, NULL, '2026-04-06 20:35:59', '2026-04-06 20:35:59', 'Administrador');
+-- 61 registros exportados
 
 
 -- Tabla: fza_caja_vales
@@ -1365,32 +1390,32 @@ ALTER TABLE `fza_clientes` ADD INDEX `IDX_REFERENCIA_CLIENTE` (`REFERENCIA_CLIEN
 
 -- Datos de fza_clientes
 INSERT INTO `fza_clientes` (`CODIGO_CLIENTE`, `ACTIVO_CLIENTE`, `ORDEN_CLIENTE`, `RAZONSOCIAL_CLIENTE`, `NIF_CLIENTE`, `MOVIL_CLIENTE`, `EMAIL_CLIENTE`, `DIRECCION1_CLIENTE`, `DIRECCION2_CLIENTE`, `POBLACION_CLIENTE`, `PROVINCIA_CLIENTE`, `CPOSTAL_CLIENTE`, `CODIGO_PAIS_CLIENTE`, `NOMBRE_PAIS_CLIENTE`, `OBSERVACIONES_CLIENTE`, `REFERENCIA_CLIENTE`, `CONTACTO_CLIENTE`, `TELEFONO_CONTACTO_CLIENTE`, `TELEFONO_CLIENTE`, `IBAN_CLIENTE`, `ESIVA_RECARGO_CLIENTE`, `ESRETENCIONES_CLIENTE`, `TOTAL_LIMITE_CREDITO_CLIENTE`, `ESPERMITE_DEUDA_CLIENTE`, `TOTAL_DEUDA_CLIENTE`, `ESIVA_EXENTO_CLIENTE`, `ESINTRACOMUNITARIO_CLIENTE`, `ESREGIMENESPECIALAGRICOLA_CLIENTE`, `CODIGO_FORMA_PAGO_CLIENTE`, `TARIFA_ARTICULO_CLIENTE`, `SERIE_CONTADOR_CLIENTE`, `TEXTO_LEGAL_FACTURA_CLIENTE`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
-  ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NULL, 'pedro.cojos@gmail.com', 'CALLE CAIDOS ', NULL, 'VILLAVEZA DEL AGUA', 'ZAMORA', '49760', '826', 'España', NULL, NULL, NULL, NULL, NULL, 'ES3201822305650206595350', 'N', 'N', 1000, 'S', NULL, 'N', 'N', 'S', '60DIAS', '1', NULL, NULL, '2026-03-03 17:37:45', '2023-05-22 13:01:22', 'Administrador', 'Administrador'),
-  ('294', 'S', 4, 'AGUSTIN SEGURADO', '11632589R', '623356689', 'agustin.segurado@gmail.com', 'CALLE EL RIEGO, 33', '', 'ZAMORA', 'ZAMORA', '49019', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, '1', NULL, NULL, '2023-11-11 15:27:57', '2023-10-31 12:15:11', 'Administrador', 'Administrador'),
-  ('295', 'S', 6, 'AZUCENA MARTIN (KIOSKO PERLA)', '11356325E', '658963321', 'cliente.nuevo@gmail.om', 'CALLE POZO AMARILLO, 3', '', 'SALAMANCA', 'SALAMANCA', '37003', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, 'ES50 0182 5632 3656 9872 0145               ', 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-01-29 05:22:58', '2023-12-06 13:07:42', 'Administrador', 'Administrador'),
-  ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', 1000, 'N', NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-03-03 17:56:25', '2026-01-15 09:00:00', 'DEMO', 'Administrador'),
-  ('302', 'S', 11, 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, '934455667', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
-  ('303', 'S', 12, 'MARTA RUIZ LÓPEZ', '34567890C', '677303030', 'marta.ruiz@gmail.com', 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', NULL, NULL, NULL, NULL, '963344556', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
-  ('304', 'S', 13, 'JUAN MARTÍN PÉREZ', '45678901D', '688404040', 'juan.martin@empresa.es', 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', NULL, NULL, NULL, NULL, '915566778', NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
-  ('305', 'S', 14, 'ANA GARCÍA MORENO', '56789012E', '699505050', 'ana.garcia@yahoo.es', 'PLAZA ESPAÑA, 3', '1º B', 'SEVILLA', 'SEVILLA', '41001', '724', 'España', NULL, NULL, NULL, NULL, '954677889', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
-  ('306', 'S', 15, 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', '968606060', 'pedidos@distribuvelaz.es', 'POLÍGONO EL PINO, 5', 'NAVE 12', 'MURCIA', 'MURCIA', '30001', '724', 'España', NULL, NULL, 'PEDRO VELÁZQUEZ', '968606061', '968606060', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
-  ('307', 'S', 16, 'ROSA JIMÉNEZ VILLA', '67890123F', '611707070', 'rosa.jimenez@gmail.com', 'C/ RÍO SEGURA, 12', '', 'ZARAGOZA', 'ZARAGOZA', '50001', '724', 'España', NULL, NULL, NULL, NULL, '976788990', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
-  ('308', 'S', 17, 'MANUEL TORRES BLANCO', '78901234G', '622808080', 'manuel.torres@icloud.com', 'AVDA. DEL MAR, 45', '', 'MÁLAGA', 'MÁLAGA', '29001', '724', 'España', NULL, NULL, NULL, NULL, '952899001', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
-  ('309', 'S', 18, 'PAULA SÁNCHEZ ROMERO', '89012345H', '633909090', 'paula.sanchez@gmail.com', 'C/ EL PILAR, 7', 'Bajo A', 'BILBAO', 'VIZCAYA', '48001', '724', 'España', NULL, NULL, NULL, NULL, '944910011', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
-  ('310', 'S', 19, 'MODA FÁCIL SL', 'B87654321', '944010101', 'compras@modafacil.com', 'C/ INDUSTRIA, 33', 'POL. NORTE', 'BILBAO', 'VIZCAYA', '48008', '724', 'España', NULL, NULL, 'NURIA ARAMBURU', '944010102', '944010101', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
-  ('311', 'S', 20, 'DAVID NAVARRO IBÁÑEZ', '90123456I', '644111111', 'd.navarro@gmail.com', 'C/ COLÓN, 18', '3ºC', 'ALICANTE', 'ALICANTE', '03001', '724', 'España', NULL, NULL, NULL, NULL, '965221122', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
-  ('312', 'S', 21, 'ISABEL MORALES CANO', '01234567J', '655222222', 'isabel.morales@outlook.com', 'AVDA. CONSTITUCIÓN, 9', '', 'GRANADA', 'GRANADA', '18001', '724', 'España', NULL, NULL, NULL, NULL, '958332233', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
-  ('313', 'S', 22, 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, 'ALBERT PUIG', '937333334', '937333333', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
-  ('314', 'S', 23, 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', NULL, NULL, NULL, NULL, '983445544', NULL, 'N', 'S', NULL, 'N', NULL, 'N', 'N', 'N', '30_60_90', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-17 09:00:00', 'DEMO', 'Administrador'),
-  ('315', 'S', 24, 'ANTONIO GUTIÉRREZ REYES', '23455432L', '677555555', 'antonio.gutierrez@hotmail.com', 'C/ CORREDERA, 31', '', 'CÓRDOBA', 'CÓRDOBA', '14001', '724', 'España', NULL, NULL, NULL, NULL, '957556655', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
-  ('316', 'S', 25, 'SOFÍA RAMÍREZ ORTEGA', '34566543M', '688666666', 'sofia.ramirez@gmail.com', 'AVDA. ARAGÓN, 14', '1ºD', 'VALENCIA', 'VALENCIA', '46021', '724', 'España', NULL, NULL, NULL, NULL, '963667766', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
-  ('317', 'S', 26, 'IMPORTACIONES LA MODA SL', 'B99887766', '916777777', 'admin@importamoda.es', 'C/ ARTESANOS, 20', 'NAVE 3', 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', NULL, NULL, 'JAVIER OLMEDO', '916777778', '916777777', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
-  ('318', 'S', 27, 'MARCOS DELGADO SERRANO', '45677654N', '699888888', 'marcos.delgado@empresa.es', 'C/ LARGA, 77', '', 'SALAMANCA', 'SALAMANCA', '37001', '724', 'España', NULL, NULL, NULL, NULL, '923889988', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
-  ('319', 'S', 28, 'LUCÍA FLORES MENDOZA', '56788765O', '611999999', 'lucia.flores@gmail.com', 'PLAZA DEL SOL, 1', '', 'BURGOS', 'BURGOS', '09001', '724', 'España', NULL, NULL, NULL, NULL, '947990099', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-02-17 06:21:32', '2026-01-19 09:00:00', 'DEMO', 'DEMO'),
-  ('320', 'S', 29, 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', NULL, NULL, 'BEATRIZ MORENO', '911000001', '911000000', NULL, 'N', 'S', NULL, NULL, NULL, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-02-26 19:56:12', '2026-01-19 09:00:00', 'DEMO', 'Administrador'),
-  ('321', 'S', NULL, 'añlsdfkjañlsdkfj', '337373837', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', '', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, 'N', NULL, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-02-26 19:58:55', '2026-02-26 19:58:55', 'Administrador', 'Administrador'),
-  ('PUBLICO', 'S', 2, 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', NULL, 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, 'ES2101822356985665446552', 'N', 'N', NULL, NULL, NULL, 'N', 'N', 'N', 'CONTADO', '0', NULL, NULL, '2023-12-24 14:10:14', '2022-11-02 20:28:28', 'Administrador', 'Administrador'),
-  ('TIENDA', 'S', 1, 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, NULL, 'N', 'N', 'N', 'TRANSFERENCIA', 'VENTAMAYOR', '', '', '2026-02-01 14:09:13', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
+  ('293', 'S', 5, 'PEDRO COJOS', '46589963j', NULL, 'pedro.cojos@gmail.com', 'CALLE CAIDOS ', NULL, 'VILLAVEZA DEL AGUA', 'ZAMORA', '49760', '826', 'España', NULL, NULL, NULL, NULL, NULL, 'ES3201822305650206595350', 'N', 'N', 1000, 'S', 0, 'N', 'N', 'S', '60DIAS', '1', NULL, NULL, '2026-04-06 19:40:06', '2023-05-22 13:01:22', 'Administrador', 'Administrador'),
+  ('294', 'S', 4, 'AGUSTIN SEGURADO', '11632589R', '623356689', 'agustin.segurado@gmail.com', 'CALLE EL RIEGO, 33', '', 'ZAMORA', 'ZAMORA', '49019', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, 0, 'N', 'N', 'N', NULL, '1', NULL, NULL, '2026-04-06 19:40:06', '2023-10-31 12:15:11', 'Administrador', 'Administrador'),
+  ('295', 'S', 6, 'AZUCENA MARTIN (KIOSKO PERLA)', '11356325E', '658963321', 'cliente.nuevo@gmail.om', 'CALLE POZO AMARILLO, 3', '', 'SALAMANCA', 'SALAMANCA', '37003', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, 'ES50 0182 5632 3656 9872 0145               ', 'S', 'S', NULL, NULL, 0, 'N', 'N', 'N', NULL, 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2023-12-06 13:07:42', 'Administrador', 'Administrador'),
+  ('301', 'S', 10, 'LAURA FERNÁNDEZ GIL', '12345678A', '655101010', 'laura.fernandez@gmail.com', 'CALLE MAYOR, 15', '', 'MADRID', 'MADRID', '28001', '724', 'España', NULL, NULL, NULL, NULL, '912233445', NULL, 'N', 'S', 1000, 'N', 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-15 09:00:00', 'DEMO', 'Administrador'),
+  ('302', 'S', 11, 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, '934455667', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
+  ('303', 'S', 12, 'MARTA RUIZ LÓPEZ', '34567890C', '677303030', 'marta.ruiz@gmail.com', 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', NULL, NULL, NULL, NULL, '963344556', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
+  ('304', 'S', 13, 'JUAN MARTÍN PÉREZ', '45678901D', '688404040', 'juan.martin@empresa.es', 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', NULL, NULL, NULL, NULL, '915566778', NULL, 'S', 'S', NULL, NULL, 0, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
+  ('305', 'S', 14, 'ANA GARCÍA MORENO', '56789012E', '699505050', 'ana.garcia@yahoo.es', 'PLAZA ESPAÑA, 3', '1º B', 'SEVILLA', 'SEVILLA', '41001', '724', 'España', NULL, NULL, NULL, NULL, '954677889', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-15 09:00:00', 'DEMO', 'DEMO'),
+  ('306', 'S', 15, 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', '968606060', 'pedidos@distribuvelaz.es', 'POLÍGONO EL PINO, 5', 'NAVE 12', 'MURCIA', 'MURCIA', '30001', '724', 'España', NULL, NULL, 'PEDRO VELÁZQUEZ', '968606061', '968606060', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
+  ('307', 'S', 16, 'ROSA JIMÉNEZ VILLA', '67890123F', '611707070', 'rosa.jimenez@gmail.com', 'C/ RÍO SEGURA, 12', '', 'ZARAGOZA', 'ZARAGOZA', '50001', '724', 'España', NULL, NULL, NULL, NULL, '976788990', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
+  ('308', 'S', 17, 'MANUEL TORRES BLANCO', '78901234G', '622808080', 'manuel.torres@icloud.com', 'AVDA. DEL MAR, 45', '', 'MÁLAGA', 'MÁLAGA', '29001', '724', 'España', NULL, NULL, NULL, NULL, '952899001', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
+  ('309', 'S', 18, 'PAULA SÁNCHEZ ROMERO', '89012345H', '633909090', 'paula.sanchez@gmail.com', 'C/ EL PILAR, 7', 'Bajo A', 'BILBAO', 'VIZCAYA', '48001', '724', 'España', NULL, NULL, NULL, NULL, '944910011', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
+  ('310', 'S', 19, 'MODA FÁCIL SL', 'B87654321', '944010101', 'compras@modafacil.com', 'C/ INDUSTRIA, 33', 'POL. NORTE', 'BILBAO', 'VIZCAYA', '48008', '724', 'España', NULL, NULL, 'NURIA ARAMBURU', '944010102', '944010101', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-16 09:00:00', 'DEMO', 'DEMO'),
+  ('311', 'S', 20, 'DAVID NAVARRO IBÁÑEZ', '90123456I', '644111111', 'd.navarro@gmail.com', 'C/ COLÓN, 18', '3ºC', 'ALICANTE', 'ALICANTE', '03001', '724', 'España', NULL, NULL, NULL, NULL, '965221122', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
+  ('312', 'S', 21, 'ISABEL MORALES CANO', '01234567J', '655222222', 'isabel.morales@outlook.com', 'AVDA. CONSTITUCIÓN, 9', '', 'GRANADA', 'GRANADA', '18001', '724', 'España', NULL, NULL, NULL, NULL, '958332233', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
+  ('313', 'S', 22, 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, 'ALBERT PUIG', '937333334', '937333333', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-17 09:00:00', 'DEMO', 'DEMO'),
+  ('314', 'S', 23, 'ELENA VEGA CASTILLO', '12344321K', '666444444', 'elena.vega@gmail.com', 'C/ REAL, 2', '', 'VALLADOLID', 'VALLADOLID', '47001', '724', 'España', NULL, NULL, NULL, NULL, '983445544', NULL, 'N', 'S', NULL, 'N', 0, 'N', 'N', 'N', '30_60_90', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-17 09:00:00', 'DEMO', 'Administrador'),
+  ('315', 'S', 24, 'ANTONIO GUTIÉRREZ REYES', '23455432L', '677555555', 'antonio.gutierrez@hotmail.com', 'C/ CORREDERA, 31', '', 'CÓRDOBA', 'CÓRDOBA', '14001', '724', 'España', NULL, NULL, NULL, NULL, '957556655', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
+  ('316', 'S', 25, 'SOFÍA RAMÍREZ ORTEGA', '34566543M', '688666666', 'sofia.ramirez@gmail.com', 'AVDA. ARAGÓN, 14', '1ºD', 'VALENCIA', 'VALENCIA', '46021', '724', 'España', NULL, NULL, NULL, NULL, '963667766', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'TRANSFERENCIA', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
+  ('317', 'S', 26, 'IMPORTACIONES LA MODA SL', 'B99887766', '916777777', 'admin@importamoda.es', 'C/ ARTESANOS, 20', 'NAVE 3', 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', NULL, NULL, 'JAVIER OLMEDO', '916777778', '916777777', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '30DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
+  ('318', 'S', 27, 'MARCOS DELGADO SERRANO', '45677654N', '699888888', 'marcos.delgado@empresa.es', 'C/ LARGA, 77', '', 'SALAMANCA', 'SALAMANCA', '37001', '724', 'España', NULL, NULL, NULL, NULL, '923889988', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-18 09:00:00', 'DEMO', 'DEMO'),
+  ('319', 'S', 28, 'LUCÍA FLORES MENDOZA', '56788765O', '611999999', 'lucia.flores@gmail.com', 'PLAZA DEL SOL, 1', '', 'BURGOS', 'BURGOS', '09001', '724', 'España', NULL, NULL, NULL, NULL, '947990099', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', 'PVP', NULL, NULL, '2026-04-06 19:40:06', '2026-01-19 09:00:00', 'DEMO', 'DEMO'),
+  ('320', 'S', 29, 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', NULL, NULL, 'BEATRIZ MORENO', '911000001', '911000000', NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '60DIAS', 'VENTAMAYOR', NULL, NULL, '2026-04-06 19:40:06', '2026-01-19 09:00:00', 'DEMO', 'Administrador'),
+  ('321', 'S', NULL, 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', '', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', 1000, 'S', 100, 'N', 'N', 'N', NULL, 'PVP', NULL, NULL, '2026-04-06 20:35:59', '2026-02-26 19:58:55', 'Administrador', 'Administrador'),
+  ('PUBLICO', 'S', 2, 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', NULL, 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, 'ES2101822356985665446552', 'N', 'N', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', '0', NULL, NULL, '2026-04-06 19:40:06', '2022-11-02 20:28:28', 'Administrador', 'Administrador'),
+  ('TIENDA', 'S', 1, 'TIENDA DE ROSA', 'NIF', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'TRANSFERENCIA', 'VENTAMAYOR', '', '', '2026-04-06 19:40:06', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
 -- 26 registros exportados
 
 
@@ -1476,7 +1501,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '008', 'ANA/2023', 5, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 54, 6, 'S', 'N', '2026-04-04 07:58:35', '2026-02-01 07:03:46', 'Administrador', '1'),
+  ('FC', '012', '2026.A1', 68, 6, 'S', 'N', '2026-04-06 20:35:59', '2026-02-01 07:03:46', 'Administrador', '1'),
   ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
   ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador'),
   ('FC', '1', 'A3', 0, 8, 'S', 'N', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador'),
@@ -1486,11 +1511,11 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 85, 3, 'S', 'S', '2026-04-05 08:16:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 88, 3, 'S', 'S', '2026-04-06 20:11:42', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 74, 10, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
-  ('OV', '012', 'OV', 43, 8, 'S', 'S', '2026-04-04 07:58:35', '2026-04-02 20:05:59', '1', '1'),
+  ('MV', '-', '-', 133, 10, 'S', 'S', '2026-04-06 20:35:59', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('OV', '012', 'OV', 73, 8, 'S', 'S', '2026-04-06 20:35:59', '2026-04-02 20:05:59', '1', '1'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
@@ -1530,15 +1555,9 @@ ALTER TABLE `fza_depositos_cliente` ADD INDEX `IDX_DEP_UNIDAD` (`CODIGO_UNIDAD_D
 
 -- Datos de fza_depositos_cliente
 INSERT INTO `fza_depositos_cliente` (`ID_DEPOSITO_DEP`, `CODIGO_EMPRESA_DEP`, `CODIGO_CLIENTE_DEP`, `CODIGO_ARTICULO_DEP`, `CODIGO_UNIDAD_DEP`, `CODIGO_ALMACEN_DEP`, `PRECIO_VENTA_DEP`, `IMPORTE_ANTICIPO_DEP`, `ESTADO_DEP`, `FECHA_CREACION_DEP`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `TIPO_IVA_DEP`, `PORCEN_IVA_DEP`, `ESIMP_INCL_DEP`, `CANTIDAD_PENDIENTE_DEP`, `FECHA_ENTREGA_DEP`, `CODIGO_CAJA_DEP`, `NUMERO_OPERACION_DEP`) VALUES
-  ('DEP-001', '1', '301', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, 189, 94.5, 'PENDIENTE', '2026-02-10 10:30:00', '2026-03-03 17:55:37', '2026-02-10 10:30:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-15 00:00:00', NULL, NULL),
-  ('DEP-002', '1', '302', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 299, 0, 'PENDIENTE', '2026-02-14 16:00:00', '2026-03-03 17:55:37', '2026-02-14 16:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-03-20 00:00:00', NULL, NULL),
-  ('DEP-003', '1', '303', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', NULL, 125, 37.5, 'PENDIENTE', '2026-02-18 11:15:00', '2026-03-03 17:55:37', '2026-02-18 11:15:00', 'ANA', 'ANA', 'N', 21, 'S', 1, '2026-03-10 00:00:00', NULL, NULL),
-  ('DEP-004', '1', '301', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, 79, 79, 'CERRADO', '2026-01-20 09:00:00', '2026-03-03 17:55:37', '2026-01-20 09:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, NULL, NULL, NULL),
-  ('DEP-005', '1', '302', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 159, 39.75, 'PENDIENTE', '2026-02-20 17:30:00', '2026-03-03 17:55:37', '2026-02-20 17:30:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, '2026-04-01 00:00:00', NULL, NULL),
-  ('DEP-006', '1', '303', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, 95, 20, 'CANCELADO', '2026-01-28 12:00:00', '2026-03-03 17:55:37', '2026-01-28 12:00:00', 'ANA', 'ANA', 'N', 21, 'S', 1, NULL, NULL, NULL),
-  ('DEP-007', '1', '301', 'VEST-FLOR', 'VEST-FLOR/AZUL/L', NULL, 115, 0, 'PENDIENTE', '2026-03-01 10:00:00', '2026-03-03 17:55:37', '2026-03-01 10:00:00', 'LAURA', 'LAURA', 'N', 21, 'S', 1, '2026-03-25 00:00:00', NULL, NULL),
-  ('DEP-008', '1', '302', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, 49, 49, 'CERRADO', '2026-02-05 15:00:00', '2026-03-03 17:55:37', '2026-02-05 15:00:00', 'CARLOS', 'CARLOS', 'N', 21, 'S', 1, NULL, NULL, NULL);
--- 8 registros exportados
+  ('DP260406203559869O/L', '012', '321', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', 'GEN', 180, 102, 'PENDIENTE', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', 'N', 21, 'S', 1, NULL, '1', '00000072'),
+  ('DP260406203559953IEL', '012', '321', 'CINTURON-PIEL', 'CINTURON-PIEL', 'GEN', 22, 0, 'PENDIENTE', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', 'N', 21, 'S', 1, NULL, '1', '00000072');
+-- 2 registros exportados
 
 
 -- Tabla: fza_empresas
@@ -1808,8 +1827,20 @@ INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ES
   ('000050', '2026.A1', '2026-04-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 22.56, 5.2, 0, 107.44, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 107.44, 22.56, NULL, 0, 0, 130, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-04 07:35:13', '2026-04-04 07:35:13', '1', '1', '1', 'GEN', '1', '00000039'),
   ('000051', '2026.A1', '2026-04-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 3.82, 5.2, 0, 18.18, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 18.18, 3.82, NULL, 0, 0, 22, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-04 07:40:38', '2026-04-04 07:40:38', '1', '1', '1', 'GEN', '1', '00000040'),
   ('000052', '2026.A1', '2026-04-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 22.56, 5.2, 0, 107.44, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 107.44, 22.56, NULL, 0, 0, 130, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-04 07:43:57', '2026-04-04 07:43:57', '1', '1', '1', 'GEN', '1', '00000041'),
-  ('000053', '2026.A1', '2026-04-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 31.24, 5.2, 0, 148.76, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 148.76, 31.24, NULL, 0, 0, 180, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', '1', 'GEN', '1', '00000042');
--- 55 registros exportados
+  ('000053', '2026.A1', '2026-04-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 31.24, 5.2, 0, 148.76, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 148.76, 31.24, NULL, 0, 0, 180, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', '1', 'GEN', '1', '00000042'),
+  ('000054', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 22.56, 5.2, 0, 107.44, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 107.44, 22.56, NULL, 0, 0, 130, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 05:59:44', '2026-04-06 05:59:44', '1', '1', '1', 'GEN', '1', '00000043'),
+  ('000056', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, -1.74, 5.2, 0, -8.26, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, -8.26, -1.74, NULL, 0, 0, -10, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 17:50:54', '2026-04-06 17:50:54', '1', '1', '1', 'GEN', '1', '00000060'),
+  ('000058', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 1.74, 5.2, 0, 8.26, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 8.26, 1.74, NULL, 0, 0, 10, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 18:11:38', '2026-04-06 18:11:38', '1', '1', '1', 'GEN', '1', '00000062'),
+  ('000059', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 1.74, 5.2, 0, 8.26, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 8.26, 1.74, NULL, 0, 0, 10, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 18:16:36', '2026-04-06 18:16:36', '1', '1', '1', 'GEN', '1', '00000063'),
+  ('000060', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 17.35, 5.2, 0, 82.65, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 82.65, 17.35, NULL, 0, 0, 100, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 18:24:44', '2026-04-06 18:24:44', '1', '1', '1', 'GEN', '1', '00000064'),
+  ('000061', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 17.35, 5.2, 0, 82.65, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 82.65, 17.35, NULL, 0, 0, 100, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 18:34:02', '2026-04-06 18:34:02', '1', '1', '1', 'GEN', '1', '00000065'),
+  ('000062', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 1.74, 5.2, 0, 8.26, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 8.26, 1.74, NULL, 0, 0, 10, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 18:50:27', '2026-04-06 18:50:27', '1', '1', '1', 'GEN', '1', '00000067'),
+  ('000063', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 8.68, 5.2, 0, 41.32, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 41.32, 8.68, NULL, 0, 0, 50, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', '1', 'GEN', '1', '00000068'),
+  ('000064', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 21.69, 5.2, 0, 103.31, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 103.31, 21.69, NULL, 0, 0, 125, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', '1', 'GEN', '1', '00000069'),
+  ('000065', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 6.42, 5.2, 0, 30.58, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 30.58, 6.42, NULL, 0, 0, 37, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 19:44:24', '2026-04-06 19:44:24', '1', '1', '1', 'GEN', '1', '00000070'),
+  ('000066', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 6.42, 5.2, 0, 30.58, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 30.58, 6.42, NULL, 0, 0, 37, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 20:00:01', '2026-04-06 20:00:01', '1', '1', '1', 'GEN', '1', '00000071'),
+  ('000067', '2026.A1', '2026-04-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 17.7, 5.2, 0, 84.3, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 84.3, 17.7, NULL, 0, 0, 102, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', '1', 'GEN', '1', '00000072');
+-- 67 registros exportados
 
 
 -- Tabla: fza_facturas_consolidaciones
@@ -1890,6 +1921,11 @@ ALTER TABLE `fza_facturas_lineas` ADD INDEX `IDX_FAC_LIN_FAMILIA` (`CODIGO_FAMIL
 
 -- Datos de fza_facturas_lineas
 INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `LINEA_FACTURA_LINEA`, `CODIGO_ARTICULO_FACTURA_LINEA`, `CODIGO_UNIDAD_FACTURA_LINEA`, `LOTE_FACTURA_LINEA`, `FECHA_CADUCIDAD_FACTURA_LINEA`, `CODIGO_FAMILIA_FACTURA_LINEA`, `NOMBRE_FAMILIA_FACTURA_LINEA`, `PRECIO_ULT_COMPRA_FACTURA_LINEA`, `CODIGO_PROVEEDOR_FACTURA_LINEA`, `RAZONSOCIAL_PROVEEDOR_FACTURA_LINEA`, `ESPROVEEDORPRINCIPAL_FACTURA_LINEA`, `FECHA_ENTREGA_FACTURA_LINEA`, `TIPO_ARTICULO_FACTURA_LINEA`, `TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA`, `CANTIDAD_FACTURA_LINEA`, `DESCRIPCION_ARTICULO_FACTURA_LINEA`, `DESCRIPCION_VARIACION_FACTURA_LINEA`, `CODIGO_TARIFA_FACTURA_LINEA`, `ESIMP_INCL_TARIFA_FACTURA_LINEA`, `PRECIOSALIDA_FACTURA_LINEA`, `PORCEN_DTO_FACTURA_LINEA`, `PRECIO_DTO_FACTURA_LINEA`, `PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA`, `TIPOIVA_ARTICULO_FACTURA_LINEA`, `PORCEN_IVA_FACTURA_LINEA`, `PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA`, `TOTAL_FACTURA_LINEA`, `TOTAL_FACTURASIVA_LINEA`, `CODIGO_VENDEDOR_FACTURA_LINEA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `CODIGO_ALMACEN_FACTURA_LINEA`, `CODIGO_CAJA_FACTURA_LINEA`, `NUMERO_OPERACION_FACTURA_LIENA`, `NUMERO_MOV_FACTURA_LINEA`) VALUES
+  ('00000069', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Chaqueta Biker Cuero', NULL, NULL, 'S', 80.1653, 0, 0, 80.1653, 'N', 21, 97, 97, 80.1653, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL),
+  ('00000069', '2026.A1', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL),
+  ('00000070', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 19:44:30', '2026-04-06 19:44:30', '1', '1', 'GEN', '1', '00000070', NULL),
+  ('00000071', '2026.A1', '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Camiseta de Algodón Básica', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 20:00:01', '2026-04-06 20:00:01', '1', '1', 'GEN', '1', '00000071', NULL),
+  ('00000072', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 84.2975, 0, 0, 84.2975, 'N', 21, 102, 102, 84.2975, '1', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', 'GEN', '1', '00000072', NULL),
   ('000002', '2026.A1', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'PETADA BILLI', NULL, NULL, 'N', 50, 10, 5, 45, 'N', 21, 54.45, 54.45, 45, NULL, '2026-02-01 14:38:48', '2026-02-01 14:38:48', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000003', '2026.A1', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'pato aparato', NULL, NULL, 'N', 5, 0, 0, 5, 'N', 21, 6.05, 6.05, 5, NULL, '2026-02-01 14:36:39', '2026-02-01 14:36:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000003', '2026.A1', '020', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Tacón Alto Señora', NULL, 'VENTAMAYOR', 'N', 42, 0, 0, 42, 'N', 21, 50.82, 50.82, 42, NULL, '2026-02-23 06:21:01', '2026-02-23 06:21:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
@@ -1961,8 +1997,18 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000050', '2026.A1', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:35:13', '2026-04-04 07:35:13', '1', '1', 'GEN', '1', '00000039', '0000000066'),
   ('000051', '2026.A1', '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-04 07:40:38', '2026-04-04 07:40:38', '1', '1', 'GEN', '1', '00000040', '0000000068'),
   ('000052', '2026.A1', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:43:57', '2026-04-04 07:43:57', '1', '1', 'GEN', '1', '00000041', '0000000070'),
-  ('000053', '2026.A1', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', 'GEN', '1', '00000042', '0000000072');
--- 72 registros exportados
+  ('000053', '2026.A1', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', 'GEN', '1', '00000042', '0000000072'),
+  ('000054', '2026.A1', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 05:59:44', '2026-04-06 05:59:44', '1', '1', 'GEN', '1', '00000043', '0000000074'),
+  ('000056', '2026.A1', '0030', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', -1, 'Devolución anticipo Abrigo de Paño Caballero', NULL, NULL, 'S', 0, 0, 0, 0, 'N', 21, 0, 0, 0, '1', '2026-04-06 17:50:57', '2026-04-06 17:50:57', '1', '1', 'GEN', '1', '00000060', NULL),
+  ('000056', '2026.A1', '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-06 17:51:28', '2026-04-06 17:51:28', '1', '1', 'GEN', '1', '00000060', NULL),
+  ('000058', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:11:42', '2026-04-06 18:11:42', '1', '1', 'GEN', '1', '00000062', NULL),
+  ('000059', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:16:41', '2026-04-06 18:16:41', '1', '1', 'GEN', '1', '00000063', NULL),
+  ('000061', '2026.A1', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 18:34:31', '2026-04-06 18:34:31', '1', '1', 'GEN', '1', '00000065', '0000000107'),
+  ('000061', '2026.A1', '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo CHAQ-CUERO/NEGRO/XL', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, -30, -24.7934, '1', '2026-04-06 18:34:44', '2026-04-06 18:34:44', '1', '1', 'GEN', '1', '00000065', NULL),
+  ('000062', '2026.A1', '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:50:27', '2026-04-06 18:50:27', '1', '1', 'GEN', '1', '00000067', NULL),
+  ('000063', '2026.A1', '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', '0000000111'),
+  ('000063', '2026.A1', '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Camiseta de Algodón Básica', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', NULL);
+-- 87 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -2650,8 +2696,13 @@ BEGIN
 END
 $$
 
-DELIMITER ;', '2026-04-05 08:16:32', '2026-04-05 08:16:32', 'Administrador', 'Administrador');
--- 14 registros exportados
+DELIMITER ;', '2026-04-05 08:16:32', '2026-04-05 08:16:32', 'Administrador', 'Administrador'),
+  ('085', NULL, 'delete from fza_caja_operaciones;
+delete from fza_depositos_cliente;
+update fza_clientes Set TOTAL_DEUDA_CLIENTE = 0;', '2026-04-06 19:40:05', '2026-04-06 19:39:35', 'Administrador', 'Administrador'),
+  ('086', NULL, 'select * from fza_depositos_cliente where NUMERO_OPERACION_DEP = ''00000070''', '2026-04-06 20:10:07', '2026-04-06 20:02:07', 'Administrador', 'Administrador'),
+  ('087', NULL, 'SELECT * FROM fza_facturas_lineas WHERE NUMERO_OPERACION_FACTURA = ''00000070''', '2026-04-06 20:35:10', '2026-04-06 20:11:42', 'Administrador', 'Administrador');
+-- 17 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3013,6 +3064,61 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000000069', 'VE', '2026.A1', '000051', '0010', '012', 'GEN', '2026-04-04 07:40:38', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'S', 1, 0, 9, 9, NULL, '0', NULL, 'S', '2026-04-04 07:40:38', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('0000000071', 'VE', '2026.A1', '000052', '0010', '012', 'GEN', '2026-04-04 07:43:57', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-04-04 07:43:57', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('0000000073', 'VE', '2026.A1', '000053', '0010', '012', 'GEN', '2026-04-04 07:58:35', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-04-04 07:58:35', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
+  ('0000000075', 'VE', '2026.A1', '000054', '0010', '012', 'GEN', '2026-04-06 05:59:44', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, NULL, '321', NULL, 'S', '2026-04-06 05:59:44', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000043'),
+  ('0000000076', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 06:27:41', 'DEMO-BASICO', 'DEMO-BASICO', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 06:27:41', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000045'),
+  ('0000000077', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 06:27:41', 'DEMO-BASICO', 'DEMO-BASICO', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 06:27:41', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000045'),
+  ('0000000078', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 06:44:51', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 06:44:51', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000046'),
+  ('0000000079', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 06:44:51', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 06:44:51', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000046'),
+  ('0000000080', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 07:44:02', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 07:44:02', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000047'),
+  ('0000000081', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 07:44:02', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 07:44:02', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000047'),
+  ('0000000082', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 08:04:22', 'DEMO-BASICO', 'DEMO-BASICO', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 08:04:22', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000048'),
+  ('0000000083', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 08:04:22', 'DEMO-BASICO', 'DEMO-BASICO', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 08:04:22', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000048'),
+  ('0000000084', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 16:40:18', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 16:40:18', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000049'),
+  ('0000000085', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 16:40:18', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 16:40:18', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000049'),
+  ('0000000086', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 16:55:05', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, 'S', 1, 0, 26, 26, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 16:55:05', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000050'),
+  ('0000000087', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 16:55:05', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 16:55:05', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000050'),
+  ('0000000088', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 17:02:15', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, 'S', 1, 0, 18, 18, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:02:15', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000051'),
+  ('0000000089', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 17:02:15', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:02:15', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000051'),
+  ('0000000090', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 17:08:09', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:08:09', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000052'),
+  ('0000000091', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 17:08:09', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:08:09', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000052'),
+  ('0000000092', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 17:11:11', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:11:11', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000053'),
+  ('0000000093', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 17:11:11', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:11:11', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000053'),
+  ('0000000094', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 17:13:04', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:13:04', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000054'),
+  ('0000000095', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 17:13:04', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:13:04', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000054'),
+  ('0000000096', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 17:14:37', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:14:37', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000055'),
+  ('0000000097', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 17:14:37', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:14:37', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000055'),
+  ('0000000098', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 17:15:58', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:15:58', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000056'),
+  ('0000000099', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 17:15:58', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:15:58', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000056'),
+  ('0000000100', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 17:17:31', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:17:31', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000057'),
+  ('0000000101', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 17:17:31', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:17:31', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000057'),
+  ('0000000102', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 17:36:51', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:36:51', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000058'),
+  ('0000000103', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 17:36:51', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:36:51', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000058'),
+  ('0000000104', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 17:50:59', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 17:50:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000060'),
+  ('0000000105', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 17:50:59', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 17:50:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000060'),
+  ('0000000108', 'VE', '2026.A1', '000061', '0010', '012', 'DEP_CL_GEN', '2026-04-06 18:34:39', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, NULL, '321', NULL, 'S', '2026-04-06 18:34:39', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000065'),
+  ('0000000109', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 18:45:19', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 18:45:19', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000066'),
+  ('0000000110', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 18:45:19', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 18:45:19', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000066'),
+  ('0000000112', 'VE', '2026.A1', '000063', '0010', '012', 'GEN', '2026-04-06 19:14:01', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'S', 1, 0, 9, 9, NULL, '321', NULL, 'S', '2026-04-06 19:14:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000068'),
+  ('0000000113', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 19:14:01', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, 'S', 1, 0, 7, 7, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 19:14:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000068'),
+  ('0000000114', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 19:14:01', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 19:14:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000068'),
+  ('0000000115', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 19:14:01', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'S', 1, 0, 80, 80, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 19:14:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000068'),
+  ('0000000116', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 19:14:01', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 19:14:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000068'),
+  ('0000000117', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 19:44:36', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'S', 1, 0, 80, 80, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 19:44:36', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000118', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 19:44:36', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 19:44:36', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000119', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 19:45:16', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, 'S', 1, 0, 7, 7, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 19:45:16', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000120', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 19:45:16', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 19:45:16', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000121', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 19:45:30', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'S', 1, 0, 9, 9, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 19:45:30', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000122', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 19:45:31', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 19:45:31', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000070'),
+  ('0000000123', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 20:00:01', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000124', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 20:00:01', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/XL', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000125', 'TR', '', '', '0001', '012', 'DEP_CL_GEN', '2026-04-06 20:00:01', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'S', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000126', 'TR', '', '', '0002', '012', 'GEN', '2026-04-06 20:00:01', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'E', 1, 0, 0, 0, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000127', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 20:00:01', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, 'S', 1, 0, 25, 25, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000128', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 20:00:01', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 20:00:01', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000071'),
+  ('0000000129', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 20:35:59', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, 'S', 1, 0, 80, 80, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 20:35:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000072'),
+  ('0000000130', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 20:35:59', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 20:35:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000072'),
+  ('0000000131', 'TR', '', '', '0001', '012', 'GEN', '2026-04-06 20:35:59', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'S', 1, 0, 8.307692, 8.307692, 'DEP_CL_GEN', '321', NULL, 'S', '2026-04-06 20:35:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000072'),
+  ('0000000132', 'TR', '', '', '0002', '012', 'DEP_CL_GEN', '2026-04-06 20:35:59', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, 'E', 1, 0, 0, 0, 'GEN', '321', NULL, 'S', '2026-04-06 20:35:59', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000072'),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:29', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
@@ -3077,7 +3183,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('4', 'IN', 'A1', '2026001', '005', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', 'Falda Vaquera L', 'E', 15, 10, 150, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:50', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('5', 'IN', 'A1', '2026001', '006', '1', 'GEN', '2026-01-04 22:13:10', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 'Chaqueta Cuero XL Negra', 'E', 3, 60, 180, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:57', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL),
   ('6', 'IN', 'A1', '2026001', '007', '1', 'GEN', '2026-01-04 22:13:10', 'CARTERA-PIEL', 'CARTERA-PIEL', 'Cartera de Cuero Unisex', 'E', 8, 20, 160, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:44:09', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL);
--- 100 registros exportados
+-- 155 registros exportados
 
 
 -- Tabla: fza_paises
@@ -3866,7 +3972,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-05 08:09:25', '2026-04-05 08:09:25', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-06 20:35:06', '2026-04-06 20:35:06', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -4005,7 +4111,7 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerChkStockOnly', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerCodEmpleadoDefecto', '1', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaParam', 'vgerDefPrinter', 'PDF', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerDefPrinter', 'DEBUG', NULL, NULL, NULL, '2026-04-06 06:08:51', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerDefTarifa', 'PVP', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerDescuentos', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerDiasCaducidadVale', '365', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
@@ -8818,4 +8924,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 05/04/2026 8:16:54
+-- Backup completado: 06/04/2026 20:49:59
