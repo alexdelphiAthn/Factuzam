@@ -49,8 +49,7 @@ var
   end;
 
 begin
-  if DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                             'SERIE_FACTURA').AsString = '' then
+  if not DatosCobro.FRequiereFactura then
     Exit;
   NombreImpresora := 'DEBUG';
   ModoQR := 'NATIVO';
