@@ -142,6 +142,9 @@ begin
       // =======================================================================
       // SECCIÓN 2: ENTREGAS A CUENTA
       // =======================================================================
+// =======================================================================
+      // SECCIÓN 2: ENTREGAS A CUENTA
+      // =======================================================================
       QrySec.Close;
       QrySec.SQL.Text :=
         'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
@@ -150,7 +153,8 @@ begin
         '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
         '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
         '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '  AND TIPO_OPERACION_OPCAJA IN (''CB'')';
+        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
+        '  AND IMPORTE_TOTAL_OPCAJA > 0';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
       QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
       QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
@@ -167,9 +171,17 @@ begin
         Ticket.Alinear(alIzquierda);
         while not QrySec.Eof do
         begin
-          var Concepto := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+          var TipoOp  := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
           var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
           TotalEntregas := TotalEntregas + Importe;
+
+          // Traducimos los códigos a texto amigable para el cliente
+          var Concepto := '';
+          if TipoOp = 'CB' then
+            Concepto := 'Abono para prenda pendiente'
+          else if TipoOp = 'DE' then
+            Concepto := 'Anticipo inicial';
+
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
@@ -177,8 +189,7 @@ begin
           QrySec.Next;
         end;
         Ticket.SaltarLineas(1);
-      end;
-      // =======================================================================
+      end;      // =======================================================================
       // SECCIÓN 3: DEVOLUCIONES
       // =======================================================================
       QrySec.Close;
@@ -524,10 +535,9 @@ begin
         if not QryDep.IsEmpty then
         begin
           Ticket.SaltarLineas(1);
-          Ticket.LineaSeparadora('/');
           Ticket.Alinear(alIzquierda);
           Ticket.Negrita(True);
-          Ticket.EscribirLinea(' ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
+          Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
           Ticket.Negrita(False);
           Ticket.LineaSeparadora('-');
           Ticket.Alinear(alIzquierda);
