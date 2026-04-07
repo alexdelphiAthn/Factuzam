@@ -1192,14 +1192,38 @@ procedure TFacturaTotales.RecorrerYCalcularLineasConClientDataSet;
 var
   lineaActual: TLinFac;
   bookmark: TBookmark;
-  sLinea:String;
+  WasInsert, WasEdit, WasEmptyInsert: Boolean;
 begin
-  sLinea := _unqryLineas.FieldByName(fnrolin).AsString;
+  if not Assigned(_unqryLineas) or not _unqryLineas.Active then
+    Exit;
+
   _unqryLineas.DisableControls;
-  bookmark := _unqryLineas.GetBookmark;
   try
-    if ((_unqryLineas.State = dsEdit) or (_unqryLineas.State = dsInsert)) then
-      _unqryLineas.Post;
+    WasInsert := (_unqryLineas.State = dsInsert);
+    WasEdit := (_unqryLineas.State = dsEdit);
+    WasEmptyInsert := False;
+    // ======================================================================
+    // 1. PREPARAMOS EL DATASET PARA CALCULAR (SIN ERRORES)
+    // ======================================================================
+    if WasInsert or WasEdit then
+    begin
+      if Trim(_unqryLineas.FieldByName(fcodart).AsString) = '' then
+      begin
+        WasEmptyInsert := True;
+        _unqryLineas.Cancel;
+      end
+      else
+        _unqryLineas.Post;
+    end;
+    if _unqryLineas.IsEmpty then
+    begin
+      if WasEmptyInsert then _unqryLineas.Append;
+      Exit;
+    end;
+    // ======================================================================
+    // 2. HACEMOS LA SUMA FISCAL
+    // ======================================================================
+    bookmark := _unqryLineas.GetBookmark;
     _unqryLineas.First;
     while not _unqryLineas.Eof do
     begin
@@ -1212,10 +1236,20 @@ begin
       lineaActual.Free;
       _unqryLineas.Next;
     end;
+    if _unqryLineas.BookmarkValid(bookmark) then
+    begin
+      _unqryLineas.GotoBookmark(bookmark);
+      _unqryLineas.FreeBookmark(bookmark);
+    end;
+    // ======================================================================
+    // 3. RESTAURAMOS LA INTERFAZ EXACTAMENTE COMO ESTABA
+    // ======================================================================
+    if WasEmptyInsert then
+      _unqryLineas.Append  // Devolvemos la línea en blanco al cajero
+    else if WasEdit then
+      _unqryLineas.Edit;   // Devolvemos el estado de edición si estaba tocando un precio
   finally
     _unqryLineas.EnableControls;
-    _unqryLineas.GotoBookmark(bookmark);
-    _unqryLineas.FreeBookmark(bookmark);
   end;
 end;
 

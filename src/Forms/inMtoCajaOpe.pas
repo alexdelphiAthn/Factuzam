@@ -166,6 +166,7 @@ type
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
+    FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
@@ -242,15 +243,38 @@ begin
     NombreEmpleadoAnterior := '';
     if DatosCaja.cdsCabecera.Active and not DatosCaja.cdsCabecera.IsEmpty then
     begin
-      EmpleadoAnterior := DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
+      EmpleadoAnterior :=
+            DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FACTURA').AsString;
       NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
     end;
+    if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
+       cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    begin
+      cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
+    end;
     // 2. Vaciar las líneas de la venta anterior
-    if (DatosCaja.cdsLineas.RecordCount > 0) then
-      DatosCaja.cdsLineas.EmptyDataSet;
+//    if (DatosCaja.cdsLineas.Active) and (DatosCaja.cdsLineas.RecordCount > 0) then
+//    begin
+//      DatosCaja.cdsLineas.EmptyDataSet;
+//    end;
+    if DatosCaja.cdsLineas.Active then
+    begin
+      DatosCaja.cdsLineas.DisableControls;
+      try
+        // --- CLAVE: Limpia el "Delta" (registros fantasma pendientes) ---
+        DatosCaja.cdsLineas.CancelUpdates;
+
+        if DatosCaja.cdsLineas.RecordCount > 0 then
+          DatosCaja.cdsLineas.EmptyDataSet;
+      finally
+        DatosCaja.cdsLineas.EnableControls;
+      end;
+    end;
+    cxGrid1DBTableView1.DataController.Refresh;
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
     begin
+      DatosCaja.cdsCabecera.CancelUpdates;
       DatosCaja.cdsCabecera.EmptyDataSet;
       DatosCaja.cdsCabecera.Append;
     end;
@@ -1654,9 +1678,15 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoClienteExit(Sender: TObject);
+var
+  Edit: TcxCustomEdit;
 begin
-//  if Sender is TcxCustomEdit then     //entra dos veces???
-//    TcxCustomEdit(Sender).ValidateEdit(True);
+  if Sender is TcxCustomEdit then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    if Edit.EditModified then
+//      Edit.ValidateEdit(True);
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoClientePropertiesValidate(Sender: TObject;
@@ -1664,22 +1694,60 @@ procedure TfrmMtoOpeCaja.btnCodigoClientePropertiesValidate(Sender: TObject;
 var
   sNomCliente: string;
   sCodigo: string;
+  Totales: TFacturaTotales;
 begin
+  if FValidandoCliente then
+    Exit;
+  FValidandoCliente := True;
+  try
+  // =======================================================================
+  // 1. LIMPIEZA INCONDICIONAL DE DEPÓSITOS DEL CLIENTE ANTERIOR
+  // =======================================================================
+  if DatosCaja.cdsLineas.Active then
+  begin
+    // Si hay una línea a medio meter, la cancelamos para evitar Abort en BeforePost
+    if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+    begin
+      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString) = '' then
+        DatosCaja.cdsLineas.Cancel
+      else
+        DatosCaja.cdsLineas.Post;
+    end;
+
+    DatosCaja.cdsLineas.DisableControls;
+    try
+      DatosCaja.cdsLineas.First;
+      while not DatosCaja.cdsLineas.Eof do
+      begin
+        if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S') or
+           (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') then
+        begin
+          DatosCaja.cdsLineas.Delete;
+        end
+        else
+        begin
+          DatosCaja.cdsLineas.Next;
+        end;
+      end;
+    finally
+      DatosCaja.cdsLineas.EnableControls;
+    end;
+  end;
+
+  // =======================================================================
+  // 2. BÚSQUEDA Y ASIGNACIÓN DEL NUEVO CLIENTE
+  // =======================================================================
   sCodigo := VarToStr(DisplayValue);
+
   if Trim(sCodigo) = '' then
   begin
     lblNombreCliente.Caption := 'VENTA CONTADO';
     DatosCaja.cdsCabecera.Edit;
-    DatosCaja.cdsCabecera.FieldByName(
-                                  'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
-                                                     DatosCaja.GetTarifaDefault;
-    DatosCaja.cdsCabecera.FieldByName(
-                                'ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
-                                                                            'S';
-    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := DatosCaja.GetTarifaDefault;
+    DatosCaja.cdsCabecera.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString := 'S';
+    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+
     Error := False;
-    Exit;
   end
   else
   begin
@@ -1693,35 +1761,54 @@ begin
                         ' WHERE CODIGO_CLIENTE = :COD';
       unqry.ParamByName('COD').AsString := sCodigo;
       unqry.Open;
+
       if not unqry.IsEmpty then
       begin
         DatosCaja.cdsCabecera.Edit;
-        DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString :=
-                                                          btnCodigoCliente.Text;
+        DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString := sCodigo;
         sNomCliente := unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-                                  'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
-                          unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
-        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-        if (Trim(btnCodigoCliente.Text) <> '') and
-           SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString, 'S') then
-          DatosCaja.CargarDepositosCliente(btnCodigoCliente.Text);
+        DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
+        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+
+        // Si es un cliente con depósitos, los cargamos
+        if SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString, 'S') then
+          DatosCaja.CargarDepositosCliente(sCodigo);
       end;
     finally
       unqry.Free;
     end;
+
+    if sNomCliente = '' then
+    begin
+      Error := True;
+      ErrorText := 'El código de cliente no existe.';
+    end
+    else
+    begin
+      Error := False;
+      lblNombreCliente.Caption := sNomCliente;
+      ErrorText := '';
+    end;
   end;
-  if sNomCliente = '' then
+
+  // =======================================================================
+  // 3. PROTECCIÓN CONTRA DATASET VACÍO Y RECÁLCULO FINAL
+  // =======================================================================
+  if DatosCaja.cdsLineas.Active then
   begin
-    Error := True;
-    ErrorText := 'El código de cliente no existe.';
-  end
-  else
-  begin
-    Error := False;
-    lblNombreCliente.Caption := sNomCliente;
-    ErrorText := '';
+    AsegurarLineaNueva;
+
+    // Recalculamos directamente sin depender del foco de la rejilla
+    Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+    try
+      Totales.ProcesarFacturaCompleta;
+      ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
+    finally
+      Totales.Free;
+    end;
+  end;
+  finally
+    FValidandoCliente := False;
   end;
 end;
 

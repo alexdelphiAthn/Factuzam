@@ -628,6 +628,7 @@ begin
   finally
     SpTrx.Free;
   end;
+
 end;
 
 procedure TdmCajaOpe.TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
@@ -1133,6 +1134,7 @@ var
   NumLineaPago:        Integer;
   RequiereFactura:     Boolean;
   TieneDepositosPendientes:boolean;
+  TotalVentasNormales, TotalDevolucionesNormales: Currency;
   // ---------------------------------------------------------------------------
   // Inserta línea fiscal de anticipo (Solo si hay factura)
   // ---------------------------------------------------------------------------
@@ -1282,6 +1284,9 @@ begin
       SerieGenerada := '';
       NumFactura := '0';
     end;
+    TotalVentasNormales := 0;
+    TotalDevolucionesNormales := 0;
+
     // =======================================================================
     // PASO 4: LÍNEAS
     // =======================================================================
@@ -1291,6 +1296,7 @@ begin
       while not cdsLineas.Eof do
       begin
         Lin := LeerLineaActual(cdsLineas);
+
         // -------------------------------------------------------------------
         // CASO A: ABONO DE ANTICIPO PREVIO
         // -------------------------------------------------------------------
@@ -1305,54 +1311,15 @@ begin
               Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
               UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
-          cdsLineas.Next;
-          Continue;
-        end;
-        // -------------------------------------------------------------------
-        // CASO B: CANCELACIÓN DE DEPÓSITO
-        // -------------------------------------------------------------------
-        if Lin.AccionDeposito = 'CANCELAR' then
-        begin
-          //EMITIR LA DEVOLUCIÓN DEL ANTICIPO (SI LO HAY)
-          if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
-            InsertarLineaFactura(
-              QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo, Lin.Sku,
-              'Devolución a cuenta ' + Lin.Descripcion, '', Lin.Familia, Lin.NombreFamilia,
-              Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl,
-              Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
-              Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
-              AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
-          //SACAR LA PRENDA DE DEPÓSITOS PENDIENTES
-          AnularDepositoCliente(
-            QryTrx, CAB.CodigoCliente, Lin.Sku, UsuarioCaja, AAlmacen,
-            AlmacenDeposito,
-            AEmpresa, ACaja, NumOperacionVE, Lin.Articulo, ImporteDevuelto,
-            Abs(Lin.Cantidad));
-          // =================================================================
-          // RESTAR LA DEUDA EN LA FICHA DEL CLIENTE
-          // =================================================================
-          if CAB.CodigoCliente <> '' then
-          begin
-            // Asumiendo que tu tabla es fza_clientes y el campo de deuda es DEUDA_CLIENTE.
-            // Cámbialos si en tu base de datos se llaman diferente.
-            QryTrx.SQL.Text :=
-              'UPDATE fza_clientes ' +
-              'SET TOTAL_DEUDA_CLIENTE = COALESCE(TOTAL_DEUDA_CLIENTE, 0) ' +
-              '                          - :ImporteDeuda ' +
-              'WHERE CODIGO_CLIENTE = :CodCli';
-            QryTrx.ParamByName('ImporteDeuda').AsCurrency :=
-                       cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency *
-                                                              Abs(Lin.Cantidad);
-            QryTrx.ParamByName('CodCli').AsString := CAB.CodigoCliente;
-            QryTrx.Execute;
-          end;
-          // =================================================================
-          // --- ELIMINAR O COMENTAR ESTO ---
-          // if ImporteDevuelto > 0 then
-          //  InsertarOperacionCaja(
-          //    QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV', -ImporteDevuelto,
-          //    UsuarioCaja, NumeroGenerado, SerieGenerada, Cab.CodigoCliente,
-          //    'Devolución anticipo: ' + Lin.Descripcion, SerieGenerada, NumeroGenerado);
+
+          // ¡LA PIEZA QUE FALTABA! Registrar el consumo del anticipo en Caja
+          // Lin.TotalCIva viene en negativo (ej: -100)
+          if Abs(Lin.TotalCIva) > 0.001 then
+            InsertarOperacionCaja(
+              QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
+              Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
+              Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion);
+
           cdsLineas.Next;
           Continue;
         end;
@@ -1397,24 +1364,33 @@ begin
           NumMovGenerado := ObtenerSiguienteContador('MV')
         else
           NumMovGenerado := '';
+
         if Lin.VieneDeDeposito = 'S' then
         begin
           AlmacenOrigenSalida := AlmacenDeposito;
-          CerrarDepositoCliente(QryTrx,
-                                Cab.CodigoCliente,
-                                Lin.Sku,
-                                UsuarioCaja);
+          CerrarDepositoCliente(QryTrx, Cab.CodigoCliente, Lin.Sku, UsuarioCaja);
+
+          // ¡CORRECCIÓN! Usar Lin.TotalCIva si PrecioOriginalDep venía a cero por error
+          var ImporteCierreDE := Lin.PrecioOriginalDep;
+          if ImporteCierreDE = 0 then ImporteCierreDE := Lin.TotalCIva;
+
           InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
-            'DE', -Lin.PrecioOriginalDep, UsuarioCaja, NumFactura,
-            SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' +
-            Lin.Descripcion);
+            'DE', -ImporteCierreDE, UsuarioCaja, NumFactura,
+            SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' + Lin.Descripcion);
+
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
             UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
             'Venta depósito: ' + Lin.Descripcion);
         end
         else
+        begin
           AlmacenOrigenSalida := AAlmacen;
+          if Lin.TotalCIva > 0 then
+            TotalVentasNormales := TotalVentasNormales + Lin.TotalCIva
+          else
+            TotalDevolucionesNormales := TotalDevolucionesNormales + Abs(Lin.TotalCIva);
+        end;
         if Lin.Cantidad < 0 then
           TipoMov := 'E'
         else
@@ -1423,44 +1399,42 @@ begin
         begin
           InsertarLineaFactura(
             QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
-            Lin.Sku,
-            Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
-            Lin.NombreFamilia,
-            Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad, Lin.Tarifa,
-            Lin.EsImpIncl,
-            Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva,
-            Lin.PrecioCIva,
-            Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
+            Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
+            Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad,
+            Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
+            Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
+            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
             AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
         end;
         if Lin.TipoArticulo = 'ESTANDAR' then
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
-            Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE,
+            Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
             Cab.CodigoCliente, Lin.Articulo);
         cdsLineas.Next;
       end;
     finally
       cdsLineas.EnableControls;
     end;
+
     // =======================================================================
     // PASO 4.5: REGISTRAR EL TOTAL DE LA VENTA NORMAL EN CAJA
     // =======================================================================
     if RequiereFactura then
     begin
-      if datosCobro.EsDevolucionEconomica then
+      // Solo registra operación si realmente hubo alguna venta de tienda normal
+      if TotalVentasNormales > 0 then
         InsertarOperacionCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
-        datosCobro.TotalesFactura.Totales.TotalLiquido,
-        UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
-         'Devolución de Venta')
-      else
+          QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
+          TotalVentasNormales, UsuarioCaja, NumFactura, SerieGenerada,
+          Cab.CodigoCliente, 'Venta');
+
+      if TotalDevolucionesNormales > 0 then
         InsertarOperacionCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
-        datosCobro.TotalesFactura.Totales.TotalLiquido,
-        UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
-         'Venta');
+          QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
+          -TotalDevolucionesNormales, UsuarioCaja, NumFactura, SerieGenerada,
+          Cab.CodigoCliente, 'Devolución de Venta');
     end;
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)

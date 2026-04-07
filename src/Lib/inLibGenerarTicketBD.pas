@@ -54,14 +54,13 @@ procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
 var
   QrySec, QryEmp: TUniQuery;
   Ticket: TTicketTermico;
-  CodigoCliente:string;
   FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   TotalNuevos,
   TotalEntregas,
   TotalDevoluciones,
   TotalDevueltos,
-  NetoOperacion: Currency;
+  TotalPagadoCaja: Currency; // <--- NUEVA VARIABLE PARA EL EFECTIVO REAL
 begin
   if Trim(AOperacion) = '' then
     Exit;
@@ -107,14 +106,16 @@ begin
       Ticket.Negrita(False);
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alIzquierda);
-      Ticket.TextoColumnas('CÓDIGO CLIENTE:', QrySec.FieldByName(
-                                                'CODIGO_CLIENTE_DEP').AsString);
+      Ticket.TextoColumnas('CÓDIGO CLIENTE:', QrySec.FieldByName('CODIGO_CLIENTE_DEP').AsString);
       Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn', Now));
       Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
       Ticket.SaltarLineas(1);
+
       TotalNuevos := 0;
       TotalEntregas := 0;
       TotalDevoluciones := 0;
+      TotalDevueltos := 0;
+
       // =======================================================================
       // SECCIÓN 1: NUEVOS DEPÓSITOS
       // =======================================================================
@@ -137,13 +138,13 @@ begin
             Ticket.EscribirLinea(Copy(Desc, 1, 40));
           Ticket.EscribirLinea(Sku);
           Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' +
-                                           FormatFloat('#,##0.00', Pvp) + ' €');
+          Ticket.EscribirLinea('Valor Artículo: ' + FormatFloat('#,##0.00', Pvp) + ' €');
           Ticket.Alinear(alIzquierda);
           QrySec.Next;
         end;
         Ticket.SaltarLineas(1);
       end;
+
       // =======================================================================
       // SECCIÓN 2: ENTREGAS A CUENTA
       // =======================================================================
@@ -155,7 +156,7 @@ begin
         '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
         '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
         '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
+        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' + // <--- ¡CORREGIDO: AÑADIDO 'DE'!
         '  AND IMPORTE_TOTAL_OPCAJA > 0';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
       QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
@@ -181,6 +182,7 @@ begin
             Concepto := 'A cuenta para artículo pendiente'
           else if TipoOp = 'DE' then
             Concepto := 'A cuenta inicial';
+
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
@@ -189,6 +191,7 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
+
       // =======================================================================
       // SECCIÓN 3: DEVOLUCIONES
       // =======================================================================
@@ -211,6 +214,7 @@ begin
       qryDev.ParamByName('CAJ').AsString := ACodigoCaja;
       qryDev.ParamByName('OPE').AsString := AOperacion;
       qryDev.Open;
+
       QrySec.SQL.Text :=
         'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
         'FROM fza_caja_operaciones ' +
@@ -224,6 +228,7 @@ begin
       QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
       QrySec.ParamByName('OPE').AsString := AOperacion;
       QrySec.Open;
+
       if not QrySec.IsEmpty then
       begin
         Ticket.LineaSeparadora('=');
@@ -238,7 +243,6 @@ begin
           var Concepto := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
           var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
           TotalDevoluciones := TotalDevoluciones + Importe;
-
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
@@ -266,49 +270,63 @@ begin
             Ticket.EscribirLinea(Copy(Desc, 1, 40));
           Ticket.EscribirLinea(Sku);
           Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' +
-                                           FormatFloat('#,##0.00', Pvp) + ' €');
+          Ticket.EscribirLinea('Valor Artículo: ' + FormatFloat('#,##0.00', Pvp) + ' €');
           Ticket.Alinear(alIzquierda);
           QryDev.Next;
         end;
         Ticket.SaltarLineas(1);
       end;
+      qryDev.Free;
       // =======================================================================
       // CIFRA FINAL DE LA OPERACIÓN
       // =======================================================================
-      // TotalEntregas es positivo, TotalDevoluciones viene en negativo desde tu
-      // función InsertarOperacionCaja('DV', -ImporteDevuelto...)
-      NetoOperacion := TotalEntregas + TotalDevoluciones;
+      // Calculamos TODO el efectivo real cobrado consultando los pagos
+      TotalPagadoCaja := 0;
+      var qryPagos := TUniQuery.Create(nil);
+      try
+        qryPagos.Connection := QrySec.Connection;
+        qryPagos.SQL.Text := 'SELECT SUM(IMPORTE_ENTREGADO_PAGO - IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
+                             '  FROM fza_caja_pagos ' +
+                             ' WHERE CODIGO_EMPRESA_PAGO = :EMP ' +
+                             '   AND CODIGO_ALMACEN_PAGO = :ALM ' +
+                             '   AND CODIGO_CAJA_PAGO = :CAJ ' +
+                             '   AND NUMERO_OPERACION_PAGO = :OPE';
+        qryPagos.ParamByName('EMP').AsString := ACodigoEmpresa;
+        qryPagos.ParamByName('ALM').AsString := ACodigoAlmacen;
+        qryPagos.ParamByName('CAJ').AsString := ACodigoCaja;
+        qryPagos.ParamByName('OPE').AsString := AOperacion;
+        qryPagos.Open;
+        if not qryPagos.IsEmpty then
+          TotalPagadoCaja := qryPagos.FieldByName('TOTAL').AsCurrency;
+      finally
+        qryPagos.Free;
+      end;
       Ticket.LineaSeparadora('=');
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alDerecha);
-      Ticket.EscribirLinea('VALOR TOTAL NUEVOS DEPÓSITOS: ' +
-                                   FormatFloat('#,##0.00', TotalNuevos) + ' €');
+      if TotalNuevos > 0 then
+        Ticket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' + FormatFloat('#,##0.00', TotalNuevos) + ' €');
       if TotalDevueltos <> 0 then
-        Ticket.EscribirLinea('VALOR TOTAL DEPÓSITOS DEVUELTOS: ' +
-                                FormatFloat('#,##0.00', TotalDevueltos) + ' €');
-      Ticket.EscribirLinea('DINERO ENTREGADO EN ESTA OPERACIÓN: ' +
-                                 FormatFloat('#,##0.00', TotalEntregas) + ' €');
+        Ticket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' + FormatFloat('#,##0.00', TotalDevueltos) + ' €');
+      Ticket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' + FormatFloat('#,##0.00', TotalEntregas) + ' €');
       if TotalDevoluciones < 0 then
-        Ticket.EscribirLinea('DINERO DEVUELTO EN ESTA OPERACIÓN: ' +
-                             FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
+        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' + FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
       Ticket.SaltarLineas(1);
-//      Ticket.Negrita(True);
-//      Ticket.EscribirLinea('TOTAL ABONADO: ' +
-//                                 FormatFloat('#,##0.00', NetoOperacion) + ' €');
-//      Ticket.Negrita(False);
-//      Ticket.SaltarLineas(2);
+      Ticket.Negrita(True);
+      // IMPRIMIMOS EL TOTAL REAL COBRADO (Los 150 €)
+      Ticket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' + FormatFloat('#,##0.00', TotalPagadoCaja) + ' €');
+      Ticket.Negrita(False);
+      Ticket.SaltarLineas(2);
       Ticket.Alinear(alCentro);
       Ticket.EscribirLinea('Conforme, el cliente');
       Ticket.SaltarLineas(4);
-      Ticket.LineaSeparadora('-');
+      Ticket.LineaSeparadora('_');
       Ticket.CortarPapel;
       // =======================================================================
       // IMPRESIÓN / VISUALIZACIÓN
       // =======================================================================
       ComandosESC := Ticket.ObtenerComandos;
-      RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
-                        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+      RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
       FormPreview := TFormVisualizador.Create(nil);
       try
         FormPreview.Hide;
