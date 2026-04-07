@@ -246,7 +246,7 @@ begin
       NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
     end;
     // 2. Vaciar las líneas de la venta anterior
-    if DatosCaja.cdsLineas.Active then
+    if (DatosCaja.cdsLineas.RecordCount > 0) then
       DatosCaja.cdsLineas.EmptyDataSet;
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
@@ -254,6 +254,8 @@ begin
       DatosCaja.cdsCabecera.EmptyDataSet;
       DatosCaja.cdsCabecera.Append;
     end;
+    lblNombreCliente.Caption := '';
+    btnCodigoCliente.Text := '';
     // 4. Aplicar valores base
     DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := FFecha;
     AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
