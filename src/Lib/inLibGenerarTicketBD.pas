@@ -610,7 +610,6 @@ begin
       Ticket.Alinear(alCentro);
       Ticket.Negrita(True);
       Ticket.SaltarLineas(3);
-      Ticket.CortarPapel(True);
       var QryDep := TUniQuery.Create(nil);
       try
         QryDep.Connection := inLibGlobalVar.oConn;
@@ -631,7 +630,6 @@ begin
         QryDep.Open;
         if not QryDep.IsEmpty then
         begin
-          Ticket.SaltarLineas(1);
           Ticket.Alinear(alIzquierda);
           Ticket.Negrita(True);
           Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
