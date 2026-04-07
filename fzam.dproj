@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -428,6 +428,7 @@
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
+        <DCCReference Include="src\Lib\inLibData.pas"/>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -467,6 +468,12 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile">
                     <Platform Name="Win32">
@@ -489,6 +496,18 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>fzam.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\fzam.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>fzam.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="payment_48_48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_tax_invoice_document_calculator_icon_188684.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>

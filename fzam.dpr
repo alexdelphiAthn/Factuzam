@@ -130,7 +130,8 @@ uses
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
-  inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas';
+  inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
+  inLibData in 'src\Lib\inLibData.pas';
 
 var
   frmLogon: TfrmLogon;
