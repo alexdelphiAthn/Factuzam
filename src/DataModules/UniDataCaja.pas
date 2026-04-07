@@ -143,6 +143,7 @@ type
                           ALinea:     string;
                           AEmpresa:   string;
                           AAlmacen:   string;
+                          ACaja:      string;
                           AAlmacenContra: string; // <--- AÑADIDO AQUÍ
                           ATipoMov:   string;
                           ASku:       string;
@@ -235,7 +236,7 @@ type
                              ANumOperacion: string;
                              ASerieFactura, ANumFactura: string;
                              AImporte: Currency): string;
-    function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
+//    function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
     procedure CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                         const AEmpresa, ACliente,
                                         AArticulo, ASku, AUsuario: string;
@@ -367,7 +368,12 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inMtoCajaOpe, inLibDevExp, inLibFacturas, inLibGenerarTicketBD;
+uses inLibtb,
+     inLibData,
+     inMtoCajaOpe,
+     inLibDevExp,
+     inLibFacturas,
+     inLibGenerarTicketBD;
 
 {$R *.dfm}
 
@@ -558,11 +564,11 @@ begin
             AnticipoSinIVA := AnticipoDado / (1 + (PorcIVA / 100));
           cdsLineas.Append;
           cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString  :=
-                                                                     'ANTICIPO';
+                                                                      'ACUENTA';
           cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString    :=
-                                                                     'ANTICIPO';
+                                                                      'ACUENTA';
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString
-                                                     := 'Abono anticipo ' + Sku;
+                                                     := 'Abono a cuenta ' + Sku;
           cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString              :=
                                                                             'A';
           cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat          :=
@@ -641,7 +647,7 @@ var
     begin
       if (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') and
          (cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString =
-          'Abono anticipo ' + ASkuLinea) then
+          'Abono a cuenta ' + ASkuLinea) then
       begin
         cdsLineas.Delete;
         Break;
@@ -685,9 +691,9 @@ var
         cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'NUEVO_DEP';
       var sDesc :=
            cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString;
-      if Pos('Adelanto ', sDesc) <> 1 then
+      if Pos('Abono ', sDesc) <> 1 then
         cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
-                                                            'Adelanto ' + sDesc;
+                                                      'Abono a cuenta ' + sDesc;
       cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency := TotalLinea;
       cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
                                                                DineroDisponible;
@@ -842,6 +848,7 @@ procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           ALinea:     string;
                           AEmpresa:   string;
                           AAlmacen:   string;
+                          ACaja:      string;
                           AAlmacenContra: string; // <--- AÑADIDO AQUÍ
                           ATipoMov:   string;
                           ASku:       string;
@@ -868,6 +875,7 @@ begin
     uspMov.ParamByName('p_LINEA_MOV').AsString               := ALinea;
     uspMov.ParamByName('p_CODIGO_EMPRESA_MOV').AsString      := AEmpresa;
     uspMov.ParamByName('p_CODIGO_ALMACEN_MOV').AsString      := AAlmacen;
+    uspMov.ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString     := ACaja;
     if Trim(AAlmacenContra) = '' then
       uspMov.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear
     else
@@ -942,6 +950,10 @@ begin
   QryTrx.SQL.Text :=
     'UPDATE fza_depositos_cliente ' +
     '   SET ESTADO_DEP   = ''CANCELADO'', ' +
+    '       EMPRESA_CANCEL_DEP = :EMP_CAN, ' +
+    '       ALMACEN_CANCEL_DEP = :ALM_CAN, ' +
+    '       CAJA_CANCEL_DEP = :CAJ_CAN, ' +
+    '       NUMERO_OPERACION_CANCEL_DEP = :NUM_CAN,'+
     '       USUARIOMODIF = :USUARIO ' +
     ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
     '   AND CODIGO_CLIENTE_DEP = :CLIENTE ' +
@@ -949,6 +961,10 @@ begin
   QryTrx.ParamByName('USUARIO').AsString := AUsuario;
   QryTrx.ParamByName('SKU').AsString     := ASku;
   QryTrx.ParamByName('CLIENTE').AsString     := ACliente;
+  QryTrx.ParamByName('EMP_CAN').AsString     := AEmpresa;
+  QryTrx.ParamByName('ALM_CAN').AsString     := AAlmacenTienda;
+  QryTrx.ParamByName('CAJ_CAN').AsString     := ACaja;
+  QryTrx.ParamByName('NUM_CAN').AsString     := ANumOpe;
   QryTrx.Execute;
   // 3. Traspaso de stock: Salida del almacén depósito → Entrada a tienda
   //    Coste = 0 en ambos lados:
@@ -961,6 +977,7 @@ begin
     '0001',        // sin doc factura asociado
     AEmpresa,
     AAlmacenDeposito,      // almacén que pierde stock
+    ACaja,
     AAlmacenTienda,        // almacén que recibe stock
     'S',
     ASku,
@@ -976,6 +993,7 @@ begin
     '', '', '0002',
     AEmpresa,
     AAlmacenTienda,        // almacén que recibe stock
+    ACaja,
     AAlmacenDeposito,      // almacén de procedencia
     'E',
     ASku,
@@ -1015,6 +1033,7 @@ begin
                             '0001',
                             AEmpresa,
                             AAlmacenOrigen,
+                            ACaja,
                             AAlmacenDestino,
                             'S',
                             ASku,
@@ -1033,6 +1052,7 @@ begin
                             '0002',
                             AEmpresa,
                             AAlmacenDestino,
+                            ACaja,
                             AAlmacenOrigen,
                             'E',
                             ASku,
@@ -1297,7 +1317,7 @@ begin
           if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
             InsertarLineaFactura(
               QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo, Lin.Sku,
-              'Devolución anticipo ' + Lin.Descripcion, '', Lin.Familia, Lin.NombreFamilia,
+              'Devolución a cuenta ' + Lin.Descripcion, '', Lin.Familia, Lin.NombreFamilia,
               Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl,
               Lin.PrecioSalida, Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
@@ -1416,7 +1436,7 @@ begin
         if Lin.TipoArticulo = 'ESTANDAR' then
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
-            AEmpresa, AlmacenOrigenSalida, '', TipoMov, Lin.Sku,
+            AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
             Lin.Cantidad, 0, UsuarioCaja,AAlmacen, NumOperacionVE,
             Cab.CodigoCliente, Lin.Articulo);
         cdsLineas.Next;
@@ -1831,34 +1851,6 @@ begin
   QryTrx.ParamByName('ESTRASPASO').AsString := AEsTraspaso;
   QryTrx.ParamByName('USUARIO').AsString  := inLibGlobalVar.oUser;
   QryTrx.Execute;
-end;
-
-function TdmCajaOpe.ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
-var
-  QryAlm: TUniQuery;
-begin
-  Result := '';
-  QryAlm := TUniQuery.Create(nil);
-  try
-    // Usamos la conexión global del sistema
-    QryAlm.Connection := inLibGlobalVar.oConn;
-    QryAlm.SQL.Text :=
-      'SELECT CODIGO_ALMACEN_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE CODIGO_EMPRESA_ALM = :EMP ' +
-      '   AND ESACTIVO_ALM = ''S'' ' +
-      '   AND TIPO_USO_ALM = ''DEPÓSITO'' ' + // <-- Usando tu flag real
-      ' LIMIT 1';
-    QryAlm.ParamByName('EMP').AsString := AEmpresa;
-    QryAlm.Open;
-    if not QryAlm.IsEmpty then
-      Result := QryAlm.FieldByName('CODIGO_ALMACEN_ALM').AsString
-    else
-      // Lanzamos excepción para que la transacción de caja se detenga si hay un error de configuración
-      raise Exception.Create('No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
-  finally
-    QryAlm.Free;
-  end;
 end;
 
 //procedure TdmCajaOpe.CalcularTotalesCabecera;

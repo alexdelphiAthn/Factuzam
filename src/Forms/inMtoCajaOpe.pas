@@ -1030,7 +1030,8 @@ begin
       if AItem <> tvUds then
         AAllow := False;
     end
-    // Si la línea es el abono (anticipo de dinero, marcado con 'A' según tu UniDataCaja)
+    // Si la línea es el abono (anticipo de dinero, marcado con 'A' según tu
+    //UniDataCaja)
     else if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A' then
     begin
       // No permitimos tocar absolutamente nada de la línea del abono
