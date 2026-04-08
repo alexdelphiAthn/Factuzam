@@ -1151,7 +1151,7 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
     else
       PrecioBase := AImporte / (1 + Lin.PorcIva / 100);
     InsertarLineaFactura(
-      QryTrx, SerieGenerada, NumeroGenerado,
+      QryTrx, SerieGenerada, NumFactura,
       Lin.Linea, 'ANTICIPO', 'ANTICIPO',
       Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds',
       1, '', 'S', PrecioBase, 0, 0, PrecioBase, AImporte,
