@@ -601,6 +601,7 @@ procedure ImprimirRecordatorio(CodigoCliente:string;
 var
   Ticket: TTicketTermico;
   FormPreview: TFormVisualizador;
+  TotalPendienteCliente:Currency;
 begin
   if Trim(CodigoCliente) <> '' then
   begin
@@ -636,43 +637,40 @@ begin
           Ticket.Negrita(False);
           Ticket.LineaSeparadora('-');
           Ticket.Alinear(alIzquierda);
-          Ticket.EscribirLinea('Fecha    SKU/Artículo     Total    Pdte');
+          // Cabecera
+          Ticket.EscribirLinea(Format('%-8s %15s %15s', ['Fecha', 'Total', 'Pendiente']));
           Ticket.LineaSeparadora('-');
-          var TotalPendienteCliente: Currency := 0;
           while not QryDep.Eof do
           begin
-            var Fecha    := FormatDateTime('dd/mm/yy',
-                         QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime);
-            var SkuDep   :=
-                Copy(QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString, 1, 15);
-            var Precio   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-            var Cantidad :=
-                         QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
-            if Cantidad = 0 then
-              Cantidad := 1; // Seguridad
-            var TotalDep := Precio * Cantidad;
-            var Anticipo :=
-                        QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
-            var Pendiente:= TotalDep - Anticipo;
+            var Fecha     := FormatDateTime('dd/mm/yy',
+                              QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+            var SkuDep    := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+            var Precio    := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
+            var Cantidad  := QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+            if Cantidad = 0 then Cantidad := 1;
+            var TotalDep  := Precio * Cantidad;
+            var Anticipo  := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+            var Pendiente := TotalDep - Anticipo;
             TotalPendienteCliente := TotalPendienteCliente + Pendiente;
-            // Formatear en columnas tabuladas
-            var LineaDep := Format('%8s %-15s %7s %7s', [
+            // Línea 1: fecha + total + pendiente  (8+1+15+1+15 = 40, < 42 ✓)
+            Ticket.EscribirLinea(Format('%-8s %15s %15s', [
               Fecha,
-              SkuDep,
               FormatFloat('#,##0.00 €', TotalDep),
               FormatFloat('#,##0.00 €', Pendiente)
-            ]);
-            Ticket.EscribirLinea(LineaDep);
-            Ticket.EscribirLinea(QryDep.FieldByName(
-                                              'DESCRIPCION_ARTICULO').AsString);
+            ]));
+            // Línea 2: SKU completo con sangría
+            Ticket.EscribirLinea('  ' + SkuDep);
+            // Línea 3: descripción truncada con sangría
+            Ticket.EscribirLinea('  ' + Copy(
+              QryDep.FieldByName('DESCRIPCION_ARTICULO').AsString, 1, 40));
+            Ticket.SaltarLineas(1); // pequeño separador entre depósitos
             QryDep.Next;
           end;
           Ticket.LineaSeparadora('-');
           Ticket.Negrita(True);
           Ticket.TextoColumnas('TOTAL PDTE. DE PAGO:',
-                       FormatFloat('#,##0.00', TotalPendienteCliente) + ' €');
+                       FormatFloat('#,##0.00', TotalPendienteCliente) + ' €  ');
           Ticket.Negrita(False);
-
         end;
       finally
         QryDep.Free;
