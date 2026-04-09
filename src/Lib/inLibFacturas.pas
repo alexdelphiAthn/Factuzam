@@ -159,6 +159,7 @@ type
     _dPorIvaS: currency;
     _dPorIvaE: currency;
     _sMensajeError: string;
+    _bAutoWriteBack: Boolean;
     function GetPrecioSal: Currency;
     procedure SetPrecioSal(const Value: Currency);
     function GetPorDto: Currency;
@@ -181,7 +182,6 @@ type
     procedure SetImpcl(const Value: String);
     function GetTipoIVa: String;
     procedure SetTipoIva(const Value: String);
-
   public
     Property PrecioSal: Currency read GetPrecioSal write SetPrecioSal;
     Property PorDto: Currency read GetPorDto write SetPorDto;
@@ -195,7 +195,6 @@ type
     Property TotSiva: Currency read GetTotSiva write SetTotSiva;
     Property Impcl: String read GetImpcl write SetImpcl;
     Property MensajeError: String read _sMensajeError;
-
   public
     constructor Create(unqryLin: TDataset); overload;
     constructor Create(unqryLin, unqryFac: TDataset;
@@ -283,6 +282,7 @@ constructor TLinFac.Create(unqryLin: TDataset);
 begin
   inherited Create;
   _unqryLin := unqryLin;
+  _bAutoWriteBack := True;
   Self.CopyToObjectLin;
 end;
 
@@ -292,6 +292,7 @@ begin
   inherited Create;
   _unqryLin := unqryLin;
   _unqryFac := unqryFac;
+  _bAutoWriteBack := False;
   _sMensajeError := '';
   Self.CopyToObjectLin;
   Self.CopyToObjectFac;
@@ -299,10 +300,8 @@ end;
 
 destructor TLinFac.Destroy;
 begin
-  if ValidarDatos then
-  begin
+  if _bAutoWriteBack and ValidarDatos then
     Self.CopyToDataSetLin;
-  end;
   inherited Destroy;
 end;
 

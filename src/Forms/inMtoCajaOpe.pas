@@ -90,6 +90,9 @@ type
     actSalir: TAction;
     actEliminarLinea: TAction;
     actCobro: TAction;
+    btnF2: TcxButton;
+    cxLabel7: TcxLabel;
+    actCargarCta: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -141,7 +144,14 @@ type
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure cxGrid1DBTableView1MouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure btnF2Click(Sender: TObject);
+    procedure actCargarCtaExecute(Sender: TObject);
+    procedure cxGrid1DBTableView1FocusedRecordChanged(
+      Sender: TcxCustomGridTableView; APrevFocusedRecord,
+      AFocusedRecord: TcxCustomGridRecord;
+      ANewItemRecordFocusingChanged: Boolean);
   private
+    procedure CargarDepositosF2;
     procedure AsegurarLineaNueva;
     procedure ActualizarFoco;
     function BuscarArticulo:String;
@@ -174,6 +184,7 @@ type
     FNumAtributosActual: Integer;   // Guarda el nº de atributos aunque el dataset haga Post
     FProcesandoAtributo: Boolean;   // Evita re-entrada en el bloque del último atributo
     FInicializandoCombo: Boolean;   // Evita que ForzarDespliegue dispare OnAtributoChanged
+    FUltimoArticuloPadre: string;
   private
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
@@ -893,14 +904,17 @@ begin
                     ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO';
     Qry.ParamByName('SKU').AsString := Sku;
     Qry.Open;
-    DatosCaja.cdsLineas.Edit;
-    var NumAtributosReq :=
-      DatosCaja.cdsLineas.FieldByName(
-                                   'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+
+    // Nos aseguramos de poder escribir en la memoria
+    if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+      DatosCaja.cdsLineas.Edit;
+
     while (not Qry.Eof) do
     begin
       i := Qry.FieldByName('ORDEN_VISUAL_ATRIBUTO').AsInteger;
-      if (i >= 1) and (i <= NumAtributosReq) then
+
+      // EL TRUCO: Ignoramos la variable que venía a 0 y escribimos siempre que sea válido
+      if (i >= 1) and (i <= 5) then
         DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) +
                      '_VALOR').AsString := Qry.FieldByName('VALOR_AV').AsString;
       Qry.Next;
@@ -1272,6 +1286,25 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.cxGrid1DBTableView1FocusedRecordChanged(
+  Sender: TcxCustomGridTableView; APrevFocusedRecord,
+  AFocusedRecord: TcxCustomGridRecord; ANewItemRecordFocusingChanged: Boolean);
+var
+  sCodPadre: string;
+begin
+  if not DatosCaja.cdsLineas.Active then Exit;
+  if DatosCaja.cdsLineas.IsEmpty then Exit;
+
+  // Si nos hemos posicionado sobre una fila válida...
+  if AFocusedRecord <> nil then
+  begin
+    // Leemos qué artículo es exactamente el de esta fila
+    sCodPadre := DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString;
+    if sCodPadre <> '' then
+      ActualizarColumnasDinamicas(sCodPadre);
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
@@ -1541,6 +1574,11 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.actCargarCtaExecute(Sender: TObject);
+begin
+  btnF2Click(Sender);
+end;
+
 procedure TfrmMtoOpeCaja.actCobroExecute(Sender: TObject);
 begin
   btnF12Click(Sender);
@@ -1595,49 +1633,46 @@ var
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
 begin
-  if ArticuloPadre = '' then Exit;
+  // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
+  if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
+  FUltimoArticuloPadre := ArticuloPadre;
+
   NombresAtributos := TStringList.Create;
   try
-    datosCaja.qryDefinicionArticulo.Connection := oConn;
-    datosCaja.qryDefinicionArticulo.Close;
-    datosCaja.qryDefinicionArticulo.SQL.Text :=
-    'SELECT DISTINCT  '        +
-    '      N.NOMBRE_ATRIBUTO, '+
-    '      N.ORDEN_VISUAL_ATRIBUTO      '+
-    ' FROM fza_articulos_skus SKU '+
-    ' JOIN fza_atributos_sku AT '+
-    '   ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SA '+
-    ' JOIN fza_atributos_valores V '+
-    '   ON AT.ID_VALOR_SA = V.ID_VALOR_AV'+
-    ' JOIN vi_atributos_nombres N '+
-    '   ON V.ID_VA_AV = N.ID_ATRIBUTO '+
-    'WHERE SKU.CODIGO_ARTICULO_SKU = :ARTICULO '+
-    'ORDER BY N.ORDEN_VISUAL_ATRIBUTO '+
-    'LIMIT 5';
-    datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
-                                                                  ArticuloPadre;
-    datosCaja.qryDefinicionArticulo.Open;
-    while not datosCaja.qryDefinicionArticulo.Eof do
+    // Solo atacamos la base de datos si hay un artículo real
+    if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
     begin
-      NombresAtributos.Add(
-       datosCaja.qryDefinicionArticulo.FieldByName('NOMBRE_ATRIBUTO').AsString);
-      datosCaja.qryDefinicionArticulo.Next;
+      datosCaja.qryDefinicionArticulo.Connection := oConn;
+      datosCaja.qryDefinicionArticulo.Close;
+      datosCaja.qryDefinicionArticulo.SQL.Text :=
+      'SELECT DISTINCT  '        +
+      '      N.NOMBRE_ATRIBUTO, '+
+      '      N.ORDEN_VISUAL_ATRIBUTO      '+
+      ' FROM fza_articulos_skus SKU '+
+      ' JOIN fza_atributos_sku AT '+
+      '   ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SA '+
+      ' JOIN fza_atributos_valores V '+
+      '   ON AT.ID_VALOR_SA = V.ID_VALOR_AV'+
+      ' JOIN vi_atributos_nombres N '+
+      '   ON V.ID_VA_AV = N.ID_ATRIBUTO '+
+      'WHERE SKU.CODIGO_ARTICULO_SKU = :ARTICULO '+
+      'ORDER BY N.ORDEN_VISUAL_ATRIBUTO '+
+      'LIMIT 5';
+      datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString := ArticuloPadre;
+      datosCaja.qryDefinicionArticulo.Open;
+      while not datosCaja.qryDefinicionArticulo.Eof do
+      begin
+        NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName('NOMBRE_ATRIBUTO').AsString);
+        datosCaja.qryDefinicionArticulo.Next;
+      end;
     end;
 
-    // CAMBIO 9: Guardar en FNumAtributosActual para que no se pierda con Posts
     FNumAtributosActual := NombresAtributos.Count;
 
-    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-    begin
-      DatosCaja.cdsLineas.FieldByName(
-         'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
-    end
-    else
-    begin
-      DatosCaja.cdsLineas.Edit;
-      DatosCaja.cdsLineas.FieldByName(
-         'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
-    end;
+    // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
+    if DatosCaja.cdsLineas.Active and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+      DatosCaja.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
+
     cxGrid1DBTableView1.BeginUpdate;
     try
       for i := 1 to 5 do
@@ -1650,9 +1685,8 @@ begin
             Col.Caption := NombresAtributos[i-1];
             Col.Visible := True;
             Col.Options.Editing := True;
-            if datosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-              datosCaja.cdsLineas.FieldByName('ATTR' +
-                     IntToStr(i) + '_NOMBRE').AsString := NombresAtributos[i-1];
+            if DatosCaja.cdsLineas.Active and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+              DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_NOMBRE').AsString := NombresAtributos[i-1];
           end
           else
           begin
@@ -1685,7 +1719,10 @@ begin
   begin
     Edit := TcxCustomEdit(Sender);
     if Edit.EditModified then
-//      Edit.ValidateEdit(True);
+    begin
+      Edit.ValidateEdit(True);
+      Edit.EditModified := False;
+    end;
   end;
 end;
 
@@ -1713,7 +1750,6 @@ begin
       else
         DatosCaja.cdsLineas.Post;
     end;
-
     DatosCaja.cdsLineas.DisableControls;
     try
       DatosCaja.cdsLineas.First;
@@ -1733,7 +1769,6 @@ begin
       DatosCaja.cdsLineas.EnableControls;
     end;
   end;
-
   // =======================================================================
   // 2. BÚSQUEDA Y ASIGNACIÓN DEL NUEVO CLIENTE
   // =======================================================================
@@ -1746,7 +1781,6 @@ begin
     DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := DatosCaja.GetTarifaDefault;
     DatosCaja.cdsCabecera.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString := 'S';
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-
     Error := False;
   end
   else
@@ -1761,7 +1795,6 @@ begin
                         ' WHERE CODIGO_CLIENTE = :COD';
       unqry.ParamByName('COD').AsString := sCodigo;
       unqry.Open;
-
       if not unqry.IsEmpty then
       begin
         DatosCaja.cdsCabecera.Edit;
@@ -1769,15 +1802,16 @@ begin
         sNomCliente := unqry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
         DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := unqry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
         lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-
         // Si es un cliente con depósitos, los cargamos
         if SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString, 'S') then
-          DatosCaja.CargarDepositosCliente(sCodigo);
+        begin
+          if oCajaParams.GetBool('vgerAutoLoadDepositos', False) then
+            DatosCaja.CargarDepositosCliente(sCodigo);
+        end;
       end;
     finally
       unqry.Free;
     end;
-
     if sNomCliente = '' then
     begin
       Error := True;
@@ -1790,15 +1824,17 @@ begin
       ErrorText := '';
     end;
   end;
-
   // =======================================================================
   // 3. PROTECCIÓN CONTRA DATASET VACÍO Y RECÁLCULO FINAL
   // =======================================================================
   if DatosCaja.cdsLineas.Active then
   begin
+    cxGrid1DBTableView1.DataController.UpdateItems(False);
+
+    // 2º Ponemos el foco en la línea nueva
     AsegurarLineaNueva;
 
-    // Recalculamos directamente sin depender del foco de la rejilla
+    // 3º Como paso final absoluto, pisamos la etiqueta leyendo la memoria contable
     Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
     try
       Totales.ProcesarFacturaCompleta;
@@ -1831,7 +1867,6 @@ begin
         DatosCaja.cdsLineas.Append;
       end;
     end;
-
     // 3. Forzamos el foco visual a la celda del Artículo, lista para escanear
     if cxGrid1.CanFocus then
       cxGrid1.SetFocus;
@@ -2119,6 +2154,64 @@ begin
       frmFaseCobro.Free;
     ObjTotales.Free;
   end;
+end;
+
+procedure TfrmMtoOpeCaja.CargarDepositosF2;
+var
+  sCodigoCliente: string;
+  Totales: TFacturaTotales;
+begin
+  sCodigoCliente := DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+  if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
+  begin
+    ShowMessage('Debe seleccionar un cliente para cargar sus depósitos.');
+    Exit;
+  end;
+
+  // 1. Matar la edición activa limpiamente (Evita el error de "Artículo no encontrado" en la línea en blanco)
+  if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
+     cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+  begin
+    cxGrid1DBTableView1.Controller.EditingController.HideEdit(False);
+  end;
+
+  // 2. Cancelar línea a medias si la hubiera
+  if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+    DatosCaja.cdsLineas.Cancel;
+
+  // 3. Limpieza y carga de depósitos de forma silenciosa
+  DatosCaja.cdsLineas.DisableControls;
+  try
+    DatosCaja.cdsLineas.First;
+    while not DatosCaja.cdsLineas.Eof do
+    begin
+      if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S') or
+         (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') then
+        DatosCaja.cdsLineas.Delete
+      else
+        DatosCaja.cdsLineas.Next;
+    end;
+
+    DatosCaja.CargarDepositosCliente(sCodigoCliente);
+  finally
+    DatosCaja.cdsLineas.EnableControls;
+  end;
+  cxGrid1DBTableView1.DataController.UpdateItems(False);
+  // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe la caché)
+  AsegurarLineaNueva;
+  // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria interna
+  Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+  try
+    Totales.ProcesarFacturaCompleta;
+    ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
+  finally
+    Totales.Free;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.btnF2Click(Sender: TObject);
+begin
+  CargarDepositosF2;
 end;
 
 procedure TfrmMtoOpeCaja.btnF5Click(Sender: TObject);
