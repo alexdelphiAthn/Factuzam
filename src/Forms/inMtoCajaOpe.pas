@@ -874,6 +874,9 @@ begin
                                      'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
                              qry.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
       DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
+      DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+      DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency :=
+                                                                              0;
       GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -1458,7 +1461,7 @@ end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Exit(Sender: TObject);
 begin
-    jvntrstb1.EnterAsTab := True;
+  jvntrstb1.EnterAsTab := True;
 end;
 
 procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
@@ -1778,6 +1781,7 @@ begin
   begin
     lblNombreCliente.Caption := 'VENTA CONTADO';
     DatosCaja.cdsCabecera.Edit;
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_CLIENTE_FACTURA').AsString := '';
     DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString := DatosCaja.GetTarifaDefault;
     DatosCaja.cdsCabecera.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString := 'S';
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;

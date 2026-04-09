@@ -324,34 +324,43 @@ begin
     raise Exception.Create(_sMensajeError);
   if (SameText(_sImpcl, 'S')) then
   begin
-    if (_dPorIva = 0) then
+    // Precio con IVA incluido
+    if (_dPreCiva = 0) and (_dPrecioSal <> 0) then
+    begin
+      // Línea nueva: calcular precio desde PrecioSalida y descuento porcentual
+      _dDto    := _dPrecioSal * (_dPorDto / 100);
+      _dPreCiva := _dPrecioSal - _dDto;
+    end
+    else if (_dPrecioSal <> 0) then
+    begin
+      // Línea existente: recalcular descuento desde precio actual
+      _dDto    := _dPrecioSal - _dPreCiva;
+      _dPorDto := (_dDto / _dPrecioSal) * 100;
+    end;
+    if _dPorIva = 0 then
       _dPreSiva := _dPreCiva
     else
-      _dPreSiva := _dPreCiva / (1 + _dPorIva/100);
+      _dPreSiva := _dPreCiva / (1 + _dPorIva / 100);
     _dTotSiva := _dPreSiva * _dCant;
     _dTotCiva := _dPreCiva * _dCant;
-    if (_dPrecioSal <> 0) then
-    begin
-      _dDto := _dPrecioSal - _dPreCiva;
-      if _dPrecioSal <> 0 then
-        _dPorDto := (_dDto / _dPrecioSal) * 100
-      else
-        _dPorDto := 0;
-    end;
   end
   else
   begin
-    _dPreCiva := _dPreSiva * (1 + _dPorIva/100);
+    // Precio sin IVA
+    if (_dPreSiva = 0) and (_dPrecioSal <> 0) then
+    begin
+      _dDto    := _dPrecioSal * (_dPorDto / 100);
+      _dPreSiva := _dPrecioSal - _dDto;
+    end
+    else if (_dPrecioSal <> 0) then
+    begin
+      _dDto    := _dPrecioSal - _dPreSiva;
+      _dPorDto := (_dDto / _dPrecioSal) * 100;
+    end;
+
+    _dPreCiva := _dPreSiva * (1 + _dPorIva / 100);
     _dTotCiva := _dPreCiva * _dCant;
     _dTotSiva := _dPreSiva * _dCant;
-    if (_dPrecioSal <> 0) then
-    begin
-      _dDto := _dPrecioSal - _dPreSiva;
-      if _dPrecioSal <> 0 then
-        _dPorDto := (_dDto / _dPrecioSal) * 100
-      else
-        _dPorDto := 0;
-    end;
   end;
 end;
 
