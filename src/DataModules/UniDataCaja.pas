@@ -77,6 +77,7 @@ type
     FormaPago:           string;
     Comentarios:         string;
   end;
+
   TDatosLineaFactura = record
     Linea:               string;
     Articulo:            string;
@@ -111,6 +112,7 @@ type
   TRellenarAtributosEvent = procedure(ASku: string) of object;
   TOnUpdateTotalEvent =
                      procedure(Sender: TObject; NuevoTotal: Currency) of object;
+
   TdmCajaOpe = class(TDataModule)
     cdsLineas:TClientDataSet;
     cdsCabecera:TClientDataSet;
@@ -358,8 +360,8 @@ type
                                   write FOnRellenarAtributos;
   end;
 
-    function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
-    function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
+  function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
+  function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
 
 var
   dmCajaOpe: TdmCajaOpe;
@@ -1144,8 +1146,7 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
     PrecioBase: Currency;
   begin
     if not RequiereFactura then
-      Exit; // Candado de seguridad
-
+      Exit;
     if Lin.PorcIva = 0 then
       PrecioBase := AImporte
     else
@@ -1175,14 +1176,12 @@ begin
   if DatosCobro.ImporteEntregado <
                 cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency then
   begin
-    //es una operación de préstamo
     TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
     if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
       raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
   end;
   Cab          := LeerCabecera(cdsCabecera);
   TotalFactura := DatosCobro.ImporteEntregado;
-
   // =======================================================================
   // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
   // =======================================================================
@@ -1215,7 +1214,6 @@ begin
           Break;
         end;
       end;
-
       cdsLineas.Next;
     end;
   finally
@@ -1286,7 +1284,6 @@ begin
     end;
     TotalVentasNormales := 0;
     TotalDevolucionesNormales := 0;
-
     // =======================================================================
     // PASO 4: LÍNEAS
     // =======================================================================
@@ -1296,7 +1293,6 @@ begin
       while not cdsLineas.Eof do
       begin
         Lin := LeerLineaActual(cdsLineas);
-
         // -------------------------------------------------------------------
         // CASO A: ABONO DE ANTICIPO PREVIO
         // -------------------------------------------------------------------
@@ -1311,7 +1307,6 @@ begin
               Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
               UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
-
           // ¡LA PIEZA QUE FALTABA! Registrar el consumo del anticipo en Caja
           // Lin.TotalCIva viene en negativo (ej: -100)
           if Abs(Lin.TotalCIva) > 0.001 then
@@ -1319,7 +1314,6 @@ begin
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
               Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
               Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion);
-
           cdsLineas.Next;
           Continue;
         end;
@@ -1364,20 +1358,16 @@ begin
           NumMovGenerado := ObtenerSiguienteContador('MV')
         else
           NumMovGenerado := '';
-
         if Lin.VieneDeDeposito = 'S' then
         begin
           AlmacenOrigenSalida := AlmacenDeposito;
           CerrarDepositoCliente(QryTrx, Cab.CodigoCliente, Lin.Sku, UsuarioCaja);
-
           // ¡CORRECCIÓN! Usar Lin.TotalCIva si PrecioOriginalDep venía a cero por error
           var ImporteCierreDE := Lin.PrecioOriginalDep;
           if ImporteCierreDE = 0 then ImporteCierreDE := Lin.TotalCIva;
-
           InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
             'DE', -ImporteCierreDE, UsuarioCaja, NumFactura,
             SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' + Lin.Descripcion);
-
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
             UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
@@ -1417,7 +1407,6 @@ begin
     finally
       cdsLineas.EnableControls;
     end;
-
     // =======================================================================
     // PASO 4.5: REGISTRAR EL TOTAL DE LA VENTA NORMAL EN CAJA
     // =======================================================================
@@ -1429,7 +1418,6 @@ begin
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
           TotalVentasNormales, UsuarioCaja, NumFactura, SerieGenerada,
           Cab.CodigoCliente, 'Venta');
-
       if TotalDevolucionesNormales > 0 then
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
@@ -1454,7 +1442,6 @@ begin
       end;
       DatosCobro.MemTablePagos.Next;
     end;
-
     // =======================================================================
     // PASO 6: VALES
     // =======================================================================
@@ -1467,7 +1454,6 @@ begin
         InsertarPagoCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE, NumLineaPago,
           'VALE', DatosCobro.ValesRecogidos[i].ImporteAplicado, 0);
-
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
           DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
@@ -1478,7 +1464,6 @@ begin
         DatosCobro.ValesRecogidos[i].CodigoVale, ACaja, AAlmacen, NumOperacionVE,
         SerieGenerada, NumFactura);
     end;
-
     if DatosCobro.ImporteValeEmitido > 0 then
     begin
       ValeGenerado := EmitirNuevoVale(
@@ -1690,7 +1675,6 @@ begin
     '  NULLIF(:REFERENCIA,  ''''),' +
     '  NULLIF(:OBS,         ''''),' +
     '  :USUARIO, NOW())';
-
   QryTrx.ParamByName('EMP').AsString       := AEmpresa;
   QryTrx.ParamByName('ALM').AsString       := AAlmacen;
   QryTrx.ParamByName('CAJA').AsString      := ACaja;
@@ -1805,7 +1789,6 @@ begin
     '  :ESTRASPASO,' +
     '  ''N'',' +            // ESTADO_DEVOLUCION_OPCAJA: N por defecto, se actualiza en abonos
     '  :USUARIO, :USUARIO, NOW())';
-
   QryTrx.ParamByName('EMP').AsString      := AEmpresa;
   QryTrx.ParamByName('ALM').AsString      := AAlmacen;
   QryTrx.ParamByName('CAJA').AsString     := ACaja;
@@ -1826,119 +1809,6 @@ begin
   QryTrx.ParamByName('USUARIO').AsString  := inLibGlobalVar.oUser;
   QryTrx.Execute;
 end;
-
-//procedure TdmCajaOpe.CalcularTotalesCabecera;
-//var
-//  Clon: TClientDataSet;
-//  TotalLiquido, TotalBase, TotalImpuestos: Currency;
-//  EstaEditando: Boolean;
-//  RecNoActivo: Integer;
-//begin
-//  TotalLiquido := 0;
-//  TotalBase := 0;
-//  if cdsLineas.Active then
-//  begin
-//    RecNoActivo := cdsLineas.RecNo;
-//    EstaEditando := (cdsLineas.State in [dsEdit, dsInsert]);
-//    Clon := TClientDataSet.Create(nil);
-//    try
-//      Clon.CloneCursor(cdsLineas, True);
-//      Clon.DisableControls;
-//      Clon.First;
-//      while not Clon.Eof do
-//      begin
-//        if EstaEditando and (Clon.RecNo = RecNoActivo) then
-//        begin
-//          TotalLiquido := TotalLiquido +
-//		                cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-//          TotalBase    := TotalBase    +
-//		            cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-//        end
-//        else
-//        begin
-//          TotalLiquido := TotalLiquido +
-//		                     Clon.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-//          TotalBase := TotalBase +
-//		                 Clon.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency;
-//        end;
-//        Clon.Next;
-//      end;
-//    finally
-//      Clon.EnableControls;
-//      Clon.Free;
-//    end;
-//  end;
-//  TotalImpuestos := TotalLiquido - TotalBase;
-//  cdsCabecera.Edit;
-//  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := TotalBase;
-//  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency :=
-//                                                                 TotalImpuestos;
-//  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := TotalLiquido;
-//  cdsCabecera.Post;
-//  if Assigned(FOnUpdateTotal) then
-//    FOnUpdateTotal(Self, TotalLiquido);
-//end;
-
-//procedure TdmCajaOpe.CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
-//var
-//  PrecioUnitario, Cantidad, PorcenDto, PorcenIVA: Currency;
-//  TotalBruto, MontoDescuentoTotal, TotalNeto: Currency;
-//  TotalBase, TotalImpuestos: Currency;
-//  EsImpuestosIncluidos: Boolean;
-//begin
-//  if not cdsLineas.Active then Exit;
-//  if cdsLineas.State = dsBrowse then cdsLineas.Edit;
-//  Cantidad := cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency;
-//  PrecioUnitario := cdsLineas.FieldByName(
-//                                       'PRECIOSALIDA_FACTURA_LINEA').AsCurrency;
-//  PorcenIVA := cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency;
-//  EsImpuestosIncluidos := (cdsLineas.FieldByName(
-//                             'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString = 'S');
-//  TotalBruto := RoundTo(PrecioUnitario * Cantidad, -2);
-//  if MantenerImporteDto then
-//  begin
-//    MontoDescuentoTotal := cdsLineas.FieldByName(
-//                                         'PRECIO_DTO_FACTURA_LINEA').AsCurrency;
-//    if TotalBruto <> 0 then
-//      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-//                                        (MontoDescuentoTotal * 100) / TotalBruto
-//    else
-//      cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
-//  end
-//  else
-//  begin
-//    // MODO B: Cambio normal. El % manda.
-//    PorcenDto := cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat;
-//    // Calculamos el descuento sobre el Total Bruto
-//    MontoDescuentoTotal := RoundTo(TotalBruto * (PorcenDto / 100), -2);
-//    cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := MontoDescuentoTotal;
-//  end;
-//  // 4. Aplicar el Descuento (Resta Global)
-//  // Aquí está la corrección: TotalBruto - DescuentoTotal
-//  TotalNeto := TotalBruto - MontoDescuentoTotal;
-//  // 5. Desglose de Impuestos
-//  if EsImpuestosIncluidos then
-//  begin
-//    // Si el precio incluye IVA, TotalNeto es el Total a Pagar
-//    // Desglosamos hacia atrás
-//    if (1 + (PorcenIVA / 100)) <> 0 then
-//      TotalBase := RoundTo(TotalNeto / (1 + (PorcenIVA / 100)), -2)
-//    else
-//      TotalBase := TotalNeto;
-//    // El total final es lo que dio la resta
-//    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalNeto;
-//    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
-//  end
-//  else
-//  begin
-//    // Si el precio NO incluye IVA, TotalNeto es la Base Imponible Total
-//    TotalBase := TotalNeto;
-//    TotalImpuestos := RoundTo(TotalBase * (PorcenIVA / 100), -2);
-//    cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency := TotalBase;
-//    cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency := TotalBase + TotalImpuestos;
-//  end;
-//  CalcularTotalesCabecera;
-//end;
 
 function TdmCajaOpe.BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                          var LabelDestino: String): Boolean;
@@ -1990,8 +1860,7 @@ var
   SkuBuilder: string;
   NumAttr:Integer;
 begin
-  NumAttr := cdsLineas.FieldByName(
-                         'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+  NumAttr := cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
   SkuBuilder := ArticuloBase;
   for i := 1 to NumAttr do
   begin
@@ -2020,31 +1889,6 @@ begin
   end;
 end;
 
-//procedure TdmCajaOpe.InicializarNuevaFactura(const ASerieFactura,
-//                                                   ANroFactura: string);
-//begin
-//  // Limpiar datos anteriores
-//  if cdsLineas.Active then cdsLineas.EmptyDataSet;
-//  if cdsCabecera.Active then cdsCabecera.EmptyDataSet;
-//  // Crear nuevo registro de cabecera
-//  cdsCabecera.Append;
-////  cdsCabecera.FieldByName('SERIE_FACTURA').AsString := ASerieFactura;
-////  cdsCabecera.FieldByName('NRO_FACTURA').AsString := ANroFactura;
-////  cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime := Date;
-////  cdsCabecera.FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'N';
-////
-////  cdsCabecera.FieldByName('FASE_FACTURA').AsString := 'BORRADOR';
-////  cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger := 0;
-////  cdsCabecera.FieldByName('INSTANTEALTA').AsDateTime := Now;
-////  cdsCabecera.FieldByName('USUARIOALTA').AsString := 'SISTEMA';
-////  // Inicializar totales a 0
-////  cdsCabecera.FieldByName('TOTAL_BASES_FACTURA').AsCurrency := 0;
-////  cdsCabecera.FieldByName('TOTAL_IMPUESTOS_FACTURA').AsCurrency := 0;
-////  cdsCabecera.FieldByName('TOTAL_LIQUIDO_FACTURA').AsCurrency := 0;
-//
-//  cdsCabecera.Post;
-//end;
-
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);
 begin
   AplicarValoresPorDefecto(cdsCabecera, 'fza_facturas');
@@ -2054,11 +1898,14 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
 begin
-  GridRecalc(nil,
+  if not DataSet.ControlsDisabled then
+  begin
+    GridRecalc(nil,
              (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
              cdsLineas,
              cdsCabecera,
              OnUpdateTotal);
+  end;
 end;
 
 procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
@@ -2118,17 +1965,14 @@ var
   Requeridos: Integer;
   SkuActual: string;
 begin
-  // 1. Validar descripción
   if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString = '' then
     Abort;
-  // 2. Si no requiere atributos, OK
   Requeridos := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
   if Requeridos = 0 then
     Exit;
-  // 3. Si requiere atributos pero el SKU no tiene "/" → ABORTAR
   SkuActual := Trim(DataSet.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString);
   if Pos('/', SkuActual) = 0 then
-    Abort; // No permite grabar hasta que se complete el SKU
+    Abort;
 end;
 
 procedure TdmCajaOpe.ConfigurarEstructuraCabecera;
@@ -2279,7 +2123,6 @@ begin
     Add('TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA', ftString, 20); // 'Uds', 'Kg'
     Add('ESIMP_INCL_TARIFA_FACTURA_LINEA', ftString, 1);
     Add('CODIGO_TARIFA_FACTURA_LINEA', ftString, 10);
-    // IMPORTANTE: ftBCD maneja bien los decimales de MySQL (Decimal 19,6)
     Add('CANTIDAD_FACTURA_LINEA', ftFloat, 0);
     // -- PRECIOS Y DESCUENTOS --
     Add('PRECIOSALIDA_FACTURA_LINEA', ftCurrency, 0);
@@ -2358,8 +2201,8 @@ procedure TdmCajaOpe.InsertarCabeceraFactura(
             const ASerie:    string;
             const ANro:      string;
             AFecha:          TDateTime;
-            const ATipo:     string;   // 'SIMPLIFICADA', 'NORMAL', 'RECTIFICATIVA'
-            const AFase:     string;   // 'BORRADOR', 'ONLINE', etc.
+            const ATipo:     string;
+            const AFase:     string;
             // — empresa emisora —
             const AEmpresa,
                   ARazonSocialEmp,
@@ -2407,7 +2250,7 @@ procedure TdmCajaOpe.InsertarCabeceraFactura(
             // — referencias —
             const AComentarios:  string;
             const ASeriAbono,
-                  ANroAbono:     string;   // solo en rectificativas
+                  ANroAbono:     string;
             // — caja —
             const AAlmacen,
                   ACaja,

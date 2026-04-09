@@ -147,12 +147,14 @@ begin
   RegistrarParametro('Configuración de Caja', 'vgerFillEmpleadoDefecto', 'Rellenar empleado por defecto al abrir', tpBoolean, 'False');
   RegistrarParametro('Configuración de Caja', 'vgerDefTarifa', 'Tarifa por defecto en caja', tpString, 'PVP');
   RegistrarParametro('Configuración de Caja', 'vgerMaxOpPending', 'Número de operaciones pendientes', tpInteger, '5');
+  RegistrarParametro('Configuración de Caja', 'vgerAutoLoadDepositos', 'Cargar depósitos automáticamente al seleccionar cliente', tpBoolean, 'False');
 
   // --- Devoluciones y Vales ---
   RegistrarParametro('Devoluciones y Vales', 'vgerReqRefDevolucion', 'Pedir referencia en devoluciones', tpBoolean, 'False');
   RegistrarParametro('Devoluciones y Vales', 'vgerRecuperaValePIN', 'Recuperar Vale sólo con PIN', tpBoolean, 'False');
   RegistrarParametro('Devoluciones y Vales', 'vgerCaducidadDefVale', 'Caducidad por defecto en vale', tpBoolean, 'False');
   RegistrarParametro('Devoluciones y Vales', 'vgerDiasCaducidadVale', 'Días hasta caducidad en vale', tpInteger, '365');
+
 
   // --- Avisos y Búsquedas ---
   RegistrarParametro('Avisos y Búsquedas', 'vgerAvisoStockWarning', 'Aviso en artículos sin stock', tpString, 'Artículo sin stock. Compruebe stock en almacén.');
