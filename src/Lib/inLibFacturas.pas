@@ -159,7 +159,6 @@ type
     _dPorIvaS: currency;
     _dPorIvaE: currency;
     _sMensajeError: string;
-    _bAutoWriteBack: Boolean;
     function GetPrecioSal: Currency;
     procedure SetPrecioSal(const Value: Currency);
     function GetPorDto: Currency;
@@ -282,7 +281,6 @@ constructor TLinFac.Create(unqryLin: TDataset);
 begin
   inherited Create;
   _unqryLin := unqryLin;
-  _bAutoWriteBack := True;
   Self.CopyToObjectLin;
 end;
 
@@ -292,7 +290,6 @@ begin
   inherited Create;
   _unqryLin := unqryLin;
   _unqryFac := unqryFac;
-  _bAutoWriteBack := False;
   _sMensajeError := '';
   Self.CopyToObjectLin;
   Self.CopyToObjectFac;
@@ -300,7 +297,7 @@ end;
 
 destructor TLinFac.Destroy;
 begin
-  if _bAutoWriteBack and ValidarDatos then
+  if ValidarDatos then
     Self.CopyToDataSetLin;
   inherited Destroy;
 end;
@@ -772,17 +769,9 @@ begin
   if _configuracion.EsRegimenAgricolaEmpresa then
   begin
     _configuracion.AplicaRetencionesEmpresa := True;
-    // OJO: En el SQL esto se refiere a "ESAPLICA_RE_ZONA_IVA",
-    // asegúrate de estar usando el campo correcto de tu configuración.
-    // Si tu variable IVARecargo es la del Cliente, quizás necesites otra variable
-    // para la Zona, o si usas esta para todo, ponla a False.
     _configuracion.IVARecargo := False;
-    // Buscar IVA específico para agricultura
-    // Llamamos a la función auxiliar que busca en la BD
     if BuscarDatosIVAAgricola(_codigoEmpresa) then
     begin
-       // Si encuentra datos, la función BuscarDatosIVAAgricola
-       // ya habrá actualizado la variable _porcentajes y _totales.GrupoZonaIVA
     end;
   end;
   // 2. Intracomunitario
@@ -812,11 +801,8 @@ begin
   begin
     _configuracion.IVAExento := True;
   end;
-  // 6. Aplicar la lógica de Exención (Sustituye a //AplicarIVAExento)
-  // Esto replica la parte del SQL: IF (pIVA_EXENTO = 'S') THEN SET pPORCENN = pPORCENE...
   if _configuracion.IVAExento then
   begin
-    // Unificamos todos los tipos de IVA al porcentaje de Exento (normalmente 0)
     _porcentajes.IVANormal        := _porcentajes.IVAExento;
     _porcentajes.IVAReducido      := _porcentajes.IVAExento;
     _porcentajes.IVASuperReducido := _porcentajes.IVAExento;
@@ -827,64 +813,6 @@ begin
     _porcentajes.REcExento        := 0;
   end;
 end;
-
-//procedure TFacturaTotales.AplicarReglas;
-//begin
-//  // Aplicar reglas de negocio según configuración
-//
-//  // Régimen Especial Agrícola Empresa-
-//  if _configuracion.EsRegimenAgricolaEmpresa then
-//  begin
-//    _configuracion.AplicaRetencionesEmpresa := True;
-//    _configuracion.AplicaRecargo := False;
-//    // Buscar IVA específico para agricultura
-//    //BuscarIVAAgricola;
-//  end;
-//
-//  // Intracomunitario
-//  if _configuracion.EsIntracomunitario then
-//  begin
-//    _configuracion.IVAExento := True;
-//    _configuracion.AplicaRetencionesCliente := False;
-//    _configuracion.EsRegimenAgricolaCliente := False;
-//  end;
-//
-//  // Venta Activo Fijo + REAGP
-//  if ((_configuracion.EsVentaActivoFijo) and
-//      (_configuracion.EsRegimenAgricolaEmpresa)) then
-//  begin
-//    _configuracion.IVAExento := True;
-//  end;
-//
-//  // REAGP Empresa + REAGP Cliente
-//  if ((_configuracion.EsRegimenAgricolaEmpresa) and
-//      (_configuracion.EsRegimenAgricolaCliente)) then
-//  begin
-//    _configuracion.AplicaRetencionesCliente := True;
-//    _configuracion.IVAExento := True;
-//  end;
-//
-//  // REAGP Empresa + Cliente Normal sin retenciones
-//  if _configuracion.EsRegimenAgricolaEmpresa and
-//     not _configuracion.EsRegimenAgricolaCliente and
-//     not _configuracion.AplicaRetencionesCliente then
-//  begin
-//    _configuracion.IVAExento := True;
-//  end;
-//  // REAGP Empresa + Cliente Normal con retenciones
-//  if ((_configuracion.EsRegimenAgricolaEmpresa) and
-//      (not _configuracion.EsRegimenAgricolaCliente) and
-//      (_configuracion.AplicaRetencionesCliente)) then
-//  begin
-//    // Aplicar IVA normal, no exento
-//    // No cambiar configuración de IVA
-//  end;
-//  // Aplicar IVA Exento si es necesario
-//  if _configuracion.IVAExento then
-//  begin
-//     //AplicarIVAExento;
-//  end;
-//end;
 
 function TFacturaTotales.ObtenerPorcentajePorTipo(tipo: string): Currency;
 begin
@@ -1144,18 +1072,6 @@ begin
     FieldByName('PORCEN_IVAE_FACTURA').AsFloat := _porcentajes.IVAExento;
   end;
 end;
-
-//function TFacturaTotales.ConvertirTipoIVA(tipo: string): TTipoIVA;
-//begin
-//  case IndexStr(tipo, ['N', 'R', 'S', 'E']) of
-//    0: Result := tivaNormal;
-//    1: Result := tivaReducido;
-//    2: Result := tivaSuperReducido;
-//    3: Result := tivaExento;
-//  else
-//    Result := tivaNormal;
-//  end;
-//end;
 
 procedure TFacturaTotales.ValidarConfiguracion;
 begin
