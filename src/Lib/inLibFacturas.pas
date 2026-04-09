@@ -198,7 +198,6 @@ type
     constructor Create(unqryLin: TDataset); overload;
     constructor Create(unqryLin, unqryFac: TDataset;
                        bCalcularFactura:boolean = false); overload;
-    destructor Destroy; override;
     procedure CopyToDataSetLin;
     procedure CopyToDataSetFac;
     procedure CopyToObjectLin;
@@ -245,7 +244,6 @@ type
     constructor Create(unqryFac: TDataset;
                        unqryLineas: TDataset;
                        LineaEnEdicion:TLinFac = nil);
-    destructor Destroy; override;
     function ProcesarFacturaCompleta: Boolean;
     procedure CalcularTotalesFactura;
     procedure ActualizarTotalesEnDataSet;
@@ -293,13 +291,6 @@ begin
   _sMensajeError := '';
   Self.CopyToObjectLin;
   Self.CopyToObjectFac;
-end;
-
-destructor TLinFac.Destroy;
-begin
-  if ValidarDatos then
-    Self.CopyToDataSetLin;
-  inherited Destroy;
 end;
 
 function TLinFac.ValidarDatos: Boolean;
@@ -638,12 +629,6 @@ begin
   InicializarConfiguracion;
 
   //ProcesarFacturaCompleta;
-end;
-
-destructor TFacturaTotales.Destroy;
-begin
-  // LiberarDatasetTemporal;
-  inherited Destroy;
 end;
 
 procedure TFacturaTotales.InicializarTotales;
@@ -1148,6 +1133,7 @@ begin
       lineaActual.PorIva := ObtenerPorcentajePorTipo(lineaActual.TipoIva);
       lineaActual.CalcularLinea;
       AcumularTotalesPorTipoIVA(lineaActual);
+      lineaActual.CopyToDataSetLin;
       lineaActual.Free;
       _unqryLineas.Next;
     end;
