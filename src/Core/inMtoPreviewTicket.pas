@@ -70,7 +70,8 @@ const
   FUENTE_C_ANCHO = 7;
   FUENTE_C_ALTO = 14;
 
-procedure TFormVisualizador.ExportarAPDF(const Comandos: string; const RutaArchivo: string);
+procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
+                                         const RutaArchivo: string);
 var
   Pdf: TPdfDocumentGDI;
   Metafile: TMetafile;
@@ -380,7 +381,7 @@ begin
                 var Modo := LeerByte;
                 var Ancho := LeerWord;
                 var BytesPorLinea := (Ancho + 7) div 8;
-                // Leer datos de imagen (una l�nea)
+                // Leer datos de imagen (una línea)
                 var DatosImagen := '';
                 for var j := 1 to BytesPorLinea do
                   DatosImagen := DatosImagen + Char(LeerByte);
@@ -388,16 +389,16 @@ begin
               end;
             'i': // Cortar papel
               begin
-                // Visual: dibujar l�nea de corte
+                // Visual: dibujar línea de corte
                 FCanvas.Pen.Color := clGray;
                 FCanvas.Pen.Style := psDash;
                 FCanvas.MoveTo(0, FCurrentY + 10);
                 FCanvas.LineTo(ANCHO_PAPEL_PIXELS, FCurrentY + 10);
                 FCurrentY := FCurrentY + 20;
               end;
-            'p': // Abrir caj�n (ignorar)
+            'p': // Abrir cajón (ignorar)
               begin
-                Inc(i, 3); // Saltar par�metros
+                Inc(i, 3); // Saltar parámetros
               end;
           end;
         end;
@@ -406,7 +407,7 @@ begin
           Inc(i);
           if i > Length(Comandos) then Break;
           case Comandos[i] of
-            '!': // Tama�o de car�cter
+            '!': // Tamaño de carácter
               begin
                 var Valor := LeerByte;
                 FTamanoAncho := (Valor and $0F) + 1;
@@ -418,7 +419,7 @@ begin
               begin
                 FInverso := LeerByte <> 0;
               end;
-             '(': // Comandos funci�n (incluye QR)
+             '(': // Comandos función (incluye QR)
               begin
                 Inc(i);
                 if i > Length(Comandos) then Break;
@@ -427,8 +428,8 @@ begin
                   var pL := LeerByte;
                   var pH := LeerByte;
                   var DataLength := pL + (pH * 256);
-                  var Fn := LeerByte; // Funci�n
-                  var Cn := LeerByte; // C�digo de funci�n
+                  var Fn := LeerByte; // Función
+                  var Cn := LeerByte; // Código de función
                   case Cn of
                     65: // 'A' - Seleccionar modelo (ignorar)
                       begin
@@ -441,7 +442,7 @@ begin
                         for var j := 1 to DataLength - 3 do
                           LeerByte;
                       end;
-                    69: // 'E' - Nivel de correcci�n de errores
+                    69: // 'E' - Nivel de corrección de errores
                       begin
                         FQRNivelError := LeerByte;
                         for var j := 1 to DataLength - 3 do
@@ -449,7 +450,8 @@ begin
                       end;
                     80: // 'P' - Almacenar datos
                       begin
-                        // Leer el texto del QR (saltar primeros 3 bytes de cabecera)
+                        // Leer el texto del QR
+                        //(saltar primeros 3 bytes de cabecera)
                         LeerByte; // Saltar byte adicional
                         FQRTexto := '';
                         for var j := 1 to DataLength - 3 do
@@ -467,7 +469,7 @@ begin
                         end;
                         // Dibujar el QR
                         DibujarQRCode;
-                        FQRTexto := ''; // Limpiar despu�s de imprimir
+                        FQRTexto := ''; // Limpiar después de imprimir
                       end;
                   else
                     // Comando desconocido, saltar datos
@@ -477,7 +479,7 @@ begin
                 end
                 else
                 begin
-                  // Otro comando con par�ntesis, saltar
+                  // Otro comando con paréntesis, saltar
                   var pL := LeerByte;
                   var pH := LeerByte;
                   var DataLength := pL + (pH * 256);
@@ -507,10 +509,11 @@ begin
                   var AnchoPixels := AnchoBytes * 8;
                   var X, Y: Integer;
                   var StartX: Integer;
-                  // Calcular posici�n X seg�n alineaci�n
+                  // Calcular posición X según alineación
                   case FAlineacion of
-                    1: StartX := (ANCHO_PAPEL_PIXELS - AnchoPixels) div 2; // Centro
-                    2: StartX := ANCHO_PAPEL_PIXELS - AnchoPixels - MARGEN_PIXELS; // Derecha
+                    1: StartX := (ANCHO_PAPEL_PIXELS - AnchoPixels) div 2;
+                    2: StartX := ANCHO_PAPEL_PIXELS - AnchoPixels -
+                                 MARGEN_PIXELS; // Derecha
                   else
                     StartX := MARGEN_PIXELS; // Izquierda
                   end;
@@ -521,7 +524,8 @@ begin
                       var ByteIndex := Y * AnchoBytes + (X div 8);
                       var BitIndex := 7 - (X mod 8);
                       if (ByteIndex < Length(DatosImagen)) and
-                         ((Ord(DatosImagen[ByteIndex + 1]) and (1 shl BitIndex)) <> 0) then
+                         ((Ord(DatosImagen[ByteIndex + 1]) and
+                         (1 shl BitIndex)) <> 0) then
                       begin
                         FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
                       end;
@@ -532,7 +536,7 @@ begin
               end;
           end;
         end;
-      #10: // LF - Nueva l�nea
+      #10: // LF - Nueva línea
         begin
           if BufferTexto <> '' then
           begin
