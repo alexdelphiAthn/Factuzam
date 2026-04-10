@@ -14,7 +14,8 @@ uses
   inLibDir;            // Para GetUserFolderTickets
 
   /// <summary>
-  /// Genera un resguardo no fiscal con las prendas que el cliente tiene apartadas.
+  /// Genera un resguardo no fiscal con las prendas que el cliente
+  ///tiene apartadas.
   /// </summary>
   procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
                                             ACodigoAlmacen,
@@ -22,7 +23,8 @@ uses
                                             AOperacion: string;
                                       const ANombreImpresora: string = 'DEBUG');
   /// <summary>
-  /// Genera e imprime un ticket recuperando todos los datos directamente de la Base de Datos.
+  /// Genera e imprime un ticket recuperando todos los datos
+  /// directamente de la Base de Datos.
   /// </summary>
   procedure ImprimirTicketDesdeBD(const ACodigoEmpresa,
                                         ACodigoAlmacen,
@@ -35,7 +37,9 @@ implementation
 
 
 // Función auxiliar para rellenar con ceros (LPAD)
-function LPAD(const AValue: string; ALength: Integer; const APadChar: Char = '0'): string;
+function LPAD(const AValue: string;
+              ALength: Integer;
+              const APadChar: Char = '0'): string;
 var
   CurrentLength: Integer;
 begin
@@ -99,14 +103,16 @@ begin
       Ticket.Alinear(alCentro);
       Ticket.Negrita(True);
       if not QryEmp.IsEmpty then
-        Ticket.EscribirLinea(QryEmp.FieldByName('RAZONSOCIAL_EMPRESA').AsString);
+        Ticket.EscribirLinea(QryEmp.FieldByName(
+                                               'RAZONSOCIAL_EMPRESA').AsString);
       Ticket.SaltarLineas(1);
       Ticket.EscribirLinea('*** RESUMEN DE LA OPERACIÓN ***');
       Ticket.EscribirLinea('DEPÓSITOS Y ENTREGAS');
       Ticket.Negrita(False);
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alIzquierda);
-      Ticket.TextoColumnas('CÓDIGO CLIENTE:', QrySec.FieldByName('CODIGO_CLIENTE_DEP').AsString);
+      Ticket.TextoColumnas('CÓDIGO CLIENTE:',
+                             QrySec.FieldByName('CODIGO_CLIENTE_DEP').AsString);
       Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn', Now));
       Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
       Ticket.SaltarLineas(1);
@@ -138,7 +144,8 @@ begin
             Ticket.EscribirLinea(Copy(Desc, 1, 40));
           Ticket.EscribirLinea(Sku);
           Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' + FormatFloat('#,##0.00', Pvp) + ' €');
+          Ticket.EscribirLinea('Valor Artículo: ' +
+                                           FormatFloat('#,##0.00', Pvp) + ' €');
           Ticket.Alinear(alIzquierda);
           QrySec.Next;
         end;
@@ -270,7 +277,8 @@ begin
             Ticket.EscribirLinea(Copy(Desc, 1, 40));
           Ticket.EscribirLinea(Sku);
           Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' + FormatFloat('#,##0.00', Pvp) + ' €');
+          Ticket.EscribirLinea('Valor Artículo: ' +
+                                           FormatFloat('#,##0.00', Pvp) + ' €');
           Ticket.Alinear(alIzquierda);
           QryDev.Next;
         end;
@@ -285,7 +293,8 @@ begin
       var qryPagos := TUniQuery.Create(nil);
       try
         qryPagos.Connection := QrySec.Connection;
-        qryPagos.SQL.Text := 'SELECT SUM(IMPORTE_ENTREGADO_PAGO - IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
+        qryPagos.SQL.Text := 'SELECT SUM(IMPORTE_ENTREGADO_PAGO - ' +
+                             '           IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
                              '  FROM fza_caja_pagos ' +
                              ' WHERE CODIGO_EMPRESA_PAGO = :EMP ' +
                              '   AND CODIGO_ALMACEN_PAGO = :ALM ' +
@@ -305,16 +314,21 @@ begin
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alDerecha);
       if TotalNuevos > 0 then
-        Ticket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' + FormatFloat('#,##0.00', TotalNuevos) + ' €');
+        Ticket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' +
+                                   FormatFloat('#,##0.00', TotalNuevos) + ' €');
       if TotalDevueltos <> 0 then
-        Ticket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' + FormatFloat('#,##0.00', TotalDevueltos) + ' €');
-      Ticket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' + FormatFloat('#,##0.00', TotalEntregas) + ' €');
+        Ticket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' +
+                                FormatFloat('#,##0.00', TotalDevueltos) + ' €');
+      Ticket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' +
+                                 FormatFloat('#,##0.00', TotalEntregas) + ' €');
       if TotalDevoluciones < 0 then
-        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' + FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
+        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' +
+                             FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
       Ticket.SaltarLineas(1);
       Ticket.Negrita(True);
       // IMPRIMIMOS EL TOTAL REAL COBRADO (Los 150 €)
-      Ticket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' + FormatFloat('#,##0.00', TotalPagadoCaja) + ' €');
+      Ticket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
+                               FormatFloat('#,##0.00', TotalPagadoCaja) + ' €');
       Ticket.Negrita(False);
       Ticket.SaltarLineas(2);
       Ticket.Alinear(alCentro);
@@ -326,7 +340,8 @@ begin
       // IMPRESIÓN / VISUALIZACIÓN
       // =======================================================================
       ComandosESC := Ticket.ObtenerComandos;
-      RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+      RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
+                            FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
       FormPreview := TFormVisualizador.Create(nil);
       try
         FormPreview.Hide;
@@ -483,7 +498,8 @@ begin
         // === TOTALES ===
         Ticket.Alinear(alIzquierda);
         Ticket.Negrita(True);
-        // Descuentos globales (Calculado matemáticamente por diferencia si es necesario o desde campo)
+        // Descuentos globales (Calculado matemáticamente por
+        //diferencia si es necesario o desde campo)
         var TotalBases := QryCab.FieldByName('TOTAL_BASES_FACTURA').AsCurrency;
         var TotalImp   := QryCab.FieldByName(
                                           'TOTAL_IMPUESTOS_FACTURA').AsCurrency;
@@ -719,7 +735,7 @@ begin
           Ticket.LineaSeparadora('-');
           Ticket.Negrita(True);
           Ticket.TextoColumnas('TOTAL PDTE. DE PAGO:',
-            FormatFloat('#,##0.00', TotalPendienteCliente) + ' €');
+                         FormatFloat('#,##0.00', TotalPendienteCliente) + ' €');
           Ticket.Negrita(False);
         end;
       finally

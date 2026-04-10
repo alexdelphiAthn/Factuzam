@@ -173,14 +173,14 @@ begin
 //                                                        [CantidadTotal]), 42);
     Ticket.SaltarLineas(1);
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
-    if Cab.TotalIvaN > 0 then
+    if Abs(Cab.TotalIvaN) > 0.001 then
     begin
       Ticket.TextoColumnas('BASE IMPONIBLE', Format('%.2f', [Cab.BaseIN]) +
                                                                           ' €');
       Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)', [Cab.PorcIvaN]),
                                         Format('%.2f', [Cab.TotalIvaN]) + ' €');
     end;
-    if Cab.TotalIvaR > 0 then
+    if Abs(Cab.TotalIvaR) > 0 then
     begin
       Ticket.TextoColumnas('BASE IMPONIBLE RED.', Format('%.2f', [Cab.BaseIR]) +
                                                                           ' €');

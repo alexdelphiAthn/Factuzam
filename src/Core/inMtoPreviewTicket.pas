@@ -84,11 +84,9 @@ var
 begin
   AlturaReal := Image1.Picture.Bitmap.Height;
   MargenPDF  := 10; // 10 puntos PDF de margen (~3.5mm) en cada lado
-
-  AnchoPDF          := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 72, DPI); // ancho del contenido
+  AnchoPDF          := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 72, DPI);
   AnchoPDFConMargen := AnchoPDF + (MargenPDF * 2);          // página más ancha
   AltoPDF           := MulDiv(AlturaReal, 72, DPI);
-
   Pdf := TPdfDocumentGDI.Create;
   Metafile := TMetafile.Create;
   try
@@ -96,7 +94,6 @@ begin
     Metafile.Height   := AlturaReal;
     Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 2540, DPI);
     Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
-
     MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
     FCanvas := MetaCanvas;
@@ -110,7 +107,6 @@ begin
       FTamanoAlto   := 1;
       FInverso      := False;
       FQRTexto      := '';
-
       MetaCanvas.Brush.Color := clWhite;
       MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
@@ -118,17 +114,14 @@ begin
       MetaCanvas.Free;
       FCanvas := CanvasBackup;
     end;
-
     Pdf.DefaultPaperSize  := psUserDefined;
     Pdf.DefaultPageWidth  := AnchoPDFConMargen; // página con margen
     Pdf.DefaultPageHeight := AltoPDF;
     Pdf.AddPage;
-
     // Dibujar el contenido desplazado MargenPDF puntos a la derecha
     PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
                     Metafile.Handle,
                     Rect(MargenPDF, 0, AnchoPDF + MargenPDF, AltoPDF));
-
     Pdf.SaveToFile(RutaArchivo);
   finally
     Metafile.Free;
@@ -175,7 +168,7 @@ begin
     QRCode.Data := FQRTexto;
     QRCode.Encoding := TQRCodeEncoding(qrUTF8NoBOM);
     QRCode.QuietZone := 1;
-    // Escala basada en el tamaño del módulo (ajustado para visualizaci�n)
+    // Escala basada en el tamaño del módulo (ajustado para visualización)
     Scale := FQRTamanoModulo div 2;
     if Scale < 2 then Scale := 2;
     // Crear bitmap del QR
@@ -217,7 +210,8 @@ begin
   end;
 end;
 
-procedure TFormVisualizador.ImprimirImagenRaster(const Datos: string; Ancho, Alto: Integer);
+procedure TFormVisualizador.ImprimirImagenRaster(const Datos: string;
+                                                 Ancho, Alto: Integer);
 var
   X, Y: Integer;
   ByteIndex, BitIndex: Integer;
@@ -229,14 +223,14 @@ begin
     FCurrentY := FCurrentY + Alto;
     Exit;
   end;
-  // Calcular posici�n X seg�n alineaci�n
+  // Calcular posición X según alineación
   case FAlineacion of
     1: StartX := (ANCHO_PAPEL_PIXELS - Ancho) div 2; // Centro
     2: StartX := ANCHO_PAPEL_PIXELS - Ancho - MARGEN_PIXELS; // Derecha
   else
     StartX := MARGEN_PIXELS; // Izquierda
   end;
-  // Asegurarnos de no salirnos de los l�mites
+  // Asegurarnos de no salirnos de los límites
   if StartX < 0 then StartX := 0;
   if StartX + Ancho > ANCHO_PAPEL_PIXELS then
     Ancho := ANCHO_PAPEL_PIXELS - StartX;
@@ -250,7 +244,8 @@ begin
       begin
         if ((Ord(Datos[ByteIndex]) and (1 shl BitIndex)) <> 0) then
         begin
-          if (StartX + X < ANCHO_PAPEL_PIXELS) and (FCurrentY + Y < Image1.Picture.Bitmap.Height) then
+          if (StartX + X < ANCHO_PAPEL_PIXELS) and
+             (FCurrentY + Y < Image1.Picture.Bitmap.Height) then
             FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
         end;
       end;
