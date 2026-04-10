@@ -1183,6 +1183,39 @@ begin
   Cab          := LeerCabecera(cdsCabecera);
   TotalFactura := DatosCobro.ImporteEntregado;
   // =======================================================================
+  // 0. FILTRO DE NOVEDAD (Cero novedad = cero operaciones en BD)
+  // =======================================================================
+  var HayNovedad := False;
+
+  cdsLineas.DisableControls;
+  try
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      var sAccion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
+      var fTotal  := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
+      var bVieneDeDepositoViejo :=
+                    (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S');
+      if Lin.TotalCIva > 0 then
+        HayNovedad := True
+      else if not bVieneDeDepositoViejo then
+        HayNovedad := True
+      else if sAccion = 'CANCELAR' then
+        HayNovedad := True;
+      if HayNovedad then
+        Break;
+      cdsLineas.Next;
+    end;
+  finally
+    cdsLineas.EnableControls;
+  end;
+  if not HayNovedad then
+  begin
+    ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
+    Result := True;
+    Exit;
+  end;
+  // =======================================================================
   // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
   // =======================================================================
   RequiereFactura := False;
@@ -1497,13 +1530,13 @@ begin
     // CONFIRMAR
     // =======================================================================
     inLibGlobalVar.oConn.Commit;
-    if TieneDepositosPendientes then
+    if TieneDepositosPendientes and (sOpeCaja <> '') then
     begin
-      ImprimirResguardoDeposito(AEmpresa,
-                                AAlmacen,
-                                ACaja,
-                                sOpeCaja,
-                                'DEBUG');
+        ImprimirResguardoDeposito(AEmpresa,
+                                  AAlmacen,
+                                  ACaja,
+                                  sOpeCaja,
+                                  'DEBUG');
       ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
     end;
     try

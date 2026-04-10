@@ -2189,8 +2189,10 @@ begin
     DatosCaja.cdsLineas.First;
     while not DatosCaja.cdsLineas.Eof do
     begin
-      if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S') or
-         (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') then
+      if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S')
+                                                                              or
+         (DatosCaja.cdsLineas.FieldByName(
+                                       'VIENE_DE_DEPOSITO').AsString = 'A') then
         DatosCaja.cdsLineas.Delete
       else
         DatosCaja.cdsLineas.Next;

@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 477
-  ClientWidth = 1376
+  ClientHeight = 469
+  ClientWidth = 1374
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,11 +19,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1376
+    Width = 1374
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1182
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -121,23 +120,19 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1376
-    Height = 388
+    Width = 1374
+    Height = 380
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 1182
-    ExplicitHeight = 380
     object Panel1: TPanel
       Left = 1
-      Top = 289
-      Width = 1374
+      Top = 281
+      Width = 1372
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 281
-      ExplicitWidth = 1180
       DesignSize = (
-        1374
+        1372
         98)
       object btnF12: TcxButton
         Left = 10
@@ -257,7 +252,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 912
+        Left = 908
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -279,10 +274,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 718
         Height = 80
         Width = 423
-        AnchorX = 1335
+        AnchorX = 1331
       end
       object btnF8: TcxButton
         Left = 224
@@ -358,17 +352,15 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1374
-      Height = 288
+      Width = 1372
+      Height = 280
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1180
-      ExplicitHeight = 280
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
-        Width = 1372
-        Height = 162
+        Width = 1370
+        Height = 154
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -379,8 +371,6 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1178
-        ExplicitHeight = 154
         object cxGrid1DBTableView1: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -470,17 +460,15 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object pnl1: TPanel
         Left = 1
-        Top = 171
-        Width = 1372
+        Top = 163
+        Width = 1370
         Height = 116
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 163
-        ExplicitWidth = 1178
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1370
+          Width = 1368
           Height = 114
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -492,7 +480,6 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1176
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
@@ -519,14 +506,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object cxspltr1: TcxSplitter
         Left = 1
-        Top = 163
-        Width = 1372
+        Top = 155
+        Width = 1370
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 155
-        ExplicitWidth = 1178
       end
     end
   end
