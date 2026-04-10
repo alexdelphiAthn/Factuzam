@@ -58,7 +58,8 @@ type
     PermitirContinuar: Boolean;
     class function OK: TResultadoValidacion; static;
     class function Error(const AMensaje: string): TResultadoValidacion; static;
-    class function Advertencia(const AMensaje: string): TResultadoValidacion; static;
+    class function Advertencia(const AMensaje: string): TResultadoValidacion;
+                                                                         static;
   end;
 
   TDatosReferencia = record
@@ -331,7 +332,8 @@ begin
 end;
 
 function TDatosFaseCobro.ActualizarImportePago(ALineaPago: Integer;
-  AImporte: Currency; ADatosRef: TDatosReferencia): Boolean;
+                                               AImporte: Currency;
+                                          ADatosRef: TDatosReferencia): Boolean;
 var
   FormaPagoInfo: TFormaPagoInfo;
   CodigoFormaPago: string;
@@ -360,9 +362,12 @@ begin
   FMemTablePagos.Edit;
   FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := AImporte;
   FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := DatosRef.CodigoDivisa;
-  FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := DatosRef.FactorCambio;
-  FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency := DatosRef.ImporteDivisa;
-//  FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString := DatosRef.RedBlockchain;
+  FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency :=
+                                                          DatosRef.FactorCambio;
+  FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency :=
+                                                         DatosRef.ImporteDivisa;
+//  FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString :=
+//DatosRef.RedBlockchain;
   FMemTablePagos.FieldByName('REFERENCIA').AsString := DatosRef.Referencia;
   FMemTablePagos.Post;
   Recalcular;
@@ -377,7 +382,8 @@ begin
   Recalcular;
 end;
 
-procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje, AImporte: Currency);
+procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje,
+                                                 AImporte: Currency);
 begin
   FPorcentajeDescuentoGlobal := APorcentaje;
   FImporteDescuentoGlobal := AImporte;
@@ -389,7 +395,8 @@ begin
   Result := FHayCliente and FPermiteDeuda;
 end;
 
-function TDatosFaseCobro.EstablecerDejarEnCuenta(AImporte: Currency): TResultadoValidacion;
+function TDatosFaseCobro.EstablecerDejarEnCuenta(
+                                      AImporte: Currency): TResultadoValidacion;
 var
   NuevaDeuda: Currency;
 begin
@@ -504,10 +511,8 @@ var
   Field: TField;
 begin
   Result := ADefault;
-
   if not Assigned(FMemTablePagos) then Exit;
   if not FMemTablePagos.Active then Exit;
-
   Field := FMemTablePagos.FindField(ANombreCampo);
   if Assigned(Field) and not Field.IsNull then
     Result := Field.AsString
@@ -521,10 +526,8 @@ var
   Field: TField;
 begin
   Result := ADefault;
-
   if not Assigned(FMemTablePagos) then Exit;
   if not FMemTablePagos.Active then Exit;
-
   Field := FMemTablePagos.FindField(ANombreCampo);
   if Assigned(Field) and not Field.IsNull then
     Result := Field.AsInteger
@@ -547,7 +550,9 @@ begin
   if FCalculandoTotales then Exit;
   FCalculandoTotales := True;
   try
-    if not Assigned(FMemTablePagos) or not FMemTablePagos.Active or (FMemTablePagos.FieldCount = 0) then
+    if not Assigned(FMemTablePagos) or
+       not FMemTablePagos.Active or
+       (FMemTablePagos.FieldCount = 0) then
     begin
       InicializarTotalesPorDefecto;
       Exit;
@@ -599,7 +604,8 @@ begin
                (ObtenerStringSafe('ES_DEVUELVE_CAMBIO_FORMAP', 'N') = 'S') then
             begin
               HayFormaPagoQueDevuelveCambio := True;
-              TotalEntregadoConCambio := TotalEntregadoConCambio + ImporteEntregado;
+              TotalEntregadoConCambio := TotalEntregadoConCambio +
+                                                               ImporteEntregado;
             end;
           end;
           FMemTablePagos.Next;
