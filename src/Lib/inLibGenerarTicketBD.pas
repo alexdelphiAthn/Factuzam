@@ -617,50 +617,56 @@ procedure ImprimirRecordatorio(CodigoCliente:   string;
 var
   Ticket: TTicketTermico;
   FormPreview: TFormVisualizador;
-  TotalPendienteCliente, TotalEntregas: Currency;
+  TotalPendienteCliente: Currency;
   CodEmp, RazonEmp: string;
 begin
-  if (Trim(CodigoCliente) <> '') then
-  begin
-    Ticket := TTicketTermico.Create(NombreImpresora);
+  if Trim(CodigoCliente) = '' then
+    Exit;
+
+  Ticket := TTicketTermico.Create(NombreImpresora);
+  try
+    Ticket.Inicializar;
+    Ticket.Alinear(alCentro);
+    Ticket.Negrita(True);
+    Ticket.SaltarLineas(3);
+
+    // ── Datos de la empresa del contexto ─────────────────────────────────
+    var QryEmp := TUniQuery.Create(nil);
     try
-      Ticket.Inicializar;
-      Ticket.Alinear(alCentro);
-      Ticket.Negrita(True);
-      Ticket.SaltarLineas(3);
-      // ── Datos de la empresa del contexto ─────────────────────
-      var QryEmp := TUniQuery.Create(nil);
-      try
-        QryEmp.Connection := inLibGlobalVar.oConn;
-        QryEmp.SQL.Text :=
-          'SELECT CODIGO_EMPRESA, RAZONSOCIAL_EMPRESA ' +
-          '  FROM fza_empresas ' +
-          ' WHERE CODIGO_EMPRESA = :EMP';
-        QryEmp.ParamByName('EMP').AsString := oEmpresa;
-        QryEmp.Open;
-        if not QryEmp.IsEmpty then
-        begin
-          CodEmp   := QryEmp.FieldByName('CODIGO_EMPRESA').AsString;
-          RazonEmp := QryEmp.FieldByName('RAZONSOCIAL_EMPRESA').AsString;
-        end;
-      finally
-        QryEmp.Free;
+      QryEmp.Connection := inLibGlobalVar.oConn;
+      QryEmp.SQL.Text :=
+        'SELECT CODIGO_EMPRESA, RAZONSOCIAL_EMPRESA ' +
+        '  FROM fza_empresas ' +
+        ' WHERE CODIGO_EMPRESA = :EMP';
+      QryEmp.ParamByName('EMP').AsString := oEmpresa;
+      QryEmp.Open;
+      if not QryEmp.IsEmpty then
+      begin
+        CodEmp   := QryEmp.FieldByName('CODIGO_EMPRESA').AsString;
+        RazonEmp := QryEmp.FieldByName('RAZONSOCIAL_EMPRESA').AsString;
       end;
-      // ── Depósitos de TODAS las empresas del cliente ───────────
-      var QryDep := TUniQuery.Create(nil);
-      try
-        var QryAnticipo := TUniQuery.Create(nil);
-        QryAnticipo.Connection := oConn;
-        QryAnticipo.SQL.Text :=
+    finally
+      QryEmp.Free;
+    end;
+
+    // ── Depósitos pendientes del cliente con sus cobros ───────────────────
+    var QryAnticipo := TUniQuery.Create(nil);
+    try
+      QryAnticipo.Connection := inLibGlobalVar.oConn;
+      QryAnticipo.SQL.Text :=
           'SELECT o.TIPO_OPERACION_OPCAJA, ' +
           '       o.IMPORTE_TOTAL_OPCAJA, ' +
-          '       o.FECHA_OPERACION_OPCAJA ' +
+          '       o.FECHA_OPERACION_OPCAJA, ' +
+          '       o.CODIGO_EMPRESA_OPCAJA, ' +
+          '       o.CODIGO_ALMACEN_OPCAJA, ' +
+          '       o.CODIGO_CAJA_OPCAJA ' +
           '  FROM fza_caja_operaciones o ' +
-          ' WHERE o.TIPO_OPERACION_OPCAJA  IN (''CB'', ''DE'') ' +
-          '   AND o.IMPORTE_TOTAL_OPCAJA    > 0 ' +
-          '   AND o.ID_DEPOSITO_OPCAJA      = :IDDEP ' +
+          ' WHERE o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
+          '   AND o.IMPORTE_TOTAL_OPCAJA   > 0 ' +
+          '   AND o.ID_DEPOSITO_OPCAJA     = :IDDEP ' +
           ' ORDER BY o.FECHA_OPERACION_OPCAJA';
-
+      var QryDep := TUniQuery.Create(nil);
+      try
         QryDep.Connection := inLibGlobalVar.oConn;
         QryDep.SQL.Text :=
           'SELECT dep.ID_DEPOSITO_DEP, ' +
@@ -676,20 +682,21 @@ begin
           '       cli.CODIGO_CLIENTE, ' +
           '       cli.RAZONSOCIAL_CLIENTE ' +
           '  FROM fza_depositos_cliente dep ' +
-          '  LEFT JOIN fza_articulos a' +
-          '    ON dep.CODIGO_ARTICULO_DEP = a.CODIGO_ARTICULO ' +
-          '  LEFT JOIN fza_clientes cli' +
-          '    ON dep.CODIGO_CLIENTE_DEP = cli.CODIGO_CLIENTE ' +
+          '  LEFT JOIN fza_articulos a ' +
+          '    ON a.CODIGO_ARTICULO = dep.CODIGO_ARTICULO_DEP ' +
+          '  LEFT JOIN fza_clientes cli ' +
+          '    ON cli.CODIGO_CLIENTE = dep.CODIGO_CLIENTE_DEP ' +
           ' WHERE dep.CODIGO_CLIENTE_DEP = :CLI ' +
           '   AND dep.ESTADO_DEP         = ''PENDIENTE'' ' +
           ' ORDER BY dep.FECHA_CREACION_DEP';
         QryDep.ParamByName('CLI').AsString := CodigoCliente;
         QryDep.Open;
+
         if not QryDep.IsEmpty then
         begin
           var CodCli   := QryDep.FieldByName('CODIGO_CLIENTE').AsString;
           var RazonCli := QryDep.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
-          var IdDep   := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
+
           Ticket.Alinear(alCentro);
           Ticket.Negrita(True);
           Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
@@ -699,41 +706,41 @@ begin
           Ticket.Negrita(True);
           Ticket.EscribirLinea('EMPRESA:');
           Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s',
-                                              [CodEmp, Copy(RazonEmp, 1, 36)]));
+          Ticket.EscribirLinea(Format('%-4s %s', [CodEmp, Copy(RazonEmp, 1, 36)]));
           Ticket.Negrita(True);
           Ticket.EscribirLinea('CLIENTE:');
           Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s',
-                                              [CodCli, Copy(RazonCli, 1, 36)]));
+          Ticket.EscribirLinea(Format('%-4s %s', [CodCli, Copy(RazonCli, 1, 36)]));
           Ticket.LineaSeparadora('-');
           Ticket.EscribirLinea(Format('%-14s %13s %13s',
-                                         ['Fecha/Hora', 'Total', 'Pendiente']));
+                                      ['Fecha/Hora', 'Total', 'Pendiente']));
           Ticket.LineaSeparadora('-');
+
           TotalPendienteCliente := 0;
+
           while not QryDep.Eof do
           begin
+            var IdDep    := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
             var FechaHora := FormatDateTime('dd/mm/yy HH:nn',
-                           QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+                             QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime);
             var SkuDep   := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
             var Precio   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-            var Cantidad :=
-                           QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+            var Cantidad := QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
             if Cantidad = 0 then Cantidad := 1;
             var TotalDep  := Precio * Cantidad;
-            var Anticipo  :=
-                          QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+            var Anticipo  := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
             var Pendiente := TotalDep - Anticipo;
             TotalPendienteCliente := TotalPendienteCliente + Pendiente;
-            // Origen de la operación
+
             var EmpDep := QryDep.FieldByName('CODIGO_EMPRESA_DEP').AsString;
             var AlmDep := QryDep.FieldByName('CODIGO_ALMACEN_DEP').AsString;
             var CajDep := QryDep.FieldByName('CODIGO_CAJA_DEP').AsString;
-            // Construir etiqueta "EMP / ALM / CAJ" omitiendo los vacíos
             var OrigenDep := EmpDep;
-            if AlmDep <> '' then OrigenDep := OrigenDep + ' / ' + AlmDep;
-            if CajDep <> '' then OrigenDep := OrigenDep + ' / ' + CajDep;
+            if AlmDep <> '' then OrigenDep := OrigenDep + '/' + AlmDep;
+            if CajDep <> '' then OrigenDep := OrigenDep + '/' + CajDep;
 
+            // Cabecera del depósito
+            Ticket.Alinear(alIzquierda);
             Ticket.EscribirLinea(Format('%-14s %13s %13s', [
               FechaHora,
               FormatFloat('#,##0.00 €', TotalDep),
@@ -742,31 +749,41 @@ begin
             Ticket.EscribirLinea('  ' + Copy(SkuDep, 1, 40));
             Ticket.EscribirLinea('  ' + Copy(
               QryDep.FieldByName('DESCRIPCION_ARTICULO').AsString, 1, 40));
-            Ticket.EscribirLinea('  ' + 'RETIRADO EN (' + OrigenDep + ')');
-            Ticket.SaltarLineas(1);
+            Ticket.EscribirLinea('  RETIRADO EN (' + OrigenDep + ')');
+
+            // Cobros de este depósito
+            // Cobros de este depósito
             QryAnticipo.Close;
             QryAnticipo.ParamByName('IDDEP').AsString := IdDep;
             QryAnticipo.Open;
             while not QryAnticipo.Eof do
             begin
-              var TipoOp  := QryAnticipo.FieldByName(
-                                              'TIPO_OPERACION_OPCAJA').AsString;
-              var Importe := QryAnticipo.FieldByName(
-                                             'IMPORTE_TOTAL_OPCAJA').AsCurrency;
-              TotalEntregas := TotalEntregas + Importe;
+              var TipoOp   := QryAnticipo.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+              var Importe  := QryAnticipo.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+              var FechaOpe := QryAnticipo.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+              var EmpOpe   := QryAnticipo.FieldByName('CODIGO_EMPRESA_OPCAJA').AsString;
+              var AlmOpe   := QryAnticipo.FieldByName('CODIGO_ALMACEN_OPCAJA').AsString;
+              var CajOpe   := QryAnticipo.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
               var Concepto := '';
-              if TipoOp = 'CB' then
-                Concepto := '  > A cuenta para artículo pendiente'
-              else if TipoOp = 'DE' then
-                Concepto := '  > Entrega inicial';
+              if TipoOp = 'DE' then
+                Concepto := '  > Entrega inicial'
+              else if TipoOp = 'CB' then
+                Concepto := '  > A cuenta';
+              var Origen := EmpOpe;
+              if AlmOpe <> '' then Origen := Origen + '/' + AlmOpe;
+              if CajOpe <> '' then Origen := Origen + '/' + CajOpe;
               Ticket.Alinear(alIzquierda);
-              Ticket.EscribirLinea(Concepto);
-              Ticket.Alinear(alDerecha);
-              Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
+              Ticket.EscribirLinea(Concepto + '  ' +
+                     FormatDateTime('dd/mm/yy HH:nn', FechaOpe));
+              Ticket.EscribirLinea(Format('   %-10s %13s',
+                     ['(' + Origen + ')',
+                      '-' + FormatFloat('#,##0.00', Importe) + ' €']));              Ticket.Alinear(alDerecha);
               QryAnticipo.Next;
             end;
+            Ticket.SaltarLineas(1);
             QryDep.Next;
           end;
+          Ticket.Alinear(alIzquierda);
           Ticket.LineaSeparadora('-');
           Ticket.Negrita(True);
           Ticket.TextoColumnas('TOTAL PDTE. DE PAGO:',
@@ -776,24 +793,28 @@ begin
       finally
         QryDep.Free;
       end;
-      var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
-                            FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      FormPreview := TFormVisualizador.Create(nil);
-      try
-        FormPreview.Hide;
-        var ComandosESC := Ticket.ObtenerComandos;
-        FormPreview.CargarYMostrar(ComandosESC);
-        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-        if UpperCase(NombreImpresora) = 'DEBUG' then
-          FormPreview.ShowModal
-        else
-          Ticket.Imprimir;
-      finally
-        FormPreview.Free;
-      end;
     finally
-      Ticket.Free;
+      QryAnticipo.Free;
     end;
+
+    // ── Generar PDF y mostrar / imprimir ─────────────────────────────────
+    var ComandosESC    := Ticket.ObtenerComandos;
+    var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
+                          FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+    FormPreview := TFormVisualizador.Create(nil);
+    try
+      FormPreview.Hide;
+      FormPreview.CargarYMostrar(ComandosESC);
+      FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
+      if UpperCase(NombreImpresora) = 'DEBUG' then
+        FormPreview.ShowModal
+      else
+        Ticket.Imprimir;
+    finally
+      FormPreview.Free;
+    end;
+  finally
+    Ticket.Free;
   end;
 end;
 
