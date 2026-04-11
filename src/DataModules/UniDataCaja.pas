@@ -102,7 +102,8 @@ type
     TotalCIva:           Currency;
     // campos de depósito
     VieneDeDeposito:     string;   // 'S', 'A', ''
-    AccionDeposito:      string;   // 'COBRAR', 'NUEVO_DEP', 'AUMENTAR_DEP', 'CANCELAR'
+    AccionDeposito:      string;   // 'COBRAR', 'NUEVO_DEP', 'AUMENTAR_DEP', ...
+    idDeposito:          string;
     PrecioOriginalDep:   Currency;
     AnticipoPrevio:      Currency;
   end;
@@ -476,6 +477,7 @@ begin
     Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
     Result.PrecioOriginalDep   := FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
     Result.AnticipoPrevio      := FieldByName('ANTICIPO_PREVIO').AsCurrency;
+    Result.IdDeposito          := FieldByName('ID_DEPOSITO_DEP').AsString;
   end;
 end;
 
@@ -553,7 +555,7 @@ begin
         cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency         := 0;
         cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency              := PrecioOriginal * CantidadPendiente;
         cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency          :=
-          cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * CantidadPendiente;
+        cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency * CantidadPendiente;
         cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency              := PrecioOriginal;
         cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency                  := AnticipoDado;
         cdsLineas.Post;
@@ -1185,17 +1187,13 @@ begin
     while not cdsLineas.Eof do
     begin
       var sAccion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
-      var fTotal  := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
-      var bVieneDeDepositoViejo :=
-                    (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S');
-      if Lin.TotalCIva > 0 then
-        HayNovedad := True
-      else if not bVieneDeDepositoViejo then
-        HayNovedad := True
-      else if sAccion = 'CANCELAR' then
+      if (DatosCobro.ImporteEntregado > 0) or
+         (sAccion = 'CANCELAR') or
+         (sAccion = 'NUEVO_DEP') then
+      begin
         HayNovedad := True;
-      if HayNovedad then
         Break;
+      end;
       cdsLineas.Next;
     end;
   finally
@@ -1337,8 +1335,7 @@ begin
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
               Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
               Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion,
-              '', '', '', '', '', 'N',
-              cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString);
+              '', '', '', '', '', 'N', Lin.idDeposito);
           cdsLineas.Next;
           Continue;
         end;
@@ -1359,8 +1356,7 @@ begin
                 QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
                 Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
                 Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion,
-                '', '', '', '', '', 'N',
-                cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString);
+                '', '', '', '', '', 'N', lin.idDeposito);
           end
           else
           begin
