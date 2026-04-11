@@ -617,7 +617,7 @@ procedure ImprimirRecordatorio(CodigoCliente:   string;
 var
   Ticket: TTicketTermico;
   FormPreview: TFormVisualizador;
-  TotalPendienteCliente: Currency;
+  TotalPendienteCliente, TotalEntregas: Currency;
   CodEmp, RazonEmp: string;
 begin
   if (Trim(CodigoCliente) <> '') then
@@ -649,9 +649,22 @@ begin
       // ── Depósitos de TODAS las empresas del cliente ───────────
       var QryDep := TUniQuery.Create(nil);
       try
+        var QryAnticipo := TUniQuery.Create(nil);
+        QryAnticipo.Connection := oConn;
+        QryAnticipo.SQL.Text :=
+          'SELECT o.TIPO_OPERACION_OPCAJA, ' +
+          '       o.IMPORTE_TOTAL_OPCAJA, ' +
+          '       o.FECHA_OPERACION_OPCAJA ' +
+          '  FROM fza_caja_operaciones o ' +
+          ' WHERE o.TIPO_OPERACION_OPCAJA  IN (''CB'', ''DE'') ' +
+          '   AND o.IMPORTE_TOTAL_OPCAJA    > 0 ' +
+          '   AND o.ID_DEPOSITO_OPCAJA      = :IDDEP ' +
+          ' ORDER BY o.FECHA_OPERACION_OPCAJA';
+
         QryDep.Connection := inLibGlobalVar.oConn;
         QryDep.SQL.Text :=
-          'SELECT dep.CODIGO_UNIDAD_DEP, ' +
+          'SELECT dep.ID_DEPOSITO_DEP, ' +
+          '       dep.CODIGO_UNIDAD_DEP, ' +
           '       dep.CODIGO_EMPRESA_DEP, ' +
           '       dep.CODIGO_ALMACEN_DEP, ' +
           '       dep.CODIGO_CAJA_DEP, ' +
@@ -676,6 +689,7 @@ begin
         begin
           var CodCli   := QryDep.FieldByName('CODIGO_CLIENTE').AsString;
           var RazonCli := QryDep.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
+          var IdDep   := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
           Ticket.Alinear(alCentro);
           Ticket.Negrita(True);
           Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
@@ -730,6 +744,27 @@ begin
               QryDep.FieldByName('DESCRIPCION_ARTICULO').AsString, 1, 40));
             Ticket.EscribirLinea('  ' + 'RETIRADO EN (' + OrigenDep + ')');
             Ticket.SaltarLineas(1);
+            QryAnticipo.Close;
+            QryAnticipo.ParamByName('IDDEP').AsString := IdDep;
+            QryAnticipo.Open;
+            while not QryAnticipo.Eof do
+            begin
+              var TipoOp  := QryAnticipo.FieldByName(
+                                              'TIPO_OPERACION_OPCAJA').AsString;
+              var Importe := QryAnticipo.FieldByName(
+                                             'IMPORTE_TOTAL_OPCAJA').AsCurrency;
+              TotalEntregas := TotalEntregas + Importe;
+              var Concepto := '';
+              if TipoOp = 'CB' then
+                Concepto := '  > A cuenta para artículo pendiente'
+              else if TipoOp = 'DE' then
+                Concepto := '  > Entrega inicial';
+              Ticket.Alinear(alIzquierda);
+              Ticket.EscribirLinea(Concepto);
+              Ticket.Alinear(alDerecha);
+              Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
+              QryAnticipo.Next;
+            end;
             QryDep.Next;
           end;
           Ticket.LineaSeparadora('-');
