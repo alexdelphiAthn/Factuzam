@@ -140,6 +140,7 @@ type
     ScrollBar1: TScrollBar;
     ScrollBar2: TScrollBar;
     DBSynEdit1: TDBSynEdit;
+    actComentar: TAction;
     procedure btRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -238,8 +239,6 @@ var
 begin
   if DBSynEdit1.Focused then
     Editor := DBSynEdit1
-  else if syndtEstructura.Focused then
-    Editor := syndtEstructura
   else
     Exit;
 
@@ -706,11 +705,11 @@ begin
   with dmmGeneradorProcesos do
   begin
     // 1. Miramos si hay texto seleccionado en alguno de los dos editores
-    sSQL := '';
-    if DBSynEdit1.Focused and (Trim(DBSynEdit1.SelText) <> '') then
-      sSQL := DBSynEdit1.SelText
-    else if syndtEstructura.Focused and (Trim(syndtEstructura.SelText) <> '') then
-      sSQL := syndtEstructura.SelText;
+  sSQL := '';
+  if Trim(DBSynEdit1.SelText) <> '' then
+    sSQL := DBSynEdit1.SelText
+  else if Trim(syndtEstructura.SelText) <> '' then
+    sSQL := syndtEstructura.SelText;
 
     // 2. Si no hay selección (o el foco está en un botón/grid), cogemos todo el texto del campo
     if sSQL = '' then
@@ -1029,6 +1028,13 @@ end;
 
 procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
+  if (Key = VK_DIVIDE) then
+  if (Shift = [ssCtrl]) then
+  begin
+    ActionComentarExecute(Sender);
+    Key := 0;
+    Exit;
+  end;
   // 1. Comprobamos si es una de las teclas de navegación o el Enter
   if (Key = VK_RETURN) or (Key = VK_PRIOR) or (Key = VK_NEXT) or
      (Key = VK_HOME) or (Key = VK_END) then
@@ -1103,13 +1109,13 @@ procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
   // [Ctrl + X] Cortar
-  with TAction.Create(Self) do
-  begin
-    ActionList := ActionList1;
-    ShortCut := TextToShortCut('Ctrl+/');
-    OnExecute := ActionComentarExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+//  with TAction.Create(Self) do
+//  begin
+//    ActionList := ActionList1;
+//    ShortCut := scCtrl + Ord('/');
+//    OnExecute := ActionComentarExecute;
+//    OnUpdate  := ActionEditoresUpdate;
+//  end;
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
@@ -1117,7 +1123,6 @@ begin
     OnExecute := ActionCortarExecute;
     OnUpdate  := ActionEditoresUpdate;
   end;
-
   // [Ctrl + C] Copiar
   with TAction.Create(Self) do
   begin
@@ -1126,7 +1131,6 @@ begin
     OnExecute := ActionCopiarExecute;
     OnUpdate  := ActionEditoresUpdate;
   end;
-
   // [Ctrl + V] Pegar
   with TAction.Create(Self) do
   begin
@@ -1142,7 +1146,6 @@ begin
     OnExecute := ActionDeshacerExecute;
     OnUpdate  := ActionEditoresUpdate;
   end;
-
   // [Shift + Ctrl + Z] Rehacer
   with TAction.Create(Self) do
   begin
@@ -1151,7 +1154,6 @@ begin
     OnExecute := ActionRehacerExecute;
     OnUpdate  := ActionEditoresUpdate;
   end;
-
   // [Ctrl + Y] Borrar Línea
   with TAction.Create(Self) do
   begin
@@ -1165,14 +1167,12 @@ begin
     FAppEvents := TApplicationEvents.Create(Self);
     FAppEvents.OnMessage := AppEventsMessage;
   end;
-
   if not Assigned(FFindDialog) then
   begin
     FFindDialog := TFindDialog.Create(Self);
     FFindDialog.Options := [frDown, frHideUpDown, frHideWholeWord];
     FFindDialog.OnFind := DoFind;
   end;
-
   // 2. Creamos el diálogo de Reemplazar
   if not Assigned(FReplaceDialog) then
   begin
@@ -1200,31 +1200,26 @@ begin
   syndtEstructura.OnExit  := EditorExit;
   DBSynEdit1.Visible := True;
   syndtEstructura.Visible := True;
-
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
-
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
     ShortCut := TextToShortCut('Ctrl+F');
     OnExecute := ActionBuscarExecute;
   end;
-
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
     ShortCut := TextToShortCut('Ctrl+R');
     OnExecute := ActionReemplazarExecute;
   end;
-
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
     ShortCut := TextToShortCut('Ctrl+Shift+F');
     OnExecute := ActionBuscarGlobalExecute;
   end;
-
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
 end;
