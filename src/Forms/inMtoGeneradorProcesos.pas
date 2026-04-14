@@ -185,6 +185,7 @@ type
     procedure ActionDeshacerExecute(Sender: TObject);
     procedure ActionRehacerExecute(Sender: TObject);
     procedure ActionBorrarLineaExecute(Sender: TObject);
+    procedure ActionComentarExecute(Sender: TObject);
     procedure DoFind(Sender: TObject);
     procedure DoReplace(Sender: TObject);
     procedure BuscarGlobal;
@@ -228,6 +229,43 @@ begin
     DBSynEdit1.CutToClipboard
   else if syndtEstructura.Focused then
     syndtEstructura.CutToClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionComentarExecute(Sender: TObject);
+var
+  Editor: TCustomSynEdit;
+  i, LineStart, LineEnd: Integer;
+begin
+  if DBSynEdit1.Focused then
+    Editor := DBSynEdit1
+  else if syndtEstructura.Focused then
+    Editor := syndtEstructura
+  else
+    Exit;
+
+  Editor.BeginUpdate;
+  Editor.Lines.BeginUpdate;
+  try
+    if Editor.SelAvail then
+    begin
+      LineStart := Editor.BlockBegin.Line;
+      LineEnd   := Editor.BlockEnd.Line;
+      if Editor.BlockEnd.Char = 1 then
+        Dec(LineEnd);
+    end
+    else
+    begin
+      LineStart := Editor.CaretY;
+      LineEnd   := Editor.CaretY;
+    end;
+
+    for i := LineStart to LineEnd do
+      Editor.Lines[i - 1] := '-- ' + Editor.Lines[i - 1];
+
+  finally
+    Editor.Lines.EndUpdate;
+    Editor.EndUpdate;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionCopiarExecute(Sender: TObject);
@@ -1065,6 +1103,13 @@ procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
   // [Ctrl + X] Cortar
+  with TAction.Create(Self) do
+  begin
+    ActionList := ActionList1;
+    ShortCut := TextToShortCut('Ctrl+/');
+    OnExecute := ActionComentarExecute;
+    OnUpdate  := ActionEditoresUpdate;
+  end;
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;

@@ -257,7 +257,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 12
       end
       object lblTotal: TcxLabel
-        Left = 906
+        Left = 902
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -279,10 +279,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 904
+        ExplicitLeft = 900
         Height = 80
         Width = 423
-        AnchorX = 1329
+        AnchorX = 1325
       end
       object btnF8: TcxButton
         Left = 224
@@ -756,6 +756,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Caption = 'CargarCta'
       ShortCut = 113
       OnExecute = actCargarCtaExecute
+    end
+    object actGuardarLayout: TAction
+      Caption = 'Guardar Layout'
+      ShortCut = 32891
+      OnExecute = actGuardarLayoutExecute
     end
   end
 end
