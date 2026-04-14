@@ -11,7 +11,7 @@ uses
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, Vcl.Printers;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector
@@ -60,6 +60,7 @@ type
     procedure CargarParametros(Grid: TJvInspector; const pUsuario, pGrupo: string);
     procedure ConstruirInspector;
     procedure GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);
+    procedure GetImpresorasList(Sender: TJvCustomInspectorItem; Strings: TStrings);
   end;
 
 var
@@ -209,14 +210,21 @@ begin
             New(pStr);
             FStrs.Add(pStr);
             pStr^ := Param.ValorPorDefecto;
-            ItemCombo := TJvInspectorVarData.New(CatItem, Param.Nombre, TypeInfo(string), pStr);
+            ItemCombo := TJvInspectorVarData.New(CatItem,
+                                                 Param.Nombre,
+                                                 TypeInfo(string),
+                                                 pStr);
             ItemCombo.DisplayName := Param.Descripcion;
-
-            // Excepción específica visual para tu combo de impresión
             if SameText(Param.Nombre, 'vgerTipoImpresion') then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
               ItemCombo.OnGetValueList := GetTipoImpresionList;
+            end
+            else if SameText(Param.Nombre, 'vgerDefPrinter') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags + [iifValueList,
+                                                         iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetImpresorasList;
             end;
           end;
       end;
@@ -383,6 +391,17 @@ begin
 
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
+end;
+
+procedure TfrmMtoCajaParam.GetImpresorasList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  i: Integer;
+begin
+  Strings.Clear;
+  Strings.Add('');  // opción vacía: "sin impresora asignada"
+  for i := 0 to Printer.Printers.Count - 1 do
+    Strings.Add(Printer.Printers[i]);
 end;
 
 procedure TfrmMtoCajaParam.GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);

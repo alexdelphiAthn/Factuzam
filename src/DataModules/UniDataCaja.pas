@@ -1948,7 +1948,8 @@ var
 begin
   with cdsLineas do
   begin
-    AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
+    if not DataSet.ControlsDisabled then
+      AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
     FieldByName('SERIE_FACTURA_LINEA').AsString := '0';
     FieldByName('NRO_FACTURA_LINEA').AsString := '0';
     NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FACTURA').AsInteger

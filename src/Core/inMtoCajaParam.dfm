@@ -2,8 +2,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros de Caja'
-  ClientHeight = 637
-  ClientWidth = 743
+  ClientHeight = 629
+  ClientWidth = 741
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,15 +16,15 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   object Panel2: TPanel
     Left = 0
     Top = 57
-    Width = 743
-    Height = 580
+    Width = 741
+    Height = 572
     Align = alClient
     TabOrder = 1
     object JvInspector1: TJvInspector
       Left = 1
       Top = 1
-      Width = 743
-      Height = 586
+      Width = 741
+      Height = 578
       Style = isItemPainter
       Align = alClient
       BevelKind = bkSoft
@@ -39,14 +39,14 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
-      ExplicitWidth = 741
-      ExplicitHeight = 578
+      ExplicitWidth = 739
+      ExplicitHeight = 570
     end
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 743
+    Width = 741
     Height = 57
     Align = alTop
     TabOrder = 0
