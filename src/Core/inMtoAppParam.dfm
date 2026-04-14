@@ -35,9 +35,6 @@ object frmMtoAppParam: TfrmMtoAppParam
     Painter = JvInspectorDotNETPainter1
     TabStop = True
     TabOrder = 0
-    ExplicitTop = 41
-    ExplicitWidth = 700
-    ExplicitHeight = 478
   end
   object Panel1: TPanel
     Left = 0
@@ -46,8 +43,6 @@ object frmMtoAppParam: TfrmMtoAppParam
     Height = 57
     Align = alTop
     TabOrder = 1
-    ExplicitLeft = -43
-    ExplicitWidth = 743
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8
@@ -80,7 +75,7 @@ object frmMtoAppParam: TfrmMtoAppParam
       OnKeyDown = edtBusquedaKeyDown
       Width = 292
     end
-    object cxComboBox1: TcxComboBox
+    object cmbGrupoUsuario: TcxComboBox
       Left = 496
       Top = 15
       Properties.ReadOnly = False
@@ -96,7 +91,7 @@ object frmMtoAppParam: TfrmMtoAppParam
       Caption = '&Guardar (F12)'
       TabOrder = 2
     end
-    object cxButton2: TcxButton
+    object btnChangeId: TcxButton
       Left = 689
       Top = 0
       Width = 58

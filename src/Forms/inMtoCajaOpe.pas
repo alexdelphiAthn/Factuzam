@@ -371,7 +371,7 @@ begin
     if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
     begin
       try
-//        View.ApplyBestFit;
+        View.ApplyBestFit;
       except
       end;
     end;
