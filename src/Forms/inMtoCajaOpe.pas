@@ -93,6 +93,7 @@ type
     btnF2: TcxButton;
     cxLabel7: TcxLabel;
     actCargarCta: TAction;
+    actGuardarLayout: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -150,7 +151,10 @@ type
       Sender: TcxCustomGridTableView; APrevFocusedRecord,
       AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
+    procedure actGuardarLayoutExecute(Sender: TObject);
   private
+    procedure GuardarLayoutCaja;
+    procedure RestaurarLayoutCaja;
     procedure CargarDepositosF2;
     procedure AsegurarLineaNueva;
     procedure ActualizarFoco;
@@ -205,8 +209,12 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu, inLibGlobalVar, inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket;
+  inMtoCajaMenu,
+  inLibGlobalVar,
+  inLibUser,
+  inMtoCajaFaseCobro, inLibDevExp, inLibtb,
+  inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
+  inMtoModalGenImpSave;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -363,7 +371,7 @@ begin
     if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
     begin
       try
-        View.ApplyBestFit;
+//        View.ApplyBestFit;
       except
       end;
     end;
@@ -1631,6 +1639,80 @@ begin
   AsegurarLineaNueva;
 end;
 
+procedure TfrmMtoOpeCaja.actGuardarLayoutExecute(Sender: TObject);
+begin
+  GuardarLayoutCaja;
+end;
+
+procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
+var
+  oPerfilLocal: TProfileDicc;
+  i: Integer;
+  Col: TcxGridDBColumn;
+  sFormKey: string;
+  EstadoVentana: TWindowState;
+  AlturaStock, AnchoCol: Integer;
+begin
+  sFormKey := Self.Name;
+
+  // Cargamos el diccionario de perfiles de este formulario+caja
+  oPerfilLocal := nil;
+  inLibUser.GetFormUserProfile(oPerfilLocal,
+                               sFormKey,
+                               inLibGlobalVar.oUser,
+                               inLibGlobalVar.oGroup);
+  if oPerfilLocal = nil then
+    Exit; // Nunca se guardó nada: usamos el diseño por defecto
+
+  try
+    // --- 1. Geometría de la ventana ---
+    Left   := StrToIntDef(GetPerfilValueDef(oPerfilLocal, 'Left',   IntToStr(Left)),   Left);
+    Top    := StrToIntDef(GetPerfilValueDef(oPerfilLocal, 'Top',    IntToStr(Top)),    Top);
+    Width  := StrToIntDef(GetPerfilValueDef(oPerfilLocal, 'Width',  IntToStr(Width)),  Width);
+    Height := StrToIntDef(GetPerfilValueDef(oPerfilLocal, 'Height', IntToStr(Height)), Height);
+
+    EstadoVentana := TWindowState(
+      StrToIntDef(GetPerfilValueDef(oPerfilLocal, 'WindowState', '0'), 0));
+    // No restauramos wsMinimized al arrancar (quedaría invisible)
+    if EstadoVentana = wsMinimized then
+      EstadoVentana := wsNormal;
+    WindowState := EstadoVentana;
+
+    // --- 2. Splitter: restauramos la altura del panel de stock ---
+    AlturaStock := StrToIntDef(
+      GetPerfilValueDef(oPerfilLocal, 'StockPanelHeight', '0'), 0);
+    if (AlturaStock > 30) and (AlturaStock < Panel2.Height - 50) then
+      pnl1.Height := AlturaStock;
+
+    // --- 3. Ancho de columnas ---
+    cxGrid1DBTableView1.BeginUpdate;
+    try
+      for i := 0 to cxGrid1DBTableView1.ColumnCount - 1 do
+      begin
+        Col := cxGrid1DBTableView1.Columns[i] as TcxGridDBColumn;
+        if Col.Tag > 0 then
+          AnchoCol := StrToIntDef(
+            GetPerfilValueDef(oPerfilLocal,
+                              'ColAtrib' + IntToStr(Col.Tag), '0'), 0)
+        else if Col.DataBinding.FieldName <> '' then
+          AnchoCol := StrToIntDef(
+            GetPerfilValueDef(oPerfilLocal,
+                              'Col_' + Col.DataBinding.FieldName, '0'), 0)
+        else
+          AnchoCol := 0;
+
+        if AnchoCol > 10 then
+          Col.Width := AnchoCol;
+      end;
+    finally
+      cxGrid1DBTableView1.EndUpdate;
+    end;
+
+  finally
+    FreeAndNil(oPerfilLocal);
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
@@ -1725,7 +1807,7 @@ begin
   finally
     NombresAtributos.Free;
   end;
-  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
@@ -2013,7 +2095,7 @@ begin
   finally
     qry.Free;
   end;
-  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 
 procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
@@ -2400,6 +2482,7 @@ procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
 //  end;
 //   btnCodigoEmpleado.SetFocus;
 begin
+  RestaurarLayoutCaja;
   ActualizarFoco;
 end;
 
@@ -2423,6 +2506,55 @@ begin
       Combo.DroppedDown := True;
     Combo.OnEnter := nil;
   end;
+end;
+
+procedure TfrmMtoOpeCaja.GuardarLayoutCaja;
+var
+  formulario: TfrmModalGenImpSave;
+  sPermisos: string;
+  i: Integer;
+  Col: TcxGridDBColumn;
+  sFormKey: string;
+begin
+  // --- 1. Pedir el perfil destino, igual que sbGrabarGridClick en TfrmMtoGen ---
+  formulario := TfrmModalGenImpSave.Create(Application);
+  try
+    formulario.edtDescripcion.Enabled := False;
+    formulario.edtNombreOrigen.Text   := Self.Name;
+    formulario.edtDescripcion.Text    := 'Personalización Caja';
+    formulario.ShowModal;
+    if formulario.sFicha <> 'S' then
+      Exit;                              // canceló → no grabamos nada
+    sPermisos := formulario.cbbPermisos.Text;
+  finally
+    FreeAndNil(formulario);
+  end;
+  // --- 2. Grabar con el perfil elegido ---
+  sFormKey := Self.Name;
+  odmPerfiles.GrabarPerfil(sPermisos, sFormKey,
+                            'WindowState', IntToStr(Ord(WindowState)));
+  if WindowState = wsNormal then
+  begin
+    odmPerfiles.GrabarPerfil(sPermisos, sFormKey, 'Left',   IntToStr(Left));
+    odmPerfiles.GrabarPerfil(sPermisos, sFormKey, 'Top',    IntToStr(Top));
+    odmPerfiles.GrabarPerfil(sPermisos, sFormKey, 'Width',  IntToStr(Width));
+    odmPerfiles.GrabarPerfil(sPermisos, sFormKey, 'Height', IntToStr(Height));
+  end;
+  odmPerfiles.GrabarPerfil(sPermisos, sFormKey,
+                                     'StockPanelHeight', IntToStr(pnl1.Height));
+  for i := 0 to cxGrid1DBTableView1.ColumnCount - 1 do
+  begin
+    Col := cxGrid1DBTableView1.Columns[i] as TcxGridDBColumn;
+    if Col.Tag > 0 then
+      odmPerfiles.GrabarPerfil(sPermisos, sFormKey,
+                                'ColAtrib' + IntToStr(Col.Tag),
+                                IntToStr(Col.Width))
+    else if Col.DataBinding.FieldName <> '' then
+      odmPerfiles.GrabarPerfil(sPermisos, sFormKey,
+                                'Col_' + Col.DataBinding.FieldName,
+                                IntToStr(Col.Width));
+  end;
+  ShowMessage('Layout guardado en perfil "' + sPermisos + '".');
 end;
 
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
