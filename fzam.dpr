@@ -131,7 +131,9 @@ uses
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
-  inLibData in 'src\Lib\inLibData.pas';
+  inLibData in 'src\Lib\inLibData.pas',
+  inLibAppParam in 'src\Lib\inLibAppParam.pas',
+  inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam};
 
 var
   frmLogon: TfrmLogon;
@@ -167,5 +169,6 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmMtoAppParam, frmMtoAppParam);
   Application.Run;
 end.

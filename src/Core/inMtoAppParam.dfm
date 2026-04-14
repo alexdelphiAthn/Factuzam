@@ -1,56 +1,53 @@
-object frmMtoCajaParam: TfrmMtoCajaParam
+object frmMtoAppParam: TfrmMtoAppParam
   Left = 0
   Top = 0
-  Caption = 'Par'#225'metros de Caja'
-  ClientHeight = 637
-  ClientWidth = 743
+  Caption = 'Par'#225'metros Generales de la Aplicaci'#243'n'
+  ClientHeight = 560
+  ClientWidth = 754
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -16
   Font.Name = 'Lucida Sans'
   Font.Style = []
+  Position = poMainFormCenter
   OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 18
-  object Panel2: TPanel
+  object JvInspector1: TJvInspector
     Left = 0
     Top = 57
-    Width = 743
-    Height = 580
+    Width = 754
+    Height = 503
+    Style = isItemPainter
     Align = alClient
-    TabOrder = 1
-    ExplicitWidth = 741
-    ExplicitHeight = 572
-    object JvInspector1: TJvInspector
-      Left = 1
-      Top = 1
-      Width = 741
-      Height = 578
-      Style = isItemPainter
-      Align = alClient
-      BevelKind = bkSoft
-      BevelOuter = bvRaised
-      Divider = 300
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Lucida Sans'
-      Font.Style = []
-      ItemHeight = 20
-      Painter = JvInspectorDotNETPainter1
-      TabStop = True
-      TabOrder = 0
-    end
+    BevelKind = bkSoft
+    BevelOuter = bvRaised
+    Divider = 300
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Lucida Sans'
+    Font.Style = []
+    ItemHeight = 20
+    Painter = JvInspectorDotNETPainter1
+    TabStop = True
+    TabOrder = 0
+    ExplicitTop = 41
+    ExplicitWidth = 700
+    ExplicitHeight = 478
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 743
+    Width = 754
     Height = 57
     Align = alTop
-    TabOrder = 0
-    ExplicitWidth = 741
+    TabOrder = 1
+    ExplicitLeft = -43
+    ExplicitWidth = 743
     object edtBusqueda: TcxButtonEdit
       Left = 21
       Top = 8
@@ -83,7 +80,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       OnKeyDown = edtBusquedaKeyDown
       Width = 292
     end
-    object cmbGrupoUsuario: TcxComboBox
+    object cxComboBox1: TcxComboBox
       Left = 496
       Top = 15
       Properties.ReadOnly = False
@@ -91,16 +88,15 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       TabOrder = 1
       Width = 176
     end
-    object btnGuardar: TcxButton
+    object cxButton1: TcxButton
       Left = 319
       Top = 15
       Width = 154
       Height = 26
       Caption = '&Guardar (F12)'
       TabOrder = 2
-      OnClick = btnGuardarClick
     end
-    object btnChangeId: TcxButton
+    object cxButton2: TcxButton
       Left = 689
       Top = 0
       Width = 58
@@ -131,18 +127,18 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter
     CategoryFont.Charset = DEFAULT_CHARSET
     CategoryFont.Color = clBtnText
-    CategoryFont.Height = -13
-    CategoryFont.Name = 'Lucida Sans'
+    CategoryFont.Height = -15
+    CategoryFont.Name = 'Segoe UI'
     CategoryFont.Style = []
     NameFont.Charset = DEFAULT_CHARSET
     NameFont.Color = clWindowText
-    NameFont.Height = -13
-    NameFont.Name = 'Lucida Sans'
+    NameFont.Height = -15
+    NameFont.Name = 'Segoe UI'
     NameFont.Style = []
     ValueFont.Charset = DEFAULT_CHARSET
     ValueFont.Color = clWindowText
-    ValueFont.Height = -13
-    ValueFont.Name = 'Lucida Sans'
+    ValueFont.Height = -15
+    ValueFont.Name = 'Segoe UI'
     ValueFont.Style = []
     DrawNameEndEllipsis = False
     HideSelectFont.Charset = DEFAULT_CHARSET
@@ -155,19 +151,19 @@ object frmMtoCajaParam: TfrmMtoCajaParam
     SelectedFont.Height = -15
     SelectedFont.Name = 'Segoe UI'
     SelectedFont.Style = []
-    Left = 368
-    Top = 328
+    Left = 608
+    Top = 496
   end
   object ActionList1: TActionList
-    Left = 608
-    Top = 104
+    Left = 452
+    Top = 496
     object actGuardar: TAction
-      Caption = 'actGuardar'
-      ShortCut = 123
+      Caption = 'Guardar'
+      ShortCut = 16467
       OnExecute = actGuardarExecute
     end
     object actSalir: TAction
-      Caption = 'actSalir'
+      Caption = 'Salir'
       ShortCut = 27
       OnExecute = actSalirExecute
     end
