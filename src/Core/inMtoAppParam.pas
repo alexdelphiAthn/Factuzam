@@ -27,9 +27,9 @@ type
     JvInspector1: TJvInspector;
     Panel1: TPanel;
     edtBusqueda: TcxButtonEdit;
-    cxComboBox1: TcxComboBox;
+    cmbGrupoUsuario: TcxComboBox;
     cxButton1: TcxButton;
-    cxButton2: TcxButton;
+    btnChangeId: TcxButton;
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
                                                  AButtonIndex: Integer);
