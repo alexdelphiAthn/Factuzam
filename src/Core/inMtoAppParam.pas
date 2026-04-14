@@ -509,11 +509,8 @@ begin
   cmbGrupoUsuario.Properties.Items.Add(oGroup);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
   cmbGrupoUsuario.ItemIndex := 0;
-
   btnChangeId.Visible := (oRootGroup = 'S');
-
   CargarParametros(JvInspector1, oUser, '');
-
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
 end;

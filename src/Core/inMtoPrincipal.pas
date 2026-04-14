@@ -74,7 +74,7 @@ type
     CrearArtculosyunpedidoounalbarn1: TMenuItem;
     Formasdepago2: TMenuItem;
     dxSkinController1: TdxSkinController;
-    // procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -166,6 +166,7 @@ type
     FLogHigSQL: TSynSQLSyn;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
+      procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
@@ -309,6 +310,28 @@ begin
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
 end;
 
+procedure TfrmMtoPrincipal.SetSystemMenuFont(const AFontName: string;
+                                             ASize: Integer);
+var
+  NCM: TNonClientMetrics;
+begin
+  NCM.cbSize := SizeOf(TNonClientMetrics);
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0) then
+  begin
+    StringToWideChar(AFontName, NCM.lfMenuFont.lfFaceName, LF_FACESIZE);
+    NCM.lfMenuFont.lfHeight := -MulDiv(ASize,
+                                       GetDeviceCaps(GetDC(0),
+                                                     LOGPIXELSY),
+                                       72);
+    NCM.lfMenuFont.lfWeight := FW_NORMAL;
+    SystemParametersInfo(SPI_SETNONCLIENTMETRICS,
+                         SizeOf(NCM),
+                         @NCM,
+                         SPIF_UPDATEINIFILE or SPIF_SENDCHANGE);
+  end;
+end;
+
+
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;
@@ -334,21 +357,6 @@ var
     except
       on E: Exception do
         inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
-    end;
-  end;
-
-  procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
-  var
-    NCM: TNonClientMetrics;
-  begin
-    NCM.cbSize := SizeOf(TNonClientMetrics);
-    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0) then
-    begin
-      StringToWideChar(AFontName, NCM.lfMenuFont.lfFaceName, LF_FACESIZE);
-      NCM.lfMenuFont.lfHeight := -MulDiv(ASize, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72);
-      NCM.lfMenuFont.lfWeight := FW_NORMAL;
-      SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCM), @NCM,
-                           SPIF_UPDATEINIFILE or SPIF_SENDCHANGE);
     end;
   end;
 
@@ -397,6 +405,11 @@ begin
   AplicarTema;
 
   inLibLog.Log.LogInfo('Ventana principal creada');
+end;
+
+procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
+begin
+  SetSystemMenuFont('Segoe UI', 9);
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
