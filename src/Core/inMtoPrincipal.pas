@@ -62,12 +62,25 @@ type
     JvStatusBar1: TJvStatusBar;
     saveDialog: TFileSaveDialog;
     openDialog: TFileOpenDialog;
+    mnuParmetrosdeEntorno: TMenuItem;
+    N2: TMenuItem;
+    Compras1: TMenuItem;
+    FormasdePagoCaja1: TMenuItem;
+    mnuFormaPagoVenta: TMenuItem;
+    Pedidos1: TMenuItem;
+    Albaranes1: TMenuItem;
+    Facturas1: TMenuItem;
+    Sesiones1: TMenuItem;
+    CrearArtculosyunpedidoounalbarn1: TMenuItem;
+    Formasdepago2: TMenuItem;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure mnuFormaPagoVentaClick(Sender: TObject);
+    procedure mnuParmetrosdeEntornoClick(Sender: TObject);
 
 //    procedure actSalirExecute(Sender: TObject);
 
@@ -101,7 +114,6 @@ type
     mnuGruposdeIVA: TMenuItem;
     mnuIvas: TMenuItem;
     mnuContadores: TMenuItem;
-    mnuFormasdePago: TMenuItem;
     mnuPaises: TMenuItem;
     N1: TMenuItem;
     UsuariosGruposyPerfiles1: TMenuItem;
@@ -128,7 +140,6 @@ type
     procedure mnuUsuariosClick(Sender: TObject);
     procedure mnuGruposClick(Sender: TObject);
     procedure mnuPerfilesClick(Sender: TObject);
-    procedure mnuFormasdepagoClick(Sender: TObject);
     procedure CopiasdeSeguridad1Click(Sender: TObject);
     procedure mnuEjecutarScriptClick(Sender: TObject);
     procedure mnuGeneradorProcesosClick(Sender: TObject);
@@ -185,6 +196,7 @@ uses inLibUser,
   inLibLog,
   inLibDir,
   inMtoSplash,
+  inMtoAppParam,
   inMtoCajaMenu,
   inMtoCajaParam,
   inMtoModalGenFilter,
@@ -910,6 +922,13 @@ begin
     ShowMto(Self, 'Familias');
 end;
 
+procedure TfrmMtoPrincipal.mnuFormaPagoVentaClick(Sender: TObject);
+begin
+  inherited;
+  if mnuFormaPagoVenta.Visible then
+    ShowMto(Self, 'FormasdePago');
+end;
+
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
 begin
   if (mnuGeneradorProcesos.Visible) then
@@ -955,12 +974,6 @@ begin
             'UsuariosPerfiles');
 end;
 
-procedure TfrmMtoPrincipal.mnuFormasdepagoClick(Sender: TObject);
-begin
-  if mnuFormasdePago.Visible then
-    ShowMto(Self, 'FormasdePago');
-end;
-
 procedure TfrmMtoPrincipal.mnuProveedoresClick(Sender: TObject);
 begin
   if (mnuProveedores.Visible) then
@@ -971,6 +984,19 @@ procedure TfrmMtoPrincipal.mnuUsuariosClick(Sender: TObject);
 begin
   if (mnuUsuarios.Visible) then
     ShowMto(Self, 'Usuarios');
+end;
+
+procedure TfrmMtoPrincipal.mnuParmetrosdeEntornoClick(Sender: TObject);
+var
+    frmMtoAppParam: TfrmMtoAppParam;
+begin
+  inherited;
+  try
+    frmMtoAppParam := TfrmMtoAppParam.Create(Self);
+    frmMtoAppParam.ShowModal;
+  finally
+    FreeAndNil(frmMtoAppParam);
+  end;
 end;
 
 end.
