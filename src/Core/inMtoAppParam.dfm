@@ -83,13 +83,14 @@ object frmMtoAppParam: TfrmMtoAppParam
       TabOrder = 1
       Width = 176
     end
-    object cxButton1: TcxButton
+    object btnGuardar: TcxButton
       Left = 319
       Top = 15
       Width = 154
       Height = 26
       Caption = '&Guardar (F12)'
       TabOrder = 2
+      OnClick = btnGuardarClick
     end
     object btnChangeId: TcxButton
       Left = 689
