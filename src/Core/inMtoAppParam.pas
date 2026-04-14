@@ -28,7 +28,7 @@ type
     Panel1: TPanel;
     edtBusqueda: TcxButtonEdit;
     cmbGrupoUsuario: TcxComboBox;
-    cxButton1: TcxButton;
+    btnGuardar: TcxButton;
     btnChangeId: TcxButton;
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;

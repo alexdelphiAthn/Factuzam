@@ -38,10 +38,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       ExplicitWidth = 1122
       ExplicitHeight = 451
-      ClientRectBottom = 455
-      ClientRectLeft = 4
-      ClientRectRight = 1120
-      ClientRectTop = 4
+      ClientRectBottom = 457
+      ClientRectLeft = 2
+      ClientRectRight = 1122
+      ClientRectTop = 2
     end
     object pnlPPBottom: TPanel
       Left = 0
@@ -98,7 +98,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     ExplicitWidth = 1122
   end
   inherited Localizer1: TcxLocalizer
-    Left = 528
+    Left = 504
     Top = 144
   end
   inherited jvntrstb1: TJvEnterAsTab
@@ -142,6 +142,9 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     PixelsPerInch = 96
   end
   object LookAndFeelController1: TcxLookAndFeelController
+    Kind = lfOffice11
+    NativeStyle = False
+    SkinName = 'Office2019Colorful'
     Left = 72
     Top = 144
   end
@@ -2833,5 +2836,13 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Options = []
     Left = 824
     Top = 144
+  end
+  object dxSkinController1: TdxSkinController
+    Kind = lfOffice11
+    NativeStyle = False
+    SkinName = 'Office2019Colorful'
+    FormCorners = fcRounded
+    Left = 560
+    Top = 296
   end
 end

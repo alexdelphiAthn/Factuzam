@@ -73,6 +73,7 @@ type
     Sesiones1: TMenuItem;
     CrearArtculosyunpedidoounalbarn1: TMenuItem;
     Formasdepago2: TMenuItem;
+    dxSkinController1: TdxSkinController;
     // procedure FormDestroy(Sender: TObject);
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
@@ -90,7 +91,7 @@ type
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
     StylCab: TcxStyle;
-    SkinController1: TdxSkinController;
+//    SkinController1: TdxSkinController;
     EditStyleController: TcxEditStyleController;
     LookAndFeelController1: TcxLookAndFeelController;
     Panel1: TPanel;
@@ -201,6 +202,7 @@ uses inLibUser,
   inMtoCajaParam,
   inMtoModalGenFilter,
   inLibCajaParam,
+  inLibAppParam,
   inLibBuscarImpresora,
   System.RegularExpressions;
 
@@ -310,77 +312,90 @@ end;
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;
+
+  procedure AplicarTema;
+  var
+    sTema: string;
+  begin
+    if not (Assigned(LookAndFeelController1) and Assigned(dxSkinController1)) then
+      Exit;
+    try
+      sTema := oAppParams.GetString('appTema');
+      if sTema = '' then
+      begin
+        if DarkModeIsEnabled then
+          sTema := 'MetropolisDark'
+        else
+          sTema := 'Office2007Pink';
+      end;
+      // PRIMERO el skin, LUEGO la fuente del menú
+      LookAndFeelController1.SkinName := sTema;
+      dxSkinController1.SkinName      := sTema;
+    except
+      on E: Exception do
+        inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
+    end;
+  end;
+
+  procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
+  var
+    NCM: TNonClientMetrics;
+  begin
+    NCM.cbSize := SizeOf(TNonClientMetrics);
+    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0) then
+    begin
+      StringToWideChar(AFontName, NCM.lfMenuFont.lfFaceName, LF_FACESIZE);
+      NCM.lfMenuFont.lfHeight := -MulDiv(ASize, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72);
+      NCM.lfMenuFont.lfWeight := FW_NORMAL;
+      SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCM), @NCM,
+                           SPIF_UPDATEINIFILE or SPIF_SENDCHANGE);
+    end;
+  end;
+
 begin
-  // Application.OnException := AppException;
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
   inLibLog.Log.LogInfo('Creando ventana principal');
+
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
-  FDmConn := TdmConn.Create(Self);
+  FDmConn     := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
   tmr1Timer(Sender);
+
   FdmDataPerfiles := TdmPerfiles.Create(Self);
-  odmPerfiles := FdmDataPerfiles;
-  oConn := FDmConn.conUni;
-  odmConn := FDmConn;
-  ofrmMto2 := Self;
+  odmPerfiles     := FdmDataPerfiles;
+  oConn           := FDmConn.conUni;
+  odmConn         := FDmConn;
+  ofrmMto2        := Self;
+
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
+
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
+  oAppParams.InicializarParametrosApp(oUser, oGroup);
   oNomImpresoraCaja := GetImpresoraCaja;
+
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
-  jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis + '';
-  jvStatusBar1.Panels[3].Text := oEmpresa + '\' +  oAlmacen + '\' + oCaja;
+  jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
+  jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
+
   Self.Caption := oAppName + ' ' + oVersion;
+
   pnlPPBottom.Visible := False;
-  cxMemo1.Visible := False;
+  cxMemo1.Visible     := False;
 {$IFDEF DEBUG}
   pnlPPBottom.Visible := True;
-  cxMemo1.Visible := True;
-{$ENDIF }
-  // Log(FdmConn.ConUni, oUSer, 'Entrando en el software', Self);
-  // zqryPermisoMenu.Connection := FdmConn.ZconnGlent;
-  // zqryPermisoMenu.SQL.Text := 'SELECT Entidad, Menu, PermisoAcceso,
-  //PermisoListado, PermisoEscritura ' +
-  // '  FROM glt_user_permisos ' +
-  // ' WHERE Entidad = ' + QuotedStr(oUser) +
-  // '    OR Entidad = ' + QuotedStr(oGroup) +
-  // '  ORDER BY Menu, PermisoAcceso';
-  // zqryPermisoMenu.Open;
-  // SetPermisosMenu(mnMenuPrin, oUser, oGroup);
-  // zqryPermisoMenu.Close;
+  cxMemo1.Visible     := True;
+{$ENDIF}
 
-  // https://stackoverflow.com/questions/2750102/
-  // how-can-i-change-the-fontsize-of-the-mainmenu-items-in-delphi
-  // ShowMessage('ESTABLECIENDO FUENTES DE MENU');
-  Screen.MenuFont.Name := 'Lucida Sans';
-  Screen.MenuFont.Size := 13;
-  // https://www.tek-tips.com/viewthread.cfm?qid=1360646
-  try
-    if Assigned(LookAndFeelController1) and Assigned(SkinController1) then
-    begin
-      if DarkModeIsEnabled then
-      begin
-        LookAndFeelController1.SkinName := 'MetropolisDark';
-        SkinController1.SkinName := 'MetropolisDark';
-      end
-      else
-      begin
-        LookAndFeelController1.SkinName := 'Office2007Pink';
-        SkinController1.SkinName := 'Office2007Pink';
-      end;
-    end;
-  except
-    on E: Exception do
-    begin
-      inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
-      // Continuar sin skin personalizado
-    end;
-  end;
+  // ORDEN CORRECTO: primero tema, luego menú
+  SetSystemMenuFont('Lucida Sans', 13);
+  AplicarTema;
+
   inLibLog.Log.LogInfo('Ventana principal creada');
 end;
 

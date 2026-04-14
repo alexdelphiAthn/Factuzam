@@ -133,7 +133,8 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
-  inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam};
+  inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
+  fzam.dxSettings in 'fzam.dxSettings.pas';
 
 var
   frmLogon: TfrmLogon;
