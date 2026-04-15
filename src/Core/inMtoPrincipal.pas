@@ -79,19 +79,12 @@ type
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure mnuFormaPagoVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
-
-//    procedure actSalirExecute(Sender: TObject);
-
-  private
-    // procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
     StylCab: TcxStyle;
-//    SkinController1: TdxSkinController;
     EditStyleController: TcxEditStyleController;
     LookAndFeelController1: TcxLookAndFeelController;
     Panel1: TPanel;
@@ -365,48 +358,39 @@ begin
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
-  inLibLog.Log.LogInfo('Creando ventana principal');
-
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
   tmr1Timer(Sender);
-
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   odmPerfiles     := FdmDataPerfiles;
   oConn           := FDmConn.conUni;
   odmConn         := FDmConn;
   ofrmMto2        := Self;
-
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
-
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   oAppParams.InicializarParametrosApp(oUser, oGroup);
   oNomImpresoraCaja := GetImpresoraCaja;
-
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
     sDis := ' ✪';
   jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
-
   Self.Caption := oAppName + ' ' + oVersion;
-
   pnlPPBottom.Visible := False;
   cxMemo1.Visible     := False;
 {$IFDEF DEBUG}
   pnlPPBottom.Visible := True;
   cxMemo1.Visible     := True;
 {$ENDIF}
-
-  // ORDEN CORRECTO: primero tema, luego menú
   SetMenuFont('Lucida Sans', 13);
-
+  var  NCM: TNonClientMetrics;
+  NCM.cbSize := SizeOf(TNonClientMetrics);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
   AplicarTema;
-
-  inLibLog.Log.LogInfo('Ventana principal creada');
+  inLibLog.Log.LogInfo('Arranque del sistema');
 end;
 
 procedure TfrmMtoPrincipal.SetMenuFont(const AFontName: string; ASize: Integer);
@@ -430,30 +414,11 @@ begin
   SetMenuFont('Segoe UI', 9);
 end;
 
-procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
-begin
-  inherited;
-//  jvStatusBar1.Panels[1].Width := jvStatusBar1.ClientWidth -
-//                                  jvStatusBar1.Panels[0].Width -
-//                                  jvStatusBar1.Panels[2].Width -
-//                                  jvStatusBar1.Panels[3].Width -
-//                                  jvStatusBar1.Panels[4].Width - 20;
-end;
-
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
 begin
   if (mnuTarifas.Visible = True) then
     ShowMto(Self, 'Tarifas');
 end;
-
-//procedure TfrmMtoPrincipal.actSalirExecute(Sender: TObject);
-//begin
-//  inherited;
-//  if (pcPrincipal.PageCount = 0) then
-//  begin
-//    Self.Close;
-//  end;
-//end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 begin
