@@ -14,7 +14,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   ExplicitLeft = 3
   ExplicitTop = 3
   ExplicitWidth = 1140
-  ExplicitHeight = 613
+  ExplicitHeight = 617
   TextHeight = 19
   object Panel1: TPanel [0]
     Left = 0

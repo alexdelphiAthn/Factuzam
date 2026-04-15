@@ -129,6 +129,7 @@ type
     procedure actDepositoClienteExecute(Sender: TObject);
     procedure btnDepositoClick(Sender: TObject);
   private
+
     FTipoImpresion: TTipoImpresionTicket;
     FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
@@ -155,6 +156,7 @@ type
     FCodigoCliente: String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
+    FHayLineasDeposito: Boolean;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
     procedure AlRecalcularDatos(Sender: TObject);
     function AlRequerirReferencia(AInfo: TFormaPagoInfo;
@@ -714,7 +716,18 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
 begin
-  txtPorcenDtoGlobal.Enabled := oCajaParams.GetBool('vgerDescuentos', True);
+  // Si hay líneas de depósito, el descuento global no está permitido
+  if FHayLineasDeposito then
+  begin
+    txtPorcenDtoGlobal.Enabled := False;
+    txtPorcenDtoGlobal.Value   := 0;
+    // Opcional: tooltip explicativo
+    txtPorcenDtoGlobal.Hint    := 'No se puede aplicar descuento global con líneas de depósito';
+    txtPorcenDtoGlobal.ShowHint := True;
+  end
+  else
+    txtPorcenDtoGlobal.Enabled := oCajaParams.GetBool('vgerDescuentos', True);
+
   txtValeEmitido.Properties.ReadOnly := True;
   txtValeEmitido.Style.Color := clWhite;
   lblDescuento4.Caption := 'Pendiente de cobro';

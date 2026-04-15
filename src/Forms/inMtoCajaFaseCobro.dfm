@@ -4,8 +4,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'Fase de cobro'
-  ClientHeight = 688
-  ClientWidth = 836
+  ClientHeight = 680
+  ClientWidth = 834
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,15 +20,13 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   object pnlPrincipal: TPanel
     Left = 65
     Top = 0
-    Width = 771
-    Height = 688
+    Width = 769
+    Height = 680
     Align = alClient
     BevelOuter = bvNone
     Color = clCream
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 769
-    ExplicitHeight = 680
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -913,10 +911,9 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
     Left = 0
     Top = 0
     Width = 65
-    Height = 688
+    Height = 680
     Align = alLeft
     TabOrder = 1
-    ExplicitHeight = 680
     object cxLabel3: TcxLabel
       Left = 1
       Top = 172

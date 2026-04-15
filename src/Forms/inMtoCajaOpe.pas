@@ -172,6 +172,7 @@ type
     procedure ConsultarStock(const CodigoInput: string);
     procedure BuscarEmpleados;
     procedure BuscarClientes;
+    function HayLineasConDeposito: Boolean;
     procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure ComboAtributoCloseUp(Sender: TObject);
@@ -648,9 +649,16 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeCaja.
-                    tvDescuentoMenosPropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoOpeCaja.tvDescuentoMenosPropertiesEditValueChanged(Sender: TObject);
 begin
+  // Ponemos a 0 los precios finales para que CalcularLinea
+  // respete el descuento y calcule el precio en base a él.
+  if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+  begin
+    DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+  end;
+
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -660,6 +668,14 @@ end;
 
 procedure TfrmMtoOpeCaja.tvDescuentoPropertiesEditValueChanged(Sender: TObject);
 begin
+  // Ponemos a 0 los precios finales para que CalcularLinea
+  // respete el descuento y calcule el precio en base a él.
+  if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+  begin
+    DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+  end;
+
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
@@ -2179,6 +2195,34 @@ begin
   end;
 end;
 
+function TfrmMtoOpeCaja.HayLineasConDeposito: Boolean;
+var
+  Bkm: TBookmark;
+  VieneDeDep: string;
+begin
+  Result := False;
+  DatosCaja.cdsLineas.DisableControls;
+  Bkm := DatosCaja.cdsLineas.GetBookmark;
+  try
+    DatosCaja.cdsLineas.First;
+    while not DatosCaja.cdsLineas.Eof do
+    begin
+      VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
+      begin
+        Result := True;
+        Break;
+      end;
+      DatosCaja.cdsLineas.Next;
+    end;
+  finally
+    if DatosCaja.cdsLineas.BookmarkValid(Bkm) then
+      DatosCaja.cdsLineas.GotoBookmark(Bkm);
+    DatosCaja.cdsLineas.FreeBookmark(Bkm);
+    DatosCaja.cdsLineas.EnableControls;
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
@@ -2217,6 +2261,7 @@ begin
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
     frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
+    frmFaseCobro.FHayLineasDeposito := HayLineasConDeposito;
     frmFaseCobro.FCodigoEmpresa := FCodigoEmpresa;
     frmFaseCobro.FCodigoAlmacen := FCodigoAlmacen;
     frmFaseCobro.FCodigoCaja := FCodigoCaja;
