@@ -166,7 +166,8 @@ type
     FLogHigSQL: TSynSQLSyn;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
-      procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
+    procedure SetMenuFont(const AFontName: string; ASize: Integer);
+    procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
@@ -401,15 +402,32 @@ begin
 {$ENDIF}
 
   // ORDEN CORRECTO: primero tema, luego menú
-  SetSystemMenuFont('Lucida Sans', 13);
+  SetMenuFont('Lucida Sans', 13);
+
   AplicarTema;
 
   inLibLog.Log.LogInfo('Ventana principal creada');
 end;
 
+procedure TfrmMtoPrincipal.SetMenuFont(const AFontName: string; ASize: Integer);
+var
+  NCM: TNonClientMetrics;
+  LF: TLogFont;
+begin
+  NCM.cbSize := SizeOf(TNonClientMetrics);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
+  LF := NCM.lfMenuFont;
+  StringToWideChar(AFontName, LF.lfFaceName, LF_FACESIZE);
+  LF.lfHeight := -MulDiv(ASize, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72);
+  LF.lfWeight := FW_NORMAL;
+  NCM.lfMenuFont := LF;
+  // Sin SPIF_UPDATEINIFILE ni SPIF_SENDCHANGE → NO persiste, NO afecta otras apps
+  SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
+end;
+
 procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
 begin
-  SetSystemMenuFont('Segoe UI', 9);
+  SetMenuFont('Segoe UI', 9);
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
