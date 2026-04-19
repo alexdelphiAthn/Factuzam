@@ -685,6 +685,14 @@ end;
 
 procedure TfrmMtoOpeCaja.tvPrecioUniPropertiesEditValueChanged(Sender: TObject);
 begin
+  if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+  begin
+    DatosCaja.cdsLineas.FieldByName(
+                     'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName(
+                     'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+  end;
+
   GridRecalc(Sender,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,
