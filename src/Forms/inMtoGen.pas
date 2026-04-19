@@ -549,6 +549,15 @@ end;
 procedure TfrmMtoGen.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  SendMessage(Self.Handle, WM_SETREDRAW, WPARAM(False), 0);
+  if Assigned(cxGrdDBTabPrin) then
+    cxGrdDBTabPrin.DataController.DataSource := nil;
+
+  if Assigned(tvPerfil) then
+    tvPerfil.DataController.DataSource := nil;
+
+  if Assigned(dsTablaG) then
+    dsTablaG.DataSet := nil;
   Action := caFree;
 end;
 
