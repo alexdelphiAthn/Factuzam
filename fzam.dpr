@@ -134,7 +134,8 @@ uses
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
   inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
-  fzam.dxSettings in 'fzam.dxSettings.pas';
+  fzam.dxSettings in 'fzam.dxSettings.pas',
+  inLibPathTokens in 'src\Lib\inLibPathTokens.pas';
 
 var
   frmLogon: TfrmLogon;

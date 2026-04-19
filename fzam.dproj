@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -435,6 +435,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="fzam.dxSettings.pas"/>
+        <DCCReference Include="src\Lib\inLibPathTokens.pas"/>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

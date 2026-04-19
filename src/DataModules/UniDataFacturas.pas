@@ -1109,11 +1109,11 @@ begin
     Abort;
   end;
   // Verificar estado de consolidación
-  if (unqryTablaG.FieldByName('ESCONSOLIDADA_FACTURA').AsString = 'S') then
-  begin
-    ShowMessage('No se pueden añadir líneas a una factura consolidada');
-    Abort;
-  end;
+//  if (unqryTablaG.FieldByName('ESCONSOLIDADA_FACTURA').AsString = 'S') then
+//  begin
+//    ShowMessage('No se pueden añadir líneas a una factura consolidada');
+//    Abort;
+//  end;
 end;
 
 procedure TdmFacturas.unqryLinFacAfterPost(DataSet: TDataSet);

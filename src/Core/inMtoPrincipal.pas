@@ -443,7 +443,7 @@ begin
   // Configuración del diálogo
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.DefaultExtension := 'sql';
-  saveDialog.DefaultFolder := GetCurrentDir;
+  saveDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
   with saveDialog.FileTypes.Add do
   begin
     DisplayName := 'Archivos SQL';
@@ -690,7 +690,7 @@ begin
     FileMask := '*.*';
   end;
   openDialog.DefaultExtension := 'sql';
-  openDialog.DefaultFolder := ExtractFilePath(Application.ExeName);
+  openDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
   if openDialog.Execute then
   begin
     SqlScript := TUniScript.Create(nil);

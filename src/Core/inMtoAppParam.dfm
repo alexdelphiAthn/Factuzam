@@ -2,8 +2,8 @@ object frmMtoAppParam: TfrmMtoAppParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros Generales de la Aplicaci'#243'n'
-  ClientHeight = 560
-  ClientWidth = 754
+  ClientHeight = 552
+  ClientWidth = 752
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,8 +19,8 @@ object frmMtoAppParam: TfrmMtoAppParam
   object JvInspector1: TJvInspector
     Left = 0
     Top = 57
-    Width = 754
-    Height = 503
+    Width = 752
+    Height = 495
     Style = isItemPainter
     Align = alClient
     BevelKind = bkSoft
@@ -39,7 +39,7 @@ object frmMtoAppParam: TfrmMtoAppParam
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 754
+    Width = 752
     Height = 57
     Align = alTop
     TabOrder = 1
