@@ -1151,13 +1151,10 @@ begin
       _unqryLineas.GotoBookmark(bookmark);
       _unqryLineas.FreeBookmark(bookmark);
     end;
-    // ======================================================================
-    // 3. RESTAURAMOS LA INTERFAZ EXACTAMENTE COMO ESTABA
-    // ======================================================================
     if WasEmptyInsert then
-      _unqryLineas.Append  // Devolvemos la línea en blanco al cajero
+      _unqryLineas.Append  
     else if WasEdit then
-      _unqryLineas.Edit;   // Devolvemos el estado de edición si estaba tocando un precio
+      _unqryLineas.Edit;
   finally
     _unqryLineas.EnableControls;
   end;
