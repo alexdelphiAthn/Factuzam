@@ -693,7 +693,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsVerifactu
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 424
             ClientRectLeft = 2
@@ -2026,7 +2026,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 HorzScrollBar.Position = 15
                 VertScrollBar.ButtonSize = 20
                 Align = alClient
+                ParentBackground = True
                 TabOrder = 0
+                UseWheelForScrolling = True
                 object lbl18: TLabel
                   Left = 29
                   Top = 612
@@ -2429,6 +2431,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Right = 4
               Margins.Bottom = 4
               Align = alClient
+              ParentBackground = False
               TabOrder = 0
               Properties.ActivePage = tsCabecera
               Properties.CustomButtons.Buttons = <>
@@ -2623,6 +2626,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Properties.OnChange = chkConsolidadaPropertiesChange
                   Style.TransparentBorder = False
                   TabOrder = 12
+                  Transparent = True
                 end
                 object txtINSTANTECONSOLIDACION: TcxDBTextEdit
                   Left = 325
