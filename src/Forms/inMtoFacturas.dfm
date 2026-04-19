@@ -3409,8 +3409,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1083
         ExplicitHeight = 773
         inherited pnlPerfilTop: TPanel

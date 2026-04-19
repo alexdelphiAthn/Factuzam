@@ -406,16 +406,23 @@ begin
   if not FSavedNCMValid then
   begin
     FSavedNCM.cbSize := SizeOf(TNonClientMetrics);
-    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(FSavedNCM), @FSavedNCM, 0) then
+    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+                            SizeOf(FSavedNCM),
+                            @FSavedNCM,
+                            0) then
       FSavedNCMValid := True;
   end;
-
   NCM.cbSize := SizeOf(TNonClientMetrics);
-  if not SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0) then
+  if not SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+                              SizeOf(NCM),
+                              @NCM,
+                              0) then
     Exit;
-
   StringToWideChar(AFontName, NCM.lfMenuFont.lfFaceName, LF_FACESIZE);
-  NCM.lfMenuFont.lfHeight := -MulDiv(ASize, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72);
+  NCM.lfMenuFont.lfHeight := -MulDiv(ASize,
+                                     GetDeviceCaps(GetDC(0),
+                                                   LOGPIXELSY),
+                                     72);
   NCM.lfMenuFont.lfWeight := FW_NORMAL;
   SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
 end;
