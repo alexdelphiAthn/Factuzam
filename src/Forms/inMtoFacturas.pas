@@ -1036,10 +1036,10 @@ end;
 procedure TfrmMtoFacturas.chkConsolidadaPropertiesChange(Sender: TObject);
 begin
   inherited;
-  if Assigned(dmmFacturas) then
-    if (Assigned(dmmFacturas.unqryTablaG)) then
-      if (Assigned(dsTablaG.DataSet)) then
-        CheckConsolidacion;
+//  if Assigned(dmmFacturas) then
+//    if (Assigned(dmmFacturas.unqryTablaG)) then
+//      if (Assigned(dsTablaG.DataSet)) then
+//        CheckConsolidacion;
 end;
 
 procedure TfrmMtoFacturas.chkCrearArticulosPropertiesChange(Sender: TObject);

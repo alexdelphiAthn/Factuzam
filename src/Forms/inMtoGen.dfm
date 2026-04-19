@@ -7,7 +7,6 @@ inherited frmMtoGen: TfrmMtoGen
   Font.Charset = ANSI_CHARSET
   Font.Pitch = fpDefault
   Font.Quality = fqDefault
-  Visible = True
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnKeyDown = FormKeyDown
@@ -38,10 +37,10 @@ inherited frmMtoGen: TfrmMtoGen
       Properties.ActivePage = tsFicha
       Properties.CustomButtons.Buttons = <>
       OnPageChanging = pcPantallaPageChanging
-      ClientRectBottom = 514
-      ClientRectLeft = 4
-      ClientRectRight = 947
-      ClientRectTop = 30
+      ClientRectBottom = 516
+      ClientRectLeft = 2
+      ClientRectRight = 949
+      ClientRectTop = 29
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
@@ -120,14 +119,19 @@ inherited frmMtoGen: TfrmMtoGen
       object tsPerfil: TcxTabSheet
         Caption = 'Perfil'
         ImageIndex = 2
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 943
+        ExplicitHeight = 484
         object pnlPerfilTop: TPanel
           Left = 0
           Top = 0
-          Width = 943
+          Width = 947
           Height = 57
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 0
+          ExplicitWidth = 943
           object edtPerfilBusq: TcxTextEdit
             Left = 294
             Top = 14
@@ -172,12 +176,14 @@ inherited frmMtoGen: TfrmMtoGen
         object pnlPerfilDetail: TPanel
           Left = 0
           Top = 57
-          Width = 943
-          Height = 427
+          Width = 947
+          Height = 430
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlPerfilDetail'
           TabOrder = 1
+          ExplicitWidth = 943
+          ExplicitHeight = 427
           object cxgrdPerfil: TcxGrid
             Left = 0
             Top = 0

@@ -3,7 +3,8 @@
 interface
 
 uses
-  System.Generics.Collections, Vcl.Forms, Vcl.Controls, cxPC, System.Classes;
+  System.Generics.Collections, Vcl.Forms, Vcl.Controls, cxPC, System.Classes,
+  winapi.Windows, winapi.Messages;
 
 type
   TEmbeddedFormManager = class
@@ -55,23 +56,30 @@ end;
 
 procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
                                          const ATitle: string;
-                                         ASelect: Boolean);
+                                         ASelect: Boolean = True);
 var
   NewTab: TcxTabSheet;
 begin
-  AForm.BorderStyle := bsNone;
-  NewTab := TcxTabSheet.Create(FPageControl);
-  NewTab.PageControl := FPageControl;
-//  NewTab := TcxTabSheet.Create(FPageControl.Owner);
-  NewTab.Caption := ATitle;
-  AForm.Parent := NewTab;
-  AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
-  AForm.Align := alClient;
-  AForm.Visible := True;
-  AForm.Show;
-  FForms.Add(AForm);
-  if ASelect then
-    FPageControl.ActivePage := NewTab;
+  SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
+  try
+    AForm.BorderStyle := bsNone;
+    NewTab := TcxTabSheet.Create(FPageControl);
+    NewTab.PageControl := FPageControl;
+    NewTab.Caption := ATitle;
+    AForm.Parent := NewTab;
+    AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
+    AForm.Align := alClient;
+    FForms.Add(AForm);
+    if ASelect then
+      FPageControl.ActivePage := NewTab;
+  finally
+    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
+    RedrawWindow(FPageControl.Handle, nil, 0,
+                 RDW_ERASE or RDW_FRAME or
+                 RDW_INVALIDATE or RDW_ALLCHILDREN);
+    AForm.Visible := True;
+    AForm.Show;
+  end;
 end;
 
 function TEmbeddedFormManager.FindFormByCaption(const ATitle: string): TForm;
@@ -133,42 +141,38 @@ procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm);
 var
   ParentTab: TWinControl;
 begin
-  // Verificación triple de seguridad
   if (AForm = nil) or (PPointer(AForm)^ = nil) then
     Exit;
-
   try
-    // Si el formulario ya se está destruyendo por el Owner (Delphi),
-    // solo lo quitamos de nuestra lista y salimos.
-    if (csDestroying in AForm.ComponentState) then
+    if csDestroying in AForm.ComponentState then
     begin
       FForms.Remove(AForm);
       Exit;
     end;
-    with (Aform as TfrmMtoGen) do
-    if pcPantalla.ActivePage = tsFicha then
-    begin
-      pcPantalla.ActivePage := tsLista;
-      Exit;
-    end;
+    with (AForm as TfrmMtoGen) do
+      if pcPantalla.ActivePage = tsFicha then
+      begin
+        pcPantalla.ActivePage := tsLista;
+        Exit;
+      end;
+    // Congela todo antes de tocar nada
+    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
+    SendMessage(AForm.Handle, WM_SETREDRAW, WPARAM(False), 0);
+    AForm.Hide;
     ParentTab := AForm.Parent;
-
-    // Quitamos de la lista PRIMERO
     FForms.Remove(AForm);
-
-    // Solo ponemos a nil si el Form está "sano"
     AForm.Parent := nil;
     AForm.Free;
-
-    // Liberamos la pestaña si procede
-    if (ParentTab <> nil) and (ParentTab is TcxTabSheet) then
-    begin
-      if not (csDestroying in ParentTab.ComponentState) then
-        ParentTab.Free;
-    end;
-  except
-    // Si falla, al menos lo sacamos de la lista para que el bucle no se bloquee
-    FForms.Remove(AForm);
+    if (ParentTab <> nil) and
+       (ParentTab is TcxTabSheet) and
+       not (csDestroying in ParentTab.ComponentState) then
+      ParentTab.Free;
+  finally
+    // Restaura y repinta de golpe
+    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
+    RedrawWindow(FPageControl.Handle, nil, 0,
+                 RDW_ERASE or RDW_FRAME or
+                 RDW_INVALIDATE or RDW_ALLCHILDREN);
   end;
 end;
 

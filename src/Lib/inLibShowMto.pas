@@ -93,6 +93,7 @@ begin
       begin
         FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
         TargetForm := FormClass.Create(frmMain);
+        TargetForm.Hide;
         frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
         inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
       end
