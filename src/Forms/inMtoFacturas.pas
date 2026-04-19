@@ -971,7 +971,7 @@ end;
 
 procedure TfrmMtoFacturas.CheckConsolidacion;
 begin
-  if Assigned(dmmFacturas) and
+(*  if Assigned(dmmFacturas) and
      Assigned(dsTablaG.Dataset) and
      Assigned(dmmFacturas.unqryTablaG) and
      Assigned(self.tdmDataModule) then
@@ -1007,7 +1007,7 @@ begin
     //      tvRecibos.optionsData.Deleting := True;
     //      tvRecibos.optionsData.Inserting := True;
 
-        end;
+        end;  *)
 end;
 
 procedure TfrmMtoFacturas.CrearTablaPrincipal;

@@ -1219,8 +1219,9 @@ begin
       frmFac.cbbSerieFactura.SetFocus;
       IsError := True;
     end;
-    if (FieldByName('CODIGO_PAIS_CLIENTE_FACTURA').AsString = '') or
-       (FieldByName('CODIGO_PAIS_EMPRESA_FACTURA').AsString = '') then
+    if ((FieldByName('CODIGO_PAIS_CLIENTE_FACTURA').AsString = '') or
+        (FieldByName('CODIGO_PAIS_EMPRESA_FACTURA').AsString = '')) and
+        (FieldByName('TIPO_FACTURA').AsString <> 'SIMPLIFICADA') then
     begin
       IsError := True;
       ShowMessage('Debe seleccionar un pais para cliente y empresa.');
