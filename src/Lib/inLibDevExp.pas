@@ -63,7 +63,7 @@ implementation
        inLibWin,
        inLibtb,
        inLibDir,
-       inLibGlobalVar; // , DuckTypeUtilsU;
+       inLibGlobalVar, inLibAppParam; // , DuckTypeUtilsU;
 
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
@@ -109,7 +109,7 @@ var
 begin
   saveDialog := TdxSaveFileDialog.Create(nil);
   saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.InitialDir := GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
+  saveDialog.InitialDir := oAppParams.GetPath('appDirExcel');
   saveDialog.Filter := 'Archivo Excel|*.xlsx';
   saveDialog.DefaultExt := 'xlsx';
   saveDialog.FilterIndex := 1;

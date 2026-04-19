@@ -231,33 +231,38 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Top = 71
         Caption = 'Cobro'
         TabOrder = 7
+        Transparent = True
       end
       object cxLabel2: TcxLabel
         Left = 136
         Top = 71
         Caption = 'Buscar'
         TabOrder = 8
+        Transparent = True
       end
       object cxLabel3: TcxLabel
         Left = 354
         Top = 71
         Caption = 'Tarifa'
         TabOrder = 10
+        Transparent = True
       end
       object cxLabel4: TcxLabel
         Left = 555
         Top = 71
         Caption = 'Ind. IVA'
         TabOrder = 11
+        Transparent = True
       end
       object cxLabel5: TcxLabel
         Left = 673
         Top = 71
         Caption = 'Otro'
         TabOrder = 12
+        Transparent = True
       end
       object lblTotal: TcxLabel
-        Left = 896
+        Left = 894
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -279,10 +284,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Properties.Orientation = cxoRight
         Properties.WordWrap = True
         TabOrder = 0
-        ExplicitLeft = 894
+        ExplicitLeft = 892
         Height = 80
         Width = 423
-        AnchorX = 1319
+        AnchorX = 1317
       end
       object btnF8: TcxButton
         Left = 224
@@ -306,6 +311,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Top = 71
         Caption = 'Eliminar'
         TabOrder = 9
+        Transparent = True
       end
       object btnF61: TcxButton
         Left = 437
@@ -329,6 +335,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Top = 71
         Caption = 'B'#250'sq Tick'
         TabOrder = 14
+        Transparent = True
       end
       object btnF2: TcxButton
         Left = 763
@@ -353,6 +360,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Top = 69
         Caption = 'Cargar cta.'
         TabOrder = 16
+        Transparent = True
       end
     end
     object Panel2: TPanel

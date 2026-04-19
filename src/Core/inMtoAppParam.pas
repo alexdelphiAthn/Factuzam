@@ -18,7 +18,7 @@ type
   PBoolean = ^Boolean;
   PInteger = ^Integer;
   PString  = ^String;
-
+  TInspectorItemEvent = procedure(Sender: TJvCustomInspectorItem) of object;
   TfrmMtoAppParam = class(TFrmBase)
     JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;
     ActionList1    : TActionList;
@@ -30,7 +30,6 @@ type
     cmbGrupoUsuario: TcxComboBox;
     btnGuardar: TcxButton;
     btnChangeId: TcxButton;
-
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
                                                  AButtonIndex: Integer);
     procedure edtBusquedaKeyDown(Sender: TObject; var Key: Word;
@@ -44,12 +43,16 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+//    procedure InspectorEditButtonClick(Sender: TObject;
+//                                       Item: TJvCustomInspectorItem);
   private
     FBools            : TList<PBoolean>;
     FInts             : TList<PInteger>;
     FStrs             : TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
-
+    procedure InspectorItemEdit(Sender: TJvCustomInspector;
+                                Item: TJvCustomInspectorItem;
+                                var DisplayStr: string);
     procedure CapturarValoresOriginales;
     procedure LimpiarMemoria;
     procedure ResetearADefectos;
@@ -68,9 +71,10 @@ type
                                         Strings: TStrings);
     procedure GetTemasList(Sender: TJvCustomInspectorItem;
                            Strings: TStrings);
+    procedure DirEditButtonClick(Sender: TJvCustomInspectorItem);
     // Handler para el botón de selección de carpeta
-    procedure OnDirButtonClick(Sender: TObject;
-                               Index: Integer);
+//    procedure OnDirButtonClick(Sender: TObject;
+//                               Index: Integer);
   end;
 
 var
@@ -83,7 +87,7 @@ implementation
 uses
   StrUtils, inLibAppParam, Vcl.Printers,
             // TdxSkinController, GetRegisteredSkins
-  FileCtrl;               // SelectDirectory
+  FileCtrl, inLibPathTokens;               // SelectDirectory
 
 // -----------------------------------------------------------------------
 // CICLO DE VIDA
@@ -96,6 +100,8 @@ begin
   FInts              := TList<PInteger>.Create;
   FStrs              := TList<PString>.Create;
   FValoresOriginales := TDictionary<string, string>.Create;
+  JvInspector1.OnItemEdit := InspectorItemEdit;
+//  JvInspector1.OnEditButtonClick := InspectorEditButtonClick;
 end;
 
 procedure TfrmMtoAppParam.FormDestroy(Sender: TObject);
@@ -201,6 +207,11 @@ begin
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
               ItemCombo.OnGetValueList := GetTemasList;
+            end
+            else if StartsText('appDir', Param.Nombre) then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
+//              ItemCombo.OnEditButton := DirEditButtonClick;
             end;
             // Los directorios (appDirPDF, appDirExcel) quedan como
             // tpString normal: el usuario escribe la ruta directamente
@@ -289,18 +300,36 @@ begin
   Strings.Add('Xmas2008Blue');
 end;
 
-// ── Botón "..." en campos de directorio ──────────────────────────────────
-procedure TfrmMtoAppParam.OnDirButtonClick(Sender: TObject; Index: Integer);
+procedure TfrmMtoAppParam.InspectorItemEdit(Sender: TJvCustomInspector;
+  Item: TJvCustomInspectorItem; var DisplayStr: string);
 var
-  Item: TJvCustomInspectorItem;
-  Dir : string;
+  Dir: string;
 begin
-  Item := Sender as TJvCustomInspectorItem;
-  Dir  := Item.DisplayValue;
+  if (Item = nil) or not StartsText('appDir', Item.Name) then
+    Exit;
+
+  // El valor guardado puede ya contener un token: lo expandimos
+  // para que SelectDirectory arranque en la carpeta real
+  Dir := ExpandPathTokens(DisplayStr);
+
   if SelectDirectory('Seleccione una carpeta', '', Dir,
                      [sdNewUI, sdNewFolder]) then
-    Item.DisplayValue := Dir;
+    DisplayStr := PathToToken(Dir);   // guardamos con token
 end;
+
+// ── Botón "..." en campos de directorio ──────────────────────────────────
+//procedure TfrmMtoAppParam.InspectorEditButtonClick(Sender: TObject;
+//  Item: TJvCustomInspectorItem);
+//var
+//  Dir: string;
+//begin
+//  if (Item = nil) or not StartsText('appDir', Item.Name) then
+//    Exit;
+//  Dir := Item.DisplayValue;
+//  if SelectDirectory('Seleccione una carpeta', '', Dir,
+//                     [sdNewUI, sdNewFolder]) then
+//    Item.DisplayValue := Dir;
+//end;
 
 // -----------------------------------------------------------------------
 // CARGA Y GUARDADO  (idéntico al de CajaParam)
@@ -680,6 +709,17 @@ procedure TfrmMtoAppParam.cxButtonEdit1PropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
   FiltrarVerticalGrid(JvInspector1, edtBusqueda.Text);
+end;
+
+procedure TfrmMtoAppParam.DirEditButtonClick(Sender: TJvCustomInspectorItem);
+var
+  Dir: string;
+begin
+  if Sender = nil then Exit;
+  Dir := Sender.DisplayValue;
+  if SelectDirectory('Seleccione una carpeta', '', Dir,
+                     [sdNewUI, sdNewFolder]) then
+    Sender.DisplayValue := Dir;
 end;
 
 procedure TfrmMtoAppParam.edtBusquedaKeyDown(Sender: TObject;

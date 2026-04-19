@@ -34,7 +34,7 @@ type
     procedure InicializarParametrosApp(const pUsuario, pGrupo: string);
     procedure Inicializar(const pUsuario, pGrupo: string);
     procedure Recargar(const pUsuario, pGrupo: string);
-
+    function GetPath(const Nombre: string): string;
     function GetString(const Key: string; const Default: string   = ''   ): string;
     function GetBool  (const Key: string; const Default: Boolean  = False): Boolean;
     function GetInt   (const Key: string; const Default: Integer  = 0    ): Integer;
@@ -48,7 +48,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibPathTokens;
 
 { TAppParamDef }
 
@@ -141,7 +141,10 @@ begin
     'Carpeta donde se guardan los PDFs', tpString, '');
   RegistrarParametro('Directorios', 'appDirExcel',
     'Carpeta donde se guardan los Excels', tpString, '');
-
+  RegistrarParametro('Directorios', 'appDirCopiasSeguridad',
+    'Carpeta de Copias de seguridad', tpString, '');
+  RegistrarParametro('Directorios', 'appDirHistoricoCaja',
+    'Carpeta de Histórico de Caja', tpString, '');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
@@ -193,6 +196,11 @@ begin
   end
   else
     Result := Default;
+end;
+
+function TAppParams.GetPath(const Nombre: string): string;
+begin
+  Result := ExpandPathTokens(GetString(Nombre));
 end;
 
 initialization

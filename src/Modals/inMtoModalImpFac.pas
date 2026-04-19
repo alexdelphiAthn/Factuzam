@@ -60,8 +60,7 @@ type
   public
     procedure preparar_consulta; override;
     procedure ConfigurarNombrePDF;
-    function ObtenerNombreFactura(ADataSet: TDataSet;
-                                  const AExtension: string): string;
+    function ObtenerNombreFactura(ADataSet: TDataSet): string;
   public
     dmFac: TdmFacturas;
   end;
@@ -73,7 +72,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoPreviewExcel, inLibFacturaExcel;
+uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam;
 
 { TfrmPrintFac }
 
@@ -87,7 +86,8 @@ begin
     fPreview.PopupParent := Self;
     with dmFac do
     begin
-      NombreSugerido := ObtenerNombreFactura(unqryTablaG, '.xlsx');
+      NombreSugerido := ObtenerNombreFactura(unqryTablaG);
+      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := NombreSugerido;
       ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
                                  unqryTablaG,
@@ -99,16 +99,12 @@ begin
   end;
 end;
 
-
-
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
-  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG,
-                                                    'pdf');
+  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG);
 end;
 
-function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet;
-                                           const AExtension: string): string;
+function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
 var
   RazonSocialCorta: string;
   sFecha: string;
@@ -132,7 +128,7 @@ begin
                            'SERIE_FACTURA').AsString, '.', '_', [rfReplaceAll]);
   sNro := ADataSet.FieldByName('NRO_FACTURA').AsString;
   Result := sFecha + '_' + SerieFormateada + '_' + sNro + '_' +
-                          RazonSocialCorta + '_' + TotalFormateado + AExtension;
+                          RazonSocialCorta + '_' + TotalFormateado;
 end;
 
 procedure TfrmPrintFac.preparar_consulta;

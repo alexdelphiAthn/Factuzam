@@ -242,6 +242,8 @@ begin
   FOriginalF3Color := lblF3.Style.TextColor;
   FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
   FFechaCaja := Now;
+  FOriginalESCColor := lblESC.Style.TextColor;
+  FOriginalSalirColor := lblSalir.Style.TextColor;
 end;
 // Eventos para F3 - Traspasos
 procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);

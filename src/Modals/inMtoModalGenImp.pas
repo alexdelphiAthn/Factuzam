@@ -91,7 +91,7 @@ var
 implementation
 
 uses
-  inMtoModalGenImpSave, inLibUser;
+  inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam;
 
 {$R *.dfm}
 
@@ -124,6 +124,7 @@ begin
   if (sElegido <> '') then
   begin
     frxrprt1.PrepareReport(True);
+    frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
     frxrprt1.Export(frxlsxprtExcel);
   end;
   Self.Show;
@@ -155,6 +156,7 @@ begin
     if (sElegido <> '') then
   begin
     frxrprt1.PrepareReport(True);
+    frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
     frxrprt1.Export(frxpdfxprtPedWeb);
   end;
   Self.Show;

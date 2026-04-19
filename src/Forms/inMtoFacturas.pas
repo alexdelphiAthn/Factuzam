@@ -564,18 +564,18 @@ end;
 procedure TfrmMtoFacturas.btnConsolidarClick(Sender: TObject);
 begin
   inherited;
-  with dmmFacturas.unqryTablaG do
-  begin
-    if Active = True then
-    if (FieldByName('ESCONSOLIDADA_FACTURA').AsString <> 'S') then
-    begin
-      if ((dsTablaG.State <> dsEdit) and (dsTablaG.State <> dsInsert)) then
-        dmmFacturas.unqryTablaG.Edit;
-      FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'S';
-      FieldByName('INSTANTECONSO_FACTURA').AsDateTime := Now;
-      Post;
-    end;
-  end;
+//  with dmmFacturas.unqryTablaG do
+//  begin
+//    if Active = True then
+//    if (FieldByName('ESCONSOLIDADA_FACTURA').AsString <> 'S') then
+//    begin
+//      if ((dsTablaG.State <> dsEdit) and (dsTablaG.State <> dsInsert)) then
+//        dmmFacturas.unqryTablaG.Edit;
+//      FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'S';
+//      FieldByName('INSTANTECONSO_FACTURA').AsDateTime := Now;
+//      Post;
+//    end;
+//  end;
 end;
 
 procedure TfrmMtoFacturas.ResetForm;
