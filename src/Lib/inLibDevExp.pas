@@ -105,14 +105,17 @@ end;
 
 procedure ExportarExcel(cxGrd: TcxGrid; sNomFile: string);
 var
-  saveDialog: TdxSaveFileDialog;
+  saveDialog: TFileSaveDialog;
 begin
-  saveDialog := TdxSaveFileDialog.Create(nil);
+  saveDialog := TFileSaveDialog.Create(nil);
   saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.InitialDir := oAppParams.GetPath('appDirExcel');
-  saveDialog.Filter := 'Archivo Excel|*.xlsx';
-  saveDialog.DefaultExt := 'xlsx';
-  saveDialog.FilterIndex := 1;
+  saveDialog.DefaultFolder := oAppParams.GetPath('appDirExcel');
+    with saveDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Archivo Excel';
+    FileMask := '*.xlsx';
+  end;
+//  saveDialog.FilterIndex := 1;
   saveDialog.FileName := sNomFile;
   //saveDialog.Options.ofOverwritePrompt := True;
   if (saveDialog.Execute)
