@@ -16,7 +16,7 @@
 
 unit fzam.dxSettings;
 
-{$I cxVer.inc}
+//{$I cxVer.inc}
 
 interface
 
