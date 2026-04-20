@@ -5,13 +5,14 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   Menu = jvMnMenuPrin
   Position = poScreenCenter
   WindowState = wsMaximized
+  StyleElements = [seFont, seClient, seBorder]
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnDestroy = FormDestroy
   OnShow = FormShow
-  ExplicitWidth = 1136
-  ExplicitHeight = 610
+  ExplicitWidth = 1140
+  ExplicitHeight = 617
   TextHeight = 19
   object Panel1: TPanel [0]
     Left = 0
@@ -21,8 +22,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1120
-    ExplicitHeight = 529
+    ExplicitWidth = 1122
+    ExplicitHeight = 522
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
@@ -33,8 +34,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
-      ExplicitWidth = 1120
-      ExplicitHeight = 458
+      ExplicitWidth = 1122
+      ExplicitHeight = 451
       ClientRectBottom = 457
       ClientRectLeft = 2
       ClientRectRight = 1122
@@ -47,8 +48,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 458
-      ExplicitWidth = 1120
+      ExplicitTop = 451
+      ExplicitWidth = 1122
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -59,7 +60,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1118
+        ExplicitWidth = 1120
         Height = 69
         Width = 1122
       end
@@ -91,8 +92,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end>
     ParentFont = True
     UseSystemFont = False
-    ExplicitTop = 529
-    ExplicitWidth = 1120
+    ExplicitTop = 522
+    ExplicitWidth = 1122
   end
   inherited Localizer1: TcxLocalizer
     Left = 504

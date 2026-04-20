@@ -46,7 +46,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, dxBarBuiltInMenu;
+  dxSkinWhiteprint, dxSkinXmas2008Blue;
 
 type
   TfrmMtoFacturas = class(TfrmMtoGen)

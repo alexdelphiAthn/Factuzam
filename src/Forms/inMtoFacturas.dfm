@@ -8,6 +8,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ClientHeight = 844
   ClientWidth = 1231
   Scaled = False
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -27,6 +28,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     Margins.Bottom = 5
     ParentColor = True
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1087
     ExplicitHeight = 844
     inherited pcPantalla: TcxPageControl
@@ -3439,6 +3441,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitHeight = 773
         inherited pnlPerfilTop: TPanel
           Width = 1083
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1083
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -3447,6 +3450,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         inherited pnlPerfilDetail: TPanel
           Width = 1083
           Height = 716
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1083
           ExplicitHeight = 716
           inherited cxgrdPerfil: TcxGrid
@@ -3461,9 +3465,11 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     inherited pnlTopPage: TPanel
       Width = 1087
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 1087
       inherited pnlTopGrid: TPanel
         Width = 1087
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
@@ -3491,6 +3497,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     Margins.Right = 5
     Margins.Bottom = 5
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 1087
     ExplicitWidth = 144
     ExplicitHeight = 844
@@ -3503,6 +3510,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       Margins.Bottom = 5
       Constraints.MinHeight = 100
       Constraints.MinWidth = 124
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 646
       ExplicitWidth = 144
       inherited btnGrabar: TcxButton
@@ -3523,6 +3531,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       Margins.Bottom = 5
       Constraints.MinHeight = 46
       Constraints.MinWidth = 124
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 144
       inherited pnStateDataSet: TPanel
         Width = 144
@@ -3530,6 +3539,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 144
         inherited lblEditMode: TcxLabel
           Margins.Left = 5
@@ -3540,6 +3550,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       end
       inherited pnlDataSetName: TPanel
         Width = 144
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 144
       end
     end
