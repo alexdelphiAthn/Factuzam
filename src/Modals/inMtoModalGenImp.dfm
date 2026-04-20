@@ -8,6 +8,7 @@ inherited frmPrint: TfrmPrint
   ClientWidth = 347
   FormStyle = fsStayOnTop
   Scaled = False
+  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 363
   ExplicitHeight = 303
@@ -19,8 +20,8 @@ inherited frmPrint: TfrmPrint
     Height = 264
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 205
-    ExplicitHeight = 257
+    ExplicitLeft = 201
+    ExplicitHeight = 256
     object btnPDF: TcxButton
       Left = 0
       Top = 48
@@ -50,14 +51,14 @@ inherited frmPrint: TfrmPrint
     end
     object btnSalir: TcxButton
       Left = 1
-      Top = 239
+      Top = 238
       Width = 142
       Height = 25
       Align = alBottom
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 231
+      ExplicitTop = 230
     end
     object btnEditar: TcxButton
       Left = 0
@@ -79,7 +80,7 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frxrprt1: TfrxReport
-    Version = '2025.1.1'
+    Version = '2026.1.8'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -98,6 +99,7 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
+    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
@@ -121,13 +123,11 @@ inherited frmPrint: TfrmPrint
     DataOnly = False
     Compressed = False
     EmbeddedFonts = True
-    EmbedFontsIfProtected = False
     InteractiveFormsFontSubset = 'A-Z,a-z,0-9,#43-#47 '
     OpenAfterExport = False
     PrintOptimized = True
     Outline = False
     Background = False
-    HTMLTags = True
     Quality = 95
     Transparency = False
     Author = 'Alejandro Laorden Hidalgo'
@@ -144,6 +144,7 @@ inherited frmPrint: TfrmPrint
     PdfA = False
     PDFStandard = psNone
     PDFVersion = pv14
+    PDFColorSpace = csDeviceRGB
     Left = 88
     Top = 120
   end
@@ -222,7 +223,7 @@ inherited frmPrint: TfrmPrint
     Top = 120
   end
   object frxReportOrigen: TfrxReport
-    Version = '2025.1.1'
+    Version = '2026.1.8'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
@@ -231,7 +232,7 @@ inherited frmPrint: TfrmPrint
     PrintOptions.PrintOnSheet = 0
     ReportOptions.Author = 'FactuZam'
     ReportOptions.CreateDate = 42481.634675740700000000
-    ReportOptions.LastChange = 43706.469558402810000000
+    ReportOptions.LastChange = 46132.560265590280000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'begin'
@@ -241,6 +242,7 @@ inherited frmPrint: TfrmPrint
     Datasets = <>
     Variables = <>
     Style = <>
+    Watermarks = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000

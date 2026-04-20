@@ -1,18 +1,20 @@
 inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
-  ClientHeight = 273
-  ClientWidth = 418
+  ClientHeight = 265
+  ClientWidth = 416
   Position = poMainFormCenter
-  ExplicitWidth = 430
-  ExplicitHeight = 311
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 434
+  ExplicitHeight = 312
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 264
+    Left = 262
     Width = 154
-    Height = 273
-    ExplicitLeft = 260
+    Height = 265
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 262
     ExplicitWidth = 154
-    ExplicitHeight = 272
+    ExplicitHeight = 265
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,7 +30,7 @@ inherited frmPrintFac: TfrmPrintFac
     inherited btnSalir: TcxButton
       Top = 247
       Width = 152
-      ExplicitTop = 246
+      ExplicitTop = 239
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -386,6 +388,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -989,6 +992,7 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
+    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
