@@ -42,7 +42,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 371
+    FrameIndex = 745
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21131,6 +21131,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     TabOrder = 1
     Transparent = True
+    OnClick = lblF10Click
     OnMouseEnter = lblF10MouseEnter
     OnMouseLeave = lblF10MouseLeave
     Height = 52
@@ -21160,6 +21161,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.WordWrap = True
     TabOrder = 2
     Transparent = True
+    OnClick = lblBuscarModificarClick
     OnMouseEnter = lblBuscarModificarMouseEnter
     OnMouseLeave = lblBuscarModificarMouseLeave
     Height = 65
