@@ -7,12 +7,16 @@ uses
   winapi.Windows, winapi.Messages;
 
 type
-  TEmbeddedFormManager = class
+  TEmbeddedFormManager = class(TComponent)
   private
     FPageControl: TcxPageControl;
     FForms: TList<TForm>;
     procedure InternalCloseForm(AForm:TForm);
+  protected
+    procedure Notification(AComponent: TComponent;
+                           Operation: TOperation); override;
   public
+
     constructor Create(APageControl: TcxPageControl);
     destructor Destroy; override;
     procedure EmbedForm(AForm: TForm;
@@ -33,25 +37,17 @@ uses inMtoGen;
 
 constructor TEmbeddedFormManager.Create(APageControl: TcxPageControl);
 begin
-  inherited Create;
+  inherited Create(APageControl);   // Owner = PageControl para autoliberación
   FPageControl := APageControl;
   FForms := TList<TForm>.Create;
 end;
 
-destructor TEmbeddedFormManager.Destroy;
+procedure TEmbeddedFormManager.Notification(AComponent: TComponent;
+                                            Operation: TOperation);
 begin
-  FForms.Free;
   inherited;
-end;
-
-procedure TEmbeddedFormManager.CloseAll;
-begin
-  // Iteramos al revés porque vamos a eliminar elementos de la lista
-//  while FForms.Count > 0 do
-//  begin
-//    InternalCloseForm(FForms.Last);
-//  end;
-  FForms.Clear;
+  if (Operation = opRemove) and (AComponent is TForm) then
+    FForms.Remove(TForm(AComponent));
 end;
 
 procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
@@ -70,17 +66,61 @@ begin
     AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
     AForm.Align := alClient;
     FForms.Add(AForm);
+    AForm.FreeNotification(Self);    // <-- CLAVE: nos avisarán si lo liberan
     if ASelect then
       FPageControl.ActivePage := NewTab;
   finally
     SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
     RedrawWindow(FPageControl.Handle, nil, 0,
-                 RDW_ERASE or RDW_FRAME or
-                 RDW_INVALIDATE or RDW_ALLCHILDREN);
+                 RDW_ERASE or RDW_FRAME or RDW_INVALIDATE or RDW_ALLCHILDREN);
     AForm.Visible := True;
     AForm.Show;
   end;
 end;
+
+destructor TEmbeddedFormManager.Destroy;
+begin
+  FForms.Free;
+  inherited;
+end;
+
+procedure TEmbeddedFormManager.CloseAll;
+begin
+  // Iteramos al revés porque vamos a eliminar elementos de la lista
+//  while FForms.Count > 0 do
+//  begin
+//    InternalCloseForm(FForms.Last);
+//  end;
+  FForms.Clear;
+end;
+
+//procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
+//                                         const ATitle: string;
+//                                         ASelect: Boolean = True);
+//var
+//  NewTab: TcxTabSheet;
+//begin
+//  SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
+//  try
+//    AForm.BorderStyle := bsNone;
+//    NewTab := TcxTabSheet.Create(FPageControl);
+//    NewTab.PageControl := FPageControl;
+//    NewTab.Caption := ATitle;
+//    AForm.Parent := NewTab;
+//    AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
+//    AForm.Align := alClient;
+//    FForms.Add(AForm);
+//    if ASelect then
+//      FPageControl.ActivePage := NewTab;
+//  finally
+//    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
+//    RedrawWindow(FPageControl.Handle, nil, 0,
+//                 RDW_ERASE or RDW_FRAME or
+//                 RDW_INVALIDATE or RDW_ALLCHILDREN);
+//    AForm.Visible := True;
+//    AForm.Show;
+//  end;
+//end;
 
 function TEmbeddedFormManager.FindFormByCaption(const ATitle: string): TForm;
 var

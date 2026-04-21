@@ -12,7 +12,7 @@ interface
 
 uses
     Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-    Dialogs, DB, ADODB, DBCtrls, StdCtrls, cxGridExportLink,
+    Dialogs, DB, ADODB, DBCtrls, StdCtrls, cxGridExportLink, dxCore,
     ExtCtrls, Grids, DBGrids, ComCtrls, Buttons, Mask,
     cxControls, cxContainer, cxEdit, inLibUser, System.strUtils,
     cxTextEdit, cxMaskEdit, cxDBEdit, cxNavigator, cxLookAndFeelPainters,
@@ -23,12 +23,11 @@ uses
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
     cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs,
-    cxGroupBox, cxLabel,  cxListBox, //inMtoPrincipal,
+    cxGroupBox, cxLabel,  cxListBox, System.NetEncoding, UniDataPerfiles,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
 type
   TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
-
   procedure BusqAllGrid(var dbTvGen: TcxGridDBTableView;
                         sDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
@@ -39,6 +38,11 @@ type
 //  procedure SaveColumnsStateActiveWindow;
 //  procedure RecoverColumnsStateActiveWindow;
 //  procedure ResetColumnsStateActiveWindow;
+  procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+                                        const sName: string;
+                                        const sProfile: string;
+                                        AList: TPerfilList);
+
   procedure GetSettingsColumn(cxgrdtvVista: TcxGridDBTableView;
                               sName: String;
                               Sender: TComponent;
@@ -63,7 +67,7 @@ implementation
        inLibWin,
        inLibtb,
        inLibDir,
-       inLibGlobalVar, inLibAppParam; // , DuckTypeUtilsU;
+       inLibGlobalVar, inLibAppParam, uGenericIfThen; // , DuckTypeUtilsU;
 
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
@@ -164,6 +168,64 @@ begin
   end;
 end;
 
+procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+                                        const sName: string;
+                                        const sProfile: string;
+                                        AList: TPerfilList);
+var
+  i: Integer;
+  oColumn: TcxGridDBColumn;
+  sVistaName, sColumnName, sPrefix: string;
+  LStream: TMemoryStream;
+  BStream: TStringStream;
+
+  procedure Add(const aSub, aVal: string);
+  var item: TPerfilItem;
+  begin
+    item.UserGroup := sProfile;
+    item.KeyPerfil := sName;
+    item.SubKey    := aSub;
+    item.Value     := aVal;
+    AList.Add(item);
+  end;
+
+begin
+  sVistaName := cxgrdtvVista.Name;
+
+  // 1. Recorrer columnas para propiedades individuales
+  for i := 0 to cxgrdtvVista.ColumnCount - 1 do
+  begin
+    oColumn := cxgrdtvVista.Columns[i];
+    sColumnName := oColumn.DataBinding.FieldName;
+    sPrefix := sVistaName + '_' + sColumnName + '_';
+
+    Add(sPrefix + 'Visible', TGenUtils.IfThen<String>(oColumn.Visible, 'True', 'False'));
+    Add(sPrefix + 'Index',   IntToStr(oColumn.Index));
+    Add(sPrefix + 'Width',   IntToStr(oColumn.Width));
+    Add(sPrefix + 'Caption', oColumn.Caption);
+
+    // Añadimos la ordenación de los datos (Ascendente/Descendente)
+    Add(sPrefix + 'SortOrder', IntToStr(Ord(oColumn.SortOrder)));
+    Add(sPrefix + 'SortIndex', IntToStr(oColumn.SortIndex));
+  end;
+
+  // 2. Guardar el Filtro global de la Vista (Binario a Base64)
+  LStream := TMemoryStream.Create;
+  BStream := TStringStream.Create('');
+  try
+    cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+    LStream.Position := 0;
+
+    TNetEncoding.Base64.Encode(LStream, BStream);
+
+    // Usamos tu procedimiento anidado para guardarlo limpio
+    Add(sVistaName + '_Filtro', BStream.DataString);
+  finally
+    LStream.Free;
+    BStream.Free;
+  end;
+end;
+
 procedure GetSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
                                     sName: String;
                                     Sender: TComponent;
@@ -172,6 +234,8 @@ var
   i: Integer;
   oColumn: TcxGridDBColumn;
   sVistaName, sColumnName, sValue: string;
+  LStream: TMemoryStream;
+  BStream: TStringStream;
 begin
   for i := 0 to cxgrdtvVista.ColumnCount - 1 do
   begin
@@ -183,7 +247,7 @@ begin
     if (oColumn.Visible) then sValue := 'True' else sValue := 'False';
     odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Visible', sValue);
 
-    // 2. Guardar Orden (usamos Index, que es la propiedad de escritura)
+    // 2. Guardar Orden (Mantenemos Index como lo tenías)
     sValue := IntToStr(oColumn.Index);
     odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Index', sValue);
 
@@ -194,6 +258,31 @@ begin
     // 4. Guardar Caption
     sValue := oColumn.Caption;
     odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Caption', sValue);
+
+    // 5. Guardar Ordenación de datos (Sorting)
+    sValue := IntToStr(Ord(oColumn.SortOrder));
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_SortOrder', sValue);
+
+    sValue := IntToStr(oColumn.SortIndex);
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_SortIndex', sValue);
+  end;
+  // 6. GUARDAR EL FILTRO DE LA VISTA COMPLETA (Binario -> Base64)
+  LStream := TMemoryStream.Create;
+  BStream := TStringStream.Create('');
+  try
+    // Extraemos el filtro del grid al stream de memoria
+    cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+    LStream.Position := 0;
+
+    // Lo codificamos a Base64 para que sea un texto seguro (sin caracteres raros)
+    TNetEncoding.Base64.Encode(LStream, BStream);
+    sValue := BStream.DataString;
+
+    // Lo guardamos en tu perfil con la clave terminada en "_Filtro"
+    odmPerfiles.GrabarPerfil(sProfile, sName, cxgrdtvVista.Name + '_Filtro', sValue);
+  finally
+    LStream.Free;
+    BStream.Free;
   end;
 end;
 
@@ -203,9 +292,12 @@ procedure PonerAnchosTitulos( cxgrdtvVista: TcxGridDBTableView;
 var
   oColumn: TcxGridDBColumn;
   i: Integer;
-  sName, sColumnName, sSubKey, sValue: string;
+  sName, sColumnName, sSubKey: string;
   IsCurrencyField, IsBooleanField,
   IsDateField, IsPercentField, IsIntegerField: Boolean;
+  LStream: TMemoryStream;
+  BStream: TStringStream;
+  sFiltroBase64: string;
 begin
   cxgrdtvVista.BeginUpdate;
   try
@@ -215,21 +307,18 @@ begin
       sColumnName := oColumn.DataBinding.FieldName;
       sName := cxgrdtvVista.Name;
       sSubKey := sName + '_' + sColumnName;
+
       // 1. Visibilidad, Caption y Ancho
-      oColumn.Visible := SameText(GetPerfilSubKeyValueDef(oPerfilDic,
-                                                          sSubKey,
-                                                          'Visible',
-                                                          'True'),
-                                  'True');
-      oColumn.Caption := GetPerfilSubKeyValueDef(oPerfilDic,
-                                                 sSubKey,
-                                                 'Caption',
-                                                 oColumn.Caption);
-      oColumn.Width := StrToInt(GetPerfilSubKeyValueDef( oPerfilDic,
-                                                         sSubKey,
-                                                         'Width',
-                                                         IntToStr(oColumn.Width)
-                                                       ));
+      oColumn.Visible := SameText(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'), 'True');
+      oColumn.Caption := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', oColumn.Caption);
+      oColumn.Width := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', IntToStr(oColumn.Width)), oColumn.Width);
+
+      // --- NUEVO: Restaurar ordenación de datos (Sorting) ---
+      oColumn.SortOrder := TcxDataSortOrder(StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
+      if oColumn.SortOrder <> soNone then
+        oColumn.SortIndex := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
+      // ------------------------------------------------------
+
       // 2. Formato: SOLO adivinamos si la columna no trae propiedades del DFM
       if oColumn.PropertiesClassName = '' then
       begin
@@ -271,6 +360,7 @@ begin
             ValueType := vtFloat;
           end;
         end;
+
         IsIntegerField := ((StartsText('ORDEN', sColumnName)) or
                            (StartsText('N_', sColumnName)));
         if (IsIntegerField) then
@@ -289,19 +379,46 @@ begin
         end;
       end; // Fin del IF de formatos
     end;
-    // 3. Aplicar el orden (Index) en un bucle SEPARADO para evitar conflictos
+
+   // 3. Aplicar el orden (Index) en un bucle SEPARADO para evitar conflictos
     for i := 0 to cxgrdtvVista.ColumnCount - 1 do
     begin
       oColumn := cxgrdtvVista.Columns[i];
       sColumnName := oColumn.DataBinding.FieldName;
       sName := cxgrdtvVista.Name;
       sSubKey := sName + '_' + sColumnName;
-      oColumn.Index := StrToInt(GetPerfilSubKeyValueDef(oPerfilDic,
-                                                        sSubKey,
-                                                        'Index',
-                                                        IntToStr(oColumn.Index)
-                                                       ));
+
+      oColumn.Index := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic,
+                                                           sSubKey,
+                                                           'Index',
+                                                           IntToStr(oColumn.Index)),
+                                   oColumn.Index);
     end;
+    // 4. RESTAURAR EL FILTRO DE LA VISTA COMPLETA (Base64 -> Binario)
+    sFiltroBase64 :=
+       GetPerfilSubKeyValueDef(oPerfilDic,
+                               sSubKey,
+                               cxgrdtvVista.Name + '_Filtro', '');
+    // Si hay un filtro guardado (y no está vacío)
+    if sFiltroBase64 <> '' then
+    begin
+      BStream := TStringStream.Create(sFiltroBase64);
+      LStream := TMemoryStream.Create;
+      try
+        BStream.Position := 0;
+
+        // Decodificamos el texto Base64 de vuelta a formato binario
+        TNetEncoding.Base64.Decode(BStream, LStream);
+        LStream.Position := 0;
+
+        // Inyectamos el filtro en el grid
+        cxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
+      finally
+        BStream.Free;
+        LStream.Free;
+      end;
+    end;
+
   finally
     cxgrdtvVista.EndUpdate;
   end;
@@ -547,31 +664,6 @@ begin
   Result:=bResul;
 end;
 
-  // procedure AplicarPermisos(frmMto:TComponent);
-  // var
-  // i:Integer;
-  // begin
-  //
-  // for i:= 0 to frmMto.Componentcount - 1 do
-  // begin
-  // if frmMto.Components[i].ClassNameis('TcxGridDBTableView') then
-  // begin
-  // // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
-  // if ( (frmMto.Components[i] as
-  // TcxGridDBTableView).DataController.DataSource <> nil ) then
-  // if ( ((frmMto.Components[i] as
-  // TcxGridDBTableView).DataController.DataSource.DataSet.State = dsInsert) or
-  // ((frmMto.Components[i]
-  // as TcxGridDBTableView).DataController.DataSource.DataSet.State = dsEdit)
-  // ) then
-  // begin
-  // ((frmMto.Components[i] as
-  // TcxGridDBTableView).DataController.DataSource.DataSet as
-  // TZquery).ReadOnly := True;
-  // end;
-  // end;
-  // end;
-  // end;
 procedure SetCaseTcxTextProperty(oControl: TComponent; sCase: TEditCharCase);
 var
   i: Integer;
@@ -609,75 +701,5 @@ begin
       end;
   end;
 end;
-
-//  procedure SaveColumnsStateActiveWindow;
-//    var
-//      X: Integer;
-//      GridTV: TcxGridDBTableView;
-//      Name: string;
-//      Form: Tform;
-//    begin
-//      Form := screen.ActiveForm;
-//      Name := screen.ActiveForm.Name;
-//      for X := 0 to Form.Componentcount - 1 do
-//      begin
-//        if (Form.Components[X] is TcxGridDBTableView)
-//        then
-//        begin
-//          GridTV := TcxGridDBTableView(Form.Components[X]);
-//          GridTV.storetoIniFile(DirIni + inLibGlobalVar.oUser + '_' +
-//              Form.Caption +
-//              '_' + GridTV.Name + '.ini');
-//        end;
-//      end;
-//    end;
-
-//  procedure RecoverColumnsStateActiveWindow;
-//    var
-//      X: Integer;
-//      GridTV: TcxGridDBTableView;
-//      Name: string;
-//      Form: Tform;
-//    begin
-//      Form := screen.ActiveForm;
-//      Name := screen.ActiveForm.Name;
-//      for X := 0 to Form.Componentcount - 1 do
-//      begin
-//        if (Form.Components[X] is TcxGridDBTableView)
-//        then
-//        begin
-//          GridTV := TcxGridDBTableView(Form.Components[X]);
-//          If FileExists(DirIni + inLibGlobalVar.oUser + '_' +
-//          Form.Caption + '_' + GridTV.Name + '.ini')
-//          then
-//            GridTV.RestoreFromIniFile(DirIni + inLibGlobalVar.oUser +
-//                '_' + Form.Caption + '_' + GridTV.Name + '.ini');
-//        end;
-//      end;
-//    end;
-
-//  procedure ResetColumnsStateActiveWindow;
-//    var
-//      X: Integer;
-//      Grid: TcxGridDBTableView;
-//      Name: string;
-//      Form: Tform;
-//    begin
-//      Form := screen.ActiveForm;
-//      Name := screen.ActiveForm.Name;
-//      for X := 0 to Form.Componentcount - 1 do
-//      begin
-//        if (Form.Components[X] is TcxGridDBTableView)
-//        then
-//        begin
-//          Grid := TcxGridDBTableView(Form.Components[X]);
-//          If FileExists(DirIni + inLibGlobalVar.oUser +
-//              '_' + Form.Caption + '_' + Grid.Name + '.ini')
-//          then
-//            DeleteFile(DirIni + inLibGlobalVar.oUser + '_' +
-//                Form.Caption + '_' + Grid.Name + '.ini');
-//        end;
-//      end;
-//    end;
 
 end.
