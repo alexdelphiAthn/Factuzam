@@ -117,10 +117,10 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
-    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
-                                        const sName: string;
-                                        const sProfile: string;
-                                        AList: TPerfilList);
+//    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+//                                        const sName: string;
+//                                        const sProfile: string;
+//                                        AList: TPerfilList);
 
   public
     tdmDataModule:TObject;
@@ -334,41 +334,6 @@ begin
     ts := TcxTabSheet(Self.Parent);
     formMain := Application.MainForm;
     PostMessage(formMain.Handle, WM_FREECONTROL, 0, LParam(ts));
-  end;
-end;
-
-procedure TfrmMtoGen.CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
-                                        const sName: string;
-                                        const sProfile: string;
-                                        AList: TPerfilList);
-var
-  i: Integer;
-  oColumn: TcxGridDBColumn;
-  sVistaName, sColumnName, sPrefix: string;
-
-  procedure Add(const aSub, aVal: string);
-  var item: TPerfilItem;
-  begin
-    item.UserGroup := sProfile;
-    item.KeyPerfil := sName;
-    item.SubKey    := aSub;
-    item.Value     := aVal;
-    AList.Add(item);
-  end;
-
-begin
-  sVistaName := cxgrdtvVista.Name;
-  for i := 0 to cxgrdtvVista.ColumnCount - 1 do
-  begin
-    oColumn := cxgrdtvVista.Columns[i];
-    sColumnName := oColumn.DataBinding.FieldName;
-    sPrefix := sVistaName + '_' + sColumnName + '_';
-    Add(sPrefix + 'Visible', TGenUtils.IfThen<String>(oColumn.Visible,
-                                                      'True',
-                                                      'False'));
-    Add(sPrefix + 'Index',   IntToStr(oColumn.Index));
-    Add(sPrefix + 'Width',   IntToStr(oColumn.Width));
-    Add(sPrefix + 'Caption', oColumn.Caption);
   end;
 end;
 

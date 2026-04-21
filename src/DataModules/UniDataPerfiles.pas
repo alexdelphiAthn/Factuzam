@@ -24,7 +24,7 @@ type
     //pTYPE_BLOB_PERFILES         :String;
     //pVALUE_BLOB_PERFILES        :Variant;
   end;
-    TPerfilItem = record
+  TPerfilItem = record
     UserGroup: string;
     KeyPerfil: string;
     SubKey: string;
