@@ -64,6 +64,7 @@ var
   TotalDevoluciones,
   TotalDevueltos,
   TotalPagadoCaja: Currency;
+  FechaOperacion: TDateTime;
 begin
   if Trim(AOperacion) = '' then
     Exit;
@@ -78,6 +79,20 @@ begin
                        ' WHERE CODIGO_EMPRESA = :EMP';
     QryEmp.ParamByName('EMP').AsString := ACodigoEmpresa;
     QryEmp.Open;
+    QrySec.SQL.Text := 'SELECT FECHA_OPERACION_OPCAJA ' +
+                       '  FROM fza_caja_operaciones ' +
+                       ' WHERE CODIGO_EMPRESA_OPCAJA = :EMP ' +
+                       '   AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
+                       '   AND CODIGO_CAJA_OPCAJA = :CAJ ' +
+                       '   AND NUMERO_OPERACION_OPCAJA = :OPE';
+    QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
+    QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
+    QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
+    QrySec.ParamByName('OPE').AsString := AOperacion;
+    QrySec.Open;
+    if not QrySec.IsEmpty then
+      FechaOperacion := QrySec.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+    QrySec.Close;
     QrySec.SQL.Text :=
       '   SELECT d.CODIGO_UNIDAD_DEP, ' +
       '          a.DESCRIPCION_ARTICULO, ' +
@@ -111,8 +126,9 @@ begin
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alIzquierda);
       Ticket.TextoColumnas('CÓDIGO CLIENTE:',
-                             QrySec.FieldByName('CODIGO_CLIENTE_DEP').AsString);
-      Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn', Now));
+                           QrySec.FieldByName('CODIGO_CLIENTE_DEP').AsString);
+      Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn',
+                           FechaOperacion));
       Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
       Ticket.SaltarLineas(1);
       TotalNuevos := 0;
