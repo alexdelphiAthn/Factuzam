@@ -711,6 +711,7 @@ begin
           Ticket.Alinear(alCentro);
           Ticket.Negrita(True);
           Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
+          Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn', Now));
           Ticket.Negrita(False);
           Ticket.LineaSeparadora('-');
           Ticket.Alinear(alIzquierda);
