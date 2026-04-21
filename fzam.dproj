@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -409,7 +409,6 @@
         <DCCReference Include="src\Lib\backup\ScriptWriters.pas"/>
         <DCCReference Include="src\Lib\inLibEAN13.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosPropiedades.pas"/>
-        <DCCReference Include="src\Lib\uGenericIfThen.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAceptCancel.pas">
             <Form>frmModalAceptCancel</Form>
@@ -436,6 +435,7 @@
         </DCCReference>
         <DCCReference Include="fzam.dxSettings.pas"/>
         <DCCReference Include="src\Lib\inLibPathTokens.pas"/>
+        <DCCReference Include="src\Lib\uGenericIfThen.pas"/>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -469,15 +469,9 @@
                 <DeployFile LocalName="$(crossvcl)\Redist\libcrossvcl.so"/>
                 <DeployFile LocalName="$(crossvcl)\Redist\libcrossvcl64.dylib"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="payment_48_48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>

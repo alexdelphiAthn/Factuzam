@@ -121,7 +121,6 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   inLibArticulosPropiedades in 'src\Lib\inLibArticulosPropiedades.pas',
-  uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
   inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
   inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
@@ -135,7 +134,8 @@ uses
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
   inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
   fzam.dxSettings in 'fzam.dxSettings.pas',
-  inLibPathTokens in 'src\Lib\inLibPathTokens.pas';
+  inLibPathTokens in 'src\Lib\inLibPathTokens.pas',
+  uGenericIfThen in 'src\Lib\uGenericIfThen.pas';
 
 var
   frmLogon: TfrmLogon;

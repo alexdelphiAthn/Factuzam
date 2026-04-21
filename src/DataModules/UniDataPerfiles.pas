@@ -24,7 +24,13 @@ type
     //pTYPE_BLOB_PERFILES         :String;
     //pVALUE_BLOB_PERFILES        :Variant;
   end;
-
+    TPerfilItem = record
+    UserGroup: string;
+    KeyPerfil: string;
+    SubKey: string;
+    Value: string;
+  end;
+  TPerfilList = TList<TPerfilItem>;
   TdmPerfiles = class(TDataModule)
     unqryPerfiles: TUniQuery;
     unstdGrabarPerfil: TUniStoredProc;
@@ -36,6 +42,7 @@ type
 public
     // Métodos existentes mejorados
     procedure GrabarPerfil(psuser, pskey, pssubkey, psvalue: string; psValueText: WideString = '');
+    procedure GrabarPerfilesBatch(const AItems: TPerfilList);
     procedure Assign_Profile_Dict(pskey: string; var oDict: TProfileUserDicc);
     procedure AddRecordToDict(fpProfile: TFieldsProfile; var oDict: TProfileUserDicc);
     function GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
@@ -233,6 +240,72 @@ begin
   unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsWideString := psValueText;
   unstdGrabarPerfil.ParamByName('pUSUARIO_MODIF').AsString := oUser;
   unstdGrabarPerfil.Execute;
+end;
+
+procedure TdmPerfiles.GrabarPerfilesBatch(const AItems: TPerfilList);
+const
+  BATCH_SIZE = 500;
+var
+  i, iStart, iEnd: Integer;
+  sSQL: TStringBuilder;
+  qry: TUniQuery;
+  sUsuarioActual: string;
+begin
+  if (AItems = nil) or (AItems.Count = 0) then Exit;
+
+  // El usuario que está grabando, para USUARIOALTA / USUARIOMODIF
+  sUsuarioActual := inLibGlobalVar.oUser;
+
+  qry := TUniQuery.Create(nil);
+  sSQL := TStringBuilder.Create;
+  try
+    qry.Connection := oConn;
+
+    iStart := 0;
+    while iStart < AItems.Count do
+    begin
+      iEnd := iStart + BATCH_SIZE - 1;
+      if iEnd >= AItems.Count then
+        iEnd := AItems.Count - 1;
+
+      sSQL.Clear;
+      sSQL.Append(
+        'INSERT INTO fza_usuarios_perfiles ' +
+        '(USUARIO_GRUPO_PERFILES, KEY_PERFILES, SUBKEY_PERFILES, VALUE_PERFILES, ' +
+        ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'VALUES ');
+
+      for i := iStart to iEnd do
+      begin
+        if i > iStart then sSQL.Append(',');
+        sSQL.AppendFormat(
+          '(:u%d, :k%d, :s%d, :v%d, CURRENT_TIMESTAMP, :ua, :ua)',
+          [i, i, i, i]);
+      end;
+
+      sSQL.Append(
+        ' ON DUPLICATE KEY UPDATE ' +
+        '  VALUE_PERFILES = VALUES(VALUE_PERFILES), ' +
+        '  USUARIOMODIF   = VALUES(USUARIOMODIF)');
+
+      qry.SQL.Text := sSQL.ToString;
+      qry.ParamByName('ua').AsString := sUsuarioActual;
+
+      for i := iStart to iEnd do
+      begin
+        qry.ParamByName(Format('u%d', [i])).AsString := AItems[i].UserGroup;
+        qry.ParamByName(Format('k%d', [i])).AsString := AItems[i].KeyPerfil;
+        qry.ParamByName(Format('s%d', [i])).AsString := AItems[i].SubKey;
+        qry.ParamByName(Format('v%d', [i])).AsString := AItems[i].Value;
+      end;
+
+      qry.Execute;
+      iStart := iEnd + 1;
+    end;
+  finally
+    sSQL.Free;
+    qry.Free;
+  end;
 end;
 
 procedure TdmPerfiles.unqryPerfilesBeforePost(DataSet: TDataSet);
