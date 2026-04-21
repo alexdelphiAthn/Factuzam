@@ -14,6 +14,7 @@ uses
   System.SysUtils, System.Generics.Collections,
   Vcl.Dialogs, Classes, DB, MemDS, inLibUser,
   DBAccess, Uni, UniDataConn;
+
 type
   TFieldsProfile = record
     pUSUARIO_GRUPO_PERFILES		  :String;
@@ -24,13 +25,16 @@ type
     //pTYPE_BLOB_PERFILES         :String;
     //pVALUE_BLOB_PERFILES        :Variant;
   end;
+
   TPerfilItem = record
     UserGroup: string;
     KeyPerfil: string;
     SubKey: string;
     Value: string;
   end;
+
   TPerfilList = TList<TPerfilItem>;
+
   TdmPerfiles = class(TDataModule)
     unqryPerfiles: TUniQuery;
     unstdGrabarPerfil: TUniStoredProc;
@@ -39,7 +43,7 @@ type
     procedure unqryPerfilesBeforePost(DataSet: TDataSet);
   private
     { Private declarations }
-public
+  public
     // Métodos existentes mejorados
     procedure GrabarPerfil(psuser, pskey, pssubkey, psvalue: string; psValueText: WideString = '');
     procedure GrabarPerfilesBatch(const AItems: TPerfilList);
@@ -237,7 +241,7 @@ begin
   unstdGrabarPerfil.ParamByName('pKEY').AsString := pskey;
   unstdGrabarPerfil.ParamByName('pSUBKEY').AsString := pssubkey;
   unstdGrabarPerfil.ParamByName('pVALUE').AsString := psvalue;
-  unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsWideString := psValueText;
+  unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsString := psValueText;
   unstdGrabarPerfil.ParamByName('pUSUARIO_MODIF').AsString := oUser;
   unstdGrabarPerfil.Execute;
 end;

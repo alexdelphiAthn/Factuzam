@@ -53,7 +53,7 @@ object dmPerfiles: TdmPerfiles
         Value = nil
       end
       item
-        DataType = ftWideMemo
+        DataType = ftMemo
         Name = 'pVALUE_TEXT'
         ParamType = ptInput
         Value = ''
