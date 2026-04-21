@@ -711,7 +711,8 @@ begin
           Ticket.Alinear(alCentro);
           Ticket.Negrita(True);
           Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
-          Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn', Now));
+          Ticket.EscribirLinea(
+                     FormatDateTime('dddd, d "de" mmmm "de" yyyy, hh:nn', Now));
           Ticket.Negrita(False);
           Ticket.LineaSeparadora('-');
           Ticket.Alinear(alIzquierda);
@@ -727,9 +728,7 @@ begin
           Ticket.EscribirLinea(Format('%-14s %13s %13s',
                                       ['Fecha/Hora', 'Total', 'Pendiente']));
           Ticket.LineaSeparadora('-');
-
           TotalPendienteCliente := 0;
-
           while not QryDep.Eof do
           begin
             var IdDep    := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
@@ -743,14 +742,12 @@ begin
             var Anticipo  := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
             var Pendiente := TotalDep - Anticipo;
             TotalPendienteCliente := TotalPendienteCliente + Pendiente;
-
             var EmpDep := QryDep.FieldByName('CODIGO_EMPRESA_DEP').AsString;
             var AlmDep := QryDep.FieldByName('CODIGO_ALMACEN_DEP').AsString;
             var CajDep := QryDep.FieldByName('CODIGO_CAJA_DEP').AsString;
             var OrigenDep := EmpDep;
             if AlmDep <> '' then OrigenDep := OrigenDep + '/' + AlmDep;
             if CajDep <> '' then OrigenDep := OrigenDep + '/' + CajDep;
-
             // Cabecera del depósito
             Ticket.Alinear(alIzquierda);
             Ticket.EscribirLinea(Format('%-14s %13s %13s', [
@@ -762,9 +759,6 @@ begin
             Ticket.EscribirLinea('  ' + Copy(
               QryDep.FieldByName('DESCRIPCION_ARTICULO').AsString, 1, 40));
             Ticket.EscribirLinea('  RETIRADO EN (' + OrigenDep + ')');
-
-            // Cobros de este depósito
-            // Cobros de este depósito
             QryAnticipo.Close;
             QryAnticipo.ParamByName('IDDEP').AsString := IdDep;
             QryAnticipo.Open;
@@ -808,7 +802,6 @@ begin
     finally
       QryAnticipo.Free;
     end;
-
     // ── Generar PDF y mostrar / imprimir ─────────────────────────────────
     var ComandosESC    := Ticket.ObtenerComandos;
     var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
