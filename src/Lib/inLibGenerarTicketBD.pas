@@ -169,14 +169,18 @@ begin
       // =======================================================================
       QrySec.Close;
       QrySec.SQL.Text :=
-        'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
-        'FROM fza_caja_operaciones ' +
-        'WHERE CODIGO_EMPRESA_OPCAJA = :EMP ' +
-        '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
-        '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
-        '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
-        '  AND IMPORTE_TOTAL_OPCAJA > 0';
+        '   SELECT o.TIPO_OPERACION_OPCAJA, ' +
+        '          o.IMPORTE_TOTAL_OPCAJA, ' +
+        '          a.DESCRIPCION_ARTICULO ' +
+        '     FROM fza_caja_operaciones o ' +
+        'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA ' +
+        'LEFT JOIN fza_articulos a ON a.CODIGO_ARTICULO = d.CODIGO_ARTICULO_DEP ' +
+        '    WHERE o.CODIGO_EMPRESA_OPCAJA = :EMP ' +
+        '      AND o.CODIGO_ALMACEN_OPCAJA = :ALM ' +
+        '      AND o.CODIGO_CAJA_OPCAJA = :CAJ ' +
+        '      AND o.NUMERO_OPERACION_OPCAJA = :OPE ' +
+        '      AND o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
+        '      AND o.IMPORTE_TOTAL_OPCAJA > 0';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
       QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
       QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
@@ -195,12 +199,25 @@ begin
         begin
           var TipoOp  := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
           var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+          var NombreArticulo := QrySec.FieldByName('DESCRIPCION_ARTICULO').AsString;
           TotalEntregas := TotalEntregas + Importe;
           var Concepto := '';
-          if TipoOp = 'CB' then
-            Concepto := 'A cuenta para artículo pendiente'
-          else if TipoOp = 'DE' then
-            Concepto := 'A cuenta inicial';
+          // Si conseguimos leer el nombre del artículo, lo mostramos
+          if Trim(NombreArticulo) <> '' then
+          begin
+            if TipoOp = 'CB' then
+              Concepto := 'A cuenta: ' + NombreArticulo
+            else if TipoOp = 'DE' then
+              Concepto := 'A cta. inicial: ' + NombreArticulo;
+          end
+          else
+          // Textos por defecto si por algún motivo no encuentra el artículo
+          begin
+            if TipoOp = 'CB' then
+              Concepto := 'A cuenta para artículo pendiente'
+            else if TipoOp = 'DE' then
+              Concepto := 'A cuenta inicial';
+          end;
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
@@ -209,7 +226,6 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-
       // =======================================================================
       // SECCIÓN 3: DEVOLUCIONES
       // =======================================================================
@@ -232,7 +248,6 @@ begin
       qryDev.ParamByName('CAJ').AsString := ACodigoCaja;
       qryDev.ParamByName('OPE').AsString := AOperacion;
       qryDev.Open;
-
       QrySec.SQL.Text :=
         'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
         'FROM fza_caja_operaciones ' +
@@ -268,6 +283,9 @@ begin
           QrySec.Next;
         end;
       end;
+      if (TotalNuevos = 0) and (TotalEntregas = 0) and
+         (TotalDevueltos = 0) and (TotalDevoluciones = 0) then
+        Exit;
       if not QryDev.IsEmpty then
       begin
         Ticket.SaltarLineas(1);
