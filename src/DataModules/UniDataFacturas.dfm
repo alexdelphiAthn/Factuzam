@@ -330,359 +330,346 @@ inherited dmFacturas: TdmFacturas
     FieldDefs = <
       item
         FieldName = 'FECHA_FACTURA'
-        FieldAlias = 'FECHA_FACTURA'
+        FieldType = fftDateTime
       end
       item
         FieldName = 'NRO_FACTURA'
-        FieldAlias = 'NRO_FACTURA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'SERIE_FACTURA'
-        FieldAlias = 'SERIE_FACTURA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'TOTAL_LIQUIDO_FACTURA'
-        FieldAlias = 'TOTAL_LIQUIDO_FACTURA'
       end
       item
         FieldName = 'PORCEN_RETENCION_FACTURA'
-        FieldAlias = 'PORCEN_RETENCION_FACTURA'
       end
       item
         FieldName = 'TOTAL_RETENCION_FACTURA'
-        FieldAlias = 'TOTAL_RETENCION_FACTURA'
       end
       item
         FieldName = 'TOTAL_IMPUESTOS_FACTURA'
-        FieldAlias = 'TOTAL_IMPUESTOS_FACTURA'
       end
       item
         FieldName = 'TOTAL_BASES_FACTURA'
-        FieldAlias = 'TOTAL_BASES_FACTURA'
       end
       item
         FieldName = 'FORMA_PAGO_FACTURA'
-        FieldAlias = 'FORMA_PAGO_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'CODIGO_EMPRESA_FACTURA'
-        FieldAlias = 'CODIGO_EMPRESA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'RAZONSOCIAL_EMPRESA_FACTURA'
-        FieldAlias = 'RAZONSOCIAL_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'NIF_EMPRESA_FACTURA'
-        FieldAlias = 'NIF_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 50
       end
       item
         FieldName = 'MOVIL_EMPRESA_FACTURA'
-        FieldAlias = 'MOVIL_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 40
       end
       item
         FieldName = 'EMAIL_EMPRESA_FACTURA'
-        FieldAlias = 'EMAIL_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'DIRECCION1_EMPRESA_FACTURA'
-        FieldAlias = 'DIRECCION1_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'DIRECCION2_EMPRESA_FACTURA'
-        FieldAlias = 'DIRECCION2_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'POBLACION_EMPRESA_FACTURA'
-        FieldAlias = 'POBLACION_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'PROVINCIA_EMPRESA_FACTURA'
-        FieldAlias = 'PROVINCIA_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'NOMBRE_PAIS_EMPRESA_FACTURA'
-        FieldAlias = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 150
       end
       item
         FieldName = 'CODIGO_PAIS_EMPRESA_FACTURA'
-        FieldAlias = 'CODIGO_PAIS_EMPRESA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'CPOSTAL_EMPRESA_FACTURA'
-        FieldAlias = 'CPOSTAL_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 15
       end
       item
         FieldName = 'ESRETENCIONES_EMPRESA_FACTURA'
-        FieldAlias = 'ESRETENCIONES_EMPRESA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
-        FieldAlias = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
-        FieldAlias = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'CODIGO_CLIENTE_FACTURA'
-        FieldAlias = 'CODIGO_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'RAZONSOCIAL_CLIENTE_FACTURA'
-        FieldAlias = 'RAZONSOCIAL_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'NIF_CLIENTE_FACTURA'
-        FieldAlias = 'NIF_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 50
       end
       item
         FieldName = 'MOVIL_CLIENTE_FACTURA'
-        FieldAlias = 'MOVIL_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 40
       end
       item
         FieldName = 'EMAIL_CLIENTE_FACTURA'
-        FieldAlias = 'EMAIL_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'DIRECCION1_CLIENTE_FACTURA'
-        FieldAlias = 'DIRECCION1_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'DIRECCION2_CLIENTE_FACTURA'
-        FieldAlias = 'DIRECCION2_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'POBLACION_CLIENTE_FACTURA'
-        FieldAlias = 'POBLACION_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'PROVINCIA_CLIENTE_FACTURA'
-        FieldAlias = 'PROVINCIA_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'CPOSTAL_CLIENTE_FACTURA'
-        FieldAlias = 'CPOSTAL_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 15
       end
       item
         FieldName = 'NOMBRE_PAIS_CLIENTE_FACTURA'
-        FieldAlias = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 150
       end
       item
         FieldName = 'CODIGO_PAIS_CLIENTE_FACTURA'
-        FieldAlias = 'CODIGO_PAIS_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESIVA_RECARGO_CLIENTE_FACTURA'
-        FieldAlias = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESIVA_EXENTO_CLIENTE_FACTURA'
-        FieldAlias = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
-        FieldAlias = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESRETENCIONES_CLIENTE_FACTURA'
-        FieldAlias = 'ESRETENCIONES_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
-        FieldAlias = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
-        FieldAlias = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
-        FieldAlias = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
-        FieldAlias = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
-        FieldAlias = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
-        FieldAlias = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
-        FieldAlias = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'CODIGO_IVA_FACTURA'
-        FieldAlias = 'CODIGO_IVA_FACTURA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'ESVENTA_ACTIVO_FIJO_FACTURA'
-        FieldAlias = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'PORCEN_IVAN_FACTURA'
-        FieldAlias = 'PORCEN_IVAN_FACTURA'
       end
       item
         FieldName = 'TOTAL_IVAN_FACTURA'
-        FieldAlias = 'TOTAL_IVAN_FACTURA'
       end
       item
         FieldName = 'PORCEN_REN_FACTURA'
-        FieldAlias = 'PORCEN_REN_FACTURA'
       end
       item
         FieldName = 'TOTAL_REN_FACTURA'
-        FieldAlias = 'TOTAL_REN_FACTURA'
       end
       item
         FieldName = 'TOTAL_BASEI_IVAN_FACTURA'
-        FieldAlias = 'TOTAL_BASEI_IVAN_FACTURA'
       end
       item
         FieldName = 'PORCEN_IVAR_FACTURA'
-        FieldAlias = 'PORCEN_IVAR_FACTURA'
       end
       item
         FieldName = 'TOTAL_IVAR_FACTURA'
-        FieldAlias = 'TOTAL_IVAR_FACTURA'
       end
       item
         FieldName = 'PORCEN_RER_FACTURA'
-        FieldAlias = 'PORCEN_RER_FACTURA'
       end
       item
         FieldName = 'TOTAL_RER_FACTURA'
-        FieldAlias = 'TOTAL_RER_FACTURA'
       end
       item
         FieldName = 'TOTAL_BASEI_IVAR_FACTURA'
-        FieldAlias = 'TOTAL_BASEI_IVAR_FACTURA'
       end
       item
         FieldName = 'PORCEN_IVAS_FACTURA'
-        FieldAlias = 'PORCEN_IVAS_FACTURA'
       end
       item
         FieldName = 'TOTAL_IVAS_FACTURA'
-        FieldAlias = 'TOTAL_IVAS_FACTURA'
       end
       item
         FieldName = 'PORCEN_RES_FACTURA'
-        FieldAlias = 'PORCEN_RES_FACTURA'
       end
       item
         FieldName = 'TOTAL_RES_FACTURA'
-        FieldAlias = 'TOTAL_RES_FACTURA'
       end
       item
         FieldName = 'TOTAL_BASEI_IVAS_FACTURA'
-        FieldAlias = 'TOTAL_BASEI_IVAS_FACTURA'
       end
       item
         FieldName = 'PORCEN_IVAE_FACTURA'
-        FieldAlias = 'PORCEN_IVAE_FACTURA'
       end
       item
         FieldName = 'TOTAL_IVAE_FACTURA'
-        FieldAlias = 'TOTAL_IVAE_FACTURA'
       end
       item
         FieldName = 'PORCEN_REE_FACTURA'
-        FieldAlias = 'PORCEN_REE_FACTURA'
       end
       item
         FieldName = 'TOTAL_REE_FACTURA'
-        FieldAlias = 'TOTAL_REE_FACTURA'
       end
       item
         FieldName = 'TOTAL_BASEI_IVAE_FACTURA'
-        FieldAlias = 'TOTAL_BASEI_IVAE_FACTURA'
       end
       item
         FieldName = 'NRO_FACTURA_ABONO_FACTURA'
-        FieldAlias = 'NRO_FACTURA_ABONO_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'SERIE_FACTURA_ABONO_FACTURA'
-        FieldAlias = 'SERIE_FACTURA_ABONO_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
-        FieldAlias = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
+        FieldType = fftString
+        Size = 1000
       end
       item
         FieldName = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
-        FieldAlias = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
+        FieldType = fftString
+        Size = 1000
       end
       item
         FieldName = 'DOCUMENTO_FACTURA'
-        FieldAlias = 'DOCUMENTO_FACTURA'
       end
       item
         FieldName = 'COMENTARIOS_FACTURA'
-        FieldAlias = 'COMENTARIOS_FACTURA'
+        FieldType = fftString
+        Size = 1000
       end
       item
         FieldName = 'CONTADOR_LINEAS_FACTURA'
-        FieldAlias = 'CONTADOR_LINEAS_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESCREARARTICULOS_FACTURA'
-        FieldAlias = 'ESCREARARTICULOS_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESDESCRIPCIONES_AMP_FACTURA'
-        FieldAlias = 'ESDESCRIPCIONES_AMP_FACTURA'
+        FieldType = fftString
       end
       item
         FieldName = 'ESFECHADEENTREGA_FACTURA'
-        FieldAlias = 'ESFECHADEENTREGA_FACTURA'
-      end
-      item
-        FieldName = 'INSTANTEMODIF'
-        FieldAlias = 'INSTANTEMODIF'
-      end
-      item
-        FieldName = 'INSTANTEALTA'
-        FieldAlias = 'INSTANTEALTA'
-      end
-      item
-        FieldName = 'USUARIOALTA'
-        FieldAlias = 'USUARIOALTA'
-      end
-      item
-        FieldName = 'USUARIOMODIF'
-        FieldAlias = 'USUARIOMODIF'
+        FieldType = fftString
       end
       item
         FieldName = 'DESCRIPCION_FORMAPAGO'
-        FieldAlias = 'DESCRIPCION_FORMAPAGO'
+        FieldType = fftString
+        Size = 100
       end
       item
         FieldName = 'ESCONTADO_FORMAPAGO'
-        FieldAlias = 'ESCONTADO_FORMAPAGO'
+        FieldType = fftString
       end
       item
         FieldName = 'VENCIMIENTOS_RECIBOS'
-        FieldAlias = 'VENCIMIENTOS_RECIBOS'
       end
       item
         FieldName = 'IBAN_EMPRESA'
-        FieldAlias = 'IBAN_EMPRESA'
+        FieldType = fftString
+        Size = 100
       end
       item
         FieldName = 'IBAN_CLIENTE'
-        FieldAlias = 'IBAN_CLIENTE'
+        FieldType = fftString
+        Size = 100
       end
       item
         FieldName = 'ESVERBANCOEMPRESA_FORMAPAGO'
-        FieldAlias = 'ESVERBANCOEMPRESA_FORMAPAGO'
+        FieldType = fftString
       end>
   end
   object fxdstPrintLinFac: TfrxDBDataset
@@ -698,50 +685,69 @@ inherited dmFacturas: TdmFacturas
       item
         FieldName = 'NRO_FACTURA_LINEA'
         FieldAlias = 'NRO_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'SERIE_FACTURA_LINEA'
         FieldAlias = 'SERIE_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'LINEA_FACTURA_LINEA'
         FieldAlias = 'LINEA_FACTURA_LINEA'
+        FieldType = fftString
       end
       item
         FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
         FieldAlias = 'CODIGO_ARTICULO_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'CODIGO_FAMILIA_FACTURA_LINEA'
         FieldAlias = 'CODIGO_FAMILIA_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'NOMBRE_FAMILIA_FACTURA_LINEA'
         FieldAlias = 'NOMBRE_FAMILIA_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 200
       end
       item
         FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
         FieldAlias = 'FECHA_ENTREGA_FACTURA_LINEA'
+        FieldType = fftDateTime
       end
       item
         FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
         FieldAlias = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 20
       end
       item
         FieldName = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
         FieldAlias = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
+        FieldType = fftString
       end
       item
         FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
         FieldAlias = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+        FieldType = fftString
       end
       item
         FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
         FieldAlias = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+        FieldType = fftString
+        Size = 100
       end
       item
         FieldName = 'CODIGO_TARIFA_FACTURA_LINEA'
         FieldAlias = 'CODIGO_TARIFA_FACTURA_LINEA'
+        FieldType = fftString
       end
       item
         FieldName = 'CANTIDAD_FACTURA_LINEA'
@@ -778,18 +784,24 @@ inherited dmFacturas: TdmFacturas
       item
         FieldName = 'INSTANTEMODIF'
         FieldAlias = 'INSTANTEMODIF'
+        FieldType = fftDateTime
       end
       item
         FieldName = 'INSTANTEALTA'
         FieldAlias = 'INSTANTEALTA'
+        FieldType = fftDateTime
       end
       item
         FieldName = 'USUARIOALTA'
         FieldAlias = 'USUARIOALTA'
+        FieldType = fftString
+        Size = 100
       end
       item
         FieldName = 'USUARIOMODIF'
         FieldAlias = 'USUARIOMODIF'
+        FieldType = fftString
+        Size = 100
       end>
   end
   object unqryFacPrint: TUniQuery
@@ -800,6 +812,7 @@ inherited dmFacturas: TdmFacturas
       'where SERIE_FACTURA = '#39'ANA/2023'#39' '
       'AND NRO_FACTURA = '#39'000003'#39
       'order by NRO_FACTURA Asc')
+    Active = True
     Left = 454
     Top = 506
   end
@@ -871,6 +884,7 @@ inherited dmFacturas: TdmFacturas
     MasterSource = dsFacPrint
     MasterFields = 'SERIE_FACTURA;NRO_FACTURA'
     DetailFields = 'SERIE_FACTURA_LINEA;NRO_FACTURA_LINEA'
+    Active = True
     Left = 574
     Top = 506
     ParamData = <
@@ -878,13 +892,13 @@ inherited dmFacturas: TdmFacturas
         DataType = ftWideString
         Name = 'NRO_FACTURA'
         ParamType = ptInput
-        Value = '000003'
+        Value = nil
       end
       item
         DataType = ftWideString
         Name = 'SERIE_FACTURA'
         ParamType = ptInput
-        Value = 'ANA/2023'
+        Value = nil
       end>
   end
   object unqrySeries: TUniQuery

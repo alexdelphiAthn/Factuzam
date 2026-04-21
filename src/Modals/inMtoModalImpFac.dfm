@@ -545,6 +545,7 @@ inherited frmPrintFac: TfrmPrintFac
     Top = 200
   end
   inherited frxdsgnr1: TfrxDesigner
+    Restrictions = []
     Left = 8
     Top = 128
   end
@@ -611,7 +612,7 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_IVAR_FACTURA.Visible := True;'
       '    FacturasPORCEN_IVAR_FACTURA.Visible:= True;'
       '    FacturasPORCEN_RER_FACTURA.Visible := True;'
-      '    FacturasTOTAL_RER_FACTURA1.Visible := True;'
+      '    FacturasTOTAL_RER_FACTURA.Visible := True;'
       '  end'
       '  else'
       '  begin'
@@ -619,7 +620,7 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_IVAR_FACTURA.Visible := False;'
       '    FacturasPORCEN_IVAR_FACTURA.Visible:= False;'
       '    FacturasPORCEN_RER_FACTURA.Visible := False;'
-      '    FacturasTOTAL_RER_FACTURA1.Visible := False;'
+      '    FacturasTOTAL_RER_FACTURA.Visible := False;'
       '  end;'
       'end;'
       ''
@@ -631,7 +632,7 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_IVAS_FACTURA.Visible := True;'
       '    FacturasPORCEN_IVAS_FACTURA.Visible:= True;'
       '    FacturasPORCEN_RES_FACTURA.Visible := True;'
-      '    FacturasTOTAL_RES_FACTURA1.Visible := True;'
+      '    FacturasTOTAL_RES_FACTURA.Visible := True;'
       '  end'
       '  else'
       '  begin'
@@ -639,7 +640,7 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_IVAS_FACTURA.Visible := False;'
       '    FacturasPORCEN_IVAS_FACTURA.Visible:= False;'
       '    FacturasPORCEN_RES_FACTURA.Visible := False;'
-      '    FacturasTOTAL_RES_FACTURA1.Visible := False;'
+      '    FacturasTOTAL_RES_FACTURA.Visible := False;'
       '  end;'
       'end;'
       ''
@@ -699,12 +700,12 @@ inherited frmPrintFac: TfrmPrintFac
       '  if <Facturas."TOTAL_RER_FACTURA"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_RER_FACTURA.Visible := True;'
-      '    FacturasTOTAL_RER_FACTURA1.Visible := True;'
+      '    FacturasTOTAL_RER_FACTURA.Visible := True;'
       '  end'
       '  else'
       '  begin'
       '    FacturasPORCEN_RER_FACTURA.Visible := False;'
-      '    FacturasTOTAL_RER_FACTURA1.Visible := False;'
+      '    FacturasTOTAL_RER_FACTURA.Visible := False;'
       '  end;'
       ''
       'end;'
@@ -721,7 +722,7 @@ inherited frmPrintFac: TfrmPrintFac
       '  else'
       '  begin'
       '    FacturasPORCEN_RES_FACTURA.Visible := False;'
-      '    FacturasTOTAL_RES_FACTURA1.Visible := False;'
+      '    FacturasTOTAL_RES_FACTURA.Visible := False;'
       '  end;'
       ''
       'end;'
@@ -802,8 +803,8 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_RER_FACTURA.Font.Color := clWhite;'
       '    FacturasTOTAL_RES_FACTURA.Font.Color := clWhite;'
       '    FacturasTOTAL_REE_FACTURA.Font.Color := clWhite;'
-      '    FacturasTOTAL_RER_FACTURA1.Font.Color := clWhite;'
-      '    FacturasTOTAL_RES_FACTURA1.Font.Color := clWhite;'
+      '    FacturasTOTAL_RER_FACTURA.Font.Color := clWhite;'
+      '    FacturasTOTAL_RES_FACTURA.Font.Color := clWhite;'
       '  end'
       '  else'
       '  begin'
@@ -844,8 +845,8 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_RER_FACTURA.Font.Color := clBlack;'
       '    FacturasTOTAL_RES_FACTURA.Font.Color := clBlack;'
       '    FacturasTOTAL_REE_FACTURA.Font.Color := clBlack;'
-      '    FacturasTOTAL_RER_FACTURA1.Font.Color := clBlack;'
-      '    FacturasTOTAL_RES_FACTURA1.Font.Color := clBlack;'
+      '    FacturasTOTAL_RER_FACTURA.Font.Color := clBlack;'
+      '    FacturasTOTAL_RES_FACTURA.Font.Color := clBlack;'
       '  end;'
       'end;'
       ''
@@ -1003,7 +1004,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 480.000000000000000000
+        Top = 525.354670000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'DetailData1OnBeforePrint'
         DataSet = dmFacturas.fxdstPrintLinFac
@@ -1241,7 +1242,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 400.630180000000000000
-        Top = 16.000000000000000000
+        Top = 18.897650000000000000
         Width = 737.008350000000000000
         object Memo7: TfrxMemoView
           AllowVectorExport = True
@@ -1281,6 +1282,8 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 207.874150000000000000
           Width = 355.275820000000000000
           Height = 136.063080000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
@@ -1781,7 +1784,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 436.000000000000000000
+        Top = 480.000310000000000000
         Visible = False
         Width = 737.008350000000000000
         DataSet = dmFacturas.fxdsPrintFac
@@ -1815,7 +1818,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 249.448980000000000000
-        Top = 528.000000000000000000
+        Top = 612.283860000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'PageFooter1OnBeforePrint'
         object CajaIVA: TfrxMemoView
@@ -2325,7 +2328,7 @@ inherited frmPrintFac: TfrmPrintFac
             '[Facturas."TOTAL_BASEI_IVAS_FACTURA"]')
           ParentFont = False
         end
-        object FacturasTOTAL_RER_FACTURA1: TfrxMemoView
+        object FacturasTOTAL_RER_FACTURA: TfrxMemoView
           IndexTag = 1
           AllowVectorExport = True
           Left = 394.630194650000000000
@@ -2333,6 +2336,8 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 68.031540000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'FacturasTOTAL_RER_FACTURAOnBeforePrint'
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataField = 'TOTAL_RER_FACTURA'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
@@ -2347,7 +2352,7 @@ inherited frmPrintFac: TfrmPrintFac
             '[Facturas."TOTAL_RER_FACTURA"]')
           ParentFont = False
         end
-        object FacturasTOTAL_RES_FACTURA1: TfrxMemoView
+        object FacturasTOTAL_RES_FACTURA: TfrxMemoView
           IndexTag = 1
           AllowVectorExport = True
           Left = 394.630194650000000000
@@ -2355,6 +2360,8 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 68.031540000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'FacturasTOTAL_RES_FACTURAOnBeforePrint'
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataField = 'TOTAL_RES_FACTURA'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'

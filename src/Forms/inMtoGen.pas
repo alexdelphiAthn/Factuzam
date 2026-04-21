@@ -223,16 +223,15 @@ begin
         cxGrid := (Self.Components[i] as TcxGridDBTableView);
 
         // Segunda validación segura
-        if SameText(Trim(GetPerfilValueDef(oPerfilDic, cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
+        if SameText(Trim(GetPerfilValueDef(oPerfilDic,
+                          cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
         begin
           PonerAnchosTitulos(cxGrid, Self.Name, oPerfilDic);
         end;
       end;
     end;
   end;
-
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
-
   if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')), 'True') then
     SetLabelForm(Self, oPerfilDic);
 
@@ -364,7 +363,6 @@ begin
     oColumn := cxgrdtvVista.Columns[i];
     sColumnName := oColumn.DataBinding.FieldName;
     sPrefix := sVistaName + '_' + sColumnName + '_';
-
     Add(sPrefix + 'Visible', TGenUtils.IfThen<String>(oColumn.Visible,
                                                       'True',
                                                       'False'));
@@ -373,55 +371,6 @@ begin
     Add(sPrefix + 'Caption', oColumn.Caption);
   end;
 end;
-
-(*procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
-var
-  formulario: TfrmModalGenImpSave;
-  bGuardar, IsSavingGrid: Boolean;
-  sPermisos, sSavingGrid:String;
-  i:Integer;
-  cxGrid : TcxGridDBTableView;
-begin
-  inherited;
-  bGuardar := False;
-  formulario := TfrmModalGenImpSave.Create(Application);
-  formulario.edtDescripcion.Enabled := False;
-  formulario.edtNombreOrigen.Text := Self.Name;
-  formulario.edtDescripcion.Text := 'Grabar Grids';
-  formulario.ShowModal;
-  if (formulario.sFicha = 'S') then
-  begin
-    bGuardar := True;
-    sPermisos := formulario.cbbPermisos.Text;
-  end;
-  FreeAndNil(formulario);
-  if bGuardar then
-  begin
-    CargarPerfilesComunes(sPermisos);
-    if (tdmDataModule <> nil) then
-      GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner, sPermisos);
-    CargarCaptions(Self, Self.Owner, sPermisos);
-    if Not(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False') = 'True') then
-    begin
-        odmPerfiles.GrabarPerfil(sPermisos, Self.Name, 'oApplyWidth', 'True');
-    end;
-    for i:= 0 to Self.Componentcount - 1 do
-    begin
-        if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
-        begin
-          cxGrid := (Self.Components[i] as TcxGridDBTableView);
-          (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
-                                                       Self.Name,
-                                                       sPermisos);
-          odmPerfiles.GrabarPerfil(sPermisos,
-                                   Self.Name,
-                                   cxGrid.Name + '__oApplyWidth',
-                                   'True');
-          GetSettingsColumnProfile(cxGrid, Self.Name, Self.Owner, sPermisos);
-        end;
-    end;
-  end;
-end;*)
 
 procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
 var
