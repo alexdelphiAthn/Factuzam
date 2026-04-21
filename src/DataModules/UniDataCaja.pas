@@ -352,8 +352,6 @@ type
                                      SerieGenerada: string;
                                      out NumeroGenerado: String;
                                      out ValeGenerado:String): Boolean;
-//    procedure CalcularTotalesLinea(MantenerImporteDto: Boolean = False);
-//    procedure CalcularTotalesCabecera;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
     property OnRellenarArticulo:  TRellenarArticuloEvent
@@ -529,7 +527,6 @@ begin
         PorcIVA           := QryDep.FieldByName('PORCEN_IVA_DEP').AsCurrency;
         EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
         Descripcion       := QryDep.FieldByName('DESCRIPCION_ARTICULO').AsString;
-
         // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────
         // *** SIN FOnRellenarArticulo ni FOnRellenarAtributos ***
         // Todo viene del SELECT, cero queries adicionales por fila
@@ -559,7 +556,6 @@ begin
         cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency              := PrecioOriginal;
         cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency                  := AnticipoDado;
         cdsLineas.Post;
-
         // ── LÍNEA 2: ABONO DEL ANTICIPO (negativo) ───────────────────────
         if AnticipoDado > 0 then
         begin
@@ -573,6 +569,7 @@ begin
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString       := 'Abono a cuenta ' + Sku;
           cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString                        := 'A';
           cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat                    := -1;
+          cdsLineas.FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString              := 'SERVICIO';
           cdsLineas.FieldByName('TIPOIVA_ARTICULO_FACTURA_LINEA').AsString           := TipoIVA;
           cdsLineas.FieldByName('PORCEN_IVA_FACTURA_LINEA').AsCurrency               := PorcIVA;
           cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString          := EsImpIncl;
@@ -581,6 +578,7 @@ begin
           cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := AnticipoSinIVA;
           cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency                    := -AnticipoDado;
           cdsLineas.FieldByName('TOTAL_FACTURASIVA_LINEA').AsCurrency                := -AnticipoSinIVA;
+          cdsLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA').AsString     := 'Uds';
           cdsLineas.Post;
         end;
         QryDep.Next;
@@ -1529,11 +1527,11 @@ begin
     inLibGlobalVar.oConn.Commit;
     if TieneDepositosPendientes and (sOpeCaja <> '') then
     begin
-        ImprimirResguardoDeposito(AEmpresa,
-                                  AAlmacen,
-                                  ACaja,
-                                  sOpeCaja,
-                                  'DEBUG');
+      ImprimirResguardoDeposito(AEmpresa,
+                                AAlmacen,
+                                ACaja,
+                                sOpeCaja,
+                                'DEBUG');
       ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
     end;
     try
