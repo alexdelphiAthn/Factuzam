@@ -368,6 +368,7 @@ begin
   if not bGuardar then Exit;
 
   Screen.Cursor := crHourGlass;
+  (tdmDataModule as TdmBase).ResetGridsProfile('', Self.Name, sPermisos);
   oList := TPerfilList.Create;
   try
     // 1. Perfiles comunes
@@ -394,7 +395,7 @@ begin
         cxGrid := TcxGridDBTableView(Self.Components[i]);
 
         // reset sigue siendo su propia transacción (borra primero)
-        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+
 
         item.SubKey := cxGrid.Name + '__oApplyWidth';
         item.Value  := 'True';
@@ -402,8 +403,6 @@ begin
 
         CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
       end;
-
-    // 3. Un solo viaje (o varios pero en lotes de 500)
     oConn.StartTransaction;
     try
       odmPerfiles.GrabarPerfilesBatch(oList);

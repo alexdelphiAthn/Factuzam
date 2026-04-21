@@ -4,8 +4,8 @@ inherited frmPrint: TfrmPrint
   HorzScrollBar.Visible = False
   BorderStyle = bsSingle
   Caption = 'Imprimir'
-  ClientHeight = 264
-  ClientWidth = 347
+  ClientHeight = 256
+  ClientWidth = 345
   FormStyle = fsStayOnTop
   Scaled = False
   StyleElements = [seFont, seClient, seBorder]
@@ -14,14 +14,12 @@ inherited frmPrint: TfrmPrint
   ExplicitHeight = 303
   TextHeight = 19
   object pnl1: TPanel [0]
-    Left = 203
+    Left = 201
     Top = 0
     Width = 144
-    Height = 264
+    Height = 256
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 201
-    ExplicitHeight = 256
     object btnPDF: TcxButton
       Left = 0
       Top = 48

@@ -14,7 +14,7 @@ uses
     Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
     Dialogs, DB, ADODB, DBCtrls, StdCtrls, cxGridExportLink, dxCore,
     ExtCtrls, Grids, DBGrids, ComCtrls, Buttons, Mask,
-    cxControls, cxContainer, cxEdit, inLibUser, System.strUtils,
+    cxControls, cxContainer, cxEdit, System.strUtils,
     cxTextEdit, cxMaskEdit, cxDBEdit, cxNavigator, cxLookAndFeelPainters,
     cxButtons, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
     cxDBLookupComboBox, cxImage, jpeg, cxCalendar, cxStyles, cxCustomData,
@@ -22,7 +22,7 @@ uses
     cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridLevel,
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
-    cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs,
+    cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs, inLibUser,
     cxGroupBox, cxLabel,  cxListBox, System.NetEncoding, UniDataPerfiles,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
@@ -57,10 +57,10 @@ type
   procedure ExportarExcel(cxGrd: TcxGrid;
                           sNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
-procedure GridRecalc(Sender: TObject;
-                     View: TcxGridDBTableView;
-                     cdsLineas, cdsCabecera: TDataSet;
-                     OnUpdateTotal: TUpdateTotalEvent = nil);
+  procedure GridRecalc(Sender: TObject;
+                       View: TcxGridDBTableView;
+                       cdsLineas, cdsCabecera: TDataSet;
+                       OnUpdateTotal: TUpdateTotalEvent = nil);
 implementation
 
   uses inMtoGen,
@@ -168,7 +168,7 @@ begin
   end;
 end;
 
-procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+procedure CollectSettingsColumnProfile(cxgrdtvVista: TcxGridDBTableView;
                                         const sName: string;
                                         const sProfile: string;
                                         AList: TPerfilList);
@@ -186,43 +186,53 @@ var
     item.KeyPerfil := sName;
     item.SubKey    := aSub;
     item.Value     := aVal;
+    // El ValueText del record lo dejamos vacío para el batch normal
     AList.Add(item);
   end;
 
 begin
   sVistaName := cxgrdtvVista.Name;
 
-  // 1. Recorrer columnas para propiedades individuales
+  // 1. Recolección de propiedades de columnas (Para el Batch)
   for i := 0 to cxgrdtvVista.ColumnCount - 1 do
   begin
     oColumn := cxgrdtvVista.Columns[i];
     sColumnName := oColumn.DataBinding.FieldName;
     sPrefix := sVistaName + '_' + sColumnName + '_';
 
-    Add(sPrefix + 'Visible', TGenUtils.IfThen<String>(oColumn.Visible, 'True', 'False'));
-    Add(sPrefix + 'Index',   IntToStr(oColumn.Index));
-    Add(sPrefix + 'Width',   IntToStr(oColumn.Width));
-    Add(sPrefix + 'Caption', oColumn.Caption);
-
-    // Añadimos la ordenación de los datos (Ascendente/Descendente)
+    Add(sPrefix + 'Visible',  TGenUtils.IfThen<String>(oColumn.Visible, 'True', 'False'));
+    Add(sPrefix + 'Index',    IntToStr(oColumn.Index));
+    Add(sPrefix + 'Width',    IntToStr(oColumn.Width));
+    Add(sPrefix + 'Caption',  oColumn.Caption);
     Add(sPrefix + 'SortOrder', IntToStr(Ord(oColumn.SortOrder)));
     Add(sPrefix + 'SortIndex', IntToStr(oColumn.SortIndex));
   end;
+  if cxgrdtvVista.DataController.Filter.IsEmpty then
+  begin
+    // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro previo en la BBDD
+    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_Filtro', '', '');
+  end
+  else
+  begin
+    // 2. Grabación inmediata del Filtro (Caso especial: Texto Largo)
+    LStream := TMemoryStream.Create;
+    BStream := TStringStream.Create('');
+    try
+      cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+      LStream.Position := 0;
+      TNetEncoding.Base64.Encode(LStream, BStream);
 
-  // 2. Guardar el Filtro global de la Vista (Binario a Base64)
-  LStream := TMemoryStream.Create;
-  BStream := TStringStream.Create('');
-  try
-    cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
-    LStream.Position := 0;
-
-    TNetEncoding.Base64.Encode(LStream, BStream);
-
-    // Usamos tu procedimiento anidado para guardarlo limpio
-    Add(sVistaName + '_Filtro', BStream.DataString);
-  finally
-    LStream.Free;
-    BStream.Free;
+      // Grabamos directamente usando tu función del DataModule
+      // psValue lo pasamos vacío (''), el Base64 va a psValueText
+      odmPerfiles.GrabarPerfil(sProfile,
+                               sName,
+                               sVistaName + '_Filtro',
+                               '',
+                               BStream.DataString);
+    finally
+      LStream.Free;
+      BStream.Free;
+    end;
   end;
 end;
 
@@ -286,132 +296,57 @@ begin
   end;
 end;
 
-procedure PonerAnchosTitulos( cxgrdtvVista: TcxGridDBTableView;
-                              sDes: string;
-                              var oPerfilDic: TProfileDicc);
+procedure PonerAnchosTitulos(cxgrdtvVista: TcxGridDBTableView;
+                             sDes: string;
+                             var oPerfilDic: TProfileDicc);
 var
   oColumn: TcxGridDBColumn;
   i: Integer;
-  sName, sColumnName, sSubKey: string;
-  IsCurrencyField, IsBooleanField,
-  IsDateField, IsPercentField, IsIntegerField: Boolean;
+  sName, sColumnName, sSubKey, sFiltroBase64: string;
   LStream: TMemoryStream;
   BStream: TStringStream;
-  sFiltroBase64: string;
 begin
   cxgrdtvVista.BeginUpdate;
   try
+    sName := cxgrdtvVista.Name;
+
+    // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
     for i := 0 to cxgrdtvVista.ColumnCount - 1 do
     begin
       oColumn := cxgrdtvVista.Columns[i];
       sColumnName := oColumn.DataBinding.FieldName;
-      sName := cxgrdtvVista.Name;
       sSubKey := sName + '_' + sColumnName;
 
-      // 1. Visibilidad, Caption y Ancho
       oColumn.Visible := SameText(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'), 'True');
       oColumn.Caption := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', oColumn.Caption);
-      oColumn.Width := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', IntToStr(oColumn.Width)), oColumn.Width);
+      oColumn.Width   := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', ''), oColumn.Width);
 
-      // --- NUEVO: Restaurar ordenación de datos (Sorting) ---
+      // Restaurar Ordenación (Sorting)
       oColumn.SortOrder := TcxDataSortOrder(StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
-      if oColumn.SortOrder <> soNone then
+      if Ord(oColumn.SortOrder) <> 0 then
         oColumn.SortIndex := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
-      // ------------------------------------------------------
-
-      // 2. Formato: SOLO adivinamos si la columna no trae propiedades del DFM
-      if oColumn.PropertiesClassName = '' then
-      begin
-        IsCurrencyField := (StartsText('EUR', sColumnName) or
-                            StartsText('TOTAL', sColumnName) or
-                            StartsText('PRECIO', sColumnName));
-        if (IsCurrencyField) then
-          oColumn.PropertiesClassName := 'TcxCurrencyEditProperties';
-
-        IsBooleanField := (StartsText('ES', sColumnName) or
-                           StartsText('ACTIVO', sColumnName));
-        if (IsBooleanField) then
-        begin
-          oColumn.PropertiesClassName := 'TcxCheckBoxProperties';
-          TcxCheckBoxProperties(oColumn.Properties).ValueChecked := 'S';
-          TcxCheckBoxProperties(oColumn.Properties).ValueUnChecked := 'N';
-        end;
-
-        IsDateField := StartsText('FECHA', sColumnName);
-        if (IsDateField) then
-        begin
-          oColumn.PropertiesClassName := 'TcxDateEditProperties';
-          TcxDateEditProperties(oColumn.Properties).Kind := ckDate;
-        end;
-
-        IsPercentField := StartsText('PORCEN', sColumnName);
-        if (IsPercentField) then
-        begin
-          oColumn.PropertiesClassName := 'TcxSpinEditProperties';
-          with TcxSpinEditProperties(oColumn.Properties) do
-          begin
-            AssignedValues.MinValue := True;
-            DisplayFormat := '0.00 %';
-            EditFormat := '0.00 %';
-            Increment := 0.10;
-            LargeIncrement := 1.0;
-            MaxValue := 100.0;
-            MinValue := 0;
-            ValueType := vtFloat;
-          end;
-        end;
-
-        IsIntegerField := ((StartsText('ORDEN', sColumnName)) or
-                           (StartsText('N_', sColumnName)));
-        if (IsIntegerField) then
-        begin
-          oColumn.PropertiesClassName := 'TcxSpinEditProperties';
-          with TcxSpinEditProperties(oColumn.Properties) do
-          begin
-            AssignedValues.MinValue := True;
-            DisplayFormat := '0';
-            EditFormat := '0';
-            Increment := 1;
-            LargeIncrement := 1;
-            MinValue := 0;
-            ValueType := vtInt;
-          end;
-        end;
-      end; // Fin del IF de formatos
     end;
 
-   // 3. Aplicar el orden (Index) en un bucle SEPARADO para evitar conflictos
+    // 2. Restaurar la posición física de las columnas (Index)
     for i := 0 to cxgrdtvVista.ColumnCount - 1 do
     begin
       oColumn := cxgrdtvVista.Columns[i];
-      sColumnName := oColumn.DataBinding.FieldName;
-      sName := cxgrdtvVista.Name;
-      sSubKey := sName + '_' + sColumnName;
-
-      oColumn.Index := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic,
-                                                           sSubKey,
-                                                           'Index',
-                                                           IntToStr(oColumn.Index)),
-                                   oColumn.Index);
+      sSubKey := sName + '_' + oColumn.DataBinding.FieldName;
+      oColumn.Index := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', ''), oColumn.Index);
     end;
-    // 4. RESTAURAR EL FILTRO DE LA VISTA COMPLETA (Base64 -> Binario)
-    sFiltroBase64 :=
-       GetPerfilSubKeyValueDef(oPerfilDic,
-                               sSubKey,
-                               cxgrdtvVista.Name + '_Filtro', '');
-    // Si hay un filtro guardado (y no está vacío)
+
+    // 3. Restaurar el Filtro (Desde VALUE_TEXT_PERFILES)
+    // Se requiere una función que lea el ValueText del diccionario
+    sFiltroBase64 := GetPerfilValueTextDef(oPerfilDic, sName + '_Filtro', '');
+
     if sFiltroBase64 <> '' then
     begin
       BStream := TStringStream.Create(sFiltroBase64);
       LStream := TMemoryStream.Create;
       try
         BStream.Position := 0;
-
-        // Decodificamos el texto Base64 de vuelta a formato binario
-        TNetEncoding.Base64.Decode(BStream, LStream);
+        System.NetEncoding.TNetEncoding.Base64.Decode(BStream, LStream);
         LStream.Position := 0;
-
-        // Inyectamos el filtro en el grid
         cxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
       finally
         BStream.Free;

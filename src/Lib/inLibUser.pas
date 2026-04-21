@@ -32,9 +32,7 @@ type
     sValue: string;
     sValueText: WideString;
   end;
-
-  TProfileUserDicc = TDictionary<TDictUserKey,
-    TDictValue>;
+  TProfileUserDicc = TDictionary<TDictUserKey, TDictValue>;
   TProfileDicc = TDictionary<string, TDictValue>;
 function GetPerfilValue(var oPerfilDic: TProfileDicc; sSubKey: string): string;
 function GetPerfilValueText(var oPerfilDic: TProfileDicc; sSubKey: string):
