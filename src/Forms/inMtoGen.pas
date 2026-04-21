@@ -117,6 +117,11 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
+    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+                                        const sName: string;
+                                        const sProfile: string;
+                                        AList: TPerfilList);
+
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -149,7 +154,7 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     UniDataGen;
+     UniDataGen, uGenericIfThen;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -333,7 +338,43 @@ begin
   end;
 end;
 
-procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
+procedure TfrmMtoGen.CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
+                                        const sName: string;
+                                        const sProfile: string;
+                                        AList: TPerfilList);
+var
+  i: Integer;
+  oColumn: TcxGridDBColumn;
+  sVistaName, sColumnName, sPrefix: string;
+
+  procedure Add(const aSub, aVal: string);
+  var item: TPerfilItem;
+  begin
+    item.UserGroup := sProfile;
+    item.KeyPerfil := sName;
+    item.SubKey    := aSub;
+    item.Value     := aVal;
+    AList.Add(item);
+  end;
+
+begin
+  sVistaName := cxgrdtvVista.Name;
+  for i := 0 to cxgrdtvVista.ColumnCount - 1 do
+  begin
+    oColumn := cxgrdtvVista.Columns[i];
+    sColumnName := oColumn.DataBinding.FieldName;
+    sPrefix := sVistaName + '_' + sColumnName + '_';
+
+    Add(sPrefix + 'Visible', TGenUtils.IfThen<String>(oColumn.Visible,
+                                                      'True',
+                                                      'False'));
+    Add(sPrefix + 'Index',   IntToStr(oColumn.Index));
+    Add(sPrefix + 'Width',   IntToStr(oColumn.Width));
+    Add(sPrefix + 'Caption', oColumn.Caption);
+  end;
+end;
+
+(*procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
 var
   formulario: TfrmModalGenImpSave;
   bGuardar, IsSavingGrid: Boolean;
@@ -379,6 +420,89 @@ begin
           GetSettingsColumnProfile(cxGrid, Self.Name, Self.Owner, sPermisos);
         end;
     end;
+  end;
+end;*)
+
+procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
+var
+  formulario: TfrmModalGenImpSave;
+  bGuardar: Boolean;
+  sPermisos: string;
+  i: Integer;
+  cxGrid: TcxGridDBTableView;
+  oList: TPerfilList;
+  item: TPerfilItem;
+begin
+  inherited;
+  bGuardar := False;
+
+  formulario := TfrmModalGenImpSave.Create(Application);
+  try
+    formulario.edtDescripcion.Enabled := False;
+    formulario.edtNombreOrigen.Text   := Self.Name;
+    formulario.edtDescripcion.Text    := 'Grabar Grids';
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+    begin
+      bGuardar  := True;
+      sPermisos := formulario.cbbPermisos.Text;
+    end;
+  finally
+    FreeAndNil(formulario);
+  end;
+
+  if not bGuardar then Exit;
+
+  Screen.Cursor := crHourGlass;
+  oList := TPerfilList.Create;
+  try
+    // 1. Perfiles comunes
+    item.UserGroup := sPermisos;
+    item.KeyPerfil := Self.Name;
+    for var par in [
+      TPair<string,string>.Create('oRenameComponents', 'False'),
+      TPair<string,string>.Create('oCreateItems',      'False'),
+      TPair<string,string>.Create('oBusqGlobal',       'Grid'),
+      TPair<string,string>.Create('oApplyWidth',       'True'),
+      TPair<string,string>.Create('oMostrarPerfil',    'False'),
+      TPair<string,string>.Create('oGetSQLFromDB',     'False')
+    ] do
+    begin
+      item.SubKey := par.Key;
+      item.Value  := par.Value;
+      oList.Add(item);
+    end;
+
+    // 2. Ajustes de cada grid
+    for i := 0 to Self.ComponentCount - 1 do
+      if Self.Components[i].ClassNameIs('TcxGridDBTableView') then
+      begin
+        cxGrid := TcxGridDBTableView(Self.Components[i]);
+
+        // reset sigue siendo su propia transacción (borra primero)
+        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name, Self.Name, sPermisos);
+
+        item.SubKey := cxGrid.Name + '__oApplyWidth';
+        item.Value  := 'True';
+        oList.Add(item);
+
+        CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
+      end;
+
+    // 3. Un solo viaje (o varios pero en lotes de 500)
+    oConn.StartTransaction;
+    try
+      odmPerfiles.GrabarPerfilesBatch(oList);
+      // aquí puedes seguir llamando a GrabarPerfilDatam / CargarCaptions
+      // si antes los refactorizas también para que acepten la lista
+      oConn.Commit;
+    except
+      oConn.Commit;
+      raise;
+    end;
+  finally
+    oList.Free;
+    Screen.Cursor := crDefault;
   end;
 end;
 

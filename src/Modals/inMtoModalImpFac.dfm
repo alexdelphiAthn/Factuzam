@@ -4,17 +4,17 @@ inherited frmPrintFac: TfrmPrintFac
   ClientWidth = 416
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 434
-  ExplicitHeight = 312
+  ExplicitWidth = 432
+  ExplicitHeight = 304
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 262
     Width = 154
     Height = 265
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 262
+    ExplicitLeft = 260
     ExplicitWidth = 154
-    ExplicitHeight = 265
+    ExplicitHeight = 257
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,9 +28,9 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 247
+      Top = 239
       Width = 152
-      ExplicitTop = 239
+      ExplicitTop = 231
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -125,8 +125,8 @@ inherited frmPrintFac: TfrmPrintFac
     end
   end
   inherited Localizer1: TcxLocalizer
-    Left = 120
-    Top = 200
+    Left = 128
+    Top = 144
   end
   inherited frxrprt1: TfrxReport
     ReportOptions.LastChange = 45266.651521481500000000
@@ -533,8 +533,8 @@ inherited frmPrintFac: TfrmPrintFac
   end
   inherited frxlsxprtExcel: TfrxXLSXExport
     CreationTime = 44864.742612013880000000
-    Left = 400
-    Top = 192
+    Left = 304
+    Top = 160
   end
   inherited unqryPerfiles: TUniQuery
     Left = 8
@@ -545,8 +545,8 @@ inherited frmPrintFac: TfrmPrintFac
     Top = 200
   end
   inherited frxdsgnr1: TfrxDesigner
-    Left = 184
-    Top = 208
+    Left = 8
+    Top = 128
   end
   inherited frxReportOrigen: TfrxReport
     EngineOptions.DoublePass = True
@@ -993,54 +993,6 @@ inherited frmPrintFac: TfrmPrintFac
     Variables = <>
     Style = <>
     Watermarks = <>
-    inherited Data: TfrxDataPage
-      object FacturasTOTAL_RER_FACTURA: TfrxMemoView
-        IndexTag = 1
-        AllowVectorExport = True
-        Left = 398.409710000000000000
-        Top = 504.031540000000000000
-        Width = 64.252010000000000000
-        Height = 18.897650000000000000
-        OnBeforePrint = 'FacturasTOTAL_RER_FACTURAOnBeforePrint'
-        DataField = 'TOTAL_RER_FACTURA'
-        DisplayFormat.DecimalSeparator = ','
-        DisplayFormat.FormatStr = '%2.3m'
-        DisplayFormat.Kind = fkNumeric
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -13
-        Font.Name = 'Arial'
-        Font.Style = []
-        Frame.Typ = []
-        HAlign = haRight
-        Memo.UTF8W = (
-          '[Facturas."TOTAL_RER_FACTURA"]')
-        ParentFont = False
-      end
-      object FacturasTOTAL_RES_FACTURA: TfrxMemoView
-        IndexTag = 1
-        AllowVectorExport = True
-        Left = 398.409710000000000000
-        Top = 530.488250000000000000
-        Width = 64.252010000000000000
-        Height = 18.897650000000000000
-        OnBeforePrint = 'FacturasTOTAL_RES_FACTURAOnBeforePrint'
-        DataField = 'TOTAL_RES_FACTURA'
-        DisplayFormat.DecimalSeparator = ','
-        DisplayFormat.FormatStr = '%2.3m'
-        DisplayFormat.Kind = fkNumeric
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -13
-        Font.Name = 'Arial'
-        Font.Style = []
-        Frame.Typ = []
-        HAlign = haRight
-        Memo.UTF8W = (
-          '[Facturas."TOTAL_RES_FACTURA"]')
-        ParentFont = False
-      end
-    end
     inherited Page1: TfrxReportPage
       LeftMargin = 10.000000000000000000
       object DetailData1: TfrxDetailData
@@ -1051,7 +1003,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 525.354670000000000000
+        Top = 480.000000000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'DetailData1OnBeforePrint'
         DataSet = dmFacturas.fxdstPrintLinFac
@@ -1289,7 +1241,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 400.630180000000000000
-        Top = 18.897650000000000000
+        Top = 16.000000000000000000
         Width = 737.008350000000000000
         object Memo7: TfrxMemoView
           AllowVectorExport = True
@@ -1829,7 +1781,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 480.000310000000000000
+        Top = 436.000000000000000000
         Visible = False
         Width = 737.008350000000000000
         DataSet = dmFacturas.fxdsPrintFac
@@ -1863,7 +1815,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 249.448980000000000000
-        Top = 612.283860000000000000
+        Top = 528.000000000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'PageFooter1OnBeforePrint'
         object CajaIVA: TfrxMemoView
@@ -2645,5 +2597,9 @@ inherited frmPrintFac: TfrmPrintFac
         end
       end
     end
+  end
+  inherited frLocalizationController1: TfrLocalizationController
+    Left = 72
+    Top = 136
   end
 end
