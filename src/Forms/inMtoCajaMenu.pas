@@ -108,12 +108,15 @@ type
     procedure lblEmpresaDblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure JvMonthCalendar1Click(Sender: TObject);
+    procedure lblBuscarModificarClick(Sender: TObject);
+    procedure lblF10Click(Sender: TObject);
   private
     VentasList: TVentasList;
     FMesesCargados: TList<Integer>;
 //    FLastHintDate: TDateTime;
 //    FHintWindow: THintWindow;
     procedure CargarVentasPeriodoVisible(Month, Year: Cardinal);
+    procedure AbrirBuscarModificar;
   private
     // Colores originales para restaurar
     FOriginalF5Color: TColor;
@@ -152,52 +155,44 @@ type
 //    property ConfigBD: TConfigBD read FConfigBD;
     property FechaCaja:TDateTime read FFechaCaja;
   end;
+
 var
   frmMtoMenuCaja: TfrmMtoMenuCaja;
-implementation
+
+  implementation
+
 uses
-  inLibGlobalVar, inLibCajaParam, DateUtils;
+  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe;
+
 {$R *.dfm}
+
 procedure ForceReferenceToClass(C: TClass); begin end;
-// Asigna este procedimiento al evento OnCloseQuery del formulario del Menú
+
 procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   i: Integer;
   F: TForm;
 begin
   CanClose := True;
-  // Recorremos los formularios de la pantalla.
-  // IMPORTANTE: Iteramos hacia atrás (downto 0) porque vamos a ir destruyendo
-  // formularios y eso altera el índice de Screen.Forms.
   for i := Screen.FormCount - 1 downto 0 do
   begin
     F := Screen.Forms[i];
-    // Verificamos si el formulario es del tipo Operación de Caja
     if F is TfrmMtoOpeCaja then
     begin
-      // Llamamos a la función que creamos antes
       if not TfrmMtoOpeCaja(F).IntentarCerrar then
       begin
-        // Si el usuario dijo "NO" en alguna operación,
-        // cancelamos el cierre del menú principal.
         CanClose := False;
-        // Opcional: Salimos del bucle si queremos parar a la primera negativa
         Break;
       end;
     end;
   end;
 end;
+
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
   FormatSettings: TFormatSettings;
 begin
-
-  //CargarConfiguracionDesdeINI;
-  //UniConnection1.Connect;
-//  FLastHintDate := 0;
-//  FHintWindow := THintWindow.Create(Self);
   Self.Position  := poScreenCenter;
-//  Application.OnShowHint := DoShowHint;
   Application.ShowHint := True;
   Application.HintPause := 500;    // Pausa antes de mostrar
   Application.HintHidePause := 5000; // Tiempo visible
@@ -224,9 +219,6 @@ begin
                                    [FEmpresa, FAlmacen, FCaja]);
     end;
   end;
-//  lblEmpresa.Caption := 'Empresa ' + FEmpresa + ' - '
-//                         + 'Almacén ' + FAlmacen + ' - ' + 'Caja ' +
-//                         FCaja;
   CargarVentasPeriodoVisible( MonthOf(Now),
                               YearOf(Now));
   FOriginalF5Color := lblF5.Style.TextColor;
@@ -276,6 +268,7 @@ begin
   case Key of
     VK_F5: lblVentasClick(Sender);
     VK_ESCAPE : lblESCClick(Sender);
+    VK_F10:     AbrirBuscarModificar;
   end;
 end;
 
@@ -284,6 +277,27 @@ begin
   with cxClock1 do
   begin
     Time := Now;              // Hora actual
+  end;
+end;
+
+procedure TfrmMtoMenuCaja.AbrirBuscarModificar;
+var
+  frm: TfrmConsultaOpe;
+begin
+  // Validamos que el contexto de caja esté bien asignado
+  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+  begin
+    ShowMessage('No hay empresa/almacén/caja asignados. ' +
+                'Selecciona una caja antes de buscar operaciones.');
+    Exit;
+  end;
+  frm := TfrmConsultaOpe.Create(Application);
+  try
+    frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
+    frm.Show;      // No modal, igual que las operaciones de caja.
+  except
+    frm.Free;
+    raise;
   end;
 end;
 
@@ -457,21 +471,21 @@ begin
   FKeyLabel.Style.TextColor := OriginalFKeyColor;
   DescLabel.Style.TextColor := OriginalDescColor;
 end;
+
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 var
   frmMtoOpeCaja: TfrmMtoOpeCaja;
 begin
-  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application); // Ojo: Owner Application para que no muera al cerrar el menú si fuera necesario
+  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
   try
-    // INICIALIZACIÓN IMPORTANTE
-    frmMtoOpeCaja.Tag := 1; // Esta es la operación 1
-    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)', [Self.FCaja]);
+    frmMtoOpeCaja.Tag := 1;
+    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)',
+                                    [Self.FCaja]);
     frmMtoOpeCaja.PrepararValores(Self.FEmpresa,
                                   Self.FAlmacen,
                                   Self.FCaja,
                                   Self.FFechaCaja);
     frmMtoOpeCaja.Show;
-    // No usamos ShowModal para permitir que existan varias ventanas si fuera necesario interactuar
   except
     frmMtoOpeCaja.Free;
   end;
@@ -479,28 +493,45 @@ end;
 
 procedure TfrmMtoMenuCaja.lblVentasMouseEnter(Sender: TObject);
 begin
-  ChangeMenuItemColors(lblF5, lblVentas, clBlue); // Cambiar a azul al pasar el mouse
+  ChangeMenuItemColors(lblF5, lblVentas, clBlue);
 end;
+
 procedure TfrmMtoMenuCaja.lblVentasMouseLeave(Sender: TObject);
 begin
   RestoreMenuItemColors(lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor);
 end;
+
 procedure TfrmMtoMenuCaja.lblF5MouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF5, lblVentas, clBlue);
 end;
+
 procedure TfrmMtoMenuCaja.lblF5MouseLeave(Sender: TObject);
 begin
   RestoreMenuItemColors(lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor);
 end;
 // Eventos para F10 - Buscar/Modificar
+
+procedure TfrmMtoMenuCaja.lblBuscarModificarClick(Sender: TObject);
+begin
+  inherited;
+  AbrirBuscarModificar;
+end;
+
 procedure TfrmMtoMenuCaja.lblBuscarModificarMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF10, lblBuscarModificar, clWebOrange);
 end;
+
 procedure TfrmMtoMenuCaja.lblBuscarModificarMouseLeave(Sender: TObject);
 begin
   RestoreMenuItemColors(lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor);
+end;
+
+procedure TfrmMtoMenuCaja.lblF10Click(Sender: TObject);
+begin
+  inherited;
+  AbrirBuscarModificar;
 end;
 
 procedure TfrmMtoMenuCaja.lblF10MouseEnter(Sender: TObject);
@@ -540,8 +571,6 @@ procedure TfrmMtoMenuCaja.lblF6MouseLeave(Sender: TObject);
 begin
   RestoreMenuItemColors(lblF6, lblEntradaCambio, FOriginalF6Color, FOriginalEntradaCambioColor);
 end;
-
-// Eventos para F7 - Gastos por Caja
 
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);
 begin

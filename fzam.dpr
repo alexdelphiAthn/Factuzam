@@ -135,7 +135,9 @@ uses
   inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
   fzam.dxSettings in 'fzam.dxSettings.pas',
   inLibPathTokens in 'src\Lib\inLibPathTokens.pas',
-  uGenericIfThen in 'src\Lib\uGenericIfThen.pas';
+  uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
+  UniDataConsultaOpe in 'src\DataModules\UniDataConsultaOpe.pas' {dmConsultaOpe: TDataModule},
+  inMtoConsultaOpe in 'src\Forms\inMtoConsultaOpe.pas' {frmConsultaOpe};
 
 var
   frmLogon: TfrmLogon;
@@ -171,6 +173,5 @@ begin
     frmLogon.Free;
   end;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmMtoAppParam, frmMtoAppParam);
   Application.Run;
 end.

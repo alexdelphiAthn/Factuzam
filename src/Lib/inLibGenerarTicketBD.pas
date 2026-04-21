@@ -35,7 +35,6 @@ uses
                                  NombreImpresora:string='DEBUG');
 implementation
 
-
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;
               ALength: Integer;
@@ -64,7 +63,7 @@ var
   TotalEntregas,
   TotalDevoluciones,
   TotalDevueltos,
-  TotalPagadoCaja: Currency; // <--- NUEVA VARIABLE PARA EL EFECTIVO REAL
+  TotalPagadoCaja: Currency;
 begin
   if Trim(AOperacion) = '' then
     Exit;
@@ -116,12 +115,10 @@ begin
       Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn', Now));
       Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
       Ticket.SaltarLineas(1);
-
       TotalNuevos := 0;
       TotalEntregas := 0;
       TotalDevoluciones := 0;
       TotalDevueltos := 0;
-
       // =======================================================================
       // SECCIÓN 1: NUEVOS DEPÓSITOS
       // =======================================================================
@@ -151,7 +148,6 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-
       // =======================================================================
       // SECCIÓN 2: ENTREGAS A CUENTA
       // =======================================================================
@@ -163,7 +159,7 @@ begin
         '  AND CODIGO_ALMACEN_OPCAJA = :ALM ' +
         '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
         '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' + // <--- ¡CORREGIDO: AÑADIDO 'DE'!
+        '  AND TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
         '  AND IMPORTE_TOTAL_OPCAJA > 0';
       QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
       QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
@@ -189,7 +185,6 @@ begin
             Concepto := 'A cuenta para artículo pendiente'
           else if TipoOp = 'DE' then
             Concepto := 'A cuenta inicial';
-
           Ticket.EscribirLinea(Copy(Concepto, 1, 40));
           Ticket.Alinear(alDerecha);
           Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
