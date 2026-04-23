@@ -378,7 +378,8 @@ procedure TdmConsultaOpe.RefrescarPestanasHijas;
 var
   sEmp, sAlm, sCaja, sNumOp, sCli, sSerie, sNroFac: string;
 begin
-  if FCargando then Exit;
+  if FCargando then
+    Exit;
   if qryMaestro.IsEmpty then
   begin
     qryOperacion.Close;
@@ -422,7 +423,6 @@ begin
   qryMovimientos.ParamByName('PCAJA').AsString   := sCaja;
   qryMovimientos.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryMovimientos, 'Movimientos');
-
   // --- Cliente ---
   qryCliente.Close;
   if Trim(sCli) <> '' then
@@ -430,7 +430,6 @@ begin
     qryCliente.ParamByName('PCLI').AsString := sCli;
     AbrirSeguro(qryCliente, 'Clientes');
   end;
-
   // --- Depósitos ---
   qryDepositos.Close;
   qryDepositos.ParamByName('PEMP').AsString    := sEmp;
@@ -438,7 +437,6 @@ begin
   qryDepositos.ParamByName('PCAJA').AsString   := sCaja;
   qryDepositos.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryDepositos, 'Depósitos');
-
   // --- Factura (cabecera + líneas) ---
   qryFactura.Close;
   qryFacturaLin.Close;
@@ -447,7 +445,6 @@ begin
   qryFactura.ParamByName('PCAJA').AsString   := sCaja;
   qryFactura.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryFactura, 'Facturas');
-
   if (not qryFactura.IsEmpty) and (Trim(sSerie) <> '') and (Trim(sNroFac) <> '') then
   begin
     qryFacturaLin.ParamByName('PSERIE').AsString  := sSerie;
@@ -474,7 +471,6 @@ begin
     qryDepositos.Close;
     qryFactura.Close;
     qryFacturaLin.Close;
-
     qryMaestro.Close;
     qryMaestro.ParamByName('PFECHA').AsDate    := AFecha;
     qryMaestro.ParamByName('PEMP').AsString    := AEmp;
@@ -485,7 +481,6 @@ begin
   finally
     FCargando := False;
   end;
-
   // Una vez cargado el maestro, refrescamos las pestañas hijas con la
   // primera fila (si hay).
   RefrescarPestanasHijas;
