@@ -252,12 +252,25 @@ function TfrmMtoCajaFaseCobro.ValidarYConfirmar: Boolean;
 var
   Res: TResultadoValidacion;
 begin
+  // 1. Si hay un editor inline activo en el grid, forzar que vuelque su valor
+  if dbtvFormasPago.Controller.EditingController.IsEditing then
+    dbtvFormasPago.Controller.EditingController.HideEdit(True); // True = Post
+
+  // 2. Si el dataset está en edición o inserción, postear
+  if FMemTablePagos.State in [dsEdit, dsInsert] then
+    FMemTablePagos.Post;
+
+  // 3. Asegurar que los totales reflejan el último cambio
+  FDatosCobro.Recalcular;
+
+  // 4. Ahora sí, validar con datos consistentes
   Res := FDatosCobro.ValidarParaCobro;
   if not Res.Valido then
   begin
     MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
     Result := False;
-  end else
+  end
+  else
     Result := True;
 end;
 
