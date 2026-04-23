@@ -8,8 +8,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
   StyleElements = [seFont, seClient, seBorder]
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitLeft = 3
-  ExplicitTop = -31
   ExplicitWidth = 1216
   ExplicitHeight = 759
   TextHeight = 18
@@ -91,7 +89,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         OptionsData.Inserting = False
         OptionsSelection.CellSelect = False
         OptionsView.NoDataToDisplayInfoText = 'No hay operaciones para esta fecha'
-        OptionsView.ColumnAutoWidth = True
         OptionsView.GroupByBox = False
         object colFechaOp: TcxGridDBColumn
           Caption = 'Fecha/Hora'
@@ -129,7 +126,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         object colRazonSocial: TcxGridDBColumn
           Caption = 'Raz'#243'n social'
           DataBinding.FieldName = 'RAZON_SOCIAL_CLI'
-          Width = 182
+          Width = 226
         end
         object colImporte: TcxGridDBColumn
           Caption = 'Importe'
@@ -163,6 +160,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     TabOrder = 2
     Properties.ActivePage = tsPagos
     Properties.CustomButtons.Buttons = <>
+    ExplicitWidth = 1198
+    ExplicitHeight = 352
     ClientRectBottom = 358
     ClientRectLeft = 2
     ClientRectRight = 1198
@@ -181,7 +180,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
           object colOpeFecha: TcxGridDBColumn
             Caption = 'Fecha/Hora'
@@ -242,6 +240,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsPagos: TcxTabSheet
       Caption = 'Pagos'
       ImageIndex = 1
+      ExplicitWidth = 1194
+      ExplicitHeight = 322
       object cxGridPagos: TcxGrid
         Left = 0
         Top = 0
@@ -249,6 +249,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Height = 330
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1194
+        ExplicitHeight = 322
         object cxViewPagos: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -259,7 +261,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.Footer = True
           OptionsView.GroupByBox = False
           object colPagLinea: TcxGridDBColumn
@@ -282,14 +283,14 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             DataBinding.FieldName = 'IMPORTE_ENTREGADO_PAGO'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
-            Width = 112
+            Width = 146
           end
           object colPagCambio: TcxGridDBColumn
             Caption = 'Cambio'
             DataBinding.FieldName = 'IMPORTE_CAMBIO_PAGO'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
-            Width = 77
+            Width = 96
           end
           object colPagNeto: TcxGridDBColumn
             Caption = 'Neto'
@@ -325,6 +326,73 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             DataBinding.FieldName = 'OBSERVACIONES_PAGO'
             Width = 131
           end
+          object colValRol: TcxGridDBColumn
+            Caption = 'Rol vale'
+            DataBinding.FieldName = 'ROL_VL'
+            Width = 97
+          end
+          object colValCodigo: TcxGridDBColumn
+            Caption = 'C'#243'd. vale'
+            DataBinding.FieldName = 'CODIGO_VL'
+            Width = 168
+          end
+          object colValPin: TcxGridDBColumn
+            Caption = 'PIN'
+            DataBinding.FieldName = 'PIN_SEGURIDAD_VL'
+            Width = 70
+          end
+          object colValEstado: TcxGridDBColumn
+            Caption = 'Estado vale'
+            DataBinding.FieldName = 'ESTADO_VL'
+            Width = 167
+          end
+          object colValNominal: TcxGridDBColumn
+            Caption = 'Nominal'
+            DataBinding.FieldName = 'IMPORTE_NOMINAL_VL'
+            PropertiesClassName = 'TcxCurrencyEditProperties'
+            Properties.DisplayFormat = '#,##0.00 '#8364
+            Width = 100
+          end
+          object colValRedimido: TcxGridDBColumn
+            Caption = 'Redimido'
+            DataBinding.FieldName = 'IMPORTE_REDIMIDO_VL'
+            PropertiesClassName = 'TcxCurrencyEditProperties'
+            Properties.DisplayFormat = '#,##0.00 '#8364
+            Width = 100
+          end
+          object colValEmision: TcxGridDBColumn
+            Caption = 'F. Emisi'#243'n'
+            DataBinding.FieldName = 'FECHA_EMISION_VL'
+            PropertiesClassName = 'TcxDateEditProperties'
+            Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+            Properties.Kind = ckDateTime
+            Width = 120
+          end
+          object colValCaducidad: TcxGridDBColumn
+            Caption = 'F. Caducidad'
+            DataBinding.FieldName = 'FECHA_CADUCIDAD_VL'
+            PropertiesClassName = 'TcxDateEditProperties'
+            Properties.DisplayFormat = 'dd/mm/yyyy'
+            Width = 149
+          end
+          object colValRedencion: TcxGridDBColumn
+            Caption = 'F. Redenci'#243'n'
+            DataBinding.FieldName = 'FECHA_REDENCION_VL'
+            PropertiesClassName = 'TcxDateEditProperties'
+            Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+            Properties.Kind = ckDateTime
+            Width = 120
+          end
+          object colValPadre: TcxGridDBColumn
+            Caption = 'Vale padre'
+            DataBinding.FieldName = 'CODIGO_PADRE_VL'
+            Width = 140
+          end
+          object colValObs: TcxGridDBColumn
+            Caption = 'Obs. vale'
+            DataBinding.FieldName = 'OBSERVACIONES_VL'
+            Width = 180
+          end
         end
         object cxLevelPagos: TcxGridLevel
           GridView = cxViewPagos
@@ -345,7 +413,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
           object colMovNum: TcxGridDBColumn
             Caption = 'N'#186' Mov'
@@ -433,7 +500,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
           object colCliCodigo: TcxGridDBColumn
             Caption = 'C'#243'digo'
@@ -507,7 +573,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
           object colDepRol: TcxGridDBColumn
             Caption = 'Rol'
@@ -590,7 +655,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitWidth = 1194
         object cxGridFacCab: TcxGrid
           Left = 0
           Top = 0
@@ -598,12 +662,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           Height = 70
           Align = alClient
           TabOrder = 0
-          ExplicitWidth = 1194
           object cxViewFacCab: TcxGridDBTableView
             OptionsData.Deleting = False
             OptionsData.Editing = False
             OptionsData.Inserting = False
-            OptionsView.ColumnAutoWidth = True
             OptionsView.GroupByBox = False
             object colFacSerie: TcxGridDBColumn
               Caption = 'Serie'
@@ -671,13 +733,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Height = 260
         Align = alClient
         TabOrder = 1
-        ExplicitWidth = 1194
-        ExplicitHeight = 252
         object cxViewFacLin: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
-          OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
           object colFlLinea: TcxGridDBColumn
             Caption = 'L'#237'n'

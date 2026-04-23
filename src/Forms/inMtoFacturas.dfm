@@ -39,6 +39,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       Margins.Right = 5
       Margins.Bottom = 5
       TabOrder = 1
+      Properties.ActivePage = tsLista
       ExplicitWidth = 1087
       ExplicitHeight = 804
       ClientRectBottom = 802
@@ -48,8 +49,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1083
         ExplicitHeight = 773
         inherited cxGrdPrincipal: TcxGrid
@@ -665,8 +664,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1083
         ExplicitHeight = 773
         object pnl1: TPanel
@@ -693,7 +690,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsVerifactu
+            Properties.ActivePage = tsRegistro
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 424
             ClientRectLeft = 2
@@ -706,10 +703,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -1896,10 +1889,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -2030,10 +2019,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrlbx1: TScrollBox
                 Left = 0
                 Top = 0
@@ -2318,10 +2303,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
@@ -2729,10 +2710,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -3433,7 +3410,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3443,9 +3419,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           Width = 1083
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1083
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1083
@@ -3473,9 +3446,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
-        end
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 338
