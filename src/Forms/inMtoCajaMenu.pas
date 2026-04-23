@@ -193,10 +193,13 @@ var
   FormatSettings: TFormatSettings;
 begin
   Self.Position  := poScreenCenter;
+  JvMonthCalendar1.Date := Date;
   Application.ShowHint := True;
-  Application.HintPause := 500;    // Pausa antes de mostrar
-  Application.HintHidePause := 5000; // Tiempo visible
+  Application.HintPause := 500;
+  Application.HintHidePause := 5000;
   JvMonthCalendar1.ShowHint := True;
+  JvMonthCalendar1.ParentShowHint := False;
+  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
   JvMonthCalendar1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
@@ -338,19 +341,22 @@ var
   VentaDia: TVentasDia;
   IdMes: Integer;
 begin
+  // Sin contexto de caja no tiene sentido consultar
+  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+    Exit;
+
   if not Assigned(VentasList) then
     VentasList := TVentasList.Create;
   if not Assigned(FMesesCargados) then
     FMesesCargados := TList<Integer>.Create;
-  // Creamos un código numérico para el mes (Ej: Año 2026, Mes 1 = 202601)
+
+  // Código numérico del mes (Año 2026, Mes 1 = 202601)
+  // El contexto de caja no se incluye aquí porque RecargarCalendario
+  // limpia la lista al cambiar de caja.
   IdMes := (Year * 100) + Month;
 
-  // Si ya hemos consultado este mes a la BD en esta sesión, salimos sin hacer nada.
-  // ¡Esto evita saturar MySQL cuando el calendario nos pide 3 meses de golpe!
   if FMesesCargados.Contains(IdMes) then
     Exit;
-
-  // ATENCIÓN: Ya NO hacemos VentasList.Clear; para no borrar los otros meses.
 
   PrimerDia := EncodeDate(Year, Month, 1);
   UltimoDia := IncMonth(PrimerDia, 1);
@@ -360,36 +366,45 @@ begin
     Query.Connection := inLibGlobalVar.oConn;
 
     Query.SQL.Text :=
-      ' SELECT DATE(FECHA_FACTURA) AS FECHA, ' +
-      '        COUNT(*) AS TOTAL_VENTAS, '+
-      '        0 AS TOTAL_COBRADO ' +
-      '    FROM fza_facturas ' +
-      '   WHERE FECHA_FACTURA >= :fecha_inicio ' +
-      '     AND FECHA_FACTURA < :fecha_fin ' +
-      'GROUP BY DATE(FECHA_FACTURA) ' +
-      'ORDER BY DATE(FECHA_FACTURA) ';
+      ' SELECT FECHA_OP_DIA                  AS FECHA,          ' +
+      '        COUNT(*)                      AS TOTAL_VENTAS,   ' +
+      '        COALESCE(SUM(CASE                                ' +
+      '                       WHEN TIPO_OPERACION_OPCAJA = ''VE'' ' +
+      '                       THEN IMPORTE_TOTAL_OPCAJA         ' +
+      '                       ELSE 0                            ' +
+      '                     END), 0)         AS TOTAL_COBRADO   ' +
+      '   FROM fza_caja_operaciones                             ' +
+      '  WHERE FECHA_OP_DIA           >= :fecha_inicio          ' +
+      '    AND FECHA_OP_DIA           <  :fecha_fin             ' +
+      '    AND CODIGO_EMPRESA_OPCAJA  =  :empresa               ' +
+      '    AND CODIGO_ALMACEN_OPCAJA  =  :almacen               ' +
+      '    AND CODIGO_CAJA_OPCAJA     =  :caja                  ' +
+      '  GROUP BY FECHA_OP_DIA                                  ' +
+      '  ORDER BY FECHA_OP_DIA                                  ';
 
-    Query.ParamByName('fecha_inicio').AsDate := PrimerDia;
-    Query.ParamByName('fecha_fin').AsDate := UltimoDia;
+    Query.ParamByName('fecha_inicio').AsDate   := PrimerDia;
+    Query.ParamByName('fecha_fin').AsDate      := UltimoDia;
+    Query.ParamByName('empresa').AsString      := FEmpresa;
+    Query.ParamByName('almacen').AsString      := FAlmacen;
+    Query.ParamByName('caja').AsString         := FCaja;
 
     Query.Open;
-
-    while not Query.Eof do
-    begin
-      VentaDia := TVentasDia.Create(
-        Query.FieldByName('FECHA').AsDateTime,
-        Query.FieldByName('TOTAL_VENTAS').AsInteger,
-        Query.FieldByName('TOTAL_COBRADO').AsCurrency
-      );
-      // Simplemente añadimos los días a la lista general
-      VentasList.Add(VentaDia);
-      Query.Next;
+    try
+      while not Query.Eof do
+      begin
+        VentaDia := TVentasDia.Create(
+          Query.FieldByName('FECHA').AsDateTime,
+          Query.FieldByName('TOTAL_VENTAS').AsInteger,
+          Query.FieldByName('TOTAL_COBRADO').AsCurrency
+        );
+        VentasList.Add(VentaDia);
+        Query.Next;
+      end;
+    finally
+      Query.Close;
     end;
 
-    // Una vez terminada la consulta, registramos que este mes ya está en memoria
     FMesesCargados.Add(IdMes);
-
-    Query.Close;
   finally
     Query.Free;
   end;
@@ -444,7 +459,7 @@ begin
     if Assigned(VentaDia) then
     begin
       // Mostramos el texto exacto que habías preparado para el Hint
-      ShowMessage('Datos del ' + DateToStr(FFechaCaja) + #13#10#13#10 + VentaDia.GetHintText);
+      //ShowMessage('Datos del ' + DateToStr(FFechaCaja) + #13#10#13#10 + VentaDia.GetHintText);
     end;
   end;
 end;
