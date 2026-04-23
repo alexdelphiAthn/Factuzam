@@ -230,7 +230,7 @@ begin
   btnF7Click(Sender);
 end;
 
-procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject); // F11
+procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
   if ValidarYConfirmar then
   begin
@@ -239,7 +239,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject); // F10
+procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject);
 begin
   if ValidarYConfirmar then
   begin
@@ -334,9 +334,9 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT * ' +
-                    'FROM fza_caja_formas_pago ' +
-                    'WHERE ES_ACTIVO_FORMAP = ''S'' ' +
+    qry.SQL.Text := '  SELECT * ' +
+                    '    FROM fza_caja_formas_pago ' +
+                    '   WHERE ES_ACTIVO_FORMAP = ''S'' ' +
                     'ORDER BY ORDEN_VISUAL_FORMAP';
     qry.Open;
 
