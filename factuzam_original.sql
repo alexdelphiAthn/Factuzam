@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 23/04/2026 10:48:41
+-- Backup generado: 23/04/2026 19:06:48
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -573,7 +573,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALMACEN_STK`, `CODIGO_UNIDAD_ST
   ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-02-17 06:21:32', 120, 12, 0, 0, 0, 0),
   ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-02-17 06:21:32', 180, 12, 0, 0, 0, 0),
   ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-04-10 07:54:32', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, -1, '2026-04-06 18:45:19', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, -2, '2026-04-23 18:52:42', 0, 0, 0, 0, 0, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 1, '2026-04-03 20:39:29', 0, 0, 0, 0, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 1, '2026-04-04 00:06:17', 0, 0, 0, 0, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 4, '2026-02-22 06:13:04', 0, 0, 0, 0, 0, 0),
@@ -1245,9 +1245,10 @@ INSERT INTO `fza_caja_operaciones` (`ID_OPCAJA`, `CODIGO_EMPRESA_OPCAJA`, `CODIG
   (107, '012', 'GEN', '1', '00000116', '000093', '2026.A1', '2026-04-21 20:22:14', '1', 'CB', 25, '321', 'N', 0, 'Cobro a cuenta: Abono a cuenta Cartera Piel Caballero', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-21 20:22:14', '2026-04-21 20:22:14', 'Administrador', 'Administrador', 'DP260410075432433IEL', '2026-04-21 00:00:00'),
   (108, '012', 'GEN', '1', '00000117', '000094', '2026.A1', '2026-04-21 20:22:55', '1', 'DE', -50, '321', 'N', 0, 'Cierre depósito: Cartera Piel Caballero', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador', 'Administrador', 'DP260410075432433IEL', '2026-04-21 00:00:00'),
   (109, '012', 'GEN', '1', '00000117', '000094', '2026.A1', '2026-04-21 20:22:55', '1', 'VE', 50, '321', 'N', 0, 'Venta depósito: Cartera Piel Caballero', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador', 'Administrador', 'DP260410075432433IEL', '2026-04-21 00:00:00'),
-  (110, '012', 'GEN', '1', '00000117', '000094', '2026.A1', '2026-04-21 20:22:55', '1', 'CB', -25, '321', 'N', 0, 'Consumo de anticipo: Abono a cuenta CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador', 'Administrador', '', '2026-04-21 00:00:00');
+  (110, '012', 'GEN', '1', '00000117', '000094', '2026.A1', '2026-04-21 20:22:55', '1', 'CB', -25, '321', 'N', 0, 'Consumo de anticipo: Abono a cuenta CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador', 'Administrador', '', '2026-04-21 00:00:00'),
+  (111, '012', 'GEN', '1', '00000123', '000100', '2026.A1', '2026-04-23 18:52:42', '1', 'VE', 120, '321', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-04-23 18:52:42', '2026-04-23 18:52:42', 'Administrador', 'Administrador', '', '2026-04-23 00:00:00');
 /*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
--- 50 registros exportados
+-- 51 registros exportados
 
 
 -- Tabla: fza_caja_pagos
@@ -1366,8 +1367,9 @@ INSERT INTO `fza_caja_pagos` (`CODIGO_EMPRESA_PAGO`, `CODIGO_ALMACEN_PAGO`, `COD
   ('012', 'GEN', '1', '2026.A1', '00000114', 1, 'EFE', NULL, NULL, 1, 0, 130, 0, NULL, NULL, '2026-04-21 08:42:52', '2026-04-21 08:42:52', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000115', 1, 'EFE', NULL, NULL, 1, 0, 22, 0, NULL, NULL, '2026-04-21 08:49:32', '2026-04-21 08:49:32', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000116', 1, 'EFE', NULL, NULL, 1, 0, 25, 0, NULL, NULL, '2026-04-21 20:22:14', '2026-04-21 20:22:14', 'Administrador'),
-  ('012', 'GEN', '1', '2026.A1', '00000117', 1, 'EFE', NULL, NULL, 1, 0, 25, 0, NULL, NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador');
--- 89 registros exportados
+  ('012', 'GEN', '1', '2026.A1', '00000117', 1, 'EFE', NULL, NULL, 1, 0, 25, 0, NULL, NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000123', 1, 'EFE', NULL, NULL, 1, 0, 120, 0, NULL, NULL, '2026-04-23 18:52:42', '2026-04-23 18:52:42', 'Administrador');
+-- 90 registros exportados
 
 
 -- Tabla: fza_caja_vales
@@ -1589,7 +1591,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '008', 'ANA/2023', 5, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 95, 6, 'S', 'N', '2026-04-21 20:22:55', '2026-02-01 07:03:46', 'Administrador', '1'),
+  ('FC', '012', '2026.A1', 101, 6, 'S', 'N', '2026-04-23 18:52:42', '2026-02-01 07:03:46', 'Administrador', '1'),
   ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
   ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador'),
   ('FC', '1', 'A3', 0, 8, 'S', 'N', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador'),
@@ -1602,8 +1604,8 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('GP', '-', '-', 110, 3, 'S', 'S', '2026-04-23 10:36:27', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 193, 10, 'S', 'S', '2026-04-11 13:31:08', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
-  ('OV', '012', 'OV', 118, 8, 'S', 'S', '2026-04-21 20:22:55', '2026-04-02 20:05:59', '1', '1'),
+  ('MV', '-', '-', 200, 10, 'S', 'S', '2026-04-23 18:52:42', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('OV', '012', 'OV', 124, 8, 'S', 'S', '2026-04-23 18:52:42', '2026-04-02 20:05:59', '1', '1'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
@@ -1968,8 +1970,14 @@ INSERT INTO `fza_facturas` (`NRO_FACTURA`, `SERIE_FACTURA`, `FECHA_FACTURA`, `ES
   ('000091', '2026.A1', '2026-04-21 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 22.56, 5.2, 0, 107.44, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 107.44, 22.56, NULL, 0, 0, 130, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-21 08:42:52', '2026-04-21 08:42:52', '1', '1', '1', 'GEN', '1', '00000114'),
   ('000092', '2026.A1', '2026-04-21 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 3.82, 5.2, 0, 18.18, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 18.18, 3.82, NULL, 0, 0, 22, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-21 08:49:32', '2026-04-21 08:49:32', '1', '1', '1', 'GEN', '1', '00000115'),
   ('000093', '2026.A1', '2026-04-21 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.34, 5.2, 0, 20.66, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 20.66, 4.34, NULL, 0, 0, 25, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-21 20:22:14', '2026-04-21 20:22:14', '1', '1', '1', 'GEN', '1', '00000116'),
-  ('000094', '2026.A1', '2026-04-21 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.34, 5.2, 0, 20.66, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 20.66, 4.34, NULL, 0, 0, 25, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', '1', 'GEN', '1', '00000117');
--- 93 registros exportados
+  ('000094', '2026.A1', '2026-04-21 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.34, 5.2, 0, 20.66, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 20.66, 4.34, NULL, 0, 0, 25, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', '1', 'GEN', '1', '00000117'),
+  ('000095', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 10:55:36', '2026-04-23 10:55:36', '1', '1', '1', 'GEN', '1', '00000118'),
+  ('000096', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 10:55:50', '2026-04-23 10:55:50', '1', '1', '1', 'GEN', '1', '00000119'),
+  ('000097', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 10:56:12', '2026-04-23 10:56:12', '1', '1', '1', 'GEN', '1', '00000120'),
+  ('000098', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 10:56:26', '2026-04-23 10:56:26', '1', '1', '1', 'GEN', '1', '00000121'),
+  ('000099', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 52.07, 5.2, 0, 247.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 247.93, 52.07, NULL, 0, 0, 300, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 18:50:55', '2026-04-23 18:50:55', '1', '1', '1', 'GEN', '1', '00000122'),
+  ('000100', '2026.A1', '2026-04-23 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '337373837', '23923923932', NULL, 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, NULL, NULL, 'S', NULL, NULL, '2026-04-23 18:52:42', '2026-04-23 18:52:42', '1', '1', '1', 'GEN', '1', '00000123');
+-- 99 registros exportados
 
 
 -- Tabla: fza_facturas_consolidaciones
@@ -2177,8 +2185,9 @@ INSERT INTO `fza_facturas_lineas` (`NRO_FACTURA_LINEA`, `SERIE_FACTURA_LINEA`, `
   ('000092', '2026.A1', NULL, '0050', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-21 08:49:32', '2026-04-21 08:49:32', '1', '1', 'GEN', '1', '00000115', NULL),
   ('000093', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 20.6612, 0, 0, 20.6612, 'N', 21, 25, 25, 20.6612, '1', '2026-04-21 20:22:14', '2026-04-21 20:22:14', '1', '1', 'GEN', '1', '00000116', NULL),
   ('000094', '2026.A1', NULL, '0050', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL),
-  ('000094', '2026.A1', NULL, '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, -25, -20.6612, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL);
--- 125 registros exportados
+  ('000094', '2026.A1', NULL, '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, -25, -20.6612, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL),
+  ('000100', '2026.A1', NULL, '0050', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-23 18:52:42', '2026-04-23 18:52:42', '1', '1', 'GEN', '1', '00000123', '0000000198');
+-- 126 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -3649,6 +3658,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000000188', 'VE', '2026.A1', '000085', '0040', '012', 'GEN', '2026-04-10 08:20:04', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'E', 1, 0, 0, 0, NULL, '', NULL, 'S', '2026-04-10 08:20:04', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000108', '1'),
   ('0000000190', 'VE', '2026.A1', '000086', '0010', '012', 'GEN', '2026-04-11 13:31:08', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-04-11 13:31:08', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000109', '1'),
   ('0000000192', 'VE', '2026.A1', '000086', '0020', '012', 'GEN', '2026-04-11 13:31:08', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', NULL, 'S', 1, 0, 8, 8, NULL, '0', NULL, 'S', '2026-04-11 13:31:08', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000109', '1'),
+  ('0000000199', 'VE', '2026.A1', '000100', '0050', '012', 'GEN', '2026-04-23 18:52:42', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 1, 0, 0, 0, NULL, '321', NULL, 'S', '2026-04-23 18:52:42', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000123', '1'),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:29', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -3713,7 +3723,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('4', 'IN', 'A1', '2026001', '005', '1', 'GEN', '2026-01-04 22:13:10', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', 'Falda Vaquera L', 'E', 15, 10, 150, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:50', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('5', 'IN', 'A1', '2026001', '006', '1', 'GEN', '2026-01-04 22:13:10', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 'Chaqueta Cuero XL Negra', 'E', 3, 60, 180, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:40:57', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('6', 'IN', 'A1', '2026001', '007', '1', 'GEN', '2026-01-04 22:13:10', 'CARTERA-PIEL', 'CARTERA-PIEL', 'Cartera de Cuero Unisex', 'E', 8, 20, 160, 0, NULL, NULL, NULL, 'S', '2026-01-08 18:44:09', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL);
--- 203 registros exportados
+-- 204 registros exportados
 
 
 -- Tabla: fza_paises
@@ -4502,7 +4512,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-23 10:48:17', '2026-04-23 10:48:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-23 19:06:39', '2026-04-23 19:06:39', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -4633,7 +4643,7 @@ FROM vi_tarifas
   ('Administrador', 'dmFacturas', 'unstrdprcGetDataArticulo', 'Procedure', 'PRC_GET_DATA_ARTICULO', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'dmFacturas', 'unstrdprcGetDataCliente', 'Procedure', 'PRC_GET_DATA_CLIENTE', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
   ('Administrador', 'dmFacturas', 'unstrdprcGetRecibos', 'Procedure', 'PRC_CREAR_RECIBOS_FACTURA', NULL, NULL, '2026-03-07 08:13:14', '2026-03-07 08:13:14', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appDirCopiasSeguridad', '$(DOCUMENTOS)\\CopiasSeguridad', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appDirCopiasSeguridad', 'C:\\DISCO_DURO\\proyectos\\Factuzam', NULL, NULL, NULL, '2026-04-23 10:48:57', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appDirExcel', '$(DOCUMENTOS)\\Excels', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appDirHistoricoCaja', '$(LOCALAPPDATA)\\factuzam\\tickets', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appDirPDF', '$(DOCUMENTOS)\\PDF', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
@@ -11645,4 +11655,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 23/04/2026 10:48:42
+-- Backup completado: 23/04/2026 19:06:48
