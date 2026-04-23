@@ -648,10 +648,11 @@ var
   FormPreview: TFormVisualizador;
   TotalPendienteCliente: Currency;
   CodEmp, RazonEmp: string;
+  HayDatos: boolean;
 begin
   if Trim(CodigoCliente) = '' then
     Exit;
-
+  HayDatos := False;
   Ticket := TTicketTermico.Create(NombreImpresora);
   try
     Ticket.Inicializar;
@@ -720,7 +721,7 @@ begin
           ' ORDER BY dep.FECHA_CREACION_DEP';
         QryDep.ParamByName('CLI').AsString := CodigoCliente;
         QryDep.Open;
-
+        HayDatos := not QryDep.IsEmpty;
         if not QryDep.IsEmpty then
         begin
           var CodCli   := QryDep.FieldByName('CODIGO_CLIENTE').AsString;
@@ -820,6 +821,8 @@ begin
     finally
       QryAnticipo.Free;
     end;
+    if not HayDatos then
+      Exit;
     // ── Generar PDF y mostrar / imprimir ─────────────────────────────────
     var ComandosESC    := Ticket.ObtenerComandos;
     var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
