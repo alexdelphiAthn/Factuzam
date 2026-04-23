@@ -158,10 +158,9 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     Height = 360
     Align = alClient
     TabOrder = 2
-    Properties.ActivePage = tsPagos
+    Properties.ActivePage = tsDepositos
     Properties.CustomButtons.Buttons = <>
-    ExplicitWidth = 1198
-    ExplicitHeight = 352
+    ExplicitLeft = 48
     ClientRectBottom = 358
     ClientRectLeft = 2
     ClientRectRight = 1198
@@ -570,14 +569,31 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Align = alClient
         TabOrder = 0
         object cxViewDep: TcxGridDBTableView
+          DataController.Summary.FooterSummaryItems = <
+            item
+              Format = '#,##0.00 '#8364
+              Kind = skSum
+              Column = colDepAnt
+            end
+            item
+              Format = '#,##0.00 '#8364
+              Kind = skSum
+              Column = colDepPendiente
+            end>
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
+          OptionsView.Footer = True
           OptionsView.GroupByBox = False
           object colDepRol: TcxGridDBColumn
             Caption = 'Rol'
             DataBinding.FieldName = 'ROL_EN_OPERACION'
-            Width = 80
+            Width = 110
+          end
+          object colDepEstado: TcxGridDBColumn
+            Caption = 'Estado'
+            DataBinding.FieldName = 'ESTADO_DEP'
+            Width = 130
           end
           object colDepId: TcxGridDBColumn
             Caption = 'Id dep'#243'sito'
@@ -587,12 +603,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           object colDepCli: TcxGridDBColumn
             Caption = 'Cliente'
             DataBinding.FieldName = 'CODIGO_CLIENTE_DEP'
-            Width = 70
+            Width = 110
           end
           object colDepArt: TcxGridDBColumn
             Caption = 'Art'#237'culo'
             DataBinding.FieldName = 'CODIGO_ARTICULO_DEP'
-            Width = 110
+            Width = 141
           end
           object colDepSku: TcxGridDBColumn
             Caption = 'SKU'
@@ -602,21 +618,28 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           object colDepAlm: TcxGridDBColumn
             Caption = 'Almac'#233'n'
             DataBinding.FieldName = 'CODIGO_ALMACEN_DEP'
-            Width = 70
+            Width = 91
           end
           object colDepCant: TcxGridDBColumn
             Caption = 'Cantidad pdte.'
             DataBinding.FieldName = 'CANTIDAD_PENDIENTE_DEP'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'
-            Width = 90
+            Width = 131
           end
           object colDepPvp: TcxGridDBColumn
             Caption = 'Precio venta'
             DataBinding.FieldName = 'PRECIO_VENTA_DEP'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
-            Width = 90
+            Width = 114
+          end
+          object colDepPorcIva: TcxGridDBColumn
+            Caption = '% IVA'
+            DataBinding.FieldName = 'PORCEN_IVA_DEP'
+            PropertiesClassName = 'TcxCurrencyEditProperties'
+            Properties.DisplayFormat = '0.00'
+            Width = 55
           end
           object colDepAnt: TcxGridDBColumn
             Caption = 'Anticipo'
@@ -625,10 +648,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 90
           end
-          object colDepEstado: TcxGridDBColumn
-            Caption = 'Estado'
-            DataBinding.FieldName = 'ESTADO_DEP'
-            Width = 80
+          object colDepPendiente: TcxGridDBColumn
+            Caption = 'Pendiente'
+            DataBinding.FieldName = 'IMPORTE_PENDIENTE_DEP'
+            PropertiesClassName = 'TcxCurrencyEditProperties'
+            Properties.DisplayFormat = '#,##0.00 '#8364
+            Width = 100
           end
           object colDepFecha: TcxGridDBColumn
             Caption = 'Fecha alta'
@@ -637,6 +662,37 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
             Properties.Kind = ckDateTime
             Width = 120
+          end
+          object colDepFechaEntrega: TcxGridDBColumn
+            Caption = 'Fecha entrega'
+            DataBinding.FieldName = 'FECHA_ENTREGA_DEP'
+            PropertiesClassName = 'TcxDateEditProperties'
+            Properties.DisplayFormat = 'dd/mm/yyyy'
+            Width = 146
+          end
+          object colDepEmpCancel: TcxGridDBColumn
+            Caption = 'Emp. cancel.'
+            DataBinding.FieldName = 'EMPRESA_CANCEL_DEP'
+            Visible = False
+            Width = 80
+          end
+          object colDepAlmCancel: TcxGridDBColumn
+            Caption = 'Alm. cancel.'
+            DataBinding.FieldName = 'ALMACEN_CANCEL_DEP'
+            Visible = False
+            Width = 80
+          end
+          object colDepCajCancel: TcxGridDBColumn
+            Caption = 'Caja cancel.'
+            DataBinding.FieldName = 'CAJA_CANCEL_DEP'
+            Visible = False
+            Width = 70
+          end
+          object colDepNumOpeCancel: TcxGridDBColumn
+            Caption = 'Op. cancel.'
+            DataBinding.FieldName = 'NUMERO_OPERACION_CANCEL_DEP'
+            Visible = False
+            Width = 100
           end
         end
         object cxLevelDep: TcxGridLevel

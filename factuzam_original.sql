@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 23/04/2026 19:06:48
+-- Backup generado: 23/04/2026 19:39:20
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1601,7 +1601,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 110, 3, 'S', 'S', '2026-04-23 10:36:27', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 113, 3, 'S', 'S', '2026-04-23 19:32:18', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 200, 10, 'S', 'S', '2026-04-23 18:52:42', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -3190,8 +3190,186 @@ SELECT ''CANCELACION''                    AS ROL_EN_OPERACION,
        l.CODIGO_ALMACEN_FACTURA_LINEA   = f.CODIGO_ALMACEN_FACTURA,
        l.CODIGO_CAJA_FACTURA_LINEA      = f.CODIGO_CAJA_FACTURA,
        l.NUMERO_OPERACION_FACTURA_LINEA = f.NUMERO_OPERACION_FACTURA
- WHERE COALESCE(l.NUMERO_OPERACION_FACTURA_LINEA,'''') = '''';', '2026-04-23 10:36:27', '2026-04-23 10:36:27', 'Administrador', 'Administrador');
--- 39 registros exportados
+ WHERE COALESCE(l.NUMERO_OPERACION_FACTURA_LINEA,'''') = '''';', '2026-04-23 10:36:27', '2026-04-23 10:36:27', 'Administrador', 'Administrador'),
+  ('110', NULL, 'DROP VIEW IF EXISTS fza_caja_depositos_view;
+
+CREATE VIEW fza_caja_depositos_view AS
+
+-- (A) Depósito dado de ALTA en la operación
+SELECT
+  ''ALTA''                          AS ROL_EN_OPERACION,
+  d.ID_DEPOSITO_DEP               AS ID_DEPOSITO_DEP,
+  d.CODIGO_EMPRESA_DEP            AS CODIGO_EMPRESA_OP,
+  d.CODIGO_ALMACEN_DEP            AS CODIGO_ALMACEN_OP,
+  d.CODIGO_CAJA_DEP               AS CODIGO_CAJA_OP,
+  d.NUMERO_OPERACION_DEP          AS NUMERO_OPERACION_OP,
+  d.CODIGO_CLIENTE_DEP            AS CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP           AS CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP             AS CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP            AS CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP        AS CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP              AS PRECIO_VENTA_DEP,
+  d.IMPORTE_ANTICIPO_DEP          AS IMPORTE_ANTICIPO_DEP,
+  d.ESTADO_DEP                    AS ESTADO_DEP,
+  d.FECHA_CREACION_DEP            AS FECHA_CREACION_DEP
+FROM fza_depositos_cliente d
+WHERE d.NUMERO_OPERACION_DEP IS NOT NULL
+  AND d.NUMERO_OPERACION_DEP <> ''''
+
+UNION ALL
+
+-- (B) Depósito CANCELADO/DEVUELTO en la operación
+SELECT
+  ''CANCELACION''                   AS ROL_EN_OPERACION,
+  d.ID_DEPOSITO_DEP               AS ID_DEPOSITO_DEP,
+  d.EMPRESA_CANCEL_DEP            AS CODIGO_EMPRESA_OP,
+  d.ALMACEN_CANCEL_DEP            AS CODIGO_ALMACEN_OP,
+  d.CAJA_CANCEL_DEP               AS CODIGO_CAJA_OP,
+  d.NUMERO_OPERACION_CANCEL_DEP   AS NUMERO_OPERACION_OP,
+  d.CODIGO_CLIENTE_DEP            AS CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP           AS CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP             AS CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP            AS CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP        AS CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP              AS PRECIO_VENTA_DEP,
+  d.IMPORTE_ANTICIPO_DEP          AS IMPORTE_ANTICIPO_DEP,
+  d.ESTADO_DEP                    AS ESTADO_DEP,
+  d.FECHA_CREACION_DEP            AS FECHA_CREACION_DEP
+FROM fza_depositos_cliente d
+WHERE d.NUMERO_OPERACION_CANCEL_DEP IS NOT NULL
+  AND d.NUMERO_OPERACION_CANCEL_DEP <> ''''
+
+UNION ALL
+
+-- (C) COBROS a cuenta (CB/DE) que tocan un depósito en la operación
+SELECT
+  CASE o.TIPO_OPERACION_OPCAJA
+       WHEN ''DE'' THEN ''COBRO_INICIAL''
+       WHEN ''CB'' THEN ''COBRO_PARCIAL''
+  END                             AS ROL_EN_OPERACION,
+  d.ID_DEPOSITO_DEP               AS ID_DEPOSITO_DEP,
+  o.CODIGO_EMPRESA_OPCAJA         AS CODIGO_EMPRESA_OP,
+  o.CODIGO_ALMACEN_OPCAJA         AS CODIGO_ALMACEN_OP,
+  o.CODIGO_CAJA_OPCAJA            AS CODIGO_CAJA_OP,
+  o.NUMERO_OPERACION_OPCAJA       AS NUMERO_OPERACION_OP,
+  d.CODIGO_CLIENTE_DEP            AS CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP           AS CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP             AS CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP            AS CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP        AS CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP              AS PRECIO_VENTA_DEP,
+  o.IMPORTE_TOTAL_OPCAJA          AS IMPORTE_ANTICIPO_DEP,  -- importe del cobro concreto
+  d.ESTADO_DEP                    AS ESTADO_DEP,
+  d.FECHA_CREACION_DEP            AS FECHA_CREACION_DEP
+FROM fza_caja_operaciones o
+JOIN fza_depositos_cliente d
+  ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA
+WHERE o.TIPO_OPERACION_OPCAJA IN (''CB'',''DE'')
+  AND o.ID_DEPOSITO_OPCAJA IS NOT NULL;', '2026-04-23 19:14:11', '2026-04-23 19:12:58', 'Administrador', 'Administrador'),
+  ('111', NULL, 'DROP VIEW IF EXISTS fza_caja_depositos_view;
+
+CREATE VIEW fza_caja_depositos_view AS
+
+-- (A) ALTA
+SELECT
+  ''ALTA''                          AS ROL_EN_OPERACION,
+  d.ID_DEPOSITO_DEP,
+  d.CODIGO_EMPRESA_DEP            AS CODIGO_EMPRESA_OP,
+  d.CODIGO_ALMACEN_DEP            AS CODIGO_ALMACEN_OP,
+  d.CODIGO_CAJA_DEP               AS CODIGO_CAJA_OP,
+  d.NUMERO_OPERACION_DEP          AS NUMERO_OPERACION_OP,
+  d.CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP,
+  d.PORCEN_IVA_DEP,
+  d.IMPORTE_ANTICIPO_DEP,
+  (d.PRECIO_VENTA_DEP * d.CANTIDAD_PENDIENTE_DEP) - d.IMPORTE_ANTICIPO_DEP AS IMPORTE_PENDIENTE_DEP,
+  d.ESTADO_DEP,
+  d.FECHA_CREACION_DEP,
+  d.FECHA_ENTREGA_DEP,
+  d.EMPRESA_CANCEL_DEP,
+  d.ALMACEN_CANCEL_DEP,
+  d.CAJA_CANCEL_DEP,
+  d.NUMERO_OPERACION_CANCEL_DEP
+FROM fza_depositos_cliente d
+WHERE d.NUMERO_OPERACION_DEP IS NOT NULL
+  AND d.NUMERO_OPERACION_DEP <> ''''
+
+UNION ALL
+
+-- (B) CANCELACION
+SELECT
+  ''CANCELACION'',
+  d.ID_DEPOSITO_DEP,
+  d.EMPRESA_CANCEL_DEP,
+  d.ALMACEN_CANCEL_DEP,
+  d.CAJA_CANCEL_DEP,
+  d.NUMERO_OPERACION_CANCEL_DEP,
+  d.CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP,
+  d.PORCEN_IVA_DEP,
+  d.IMPORTE_ANTICIPO_DEP,
+  (d.PRECIO_VENTA_DEP * d.CANTIDAD_PENDIENTE_DEP) - d.IMPORTE_ANTICIPO_DEP,
+  d.ESTADO_DEP,
+  d.FECHA_CREACION_DEP,
+  d.FECHA_ENTREGA_DEP,
+  d.EMPRESA_CANCEL_DEP,
+  d.ALMACEN_CANCEL_DEP,
+  d.CAJA_CANCEL_DEP,
+  d.NUMERO_OPERACION_CANCEL_DEP
+FROM fza_depositos_cliente d
+WHERE d.NUMERO_OPERACION_CANCEL_DEP IS NOT NULL
+  AND d.NUMERO_OPERACION_CANCEL_DEP <> ''''
+
+UNION ALL
+
+-- (C) COBROS (CB/DE) asociados a un depósito
+SELECT
+  CASE o.TIPO_OPERACION_OPCAJA
+       WHEN ''DE'' THEN ''COBRO_INICIAL''
+       WHEN ''CB'' THEN ''COBRO_PARCIAL''
+  END,
+  d.ID_DEPOSITO_DEP,
+  o.CODIGO_EMPRESA_OPCAJA,
+  o.CODIGO_ALMACEN_OPCAJA,
+  o.CODIGO_CAJA_OPCAJA,
+  o.NUMERO_OPERACION_OPCAJA,
+  d.CODIGO_CLIENTE_DEP,
+  d.CODIGO_ARTICULO_DEP,
+  d.CODIGO_UNIDAD_DEP,
+  d.CODIGO_ALMACEN_DEP,
+  d.CANTIDAD_PENDIENTE_DEP,
+  d.PRECIO_VENTA_DEP,
+  d.PORCEN_IVA_DEP,
+  o.IMPORTE_TOTAL_OPCAJA,          -- importe del cobro concreto
+  (d.PRECIO_VENTA_DEP * d.CANTIDAD_PENDIENTE_DEP) - d.IMPORTE_ANTICIPO_DEP,
+  d.ESTADO_DEP,
+  d.FECHA_CREACION_DEP,
+  d.FECHA_ENTREGA_DEP,
+  d.EMPRESA_CANCEL_DEP,
+  d.ALMACEN_CANCEL_DEP,
+  d.CAJA_CANCEL_DEP,
+  d.NUMERO_OPERACION_CANCEL_DEP
+FROM fza_caja_operaciones o
+JOIN fza_depositos_cliente d
+  ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA
+WHERE o.TIPO_OPERACION_OPCAJA IN (''CB'',''DE'')
+  AND o.ID_DEPOSITO_OPCAJA IS NOT NULL;', '2026-04-23 19:22:29', '2026-04-23 19:20:18', 'Administrador', 'Administrador'),
+  ('112', NULL, 'SELECT ROL_EN_OPERACION, ID_DEPOSITO_DEP, CODIGO_EMPRESA_OP,
+       CODIGO_ALMACEN_OP, CODIGO_CAJA_OP, NUMERO_OPERACION_OP
+FROM fza_caja_depositos_view
+WHERE CODIGO_EMPRESA_OP   = ''012''
+  AND CODIGO_ALMACEN_OP   = ''GEN''
+  AND CODIGO_CAJA_OP      = ''1''
+  AND NUMERO_OPERACION_OP = ''00000107'';', '2026-04-23 19:33:50', '2026-04-23 19:32:18', 'Administrador', 'Administrador');
+-- 42 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3376,55 +3554,56 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (65, 'fza_variaciones_atributos', '1'),
   (66, 'fza_verifactu_eventos', '1'),
   (67, 'fza_winforms', '1'),
-  (131, 'vi_articulos', '2'),
-  (132, 'vi_articulos_conjuntos_slots', '2'),
-  (133, 'vi_articulos_familias', '2'),
-  (134, 'vi_articulos_familias_list', '2'),
-  (135, 'vi_articulos_list', '2'),
-  (136, 'vi_articulos_propiedades_slots', '2'),
-  (137, 'vi_articulos_proveedores', '2'),
-  (138, 'vi_articulos_skus', '2'),
-  (139, 'vi_articulos_skus_extendida', '2'),
-  (140, 'vi_articulos_tarifas', '2'),
-  (141, 'vi_art_busquedas', '2'),
-  (142, 'vi_atributos_nombres', '2'),
-  (143, 'vi_cajasdef', '2'),
-  (144, 'vi_caja_busqueda_unificada', '2'),
-  (145, 'vi_caja_tarifa_sku_articulos', '2'),
-  (146, 'vi_caja_totalventas', '2'),
-  (147, 'vi_caja_vales_ptes', '2'),
-  (148, 'vi_clientes', '2'),
-  (149, 'vi_cli_busquedas', '2'),
-  (150, 'vi_contadores', '2'),
-  (151, 'vi_depositos_cliente', '2'),
-  (152, 'vi_empresas', '2'),
-  (153, 'vi_empresas_retenciones', '2'),
-  (154, 'vi_empresas_series', '2'),
-  (155, 'vi_emp_busquedas', '2'),
-  (156, 'vi_facturas', '2'),
-  (157, 'vi_facturas_lineas', '2'),
-  (158, 'vi_facturas_lineas_print', '2'),
-  (159, 'vi_facturas_print', '2'),
-  (160, 'vi_fac_busquedas', '2'),
-  (161, 'vi_fac_lin_busquedas', '2'),
-  (162, 'vi_formapago', '2'),
-  (163, 'vi_info_tpv_completa', '2'),
-  (164, 'vi_ivas', '2'),
-  (165, 'vi_ivas_empresa', '2'),
-  (166, 'vi_ivas_grupos', '2'),
-  (167, 'vi_ivas_zonas', '2'),
-  (168, 'vi_movimientos', '2'),
-  (169, 'vi_paises', '2'),
-  (170, 'vi_proveedores', '2'),
-  (171, 'vi_proveedores_articulos', '2'),
-  (172, 'vi_proveedores_busquedas', '2'),
-  (173, 'vi_recibos', '2'),
-  (174, 'vi_tarifas', '2'),
-  (175, 'vi_usuarios', '2'),
-  (176, 'vi_usuarios_grupos', '2'),
-  (177, 'vi_usuarios_perfiles', '2'),
-  (178, 'vi_variaciones', '2'),
-  (179, 'v_articulos_stock_barras', '2'),
+  (131, 'fza_caja_depositos_view', '2'),
+  (132, 'vi_articulos', '2'),
+  (133, 'vi_articulos_conjuntos_slots', '2'),
+  (134, 'vi_articulos_familias', '2'),
+  (135, 'vi_articulos_familias_list', '2'),
+  (136, 'vi_articulos_list', '2'),
+  (137, 'vi_articulos_propiedades_slots', '2'),
+  (138, 'vi_articulos_proveedores', '2'),
+  (139, 'vi_articulos_skus', '2'),
+  (140, 'vi_articulos_skus_extendida', '2'),
+  (141, 'vi_articulos_tarifas', '2'),
+  (142, 'vi_art_busquedas', '2'),
+  (143, 'vi_atributos_nombres', '2'),
+  (144, 'vi_cajasdef', '2'),
+  (145, 'vi_caja_busqueda_unificada', '2'),
+  (146, 'vi_caja_tarifa_sku_articulos', '2'),
+  (147, 'vi_caja_totalventas', '2'),
+  (148, 'vi_caja_vales_ptes', '2'),
+  (149, 'vi_clientes', '2'),
+  (150, 'vi_cli_busquedas', '2'),
+  (151, 'vi_contadores', '2'),
+  (152, 'vi_depositos_cliente', '2'),
+  (153, 'vi_empresas', '2'),
+  (154, 'vi_empresas_retenciones', '2'),
+  (155, 'vi_empresas_series', '2'),
+  (156, 'vi_emp_busquedas', '2'),
+  (157, 'vi_facturas', '2'),
+  (158, 'vi_facturas_lineas', '2'),
+  (159, 'vi_facturas_lineas_print', '2'),
+  (160, 'vi_facturas_print', '2'),
+  (161, 'vi_fac_busquedas', '2'),
+  (162, 'vi_fac_lin_busquedas', '2'),
+  (163, 'vi_formapago', '2'),
+  (164, 'vi_info_tpv_completa', '2'),
+  (165, 'vi_ivas', '2'),
+  (166, 'vi_ivas_empresa', '2'),
+  (167, 'vi_ivas_grupos', '2'),
+  (168, 'vi_ivas_zonas', '2'),
+  (169, 'vi_movimientos', '2'),
+  (170, 'vi_paises', '2'),
+  (171, 'vi_proveedores', '2'),
+  (172, 'vi_proveedores_articulos', '2'),
+  (173, 'vi_proveedores_busquedas', '2'),
+  (174, 'vi_recibos', '2'),
+  (175, 'vi_tarifas', '2'),
+  (176, 'vi_usuarios', '2'),
+  (177, 'vi_usuarios_grupos', '2'),
+  (178, 'vi_usuarios_perfiles', '2'),
+  (179, 'vi_variaciones', '2'),
+  (180, 'v_articulos_stock_barras', '2'),
   (194, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (195, 'PRC_BUSQUEDA_ARTICULOS', '3'),
   (196, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
@@ -3468,7 +3647,7 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (234, 'SP_RECALCULAR_PMP_SKU', '3'),
   (235, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 158 registros exportados
+-- 159 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -4512,7 +4691,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-23 19:06:39', '2026-04-23 19:06:39', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-23 19:39:11', '2026-04-23 19:39:11', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -8191,7 +8370,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
 
 -- Vista: fza_caja_depositos_view
 DROP VIEW IF EXISTS `fza_caja_depositos_view`;
-CREATE ALGORITHM=UNDEFINED  VIEW `fza_caja_depositos_view` AS select 'ALTA' AS `ROL_EN_OPERACION`,`d`.`ID_DEPOSITO_DEP` AS `ID_DEPOSITO_DEP`,`d`.`CODIGO_EMPRESA_DEP` AS `CODIGO_EMPRESA_OP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_OP`,`d`.`CODIGO_CAJA_DEP` AS `CODIGO_CAJA_OP`,`d`.`NUMERO_OPERACION_DEP` AS `NUMERO_OPERACION_OP`,`d`.`CODIGO_CLIENTE_DEP` AS `CODIGO_CLIENTE_DEP`,`d`.`CODIGO_ARTICULO_DEP` AS `CODIGO_ARTICULO_DEP`,`d`.`CODIGO_UNIDAD_DEP` AS `CODIGO_UNIDAD_DEP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_DEP`,`d`.`CANTIDAD_PENDIENTE_DEP` AS `CANTIDAD_PENDIENTE_DEP`,`d`.`PRECIO_VENTA_DEP` AS `PRECIO_VENTA_DEP`,`d`.`IMPORTE_ANTICIPO_DEP` AS `IMPORTE_ANTICIPO_DEP`,`d`.`ESTADO_DEP` AS `ESTADO_DEP`,`d`.`FECHA_CREACION_DEP` AS `FECHA_CREACION_DEP` from `fza_depositos_cliente` `d` where `d`.`NUMERO_OPERACION_DEP` is not null and `d`.`NUMERO_OPERACION_DEP` <> '' union all select 'CANCELACION' AS `ROL_EN_OPERACION`,`d`.`ID_DEPOSITO_DEP` AS `ID_DEPOSITO_DEP`,`d`.`EMPRESA_CANCEL_DEP` AS `CODIGO_EMPRESA_OP`,`d`.`ALMACEN_CANCEL_DEP` AS `CODIGO_ALMACEN_OP`,`d`.`CAJA_CANCEL_DEP` AS `CODIGO_CAJA_OP`,`d`.`NUMERO_OPERACION_CANCEL_DEP` AS `NUMERO_OPERACION_OP`,`d`.`CODIGO_CLIENTE_DEP` AS `CODIGO_CLIENTE_DEP`,`d`.`CODIGO_ARTICULO_DEP` AS `CODIGO_ARTICULO_DEP`,`d`.`CODIGO_UNIDAD_DEP` AS `CODIGO_UNIDAD_DEP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_DEP`,`d`.`CANTIDAD_PENDIENTE_DEP` AS `CANTIDAD_PENDIENTE_DEP`,`d`.`PRECIO_VENTA_DEP` AS `PRECIO_VENTA_DEP`,`d`.`IMPORTE_ANTICIPO_DEP` AS `IMPORTE_ANTICIPO_DEP`,`d`.`ESTADO_DEP` AS `ESTADO_DEP`,`d`.`FECHA_CREACION_DEP` AS `FECHA_CREACION_DEP` from `fza_depositos_cliente` `d` where `d`.`NUMERO_OPERACION_CANCEL_DEP` is not null and `d`.`NUMERO_OPERACION_CANCEL_DEP` <> '';
+CREATE ALGORITHM=UNDEFINED  VIEW `fza_caja_depositos_view` AS select 'ALTA' AS `ROL_EN_OPERACION`,`d`.`ID_DEPOSITO_DEP` AS `ID_DEPOSITO_DEP`,`d`.`CODIGO_EMPRESA_DEP` AS `CODIGO_EMPRESA_OP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_OP`,`d`.`CODIGO_CAJA_DEP` AS `CODIGO_CAJA_OP`,`d`.`NUMERO_OPERACION_DEP` AS `NUMERO_OPERACION_OP`,`d`.`CODIGO_CLIENTE_DEP` AS `CODIGO_CLIENTE_DEP`,`d`.`CODIGO_ARTICULO_DEP` AS `CODIGO_ARTICULO_DEP`,`d`.`CODIGO_UNIDAD_DEP` AS `CODIGO_UNIDAD_DEP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_DEP`,`d`.`CANTIDAD_PENDIENTE_DEP` AS `CANTIDAD_PENDIENTE_DEP`,`d`.`PRECIO_VENTA_DEP` AS `PRECIO_VENTA_DEP`,`d`.`PORCEN_IVA_DEP` AS `PORCEN_IVA_DEP`,`d`.`IMPORTE_ANTICIPO_DEP` AS `IMPORTE_ANTICIPO_DEP`,`d`.`PRECIO_VENTA_DEP` * `d`.`CANTIDAD_PENDIENTE_DEP` - `d`.`IMPORTE_ANTICIPO_DEP` AS `IMPORTE_PENDIENTE_DEP`,`d`.`ESTADO_DEP` AS `ESTADO_DEP`,`d`.`FECHA_CREACION_DEP` AS `FECHA_CREACION_DEP`,`d`.`FECHA_ENTREGA_DEP` AS `FECHA_ENTREGA_DEP`,`d`.`EMPRESA_CANCEL_DEP` AS `EMPRESA_CANCEL_DEP`,`d`.`ALMACEN_CANCEL_DEP` AS `ALMACEN_CANCEL_DEP`,`d`.`CAJA_CANCEL_DEP` AS `CAJA_CANCEL_DEP`,`d`.`NUMERO_OPERACION_CANCEL_DEP` AS `NUMERO_OPERACION_CANCEL_DEP` from `fza_depositos_cliente` `d` where `d`.`NUMERO_OPERACION_DEP` is not null and `d`.`NUMERO_OPERACION_DEP` <> '' union all select 'CANCELACION' AS `CANCELACION`,`d`.`ID_DEPOSITO_DEP` AS `ID_DEPOSITO_DEP`,`d`.`EMPRESA_CANCEL_DEP` AS `EMPRESA_CANCEL_DEP`,`d`.`ALMACEN_CANCEL_DEP` AS `ALMACEN_CANCEL_DEP`,`d`.`CAJA_CANCEL_DEP` AS `CAJA_CANCEL_DEP`,`d`.`NUMERO_OPERACION_CANCEL_DEP` AS `NUMERO_OPERACION_CANCEL_DEP`,`d`.`CODIGO_CLIENTE_DEP` AS `CODIGO_CLIENTE_DEP`,`d`.`CODIGO_ARTICULO_DEP` AS `CODIGO_ARTICULO_DEP`,`d`.`CODIGO_UNIDAD_DEP` AS `CODIGO_UNIDAD_DEP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_DEP`,`d`.`CANTIDAD_PENDIENTE_DEP` AS `CANTIDAD_PENDIENTE_DEP`,`d`.`PRECIO_VENTA_DEP` AS `PRECIO_VENTA_DEP`,`d`.`PORCEN_IVA_DEP` AS `PORCEN_IVA_DEP`,`d`.`IMPORTE_ANTICIPO_DEP` AS `IMPORTE_ANTICIPO_DEP`,`d`.`PRECIO_VENTA_DEP` * `d`.`CANTIDAD_PENDIENTE_DEP` - `d`.`IMPORTE_ANTICIPO_DEP` AS `Name_exp_15`,`d`.`ESTADO_DEP` AS `ESTADO_DEP`,`d`.`FECHA_CREACION_DEP` AS `FECHA_CREACION_DEP`,`d`.`FECHA_ENTREGA_DEP` AS `FECHA_ENTREGA_DEP`,`d`.`EMPRESA_CANCEL_DEP` AS `EMPRESA_CANCEL_DEP`,`d`.`ALMACEN_CANCEL_DEP` AS `ALMACEN_CANCEL_DEP`,`d`.`CAJA_CANCEL_DEP` AS `CAJA_CANCEL_DEP`,`d`.`NUMERO_OPERACION_CANCEL_DEP` AS `NUMERO_OPERACION_CANCEL_DEP` from `fza_depositos_cliente` `d` where `d`.`NUMERO_OPERACION_CANCEL_DEP` is not null and `d`.`NUMERO_OPERACION_CANCEL_DEP` <> '' union all select case `o`.`TIPO_OPERACION_OPCAJA` when 'DE' then 'COBRO_INICIAL' when 'CB' then 'COBRO_PARCIAL' end AS `Name_exp_1`,`d`.`ID_DEPOSITO_DEP` AS `ID_DEPOSITO_DEP`,`o`.`CODIGO_EMPRESA_OPCAJA` AS `CODIGO_EMPRESA_OPCAJA`,`o`.`CODIGO_ALMACEN_OPCAJA` AS `CODIGO_ALMACEN_OPCAJA`,`o`.`CODIGO_CAJA_OPCAJA` AS `CODIGO_CAJA_OPCAJA`,`o`.`NUMERO_OPERACION_OPCAJA` AS `NUMERO_OPERACION_OPCAJA`,`d`.`CODIGO_CLIENTE_DEP` AS `CODIGO_CLIENTE_DEP`,`d`.`CODIGO_ARTICULO_DEP` AS `CODIGO_ARTICULO_DEP`,`d`.`CODIGO_UNIDAD_DEP` AS `CODIGO_UNIDAD_DEP`,`d`.`CODIGO_ALMACEN_DEP` AS `CODIGO_ALMACEN_DEP`,`d`.`CANTIDAD_PENDIENTE_DEP` AS `CANTIDAD_PENDIENTE_DEP`,`d`.`PRECIO_VENTA_DEP` AS `PRECIO_VENTA_DEP`,`d`.`PORCEN_IVA_DEP` AS `PORCEN_IVA_DEP`,`o`.`IMPORTE_TOTAL_OPCAJA` AS `IMPORTE_TOTAL_OPCAJA`,`d`.`PRECIO_VENTA_DEP` * `d`.`CANTIDAD_PENDIENTE_DEP` - `d`.`IMPORTE_ANTICIPO_DEP` AS `Name_exp_15`,`d`.`ESTADO_DEP` AS `ESTADO_DEP`,`d`.`FECHA_CREACION_DEP` AS `FECHA_CREACION_DEP`,`d`.`FECHA_ENTREGA_DEP` AS `FECHA_ENTREGA_DEP`,`d`.`EMPRESA_CANCEL_DEP` AS `EMPRESA_CANCEL_DEP`,`d`.`ALMACEN_CANCEL_DEP` AS `ALMACEN_CANCEL_DEP`,`d`.`CAJA_CANCEL_DEP` AS `CAJA_CANCEL_DEP`,`d`.`NUMERO_OPERACION_CANCEL_DEP` AS `NUMERO_OPERACION_CANCEL_DEP` from (`fza_caja_operaciones` `o` join `fza_depositos_cliente` `d` on(`d`.`ID_DEPOSITO_DEP` = `o`.`ID_DEPOSITO_OPCAJA`)) where `o`.`TIPO_OPERACION_OPCAJA` in ('CB','DE') and `o`.`ID_DEPOSITO_OPCAJA` is not null;
 
 -- Vista: vi_articulos
 DROP VIEW IF EXISTS `vi_articulos`;
@@ -11655,4 +11834,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 23/04/2026 19:06:48
+-- Backup completado: 23/04/2026 19:39:21
