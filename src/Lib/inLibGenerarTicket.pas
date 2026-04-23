@@ -16,7 +16,6 @@ uses
 
 implementation
 
-
 uses
   inLibDir;
 
@@ -36,7 +35,6 @@ var
   ComandosESC, RutaFicheroPDF: string;
   FormPreview: TFormVisualizador;
 
-  // Función anidada original para rellenar con ceros (LPAD)
   function LPAD(const AValue: string; ALength: Integer; const APadChar: Char = '0'): string;
   var
     CurrentLength: Integer;
