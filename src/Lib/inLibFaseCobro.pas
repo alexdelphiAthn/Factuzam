@@ -10,7 +10,7 @@
   - Gestión de referencias y divisas en formas de pago
   - Integración con VirtualTable para grid de pagos
 
-  Autor: Sistema Factuzam
+  Autor: Alejandro Laorden Hidalgo
   Fecha: 2026-02-15
 }
 
