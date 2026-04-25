@@ -137,7 +137,9 @@ uses
   inLibPathTokens in 'src\Lib\inLibPathTokens.pas',
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   UniDataConsultaOpe in 'src\DataModules\UniDataConsultaOpe.pas' {dmConsultaOpe: TDataModule},
-  inMtoConsultaOpe in 'src\Forms\inMtoConsultaOpe.pas' {frmConsultaOpe};
+  inMtoConsultaOpe in 'src\Forms\inMtoConsultaOpe.pas' {frmConsultaOpe},
+  inLibVentasCalendario in 'src\Lib\inLibVentasCalendario.pas',
+  inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas';
 
 var
   frmLogon: TfrmLogon;

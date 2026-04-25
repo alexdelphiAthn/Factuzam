@@ -1,25 +1,5 @@
 ﻿unit inMtoConsultaOpe;
 
-// =============================================================================
-//  F10 - BUSCAR/MODIFICAR OPERACIONES DE CAJA
-//
-//  Se invoca desde inMtoCajaMenu pasando (empresa, almacen, caja, fecha).
-//  Hereda de TfrmBase (como el resto del sistema) para estética consistente.
-//
-//  Layout:
-//    ┌────────────────────────────────────────────────────────────────┐
-//    │ [Fecha ▾]  [Buscar: ___________________]  [Refrescar]          │
-//    ├────────────────────────────────────────────────────────────────┤
-//    │  cxGrid MAESTRO (operaciones del día agrupadas)                │
-//    │                                                                │
-//    ├────────────────────────────────────────────────────────────────┤
-//    │ [Operación] [Movimientos] [Cliente] [Depósitos] [Factura]      │
-//    │  grids en cada pestaña — sólo lectura                          │
-//    │                                                                │
-//    │        [ Reimprimir ]            [ Cerrar (ESC) ]              │
-//    └────────────────────────────────────────────────────────────────┘
-// =============================================================================
-
 interface
 
 uses
@@ -31,7 +11,7 @@ uses
   cxDBData, cxGridLevel, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxCalendar, cxTextEdit,
   cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxContainer, cxLabel,
-  inMtoFrmBase,
+  inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, dxCore, cxDateUtils, dxCoreGraphics, cxCurrencyEdit,
   cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization;
 
@@ -39,19 +19,14 @@ type
   TfrmConsultaOpe = class(TfrmBase)
     pnlFiltros:       TPanel;
     lblFecha:         TcxLabel;
-
-
     lblBuscar:        TcxLabel;
     edtBuscar:        TcxButtonEdit;
     btnRefrescar:     TButton;
-
     pnlMaestro:       TPanel;
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;
     cxLevelMaestro:   TcxGridLevel;
-
     splitter:         TSplitter;
-
     pcHijos:          TcxPageControl;
     tsOperacion:      TcxTabSheet;
     tsPagos:          TcxTabSheet;
@@ -63,23 +38,18 @@ type
     cxGridOpe:        TcxGrid;
     cxViewOpe:        TcxGridDBTableView;
     cxLevelOpe:       TcxGridLevel;
-
     cxGridPagos:      TcxGrid;
     cxViewPagos:      TcxGridDBTableView;
     cxLevelPagos:     TcxGridLevel;
-
     cxGridMov:        TcxGrid;
     cxViewMov:        TcxGridDBTableView;
     cxLevelMov:       TcxGridLevel;
-
     cxGridCli:        TcxGrid;
     cxViewCli:        TcxGridDBTableView;
     cxLevelCli:       TcxGridLevel;
-
     cxGridDep:        TcxGrid;
     cxViewDep:        TcxGridDBTableView;
     cxLevelDep:       TcxGridLevel;
-
     pnlFacCabecera:   TPanel;
     cxGridFacCab:     TcxGrid;
     cxViewFacCab:     TcxGridDBTableView;
@@ -87,15 +57,12 @@ type
     cxGridFacLin:     TcxGrid;
     cxViewFacLin:     TcxGridDBTableView;
     cxLevelFacLin:    TcxGridLevel;
-
     pnlPie:           TPanel;
     btnReimprimir:    TButton;
     btnCerrar:        TButton;
-
     tmrBusqueda:      TTimer;
     Button1: TButton;
     Button2: TButton;
-
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -105,20 +72,29 @@ type
     procedure tmrBusquedaTimer(Sender: TObject);
     procedure btnReimprimirClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure dtpFechaPropertiesGetDayState(Sender: TObject; ADate: TDateTime;
+      AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
+    procedure dtpFechaPropertiesEditValueChanged(Sender: TObject);
   private
     FdmConsulta: TdmConsultaOpe;
     FEmpresa:    string;
     FAlmacen:    string;
     FCaja:       string;
     procedure RecargarMaestro;
+    procedure GuardarLayout;
+    procedure RestaurarLayout;
     procedure AjustarVisibilidadPestanas;
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
   public
-    // Invocado por inMtoCajaMenu antes de Show (patrón idéntico al de TfrmMtoOpeCaja)
     procedure PrepararValores(const AEmpresa,
                                     AAlmacen,
                                     ACaja: string;
                                     AFecha: TDateTime);
+  private
+    FVentasCal: TVentasCalendarioCache;
+    procedure dtpFechaGetDayState(Sender: TObject; ADate: TDateTime;
+      AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
   end;
 
 var
@@ -135,7 +111,8 @@ procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
   FdmConsulta := TdmConsultaOpe.Create(Self);
-
+  FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
+  dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
   cxViewPagos.DataController.DataSource   := FdmConsulta.dsPagos;
@@ -144,19 +121,26 @@ begin
   cxViewDep.DataController.DataSource     := FdmConsulta.dsDepositos;
   cxViewFacCab.DataController.DataSource  := FdmConsulta.dsFactura;
   cxViewFacLin.DataController.DataSource  := FdmConsulta.dsFacturaLin;
-
-  // Reaccionamos al cambio de fila del maestro
   FdmConsulta.dsMaestro.OnDataChange := OnMaestroDataChange;
-
-  // Timer de debounce para la búsqueda en caliente (400ms)
   tmrBusqueda.Enabled  := False;
   tmrBusqueda.Interval := 400;
-
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
                         // esté en el grid o en el edit de búsqueda
 end;
 
-// -----------------------------------------------------------------------------
+procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  FVentasCal.Free;
+end;
+
+procedure TfrmConsultaOpe.dtpFechaGetDayState(Sender: TObject;
+  ADate: TDateTime; AState: TCustomDrawState; AFont: TFont;
+  var ABackgroundColor: TColor);
+begin
+  FVentasCal.AplicarEstiloDia(ADate, AFont, ABackgroundColor);
+end;
+
 procedure TfrmConsultaOpe.PrepararValores(const AEmpresa,
                                                 AAlmacen,
                                                 ACaja: string;
@@ -165,13 +149,14 @@ begin
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
   FCaja    := ACaja;
-  dtpFecha.Date := AFecha;   // fecha heredada del calendario del menú
+  dtpFecha.Date := AFecha;
+  FVentasCal.Reconfigurar(AEmpresa, AAlmacen, ACaja);
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);
 begin
   inherited;
+  RestaurarLayout;
   Caption := Format('Buscar operaciones — Empresa %s / Almacén %s / Caja %s',
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
@@ -179,17 +164,61 @@ begin
     edtBuscar.SetFocus;
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
                                                        Shift: TShiftState);
 begin
   case Key of
     VK_ESCAPE: Close;
     VK_F5:     RecargarMaestro;
+    VK_F12:    if ssAlt in Shift then GuardarLayout;
   end;
 end;
 
-// -----------------------------------------------------------------------------
+procedure TfrmConsultaOpe.RestaurarLayout;
+var
+  Layout: TLayoutLoader;
+begin
+  Layout := TLayoutLoader.Create(Self.Name);
+  try
+    if not Layout.Disponible then Exit;
+    Layout.RestaurarGeometria(Self);
+    Layout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
+    Layout.RestaurarGrid('Maestro',     cxViewMaestro);
+    Layout.RestaurarGrid('Operacion',   cxViewOpe);
+    Layout.RestaurarGrid('Pagos',       cxViewPagos);
+    Layout.RestaurarGrid('Movimientos', cxViewMov);
+    Layout.RestaurarGrid('Cliente',     cxViewCli);
+    Layout.RestaurarGrid('Depositos',   cxViewDep);
+    Layout.RestaurarGrid('FacturaCab',  cxViewFacCab);
+    Layout.RestaurarGrid('FacturaLin',  cxViewFacLin);
+  finally
+    Layout.Free;
+  end;
+end;
+
+procedure TfrmConsultaOpe.GuardarLayout;
+var
+  Layout: TLayoutSaver;
+begin
+  Layout := TLayoutSaver.Create(Self.Name);
+  try
+    Layout.GuardarGeometria(Self);
+    Layout.GuardarAlturaPanel('PnlMaestroHeight', pnlMaestro);
+    Layout.GuardarGrid('Maestro',     cxViewMaestro);
+    Layout.GuardarGrid('Operacion',   cxViewOpe);
+    Layout.GuardarGrid('Pagos',       cxViewPagos);
+    Layout.GuardarGrid('Movimientos', cxViewMov);
+    Layout.GuardarGrid('Cliente',     cxViewCli);
+    Layout.GuardarGrid('Depositos',   cxViewDep);
+    Layout.GuardarGrid('FacturaCab',  cxViewFacCab);
+    Layout.GuardarGrid('FacturaLin',  cxViewFacLin);
+    if Layout.PreguntarYGrabar('Personalización Consulta Operaciones') then
+      ShowMessage('Layout guardado.');
+  finally
+    Layout.Free;
+  end;
+end;
+
 procedure TfrmConsultaOpe.RecargarMaestro;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then Exit;
@@ -204,7 +233,6 @@ begin
   end;
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.OnMaestroDataChange(Sender: TObject; Field: TField);
 begin
   // Field=nil => cambio de fila (no de celda). Refrescamos hijas y visibilidad.
@@ -215,7 +243,6 @@ begin
   end;
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.AjustarVisibilidadPestanas;
 var
   PagActiva: TcxTabSheet;
@@ -246,8 +273,20 @@ begin
   RecargarMaestro;
 end;
 
-// Debounce: cada vez que el usuario pulsa una tecla, reiniciamos el timer.
-// Cuando pare de teclear 400ms, disparamos la búsqueda. Así no saturamos MySQL.
+procedure TfrmConsultaOpe.dtpFechaPropertiesEditValueChanged(Sender: TObject);
+begin
+  inherited;
+  RecargarMaestro;
+end;
+
+procedure TfrmConsultaOpe.dtpFechaPropertiesGetDayState(Sender: TObject;
+  ADate: TDateTime; AState: TCustomDrawState; AFont: TFont;
+  var ABackgroundColor: TColor);
+begin
+  inherited;
+  FVentasCal.AplicarEstiloDia(ADate, AFont, ABackgroundColor);
+end;
+
 procedure TfrmConsultaOpe.edtBuscarPropertiesChange(Sender: TObject);
 begin
   tmrBusqueda.Enabled := False;
@@ -260,7 +299,6 @@ begin
   RecargarMaestro;
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.btnReimprimirClick(Sender: TObject);
 var
   sEmp, sAlm, sCaja, sNumOp, sCliente: string;
@@ -272,35 +310,19 @@ begin
   sCaja    := FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
   sNumOp   := FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
-
-  // Replicamos el orden de GrabarFacturaSimplificada:
-  //   1º  ticket fiscal        (si existe factura)
-  //   2º  resguardo depósitos  (si hubo alta/cancelación de depósito)
-  //   3º  recordatorio cliente (estado de cuenta ACTUAL, si hay cliente)
-  //
-  // Una misma operación puede imprimir las tres cosas: p.ej. cuando el
-  // cliente cobra un depósito existente y a la vez aparta prenda nueva.
-
   if FdmConsulta.TieneFactura then
     ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, 'DEBUG');
-
   if FdmConsulta.TieneDepositos then
     ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, 'DEBUG');
-
   if (not FdmConsulta.TieneFactura) and (not FdmConsulta.TieneDepositos) then
   begin
     ShowMessage('Esta operación no tiene ticket ni resguardo asociados.');
     Exit;
   end;
-
-  // Recordatorio de estado de cuenta: se imprime SIEMPRE que haya cliente,
-  // independientemente de si la operación era factura o depósito.
-  // Muestra la situación al día de HOY, no la del día de la operación original.
   if Trim(sCliente) <> '' then
     ImprimirRecordatorio(sCliente, 'DEBUG');
 end;
 
-// -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.btnCerrarClick(Sender: TObject);
 begin
   Close;
