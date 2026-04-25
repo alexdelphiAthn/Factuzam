@@ -2,8 +2,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   Left = 0
   Top = 0
   Caption = 'Men'#250' de Caja'
-  ClientHeight = 714
-  ClientWidth = 865
+  ClientHeight = 706
+  ClientWidth = 863
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

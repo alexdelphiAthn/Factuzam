@@ -6,6 +6,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
   Font.Height = -16
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
+  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   ExplicitWidth = 1216
@@ -38,6 +39,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Left = 72
       Top = 16
       Properties.OnChange = dtpFechaPropertiesChange
+      Properties.OnEditValueChanged = dtpFechaPropertiesEditValueChanged
+      Properties.OnGetDayState = dtpFechaPropertiesGetDayState
       TabOrder = 0
       Width = 130
     end
@@ -160,7 +163,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     TabOrder = 2
     Properties.ActivePage = tsDepositos
     Properties.CustomButtons.Buttons = <>
-    ExplicitLeft = 48
+    ExplicitWidth = 1198
+    ExplicitHeight = 352
     ClientRectBottom = 358
     ClientRectLeft = 2
     ClientRectRight = 1198
@@ -239,8 +243,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsPagos: TcxTabSheet
       Caption = 'Pagos'
       ImageIndex = 1
-      ExplicitWidth = 1194
-      ExplicitHeight = 322
       object cxGridPagos: TcxGrid
         Left = 0
         Top = 0
@@ -248,8 +250,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Height = 330
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1194
-        ExplicitHeight = 322
         object cxViewPagos: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -561,6 +561,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsDepositos: TcxTabSheet
       Caption = 'Dep'#243'sitos'
       ImageIndex = 3
+      ExplicitWidth = 1194
+      ExplicitHeight = 322
       object cxGridDep: TcxGrid
         Left = 0
         Top = 0
@@ -568,6 +570,8 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Height = 330
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1194
+        ExplicitHeight = 322
         object cxViewDep: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item

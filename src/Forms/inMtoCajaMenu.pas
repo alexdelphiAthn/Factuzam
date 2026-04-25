@@ -11,27 +11,10 @@ uses
   UniProvider, MySQLUniProvider, Data.DB, DBAccess, Uni, Vcl.Menus,
   Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles,
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
-  JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl;
+  JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
+  inLibVentasCalendario;
+
 type
-  TVentasDia = class
-  private
-    FFecha: TDateTime;
-    FTotalVentas: Integer;
-    FTotalCobrado: Currency;
-  public
-    constructor Create(AFecha: TDateTime; ATotalVentas: Integer; ATotalCobrado: Currency);
-    property Fecha: TDateTime read FFecha write FFecha;
-    property TotalVentas: Integer read FTotalVentas write FTotalVentas;
-    property TotalCobrado: Currency read FTotalCobrado write FTotalCobrado;
-    function GetHintText: string;
-  end;
-
-  TVentasList = class(TList<TVentasDia>)
-  public
-    function FindByDate(AFecha: TDateTime): TVentasDia;
-    function HasSales(AFecha: TDateTime): Boolean;
-  end;
-
   TfrmMtoMenuCaja = class(TfrmBase)
     lblF5: TcxLabel;
     lblF10: TcxLabel;
@@ -56,47 +39,46 @@ type
     lblTraspasos: TcxLabel;
     jvgfnmtr1: TJvGIFAnimator;
     lblEmpresa: TcxLabel;
-    JvMonthCalendar1:TJvMonthCalendar;
+    JvMonthCalendar1: TJvMonthCalendar;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    // Eventos para F5 - Ventas
+    // Eventos F5
     procedure lblVentasMouseEnter(Sender: TObject);
     procedure lblVentasMouseLeave(Sender: TObject);
     procedure lblF5MouseEnter(Sender: TObject);
     procedure lblF5MouseLeave(Sender: TObject);
-    // Eventos para F10 - Buscar/Modificar
+    // Eventos F10
     procedure lblBuscarModificarMouseEnter(Sender: TObject);
     procedure lblBuscarModificarMouseLeave(Sender: TObject);
     procedure lblF10MouseEnter(Sender: TObject);
     procedure lblF10MouseLeave(Sender: TObject);
-    // Eventos para F6 - Entrada de Cambio
+    // Eventos F6
     procedure lblEntradaCambioMouseEnter(Sender: TObject);
     procedure lblEntradaCambioMouseLeave(Sender: TObject);
     procedure lblF6MouseEnter(Sender: TObject);
     procedure lblF6MouseLeave(Sender: TObject);
-    // Eventos para F7 - Gastos por Caja
+    // Eventos F7
     procedure lblGastosCajaMouseEnter(Sender: TObject);
     procedure lblGastosCajaMouseLeave(Sender: TObject);
     procedure lblF7MouseEnter(Sender: TObject);
     procedure lblF7MouseLeave(Sender: TObject);
-    // Eventos para F11 - Arqueo
+    // Eventos F11
     procedure lblArqueoMouseEnter(Sender: TObject);
     procedure lblArqueoMouseLeave(Sender: TObject);
     procedure lblF11MouseEnter(Sender: TObject);
     procedure lblF11MouseLeave(Sender: TObject);
-    // Eventos para F3 - Traspasos
+    // Eventos F3
     procedure lblTraspasosMouseEnter(Sender: TObject);
     procedure lblTraspasosMouseLeave(Sender: TObject);
     procedure lblF3MouseEnter(Sender: TObject);
     procedure lblF3MouseLeave(Sender: TObject);
-    //Eventos para ESC - Salir
+    // Eventos ESC
     procedure lblSalirMouseEnter(Sender: TObject);
     procedure lblSalirMouseLeave(Sender: TObject);
     procedure lblESCMouseEnter(Sender: TObject);
     procedure lblESCMouseLeave(Sender: TObject);
-//    procedure JvMonthCalendar1Change(Sender: TObject);
-    procedure JvMonthCalendar1GetMonthBoldInfo(Sender: TObject; Month,
-      Year: Cardinal; var MonthBoldInfo: Cardinal);
+    procedure JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
+      Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
     procedure JvMonthCalendar1DblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure lblESCClick(Sender: TObject);
@@ -111,14 +93,10 @@ type
     procedure lblBuscarModificarClick(Sender: TObject);
     procedure lblF10Click(Sender: TObject);
   private
-    VentasList: TVentasList;
-    FMesesCargados: TList<Integer>;
-//    FLastHintDate: TDateTime;
-//    FHintWindow: THintWindow;
-    procedure CargarVentasPeriodoVisible(Month, Year: Cardinal);
+    FVentasCal: TVentasCalendarioCache;
     procedure AbrirBuscarModificar;
   private
-    // Colores originales para restaurar
+    // Colores originales
     FOriginalF5Color: TColor;
     FOriginalVentasColor: TColor;
     FOriginalF10Color: TColor;
@@ -129,37 +107,27 @@ type
     FOriginalGastosCajaColor: TColor;
     FOriginalF11Color: TColor;
     FOriginalArqueoColor: TColor;
-    FOriginalESCColor:TColor;
-    FOriginalSalirColor:TColor;
+    FOriginalESCColor: TColor;
+    FOriginalSalirColor: TColor;
     FOriginalF3Color: TColor;
     FOriginalTraspasosColor: TColor;
-    // Métodos auxiliares para cambiar colores
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
-    procedure RestoreMenuItemColors(FKeyLabel,
-                                    DescLabel: TcxLabel;
+    procedure RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                     OriginalFKeyColor,
                                     OriginalDescColor: TColor);
     procedure AbrirSelectorCaja;
     procedure RecargarCalendario;
   public
-    { Public declarations }
-
-    FFechaCaja:TDateTime;
-    //FConfigBD: TConfigBD; // Variable privada que guardará los datos en RAM
-    FEmpresa, FAlmacen, FCaja:string;
-    //procedure CargarConfiguracionDesdeINI; // Lee el disco SOLO una vez
-//    procedure DoShowHint(var HintStr: string; var CanShow: Boolean; var HintInfo: THintInfo);
-  public
-
-//    property ConfigBD: TConfigBD read FConfigBD;
-    property FechaCaja:TDateTime read FFechaCaja;
+    FFechaCaja: TDateTime;
+    FEmpresa, FAlmacen, FCaja: string;
+    property FechaCaja: TDateTime read FFechaCaja;
   end;
 
 var
   frmMtoMenuCaja: TfrmMtoMenuCaja;
 
-  implementation
+implementation
 
 uses
   inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe;
@@ -189,28 +157,27 @@ begin
 end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
-var
-  FormatSettings: TFormatSettings;
 begin
-  Self.Position  := poScreenCenter;
-  JvMonthCalendar1.Date := Date;
-  Application.ShowHint := True;
-  Application.HintPause := 500;
+  Self.Position := poScreenCenter;
+  JvMonthCalendar1.Date := Date;     // forzar mes actual (evita fecha cacheada en DFM)
+
+  Application.ShowHint     := True;
+  Application.HintPause    := 500;
   Application.HintHidePause := 5000;
-  JvMonthCalendar1.ShowHint := True;
+  JvMonthCalendar1.ShowHint       := True;
   JvMonthCalendar1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
-  JvMonthCalendar1.ParentShowHint := False;
-  lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
+
+  // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del calendario
+  FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
+
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
   else
   begin
-    // Tomar directamente los valores del login
     FEmpresa := oEmpresa;
     FAlmacen := oAlmacen;
     FCaja    := oCaja;
-    // Si aún así están vacíos, forzar selector como fallback
     if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
     begin
       ShowMessage('Error al asignar Empresa Almacén Caja');
@@ -220,10 +187,13 @@ begin
     begin
       lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
                                    [FEmpresa, FAlmacen, FCaja]);
+      FVentasCal.Reconfigurar(FEmpresa, FAlmacen, FCaja);
     end;
   end;
-  CargarVentasPeriodoVisible( MonthOf(Now),
-                              YearOf(Now));
+
+  // Forzar repintado para que el calendario marque el mes actual con los días con ventas
+  JvMonthCalendar1.Invalidate;
+
   FOriginalF5Color := lblF5.Style.TextColor;
   FOriginalVentasColor := lblVentas.Style.TextColor;
   FOriginalF10Color := lblF10.Style.TextColor;
@@ -240,54 +210,31 @@ begin
   FOriginalESCColor := lblESC.Style.TextColor;
   FOriginalSalirColor := lblSalir.Style.TextColor;
 end;
-// Eventos para F3 - Traspasos
-procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
-begin
-  // Usamos clWebOrange para mantener la coherencia con F6, F7, F10, F11
-  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
-end;
-procedure TfrmMtoMenuCaja.lblTraspasosMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF3, lblTraspasos, FOriginalF3Color, FOriginalTraspasosColor);
-end;
-procedure TfrmMtoMenuCaja.lblF3MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
-end;
-procedure TfrmMtoMenuCaja.lblF3MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF3, lblTraspasos, FOriginalF3Color, FOriginalTraspasosColor);
-end;
+
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
-  if Assigned(VentasList) then
-    VentasList.Free;
-  if Assigned(FMesesCargados) then
-    FMesesCargados.Free;
+  FVentasCal.Free;
 end;
+
 procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   case Key of
-    VK_F5: lblVentasClick(Sender);
-    VK_ESCAPE : lblESCClick(Sender);
-    VK_F10:     AbrirBuscarModificar;
+    VK_F5:     lblVentasClick(Sender);
+    VK_ESCAPE: lblESCClick(Sender);
+    VK_F10:    AbrirBuscarModificar;
   end;
 end;
 
 procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
 begin
-  with cxClock1 do
-  begin
-    Time := Now;              // Hora actual
-  end;
+  cxClock1.Time := Now;
 end;
 
 procedure TfrmMtoMenuCaja.AbrirBuscarModificar;
 var
   frm: TfrmConsultaOpe;
 begin
-  // Validamos que el contexto de caja esté bien asignado
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
     ShowMessage('No hay empresa/almacén/caja asignados. ' +
@@ -297,7 +244,7 @@ begin
   frm := TfrmConsultaOpe.Create(Application);
   try
     frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
-    frm.Show;      // No modal, igual que las operaciones de caja.
+    frm.Show;
   except
     frm.Free;
     raise;
@@ -310,21 +257,19 @@ var
 begin
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    // Configuramos la conexión antes de abrir
     frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
     frm.qrySeleccion.Open;
     frm.sEmpresa := oEmpresa;
     frm.sAlmacen := oAlmacen;
-    frm.sCaja := oCaja;
+    frm.sCaja    := oCaja;
     frm.ShowModal;
     if (frm.sFicha = 'S') then
     begin
-      // ASIGNACIÓN DE VARIABLES desde el dataset del formulario modal
       FEmpresa := frm.qrySeleccion.FieldByName('Empresa').AsString;
       FAlmacen := frm.qrySeleccion.FieldByName('Almacen').AsString;
       FCaja    := frm.qrySeleccion.FieldByName('Caja').AsString;
       lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
-                                  [FEmpresa, FAlmacen, FCaja]);
+                                   [FEmpresa, FAlmacen, FCaja]);
       RecargarCalendario;
     end
     else
@@ -334,134 +279,29 @@ begin
   end;
 end;
 
-procedure TfrmMtoMenuCaja.CargarVentasPeriodoVisible(Month, Year: Cardinal);
-var
-  Query: TUniQuery;
-  PrimerDia, UltimoDia: TDateTime;
-  VentaDia: TVentasDia;
-  IdMes: Integer;
+procedure TfrmMtoMenuCaja.RecargarCalendario;
 begin
-  // Sin contexto de caja no tiene sentido consultar
-  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
-    Exit;
-
-  if not Assigned(VentasList) then
-    VentasList := TVentasList.Create;
-  if not Assigned(FMesesCargados) then
-    FMesesCargados := TList<Integer>.Create;
-
-  // Código numérico del mes (Año 2026, Mes 1 = 202601)
-  // El contexto de caja no se incluye aquí porque RecargarCalendario
-  // limpia la lista al cambiar de caja.
-  IdMes := (Year * 100) + Month;
-
-  if FMesesCargados.Contains(IdMes) then
-    Exit;
-
-  PrimerDia := EncodeDate(Year, Month, 1);
-  UltimoDia := IncMonth(PrimerDia, 1);
-
-  Query := TUniQuery.Create(nil);
-  try
-    Query.Connection := inLibGlobalVar.oConn;
-
-    Query.SQL.Text :=
-      ' SELECT FECHA_OP_DIA                  AS FECHA,          ' +
-      '        COUNT(*)                      AS TOTAL_VENTAS,   ' +
-      '        COALESCE(SUM(CASE                                ' +
-      '                       WHEN TIPO_OPERACION_OPCAJA = ''VE'' ' +
-      '                       THEN IMPORTE_TOTAL_OPCAJA         ' +
-      '                       ELSE 0                            ' +
-      '                     END), 0)         AS TOTAL_COBRADO   ' +
-      '   FROM fza_caja_operaciones                             ' +
-      '  WHERE FECHA_OP_DIA           >= :fecha_inicio          ' +
-      '    AND FECHA_OP_DIA           <  :fecha_fin             ' +
-      '    AND CODIGO_EMPRESA_OPCAJA  =  :empresa               ' +
-      '    AND CODIGO_ALMACEN_OPCAJA  =  :almacen               ' +
-      '    AND CODIGO_CAJA_OPCAJA     =  :caja                  ' +
-      '  GROUP BY FECHA_OP_DIA                                  ' +
-      '  ORDER BY FECHA_OP_DIA                                  ';
-
-    Query.ParamByName('fecha_inicio').AsDate   := PrimerDia;
-    Query.ParamByName('fecha_fin').AsDate      := UltimoDia;
-    Query.ParamByName('empresa').AsString      := FEmpresa;
-    Query.ParamByName('almacen').AsString      := FAlmacen;
-    Query.ParamByName('caja').AsString         := FCaja;
-
-    Query.Open;
-    try
-      while not Query.Eof do
-      begin
-        VentaDia := TVentasDia.Create(
-          Query.FieldByName('FECHA').AsDateTime,
-          Query.FieldByName('TOTAL_VENTAS').AsInteger,
-          Query.FieldByName('TOTAL_COBRADO').AsCurrency
-        );
-        VentasList.Add(VentaDia);
-        Query.Next;
-      end;
-    finally
-      Query.Close;
-    end;
-
-    FMesesCargados.Add(IdMes);
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TfrmMtoMenuCaja.ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
-                                      HoverColor: TColor);
-begin
-  FKeyLabel.Style.TextColor := HoverColor;
-  DescLabel.Style.TextColor := HoverColor;
-end;
-
-procedure TfrmMtoMenuCaja.cxButton1Click(Sender: TObject);
-begin
-  JvMonthCalendar1.Date := Now;
+  // Si el contexto cambió, esto vacía el caché internamente
+  FVentasCal.Reconfigurar(FEmpresa, FAlmacen, FCaja);
+  JvMonthCalendar1.Invalidate;
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
   Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
-var
-  Dia: Integer;
-  Fecha: TDateTime;
 begin
-  CargarVentasPeriodoVisible(Month, Year);
-  MonthBoldInfo := 0;
-  if not Assigned(VentasList) then
-    Exit;
-  for Dia := 1 to DaysInAMonth(Year, Month) do
-  begin
-    Fecha := EncodeDate(Year, Month, Dia);
-    if VentasList.HasSales(Fecha) then
-      MonthBoldInfo := MonthBoldInfo or (1 shl (Dia - 1));
-  end;
+  MonthBoldInfo := FVentasCal.MaskBoldDelMes(Year, Month);
 end;
 
-
-// -----------------------------------------------------------------------------
-// JvMonthCalendar1DblClick — equivalente a OnDblClick del cxDateNavigator
-// -----------------------------------------------------------------------------
 procedure TfrmMtoMenuCaja.JvMonthCalendar1Click(Sender: TObject);
 var
   VentaDia: TVentasDia;
 begin
-  // Actualizamos tu variable de fecha y la etiqueta visual que ya tenías
   FFechaCaja := JvMonthCalendar1.Date;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
-
-  // Buscamos si el día seleccionado tiene ventas
-  if Assigned(VentasList) then
-  begin
-    VentaDia := VentasList.FindByDate(FFechaCaja);
-    if Assigned(VentaDia) then
-    begin
-      // Mostramos el texto exacto que habías preparado para el Hint
-      //ShowMessage('Datos del ' + DateToStr(FFechaCaja) + #13#10#13#10 + VentaDia.GetHintText);
-    end;
-  end;
+  // Si quieres mostrar el resumen del día clickado, descomenta:
+  // VentaDia := FVentasCal.GetVentasDia(FFechaCaja);
+  // if Assigned(VentaDia) then
+  //   ShowMessage(VentaDia.GetHintText);
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
@@ -470,23 +310,30 @@ begin
   FFechaCaja := JvMonthCalendar1.Date;
 end;
 
-procedure TfrmMtoMenuCaja.RecargarCalendario;
+procedure TfrmMtoMenuCaja.cxButton1Click(Sender: TObject);
 begin
-  if Assigned(FMesesCargados) then
-    FMesesCargados.Clear;
-
-  if Assigned(VentasList) then
-    VentasList.Clear;
-
-  JvMonthCalendar1.Invalidate;
+  JvMonthCalendar1.Date := Now;
 end;
 
-procedure TfrmMtoMenuCaja.RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel; OriginalFKeyColor, OriginalDescColor: TColor);
+// =============================================================================
+// Hover de etiquetas — sin cambios funcionales respecto a tu versión
+// =============================================================================
+
+procedure TfrmMtoMenuCaja.ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
+  HoverColor: TColor);
+begin
+  FKeyLabel.Style.TextColor := HoverColor;
+  DescLabel.Style.TextColor := HoverColor;
+end;
+
+procedure TfrmMtoMenuCaja.RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
+  OriginalFKeyColor, OriginalDescColor: TColor);
 begin
   FKeyLabel.Style.TextColor := OriginalFKeyColor;
   DescLabel.Style.TextColor := OriginalDescColor;
 end;
 
+// F5 - Ventas
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 var
   frmMtoOpeCaja: TfrmMtoOpeCaja;
@@ -494,11 +341,8 @@ begin
   frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
   try
     frmMtoOpeCaja.Tag := 1;
-    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)',
-                                    [Self.FCaja]);
-    frmMtoOpeCaja.PrepararValores(Self.FEmpresa,
-                                  Self.FAlmacen,
-                                  Self.FCaja,
+    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)', [Self.FCaja]);
+    frmMtoOpeCaja.PrepararValores(Self.FEmpresa, Self.FAlmacen, Self.FCaja,
                                   Self.FFechaCaja);
     frmMtoOpeCaja.Show;
   except
@@ -525,8 +369,8 @@ procedure TfrmMtoMenuCaja.lblF5MouseLeave(Sender: TObject);
 begin
   RestoreMenuItemColors(lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor);
 end;
-// Eventos para F10 - Buscar/Modificar
 
+// F10 - Buscar/Modificar
 procedure TfrmMtoMenuCaja.lblBuscarModificarClick(Sender: TObject);
 begin
   inherited;
@@ -540,7 +384,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblBuscarModificarMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor);
+  RestoreMenuItemColors(lblF10, lblBuscarModificar,
+                        FOriginalF10Color, FOriginalBuscarModificarColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblF10Click(Sender: TObject);
@@ -556,11 +401,11 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF10MouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor);
+  RestoreMenuItemColors(lblF10, lblBuscarModificar,
+                        FOriginalF10Color, FOriginalBuscarModificarColor);
 end;
 
-// Eventos para F6 - Entrada de Cambio
-
+// F6 - Entrada de Cambio
 procedure TfrmMtoMenuCaja.lblEmpresaDblClick(Sender: TObject);
 begin
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
@@ -574,7 +419,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF6, lblEntradaCambio, FOriginalF6Color, FOriginalEntradaCambioColor);
+  RestoreMenuItemColors(lblF6, lblEntradaCambio,
+                        FOriginalF6Color, FOriginalEntradaCambioColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblF6MouseEnter(Sender: TObject);
@@ -584,9 +430,11 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF6MouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF6, lblEntradaCambio, FOriginalF6Color, FOriginalEntradaCambioColor);
+  RestoreMenuItemColors(lblF6, lblEntradaCambio,
+                        FOriginalF6Color, FOriginalEntradaCambioColor);
 end;
 
+// F7 - Gastos por Caja
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF7, lblGastosCaja, clWebOrange);
@@ -594,7 +442,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF7, lblGastosCaja, FOriginalF7Color, FOriginalGastosCajaColor);
+  RestoreMenuItemColors(lblF7, lblGastosCaja,
+                        FOriginalF7Color, FOriginalGastosCajaColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblF7MouseEnter(Sender: TObject);
@@ -604,9 +453,11 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF7MouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF7, lblGastosCaja, FOriginalF7Color, FOriginalGastosCajaColor);
+  RestoreMenuItemColors(lblF7, lblGastosCaja,
+                        FOriginalF7Color, FOriginalGastosCajaColor);
 end;
 
+// Etiqueta fecha
 procedure TfrmMtoMenuCaja.lblFechaMouseEnter(Sender: TObject);
 begin
   lblFecha.Style.TextColor := clBlue;
@@ -617,8 +468,7 @@ begin
   lblFecha.Style.TextColor := clBlack;
 end;
 
-// Eventos para F11 - Arqueo
-
+// F11 - Arqueo
 procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF11, lblArqueo, clWebOrange);
@@ -626,7 +476,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblArqueoMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF11, lblArqueo, FOriginalF11Color, FOriginalArqueoColor);
+  RestoreMenuItemColors(lblF11, lblArqueo,
+                        FOriginalF11Color, FOriginalArqueoColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblF11MouseEnter(Sender: TObject);
@@ -636,20 +487,43 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF11MouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF11, lblArqueo, FOriginalF11Color, FOriginalArqueoColor);
+  RestoreMenuItemColors(lblF11, lblArqueo,
+                        FOriginalF11Color, FOriginalArqueoColor);
 end;
 
+// F3 - Traspasos
+procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
+begin
+  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
+end;
+
+procedure TfrmMtoMenuCaja.lblTraspasosMouseLeave(Sender: TObject);
+begin
+  RestoreMenuItemColors(lblF3, lblTraspasos,
+                        FOriginalF3Color, FOriginalTraspasosColor);
+end;
+
+procedure TfrmMtoMenuCaja.lblF3MouseEnter(Sender: TObject);
+begin
+  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
+end;
+
+procedure TfrmMtoMenuCaja.lblF3MouseLeave(Sender: TObject);
+begin
+  RestoreMenuItemColors(lblF3, lblTraspasos,
+                        FOriginalF3Color, FOriginalTraspasosColor);
+end;
+
+// ESC - Salir
 procedure TfrmMtoMenuCaja.lblSalirMouseEnter(Sender: TObject);
 begin
-  ChangeMenuItemColors(lblESC, lblSalir, clBlue); // Cambiar a azul al pasar el mouse
+  ChangeMenuItemColors(lblESC, lblSalir, clBlue);
 end;
 
 procedure TfrmMtoMenuCaja.lblSalirMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblESC,
-                        lblSalir,
-                        FOriginalESCColor,
-                        FOriginalSalirColor);
+  RestoreMenuItemColors(lblESC, lblSalir,
+                        FOriginalESCColor, FOriginalSalirColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblESCClick(Sender: TObject);
@@ -664,50 +538,10 @@ end;
 
 procedure TfrmMtoMenuCaja.lblESCMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblESC,
-                              lblSalir, FOriginalESCColor, FOriginalSalirColor);
+  RestoreMenuItemColors(lblESC, lblSalir,
+                        FOriginalESCColor, FOriginalSalirColor);
 end;
 
-{ TVentasDia }
-
-constructor TVentasDia.Create(AFecha: TDateTime;
-                              ATotalVentas: Integer;
-                              ATotalCobrado: Currency);
-begin
-  inherited Create;
-  FFecha := AFecha;
-  FTotalVentas := ATotalVentas;
-  FTotalCobrado := ATotalCobrado;
-end;
-
-function TVentasDia.GetHintText: string;
-begin
-  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s €',
-                   [FTotalVentas, FormatFloat('#,##0.00', FTotalCobrado)]);
-end;
-
-{ TVentasList }
-
-function TVentasList.FindByDate(AFecha: TDateTime): TVentasDia;
-var
-  I: Integer;
-  FechaBuscada: TDateTime;
-begin
-  Result := nil;
-  FechaBuscada := AFecha;
-  for I := 0 to Count - 1 do
-  begin
-    if (Items[I].Fecha = FechaBuscada) then
-    begin
-      Result := Items[I];
-      Exit;
-    end;
-  end;
-end;
-function TVentasList.HasSales(AFecha: TDateTime): Boolean;
-begin
-  Result := FindByDate(AFecha) <> nil;
-end;
 initialization
   ForceReferenceToClass(TfrmMtoMenuCaja);
 end.
