@@ -12,7 +12,7 @@ uses
   Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles,
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
-  inLibVentasCalendario;
+  inLibVentasCalendario, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoMenuCaja = class(TfrmBase)
@@ -40,6 +40,8 @@ type
     jvgfnmtr1: TJvGIFAnimator;
     lblEmpresa: TcxLabel;
     JvMonthCalendar1: TJvMonthCalendar;
+    ActionList1: TActionList;
+    Action1: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     // Eventos F5
@@ -92,6 +94,7 @@ type
     procedure JvMonthCalendar1Click(Sender: TObject);
     procedure lblBuscarModificarClick(Sender: TObject);
     procedure lblF10Click(Sender: TObject);
+    procedure Action1Execute(Sender: TObject);
   private
     FVentasCal: TVentasCalendarioCache;
     procedure AbrirBuscarModificar;
@@ -277,6 +280,12 @@ begin
   finally
     frm.Free;
   end;
+end;
+
+procedure TfrmMtoMenuCaja.Action1Execute(Sender: TObject);
+begin
+  inherited;
+  lblESCClick(Sender);
 end;
 
 procedure TfrmMtoMenuCaja.RecargarCalendario;

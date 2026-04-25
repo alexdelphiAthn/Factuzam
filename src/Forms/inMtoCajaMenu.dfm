@@ -2,8 +2,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   Left = 0
   Top = 0
   Caption = 'Men'#250' de Caja'
-  ClientHeight = 706
-  ClientWidth = 863
+  ClientHeight = 714
+  ClientWidth = 865
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -42,7 +42,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Animate = True
     AutoSize = False
     Center = True
-    FrameIndex = 1
+    FrameIndex = 198
     Image.Data = {
       A4440A0047494638396133003300F7000000000001050B010914031837041F48
       04214C073780094BAC094FB80B5CD50D6EFD3485FD0316330107100A57C90528
@@ -21624,5 +21624,14 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     OnTimer = Timer1Timer
     Left = 504
     Top = 440
+  end
+  object ActionList1: TActionList
+    Left = 424
+    Top = 360
+    object Action1: TAction
+      Caption = 'ESCAPE'
+      ShortCut = 27
+      OnExecute = Action1Execute
+    end
   end
 end
