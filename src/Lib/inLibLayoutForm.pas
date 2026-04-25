@@ -7,6 +7,37 @@
 //    * Geometría (Left/Top/Width/Height/WindowState)
 //    * Anchos de columnas de cxGrid (cualquier número de grids)
 //    * Altura de paneles asociados a splitters
+//
+//  Persistencia: usa odmPerfiles.GrabarPerfilesBatch para escribir TODAS las
+//  claves del layout en un único INSERT ... VALUES por lote, en lugar de un
+//  INSERT por clave. Para un layout con varios grids esto reduce drásticamente
+//  el tráfico contra MySQL.
+//
+//  Uso típico:
+//    Para guardar (Alt+F12):
+//      var Layout := TLayoutSaver.Create(Self.Name);
+//      try
+//        Layout.GuardarGeometria(Self);
+//        Layout.GuardarAlturaPanel('PanelMaestro', pnlMaestro);
+//        Layout.GuardarGrid('Maestro', cxViewMaestro);
+//        Layout.GuardarGrid('Pagos', cxViewPagos);
+//        Layout.PreguntarYGrabar('Personalización Consulta');
+//      finally
+//        Layout.Free;
+//      end;
+//
+//    Para restaurar (FormShow):
+//      var Layout := TLayoutLoader.Create(Self.Name);
+//      try
+//        if Layout.Disponible then
+//        begin
+//          Layout.RestaurarGeometria(Self);
+//          Layout.RestaurarAlturaPanel('PanelMaestro', pnlMaestro, 80);
+//          Layout.RestaurarGrid('Maestro', cxViewMaestro);
+//        end;
+//      finally
+//        Layout.Free;
+//      end;
 // =============================================================================
 
 interface
@@ -14,7 +45,8 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.ExtCtrls,
   cxGridDBTableView, cxGridCustomTableView,
-  inLibUser;   // TProfileDicc
+  inLibUser,            // TProfileDicc
+  UniDataPerfiles;      // TPerfilList, TPerfilItem
 
 type
   // ---------------------------------------------------------------------------
@@ -38,7 +70,8 @@ type
   end;
 
   // ---------------------------------------------------------------------------
-  // Acumula valores en memoria, al final pregunta el perfil destino y graba
+  // Acumula valores en memoria; PreguntarYGrabar los persiste TODOS de una
+  // sola vez con GrabarPerfilesBatch.
   // ---------------------------------------------------------------------------
   TLayoutSaver = class
   private
@@ -185,14 +218,19 @@ begin
   end;
 end;
 
+// Pregunta al usuario el perfil destino y graba TODAS las claves acumuladas
+// en una única llamada batch. Si el usuario cancela el modal, no se graba
+// nada y devuelve False.
 function TLayoutSaver.PreguntarYGrabar(const ADescripcion: string): Boolean;
 var
   formulario: TfrmModalGenImpSave;
   sPermisos: string;
   i: Integer;
-  Clave, Valor: string;
+  Lote: TPerfilList;
+  Item: TPerfilItem;
 begin
   Result := False;
+  if FClaves.Count = 0 then Exit;
   formulario := TfrmModalGenImpSave.Create(Application);
   try
     formulario.edtDescripcion.Enabled := False;
@@ -204,13 +242,22 @@ begin
   finally
     formulario.Free;
   end;
-  for i := 0 to FClaves.Count - 1 do
-  begin
-    Clave := FClaves.Names[i];
-    Valor := FClaves.ValueFromIndex[i];
-    odmPerfiles.GrabarPerfil(sPermisos, FFormKey, Clave, Valor);
+  Lote := TPerfilList.Create;
+  try
+    for i := 0 to FClaves.Count - 1 do
+    begin
+      Item.UserGroup := sPermisos;
+      Item.KeyPerfil := FFormKey;
+      Item.SubKey    := FClaves.Names[i];
+      Item.Value     := FClaves.ValueFromIndex[i];
+      Lote.Add(Item);
+    end;
+    odmPerfiles.GrabarPerfilesBatch(Lote);
+  finally
+    Lote.Free;
   end;
   Result := True;
 end;
 
 end.
+
