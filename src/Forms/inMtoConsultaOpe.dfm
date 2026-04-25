@@ -38,6 +38,9 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object dtpFecha: TcxDateEdit
       Left = 72
       Top = 16
+      Properties.DisplayFormat = 'dd/mm/yyyy'
+      Properties.EditFormat = 'dd/mm/yyyy'
+      Properties.ImmediatePost = True
       Properties.OnChange = dtpFechaPropertiesChange
       Properties.OnEditValueChanged = dtpFechaPropertiesEditValueChanged
       Properties.OnGetDayState = dtpFechaPropertiesGetDayState
@@ -592,6 +595,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           object colDepRol: TcxGridDBColumn
             Caption = 'Rol'
             DataBinding.FieldName = 'ROL_EN_OPERACION'
+            Visible = False
             Width = 110
           end
           object colDepEstado: TcxGridDBColumn
