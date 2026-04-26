@@ -33,7 +33,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Left = 12
       Top = 18
       Caption = 'Fecha:'
-      TabOrder = 3
+      TabOrder = 2
     end
     object dtpFecha: TcxDateEdit
       Left = 72
@@ -51,7 +51,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Left = 232
       Top = 18
       Caption = 'Buscar:'
-      TabOrder = 4
+      TabOrder = 3
     end
     object edtBuscar: TcxButtonEdit
       Left = 296
@@ -60,15 +60,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Properties.OnChange = edtBuscarPropertiesChange
       TabOrder = 1
       Width = 500
-    end
-    object btnRefrescar: TButton
-      Left = 812
-      Top = 14
-      Width = 173
-      Height = 28
-      Caption = 'Refrescar (F5)'
-      TabOrder = 2
-      OnClick = btnRefrescarClick
     end
   end
   object pnlMaestro: TPanel [2]
