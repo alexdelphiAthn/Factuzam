@@ -21,7 +21,6 @@ type
     lblFecha:         TcxLabel;
     lblBuscar:        TcxLabel;
     edtBuscar:        TcxButtonEdit;
-    btnRefrescar:     TButton;
     pnlMaestro:       TPanel;
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;

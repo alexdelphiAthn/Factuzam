@@ -227,6 +227,7 @@ type
                         // — vendedor —
                         const AVendedor:     string;
                         // — caja y trazabilidad —
+                        const AEmpresa:      string;
                         const AAlmacen:      string;
                         const ACaja:         string;
                         ANumOperacion:       string;
@@ -1149,7 +1150,7 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
       Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds',
       1, '', 'S', PrecioBase, 0, 0, PrecioBase, AImporte,
       Lin.TipoIva, Lin.PorcIva, PrecioBase, AImporte,
-      UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
+      UsuarioCaja, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
   end;
 
 begin
@@ -1327,7 +1328,8 @@ begin
               Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
               Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
-              UsuarioCaja, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
+              UsuarioCaja, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '',
+              UsuarioCaja);
           if Abs(Lin.TotalCIva) > 0.001 then
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
@@ -1421,7 +1423,7 @@ begin
             Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad, Lin.Cantidad,
             Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
             Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
-            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja,
+            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja, AEmpresa,
             AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
         end;
         if Lin.TipoArticulo = 'ESTANDAR' then
@@ -2463,6 +2465,7 @@ procedure TdmCajaOpe.InsertarLineaFactura(
             // — vendedor —
             const AVendedor:     string;
             // — caja y trazabilidad —
+            const AEmpresa:      string;
             const AAlmacen:      string;
             const ACaja:         string;
             ANumOperacion:       string;
@@ -2472,6 +2475,7 @@ begin
   QryTrx.SQL.Text :=
     'INSERT INTO fza_facturas_lineas (' +
     '  SERIE_FACTURA_LINEA, NRO_FACTURA_LINEA, LINEA_FACTURA_LINEA,' +
+    '  CODIGO_EMPRESA_FACTURA_LINEA, ' +
     '  CODIGO_ARTICULO_FACTURA_LINEA, CODIGO_UNIDAD_FACTURA_LINEA,' +
     '  DESCRIPCION_ARTICULO_FACTURA_LINEA, ' + //DESCRIPCION_VARIACION_FACTURA_LINEA,' +
     '  CODIGO_FAMILIA_FACTURA_LINEA, NOMBRE_FAMILIA_FACTURA_LINEA,' +
@@ -2491,6 +2495,7 @@ begin
     '  USUARIOALTA, USUARIOMODIF, INSTANTEALTA) ' +
     'VALUES (' +
     '  :SERIE, :NRO, :LINEA,' +
+    '  :EMP, ' +
     '  NULLIF(:ART,   ''''), NULLIF(:SKU,    ''''),' +
     '  NULLIF(:DESC,  ''''),' + //NULLIF(:DESCVAR,''''),' +
     '  NULLIF(:FAM,   ''''), NULLIF(:NOMFAM, ''''),' +
@@ -2511,6 +2516,7 @@ begin
   QryTrx.ParamByName('SERIE').AsString    := ASerie;
   QryTrx.ParamByName('NRO').AsString      := ANro;
   QryTrx.ParamByName('LINEA').AsString    := ALinea;
+  QryTrx.ParamByName('EMP').AsString      := AEmpresa;
   QryTrx.ParamByName('ART').AsString      := AArticulo;
   QryTrx.ParamByName('SKU').AsString      := ASku;
   QryTrx.ParamByName('DESC').AsString     := ADesc;
