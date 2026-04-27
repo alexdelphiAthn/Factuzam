@@ -565,6 +565,7 @@ begin
           else
             AnticipoSinIVA := AnticipoDado / (1 + (PorcIVA / 100));
           cdsLineas.Append;
+          cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString := IdDeposito;
           cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString            := 'ACUENTA';
           cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString              := 'ACUENTA';
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString       := 'Abono a cuenta ' + Sku;
@@ -631,17 +632,17 @@ var
   VieneDeDep, AccionDep: string;
   AnticipoRecuperado: Currency;
 
-  procedure EliminarLineaAbono(const ASkuLinea: string);
+  procedure EliminarLineaAbono(const AIdDeposito: string);
   var
     Bkm: TBookmark;
   begin
+    if Trim(AIdDeposito) = '' then Exit;
     Bkm := (cdsLineas as TClientDataSet).GetBookmark;
     cdsLineas.First;
     while not cdsLineas.Eof do
     begin
       if (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') and
-         (cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString =
-          'Abono a cuenta ' + ASkuLinea) then
+         (cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString = AIdDeposito) then
       begin
         cdsLineas.Delete;
         Break;
@@ -656,10 +657,11 @@ var
   procedure ProcesarLinea;
   var
     AnticipoPrevio: Currency;
-    SkuLinea, TipoIVALinea, EsImpInclLinea: string;
+    SkuLinea, TipoIVALinea, EsImpInclLinea, IdDepLinea: string;
     PorcIVALinea: Currency;
     DineroReal: Currency;
   begin
+    IdDepLinea     := cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString;
     TotalLinea     := cdsLineas.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency;
     AnticipoPrevio := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
     SkuLinea       := cdsLineas.FieldByName(
@@ -711,7 +713,7 @@ var
           cdsLineas.FieldByName(
                           'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency;
       cdsLineas.Post;
-      EliminarLineaAbono(SkuLinea);
+      EliminarLineaAbono(IdDepLinea);
       DineroDisponible := 0;
       cdsLineas.Next;
     end;

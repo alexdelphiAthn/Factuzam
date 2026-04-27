@@ -316,7 +316,7 @@ begin
   //  ROL = ALTA / CANCELACION / COBRO_PARCIAL según haga falta.
   // ------------------------------------------------------------------
   qryDepositos.SQL.Text :=
-    'SELECT d.ROL_EN_OPERACION, '                                         +
+    'SELECT DISTINCT  '                                         +
     '       d.ID_DEPOSITO_DEP, '                                          +
     '       d.CODIGO_CLIENTE_DEP, '                                       +
     '       d.CODIGO_ARTICULO_DEP, '                                      +
