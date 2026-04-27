@@ -970,6 +970,7 @@ function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
 var
   Clon: TClientDataSet;
   OldQty: Double;
+  VieneDeDep: string;
 begin
   Result := False;
   if Trim(SkuBuscado) = '' then Exit;
@@ -979,13 +980,19 @@ begin
     Clon.First;
     while not Clon.Eof do
     begin
-      if (Clon.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString = SkuBuscado)
+      VieneDeDep := Clon.FieldByName('VIENE_DE_DEPOSITO').AsString;
+
+      // Solo consolidamos líneas de venta normal.
+      // Las líneas de depósito ('S' = prenda apartada, 'A' = abono)
+      // NO se consolidan: representan operaciones distintas aunque
+      // compartan SKU con un artículo que el cliente se lleva ahora.
+      if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
+         (Clon.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString = SkuBuscado)
          and (Clon.RecNo <> DatosCaja.cdsLineas.RecNo) then
       begin
         OldQty := Clon.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
         Clon.Edit;
         Clon.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat := OldQty + 1;
-        // GridRecalc se encarga del resto: precio, descuento, total
         dsLineas.DataSet.DisableControls;
         Clon.Post;
         dsLineas.DataSet.EnableControls;
