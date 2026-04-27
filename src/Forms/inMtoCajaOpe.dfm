@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 437
-  ClientWidth = 1366
+  ClientHeight = 445
+  ClientWidth = 1368
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -126,13 +126,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     TabOrder = 3
     object Panel1: TPanel
       Left = 1
-      Top = 257
-      Width = 1366
+      Top = 249
+      Width = 1364
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 249
-      ExplicitWidth = 1364
       DesignSize = (
         1364
         98)

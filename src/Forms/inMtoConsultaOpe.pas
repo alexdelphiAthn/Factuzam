@@ -75,6 +75,7 @@ type
     procedure dtpFechaPropertiesGetDayState(Sender: TObject; ADate: TDateTime;
       AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
     procedure dtpFechaPropertiesEditValueChanged(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FdmConsulta: TdmConsultaOpe;
     FEmpresa:    string;
@@ -84,6 +85,7 @@ type
     procedure GuardarLayout;
     procedure RestaurarLayout;
     procedure AjustarVisibilidadPestanas;
+    procedure AplicarAnchosPestanasHijas;
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
   public
     procedure PrepararValores(const AEmpresa,
@@ -91,6 +93,7 @@ type
                                     ACaja: string;
                                     AFecha: TDateTime);
   private
+    FLayout: TLayoutLoader;
     FVentasCal: TVentasCalendarioCache;
     procedure dtpFechaGetDayState(Sender: TObject; ADate: TDateTime;
       AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
@@ -106,10 +109,17 @@ implementation
 uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar;
 
 // -----------------------------------------------------------------------------
+procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  inherited;
+  Action := CaFree;
+end;
+
 procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
   FdmConsulta := TdmConsultaOpe.Create(Self);
+  FLayout     := TLayoutLoader.Create(Self.Name);
   FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
@@ -130,6 +140,7 @@ end;
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FLayout.Free;
   FVentasCal.Free;
 end;
 
@@ -155,10 +166,10 @@ end;
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);
 begin
   inherited;
-  RestaurarLayout;
   Caption := Format('Buscar operaciones — Empresa %s / Almacén %s / Caja %s',
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
+  RestaurarLayout;
   if edtBuscar.CanFocus then
     edtBuscar.SetFocus;
 end;
@@ -174,25 +185,24 @@ begin
 end;
 
 procedure TfrmConsultaOpe.RestaurarLayout;
-var
-  Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name);
-  try
-    if not Layout.Disponible then Exit;
-    Layout.RestaurarGeometria(Self);
-    Layout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
-    Layout.RestaurarGrid('Maestro',     cxViewMaestro);
-    Layout.RestaurarGrid('Operacion',   cxViewOpe);
-    Layout.RestaurarGrid('Pagos',       cxViewPagos);
-    Layout.RestaurarGrid('Movimientos', cxViewMov);
-    Layout.RestaurarGrid('Cliente',     cxViewCli);
-    Layout.RestaurarGrid('Depositos',   cxViewDep);
-    Layout.RestaurarGrid('FacturaCab',  cxViewFacCab);
-    Layout.RestaurarGrid('FacturaLin',  cxViewFacLin);
-  finally
-    Layout.Free;
-  end;
+  if not FLayout.Disponible then Exit;
+  FLayout.RestaurarGeometria(Self);
+  FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
+  FLayout.RestaurarGrid('Maestro', cxViewMaestro);
+  AplicarAnchosPestanasHijas;
+end;
+
+procedure TfrmConsultaOpe.AplicarAnchosPestanasHijas;
+begin
+  if not FLayout.Disponible then Exit;
+  FLayout.RestaurarGrid('Operacion',   cxViewOpe);
+  FLayout.RestaurarGrid('Pagos',       cxViewPagos);
+  FLayout.RestaurarGrid('Movimientos', cxViewMov);
+  FLayout.RestaurarGrid('Cliente',     cxViewCli);
+  FLayout.RestaurarGrid('Depositos',   cxViewDep);
+  FLayout.RestaurarGrid('FacturaCab',  cxViewFacCab);
+  FLayout.RestaurarGrid('FacturaLin',  cxViewFacLin);
 end;
 
 procedure TfrmConsultaOpe.GuardarLayout;
@@ -310,16 +320,16 @@ begin
   sNumOp   := FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
   if FdmConsulta.TieneFactura then
-    ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, 'DEBUG');
+    ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
   if FdmConsulta.TieneDepositos then
-    ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, 'DEBUG');
+    ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
   if (not FdmConsulta.TieneFactura) and (not FdmConsulta.TieneDepositos) then
   begin
     ShowMessage('Esta operación no tiene ticket ni resguardo asociados.');
     Exit;
   end;
   if Trim(sCliente) <> '' then
-    ImprimirRecordatorio(sCliente, 'DEBUG');
+    ImprimirRecordatorio(sCliente, oNomImpresoraCaja);
 end;
 
 procedure TfrmConsultaOpe.btnCerrarClick(Sender: TObject);
