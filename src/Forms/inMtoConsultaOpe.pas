@@ -325,7 +325,7 @@ begin
     ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
   if (not FdmConsulta.TieneFactura) and (not FdmConsulta.TieneDepositos) then
   begin
-    ShowMessage('Esta operación no tiene ticket ni resguardo asociados.');
+    ShowMessage('Esta operación no tiene ticket ni depósito asociado.');
     Exit;
   end;
   if Trim(sCliente) <> '' then
