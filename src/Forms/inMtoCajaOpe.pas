@@ -2252,13 +2252,13 @@ begin
                                   FCodigoAlmacen,
                                   FCodigoCaja,
                                   NumeroGenerado,
-                                  frmFaseCobro.DatosCobro);
+                                  frmFaseCobro.DatosCobro,
+                                  oNomImpresoraCaja);
            tiTicketRegalo:
              ;
            tiSinTicket:
              ;
          end;
-         // 3. Imprimir el ticket del vale (Si se emitió alguno por devoluciones o cambio sobrante)
          if CodigoValeGenerado <> '' then
          begin
            // ImprimirTicketVale(CodigoValeGenerado, frmFaseCobro.DatosCobro.ImporteValeEmitido);

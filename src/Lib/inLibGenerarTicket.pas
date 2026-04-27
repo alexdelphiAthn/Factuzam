@@ -12,7 +12,8 @@ uses
                             ACodigoAlmacen,
                             ACodigoCaja,
                             ANumeroGenerado: string;
-                            DatosCobro: TDatosFaseCobro);
+                            DatosCobro: TDatosFaseCobro;
+                            NombreImpresora:string = 'DEBUG');
 
 implementation
 
@@ -23,13 +24,13 @@ procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoAlmacen,
                           ACodigoCaja,
                           ANumeroGenerado: string;
-                          DatosCobro: TDatosFaseCobro);
+                          DatosCobro: TDatosFaseCobro;
+                          NombreImpresora:string = 'DEBUG');
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
   Lin: TDatosLineaFactura;
   dLin:TDataSet;
-  NombreImpresora: string;
   ModoQR, QRTexto: string;
   CantidadTotal: Double;
   ComandosESC, RutaFicheroPDF: string;
@@ -49,7 +50,7 @@ var
 begin
   if not DatosCobro.FRequiereFactura then
     Exit;
-  NombreImpresora := 'DEBUG';
+//  NombreImpresora := 'DEBUG';
   ModoQR := 'NATIVO';
   QRTexto := 'http://hacienda.com';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);

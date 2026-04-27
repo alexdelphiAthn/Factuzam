@@ -6,6 +6,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
   Font.Height = -16
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
+  OnClose = FormClose
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
@@ -166,6 +167,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsOperacion: TcxTabSheet
       Caption = 'Operaci'#243'n '
       ImageIndex = 0
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object cxGridOpe: TcxGrid
         Left = 0
         Top = 0
@@ -237,6 +242,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsPagos: TcxTabSheet
       Caption = 'Pagos'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object cxGridPagos: TcxGrid
         Left = 0
         Top = 0
@@ -395,6 +404,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsMovimientos: TcxTabSheet
       Caption = 'Movimientos '
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object cxGridMov: TcxGrid
         Left = 0
         Top = 0
@@ -482,6 +495,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsCliente: TcxTabSheet
       Caption = 'Cliente '
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object cxGridCli: TcxGrid
         Left = 0
         Top = 0
@@ -702,6 +719,10 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsFactura: TcxTabSheet
       Caption = 'Factura '
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlFacCabecera: TPanel
         Left = 0
         Top = 0
