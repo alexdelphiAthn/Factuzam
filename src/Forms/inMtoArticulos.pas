@@ -31,7 +31,8 @@ uses
   dxScrollbarAnnotations, dxCore, System.Actions, Vcl.ActnList,
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  cxDBLabel, dxShellDialogs, inLibArticulosVariaciones;
+  cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
+  cxCustomListBox, cxCheckListBox;
 
 type
   TfrmMtoArticulos = class(TfrmMtoGen)
@@ -245,7 +246,7 @@ type
     tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn;
     tvTarifasESVARIACION_ARTICULO: TcxGridDBColumn;
     tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
-    cxButton4: TcxButton;
+    btnAddSKU: TcxButton;
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -280,6 +281,7 @@ type
     procedure cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
     procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure addSkuAllClick(Sender: TObject);
+    procedure btnAddSKUClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -469,6 +471,133 @@ begin
     if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
     unqryTablaG.Post;
   BuscarProveedores;
+end;
+
+procedure TfrmMtoArticulos.btnAddSKUClick(Sender: TObject);
+var
+  frmSel: TfrmModalAceptCancel;
+  lblSkus, lblTarifas: TLabel;
+  chkSkus, chkTarifas: TcxCheckListBox;
+  i, j: Integer;
+  qryTodasTarifas: TUniQuery;
+begin
+  inherited;
+
+  if dmmArticulos.unqryVariacionesArticulos.IsEmpty then
+  begin
+    ShowMessage('No hay SKUs generados para este artículo.');
+    Exit;
+  end;
+
+  // Instanciamos tu modal base
+  frmSel := TfrmModalAceptCancel.Create(Self);
+  try
+    frmSel.OnClose := nil;
+    frmSel.Caption := 'Añadir SKUs a Tarifas';
+    frmSel.Width := 550;
+    frmSel.Height := 600;
+
+    // --- SECCIÓN SKUs ---
+    lblSkus := TLabel.Create(frmSel);
+    lblSkus.Parent := frmSel.pnlBody;
+    lblSkus.Caption := ' 1. Seleccione los SKUs:';
+    lblSkus.Font.Style := [fsBold];
+    lblSkus.AlignWithMargins := True;
+    // Forzamos el orden dándole un número de Top correlativo muy grande
+    lblSkus.Top := 1000;
+    lblSkus.Align := alTop;
+
+    chkSkus := TcxCheckListBox.Create(frmSel);
+    chkSkus.Parent := frmSel.pnlBody;
+    chkSkus.Height := 170;
+    chkSkus.AlignWithMargins := True;
+    chkSkus.Top := 2000; // Obliga a colocarse debajo del Label 1
+    chkSkus.Align := alTop;
+
+    // Rellenamos los SKUs
+    with dmmArticulos.unqryVariacionesArticulos do
+    begin
+      DisableControls;
+      First;
+      while not Eof do
+      begin
+        chkSkus.Items.Add.Text := FieldByName('CODIGO_UNIDAD_SKU').AsString;
+        Next;
+      end;
+      EnableControls;
+    end;
+
+    // --- SECCIÓN TARIFAS ---
+    lblTarifas := TLabel.Create(frmSel);
+    lblTarifas.Parent := frmSel.pnlBody;
+    lblTarifas.Caption := ' 2. Seleccione las Tarifas:';
+    lblTarifas.Font.Style := [fsBold];
+    lblTarifas.AlignWithMargins := True;
+    lblTarifas.Top := 3000; // Obliga a colocarse debajo del CheckList 1
+    lblTarifas.Align := alTop;
+
+    chkTarifas := TcxCheckListBox.Create(frmSel);
+    chkTarifas.Parent := frmSel.pnlBody;
+    chkTarifas.AlignWithMargins := True;
+    chkTarifas.Align := alClient; // Ocupa todo el resto inferior de la ventana
+
+    // Consultamos TODAS las tarifas activas directamente
+    qryTodasTarifas := TUniQuery.Create(nil);
+    try
+      qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
+      qryTodasTarifas.SQL.Text := 'SELECT CODIGO_TARIFA FROM fza_tarifas WHERE ACTIVO_TARIFA = ''S'' ORDER BY ORDEN_TARIFA';
+      qryTodasTarifas.Open;
+
+      while not qryTodasTarifas.Eof do
+      begin
+        chkTarifas.Items.Add.Text := qryTodasTarifas.FieldByName('CODIGO_TARIFA').AsString;
+        qryTodasTarifas.Next;
+      end;
+    finally
+      qryTodasTarifas.Free;
+    end;
+
+    // Mostramos tu modal
+    frmSel.ShowModal;
+
+    // Si el usuario aceptó
+    if frmSel.sFicha = 'S' then
+    begin
+      dmmArticulos.unqryTarifasArticulos.DisableControls;
+      try
+        for i := 0 to chkSkus.Items.Count - 1 do
+        begin
+          if chkSkus.Items[i].Checked then
+          begin
+            for j := 0 to chkTarifas.Items.Count - 1 do
+            begin
+              if chkTarifas.Items[j].Checked then
+              begin
+                dmmArticulos.unqryTarifasArticulos.Append;
+
+                dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := chkSkus.Items[i].Text;
+                dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TARIFA').AsString := chkTarifas.Items[j].Text;
+                dmmArticulos.unqryTarifasArticulos.FieldByName('ACTIVO_TARIFA').AsString := 'S';
+                dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIOSALIDA_TARIFA').AsFloat := 0;
+                dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIOFINAL_TARIFA').AsFloat := 0;
+                dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_TARIFA').AsDateTime := Now;
+
+                dmmArticulos.unqryTarifasArticulos.Post;
+              end;
+            end;
+          end;
+        end;
+      finally
+        dmmArticulos.unqryTarifasArticulos.EnableControls;
+      end;
+
+      pcDetail.ActivePage := tsTarifas;
+//      if tvTarifas.CanFocus then tvTarifas.SetFocus;
+    end;
+
+  finally
+    frmSel.Free;
+  end;
 end;
 
 procedure TfrmMtoArticulos.btnBuscarClick(Sender: TObject);

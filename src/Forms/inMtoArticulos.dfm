@@ -20,21 +20,20 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       Width = 1077
       Height = 671
       TabOrder = 1
-      Properties.ActivePage = tsFicha
       ExplicitWidth = 1077
       ExplicitHeight = 671
-      ClientRectBottom = 667
-      ClientRectRight = 1073
+      ClientRectBottom = 669
+      ClientRectRight = 1075
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 1069
-        ExplicitHeight = 637
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 1073
+        ExplicitHeight = 640
         inherited cxGrdPrincipal: TcxGrid
-          Width = 1069
-          Height = 637
-          ExplicitWidth = 1069
-          ExplicitHeight = 637
+          Width = 1073
+          Height = 640
+          ExplicitWidth = 1073
+          ExplicitHeight = 640
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
               Caption = 'C'#243'digo Art'#237'culo'
@@ -75,14 +74,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 1069
-        ExplicitHeight = 637
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 1073
+        ExplicitHeight = 640
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 1069
+          Width = 1073
           Height = 174
           Align = alTop
           BevelOuter = bvNone
@@ -90,7 +89,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           object pnlBodyFicha: TPanel
             Left = 0
             Top = 0
-            Width = 1069
+            Width = 1073
             Height = 174
             Align = alClient
             BevelOuter = bvNone
@@ -196,25 +195,25 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
         object pnlButtonFicha: TPanel
           Left = 0
-          Top = 182
-          Width = 1069
-          Height = 455
+          Top = 184
+          Width = 1073
+          Height = 456
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
-            Width = 1069
-            Height = 455
+            Width = 1073
+            Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsSKUs
+            Properties.ActivePage = tsTarifas
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 451
-            ClientRectLeft = 4
-            ClientRectRight = 1065
-            ClientRectTop = 30
+            ClientRectBottom = 454
+            ClientRectLeft = 2
+            ClientRectRight = 1071
+            ClientRectTop = 29
             object tsGeneral: TcxTabSheet
               Caption = '&1_General'
               ImageIndex = 4
@@ -320,10 +319,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Caption = '&4_SKUS'
               ImageIndex = 6
               object Panel1: TPanel
-                Left = 940
+                Left = 948
                 Top = 0
                 Width = 121
-                Height = 421
+                Height = 425
                 Align = alRight
                 TabOrder = 0
                 object cxButton2: TcxButton
@@ -366,8 +365,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrid2: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 940
-                Height = 421
+                Width = 948
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -484,8 +483,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 945
-                Height = 421
+                Width = 953
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -713,10 +712,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts2: TPanel
-                Left = 945
+                Left = 953
                 Top = 0
                 Width = 116
-                Height = 421
+                Height = 425
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -747,13 +746,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 2
                   OnClick = btnExportarTarifaClick
                 end
-                object cxButton4: TcxButton
+                object btnAddSKU: TcxButton
                   Left = 4
                   Top = 96
                   Width = 104
                   Height = 34
                   Caption = 'A&'#241'adir SKU'
                   TabOrder = 3
+                  OnClick = btnAddSKUClick
                 end
               end
             end
@@ -763,8 +763,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 940
-                Height = 421
+                Width = 948
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -890,10 +890,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts1: TPanel
-                Left = 940
+                Left = 948
                 Top = 0
                 Width = 121
-                Height = 421
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnIraProveedor: TcxButton
@@ -931,8 +931,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 948
-                Height = 421
+                Width = 956
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1102,10 +1102,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts: TPanel
-                Left = 948
+                Left = 956
                 Top = 0
                 Width = 113
-                Height = 421
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnIraFactura: TcxButton
@@ -1151,8 +1151,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 940
-                Height = 421
+                Width = 948
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1241,10 +1241,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object Panel2: TPanel
-                Left = 940
+                Left = 948
                 Top = 0
                 Width = 121
-                Height = 421
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object cxButton6: TcxButton
@@ -1300,8 +1300,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrid6: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 940
-                Height = 421
+                Width = 948
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1526,10 +1526,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object Panel3: TPanel
-                Left = 940
+                Left = 948
                 Top = 0
                 Width = 121
-                Height = 421
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object cxButton11: TcxButton
@@ -1584,8 +1584,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
-                Top = 342
-                Width = 1061
+                Top = 346
+                Width = 1069
                 Height = 79
                 Align = alBottom
                 TabOrder = 3
@@ -1722,35 +1722,35 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         object splSplitterFicha: TcxSplitter
           Left = 0
           Top = 174
-          Width = 1069
-          Height = 8
+          Width = 1073
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1069
-        ExplicitHeight = 637
+        ExplicitWidth = 1073
+        ExplicitHeight = 640
         inherited pnlPerfilTop: TPanel
-          Width = 1069
+          Width = 1073
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1069
+          ExplicitWidth = 1073
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1069
-          Height = 580
+          Width = 1073
+          Height = 583
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1069
-          ExplicitHeight = 580
+          ExplicitWidth = 1073
+          ExplicitHeight = 583
           inherited cxgrdPerfil: TcxGrid
-            Width = 1069
-            Height = 580
-            ExplicitWidth = 1069
-            ExplicitHeight = 580
+            Width = 1073
+            Height = 583
+            ExplicitWidth = 1073
+            ExplicitHeight = 583
           end
         end
       end
