@@ -305,48 +305,64 @@ end;
 
 procedure TdmArticulos.unqryTarifasArticulosBeforePost(DataSet: TDataSet);
 var
-  unqrySol:TUniQuery;
+  unqrySol: TUniQuery;
+  PKValue: Integer;
 begin
   inherited;
   with unqryTarifasArticulos do
   begin
+    // 1. Averiguamos el ID del registro actual.
+    // Si estamos insertando uno nuevo, le damos un valor que no existe (-1)
     if State = dsInsert then
     begin
       FieldByName('CODIGO_UNICO_TARIFA').Required := False;
       FieldByName('CODIGO_UNICO_TARIFA').AutoGenerateValue := arAutoInc;
-    end;
-    unqrySol := TUniQuery.Create(nil);
-    unqrySol.Connection := oConn;
-
-    // NUEVO: Añadimos COALESCE(CODIGO_UNIDAD_TARIFA, '') = :CODIGO_UNIDAD a la SQL
-    // Utilizamos COALESCE para que los artículos que no tienen SKU (valor null) tampoco fallen.
-    unqrySol.SQL.Text := 'SELECT * ' +
-                         '  FROM fza_articulos_tarifas ' +
-                         ' WHERE CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO' +
-                         '   AND CODIGO_TARIFA = :CODIGO_TARIFA' +
-                         '   AND COALESCE(CODIGO_UNIDAD_TARIFA, '''') = ' +
-                         '                                      :CODIGO_UNIDAD';
-
-    unqrySol.ParamByName('CODIGO_ARTICULO').AsString :=
-                            unqryTablaG.FindField('CODIGO_ARTICULO').AsString;
-    unqrySol.ParamByName('CODIGO_TARIFA').AsString :=
-                                          FindField('CODIGO_TARIFA').AsString;
-    // NUEVO: Le pasamos el parámetro del SKU
-    unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
-                                          FindField('CODIGO_UNIDAD_TARIFA').AsString;
-    unqrySol.Open;
-    if not(ExistePeriodoUnico(unqrySol,
-                              FindField('FECHA_DESDE_TARIFA'),
-                              FindField('FECHA_HASTA_TARIFA')))
-    then
+      PKValue := -1;
+    end
+    else
     begin
-      ShowMessageFmt('No se pueden grabar dos precios para una tarifa ' +
-                     'activa en fechas concurrentes para el artículo/SKU %s',
-                     [FindField('CODIGO_UNIDAD_TARIFA').AsString]); // Mejoramos el mensaje
-      Abort;
+      // Si estamos editando, cogemos su ID real
+      PKValue := FieldByName('CODIGO_UNICO_TARIFA').AsInteger;
     end;
-    if ((unqryTarifasArticulos.State = dsInsert) or
-        (unqryTarifasArticulos.State = dsEdit)) then
+
+    unqrySol := TUniQuery.Create(nil);
+    try
+      unqrySol.Connection := oConn;
+
+      // 2. Añadimos: AND CODIGO_UNICO_TARIFA <> :PK para que no se valide contra sí mismo
+      unqrySol.SQL.Text := 'SELECT * ' +
+                           '  FROM fza_articulos_tarifas ' +
+                           ' WHERE CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO' +
+                           '   AND CODIGO_TARIFA = :CODIGO_TARIFA' +
+                           '   AND COALESCE(CODIGO_UNIDAD_TARIFA, '''') = :CODIGO_UNIDAD' +
+                           '   AND CODIGO_UNICO_TARIFA <> :PK';
+
+      unqrySol.ParamByName('CODIGO_ARTICULO').AsString :=
+                              unqryTablaG.FindField('CODIGO_ARTICULO').AsString;
+      unqrySol.ParamByName('CODIGO_TARIFA').AsString :=
+                                            FindField('CODIGO_TARIFA').AsString;
+      unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
+                                            FindField('CODIGO_UNIDAD_TARIFA').AsString;
+      unqrySol.ParamByName('PK').AsInteger := PKValue;
+
+      unqrySol.Open;
+
+      if not(ExistePeriodoUnico(unqrySol,
+                                FindField('FECHA_DESDE_TARIFA'),
+                                FindField('FECHA_HASTA_TARIFA')))
+      then
+      begin
+        ShowMessageFmt('No se pueden grabar dos precios para una tarifa ' +
+                       'activa en fechas concurrentes para el artículo/SKU %s',
+                       [FindField('CODIGO_UNIDAD_TARIFA').AsString]);
+        Abort;
+      end;
+    finally
+      // Liberamos memoria de forma segura
+      unqrySol.Free;
+    end;
+
+    if ((State = dsInsert) or (State = dsEdit)) then
       oDmConn.ActualizarUserTimeModif(DataSet);
   end;
 end;

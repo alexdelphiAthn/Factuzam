@@ -777,6 +777,7 @@ var
   Qry: TUniQuery;
   CodigoLimpio, SkuDetectado, CodigoPadre: string;
   sql: TUniQuery;
+  fDescuento: Double;
 begin
   Result := False;
   CodigoLimpio := UpperCase(Trim(Codigo));
@@ -797,20 +798,15 @@ begin
       DatosCaja.cdsLineas.DisableControls;
       try
         if DatosCaja.cdsLineas.State = dsBrowse then DatosCaja.cdsLineas.Edit;
-        DatosCaja.cdsLineas.FieldByName(
-                               'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString :=
-                               Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
-        DatosCaja.cdsLineas.FieldByName(
-                                      'TIPO_ARTICULO_FACTURA_LINEA').AsString :=
-                                      Qry.FieldByName('TIPO_ARTICULO').AsString;
-        DatosCaja.cdsLineas.FieldByName(
-                       'CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
+        DatosCaja.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('DESCRIPCION_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName('TIPO_ARTICULO_FACTURA_LINEA').AsString := Qry.FieldByName('TIPO_ARTICULO').AsString;
+        DatosCaja.cdsLineas.FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString := CodigoPadre;
+
         if SkuDetectado <> '' then
         begin
           if not FActualizandoDepositos then
             ConsultarStock(SkuDetectado);
-          DatosCaja.cdsLineas.FieldByName(
-                        'CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
+          DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACTURA_LINEA').AsString := SkuDetectado;
           RecalcularPrecioDesdeSku(SkuDetectado);
           Result := True;
         end
@@ -824,10 +820,21 @@ begin
             sql := TUniQuery.Create(nil);
             try
               sql.Connection := oConn;
+
+              // --- AÑADIDOS LOS FILTROS DE FECHAS AQUÍ TAMBIÉN ---
               sql.SQL.Text := 'SELECT PRECIOSALIDA_TARIFA, ESIMP_INCL_TARIFA, TIPO_IVA_ARTICULO, PORCEN_DTO_TARIFA, NUM_ATRIBUTOS_REQ ' +
-                              '  FROM vi_articulos_tarifas WHERE CODIGO_TARIFA = :CODTARIFA AND CODIGO_ARTICULO_TARIFA = :CODIGOARTICULO LIMIT 1';
+                              '  FROM vi_articulos_tarifas ' +
+                              ' WHERE CODIGO_TARIFA = :CODTARIFA ' +
+                              '   AND CODIGO_ARTICULO_TARIFA = :CODIGOARTICULO ' +
+                              '   AND FECHA_DESDE_TARIFA <= :FECHA ' +
+                              '   AND (FECHA_HASTA_TARIFA IS NULL OR FECHA_HASTA_TARIFA >= :FECHA) ' +
+                              ' LIMIT 1';
+
               sql.ParamByName('CODTARIFA').AsString := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
               sql.ParamByName('CODIGOARTICULO').AsString := CodigoPadre;
+              // Le pasamos la fecha del ticket
+              sql.ParamByName('FECHA').AsDateTime := DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
+
               sql.Open;
               if not sql.IsEmpty then
               begin
@@ -838,16 +845,17 @@ begin
                  if NumAtributosReq = 0 then
                     DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := sql.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
 
-                 // --- CORRECCIÓN: Leemos el descuento real y reseteamos precios ---
-                 if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
-                    DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat
-                 else
-                    DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+                 fDescuento := 0;
+                 if sql.FindField('PORCEN_DTO_TARIFA') <> nil then
+                 begin
+                   if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
+                     fDescuento := sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat;
+                 end;
+                 DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := fDescuento;
 
                  DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
                  DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
                  DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
-                 // ------------------------------------------------------------------
               end
               else
               begin
@@ -864,11 +872,7 @@ begin
         DatosCaja.cdsLineas.EnableControls;
       end;
       if not FActualizandoDepositos then
-        GridRecalc(nil,
-                   cxGrid1DBTableView1,
-                   DatosCaja.cdsLineas,
-                   DatosCaja.cdsCabecera,
-                   ActualizarLabelTotal);
+        GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
     end;
   finally
     Qry.Free;
@@ -902,49 +906,53 @@ procedure TfrmMtoOpeCaja.RecalcularPrecioDesdeSku(sSKU: string);
 var
   qry: TUniQuery;
   CodTarifa: string;
+  fDescuento: Double;
+  FechaFactura: TDateTime;
 begin
   if Trim(sSKU) = '' then Exit;
-  CodTarifa := DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+  CodTarifa := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
+  // Leemos la fecha real del ticket para buscar tarifas vigentes
+  FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FACTURA').AsDateTime;
+
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT * ' +
-                    '  FROM vi_caja_tarifa_sku_articulos ' +
-                    ' WHERE CODIGO_TARIFA = :TARIFA ' +
-                    '   AND CODIGO_UNIDAD_TARIFA = :SKU ' +
+    // Búsqueda blindada por fechas que prioriza el precio del SKU sobre el precio del Padre
+    qry.SQL.Text := 'SELECT t.PRECIOSALIDA_TARIFA, t.PORCEN_DTO_TARIFA, tf.ESIMP_INCL_TARIFA ' +
+                    '  FROM fza_articulos_tarifas t ' +
+                    '  JOIN fza_tarifas tf ON t.CODIGO_TARIFA = tf.CODIGO_TARIFA ' +
+                    ' WHERE t.CODIGO_TARIFA = :TARIFA ' +
+                    '   AND t.ACTIVO_TARIFA = ''S'' ' +
+                    '   AND t.CODIGO_ARTICULO_TARIFA = (SELECT CODIGO_ARTICULO_SKU FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = :SKU) ' +
+                    '   AND (t.CODIGO_UNIDAD_TARIFA = :SKU OR t.CODIGO_UNIDAD_TARIFA IS NULL OR t.CODIGO_UNIDAD_TARIFA = '''') ' +
+                    '   AND t.FECHA_DESDE_TARIFA <= :FECHA ' +
+                    '   AND (t.FECHA_HASTA_TARIFA IS NULL OR t.FECHA_HASTA_TARIFA >= :FECHA) ' +
+                    ' ORDER BY CASE WHEN t.CODIGO_UNIDAD_TARIFA = :SKU THEN 1 ELSE 2 END ASC ' +
                     ' LIMIT 1';
     qry.ParamByName('TARIFA').AsString := CodTarifa;
     qry.ParamByName('SKU').AsString := sSKU;
+    qry.ParamByName('FECHA').AsDateTime := FechaFactura;
     qry.Open;
+
     if not qry.IsEmpty then
     begin
-      DatosCaja.cdsLineas.FieldByName(
-                                  'ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString :=
-                                qry.FieldByName('ESIMP_INCL_TARIFA').AsString;
-      DatosCaja.cdsLineas.FieldByName(
-                                     'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
-                             qry.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
+      DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString := qry.FieldByName('ESIMP_INCL_TARIFA').AsString;
+      DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := qry.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
       DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
 
-      // --- CORRECCIÓN: Leemos el descuento real de la base de datos ---
-      if not qry.FieldByName('PORCEN_DTO_TARIFA').IsNull then
-        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
-                                  qry.FieldByName('PORCEN_DTO_TARIFA').AsFloat
-      else
-        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+      fDescuento := 0;
+      if qry.FindField('PORCEN_DTO_TARIFA') <> nil then
+      begin
+        if not qry.FieldByName('PORCEN_DTO_TARIFA').IsNull then
+          fDescuento := qry.FieldByName('PORCEN_DTO_TARIFA').AsFloat;
+      end;
+      DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := fDescuento;
 
-      // --- CORRECCIÓN: Ponemos el importe de descuento y precios a 0
-      // para forzar a la clase TLinFac a aplicar el nuevo porcentaje. ---
       DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
       DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
       DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
 
-      GridRecalc(nil,
-             cxGrid1DBTableView1,
-             DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera,
-             ActualizarLabelTotal);
+      GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
     end;
   finally
     qry.Free;
