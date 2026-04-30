@@ -260,7 +260,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'CAMI-POLO'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -332,7 +332,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'CAMI-POLO'
       end>
   end
   object dsLinFacturasArticulos: TDataSource
@@ -665,7 +665,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'CAMI-POLO'
       end>
   end
   object dsVariacionesArticulos: TDataSource
@@ -712,7 +712,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ARTICULO'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'CAMI-POLO'
       end>
   end
   object dsMovimientosArticulos: TDataSource

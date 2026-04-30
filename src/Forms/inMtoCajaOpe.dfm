@@ -2,8 +2,8 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 445
-  ClientWidth = 1368
+  ClientHeight = 437
+  ClientWidth = 1366
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -126,11 +126,13 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     TabOrder = 3
     object Panel1: TPanel
       Left = 1
-      Top = 249
-      Width = 1364
+      Top = 257
+      Width = 1366
       Height = 98
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 249
+      ExplicitWidth = 1364
       DesignSize = (
         1364
         98)
@@ -257,7 +259,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Transparent = True
       end
       object lblTotal: TcxLabel
-        Left = 882
+        Left = 878
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -281,7 +283,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         Height = 80
         Width = 423
-        AnchorX = 1305
+        AnchorX = 1301
       end
       object btnF8: TcxButton
         Left = 224

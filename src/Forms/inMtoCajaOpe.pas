@@ -837,8 +837,17 @@ begin
                  DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACTURA_LINEA').AsString := sql.FieldByName('ESIMP_INCL_TARIFA').AsString;
                  if NumAtributosReq = 0 then
                     DatosCaja.cdsLineas.FieldByName('PRECIOSALIDA_FACTURA_LINEA').AsCurrency := sql.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
+
+                 // --- CORRECCIÓN: Leemos el descuento real y reseteamos precios ---
                  if not sql.FieldByName('PORCEN_DTO_TARIFA').IsNull then
-                    DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat;
+                    DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := sql.FieldByName('PORCEN_DTO_TARIFA').AsFloat
+                 else
+                    DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+
+                 DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
+                 DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+                 DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+                 // ------------------------------------------------------------------
               end
               else
               begin
@@ -855,7 +864,11 @@ begin
         DatosCaja.cdsLineas.EnableControls;
       end;
       if not FActualizandoDepositos then
-        GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
+        GridRecalc(nil,
+                   cxGrid1DBTableView1,
+                   DatosCaja.cdsLineas,
+                   DatosCaja.cdsCabecera,
+                   ActualizarLabelTotal);
     end;
   finally
     Qry.Free;
@@ -913,9 +926,20 @@ begin
                                      'PRECIOSALIDA_FACTURA_LINEA').AsCurrency :=
                              qry.FieldByName('PRECIOSALIDA_TARIFA').AsCurrency;
       DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACTURA_LINEA').AsCurrency := 1;
-      DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
-      DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency :=
-                                                                              0;
+
+      // --- CORRECCIÓN: Leemos el descuento real de la base de datos ---
+      if not qry.FieldByName('PORCEN_DTO_TARIFA').IsNull then
+        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat :=
+                                  qry.FieldByName('PORCEN_DTO_TARIFA').AsFloat
+      else
+        DatosCaja.cdsLineas.FieldByName('PORCEN_DTO_FACTURA_LINEA').AsFloat := 0;
+
+      // --- CORRECCIÓN: Ponemos el importe de descuento y precios a 0
+      // para forzar a la clase TLinFac a aplicar el nuevo porcentaje. ---
+      DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACTURA_LINEA').AsCurrency := 0;
+      DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+      DatosCaja.cdsLineas.FieldByName('PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA').AsCurrency := 0;
+
       GridRecalc(nil,
              cxGrid1DBTableView1,
              DatosCaja.cdsLineas,

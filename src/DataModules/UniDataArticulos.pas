@@ -310,8 +310,6 @@ begin
   inherited;
   with unqryTarifasArticulos do
   begin
-//    if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
-//      unqryTablaG.Post;
     if State = dsInsert then
     begin
       FieldByName('CODIGO_UNICO_TARIFA').Required := False;
@@ -319,14 +317,23 @@ begin
     end;
     unqrySol := TUniQuery.Create(nil);
     unqrySol.Connection := oConn;
+
+    // NUEVO: Añadimos COALESCE(CODIGO_UNIDAD_TARIFA, '') = :CODIGO_UNIDAD a la SQL
+    // Utilizamos COALESCE para que los artículos que no tienen SKU (valor null) tampoco fallen.
     unqrySol.SQL.Text := 'SELECT * ' +
                          '  FROM fza_articulos_tarifas ' +
                          ' WHERE CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO' +
-                         '   AND CODIGO_TARIFA = :CODIGO_TARIFA';
+                         '   AND CODIGO_TARIFA = :CODIGO_TARIFA' +
+                         '   AND COALESCE(CODIGO_UNIDAD_TARIFA, '''') = ' +
+                         '                                      :CODIGO_UNIDAD';
+
     unqrySol.ParamByName('CODIGO_ARTICULO').AsString :=
                             unqryTablaG.FindField('CODIGO_ARTICULO').AsString;
     unqrySol.ParamByName('CODIGO_TARIFA').AsString :=
                                           FindField('CODIGO_TARIFA').AsString;
+    // NUEVO: Le pasamos el parámetro del SKU
+    unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
+                                          FindField('CODIGO_UNIDAD_TARIFA').AsString;
     unqrySol.Open;
     if not(ExistePeriodoUnico(unqrySol,
                               FindField('FECHA_DESDE_TARIFA'),
@@ -334,8 +341,8 @@ begin
     then
     begin
       ShowMessageFmt('No se pueden grabar dos precios para una tarifa ' +
-                     'activa en fechas concurrentes para el artículo %s',
-                     [FindField('CODIGO_ARTICULO_TARIFA').AsString]);
+                     'activa en fechas concurrentes para el artículo/SKU %s',
+                     [FindField('CODIGO_UNIDAD_TARIFA').AsString]); // Mejoramos el mensaje
       Abort;
     end;
     if ((unqryTarifasArticulos.State = dsInsert) or
