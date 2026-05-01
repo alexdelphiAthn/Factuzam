@@ -161,7 +161,7 @@ type
     FSavedNCMValid: Boolean;           // <- AÑADIR
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
-    procedure SetMenuFont(const AFontName: string; ASize: Integer);
+//    procedure SetMenuFont(const AFontName: string; ASize: Integer);
     procedure SetSystemMenuFont(const AFontName: string; ASize: Integer);
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
@@ -388,50 +388,16 @@ begin
   pnlPPBottom.Visible := True;
   cxMemo1.Visible     := True;
 {$ENDIF}
-  SetMenuFont('Lucida Sans', 13);
-//  var  NCM: TNonClientMetrics;
-//  NCM.cbSize := SizeOf(TNonClientMetrics);
-//  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
-//  jvMnMenuPrin.Font.Name := 'Lucida Sans';
-//  jvMnMenuPrin.Font.Size := 13;
+
   AplicarTema;
   inLibLog.Log.LogInfo('Arranque del sistema');
 end;
 
-procedure TfrmMtoPrincipal.SetMenuFont(const AFontName: string; ASize: Integer);
-var
-  NCM: TNonClientMetrics;
-begin
-  // Guardar estado original del sistema solo la primera vez
-  if not FSavedNCMValid then
-  begin
-    FSavedNCM.cbSize := SizeOf(TNonClientMetrics);
-    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
-                            SizeOf(FSavedNCM),
-                            @FSavedNCM,
-                            0) then
-      FSavedNCMValid := True;
-  end;
-  NCM.cbSize := SizeOf(TNonClientMetrics);
-  if not SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
-                              SizeOf(NCM),
-                              @NCM,
-                              0) then
-    Exit;
-  StringToWideChar(AFontName, NCM.lfMenuFont.lfFaceName, LF_FACESIZE);
-  NCM.lfMenuFont.lfHeight := -MulDiv(ASize,
-                                     GetDeviceCaps(GetDC(0),
-                                                   LOGPIXELSY),
-                                     72);
-  NCM.lfMenuFont.lfWeight := FW_NORMAL;
-  SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCM), @NCM, 0);
-end;
-
 procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
 begin
-  if FSavedNCMValid then
-    SystemParametersInfo(SPI_SETNONCLIENTMETRICS,
-                         SizeOf(FSavedNCM), @FSavedNCM, 0);
+//  if FSavedNCMValid then
+//    SystemParametersInfo(SPI_SETNONCLIENTMETRICS,
+//                         SizeOf(FSavedNCM), @FSavedNCM, 0);
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
