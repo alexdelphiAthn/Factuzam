@@ -38,6 +38,8 @@ type
 //  procedure SaveColumnsStateActiveWindow;
 //  procedure RecoverColumnsStateActiveWindow;
 //  procedure ResetColumnsStateActiveWindow;
+  procedure RestaurarFocoGrid(cxgrdtvVista: TcxGridDBTableView;
+                              var oPerfilDic: TProfileDicc);
   procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
                                         const sName: string;
                                         const sProfile: string;
@@ -168,6 +170,45 @@ begin
   end;
 end;
 
+procedure RestaurarFocoGrid(cxgrdtvVista: TcxGridDBTableView;
+                            var oPerfilDic: TProfileDicc);
+var
+  sFocusedIDString: string;
+  sCamposClave: string;
+  vLocateValues: Variant;
+begin
+  if not Assigned(cxgrdtvVista.DataController.DataSet) or
+     not cxgrdtvVista.DataController.DataSet.Active then
+    Exit;
+
+  sCamposClave := cxgrdtvVista.DataController.KeyFieldNames;
+  if sCamposClave = '' then
+  begin
+    sCamposClave := ObtenerClavePrimaria(cxgrdtvVista.DataController.DataSet);
+    if sCamposClave <> '' then
+      cxgrdtvVista.DataController.KeyFieldNames := sCamposClave;
+  end;
+
+  if sCamposClave = '' then Exit;
+
+  // 1. Buscamos el string guardado (ej. "1|1500" o "45")
+  sFocusedIDString := GetPerfilValueDef(oPerfilDic,
+                                        cxgrdtvVista.Name + '_FocusedID', '');
+
+  if sFocusedIDString <> '' then
+  begin
+    // 2. Convertimos el string al formato que necesita el Locate
+    vLocateValues := StrToKeyValues(sFocusedIDString, sCamposClave);
+
+    // 3. Movemos el cursor
+    cxgrdtvVista.DataController.DataSet.Locate(
+      sCamposClave,
+      vLocateValues,
+      []
+    );
+  end;
+end;
+
 procedure CollectSettingsColumnProfile(cxgrdtvVista: TcxGridDBTableView;
                                         const sName: string;
                                         const sProfile: string;
@@ -192,7 +233,31 @@ var
 
 begin
   sVistaName := cxgrdtvVista.Name;
+  var sCamposClave: string;
+  var vValoresClave: Variant;
+  if not Assigned(cxgrdtvVista.DataController.DataSet) or
+     not cxgrdtvVista.DataController.DataSet.Active then
+    Exit;
 
+  // Obtenemos la clave (con la función que vimos antes de UniDAC)
+  sCamposClave := cxgrdtvVista.DataController.KeyFieldNames;
+  if sCamposClave = '' then
+  begin
+    sCamposClave := ObtenerClavePrimaria(cxgrdtvVista.DataController.DataSet);
+    if sCamposClave <> '' then
+      cxgrdtvVista.DataController.KeyFieldNames := sCamposClave;
+  end;
+
+  if sCamposClave <> '' then
+  begin
+    vValoresClave := cxgrdtvVista.DataController.GetKeyFieldsValues;
+
+    if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
+    begin
+      // USAMOS LA NUEVA FUNCIÓN AQUÍ:
+      Add(cxgrdtvVista.Name + '_FocusedID', KeyValuesToStr(vValoresClave));
+    end;
+  end;
   // 1. Recolección de propiedades de columnas (Para el Batch)
   for i := 0 to cxgrdtvVista.ColumnCount - 1 do
   begin

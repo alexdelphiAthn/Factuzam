@@ -388,7 +388,6 @@ begin
   pnlPPBottom.Visible := True;
   cxMemo1.Visible     := True;
 {$ENDIF}
-
   AplicarTema;
   inLibLog.Log.LogInfo('Arranque del sistema');
 end;
