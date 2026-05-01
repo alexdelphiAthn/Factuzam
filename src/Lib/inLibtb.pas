@@ -88,8 +88,105 @@ type
   function CheckOpenDatasets(AModule: TDataModule): Boolean;
   procedure CancelarDatasets(AModule: TDataModule);
   procedure GrabarDatasets(AModule: TDataModule);
+  function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+  function StrToKeyValues(const S: string; const FieldNames: string): Variant;
+  function KeyValuesToStr(const V: Variant): string;
 
 implementation
+
+// Convierte el valor (sea simple o un array de varios campos) a un texto para guardarlo
+function KeyValuesToStr(const V: Variant): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if VarIsNull(V) or VarIsEmpty(V) then Exit;
+
+  // Si es una clave compuesta (Array)
+  if VarIsArray(V) then
+  begin
+    for i := VarArrayLowBound(V, 1) to VarArrayHighBound(V, 1) do
+    begin
+      if Result <> '' then
+        Result := Result + '|'; // Usamos el "pipe" (|) como separador
+      Result := Result + VarToStr(V[i]);
+    end;
+  end
+  else // Si es una clave simple
+    Result := VarToStr(V);
+end;
+
+// Convierte el texto guardado de vuelta al formato que necesita el Locate (Variante simple o Array)
+function StrToKeyValues(const S: string; const FieldNames: string): Variant;
+var
+  slCampos, slValores: TStringList;
+  i: Integer;
+begin
+  // Si no hay punto y coma, es clave simple
+  if Pos(';', FieldNames) = 0 then
+  begin
+    Result := S;
+    Exit;
+  end;
+
+  // Es clave compuesta, reconstruimos el array
+  slCampos := TStringList.Create;
+  slValores := TStringList.Create;
+  try
+    slCampos.Delimiter := ';';
+    slCampos.StrictDelimiter := True;
+    slCampos.DelimitedText := FieldNames;
+
+    slValores.Delimiter := '|';
+    slValores.StrictDelimiter := True;
+    slValores.DelimitedText := S;
+
+    // Creamos un array de variantes del tamaño exacto de los campos clave
+    Result := VarArrayCreate([0, slCampos.Count - 1], varVariant);
+
+    for i := 0 to slCampos.Count - 1 do
+    begin
+      if i < slValores.Count then
+        Result[i] := slValores[i]
+      else
+        Result[i] := Null; // Por seguridad, si falta algún valor
+    end;
+  finally
+    slCampos.Free;
+    slValores.Free;
+  end;
+end;
+
+function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if not Assigned(ADataSet) or not ADataSet.Active then
+    Exit;
+  // 1. Intento nativo UniDAC: Comprobamos si el dataset es de la familia Devart
+  // y si tiene la propiedad KeyFields asignada manualmente en el componente.
+  if ADataSet is TUniQuery then
+  begin
+    Result := TUniQuery(ADataSet).KeyFields;
+
+    // UniDAC suele separar las claves compuestas con punto y coma, igual que cxGrid.
+    if Result <> '' then
+      Exit;
+  end;
+  for i := 0 to ADataSet.FieldCount - 1 do
+  begin
+    // Si el campo está marcado como clave primaria en los metadatos
+    if pfInKey in ADataSet.Fields[i].ProviderFlags then
+    begin
+      // Si ya hay un campo (clave compuesta), añadimos el separador de DevExpress
+      if Result <> '' then
+        Result := Result + ';';
+
+      Result := Result + ADataSet.Fields[i].FieldName;
+    end;
+  end;
+end;
 
 procedure GrabarDatasets(AModule: TDataModule);
 var

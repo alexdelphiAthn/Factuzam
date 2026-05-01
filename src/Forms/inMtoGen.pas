@@ -227,6 +227,7 @@ begin
                           cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
         begin
           PonerAnchosTitulos(cxGrid, Self.Name, oPerfilDic);
+          RestaurarFocoGrid(cxGrid, oPerfilDic);
         end;
       end;
     end;
@@ -738,6 +739,7 @@ begin
                                inLibGlobalVar.oGroup);
   CrearTablaPrincipal;
   AplicarEtiquetas;
+
 end;
 
 procedure TfrmMtoGen.rbBBDDClick(Sender: TObject);

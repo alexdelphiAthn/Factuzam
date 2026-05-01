@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 30/04/2026 19:37:00
+-- Backup generado: 01/05/2026 21:58:33
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -714,9 +714,14 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ARTICULO_TARIFA`, `CODIGO_UNICO_TAR
   ('CINTURON-PIEL', 46, '', 'VENTAMAYOR', 'S', 14, 14, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('SOMBRERO-PJM', 47, '', 'VENTAMAYOR', 'S', 22, 22, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('DEMO-CAMISA', 48, '', 'PVP', 'S', 10, 10, NULL, NULL, '2026-03-29 00:00:00', NULL, '2026-03-29 05:47:38', '2026-03-29 05:47:38', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 50, 'VEST-FLOR/AMARILLO/XL', 'PVP', 'S', 30, 27, 3, 10, '2026-04-30 00:00:00', NULL, '2026-04-30 19:18:34', '2026-04-30 19:18:34', 'Administrador', 'Administrador');
+  ('VEST-FLOR', 50, 'VEST-FLOR/AMARILLO/XL', 'PVP', 'S', 30, 27, 3, 10, '2026-04-30 00:00:00', NULL, '2026-04-30 19:18:34', '2026-04-30 19:18:34', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 52, 'VEST-FLOR/AMARILLO/XXL', 'PVP', 'S', 70, 70, NULL, NULL, '2026-04-30 00:00:00', NULL, '2026-04-30 19:38:03', '2026-04-30 19:38:03', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 53, 'VEST-FLOR/AZUL/L', 'PVP', 'S', 25, 25, NULL, NULL, '2026-04-30 00:00:00', NULL, '2026-04-30 19:38:03', '2026-04-30 19:38:03', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 54, 'VEST-FLOR/BONIATO/L', 'PVP', 'S', 20, 10, 10, 50, '2026-05-01 00:00:00', '2026-05-03 00:00:00', '2026-04-30 19:49:07', '2026-04-30 19:49:07', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 55, 'VEST-FLOR/BLANCO/XXXL', 'PVP', 'S', 90, 90, NULL, NULL, '2026-04-30 00:00:00', '2026-04-30 00:00:00', '2026-04-30 19:53:49', '2026-04-30 19:53:49', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 56, 'VEST-FLOR/BLANCO/XXXL', 'PVP', 'S', 90, 45, 45, 50, '2026-05-01 00:00:00', '2026-05-03 00:00:00', '2026-04-30 19:59:11', '2026-04-30 19:59:11', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 49 registros exportados
+-- 54 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1596,7 +1601,7 @@ INSERT INTO `fza_contadores` (`TIPODOC_CONTADOR`, `EMPRESA_CONTADOR`, `SERIE_CON
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 118, 3, 'S', 'S', '2026-04-30 19:35:50', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 121, 3, 'S', 'S', '2026-05-01 21:57:26', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
   ('MV', '-', '-', 224, 10, 'S', 'S', '2026-04-28 17:31:07', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
@@ -3495,8 +3500,419 @@ LEFT JOIN fza_articulos_tarifas tarifa_padre ON (
 )
 WHERE (skus.ESACTIVO_SKU = ''S'') 
   AND ((tarifa_sku.PRECIOFINAL_TARIFA IS NOT NULL) OR (tarifa_padre.PRECIOFINAL_TARIFA IS NOT NULL))
-ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-04-30 19:36:14', '2026-04-30 19:35:50', 'Administrador', 'Administrador');
--- 47 registros exportados
+ORDER BY skus.CODIGO_ARTICULO_SKU, skus.CODIGO_UNIDAD_SKU, tarifas.ORDEN_TARIFA;', '2026-04-30 19:36:14', '2026-04-30 19:35:50', 'Administrador', 'Administrador'),
+  ('118', NULL, '-- ========================================
+-- TABLA: fza_inventarios (Cabeceras)
+-- ========================================
+DROP TABLE IF EXISTS `fza_inventarios`;
+CREATE TABLE `fza_inventarios` (
+  `CODIGO_EMPRESA_INVENTARIO` varchar(10) NOT NULL,
+  `CODIGO_ALMACEN_INVENTARIO` varchar(10) NOT NULL,
+  `SERIE_INVENTARIO` varchar(20) NOT NULL,
+  `NRO_INVENTARIO` varchar(20) NOT NULL,
+  `TIPO_DOC_INVENTARIO` varchar(5) NOT NULL DEFAULT ''IN'',
+  `FECHA_INVENTARIO` datetime NOT NULL,
+  `ESTADO_INVENTARIO` varchar(20) NOT NULL DEFAULT ''ABIERTO'' COMMENT ''ABIERTO, CERRADO, APLICADO, CANCELADO'',
+  `DESCRIPCION_INVENTARIO` varchar(200) NULL DEFAULT NULL,
+  `OBSERVACIONES_INVENTARIO` text NULL DEFAULT NULL,
+  `TOTAL_UNIDADES_DIFERENCIA_INVENTARIO` decimal(19,6) NULL DEFAULT ''0.000000'' COMMENT ''Suma total de unidades de descuadre'',
+  `TOTAL_EUROS_DIFERENCIA_INVENTARIO` decimal(19,6) NULL DEFAULT ''0.000000'' COMMENT ''Variación económica total (apreciación/depreciación global)'',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_EMPRESA_INVENTARIO`, `CODIGO_ALMACEN_INVENTARIO`, `SERIE_INVENTARIO`, `NRO_INVENTARIO`)
+);
+
+ALTER TABLE `fza_inventarios` ADD INDEX `IDX_INV_FECHA` (`FECHA_INVENTARIO`);
+ALTER TABLE `fza_inventarios` ADD INDEX `IDX_INV_ESTADO` (`CODIGO_EMPRESA_INVENTARIO`, `CODIGO_ALMACEN_INVENTARIO`, `ESTADO_INVENTARIO`);
+
+
+-- ========================================
+-- TABLA: fza_inventarios_lineas (Líneas)
+-- ========================================
+DROP TABLE IF EXISTS `fza_inventarios_lineas`;
+CREATE TABLE `fza_inventarios_lineas` (
+  `CODIGO_EMPRESA_INVENTARIO_LINEA` varchar(10) NOT NULL,
+  `CODIGO_ALMACEN_INVENTARIO_LINEA` varchar(10) NOT NULL,
+  `SERIE_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `NRO_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `LINEA_INVENTARIO_LINEA` varchar(4) NOT NULL COMMENT ''Secuencial de la línea (001, 002...)'',
+  `CODIGO_ARTICULO_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `CODIGO_UNIDAD_INVENTARIO_LINEA` varchar(50) NOT NULL COMMENT ''El SKU específico contado'',
+  `LOTE_INVENTARIO_LINEA` varchar(50) NULL DEFAULT '''',
+  `FECHA_CADUCIDAD_INVENTARIO_LINEA` date NULL DEFAULT NULL,
+  `DESCRIPCION_ARTICULO_INVENTARIO_LINEA` varchar(200) NULL DEFAULT NULL,
+  `CANTIDAD_TEORICA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT ''0.000000'' COMMENT ''Stock actual en sistema'',
+  `CANTIDAD_FISICA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT ''0.000000'' COMMENT ''Stock contado'',
+  `CANTIDAD_DIFERENCIA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT ''0.000000'' COMMENT ''Física - Teórica'',
+  `PRECIO_MEDIO_INVENTARIO_LINEA` decimal(19,6) NULL DEFAULT ''0.000000'' COMMENT ''PMP que tenía el sistema antes del inventario'',
+  `PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA` decimal(19,6) NULL DEFAULT ''0.000000'' COMMENT ''PMP corregido por el usuario (apreciación/depreciación)'',
+  `TOTAL_COSTE_DIFERENCIA_LINEA` decimal(19,6) NULL DEFAULT ''0.000000'' COMMENT ''Fórmula sugerida: (CANTIDAD_FISICA * PRECIO_MEDIO_NUEVO) - (CANTIDAD_TEORICA * PRECIO_MEDIO_ACTUAL)'',
+  `FECHA_RECUENTO_INVENTARIO_LINEA` datetime NULL DEFAULT NULL COMMENT ''Instante exacto del escaneo'',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_EMPRESA_INVENTARIO_LINEA`, `CODIGO_ALMACEN_INVENTARIO_LINEA`, `SERIE_INVENTARIO_LINEA`, `NRO_INVENTARIO_LINEA`, `LINEA_INVENTARIO_LINEA`)
+);
+
+ALTER TABLE `fza_inventarios_lineas` ADD INDEX `IDX_INV_LIN_ARTICULO` (`CODIGO_ARTICULO_INVENTARIO_LINEA`);
+ALTER TABLE `fza_inventarios_lineas` ADD INDEX `IDX_INV_LIN_UNIDAD` (`CODIGO_UNIDAD_INVENTARIO_LINEA`);', '2026-05-01 21:53:36', '2026-05-01 21:53:36', 'Administrador', 'Administrador'),
+  ('119', NULL, 'DELIMITER ;;
+
+
+CREATE PROCEDURE `PRC_FZA_INVENTARIOS_APLICAR`(
+    IN p_EMPRESA VARCHAR(10),
+    IN p_ALMACEN VARCHAR(10),
+    IN p_SERIE VARCHAR(20),
+    IN p_NRO VARCHAR(20),
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_DONE INT DEFAULT FALSE;
+    DECLARE v_ESTADO VARCHAR(20);
+
+    -- Variables del cursor
+    DECLARE v_LINEA VARCHAR(4);
+    DECLARE v_ARTICULO VARCHAR(20);
+    DECLARE v_SKU VARCHAR(50);
+    DECLARE v_TEORICA DECIMAL(19,6);
+    DECLARE v_FISICA DECIMAL(19,6);
+    DECLARE v_PMP_NUEVO DECIMAL(19,6);
+    DECLARE v_FECHA_RECUENTO DATETIME;
+    
+    DECLARE v_MOV_SALIDA VARCHAR(20);
+    DECLARE v_MOV_ENTRADA VARCHAR(20);
+
+    -- Cursor que carga la "foto" exacta del pasado
+    DECLARE cur_lineas CURSOR FOR
+        SELECT LINEA_INVENTARIO_LINEA,
+               CODIGO_ARTICULO_INVENTARIO_LINEA,
+               CODIGO_UNIDAD_INVENTARIO_LINEA,
+               CANTIDAD_TEORICA_INVENTARIO_LINEA, -- La foto del pasado
+               CANTIDAD_FISICA_INVENTARIO_LINEA,  -- Lo que se contó
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA,
+               IFNULL(FECHA_RECUENTO_INVENTARIO_LINEA, FECHA_INVENTARIO) -- Si no hay fecha de línea, usa la de cabecera
+          FROM fza_inventarios_lineas l
+          JOIN fza_inventarios c 
+            ON c.CODIGO_EMPRESA_INVENTARIO = l.CODIGO_EMPRESA_INVENTARIO_LINEA
+           AND c.CODIGO_ALMACEN_INVENTARIO = l.CODIGO_ALMACEN_INVENTARIO_LINEA
+           AND c.SERIE_INVENTARIO = l.SERIE_INVENTARIO_LINEA
+           AND c.NRO_INVENTARIO = l.NRO_INVENTARIO_LINEA
+         WHERE l.CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND l.CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND l.SERIE_INVENTARIO_LINEA = p_SERIE
+           AND l.NRO_INVENTARIO_LINEA = p_NRO;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
+    
+    -- Blindaje transaccional
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT ESTADO_INVENTARIO INTO v_ESTADO
+      FROM fza_inventarios
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO
+       FOR UPDATE;
+
+    IF v_ESTADO != ''ABIERTO'' THEN
+        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT = ''Error: El inventario ya fue aplicado o está cancelado.'';
+    END IF;
+
+    OPEN cur_lineas;
+
+    read_loop: LOOP
+        FETCH cur_lineas INTO v_LINEA, v_ARTICULO, v_SKU, v_TEORICA, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
+
+        IF v_DONE THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET v_MOV_SALIDA = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''S''), 20);
+        SET v_MOV_ENTRADA = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''E''), 20);
+
+        -- 1. FASE DE VACIADO HISTÓRICO
+        IF v_TEORICA > 0 THEN
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                ''S'', v_TEORICA, 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            
+            -- Hacemos el "truco" de viajar en el tiempo actualizando la fecha generada por el insert nativo
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
+            
+        ELSEIF v_TEORICA < 0 THEN
+            -- Anulación de stock negativo histórico
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                ''E'', ABS(v_TEORICA), 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
+        END IF;
+
+        -- 2. FASE DE LLENADO HISTÓRICO
+        IF v_FISICA > 0 THEN
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_ENTRADA, ''IN'', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                ''E'', v_FISICA, v_PMP_NUEVO, (v_FISICA * v_PMP_NUEVO), p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_ENTRADA;
+        END IF;
+
+        -- 3. EFECTO DOMINÓ: Forzamos el recálculo del Kardex para este SKU
+        -- Esto pondrá en orden la tabla fza_articulos_stockactual y revalorizará las ventas hechas después del inventario
+        CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_ALMACEN, v_SKU);
+
+    END LOOP;
+
+    CLOSE cur_lineas;
+
+    -- Marcamos el documento como cerrado
+    UPDATE fza_inventarios
+       SET ESTADO_INVENTARIO = ''APLICADO'',
+           USUARIOMODIF = p_USUARIO,
+           INSTANTEMODIF = NOW()
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO;
+
+    COMMIT;
+END;;
+
+DELIMITER ;;', '2026-05-01 21:56:13', '2026-05-01 21:54:25', 'Administrador', 'Administrador'),
+  ('120', NULL, 'DELIMITER ;;
+
+DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`;;
+
+CREATE PROCEDURE `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`(
+    IN p_EMPRESA VARCHAR(10),
+    IN p_ALMACEN VARCHAR(10),
+    IN p_SERIE VARCHAR(20),
+    IN p_NRO VARCHAR(20),
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_DONE INT DEFAULT FALSE;
+    DECLARE v_ESTADO VARCHAR(20);
+    DECLARE v_FECHA_CABECERA DATETIME;
+
+    -- Variables del cursor
+    DECLARE v_LINEA VARCHAR(4);
+    DECLARE v_SKU VARCHAR(50);
+    DECLARE v_FISICA DECIMAL(19,6);
+    DECLARE v_PMP_NUEVO DECIMAL(19,6);
+    DECLARE v_FECHA_RECUENTO DATETIME;
+
+    -- Variables para el cálculo histórico
+    DECLARE v_STOCK_HIST DECIMAL(19,6);
+    DECLARE v_PMP_HIST DECIMAL(19,6);
+    DECLARE v_DIF_CANTIDAD DECIMAL(19,6);
+    DECLARE v_TOTAL_COSTE_DIF DECIMAL(19,6);
+
+    DECLARE cur_lineas CURSOR FOR
+        SELECT LINEA_INVENTARIO_LINEA,
+               CODIGO_UNIDAD_INVENTARIO_LINEA,
+               CANTIDAD_FISICA_INVENTARIO_LINEA,
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA,
+               FECHA_RECUENTO_INVENTARIO_LINEA
+          FROM fza_inventarios_lineas
+         WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND SERIE_INVENTARIO_LINEA = p_SERIE
+           AND NRO_INVENTARIO_LINEA = p_NRO;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
+
+    -- Blindaje transaccional
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- 1. Obtener estado y fecha global del inventario
+    SELECT ESTADO_INVENTARIO, FECHA_INVENTARIO 
+      INTO v_ESTADO, v_FECHA_CABECERA
+      FROM fza_inventarios
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO
+       FOR UPDATE;
+
+    IF v_ESTADO != ''ABIERTO'' THEN
+        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT = ''Error: El inventario no está ABIERTO, no se puede recalcular.'';
+    END IF;
+
+    OPEN cur_lineas;
+
+    read_loop: LOOP
+        FETCH cur_lineas INTO v_LINEA, v_SKU, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
+
+        IF v_DONE THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Si la línea no tiene hora de recuento, hereda la hora de apertura del inventario (cabecera)
+        IF v_FECHA_RECUENTO IS NULL THEN
+            SET v_FECHA_RECUENTO = v_FECHA_CABECERA;
+        END IF;
+
+        SET v_STOCK_HIST = 0;
+        SET v_PMP_HIST = 0;
+
+        -- 2. Calcular Stock Teórico a esa fecha/hora exacta
+        SELECT IFNULL(SUM(IF(TIPO_MOVIMIENTO_MOV = ''E'', CANTIDAD_MOV, -CANTIDAD_MOV)), 0)
+          INTO v_STOCK_HIST
+          FROM fza_movimientos_almacen
+         WHERE CODIGO_ALMACEN_MOV = p_ALMACEN
+           AND CODIGO_UNIDAD_MOV = v_SKU
+           AND FECHA_MOV <= v_FECHA_RECUENTO
+           AND ESACTIVO_MOV = ''S'';
+
+        -- 3. Rescatar el Precio Medio que había a esa fecha/hora exacta (el del último movimiento)
+        SELECT IFNULL(PRECIO_MEDIO_MOV, 0)
+          INTO v_PMP_HIST
+          FROM fza_movimientos_almacen
+         WHERE CODIGO_ALMACEN_MOV = p_ALMACEN
+           AND CODIGO_UNIDAD_MOV = v_SKU
+           AND FECHA_MOV <= v_FECHA_RECUENTO
+           AND ESACTIVO_MOV = ''S''
+         ORDER BY FECHA_MOV DESC, NUMERO_MOV DESC
+         LIMIT 1;
+
+        -- 4. Cálculo de diferencias de Cantidad
+        SET v_DIF_CANTIDAD = v_FISICA - v_STOCK_HIST;
+        
+        -- Si el usuario no ha especificado un PMP nuevo (revalorización), mantenemos el que tenía
+        IF v_PMP_NUEVO = 0 OR v_PMP_NUEVO IS NULL THEN
+            SET v_PMP_NUEVO = v_PMP_HIST;
+        END IF;
+
+        -- 5. Cálculo del Coste de la Diferencia (Fórmula de doble impacto: cantidad y/o revalorización)
+        SET v_TOTAL_COSTE_DIF = (v_FISICA * v_PMP_NUEVO) - (v_STOCK_HIST * v_PMP_HIST);
+
+        -- 6. Grabar el recálculo en la línea
+        UPDATE fza_inventarios_lineas
+           SET CANTIDAD_TEORICA_INVENTARIO_LINEA = v_STOCK_HIST,
+               PRECIO_MEDIO_INVENTARIO_LINEA = v_PMP_HIST,
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA = v_PMP_NUEVO,
+               CANTIDAD_DIFERENCIA_INVENTARIO_LINEA = v_DIF_CANTIDAD,
+               TOTAL_COSTE_DIFERENCIA_LINEA = v_TOTAL_COSTE_DIF,
+               USUARIOMODIF = p_USUARIO,
+               INSTANTEMODIF = NOW()
+         WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND SERIE_INVENTARIO_LINEA = p_SERIE
+           AND NRO_INVENTARIO_LINEA = p_NRO
+           AND LINEA_INVENTARIO_LINEA = v_LINEA;
+
+    END LOOP;
+
+    CLOSE cur_lineas;
+
+    -- 7. Finalmente, sumamos todo y rellenamos los totales de la cabecera
+    UPDATE fza_inventarios
+       SET TOTAL_UNIDADES_DIFERENCIA_INVENTARIO = (
+               SELECT IFNULL(SUM(CANTIDAD_DIFERENCIA_INVENTARIO_LINEA), 0)
+                 FROM fza_inventarios_lineas 
+                WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+                  AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+                  AND SERIE_INVENTARIO_LINEA = p_SERIE
+                  AND NRO_INVENTARIO_LINEA = p_NRO
+           ),
+           TOTAL_EUROS_DIFERENCIA_INVENTARIO = (
+               SELECT IFNULL(SUM(TOTAL_COSTE_DIFERENCIA_LINEA), 0) 
+                 FROM fza_inventarios_lineas 
+                WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+                  AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+                  AND SERIE_INVENTARIO_LINEA = p_SERIE
+                  AND NRO_INVENTARIO_LINEA = p_NRO
+           ),
+           USUARIOMODIF = p_USUARIO,
+           INSTANTEMODIF = NOW()
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO;
+
+    COMMIT;
+END;;
+
+DELIMITER ;;', '2026-05-01 21:58:08', '2026-05-01 21:57:26', 'Administrador', 'Administrador');
+-- 50 registros exportados
+
+
+-- Tabla: fza_inventarios
+
+DROP TABLE IF EXISTS `fza_inventarios`;
+CREATE TABLE `fza_inventarios` (
+  `CODIGO_EMPRESA_INVENTARIO` varchar(10) NOT NULL,
+  `CODIGO_ALMACEN_INVENTARIO` varchar(10) NOT NULL,
+  `SERIE_INVENTARIO` varchar(20) NOT NULL,
+  `NRO_INVENTARIO` varchar(20) NOT NULL,
+  `TIPO_DOC_INVENTARIO` varchar(5) NOT NULL DEFAULT 'IN',
+  `FECHA_INVENTARIO` datetime NOT NULL,
+  `ESTADO_INVENTARIO` varchar(20) NOT NULL DEFAULT 'ABIERTO' COMMENT 'ABIERTO, CERRADO, APLICADO, CANCELADO',
+  `DESCRIPCION_INVENTARIO` varchar(200) NULL DEFAULT NULL,
+  `OBSERVACIONES_INVENTARIO` text NULL DEFAULT NULL,
+  `TOTAL_UNIDADES_DIFERENCIA_INVENTARIO` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'Suma total de unidades de descuadre',
+  `TOTAL_EUROS_DIFERENCIA_INVENTARIO` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'Variación económica total (apreciación/depreciación global)',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_EMPRESA_INVENTARIO`,`CODIGO_ALMACEN_INVENTARIO`,`SERIE_INVENTARIO`,`NRO_INVENTARIO`)
+);
+ALTER TABLE `fza_inventarios` ADD INDEX `IDX_INV_ESTADO` (`CODIGO_EMPRESA_INVENTARIO`, `CODIGO_ALMACEN_INVENTARIO`, `ESTADO_INVENTARIO`);
+ALTER TABLE `fza_inventarios` ADD INDEX `IDX_INV_FECHA` (`FECHA_INVENTARIO`);
+
+
+-- Tabla: fza_inventarios_lineas
+
+DROP TABLE IF EXISTS `fza_inventarios_lineas`;
+CREATE TABLE `fza_inventarios_lineas` (
+  `CODIGO_EMPRESA_INVENTARIO_LINEA` varchar(10) NOT NULL,
+  `CODIGO_ALMACEN_INVENTARIO_LINEA` varchar(10) NOT NULL,
+  `SERIE_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `NRO_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `LINEA_INVENTARIO_LINEA` varchar(4) NOT NULL COMMENT 'Secuencial de la línea (001, 002...)',
+  `CODIGO_ARTICULO_INVENTARIO_LINEA` varchar(20) NOT NULL,
+  `CODIGO_UNIDAD_INVENTARIO_LINEA` varchar(50) NOT NULL COMMENT 'El SKU específico contado',
+  `LOTE_INVENTARIO_LINEA` varchar(50) NULL DEFAULT '',
+  `FECHA_CADUCIDAD_INVENTARIO_LINEA` date NULL DEFAULT NULL,
+  `DESCRIPCION_ARTICULO_INVENTARIO_LINEA` varchar(200) NULL DEFAULT NULL,
+  `CANTIDAD_TEORICA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Stock actual en sistema',
+  `CANTIDAD_FISICA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Stock contado',
+  `CANTIDAD_DIFERENCIA_INVENTARIO_LINEA` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Física - Teórica',
+  `PRECIO_MEDIO_INVENTARIO_LINEA` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'PMP que tenía el sistema antes del inventario',
+  `PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'PMP corregido por el usuario (apreciación/depreciación)',
+  `TOTAL_COSTE_DIFERENCIA_LINEA` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'Fórmula sugerida: (CANTIDAD_FISICA * PRECIO_MEDIO_NUEVO) - (CANTIDAD_TEORICA * PRECIO_MEDIO_ACTUAL)',
+  `FECHA_RECUENTO_INVENTARIO_LINEA` datetime NULL DEFAULT NULL COMMENT 'Instante exacto del escaneo',
+  `INSTANTEMODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIOALTA` varchar(100) NOT NULL,
+  `USUARIOMODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_EMPRESA_INVENTARIO_LINEA`,`CODIGO_ALMACEN_INVENTARIO_LINEA`,`SERIE_INVENTARIO_LINEA`,`NRO_INVENTARIO_LINEA`,`LINEA_INVENTARIO_LINEA`)
+);
+ALTER TABLE `fza_inventarios_lineas` ADD INDEX `IDX_INV_LIN_ARTICULO` (`CODIGO_ARTICULO_INVENTARIO_LINEA`);
+ALTER TABLE `fza_inventarios_lineas` ADD INDEX `IDX_INV_LIN_UNIDAD` (`CODIGO_UNIDAD_INVENTARIO_LINEA`);
 
 
 -- Tabla: fza_ivas
@@ -3655,32 +4071,34 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (39, 'fza_familias_claves_info_defecto', '1'),
   (40, 'fza_formas_pago', '1'),
   (41, 'fza_generadorprocesos', '1'),
-  (42, 'fza_ivas', '1'),
-  (43, 'fza_ivas_grupos', '1'),
-  (44, 'fza_ivas_tipos', '1'),
-  (45, 'fza_ivas_zonas', '1'),
-  (46, 'fza_metadatos', '1'),
-  (47, 'fza_movimientos_almacen', '1'),
-  (48, 'fza_paises', '1'),
-  (49, 'fza_pedidos', '1'),
-  (50, 'fza_pedidos_lineas', '1'),
-  (51, 'fza_pedidos_mensajes', '1'),
-  (52, 'fza_propiedades', '1'),
-  (53, 'fza_propiedades_valores', '1'),
-  (54, 'fza_proveedores', '1'),
-  (55, 'fza_proveedores_familias', '1'),
-  (56, 'fza_proveedores_familias_conjuntos', '1'),
-  (57, 'fza_recibos', '1'),
-  (58, 'fza_tarifas', '1'),
-  (59, 'fza_tipos_documentos', '1'),
-  (60, 'fza_usuarios', '1'),
-  (61, 'fza_usuarios_grupos', '1'),
-  (62, 'fza_usuarios_perfiles', '1'),
-  (63, 'fza_valores_defecto', '1'),
-  (64, 'fza_variaciones', '1'),
-  (65, 'fza_variaciones_atributos', '1'),
-  (66, 'fza_verifactu_eventos', '1'),
-  (67, 'fza_winforms', '1'),
+  (42, 'fza_inventarios', '1'),
+  (43, 'fza_inventarios_lineas', '1'),
+  (44, 'fza_ivas', '1'),
+  (45, 'fza_ivas_grupos', '1'),
+  (46, 'fza_ivas_tipos', '1'),
+  (47, 'fza_ivas_zonas', '1'),
+  (48, 'fza_metadatos', '1'),
+  (49, 'fza_movimientos_almacen', '1'),
+  (50, 'fza_paises', '1'),
+  (51, 'fza_pedidos', '1'),
+  (52, 'fza_pedidos_lineas', '1'),
+  (53, 'fza_pedidos_mensajes', '1'),
+  (54, 'fza_propiedades', '1'),
+  (55, 'fza_propiedades_valores', '1'),
+  (56, 'fza_proveedores', '1'),
+  (57, 'fza_proveedores_familias', '1'),
+  (58, 'fza_proveedores_familias_conjuntos', '1'),
+  (59, 'fza_recibos', '1'),
+  (60, 'fza_tarifas', '1'),
+  (61, 'fza_tipos_documentos', '1'),
+  (62, 'fza_usuarios', '1'),
+  (63, 'fza_usuarios_grupos', '1'),
+  (64, 'fza_usuarios_perfiles', '1'),
+  (65, 'fza_valores_defecto', '1'),
+  (66, 'fza_variaciones', '1'),
+  (67, 'fza_variaciones_atributos', '1'),
+  (68, 'fza_verifactu_eventos', '1'),
+  (69, 'fza_winforms', '1'),
   (131, 'fza_caja_depositos_view', '2'),
   (132, 'vi_articulos', '2'),
   (133, 'vi_articulos_conjuntos_slots', '2'),
@@ -3754,27 +4172,29 @@ INSERT INTO `fza_metadatos` (`CODIGO_METADATO`, `NOMBRE_METADATO`, `PARENT_METAD
   (214, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
   (215, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
   (216, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (217, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (218, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (219, 'PRC_GETPERFILFORMULARIO', '3'),
-  (220, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (221, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (222, 'PRC_GET_CREAR_VALOR', '3'),
-  (223, 'PRC_GET_DATA_ARTICULO', '3'),
-  (224, 'PRC_GET_DATA_CLIENTE', '3'),
-  (225, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (226, 'PRC_GET_NEXT_CONT', '3'),
-  (227, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (228, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (229, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (230, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (231, 'PRC_REALIZAR_TRASPASO', '3'),
-  (232, 'PRC_RECALCULAR_STOCK', '3'),
-  (233, 'PRC_SETPERFILFORMULARIO', '3'),
-  (234, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (235, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (217, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
+  (218, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
+  (219, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (220, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (221, 'PRC_GETPERFILFORMULARIO', '3'),
+  (222, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (223, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (224, 'PRC_GET_CREAR_VALOR', '3'),
+  (225, 'PRC_GET_DATA_ARTICULO', '3'),
+  (226, 'PRC_GET_DATA_CLIENTE', '3'),
+  (227, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (228, 'PRC_GET_NEXT_CONT', '3'),
+  (229, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (230, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (231, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (232, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (233, 'PRC_REALIZAR_TRASPASO', '3'),
+  (234, 'PRC_RECALCULAR_STOCK', '3'),
+  (235, 'PRC_SETPERFILFORMULARIO', '3'),
+  (236, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (237, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 159 registros exportados
+-- 163 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -4835,7 +5255,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-04-30 19:33:57', '2026-04-30 19:33:57', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-01 21:45:21', '2026-05-01 21:45:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5079,7 +5499,750 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoAppParam', 'appDirHistoricoCaja', '$(LOCALAPPDATA)\\factuzam\\tickets', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appDirPDF', '$(DOCUMENTOS)\\PDF', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appImpresoraInformes', 'Microsoft Print to PDF', NULL, NULL, NULL, '2026-04-15 06:01:36', '2026-04-15 06:01:36', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appTema', 'Summer2008', NULL, NULL, NULL, '2026-04-28 17:39:19', '2026-04-14 13:23:51', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appTema', 'SevenClassic', NULL, NULL, NULL, '2026-05-01 15:08:59', '2026-04-14 13:23:51', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_Caption', 'Activo', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ACTIVO_ARTICULO_Width', '76', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ARTICULO_Width', '150', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_Caption', 'Código Familia', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAMILIA_ARTICULO_Width', '149', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ARTICULO_Width', '205', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Caption', 'Descripción Familia', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Width', '470', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:19', '2026-05-01 21:49:19', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_Caption', 'Tipo IVA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_Width', '130', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACTURA_LINEA_Width', '82', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_Caption', 'CODIGO_ARTICULO_FACTURA_LINEA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_Index', '12', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ARTICULO_FACTURA_LINEA_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_Caption', 'CODIGO_FAMILIA_FACTURA_LINEA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_Index', '13', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAMILIA_FACTURA_LINEA_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_Caption', 'Descripción Linea', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACTURA_LINEA_Width', '155', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_Caption', 'Precio Imp. Incl.', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_Index', '7', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACTURA_LINEA_Width', '137', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_Index', '16', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACTURA_LINEA_Width', '136', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACTURA_LINEA_Width', '109', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_Caption', 'NOMBRE_FAMILIA_FACTURA_LINEA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_Index', '14', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAMILIA_FACTURA_LINEA_Width', '2204', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_Caption', 'Tarifa Aplicada', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TARIFA_Width', '143', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_Caption', 'Nro Factura', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NRO_FACTURA_LINEA_Width', '119', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_Caption', '% IVA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_Index', '10', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCEN_IVA_FACTURA_LINEA_Width', '80', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Caption', 'Precio Con IVA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Index', '11', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Width', '152', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Caption', 'Precio sin IVA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Index', '8', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Width', '131', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_Caption', 'Serie Factura', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FACTURA_LINEA_Width', '141', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Width', '134', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_Caption', 'Tipo IVA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_Index', '9', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPOIVA_ARTICULO_FACTURA_LINEA_Width', '108', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_Caption', 'Total Linea', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_Index', '15', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACTURA_LINEA_Width', '118', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Caption', 'Ctd', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Width', '50', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_Caption', 'Almacén Dest', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_Index', '16', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_CONTRA_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_Caption', 'Alm Origen', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALMACEN_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_Caption', 'Cód Art.', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_Index', '11', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ARTICULO_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_Index', '17', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLIENTE_MOV_Width', '132', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_Caption', 'Cód Empresa', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMPRESA_MOV_Width', '121', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_Caption', 'Código Prov', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_Index', '18', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PROVEEDOR_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Caption', 'Sku', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Width', '228', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Caption', 'DESCRIPCION_ARTICULO_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Index', '12', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Width', '261', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_Caption', 'DESCRIPCION_TIPODOCUMENTO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_Index', '32', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPODOCUMENTO_Width', '278', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Caption', 'Activo', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Index', '19', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Width', '100', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Caption', 'FECHA_CADUCIDAD_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Index', '29', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Caption', 'Fecha Hora', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Index', '10', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_Index', '21', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_Index', '20', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Caption', 'NroLinea', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Index', '9', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Width', '94', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Caption', 'LINEA_REF_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Index', '27', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Width', '148', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Caption', 'LOTE_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Index', '28', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Width', '96', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Caption', 'NOMBRE_ALMACEN_DESTINO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Index', '31', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Width', '250', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Caption', 'NOMBRE_ALMACEN_ORIGEN', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Index', '30', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Width', '241', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_Caption', 'Nro Doc', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_Index', '8', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_MOV_Width', '83', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_Caption', 'NRO_DOC_REF_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_Index', '26', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NRO_DOC_REF_MOV_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Caption', 'Nro. Mov', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Width', '92', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Caption', 'Coste Ud', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Index', '13', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Width', '82', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Caption', 'Precio MP', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Index', '15', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_Caption', 'RAZONSOCIAL_CLIENTE', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_Index', '33', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_CLIENTE_Width', '223', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_Caption', 'RAZONSOCIAL_PROVEEDOR', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_Index', '34', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZONSOCIAL_PROVEEDOR_Width', '231', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Caption', 'Serie', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Index', '7', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Width', '54', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Caption', 'SERIE_DOC_REF_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Index', '25', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Caption', 'Tipo', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Width', '44', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Caption', 'TIPO_DOC_REF_MOV', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Index', '24', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Width', '183', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_Caption', 'E/S', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOVIMIENTO_MOV_Width', '38', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Caption', 'Total Coste', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Index', '14', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_Index', '22', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOALTA_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_Index', '23', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIOMODIF_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:19', '2026-05-01 21:49:19', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_Caption', 'KEY_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_KEY_PERFILES_Width', '132', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_Caption', 'SUBKEY_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_SUBKEY_PERFILES_Width', '190', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_Caption', 'TYPE_BLOB_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_TYPE_BLOB_PERFILES_Width', '64', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Caption', 'USUARIO_GRUPO_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Width', '167', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_Caption', 'VALUE_BLOB_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_BLOB_PERFILES_Width', '64', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_Caption', 'VALUE_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_PERFILES_Width', '112', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_Caption', 'VALUE_TEXT_PERFILES', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil_VALUE_TEXT_PERFILES_Width', '140', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_Caption', 'CODIGO_ARTICULO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ARTICULO_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PROVEEDOR_Width', '189', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Caption', 'Principal', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Width', '89', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Caption', 'Fecha último Precio', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Width', '174', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_Index', '8', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_Index', '7', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Caption', 'Precio Última Compra', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Width', '194', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZONSOCIAL_PROVEEDOR_Width', '221', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_Caption', 'Modelo Proveedor', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_ARTICULO_PROVEEDOR_Width', '181', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_Index', '9', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOALTA_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_Index', '10', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIOMODIF_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_Caption', 'CODIGO_ARTICULO_SKU', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ARTICULO_SKU_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Caption', 'Código de Barras', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Index', '7', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Width', '194', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Caption', 'Código SKU', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Width', '328', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Caption', 'Activo', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Width', '80', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:19', '2026-05-01 21:49:19', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Caption', 'Stock Total', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Index', '8', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Width', '134', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOALTA_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIOMODIF_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_Caption', '41', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_41_Width', '27', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Caption', '42', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Width', '27', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Caption', '43', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Width', '27', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Caption', 'Almacen', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Width', '239', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Caption', 'Color', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Width', '82', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Caption', 'Total', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Width', '47', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_Caption', 'Tarifa Activa', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_Index', '12', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ACTIVO_TARIFA_Width', '110', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_Caption', 'CODIGO_ARTICULO_TARIFA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_Index', '3', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_ARTICULO_TARIFA_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_Caption', 'Familia', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_Index', '20', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_FAMILIA_ARTICULO_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_Index', '16', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_PROVEEDOR_Width', '156', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_Caption', 'Código Tarifa', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_Index', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_TARIFA_Width', '129', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_Caption', 'CODIGO_UNICO_TARIFA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_Index', '26', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNICO_TARIFA_Width', '114', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_Caption', 'Sku', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_Index', '4', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_CODIGO_UNIDAD_TARIFA_Width', '241', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_Caption', 'DESCRIPCION_ARTICULO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_Index', '5', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_ARTICULO_Width', '11004', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_Caption', 'Descripción Familia', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_Index', '21', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_DESCRIPCION_FAMILIA_Width', '301', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_Caption', 'Tarifa x Defecto', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_Index', '15', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESDEFAULT_TARIFA_Width', '142', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_Caption', 'Imp. Incl.', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_Index', '2', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESIMP_INCL_TARIFA_Width', '86', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_Caption', 'ESVARIACION_ARTICULO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_Index', '27', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_ESVARIACION_ARTICULO_Width', '20', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_Caption', 'Fecha Desde', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_Index', '13', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_DESDE_TARIFA_Width', '112', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_Caption', 'Fecha Hasta', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_Index', '14', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_HASTA_TARIFA_Width', '107', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_Caption', 'Fecha Validez', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_Index', '19', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_FECHA_VALIDEZ_Width', '121', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_Filtro', '', '', NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_Index', '22', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_Index', '23', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_Caption', 'Nombre Tarifa', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_Index', '1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NOMBRE_TARIFA_Width', '145', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_Caption', 'NUM_ATRIBUTOS_REQ', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_Index', '28', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_NUM_ATRIBUTOS_REQ_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_Caption', '% Descuento', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_Index', '8', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PORCEN_DTO_TARIFA_Width', '124', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_Caption', 'Cantidad Descuento', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_Index', '9', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_DTO_TARIFA_Width', '174', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_Caption', 'Precio Últ Compra', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_Index', '18', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIO_ULT_COMPRA_Width', '156', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_Caption', 'Precio Final', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_Index', '10', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOFINAL_TARIFA_Width', '129', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_Caption', 'Precio Salida', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_Index', '7', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_PRECIOSALIDA_TARIFA_Width', '113', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_Caption', 'RAZONSOCIAL_PROVEEDOR', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_Index', '17', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_RAZONSOCIAL_PROVEEDOR_Width', '231', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_Caption', 'TIPO_CANTIDAD_ARTICULO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_Index', '6', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_CANTIDAD_ARTICULO_Width', '224', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_Caption', 'TIPO_IVA_ARTICULO', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_Index', '11', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_TIPO_IVA_ARTICULO_Width', '20', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_Index', '24', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOALTA_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_Index', '25', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas_USUARIOMODIF_Width', '1104', NULL, NULL, NULL, '2026-05-01 21:49:20', '2026-05-01 21:49:20', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerArqueoTarjetas', 'False', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerAutoLoadDepositos', 'False', NULL, NULL, NULL, '2026-04-27 20:08:57', '2026-04-09 06:42:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
@@ -5103,6 +6266,788 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerVentasCredito', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_Caption', 'Activo', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_Width', '71', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Caption', 'Código', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Width', '79', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Caption', 'Código Postal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Index', '11', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Width', '138', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_Caption', 'Zona de IVA principal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_Index', '12', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DESCRIPCION_ZONA_IVA_Width', '302', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_Caption', 'Direción', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_Index', '7', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION1_EMPRESA_Width', '298', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_Caption', 'Más Dirección', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_Index', '8', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_DIRECCION2_EMPRESA_Width', '138', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_Caption', 'Email', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_EMAIL_EMPRESA_Width', '271', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_Caption', 'Es REAGP', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_Index', '13', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_Width', '86', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Caption', 'Aplica Retenciones', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Index', '14', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Width', '170', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_Caption', 'GRUPO_ZONA_IVA_EMPRESA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_Index', '21', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_GRUPO_ZONA_IVA_EMPRESA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_Index', '17', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_Index', '16', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_Caption', 'Móvil', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_MOVIL_EMPRESA_Width', '215', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_Caption', 'Nif', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_NIF_EMPRESA_Width', '168', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_Caption', 'Orden', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ORDEN_EMPRESA_Width', '70', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_Caption', 'PAIS_EMPRESA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_Index', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Caption', 'Población', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Index', '9', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Width', '132', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_Caption', 'Provincia', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_Index', '10', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PROVINCIA_EMPRESA_Width', '113', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_Caption', 'Razón Social', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_RAZONSOCIAL_EMPRESA_Width', '282', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_Caption', 'Texto en Factura', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_Index', '15', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_TEXTO_LEGAL_FACTURA_EMPRESA_Width', '366', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_Index', '18', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOALTA_Width', '88', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_Index', '19', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_USUARIOMODIF_Width', '96', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_Index', '10', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_CLIENTE_FACTURA_Width', '131', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_Caption', 'CODIGO_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_Index', '54', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_EMPRESA_FACTURA_Width', '92', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_Caption', 'CODIGO_IVA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_Index', '70', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CODIGO_IVA_FACTURA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_Caption', 'CPostal Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_Index', '17', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_CLIENTE_FACTURA_Width', '133', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_Caption', 'CPOSTAL_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_Index', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_CPOSTAL_EMPRESA_FACTURA_Width', '169', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_Caption', 'Descripción Forma Pago', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_Index', '9', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_FORMAPAGO_Width', '230', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_Caption', 'Zona IVA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_Caption', 'DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_Index', '66', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_EMPRESA_FACTURA_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_Index', '32', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DESCRIPCION_ZONA_IVA_Width', '90', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_Caption', 'Dirección1 Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_Index', '15', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_CLIENTE_FACTURA_Width', '161', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_Caption', 'DIRECCION1_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_Index', '59', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION1_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_Caption', 'Dirección2 Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_Index', '16', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_CLIENTE_FACTURA_Width', '161', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_Caption', 'DIRECCION2_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_Index', '60', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_DIRECCION2_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_Caption', 'Email Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_Index', '14', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_CLIENTE_FACTURA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_Caption', 'EMAIL_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_Index', '58', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_EMAIL_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_Caption', 'ESAPLICA_RE_ZONA_IVA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_Index', '29', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESAPLICA_RE_ZONA_IVA_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_Caption', 'Tarifa tiene Imp Incl', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_Index', '26', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_Width', '184', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Caption', 'Es Cliente Intracomunitario', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Index', '27', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Width', '235', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_Caption', 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_Index', '28', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIRPF_IMP_INCL_ZONA_IVA_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_Caption', 'IVA Exento Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_Index', '22', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_EXENTO_CLIENTE_FACTURA_Width', '161', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_Caption', 'Tiene RE Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_Index', '21', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVA_RECARGO_CLIENTE_FACTURA_Width', '155', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_Caption', 'IVA Agrícola', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_Index', '30', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_Caption', 'REAGP Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_Index', '23', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA_Width', '123', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_Caption', 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_Index', '67', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_Caption', 'Tiene IRPF Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_Index', '24', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_CLIENTE_FACTURA_Width', '155', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_Caption', 'ESRETENCIONES_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_Index', '65', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESRETENCIONES_EMPRESA_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_Caption', 'ESVENTA_ACTIVO_FIJO_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_Index', '33', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_ESVENTA_ACTIVO_FIJO_FACTURA_Width', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_Caption', 'Fecha', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FECHA_FACTURA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_Caption', 'Forma de Pago', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_Index', '8', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_FORMA_PAGO_FACTURA_Width', '129', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_Caption', 'GRUPO_ZONA_IVA_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_Index', '68', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_GRUPO_ZONA_IVA_EMPRESA_FACTURA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_Caption', 'Móvil Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_Index', '13', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_CLIENTE_FACTURA_Width', '115', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_Caption', 'MOVIL_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_Index', '57', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_MOVIL_EMPRESA_FACTURA_Width', '444', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_Caption', 'Nif Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_Index', '12', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_CLIENTE_FACTURA_Width', '94', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_Caption', 'NIF_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_Index', '56', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NIF_EMPRESA_FACTURA_Width', '554', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_Caption', 'Tarifa Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_Index', '25', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NOMBRE_TARIFA_CLIENTE_Width', '118', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_Caption', 'Nro', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_NRO_FACTURA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_Caption', 'País Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_Index', '20', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_CLIENTE_FACTURA_Width', '149', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_Caption', 'PAIS_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_Index', '63', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PAIS_EMPRESA_FACTURA_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_Caption', 'PALABRA_REPORTS_ZONA_IVA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_Index', '31', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PALABRA_REPORTS_ZONA_IVA_FACTURA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_Caption', 'Población Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_Index', '18', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_CLIENTE_FACTURA_Width', '152', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_Caption', 'POBLACION_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_Index', '61', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_POBLACION_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_Caption', '% IVA Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_Index', '49', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAE_FACTURA_Width', '112', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_Caption', '% IVA Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_Index', '34', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAN_FACTURA_Width', '127', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_Caption', '% IVA Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_Index', '39', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAR_FACTURA_Width', '145', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_Caption', '% IVA SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_Index', '44', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_IVAS_FACTURA_Width', '181', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_Caption', 'RE Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_Index', '51', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REE_FACTURA_Width', '88', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_Caption', '% RE Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_Index', '36', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_REN_FACTURA_Width', '107', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Caption', '% RE Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Index', '41', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Width', '125', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Caption', '% RE SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Index', '46', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Width', '173', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_Caption', '% IRPF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RETENCION_FACTURA_Width', '71', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_Caption', 'Provincia Cliente', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_Index', '19', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_CLIENTE_FACTURA_Width', '146', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_Caption', 'PROVINCIA_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_Index', '62', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PROVINCIA_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_Caption', 'Razón Social Clietne', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_Index', '11', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_CLIENTE_FACTURA_Width', '189', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_Caption', 'RAZONSOCIAL_EMPRESA_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_Index', '55', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_RAZONSOCIAL_EMPRESA_FACTURA_Width', '2204', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_Caption', 'Serie', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_SERIE_FACTURA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_Caption', 'TARIFA_ARTICULO_CLIENTE_FACTURA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_Index', '69', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TARIFA_ARTICULO_CLIENTE_FACTURA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_Caption', 'Base Imp Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_Index', '53', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAE_FACTURA_Width', '143', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_Caption', 'Base Imp Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_Index', '38', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAN_FACTURA_Width', '158', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_Caption', 'Base Imp Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_Index', '43', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAR_FACTURA_Width', '163', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_Caption', 'Base Imp SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_Index', '48', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASEI_IVAS_FACTURA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_Caption', 'Total Bases Imponibles', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_BASES_FACTURA_Width', '199', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_Caption', 'IVA + RE', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_Index', '7', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IMPUESTOS_FACTURA_Width', '74', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Caption', 'IVA Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Index', '50', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Width', '108', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_Caption', 'IVA Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_Index', '35', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_Width', '99', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_Caption', 'IVA Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_Index', '40', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAR_FACTURA_Width', '117', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_Caption', 'IVA SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_Index', '45', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAS_FACTURA_Width', '165', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_Caption', 'Total a Pagar', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_LIQUIDO_FACTURA_Width', '126', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_Caption', 'RE Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_Index', '52', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REE_FACTURA_Width', '88', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Caption', 'RE Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Index', '37', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Width', '91', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Caption', 'RE Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Index', '42', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Width', '121', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_Caption', 'RE SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_Index', '47', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RES_FACTURA_Width', '157', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_Caption', 'Total IRPF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RETENCION_FACTURA_Width', '118', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CANTIDAD_FACTURA_LINEA_Width', '84', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_CODIGO_ARTICULO_FACTURA_LINEA_Width', '164', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_DESCRIPCION_ARTICULO_FACTURA_LINEA_Width', '162', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_Caption', 'Fecha de Entrega', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_Index', '10', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_FECHA_ENTREGA_FACTURA_LINEA_Width', '202', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Width', '28', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Caption', 'NOMBRE_TIPO_IVA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Index', '7', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_Caption', 'Porcentaje IVA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PORCEN_IVA_FACTURA_LINEA_Width', '124', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Caption', 'Precio CIVA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Index', '8', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA_Width', '84', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Caption', 'Precio SIVA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA_Width', '224', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_Caption', 'Total', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_Index', '9', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_TOTAL_FACTURA_LINEA_Width', '84', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_Caption', 'KEY_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_KEY_PERFILES_Width', '132', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_Caption', 'SUBKEY_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_SUBKEY_PERFILES_Width', '190', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_Caption', 'TYPE_BLOB_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_TYPE_BLOB_PERFILES_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_Caption', 'USUARIO_GRUPO_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_USUARIO_GRUPO_PERFILES_Width', '167', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_Caption', 'VALUE_BLOB_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_BLOB_PERFILES_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_Caption', 'VALUE_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_PERFILES_Width', '112', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_Caption', 'VALUE_TEXT_PERFILES', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvPerfil_VALUE_TEXT_PERFILES_Width', '140', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_Caption', 'CODIGO_EMPRESA_RETENCION', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_EMPRESA_RETENCION_Width', '122', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_Caption', 'Código Retención', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_CODIGO_RETENCION_Width', '163', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_Caption', 'Fecha Aplicación desde', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_DESDE_RETENCION_Width', '151', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_Caption', 'Fecha Aplicación hasta', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_FECHA_HASTA_RETENCION_Width', '150', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_Caption', 'INSTANTEALTA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEALTA_Width', '202', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_Caption', 'INSTANTEMODIF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_INSTANTEMODIF_Width', '202', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_Caption', '% Retención', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_PORCENRETENCION_RETENCION_Width', '107', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_Caption', 'USUARIOALTA', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_Index', '7', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOALTA_Width', '1104', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_Caption', 'USUARIOMODIF', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_Index', '8', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvRetenciones_USUARIOMODIF_Width', '1104', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_Caption', 'Almacén', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_ALMACEN_SERIE_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_Caption', 'Caja', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_Index', '1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_CODIGO_CAJA_SERIE_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_Caption', 'Fecha Desde', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_Index', '5', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_DESDE_SERIE_Width', '121', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_Caption', 'Fecha Hasta', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_Index', '6', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_FECHA_HASTA_SERIE_Width', '114', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_Filtro', '', '', NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_Caption', 'Serie', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_Index', '2', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SERIE_SERIE_Width', '136', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_Caption', 'Subtipo', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_Index', '4', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_SUBTIPO_SERIE_Width', '107', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_Caption', 'Tipo Doc', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_Index', '3', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvSeries_TIPODOC_SERIE_Width', '45', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_CODIGO_CLIENTE_FACTURA_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_CODIGO_CLIENTE_FACTURA_Index', '5', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
@@ -5420,7 +7365,8 @@ UgBBABEAAAAAIITmQAAAAAAAAAAAAAA=', NULL, NULL, '2026-04-28 17:36:25', '2026-04-2
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAR_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAR_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAR_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAR_FACTURA_Width', '145', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAR_FACTURA_Width', '145', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAS_FACTURA_Caption', '% IVA SuperReducido', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAS_FACTURA_Index', '40', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_IVAS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
@@ -5442,8 +7388,7 @@ UgBBABEAAAAAIITmQAAAAAAAAAAAAAA=', NULL, NULL, '2026-04-28 17:36:25', '2026-04-2
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_Caption', '% RE Reducido', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_Index', '35', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RER_FACTURA_Width', '145', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCEN_RES_FACTURA_Caption', '% RE SuperReducido', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
@@ -5921,7 +7866,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_FACTURA_RECIBO_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_FACTURA_RECIBO_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_FACTURA_RECIBO_Visible', 'False', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_FACTURA_RECIBO_Width', '136', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_FACTURA_RECIBO_Width', '136', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_PLAZO_RECIBO_Caption', 'Nro Plazo', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_PLAZO_RECIBO_Index', '2', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_NRO_PLAZO_RECIBO_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
@@ -5943,8 +7889,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_Caption', 'Razón Social Cliente', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_Index', '13', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_SortIndex', '-1', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_SortOrder', '0', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_Visible', 'True', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_RAZONSOCIAL_CLIENTE_RECIBO_Width', '268', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_SERIE_FACTURA_RECIBO_Caption', 'Serie Factura Recibo', NULL, NULL, NULL, '2026-04-28 17:36:25', '2026-04-28 17:36:25', 'Administrador', 'Administrador'),
@@ -6442,7 +8387,8 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-04-21 2
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_IVAS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_IVAS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_IVAS_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_IVAS_FACTURA_Width', '232', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_IVAS_FACTURA_Width', '232', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACTURA_Caption', 'Total Liquido', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACTURA_Index', '4', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
@@ -6464,8 +8410,7 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-04-21 2
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_Caption', 'Total RE Reducido', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_Index', '38', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RER_FACTURA_Width', '172', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RES_FACTURA_Caption', 'Total RE SuperReducido', NULL, NULL, NULL, '2026-04-21 20:17:24', '2026-04-21 20:17:24', 'Administrador', 'Administrador'),
@@ -6943,7 +8888,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_Index', '81', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_Visible', 'False', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FACTURA_Width', '142', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FACTURA_Caption', 'Tiene Descripciones Ampliadas', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FACTURA_Index', '82', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
@@ -6965,8 +8911,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESIMP_INCL_TARIFA_CLIENTE_FACTURA_Width', '263', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Caption', 'Intracomunitario', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Index', '65', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESINTRACOMUNITARIO_CLIENTE_FACTURA_Width', '159', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
@@ -7452,7 +9397,8 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACTURA_LINEA_Width', '87', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_Caption', 'Nombre Familia', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_Index', '3', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_Index', '3', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAMILIA_FACTURA_LINEA_Visible', 'False', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
@@ -7474,8 +9420,7 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACTURA_LINEA_Width', '114', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACTURA_LINEA_Width', '114', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACTURA_LINEA_Caption', 'Precio Coste', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACTURA_LINEA_Index', '7', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-21 20:17:53', '2026-04-21 20:17:53', 'Administrador', 'Administrador'),
@@ -7953,7 +9898,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoOpeCaja', 'ColAtrib1', '125', '', NULL, NULL, '2026-04-19 16:11:04', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoOpeCaja', 'ColAtrib2', '74', '', NULL, NULL, '2026-04-19 16:11:04', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoOpeCaja', 'ColAtrib3', '80', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoOpeCaja', 'ColAtrib4', '80', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoOpeCaja', 'ColAtrib4', '80', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
   ('Administrador', 'frmMtoOpeCaja', 'ColAtrib5', '80', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoOpeCaja', 'StockPanelHeight', '244', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoOpeCaja', 'WindowState', '2', '', NULL, NULL, '2026-04-14 06:37:08', '2026-04-14 06:37:08', 'Administrador', 'Administrador'),
@@ -7975,8 +9921,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administradores', 'frmMtoCajaParam', 'vgerMaxOpPending', '5', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerMoverLineaIdentif', 'False', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerRecuperaValePIN', 'False', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
-  ('Administradores', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `SUBKEY_PERFILES`, `VALUE_PERFILES`, `VALUE_TEXT_PERFILES`, `TYPE_BLOB_PERFILES`, `VALUE_BLOB_PERFILES`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`) VALUES
+  ('Administradores', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerTipoImpresion', 'EDITOR', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
@@ -8447,7 +10392,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Todos', 'frmPrintRecFac', 'frxrprt1_Buena', 'Buena', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22362E392E332220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E417574686F723D2266616374757A616D22205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234353033372C35353634323037303622205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D22626567696E262331333B262331303B262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F73222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2235222052696768744D617267696E3D22352220546F704D617267696E3D2232302220426F74746F6D4D617267696E3D2232302220436F6C756D6E57696474683D22302220436F6C756D6E506F736974696F6E732E546578743D2222204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223334332C393337323322204C6566743D22302220546F703D2231382C3839373635222057696474683D223735352C3930362220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D2235392C3235323031222057696474683D223334332C393337323322204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D22392C3839373635222057696474683D223135382C373430323622204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D2233362C3335343336222057696474683D223132342C373234343922204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D225B262336303B52656369626F732E262333343B53455249455F464143545552415F52454349424F262333343B262336323B5D5C5B262336303B52656369626F732E262333343B4E524F5F464143545552415F52454349424F262333343B262336323B5D5C5B496E74546F53747228262336303B52656369626F732E262333343B4E524F5F504C415A4F5F52454349424F262333343B262336323B295D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2231332C3637373138222057696474683D223131332C3338353922204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2252454349424F204E524F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223137382C393736352220546F703D22392C3839373635222057696474683D223332312C323630303522204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232302C35353133332220546F703D2233362C3335343336222057696474683D223232362C3737313822204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4C4F43414C494441445F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223139302C33313530392220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224C4F43414C49444144204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F372220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530302C32333635352220546F703D22392C3839373635222057696474683D223232322C393932323722204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532322C39313337332220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22494D504F5254452052454349424F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2236362C35393036222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224645434841204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223336342C31373334372220546F703D2235392C3033313534222057696474683D223335392C303535333522204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223337392C32393135392220546F703D2236362C3337303133222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2246454348412044452056454E43494D49454E544F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D223131332C33383539222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22534F4E2045553A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223135382C3231323734222057696474683D223730322C393932353822204865696768743D2233302C32333632342220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223136322C37373138222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22504147414445524F20454E202020262336303B4942414E262336323B20203A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223139352C3032333831222057696474683D223436382C363631373222204865696768743D223132342C37323434392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223230322C33363234222057696474683D223234312C383839393222204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22444F4D4943494C494F2059204E4F4D4252452044454C204C49425241444F3A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223232352C3236303035222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B52415A4F4E534F4349414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223234372C3933373233222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B444952454343494F4E315F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223236362C3833343838222057696474683D223132302C393434393622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B43504F5354414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F424C4143494F4E5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223135362C32393933322220546F703D223236362C3833343838222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B504F424C4143494F4E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223238392C3531323036222057696474683D223332382C383139313122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B50524F56494E4349415F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173434F4449474F5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223430352C373438332220546F703D223139382C3830333334222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B434F4449474F5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530362C34353730322220546F703D223139382C3433333231222057696474683D223138382C3937363522204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22434F4E464F524D452C20454C204C49425241444F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173494D504F5254455F4C45545241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223132302C39343439362220546F703D223131332C33383539222057696474683D223531342C303136303822204865696768743D2233372C373935332220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B494D504F5254455F4C455452415F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734942414E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D223136322C37373138222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B4942414E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F45585045444943494F4E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D2238312C35393036222057696474683D223130392C363036333722204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F56454E43494D49454E544F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223537342C34383835362220546F703D2238312C35393036222057696474683D223130322C303437333122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F56454E43494D49454E544F5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734555524F535F52454349424F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532312C35373531342220546F703D2233322C3435363731222057696474683D223137332C383538333822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4555524F535F52454349424F262333343B5D222F3E0D0A2020202020203C546672784C696E6556696577204E616D653D224C696E65312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22302220546F703D223333342C3831393131222057696474683D223735392C363835353322204865696768743D22302220436F6C6F723D223022204672616D652E5374796C653D2266734461736822204672616D652E5479703D2234222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2023-04-21 13:21:21', '2023-04-21 13:21:21', 'Administrador', 'Administrador'),
   ('Todos', 'frmPrintRecFac', 'frxrprt1_cola cao', 'cola cao', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22323032322E332220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E417574686F723D2246616374755A616D22205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234353639342C3836363236303532303822205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D22626567696E262331333B262331303B262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F73222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2235222052696768744D617267696E3D22352220546F704D617267696E3D2232302220426F74746F6D4D617267696E3D2232302220436F6C756D6E57696474683D22302220436F6C756D6E506F736974696F6E732E546578743D2222204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223334332C393337323322204C6566743D22302220546F703D2231382C3839373635222057696474683D223735352C3930362220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D2235392C3235323031222057696474683D223334332C393337323322204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D22392C3839373635222057696474683D223135382C373430323622204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D2233362C3335343336222057696474683D223132342C373234343922204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D225B262336303B52656369626F732E262333343B53455249455F464143545552415F52454349424F262333343B262336323B5D5C5B262336303B52656369626F732E262333343B4E524F5F464143545552415F52454349424F262333343B262336323B5D5C5B496E74546F53747228262336303B52656369626F732E262333343B4E524F5F504C415A4F5F52454349424F262333343B262336323B295D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2231332C3637373138222057696474683D223131332C3338353922204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2252454349424F204E524F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223137382C393736352220546F703D22392C3839373635222057696474683D223332312C323630303522204865696768743D2234392C31333338392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232302C35353133332220546F703D2233362C3335343336222057696474683D223232362C3737313822204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4C4F43414C494441445F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223139302C33313530392220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224C4F43414C49444144204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F372220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530302C32333635352220546F703D22392C3839373635222057696474683D223232322C393932323722204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532322C39313337332220546F703D2231332C3637373138222057696474683D223137332C383538333822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22494D504F5254452052454349424F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D2236362C35393036222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224645434841204445204558504544494349C3934E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223336342C31373334372220546F703D2235392C3033313534222057696474683D223335392C303535333522204865696768743D2234392C31333338392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223337392C32393135392220546F703D2236362C3337303133222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2246454348412044452056454E43494D49454E544F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2233352C33353433362220546F703D223131332C33383539222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22534F4E2045553A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223135382C3231323734222057696474683D223730322C393932353822204865696768743D2233302C32333632342220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223136322C37373138222057696474683D223138312C343137343422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22504147414445524F20454E202020262336303B4942414E262336323B20203A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C32333632342220546F703D223139352C3032333831222057696474683D223436382C363631373222204865696768743D223132342C37323434392220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223230322C33363234222057696474683D223234312C383839393222204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22444F4D4943494C494F2059204E4F4D4252452044454C204C49425241444F3A222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223232352C3236303035222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B52415A4F4E534F4349414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223234372C3933373233222057696474683D223430302C363330313822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B444952454343494F4E315F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223236362C3833343838222057696474683D223132302C393434393622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B43504F5354414C5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F424C4143494F4E5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223135362C32393933322220546F703D223236362C3833343838222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B504F424C4143494F4E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232372C373935332220546F703D223238392C3531323036222057696474683D223332382C383139313122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B50524F56494E4349415F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173434F4449474F5F434C49454E54452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223430352C373438332220546F703D223139382C3830333334222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B434F4449474F5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530362C34353730322220546F703D223139382C3433333231222057696474683D223138382C3937363522204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22434F4E464F524D452C20454C204C49425241444F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173494D504F5254455F4C45545241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223132302C39343439362220546F703D223131332C33383539222057696474683D223531342C303136303822204865696768743D2233372C373935332220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B494D504F5254455F4C455452415F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734942414E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D223136322C37373138222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D22466163747572617322204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B4942414E5F434C49454E54455F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F45585045444943494F4E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232372220546F703D2238312C35393036222057696474683D223130392C363036333722204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F45585045444943494F4E5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617346454348415F56454E43494D49454E544F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223537342C34383835362220546F703D2238312C35393036222057696474683D223130322C303437333122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D6522204672616D652E5479703D22302220546578743D225B52656369626F732E262333343B46454348415F56454E43494D49454E544F5F52454349424F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734555524F535F52454349424F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223532312C35373531342220546F703D2233322C3435363731222057696474683D223137332C383538333822204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B52656369626F732E262333343B4555524F535F52454349424F262333343B5D222F3E0D0A2020202020203C546672784C696E6556696577204E616D653D224C696E65312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22302220546F703D223333342C3831393131222057696474683D223735392C363835353322204865696768743D22302220436F6C6F723D223022204672616D652E5374796C653D2266734461736822204672616D652E5479703D2234222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F32312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223533322C39313337332220546F703D223239342C3830333334222057696474683D223135312C3138313222204865696768743D2233302C32333632342220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22636F6C612063616F222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2025-02-06 20:47:48', '2025-02-06 20:47:48', 'Administrador', 'Administrador'),
   ('Todos', 'inLibtb', 'oSimbolosProhibidos', ',"''+-€%*', NULL, NULL, NULL, '2023-04-26 11:50:56', '2023-04-26 11:50:48', 'Administrador', 'Administrador');
--- 3470 registros exportados
+-- 4992 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -10652,6 +12597,302 @@ BEGIN
 END ;;
 DELIMITER ;
 
+-- Procedimiento: PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO
+DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`(
+    IN p_EMPRESA VARCHAR(10),
+    IN p_ALMACEN VARCHAR(10),
+    IN p_SERIE VARCHAR(20),
+    IN p_NRO VARCHAR(20),
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_DONE INT DEFAULT FALSE;
+    DECLARE v_ESTADO VARCHAR(20);
+    DECLARE v_FECHA_CABECERA DATETIME;
+
+    /* Variables del cursor */
+    DECLARE v_LINEA VARCHAR(4);
+    DECLARE v_SKU VARCHAR(50);
+    DECLARE v_FISICA DECIMAL(19,6);
+    DECLARE v_PMP_NUEVO DECIMAL(19,6);
+    DECLARE v_FECHA_RECUENTO DATETIME;
+
+    /* Variables para el cálculo histórico */
+    DECLARE v_STOCK_HIST DECIMAL(19,6);
+    DECLARE v_PMP_HIST DECIMAL(19,6);
+    DECLARE v_DIF_CANTIDAD DECIMAL(19,6);
+    DECLARE v_TOTAL_COSTE_DIF DECIMAL(19,6);
+
+    DECLARE cur_lineas CURSOR FOR
+        SELECT LINEA_INVENTARIO_LINEA,
+               CODIGO_UNIDAD_INVENTARIO_LINEA,
+               CANTIDAD_FISICA_INVENTARIO_LINEA,
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA,
+               FECHA_RECUENTO_INVENTARIO_LINEA
+          FROM fza_inventarios_lineas
+         WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND SERIE_INVENTARIO_LINEA = p_SERIE
+           AND NRO_INVENTARIO_LINEA = p_NRO;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
+
+    /* Blindaje transaccional */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    /* 1. Obtener estado y fecha global del inventario */
+    SELECT ESTADO_INVENTARIO, FECHA_INVENTARIO 
+      INTO v_ESTADO, v_FECHA_CABECERA
+      FROM fza_inventarios
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO
+       FOR UPDATE;
+
+    IF v_ESTADO != 'ABIERTO' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: El inventario no está ABIERTO, no se puede recalcular.';
+    END IF;
+
+    OPEN cur_lineas;
+
+    read_loop: LOOP
+        FETCH cur_lineas INTO v_LINEA, v_SKU, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
+
+        IF v_DONE THEN
+            LEAVE read_loop;
+        END IF;
+
+        /* Si la línea no tiene hora de recuento, hereda la hora de apertura del inventario (cabecera) */
+        IF v_FECHA_RECUENTO IS NULL THEN
+            SET v_FECHA_RECUENTO = v_FECHA_CABECERA;
+        END IF;
+
+        SET v_STOCK_HIST = 0;
+        SET v_PMP_HIST = 0;
+
+        /* 2. Calcular Stock Teórico a esa fecha/hora exacta */
+        SELECT IFNULL(SUM(IF(TIPO_MOVIMIENTO_MOV = 'E', CANTIDAD_MOV, -CANTIDAD_MOV)), 0)
+          INTO v_STOCK_HIST
+          FROM fza_movimientos_almacen
+         WHERE CODIGO_ALMACEN_MOV = p_ALMACEN
+           AND CODIGO_UNIDAD_MOV = v_SKU
+           AND FECHA_MOV <= v_FECHA_RECUENTO
+           AND ESACTIVO_MOV = 'S';
+
+        /* 3. Rescatar el Precio Medio que había a esa fecha/hora exacta (el del último movimiento) */
+        SELECT IFNULL(PRECIO_MEDIO_MOV, 0)
+          INTO v_PMP_HIST
+          FROM fza_movimientos_almacen
+         WHERE CODIGO_ALMACEN_MOV = p_ALMACEN
+           AND CODIGO_UNIDAD_MOV = v_SKU
+           AND FECHA_MOV <= v_FECHA_RECUENTO
+           AND ESACTIVO_MOV = 'S'
+         ORDER BY FECHA_MOV DESC, NUMERO_MOV DESC
+         LIMIT 1;
+
+        /* 4. Cálculo de diferencias de Cantidad */
+        SET v_DIF_CANTIDAD = v_FISICA - v_STOCK_HIST;
+        
+        /* Si el usuario no ha especificado un PMP nuevo (revalorización), mantenemos el que tenía */
+        IF v_PMP_NUEVO = 0 OR v_PMP_NUEVO IS NULL THEN
+            SET v_PMP_NUEVO = v_PMP_HIST;
+        END IF;
+
+        /* 5. Cálculo del Coste de la Diferencia (Fórmula de doble impacto: cantidad y/o revalorización) */
+        SET v_TOTAL_COSTE_DIF = (v_FISICA * v_PMP_NUEVO) - (v_STOCK_HIST * v_PMP_HIST);
+
+        /* 6. Grabar el recálculo en la línea */
+        UPDATE fza_inventarios_lineas
+           SET CANTIDAD_TEORICA_INVENTARIO_LINEA = v_STOCK_HIST,
+               PRECIO_MEDIO_INVENTARIO_LINEA = v_PMP_HIST,
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA = v_PMP_NUEVO,
+               CANTIDAD_DIFERENCIA_INVENTARIO_LINEA = v_DIF_CANTIDAD,
+               TOTAL_COSTE_DIFERENCIA_LINEA = v_TOTAL_COSTE_DIF,
+               USUARIOMODIF = p_USUARIO,
+               INSTANTEMODIF = NOW()
+         WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND SERIE_INVENTARIO_LINEA = p_SERIE
+           AND NRO_INVENTARIO_LINEA = p_NRO
+           AND LINEA_INVENTARIO_LINEA = v_LINEA;
+
+    END LOOP;
+
+    CLOSE cur_lineas;
+
+    /* 7. Finalmente, sumamos todo y rellenamos los totales de la cabecera */
+    UPDATE fza_inventarios
+       SET TOTAL_UNIDADES_DIFERENCIA_INVENTARIO = (
+               SELECT IFNULL(SUM(CANTIDAD_DIFERENCIA_INVENTARIO_LINEA), 0)
+                 FROM fza_inventarios_lineas 
+                WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+                  AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+                  AND SERIE_INVENTARIO_LINEA = p_SERIE
+                  AND NRO_INVENTARIO_LINEA = p_NRO
+           ),
+           TOTAL_EUROS_DIFERENCIA_INVENTARIO = (
+               SELECT IFNULL(SUM(TOTAL_COSTE_DIFERENCIA_LINEA), 0) 
+                 FROM fza_inventarios_lineas 
+                WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+                  AND CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+                  AND SERIE_INVENTARIO_LINEA = p_SERIE
+                  AND NRO_INVENTARIO_LINEA = p_NRO
+           ),
+           USUARIOMODIF = p_USUARIO,
+           INSTANTEMODIF = NOW()
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO;
+
+    COMMIT;
+END ;;
+DELIMITER ;
+
+-- Procedimiento: PRC_FZA_INVENTARIOS_APLICAR
+DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_APLICAR`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FZA_INVENTARIOS_APLICAR`(
+    IN p_EMPRESA VARCHAR(10),
+    IN p_ALMACEN VARCHAR(10),
+    IN p_SERIE VARCHAR(20),
+    IN p_NRO VARCHAR(20),
+    IN p_USUARIO VARCHAR(100)
+)
+BEGIN
+    DECLARE v_DONE INT DEFAULT FALSE;
+    DECLARE v_ESTADO VARCHAR(20);
+
+    /* Variables del cursor */
+    DECLARE v_LINEA VARCHAR(4);
+    DECLARE v_ARTICULO VARCHAR(20);
+    DECLARE v_SKU VARCHAR(50);
+    DECLARE v_TEORICA DECIMAL(19,6);
+    DECLARE v_FISICA DECIMAL(19,6);
+    DECLARE v_PMP_NUEVO DECIMAL(19,6);
+    DECLARE v_FECHA_RECUENTO DATETIME;
+    
+    DECLARE v_MOV_SALIDA VARCHAR(20);
+    DECLARE v_MOV_ENTRADA VARCHAR(20);
+
+    /* Cursor que carga la "foto" exacta del pasado */
+    DECLARE cur_lineas CURSOR FOR
+        SELECT LINEA_INVENTARIO_LINEA,
+               CODIGO_ARTICULO_INVENTARIO_LINEA,
+               CODIGO_UNIDAD_INVENTARIO_LINEA,
+               CANTIDAD_TEORICA_INVENTARIO_LINEA, /* La foto del pasado */
+               CANTIDAD_FISICA_INVENTARIO_LINEA,  /* Lo que se contó */
+               PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA,
+               IFNULL(FECHA_RECUENTO_INVENTARIO_LINEA, FECHA_INVENTARIO) /* Si no hay fecha de línea, usa la de cabecera */
+          FROM fza_inventarios_lineas l
+          JOIN fza_inventarios c 
+            ON c.CODIGO_EMPRESA_INVENTARIO = l.CODIGO_EMPRESA_INVENTARIO_LINEA
+           AND c.CODIGO_ALMACEN_INVENTARIO = l.CODIGO_ALMACEN_INVENTARIO_LINEA
+           AND c.SERIE_INVENTARIO = l.SERIE_INVENTARIO_LINEA
+           AND c.NRO_INVENTARIO = l.NRO_INVENTARIO_LINEA
+         WHERE l.CODIGO_EMPRESA_INVENTARIO_LINEA = p_EMPRESA
+           AND l.CODIGO_ALMACEN_INVENTARIO_LINEA = p_ALMACEN
+           AND l.SERIE_INVENTARIO_LINEA = p_SERIE
+           AND l.NRO_INVENTARIO_LINEA = p_NRO;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
+    
+    /* Blindaje transaccional */
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT ESTADO_INVENTARIO INTO v_ESTADO
+      FROM fza_inventarios
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO
+       FOR UPDATE;
+
+    IF v_ESTADO != 'ABIERTO' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: El inventario ya fue aplicado o está cancelado.';
+    END IF;
+
+    OPEN cur_lineas;
+
+    read_loop: LOOP
+        FETCH cur_lineas INTO v_LINEA, v_ARTICULO, v_SKU, v_TEORICA, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
+
+        IF v_DONE THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET v_MOV_SALIDA = LEFT(CONCAT('IV-', p_NRO, '-', v_LINEA, 'S'), 20);
+        SET v_MOV_ENTRADA = LEFT(CONCAT('IV-', p_NRO, '-', v_LINEA, 'E'), 20);
+
+        /* 1. FASE DE VACIADO HISTÓRICO */
+        IF v_TEORICA > 0 THEN
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_SALIDA, 'IN', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                'S', v_TEORICA, 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            
+            /* Hacemos el "truco" de viajar en el tiempo actualizando la fecha generada por el insert nativo */
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
+            
+        ELSEIF v_TEORICA < 0 THEN
+            /* Anulación de stock negativo histórico */
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_SALIDA, 'IN', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                'E', ABS(v_TEORICA), 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
+        END IF;
+
+        /* 2. FASE DE LLENADO HISTÓRICO */
+        IF v_FISICA > 0 THEN
+            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+                v_MOV_ENTRADA, 'IN', p_SERIE, p_NRO, v_LINEA,
+                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
+                'E', v_FISICA, v_PMP_NUEVO, (v_FISICA * v_PMP_NUEVO), p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
+            );
+            
+            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_ENTRADA;
+        END IF;
+
+        /* 3. EFECTO DOMINÓ: Forzamos el recálculo del Kardex para este SKU */
+        /* Esto pondrá en orden la tabla fza_articulos_stockactual y revalorizará las ventas hechas después del inventario */
+        CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_ALMACEN, v_SKU);
+
+    END LOOP;
+
+    CLOSE cur_lineas;
+
+    /* Marcamos el documento como cerrado */
+    UPDATE fza_inventarios
+       SET ESTADO_INVENTARIO = 'APLICADO',
+           USUARIOMODIF = p_USUARIO,
+           INSTANTEMODIF = NOW()
+     WHERE CODIGO_EMPRESA_INVENTARIO = p_EMPRESA
+       AND CODIGO_ALMACEN_INVENTARIO = p_ALMACEN
+       AND SERIE_INVENTARIO = p_SERIE
+       AND NRO_INVENTARIO = p_NRO;
+
+    COMMIT;
+END ;;
+DELIMITER ;
+
 -- Procedimiento: PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT
 DROP PROCEDURE IF EXISTS `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`;
 DELIMITER ;;
@@ -12087,4 +14328,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 30/04/2026 19:37:03
+-- Backup completado: 01/05/2026 21:58:45
