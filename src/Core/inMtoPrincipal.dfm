@@ -153,7 +153,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     ImageMargin.Bottom = 0
     ImageSize.Height = 0
     ImageSize.Width = 0
-    TextMargin = 35
+    TextMargin = 100
     Left = 616
     Top = 144
     object Archivo1: TMenuItem

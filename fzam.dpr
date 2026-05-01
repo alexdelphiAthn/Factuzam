@@ -174,6 +174,8 @@ begin
   finally
     frmLogon.Free;
   end;
+  Screen.MenuFont.Name := 'Lucida Sans';
+  Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   Application.Run;
 end.
