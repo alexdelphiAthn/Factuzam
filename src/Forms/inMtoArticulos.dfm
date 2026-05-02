@@ -729,17 +729,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OnClick = btnIraTarifaClick
                 end
                 object btnCrearTarifa: TcxButton
-                  Left = 4
-                  Top = 56
+                  Left = 7
+                  Top = 200
                   Width = 104
                   Height = 34
                   Caption = 'C&rear Tarifa'
                   TabOrder = 1
+                  Visible = False
                   OnClick = btnCrearTarifaClick
                 end
                 object btnExportarTarifa: TcxButton
                   Left = 4
-                  Top = 144
+                  Top = 113
                   Width = 105
                   Height = 34
                   Caption = '&Exp Excel'
@@ -748,7 +749,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
                 object btnAddSKU: TcxButton
                   Left = 4
-                  Top = 96
+                  Top = 65
                   Width = 104
                   Height = 34
                   Caption = 'A&'#241'adir SKU'

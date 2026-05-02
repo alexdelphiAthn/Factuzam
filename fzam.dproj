@@ -447,6 +447,15 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibVentasCalendario.pas"/>
         <DCCReference Include="src\Lib\inLibLayoutForm.pas"/>
+        <DCCReference Include="src\Forms\inMtoInventarios.pas">
+            <Form>frmMtoInventarios</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataInventarios.pas">
+            <Form>dmInventarios</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <None Include="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -471,6 +480,56 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrControlsLibrary37.bpl">FastControls VCL Library by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrCoreLibrary37.bpl">FastCore VCL Library by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrLocalizationLibrary37.bpl">FastLocalization VCL Library by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrx37.bpl">FastReport VCL Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxADO37.bpl">FastReport VCL - ADO Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxDB37.bpl">FastReport VCL - DB Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxDBX37.bpl">FastReport VCL - DBX Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxe37.bpl">FastReport VCL - Exports by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxFD37.bpl">FastReport VCL - FireDAC Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxHTML37.bpl">FastReport VCL - HTMLView Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfrxPDF37.bpl">FastReport VCL - PDF Component by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfs37.bpl">FastScript VCL Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfsADO37.bpl">FastScript VCL - ADO Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfsDB37.bpl">FastScript VCL - DB Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\dclfsFD37.bpl">FastScript VCL - FD Components by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageArabic37.bpl">FastLocalization VCL Library - Arabic Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageBrazil137.bpl">FastLocalization VCL Library - Brazil1 Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageBrazil237.bpl">FastLocalization VCL Library - Brazil2 Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageBrazil37.bpl">FastLocalization VCL Library - Brazil Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageBulgarian37.bpl">FastLocalization VCL Library - Bulgarian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageCatalon37.bpl">FastLocalization VCL Library - Catalon Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageChinese37.bpl">FastLocalization VCL Library - Chinese Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageCroatian37.bpl">FastLocalization VCL Library - Croatian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageCzech37.bpl">FastLocalization VCL Library - Czech Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageDanish37.bpl">FastLocalization VCL Library - Danish Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageDutch37.bpl">FastLocalization VCL Library - Dutch Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageFarsi37.bpl">FastLocalization VCL Library - Farsi Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageFrench37.bpl">FastLocalization VCL Library - French Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageGerman37.bpl">FastLocalization VCL Library - German Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageGreek37.bpl">FastLocalization VCL Library - Greek Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageHebrew37.bpl">FastLocalization VCL Library - Hebrew Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageHungarian37.bpl">FastLocalization VCL Library - Hungarian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageIndonesian37.bpl">FastLocalization VCL Library - Indonesian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageItalian37.bpl">FastLocalization VCL Library - Italian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageJapanese37.bpl">FastLocalization VCL Library - Japanese Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageLatvian37.bpl">FastLocalization VCL Library - Latvian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageLithuanian37.bpl">FastLocalization VCL Library - Lithuanian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguagePolish37.bpl">FastLocalization VCL Library - Polish Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguagePortuguese37.bpl">FastLocalization VCL Library - Portuguese Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageRomanian37.bpl">FastLocalization VCL Library - Romanian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageRussian37.bpl">FastLocalization VCL Library - Russian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSerbian37.bpl">FastLocalization VCL Library - Serbian Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSlovak37.bpl">FastLocalization VCL Library - Slovak Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSlovene37.bpl">FastLocalization VCL Library - Slovene Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSpanish37.bpl">FastLocalization VCL Library - Spanish Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSwedish37.bpl">FastLocalization VCL Library - Swedish Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageSwiss37.bpl">FastLocalization VCL Library - Swiss Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageTaiwan37.bpl">FastLocalization VCL Library - Taiwan Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageTurkish37.bpl">FastLocalization VCL Library - Turkish Language by Fast Reports Inc</Excluded_Packages>
+                    <Excluded_Packages Name="C:\DISCO_DURO\Fast Reports\VCL\2026.2\Sources\LibRS37\VCL\Win32\frLanguageUkrainian37.bpl">FastLocalization VCL Library - Ukrainian Language by Fast Reports Inc</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="5">
@@ -482,6 +541,12 @@
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win64">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -502,6 +567,18 @@
                 </DeployFile>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>fzam.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\fzam.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>fzam.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win64">

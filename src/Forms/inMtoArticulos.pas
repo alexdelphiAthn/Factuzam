@@ -489,14 +489,18 @@ var
   HaySolapamiento, TieneUserHasta, DbHastaIsNull: Boolean;
   UserDesde, UserHasta, DbDesde, DbHasta: TDate;
   Cond1, Cond2: Boolean;
+  codArticulo:String;
 begin
   inherited;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
 
-  if dmmArticulos.unqryVariacionesArticulos.IsEmpty then
-  begin
-    ShowMessage('No hay SKUs generados para este artículo.');
-    Exit;
-  end;
+  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+//  if dmmArticulos.unqryVariacionesArticulos.IsEmpty then
+//  begin
+//    ShowMessage('No hay SKUs generados para este artículo.');
+//    Exit;
+//  end;
 
   // Instanciamos tu modal base
   frmSel := TfrmModalAceptCancel.Create(Self);
@@ -555,7 +559,7 @@ begin
     chkSkus.AlignWithMargins := True;
     chkSkus.Top := 2000;
     chkSkus.Align := alTop;
-
+    chkSkus.Items.Add.Text := 'ARTÍCULO';
     with dmmArticulos.unqryVariacionesArticulos do
     begin
       DisableControls;
@@ -661,14 +665,28 @@ begin
             begin
               if chkTarifas.Items[j].Checked then
               begin
-                LlaveUnica := chkSkus.Items[i].Text + '|' + chkTarifas.Items[j].Text;
+                // EVALUAMOS QUÉ GUARDAR SI ES "GENERAL"
+                if chkSkus.Items[i].Text = 'ARTÍCULO' then
+                begin
+                  // Opción recomendada: lo dejamos en blanco para que sea la tarifa global del artículo
+                  LlaveUnica := '' + '|' + chkTarifas.Items[j].Text;
+                end
+                else
+                begin
+                  LlaveUnica := chkSkus.Items[i].Text + '|' + chkTarifas.Items[j].Text;
+                end;
 
                 // Solo insertamos si la combinación NO choca en fechas
                 if TarifasActivas.IndexOf(LlaveUnica) = -1 then
                 begin
                   dmmArticulos.unqryTarifasArticulos.Append;
 
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := chkSkus.Items[i].Text;
+                  // Asignamos el valor correspondiente al campo SKU
+                  if chkSkus.Items[i].Text = 'ARTÍCULO' then
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := ''
+                  else
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := chkSkus.Items[i].Text;
+
                   dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TARIFA').AsString := chkTarifas.Items[j].Text;
                   dmmArticulos.unqryTarifasArticulos.FieldByName('ACTIVO_TARIFA').AsString := 'S';
                   dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIOSALIDA_TARIFA').AsFloat := 0;
