@@ -53,13 +53,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             BevelOuter = bvNone
             TabOrder = 0
             object lblEmpresa: TcxLabel
-              Left = 24
+              Left = 32
               Top = 15
               Caption = 'Empresa'
               TabOrder = 0
             end
             object cbbCODIGO_EMPRESA_INVENTARIO: TcxDBLookupComboBox
-              Left = 113
+              Left = 121
               Top = 11
               DataBinding.DataField = 'CODIGO_EMPRESA_INVENTARIO'
               DataBinding.DataSource = dsTablaG
@@ -73,18 +73,17 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 200
                   FieldName = 'RAZONSOCIAL_EMPRESA'
                 end>
-              Properties.ListSource = dsEmpresas
               TabOrder = 1
               Width = 280
             end
             object lblAlmacen: TcxLabel
-              Left = 23
+              Left = 31
               Top = 47
               Caption = 'Almac'#233'n'
               TabOrder = 2
             end
             object cbbCODIGO_ALMACEN_INVENTARIO: TcxDBLookupComboBox
-              Left = 113
+              Left = 121
               Top = 43
               DataBinding.DataField = 'CODIGO_ALMACEN_INVENTARIO'
               DataBinding.DataSource = dsTablaG
@@ -98,18 +97,17 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 200
                   FieldName = 'DESCRIPCION_ALMACEN'
                 end>
-              Properties.ListSource = dsAlmacenes
               TabOrder = 3
               Width = 280
             end
             object lblSerie: TcxLabel
-              Left = 54
+              Left = 62
               Top = 85
               Caption = 'Serie'
               TabOrder = 4
             end
             object cbbSERIE_INVENTARIO: TcxDBLookupComboBox
-              Left = 113
+              Left = 121
               Top = 78
               DataBinding.DataField = 'SERIE_INVENTARIO'
               DataBinding.DataSource = dsTablaG
@@ -119,18 +117,17 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 100
                   FieldName = 'SERIE_SERIE'
                 end>
-              Properties.ListSource = dsSeries
               TabOrder = 5
               Width = 120
             end
             object lblNumero: TcxLabel
-              Left = 27
+              Left = 35
               Top = 115
               Caption = 'N'#250'mero'
               TabOrder = 6
             end
             object txtNRO_INVENTARIO: TcxDBTextEdit
-              Left = 113
+              Left = 121
               Top = 111
               DataBinding.DataField = 'NRO_INVENTARIO'
               DataBinding.DataSource = dsTablaG
@@ -138,7 +135,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Width = 174
             end
             object lblFecha: TcxLabel
-              Left = 326
+              Left = 353
               Top = 115
               Caption = 'Fecha'
               TabOrder = 8
@@ -152,7 +149,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Width = 228
             end
             object lblEstado: TcxLabel
-              Left = 326
+              Left = 346
               Top = 85
               Caption = 'Estado'
               TabOrder = 10
@@ -167,13 +164,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Width = 228
             end
             object lblDescripcion: TcxLabel
-              Left = -5
+              Left = 3
               Top = 144
               Caption = 'Descripci'#243'n'
               TabOrder = 12
             end
             object txtDESCRIPCION_INVENTARIO: TcxDBTextEdit
-              Left = 113
+              Left = 121
               Top = 144
               DataBinding.DataField = 'DESCRIPCION_INVENTARIO'
               DataBinding.DataSource = dsTablaG
@@ -269,7 +266,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 object tvLineas: TcxGridDBTableView
                   OnEditing = tvLineasEditing
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
-                  DataController.DataSource = dsLineasLocal
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '#,##0.00'
@@ -454,7 +450,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Align = alClient
                 TabOrder = 1
                 object tvMovs: TcxGridDBTableView
-                  DataController.DataSource = dsMovsLocal
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
                   OptionsData.Inserting = False
@@ -716,6 +711,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
       StyleElements = [seFont, seClient, seBorder]
       inherited pnStateDataSet: TPanel
         StyleElements = [seFont, seClient, seBorder]
+        inherited lblEditMode: TcxLabel
+          Left = 17
+          Top = 7
+          ExplicitLeft = 17
+          ExplicitTop = 7
+        end
       end
       inherited pnlDataSetName: TPanel
         StyleElements = [seFont, seClient, seBorder]
@@ -730,16 +731,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
       TabOrder = 2
       OnClick = btnAplicarClick
     end
-    object btnRecalcular: TcxButton
-      Left = 0
-      Top = 234
-      Width = 137
-      Height = 40
-      Caption = 'Valorar'
-      OptionsImage.ImageIndex = 0
-      TabOrder = 3
-      OnClick = btnRecalcularClick
-    end
     object cxButton1: TcxButton
       Left = 0
       Top = 282
@@ -747,51 +738,19 @@ inherited frmMtoInventarios: TfrmMtoInventarios
       Height = 40
       Caption = 'Cargar'
       OptionsImage.ImageIndex = 0
-      TabOrder = 4
+      TabOrder = 3
       OnClick = btnRecalcularClick
     end
   end
   inherited dsTablaG: TDataSource
     OnDataChange = dsTablaGDataChange
   end
-  object jvntrstbLineas: TJvEnterAsTab
-    Left = 1100
-    Top = 60
-  end
   object dlgAbrir: TOpenDialog
     Filter = 
       'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Excel (*.xlsx)|*.xlsx|Tod' +
       'os|*.*'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist]
-    Left = 1180
-    Top = 16
-  end
-  object dsEmpresas: TDataSource
-    Left = 1100
-    Top = 24
-  end
-  object dsAlmacenes: TDataSource
-    Left = 1140
-    Top = 24
-  end
-  object dsSeries: TDataSource
-    Left = 1180
-    Top = 24
-  end
-  object dsLineasLocal: TDataSource
-    Left = 1100
-    Top = 56
-  end
-  object dsMovsLocal: TDataSource
-    Left = 1140
-    Top = 56
-  end
-  object dsFamilias: TDataSource
-    Left = 1180
-    Top = 56
-  end
-  object dsProveedores: TDataSource
-    Left = 1220
-    Top = 56
+    Left = 948
+    Top = 224
   end
 end
