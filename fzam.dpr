@@ -139,7 +139,9 @@ uses
   UniDataConsultaOpe in 'src\DataModules\UniDataConsultaOpe.pas' {dmConsultaOpe: TDataModule},
   inMtoConsultaOpe in 'src\Forms\inMtoConsultaOpe.pas' {frmConsultaOpe},
   inLibVentasCalendario in 'src\Lib\inLibVentasCalendario.pas',
-  inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas';
+  inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas',
+  inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
+  UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule};
 
 var
   frmLogon: TfrmLogon;

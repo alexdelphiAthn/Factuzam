@@ -9,7 +9,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
-  OnDestroy = FormDestroy
   OnShow = FormShow
   ExplicitWidth = 1140
   ExplicitHeight = 617
@@ -1309,6 +1308,15 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object FormasdePagoCaja1: TMenuItem
         Caption = 'Formas de Pago Caja'
+      end
+    end
+    object mnuAlmacen: TMenuItem
+      Caption = 'Almac'#233'n'
+      object Movimientosdealmacn1: TMenuItem
+        Caption = 'Movimientos de almac'#233'n'
+      end
+      object Inventarios1: TMenuItem
+        Caption = 'Inventarios'
       end
     end
     object Utilidades1: TMenuItem

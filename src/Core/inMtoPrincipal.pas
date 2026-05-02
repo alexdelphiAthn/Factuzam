@@ -74,7 +74,9 @@ type
     CrearArtculosyunpedidoounalbarn1: TMenuItem;
     Formasdepago2: TMenuItem;
     dxSkinController1: TdxSkinController;
-    procedure FormDestroy(Sender: TObject);
+    mnuAlmacen: TMenuItem;
+    Movimientosdealmacn1: TMenuItem;
+    Inventarios1: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -157,8 +159,8 @@ type
     FLogForm: TForm;
     FLogMemo: TSynEdit;
     FLogHigSQL: TSynSQLSyn;
-    FSavedNCM: TNonClientMetrics;      // <- AÑADIR
-    FSavedNCMValid: Boolean;           // <- AÑADIR
+    FSavedNCM: TNonClientMetrics;
+    FSavedNCMValid: Boolean;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
 //    procedure SetMenuFont(const AFontName: string; ASize: Integer);
@@ -205,18 +207,22 @@ uses inLibUser,
 
 {$R *.dfm}
 
-procedure TfrmMtoPrincipal.LogFormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfrmMtoPrincipal.LogFormClose(Sender: TObject;
+                                        var Action: TCloseAction);
 begin
   Action := caFree;
   FLogForm := nil;
   FLogMemo := nil;
 end;
 
-procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject; var SQL: string; var Omit: Boolean);
+procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject;
+                                               var SQL: string;
+                                               var Omit: Boolean);
 var
   TempList: TStringList;
 begin
-  FLogMemo.Lines.Add(' -- Ejecutando (' + FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
+  FLogMemo.Lines.Add(' -- Ejecutando (' +
+                                   FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
   TempList := TStringList.Create;
   try
     TempList.Text := SQL;
@@ -249,8 +255,6 @@ function TfrmMtoPrincipal.ContieneDDL(const ASQL: string): Boolean;
 var
   Patron: string;
 begin
-  // \b indica "límite de palabra" para asegurar que es el comando exacto.
-  // Buscamos ignorando mayúsculas o minúsculas.
   Patron := '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b';
   Result := TRegEx.IsMatch(ASQL, Patron, [roIgnoreCase]);
 end;
@@ -286,7 +290,8 @@ begin
     Action := eaFail;
 end;
 
-procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
+                                                  var Done: Boolean);
 var
   EstadoTeclas: string;
 begin
@@ -336,7 +341,8 @@ var
   var
     sTema: string;
   begin
-    if not (Assigned(LookAndFeelController1) and Assigned(dxSkinController1)) then
+    if not (Assigned(LookAndFeelController1) and
+            Assigned(dxSkinController1)) then
       Exit;
     try
       sTema := oAppParams.GetString('appTema');
@@ -347,7 +353,6 @@ var
         else
           sTema := 'Office2007Pink';
       end;
-      // PRIMERO el skin, LUEGO la fuente del menú
       LookAndFeelController1.SkinName := sTema;
       dxSkinController1.SkinName      := sTema;
     except
@@ -392,13 +397,6 @@ begin
   inLibLog.Log.LogInfo('Arranque del sistema');
 end;
 
-procedure TfrmMtoPrincipal.FormDestroy(Sender: TObject);
-begin
-//  if FSavedNCMValid then
-//    SystemParametersInfo(SPI_SETNONCLIENTMETRICS,
-//                         SizeOf(FSavedNCM), @FSavedNCM, 0);
-end;
-
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
 begin
   if (mnuTarifas.Visible = True) then
@@ -423,7 +421,7 @@ var
   IncludeTables, ExcludeTables: TStringList;
 begin
   // Asumimos por defecto que no se completará (ej. el usuario cancela)
-  Result := False; 
+  Result := False;
 
   // Configuración del diálogo
   saveDialog.Title := 'Guardar copia de seguridad';
@@ -441,7 +439,7 @@ begin
   end;
   //saveDialog.FileTypes.Add(); := 'Archivos SQL (*.sql)|*.sql';
   saveDialog.FileName := 'copiaseguridad' +
-                              FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
+                           FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
   if saveDialog.Execute then
   begin
     // 1. Configurar Opciones de la librería
@@ -457,18 +455,23 @@ begin
     IncludeTables := TStringList.Create;
     ExcludeTables := TStringList.Create;
     // 2. Inicializar el Provider
-    Provider := TMySQLMetadataProvider.Create(FDmConn.conUni, FDmConn.conUni.Database);
+    Provider := TMySQLMetadataProvider.Create(FDmConn.conUni,
+                                              FDmConn.conUni.Database);
     Helpers := TMySQLHelpers.Create;
     Writer := TScriptWriter.Create(saveDialog.FileName);
     try
       try
-        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
+        Engine := TDBBackupEngine.Create(Provider,
+                                         Writer,
+                                         Helpers,
+                                         Options,
+                                         IncludeTables,
+                                         ExcludeTables);
         try
-          // 3. Ejecutar el backup
           Engine.GenerateBackup;
-          inLibLog.Log.LogInfo('Copia de seguridad creada en ' + saveDialog.FileName);
+          inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
+                                                           saveDialog.FileName);
           ShowMessage('La copia se guardó exitosamente.');
-          // Si llegamos hasta aquí sin errores, el backup fue un éxito
           Result := True;
         finally
           Engine.Free;
@@ -476,9 +479,10 @@ begin
       except
         on E: Exception do
         begin
-          // Si algo falla al guardar (ej. disco lleno, sin permisos), lo capturamos
-          inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' + E.Message);
-          ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak + E.Message);
+          inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' +
+                                                                     E.Message);
+          ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak +
+                                                                     E.Message);
           Result := False;
         end;
       end;
@@ -507,7 +511,8 @@ begin
     try
       FormManager.CloseAll;
     except
-      on E: Exception do inLibLog.Log.LogError('Error en CloseAll: ' + E.Message);
+      on E: Exception do inLibLog.Log.LogError('Error en CloseAll: ' +
+                                                                     E.Message);
     end;
     FreeAndNil(oFzaWinf);
     if (FdmDataPerfiles <> nil) then
@@ -534,12 +539,6 @@ begin
     begin
       CanClose := True;  // Permite el cierre
     end;
-  end
-  else
-  begin
-    // Si hay formularios abiertos, podrías decidir si dejar cerrar
-    // directamente o pedir cerrar primero las pestañas.
-//    CanClose := True;
   end;
 end;
 
@@ -550,8 +549,6 @@ end;
 
 procedure TfrmMtoPrincipal.FormShow(Sender: TObject);
 begin
-  // si ocurre una excepción durante la carga,
-  // se fuerza el cierre de la ventana
   if FException then
   begin
     PostMessage(Handle, wm_Close, 0, 0);
