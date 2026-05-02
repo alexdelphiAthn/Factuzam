@@ -202,6 +202,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsDetalle: TcxTabSheet
               Caption = '2. Detalle del inventario'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlDetalleTop: TPanel
                 Left = 0
                 Top = 0
@@ -591,7 +595,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     DataBinding.DataField = 'USUARIOALTA'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
-                    Properties.OnChange = txtUSUARIOALTAPropertiesChange
                     TabOrder = 0
                     Width = 166
                   end
@@ -654,6 +657,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           AlignSplitter = salTop
           Control = pnlButtonFicha
           ExplicitTop = 175
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet

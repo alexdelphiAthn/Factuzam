@@ -144,11 +144,9 @@ begin
   AlturaReal := Image1.Picture.Bitmap.Height;
   MargenH    := 20;   // margen izq y der en puntos PDF
   MargenV    := 40;   // margen inferior
-
   // Página = contenido + márgenes laterales
   PageW := ANCHO_PAPEL_PIXELS_PDF + (MargenH * 2);
   PageH := AlturaReal + MargenV;
-
   Pdf := TPdfDocumentGDI.Create;
   Metafile := TMetafile.Create;
   try
@@ -156,7 +154,6 @@ begin
     Metafile.Height   := AlturaReal;
     Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 2540, DPI);
     Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
-
     MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
     FCanvas := MetaCanvas;
@@ -177,12 +174,10 @@ begin
       MetaCanvas.Free;
       FCanvas := CanvasBackup;
     end;
-
     Pdf.DefaultPaperSize  := psUserDefined;
     Pdf.DefaultPageWidth  := PageW;
     Pdf.DefaultPageHeight := PageH;
     Pdf.AddPage;
-
     // El contenido ocupa exactamente ANCHO_PAPEL_PIXELS_PDF,
     // desplazado MargenH puntos desde la izquierda
     PlayEnhMetaFile(Pdf.VCLCanvas.Handle,

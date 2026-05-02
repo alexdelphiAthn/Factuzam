@@ -1,16 +1,16 @@
 inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
-  ClientHeight = 265
-  ClientWidth = 416
+  ClientHeight = 257
+  ClientWidth = 414
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 432
   ExplicitHeight = 304
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 262
+    Left = 260
     Width = 154
-    Height = 265
+    Height = 257
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 260
     ExplicitWidth = 154
@@ -388,7 +388,6 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
-    Watermarks = <>
     inherited Data: TfrxDataPage
       object FacturasTOTAL_RER_FACTURA: TfrxMemoView
         IndexTag = 1
@@ -993,7 +992,6 @@ inherited frmPrintFac: TfrmPrintFac
       end>
     Variables = <>
     Style = <>
-    Watermarks = <>
     inherited Page1: TfrxReportPage
       LeftMargin = 10.000000000000000000
       object DetailData1: TfrxDetailData
