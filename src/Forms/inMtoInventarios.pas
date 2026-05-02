@@ -158,7 +158,6 @@ type
     procedure btnCargarExcelClick(Sender: TObject);
     procedure edtRutaExcelPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
-    procedure txtUSUARIOALTAPropertiesChange(Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
@@ -291,17 +290,17 @@ begin
   Edicion := PuedeEditar;
 
   // Etiqueta visual del estado
-  lblEstadoDetalle.Caption := 'Estado del inventario: ' + Estado;
-  case IndexStr(Estado, ['ABIERTO', 'APLICADO', 'CANCELADO']) of
-    0: lblEstadoDetalle.Style.TextColor := clGreen;
-    1: lblEstadoDetalle.Style.TextColor := clBlue;
-    2: lblEstadoDetalle.Style.TextColor := clRed;
-  else
-    lblEstadoDetalle.Style.TextColor := clGray;
-  end;
+  //lblEstadoDetalle.Caption := 'Estado del inventario: ' + Estado;
+//  case IndexStr(Estado, ['ABIERTO', 'APLICADO', 'CANCELADO']) of
+//    0: lblEstadoDetalle.Style.TextColor := clGreen;
+//    1: lblEstadoDetalle.Style.TextColor := clBlue;
+//    2: lblEstadoDetalle.Style.TextColor := clRed;
+//  else
+//    lblEstadoDetalle.Style.TextColor := clGray;
+//  end;
 
   // Botones de acciones globales
-  btnRecalcular.Enabled               := Edicion;
+{  btnRecalcular.Enabled               := Edicion;
   btnAplicar.Enabled                  := Edicion;
   btnRecalcularDetalle.Enabled        := Edicion;
   btnAnadirLinea.Enabled              := Edicion;
@@ -312,7 +311,7 @@ begin
   btnCargarTodo.Enabled               := Edicion;
   btnCargarExcel.Enabled              := Edicion;
   btnEliminarRegularizacion.Enabled   := Estado = 'APLICADO';
-
+ }
   HabilitarEdicionLineas(Edicion);
 end;
 
@@ -582,13 +581,7 @@ begin
   RellenarAtributosDesdeSku(Sku);
 end;
 
-pprocedure TfrmMtoInventarios.txtUSUARIOALTAPropertiesChange(Sender: TObject);
-begin
-  inherited;
-
-end;
-
-rocedure TfrmMtoInventarios.tvLineasUdsFisicasPropertiesValidate(Sender: TObject;
+procedure TfrmMtoInventarios.tvLineasUdsFisicasPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
   Fis, Teo, PMPAct, PMPNue, DifUds, DifCoste: Currency;
@@ -848,8 +841,8 @@ begin
   dlgAbrir.Filter := 'Archivos Excel (*.xlsx;*.xls)|*.xlsx;*.xls|' +
                      'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|' +
                      'Todos|*.*';
-  if dlgAbrir.Execute then
-    edtRutaExcel.Text := dlgAbrir.FileName;
+//  if dlgAbrir.Execute then
+//    edtRutaExcel.Text := dlgAbrir.FileName;
 end;
 
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
@@ -862,7 +855,7 @@ begin
     ShowMessage('El inventario debe estar ABIERTO.'); Exit;
   end;
 
-  Archivo := Trim(edtRutaExcel.Text);
+//  Archivo := Trim(edtRutaExcel.Text);
   if (Archivo = '') or not FileExists(Archivo) then
   begin
     ShowMessage('Selecciona primero un archivo válido.'); Exit;

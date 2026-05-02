@@ -142,7 +142,8 @@ implementation
 
 uses
   inLibUser,            // Usuario logueado
-  UniDataConexion;      // oConn
+  inLibGlobalVar,
+  UniDataConn;      // oConn
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -175,7 +176,7 @@ begin
   if not unqryFamilias.Active   then unqryFamilias.Open;
   if not unqryProveedores.Active then unqryProveedores.Open;
 
-  FUsuario := GetUsuarioActual;
+  FUsuario := oUser;
 end;
 
 procedure TdmInventarios.SetClavesActivas(const AEmpresa, AAlmacen, ASerie,

@@ -133,7 +133,6 @@ uses
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
   inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
-  fzam.dxSettings in 'fzam.dxSettings.pas',
   inLibPathTokens in 'src\Lib\inLibPathTokens.pas',
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   UniDataConsultaOpe in 'src\DataModules\UniDataConsultaOpe.pas' {dmConsultaOpe: TDataModule},
