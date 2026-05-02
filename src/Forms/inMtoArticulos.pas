@@ -921,7 +921,7 @@ end;
 procedure TfrmMtoArticulos.ResetForm;
 begin
   inherited;
-  //pcDetail.ActivePage := tsTarifas;
+  pcDetail.ActivePage := tsGeneral;
 end;
 
 procedure TfrmMtoArticulos.BuscarProveedores;

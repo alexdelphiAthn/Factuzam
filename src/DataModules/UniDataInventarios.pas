@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -13,12 +13,10 @@ interface
 uses
   System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
   Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
-  UniDataBase;
+  UniDataGen;
 
 type
-  TdmInventarios = class(TDataModule)
-    // === CABECERAS DE INVENTARIO (LISTA + FICHA) ===
-    unqryTablaG: TUniQuery;                    // Cabecera (heredado de TdmBase)
+  TdmInventarios = class(TdmBase)                    // Cabecera (heredado de TdmBase)
 
     // === LÍNEAS DEL INVENTARIO (Detalle pestaña 2) ===
     unqryLineas: TUniQuery;                    // Líneas físicas en BD

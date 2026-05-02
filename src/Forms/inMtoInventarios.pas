@@ -29,17 +29,7 @@ uses
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
-    jvntrstbLineas: TJvEnterAsTab;
     dlgAbrir: TOpenDialog;
-
-    // === DATA SOURCES (heredados/locales) ===
-    dsEmpresas: TDataSource;
-    dsAlmacenes: TDataSource;
-    dsSeries: TDataSource;
-    dsLineasLocal: TDataSource;
-    dsMovsLocal: TDataSource;
-    dsFamilias: TDataSource;
-    dsProveedores: TDataSource;
     pnlTopFicha: TPanel;
     pnlBodyFicha: TPanel;
     lblEmpresa: TcxLabel;
@@ -57,7 +47,6 @@ type
     btnAplicar: TcxButton;
     lblDescripcion: TcxLabel;
     txtDESCRIPCION_INVENTARIO: TcxDBTextEdit;
-    btnRecalcular: TcxButton;
     cxButton1: TcxButton;
     pnlButtonFicha: TPanel;
     pcDetail: TcxPageControl;
@@ -220,20 +209,21 @@ procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin
   // Llamado por TfrmMtoGen — aquí se crea el DataModule de la pantalla
   dmmInventarios := TdmInventarios.Create(Self);
-  dmmInventarios.Name := 'dmmInventarios_' + IntToStr(Self.Tag);
   tdmDataModule := dmmInventarios;
 
   // Vinculamos el dataset principal al heredado dsTablaG
   dsTablaG.DataSet := dmmInventarios.unqryTablaG;
 
   // Datasources locales que apuntan a queries del DataModule
-  dsEmpresas.DataSet     := dmmInventarios.unqryEmpresas;
-  dsAlmacenes.DataSet    := dmmInventarios.unqryAlmacenes;
-  dsSeries.DataSet       := dmmInventarios.unqrySeries;
-  dsLineasLocal.DataSet  := dmmInventarios.cdsLineas;
-  dsMovsLocal.DataSet    := dmmInventarios.unqryMovsRegul;
-  dsFamilias.DataSet     := dmmInventarios.unqryFamilias;
-  dsProveedores.DataSet  := dmmInventarios.unqryProveedores;
+   cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
+                                                      dmmInventarios.dsEmpresas;
+   cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
+                                                     dmmInventarios.dsAlmacenes;
+   cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
+//    dmmInventarios.dsLineasLocal;
+//   dmmInventarios.dsMovsLocal;
+//    dmmInventarios.dsFamilias;
+//    dmmInventarios.dsProveedores;
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
