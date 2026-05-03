@@ -32,8 +32,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1136
         ExplicitHeight = 649
         object pnlTopFicha: TPanel
@@ -73,6 +71,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 200
                   FieldName = 'RAZONSOCIAL_EMPRESA'
                 end>
+              Properties.OnEditValueChanged = cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged
               TabOrder = 1
               Width = 280
             end
@@ -106,17 +105,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Caption = 'Serie'
               TabOrder = 4
             end
-            object cbbSERIE_INVENTARIO: TcxDBLookupComboBox
+            object cbbSERIE_INVENTARIO: TcxDBComboBox
               Left = 121
               Top = 78
               DataBinding.DataField = 'SERIE_INVENTARIO'
               DataBinding.DataSource = dsTablaG
-              Properties.KeyFieldNames = 'SERIE_SERIE'
-              Properties.ListColumns = <
-                item
-                  Width = 100
-                  FieldName = 'SERIE_SERIE'
-                end>
               TabOrder = 5
               Width = 120
             end
@@ -688,9 +681,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         Width = 1140
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1140
-        inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
-        end
       end
     end
   end

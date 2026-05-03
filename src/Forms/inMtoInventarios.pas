@@ -37,7 +37,7 @@ type
     lblAlmacen: TcxLabel;
     cbbCODIGO_ALMACEN_INVENTARIO: TcxDBLookupComboBox;
     lblSerie: TcxLabel;
-    cbbSERIE_INVENTARIO: TcxDBLookupComboBox;
+    cbbSERIE_INVENTARIO: TcxDBComboBox;
     lblNumero: TcxLabel;
     txtNRO_INVENTARIO: TcxDBTextEdit;
     lblFecha: TcxLabel;
@@ -159,6 +159,8 @@ type
     procedure edtRutaExcelPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure btnCargarClick(Sender: TObject);
+    procedure cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
+      Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
@@ -208,18 +210,19 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin
   // Llamado por TfrmMtoGen — aquí se crea el DataModule de la pantalla
-  dmmInventarios := TdmInventarios.Create(Self);
-  tdmDataModule := dmmInventarios;
-
+//  dmmInventarios := TdmInventarios.Create(Self);
+  inherited;
+//  tdmDataModule := dmmInventarios;
+  dmmInventarios := tdmDataModule as TdmInventarios;
   // Vinculamos el dataset principal al heredado dsTablaG
-  dsTablaG.DataSet := dmmInventarios.unqryTablaG;
+//  dsTablaG.DataSet := dmmInventarios.unqryTablaG;
 
   // Datasources locales que apuntan a queries del DataModule
    cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
                                                       dmmInventarios.dsEmpresas;
    cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
                                                      dmmInventarios.dsAlmacenes;
-   cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
+//   cbbSERIE_INVENTARIO := dmmInventarios.dsSeries;
 //    dmmInventarios.dsLineasLocal;
 //   dmmInventarios.dsMovsLocal;
 //    dmmInventarios.dsFamilias;
@@ -229,7 +232,7 @@ end;
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
 begin
   inherited;
-  pcDetail.ActivePage := tsCabecera;
+//  pcDetail.ActivePage := tsCabecera;
   FNumAtributosActual := 0;
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
@@ -262,9 +265,24 @@ begin
 end;
 
 procedure TfrmMtoInventarios.dsTablaGDataChange(Sender: TObject; Field: TField);
+var
+  emp: string;
 begin
   inherited;
-  // Cuando cambia el registro activo (no un campo concreto), refrescamos UI
+
+  // Si cambia el registro activo, recargamos el lookup de almacenes
+  if (Field = nil) or
+     ((Field <> nil) and (Field.FieldName = 'CODIGO_EMPRESA_INVENTARIO')) then
+  begin
+    if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+       not dsTablaG.DataSet.IsEmpty then
+    begin
+      emp := dsTablaG.DataSet.FieldByName('CODIGO_EMPRESA_INVENTARIO').AsString;
+      if dmmInventarios <> nil then
+        dmmInventarios.CargarAlmacenesPorEmpresa(emp);
+    end;
+  end;
+
   if Field = nil then
     ActualizarEstadoUI;
 end;
@@ -338,6 +356,20 @@ begin
       dmmInventarios.cdsLineas.FieldByName('CODIGO_ARTICULO_INVENTARIO_LINEA').AsString
     );
   end;
+end;
+
+procedure TfrmMtoInventarios.cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  emp: string;
+begin
+  if dmmInventarios = nil then Exit;
+  emp := VarToStr(cbbCODIGO_EMPRESA_INVENTARIO.EditValue);
+  dmmInventarios.CargarAlmacenesPorEmpresa(emp);
+
+  // Si el almacén ya escrito no pertenece a la nueva empresa, lo limpiamos
+  if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
+    dsTablaG.DataSet.FieldByName('CODIGO_ALMACEN_INVENTARIO').Clear;
 end;
 
 // ============================================================================

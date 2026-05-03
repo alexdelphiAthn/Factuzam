@@ -133,6 +133,8 @@ type
     property CodigoAlmacen: string read FCodigoAlmacen;
     property Serie: string read FSerie;
     property Numero: string read FNumero;
+
+    procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
   end;
 
 var
@@ -705,6 +707,14 @@ begin
   finally
     qry.Free;
   end;
+end;
+
+procedure TdmInventarios.CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
+begin
+  unqryAlmacenes.Close;
+  if ACodigoEmpresa = '' then Exit;
+  unqryAlmacenes.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
+  unqryAlmacenes.Open;
 end;
 
 procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);

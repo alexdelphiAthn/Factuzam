@@ -1,6 +1,6 @@
 inherited dmTarifas: TdmTarifas
-  OldCreateOrder = True
   Width = 400
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
@@ -95,6 +95,7 @@ inherited dmTarifas: TdmTarifas
     MasterSource = frmMtoTarifas.dsTablaG
     MasterFields = 'CODIGO_TARIFA'
     DetailFields = 'CODIGO_TARIFA'
+    Active = True
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
