@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 03/05/2026 18:01:00
+-- Backup generado: 03/05/2026 18:16:51
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -4561,7 +4561,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USUARIO`, `PASSWORD_USUARIO`, `GRUPO_USUARIO`, `ACTIVO_USUARIO`, `EMPRESADEF_USUARIO`, `DIMINUTIVO_TICKET_USUARIO`, `CODIGO_EMPLEADO_USUARIO`, `ULTIMOLOGIN_USUARIO`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`, `ALMACENDEF_USUARIO`, `CAJADEF_USUARIO`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-03 17:48:51', '2026-05-03 17:48:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-03 18:14:52', '2026-05-03 18:14:52', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -5522,7 +5522,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_PERFILES`, `KEY_PERFILES`, `
   ('Administrador', 'frmMtoCajaParam', 'vgerReqRefDevolucion', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerShowCajaSelection', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerShowEmpleadoLinea', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaParam', 'vgerTipoImpresion', 'ESC POS', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerTipoImpresion', 'DEBUG', NULL, NULL, NULL, '2026-05-03 18:05:50', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerVentasCredito', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ACTIVO_EMPRESA_Caption', 'Activo', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -9766,6 +9766,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Ctrl+Q', 'UniDataFormasdePago.TdmFormasdePago'),
   ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'Ctrl+G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos'),
   ('Grupos', 'Grupos de Usuarios', 'mnuGrupos', 'inMtoGrupos.TfrmMtoGrupos', 'Ctrl+J', 'UniDataGrupos.TdmGrupos'),
+  ('Inventarios', 'Inventarios', 'mnuInventarios', 'inMtoInventarios.TfrmMtoInventarios', 'Ctrl+Alt+I', 'UniDataInventarios.TdmInventarios'),
   ('Ivas', 'Impuestos IVA', 'mnuIvas', 'inMtoIvas.TfrmMtoIvas', 'Ctrl+I', 'UniDataIvas.TdmIvas'),
   ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'Ctrl+O', 'UniDataIvasGrupos.TdmIvasGrupos'),
   ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL),
@@ -9774,7 +9775,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas'),
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios'),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+M', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles');
--- 18 registros exportados
+-- 19 registros exportados
 
 
 -- ========================================
@@ -13644,4 +13645,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 03/05/2026 18:01:03
+-- Backup completado: 03/05/2026 18:16:53

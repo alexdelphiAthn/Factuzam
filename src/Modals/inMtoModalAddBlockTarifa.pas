@@ -22,7 +22,11 @@ uses
   cxCurrencyEdit, cxCheckBox, cxRadioGroup,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
-  inMtoModalAddBlockBase;
+  inMtoModalAddBlockBase, cxLookAndFeelPainters, Vcl.Menus, cxFilter,
+  cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, cxDBData, Vcl.ComCtrls,
+  dxCore, cxDateUtils, JvComponentBase, JvEnterTab, cxLocalization, cxSplitter,
+  cxSpinEdit, cxCustomListBox, cxCheckListBox, cxGroupBox, cxInplaceContainer,
+  cxDBTL, cxTLData, cxPC;
 
 type
   TAjusteAlcance = (aaSoloFinal, aaSoloSalida, aaAmbos);
@@ -112,7 +116,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser;
+  inLibGlobalVar;
 
 // ============================================================================
 //   API publica
@@ -460,7 +464,7 @@ begin
      (FSqlPreview.RecordCount = 0) then Exit;
 
   codigoTar := ObtenerCodigoTarifaActual;
-  usuario   := GetUsuarioActual;
+  usuario   := oUser;
 
   codigos := TList<string>.Create;
   ins     := TUniQuery.Create(nil);
