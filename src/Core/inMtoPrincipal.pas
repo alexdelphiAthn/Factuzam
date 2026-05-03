@@ -76,13 +76,14 @@ type
     dxSkinController1: TdxSkinController;
     mnuAlmacen: TMenuItem;
     Movimientosdealmacn1: TMenuItem;
-    Inventarios1: TMenuItem;
+    mnuInventarios: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure mnuFormaPagoVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
+    procedure mnuInventariosClick(Sender: TObject);
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -938,6 +939,13 @@ procedure TfrmMtoPrincipal.mnuGruposdeIVAClick(Sender: TObject);
 begin
   if (mnuGruposdeIVA.Visible) then
     ShowMto(Self, 'IvasGrupos');
+end;
+
+procedure TfrmMtoPrincipal.mnuInventariosClick(Sender: TObject);
+begin
+  inherited;
+  if mnuInventarios.Visible then
+    ShowMto(Self, 'Inventarios');
 end;
 
 procedure TfrmMtoPrincipal.mnuIvasClick(Sender: TObject);

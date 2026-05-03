@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -21,7 +21,12 @@ uses
   cxLabel, cxButtons, cxTextEdit, cxCheckBox, cxRadioGroup,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
-  inMtoModalAddBlockBase;
+  inMtoModalAddBlockBase, cxLookAndFeelPainters, Vcl.Menus, cxFilter,
+  cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, cxMaskEdit, cxDBData,
+  cxCurrencyEdit, Vcl.ComCtrls, dxCore, cxDateUtils, JvComponentBase,
+  JvEnterTab, cxLocalization, cxSplitter, cxSpinEdit, cxDropDownEdit,
+  cxCalendar, cxCustomListBox, cxCheckListBox, cxGroupBox, cxInplaceContainer,
+  cxDBTL, cxTLData, cxPC;
 
 type
   TAddBlockInventarioResult = record
@@ -79,7 +84,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser;
+  inLibUser, inLibGlobalVar;
 
 class function TfrmModalAddBlockInventario.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection;
@@ -340,9 +345,10 @@ begin
   numArt    := 0;
 
   if (FSqlPreview = nil) or (not FSqlPreview.Active) or
-     (FSqlPreview.RecordCount = 0) then Exit;
+     (FSqlPreview.RecordCount = 0) then
+    Exit;
 
-  usuario     := GetUsuarioActual;
+  usuario     := oUser;
   lineaActual := ProximoNumeroLinea;
 
   codigos := TList<string>.Create;

@@ -1315,8 +1315,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       object Movimientosdealmacn1: TMenuItem
         Caption = 'Movimientos de almac'#233'n'
       end
-      object Inventarios1: TMenuItem
+      object mnuInventarios: TMenuItem
         Caption = 'Inventarios'
+        ShortCut = 49225
+        OnClick = mnuInventariosClick
       end
     end
     object Utilidades1: TMenuItem
