@@ -131,7 +131,7 @@ uses
   inLibDevExp,
   inMtoArticulos,
   inMtoFamilias,
-  inMtoProveedores;
+  inMtoProveedores, inMtoModalAddBlockTarifa;
 
 {$R *.dfm}
 
@@ -174,10 +174,41 @@ begin
 end;
 
 procedure TfrmMtoTarifas.btAddBlockClick(Sender: TObject);
+var
+  res        : TAddBlockTarifaResult;
+  codigoTar  : string;
 begin
   inherited;
-  //mostrar dialogo para filtrar por proveedores, familias, artículos
+
+  if (dsTablaG.DataSet = nil) or (dsTablaG.DataSet.IsEmpty) then
+  begin
+    ShowMessage('Selecciona primero una tarifa.');
+    Exit;
+  end;
+
+  if dsTablaG.State in [dsInsert, dsEdit] then
+  begin
+    if MessageDlg('La tarifa actual esta en edicion. Guardar antes de continuar?',
+                  mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
+      dsTablaG.DataSet.Post
+    else
+      Exit;
+  end;
+
+  codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TARIFA').AsString;
+
+  res := TfrmModalAddBlockTarifa.Ejecutar(
+           Self,
+           (dsTablaG.DataSet as TUniQuery).Connection,
+           codigoTar);
+
+  if res.Aceptado then
+  begin
+    dmmTarifas.unqryArticulosTarifas.Close;
+    dmmTarifas.unqryArticulosTarifas.Open;
+  end;
 end;
+
 
 procedure TfrmMtoTarifas.btnIraArticuloClick(Sender: TObject);
 begin

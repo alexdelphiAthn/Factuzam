@@ -140,7 +140,10 @@ uses
   inLibVentasCalendario in 'src\Lib\inLibVentasCalendario.pas',
   inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas',
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
-  UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule};
+  UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
+  inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
+  inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
+  inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa};
 
 var
   frmLogon: TfrmLogon;
