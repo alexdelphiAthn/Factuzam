@@ -47,7 +47,7 @@ type
     btnAplicar: TcxButton;
     lblDescripcion: TcxLabel;
     txtDESCRIPCION_INVENTARIO: TcxDBTextEdit;
-    cxButton1: TcxButton;
+    btnCargar: TcxButton;
     pnlButtonFicha: TPanel;
     pcDetail: TcxPageControl;
     tsDetalle: TcxTabSheet;
@@ -158,6 +158,7 @@ type
     procedure btnCargarExcelClick(Sender: TObject);
     procedure edtRutaExcelPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure btnCargarClick(Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
@@ -196,7 +197,7 @@ uses
   inLibUser,
   inLibShowMto,
   inLibDevExp,
-  inMtoPrincipal;
+  inMtoPrincipal, inMtoModalAddBlockInventario;
 
 {$R *.dfm}
 
@@ -843,6 +844,56 @@ begin
                      'Todos|*.*';
 //  if dlgAbrir.Execute then
 //    edtRutaExcel.Text := dlgAbrir.FileName;
+end;
+
+procedure TfrmMtoInventarios.btnCargarClick(Sender: TObject);
+var
+  res: TAddBlockInventarioResult;
+  ds : TDataSet;
+begin
+  if not PuedeEditar then
+  begin
+    ShowMessage('El inventario debe estar ABIERTO.');
+    Exit;
+  end;
+
+  ds := dsTablaG.DataSet;
+  if (ds = nil) or ds.IsEmpty then
+  begin
+    ShowMessage('Selecciona primero un inventario.');
+    Exit;
+  end;
+
+  if ds.State in [dsInsert, dsEdit] then
+  begin
+    if MessageDlg('El inventario esta en edicion. Guardar antes?',
+                  mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
+      ds.Post
+    else
+      Exit;
+  end;
+
+  res := TfrmModalAddBlockInventario.Ejecutar(
+           Self,
+           (ds as TUniQuery).Connection,
+           ds.FieldByName('CODIGO_EMPRESA_INVENTARIO').AsString,
+           ds.FieldByName('CODIGO_ALMACEN_INVENTARIO').AsString,
+           ds.FieldByName('SERIE_INVENTARIO').AsString,
+           ds.FieldByName('NRO_INVENTARIO').AsString);
+
+  if res.Aceptado then
+  begin
+    // Refrescar el grid de lineas y proponer recalcular
+    pcDetail.ActivePage := tsDetalle;
+    CargarLineasYRefrescar;
+
+    if MessageDlg(
+         Format('Se anadieron %d lineas (%d articulos distintos).' + sLineBreak +
+                '?Quieres calcular ahora las cantidades teoricas y PMP?',
+                [res.NumLineas, res.NumArticulos]),
+         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      btnRecalcularDetalleClick(nil);
+  end;
 end;
 
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);

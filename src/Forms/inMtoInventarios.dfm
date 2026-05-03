@@ -202,10 +202,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsDetalle: TcxTabSheet
               Caption = '2. Detalle del inventario'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlDetalleTop: TPanel
                 Left = 0
                 Top = 0
@@ -656,8 +652,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitTop = 175
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -731,19 +725,19 @@ inherited frmMtoInventarios: TfrmMtoInventarios
       Top = 333
       Width = 137
       Height = 40
-      Caption = 'Regularizar'
+      Caption = '&Regularizar'
       TabOrder = 2
       OnClick = btnAplicarClick
     end
-    object cxButton1: TcxButton
+    object btnCargar: TcxButton
       Left = 0
       Top = 282
       Width = 137
       Height = 40
-      Caption = 'Cargar'
+      Caption = 'Car&gar'
       OptionsImage.ImageIndex = 0
       TabOrder = 3
-      OnClick = btnRecalcularClick
+      OnClick = btnCargarClick
     end
   end
   inherited dsTablaG: TDataSource
