@@ -4,7 +4,6 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   TextHeight = 19
   inherited pnlCabeceraExtra: TPanel
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 1182
     object lblTarifa: TcxLabel
       Left = 12
       Top = 6
@@ -19,30 +18,30 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Width = 200
     end
     object lblFechaDesde: TcxLabel
-      Left = 220
+      Left = 227
       Top = 6
       Caption = 'Fecha desde:'
       TabOrder = 12
     end
     object dtFechaDesde: TcxDateEdit
-      Left = 220
+      Left = 227
       Top = 28
       TabOrder = 1
-      Width = 110
+      Width = 146
     end
     object chkConFechaHasta: TcxCheckBox
-      Left = 340
-      Top = 28
+      Left = 388
+      Top = 6
       Caption = 'Fecha hasta:'
       Properties.OnChange = chkConFechaHastaPropertiesChange
       TabOrder = 2
     end
     object dtFechaHasta: TcxDateEdit
-      Left = 450
+      Left = 388
       Top = 28
       Enabled = False
       TabOrder = 3
-      Width = 110
+      Width = 165
     end
     object lblPorcenDto: TcxLabel
       Left = 580
@@ -71,13 +70,13 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       TabOrder = 14
     end
     object spnMultiplo: TcxCurrencyEdit
-      Left = 720
-      Top = 28
+      Left = 660
+      Top = 56
       Enabled = False
       Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00'
       TabOrder = 6
-      Width = 60
+      Width = 82
     end
     object lblRestar: TcxLabel
       Left = 790
@@ -86,16 +85,16 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       TabOrder = 15
     end
     object spnRestar: TcxCurrencyEdit
-      Left = 850
-      Top = 28
+      Left = 790
+      Top = 56
       Enabled = False
       Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00'
       TabOrder = 7
-      Width = 60
+      Width = 79
     end
     object rgAjusteAlcance: TcxRadioGroup
-      Left = 920
+      Left = 888
       Top = 2
       Caption = ' Aplicar ajuste a '
       Enabled = False
@@ -112,19 +111,19 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
         end>
       ItemIndex = 0
       TabOrder = 8
-      Height = 50
-      Width = 245
+      Height = 81
+      Width = 265
     end
     object chkCopiarDeTarifa: TcxCheckBox
       Left = 12
-      Top = 60
+      Top = 71
       Caption = 'Copiar precios de tarifa'
       Properties.OnChange = chkCopiarDeTarifaPropertiesChange
       TabOrder = 9
     end
     object cbxTarifaOrigen: TcxComboBox
-      Left = 230
-      Top = 58
+      Left = 240
+      Top = 67
       Enabled = False
       Properties.DropDownListStyle = lsFixedList
       TabOrder = 10
@@ -133,14 +132,38 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   end
   inherited pnlCabeceraComun: TPanel
     StyleElements = [seFont, seClient, seBorder]
+    ExplicitWidth = 1180
     inherited chkSoloActivos: TcxCheckBox
-      ExplicitWidth = 121
+      Top = 6
+      ExplicitTop = 6
+      ExplicitWidth = 203
+      ExplicitHeight = 23
     end
     inherited chkExcluirYaCargados: TcxCheckBox
-      ExplicitWidth = 121
+      Left = 223
+      Top = 6
+      ExplicitLeft = 223
+      ExplicitTop = 6
+      ExplicitWidth = 265
+      ExplicitHeight = 23
     end
     inherited chkSoloConStock: TcxCheckBox
-      ExplicitWidth = 121
+      Left = 494
+      Top = 6
+      ExplicitLeft = 494
+      ExplicitTop = 6
+      ExplicitWidth = 225
+      ExplicitHeight = 23
+    end
+    inherited btnPrevisualizar: TcxButton
+      Left = 888
+      Width = 162
+      ExplicitLeft = 888
+      ExplicitWidth = 162
+    end
+    inherited btnLimpiarFiltros: TcxButton
+      Width = 93
+      ExplicitWidth = 93
     end
   end
   inherited pcFiltros: TcxPageControl
@@ -153,11 +176,37 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1176
         inherited chkPropagarHijos: TcxCheckBox
-          ExplicitWidth = 121
+          ExplicitWidth = 299
+          ExplicitHeight = 23
         end
+        inherited btnExpandirFamilias: TcxButton
+          Left = 313
+          ExplicitLeft = 313
+        end
+        inherited btnContraerFamilias: TcxButton
+          Left = 409
+          ExplicitLeft = 409
+        end
+        inherited btnQuitarSelFamilias: TcxButton
+          Left = 505
+          Width = 152
+          ExplicitLeft = 505
+          ExplicitWidth = 152
+        end
+        inherited lblSelFamilias: TcxLabel
+          Left = 663
+          Top = 6
+          ExplicitLeft = 663
+          ExplicitTop = 6
+        end
+      end
+      inherited tlFamilias: TcxDBTreeList
+        ExplicitWidth = 1176
+        ExplicitHeight = 272
       end
     end
     inherited tsProveedores: TcxTabSheet
+      Caption = '&2_Proveedores '
       ExplicitLeft = 2
       ExplicitTop = 29
       ExplicitWidth = 1176
@@ -165,12 +214,33 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       inherited pnlProveedoresTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1176
-        inherited chkSoloPrincipal: TcxCheckBox
-          ExplicitWidth = 121
+        inherited edtFiltroProveedor: TcxTextEdit
+          ExplicitHeight = 27
         end
+        inherited chkSoloPrincipal: TcxCheckBox
+          ExplicitWidth = 268
+          ExplicitHeight = 23
+        end
+        inherited btnQuitarSelProveedores: TcxButton
+          Left = 558
+          Width = 154
+          ExplicitLeft = 558
+          ExplicitWidth = 154
+        end
+        inherited lblSelProveedores: TcxLabel
+          Left = 726
+          Top = 6
+          ExplicitLeft = 726
+          ExplicitTop = 6
+        end
+      end
+      inherited grdProveedores: TcxGrid
+        ExplicitWidth = 1176
+        ExplicitHeight = 272
       end
     end
     inherited tsPropiedades: TcxTabSheet
+      Caption = '&3_Propiedades '
       ExplicitLeft = 2
       ExplicitTop = 29
       ExplicitWidth = 1176
@@ -178,32 +248,119 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       inherited pnlPropiedadesTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1176
+        inherited cbxPropiedad: TcxComboBox
+          Left = 176
+          ExplicitLeft = 176
+          ExplicitWidth = 254
+          ExplicitHeight = 27
+          Width = 254
+        end
+        inherited btnQuitarSelPropiedades: TcxButton
+          Width = 151
+          ExplicitWidth = 151
+        end
+        inherited lblSelPropiedades: TcxLabel
+          Left = 627
+          Top = 6
+          ExplicitLeft = 627
+          ExplicitTop = 6
+        end
+      end
+      inherited grdPropValores: TcxGrid
+        ExplicitWidth = 1176
+        ExplicitHeight = 272
       end
     end
     inherited tsAlmacenes: TcxTabSheet
       inherited pnlAlmacenesTop: TPanel
+        Height = 113
         StyleElements = [seFont, seClient, seBorder]
+        ExplicitHeight = 113
+        inherited rgStockCombinacion: TcxRadioGroup
+          ExplicitWidth = 873
+          ExplicitHeight = 65
+          Height = 65
+          Width = 873
+        end
+        inherited btnMarcarTodosAlm: TcxButton
+          Left = 887
+          Top = 37
+          ExplicitLeft = 887
+          ExplicitTop = 37
+        end
+        inherited btnDesmarcarTodosAlm: TcxButton
+          Left = 887
+          Top = 68
+          Width = 154
+          ExplicitLeft = 887
+          ExplicitTop = 68
+          ExplicitWidth = 154
+        end
+        inherited lblSelAlmacenes: TcxLabel
+          Left = 1047
+          Top = 39
+          ExplicitLeft = 1047
+          ExplicitTop = 39
+        end
+      end
+      inherited chkLstAlmacenes: TcxCheckListBox
+        Top = 113
+        Height = 194
       end
     end
     inherited tsFechaAlta: TcxTabSheet
+      Caption = '&5_Fecha alta '
       ExplicitLeft = 2
       ExplicitTop = 29
       ExplicitWidth = 1176
       ExplicitHeight = 307
       inherited chkAplicarFechaAlta: TcxCheckBox
-        ExplicitWidth = 121
+        ExplicitWidth = 322
+        ExplicitHeight = 23
+      end
+      inherited dtAltaDesde: TcxDateEdit
+        ExplicitHeight = 27
+      end
+      inherited dtAltaHasta: TcxDateEdit
+        ExplicitHeight = 27
       end
     end
     inherited tsVentas: TcxTabSheet
+      Caption = '&6_Ventas '
       inherited chkConVenta: TcxCheckBox
-        ExplicitWidth = 121
+        ExplicitWidth = 297
+        ExplicitHeight = 23
+      end
+      inherited dtVtaDesde: TcxDateEdit
+        ExplicitHeight = 27
+      end
+      inherited dtVtaHasta: TcxDateEdit
+        ExplicitHeight = 27
+      end
+      inherited spnNumMinVtas: TcxSpinEdit
+        Left = 252
+        ExplicitLeft = 252
+        ExplicitHeight = 27
       end
     end
   end
+  inherited splitterPreview: TcxSplitter
+    ExplicitTop = 488
+    ExplicitWidth = 1180
+  end
   inherited pnlPreview: TPanel
     StyleElements = [seFont, seClient, seBorder]
+    ExplicitWidth = 1180
     inherited grdPreview: TcxGrid
+      ExplicitTop = 0
+      ExplicitHeight = 220
       inherited tvPreview: TcxGridDBTableView
+        inherited colPrevCodigo: TcxGridDBColumn
+          Width = 193
+        end
+        inherited colPrevFamilia: TcxGridDBColumn
+          Width = 209
+        end
         object colPrevPrecioSalidaOrig: TcxGridDBColumn
           Caption = 'P. Salida orig.'
           DataBinding.FieldName = 'PRECIO_SALIDA_ORIG'
@@ -223,5 +380,9 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   end
   inherited pnlBotonera: TPanel
     StyleElements = [seFont, seClient, seBorder]
+  end
+  inherited jvntrstb1: TJvEnterAsTab
+    Left = 704
+    Top = 680
   end
 end

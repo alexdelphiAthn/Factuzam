@@ -339,7 +339,7 @@ inherited dmInventarios: TdmInventarios
     SQL.Strings = (
       'SELECT CODIGO_EMPRESA, RAZONSOCIAL_EMPRESA'
       'FROM fza_empresas'
-      'WHERE ACTIVA_EMPRESA = '#39'S'#39
+      'WHERE ACTIVO_EMPRESA = '#39'S'#39
       'ORDER BY ORDEN_EMPRESA, CODIGO_EMPRESA')
     Left = 138
     Top = 198
@@ -351,11 +351,20 @@ inherited dmInventarios: TdmInventarios
   end
   object unqryAlmacenes: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_ALMACEN, DESCRIPCION_ALMACEN'
+      'SELECT CODIGO_ALMACEN_ALM AS CODIGO_ALMACEN,'
+      '       NOMBRE_ALMACEN_ALM AS DESCRIPCION_ALMACEN'
       'FROM fza_almacenes'
-      'ORDER BY CODIGO_ALMACEN')
+      'WHERE ESACTIVO_ALM = '#39'S'#39
+      '  AND CODIGO_EMPRESA_ALM = :EMPRESA'
+      'ORDER BY ORDEN_ALM, CODIGO_ALMACEN_ALM')
     Left = 370
     Top = 198
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        Value = nil
+      end>
   end
   object dsAlmacenes: TDataSource
     DataSet = unqryAlmacenes
@@ -364,8 +373,8 @@ inherited dmInventarios: TdmInventarios
   end
   object unqrySeries: TUniQuery
     SQL.Strings = (
-      'SELECT SERIE_SERIE'
-      'FROM fza_series'
+      'SELECT DISTINCT SERIE_SERIE'
+      'FROM fza_empresas_series'
       'WHERE TIPODOC_SERIE = '#39'IN'#39
       'ORDER BY SERIE_SERIE')
     Left = 650
@@ -378,9 +387,10 @@ inherited dmInventarios: TdmInventarios
   end
   object unqryFamilias: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_FAMILIA, DESCRIPCION_FAMILIA'
-      'FROM fza_familias'
-      'ORDER BY CODIGO_FAMILIA')
+      'SELECT CODIGO_FAMILIA, NOMBRE_FAMILIA AS DESCRIPCION_FAMILIA'
+      'FROM fza_articulos_familias'
+      'WHERE ACTIVO_FAMILIA = '#39'S'#39
+      'ORDER BY ORDEN_FAMILIA, CODIGO_FAMILIA')
     Left = 26
     Top = 198
   end
