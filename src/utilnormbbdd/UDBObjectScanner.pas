@@ -16,8 +16,9 @@
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  UProjectScanner, System.Generics.Defaults;  // reusamos TPlanPair
+  System.Classes, System.SysUtils,
+  System.Generics.Collections, System.Generics.Defaults,
+  UProjectScanner;  // reusamos TPlanPair
 
 type
   TSQLMatch = record
@@ -156,7 +157,7 @@ procedure TDBObjectScanner.Scan(const SQLContent: string;
 var
   Stripped: string;
   Lines:    TStringList;
-  i, iPos:   Integer;
+  i, Pos:   Integer;
   Line:     string;
   Pair:     TPlanPair;
   Pre, Post: Char;
@@ -197,14 +198,14 @@ begin
 
       for Pair in FRenamePlan do
       begin
-        iPos := 1;
-        while iPos > 0 do
+        Pos := 1;
+        while Pos > 0 do
         begin
-          iPos := System.Pos(Pair.OldName, Line, iPos);
-          if iPos = 0 then Break;
-          if iPos = 1 then Pre := #0 else Pre := Line[iPos - 1];
-          if iPos + Length(Pair.OldName) > Length(Line) then Post := #0
-          else Post := Line[iPos + Length(Pair.OldName)];
+          Pos := System.Pos(Pair.OldName, Line, Pos);
+          if Pos = 0 then Break;
+          if Pos = 1 then Pre := #0 else Pre := Line[Pos - 1];
+          if Pos + Length(Pair.OldName) > Length(Line) then Post := #0
+          else Post := Line[Pos + Length(Pair.OldName)];
 
           if ((Pre = #0) or IsBoundary(Pre)) and
              ((Post = #0) or IsBoundary(Post)) then
@@ -217,7 +218,7 @@ begin
             AOutMatches.Add(M);
             Inc(Total);
           end;
-          Inc(iPos, Length(Pair.OldName));
+          Inc(Pos, Length(Pair.OldName));
         end;
       end;
     end;
@@ -232,72 +233,27 @@ function TDBObjectScanner.BuildReplacementSQL(const SQLContent: string;
   out ChangedLines: Integer): string;
 {
   Genera una versión MODIFICADA del SQL de entrada con todos los reemplazos
-  aplicados FUERA de los bloques CREATE TABLE.
+  aplicados a TODO el contenido (incluyendo dentro de los CREATE TABLE).
 
-  Para preservar los CREATE TABLE intactos:
-    1. Localizamos los bloques CREATE TABLE y los reservamos con marcadores únicos.
-    2. Aplicamos los reemplazos sobre el SQL "limpio".
-    3. Restauramos los bloques originales en sus marcadores.
+  El resultado es un dump completo coherente que se puede importar de cero:
+  los CREATE TABLE definirán las columnas con sus nombres nuevos y los INSERT
+  INTO referenciarán esas mismas columnas nuevas.
 }
 var
-  Pat:       TRegEx;
-  M:         TMatch;
-  Blocks:    TList<string>;
-  Working:   string;
-  Idx:       Integer;
-  SB:        TStringBuilder;
-  Pair:      TPlanPair;
-  RegexPat:  string;
-  i:         Integer;
-  Marker:    string;
-  Original:  string;
+  Working:  string;
+  Pair:     TPlanPair;
+  RegexPat: string;
 begin
-  Original := SQLContent;
-  Blocks := TList<string>.Create;
-  try
-    // 1) Sustituir cada CREATE TABLE … ); por un marcador
-    Pat := TRegEx.Create('CREATE TABLE `[^`]+` \(.*?^\);',
-      [roSingleLine, roMultiLine]);
-    SB := TStringBuilder.Create(Length(Original));
-    try
-      Idx := 1;
-      for M in Pat.Matches(Original) do
-      begin
-        if M.Index > Idx then
-          SB.Append(Copy(Original, Idx, M.Index - Idx));
-        Marker := Format('@@CREATE_TABLE_BLOCK_%d@@', [Blocks.Count]);
-        Blocks.Add(M.Value);
-        SB.Append(Marker);
-        Idx := M.Index + M.Length;
-      end;
-      if Idx <= Length(Original) then
-        SB.Append(Copy(Original, Idx, Length(Original) - Idx + 1));
-      Working := SB.ToString;
-    finally
-      SB.Free;
-    end;
-
-    // 2) Aplicar reemplazos sobre Working
-    ChangedLines := 0;
-    for Pair in FRenamePlan do
-    begin
-      RegexPat := '(?<![A-Za-z0-9_])' + TRegEx.Escape(Pair.OldName) +
-                  '(?![A-Za-z0-9_])';
-      Inc(ChangedLines, TRegEx.Matches(Working, RegexPat).Count);
-      Working := TRegEx.Replace(Working, RegexPat, Pair.NewName);
-    end;
-
-    // 3) Restaurar bloques CREATE TABLE
-    for i := 0 to Blocks.Count - 1 do
-    begin
-      Marker := Format('@@CREATE_TABLE_BLOCK_%d@@', [i]);
-      Working := StringReplace(Working, Marker, Blocks[i], []);
-    end;
-
-    Result := Working;
-  finally
-    Blocks.Free;
+  Working := SQLContent;
+  ChangedLines := 0;
+  for Pair in FRenamePlan do
+  begin
+    RegexPat := '(?<![A-Za-z0-9_])' + TRegEx.Escape(Pair.OldName) +
+                '(?![A-Za-z0-9_])';
+    Inc(ChangedLines, TRegEx.Matches(Working, RegexPat).Count);
+    Working := TRegEx.Replace(Working, RegexPat, Pair.NewName);
   end;
+  Result := Working;
 end;
 
 end.
