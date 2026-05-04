@@ -2,8 +2,8 @@ object FormNormalizer: TFormNormalizer
   Left = 0
   Top = 0
   Caption = 'Factuzam Normalizer'
-  ClientHeight = 712
-  ClientWidth = 1178
+  ClientHeight = 704
+  ClientWidth = 1176
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object FormNormalizer: TFormNormalizer
   object PanelTop: TPanel
     Left = 0
     Top = 0
-    Width = 1178
+    Width = 1176
     Height = 49
     Align = alTop
     BevelOuter = bvNone
@@ -25,7 +25,6 @@ object FormNormalizer: TFormNormalizer
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
-    ExplicitWidth = 1176
     object lblSourceFile: TLabel
       Left = 600
       Top = 18
@@ -36,25 +35,25 @@ object FormNormalizer: TFormNormalizer
     object btnLoadSQL: TButton
       Left = 8
       Top = 12
-      Width = 105
+      Width = 140
       Height = 25
-      Caption = 'Cargar SQL...'
+      Caption = 'Cargar Copia Seg. SQL...'
       TabOrder = 0
       OnClick = btnLoadSQLClick
     end
     object btnLoadCSV: TButton
-      Left = 119
+      Left = 154
       Top = 12
-      Width = 105
+      Width = 88
       Height = 25
       Caption = 'Cargar CSV...'
       TabOrder = 1
       OnClick = btnLoadCSVClick
     end
     object btnGenerate: TButton
-      Left = 230
+      Left = 248
       Top = 12
-      Width = 105
+      Width = 87
       Height = 25
       Caption = 'Generar plan'
       TabOrder = 2
@@ -82,27 +81,23 @@ object FormNormalizer: TFormNormalizer
   object PageControl: TPageControl
     Left = 0
     Top = 49
-    Width = 1178
-    Height = 644
-    ActivePage = tabPlan
+    Width = 1176
+    Height = 636
+    ActivePage = tabCodeSearch
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1176
-    ExplicitHeight = 636
     object tabPlan: TTabSheet
       Caption = 'Plan'
       object GridPlan: TStringGrid
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         DefaultRowHeight = 18
         FixedCols = 0
         RowCount = 2
         TabOrder = 0
-        ExplicitWidth = 1168
-        ExplicitHeight = 606
       end
     end
     object tabColumnSQL: TTabSheet
@@ -111,8 +106,8 @@ object FormNormalizer: TFormNormalizer
       object MemoColumnSQL: TMemo
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -132,8 +127,8 @@ object FormNormalizer: TFormNormalizer
       object MemoIndexSQL: TMemo
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -153,7 +148,7 @@ object FormNormalizer: TFormNormalizer
       object PanelSQLSearchTop: TPanel
         Left = 0
         Top = 0
-        Width = 1170
+        Width = 1168
         Height = 49
         Align = alTop
         BevelOuter = bvNone
@@ -191,8 +186,8 @@ object FormNormalizer: TFormNormalizer
       object GridSQLMatches: TStringGrid
         Left = 0
         Top = 49
-        Width = 1170
-        Height = 565
+        Width = 1168
+        Height = 557
         Align = alClient
         DefaultRowHeight = 18
         FixedCols = 0
@@ -206,8 +201,8 @@ object FormNormalizer: TFormNormalizer
       object MemoFullSQL: TMemo
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -227,7 +222,7 @@ object FormNormalizer: TFormNormalizer
       object PanelCodeTop: TPanel
         Left = 0
         Top = 0
-        Width = 1170
+        Width = 1168
         Height = 145
         Align = alTop
         BevelOuter = bvNone
@@ -307,8 +302,8 @@ object FormNormalizer: TFormNormalizer
       object GridCodeMatches: TStringGrid
         Left = 0
         Top = 145
-        Width = 1170
-        Height = 469
+        Width = 1168
+        Height = 461
         Align = alClient
         DefaultRowHeight = 18
         FixedCols = 0
@@ -322,7 +317,7 @@ object FormNormalizer: TFormNormalizer
       object PanelAuditTop: TPanel
         Left = 0
         Top = 0
-        Width = 1170
+        Width = 1168
         Height = 49
         Align = alTop
         BevelOuter = bvNone
@@ -360,8 +355,8 @@ object FormNormalizer: TFormNormalizer
       object GridAuditMatches: TStringGrid
         Left = 0
         Top = 49
-        Width = 1170
-        Height = 565
+        Width = 1168
+        Height = 557
         Align = alClient
         DefaultRowHeight = 18
         FixedCols = 0
@@ -375,8 +370,8 @@ object FormNormalizer: TFormNormalizer
       object MemoReport: TMemo
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -395,8 +390,8 @@ object FormNormalizer: TFormNormalizer
       object MemoLog: TMemo
         Left = 0
         Top = 0
-        Width = 1170
-        Height = 614
+        Width = 1168
+        Height = 606
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -412,14 +407,12 @@ object FormNormalizer: TFormNormalizer
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 693
-    Width = 1178
+    Top = 685
+    Width = 1176
     Height = 19
     Panels = <>
     SimplePanel = True
     SimpleText = 'Listo.'
-    ExplicitTop = 685
-    ExplicitWidth = 1176
   end
   object SaveDialogAudit: TSaveDialog
     Left = 600

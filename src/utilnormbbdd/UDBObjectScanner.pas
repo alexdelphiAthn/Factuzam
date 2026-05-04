@@ -157,7 +157,7 @@ procedure TDBObjectScanner.Scan(const SQLContent: string;
 var
   Stripped: string;
   Lines:    TStringList;
-  i, Pos:   Integer;
+  i, iPos:   Integer;
   Line:     string;
   Pair:     TPlanPair;
   Pre, Post: Char;
@@ -198,14 +198,14 @@ begin
 
       for Pair in FRenamePlan do
       begin
-        Pos := 1;
-        while Pos > 0 do
+        iPos := 1;
+        while iPos > 0 do
         begin
-          Pos := System.Pos(Pair.OldName, Line, Pos);
-          if Pos = 0 then Break;
-          if Pos = 1 then Pre := #0 else Pre := Line[Pos - 1];
-          if Pos + Length(Pair.OldName) > Length(Line) then Post := #0
-          else Post := Line[Pos + Length(Pair.OldName)];
+          iPos := PosEx(Pair.OldName, Line, iPos);
+          if iPos = 0 then Break;
+          if iPos = 1 then Pre := #0 else Pre := Line[iPos - 1];
+          if iPos + Length(Pair.OldName) > Length(Line) then Post := #0
+          else Post := Line[iPos + Length(Pair.OldName)];
 
           if ((Pre = #0) or IsBoundary(Pre)) and
              ((Post = #0) or IsBoundary(Post)) then
@@ -218,7 +218,7 @@ begin
             AOutMatches.Add(M);
             Inc(Total);
           end;
-          Inc(Pos, Length(Pair.OldName));
+          Inc(iPos, Length(Pair.OldName));
         end;
       end;
     end;
