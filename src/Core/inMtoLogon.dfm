@@ -25,8 +25,7 @@ object frmLogon: TfrmLogon
     Height = 430
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 702
-    ExplicitHeight = 342
+    ExplicitWidth = 706
     object pnlLogin: TPanel
       Left = 14
       Top = 24

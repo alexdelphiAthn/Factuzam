@@ -659,18 +659,41 @@ end;
 
 function TFactuzamNormalizer.StripOwnConcept(const Name, TableName: string): string;
 var
-  Own:   TStringList;
-  Parts: TArray<string>;
-  Out_:  TList<string>;
-  i:     Integer;
-  P:     string;
+  Own:        TStringList;
+  Parts:      TArray<string>;
+  Out_:       TList<string>;
+  i:          Integer;
+  P:          string;
   Protectors: TStringList;
+  Suffix:     string;
+  ToStrip:    TStringList;
+  IsOwnConcept: Boolean;
 begin
   if not FOwnConcepts.TryGetValue(TableName, Own) then
     Exit(Name);
 
+  // ToStrip = palabras a barrer.
+  // Incluye los conceptos propios (ALMACEN, ARTICULO...) Y la abreviatura del
+  // sufijo de la tabla (ALM, ART...). La razón: ExpandAbbreviations corre antes
+  // y puede haber convertido ALMACEN -> ALM en medio del nombre.
+  ToStrip := TStringList.Create;
   Protectors := TStringList.Create;
   try
+    ToStrip.CaseSensitive := True;
+    ToStrip.Sorted        := True;
+    ToStrip.Duplicates    := dupIgnore;
+    for i := 0 to Own.Count - 1 do
+      ToStrip.Add(Own[i]);
+    Suffix := GetTableSuffix(TableName);
+    if Suffix <> '' then
+      ToStrip.Add(Suffix);
+
+    // Protectors: palabras delante de las cuales un concepto SE CONSERVA (es FK).
+    // CODIGO_CLIENTE_ALM en fza_almacenes -> CLIENTE va precedido de CODIGO,
+    //   se conserva (es FK a fza_clientes); resultado: CODIGO_CLI_ALM.
+    // OJO: el protector NO aplica al concepto propio de la tabla. Si la
+    //   tabla es fza_almacenes y aparece CODIGO_ALMACEN_ALM, ALMACEN es el
+    //   concepto propio y SÍ se barre aunque CODIGO esté delante; resultado: CODIGO_ALM.
     Protectors.CaseSensitive := True;
     Protectors.Sorted := True;
     Protectors.Add('CODIGO');
@@ -684,12 +707,23 @@ begin
       for i := 0 to Length(Parts) - 1 do
       begin
         P := Parts[i];
-        if Own.IndexOf(P) >= 0 then
+        if ToStrip.IndexOf(P) >= 0 then
         begin
-          // ¿va precedido de un protector?
-          if (Out_.Count > 0) and (Protectors.IndexOf(Out_[Out_.Count - 1]) >= 0) then
+          // P es palabra a considerar para barrido.
+          // ¿es concepto propio (o su forma abreviada = sufijo de tabla)?
+          IsOwnConcept := (Own.IndexOf(P) >= 0) or SameText(P, Suffix);
+
+          if IsOwnConcept then
+          begin
+            // Concepto propio: SIEMPRE se barre, incluso protegido por CODIGO.
+            // (porque el sufijo de tabla ya identifica la propia tabla)
+            // No añadimos nada a Out_.
+          end
+          else if (Out_.Count > 0) and
+                  (Protectors.IndexOf(Out_[Out_.Count - 1]) >= 0) then
+            // FK protegida por CODIGO/ID/NOMBRE: se conserva
             Out_.Add(P);
-          // En caso contrario, lo barremos.
+          // else: concepto suelto sin protector, se barre.
         end
         else
           Out_.Add(P);
@@ -700,6 +734,7 @@ begin
     end;
   finally
     Protectors.Free;
+    ToStrip.Free;
   end;
 end;
 
@@ -901,6 +936,17 @@ procedure TFactuzamNormalizer.GeneratePlan(const SourceSQL: string;
     Result := OldCol;
   end;
 
+  function IsDuplicateIndex(APlan: TIndexList;
+                            const ATable, ANewName: string): Boolean;
+  var
+    Rec: TIndexRename;
+  begin
+    for Rec in APlan do
+      if (Rec.TableName = ATable) and (Rec.NewName = ANewName) then
+        Exit(True);
+    Result := False;
+  end;
+
 var
   TablePat:   TRegEx;
   IdxPat:     TRegEx;
@@ -980,6 +1026,20 @@ begin
     IdxRec.NewName   := IdxNewName;
     IdxRec.Columns   := NewCols;
     IdxRec.IsUnique  := IsUnique;
+
+    // Detección de duplicado: si en la misma tabla ya existe un índice con
+    // este NewName (mismo prefijo + mismas columnas), se omite el segundo.
+    // Causa típica: el dump original tenía dos índices funcionalmente iguales
+    // (mismas columnas, distinto nombre histórico). El nombre nuevo se calcula
+    // a partir de las columnas, así que ambos colapsan al mismo identificador.
+    // Ignorar el segundo evita el error MySQL "Duplicate key name".
+    if IsDuplicateIndex(AIndexPlan, TableName, IdxNewName) then
+    begin
+      Log(Format('[WARN] Indice duplicado en %s: %s y otro previo apuntan a %s (mismas columnas). Se omite del SQL.',
+        [TableName, IdxName, IdxNewName]));
+      Continue;
+    end;
+
     AIndexPlan.Add(IdxRec);
   end;
   Log(Format('Procesados %d índices', [AIndexPlan.Count]));

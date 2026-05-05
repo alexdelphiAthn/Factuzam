@@ -143,7 +143,7 @@ uses  inLibWin,
       Providers_MySQL_Helpers,
       ScriptWriters,
       Core_Interfaces,
-      Core_Helpers;
+      Core_Helpers, inLibDBStructure;
 
 {$R *.dfm}
 
@@ -237,11 +237,13 @@ begin
 end;
 
 procedure TfrmLogon.FormCreate(Sender: TObject);
+var
+  CheckResult: TDBStructureCheckResult;
 begin
   ucConexion.Pooling := True;
   ucConexion.PoolingOptions.MinPoolSize := 1;
   ucConexion.PoolingOptions.MaxPoolSize := 50;
-  ucConexion.PoolingOptions.ConnectionLifeTime := 3 * 60; // 3 minutos
+  ucConexion.PoolingOptions.ConnectionLifeTime := 3 * 60;
   Application.OnException := AppException;
   UniSQLMonitor1.Active := False;
   Self.Width := 375;
@@ -253,16 +255,8 @@ begin
   Self.Position := poScreenCenter;
   edtUser.Text := '';
 
-  //leerini;
-  //  try
   GetIniValues;
-  //  except
-  //    on E:Exception do
-  //    if (E is EAccessViolation) or (E is ERangeError) then
-  //      begin
-  //        raise EPassWordCorrupt.Create(SErrorDecryptPass);
-  //      end;
-  //  end;
+
   sPassEn := leCadINIDir('ConnData',
                          'PasswordEn',
                          '2qJFaDfegP/9y6RDno1FRg==',
@@ -272,20 +266,109 @@ begin
     try
       sPass := DecriptAES(sPassEn);
     except
-    on E:Exception do
-      begin
+      on E: Exception do
         raise EPassWordCorrupt.Create(SErrorDecryptPassBBDD);
+    end;
+  end;
+
+  // --- 1. Conexión a information_schema para validar estructura ---
+  try
+    ConstruirConexionConnect(ucConexion,
+                             edtUserBD.Text,
+                             sPass,
+                             edtHostName.Text,
+                             edtPortBD.Text,
+                             'information_schema');
+  except
+    on E: Exception do
+    begin
+      inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
+                            E.ClassName + ': ' + E.Message);
+      ShowMessage('No se pudo conectar al servidor MySQL/MariaDB:' +
+                  sLineBreak + E.Message + sLineBreak + sLineBreak +
+                  'Revise la configuración pulsando "Configurar BBDD".');
+      chkAuto.Checked := False;
+      esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      if not pnlBBDD.Visible then
+        btnConfClick(Self);
+      Exit;
+    end;
+  end;
+
+  // --- 2. Verificación de estructura ---
+  CheckResult := TDBStructureChecker.Check(ucConexion, edtNomBD.Text);
+
+  if not CheckResult.IsOK then
+  begin
+    inliblog.Log.LogError('Estructura BBDD no válida: ' +
+                          CheckResult.FormattedMessage);
+    ShowMessage(CheckResult.FormattedMessage + sLineBreak + sLineBreak +
+                'Puede usar "Subir script" para crear/actualizar la ' +
+                'base de datos, o "Recuperar copia" para restaurar un backup.');
+
+    // Desactivamos auto-login para no entrar en bucle
+    chkAuto.Checked := False;
+    esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+
+    // Abrimos el panel de configuración
+    if not pnlBBDD.Visible then
+      btnConfClick(Self);
+
+    // Desconectamos de information_schema, ya no la necesitamos
+    if ucConexion.Connected then
+      ucConexion.Disconnect;
+    Exit;
+  end;
+
+  // --- 3. Estructura OK: reconectamos al schema real ---
+  if ucConexion.Connected then
+    ucConexion.Disconnect;
+
+  try
+    ConstruirConexionConnect(ucConexion,
+                             edtUserBD.Text,
+                             sPass,
+                             edtHostName.Text,
+                             edtPortBD.Text,
+                             edtNomBD.Text);
+  except
+    on E: Exception do
+    begin
+      inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text + ': ' +
+                            E.ClassName + ': ' + E.Message);
+      ShowMessage('No se pudo conectar a la base de datos "' +
+                  edtNomBD.Text + '":' + sLineBreak + E.Message);
+      chkAuto.Checked := False;
+      esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      if not pnlBBDD.Visible then
+        btnConfClick(Self);
+      Exit;
+    end;
+  end;
+
+  // --- 4. Auto-login protegido ---
+  if IsInitializeAuto then
+  begin
+    try
+      btnAceptarClick(Self);
+    except
+      on E: Exception do
+      begin
+        inliblog.Log.LogError('Fallo en auto-login: ' +
+                              E.ClassName + ': ' + E.Message);
+        ShowMessage('No se pudo completar el inicio automático:' +
+                    sLineBreak + E.Message + sLineBreak + sLineBreak +
+                    'Introduzca sus credenciales manualmente.');
+        chkAuto.Checked := False;
+        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        if tbUsers.Active then
+          tbUsers.Close;
+        sUserPassOK := 'false';
+        sSuccess := 'N';
+        ModalResult := mrNone;
       end;
     end;
   end;
-  ConstruirConexionConnect(ucConexion,
-                           edtUserBD.Text,
-                           sPass,
-                           edtHostName.Text,
-                           edtPortBD.Text,
-                           edtNomBD.Text);
-  if (IsInitializeAuto) then
-    btnAceptarClick(Self);
 end;
 
 procedure TfrmLogon.btnConfClick(Sender: TObject);
@@ -718,33 +801,15 @@ procedure TfrmLogon.btnAceptarClick(Sender: TObject);
 var
   sGrupoAdmin: string;
 begin
-//  if ucConexion.Connected then
-//    ucConexion.Disconnect;
-//  if CheckIfExistsDataBase then
-//  begin
-//    if ucConexion.Connected then
-//      ucConexion.Disconnect;
-//    ConstruirConexionConnect(ucConexion,
-//                             edtUserBD.Text,
-//                             sPass,
-//                             edtHostName.Text,
-//                             edtPortBD.Text,
-//                             edtNomBD.Text);
-//    //Log(ucConexion, edtUser.Text, 'Intento de conexión');
-//    if not CheckIfDatabaseIsUpdated then
-//    begin
-//      Log.LogError('No puede entrar a una base de datos sin actualizar');
-//      ShowMessage('No puede entrar a una base de datos sin actualizar');
-//      Exit;
-//    end;
+  try
     if not ExisteUser(edtUser.Text, ucConexion) then
     begin
       Log.LogError('El nombre de usuario no existe');
       raise EInvalidUser.Create('El nombre de usuario no existe');
     end
-    else if not LoginCorrecto(edtUser.text, edtPass.Text, ucConexion) then
+    else if not LoginCorrecto(edtUser.Text, edtPass.Text, ucConexion) then
     begin
-      if (Sender <> nil) then // Si se llamó desde el botón (no auto-login)
+      if (Sender <> nil) then
         ShowMessage(SErrorAuthPass);
       sSuccess := 'N';
       Log.LogError(SErrorAuthPass);
@@ -755,20 +820,36 @@ begin
       tbUsers.Edit;
       tbUsers.FieldByName('ULTIMO_LOGIN_USU').AsDateTime := Now;
       tbUsers.Post;
-      oUser := edtUser.Text;
-      oGroup := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
+      oUser    := edtUser.Text;
+      oGroup   := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
       orootGroup := sGrupoAdmin;
-      oEmpresa   := tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString;
-      oAlmacen   := tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString;
-      oCaja      := tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString;
+      oEmpresa := tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString;
+      oAlmacen := tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString;
+      oCaja    := tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString;
       tbUsers.Close;
       sUserPassOK := 'true';
       SetIniValues;
       sSuccess := 'S';
       PostMessage(Handle, WM_CLOSE, 0, 0);
-      modalResult := mrOK;
+      ModalResult := mrOK;
     end;
-//  end;
+  except
+    on E: EInvalidUser do
+    begin
+      if (Sender <> nil) then
+        ShowMessage(E.Message);
+      sSuccess := 'N';
+      raise; // que la propague el caller (FormCreate) si es auto-login
+    end;
+    on E: Exception do
+    begin
+      Log.LogError('Error en login: ' + E.ClassName + ': ' + E.Message);
+      sSuccess := 'N';
+      if tbUsers.Active then
+        tbUsers.Close;
+      raise; // para que FormCreate decida qué hacer
+    end;
+  end;
 end;
 
 function TfrmLogon.ExisteUser(sNom: string; f: TUniConnection): Boolean;

@@ -143,7 +143,8 @@ uses
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
-  inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa};
+  inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
+  inLibDBStructure in 'src\Lib\inLibDBStructure.pas';
 
 var
   frmLogon: TfrmLogon;
