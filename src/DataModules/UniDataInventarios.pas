@@ -35,12 +35,12 @@ type
     cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField;
     cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField;
     cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFMTBCDField;
-    cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFMTBCDField;
-    cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFMTBCDField;
-    cdsLineasPRECIO_MEDIO_INVENTARIO_LINEA: TFMTBCDField;
-    cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFMTBCDField;
-    cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFMTBCDField;
+    cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFloatField;
+    cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFloatField;
+    cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFloatField;
+    cdsLineasPRECIO_MEDIO_INVENTARIO_LINEA: TFloatField;
+    cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFloatField;
+    cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFloatField;
     cdsLineasFECHA_RECUENTO_INVENTARIO_LINEA: TDateTimeField;
 
     // === Campos in-memory para SKUs dinámicos (1 a 5 atributos) ===
@@ -56,7 +56,7 @@ type
     cdsLineasATTR5_NOMBRE: TStringField;
     cdsLineasATTR5_VALOR: TStringField;
     // Unidades regularizadas (calculado: 0 si ABIERTO, =DIFERENCIA si APLICADO)
-    cdsLineasUDS_REGULARIZADAS: TFMTBCDField;
+    cdsLineasUDS_REGULARIZADAS: TFloatField;
 
     // === MOVIMIENTOS DE ALMACÉN GENERADOS POR ESTE INVENTARIO (Pestaña 3) ===
     unqryMovsRegul: TUniQuery;
@@ -816,4 +816,3 @@ begin
 end;
 
 end.
-

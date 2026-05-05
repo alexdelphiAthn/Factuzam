@@ -120,41 +120,29 @@ inherited dmInventarios: TdmInventarios
       FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
       Size = 200
     end
-    object cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFMTBCDField
+    object cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFloatField
       FieldName = 'CANTIDAD_TEORICA_INVLIN'
       DisplayFormat = ',0.00'
-      Precision = 19
-      Size = 6
     end
-    object cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFMTBCDField
+    object cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFloatField
       FieldName = 'CANTIDAD_FISICA_INVLIN'
       DisplayFormat = ',0.00'
-      Precision = 19
-      Size = 6
     end
-    object cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFMTBCDField
+    object cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFloatField
       FieldName = 'CANTIDAD_DIFERENCIA_INVLIN'
       DisplayFormat = '+,0.00;-,0.00'
-      Precision = 19
-      Size = 6
     end
-    object cdsLineasPRECIO_MEDIO_INVENTARIO_LINEA: TFMTBCDField
+    object cdsLineasPRECIO_MEDIO_INVENTARIO_LINEA: TFloatField
       FieldName = 'PRECIO_MEDIO_INVLIN'
       DisplayFormat = ',0.0000'
-      Precision = 19
-      Size = 6
     end
-    object cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFMTBCDField
+    object cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFloatField
       FieldName = 'PRECIO_MEDIO_NUEVO_INVLIN'
       DisplayFormat = ',0.0000'
-      Precision = 19
-      Size = 6
     end
-    object cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFMTBCDField
+    object cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFloatField
       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
       DisplayFormat = '+,0.00 '#8364';-,0.00 '#8364
-      Precision = 19
-      Size = 6
     end
     object cdsLineasFECHA_RECUENTO_INVENTARIO_LINEA: TDateTimeField
       FieldName = 'FECHA_RECUENTO_INVLIN'
@@ -214,12 +202,10 @@ inherited dmInventarios: TdmInventarios
       FieldName = 'ATTR5_VALOR'
       Size = 50
     end
-    object cdsLineasUDS_REGULARIZADAS: TFMTBCDField
+    object cdsLineasUDS_REGULARIZADAS: TFloatField
       FieldKind = fkCalculated
       FieldName = 'UDS_REGULARIZADAS'
       DisplayFormat = ',0.00'
-      Precision = 19
-      Size = 6
       Calculated = True
     end
   end
