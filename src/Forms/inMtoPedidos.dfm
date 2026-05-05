@@ -1,4 +1,4 @@
-inherited frmMtoPedidos: TfrmMtoPedidos
+﻿inherited frmMtoPedidos: TfrmMtoPedidos
   Caption = 'Mantenimiento de Pedidos'
   ClientHeight = 765
   ClientWidth = 1085
@@ -31,293 +31,293 @@ inherited frmMtoPedidos: TfrmMtoPedidos
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdDBTabPrinIDPS_PEDIDO: TcxGridDBColumn
               Caption = 'C'#243'digo PrestaShop'
-              DataBinding.FieldName = 'IDPS_PEDIDO'
+              DataBinding.FieldName = 'IDPS_PED'
             end
             object dbcGrdDBTabPrinFECHAPS_PEDIDO: TcxGridDBColumn
               Caption = 'Fecha Pedido PrestaShop'
-              DataBinding.FieldName = 'FECHAPS_PEDIDO'
+              DataBinding.FieldName = 'FECHAPS_PED'
               Width = 219
             end
             object dbcGrdDBTabPrinCODIGO_EMPRESA_PEDIDO: TcxGridDBColumn
               Caption = 'C'#243'digo Empresa Emisora'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_EMP_PED'
               Width = 220
             end
             object dbcGrdDBTabPrinFECHA_PEDIDO: TcxGridDBColumn
               Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_PEDIDO'
+              DataBinding.FieldName = 'FECHA_PED'
               Width = 110
             end
             object dbcGrdDBTabPrinNRO_PEDIDO: TcxGridDBColumn
               Caption = 'Nro Pedido'
-              DataBinding.FieldName = 'NRO_PEDIDO'
+              DataBinding.FieldName = 'NUMERO_PED'
             end
             object dbcGrdDBTabPrinSERIE_PEDIDO: TcxGridDBColumn
               Caption = 'Serie Pedido'
-              DataBinding.FieldName = 'SERIE_PEDIDO'
+              DataBinding.FieldName = 'SERIE_PED'
               Width = 128
             end
             object dbcGrdDBTabPrinCODIGO_CLIENTE_PEDIDO: TcxGridDBColumn
               Caption = 'C'#243'digo Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_CLI_PED'
               Width = 139
             end
             object dbcGrdDBTabPrinEMAIL_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'EMAIL_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'EMAIL_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinNIF_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NIF_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'NIF_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinNOMBRE_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Nombre Cliente Env'#237'o'
-              DataBinding.FieldName = 'NOMBRE_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'NOMBRE_CLI_ENVIO_PED'
               Width = 248
             end
             object dbcGrdDBTabPrinMOVIL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'M'#243'vil Cliente Env'#237'o'
-              DataBinding.FieldName = 'MOVIL_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'MOVIL_CLIENTE_ENVIO_PED'
               Width = 182
             end
             object dbcGrdDBTabPrinDIRECCION1_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Direcci'#243'n 1 Cliente Env'#237'o'
-              DataBinding.FieldName = 'DIRECCION1_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'DIRECCION1_CLIENTE_ENVIO_PED'
               Width = 218
             end
             object dbcGrdDBTabPrinDIRECCION2_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Direcci'#243'n 2 Cliente Env'#237'o'
-              DataBinding.FieldName = 'DIRECCION2_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'DIRECCION2_CLIENTE_ENVIO_PED'
               Width = 218
             end
             object dbcGrdDBTabPrinCPOSTAL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'C'#243'digo Postal Cliente Env'#237'o'
-              DataBinding.FieldName = 'CPOSTAL_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_POSTAL_CLIENTE_ENVIO_PED'
             end
             object dbcGrdDBTabPrinPOBLACION_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Poblaci'#243'n Cliente Env'#237'o'
-              DataBinding.FieldName = 'POBLACION_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'POBLACION_CLIENTE_ENVIO_PED'
               Width = 204
             end
             object dbcGrdDBTabPrinPROVINCIA_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Provincia Cliente Env'#237'o'
-              DataBinding.FieldName = 'PROVINCIA_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'PROVINCIA_CLIENTE_ENVIO_PED'
               Width = 210
             end
             object dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'C'#243'digo Pa'#237's Cliente Env'#237'o'
-              DataBinding.FieldName = 'CODIGO_PAIS_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_PAI_CLIENTE_ENVIO_PED'
             end
             object dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
               Caption = 'Pa'#237's Cliente Env'#237'o'
-              DataBinding.FieldName = 'NOMBRE_PAIS_CLIENTE_ENVIO_PEDIDO'
+              DataBinding.FieldName = 'NOMBRE_PAI_CLIENTE_ENVIO_PED'
               Width = 154
             end
             object dbcGrdDBTabPrinRAZONSOCIAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
               Caption = 'Raz'#243'n Social Cliente Fiscal'
-              DataBinding.FieldName = 'RAZONSOCIAL_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
               Width = 231
             end
             object dbcGrdDBTabPrinMOVIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
               Caption = 'M'#243'vil Cliente Fiscal'
-              DataBinding.FieldName = 'MOVIL_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'MOVIL_CLIENTE_FISCAL_PED'
             end
             object dbcGrdDBTabPrinEMAIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
               Caption = 'Email Cliente Fiscal'
-              DataBinding.FieldName = 'EMAIL_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'EMAIL_CLIENTE_FISCAL_PED'
               Width = 170
             end
             object dbcGrdDBTabPrinDIRECCION1_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION1_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'DIRECCION1_CLIENTE_FISCAL_PED'
               Width = 324
             end
             object dbcGrdDBTabPrinDIRECCION2_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION2_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'DIRECCION2_CLIENTE_FISCAL_PED'
               Width = 324
             end
             object dbcGrdDBTabPrinPOBLACION_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'POBLACION_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'POBLACION_CLIENTE_FISCAL_PED'
               Width = 314
             end
             object dbcGrdDBTabPrinPROVINCIA_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PROVINCIA_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'PROVINCIA_CLIENTE_FISCAL_PED'
               Width = 310
             end
             object dbcGrdDBTabPrinCPOSTAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CPOSTAL_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_POSTAL_CLIENTE_FISCAL_PED'
             end
             object dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_PAIS_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_PAI_CLIENTE_FISCAL_PED'
             end
             object dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NOMBRE_PAIS_CLIENTE_FISCAL_PEDIDO'
+              DataBinding.FieldName = 'NOMBRE_PAI_CLIENTE_FISCAL_PED'
               Width = 1582
             end
             object dbcGrdDBTabPrinREFERENCIAPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'REFERENCIAPS_PEDIDO'
+              DataBinding.FieldName = 'REFERENCIAPS_PED'
             end
             object dbcGrdDBTabPrinFORMAPAGOPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'FORMAPAGOPS_PEDIDO'
+              DataBinding.FieldName = 'FORMAPAGOPS_PED'
             end
             object dbcGrdDBTabPrinDESCRIPCION_FORMAPAGO: TcxGridDBColumn
-              DataBinding.FieldName = 'DESCRIPCION_FORMAPAGO'
+              DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
             end
             object dbcGrdDBTabPrinTRANSPORTISTAPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TRANSPORTISTAPS_PEDIDO'
+              DataBinding.FieldName = 'TRANSPORTISTAPS_PED'
             end
             object dbcGrdDBTabPrinESTADOPEDIDOPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESTADOPEDIDOPS_PEDIDO'
+              DataBinding.FieldName = 'ESTADOPEDIDOPS_PED'
             end
             object dbcGrdDBTabPrinESTADOMENSAJEPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESTADOMENSAJEPS_PEDIDO'
+              DataBinding.FieldName = 'ESTADOMENSAJEPS_PED'
             end
             object dbcGrdDBTabPrinIDHILOPS_MENSAJES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'IDHILOPS_MENSAJES_PEDIDO'
+              DataBinding.FieldName = 'IDHILOPS_MENSAJES_PED'
             end
             object dbcGrdDBTabPrinESIVA_RECARGO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVA_RECARGO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESIVA_RECARGO_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESIVA_EXENTO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVA_EXENTO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESIVA_EXENTO_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESREGIMENESPECIALAGRICOLA_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESRETENCIONES_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESRETENCIONES_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESRETENCIONES_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinTARIFA_ARTICULO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TARIFA_ARTICULO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'TARIFA_ARTICULO_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESIMP_INCL_TARIFA_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESINTRACOMUNITARIO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESINTRACOMUNITARIO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'ESINTRACOMUNITARIO_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinESIRPF_IMP_INCL_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_PEDIDO'
+              DataBinding.FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_PED'
             end
             object dbcGrdDBTabPrinESAPLICA_RE_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESAPLICA_RE_ZONA_IVA_PEDIDO'
+              DataBinding.FieldName = 'ESAPLICA_RE_ZONA_IVA_PED'
             end
             object dbcGrdDBTabPrinESIVAAGRICOLA_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVAAGRICOLA_ZONA_IVA_PEDIDO'
+              DataBinding.FieldName = 'ESIVAAGRICOLA_ZONA_IVA_PED'
             end
             object dbcGrdDBTabPrinPALABRA_REPORTS_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PALABRA_REPORTS_ZONA_IVA_PEDIDO'
+              DataBinding.FieldName = 'PALABRA_REPORTS_ZONA_IVA_PED'
             end
             object dbcGrdDBTabPrinCODIGO_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_IVA_PEDIDO'
+              DataBinding.FieldName = 'CODIGO_IVA_PED'
             end
             object dbcGrdDBTabPrinESVENTA_ACTIVO_FIJO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESVENTA_ACTIVO_FIJO_PEDIDO'
+              DataBinding.FieldName = 'ESVENTA_ACTIVO_FIJO_PED'
             end
             object dbcGrdDBTabPrinPORCEN_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_IVAN_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_IVAN_PED'
             end
             object dbcGrdDBTabPrinTOTAL_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAN_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_IVAN_PED'
             end
             object dbcGrdDBTabPrinPORCEN_REN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_REN_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_REN_PED'
             end
             object dbcGrdDBTabPrinTOTAL_REN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_REN_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_REN_PED'
             end
             object dbcGrdDBTabPrinTOTAL_BASEI_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAN_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_BASEI_IVAN_PED'
             end
             object dbcGrdDBTabPrinPORCEN_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_IVAR_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_IVAR_PED'
             end
             object dbcGrdDBTabPrinTOTAL_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAR_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_IVAR_PED'
             end
             object dbcGrdDBTabPrinPORCEN_RER_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_RER_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_RER_PED'
             end
             object dbcGrdDBTabPrinTOTAL_RER_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RER_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_RER_PED'
             end
             object dbcGrdDBTabPrinTOTAL_BASEI_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAR_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_BASEI_IVAR_PED'
             end
             object dbcGrdDBTabPrinPORCEN_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_IVAS_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_IVAS_PED'
             end
             object dbcGrdDBTabPrinTOTAL_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAS_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_IVAS_PED'
             end
             object dbcGrdDBTabPrinPORCEN_RES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_RES_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_RES_PED'
             end
             object dbcGrdDBTabPrinTOTAL_RES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RES_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_RES_PED'
             end
             object dbcGrdDBTabPrinTOTAL_BASEI_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAS_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_BASEI_IVAS_PED'
             end
             object dbcGrdDBTabPrinPORCEN_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_IVAE_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_IVAE_PED'
             end
             object dbcGrdDBTabPrinTOTAL_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAE_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_IVAE_PED'
             end
             object dbcGrdDBTabPrinPORCEN_REE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_REE_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_REE_PED'
             end
             object dbcGrdDBTabPrinTOTAL_REE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_REE_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_REE_PED'
             end
             object dbcGrdDBTabPrinTOTAL_BASEI_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAE_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_BASEI_IVAE_PED'
             end
             object dbcGrdDBTabPrinTOTAL_BASES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASES_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_BASES_PED'
             end
             object dbcGrdDBTabPrinTOTAL_IMPUESTOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IMPUESTOS_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_IMPUESTOS_PED'
             end
             object dbcGrdDBTabPrinFORMA_PAGO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'FORMA_PAGO_PEDIDO'
+              DataBinding.FieldName = 'FORMA_PAGO_PED'
             end
             object dbcGrdDBTabPrinPORCEN_RETENCION_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCEN_RETENCION_PEDIDO'
+              DataBinding.FieldName = 'PORCENTAJE_RETENCION_PED'
             end
             object dbcGrdDBTabPrinTOTAL_RETENCION_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RETENCION_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_RETENCION_PED'
             end
             object dbcGrdDBTabPrinTOTAL_LIQUIDO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_LIQUIDO_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_PED'
             end
             object dbcGrdDBTabPrinTOTAL_PAGADOREALPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_PAGADOREALPS_PEDIDO'
+              DataBinding.FieldName = 'TOTAL_PAGADOREALPS_PED'
             end
             object dbcGrdDBTabPrinNRO_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NRO_PEDIDO_ABONO_PEDIDO'
+              DataBinding.FieldName = 'NUMERO_PED_ABONO_PED'
             end
             object dbcGrdDBTabPrinSERIE_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'SERIE_PEDIDO_ABONO_PEDIDO'
+              DataBinding.FieldName = 'SERIE_PED_ABONO_PED'
             end
             object dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TEXTO_LEGAL_PEDIDO_CLIENTE_PEDIDO'
+              DataBinding.FieldName = 'TEXTO_LEGAL_CLIENTE_PED'
             end
             object dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_EMPRESA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TEXTO_LEGAL_PEDIDO_EMPRESA_PEDIDO'
+              DataBinding.FieldName = 'TEXTO_LEGAL_EMPRESA_PED'
             end
             object dbcGrdDBTabPrinDOCUMENTO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DOCUMENTO_PEDIDO'
+              DataBinding.FieldName = 'DOCUMENTO_PED'
             end
             object dbcGrdDBTabPrinCOMENTARIOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'COMENTARIOS_PEDIDO'
+              DataBinding.FieldName = 'COMENTARIOS_PED'
             end
             object dbcGrdDBTabPrinCONTADOR_LINEAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CONTADOR_LINEAS_PEDIDO'
+              DataBinding.FieldName = 'CONTADOR_LINEAS_PED'
             end
             object dbcGrdDBTabPrinESCREARARTICULOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESCREARARTICULOS_PEDIDO'
+              DataBinding.FieldName = 'ESCREARARTICULOS_PED'
             end
             object dbcGrdDBTabPrinESDESCRIPCIONES_AMP_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESDESCRIPCIONES_AMP_PEDIDO'
+              DataBinding.FieldName = 'ESDESCRIPCIONES_AMP_PED'
             end
           end
         end
@@ -390,7 +390,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'FECHA_FACTURA'
+                DataBinding.DataField = 'FECHA_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.DateButtons = [btnClear, btnToday]
                 TabOrder = 10
@@ -410,7 +410,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object btnCODIGO_CLIENTE: TcxDBButtonEdit
                 Left = 159
                 Top = 105
-                DataBinding.DataField = 'CODIGO_CLIENTE_FACTURA'
+                DataBinding.DataField = 'CODIGO_CLI_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.Buttons = <
                   item
@@ -434,7 +434,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object cxdblblRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel
                 Left = 269
                 Top = 60
-                DataBinding.DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
+                DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 8
                 Transparent = True
@@ -444,7 +444,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object cxdblblRAZONSOCIAL_CLIENTE_FACTURA: TcxDBLabel
                 Left = 269
                 Top = 109
-                DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
+                DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
                 DataBinding.DataSource = dsTablaG
                 ParentFont = False
                 TabOrder = 9
@@ -455,7 +455,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object btnCODIGO_EMPRESA_FACTURA: TcxDBButtonEdit
                 Left = 155
                 Top = 58
-                DataBinding.DataField = 'CODIGO_EMPRESA_FACTURA'
+                DataBinding.DataField = 'CODIGO_EMP_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.Buttons = <
                   item
@@ -480,7 +480,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object txtNRO_FACTURA: TcxDBTextEdit
                 Left = 155
                 Top = 12
-                DataBinding.DataField = 'NRO_FACTURA'
+                DataBinding.DataField = 'NUMERO_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 0
@@ -490,16 +490,16 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 155
                 Top = 150
                 BeepOnEnter = False
-                DataBinding.DataField = 'SERIE_FACTURA'
+                DataBinding.DataField = 'SERIE_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.DropDownListStyle = lsEditList
                 Properties.ImmediateDropDownWhenKeyPressed = False
                 Properties.IncrementalFiltering = False
-                Properties.KeyFieldNames = 'SERIE_CONTADOR'
+                Properties.KeyFieldNames = 'SERIE_CON'
                 Properties.ListColumns = <
                   item
                     Caption = 'Serie'
-                    FieldName = 'SERIE_CONTADOR'
+                    FieldName = 'SERIE_CON'
                   end>
                 Properties.ListOptions.ColumnSorting = False
                 Properties.ListOptions.ShowHeader = False
@@ -535,7 +535,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION1_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'DIRECCION1_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 1
                   Width = 328
@@ -547,7 +547,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'CPOSTAL_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'CODIGO_POSTAL_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 3
                   Width = 75
@@ -559,7 +559,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'PROVINCIA_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'PROVINCIA_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 5
                   Width = 228
@@ -571,7 +571,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'NOMBRE_PAI_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 6
                   Width = 165
@@ -583,7 +583,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION2_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'DIRECCION2_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 2
                   Width = 328
@@ -617,7 +617,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 0
                   Width = 328
@@ -629,7 +629,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'NIF_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'NIF_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 7
                   Width = 247
@@ -665,7 +665,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'MOVIL_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'MOVIL_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 8
                   Width = 247
@@ -677,7 +677,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'EMAIL_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'EMAIL_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 9
                   Width = 247
@@ -698,7 +698,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 372
                   Top = 167
                   Caption = 'Empresa es agricultor/ganadero/pesca (S'#243'lo REAGP)'
-                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.MultiLine = True
                   Properties.ValueChecked = 'S'
@@ -712,7 +712,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 372
                   Top = 138
                   Caption = 'Empresa practica retenci'#243'n en Factura'
-                  DataBinding.DataField = 'ESRETENCIONES_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'ESRETENCIONES_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
@@ -723,7 +723,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 object cxdbmPOBLACION_EMPRESA_FACTURA: TcxDBMemo
                   Left = 91
                   Top = 115
-                  DataBinding.DataField = 'POBLACION_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'POBLACION_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ScrollBars = ssVertical
                   TabOrder = 4
@@ -733,13 +733,13 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 object cbbCanalIVA: TcxDBLookupComboBox
                   Left = 112
                   Top = 233
-                  DataBinding.DataField = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'GRUPO_ZONA_IVA_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'GRUPO_ZONA_IVA'
+                  Properties.KeyFieldNames = 'IVA_IVAGRP'
                   Properties.ListColumns = <
                     item
                       Caption = 'Zona de IVA'
-                      FieldName = 'DESCRIPCION_ZONA_IVA'
+                      FieldName = 'DESCRIPCION_IVA_IVAGRP'
                     end>
                   Properties.ListOptions.ShowHeader = False
                   Properties.ReadOnly = True
@@ -764,7 +764,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_PAIS_EMPRESA_FACTURA'
+                  DataBinding.DataField = 'CODIGO_PAI_EMPRESA_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 19
                   Width = 58
@@ -790,7 +790,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object cxdblblCODIGO_EMPRESA_FACTURA: TcxDBLabel
                 Left = 799
                 Top = 23
-                DataBinding.DataField = 'CODIGO_EMPRESA_FACTURA'
+                DataBinding.DataField = 'CODIGO_EMP_FAC'
                 DataBinding.DataSource = dsTablaG
                 ParentFont = False
                 Style.Font.Charset = ANSI_CHARSET
@@ -830,7 +830,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION1_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'DIRECCION1_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 1
                   Width = 328
@@ -842,7 +842,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'CPOSTAL_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'CODIGO_POSTAL_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 3
                   Width = 70
@@ -854,7 +854,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'POBLACION_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'POBLACION_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 4
                   Width = 247
@@ -866,7 +866,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'PROVINCIA_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'PROVINCIA_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 5
                   Width = 228
@@ -878,7 +878,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'NOMBRE_PAI_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 6
                   Width = 228
@@ -890,7 +890,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION2_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'DIRECCION2_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 2
                   Width = 328
@@ -924,7 +924,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 0
                   Width = 328
@@ -936,7 +936,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'NIF_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'NIF_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 7
                   Width = 289
@@ -970,7 +970,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'MOVIL_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'MOVIL_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 8
                   Width = 289
@@ -982,7 +982,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'EMAIL_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'EMAIL_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 9
                   Width = 289
@@ -1002,7 +1002,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 378
                   Top = 151
                   Caption = 'Aplicar Recargo de Equivalencia'
-                  DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
@@ -1014,7 +1014,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 378
                   Top = 177
                   Caption = 'Cliente es agricultor/ganadero/pesca'
-                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
@@ -1026,7 +1026,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 378
                   Top = 124
                   Caption = 'Aplicar IRPF (Es profesional)'
-                  DataBinding.DataField = 'ESRETENCIONES_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESRETENCIONES_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
@@ -1038,7 +1038,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 13
                   Top = 217
                   Caption = 'IVA Exento'
-                  DataBinding.DataField = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESIVA_EXENTO_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DisplayUnchecked = 'True'
                   Properties.DisplayGrayed = 'False'
@@ -1055,12 +1055,12 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'TARIFA_ARTICULO_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_TARIFA'
+                  Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
                   Properties.ListColumns = <
                     item
-                      FieldName = 'NOMBRE_TARIFA'
+                      FieldName = 'NOMBRE_TAR_TAR'
                     end>
                   Properties.ListOptions.ShowHeader = False
                   Properties.ReadOnly = True
@@ -1083,7 +1083,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 132
                   Top = 217
                   Caption = 'Cliente intracomunitario'
-                  DataBinding.DataField = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESINTRACOMUNITARIO_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DisplayUnchecked = 'True'
                   Properties.DisplayGrayed = 'False'
@@ -1097,7 +1097,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 407
                   Top = 242
                   Caption = 'Precios Venta con Impuestos Incluidos'
-                  DataBinding.DataField = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'ESIMP_INCL_TARIFA_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DisplayUnchecked = 'True'
                   Properties.DisplayGrayed = 'False'
@@ -1115,7 +1115,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_PAIS_CLIENTE_FACTURA'
+                  DataBinding.DataField = 'CODIGO_PAI_CLIENTE_FAC'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 23
                   Width = 54
@@ -1141,7 +1141,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object cxdblblCODIGO_CLIENTE_FACTURA: TcxDBLabel
                 Left = 803
                 Top = 23
-                DataBinding.DataField = 'CODIGO_CLIENTE_FACTURA'
+                DataBinding.DataField = 'CODIGO_CLI_FAC'
                 DataBinding.DataSource = dsTablaG
                 ParentFont = False
                 Style.Font.Charset = ANSI_CHARSET

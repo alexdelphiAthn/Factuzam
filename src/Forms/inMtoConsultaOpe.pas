@@ -314,8 +314,8 @@ var
 begin
   if FdmConsulta.qryMaestro.IsEmpty then Exit;
 
-  sEmp     := FdmConsulta.qryMaestro.FieldByName('CODIGO_EMPRESA_OPCAJA').AsString;
-  sAlm     := FdmConsulta.qryMaestro.FieldByName('CODIGO_ALMACEN_OPCAJA').AsString;
+  sEmp     := FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+  sAlm     := FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
   sCaja    := FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
   sNumOp   := FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;

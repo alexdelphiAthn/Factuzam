@@ -25,6 +25,7 @@ object FormNormalizer: TFormNormalizer
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
+    ExplicitWidth = 1174
     object lblSourceFile: TLabel
       Left = 600
       Top = 18
@@ -86,6 +87,8 @@ object FormNormalizer: TFormNormalizer
     ActivePage = tabCodeSearch
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1174
+    ExplicitHeight = 628
     object tabPlan: TTabSheet
       Caption = 'Plan'
       object GridPlan: TStringGrid
@@ -231,6 +234,7 @@ object FormNormalizer: TFormNormalizer
         Padding.Right = 8
         Padding.Bottom = 8
         TabOrder = 0
+        ExplicitWidth = 1166
         object lblFolders: TLabel
           Left = 8
           Top = 12
@@ -272,8 +276,8 @@ object FormNormalizer: TFormNormalizer
           OnClick = btnRemoveFolderClick
         end
         object btnScanCode: TButton
-          Left = 8
-          Top = 113
+          Left = 688
+          Top = 30
           Width = 145
           Height = 25
           Caption = 'Escanear c'#243'digo'
@@ -281,17 +285,17 @@ object FormNormalizer: TFormNormalizer
           OnClick = btnScanCodeClick
         end
         object btnApplyCodeReplacements: TButton
-          Left = 159
-          Top = 113
-          Width = 155
+          Left = 688
+          Top = 63
+          Width = 172
           Height = 25
           Caption = 'Aplicar reemplazos (con .bak)'
           TabOrder = 4
           OnClick = btnApplyCodeReplacementsClick
         end
         object btnGenerateApplyScript: TButton
-          Left = 320
-          Top = 113
+          Left = 688
+          Top = 97
           Width = 165
           Height = 25
           Caption = 'Generar script aplicaci'#243'n'#8230
@@ -309,6 +313,8 @@ object FormNormalizer: TFormNormalizer
         FixedCols = 0
         RowCount = 2
         TabOrder = 1
+        ExplicitWidth = 1166
+        ExplicitHeight = 453
       end
     end
     object tabAudit: TTabSheet
@@ -413,6 +419,8 @@ object FormNormalizer: TFormNormalizer
     Panels = <>
     SimplePanel = True
     SimpleText = 'Listo.'
+    ExplicitTop = 677
+    ExplicitWidth = 1174
   end
   object SaveDialogAudit: TSaveDialog
     Left = 600

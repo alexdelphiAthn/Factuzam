@@ -541,13 +541,13 @@ begin
     sCodigo := VarToStr(e.EditingValue);
     if ((sCodigo <> '') and (sCodigo <> '0')) then
     begin
-      dsTablaG.Dataset.FindField('CODIGO_EMPRESA_FACTURA').AsString :=
+      dsTablaG.Dataset.FindField('CODIGO_EMP_FAC').AsString :=
                                                      VarToStr(e.EditingValue);
       unqrySol := TUniQuery.Create(Self);
       unqrySol.Connection := oConn;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_empresas ' +
-                           ' WHERE CODIGO_EMPRESA = :empresa';
+                           ' WHERE CODIGO_EMP_EMP = :empresa';
       unqrySol.ParamByName('empresa').AsString := VarToStr(e.EditingValue);
       unqrySol.Open;
       if unqrySol.RecordCount = 0 then
@@ -567,12 +567,12 @@ begin
 //  with dmmFacturas.unqryTablaG do
 //  begin
 //    if Active = True then
-//    if (FieldByName('ESCONSOLIDADA_FACTURA').AsString <> 'S') then
+//    if (FieldByName('ESCONSOLIDADA_FAC').AsString <> 'S') then
 //    begin
 //      if ((dsTablaG.State <> dsEdit) and (dsTablaG.State <> dsInsert)) then
 //        dmmFacturas.unqryTablaG.Edit;
-//      FieldByName('ESCONSOLIDADA_FACTURA').AsString := 'S';
-//      FieldByName('INSTANTECONSO_FACTURA').AsDateTime := Now;
+//      FieldByName('ESCONSOLIDADA_FAC').AsString := 'S';
+//      FieldByName('INSTANTECONSO_FAC').AsDateTime := Now;
 //      Post;
 //    end;
 //  end;
@@ -593,11 +593,11 @@ begin
   inherited;
   with dmmFacturas.unqryTablaG do
   begin
-    if (FieldByName('CODIGO_CLIENTE_FACTURA').AsString = '0') then
+    if (FieldByName('CODIGO_CLI_FAC').AsString = '0') then
       dmmFacturas.GetCodigoAutoCliente;
     dmmFacturas.CrearCliente;
     ShowMessageFmt(SCliToTbl,
-                   [FieldByName('CODIGO_CLIENTE_FACTURA').AsString]);
+                   [FieldByName('CODIGO_CLI_FAC').AsString]);
   end;
 end;
 
@@ -606,11 +606,11 @@ begin
   inherited;
   with dmmFacturas.unqryTablaG do
   begin
-    if (FieldByName('CODIGO_EMPRESA_FACTURA').AsString = '0') then
+    if (FieldByName('CODIGO_EMP_FAC').AsString = '0') then
       dmmFacturas.GetCodigoAutoEmpresa;
     dmmFacturas.CrearEmpresa;
     ShowMessageFmt(SEmpToTbl,
-              [FieldByName('CODIGO_EMPRESA_FACTURA').AsString]);
+              [FieldByName('CODIGO_EMP_FAC').AsString]);
   end;
  end;
 
@@ -637,7 +637,7 @@ begin
     sEmpresaDef := dmmFacturas.GetUserEmpresaDef;
     if (sEmpresaDef <> '') then
     begin
-      dsTablaG.DataSet.FindField('CODIGO_EMPRESA_FACTURA').AsString :=
+      dsTablaG.DataSet.FindField('CODIGO_EMP_FAC').AsString :=
                                                                     sEmpresaDef;
     end;
   end;
@@ -650,10 +650,10 @@ begin
   inherited;
   form := TfrmPrintRecFac.Create(Application);
   try
-    form.edtNroFac.Text := dsTablaG.DataSet.findField('NRO_FACTURA').AsString;
-    form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FACTURA').AsString;
+    form.edtNroFac.Text := dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
+    form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
     form.edtPlazoRecFac.Text :=
-                dmmFacturas.unqryRecibos.FindField('NRO_PLAZO_RECIBO').AsString;
+                dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
     form.ShowModal;
   finally
     form.Free;
@@ -699,12 +699,12 @@ begin
                 dsTablaG.DataSet.FindField(fcodemp).AsString,
                 dsTablaG.DataSet.FindField(fcodcli).AsString,
                 dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
-    cbbSerieFactura.Properties.ListFieldNames := 'SERIE_CONTADOR';
+    cbbSerieFactura.Properties.ListFieldNames := 'SERIE_CON';
     cbbSerieFactura.Properties.ListSource := dmmFacturas.dsSeriesEditCombo;
     cbbSerieFactura.Refresh;
     dmmFacturas.unqrySeriesEditCombo.First;
     dsTablaG.DataSet.FindField(fseriefac).AsString :=
-          dmmFacturas.unqrySeriesEditCombo.FindField('SERIE_CONTADOR').AsString;
+          dmmFacturas.unqrySeriesEditCombo.FindField('SERIE_CON').AsString;
   end
   else
   begin
@@ -899,12 +899,12 @@ begin
   begin
     if not((State = dsEdit) or (State = dsInsert)) then
       Edit;
-    FieldByName('STADO_RECIBO').AsString := sEstado;
+    FieldByName('ESTADO_RECIBO_REC').AsString := sEstado;
     if sEstado = 'Pagado' then
-       FieldByNAme('FECHA_PAGO_RECIBO').AsDateTime := Trunc(Now)
+       FieldByNAme('FECHA_PAGO_RECIBO_REC').AsDateTime := Trunc(Now)
     else
       if ((sEstado = 'Emitido') or (sEstado='Devuelto')) then
-        FieldByNAme('FECHA_PAGO_RECIBO').AsVariant := null;
+        FieldByNAme('FECHA_PAGO_RECIBO_REC').AsVariant := null;
     Post;
   end;
 end;
@@ -922,7 +922,7 @@ begin
     if ((dsTablaG.DataSet.State = dsEdit) or
         (dsTablaG.DataSet.State = dsInsert)) then
     begin
-      dsTablaG.DataSet.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString :=
+      dsTablaG.DataSet.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString :=
                                                              VarToStr(NewValue);
       CambiarIVA;
     end;
@@ -952,13 +952,13 @@ begin
     if (sTarifa <> '') then
     begin
       // Localizar la tarifa en el dataset
-      if dmmFacturas.unqryTarifas.Locate('CODIGO_TARIFA', sTarifa, []) then
+      if dmmFacturas.unqryTarifas.Locate('CODIGO_TAR_ARTTAR', sTarifa, []) then
       begin
-        dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
-          dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString;
+        dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
+          dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString;
         // Opcional: Mostrar mensaje de confirmación
         // ShowMessage('IVA incluido: ' +
-        //   IfThen(dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TARIFA').AsString = 'S',
+        //   IfThen(dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString = 'S',
         //          'SÍ', 'NO'));
       end
       else
@@ -1027,7 +1027,7 @@ begin
   //tvIVA.DataController.DataSource := dsTablaG;
   (ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties as
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
-  Self.pkFieldName := 'NRO_FACTURA; SERIE_FACTURA';
+  Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   dmmFacturas.OpenTables;
   CheckConsolidacion;
@@ -1129,7 +1129,7 @@ begin
     chkREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA.Visible := True;
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA.Visible := True;
     //dsTablaG.DataSet.FieldByName(
-    //                      'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString := 'S';
+    //                      'ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString := 'S';
     chkESVENTA_ACTIVO_FIJO_FACTURA.Visible := True;
   end
   else
@@ -1206,7 +1206,7 @@ begin
     NewValue := e.EditingValue;
     if (NewValue <> null) then
     begin
-      dmmFacturas.unqryTablaG.FindField('FECHA_FACTURA').AsDateTime :=
+      dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime :=
                                                       VarToDateTime(NewValue);
       CambiarIVA;
       dmmFacturas.CalcularRetencionesEmpresa;
@@ -1222,7 +1222,7 @@ begin
     with cxGrdDBTabPrin.DataController.DataSet do
   ShowMto(Self.Owner,
           'Clientes',
-          FieldByName('CODIGO_CLIENTE_FACTURA').AsString);
+          FieldByName('CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoFacturas.btnIrAEmpresaClick(Sender: TObject);
@@ -1231,7 +1231,7 @@ begin
   ShowMto(Self.Owner,
           'Empresas',
           cxGrdDBTabPrin.DataController.DataSet.FieldByName(
-                                            'CODIGO_EMPRESA_FACTURA').AsString);
+                                            'CODIGO_EMP_FAC').AsString);
 end;
 
 procedure TfrmMtoFacturas.
@@ -1243,9 +1243,9 @@ begin
   begin
     dmmFacturas.unqryArtDataLinFac.ParamByName('TARIFA').AsString :=
                                               dmmFacturas.unqryTablaG.FindField(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-    dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FACTURA').AsDateTime :=
-                  dmmFacturas.unqryTablaG.FindField('FECHA_FACTURA').AsDateTime;
+                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FAC').AsDateTime :=
+                  dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
     //      TLibDefaults.Configurar(formulario, esArticulo, True);
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Lineas de ' +
                                                                      'Facturas',
@@ -1275,23 +1275,23 @@ begin
       if ((sCodigo <> '') ) then
       begin
         dmmFacturas.unqryLinFac.FindField(
-                                  'CODIGO_ARTICULO_FACTURA_LINEA').AsString :=
+                                  'CODIGO_ART_FACLIN').AsString :=
                                                      VarToStr(e.EditingValue);
         unqrySol := TUniQuery.Create(Self);
         unqrySol.Connection := inLibGlobalVar.oConn;
         unqrySol.SQL.Text := 'SELECT * ' +
                              '  FROM vi_art_busquedas ' +
-                             ' WHERE CODIGO_TARIFA = :tarifa ' +
-                             '   AND CODIGO_ARTICULO = :articulo ' +
-                             '   AND FECHA_DESDE_TARIFA < :FECHA_FACTURA ' +
-                             '   AND (FECHA_HASTA_TARIFA IS NULL ' +
-                             '        OR FECHA_HASTA_TARIFA > :FECHA_FACTURA)';
+                             ' WHERE CODIGO_TAR_ARTTAR = :tarifa ' +
+                             '   AND CODIGO_ART_ART = :articulo ' +
+                             '   AND FECHA_DESDE_ARTTAR < :FECHA_FAC ' +
+                             '   AND (FECHA_HASTA_ARTTAR IS NULL ' +
+                             '        OR FECHA_HASTA_ARTTAR > :FECHA_FAC)';
         unqrySol.ParamByName('articulo').AsString := VarToStr(e.EditingValue);
         unqrySol.ParamByName('tarifa').AsString :=
           dmmFacturas.unqryTablaG.FindField(
-                                    'TARIFA_ARTICULO_CLIENTE_FACTURA').AsString;
-        unqrySol.ParamByName('FECHA_FACTURA').AsDateTime :=
-                  dmmFacturas.unqryTablaG.FindField('FECHA_FACTURA').AsDateTime;
+                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+        unqrySol.ParamByName('FECHA_FAC').AsDateTime :=
+                  dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
         unqrySol.Open;
         if (unqrySol.RecordCount = 0) then
           Sleep(0) //si no existe artículo y tarifa, no hago nada
@@ -1357,7 +1357,7 @@ procedure TfrmMtoFacturas.CambiarIVA;
 begin
   if (dsTablaG.DataSet.State = dsInsert) then
     dmmFacturas.AsignarIVA(
-        dsTablaG.DataSet.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString,
+        dsTablaG.DataSet.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString,
         dmmFacturas.unqryTablaG);
 end;
 

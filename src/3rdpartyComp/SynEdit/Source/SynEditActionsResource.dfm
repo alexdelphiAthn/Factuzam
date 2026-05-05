@@ -1,4 +1,4 @@
-object SynEditActions: TSynEditActions
+﻿object SynEditActions: TSynEditActions
   Height = 270
   Width = 474
   object ActionList: TActionList

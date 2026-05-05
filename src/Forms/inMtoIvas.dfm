@@ -1,4 +1,4 @@
-inherited frmMtoIvas: TfrmMtoIvas
+﻿inherited frmMtoIvas: TfrmMtoIvas
   Caption = 'IVA'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -15,17 +15,17 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinGRUPO_ZONA_IVA: TcxGridDBColumn
               Caption = 'Zona IVA'
-              DataBinding.FieldName = 'GRUPO_ZONA_IVA'
+              DataBinding.FieldName = 'IVA_IVAGRP'
               PropertiesClassName = 'TcxLookupComboBoxProperties'
               Properties.DropDownListStyle = lsFixedList
-              Properties.KeyFieldNames = 'GRUPO_ZONA_IVA'
+              Properties.KeyFieldNames = 'IVA_IVAGRP'
               Properties.ListColumns = <
                 item
                   MinWidth = 50
-                  FieldName = 'GRUPO_ZONA_IVA'
+                  FieldName = 'IVA_IVAGRP'
                 end
                 item
-                  FieldName = 'DESCRIPCION_ZONA_IVA'
+                  FieldName = 'DESCRIPCION_IVA_IVAGRP'
                 end>
               Properties.ListOptions.ShowHeader = False
               Properties.ListSource = dmIvas.dsZonas
@@ -33,12 +33,12 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinDESCRIPCION_ZONA_IVA: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
-              DataBinding.FieldName = 'DESCRIPCION_ZONA_IVA'
+              DataBinding.FieldName = 'DESCRIPCION_IVA_IVAGRP'
               Width = 277
             end
             object cxGrdDBTabPrinPORCENNORMAL_IVA: TcxGridDBColumn
               Caption = '%Normal'
-              DataBinding.FieldName = 'PORCENNORMAL_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_NORMAL_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -47,7 +47,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENNORMAL_RE_IVA: TcxGridDBColumn
               Caption = '%RE Normal'
-              DataBinding.FieldName = 'PORCENNORMAL_RE_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_NORMAL_RE_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -56,7 +56,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENREDUCIDO_IVA: TcxGridDBColumn
               Caption = '% Reducido'
-              DataBinding.FieldName = 'PORCENREDUCIDO_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_REDUCIDO_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -65,7 +65,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENREDUCIDO_RE_IVA: TcxGridDBColumn
               Caption = '%RE Reducido'
-              DataBinding.FieldName = 'PORCENREDUCIDO_RE_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_REDUCIDO_RE_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -74,7 +74,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENSUPERREDUCIDO_IVA: TcxGridDBColumn
               Caption = '%S'#250'perReducido'
-              DataBinding.FieldName = 'PORCENSUPERREDUCIDO_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_SUPERREDUCIDO_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -83,7 +83,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENSUPERREDUCIDO_RE_IVA: TcxGridDBColumn
               Caption = '%RE SuperReducido'
-              DataBinding.FieldName = 'PORCENSUPERREDUCIDO_RE_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_SUPERREDUCIDO_RE_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -92,7 +92,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENEXENTO_IVA: TcxGridDBColumn
               Caption = '%Exento'
-              DataBinding.FieldName = 'PORCENEXENTO_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_EXENTO_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -101,7 +101,7 @@ inherited frmMtoIvas: TfrmMtoIvas
             end
             object cxGrdDBTabPrinPORCENEXENTO_RE_IVA: TcxGridDBColumn
               Caption = '%RE Exento'
-              DataBinding.FieldName = 'PORCENEXENTO_RE_IVA'
+              DataBinding.FieldName = 'PORCENTAJE_EXENTO_RE_IVA'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.DisplayFormat = '0.00 %'
               Properties.EditFormat = '0.00 %'
@@ -119,40 +119,40 @@ inherited frmMtoIvas: TfrmMtoIvas
               Width = 121
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Visible = False
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Visible = False
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Visible = False
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Visible = False
             end
             object cxGrdDBTabPrinESAPLICA_RE_ZONA_IVA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESAPLICA_RE_ZONA_IVA'
+              DataBinding.FieldName = 'ESAPLICA_RE_IVA_IVAGRP'
               Visible = False
             end
             object cxGrdDBTabPrinESIVAAGRICOLA_ZONA_IVA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVAAGRICOLA_ZONA_IVA'
+              DataBinding.FieldName = 'ESIVAAGRICOLA_IVA_IVAGRP'
               Visible = False
             end
             object cxGrdDBTabPrinESDEFAULT_ZONA_IVA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESDEFAULT_ZONA_IVA'
+              DataBinding.FieldName = 'ESDEFAULT_IVA_IVAGRP'
               Visible = False
             end
             object cxGrdDBTabPrinESIRPF_IMP_INCL_ZONA_IVA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA'
+              DataBinding.FieldName = 'ESIRPF_IMP_INCL_IVA_IVAGRP'
               Visible = False
             end
             object cxGrdDBTabPrinPALABRA_REPORTS_ZONA_IVA: TcxGridDBColumn
               Caption = 'Palabra IVA'
-              DataBinding.FieldName = 'PALABRA_REPORTS_ZONA_IVA'
+              DataBinding.FieldName = 'PALABRA_REPORTS_IVA_IVAGRP'
             end
           end
         end

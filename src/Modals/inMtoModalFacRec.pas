@@ -95,8 +95,8 @@ begin
   VAR ParentForm := TfrmMtoFacturas(Owner);
   with ParentForm.tdmDataModule as TdmFacturas do
   begin
-//    if (ExisteSerieEmpresa(FieldByName('SERIE_FACTURA').AsString,
-//                           FieldByName('CODIGO_EMPRESA_FACTURA').AsString,
+//    if (ExisteSerieEmpresa(FieldByName('SERIE_FAC').AsString,
+//                           FieldByName('CODIGO_EMP_FAC').AsString,
 //                           'FC')) then
 //    begin
 //      ShowMessage('Esta serie es usada por otra empresa.' +
@@ -115,7 +115,7 @@ begin
              ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
              ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
              ParamByName('pidcodigo_empresa').AsString :=
-                     unqryTablaG.FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
+                     unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
              ParamByName('pidseriefacturaabono').AsString :=
                                                            cmbSerieFactura.Text;
              ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
@@ -145,7 +145,7 @@ begin
          ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
          ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
          ParamByName('pidcodigo_empresa').AsString :=
-                    unqryTablaG.FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
+                    unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
          ParamByName('pUSUARIO').AsString := oUser;
          ParamByName('pidseriefacturaabono').AsString :=  cmbSerieFactura.Text;
          ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
@@ -185,8 +185,8 @@ begin
       cmbSerieFactura.Properties.ListSource := dsSeries;
       cmbSerieFactura.Text :=
               cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
-      edtNumFacOrigen.Text := unqryTablaG.FieldByName('NRO_FACTURA').AsString;
-      edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FACTURA').AsString;
+      edtNumFacOrigen.Text := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+      edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FAC').AsString;
     end;
     dtFecha.Date := Trunc(Now);
   end;

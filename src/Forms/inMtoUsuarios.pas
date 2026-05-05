@@ -81,14 +81,14 @@ begin
   inherited;
   formulario := TfrmModalGenPass.Create(Application);
   formulario.edtUsuario.Text :=
-                dmmUsuarios.unqryTablaG.FieldByName('USUARIO_USUARIO').AsString;
+                dmmUsuarios.unqryTablaG.FieldByName('USUARIO_USU').AsString;
   formulario.ShowModal;
   if (formulario.sFicha = 'S') then
   begin
      if ((dsTablaG.DataSet.State <> dsInsert) and
          (dsTablaG.DataSet.State <> dsEdit)) then
        dsTablaG.DataSet.Edit;
-     dmmUsuarios.unqryTablaG.FieldByName('PASSWORD_USUARIO').AsString :=
+     dmmUsuarios.unqryTablaG.FieldByName('PASSWORD_USU').AsString :=
                                               sMd5(formulario.edtPassword.Text);
      dmmUSuarios.unqryTablaG.Post;
   end;
@@ -106,7 +106,7 @@ begin
     cxGrdDBTabPrinEMPRESADEF_USUARIO.Properties).ListSource :=
                                                          dmmUsuarios.dsEmpresas;
   dmmUsuarios.unqryEmpresas.Open;
-  pkFieldName := 'USUARIO_USUARIO';
+  pkFieldName := 'USUARIO_USU';
 end;
 
 procedure TfrmMtoUsuarios.dsTablaGStateChange(Sender: TObject);

@@ -184,16 +184,16 @@ end;
 
 procedure TdmConn.ActualizarUserTimeModif(DataSet:TDataSet);
 begin
-  if (DataSet.FindField('USUARIOMODIF') <> nil) then
-    DataSet.FieldbyName('USUARIOMODIF').AsString:= oUser;
+  if (DataSet.FindField('USUARIO_MODIF') <> nil) then
+    DataSet.FieldbyName('USUARIO_MODIF').AsString:= oUser;
   if DataSet.State = dsInsert then
   begin
-    if (DataSet.FindField('INSTANTEALTA') <> nil) then
-      DataSet.FieldbyName('INSTANTEALTA').AsDateTime := Now;
-    if (DataSet.FindField('USUARIOALTA') <> nil) then
-      DataSet.FieldbyName('USUARIOALTA').AsString := oUser;
-    if (DataSet.FindField('INSTANTEMODIF') <> nil) then
-      DataSet.FieldbyName('INSTANTEMODIF').AsDateTime := Now;
+    if (DataSet.FindField('INSTANTE_ALTA') <> nil) then
+      DataSet.FieldbyName('INSTANTE_ALTA').AsDateTime := Now;
+    if (DataSet.FindField('USUARIO_ALTA') <> nil) then
+      DataSet.FieldbyName('USUARIO_ALTA').AsString := oUser;
+    if (DataSet.FindField('INSTANTE_MODIF') <> nil) then
+      DataSet.FieldbyName('INSTANTE_MODIF').AsDateTime := Now;
   end;
 end;
 

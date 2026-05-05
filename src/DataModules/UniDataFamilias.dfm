@@ -1,4 +1,4 @@
-inherited dmFamilias: TdmFamilias
+﻿inherited dmFamilias: TdmFamilias
   Height = 282
   Width = 887
   PixelsPerInch = 120
@@ -6,46 +6,34 @@ inherited dmFamilias: TdmFamilias
     SQLInsert.Strings = (
       'INSERT INTO `fza_articulos_familias`'
       
-        '  (`CODIGO_FAMILIA`, `ACTIVO_FAMILIA`, `ORDEN_FAMILIA`, `ESDEFAU' +
-        'LT_FAMILIA`, `CODIGO_SUBFAMILIA`, `NOMBRE_FAMILIA`, `DESCRIPCION' +
-        '_FAMILIA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUA' +
-        'RIOMODIF`)'
+        '  (`CODIGO_FAM_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
       
-        '  (:`CODIGO_FAMILIA`, :`ACTIVO_FAMILIA`, :`ORDEN_FAMILIA`, :`ESD' +
-        'EFAULT_FAMILIA`, :`CODIGO_SUBFAMILIA`, :`NOMBRE_FAMILIA`, :`DESC' +
-        'RIPCION_FAMILIA`, :`INSTANTEMODIF`, :`INSTANTEALTA`, :`USUARIOAL' +
-        'TA`, :`USUARIOMODIF`)')
+        '  (:`CODIGO_FAM_FAM`, :`ESACTIVO_FAM`, :`ORDEN_FAM`, :`ESDEFAULT_FAM`, :`CODIGO_SUBFAMILIA_FAM`, :`NOMBRE_FAM_FAM`, :`DESCRIPCION_FAM`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_articulos_familias`'
       'WHERE'
-      '  `CODIGO_FAMILIA` = :`Old_CODIGO_FAMILIA`')
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`')
     SQLUpdate.Strings = (
       'UPDATE `fza_articulos_familias`'
       'SET'
       
-        '  `CODIGO_FAMILIA` = :`CODIGO_FAMILIA`, `ACTIVO_FAMILIA` = :`ACT' +
-        'IVO_FAMILIA`, `ORDEN_FAMILIA` = :`ORDEN_FAMILIA`, `ESDEFAULT_FAM' +
-        'ILIA` = :`ESDEFAULT_FAMILIA`, `CODIGO_SUBFAMILIA` = :`CODIGO_SUB' +
-        'FAMILIA`, `NOMBRE_FAMILIA` = :`NOMBRE_FAMILIA`, `DESCRIPCION_FAM' +
-        'ILIA` = :`DESCRIPCION_FAMILIA`, `INSTANTEMODIF` = :`INSTANTEMODI' +
-        'F`, `INSTANTEALTA` = :`INSTANTEALTA`, `USUARIOALTA` = :`USUARIOA' +
-        'LTA`, `USUARIOMODIF` = :`USUARIOMODIF`'
+        '  `CODIGO_FAM_FAM` = :`CODIGO_FAM_FAM`, `ESACTIVO_FAM` = :`ESACTIVO_FAM`, `ORDEN_FAM` = :`ORDEN_FAM`, `ESDEFAULT_FAM` = :`ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM` = :`CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FA' +
+        'M_FAM` = :`NOMBRE_FAM_FAM`, `DESCRIPCION_FAM` = :`DESCRIPCION_FAM`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUA' +
+        'RIO_MODIF`'
       'WHERE'
-      '  `CODIGO_FAMILIA` = :`Old_CODIGO_FAMILIA`')
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_familias'
       'WHERE'
-      '  `CODIGO_FAMILIA` = :`Old_CODIGO_FAMILIA`'
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT `CODIGO_FAMILIA`, `ACTIVO_FAMILIA`, `ORDEN_FAMILIA`, `ESD' +
-        'EFAULT_FAMILIA`, `CODIGO_SUBFAMILIA`, `NOMBRE_FAMILIA`, `DESCRIP' +
-        'CION_FAMILIA`, `INSTANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `' +
-        'USUARIOMODIF` FROM `fza_articulos_familias`'
+        'SELECT `CODIGO_FAM_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF` ' +
+        'FROM `fza_articulos_familias`'
       'WHERE'
-      '  `CODIGO_FAMILIA` = :`CODIGO_FAMILIA`')
+      '  `CODIGO_FAM_FAM` = :`CODIGO_FAM_FAM`')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_familias')
     Connection = dmConn.conUni
@@ -60,8 +48,8 @@ inherited dmFamilias: TdmFamilias
     SQL.Strings = (
       'select *'
       'from fza_usuarios_perfiles'
-      'where (KEY_PERFILES = '#39'dmFamilias'#39' '
-      'OR KEY_PERFILES='#39'frmMtoFamilias'#39')')
+      'where (KEY_USUPER = '#39'dmFamilias'#39' '
+      'OR KEY_USUPER='#39'frmMtoFamilias'#39')')
   end
   object unstrdprcContador: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT'
@@ -73,46 +61,35 @@ inherited dmFamilias: TdmFamilias
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_tarifas'
       
-        '  (CODIGO_ARTICULO_TARIFA, CODIGO_VARIACION_TARIFA, CODIGO_UNICO' +
-        '_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOFINAL, FECHA_DESDE_' +
-        'TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USUARIO' +
-        'ALTA, USUARIOMODIF)'
+        '  (CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIOFINAL, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       
-        '  (:CODIGO_ARTICULO_TARIFA, :CODIGO_VARIACION_TARIFA, :CODIGO_UN' +
-        'ICO_TARIFA, :CODIGO_TARIFA, :ACTIVO_TARIFA, :PRECIOFINAL, :FECHA' +
-        '_DESDE_TARIFA, :FECHA_HASTA_TARIFA, :INSTANTEMODIF, :INSTANTEALT' +
-        'A, :USUARIOALTA, :USUARIOMODIF)')
+        '  (:CODIGO_ART_ARTTAR, :CODIGO_VARIACION_TARIFA, :CODIGO_UNICO_ARTTAR, :CODIGO_TAR_ARTTAR, :ESACTIVO_ARTTAR, :PRECIOFINAL, :FECHA_DESDE_ARTTAR, :FECHA_HASTA_ARTTAR, :INSTANTE_MODIF, :INSTANTE_ALTA, :U' +
+        'SUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_tarifas'
       'SET'
       
-        '  CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO_TARIFA, CODIGO_VARIA' +
-        'CION_TARIFA = :CODIGO_VARIACION_TARIFA, CODIGO_UNICO_TARIFA = :C' +
-        'ODIGO_UNICO_TARIFA, CODIGO_TARIFA = :CODIGO_TARIFA, ACTIVO_TARIF' +
-        'A = :ACTIVO_TARIFA, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_TARI' +
-        'FA = :FECHA_DESDE_TARIFA, FECHA_HASTA_TARIFA = :FECHA_HASTA_TARI' +
-        'FA, INSTANTEMODIF = :INSTANTEMODIF, INSTANTEALTA = :INSTANTEALTA' +
-        ', USUARIOALTA = :USUARIOALTA, USUARIOMODIF = :USUARIOMODIF'
+        '  CODIGO_ART_ARTTAR = :CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA = :CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR = :CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR = :ESA' +
+        'CTIVO_ARTTAR, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_ARTTAR = :FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR = :FECHA_HASTA_ARTTAR, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_' +
+        'ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA'
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT CODIGO_ARTICULO_TARIFA, CODIGO_VARIACION_TARIFA, CODIGO_U' +
-        'NICO_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOFINAL, FECHA_DE' +
-        'SDE_TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USU' +
-        'ARIOALTA, USUARIOMODIF FROM fza_articulos_tarifas'
+        'SELECT CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIOFINAL, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_' +
+        'ALTA, USUARIO_MODIF FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :CODIGO_UNICO_ARTTAR')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_tarifas')
     Connection = dmConn.conUni
@@ -121,8 +98,8 @@ inherited dmFamilias: TdmFamilias
       '  FROM vi_art_busquedas'
       '')
     MasterSource = frmMtoFamilias.dsTablaG
-    MasterFields = 'CODIGO_FAMILIA'
-    DetailFields = 'CODIGO_FAMILIA_ARTICULO'
+    MasterFields = 'CODIGO_FAM_FAM'
+    DetailFields = 'CODIGO_FAM_ART'
     Active = True
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
@@ -132,7 +109,7 @@ inherited dmFamilias: TdmFamilias
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_FAMILIA'
+        Name = 'CODIGO_FAM_FAM'
         ParamType = ptInput
         Value = 'BOLSOS'
       end>
@@ -159,62 +136,50 @@ inherited dmFamilias: TdmFamilias
     SQLInsert.Strings = (
       'INSERT INTO fza_familias_atributos'
       
-        '  (CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOSTRAR' +
-        ')'
+        '  (CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA)'
       'VALUES'
       
-        '  (:CODIGO_FAMILIA, :CODIGO_PROPIEDAD, :ES_REQUERIDO, :ORDEN_MOS' +
-        'TRAR)')
+        '  (:CODIGO_FAM_FAM, :CODIGO_PROP_ARTPROP, :ESREQUERIDO_FA, :ORDEN_MOSTRAR_FA)')
     SQLDelete.Strings = (
       'DELETE FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
     SQLUpdate.Strings = (
       'UPDATE fza_familias_atributos'
       'SET'
       
-        '  CODIGO_FAMILIA = :CODIGO_FAMILIA, CODIGO_PROPIEDAD = :CODIGO_P' +
-        'ROPIEDAD, ES_REQUERIDO = :ES_REQUERIDO, ORDEN_MOSTRAR = :ORDEN_M' +
-        'OSTRAR'
+        '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP, ESREQUERIDO_FA = :ESREQUERIDO_FA, ORDEN_MOSTRAR_FA = :ORDEN_MOSTRAR_FA'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
     SQLLock.Strings = (
       
-        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
-        'TRAR FROM fza_familias_atributos'
+        'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD'
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
-        'TRAR FROM fza_familias_atributos'
+        'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :CODIG' +
-        'O_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_familias_atributos')
     Connection = dmConn.conUni
     SQL.Strings = (
       
-        'SELECT fa.CODIGO_FAMILIA, fa.CODIGO_PROPIEDAD, p.NOMBRE_PROPIEDA' +
-        'D, '
-      '       fa.ES_REQUERIDO, fa.ORDEN_MOSTRAR'
+        'SELECT fa.CODIGO_FAM_FAM, fa.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, '
+      '       fa.ESREQUERIDO_FA, fa.ORDEN_MOSTRAR_FA'
       'FROM fza_familias_atributos fa'
       
-        'LEFT JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = fa.CODIGO_PR' +
-        'OPIEDAD'
-      'ORDER BY fa.ORDEN_MOSTRAR, p.NOMBRE_PROPIEDAD')
+        'LEFT JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = fa.CODIGO_PROP_ARTPROP'
+      'ORDER BY fa.ORDEN_MOSTRAR_FA, p.NOMBRE_PROP_PROP')
     MasterSource = frmMtoFamilias.dsTablaG
-    MasterFields = 'CODIGO_FAMILIA'
-    DetailFields = 'CODIGO_FAMILIA'
+    MasterFields = 'CODIGO_FAM_FAM'
+    DetailFields = 'CODIGO_FAM_FAM'
     Active = True
     AfterInsert = unqryFamiliasAtributosAfterInsert
     BeforePost = unqryFamiliasAtributosBeforePost
@@ -224,7 +189,7 @@ inherited dmFamilias: TdmFamilias
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_FAMILIA'
+        Name = 'CODIGO_FAM_FAM'
         ParamType = ptInput
         Value = 'BOLSOS'
       end>
@@ -238,60 +203,48 @@ inherited dmFamilias: TdmFamilias
     SQLInsert.Strings = (
       'INSERT INTO fza_familias_atributos'
       
-        '  (CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOSTRAR' +
-        ')'
+        '  (CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA)'
       'VALUES'
       
-        '  (:CODIGO_FAMILIA, :CODIGO_PROPIEDAD, :ES_REQUERIDO, :ORDEN_MOS' +
-        'TRAR)')
+        '  (:CODIGO_FAM_FAM, :CODIGO_PROP_ARTPROP, :ESREQUERIDO_FA, :ORDEN_MOSTRAR_FA)')
     SQLDelete.Strings = (
       'DELETE FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
     SQLUpdate.Strings = (
       'UPDATE fza_familias_atributos'
       'SET'
       
-        '  CODIGO_FAMILIA = :CODIGO_FAMILIA, CODIGO_PROPIEDAD = :CODIGO_P' +
-        'ROPIEDAD, ES_REQUERIDO = :ES_REQUERIDO, ORDEN_MOSTRAR = :ORDEN_M' +
-        'OSTRAR'
+        '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP, ESREQUERIDO_FA = :ESREQUERIDO_FA, ORDEN_MOSTRAR_FA = :ORDEN_MOSTRAR_FA'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
     SQLLock.Strings = (
       
-        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
-        'TRAR FROM fza_familias_atributos'
+        'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :Old_CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :O' +
-        'ld_CODIGO_PROPIEDAD'
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT CODIGO_FAMILIA, CODIGO_PROPIEDAD, ES_REQUERIDO, ORDEN_MOS' +
-        'TRAR FROM fza_familias_atributos'
+        'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAMILIA = :CODIGO_FAMILIA AND CODIGO_PROPIEDAD = :CODIG' +
-        'O_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_familias_atributos')
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT '
-      '  CODIGO_PROPIEDAD, '
-      '  NOMBRE_PROPIEDAD '
+      '  CODIGO_PROP_ARTPROP, '
+      '  NOMBRE_PROP_PROP '
       'FROM fza_propiedades '
       
-        'WHERE ACTIVO_PROPIEDAD = '#39'S'#39' -- Solo mostramos las que est'#233'n act' +
-        'ivas'
+        'WHERE ESACTIVO_PROP = '#39'S'#39' -- Solo mostramos las que est'#233'n activas'
       
-        'ORDER BY NOMBRE_PROPIEDAD ASC; -- Ordenado alfab'#233'ticamente para ' +
-        'el combo')
+        'ORDER BY NOMBRE_PROP_PROP ASC; -- Ordenado alfab'#233'ticamente para el combo')
     BeforeInsert = unqryTablaGBeforeInsert
     BeforePost = unqryTablaGBeforePost
     Left = 792

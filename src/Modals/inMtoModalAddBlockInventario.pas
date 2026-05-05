@@ -160,18 +160,18 @@ begin
     '   FROM fza_articulos_stockactual s' +
     '   LEFT JOIN fza_articulos_skus sk' +
     '          ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK' +
-    '  WHERE COALESCE(sk.CODIGO_ARTICULO_SKU, s.CODIGO_UNIDAD_STK)' +
-    '        = a.CODIGO_ARTICULO' +
-    '    AND s.CODIGO_ALMACEN_STK = :P_INV_ALMACEN' +
+    '  WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)' +
+    '        = a.CODIGO_ART_ART' +
+    '    AND s.CODIGO_ALM_STK = :P_INV_ALMACEN' +
     '    AND s.CANTIDAD_STK > 0) AS NUM_SKUS_CON_STOCK, ' +
 
     '(SELECT AVG(s.PRECIO_MEDIO_STK)' +
     '   FROM fza_articulos_stockactual s' +
     '   LEFT JOIN fza_articulos_skus sk' +
     '          ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK' +
-    '  WHERE COALESCE(sk.CODIGO_ARTICULO_SKU, s.CODIGO_UNIDAD_STK)' +
-    '        = a.CODIGO_ARTICULO' +
-    '    AND s.CODIGO_ALMACEN_STK = :P_INV_ALMACEN_PMP' +
+    '  WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)' +
+    '        = a.CODIGO_ART_ART' +
+    '    AND s.CODIGO_ALM_STK = :P_INV_ALMACEN_PMP' +
     '    AND s.PRECIO_MEDIO_STK > 0) AS PMP_ACTUAL,';
 end;
 
@@ -180,11 +180,11 @@ begin
   // En inventario, "ya cargado" = ya existe alguna linea para ese articulo
   Result :=
     'CASE WHEN EXISTS (SELECT 1 FROM fza_inventarios_lineas il' +
-    '                   WHERE il.CODIGO_EMPRESA_INVENTARIO_LINEA = :P_INV_EMP_C' +
-    '                     AND il.CODIGO_ALMACEN_INVENTARIO_LINEA = :P_INV_ALM_C' +
-    '                     AND il.SERIE_INVENTARIO_LINEA          = :P_INV_SER_C' +
-    '                     AND il.NRO_INVENTARIO_LINEA            = :P_INV_NRO_C' +
-    '                     AND il.CODIGO_ARTICULO_INVENTARIO_LINEA = a.CODIGO_ARTICULO)' +
+    '                   WHERE il.CODIGO_EMP_INVLIN = :P_INV_EMP_C' +
+    '                     AND il.CODIGO_ALM_INVLIN = :P_INV_ALM_C' +
+    '                     AND il.SERIE_INV_INVLIN          = :P_INV_SER_C' +
+    '                     AND il.NUMERO_INV_INVLIN            = :P_INV_NRO_C' +
+    '                     AND il.CODIGO_ART_INVLIN = a.CODIGO_ART_ART)' +
     '     THEN ''S'' ELSE ''N'' END';
 end;
 
@@ -192,11 +192,11 @@ function TfrmModalAddBlockInventario.WhereExcluirYaCargados: string;
 begin
   Result :=
     'NOT EXISTS (SELECT 1 FROM fza_inventarios_lineas ilx' +
-    '             WHERE ilx.CODIGO_EMPRESA_INVENTARIO_LINEA = :P_INV_EMP_X' +
-    '               AND ilx.CODIGO_ALMACEN_INVENTARIO_LINEA = :P_INV_ALM_X' +
-    '               AND ilx.SERIE_INVENTARIO_LINEA          = :P_INV_SER_X' +
-    '               AND ilx.NRO_INVENTARIO_LINEA            = :P_INV_NRO_X' +
-    '               AND ilx.CODIGO_ARTICULO_INVENTARIO_LINEA = a.CODIGO_ARTICULO)';
+    '             WHERE ilx.CODIGO_EMP_INVLIN = :P_INV_EMP_X' +
+    '               AND ilx.CODIGO_ALM_INVLIN = :P_INV_ALM_X' +
+    '               AND ilx.SERIE_INV_INVLIN          = :P_INV_SER_X' +
+    '               AND ilx.NUMERO_INV_INVLIN            = :P_INV_NRO_X' +
+    '               AND ilx.CODIGO_ART_INVLIN = a.CODIGO_ART_ART)';
 end;
 
 procedure TfrmModalAddBlockInventario.VincularParametrosExtra(AQry: TUniQuery);
@@ -257,12 +257,12 @@ begin
   try
     qry.Connection := FConn;
     qry.SQL.Text :=
-      'SELECT COALESCE(MAX(CAST(LINEA_INVENTARIO_LINEA AS UNSIGNED)),0)+1 AS PROX' +
+      'SELECT COALESCE(MAX(CAST(LINEA_INVLIN AS UNSIGNED)),0)+1 AS PROX' +
       '  FROM fza_inventarios_lineas' +
-      ' WHERE CODIGO_EMPRESA_INVENTARIO_LINEA = :EMP' +
-      '   AND CODIGO_ALMACEN_INVENTARIO_LINEA = :ALM' +
-      '   AND SERIE_INVENTARIO_LINEA          = :SER' +
-      '   AND NRO_INVENTARIO_LINEA            = :NRO';
+      ' WHERE CODIGO_EMP_INVLIN = :EMP' +
+      '   AND CODIGO_ALM_INVLIN = :ALM' +
+      '   AND SERIE_INV_INVLIN          = :SER' +
+      '   AND NUMERO_INV_INVLIN            = :NRO';
     qry.ParamByName('EMP').AsString := FEmpresa;
     qry.ParamByName('ALM').AsString := FAlmacen;
     qry.ParamByName('SER').AsString := FSerie;
@@ -287,18 +287,18 @@ begin
     qrySkus.Connection := FConn;
     // Una linea por cada CODIGO_UNIDAD_STK con stock>0 en el almacen.
     // Para articulos con variaciones: enlazamos via skus.
-    // Para articulos sin variaciones: CODIGO_UNIDAD_STK = CODIGO_ARTICULO.
+    // Para articulos sin variaciones: CODIGO_UNIDAD_STK = CODIGO_ART_ART.
     qrySkus.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_STK   AS SKU,' +
-      '       a.DESCRIPCION_ARTICULO AS DESC_ART' +
+      '       a.DESCRIPCION_ART AS DESC_ART' +
       '  FROM fza_articulos_stockactual s' +
       '  LEFT JOIN fza_articulos_skus sk' +
       '         ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK' +
       '  JOIN fza_articulos a' +
-      '    ON a.CODIGO_ARTICULO =' +
-      '       COALESCE(sk.CODIGO_ARTICULO_SKU, s.CODIGO_UNIDAD_STK)' +
-      ' WHERE COALESCE(sk.CODIGO_ARTICULO_SKU, s.CODIGO_UNIDAD_STK) = :ART' +
-      '   AND s.CODIGO_ALMACEN_STK = :ALM' +
+      '    ON a.CODIGO_ART_ART =' +
+      '       COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)' +
+      ' WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK) = :ART' +
+      '   AND s.CODIGO_ALM_STK = :ALM' +
       '   AND s.CANTIDAD_STK > 0' +
       ' ORDER BY s.CODIGO_UNIDAD_STK';
     qrySkus.ParamByName('ART').AsString := ACodigoArticulo;
@@ -311,7 +311,7 @@ begin
       descripcion := qrySkus.FieldByName('DESC_ART').AsString;
 
       AIns.ParamByName('LINEA').AsString           := Format('%.4d', [ALineaActual]);
-      AIns.ParamByName('CODIGO_ARTICULO').AsString := ACodigoArticulo;
+      AIns.ParamByName('CODIGO_ART_ART').AsString := ACodigoArticulo;
       AIns.ParamByName('CODIGO_UNIDAD').AsString   := sku;
       AIns.ParamByName('DESCRIPCION').AsString     := descripcion;
       AIns.ParamByName('USR').AsString             := AUsuario;
@@ -359,17 +359,17 @@ begin
     // a partir de la fecha del inventario.
     ins.SQL.Text :=
       'INSERT INTO fza_inventarios_lineas (' +
-      '  CODIGO_EMPRESA_INVENTARIO_LINEA, CODIGO_ALMACEN_INVENTARIO_LINEA,' +
-      '  SERIE_INVENTARIO_LINEA, NRO_INVENTARIO_LINEA, LINEA_INVENTARIO_LINEA,' +
-      '  CODIGO_ARTICULO_INVENTARIO_LINEA, CODIGO_UNIDAD_INVENTARIO_LINEA,' +
-      '  DESCRIPCION_ARTICULO_INVENTARIO_LINEA,' +
-      '  CANTIDAD_TEORICA_INVENTARIO_LINEA, CANTIDAD_FISICA_INVENTARIO_LINEA,' +
-      '  CANTIDAD_DIFERENCIA_INVENTARIO_LINEA,' +
-      '  PRECIO_MEDIO_INVENTARIO_LINEA, PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA,' +
-      '  USUARIOALTA, USUARIOMODIF, INSTANTEALTA' +
+      '  CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN,' +
+      '  SERIE_INV_INVLIN, NUMERO_INV_INVLIN, LINEA_INVLIN,' +
+      '  CODIGO_ART_INVLIN, CODIGO_UNIDAD_INVLIN,' +
+      '  DESCRIPCION_ARTICULO_INVLIN,' +
+      '  CANTIDAD_TEORICA_INVLIN, CANTIDAD_FISICA_INVLIN,' +
+      '  CANTIDAD_DIFERENCIA_INVLIN,' +
+      '  PRECIO_MEDIO_INVLIN, PRECIO_MEDIO_NUEVO_INVLIN,' +
+      '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
       ') VALUES (' +
       '  :EMP, :ALM, :SER, :NRO, :LINEA,' +
-      '  :CODIGO_ARTICULO, :CODIGO_UNIDAD,' +
+      '  :CODIGO_ART_ART, :CODIGO_UNIDAD,' +
       '  :DESCRIPCION,' +
       '  0, 0, 0, 0, 0,' +
       '  :USR, :USR2, NOW()' +
@@ -391,7 +391,7 @@ begin
           Continue;
         end;
 
-        cod := FSqlPreview.FieldByName('CODIGO_ARTICULO').AsString;
+        cod := FSqlPreview.FieldByName('CODIGO_ART_ART').AsString;
         InsertarSkusConStockDelArticulo(ins, cod, lineaActual, numLineas, usuario);
         codigos.Add(cod);
         Inc(numArt);

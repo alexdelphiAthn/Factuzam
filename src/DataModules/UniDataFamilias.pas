@@ -55,7 +55,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmFamilias.unqryFamiliasAtributosAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryFamiliasAtributos.FindField('ES_REQUERIDO').AsString := 'N';
+  unqryFamiliasAtributos.FindField('ESREQUERIDO_FA').AsString := 'N';
 end;
 
 procedure TdmFamilias.unqryFamiliasAtributosAfterPost(DataSet: TDataSet);
@@ -70,7 +70,7 @@ var
   DebeValidar: Boolean;
 begin
   // Evitamos llamar a FindField varias veces guardándolo en una variable
-  CampoPropiedad := unqryFamiliasAtributos.FindField('CODIGO_PROPIEDAD');
+  CampoPropiedad := unqryFamiliasAtributos.FindField('CODIGO_PROP_ARTPROP');
   DebeValidar := False;
 
   // 1. Si es un registro nuevo, validamos siempre
@@ -88,7 +88,7 @@ begin
   if DebeValidar then
   begin
     if PropiedadExisteEnFamilia(CampoPropiedad.AsString,
-                                unqryTablaG.FindField('CODIGO_FAMILIA').AsString) then
+                                unqryTablaG.FindField('CODIGO_FAM_FAM').AsString) then
     begin
       ShowMessage('Propiedad Duplicada');
       Abort;
@@ -99,10 +99,10 @@ end;
 procedure TdmFamilias.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_FAMILIA').AsString := '0';
-  unqryTablaG.FindField('ORDEN_FAMILIA').AsString := '0';
-  unqryTablaG.FindField('ACTIVO_FAMILIA').AsString := 'S';
-  unqryTablaG.FindField('ESDEFAULT_FAMILIA').AsString := 'N';
+  unqryTablaG.FindField('CODIGO_FAM_FAM').AsString := '0';
+  unqryTablaG.FindField('ORDEN_FAM').AsString := '0';
+  unqryTablaG.FindField('ESACTIVO_FAM').AsString := 'S';
+  unqryTablaG.FindField('ESDEFAULT_FAM').AsString := 'N';
 end;
 
 procedure TdmFamilias.DataModuleCreate(Sender: TObject);
@@ -121,7 +121,7 @@ end;
 
 procedure TdmFamilias.GetCodigoAutoFamilia;
 begin
-  if (unqryTablaG.FindField('CODIGO_Familia').AsString = '0') then
+  if (unqryTablaG.FindField('CODIGO_FAM_FAM').AsString = '0') then
   begin
     with unstrdprcContador do
     begin
@@ -132,11 +132,11 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'FA';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_Familia').AsString :=
+      unqryTablaG.FindField('CODIGO_FAM_FAM').AsString :=
                                                   ParamByName('pcont').AsString;
     end;
   end;
-  if (unqryTablaG.FindField('ORDEN_FAMILIA').AsString = '0') then
+  if (unqryTablaG.FindField('ORDEN_FAM').AsString = '0') then
   begin
     with unstrdprcContador do
     begin
@@ -147,7 +147,7 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'FO';
       ExecProc;
-      unqryTablaG.FindField('ORDEN_FAMILIA').AsString :=
+      unqryTablaG.FindField('ORDEN_FAM').AsString :=
                                                   ParamByName('pcont').AsString;
     end;
   end;
@@ -159,12 +159,12 @@ begin
   var unqryFamProp:TUniQuery := TUniQuery.Create(nil);
   try
     unqryFamProp.Connection := oConn;
-    unqryFamProp.sql.Text := 'SELECT CODIGO_PROPIEDAD '+
+    unqryFamProp.sql.Text := 'SELECT CODIGO_PROP_ARTPROP '+
                              '  FROM fza_familias_atributos ' +
-                             ' WHERE CODIGO_FAMILIA = :CODIGO_FAMILIA ' +
-                             '   AND CODIGO_PROPIEDAD = :CODIGO_PROPIEDAD';
-    unqryFamProp.ParamByName('CODIGO_FAMILIA').AsString := sFamilia;
-    unqryFamProp.ParamByName('CODIGO_PROPIEDAD').AsString := sPropiedad;
+                             ' WHERE CODIGO_FAM_FAM = :CODIGO_FAM_FAM ' +
+                             '   AND CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP';
+    unqryFamProp.ParamByName('CODIGO_FAM_FAM').AsString := sFamilia;
+    unqryFamProp.ParamByName('CODIGO_PROP_ARTPROP').AsString := sPropiedad;
     unqryFamProp.Open;
     Result := (unqryFamProp.RecordCount > 0);
   finally
@@ -177,24 +177,24 @@ begin
   inherited;
     with unqryTablaG do
   begin
-    if Trim(FindField('NOMBRE_FAMILIA').AsString) = '' then
+    if Trim(FindField('NOMBRE_FAM_FAM').AsString) = '' then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Nombre de Familias',
-               [FindField('NOMBRE_FAMILIA').AsString]);
+               [FindField('NOMBRE_FAM_FAM').AsString]);
       Abort;
     end
     else
-    if (FindField('CODIGO_FAMILIA').AsString =
-        FindField('CODIGO_SUBFAMILIA').AsString) then
+    if (FindField('CODIGO_FAM_FAM').AsString =
+        FindField('CODIGO_SUBFAMILIA_FAM').AsString) then
     begin
       raise ERangeError.CreateFmt('%s no puede ser padre e hijo a la vez. ' +
                                        'Revise campo Familia Padre',
-               [FindField('CODIGO_SUBFAMILIA').AsString]);
+               [FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
       Abort;
     end
     else
-      if (FindField('CODIGO_FAMILIA').AsString = '0') then
+      if (FindField('CODIGO_FAM_FAM').AsString = '0') then
         GetCodigoAutoFamilia;
   end;
 end;

@@ -118,7 +118,7 @@ type
     FOriginalArqueoColor: TColor;
     FOriginalESCColor:TColor;
     FOriginalSalirColor:TColor;
-    // Métodos auxiliares para cambiar colores
+    // Mï¿½todos auxiliares para cambiar colores
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
     procedure RestoreMenuItemColors(FKeyLabel,
@@ -151,8 +151,8 @@ begin
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
   CargarVentasPeriodoVisible;
   // Cargar ventas del mes actual al iniciar
-  //DecodeDate(Date, Año, Mes, Dia);
-//  CargarVentasDelMes(Año, Mes);
+  //DecodeDate(Date, Aï¿½o, Mes, Dia);
+//  CargarVentasDelMes(Aï¿½o, Mes);
   //referente a los  CAMBIOS DE COLOR
   // Guardar los colores originales
   FOriginalF5Color := lblF5.Style.TextColor;
@@ -207,7 +207,7 @@ begin
   end;
 end;
 
-// Métodos auxiliares
+// Mï¿½todos auxiliares
 procedure TfrmMtoMenuCaja.CargarVentasPeriodoVisible;
 var
   Query: TUniQuery;
@@ -217,20 +217,20 @@ var
 begin
  if not Assigned(VentasList) then
     VentasList := TVentasList.Create;
-  // Calcular primer y último día del mes
+  // Calcular primer y ï¿½ltimo dï¿½a del mes
   PrimerDia := cxDateNavigator1.RealFirstDate;
   UltimoDia := cxDateNavigator1.RealLastDate;
   Query := TUniQuery.Create(nil);
   try
-    Query.Connection := dmDataCaja.UniConnection1; // Tu conexión
-    // Consulta para obtener fecha y cantidad de ventas
+    Query.Connection := dmDataCaja.UniConnection1; // Tu conexiï¿½n
+    // Consulta para obtener fecha y cantidad_artvin de ventas
     Query.SQL.Text :=
       ' SELECT FECHA, '+
       '        TOTAL_VENTAS, '+
       '        TOTAL_COBRADO ' +
       '    FROM vi_caja_totalventas ' +
-      '   WHERE FECHA_FACTURA >= :fecha_inicio ' +
-      '     AND FECHA_FACTURA <= :fecha_fin ';
+      '   WHERE FECHA_FAC >= :fecha_inicio ' +
+      '     AND FECHA_FAC <= :fecha_fin ';
     Query.ParamByName('fecha_inicio').AsDate := PrimerDia;
     Query.ParamByName('fecha_fin').AsDate := UltimoDia;
     Query.Open;
@@ -470,7 +470,7 @@ end;
 
 function TVentasDia.GetHintText: string;
 begin
-  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s €',
+  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s ï¿½',
                    [FTotalVentas, FormatFloat('#,##0.00', FTotalCobrado)]);
 end;
 

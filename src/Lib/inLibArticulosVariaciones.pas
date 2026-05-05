@@ -195,16 +195,16 @@ begin
   try
     q.Connection := FConexion;
     q.SQL.Text   :=
-      'SELECT a.TIPO_VARIACION_ARTICULO, v.NOMBRE_VAR ' +
+      'SELECT a.TIPO_VARIACION_ART, v.NOMBRE_VAR ' +
       'FROM   fza_articulos a ' +
-      'LEFT JOIN fza_variaciones v ON v.CODIGO_VAR = a.TIPO_VARIACION_ARTICULO ' +
-      'WHERE  a.CODIGO_ARTICULO = :cod ' +
-      '  AND  a.ESVARIACION_ARTICULO = ''S''';
+      'LEFT JOIN fza_variaciones v ON v.CODIGO_VAR = a.TIPO_VARIACION_ART ' +
+      'WHERE  a.CODIGO_ART_ART = :cod ' +
+      '  AND  a.ESVARIACION_ART = ''S''';
     q.ParamByName('cod').AsString := CodigoArticulo;
     q.Open;
     if not q.Eof then
     begin
-      FTipoVariacion  := q.FieldByName('TIPO_VARIACION_ARTICULO').AsString;
+      FTipoVariacion  := q.FieldByName('TIPO_VARIACION_ART').AsString;
       FNombreVariacion:= q.FieldByName('NOMBRE_VAR').AsString;
     end;
   finally
@@ -246,18 +246,18 @@ begin
   try
     qSlots.Connection := FConexion;
     qSlots.SQL.Text   :=
-      'SELECT va.ID_ATRIBUTO_VA, ' +
-      '       COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA) AS NOMBRE_ATRIBUTO, ' +
+      'SELECT va.ID_ATB_VA, ' +
+      '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, ' +
       '       va.ORDEN_VA, ' +
-      '       aca.ID_CONJUNTO_ACA, ' +
+      '       aca.ID_AC_ACA, ' +
       '       ac.NOMBRE_AC ' +
       'FROM   fza_variaciones_atributos va ' +
       'LEFT JOIN fza_articulos_conjuntos_asign aca ' +
-      '       ON aca.CODIGO_ARTICULO_ACA = :art ' +
-      '      AND aca.ID_ATRIBUTO_ACA     = va.ID_ATRIBUTO_VA ' +
+      '       ON aca.CODIGO_ART_ACA = :art ' +
+      '      AND aca.ID_VA_ACA     = va.ID_ATB_VA ' +
       'LEFT JOIN fza_atributos_conjuntos ac ' +
-      '       ON ac.ID_CONJUNTO_AC = aca.ID_CONJUNTO_ACA ' +
-      'WHERE  va.ID_VA = :var ' +
+      '       ON ac.ID_AC = aca.ID_AC_ACA ' +
+      'WHERE  va.ID_VAR_VA = :var ' +
       'ORDER  BY va.ORDEN_VA';
     qSlots.ParamByName('art').AsString := FCodigoArticulo;
     qSlots.ParamByName('var').AsString := FTipoVariacion;
@@ -265,10 +265,10 @@ begin
     while not qSlots.Eof do
     begin
       S := Default(TSlotVariacion);
-      S.IdAtributo     := qSlots.FieldByName('ID_ATRIBUTO_VA').AsString;
+      S.IdAtributo     := qSlots.FieldByName('ID_ATB_VA').AsString;
       S.NombreAtributo := qSlots.FieldByName('NOMBRE_ATRIBUTO').AsString;
       S.OrdenAtributo  := qSlots.FieldByName('ORDEN_VA').AsInteger;
-      S.IdConjunto     := qSlots.FieldByName('ID_CONJUNTO_ACA').AsInteger;
+      S.IdConjunto     := qSlots.FieldByName('ID_AC_ACA').AsInteger;
       S.NombreConjunto := qSlots.FieldByName('NOMBRE_AC').AsString;
       S.Ctrl           := nil;
       S.Opciones       := nil;
@@ -284,9 +284,9 @@ begin
   try
     qOpc.Connection := FConexion;
     qOpc.SQL.Text   :=
-      'SELECT ID_CONJUNTO_AC, NOMBRE_AC ' +
+      'SELECT ID_AC, NOMBRE_AC ' +
       'FROM   fza_atributos_conjuntos ' +
-      'WHERE  ID_ATRIBUTO_AC = :atr ' +
+      'WHERE  ID_VA_AC = :atr ' +
       '  AND  ESACTIVO_AC    = ''S'' ' +
       'ORDER  BY NOMBRE_AC';
 
@@ -300,7 +300,7 @@ begin
       while not qOpc.Eof do
       begin
         S.Opciones.Add(
-          qOpc.FieldByName('ID_CONJUNTO_AC').AsInteger,
+          qOpc.FieldByName('ID_AC').AsInteger,
           qOpc.FieldByName('NOMBRE_AC').AsString);
         qOpc.Next;
       end;
@@ -325,13 +325,13 @@ begin
 //    q.Connection := FConexion;
 //    q.SQL.Text   :=
 //      'SELECT sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
-//      '       GROUP_CONCAT(av.VALOR_AV ORDER BY va.ORDEN_VA SEPARATOR '' / '') AS DESCRIPCION_SKU ' +
+//      '       GROUP_CONCAT(av.AV ORDER BY va.ORDEN_VA SEPARATOR '' / '') AS DESCRIPCION_SKU ' +
 //      'FROM   fza_articulos_skus sk ' +
-//      'LEFT JOIN fza_atributos_sku asku ON asku.CODIGO_UNIDAD_SA = sk.CODIGO_UNIDAD_SKU ' +
-//      'LEFT JOIN fza_atributos_valores av ON av.ID_VALOR_AV = asku.ID_VALOR_SA ' +
-//      'LEFT JOIN fza_variaciones_atributos va ON va.ID_ATRIBUTO_VA = av.ID_VA_AV ' +
-//      '                                      AND va.ID_VA = sk.CODIGO_VAR_SKU ' +
-//      'WHERE  sk.CODIGO_ARTICULO_SKU = :art ' +
+//      'LEFT JOIN fza_atributos_sku asku ON asku.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+//      'LEFT JOIN fza_atributos_valores av ON av.ID_AV = asku.ID_AV_SA ' +
+//      'LEFT JOIN fza_variaciones_atributos va ON va.ID_ATB_VA = av.ID_VA_AV ' +
+//      '                                      AND va.ID_VAR_VA = sk.CODIGO_VAR_SKU ' +
+//      'WHERE  sk.CODIGO_ART_SKU = :art ' +
 //      'GROUP  BY sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU ' +
 //      'ORDER  BY sk.CODIGO_UNIDAD_SKU';
 //    q.ParamByName('art').AsString := FCodigoArticulo;
@@ -563,14 +563,14 @@ begin
     q.Connection := FConexion;
     q.SQL.Text   :=
       'INSERT INTO fza_articulos_conjuntos_asign ' +
-      '  (CODIGO_ARTICULO_ACA, ID_CONJUNTO_ACA, ID_ATRIBUTO_ACA, ' +
-      '   ES_GENERACION_AUTO, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      '  (CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ' +
+      '   ESGENERACION_AUTO_ACA, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES ' +
       '  (:art, :conj, :atr, ''S'', NOW(), :usr, :usr) ' +
       'ON DUPLICATE KEY UPDATE ' +
-      '  ID_CONJUNTO_ACA    = VALUES(ID_CONJUNTO_ACA), ' +
-      '  ES_GENERACION_AUTO = ''S'', ' +
-      '  USUARIOMODIF       = VALUES(USUARIOMODIF)';
+      '  ID_AC_ACA    = VALUES(ID_AC_ACA), ' +
+      '  ESGENERACION_AUTO_ACA = ''S'', ' +
+      '  USUARIO_MODIF       = VALUES(USUARIO_MODIF)';
     q.ParamByName('art').AsString  := FCodigoArticulo;
     q.ParamByName('conj').AsInteger:= NuevoId;
     q.ParamByName('atr').AsString  := S.IdAtributo;
@@ -590,8 +590,8 @@ begin
     q.Connection := FConexion;
     q.SQL.Text   :=
       'DELETE FROM fza_articulos_conjuntos_asign ' +
-      'WHERE CODIGO_ARTICULO_ACA = :art ' +
-      '  AND ID_ATRIBUTO_ACA     = :atr';
+      'WHERE CODIGO_ART_ACA = :art ' +
+      '  AND ID_VA_ACA     = :atr';
     q.ParamByName('art').AsString := FCodigoArticulo;
     q.ParamByName('atr').AsString := IdAtributo;
     q.Execute;
@@ -611,7 +611,7 @@ begin
 //    q.SQL.Text   :=
 //      'UPDATE fza_articulos_skus ' +
 //      'SET    ESACTIVO_SKU  = :act, ' +
-//      '       USUARIOMODIF  = :usr ' +
+//      '       USUARIO_MODIF  = :usr ' +
 //      'WHERE  CODIGO_UNIDAD_SKU = :cod';
 //    q.ParamByName('act').AsString := IfThen(Activo, 'S', 'N');
 //    q.ParamByName('usr').AsString := FUsuario;

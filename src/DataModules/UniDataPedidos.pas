@@ -63,9 +63,9 @@ begin
   inherited;
   with unqryTablaG do
   begin
-    FieldByName('FECHA_PEDIDO').AsDateTime := Date;
-    FieldByName('CODIGO_EMPRESA_PEDIDO').AsString := '0';
-    FieldByName('CODIGO_CLIENTE_PEDIDO').AsString := '0';
+    FieldByName('FECHA_PED').AsDateTime := Date;
+    FieldByName('CODIGO_EMP_PED').AsString := '0';
+    FieldByName('CODIGO_CLI_PED').AsString := '0';
     // Inicializar otros campos según sea necesario
   end;
 end;
@@ -73,9 +73,9 @@ end;
 procedure TdmPedidos.unqryPedidosBeforePost(DataSet: TDataSet);
 begin
   inherited;
-  if (unqryTablaG.FieldByName('NRO_PEDIDO').AsString = '0') then
+  if (unqryTablaG.FieldByName('NUMERO_PED').AsString = '0') then
     GetCodigoAutoPedido;
-  if (unqryTablaG.FieldByName('CODIGO_CLIENTE_PEDIDO').AsString = '0') then
+  if (unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString = '0') then
     GetCodigoAutoPedido;
   CalcularTotalesPedido;
 end;
@@ -85,10 +85,10 @@ begin
   inherited;
   with unqryPedidosLineas do
   begin
-    FieldByName('NRO_PEDIDO_LINEA').AsString :=
-                                 unqryTablaG.FieldByName('NRO_PEDIDO').AsString;
-    FieldByName('SERIE_PEDIDO_LINEA').AsString :=
-                               unqryTablaG.FieldByName('SERIE_PEDIDO').AsString;
+    FieldByName('NUMERO_PED_PEDLIN').AsString :=
+                                 unqryTablaG.FieldByName('NUMERO_PED').AsString;
+    FieldByName('SERIE_PED_PEDLIN').AsString :=
+                               unqryTablaG.FieldByName('SERIE_PED').AsString;
 
   end;
 end;
@@ -106,7 +106,7 @@ begin
     ParamByName('ptipodoc').AsString := 'PE';
     ParamByName('pUSUARIO').AsString := oUser;
     ExecProc;
-    unqryTablaG.FieldByName('NRO_PEDIDO').AsString := ParamByName('pcont').AsString;
+    unqryTablaG.FieldByName('NUMERO_PED').AsString := ParamByName('pcont').AsString;
   end;
 end;
 
@@ -117,7 +117,7 @@ begin
     ParamByName('ptipodoc').AsString := 'CL';
     ParamByName('pUSUARIO').AsString := oUser;
     ExecProc;
-    unqryTablaG.FieldByName('CODIGO_CLIENTE_PEDIDO').AsString :=
+    unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString :=
                             ParamByName('pcont').AsString;
   end;
 end;

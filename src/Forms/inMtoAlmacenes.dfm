@@ -1,4 +1,4 @@
-inherited frmMtoAlmacenes: TfrmMtoAlmacenes
+﻿inherited frmMtoAlmacenes: TfrmMtoAlmacenes
   Caption = 'Almacenes'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19
@@ -15,7 +15,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdDBTabPrinCODIGO_ALMACEN_ALM: TcxGridDBColumn
               Caption = 'C'#243'digo Almac'#233'n'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_ALM'
+              DataBinding.FieldName = 'CODIGO_ALM_ALM'
               Width = 149
             end
             object dbcGrdDBTabPrinCODIGO_PADRE_ALM: TcxGridDBColumn
@@ -25,12 +25,12 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
             end
             object dbcGrdDBTabPrinCODIGO_EMPRESA_ALM: TcxGridDBColumn
               Caption = 'C'#243'digo Empresa'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_ALM'
+              DataBinding.FieldName = 'CODIGO_EMP_ALM'
               Width = 151
             end
             object dbcGrdDBTabPrinNOMBRE_ALMACEN_ALM: TcxGridDBColumn
               Caption = 'Nombre Almac'#233'n'
-              DataBinding.FieldName = 'NOMBRE_ALMACEN_ALM'
+              DataBinding.FieldName = 'NOMBRE_ALM_ALM'
               Width = 250
             end
             object dbcGrdDBTabPrinESACTIVO_ALM: TcxGridDBColumn
@@ -81,17 +81,17 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
             end
             object dbcGrdDBTabPrinCODIGO_CLIENTE_ALM: TcxGridDBColumn
               Caption = 'C'#243'digo Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_ALM'
+              DataBinding.FieldName = 'CODIGO_CLI_ALM'
               Width = 156
             end
             object dbcGrdDBTabPrinALMACEN_DESTINO_ACTUAL_ALM: TcxGridDBColumn
               Caption = 'Almac'#233'n Destino'
-              DataBinding.FieldName = 'ALMACEN_DESTINO_ACTUAL_ALM'
+              DataBinding.FieldName = 'DESTINO_ACTUAL_ALM'
               Width = 155
             end
             object dbcGrdDBTabPrinALMACEN_ORIGEN_ACTUAL_ALM: TcxGridDBColumn
               Caption = 'Almac'#233'n Origen'
-              DataBinding.FieldName = 'ALMACEN_ORIGEN_ACTUAL_ALM'
+              DataBinding.FieldName = 'ORIGEN_ACTUAL_ALM'
               Width = 141
             end
             object dbcGrdDBTabPrinORDEN_ALM: TcxGridDBColumn
@@ -134,7 +134,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
             object txtCODIGO_ALMACEN_ALM: TcxDBTextEdit
               Left = 164
               Top = 13
-              DataBinding.DataField = 'CODIGO_ALMACEN_ALM'
+              DataBinding.DataField = 'CODIGO_ALM_ALM'
               DataBinding.DataSource = dsTablaG
               TabOrder = 0
               Width = 122
@@ -149,7 +149,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
             object txtCODIGO_EMPRESA_ALM: TcxDBTextEdit
               Left = 164
               Top = 45
-              DataBinding.DataField = 'CODIGO_EMPRESA_ALM'
+              DataBinding.DataField = 'CODIGO_EMP_ALM'
               DataBinding.DataSource = dsTablaG
               TabOrder = 5
               Width = 150
@@ -164,7 +164,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
             object txtNOMBRE_ALMACEN_ALM: TcxDBTextEdit
               Left = 163
               Top = 76
-              DataBinding.DataField = 'NOMBRE_ALMACEN_ALM'
+              DataBinding.DataField = 'NOMBRE_ALM_ALM'
               DataBinding.DataSource = dsTablaG
               TabOrder = 7
               Width = 313
@@ -384,7 +384,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
                     OptionsView.Indicator = True
                     object dbmAlmacenesCajasCODIGO_ALMACEN_ALMCAJ: TcxGridDBColumn
                       Caption = 'C'#243'digo Almac'#233'n'
-                      DataBinding.FieldName = 'CODIGO_ALMACEN_ALMCAJ'
+                      DataBinding.FieldName = 'CODIGO_ALM_ALMCAJ'
                       Visible = False
                     end
                     object dbmAlmacenesCajasCODIGO_CAJA_ALMCAJ: TcxGridDBColumn
@@ -423,7 +423,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
               object cxdbtxtdtALMACEN_ORIGEN_ACTUAL_ALM: TcxDBTextEdit
                 Left = 199
                 Top = 70
-                DataBinding.DataField = 'ALMACEN_ORIGEN_ACTUAL_ALM'
+                DataBinding.DataField = 'ORIGEN_ACTUAL_ALM'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 2
                 Width = 150
@@ -431,7 +431,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
               object cxdbtxtdtALMACEN_DESTINO_ACTUAL_ALM: TcxDBTextEdit
                 Left = 199
                 Top = 101
-                DataBinding.DataField = 'ALMACEN_DESTINO_ACTUAL_ALM'
+                DataBinding.DataField = 'DESTINO_ACTUAL_ALM'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 3
                 Width = 150
@@ -476,7 +476,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
               object cxdbtxtdtCODIGO_CLIENTE_ALM: TcxDBTextEdit
                 Left = 199
                 Top = 130
-                DataBinding.DataField = 'CODIGO_CLIENTE_ALM'
+                DataBinding.DataField = 'CODIGO_CLI_ALM'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 9
                 Width = 150
@@ -503,7 +503,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
                 object txtUSUARIOALTA: TcxDBTextEdit
                   Left = 136
                   Top = 13
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 0
@@ -519,7 +519,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
                 object txtINSTANTEALTA: TcxDBTextEdit
                   Left = 136
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 1
@@ -535,7 +535,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
                 object txtUSUARIOMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 13
-                  DataBinding.DataField = 'USUARIOMODIF'
+                  DataBinding.DataField = 'USUARIO_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -551,7 +551,7 @@ inherited frmMtoAlmacenes: TfrmMtoAlmacenes
                 object txtINSTANTEMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3

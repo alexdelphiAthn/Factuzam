@@ -48,9 +48,9 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmFormasdePago.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_FORMAPAGO').AsString := '0';
-  unqryTablaG.FindField('ORDEN_FORMAPAGO').AsString := '0';
-  unqryTablaG.FindField('PORCEN_ANTICIPO_FORMAPAGO').AsString := '0';
+  unqryTablaG.FindField('CODIGO_FP_FP').AsString := '0';
+  unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_ANTICIPO_FORMA_PAGO_FP').AsString := '0';
 end;
 
 procedure TdmFormasdePago.DataModuleCreate(Sender: TObject);
@@ -68,7 +68,7 @@ end;
 
 procedure TdmFormasdePago.GetCodigoAutoFormasdePago;
 begin
-  if unqryTablaG.FindField('CODIGO_FORMAPAGO').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_FP_FP').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -79,11 +79,11 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'PG';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_FORMAPAGO').AsString :=
+      unqryTablaG.FindField('CODIGO_FP_FP').AsString :=
                                                   ParamByName('pcont').AsString;
     end;
   end;
-  if unqryTablaG.FindField('ORDEN_FORMAPAGO').AsString = '0' then
+  if unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -94,7 +94,7 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'GO';
       ExecProc;
-      unqryTablaG.FindField('ORDEN_FORMAPAGO').AsString :=
+      unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString :=
                                                   ParamByName('pcont').AsString;
     end;
   end;
@@ -105,11 +105,11 @@ begin
   inherited;
     with unqryTablaG do
   begin
-    if Trim(FindField('DESCRIPCION_FORMAPAGO').AsString) = '' then
+    if Trim(FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                   'para el campo Descripción de Formas de Pago',
-               [FindField('DESCRIPCION_FORMAPAGO').AsString]);
+               [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
       Abort;
     end
     else

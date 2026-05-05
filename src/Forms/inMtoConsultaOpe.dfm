@@ -1,4 +1,4 @@
-inherited frmConsultaOpe: TfrmConsultaOpe
+﻿inherited frmConsultaOpe: TfrmConsultaOpe
   Caption = 'Buscar operaciones'
   ClientHeight = 720
   ClientWidth = 1200
@@ -108,12 +108,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         end
         object colSerieFactura: TcxGridDBColumn
           Caption = 'Serie'
-          DataBinding.FieldName = 'SERIE_FACTURA'
+          DataBinding.FieldName = 'SERIE_FAC'
           Width = 78
         end
         object colNroFactura: TcxGridDBColumn
           Caption = 'N'#186' Factura'
-          DataBinding.FieldName = 'NRO_FACTURA'
+          DataBinding.FieldName = 'NUMERO_FAC'
           Width = 97
         end
         object colCliente: TcxGridDBColumn
@@ -272,12 +272,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colPagCodigo: TcxGridDBColumn
             Caption = 'C'#243'digo'
-            DataBinding.FieldName = 'CODIGO_FORMAP'
+            DataBinding.FieldName = 'CODIGO_FP_CFP'
             Width = 106
           end
           object colPagForma: TcxGridDBColumn
             Caption = 'Forma de pago'
-            DataBinding.FieldName = 'DESCRIPCION_FORMAP'
+            DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_CFP'
             Width = 142
           end
           object colPagEntregado: TcxGridDBColumn
@@ -315,12 +315,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colPagBlockchain: TcxGridDBColumn
             Caption = 'Red'
-            DataBinding.FieldName = 'RED_BLOCKCHAIN'
+            DataBinding.FieldName = 'RED_BLOCKCHAIN_PAGO'
             Width = 65
           end
           object colPagReferencia: TcxGridDBColumn
             Caption = 'Referencia'
-            DataBinding.FieldName = 'REFERENCIA_PAGO'
+            DataBinding.FieldName = 'REFERENCIA_FACPAG'
             Width = 131
           end
           object colPagObs: TcxGridDBColumn
@@ -437,17 +437,17 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colMovAlmacen: TcxGridDBColumn
             Caption = 'Almac'#233'n'
-            DataBinding.FieldName = 'CODIGO_ALMACEN_MOV'
+            DataBinding.FieldName = 'CODIGO_ALM_MOV'
             Width = 138
           end
           object colMovAlmacenContra: TcxGridDBColumn
             Caption = 'Contra'
-            DataBinding.FieldName = 'CODIGO_ALMACEN_CONTRA_MOV'
+            DataBinding.FieldName = 'CODIGO_ALM_CONTRA_MOV'
             Width = 112
           end
           object colMovArticulo: TcxGridDBColumn
             Caption = 'Art'#237'culo'
-            DataBinding.FieldName = 'CODIGO_ARTICULO_MOV'
+            DataBinding.FieldName = 'CODIGO_ART_MOV'
             Width = 88
           end
           object colMovSku: TcxGridDBColumn
@@ -457,16 +457,16 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colMovDesc: TcxGridDBColumn
             Caption = 'Descripci'#243'n'
-            DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+            DataBinding.FieldName = 'DESCRIPCION_ART'
             Width = 206
           end
           object colMovTipo: TcxGridDBColumn
             Caption = 'E/S'
-            DataBinding.FieldName = 'TIPO_MOVIMIENTO_MOV'
+            DataBinding.FieldName = 'TIPO_MOV'
             Width = 89
           end
           object colMovCantidad: TcxGridDBColumn
-            Caption = 'Cantidad'
+            Caption = 'CANTIDAD_ARTVIN'
             DataBinding.FieldName = 'CANTIDAD_MOV'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'
@@ -513,52 +513,52 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsView.GroupByBox = False
           object colCliCodigo: TcxGridDBColumn
             Caption = 'C'#243'digo'
-            DataBinding.FieldName = 'CODIGO_CLIENTE'
+            DataBinding.FieldName = 'CODIGO_CLI_CLI'
             Width = 80
           end
           object colCliRazon: TcxGridDBColumn
             Caption = 'Raz'#243'n social'
-            DataBinding.FieldName = 'RAZONSOCIAL_CLIENTE'
+            DataBinding.FieldName = 'RAZON_SOCIAL_CLI'
             Width = 250
           end
           object colCliNif: TcxGridDBColumn
             Caption = 'NIF'
-            DataBinding.FieldName = 'NIF_CLIENTE'
+            DataBinding.FieldName = 'NIF_CLI'
             Width = 100
           end
           object colCliMovil: TcxGridDBColumn
             Caption = 'M'#243'vil'
-            DataBinding.FieldName = 'MOVIL_CLIENTE'
+            DataBinding.FieldName = 'MOVIL_CLI'
             Width = 100
           end
           object colCliEmail: TcxGridDBColumn
             Caption = 'Email'
-            DataBinding.FieldName = 'EMAIL_CLIENTE'
+            DataBinding.FieldName = 'EMAIL_CLI'
             Width = 180
           end
           object colCliDir1: TcxGridDBColumn
             Caption = 'Direcci'#243'n'
-            DataBinding.FieldName = 'DIRECCION1_CLIENTE'
+            DataBinding.FieldName = 'DIRECCION1_CLI'
             Width = 200
           end
           object colCliPobl: TcxGridDBColumn
             Caption = 'Poblaci'#243'n'
-            DataBinding.FieldName = 'POBLACION_CLIENTE'
+            DataBinding.FieldName = 'POBLACION_CLI'
             Width = 130
           end
           object colCliProv: TcxGridDBColumn
             Caption = 'Provincia'
-            DataBinding.FieldName = 'PROVINCIA_CLIENTE'
+            DataBinding.FieldName = 'PROVINCIA_CLI'
             Width = 120
           end
           object colCliCP: TcxGridDBColumn
             Caption = 'C.P.'
-            DataBinding.FieldName = 'CPOSTAL_CLIENTE'
+            DataBinding.FieldName = 'CODIGO_POSTAL_CLI'
             Width = 60
           end
           object colCliDeuda: TcxGridDBColumn
             Caption = 'Deuda'
-            DataBinding.FieldName = 'TOTAL_DEUDA_CLIENTE'
+            DataBinding.FieldName = 'TOTAL_DEUDA_CLI'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 100
@@ -618,12 +618,12 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colDepCli: TcxGridDBColumn
             Caption = 'Cliente'
-            DataBinding.FieldName = 'CODIGO_CLIENTE_DEP'
+            DataBinding.FieldName = 'CODIGO_CLI_DEP'
             Width = 110
           end
           object colDepArt: TcxGridDBColumn
             Caption = 'Art'#237'culo'
-            DataBinding.FieldName = 'CODIGO_ARTICULO_DEP'
+            DataBinding.FieldName = 'CODIGO_ART_DEP'
             Width = 141
           end
           object colDepSku: TcxGridDBColumn
@@ -633,11 +633,11 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colDepAlm: TcxGridDBColumn
             Caption = 'Almac'#233'n'
-            DataBinding.FieldName = 'CODIGO_ALMACEN_DEP'
+            DataBinding.FieldName = 'CODIGO_ALM_DEP'
             Width = 91
           end
           object colDepCant: TcxGridDBColumn
-            Caption = 'Cantidad pdte.'
+            Caption = 'CANTIDAD_ARTVIN pdte.'
             DataBinding.FieldName = 'CANTIDAD_PENDIENTE_DEP'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'
@@ -652,7 +652,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           end
           object colDepPorcIva: TcxGridDBColumn
             Caption = '% IVA'
-            DataBinding.FieldName = 'PORCEN_IVA_DEP'
+            DataBinding.FieldName = 'PORCENTAJE_IVA_DEP'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '0.00'
             Width = 55
@@ -745,53 +745,53 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             OptionsView.GroupByBox = False
             object colFacSerie: TcxGridDBColumn
               Caption = 'Serie'
-              DataBinding.FieldName = 'SERIE_FACTURA'
+              DataBinding.FieldName = 'SERIE_FAC'
               Width = 80
             end
             object colFacNro: TcxGridDBColumn
               Caption = 'N'#186
-              DataBinding.FieldName = 'NRO_FACTURA'
+              DataBinding.FieldName = 'NUMERO_FAC'
               Width = 80
             end
             object colFacFecha: TcxGridDBColumn
               Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_FACTURA'
+              DataBinding.FieldName = 'FECHA_FAC'
               PropertiesClassName = 'TcxDateEditProperties'
               Properties.DisplayFormat = 'dd/mm/yyyy'
               Width = 100
             end
             object colFacTipo: TcxGridDBColumn
               Caption = 'Tipo'
-              DataBinding.FieldName = 'TIPO_FACTURA'
+              DataBinding.FieldName = 'TIPO_FAC'
               Width = 110
             end
             object colFacCliente: TcxGridDBColumn
               Caption = 'Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_FACTURA'
+              DataBinding.FieldName = 'CODIGO_CLI_FAC'
               Width = 80
             end
             object colFacRazon: TcxGridDBColumn
               Caption = 'Raz'#243'n social'
-              DataBinding.FieldName = 'RAZONSOCIAL_CLIENTE_FACTURA'
+              DataBinding.FieldName = 'RAZON_SOCIAL_CLIENTE_FAC'
               Width = 220
             end
             object colFacBases: TcxGridDBColumn
               Caption = 'Bases'
-              DataBinding.FieldName = 'TOTAL_BASES_FACTURA'
+              DataBinding.FieldName = 'TOTAL_BASES_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 100
             end
             object colFacImp: TcxGridDBColumn
               Caption = 'Impuestos'
-              DataBinding.FieldName = 'TOTAL_IMPUESTOS_FACTURA'
+              DataBinding.FieldName = 'TOTAL_IMPUESTOS_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 100
             end
             object colFacLiq: TcxGridDBColumn
               Caption = 'L'#237'quido'
-              DataBinding.FieldName = 'TOTAL_LIQUIDO_FACTURA'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 110
@@ -816,74 +816,74 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           OptionsView.GroupByBox = False
           object colFlLinea: TcxGridDBColumn
             Caption = 'L'#237'n'
-            DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+            DataBinding.FieldName = 'LINEA_FACLIN'
             Width = 50
           end
           object colFlArt: TcxGridDBColumn
             Caption = 'Art'#237'culo'
-            DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'CODIGO_ART_FACLIN'
             Width = 110
           end
           object colFlSku: TcxGridDBColumn
             Caption = 'SKU'
-            DataBinding.FieldName = 'CODIGO_UNIDAD_FACTURA_LINEA'
+            DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
             Width = 160
           end
           object colFlDesc: TcxGridDBColumn
             Caption = 'Descripci'#243'n'
-            DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
             Width = 280
           end
           object colFlCant: TcxGridDBColumn
             Caption = 'Cant.'
-            DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+            DataBinding.FieldName = 'CANTIDAD_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'
             Width = 70
           end
           object colFlPrSiva: TcxGridDBColumn
             Caption = 'P.S.IVA'
-            DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 90
           end
           object colFlPrCiva: TcxGridDBColumn
             Caption = 'P.C.IVA'
-            DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 90
           end
           object colFlDto: TcxGridDBColumn
             Caption = '% Dto'
-            DataBinding.FieldName = 'PORCEN_DTO_FACTURA_LINEA'
+            DataBinding.FieldName = 'PORCENTAJE_DTO_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '0.00 %'
             Width = 60
           end
           object colFlTipoIva: TcxGridDBColumn
             Caption = 'T.IVA'
-            DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
             Width = 50
           end
           object colFlPorcIva: TcxGridDBColumn
             Caption = '% IVA'
-            DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+            DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '0.00'
             Width = 60
           end
           object colFlTotSiva: TcxGridDBColumn
             Caption = 'Tot. S.IVA'
-            DataBinding.FieldName = 'TOTAL_FACTURASIVA_LINEA'
+            DataBinding.FieldName = 'TOTAL_FAC_SIVA_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 100
           end
           object colFlTotCiva: TcxGridDBColumn
             Caption = 'Tot. C.IVA'
-            DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+            DataBinding.FieldName = 'TOTAL_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 100

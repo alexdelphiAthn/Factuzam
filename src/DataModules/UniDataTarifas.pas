@@ -46,7 +46,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmTarifas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_TARIFA').AsString := '0';
+  unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString := '0';
 end;
 
 procedure TdmTarifas.DataModuleCreate(Sender: TObject);
@@ -59,7 +59,7 @@ end;
 
 procedure TdmTarifas.GetCodigoAutoFamilia;
 begin
-  if unqryTablaG.FindField('CODIGO_TARIFA').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -70,7 +70,7 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'TF';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_TARIFA').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString := ParamByName('pcont').AsString;
     end;
   end;
 end;

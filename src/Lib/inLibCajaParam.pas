@@ -111,8 +111,8 @@ begin
     // 2. Sobrescribimos los valores por defecto con los que tenga el usuario
     while not qry.Eof do
     begin
-      KeyDB := qry.FieldByName('SUBKEY_PERFILES').AsString;
-      ValueDB := qry.FieldByName('VALUE_PERFILES').AsString;
+      KeyDB := qry.FieldByName('SUBKEY_USUPER').AsString;
+      ValueDB := qry.FieldByName('VALUE_USUPER').AsString;
       if FParams.TryGetValue(KeyDB, ParamObj) then
       begin
         ParamObj.ValorActual := ValueDB;

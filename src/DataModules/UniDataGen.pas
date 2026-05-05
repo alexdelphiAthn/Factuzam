@@ -103,9 +103,9 @@ begin
   unqrySol := TUniQuery.Create(nil);
   unqrySol.Connection := oConn;
   unqrySol.SQL.Text := 'DELETE FROM fza_usuarios_perfiles ' +
-                       '      WHERE USUARIO_GRUPO_PERFILES = :user ' +
-                       '        AND KEY_PERFILES = :form ';
-//                       '        AND SUBKEY_PERFILES LIKE ' +
+                       '      WHERE USUARIO_GRUPO_USUPER = :user ' +
+                       '        AND KEY_USUPER = :form ';
+//                       '        AND SUBKEY_USUPER LIKE ' +
 //                                                      QuotedSTr(sGrid + '_%');
   unqrysol.ParamByName('user').AsString := sPermisos;
   unqrysol.ParamByName('form').AsString := sForm;

@@ -75,9 +75,9 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
     Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' +
-      DatosCobro.TotalesFactura.Cabecera.FieldByName('SERIE_FACTURA').AsString +
+      DatosCobro.TotalesFactura.Cabecera.FieldByName('SERIE_FAC').AsString +
       '\' +
-      DatosCobro.TotalesFactura.Cabecera.FieldByName('NRO_FACTURA').AsString);
+      DatosCobro.TotalesFactura.Cabecera.FieldByName('NUMERO_FAC').AsString);
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
@@ -107,17 +107,17 @@ begin
       while not dLin.Eof do
       begin
         var sArt := Format('%-26s', [Copy(dLin.FieldByName(
-                              'CODIGO_UNIDAD_FACTURA_LINEA').AsString, 1, 26)]);
+                              'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
         var sUds := Format('%4s',
-             [FloatToStr(dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat)]);
+             [FloatToStr(dLin.FieldByName('CANTIDAD_FACLIN').AsFloat)]);
         var Des := Format('%-38s', [Copy(Lin.Descripcion, 1, 38)]);
         var sPre := FormatFloat('#,##0.00',
-                    dLin.FieldByName('TOTAL_FACTURA_LINEA').AsCurrency) + ' €';
+                    dLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
         Ticket.TextoColumnas(sArt + sUds, sPre);
         Ticket.EscribirLinea(Copy(dLin.FieldByName(
-                        'DESCRIPCION_ARTICULO_FACTURA_LINEA').AsString, 1, 42));
+                        'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 42));
 //        CantidadTotal := CantidadTotal +
-//                           dLin.FieldByName('CANTIDAD_FACTURA_LINEA').AsFloat;
+//                           dLin.FieldByName('CANTIDAD_FACLIN').AsFloat;
         dLin.Next;
       end;
     finally
@@ -146,7 +146,7 @@ begin
     while not DatosCobro.MemTablePagos.Eof do
     begin
       var FPName := DatosCobro.MemTablePagos.FieldByName(
-                                                 'DESCRIPCION_FORMAP').AsString;
+                                                 'DESCRIPCION_FORMA_PAGO_CFP').AsString;
       var FPAmount := DatosCobro.MemTablePagos.FieldByName(
                                                    'IMPORTE_ENTREGADO').AsFloat;
       if FPAmount > 0.001 then
@@ -168,7 +168,7 @@ begin
                                                  DatosCobro.CodigoValeEmitido );
       Ticket.Negrita(False);
     end;
-//    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
+//    Ticket.TextoColumnas('CANTIDAD_ARTVIN DE ARTICULOS', Format('%.2f',
 //                                                        [CantidadTotal]), 42);
     Ticket.SaltarLineas(1);
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
@@ -193,7 +193,7 @@ begin
     //por ahora imprimimos el código
     Ticket.EscribirLinea('LE ATENDIÓ: ' +
                                  DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                             'CODIGO_CAJERO_FACTURA').AsString);
+                                             'CODIGO_CAJERO_FAC').AsString);
     Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
     // Puedes cargar las líneas personalizadas aquí de tu configuración

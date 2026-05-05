@@ -1,4 +1,4 @@
-inherited dmGrupos: TdmGrupos
+﻿inherited dmGrupos: TdmGrupos
   OldCreateOrder = True
   Width = 360
   inherited unqryTablaG: TUniQuery
@@ -20,18 +20,18 @@ inherited dmGrupos: TdmGrupos
     SQL.Strings = (
       'SELECT *  '
       'FROM fza_usuarios'
-      'WHERE GRUPO_USUARIO = :GRUPO_USUARIO'
+      'WHERE GRUPO_USU = :GRUPO_USU'
       '')
     MasterSource = frmMtoGrupos.dsTablaG
-    MasterFields = 'GRUPO_USUARIO'
-    DetailFields = 'GRUPO_USUARIO'
+    MasterFields = 'GRUPO_USU'
+    DetailFields = 'GRUPO_USU'
     BeforePost = unqryTablaGBeforePost
     Left = 224
     Top = 24
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'GRUPO_USUARIO'
+        Name = 'GRUPO_USU'
         ParamType = ptInput
         Value = 'Administradores'
       end>

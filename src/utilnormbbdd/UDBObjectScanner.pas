@@ -157,7 +157,7 @@ procedure TDBObjectScanner.Scan(const SQLContent: string;
 var
   Stripped: string;
   Lines:    TStringList;
-  i, iPos:   Integer;
+  i, iPos:  Integer;
   Line:     string;
   Pair:     TPlanPair;
   Pre, Post: Char;

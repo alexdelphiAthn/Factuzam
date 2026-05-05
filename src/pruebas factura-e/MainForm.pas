@@ -142,7 +142,7 @@ begin
           LineaFactura.CodigoArticulo := FieldByName(fcodart).AsString;
           LineaFactura.DescripcionArticulo :=
                                              FieldByName(fdescripcion).AsString;
-          LineaFactura.Cantidad := FieldByName(fcant).AsFloat;
+          LineaFactura.CANTIDAD_ARTVIN := FieldByName(fcant).AsFloat;
           LineaFactura.PrecioUnitario := FieldByName(fpresiva).AsFloat;
           LineaFactura.TotalLinea := FieldByName(ftotciva).AsFloat;
           LineaFactura.PorcentajeIVA := FieldByName(fporiva).AsFloat;
@@ -209,7 +209,7 @@ begin
     AddChild('SchemaVersion').Text := '3.2.2';
     AddChild('Modality').Text := 'I';
     AddChild('InvoiceIssuerType').Text := 'EM';
-    // ... Añadir más nodos del FileHeader ...
+    // ... Aï¿½adir mï¿½s nodos del FileHeader ...
   end;
 
   // Parties
@@ -218,13 +218,13 @@ begin
     // SellerParty
     with AddChild('SellerParty') do
     begin
-      // ... Añadir información del vendedor ...
+      // ... Aï¿½adir informaciï¿½n del vendedor ...
     end;
     with AddChild('BuyerParty') do
     begin
       with AddChild('TaxIdentification') do
       begin
-        // Asumiendo que es una persona jurídica J
+        // Asumiendo que es una persona jurï¿½dica J
         AddChild('PersonTypeCode').Text := 'J';
         // Asumiendo que es residente R
         AddChild('ResidenceTypeCode').Text := 'R';
@@ -233,7 +233,7 @@ begin
       with AddChild('LegalEntity') do
       begin
         AddChild('CorporateName').Text := Factura.RazonSocialCliente;
-        // ... Añadir más información del cliente ...
+        // ... Aï¿½adir mï¿½s informaciï¿½n del cliente ...
       end;
     end;
   end;
@@ -382,7 +382,7 @@ begin
     begin
       AddChild('ItemDescription').Text := LineaFactura.DescripcionArticulo;
       AddChild('Quantity').Text := FormatFloat('0.000000',
-                                                         LineaFactura.Cantidad);
+                                                         LineaFactura.CANTIDAD_ARTVIN);
       AddChild('UnitOfMeasure').Text := '01';  // Asumiendo unidades
       AddChild('UnitPriceWithoutTax').Text := FormatFloat('0.000000',
                                                    LineaFactura.PrecioUnitario);
@@ -431,7 +431,7 @@ var
   S:String;
 begin
   T := TcurrencyField.Create(50225522.455667);
-  S := T.AsCur(0, '.', '€', '_');
+  S := T.AsCur(0, '.', 'ï¿½', '_');
   ShowMessage(S);
 
 end;

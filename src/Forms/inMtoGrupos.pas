@@ -68,7 +68,7 @@ begin
   dmmGrupos :=  tdmDataModule as TdmGrupos;
   dsTablaG.DataSet := dmmGrupos.unqryTablaG;
   tvUsuarios.DataController.DataSource := dmmGrupos.dsUsuariosGrupo;
-  pkFieldName := 'GRUPO_USUARIO';
+  pkFieldName := 'GRUPO_USU';
 end;
 
 procedure TfrmMtoGrupos.dsTablaGStateChange(Sender: TObject);

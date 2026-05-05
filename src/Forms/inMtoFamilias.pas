@@ -134,7 +134,7 @@ type
     procedure ResetForm; override;
   end;
 const
-  pkFieldName = 'CODIGO_FAMILIA';
+  pkFieldName = 'CODIGO_FAM_FAM';
 
 var
   frmMtoFamilias: TfrmMtoFamilias;
@@ -162,10 +162,10 @@ begin
   with dmmFamilias.dsArticulosFamilias.DataSet do
   if (
       (pcDetail.ActivePage = tsArticulos) and
-      (not(FieldByName('CODIGO_ARTICULO').isNull))) then
+      (not(FieldByName('CODIGO_ART_ART').isNull))) then
     ShowMto(Self.Owner,
             'Articulos',
-            FieldByName('CODIGO_ARTICULO').AsString)
+            FieldByName('CODIGO_ART_ART').AsString)
   else
     ShowMto(Self.Owner,
             'Articulos' );
@@ -194,10 +194,10 @@ begin
   with dmmFamilias.dsArticulosFamilias.DataSet do
   if (
       (pcDetail.ActivePage = tsArticulos) and
-      (not(FieldByName('CODIGO_TARIFA').isNull))) then
+      (not(FieldByName('CODIGO_TAR_ARTTAR').isNull))) then
     ShowMto(Self.Owner,
             'Tarifas',
-            FieldByName('CODIGO_TARIFA').AsString)
+            FieldByName('CODIGO_TAR_ARTTAR').AsString)
   else
     ShowMto(Self.Owner,
             'Tarifas');
@@ -239,7 +239,7 @@ begin
   tvArticulos.DataController.DataSource := dmmFamilias.dsArticulosFamilias;
   cbbFamilia.Properties.ListSource := dmmFamilias.dsSubfamilias;
   ResetForm;
-  pkFieldName := 'CODIGO_FAMILIA';
+  pkFieldName := 'CODIGO_FAM_FAM';
 end;
 
 procedure TfrmMtoFamilias.dsTablaGStateChange(Sender: TObject);

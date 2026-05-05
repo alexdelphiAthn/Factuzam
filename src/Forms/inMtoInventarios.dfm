@@ -1,4 +1,4 @@
-inherited frmMtoInventarios: TfrmMtoInventarios
+﻿inherited frmMtoInventarios: TfrmMtoInventarios
   Caption = 'Mantenimiento de Inventarios'
   ClientHeight = 720
   ClientWidth = 1280
@@ -59,17 +59,17 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object cbbCODIGO_EMPRESA_INVENTARIO: TcxDBLookupComboBox
               Left = 121
               Top = 11
-              DataBinding.DataField = 'CODIGO_EMPRESA_INVENTARIO'
+              DataBinding.DataField = 'CODIGO_EMP_INV'
               DataBinding.DataSource = dsTablaG
-              Properties.KeyFieldNames = 'CODIGO_EMPRESA'
+              Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
               Properties.ListColumns = <
                 item
                   Width = 80
-                  FieldName = 'CODIGO_EMPRESA'
+                  FieldName = 'CODIGO_EMP_EMP'
                 end
                 item
                   Width = 200
-                  FieldName = 'RAZONSOCIAL_EMPRESA'
+                  FieldName = 'RAZON_SOCIAL_EMP'
                 end>
               Properties.OnEditValueChanged = cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged
               TabOrder = 1
@@ -84,7 +84,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object cbbCODIGO_ALMACEN_INVENTARIO: TcxDBLookupComboBox
               Left = 121
               Top = 43
-              DataBinding.DataField = 'CODIGO_ALMACEN_INVENTARIO'
+              DataBinding.DataField = 'CODIGO_ALM_INV'
               DataBinding.DataSource = dsTablaG
               Properties.KeyFieldNames = 'CODIGO_ALMACEN'
               Properties.ListColumns = <
@@ -108,7 +108,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object cbbSERIE_INVENTARIO: TcxDBComboBox
               Left = 121
               Top = 78
-              DataBinding.DataField = 'SERIE_INVENTARIO'
+              DataBinding.DataField = 'SERIE_INV'
               DataBinding.DataSource = dsTablaG
               TabOrder = 5
               Width = 120
@@ -122,7 +122,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object txtNRO_INVENTARIO: TcxDBTextEdit
               Left = 121
               Top = 111
-              DataBinding.DataField = 'NRO_INVENTARIO'
+              DataBinding.DataField = 'NUMERO_INV'
               DataBinding.DataSource = dsTablaG
               TabOrder = 7
               Width = 174
@@ -136,7 +136,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object dtFECHA_INVENTARIO: TcxDBDateEdit
               Left = 418
               Top = 111
-              DataBinding.DataField = 'FECHA_INVENTARIO'
+              DataBinding.DataField = 'FECHA_INV'
               DataBinding.DataSource = dsTablaG
               TabOrder = 9
               Width = 228
@@ -150,7 +150,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object txtESTADO_INVENTARIO: TcxDBTextEdit
               Left = 418
               Top = 78
-              DataBinding.DataField = 'ESTADO_INVENTARIO'
+              DataBinding.DataField = 'ESTADO_INV'
               DataBinding.DataSource = dsTablaG
               Properties.ReadOnly = True
               TabOrder = 11
@@ -165,7 +165,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object txtDESCRIPCION_INVENTARIO: TcxDBTextEdit
               Left = 121
               Top = 144
-              DataBinding.DataField = 'DESCRIPCION_INVENTARIO'
+              DataBinding.DataField = 'DESCRIPCION_INV'
               DataBinding.DataSource = dsTablaG
               TabOrder = 13
               Width = 457
@@ -263,35 +263,35 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     item
                       Format = '#,##0.00'
                       Kind = skSum
-                      FieldName = 'CANTIDAD_DIFERENCIA_INVENTARIO_LINEA'
+                      FieldName = 'CANTIDAD_DIFERENCIA_INVLIN'
                     end
                     item
                       Format = '#,##0.00 '#8364
                       Kind = skSum
-                      FieldName = 'TOTAL_COSTE_DIFERENCIA_LINEA'
+                      FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     end>
                   OptionsBehavior.IncSearch = True
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   object tvLineasLINEA: TcxGridDBColumn
                     Caption = 'L'#237'nea'
-                    DataBinding.FieldName = 'LINEA_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'LINEA_INVLIN'
                     Options.Editing = False
                     Width = 68
                   end
                   object tvLineasARTICULO: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'CODIGO_ART_INVLIN'
                     Width = 130
                   end
                   object tvLineasUNIDAD: TcxGridDBColumn
                     Caption = 'SKU completo'
-                    DataBinding.FieldName = 'CODIGO_UNIDAD_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_INVLIN'
                     Width = 180
                   end
                   object tvLineasDESCRIPCION: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
                     Options.Editing = False
                     Width = 220
                   end
@@ -332,52 +332,52 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   end
                   object tvLineasLOTE: TcxGridDBColumn
                     Caption = 'Lote'
-                    DataBinding.FieldName = 'LOTE_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'LOTE_INVLIN'
                     Visible = False
                     Width = 80
                   end
                   object tvLineasCADUCIDAD: TcxGridDBColumn
                     Caption = 'Caducidad'
-                    DataBinding.FieldName = 'FECHA_CADUCIDAD_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'FECHA_CADUCIDAD_INVLIN'
                     Visible = False
                     Width = 90
                   end
                   object tvLineasUDS_TEORICAS: TcxGridDBColumn
                     Caption = 'Uds. te'#243'ricas'
-                    DataBinding.FieldName = 'CANTIDAD_TEORICA_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'CANTIDAD_TEORICA_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Options.Editing = False
                     Width = 141
                   end
                   object tvLineasUDS_FISICAS: TcxGridDBColumn
                     Caption = 'Recuento'
-                    DataBinding.FieldName = 'CANTIDAD_FISICA_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'CANTIDAD_FISICA_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 110
                   end
                   object tvLineasPMP_ACTUAL: TcxGridDBColumn
                     Caption = 'PMP actual'
-                    DataBinding.FieldName = 'PRECIO_MEDIO_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'PRECIO_MEDIO_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Options.Editing = False
                     Width = 119
                   end
                   object tvLineasPMP_NUEVO: TcxGridDBColumn
                     Caption = 'PMP nuevo'
-                    DataBinding.FieldName = 'PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'PRECIO_MEDIO_NUEVO_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 128
                   end
                   object tvLineasDIF_UNIDADES: TcxGridDBColumn
                     Caption = 'Dif. uds.'
-                    DataBinding.FieldName = 'CANTIDAD_DIFERENCIA_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'CANTIDAD_DIFERENCIA_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Options.Editing = False
                     Width = 90
                   end
                   object tvLineasDIF_COSTE: TcxGridDBColumn
                     Caption = 'Dif. coste'
-                    DataBinding.FieldName = 'TOTAL_COSTE_DIFERENCIA_LINEA'
+                    DataBinding.FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     HeaderAlignmentHorz = taRightJustify
                     Options.Editing = False
                     Width = 110
@@ -391,13 +391,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   end
                   object tvLineasFECHA_RECUENTO: TcxGridDBColumn
                     Caption = 'Hora recuento'
-                    DataBinding.FieldName = 'FECHA_RECUENTO_INVENTARIO_LINEA'
+                    DataBinding.FieldName = 'FECHA_RECUENTO_INVLIN'
                     Options.Editing = False
                     Width = 212
                   end
                   object tvLineasUSUARIO: TcxGridDBColumn
                     Caption = 'Usuario'
-                    DataBinding.FieldName = 'USUARIOMODIF'
+                    DataBinding.FieldName = 'USUARIO_MODIF'
                     Visible = False
                     Options.Editing = False
                     Width = 110
@@ -454,12 +454,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   end
                   object tvMovsTIPO: TcxGridDBColumn
                     Caption = 'Tipo'
-                    DataBinding.FieldName = 'TIPO_MOVIMIENTO_MOV'
+                    DataBinding.FieldName = 'TIPO_MOV'
                     Width = 50
                   end
                   object tvMovsARTICULO: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_MOV'
+                    DataBinding.FieldName = 'CODIGO_ART_MOV'
                     Width = 130
                   end
                   object tvMovsUNIDAD: TcxGridDBColumn
@@ -468,7 +468,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Width = 200
                   end
                   object tvMovsCANTIDAD: TcxGridDBColumn
-                    Caption = 'Cantidad'
+                    Caption = 'CANTIDAD_ARTVIN'
                     DataBinding.FieldName = 'CANTIDAD_MOV'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 100
@@ -521,7 +521,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 object mmoOBSERVACIONES_INVENTARIO: TcxDBMemo
                   Left = 156
                   Top = 194
-                  DataBinding.DataField = 'OBSERVACIONES_INVENTARIO'
+                  DataBinding.DataField = 'OBSERVACIONES_INV'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 0
                   Height = 90
@@ -543,7 +543,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtTOTAL_UNIDADES_DIFERENCIA: TcxDBTextEdit
                     Left = 265
                     Top = 30
-                    DataBinding.DataField = 'TOTAL_UNIDADES_DIFERENCIA_INVENTARIO'
+                    DataBinding.DataField = 'TOTAL_UNIDADES_DIFERENCIA_INV'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 0
@@ -558,7 +558,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtTOTAL_EUROS_DIFERENCIA: TcxDBTextEdit
                     Left = 265
                     Top = 74
-                    DataBinding.DataField = 'TOTAL_EUROS_DIFERENCIA_INVENTARIO'
+                    DataBinding.DataField = 'TOTAL_EUROS_DIFERENCIA_INV'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 1
@@ -581,7 +581,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtUSUARIOALTA: TcxDBTextEdit
                     Left = 74
                     Top = 6
-                    DataBinding.DataField = 'USUARIOALTA'
+                    DataBinding.DataField = 'USUARIO_ALTA'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 0
@@ -596,7 +596,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtINSTANTEALTA: TcxDBTextEdit
                     Left = 364
                     Top = 6
-                    DataBinding.DataField = 'INSTANTEALTA'
+                    DataBinding.DataField = 'INSTANTE_ALTA'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 1
@@ -611,7 +611,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtUSUARIOMODIF: TcxDBTextEdit
                     Left = 74
                     Top = 48
-                    DataBinding.DataField = 'USUARIOMODIF'
+                    DataBinding.DataField = 'USUARIO_MODIF'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 2
@@ -626,7 +626,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object txtINSTANTEMODIF: TcxDBTextEdit
                     Left = 364
                     Top = 48
-                    DataBinding.DataField = 'INSTANTEMODIF'
+                    DataBinding.DataField = 'INSTANTE_MODIF'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     TabOrder = 3
@@ -735,8 +735,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
   end
   object dlgAbrir: TOpenDialog
     Filter = 
-      'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Excel (*.xlsx)|*.xlsx|Tod' +
-      'os|*.*'
+      'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Excel (*.xlsx)|*.xlsx|Todos|*.*'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist]
     Left = 948
     Top = 224

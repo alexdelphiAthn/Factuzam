@@ -200,12 +200,12 @@ begin
     if ((pcPestanas.ActivePage = tsArticulos)) then
       ShowMto(Self.Owner,
               'Articulos',
-              unqryArticulos.FieldByName('CODIGO_ARTICULO').AsString)
+              unqryArticulos.FieldByName('CODIGO_ART_ART').AsString)
     else
       if ((pcPestanas.ActivePage = tsVentas)) then
         ShowMto(Self.Owner,
                 'Articulos',
-             unqryLinFacturasArticulos.FieldByName('CODIGO_ARTICULO').AsString);
+             unqryLinFacturasArticulos.FieldByName('CODIGO_ART_ART').AsString);
   end;
 end;
 
@@ -215,7 +215,7 @@ begin
   ShowMto(Self.Owner,
           'Clientes',
           dmmProveedores.unqryLinFacturasArticulos.FieldByName(
-                                            'CODIGO_CLIENTE_FACTURA').AsString);
+                                            'CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoProveedores.btnIraFacturaClick(Sender: TObject);
@@ -224,9 +224,9 @@ var
 begin
   inherited;
   sNroFactura := tvLinFac.DataController.DataSet.FieldByName(
-                                                  'NRO_FACTURA_LINEA').AsString;
+                                                  'NUMERO_FAC_FACLIN').AsString;
   sSerieFactura := tvLinFac.DataController.DataSet.FieldByName(
-                                                'SERIE_FACTURA_LINEA').AsString;
+                                                'SERIE_FAC_FACLIN').AsString;
   ShowMto(Self.Owner,
           'Facturas',
           sNroFactura +','+ sSerieFactura);
@@ -282,7 +282,7 @@ procedure TfrmMtoProveedores.btnExportarClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxgrdLinFac, 'Ventas de artículos por proveedor_' +
-                     dsTablaG.DataSet.FieldByName('CODIGO_PROVEEDOR').AsString);
+                     dsTablaG.DataSet.FieldByName('CODIGO_PRV_PRV').AsString);
 end;
 
 procedure TfrmMtoProveedores.btnGrabarClick(Sender: TObject);
@@ -299,7 +299,7 @@ begin
   tvArticulos.DataController.DataSource := dmmProveedores.dsArticulos;
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
   pcPestanas.ActivePage := tsDomicilioFiscal;
-  pkFieldName := 'CODIGO_PROVEEDOR';
+  pkFieldName := 'CODIGO_PRV_PRV';
 end;
 
 procedure TfrmMtoProveedores.dsTablaGStateChange(Sender: TObject);

@@ -59,9 +59,9 @@ begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
                   '       FROM vi_recibos' +
-                  '      WHERE NRO_FACTURA_RECIBO = :numfac ' +
-                  '        AND SERIE_FACTURA_RECIBO = :serie ' +
-                  '        AND NRO_PLAZO_RECIBO = :recibo ';
+                  '      WHERE NUMERO_FAC_REC = :numfac ' +
+                  '        AND SERIE_FAC_REC = :serie ' +
+                  '        AND NUMERO_PLAZO_REC = :recibo ';
       Params.ParamByName('numfac').AsString := edtNroFac.text;
       Params.ParamByName('serie').AsString := edtSerie.text;
       Params.ParamByName('recibo').AsString := edtPlazoRecFac.text;
@@ -76,8 +76,8 @@ begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
                   '       FROM vi_recibos ' +
-                  '      WHERE NRO_FACTURA_RECIBO = :numfac ' +
-                  '        AND SERIE_FACTURA_RECIBO = :serie ' ;
+                  '      WHERE NUMERO_FAC_REC = :numfac ' +
+                  '        AND SERIE_FAC_REC = :serie ' ;
       Params.ParamByName('numfac').AsString := edtNroFac.text;
       Params.ParamByName('serie').AsString := edtSerie.text;
     end;

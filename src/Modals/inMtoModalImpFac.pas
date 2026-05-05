@@ -113,20 +113,20 @@ var
   sNro: string;
 begin
   RazonSocialCorta := Copy(ADataSet.FieldByName(
-                                'RAZONSOCIAL_CLIENTE_FACTURA').AsString, 1, 12);
+                                'RAZON_SOCIAL_CLIENTE_FAC').AsString, 1, 12);
   RazonSocialCorta := StringReplace(RazonSocialCorta, ' ', '', [rfReplaceAll]);
-  if not ADataSet.FieldByName('FECHA_FACTURA').IsNull then
+  if not ADataSet.FieldByName('FECHA_FAC').IsNull then
     sFecha := FormatDateTime('dd_mm', ADataSet.FieldByName(
-                                                    'FECHA_FACTURA').AsDateTime)
+                                                    'FECHA_FAC').AsDateTime)
   else
     sFecha := '00_00';
   TotalFormateado := FormatFloat('0.00', ADataSet.FieldByName(
-                                              'TOTAL_LIQUIDO_FACTURA').AsFloat);
+                                              'TOTAL_LIQUIDO_FAC').AsFloat);
   TotalFormateado := StringReplace(TotalFormateado, ',', '_', [rfReplaceAll]);
   TotalFormateado := StringReplace(TotalFormateado, '.', '_', [rfReplaceAll]);
   SerieFormateada := StringReplace(ADataSet.FieldByName(
-                           'SERIE_FACTURA').AsString, '.', '_', [rfReplaceAll]);
-  sNro := ADataSet.FieldByName('NRO_FACTURA').AsString;
+                           'SERIE_FAC').AsString, '.', '_', [rfReplaceAll]);
+  sNro := ADataSet.FieldByName('NUMERO_FAC').AsString;
   Result := sFecha + '_' + SerieFormateada + '_' + sNro + '_' +
                           RazonSocialCorta + '_' + TotalFormateado;
 end;
@@ -143,8 +143,8 @@ begin
       Params.Clear;
       SQL.Text := 'SELECT *  ' +
                   '  FROM vi_FACTURAS_print f' +
-                  ' WHERE NRO_FACTURA = :numfac' +
-                  '   AND SERIE_FACTURA = :serie';
+                  ' WHERE NUMERO_FAC = :numfac' +
+                  '   AND SERIE_FAC = :serie';
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
     end;
@@ -156,9 +156,9 @@ begin
       Params.Clear;
       SQL.Text := '  SELECT * ' +
                   '    FROM vi_FACTURAS_LINEAS_print V  ' +
-                  '   WHERE V.NRO_FACTURA_LINEA = :numfac' +
-                  '     AND V.SERIE_FACTURA_LINEA = :serie ' +
-                  'ORDER BY V.LINEA_FACTURA_LINEA';
+                  '   WHERE V.NUMERO_FAC_FACLIN = :numfac' +
+                  '     AND V.SERIE_FAC_FACLIN = :serie ' +
+                  'ORDER BY V.LINEA_FACLIN';
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
       end;
@@ -175,9 +175,9 @@ begin
       Params.Clear;
       SQL.Text := '  SELECT *  ' +
                   '    FROM VI_FACTURAS_PRINT' +
-                  '   WHERE FECHA_FACTURA >= :fecha_ini ' +
-                  '     AND  FECHA_FACTURA <= :fecha_fin ' +
-                  'ORDER BY NRO_FACTURA';
+                  '   WHERE FECHA_FAC >= :fecha_ini ' +
+                  '     AND  FECHA_FAC <= :fecha_fin ' +
+                  'ORDER BY NUMERO_FAC';
       Params.ParamByName('fecha_ini').Value := dedDesde.Date;
       Params.ParamByName('fecha_fin').Value := dedHasta.Date;
     end;
@@ -191,13 +191,13 @@ begin
       SQL.Text := '    SELECT *  ' +
                   '      FROM vi_FACTURAS_LINEAS_print L ' +
                   'INNER JOIN vi_FACTURAS_print F ' +
-                  '        ON F.NRO_FACTURA = L.NRO_FACTURA_LINEA ' +
-                  '       AND F.SERIE_FACTURA = L.SERIE_FACTURA_LINEA ' +
-                  '     WHERE F.fecha_FACTURA >= :fecha_ini ' +
-                  '       AND  F.fecha_FACTURA <= :fecha_fin ' +
-                  '  order by L.NRO_FACTURA_LINEA, ' +
-                  '           L.SERIE_FACTURA_LINEA, ' +
-                  '           L.LINEA_FACTURA_LINEA';
+                  '        ON F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
+                  '       AND F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
+                  '     WHERE F.FECHA_FAC >= :fecha_ini ' +
+                  '       AND  F.FECHA_FAC <= :fecha_fin ' +
+                  '  order by L.NUMERO_FAC_FACLIN, ' +
+                  '           L.SERIE_FAC_FACLIN, ' +
+                  '           L.LINEA_FACLIN';
       Params.ParamByName('fecha_ini').DataType := ftDate;
       Params.ParamByName('fecha_ini').Value := dedDesde.date;
       Params.ParamByName('fecha_fin').DataType := ftDate;

@@ -67,7 +67,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmEmpresas.unqryRetencionesAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryRetenciones.FindField('CODIGO_RETENCION').AsString := '0';
+  unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString := '0';
 end;
 
 procedure TdmEmpresas.unqryRetencionesBeforeInsert(DataSet: TDataSet);
@@ -92,12 +92,12 @@ begin
   bSinErrores := True;
   with unqryRetenciones do
   begin
-    if ((FindField('PORCENRETENCION_RETENCION').AsInteger <= 0) or
-        (FindField('PORCENRETENCION_RETENCION').IsNull)) then
+    if ((FindField('PORCENTAJE_EMPRET').AsInteger <= 0) or
+        (FindField('PORCENTAJE_EMPRET').IsNull)) then
     begin
       raise ERangeError.CreateFmt('%d no es un valor válido ' +
                                                         ' para %% de Retención',
-             [FindField('PORCENRETENCION_RETENCION').AsInteger]);
+             [FindField('PORCENTAJE_EMPRET').AsInteger]);
       bSinErrores := False;
     end;
     if (bSinErrores) then
@@ -106,20 +106,20 @@ begin
       unqrySol.Connection := oConn;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM vi_empresas_retenciones ' +
-                           ' WHERE CODIGO_EMPRESA_RETENCION = :CODIGO_EMPRESA';
-      unqrySol.ParamByName('CODIGO_EMPRESA').AsString :=
-                                 FindField('CODIGO_EMPRESA_RETENCION').AsString;
+                           ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
+      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+                                 FindField('CODIGO_EMP_EMPRET').AsString;
       unqrySol.Open;
     end;
     if ((bSinErrores) and  not(ExistePeriodoUnico(
                                             unqrySol,
-                                            FindField('FECHA_DESDE_RETENCION'),
-                                            FindField('FECHA_HASTA_RETENCION')))
+                                            FindField('FECHA_DESDE_EMPRET'),
+                                            FindField('FECHA_HASTA_EMPRET')))
        ) then
     begin
       raise ERangeError.CreateFmt('No se pueden grabar dos porcentajes ' +
                                 ' activos en la misma fecha para la empresa %s',
-                              [FindField('CODIGO_EMPRESA_RETENCION').AsString]);
+                              [FindField('CODIGO_EMP_EMPRET').AsString]);
       bSinErrores := False;
     end;
   end;
@@ -140,7 +140,7 @@ end;
 procedure TdmEmpresas.unqrySeriesAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  Dataset.FindField('CODIGO_SERIE').AsString := '0';
+  Dataset.FindField('CODIGO_SERIE_EMPSER').AsString := '0';
 end;
 
 procedure TdmEmpresas.unqrySeriesBeforePost(DataSet: TDataSet);
@@ -157,17 +157,17 @@ begin
   bSinErrores := True;
   with unqrySeries do
   begin
-    if (FindField('SERIE_SERIE').AsString = '') or
-       (FindField('SERIE_SERIE').IsNull) or
-       (SimbolosProhibidos(FindField('SERIE_SERIE').AsString)) then
+    if (FindField('EMPSER').AsString = '') or
+       (FindField('EMPSER').IsNull) or
+       (SimbolosProhibidos(FindField('EMPSER').AsString)) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                                      ' para serie por Empresa ',
-             [FindField('SERIE_SERIE').AsString]);
+             [FindField('EMPSER').AsString]);
       bSinErrores := False;
     end;
 //    if (State = dsEdit) then
-//      sCodigoSerie := FindField('CODIGO_SERIE').AsString
+//      sCodigoSerie := FindField('CODIGO_SERIE_EMPSER').AsString
 //    else
 //      sCodigoSerie := '';
     if (bSinErrores) then
@@ -176,23 +176,23 @@ begin
       unqrySol.Connection := oConn;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM vi_empresas_series ' +
-                           ' WHERE CODIGO_EMPRESA_SERIE = :CODIGO_EMPRESA';
+                           ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
 //      if (sCodigoSerie <> '') then
-//        unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE <> ' +
+//        unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE_EMPSER <> ' +
 //                                                                 sCodigoSerie;
-      unqrySol.ParamByName('CODIGO_EMPRESA').AsString :=
-                                 FindField('CODIGO_EMPRESA_SERIE').AsString;
+      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+                                 FindField('CODIGO_EMP_EMPSER').AsString;
       unqrySol.Open;
     end;
 //    if ((bSinErrores) and  not(ExistePeriodoUnico(
 //                                            unqrySol,
-//                                            FindField('FECHA_DESDE_SERIE'),
-//                                            FindField('FECHA_HASTA_SERIE')))
+//                                            FindField('FECHA_DESDE_EMPSER'),
+//                                            FindField('FECHA_HASTA_EMPSER')))
 //       ) then
 //    begin
 //      raise ERangeError.CreateFmt('No se pueden grabar dos series ' +
 //                                ' en la misma fecha para la empresa %s',
-//                              [FindField('CODIGO_EMPRESA_RETENCION').AsString]);
+//                              [FindField('CODIGO_EMP_EMPRET').AsString]);
 //      bSinErrores := False;
 //    end;
   end;
@@ -221,15 +221,15 @@ begin
     Connection := inLibGlobalVar.oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_empresas_retenciones ' +
-                ' WHERE CODIGO_EMPRESA_RETENCION = :Empresa ;';
+                ' WHERE CODIGO_EMP_EMPRET = :Empresa ;';
     Params.ParamByName('Empresa').AsString :=
-                             unqryTablaG.FieldByName('CODIGO_EMPRESA').AsString;
+                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
     ExecSQL;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_empresas_series ' +
-                ' WHERE CODIGO_EMPRESA_SERIE = :Empresa ;';
+                ' WHERE CODIGO_EMP_EMPSER = :Empresa ;';
     Params.ParamByName('Empresa').AsString :=
-                             unqryTablaG.FieldByName('CODIGO_EMPRESA').AsString;
+                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
     ExecSQL;
     Free;
   end;
@@ -239,8 +239,8 @@ procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_empresas');
-  unqryTablaG.FindField('GRUPO_ZONA_IVA_EMPRESA').AsString :=
-       GetDefaultValue('vi_ivas_grupos', 'GRUPO_ZONA_IVA','ESDEFAULT_ZONA_IVA');
+  unqryTablaG.FindField('GRUPO_ZONA_IVA_EMP').AsString :=
+       GetDefaultValue('vi_ivas_grupos', 'IVA_IVAGRP','ESDEFAULT_IVA_IVAGRP');
 end;
 
 procedure TdmEmpresas.DataModuleCreate(Sender: TObject);
@@ -268,14 +268,14 @@ end;
 
 procedure TdmEmpresas.GetCodigoAutoEmpresa;
 begin
-  if unqryTablaG.FindField('CODIGO_EMPRESA').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_EMP_EMP').AsString = '0' then
   begin
-      unqryTablaG.FindField('CODIGO_EMPRESA').AsString :=
+      unqryTablaG.FindField('CODIGO_EMP_EMP').AsString :=
                                                  ObtenerSiguienteContador('EM');
   end;
-  if unqryTablaG.FindField('ORDEN_EMPRESA').AsString = '0' then
+  if unqryTablaG.FindField('ORDEN_EMP').AsString = '0' then
   begin
-      unqryTablaG.FindField('ORDEN_EMPRESA').AsString :=
+      unqryTablaG.FindField('ORDEN_EMP').AsString :=
                                                  ObtenerSiguienteContador('EO');
   end;
 end;
@@ -303,8 +303,8 @@ begin
          unqryRetenciones.Post;
   with unqryTablaG do
   begin
-    sCodigoEmpresa := Trim(FindField('CODIGO_EMPRESA').AsString);
-    sRazonSocial := Trim(FindField('RAZONSOCIAL_EMPRESA').AsString);
+    sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
+    sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
     if ((sRazonSocial = '') or (SimbolosProhibidos(sRazonSocial))) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
@@ -328,18 +328,18 @@ end;
 
 procedure TdmEmpresas.GetCodigoAutoRetencion;
 begin
-  if unqryRetenciones.FindField('CODIGO_RETENCION').AsString = '0' then
+  if unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString = '0' then
   begin
-      unqryRetenciones.FindField('CODIGO_RETENCION').AsString :=
+      unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString :=
                                                  ObtenerSiguienteContador('RT');
     end;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoSerie;
 begin
-  if unqrySeries.FindField('CODIGO_SERIE').AsString = '0' then
+  if unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString = '0' then
   begin
-      unqrySeries.FindField('CODIGO_SERIE').AsString :=
+      unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString :=
                                                 ObtenerSiguienteContador('ES');
   end;
 end;
@@ -350,8 +350,8 @@ end;
 //begin
 //  unqrySol := TUniQuery.Create(Self);
 //  unqrySol.Connection := oConn;
-//  unqrySol.SQL.Text := 'SELECT GRUPO_ZONA_IVA FROM vi_ivas_grupos ' +
-//                       ' WHERE ESDEFAULT_ZONA_IVA = ' + QuotedStr('S');
+//  unqrySol.SQL.Text := 'SELECT IVA_IVAGRP FROM vi_ivas_grupos ' +
+//                       ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
 //  unqrySol.Open;
 //  if unqrySol.RecordCount = 0 then
 //    Sleep(0)

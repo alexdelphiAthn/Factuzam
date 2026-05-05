@@ -1,4 +1,4 @@
-inherited frmPrintCliEti: TfrmPrintCliEti
+﻿inherited frmPrintCliEti: TfrmPrintCliEti
   Caption = 'Impresi'#243'n de Etiquetas'
   ClientHeight = 296
   ClientWidth = 389
@@ -111,7 +111,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Top = 15.118120000000000000
           Width = 362.834880000000000000
           Height = 18.897650000000000000
-          DataField = 'RAZONSOCIAL_CLIENTE'
+          DataField = 'RAZON_SOCIAL_CLI'
           DataSet = dmClientes.fxdsEtiquetas
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
@@ -121,7 +121,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Etiquetas."RAZONSOCIAL_CLIENTE"]')
+            '[Etiquetas."RAZON_SOCIAL_CLI"]')
           ParentFont = False
         end
         object FacturasDIRECCION1_CLIENTE_FACTURA: TfrxMemoView
@@ -130,7 +130,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Top = 35.015770000000000000
           Width = 366.614410000000000000
           Height = 18.897650000000000000
-          DataField = 'DIRECCION1_CLIENTE'
+          DataField = 'DIRECCION1_CLI'
           DataSet = dmClientes.fxdsEtiquetas
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
@@ -140,7 +140,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Etiquetas."DIRECCION1_CLIENTE"]')
+            '[Etiquetas."DIRECCION1_CLI"]')
           ParentFont = False
         end
         object FacturasCPOSTAL_CLIENTE_FACTURA: TfrxMemoView
@@ -149,7 +149,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Top = 53.913420000000000000
           Width = 79.370130000000000000
           Height = 18.897650000000000000
-          DataField = 'CPOSTAL_CLIENTE'
+          DataField = 'CODIGO_POSTAL_CLI'
           DataSet = dmClientes.fxdsEtiquetas
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
@@ -159,16 +159,16 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Etiquetas."CPOSTAL_CLIENTE"]')
+            '[Etiquetas."CODIGO_POSTAL_CLI"]')
           ParentFont = False
         end
-        object POBLACION_CLIENTE_FACTURA: TfrxMemoView
+        object POBLACION_CLIENTE_FAC: TfrxMemoView
           AllowVectorExport = True
           Left = 79.149660000000000000
           Top = 53.913420000000000000
           Width = 279.685220000000000000
           Height = 18.897650000000000000
-          DataField = 'POBLACION_CLIENTE'
+          DataField = 'POBLACION_CLI'
           DataSet = dmClientes.fxdsEtiquetas
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
@@ -178,16 +178,16 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Etiquetas."POBLACION_CLIENTE"]')
+            '[Etiquetas."POBLACION_CLI"]')
           ParentFont = False
         end
-        object PROVINCIA_CLIENTE: TfrxMemoView
+        object PROVINCIA_CLI: TfrxMemoView
           AllowVectorExport = True
           Left = 26.456710000000000000
           Top = 76.590600000000000000
           Width = 366.614410000000000000
           Height = 18.897650000000000000
-          DataField = 'PROVINCIA_CLIENTE'
+          DataField = 'PROVINCIA_CLI'
           DataSet = dmClientes.fxdsEtiquetas
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
@@ -197,7 +197,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Etiquetas."PROVINCIA_CLIENTE"]')
+            '[Etiquetas."PROVINCIA_CLI"]')
           ParentFont = False
         end
       end

@@ -7,82 +7,82 @@ uses
 
 const
 //linea de factura
-  fnrofaclin:string = 'NRO_FACTURA_LINEA';
-  fserielin:string = 'SERIE_FACTURA_LINEA';
+  fnrofaclin:string = 'NUMERO_FAC_FACLIN';
+  fserielin:string = 'SERIE_FAC_FACLIN';
   //constantes para linea de factura
-  fnrolin:string = 'LINEA_FACTURA_LINEA';
-  fcodart:string = 'CODIGO_ARTICULO_FACTURA_LINEA';
-  fcodfam:string = 'CODIGO_FAMILIA_FACTURA_LINEA';
-  fnomfam:string = 'NOMBRE_FAMILIA_FACTURA_LINEA';
-  ffechentr:string = 'FECHA_ENTREGA_FACTURA_LINEA';
-  ftipocant:string = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA';
-  fimpcl:string = 'ESIMP_INCL_TARIFA_FACTURA_LINEA';
-  ftipiva:string = 'TIPOIVA_ARTICULO_FACTURA_LINEA';
-  fdescripcion:string = 'DESCRIPCION_ARTICULO_FACTURA_LINEA';
-  fcodtariflin:string = 'CODIGO_TARIFA_FACTURA_LINEA';
-  fcant:string = 'CANTIDAD_FACTURA_LINEA';
-  fpreciosal:string = 'PRECIOSALIDA_FACTURA_LINEA';
-  fpordto:string = 'PORCEN_DTO_FACTURA_LINEA';
-  fdto:string = 'PRECIO_DTO_FACTURA_LINEA';
-  fpresiva:string = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA';
-  fporiva:string = 'PORCEN_IVA_FACTURA_LINEA';
-  fpreciva:string = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA';
-  ftotciva:string = 'TOTAL_FACTURA_LINEA';
-  ftotsiva:string = 'TOTAL_FACTURASIVA_LINEA';
+  fnrolin:string = 'LINEA_FACLIN';
+  fcodart:string = 'CODIGO_ART_FACLIN';
+  fcodfam:string = 'CODIGO_FAM_FACLIN';
+  fnomfam:string = 'NOMBRE_FAM_FACLIN';
+  ffechentr:string = 'FECHA_ENTREGA_FACLIN';
+  ftipocant:string = 'TIPO_CANTIDAD_ARTICULO_FACLIN';
+  fimpcl:string = 'ESIMP_INCL_TARIFA_FACLIN';
+  ftipiva:string = 'TIPO_IVA_ARTICULO_FACLIN';
+  fdescripcion:string = 'DESCRIPCION_ARTICULO_FACLIN';
+  fcodtariflin:string = 'CODIGO_TAR_FACLIN';
+  fcant:string = 'CANTIDAD_FACLIN';
+  fpreciosal:string = 'PRECIO_SALIDA_FACLIN';
+  fpordto:string = 'PORCENTAJE_DTO_FACLIN';
+  fdto:string = 'PRECIO_DTO_FACLIN';
+  fpresiva:string = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN';
+  fporiva:string = 'PORCENTAJE_IVA_FACLIN';
+  fpreciva:string = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN';
+  ftotciva:string = 'TOTAL_FACLIN';
+  ftotsiva:string = 'TOTAL_FAC_SIVA_FACLIN';
   //factura
     // Constantes para los datos del vendedor (empresa)
-  fEmailCliente: string = 'EMAIL_CLIENTE_FACTURA';
-  fNifEmpresa: string = 'NIF_EMPRESA_FACTURA';
-  fRazonSocialEmpresa: string = 'RAZONSOCIAL_EMPRESA_FACTURA';
-  fDireccion1Empresa: string = 'DIRECCION1_EMPRESA_FACTURA';
-  fDireccion2Empresa: string = 'DIRECCION2_EMPRESA_FACTURA';
-  fCPostalEmpresa: string = 'CPOSTAL_EMPRESA_FACTURA';
-  fPoblacionEmpresa: string = 'POBLACION_EMPRESA_FACTURA';
-  fProvinciaEmpresa: string = 'PROVINCIA_EMPRESA_FACTURA';
+  fEmailCliente: string = 'EMAIL_CLIENTE_FAC';
+  fNifEmpresa: string = 'NIF_EMPRESA_FAC';
+  fRazonSocialEmpresa: string = 'RAZON_SOCIAL_EMPRESA_FAC';
+  fDireccion1Empresa: string = 'DIRECCION1_EMPRESA_FAC';
+  fDireccion2Empresa: string = 'DIRECCION2_EMPRESA_FAC';
+  fCPostalEmpresa: string = 'CODIGO_POSTAL_EMPRESA_FAC';
+  fPoblacionEmpresa: string = 'POBLACION_EMPRESA_FAC';
+  fProvinciaEmpresa: string = 'PROVINCIA_EMPRESA_FAC';
   fPaisEmpresa: string = 'PAIS_EMPRESA_FACTURA';
-  fMovilEmpresa: string = 'MOVIL_EMPRESA_FACTURA';
-  fEmailEmpresa: string = 'EMAIL_EMPRESA_FACTURA';
+  fMovilEmpresa: string = 'MOVIL_EMPRESA_FAC';
+  fEmailEmpresa: string = 'EMAIL_EMPRESA_FAC';
   // Constantes para los datos del comprador (cliente)
-  fNifCliente: string = 'NIF_CLIENTE_FACTURA';
-  fRazonSocialCliente: string = 'RAZONSOCIAL_CLIENTE_FACTURA';
-  fDireccion1Cliente: string = 'DIRECCION1_CLIENTE_FACTURA';
-  fDireccion2Cliente: string = 'DIRECCION2_CLIENTE_FACTURA';
-  fCPostalCliente: string = 'CPOSTAL_CLIENTE_FACTURA';
-  fPoblacionCliente: string = 'POBLACION_CLIENTE_FACTURA';
-  fProvinciaCliente: string = 'PROVINCIA_CLIENTE_FACTURA';
+  fNifCliente: string = 'NIF_CLIENTE_FAC';
+  fRazonSocialCliente: string = 'RAZON_SOCIAL_CLIENTE_FAC';
+  fDireccion1Cliente: string = 'DIRECCION1_CLIENTE_FAC';
+  fDireccion2Cliente: string = 'DIRECCION2_CLIENTE_FAC';
+  fCPostalCliente: string = 'CODIGO_POSTAL_CLIENTE_FAC';
+  fPoblacionCliente: string = 'POBLACION_CLIENTE_FAC';
+  fProvinciaCliente: string = 'PROVINCIA_CLIENTE_FAC';
   fPaisCliente: string = 'PAIS_CLIENTE_FACTURA';
-  fMovilCliente: string = 'MOVIL_CLIENTE_FACTURA';
+  fMovilCliente: string = 'MOVIL_CLIENTE_FAC';
 
-  ffechfac:string = 'FECHA_FACTURA';
-  fnrofac:string = 'NRO_FACTURA';
-  fseriefac:string = 'SERIE_FACTURA';
-  fcodemp:string = 'CODIGO_EMPRESA_FACTURA';
-  fcodcli:string = 'CODIGO_CLIENTE_FACTURA';
-  fporivan:string = 'PORCEN_IVAN_FACTURA';
-  ftotivan:string = 'TOTAL_IVAN_FACTURA';
-  fporren:string = 'PORCEN_REN_FACTURA';
-  ftotren:string = 'TOTAL_REN_FACTURA';
-  ftotbasen:string = 'TOTAL_BASEI_IVAN_FACTURA';
-  fporivar:string = 'PORCEN_IVAR_FACTURA';
-  ftotivar:string = 'TOTAL_IVAR_FACTURA';
-  fporrer:string = 'PORCEN_RER_FACTURA';
-  ftotrer:string = 'TOTAL_RER_FACTURA';
-  ftotbaser:string = 'TOTAL_BASEI_IVAR_FACTURA';
-  fporivas:string = 'PORCEN_IVAS_FACTURA';
-  ftotivas:string = 'TOTAL_IVAS_FACTURA';
-  fporres:string = 'PORCEN_RES_FACTURA';
-  ftotres:string = 'TOTAL_RES_FACTURA';
-  ftotbases:string = 'TOTAL_BASEI_IVAS_FACTURA';
-  fporivae:string = 'PORCEN_IVAE_FACTURA';
-  ftotivae:string = 'TOTAL_IVAE_FACTURA';
-  fporree:string = 'PORCEN_REE_FACTURA';
-  ftotree:string = 'TOTAL_REE_FACTURA';
-  ftotbasee:string = 'TOTAL_BASEI_IVAE_FACTURA';
-  ftotallifac:string = 'TOTAL_LIQUIDO_FACTURA';
-  fporirpf:string = 'PORCEN_RETENCION_FACTURA';
-  ftotirpf:string = 'TOTAL_RETENCION_FACTURA';
-  ftotimp:string = 'TOTAL_IMPUESTOS_FACTURA';
-  ftotbasefac:string = 'TOTAL_BASES_FACTURA';
+  ffechfac:string = 'FECHA_FAC';
+  fnrofac:string = 'NUMERO_FAC';
+  fseriefac:string = 'SERIE_FAC';
+  fcodemp:string = 'CODIGO_EMP_FAC';
+  fcodcli:string = 'CODIGO_CLI_FAC';
+  fporivan:string = 'PORCENTAJE_IVAN_FAC';
+  ftotivan:string = 'TOTAL_IVAN_FAC';
+  fporren:string = 'PORCENTAJE_REN_FAC';
+  ftotren:string = 'TOTAL_REN_FAC';
+  ftotbasen:string = 'TOTAL_BASEI_IVAN_FAC';
+  fporivar:string = 'PORCENTAJE_IVAR_FAC';
+  ftotivar:string = 'TOTAL_IVAR_FAC';
+  fporrer:string = 'PORCENTAJE_RER_FAC';
+  ftotrer:string = 'TOTAL_RER_FAC';
+  ftotbaser:string = 'TOTAL_BASEI_IVAR_FAC';
+  fporivas:string = 'PORCENTAJE_IVAS_FAC';
+  ftotivas:string = 'TOTAL_IVAS_FAC';
+  fporres:string = 'PORCENTAJE_RES_FAC';
+  ftotres:string = 'TOTAL_RES_FAC';
+  ftotbases:string = 'TOTAL_BASEI_IVAS_FAC';
+  fporivae:string = 'PORCENTAJE_IVAE_FAC';
+  ftotivae:string = 'TOTAL_IVAE_FAC';
+  fporree:string = 'PORCENTAJE_REE_FAC';
+  ftotree:string = 'TOTAL_REE_FAC';
+  ftotbasee:string = 'TOTAL_BASEI_IVAE_FAC';
+  ftotallifac:string = 'TOTAL_LIQUIDO_FAC';
+  fporirpf:string = 'PORCENTAJE_RETENCION_FAC';
+  ftotirpf:string = 'TOTAL_RETENCION_FAC';
+  ftotimp:string = 'TOTAL_IMPUESTOS_FAC';
+  ftotbasefac:string = 'TOTAL_BASES_FAC';
 
 type
   TCurrencyField = record
@@ -117,7 +117,7 @@ type
     LineaFacturaLinea: string;
     CodigoArticulo: string;
     DescripcionArticulo: string;
-    Cantidad: Double;
+    CANTIDAD_ARTVIN: Double;
     PrecioUnitario: Double;
     TotalLinea: Double;
     PorcentajeIVA: Double;
@@ -126,7 +126,7 @@ type
                      //'S' para superreducido, 'E' para exento
 
   end;
-  (* Para una correcta encapsulación, hay que crear una segunda propiedad
+  (* Para una correcta encapsulaciï¿½n, hay que crear una segunda propiedad
   TFactura = class
   private
     FPorcenIvaN: TCurrencyField;
@@ -308,7 +308,7 @@ begin
     Exit(Value);
   Factor := Power(10, Decimals);
   Value := Value * Factor;
-  // Separar la parte entera y la fracción
+  // Separar la parte entera y la fracciï¿½n
   IntPart := Trunc(Value);
   Fraction := Frac(Value);
   // Manejar el caso especial de .5

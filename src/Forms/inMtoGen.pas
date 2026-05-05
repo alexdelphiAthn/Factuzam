@@ -171,7 +171,7 @@ begin
         begin
           SQL.Text :='SELECT * '+
                      '  FROM fza_usuarios_perfiles ' +
-                     ' WHERE (KEY_PERFILES = :NameFormModule)';
+                     ' WHERE (KEY_USUPER = :NameFormModule)';
           ParamByName('NameFormModule').AsString := Self.Name;
         end;
         if (Active = false) then
@@ -192,8 +192,8 @@ begin
           begin
             SQL.Text :=   'SELECT * '+
                           '  FROM fza_usuarios_perfiles ' +
-                          ' WHERE ((KEY_PERFILES = :NameDataModule) ' +
-                          '    OR  (KEY_PERFILES = :NameFormModule)) ';
+                          ' WHERE ((KEY_USUPER = :NameDataModule) ' +
+                          '    OR  (KEY_USUPER = :NameFormModule)) ';
             ParamByName('NameDataModule').AsString := Self.Name;
             ParamByName('NameFormModule').AsString :=
                                                 (tdmDataModule as TdmBase).Name;

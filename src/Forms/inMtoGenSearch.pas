@@ -402,18 +402,18 @@ begin
     QryDef.Connection := inLibGlobalVar.oConn;
     QryDef.SQL.Text := 'SELECT * ' +
                        'FROM fza_gen_defaults ' +
-                       'WHERE TABLA_OBJETIVO_DEF = :Tabla';
+                       'WHERE TABLA_OBJETIVO_DEF_VD = :Tabla';
     QryDef.ParamByName('Tabla').AsString := aNombreTabla;
     QryDef.Open;
     while not QryDef.Eof do
     begin
       AddValorDefecto(
-        QryDef.FieldByName('CAMPO_OBJETIVO_DEF').AsString,
-        ProcesarValor(QryDef.FieldByName('VALOR_DEFECTO_DEF').AsString,
-                      QryDef.FieldByName('TIPO_DATO_DEF').AsString)
+        QryDef.FieldByName('CAMPO_OBJETIVO_DEF_VD').AsString,
+        ProcesarValor(QryDef.FieldByName('VALOR_DEF_VD').AsString,
+                      QryDef.FieldByName('TIPO_DATO_DEF_VD').AsString)
       );
       FConfigAlta.ValoresDefecto[High(FConfigAlta.ValoresDefecto)].Opciones :=
-         QryDef.FieldByName('VALORES_POSIBLES_DEF').AsString;
+         QryDef.FieldByName('VALORES_POSIBLES_DEF_VD').AsString;
       QryDef.Next;
     end;
   finally
@@ -423,16 +423,16 @@ begin
   try
     QryCont.Connection := inLibGlobalVar.oConn;
     QryCont.SQL.Text :=
-      'SELECT TIPODOC_CONTADOR ' +
+      'SELECT TIPO_DOC_CON ' +
       '  FROM fza_contadores ' +
       ' WHERE TABLAORIGEN_CONTADOR = :Tabla ' +
-      '   AND SERIE_CONTADOR = ''-''';
+      '   AND SERIE_CON = ''-''';
     QryCont.ParamByName('Tabla').AsString := aNombreTabla;
     QryCont.Open;
     if not QryCont.IsEmpty then
     begin
       FConfigAlta.TipoDocContador :=
-                               QryCont.FieldByName('TIPODOC_CONTADOR').AsString;
+                               QryCont.FieldByName('TIPO_DOC_CON').AsString;
     end;
   finally
     QryCont.Free;

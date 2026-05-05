@@ -1,4 +1,4 @@
-inherited frmMtoFamilias: TfrmMtoFamilias
+﻿inherited frmMtoFamilias: TfrmMtoFamilias
   Left = 5
   Top = 4
   Caption = 'Familias'
@@ -37,12 +37,12 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_FAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Familia'
-              DataBinding.FieldName = 'CODIGO_FAMILIA'
+              DataBinding.FieldName = 'CODIGO_FAM_FAM'
               Width = 140
             end
             object cxgrdbclmnGrdDBTabPrinACTIVO_FAMILIA: TcxGridDBColumn
               Caption = 'Es Familia activa'
-              DataBinding.FieldName = 'ACTIVO_FAMILIA'
+              DataBinding.FieldName = 'ESACTIVO_FAM'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -50,7 +50,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             end
             object dbcGrdDBTabPrinESDEFAULT_FAMILIA: TcxGridDBColumn
               Caption = 'Por Defecto'
-              DataBinding.FieldName = 'ESDEFAULT_FAMILIA'
+              DataBinding.FieldName = 'ESDEFAULT_FAM'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -58,12 +58,12 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             end
             object cxgrdbclmnGrdDBTabPrinNOMBRE_FAMILIA: TcxGridDBColumn
               Caption = 'Nombre Familia'
-              DataBinding.FieldName = 'NOMBRE_FAMILIA'
+              DataBinding.FieldName = 'NOMBRE_FAM_FAM'
               Width = 191
             end
             object dbcGrdDBTabPrinCODIGO_SUBFAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Subfamilia'
-              DataBinding.FieldName = 'CODIGO_SUBFAMILIA'
+              DataBinding.FieldName = 'CODIGO_SUBFAMILIA_FAM'
               Width = 174
             end
             object dbcGrdDBTabPrinNOMBRE_SUBFAMILIA: TcxGridDBColumn
@@ -73,12 +73,12 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             end
             object cxgrdbclmnGrdDBTabPrinDESCRIPCION_FAMILIA: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
-              DataBinding.FieldName = 'DESCRIPCION_FAMILIA'
+              DataBinding.FieldName = 'DESCRIPCION_FAM'
               Width = 309
             end
             object cxgrdbclmnGrdDBTabPrinORDEN_FAMILIA: TcxGridDBColumn
               Caption = 'Orden en listados'
-              DataBinding.FieldName = 'ORDEN_FAMILIA'
+              DataBinding.FieldName = 'ORDEN_FAM'
               Width = 162
             end
           end
@@ -133,7 +133,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object txtCODIGO_FAMILIA: TcxDBTextEdit
               Left = 101
               Top = 13
-              DataBinding.DataField = 'CODIGO_FAMILIA'
+              DataBinding.DataField = 'CODIGO_FAM_FAM'
               DataBinding.DataSource = dsTablaG
               Properties.ReadOnly = False
               TabOrder = 0
@@ -156,7 +156,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object txtNOMBRE_FAMILIA: TcxDBTextEdit
               Left = 100
               Top = 48
-              DataBinding.DataField = 'NOMBRE_FAMILIA'
+              DataBinding.DataField = 'NOMBRE_FAM_FAM'
               DataBinding.DataSource = dsTablaG
               TabOrder = 3
               Width = 322
@@ -165,7 +165,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Left = 97
               Top = 78
               Caption = 'Activo'
-              DataBinding.DataField = 'ACTIVO_FAMILIA'
+              DataBinding.DataField = 'ESACTIVO_FAM'
               DataBinding.DataSource = dsTablaG
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -175,19 +175,19 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object cbbFamilia: TcxDBLookupComboBox
               Left = 143
               Top = 111
-              DataBinding.DataField = 'CODIGO_SUBFAMILIA'
+              DataBinding.DataField = 'CODIGO_SUBFAMILIA_FAM'
               DataBinding.DataSource = dsTablaG
               Properties.DropDownAutoSize = True
-              Properties.KeyFieldNames = 'CODIGO_FAMILIA'
+              Properties.KeyFieldNames = 'CODIGO_FAM_FAM'
               Properties.ListColumns = <
                 item
                   MinWidth = 50
                   Width = 150
-                  FieldName = 'CODIGO_FAMILIA'
+                  FieldName = 'CODIGO_FAM_FAM'
                 end
                 item
                   Sorting = False
-                  FieldName = 'NOMBRE_FAMILIA'
+                  FieldName = 'NOMBRE_FAM_FAM'
                 end>
               Properties.ListOptions.ShowHeader = False
               TabOrder = 5
@@ -210,7 +210,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               Left = 249
               Top = 82
               Caption = 'Familia por defecto'
-              DataBinding.DataField = 'ESDEFAULT_FAMILIA'
+              DataBinding.DataField = 'ESDEFAULT_FAM'
               DataBinding.DataSource = dsTablaG
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -254,7 +254,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               object mDESCRIPCION_FAMILIA: TcxDBMemo
                 Left = 33
                 Top = 45
-                DataBinding.DataField = 'DESCRIPCION_FAMILIA'
+                DataBinding.DataField = 'DESCRIPCION_FAM'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 1
                 Height = 89
@@ -321,12 +321,12 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   OptionsView.GroupFooters = gfAlwaysVisible
                   object cxgrdbclmnArticulosCODIGO_ARTICULO: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO'
+                    DataBinding.FieldName = 'CODIGO_ART_ART'
                     Width = 147
                   end
                   object cxgrdbclmnArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                    DataBinding.FieldName = 'DESCRIPCION_ART'
                     Width = 139
                   end
                   object cxgrdbclmnArticulosCODIGO_PROVEEDOR_PRINCIPAL: TcxGridDBColumn
@@ -341,18 +341,18 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                   object cxgrdbclmnArticulosNOMBRE_TARIFA: TcxGridDBColumn
                     Caption = 'Tarifa'
-                    DataBinding.FieldName = 'NOMBRE_TARIFA'
+                    DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     Width = 78
                   end
                   object cxgrdbclmnArticulosPRECIOFINAL_TARIFA: TcxGridDBColumn
                     Caption = 'Precio Salida'
-                    DataBinding.FieldName = 'PRECIOFINAL_TARIFA'
+                    DataBinding.FieldName = 'PRECIO_FINAL_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 127
                   end
                   object cxgrdbclmnArticulosESIMP_INCL_TARIFA: TcxGridDBColumn
                     Caption = 'Tarifa Imp Incl'
-                    DataBinding.FieldName = 'ESIMP_INCL_TARIFA'
+                    DataBinding.FieldName = 'ESIMP_INCL_TAR'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
@@ -360,17 +360,17 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                   object cxgrdbclmnArticulosNOMBRE_TIPO_IVA: TcxGridDBColumn
                     Caption = 'Tipo de IVA'
-                    DataBinding.FieldName = 'NOMBRE_TIPO_IVA'
+                    DataBinding.FieldName = 'NOMBRE_TIPO_IVA_IVATIP'
                     Width = 114
                   end
                   object cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn
-                    Caption = 'Tipo Cantidad'
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO'
+                    Caption = 'Tipo CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ART'
                     Width = 131
                   end
                   object cxgrdbclmnArticulosESACTIVO_FIJO_ARTICULO: TcxGridDBColumn
                     Caption = 'Activo Fijo'
-                    DataBinding.FieldName = 'ESACTIVO_FIJO_ARTICULO'
+                    DataBinding.FieldName = 'ESACTIVO_FIJO_ART'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
@@ -378,9 +378,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                 end
                 object tvLineasFacturacion: TcxGridDBTableView
-                  DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
-                  DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
-                  DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
+                  DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
+                  DataController.KeyFieldNames = 'LINEA_FACLIN'
+                  DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -391,55 +391,55 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   OptionsData.Inserting = False
                   OptionsView.GroupByBox = False
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA: TcxGridDBColumn
-                    DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'LINEA_FACLIN'
                     Width = 28
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Tratamiento'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_ART_FACLIN'
                     Width = 164
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA: TcxGridDBColumn
                     Caption = 'Descripci'#243'n Tratamiento'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
                     Width = 162
                   end
                   object cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA: TcxGridDBColumn
-                    Caption = 'Cantidad'
-                    DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                    Caption = 'CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 84
                   end
                   object cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Porcentaje IVA'
-                    DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.EditFormat = '0.00 %'
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA: TcxGridDBColumn
                     Caption = 'Precio'
-                    DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA: TcxGridDBColumn
                     Caption = 'Total'
-                    DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TOTAL_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Fecha de Entrega'
-                    DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'FECHA_ENTREGA_FACLIN'
                     PropertiesClassName = 'TcxDateEditProperties'
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
                   end
                 end
                 object cxgrdlvlArticulosFamilias: TcxGridLevel
@@ -505,23 +505,23 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   OptionsView.GroupByBox = False
                   OptionsView.GroupFooters = gfAlwaysVisible
                   object tvAtributosCODIGO_FAMILIA: TcxGridDBColumn
-                    DataBinding.FieldName = 'CODIGO_FAMILIA'
+                    DataBinding.FieldName = 'CODIGO_FAM_FAM'
                     Visible = False
                   end
                   object tvAtributosCODIGO_PROPIEDAD: TcxGridDBColumn
                     Caption = 'Cod Propiedad'
-                    DataBinding.FieldName = 'CODIGO_PROPIEDAD'
+                    DataBinding.FieldName = 'CODIGO_PROP_ARTPROP'
                     PropertiesClassName = 'TcxLookupComboBoxProperties'
                     Properties.DropDownAutoSize = True
                     Properties.DropDownSizeable = True
                     Properties.ImmediatePost = True
-                    Properties.KeyFieldNames = 'CODIGO_PROPIEDAD'
+                    Properties.KeyFieldNames = 'CODIGO_PROP_ARTPROP'
                     Properties.ListColumns = <
                       item
-                        FieldName = 'CODIGO_PROPIEDAD'
+                        FieldName = 'CODIGO_PROP_ARTPROP'
                       end
                       item
-                        FieldName = 'NOMBRE_PROPIEDAD'
+                        FieldName = 'NOMBRE_PROP_PROP'
                       end>
                     Properties.ListOptions.ShowHeader = False
                     Properties.ListSource = dmFamilias.dsPropiedades
@@ -529,12 +529,12 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                   object tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn
                     Caption = 'Nombre Propiedad'
-                    DataBinding.FieldName = 'NOMBRE_PROPIEDAD'
+                    DataBinding.FieldName = 'NOMBRE_PROP_PROP'
                     Width = 193
                   end
                   object tvAtributosES_REQUERIDO: TcxGridDBColumn
                     Caption = 'Obligatorio'
-                    DataBinding.FieldName = 'ES_REQUERIDO'
+                    DataBinding.FieldName = 'ESREQUERIDO_FA'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
@@ -542,14 +542,14 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   end
                   object tvAtributosORDEN_MOSTRAR: TcxGridDBColumn
                     Caption = 'Orden'
-                    DataBinding.FieldName = 'ORDEN_MOSTRAR'
+                    DataBinding.FieldName = 'ORDEN_MOSTRAR_FA'
                     HeaderAlignmentHorz = taRightJustify
                   end
                 end
                 object cxGridDBTableView2: TcxGridDBTableView
-                  DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
-                  DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
-                  DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
+                  DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
+                  DataController.KeyFieldNames = 'LINEA_FACLIN'
+                  DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -560,55 +560,55 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   OptionsData.Inserting = False
                   OptionsView.GroupByBox = False
                   object cxGridDBColumn11: TcxGridDBColumn
-                    DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'LINEA_FACLIN'
                     Width = 28
                   end
                   object cxGridDBColumn12: TcxGridDBColumn
                     Caption = 'C'#243'digo Tratamiento'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_ART_FACLIN'
                     Width = 164
                   end
                   object cxGridDBColumn13: TcxGridDBColumn
                     Caption = 'Descripci'#243'n Tratamiento'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
                     Width = 162
                   end
                   object cxGridDBColumn14: TcxGridDBColumn
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                   end
                   object cxGridDBColumn15: TcxGridDBColumn
-                    Caption = 'Cantidad'
-                    DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                    Caption = 'CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 84
                   end
                   object cxGridDBColumn16: TcxGridDBColumn
-                    DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                   end
                   object cxGridDBColumn17: TcxGridDBColumn
                     Caption = 'Porcentaje IVA'
-                    DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.EditFormat = '0.00 %'
                   end
                   object cxGridDBColumn18: TcxGridDBColumn
                     Caption = 'Precio'
-                    DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxGridDBColumn19: TcxGridDBColumn
                     Caption = 'Total'
-                    DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TOTAL_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxGridDBColumn20: TcxGridDBColumn
                     Caption = 'Fecha de Entrega'
-                    DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'FECHA_ENTREGA_FACLIN'
                     PropertiesClassName = 'TcxDateEditProperties'
                   end
                   object cxGridDBColumn21: TcxGridDBColumn
-                    DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
                   end
                 end
                 object cxGridLevel1: TcxGridLevel
@@ -634,7 +634,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -669,7 +669,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3
@@ -682,7 +682,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 7
@@ -706,7 +706,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 4
@@ -734,7 +734,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
                 Left = 179
                 Top = 23
-                DataBinding.DataField = 'ORDEN_FAMILIA'
+                DataBinding.DataField = 'ORDEN_FAM'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 2
                 Width = 106

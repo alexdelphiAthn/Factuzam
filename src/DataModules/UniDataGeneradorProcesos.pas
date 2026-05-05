@@ -55,14 +55,14 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmGeneradorProcesos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_GENERADORPROCESO').AsString := '0';
+  unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString := '0';
 end;
 
 procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
   inherited;
 //  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
-//                       DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+//                       DataSet.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
   (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1StatusChange(nil, [scAll]);
 end;
 
@@ -79,7 +79,7 @@ end;
 
 procedure TdmGeneradorProcesos.GetCodigoAutoGeneradorProcesos;
 begin
-  if unqryTablaG.FindField('CODIGO_GENERADORPROCESO').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -90,7 +90,7 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'GP';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_GENERADORPROCESO').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString := ParamByName('pcont').AsString;
     end;
   end;
 end;
@@ -99,7 +99,7 @@ procedure TdmGeneradorProcesos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   GetCodigoAutoGeneradorProcesos;
-//  DataSet.FieldByName('PROCESO_GENERADORPROCESO').AsString :=
+//  DataSet.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
 //     (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text;
 end;
 

@@ -1,4 +1,4 @@
-object frmSplash: TfrmSplash
+﻿object frmSplash: TfrmSplash
   Left = 472
   Top = 190
   BorderIcons = []
@@ -43261,9 +43261,7 @@ object frmSplash: TfrmSplash
         Top = 48
         AutoSize = False
         Caption = 
-          'Dedicado a mis hermanas, a mi mentor y maestro en programaci'#243'n J' +
-          '.F.Criado, a mi compa'#241'era Ana M. y un especial agradecimiento a ' +
-          ' la Biblioteca P'#250'blica de Zamora.'
+          'Dedicado a mis hermanas, a mi mentor y maestro en programaci'#243'n J.F.Criado, a mi compa'#241'era Ana M. y un especial agradecimiento a  la Biblioteca P'#250'blica de Zamora.'
         ParentFont = False
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText

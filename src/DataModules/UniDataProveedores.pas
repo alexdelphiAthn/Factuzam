@@ -56,7 +56,7 @@ end;
 
 procedure TdmProveedores.GetCodigoAutoProveedor;
 begin
-  if unqryTablaG.FindField('CODIGO_PROVEEDOR').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_PRV_PRV').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -67,10 +67,10 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'PV';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_PROVEEDOR').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := ParamByName('pcont').AsString;
     end;
   end;
-    if unqryTablaG.FindField('ORDEN_PROVEEDOR').AsString = '0' then
+    if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
   begin
     with unstrdprcContador do
     begin
@@ -81,7 +81,7 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'PO';
       ExecProc;
-      unqryTablaG.FindField('ORDEN_PROVEEDOR').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('ORDEN_PRV').AsString := ParamByName('pcont').AsString;
     end;
   end;
 end;
@@ -89,8 +89,8 @@ end;
 procedure TdmProveedores.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  unqryTablaG.FindField('CODIGO_PROVEEDOR').AsString := '0';
-  unqryTablaG.FindField('ORDEN_PROVEEDOR').AsString := '0';
+  unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := '0';
+  unqryTablaG.FindField('ORDEN_PRV').AsString := '0';
 end;
 
 procedure TdmProveedores.unqryTablaGBeforePost(DataSet: TDataSet);

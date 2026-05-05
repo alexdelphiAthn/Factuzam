@@ -350,7 +350,7 @@ end;
 procedure TfrmMtoEmpresas.btExportarExcelClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdEmpresasFacturas, 'Historico_Facturas_Empresa_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_EMPRESA').AsString);
+                       dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
 end;
 
 procedure TfrmMtoEmpresas.btIraFacturaClick(Sender: TObject);
@@ -360,12 +360,12 @@ begin
   inherited;
   with tvFacturacion.DataController.DataSet do
   begin
-    if ((not(FieldByName('NRO_FACTURA').IsNull)) and
-        (not(FieldByName('SERIE_FACTURA').IsNull))
+    if ((not(FieldByName('NUMERO_FAC').IsNull)) and
+        (not(FieldByName('SERIE_FAC').IsNull))
        ) then
        begin
-          sNroFactura := FieldByName('NRO_FACTURA').AsString;
-          sSerieFactura := FieldByName('SERIE_FACTURA').AsString;
+          sNroFactura := FieldByName('NUMERO_FAC').AsString;
+          sSerieFactura := FieldByName('SERIE_FAC').AsString;
           ShowMto(Self.Owner,
                   'Facturas',
                   sNroFactura + ',' + sSerieFactura);
@@ -443,7 +443,7 @@ begin
   inherited;
   EsIBANErr := False;
   stErr := TStringList.Create;
-  sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_EMPRESA').Text,
+  sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_EMP').Text,
                          ' ', '', [rfReplaceAll]);
   iLen := Length(sIBAN);
   sPref := (Copy(sIBAN, 1, 2));
@@ -464,7 +464,7 @@ begin
     sPref4 := TIBAN.GenerarIBAN('ES', sIBAN);
     if (dsTablaG.State = dsBrowse) then
       dsTablaG.DataSet.Edit;
-    dsTablaG.DataSet.FieldByName('IBAN_EMPRESA').Text := sPref4 + sIBAN;
+    dsTablaG.DataSet.FieldByName('IBAN_EMP').Text := sPref4 + sIBAN;
   end;
   if (not(EsIBANErr) and (StrToIntDef(sPref, 0) = 0)) then
   begin
@@ -527,7 +527,7 @@ begin
   tvLineasFacturacion.DataController.DataSource :=
                                            dmmEmpresas.dsFacturasLineasEmpresas;
   cbbPaises.Properties.ListSource := dmmEmpresas.dsPaises;
-  Self.pkFieldName := 'CODIGO_EMPRESA';
+  Self.pkFieldName := 'CODIGO_EMP_EMP';
 end;
 
 procedure TfrmMtoEmpresas.dsTablaGStateChange(Sender: TObject);
@@ -545,7 +545,7 @@ begin
   with tvLineasFacturacion.DataController.DataSet do
     ShowMto(Self.Owner,
             'Articulos',
-            FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString);
+            FieldByName('CODIGO_ART_FACLIN').AsString);
 end;
 
 procedure TfrmMtoEmpresas.btnIraClienteClick(Sender: TObject);
@@ -554,7 +554,7 @@ begin
   with tvFacturacion.DataController.DataSet do
   ShowMto(Self.Owner,
           'Clientes',
-          FieldByName('CODIGO_CLIENTE_FACTURA').AsString);
+          FieldByName('CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoEmpresas.FormCreate(Sender: TObject);
@@ -591,12 +591,12 @@ begin
   begin
     item := lst.Items[lst.Selected.Index];
     Edit;
-    FieldByName('CODIGO_CERTIFICADO_EMPRESA').AsString :=
+    FieldByName('CODIGO_CERTIFICADO_EMP').AsString :=
                                             item.SubItems[COLUMNA_CER_NROSERIE];
-    FieldByName('TITULAR_CERTIFICADO_EMPRESA').AsString :=
+    FieldByName('TITULAR_CERTIFICADO_EMP').AsString :=
                                              item.SubItems[COLUMNA_CER_TITULAR];
-    FieldByName('TIPO_CERTIFICADO_EMPRESA').AsString := item.Caption;
-    FieldByName('FECHA_HASTA_CERTIFICADO_EMPRESA').AsString :=
+    FieldByName('TIPO_CERTIFICADO_EMP').AsString := item.Caption;
+    FieldByName('FECHA_HASTA_CERTIFICADO_EMP').AsString :=
                                           item.SubItems[COLUMNA_CER_FECHAHASTA];
     Post;
   end;
@@ -620,7 +620,7 @@ begin
   inherited;
   if (dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit) then
   begin
-    dsTablaG.DataSet.FieldByName('NOMBRE_PAIS_EMPRESA').AsString :=
+    dsTablaG.DataSet.FieldByName('NOMBRE_PAI_EMP').AsString :=
                          dmmEmpresas.unqryPaises.FieldByName('NOMBRE').AsString;
   end;
 end;

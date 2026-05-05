@@ -337,7 +337,7 @@ var
 begin
   if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
     HayVars := dmmArticulos.unqryTablaG.FieldByName(
-                                     'ESVARIACION_ARTICULO').AsWideString = 'S';
+                                     'ESVARIACION_ART').AsWideString = 'S';
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
   tsSKUS.TabVisible := HayVars;
@@ -352,8 +352,8 @@ begin
     dmmArticulos.unqryTablaG.Post;
 
   // 2. Leemos los datos clave del dataset principal
-  CodArticulo   := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
-  TipoVariacion := dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ARTICULO').AsString;
+  CodArticulo   := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  TipoVariacion := dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString;
 
   // 3. Validamos que haya un esquema de variación asignado
   if (CodArticulo = '') or (TipoVariacion = '') then
@@ -397,7 +397,7 @@ begin
    with tvLinFac.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsLineasFactura)        and
-        (not(FieldByName('CODIGO_EMPRESA_FACTURA_LINEA').IsNull))
+        (not(FieldByName('CODIGO_EMP_FACLIN').IsNull))
        ) then
       btnIraEmpresaClick(Sender)
     else
@@ -412,8 +412,8 @@ begin
    with tvLinFac.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsLineasFactura)        and
-        (not(FieldByName('NRO_FACTURA_LINEA').IsNull))  and
-        (not(FieldByName('SERIE_FACTURA_LINEA').IsNull))
+        (not(FieldByName('NUMERO_FAC_FACLIN').IsNull))  and
+        (not(FieldByName('SERIE_FAC_FACLIN').IsNull))
        ) then
       btnIraFacturaClick(Sender)
     else
@@ -426,11 +426,11 @@ begin
   inherited;
   //Control + N     -> Familias
   with dsTablaG.DataSet do
-    if ((not(FieldByName('CODIGO_FAMILIA_ARTICULO').IsNull))
+    if ((not(FieldByName('CODIGO_FAM_ART').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Familias',
-              FieldByName('CODIGO_FAMILIA_ARTICULO').AsString)
+              FieldByName('CODIGO_FAM_ART').AsString)
     else
       ShowMto(Self.Owner,
               'Familias');
@@ -442,7 +442,7 @@ begin  //control + P -> proveedores
   with tvProveedores.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsProveedores) and
-        (not(FieldByName('CODIGO_PROVEEDOR').IsNull))
+        (not(FieldByName('CODIGO_PRV_PRV').IsNull))
        ) then
       btnIraProveedorClick(Sender)
     else
@@ -457,7 +457,7 @@ begin
   with tvTarifas.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsTarifas) and
-        (not(FieldByName('CODIGO_TARIFA').IsNull))
+        (not(FieldByName('CODIGO_TAR_ARTTAR').IsNull))
        ) then
       btnIraTarifaClick(Sender)
     else
@@ -495,7 +495,7 @@ begin
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 
-  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
 //  if dmmArticulos.unqryVariacionesArticulos.IsEmpty then
 //  begin
 //    ShowMessage('No hay SKUs generados para este artículo.');
@@ -590,12 +590,12 @@ begin
     qryTodasTarifas := TUniQuery.Create(nil);
     try
       qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
-      qryTodasTarifas.SQL.Text := 'SELECT CODIGO_TARIFA FROM fza_tarifas WHERE ACTIVO_TARIFA = ''S'' ORDER BY ORDEN_TARIFA';
+      qryTodasTarifas.SQL.Text := 'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas WHERE ESACTIVO_ARTTAR = ''S'' ORDER BY ORDEN_TAR';
       qryTodasTarifas.Open;
 
       while not qryTodasTarifas.Eof do
       begin
-        chkTarifas.Items.Add.Text := qryTodasTarifas.FieldByName('CODIGO_TARIFA').AsString;
+        chkTarifas.Items.Add.Text := qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString;
         qryTodasTarifas.Next;
       end;
     finally
@@ -629,10 +629,10 @@ begin
         while not dmmArticulos.unqryTarifasArticulos.Eof do
         begin
           // Leemos el rango de fechas de la tarifa en base de datos
-          DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_TARIFA').AsDateTime;
-          DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_TARIFA').IsNull;
+          DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime;
+          DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').IsNull;
           if not DbHastaIsNull then
-            DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_TARIFA').AsDateTime;
+            DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime;
 
           // Lógica de solapamiento: (InicioA <= FinB) Y (InicioB <= FinA)
           // Si alguno de los fines es nulo, se considera infinito.
@@ -643,8 +643,8 @@ begin
 
           if HaySolapamiento then
           begin
-            LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString + '|' +
-                          dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TARIFA').AsString;
+            LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString + '|' +
+                          dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
             TarifasActivas.Add(LlaveUnica); // Marcamos combinación como ocupada en estas fechas
           end;
 
@@ -683,21 +683,21 @@ begin
 
                   // Asignamos el valor correspondiente al campo SKU
                   if chkSkus.Items[i].Text = 'ARTÍCULO' then
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := ''
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := ''
                   else
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_TARIFA').AsString := chkSkus.Items[i].Text;
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := chkSkus.Items[i].Text;
 
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TARIFA').AsString := chkTarifas.Items[j].Text;
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('ACTIVO_TARIFA').AsString := 'S';
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIOSALIDA_TARIFA').AsFloat := 0;
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIOFINAL_TARIFA').AsFloat := 0;
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString := chkTarifas.Items[j].Text;
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := 0;
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat := 0;
 
                   // Aplicamos las fechas que eligió el usuario
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_TARIFA').AsDateTime := UserDesde;
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
                   if TieneUserHasta then
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_TARIFA').AsDateTime := UserHasta
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
                   else
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_TARIFA').Clear;
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').Clear;
 
                   dmmArticulos.unqryTarifasArticulos.Post;
 
@@ -747,14 +747,14 @@ procedure TfrmMtoArticulos.btnExportarProveedorClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxgrdProveedores, 'Historico_Proveedores_Artículo_' +
-                dsTablaG.Dataset.FieldByName('CODIGO_ARTICULO').AsString);
+                dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnExportarTarifaClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxGrdTarifas, 'Historico_Tarifas_Artículo_' +
-                dsTablaG.Dataset.FieldByName('CODIGO_ARTICULO').AsString);
+                dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnIraClienteClick(Sender: TObject);
@@ -772,7 +772,7 @@ begin
   ShowMto(Self.Owner,
           'Empresas',
           tvLinfac.DataController.DataSet.FieldByName(
-                                      'CODIGO_EMPRESA_FACTURA_LINEA').AsString);
+                                      'CODIGO_EMP_FACLIN').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnIraFacturaClick(Sender: TObject);
@@ -781,8 +781,8 @@ begin
   with tvLinFac.DataController.DataSource.DataSet do
   ShowMto(Self.Owner,
           'Facturas',
-          FieldByName('NRO_FACTURA_LINEA').AsString + ',' +
-          FieldByName('SERIE_FACTURA_LINEA').AsString);
+          FieldByName('NUMERO_FAC_FACLIN').AsString + ',' +
+          FieldByName('SERIE_FAC_FACLIN').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnIraProveedorClick(Sender: TObject);
@@ -791,7 +791,7 @@ begin
     ShowMto(Self.Owner,
     'Proveedores',
     tvProveedores.DataController.DataSet.FieldByName(
-                                                  'CODIGO_PROVEEDOR').AsString);
+                                                  'CODIGO_PRV_PRV').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnIraTarifaClick(Sender: TObject);
@@ -800,7 +800,7 @@ begin
     ShowMto(Self.Owner,
             'Tarifas',
                  dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                                     'CODIGO_TARIFA').AsString);
+                                                     'CODIGO_TAR_ARTTAR').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
@@ -902,12 +902,12 @@ begin
       if item.Checked then
       begin
         Insert;
-        FieldByName('CODIGO_TARIFA').AsString := item.Caption;
-        FieldByName('ACTIVO_TARIFA').AsString := 'S';
-        FieldByName('FECHA_DESDE_TARIFA').AsDateTime := Now;
-        FieldByName('PRECIOSALIDA_TARIFA').AsInteger := 0;
-        FieldByName('PRECIOFINAL_TARIFA').AsInteger := 0;
-        FieldByName('CODIGO_UNIDAD_TARIFA').AsString := '';
+        FieldByName('CODIGO_TAR_ARTTAR').AsString := item.Caption;
+        FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
+        FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := Now;
+        FieldByName('PRECIO_SALIDA_ARTTAR').AsInteger := 0;
+        FieldByName('PRECIO_FINAL_ARTTAR').AsInteger := 0;
+        FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := '';
         Post;
         bAdded := True;
       end;
@@ -958,18 +958,18 @@ begin
   tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
   tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
-  pkFieldName := 'CODIGO_ARTICULO';
+  pkFieldName := 'CODIGO_ART_ART';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
   if dmmArticulos.unqryTablaG.Active and (dmmArticulos.unqryTablaG.RecordCount > 0) then
   begin
-    FArticuloCargado := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+    FArticuloCargado := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     FGestorProp.CargarPropiedades(FArticuloCargado);
   end else
     FArticuloCargado := ''; // Por si acaso arranca vacío
   FGestorVar.CargarVariaciones(                // [AÑADIR]
-    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString);
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
   ActualizarVisibilidadVariaciones;
 end;
 
@@ -1033,7 +1033,7 @@ begin
   lbl.Caption := 'Tipo de variación: ';
   lbl.AutoSize:= True;
 
-  // Combo enlazado al campo TIPO_VARIACION_ARTICULO del dataset principal
+  // Combo enlazado al campo TIPO_VARIACION_ART del dataset principal
   FCbbTipoVariacion := TcxDBLookupComboBox.Create(Self);
   FCbbTipoVariacion.Parent          := FPnlTopVariaciones;
   FCbbTipoVariacion.Left            := 170;
@@ -1041,7 +1041,7 @@ begin
   FCbbTipoVariacion.Width           := 260;
   FCbbTipoVariacion.Height          := 26;
   FCbbTipoVariacion.DataBinding.DataSource := dsTablaG;
-  FCbbTipoVariacion.DataBinding.DataField  := 'TIPO_VARIACION_ARTICULO';
+  FCbbTipoVariacion.DataBinding.DataField  := 'TIPO_VARIACION_ART';
   // ListSource apunta a un dataset con las variaciones activas
   FCbbTipoVariacion.Properties.ListSource     := dmmArticulos.dsVariaciones;
   FCbbTipoVariacion.Properties.KeyFieldNames  := 'CODIGO_VAR';
@@ -1109,7 +1109,7 @@ begin
   // 2. Si estamos editando, ignoramos los scrolls fantasma
   if DataSet.State = dsEdit then Exit;
 
-  CodArticulo := DataSet.FieldByName('CODIGO_ARTICULO').AsString;
+  CodArticulo := DataSet.FieldByName('CODIGO_ART_ART').AsString;
 
   // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado, ¡no hagas nada!
   if FArticuloCargado = CodArticulo then Exit;
@@ -1179,13 +1179,13 @@ begin
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
         e := Sender as TcxCustomEdit;
-        FindField('PORCEN_DTO_TARIFA').AsString := VarToStr(e.EditingValue);
-        FindField('PRECIO_DTO_TARIFA').AsFloat :=
-                               (FindField('PRECIOSALIDA_TARIFA').AsFloat * (
-                                FindField('PORCEN_DTO_TARIFA').AsFloat / 100));
-        FindField('PRECIOFINAL_TARIFA').AsFloat :=
-                                    ( FindField('PRECIOSALIDA_TARIFA').AsFloat -
-                                      FindField('PRECIO_DTO_TARIFA').AsFloat
+        FindField('PORCENTAJE_DTO_ARTTAR').AsString := VarToStr(e.EditingValue);
+        FindField('PRECIO_DTO_ARTTAR').AsFloat :=
+                               (FindField('PRECIO_SALIDA_ARTTAR').AsFloat * (
+                                FindField('PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
+        FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
+                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                      FindField('PRECIO_DTO_ARTTAR').AsFloat
                                     );
       end;
     end;
@@ -1203,22 +1203,22 @@ var
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
         e := Sender as TcxCustomEdit;
-        FindField('PRECIOFINAL_TARIFA').AsString := VarToStr(e.EditingValue);
-        if (FindField('PORCEN_DTO_TARIFA').AsFloat <> 0) then
+        FindField('PRECIO_FINAL_ARTTAR').AsString := VarToStr(e.EditingValue);
+        if (FindField('PORCENTAJE_DTO_ARTTAR').AsFloat <> 0) then
         begin
-          FindField('PRECIO_DTO_TARIFA').AsFloat :=
-                                (FindField('PRECIOFINAL_TARIFA').AsFloat * (
-                                 FindField('PORCEN_DTO_TARIFA').AsFloat / 100));
-          FindField('PRECIOSALIDA_TARIFA').AsFloat :=
-                                        FindField('PRECIOFINAL_TARIFA').AsFloat
-                                       - FindField('PRECIO_DTO_TARIFA').AsFloat;
+          FindField('PRECIO_DTO_ARTTAR').AsFloat :=
+                                (FindField('PRECIO_FINAL_ARTTAR').AsFloat * (
+                                 FindField('PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
+          FindField('PRECIO_SALIDA_ARTTAR').AsFloat :=
+                                        FindField('PRECIO_FINAL_ARTTAR').AsFloat
+                                       - FindField('PRECIO_DTO_ARTTAR').AsFloat;
         end
         else
         begin
-          FindField('PRECIOSALIDA_TARIFA').AsString :=
-                                       FindField('PRECIOFINAL_TARIFA').AsString;
-          FindField('PRECIO_DTO_TARIFA').AsFloat := 0;
-          FindField('PORCEN_DTO_TARIFA').AsFloat := 0;
+          FindField('PRECIO_SALIDA_ARTTAR').AsString :=
+                                       FindField('PRECIO_FINAL_ARTTAR').AsString;
+          FindField('PRECIO_DTO_ARTTAR').AsFloat := 0;
+          FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
         end;
       end;
     end;
@@ -1236,10 +1236,10 @@ begin
     if ((State = dsInsert) or (State = dsEdit)) then
       begin
         e := Sender as TcxCustomEdit;
-        FindField('PRECIOSALIDA_TARIFA').AsString := VarToStr(e.EditingValue);
-        FindField('PRECIOFINAL_TARIFA').AsFloat :=
-                                    ( FindField('PRECIOSALIDA_TARIFA').AsFloat -
-                                      FindField('PRECIO_DTO_TARIFA').AsFloat
+        FindField('PRECIO_SALIDA_ARTTAR').AsString := VarToStr(e.EditingValue);
+        FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
+                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                      FindField('PRECIO_DTO_ARTTAR').AsFloat
                                     );
       end;
     end;
@@ -1258,15 +1258,15 @@ begin
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
         e := Sender as TcxCustomEdit;
-        FindField('PRECIO_DTO_TARIFA').AsString := VarToStr(e.EditingValue);
-        if (FindField('PRECIOSALIDA_TARIFA').AsFloat <> 0) then
+        FindField('PRECIO_DTO_ARTTAR').AsString := VarToStr(e.EditingValue);
+        if (FindField('PRECIO_SALIDA_ARTTAR').AsFloat <> 0) then
         begin
-          FindField('PORCEN_DTO_TARIFA').AsFloat :=
-                             ((FindField('PRECIO_DTO_TARIFA').AsFloat /
-                               FindField('PRECIOSALIDA_TARIFA').AsFloat) * 100);
-          FindField('PRECIOFINAL_TARIFA').AsFloat :=
-                                    ( FindField('PRECIOSALIDA_TARIFA').AsFloat -
-                                      FindField('PRECIO_DTO_TARIFA').AsFloat);
+          FindField('PORCENTAJE_DTO_ARTTAR').AsFloat :=
+                             ((FindField('PRECIO_DTO_ARTTAR').AsFloat /
+                               FindField('PRECIO_SALIDA_ARTTAR').AsFloat) * 100);
+          FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
+                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                      FindField('PRECIO_DTO_ARTTAR').AsFloat);
         end;
       end;
     end;

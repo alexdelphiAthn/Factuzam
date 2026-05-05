@@ -1,4 +1,4 @@
-object dmDataCaja: TdmDataCaja
+﻿object dmDataCaja: TdmDataCaja
   OldCreateOrder = True
   Height = 573
   Width = 866
@@ -153,17 +153,17 @@ object dmDataCaja: TdmDataCaja
     Aggregates = <>
     FieldDefs = <
       item
-        Name = 'NRO_FACTURA'
+        Name = 'NUMERO_FAC'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'SERIE_FACTURA'
+        Name = 'SERIE_FAC'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'FECHA_FACTURA'
+        Name = 'FECHA_FAC'
         DataType = ftDate
       end
       item
@@ -177,443 +177,443 @@ object dmDataCaja: TdmDataCaja
         Size = 200
       end
       item
-        Name = 'ESCONSOLIDADA_FACTURA'
+        Name = 'ESCONSOLIDADA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'INSTANTECONSO_FACTURA'
+        Name = 'INSTANTECONSO_FAC'
         DataType = ftDateTime
       end
       item
-        Name = 'TIPO_FACTURA'
+        Name = 'TIPO_FAC'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'FASE_FACTURA'
+        Name = 'FASE_FAC'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'CODIGO_EMPRESA_FACTURA'
+        Name = 'CODIGO_EMP_FAC'
         DataType = ftString
         Size = 8
       end
       item
-        Name = 'RAZONSOCIAL_EMPRESA_FACTURA'
+        Name = 'RAZON_SOCIAL_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'NIF_EMPRESA_FACTURA'
+        Name = 'NIF_EMPRESA_FAC'
         DataType = ftString
         Size = 50
       end
       item
-        Name = 'MOVIL_EMPRESA_FACTURA'
+        Name = 'MOVIL_EMPRESA_FAC'
         DataType = ftString
         Size = 40
       end
       item
-        Name = 'EMAIL_EMPRESA_FACTURA'
+        Name = 'EMAIL_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'DIRECCION1_EMPRESA_FACTURA'
+        Name = 'DIRECCION1_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'DIRECCION2_EMPRESA_FACTURA'
+        Name = 'DIRECCION2_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'POBLACION_EMPRESA_FACTURA'
+        Name = 'POBLACION_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'PROVINCIA_EMPRESA_FACTURA'
+        Name = 'PROVINCIA_EMPRESA_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'CODIGO_PAIS_EMPRESA_FACTURA'
+        Name = 'CODIGO_PAI_EMPRESA_FAC'
         DataType = ftString
         Size = 3
       end
       item
-        Name = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+        Name = 'NOMBRE_PAI_EMPRESA_FAC'
         DataType = ftString
         Size = 150
       end
       item
-        Name = 'CPOSTAL_EMPRESA_FACTURA'
+        Name = 'CODIGO_POSTAL_EMPRESA_FAC'
         DataType = ftString
         Size = 15
       end
       item
-        Name = 'ESRETENCIONES_EMPRESA_FACTURA'
+        Name = 'ESRETENCIONES_EMPRESA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+        Name = 'GRUPO_ZONA_IVA_EMPRESA_FAC'
         DataType = ftString
         Size = 10
       end
       item
-        Name = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+        Name = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'CODIGO_CLIENTE_FACTURA'
+        Name = 'CODIGO_CLI_FAC'
         DataType = ftString
         Size = 10
       end
       item
-        Name = 'RAZONSOCIAL_CLIENTE_FACTURA'
+        Name = 'RAZON_SOCIAL_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'NIF_CLIENTE_FACTURA'
+        Name = 'NIF_CLIENTE_FAC'
         DataType = ftString
         Size = 50
       end
       item
-        Name = 'MOVIL_CLIENTE_FACTURA'
+        Name = 'MOVIL_CLIENTE_FAC'
         DataType = ftString
         Size = 40
       end
       item
-        Name = 'EMAIL_CLIENTE_FACTURA'
+        Name = 'EMAIL_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'DIRECCION1_CLIENTE_FACTURA'
+        Name = 'DIRECCION1_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'DIRECCION2_CLIENTE_FACTURA'
+        Name = 'DIRECCION2_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'POBLACION_CLIENTE_FACTURA'
+        Name = 'POBLACION_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'PROVINCIA_CLIENTE_FACTURA'
+        Name = 'PROVINCIA_CLIENTE_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'CPOSTAL_CLIENTE_FACTURA'
+        Name = 'CODIGO_POSTAL_CLIENTE_FAC'
         DataType = ftString
         Size = 15
       end
       item
-        Name = 'CODIGO_PAIS_CLIENTE_FACTURA'
+        Name = 'CODIGO_PAI_CLIENTE_FAC'
         DataType = ftString
         Size = 3
       end
       item
-        Name = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+        Name = 'NOMBRE_PAI_CLIENTE_FAC'
         DataType = ftString
         Size = 150
       end
       item
-        Name = 'CODIGO_IVA_FACTURA'
+        Name = 'CODIGO_IVA_FAC'
         DataType = ftString
         Size = 20
       end
       item
-        Name = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+        Name = 'ESIVA_RECARGO_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+        Name = 'ESIVA_EXENTO_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+        Name = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESRETENCIONES_CLIENTE_FACTURA'
+        Name = 'ESRETENCIONES_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+        Name = 'TARIFA_ARTICULO_CLIENTE_FAC'
         DataType = ftString
         Size = 10
       end
       item
-        Name = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+        Name = 'ESIMP_INCL_TARIFA_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+        Name = 'ESINTRACOMUNITARIO_CLIENTE_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+        Name = 'ESIRPF_IMP_INCL_ZONA_IVA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
+        Name = 'ESAPLICA_RE_ZONA_IVA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
+        Name = 'ESIVAAGRICOLA_ZONA_IVA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
+        Name = 'PALABRA_REPORTS_ZONA_IVA_FAC'
         DataType = ftString
         Size = 10
       end
       item
-        Name = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+        Name = 'ESVENTA_ACTIVO_FIJO_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'PORCEN_IVAN_FACTURA'
+        Name = 'PORCENTAJE_IVAN_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_BASEI_IVAN_FACTURA'
+        Name = 'TOTAL_BASEI_IVAN_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_IVAN_FACTURA'
+        Name = 'TOTAL_IVAN_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_REN_FACTURA'
+        Name = 'PORCENTAJE_REN_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_REN_FACTURA'
+        Name = 'TOTAL_REN_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_IVAR_FACTURA'
+        Name = 'PORCENTAJE_IVAR_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_BASEI_IVAR_FACTURA'
+        Name = 'TOTAL_BASEI_IVAR_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_IVAR_FACTURA'
+        Name = 'TOTAL_IVAR_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_RER_FACTURA'
+        Name = 'PORCENTAJE_RER_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_RER_FACTURA'
+        Name = 'TOTAL_RER_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_IVAS_FACTURA'
+        Name = 'PORCENTAJE_IVAS_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_BASEI_IVAS_FACTURA'
+        Name = 'TOTAL_BASEI_IVAS_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_IVAS_FACTURA'
+        Name = 'TOTAL_IVAS_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_RES_FACTURA'
+        Name = 'PORCENTAJE_RES_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_RES_FACTURA'
+        Name = 'TOTAL_RES_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_IVAE_FACTURA'
+        Name = 'PORCENTAJE_IVAE_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_BASEI_IVAE_FACTURA'
+        Name = 'TOTAL_BASEI_IVAE_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_IVAE_FACTURA'
+        Name = 'TOTAL_IVAE_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_REE_FACTURA'
+        Name = 'PORCENTAJE_REE_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_REE_FACTURA'
+        Name = 'TOTAL_REE_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_BASES_FACTURA'
+        Name = 'TOTAL_BASES_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_IMPUESTOS_FACTURA'
+        Name = 'TOTAL_IMPUESTOS_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'PORCEN_RETENCION_FACTURA'
+        Name = 'PORCENTAJE_RETENCION_FAC'
         DataType = ftBCD
         Precision = 19
         Size = 6
       end
       item
-        Name = 'TOTAL_RETENCION_FACTURA'
+        Name = 'TOTAL_RETENCION_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'TOTAL_LIQUIDO_FACTURA'
+        Name = 'TOTAL_LIQUIDO_FAC'
         DataType = ftBCD
         Precision = 18
         Size = 6
       end
       item
-        Name = 'NRO_FACTURA_ABONO_FACTURA'
+        Name = 'NUMERO_FAC_ABONO_FAC'
         DataType = ftString
         Size = 8
       end
       item
-        Name = 'SERIE_FACTURA_ABONO_FACTURA'
+        Name = 'SERIE_FAC_ABONO_FAC'
         DataType = ftString
         Size = 8
       end
       item
-        Name = 'FORMA_PAGO_FACTURA'
+        Name = 'FORMA_PAGO_FAC'
         DataType = ftString
         Size = 200
       end
       item
-        Name = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
+        Name = 'TEXTO_LEGAL_CLIENTE_FAC'
         DataType = ftString
         Size = 1000
       end
       item
-        Name = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
+        Name = 'TEXTO_LEGAL_EMPRESA_FAC'
         DataType = ftString
         Size = 1000
       end
       item
-        Name = 'COMENTARIOS_FACTURA'
+        Name = 'COMENTARIOS_FAC'
         DataType = ftString
         Size = 1000
       end
       item
-        Name = 'CONTADOR_LINEAS_FACTURA'
+        Name = 'CONTADOR_LINEAS_FAC'
         DataType = ftString
         Size = 8
       end
       item
-        Name = 'ESCREARARTICULOS_FACTURA'
+        Name = 'ESCREARARTICULOS_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESDESCRIPCIONES_AMP_FACTURA'
+        Name = 'ESDESCRIPCIONES_AMP_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'ESFECHADEENTREGA_FACTURA'
+        Name = 'ESFECHADEENTREGA_FAC'
         DataType = ftString
         Size = 1
       end
       item
-        Name = 'XML_FACTURA'
+        Name = 'XML_FAC'
         DataType = ftMemo
       end
       item
-        Name = 'INSTANTEALTA'
+        Name = 'INSTANTE_ALTA'
         DataType = ftDateTime
       end
       item
-        Name = 'INSTANTEMODIF'
+        Name = 'INSTANTE_MODIF'
         DataType = ftDateTime
       end
       item
-        Name = 'USUARIOALTA'
+        Name = 'USUARIO_ALTA'
         DataType = ftString
         Size = 100
       end
       item
-        Name = 'USUARIOMODIF'
+        Name = 'USUARIO_MODIF'
         DataType = ftString
         Size = 100
       end>
@@ -623,13 +623,13 @@ object dmDataCaja: TdmDataCaja
     Left = 472
     Top = 280
     object cdsCabeceraNRO_FACTURA: TStringField
-      FieldName = 'NRO_FACTURA'
+      FieldName = 'NUMERO_FAC'
     end
     object cdsCabeceraSERIE_FACTURA: TStringField
-      FieldName = 'SERIE_FACTURA'
+      FieldName = 'SERIE_FAC'
     end
     object cdsCabeceraFECHA_FACTURA: TDateField
-      FieldName = 'FECHA_FACTURA'
+      FieldName = 'FECHA_FAC'
     end
     object cdsCabeceraCODIGO_EMPLEADO: TStringField
       FieldName = 'CODIGO_EMPLEADO'
@@ -640,358 +640,358 @@ object dmDataCaja: TdmDataCaja
       Size = 200
     end
     object cdsCabeceraESCONSOLIDADA_FACTURA: TStringField
-      FieldName = 'ESCONSOLIDADA_FACTURA'
+      FieldName = 'ESCONSOLIDADA_FAC'
       Size = 1
     end
     object cdsCabeceraINSTANTECONSO_FACTURA: TDateTimeField
-      FieldName = 'INSTANTECONSO_FACTURA'
+      FieldName = 'INSTANTECONSO_FAC'
     end
     object cdsCabeceraTIPO_FACTURA: TStringField
-      FieldName = 'TIPO_FACTURA'
+      FieldName = 'TIPO_FAC'
     end
     object cdsCabeceraFASE_FACTURA: TStringField
-      FieldName = 'FASE_FACTURA'
+      FieldName = 'FASE_FAC'
     end
     object cdsCabeceraCODIGO_EMPRESA_FACTURA: TStringField
-      FieldName = 'CODIGO_EMPRESA_FACTURA'
+      FieldName = 'CODIGO_EMP_FAC'
       Size = 8
     end
     object cdsCabeceraRAZONSOCIAL_EMPRESA_FACTURA: TStringField
-      FieldName = 'RAZONSOCIAL_EMPRESA_FACTURA'
+      FieldName = 'RAZON_SOCIAL_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraNIF_EMPRESA_FACTURA: TStringField
-      FieldName = 'NIF_EMPRESA_FACTURA'
+      FieldName = 'NIF_EMPRESA_FAC'
       Size = 50
     end
     object cdsCabeceraMOVIL_EMPRESA_FACTURA: TStringField
-      FieldName = 'MOVIL_EMPRESA_FACTURA'
+      FieldName = 'MOVIL_EMPRESA_FAC'
       Size = 40
     end
     object cdsCabeceraEMAIL_EMPRESA_FACTURA: TStringField
-      FieldName = 'EMAIL_EMPRESA_FACTURA'
+      FieldName = 'EMAIL_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraDIRECCION1_EMPRESA_FACTURA: TStringField
-      FieldName = 'DIRECCION1_EMPRESA_FACTURA'
+      FieldName = 'DIRECCION1_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraDIRECCION2_EMPRESA_FACTURA: TStringField
-      FieldName = 'DIRECCION2_EMPRESA_FACTURA'
+      FieldName = 'DIRECCION2_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraPOBLACION_EMPRESA_FACTURA: TStringField
-      FieldName = 'POBLACION_EMPRESA_FACTURA'
+      FieldName = 'POBLACION_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraPROVINCIA_EMPRESA_FACTURA: TStringField
-      FieldName = 'PROVINCIA_EMPRESA_FACTURA'
+      FieldName = 'PROVINCIA_EMPRESA_FAC'
       Size = 200
     end
     object cdsCabeceraCODIGO_PAIS_EMPRESA_FACTURA: TStringField
-      FieldName = 'CODIGO_PAIS_EMPRESA_FACTURA'
+      FieldName = 'CODIGO_PAI_EMPRESA_FAC'
       Size = 3
     end
     object cdsCabeceraNOMBRE_PAIS_EMPRESA_FACTURA: TStringField
-      FieldName = 'NOMBRE_PAIS_EMPRESA_FACTURA'
+      FieldName = 'NOMBRE_PAI_EMPRESA_FAC'
       Size = 150
     end
     object cdsCabeceraCPOSTAL_EMPRESA_FACTURA: TStringField
-      FieldName = 'CPOSTAL_EMPRESA_FACTURA'
+      FieldName = 'CODIGO_POSTAL_EMPRESA_FAC'
       Size = 15
     end
     object cdsCabeceraESRETENCIONES_EMPRESA_FACTURA: TStringField
-      FieldName = 'ESRETENCIONES_EMPRESA_FACTURA'
+      FieldName = 'ESRETENCIONES_EMPRESA_FAC'
       Size = 1
     end
     object cdsCabeceraGRUPO_ZONA_IVA_EMPRESA_FACTURA: TStringField
-      FieldName = 'GRUPO_ZONA_IVA_EMPRESA_FACTURA'
+      FieldName = 'GRUPO_ZONA_IVA_EMPRESA_FAC'
       Size = 10
     end
     object cdsCabeceraESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TStringField
-      FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA'
+      FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC'
       Size = 1
     end
     object cdsCabeceraCODIGO_CLIENTE_FACTURA: TStringField
-      FieldName = 'CODIGO_CLIENTE_FACTURA'
+      FieldName = 'CODIGO_CLI_FAC'
       Size = 10
     end
     object cdsCabeceraRAZONSOCIAL_CLIENTE_FACTURA: TStringField
-      FieldName = 'RAZONSOCIAL_CLIENTE_FACTURA'
+      FieldName = 'RAZON_SOCIAL_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraNIF_CLIENTE_FACTURA: TStringField
-      FieldName = 'NIF_CLIENTE_FACTURA'
+      FieldName = 'NIF_CLIENTE_FAC'
       Size = 50
     end
     object cdsCabeceraMOVIL_CLIENTE_FACTURA: TStringField
-      FieldName = 'MOVIL_CLIENTE_FACTURA'
+      FieldName = 'MOVIL_CLIENTE_FAC'
       Size = 40
     end
     object cdsCabeceraEMAIL_CLIENTE_FACTURA: TStringField
-      FieldName = 'EMAIL_CLIENTE_FACTURA'
+      FieldName = 'EMAIL_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraDIRECCION1_CLIENTE_FACTURA: TStringField
-      FieldName = 'DIRECCION1_CLIENTE_FACTURA'
+      FieldName = 'DIRECCION1_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraDIRECCION2_CLIENTE_FACTURA: TStringField
-      FieldName = 'DIRECCION2_CLIENTE_FACTURA'
+      FieldName = 'DIRECCION2_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraPOBLACION_CLIENTE_FACTURA: TStringField
-      FieldName = 'POBLACION_CLIENTE_FACTURA'
+      FieldName = 'POBLACION_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraPROVINCIA_CLIENTE_FACTURA: TStringField
-      FieldName = 'PROVINCIA_CLIENTE_FACTURA'
+      FieldName = 'PROVINCIA_CLIENTE_FAC'
       Size = 200
     end
     object cdsCabeceraCPOSTAL_CLIENTE_FACTURA: TStringField
-      FieldName = 'CPOSTAL_CLIENTE_FACTURA'
+      FieldName = 'CODIGO_POSTAL_CLIENTE_FAC'
       Size = 15
     end
     object cdsCabeceraCODIGO_PAIS_CLIENTE_FACTURA: TStringField
-      FieldName = 'CODIGO_PAIS_CLIENTE_FACTURA'
+      FieldName = 'CODIGO_PAI_CLIENTE_FAC'
       Size = 3
     end
     object cdsCabeceraNOMBRE_PAIS_CLIENTE_FACTURA: TStringField
-      FieldName = 'NOMBRE_PAIS_CLIENTE_FACTURA'
+      FieldName = 'NOMBRE_PAI_CLIENTE_FAC'
       Size = 150
     end
     object cdsCabeceraCODIGO_IVA_FACTURA: TStringField
-      FieldName = 'CODIGO_IVA_FACTURA'
+      FieldName = 'CODIGO_IVA_FAC'
     end
     object cdsCabeceraESIVA_RECARGO_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESIVA_RECARGO_CLIENTE_FACTURA'
+      FieldName = 'ESIVA_RECARGO_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraESIVA_EXENTO_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESIVA_EXENTO_CLIENTE_FACTURA'
+      FieldName = 'ESIVA_EXENTO_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA'
+      FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraESRETENCIONES_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESRETENCIONES_CLIENTE_FACTURA'
+      FieldName = 'ESRETENCIONES_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraTARIFA_ARTICULO_CLIENTE_FACTURA: TStringField
-      FieldName = 'TARIFA_ARTICULO_CLIENTE_FACTURA'
+      FieldName = 'TARIFA_ARTICULO_CLIENTE_FAC'
       Size = 10
     end
     object cdsCabeceraESIMP_INCL_TARIFA_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_FACTURA'
+      FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraESINTRACOMUNITARIO_CLIENTE_FACTURA: TStringField
-      FieldName = 'ESINTRACOMUNITARIO_CLIENTE_FACTURA'
+      FieldName = 'ESINTRACOMUNITARIO_CLIENTE_FAC'
       Size = 1
     end
     object cdsCabeceraESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TStringField
-      FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_FACTURA'
+      FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_FAC'
       Size = 1
     end
     object cdsCabeceraESAPLICA_RE_ZONA_IVA_FACTURA: TStringField
-      FieldName = 'ESAPLICA_RE_ZONA_IVA_FACTURA'
+      FieldName = 'ESAPLICA_RE_ZONA_IVA_FAC'
       Size = 1
     end
     object cdsCabeceraESIVAAGRICOLA_ZONA_IVA_FACTURA: TStringField
-      FieldName = 'ESIVAAGRICOLA_ZONA_IVA_FACTURA'
+      FieldName = 'ESIVAAGRICOLA_ZONA_IVA_FAC'
       Size = 1
     end
     object cdsCabeceraPALABRA_REPORTS_ZONA_IVA_FACTURA: TStringField
-      FieldName = 'PALABRA_REPORTS_ZONA_IVA_FACTURA'
+      FieldName = 'PALABRA_REPORTS_ZONA_IVA_FAC'
       Size = 10
     end
     object cdsCabeceraESVENTA_ACTIVO_FIJO_FACTURA: TStringField
-      FieldName = 'ESVENTA_ACTIVO_FIJO_FACTURA'
+      FieldName = 'ESVENTA_ACTIVO_FIJO_FAC'
       Size = 1
     end
     object cdsCabeceraPORCEN_IVAN_FACTURA: TBCDField
-      FieldName = 'PORCEN_IVAN_FACTURA'
+      FieldName = 'PORCENTAJE_IVAN_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_BASEI_IVAN_FACTURA: TBCDField
-      FieldName = 'TOTAL_BASEI_IVAN_FACTURA'
+      FieldName = 'TOTAL_BASEI_IVAN_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_IVAN_FACTURA: TBCDField
-      FieldName = 'TOTAL_IVAN_FACTURA'
+      FieldName = 'TOTAL_IVAN_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_REN_FACTURA: TBCDField
-      FieldName = 'PORCEN_REN_FACTURA'
+      FieldName = 'PORCENTAJE_REN_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_REN_FACTURA: TBCDField
-      FieldName = 'TOTAL_REN_FACTURA'
+      FieldName = 'TOTAL_REN_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_IVAR_FACTURA: TBCDField
-      FieldName = 'PORCEN_IVAR_FACTURA'
+      FieldName = 'PORCENTAJE_IVAR_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_BASEI_IVAR_FACTURA: TBCDField
-      FieldName = 'TOTAL_BASEI_IVAR_FACTURA'
+      FieldName = 'TOTAL_BASEI_IVAR_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_IVAR_FACTURA: TBCDField
-      FieldName = 'TOTAL_IVAR_FACTURA'
+      FieldName = 'TOTAL_IVAR_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_RER_FACTURA: TBCDField
-      FieldName = 'PORCEN_RER_FACTURA'
+      FieldName = 'PORCENTAJE_RER_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_RER_FACTURA: TBCDField
-      FieldName = 'TOTAL_RER_FACTURA'
+      FieldName = 'TOTAL_RER_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_IVAS_FACTURA: TBCDField
-      FieldName = 'PORCEN_IVAS_FACTURA'
+      FieldName = 'PORCENTAJE_IVAS_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_BASEI_IVAS_FACTURA: TBCDField
-      FieldName = 'TOTAL_BASEI_IVAS_FACTURA'
+      FieldName = 'TOTAL_BASEI_IVAS_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_IVAS_FACTURA: TBCDField
-      FieldName = 'TOTAL_IVAS_FACTURA'
+      FieldName = 'TOTAL_IVAS_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_RES_FACTURA: TBCDField
-      FieldName = 'PORCEN_RES_FACTURA'
+      FieldName = 'PORCENTAJE_RES_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_RES_FACTURA: TBCDField
-      FieldName = 'TOTAL_RES_FACTURA'
+      FieldName = 'TOTAL_RES_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_IVAE_FACTURA: TBCDField
-      FieldName = 'PORCEN_IVAE_FACTURA'
+      FieldName = 'PORCENTAJE_IVAE_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_BASEI_IVAE_FACTURA: TBCDField
-      FieldName = 'TOTAL_BASEI_IVAE_FACTURA'
+      FieldName = 'TOTAL_BASEI_IVAE_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_IVAE_FACTURA: TBCDField
-      FieldName = 'TOTAL_IVAE_FACTURA'
+      FieldName = 'TOTAL_IVAE_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_REE_FACTURA: TBCDField
-      FieldName = 'PORCEN_REE_FACTURA'
+      FieldName = 'PORCENTAJE_REE_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_REE_FACTURA: TBCDField
-      FieldName = 'TOTAL_REE_FACTURA'
+      FieldName = 'TOTAL_REE_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_BASES_FACTURA: TBCDField
-      FieldName = 'TOTAL_BASES_FACTURA'
+      FieldName = 'TOTAL_BASES_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_IMPUESTOS_FACTURA: TBCDField
-      FieldName = 'TOTAL_IMPUESTOS_FACTURA'
+      FieldName = 'TOTAL_IMPUESTOS_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraPORCEN_RETENCION_FACTURA: TBCDField
-      FieldName = 'PORCEN_RETENCION_FACTURA'
+      FieldName = 'PORCENTAJE_RETENCION_FAC'
       Precision = 19
       Size = 6
     end
     object cdsCabeceraTOTAL_RETENCION_FACTURA: TBCDField
-      FieldName = 'TOTAL_RETENCION_FACTURA'
+      FieldName = 'TOTAL_RETENCION_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraTOTAL_LIQUIDO_FACTURA: TBCDField
-      FieldName = 'TOTAL_LIQUIDO_FACTURA'
+      FieldName = 'TOTAL_LIQUIDO_FAC'
       Precision = 18
       Size = 6
     end
     object cdsCabeceraNRO_FACTURA_ABONO_FACTURA: TStringField
-      FieldName = 'NRO_FACTURA_ABONO_FACTURA'
+      FieldName = 'NUMERO_FAC_ABONO_FAC'
       Size = 8
     end
     object cdsCabeceraSERIE_FACTURA_ABONO_FACTURA: TStringField
-      FieldName = 'SERIE_FACTURA_ABONO_FACTURA'
+      FieldName = 'SERIE_FAC_ABONO_FAC'
       Size = 8
     end
     object cdsCabeceraFORMA_PAGO_FACTURA: TStringField
-      FieldName = 'FORMA_PAGO_FACTURA'
+      FieldName = 'FORMA_PAGO_FAC'
       Size = 200
     end
     object cdsCabeceraTEXTO_LEGAL_FACTURA_CLIENTE_FACTURA: TStringField
-      FieldName = 'TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA'
+      FieldName = 'TEXTO_LEGAL_CLIENTE_FAC'
       Size = 1000
     end
     object cdsCabeceraTEXTO_LEGAL_FACTURA_EMPRESA_FACTURA: TStringField
-      FieldName = 'TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA'
+      FieldName = 'TEXTO_LEGAL_EMPRESA_FAC'
       Size = 1000
     end
     object cdsCabeceraCOMENTARIOS_FACTURA: TStringField
-      FieldName = 'COMENTARIOS_FACTURA'
+      FieldName = 'COMENTARIOS_FAC'
       Size = 1000
     end
     object cdsCabeceraCONTADOR_LINEAS_FACTURA: TStringField
-      FieldName = 'CONTADOR_LINEAS_FACTURA'
+      FieldName = 'CONTADOR_LINEAS_FAC'
       Size = 8
     end
     object cdsCabeceraESCREARARTICULOS_FACTURA: TStringField
-      FieldName = 'ESCREARARTICULOS_FACTURA'
+      FieldName = 'ESCREARARTICULOS_FAC'
       Size = 1
     end
     object cdsCabeceraESDESCRIPCIONES_AMP_FACTURA: TStringField
-      FieldName = 'ESDESCRIPCIONES_AMP_FACTURA'
+      FieldName = 'ESDESCRIPCIONES_AMP_FAC'
       Size = 1
     end
     object cdsCabeceraESFECHADEENTREGA_FACTURA: TStringField
-      FieldName = 'ESFECHADEENTREGA_FACTURA'
+      FieldName = 'ESFECHADEENTREGA_FAC'
       Size = 1
     end
     object cdsCabeceraXML_FACTURA: TMemoField
-      FieldName = 'XML_FACTURA'
+      FieldName = 'XML_FAC'
       BlobType = ftMemo
     end
     object cdsCabeceraINSTANTEALTA: TDateTimeField
-      FieldName = 'INSTANTEALTA'
+      FieldName = 'INSTANTE_ALTA'
     end
     object cdsCabeceraINSTANTEMODIF: TDateTimeField
-      FieldName = 'INSTANTEMODIF'
+      FieldName = 'INSTANTE_MODIF'
     end
     object cdsCabeceraUSUARIOALTA: TStringField
-      FieldName = 'USUARIOALTA'
+      FieldName = 'USUARIO_ALTA'
       Size = 100
     end
     object cdsCabeceraUSUARIOMODIF: TStringField
-      FieldName = 'USUARIOMODIF'
+      FieldName = 'USUARIO_MODIF'
       Size = 100
     end
   end
@@ -1060,13 +1060,13 @@ object dmDataCaja: TdmDataCaja
     Left = 552
     Top = 280
     object cdsLineasNRO_FACTURA_LINEA: TStringField
-      FieldName = 'NRO_FACTURA_LINEA'
+      FieldName = 'NUMERO_FAC_FACLIN'
     end
     object cdsLineasSERIE_FACTURA_LINEA: TStringField
-      FieldName = 'SERIE_FACTURA_LINEA'
+      FieldName = 'SERIE_FAC_FACLIN'
     end
     object cdsLineasLINEA_FACTURA_LINEA: TStringField
-      FieldName = 'LINEA_FACTURA_LINEA'
+      FieldName = 'LINEA_FACLIN'
       Size = 3
     end
     object cdsLineasCODIGO_EMPLEADO: TStringField
@@ -1074,110 +1074,110 @@ object dmDataCaja: TdmDataCaja
       Size = 10
     end
     object cdsLineasCODIGO_ARTICULO_FACTURA_LINEA: TStringField
-      FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+      FieldName = 'CODIGO_ART_FACLIN'
     end
     object cdsLineasDESCRIPCION_ARTICULO_FACTURA_LINEA: TStringField
-      FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+      FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
       Size = 100
     end
     object cdsLineasCODIGO_FAMILIA_FACTURA_LINEA: TStringField
-      FieldName = 'CODIGO_FAMILIA_FACTURA_LINEA'
+      FieldName = 'CODIGO_FAM_FACLIN'
     end
     object cdsLineasNOMBRE_FAMILIA_FACTURA_LINEA: TStringField
-      FieldName = 'NOMBRE_FAMILIA_FACTURA_LINEA'
+      FieldName = 'NOMBRE_FAM_FACLIN'
       Size = 200
     end
     object cdsLineasCANTIDAD_FACTURA_LINEA: TBCDField
-      FieldName = 'CANTIDAD_FACTURA_LINEA'
+      FieldName = 'CANTIDAD_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TStringField
-      FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+      FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
     end
     object cdsLineasPRECIOSALIDA_FACTURA_LINEA: TBCDField
-      FieldName = 'PRECIOSALIDA_FACTURA_LINEA'
+      FieldName = 'PRECIO_SALIDA_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasPORCEN_DTO_FACTURA_LINEA: TBCDField
-      FieldName = 'PORCEN_DTO_FACTURA_LINEA'
+      FieldName = 'PORCENTAJE_DTO_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasPRECIO_DTO_FACTURA_LINEA: TBCDField
-      FieldName = 'PRECIO_DTO_FACTURA_LINEA'
+      FieldName = 'PRECIO_DTO_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TBCDField
-      FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+      FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasPORCEN_IVA_FACTURA_LINEA: TBCDField
-      FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+      FieldName = 'PORCENTAJE_IVA_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA: TBCDField
-      FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+      FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasTIPOIVA_ARTICULO_FACTURA_LINEA: TStringField
-      FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+      FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
       Size = 2
     end
     object cdsLineasTOTAL_FACTURA_LINEA: TBCDField
-      FieldName = 'TOTAL_FACTURA_LINEA'
+      FieldName = 'TOTAL_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasTOTAL_FACTURASIVA_LINEA: TBCDField
-      FieldName = 'TOTAL_FACTURASIVA_LINEA'
+      FieldName = 'TOTAL_FAC_SIVA_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasESIMP_INCL_TARIFA_FACTURA_LINEA: TStringField
-      FieldName = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
+      FieldName = 'ESIMP_INCL_TARIFA_FACLIN'
       Size = 1
     end
     object cdsLineasCODIGO_TARIFA_FACTURA_LINEA: TStringField
-      FieldName = 'CODIGO_TARIFA_FACTURA_LINEA'
+      FieldName = 'CODIGO_TAR_FACLIN'
       Size = 10
     end
     object cdsLineasPRECIO_ULT_COMPRA_FACTURA_LINEA: TBCDField
-      FieldName = 'PRECIO_ULT_COMPRA_FACTURA_LINEA'
+      FieldName = 'PRECIO_ULT_COMPRA_FACLIN'
       Precision = 19
       Size = 6
     end
     object cdsLineasCODIGO_PROVEEDOR_FACTURA_LINEA: TStringField
-      FieldName = 'CODIGO_PROVEEDOR_FACTURA_LINEA'
+      FieldName = 'CODIGO_PRV_FACLIN'
     end
     object cdsLineasRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA: TStringField
-      FieldName = 'RAZONSOCIAL_PROVEEDOR_FACTURA_LINEA'
+      FieldName = 'RAZON_SOCIAL_PROVEEDOR_FACLIN'
       Size = 200
     end
     object cdsLineasESPROVEEDORPRINCIPAL_FACTURA_LINEA: TStringField
-      FieldName = 'ESPROVEEDORPRINCIPAL_FACTURA_LINEA'
+      FieldName = 'ESPROVEEDORPRINCIPAL_FACLIN'
       Size = 1
     end
     object cdsLineasFECHA_ENTREGA_FACTURA_LINEA: TDateTimeField
-      FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+      FieldName = 'FECHA_ENTREGA_FACLIN'
     end
     object cdsLineasINSTANTEALTA: TDateTimeField
-      FieldName = 'INSTANTEALTA'
+      FieldName = 'INSTANTE_ALTA'
     end
     object cdsLineasINSTANTEMODIF: TDateTimeField
-      FieldName = 'INSTANTEMODIF'
+      FieldName = 'INSTANTE_MODIF'
     end
     object cdsLineasUSUARIOALTA: TStringField
-      FieldName = 'USUARIOALTA'
+      FieldName = 'USUARIO_ALTA'
       Size = 100
     end
     object cdsLineasUSUARIOMODIF: TStringField
-      FieldName = 'USUARIOMODIF'
+      FieldName = 'USUARIO_MODIF'
       Size = 100
     end
   end

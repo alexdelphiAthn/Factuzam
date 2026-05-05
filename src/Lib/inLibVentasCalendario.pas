@@ -216,7 +216,7 @@ begin
   try
     Query.Connection := FConn;
     Query.SQL.Text :=
-      ' SELECT FECHA_OP_DIA                  AS FECHA,         ' +
+      ' SELECT FECHA_OP_DIA_OPCAJA                  AS FECHA,         ' +
       '        COUNT(*)                      AS TOTAL_VENTAS,  ' +
       '        COALESCE(SUM(CASE                               ' +
       '                       WHEN TIPO_OPERACION_OPCAJA = ''VE'' ' +
@@ -224,12 +224,12 @@ begin
       '                       ELSE 0                           ' +
       '                     END), 0)         AS TOTAL_COBRADO  ' +
       '   FROM fza_caja_operaciones                            ' +
-      '  WHERE FECHA_OP_DIA           >= :fecha_inicio         ' +
-      '    AND FECHA_OP_DIA           <  :fecha_fin            ' +
-      '    AND CODIGO_EMPRESA_OPCAJA  =  :empresa              ' +
-      '    AND CODIGO_ALMACEN_OPCAJA  =  :almacen              ' +
+      '  WHERE FECHA_OP_DIA_OPCAJA           >= :fecha_inicio         ' +
+      '    AND FECHA_OP_DIA_OPCAJA           <  :fecha_fin            ' +
+      '    AND CODIGO_EMP_OPCAJA  =  :empresa              ' +
+      '    AND CODIGO_ALM_OPCAJA  =  :almacen              ' +
       '    AND CODIGO_CAJA_OPCAJA     =  :caja                 ' +
-      '  GROUP BY FECHA_OP_DIA                                 ';
+      '  GROUP BY FECHA_OP_DIA_OPCAJA                                 ';
     Query.ParamByName('fecha_inicio').AsDate  := PrimerDia;
     Query.ParamByName('fecha_fin').AsDate     := UltimoDia;
     Query.ParamByName('empresa').AsString     := FEmpresa;

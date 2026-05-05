@@ -1,4 +1,4 @@
-inherited dmProveedores: TdmProveedores
+﻿inherited dmProveedores: TdmProveedores
   OldCreateOrder = True
   Height = 142
   Width = 386
@@ -11,16 +11,15 @@ inherited dmProveedores: TdmProveedores
   inherited unqryPerfiles: TUniQuery
     SQL.Strings = (
       'select * from fza_usuarios_perfiles '
-      'where ( KEY_PERFILES = '#39'frmMtoProveedores'#39' OR'
-      '        KEY_PERFILES = '#39'dmProveedores'#39
+      'where ( KEY_USUPER = '#39'frmMtoProveedores'#39' OR'
+      '        KEY_USUPER = '#39'dmProveedores'#39
       '       )')
   end
   object unstrdprcContador: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT'
     SQL.Strings = (
       
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, @pcont); SELECT CAST(@pcont AS' +
-        ' SIGNED) AS '#39'@pcont'#39)
+        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, @pcont); SELECT CAST(@pcont AS SIGNED) AS '#39'@pcont'#39)
     Connection = dmConn.conUni
     Left = 8
     Top = 84
@@ -46,14 +45,14 @@ inherited dmProveedores: TdmProveedores
     SQL.Strings = (
       'select * from vi_proveedores_articulos')
     MasterSource = frmMtoProveedores.dsTablaG
-    MasterFields = 'CODIGO_PROVEEDOR'
-    DetailFields = 'CODIGO_PROVEEDOR'
+    MasterFields = 'CODIGO_PRV_PRV'
+    DetailFields = 'CODIGO_PRV_PRV'
     Left = 184
     Top = 24
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_PROVEEDOR'
+        Name = 'CODIGO_PRV_PRV'
         ParamType = ptInput
         Value = '10'
       end>
@@ -67,45 +66,32 @@ inherited dmProveedores: TdmProveedores
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_tarifas'
       
-        '  (CODIGO_ARTICULO_TARIFA, ACTIVO_TARIFA, PRECIOVENTA_IVAINCL_TA' +
-        'RIFA, PRECIOVENTA_SIVA_TARIFA, FECHA_DESDE_TARIFA, FECHA_HASTA_T' +
-        'ARIFA, INSTANTEMODIF, INSTANTEALTA, USUARIOALTA, USUARIOMODIF)'
+        '  (CODIGO_ART_ARTTAR, ESACTIVO_ARTTAR, PRECIOVENTA_IVAINCL_TARIFA, PRECIOVENTA_SIVA_TARIFA, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       
-        '  (:CODIGO_ARTICULO_TARIFA, :ACTIVO_TARIFA, :PRECIOVENTA_IVAINCL' +
-        '_TARIFA, :PRECIOVENTA_SIVA_TARIFA, :FECHA_DESDE_TARIFA, :FECHA_H' +
-        'ASTA_TARIFA, :INSTANTEMODIF, :INSTANTEALTA, :USUARIOALTA, :USUAR' +
-        'IOMODIF)')
+        '  (:CODIGO_ART_ARTTAR, :ESACTIVO_ARTTAR, :PRECIOVENTA_IVAINCL_TARIFA, :PRECIOVENTA_SIVA_TARIFA, :FECHA_DESDE_ARTTAR, :FECHA_HASTA_ARTTAR, :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_ARTICULO_TARIFA = :Old_CODIGO_ARTICULO_TARIFA')
+      '  CODIGO_ART_ARTTAR = :Old_CODIGO_ARTICULO_TARIFA')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_tarifas'
       'SET'
       
-        '  CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO_TARIFA, ACTIVO_TARIF' +
-        'A = :ACTIVO_TARIFA, PRECIOVENTA_IVAINCL_TARIFA = :PRECIOVENTA_IV' +
-        'AINCL_TARIFA, PRECIOVENTA_SIVA_TARIFA = :PRECIOVENTA_SIVA_TARIFA' +
-        ', FECHA_DESDE_TARIFA = :FECHA_DESDE_TARIFA, FECHA_HASTA_TARIFA =' +
-        ' :FECHA_HASTA_TARIFA, INSTANTEMODIF = :INSTANTEMODIF, INSTANTEAL' +
-        'TA = :INSTANTEALTA, USUARIOALTA = :USUARIOALTA, USUARIOMODIF = :' +
-        'USUARIOMODIF'
+        '  CODIGO_ART_ARTTAR = :CODIGO_ART_ARTTAR, ESACTIVO_ARTTAR = :ESACTIVO_ARTTAR, PRECIOVENTA_IVAINCL_TARIFA = :PRECIOVENTA_IVAINCL_TARIFA, PRECIOVENTA_SIVA_TARIFA = :PRECIOVENTA_SIVA_TARIFA, FECHA_DESDE_' +
+        'ARTTAR = :FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR = :FECHA_HASTA_ARTTAR, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  CODIGO_ARTICULO_TARIFA = :Old_CODIGO_ARTICULO_TARIFA')
+      '  CODIGO_ART_ARTTAR = :Old_CODIGO_ARTICULO_TARIFA')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_ARTICULO_TARIFA = :Old_CODIGO_ARTICULO_TARIFA'
+      '  CODIGO_ART_ARTTAR = :Old_CODIGO_ARTICULO_TARIFA'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT CODIGO_ARTICULO_TARIFA, ACTIVO_TARIFA, PRECIOVENTA_IVAINC' +
-        'L_TARIFA, PRECIOVENTA_SIVA_TARIFA, FECHA_DESDE_TARIFA, FECHA_HAS' +
-        'TA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USUARIOALTA, USUARIOMODI' +
-        'F FROM fza_articulos_tarifas'
+        'SELECT CODIGO_ART_ARTTAR, ESACTIVO_ARTTAR, PRECIOVENTA_IVAINCL_TARIFA, PRECIOVENTA_SIVA_TARIFA, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO_TARIFA')
+      '  CODIGO_ART_ARTTAR = :CODIGO_ART_ARTTAR')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_tarifas')
     Connection = dmConn.conUni
@@ -113,24 +99,22 @@ inherited dmProveedores: TdmProveedores
       'select *'
       'from vi_fac_lin_busquedas'
       'INNER JOIN vi_articulos_proveedores '
-      'ON vi_fac_lin_busquedas.CODIGO_ARTICULO_FACTURA_LINEA = '
-      '   vi_articulos_proveedores.CODIGO_ARTICULO'
+      'ON vi_fac_lin_busquedas.CODIGO_ART_FACLIN = '
+      '   vi_articulos_proveedores.CODIGO_ART_ART'
       'INNER JOIN vi_fac_busquedas'
       
-        'ON vi_fac_lin_busquedas.NRO_FACTURA_LINEA = vi_fac_busquedas.NRO' +
-        '_FACTURA'
+        'ON vi_fac_lin_busquedas.NUMERO_FAC_FACLIN = vi_fac_busquedas.NUMERO_FAC'
       
-        'AND vi_fac_lin_busquedas.SERIE_FACTURA_LINEA = vi_fac_busquedas.' +
-        'SERIE_FACTURA')
+        'AND vi_fac_lin_busquedas.SERIE_FAC_FACLIN = vi_fac_busquedas.SERIE_FAC')
     MasterSource = frmMtoProveedores.dsTablaG
-    MasterFields = 'CODIGO_PROVEEDOR'
-    DetailFields = 'CODIGO_PROVEEDOR'
+    MasterFields = 'CODIGO_PRV_PRV'
+    DetailFields = 'CODIGO_PRV_PRV'
     Left = 297
     Top = 24
     ParamData = <
       item
         DataType = ftInteger
-        Name = 'CODIGO_PROVEEDOR'
+        Name = 'CODIGO_PRV_PRV'
         ParamType = ptInput
         Value = 3
       end>

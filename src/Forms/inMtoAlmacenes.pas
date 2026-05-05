@@ -131,7 +131,7 @@ procedure TfrmMtoAlmacenes.CrearTablaPrincipal;
 begin
   inherited;
   dmmAlmacenes := tdmDataModule as TdmAlmacenes;
-  pkFieldName := 'CODIGO_ALMACEN_ALM';
+  pkFieldName := 'CODIGO_ALM_ALM';
 end;
 
 initialization

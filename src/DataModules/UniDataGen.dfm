@@ -1,4 +1,4 @@
-object dmBase: TdmBase
+﻿object dmBase: TdmBase
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   Height = 188
@@ -15,7 +15,7 @@ object dmBase: TdmBase
     SQL.Strings = (
       'SELECT * '
       'FROM fza_usuarios_perfiles '
-      'WHERE USUARIO_GRUPO_PERFILES = '#39'Nothing'#39)
+      'WHERE USUARIO_GRUPO_USUPER = '#39'Nothing'#39)
     BeforePost = unqryPerfilesBeforePost
     Left = 120
     Top = 30

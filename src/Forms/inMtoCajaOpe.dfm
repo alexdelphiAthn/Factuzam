@@ -1,4 +1,4 @@
-object frmMtoOpeCaja: TfrmMtoOpeCaja
+﻿object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
@@ -401,13 +401,13 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           Styles.Header = cxstyl2
           object tvEmpleado: TcxGridDBColumn
             Caption = 'Vend.'
-            DataBinding.FieldName = 'CODIGO_VENDEDOR_FACTURA_LINEA'
+            DataBinding.FieldName = 'CODIGO_VENDEDOR_FACLIN'
             PropertiesClassName = 'TcxTextEditProperties'
             Width = 66
           end
           object tvArticulo: TcxGridDBColumn
             Caption = 'Art'#237'culo'
-            DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'CODIGO_ART_FACLIN'
             PropertiesClassName = 'TcxExtLookupComboBoxProperties'
             Properties.DropDownListStyle = lsEditList
             Properties.View = dbtvBusqDBTableView1
@@ -420,12 +420,12 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           end
           object tvDescripcion: TcxGridDBColumn
             Caption = 'Descripci'#243'n'
-            DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+            DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
             Width = 306
           end
           object tvUds: TcxGridDBColumn
             Caption = 'Uds.'
-            DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+            DataBinding.FieldName = 'CANTIDAD_FACLIN'
             PropertiesClassName = 'TcxTextEditProperties'
             Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
             Properties.OnValidate = tvUdsPropertiesValidate
@@ -433,14 +433,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           end
           object tvPrecioUni: TcxGridDBColumn
             Caption = 'Precio'
-            DataBinding.FieldName = 'PRECIOSALIDA_FACTURA_LINEA'
+            DataBinding.FieldName = 'PRECIO_SALIDA_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.OnEditValueChanged = tvPrecioUniPropertiesEditValueChanged
             Width = 91
           end
           object tvDescuento: TcxGridDBColumn
             Caption = '%'
-            DataBinding.FieldName = 'PORCEN_DTO_FACTURA_LINEA'
+            DataBinding.FieldName = 'PORCENTAJE_DTO_FACLIN'
             PropertiesClassName = 'TcxSpinEditProperties'
             Properties.DisplayFormat = '0.00 %'
             Properties.EditFormat = '0.00 %'
@@ -452,14 +452,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           end
           object tvDescuentoMenos: TcxGridDBColumn
             Caption = 'Menos'
-            DataBinding.FieldName = 'PRECIO_DTO_FACTURA_LINEA'
+            DataBinding.FieldName = 'PRECIO_DTO_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.OnEditValueChanged = tvDescuentoMenosPropertiesEditValueChanged
             Width = 152
           end
           object tvTotal: TcxGridDBColumn
             Caption = 'Total'
-            DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+            DataBinding.FieldName = 'TOTAL_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.ReadOnly = False
             Properties.OnEditValueChanged = tvTotalPropertiesEditValueChanged
@@ -649,14 +649,13 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object qryBusq: TUniQuery
     SQL.Strings = (
       'SELECT '
-      '    CODIGO_ARTICULO as INPUT_BUSQUEDA,'
+      '    CODIGO_ART_ART as INPUT_BUSQUEDA,'
       
-        '    CODIGO_ARTICULO AS CODIGO_PADRE,   -- El valor real que guar' +
-        'daremos'
-      '    DESCRIPCION_ARTICULO'
+        '    CODIGO_ART_ART AS CODIGO_PADRE,   -- El valor real que guardaremos'
+      '    DESCRIPCION_ART'
       'FROM vi_articulos_list'
-      'WHERE CODIGO_ARTICULO LIKE :TOKEN'
-      'ORDER BY CODIGO_ARTICULO'
+      'WHERE CODIGO_ART_ART LIKE :TOKEN'
+      'ORDER BY CODIGO_ART_ART'
       'LIMIT 20')
     Left = 80
     Top = 256
@@ -703,7 +702,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         DataBinding.FieldName = 'CODIGO_PADRE'
       end
       object cxgrdbclmnBusqDBTableView1DESCRIPCION_ARTICULO: TcxGridDBColumn
-        DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+        DataBinding.FieldName = 'DESCRIPCION_ART'
       end
     end
   end

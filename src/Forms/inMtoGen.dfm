@@ -1,4 +1,4 @@
-inherited frmMtoGen: TfrmMtoGen
+﻿inherited frmMtoGen: TfrmMtoGen
   BorderStyle = bsNone
   Caption = 'Ventana Gen'#233'rica'
   ClientHeight = 558
@@ -233,34 +233,34 @@ inherited frmMtoGen: TfrmMtoGen
               OptionsData.Appending = True
               OptionsView.GroupByBox = False
               object tvPerfilUSUARIO_GRUPO_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'USUARIO_GRUPO_PERFILES'
+                DataBinding.FieldName = 'USUARIO_GRUPO_USUPER'
                 Width = 167
               end
               object tvPerfilKEY_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'KEY_PERFILES'
+                DataBinding.FieldName = 'KEY_USUPER'
                 Width = 132
               end
               object tvPerfilSUBKEY_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'SUBKEY_PERFILES'
+                DataBinding.FieldName = 'SUBKEY_USUPER'
                 Width = 190
               end
               object tvPerfilVALUE_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_PERFILES'
+                DataBinding.FieldName = 'VALUE_USUPER'
                 Width = 112
               end
               object tvPerfilVALUE_TEXT_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_TEXT_PERFILES'
+                DataBinding.FieldName = 'VALUE_TEXT_USUPER'
                 PropertiesClassName = 'TcxBlobEditProperties'
                 Properties.BlobEditKind = bekMemo
                 Width = 140
               end
               object tvPerfilTYPE_BLOB_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'TYPE_BLOB_PERFILES'
+                DataBinding.FieldName = 'TYPE_BLOB_USUPER'
                 PropertiesClassName = 'TcxBlobEditProperties'
                 Properties.BlobEditKind = bekBlob
               end
               object tvPerfilVALUE_BLOB_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_BLOB_PERFILES'
+                DataBinding.FieldName = 'VALUE_BLOB_USUPER'
               end
             end
             object cxgrdlvlPerfil: TcxGridLevel

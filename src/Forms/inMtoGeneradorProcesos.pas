@@ -389,8 +389,8 @@ begin
       try
         Filtered := False;
         // Filtramos por el contenido del proceso o por el nombre
-        Filter := 'PROCESO_GENERADORPROCESO LIKE ' + QuotedStr('%' + TextoBuscar + '%') +
-                  ' OR NOMBRE_GENERADORPROCESO LIKE ' + QuotedStr('%' + TextoBuscar + '%');
+        Filter := 'PROCESO_GENERADOR_PROCESO_GP LIKE ' + QuotedStr('%' + TextoBuscar + '%') +
+                  ' OR NOMBRE_GENERADOR_PROCESO_GP LIKE ' + QuotedStr('%' + TextoBuscar + '%');
         Filtered := True;
 
         if RecordCount = 0 then
@@ -597,10 +597,10 @@ begin
     begin
       with dmmGeneradorProcesos do
       begin
-        sNombreMetadato := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+        sNombreMetadato := unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
 
         // Comprobamos si el metadato actual es un procedimiento (tipo 3)
-        bEsProcedimiento := (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3');
+        bEsProcedimiento := (unqryMetadatos.FieldByName('PARENT_META').AsString = '3');
 
         // Recogemos el script completo
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
@@ -638,8 +638,8 @@ begin
           dsTablaG.DataSet.Append;
 
         // Volcamos todo al editor principal
-        unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Modificar ' + sNombreMetadato;
-        unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sScriptCompleto;
+        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString := 'Modificar ' + sNombreMetadato;
+        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString := sScriptCompleto;
 
         // Cambiamos de pestaña y damos foco
         pcPestana.ActivePage := tsSQL;
@@ -713,7 +713,7 @@ begin
 
     // 2. Si no hay selección (o el foco está en un botón/grid), cogemos todo el texto del campo
     if sSQL = '' then
-      sSQL := unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString;
+      sSQL := unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
 
     sSQL := Trim(sSQL);
 
@@ -889,11 +889,11 @@ begin
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
-      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
+      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
       if sParent = '-1' then
       begin
-        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
-        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_META_META').AsString;
         iCodigo := StrToIntDef(sCodigo, 0);
 
         // Creamos el nodo raíz
@@ -910,11 +910,11 @@ begin
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
-      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_METADATO').AsString;
+      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
       if sParent <> '-1' then
       begin
-        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
-        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_METADATO').AsString;
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_META_META').AsString;
         iCodigo := StrToIntDef(sCodigo, 0);
         iParent := StrToIntDef(sParent, -1);
 
@@ -954,7 +954,7 @@ begin
                                                dmmGeneradorProcesos.dsContenido;
   tvVista.DataController.DataSource := dmmGeneradorProcesos.dsVista;
   pcPestana.ActivePage := tsSQL;
-  pkFieldName := 'CODIGO_GENERADORPROCESO';
+  pkFieldName := 'CODIGO_GENERADOR_PROCESO_GP';
   // Asegúrate de que las opciones predeterminadas estén configuradas correctamente
 //  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
   IsColumnMode := False;
@@ -972,19 +972,19 @@ begin
   with dmmGeneradorProcesos do
   begin
     pcMetadato.ActivePage := tsEstructura;
-    if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '1')) then
+    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '1')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE TABLE ' +
-                         unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       syndtEstructura.Lines.Text :=
                            unqryEstructura.FieldByName('Create Table').AsString;
     end
       else
-    if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '2')) then
+    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '2')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE VIEW ' +
-                         unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       mmo1.Lines.Text :=
                       Trim(unqryEstructura.FieldByName('Create View').AsString);
@@ -1009,10 +1009,10 @@ begin
       // -------------------------------------------
     end
     else
-    if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3')) then
+    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '3')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE PROCEDURE ' +
-                         unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       syndtEstructura.Lines.Text := StringReplace(unqryEstructura.FieldByName(
                                                  'Create Procedure').AsString,
@@ -1293,7 +1293,7 @@ begin
   iCodigo := NativeInt(Node.Data);
 
   // Posicionar el dataset de metadatos en el registro correspondiente
-  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
+  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_META_META', iCodigo, []);
 
   // Llama a tu lógica existente para actualizar la interfaz/datos
   cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
@@ -1310,7 +1310,7 @@ end;
 //  iCodigo := NativeInt(nodo.Data);
 //  // Posicionar el dataset en el registro correspondiente
 //  dmmGeneradorProcesos.unqryMetadatos.Locate(
-//    'CODIGO_METADATO', iCodigo, []);
+//    'CODIGO_META_META', iCodigo, []);
 //  // Ahora llama a tu lógica existente
 //  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
 //end;
@@ -1326,26 +1326,26 @@ begin
   nodo := TreeView1.Selected;
   if nodo = nil then Exit;
   iCodigo := NativeInt(nodo.Data);
-  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_METADATO', iCodigo, []);
+  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_META_META', iCodigo, []);
   with dmmGeneradorProcesos do
   begin
     // Si es una Tabla (1) o Vista (2), mostramos los datos
-    if ((unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '1') or
-        (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '2')) then
+    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '1') or
+        (unqryMetadatos.FieldByName('PARENT_META').AsString = '2')) then
     begin
       pcMetadato.ActivePage := tsContenido;
       tvMetadatostvVista.ClearItems;
       unqryContenido.Close;
       unqryContenido.SQL.Text := 'SELECT * FROM ' +
-                         unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       unqryContenido.Open;
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
     end
     // Si es un Procedimiento Almacenado (3), generamos el CALL
-    else if (unqryMetadatos.FieldByName('PARENT_METADATO').AsString = '3') then
+    else if (unqryMetadatos.FieldByName('PARENT_META').AsString = '3') then
     begin
-      sProcName := unqryMetadatos.FieldByName('NOMBRE_METADATO').AsString;
+      sProcName := unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       sCallText := 'CALL ' + sProcName + '(';
       // Creamos un TUniQuery temporal para leer los parámetros del procedimiento
       qryParams := TUniQuery.Create(nil);
@@ -1378,9 +1378,9 @@ begin
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
         dsTablaG.DataSet.Append; // Usar Append o Insert según prefieras
       // Asignamos el nombre al proceso (opcional)
-      unqryTablaG.FieldByName('NOMBRE_GENERADORPROCESO').AsString := 'Ejecutar ' + sProcName;
+      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString := 'Ejecutar ' + sProcName;
       // Asignamos el comando SQL generado al campo memo del editor
-      unqryTablaG.FieldByName('PROCESO_GENERADORPROCESO').AsString := sCallText;
+      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString := sCallText;
 //      DBsynEdit1.Text := sCallText;
       // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor SynEdit
       pcPestana.ActivePage := tsSQL;

@@ -81,9 +81,9 @@ begin
   unqrySol.Connection := oConn;
   unqrySol.SQL.Text := 'SELECT * ' +
                        '  FROM vi_articulos_proveedores ' +
-                       ' WHERE CODIGO_ARTICULO = :CODIGO_ARTICULO' +
+                       ' WHERE CODIGO_ART_ART = :CODIGO_ART_ART' +
                        '   AND ESPROVEEDORPRINCIPAL = ' + QuotedStr('S');
-  unqrySol.ParamByName('CODIGO_ARTICULO').AsString := sArt;
+  unqrySol.ParamByName('CODIGO_ART_ART').AsString := sArt;
   unqrySol.Open;
   if (unqrySol.RecordCount > 0) then
   begin
@@ -102,11 +102,11 @@ begin
   if (State = dsInsert) then
     if Trim(FindField('ESPROVEEDORPRINCIPAL').AsString) = 'S' then
     begin
-      if (ArticuloTieneProvPrin(FindField('CODIGO_ARTICULO').AsString)) then
+      if (ArticuloTieneProvPrin(FindField('CODIGO_ART_ART').AsString)) then
       begin
         raise ERangeError.CreateFmt('%s ya tiene un proveedor principal ' +
                                     'asociado a este artículo.',
-                                       [FindField('CODIGO_ARTICULO').AsString]);
+                                       [FindField('CODIGO_ART_ART').AsString]);
       end;
     end;
   oDmConn.ActualizarUserTimeModif(DataSet);
@@ -122,9 +122,9 @@ begin
   if not DataSet.Active or DataSet.IsEmpty then Exit;
 //  DataSet.AfterScroll := nil;
   unqryStockArticulos.Close;
-  unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
-  if unqryStockArticulos.ParamByName('CODIGO_ARTICULO').AsString <> '' then
+  unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString :=
+                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  if unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString <> '' then
   begin
     unqryStockArticulos.Open;
     tvArticulosStock :=  (GetOwnerForm<TfrmMtoArticulos>).tvStock;
@@ -167,15 +167,15 @@ begin
     Connection := inLibGlobalVar.oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_articulos_proveedores ' +
-                ' WHERE CODIGO_ARTICULO_ARTICULO_PROVEEDOR = :Articulo ;';
+                ' WHERE CODIGO_ART_AP = :Articulo ;';
     Params.ParamByName('Articulo').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     ExecSQL;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_articulos_tarifas ' +
-                ' WHERE CODIGO_ARTICULO_TARIFA = :Articulo ;';
+                ' WHERE CODIGO_ART_ARTTAR = :Articulo ;';
     Params.ParamByName('Articulo').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     ExecSQL;
     Free;
   end;
@@ -186,10 +186,10 @@ procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_articulos');
-  unqryTablaG.FindField('CODIGO_FAMILIA_ARTICULO').AsString :=
+  unqryTablaG.FindField('CODIGO_FAM_ART').AsString :=
                                    GetDefaultValue('vi_articulos_familias_list',
-                                                   'CODIGO_FAMILIA',
-                                                   'ESDEFAULT_FAMILIA');
+                                                   'CODIGO_FAM_FAM',
+                                                   'ESDEFAULT_FAM');
 end;
 
 procedure TdmArticulos.CopiarProveedoraArticulo(dtProveedores: TDataset);
@@ -198,10 +198,10 @@ begin
   begin
     if (State = dsBrowse) then
       Insert;
-    FindField('CODIGO_PROVEEDOR').AsString :=
-                           dtProveedores.FindField('CODIGO_PROVEEDOR').AsString;
-    FindField('RAZONSOCIAL_PROVEEDOR').AsString :=
-                      dtProveedores.FindField('RAZONSOCIAL_PROVEEDOR').AsString;
+    FindField('CODIGO_PRV_PRV').AsString :=
+                           dtProveedores.FindField('CODIGO_PRV_PRV').AsString;
+    FindField('RAZON_SOCIAL_PRV').AsString :=
+                      dtProveedores.FindField('RAZON_SOCIAL_PRV').AsString;
     if RecordCount = 0 then
       FindField('ESPROVEEDORPRINCIPAL').AsString := 'S'
     else
@@ -253,17 +253,17 @@ begin
   lst.Clear;
   with unqryTarifas do
   begin
-    if ContainsText(SQL.Text, ':CODIGO_ARTICULO') then
-      ParamByName('CODIGO_ARTICULO').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ARTICULO').AsString;
+    if ContainsText(SQL.Text, ':CODIGO_ART_ART') then
+      ParamByName('CODIGO_ART_ART').AsString :=
+                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     Open;
     First;
     while not (Eof) do
     begin
       Itm := lst.Items.Add;
-      Itm.Caption := FindField('CODIGO_TARIFA').AsString;
-      Itm.SubItems.Add(FindField('NOMBRE_TARIFA').AsString);
-      if FieldByName('ESDEFAULT_TARIFA').AsString = 'S' then
+      Itm.Caption := FindField('CODIGO_TAR_ARTTAR').AsString;
+      Itm.SubItems.Add(FindField('NOMBRE_TAR_TAR').AsString);
+      if FieldByName('ESDEFAULT_TAR').AsString = 'S' then
         Itm.Checked := True;
       Next;
     end;
@@ -273,14 +273,14 @@ end;
 
 procedure TdmArticulos.GetCodigoAutoArticulo;
 begin
-  if unqryTablaG.FindField('CODIGO_ARTICULO').AsString = '0' then
+  if unqryTablaG.FindField('CODIGO_ART_ART').AsString = '0' then
   begin
-    unqryTablaG.FindField('CODIGO_ARTICULO').AsString :=
+    unqryTablaG.FindField('CODIGO_ART_ART').AsString :=
                                                  ObtenerSiguienteContador('AR');
   end;
-  if unqryTablaG.FindField('ORDEN_ARTICULO').AsString = '0' then
+  if unqryTablaG.FindField('ORDEN_ART').AsString = '0' then
   begin
-      unqryTablaG.FindField('ORDEN_ARTICULO').AsString :=
+      unqryTablaG.FindField('ORDEN_ART').AsString :=
                                                  ObtenerSiguienteContador('AO');
   end;
 end;
@@ -290,12 +290,12 @@ begin
   inherited;
   with unqryTablaG do
   begin
-    var sDescripcion := Trim(FindField('DESCRIPCION_ARTICULO').AsString);
+    var sDescripcion := Trim(FindField('DESCRIPCION_ART').AsString);
     if (sDescripcion = '') or (SimbolosProhibidos(sDescripcion)) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Descripción de Artículos',
-               [FindField('DESCRIPCION_ARTICULO').AsString]);
+               [FindField('DESCRIPCION_ART').AsString]);
         Abort;
     end
     else
@@ -315,46 +315,46 @@ begin
     // Si estamos insertando uno nuevo, le damos un valor que no existe (-1)
     if State = dsInsert then
     begin
-      FieldByName('CODIGO_UNICO_TARIFA').Required := False;
-      FieldByName('CODIGO_UNICO_TARIFA').AutoGenerateValue := arAutoInc;
+      FieldByName('CODIGO_UNICO_ARTTAR').Required := False;
+      FieldByName('CODIGO_UNICO_ARTTAR').AutoGenerateValue := arAutoInc;
       PKValue := -1;
     end
     else
     begin
       // Si estamos editando, cogemos su ID real
-      PKValue := FieldByName('CODIGO_UNICO_TARIFA').AsInteger;
+      PKValue := FieldByName('CODIGO_UNICO_ARTTAR').AsInteger;
     end;
 
     unqrySol := TUniQuery.Create(nil);
     try
       unqrySol.Connection := oConn;
 
-      // 2. Añadimos: AND CODIGO_UNICO_TARIFA <> :PK para que no se valide contra sí mismo
+      // 2. Añadimos: AND CODIGO_UNICO_ARTTAR <> :PK para que no se valide contra sí mismo
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_articulos_tarifas ' +
-                           ' WHERE CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO' +
-                           '   AND CODIGO_TARIFA = :CODIGO_TARIFA' +
-                           '   AND COALESCE(CODIGO_UNIDAD_TARIFA, '''') = :CODIGO_UNIDAD' +
-                           '   AND CODIGO_UNICO_TARIFA <> :PK';
+                           ' WHERE CODIGO_ART_ARTTAR = :CODIGO_ART_ART' +
+                           '   AND CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR' +
+                           '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = :CODIGO_UNIDAD' +
+                           '   AND CODIGO_UNICO_ARTTAR <> :PK';
 
-      unqrySol.ParamByName('CODIGO_ARTICULO').AsString :=
-                              unqryTablaG.FindField('CODIGO_ARTICULO').AsString;
-      unqrySol.ParamByName('CODIGO_TARIFA').AsString :=
-                                            FindField('CODIGO_TARIFA').AsString;
+      unqrySol.ParamByName('CODIGO_ART_ART').AsString :=
+                              unqryTablaG.FindField('CODIGO_ART_ART').AsString;
+      unqrySol.ParamByName('CODIGO_TAR_ARTTAR').AsString :=
+                                            FindField('CODIGO_TAR_ARTTAR').AsString;
       unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
-                                            FindField('CODIGO_UNIDAD_TARIFA').AsString;
+                                            FindField('CODIGO_UNIDAD_ARTTAR').AsString;
       unqrySol.ParamByName('PK').AsInteger := PKValue;
 
       unqrySol.Open;
 
       if not(ExistePeriodoUnico(unqrySol,
-                                FindField('FECHA_DESDE_TARIFA'),
-                                FindField('FECHA_HASTA_TARIFA')))
+                                FindField('FECHA_DESDE_ARTTAR'),
+                                FindField('FECHA_HASTA_ARTTAR')))
       then
       begin
         ShowMessageFmt('No se pueden grabar dos precios para una tarifa ' +
                        'activa en fechas concurrentes para el artículo/SKU %s',
-                       [FindField('CODIGO_UNIDAD_TARIFA').AsString]);
+                       [FindField('CODIGO_UNIDAD_ARTTAR').AsString]);
         Abort;
       end;
     finally

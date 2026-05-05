@@ -277,8 +277,8 @@ begin
     try
       while not qry.Eof do
       begin
-        SubKey := qry.FieldByName('SUBKEY_PERFILES').AsString;
-        ValorStr := qry.FieldByName('VALUE_PERFILES').AsString;
+        SubKey := qry.FieldByName('SUBKEY_USUPER').AsString;
+        ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
         ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
 
         if (ItemData <> nil) and (ItemData.Data <> nil) then
@@ -467,7 +467,7 @@ begin
   usuarios := TStringList.Create;
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT DISTINCT USUARIO_GRUPO_PERFILES FROM fza_usuarios_perfiles WHERE KEY_PERFILES = ''frmMtoCajaParam'' ORDER BY USUARIO_GRUPO_PERFILES';
+    qry.SQL.Text := 'SELECT DISTINCT USUARIO_GRUPO_USUPER FROM fza_usuarios_perfiles WHERE KEY_USUPER = ''frmMtoCajaParam'' ORDER BY USUARIO_GRUPO_USUPER';
     qry.Open;
     while not qry.Eof do
     begin

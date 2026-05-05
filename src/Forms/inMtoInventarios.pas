@@ -272,12 +272,12 @@ begin
 
   // Si cambia el registro activo, recargamos el lookup de almacenes
   if (Field = nil) or
-     ((Field <> nil) and (Field.FieldName = 'CODIGO_EMPRESA_INVENTARIO')) then
+     ((Field <> nil) and (Field.FieldName = 'CODIGO_EMP_INV')) then
   begin
     if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
        not dsTablaG.DataSet.IsEmpty then
     begin
-      emp := dsTablaG.DataSet.FieldByName('CODIGO_EMPRESA_INVENTARIO').AsString;
+      emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString;
       if dmmInventarios <> nil then
         dmmInventarios.CargarAlmacenesPorEmpresa(emp);
     end;
@@ -292,7 +292,7 @@ begin
   Result := '';
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      (not dsTablaG.DataSet.IsEmpty) then
-    Result := dsTablaG.DataSet.FieldByName('ESTADO_INVENTARIO').AsString;
+    Result := dsTablaG.DataSet.FieldByName('ESTADO_INV').AsString;
 end;
 
 function TfrmMtoInventarios.PuedeEditar: Boolean;
@@ -353,7 +353,7 @@ begin
      not dmmInventarios.cdsLineas.IsEmpty then
   begin
     ActualizarColumnasDinamicas(
-      dmmInventarios.cdsLineas.FieldByName('CODIGO_ARTICULO_INVENTARIO_LINEA').AsString
+      dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString
     );
   end;
 end;
@@ -369,7 +369,7 @@ begin
 
   // Si el almacén ya escrito no pertenece a la nueva empresa, lo limpiamos
   if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
-    dsTablaG.DataSet.FieldByName('CODIGO_ALMACEN_INVENTARIO').Clear;
+    dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').Clear;
 end;
 
 // ============================================================================
@@ -410,12 +410,12 @@ begin
         '       N.ORDEN_VISUAL_ATRIBUTO '                              +
         '  FROM fza_articulos_skus SKU '                               +
         '  JOIN fza_atributos_sku AT '                                 +
-        '    ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SA '          +
+        '    ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA '          +
         '  JOIN fza_atributos_valores V '                              +
-        '    ON AT.ID_VALOR_SA = V.ID_VALOR_AV '                       +
+        '    ON AT.ID_AV_SA = V.ID_AV '                       +
         '  JOIN vi_atributos_nombres N '                               +
         '    ON V.ID_VA_AV = N.ID_ATRIBUTO '                           +
-        ' WHERE SKU.CODIGO_ARTICULO_SKU = :ARTICULO '                  +
+        ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO '                  +
         ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
       dmmInventarios.unqryDefinicionArticulo.ParamByName('ARTICULO').AsString := ArticuloPadre;
       dmmInventarios.unqryDefinicionArticulo.Open;
@@ -476,9 +476,9 @@ begin
     qry.SQL.Text :=
       'SELECT V.NOMBRE_VALOR_AV, N.ORDEN_VISUAL_ATRIBUTO ' +
       '  FROM fza_atributos_sku AT ' +
-      '  JOIN fza_atributos_valores V ON AT.ID_VALOR_SA = V.ID_VALOR_AV ' +
+      '  JOIN fza_atributos_valores V ON AT.ID_AV_SA = V.ID_AV ' +
       '  JOIN vi_atributos_nombres N  ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
-      ' WHERE AT.CODIGO_UNIDAD_SA = :SKU ' +
+      ' WHERE AT.CODIGO_UNIDAD_SKU_SA = :SKU ' +
       ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
     qry.ParamByName('SKU').AsString := Sku;
     qry.Open;
@@ -501,10 +501,10 @@ var
   i: Integer;
   ArticuloPadre, Sku, Valor: string;
 begin
-  // Concatena: CODIGO_ARTICULO/VAL1/VAL2/...
+  // Concatena: CODIGO_ART_ART/VAL1/VAL2/...
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
-  ArticuloPadre := dmmInventarios.cdsLineas.FieldByName('CODIGO_ARTICULO_INVENTARIO_LINEA').AsString;
+  ArticuloPadre := dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
   if ArticuloPadre = '' then Exit;
 
   Sku := ArticuloPadre;
@@ -515,7 +515,7 @@ begin
     Sku := Sku + '/' + Valor;
   end;
 
-  dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVENTARIO_LINEA').AsString := Sku;
+  dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := Sku;
 end;
 
 // ============================================================================
@@ -543,7 +543,7 @@ begin
      not dmmInventarios.cdsLineas.IsEmpty then
   begin
     ArtPadre := dmmInventarios.cdsLineas.FieldByName(
-                            'CODIGO_ARTICULO_INVENTARIO_LINEA').AsString;
+                            'CODIGO_ART_INVLIN').AsString;
     ActualizarColumnasDinamicas(ArtPadre);
   end;
 end;
@@ -570,7 +570,7 @@ begin
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
 
-  dmmInventarios.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVENTARIO_LINEA').AsString := Descripcion;
+  dmmInventarios.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString := Descripcion;
   dmmInventarios.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NumAtr;
 
   // Refrescar columnas SKU dinámicas
@@ -579,14 +579,14 @@ begin
   // Si no hay atributos (artículo sin SKUs), el SKU = código artículo
   if NumAtr = 0 then
   begin
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVENTARIO_LINEA').AsString := CodArticulo;
+    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := CodArticulo;
     // Y rellenamos teóricas y PMP directamente
     var CantTeo, PMPAct: Currency;
     dmmInventarios.RellenarDatosSku(CodArticulo, CantTeo, PMPAct);
-    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVENTARIO_LINEA').AsCurrency := CantTeo;
-    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVENTARIO_LINEA').AsCurrency  := CantTeo; // por defecto
-    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVENTARIO_LINEA').AsCurrency       := PMPAct;
-    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA').AsCurrency := PMPAct; // por defecto
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency  := CantTeo; // por defecto
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := PMPAct; // por defecto
   end;
 end;
 
@@ -605,11 +605,11 @@ begin
     dmmInventarios.cdsLineas.Edit;
 
   dmmInventarios.RellenarDatosSku(Sku, CantTeo, PMPAct);
-  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVENTARIO_LINEA').AsCurrency := CantTeo;
-  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVENTARIO_LINEA').AsCurrency  := CantTeo;
-  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVENTARIO_LINEA').AsCurrency       := PMPAct;
-  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA').AsCurrency := PMPAct;
-  dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVENTARIO_LINEA').AsDateTime     := Now;
+  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency := CantTeo;
+  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency  := CantTeo;
+  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       := PMPAct;
+  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := PMPAct;
+  dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime     := Now;
 
   RellenarAtributosDesdeSku(Sku);
 end;
@@ -624,16 +624,16 @@ begin
     dmmInventarios.cdsLineas.Edit;
 
   Fis    := StrToCurrDef(VarToStr(DisplayValue), 0);
-  Teo    := dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVENTARIO_LINEA').AsCurrency;
-  PMPAct := dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVENTARIO_LINEA').AsCurrency;
-  PMPNue := dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVENTARIO_LINEA').AsCurrency;
+  Teo    := dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency;
+  PMPAct := dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency;
+  PMPNue := dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency;
 
   DifUds   := Fis - Teo;
   DifCoste := (Fis * PMPNue) - (Teo * PMPAct);
 
-  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_DIFERENCIA_INVENTARIO_LINEA').AsCurrency := DifUds;
-  dmmInventarios.cdsLineas.FieldByName('TOTAL_COSTE_DIFERENCIA_LINEA').AsCurrency           := DifCoste;
-  dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVENTARIO_LINEA').AsDateTime         := Now;
+  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_DIFERENCIA_INVLIN').AsCurrency := DifUds;
+  dmmInventarios.cdsLineas.FieldByName('TOTAL_COSTE_DIFERENCIA_INVLIN').AsCurrency           := DifCoste;
+  dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime         := Now;
 end;
 
 procedure TfrmMtoInventarios.tvLineasGetCellHint(Sender: TcxCustomGridTableView;
@@ -757,7 +757,7 @@ end;
 procedure TfrmMtoInventarios.btnExportarMovsClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdMovs, 'Movimientos_Inventario_' +
-                dmmInventarios.unqryTablaG.FieldByName('NRO_INVENTARIO').AsString);
+                dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString);
 end;
 
 // ============================================================================
@@ -773,7 +773,7 @@ begin
     ShowMessage('El inventario debe estar ABIERTO.'); Exit;
   end;
 
-  Familia := dmmInventarios.unqryFamilias.FieldByName('CODIGO_FAMILIA').AsString;
+  Familia := dmmInventarios.unqryFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
   if Familia = '' then
   begin
     ShowMessage('Selecciona primero una familia.'); Exit;
@@ -802,7 +802,7 @@ begin
     ShowMessage('El inventario debe estar ABIERTO.'); Exit;
   end;
 
-  Proveedor := dmmInventarios.unqryProveedores.FieldByName('CODIGO_PROVEEDOR').AsString;
+  Proveedor := dmmInventarios.unqryProveedores.FieldByName('CODIGO_PRV_PRV').AsString;
   if Proveedor = '' then
   begin
     ShowMessage('Selecciona primero un proveedor.'); Exit;
@@ -831,7 +831,7 @@ begin
 
   if MessageDlg(
        'Esto añadirá al inventario todos los SKUs con stock que NO ' + #13#10 +
-       'estén ya en el inventario, con cantidad física = 0.' + #13#10 + #13#10 +
+       'estén ya en el inventario, con cantidad_artvin física = 0.' + #13#10 + #13#10 +
        'Útil para detectar artículos que faltó contar.' + #13#10 + #13#10 +
        '¿Continuar?',
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
@@ -855,7 +855,7 @@ begin
 
   if MessageDlg(
        'Esto cargará TODOS los SKUs con stock al inventario, ' + #13#10 +
-       'con cantidad física = teórica. ¿Continuar?',
+       'con cantidad_artvin física = teórica. ¿Continuar?',
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -908,10 +908,10 @@ begin
   res := TfrmModalAddBlockInventario.Ejecutar(
            Self,
            (ds as TUniQuery).Connection,
-           ds.FieldByName('CODIGO_EMPRESA_INVENTARIO').AsString,
-           ds.FieldByName('CODIGO_ALMACEN_INVENTARIO').AsString,
-           ds.FieldByName('SERIE_INVENTARIO').AsString,
-           ds.FieldByName('NRO_INVENTARIO').AsString);
+           ds.FieldByName('CODIGO_EMP_INV').AsString,
+           ds.FieldByName('CODIGO_ALM_INV').AsString,
+           ds.FieldByName('SERIE_INV').AsString,
+           ds.FieldByName('NUMERO_INV').AsString);
 
   if res.Aceptado then
   begin
@@ -946,7 +946,7 @@ begin
 
   // Por simplicidad: si es CSV/TXT lo cargamos directamente.
   // Para XLSX se debería usar un parser (p.ej. la unidad de Excel del proyecto).
-  // Formato esperado: SKU=CANTIDAD por línea (o solo SKU)
+  // Formato esperado: SKU=CANTIDAD_ARTVIN por línea (o solo SKU)
   Lista := TStringList.Create;
   try
     if SameText(ExtractFileExt(Archivo), '.xlsx') or
@@ -954,7 +954,7 @@ begin
     begin
       ShowMessage(
         'Para XLSX: utiliza la opción "Exportar a CSV" desde Excel y vuelve a cargar.' + #13#10 +
-        'Formato esperado del CSV: SKU;CANTIDAD por línea.');
+        'Formato esperado del CSV: SKU;CANTIDAD_ARTVIN por línea.');
       Exit;
     end;
 

@@ -1,4 +1,4 @@
-inherited frmMtoContadores: TfrmMtoContadores
+﻿inherited frmMtoContadores: TfrmMtoContadores
   Caption = 'Contadores'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -14,45 +14,45 @@ inherited frmMtoContadores: TfrmMtoContadores
             OptionsData.Editing = True
             object cxgrdbclmnGrdDBTabPrinTIPODOC_CONTADOR: TcxGridDBColumn
               Caption = 'Tipo de Documento'
-              DataBinding.FieldName = 'TIPODOC_CONTADOR'
+              DataBinding.FieldName = 'TIPO_DOC_CON'
               Options.Editing = False
               Width = 71
             end
             object cxGrdDBTabPrinDESCRIPCION_TIPODOCUMENTO: TcxGridDBColumn
               Caption = 'Documento'
-              DataBinding.FieldName = 'DESCRIPCION_TIPODOCUMENTO'
+              DataBinding.FieldName = 'DESCRIPCION_TIPO_DOCUMENTO_TD'
               Width = 197
             end
             object cxGrdDBTabPrinTABLAORIGEN_TIPODOCUMENTO: TcxGridDBColumn
               Caption = 'Tabla de origen'
-              DataBinding.FieldName = 'TABLAORIGEN_TIPODOCUMENTO'
+              DataBinding.FieldName = 'TABLA_ORIGEN_TIPO_DOCUMENTO_TD'
               Width = 188
             end
             object cxGrdDBTabPrinEMPRESA_CONTADOR: TcxGridDBColumn
               Caption = 'Empresa'
-              DataBinding.FieldName = 'EMPRESA_CONTADOR'
+              DataBinding.FieldName = 'EMPRESA_CON'
               Width = 88
             end
             object cxgrdbclmnGrdDBTabPrinSERIE_CONTADOR: TcxGridDBColumn
               Caption = 'Serie'
-              DataBinding.FieldName = 'SERIE_CONTADOR'
+              DataBinding.FieldName = 'SERIE_CON'
               Width = 114
             end
             object cxgrdbclmnGrdDBTabPrinCONTADOR_CONTADOR: TcxGridDBColumn
               Caption = 'Contador'
-              DataBinding.FieldName = 'CONTADOR_CONTADOR'
+              DataBinding.FieldName = 'CON'
               Width = 88
             end
             object cxGrdDBTabPrinNUMDIGIT_CONTADOR: TcxGridDBColumn
               Caption = 'Digitos Contador'
-              DataBinding.FieldName = 'NUMDIGIT_CONTADOR'
+              DataBinding.FieldName = 'NUM_DIGITOS_CON'
               PropertiesClassName = 'TcxSpinEditProperties'
               Properties.MaxValue = 30.000000000000000000
               Width = 161
             end
             object cxGrdDBTabPrinACTIVO_CONTADOR: TcxGridDBColumn
               Caption = 'EsActivo'
-              DataBinding.FieldName = 'ACTIVO_CONTADOR'
+              DataBinding.FieldName = 'ESACTIVO_CON'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -60,26 +60,26 @@ inherited frmMtoContadores: TfrmMtoContadores
             end
             object cxgrdbclmnGrdDBTabPrinDEFAULT_CONTADOR: TcxGridDBColumn
               Caption = 'Es contador por defecto'
-              DataBinding.FieldName = 'DEFAULT_CONTADOR'
+              DataBinding.FieldName = 'DEFAULT_CON'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               Width = 177
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Visible = False
             end
           end

@@ -1,4 +1,4 @@
-inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
+﻿inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   Caption = 'Generar SKUS'
   ClientHeight = 485
   ClientWidth = 732
@@ -64,11 +64,11 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           DataController.DataSource = dsMaestro
           OptionsView.GroupByBox = False
           object tvMaestroID_ATRIBUTO_VA: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_ATRIBUTO_VA'
+            DataBinding.FieldName = 'ID_ATB_VA'
             Visible = False
           end
           object tvMaestroID_VA: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_VA'
+            DataBinding.FieldName = 'ID_VAR_VA'
             Visible = False
           end
           object tvMaestroNOMBRE_ATRIBUTO: TcxGridDBColumn
@@ -118,11 +118,11 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
           DataController.DataSource = dsDetalle
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_ATRIBUTO_AC'
+            DataBinding.FieldName = 'ID_VA_AC'
             Visible = False
           end
           object tvDetalleID_CONJUNTO_AC: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_CONJUNTO_AC'
+            DataBinding.FieldName = 'ID_AC'
             Visible = False
             Width = 167
           end
@@ -140,7 +140,7 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
             Properties.ValueUnchecked = '0'
           end
           object tvDetalleID_ATRIBUTO_VA: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_ATRIBUTO_VA'
+            DataBinding.FieldName = 'ID_ATB_VA'
             Visible = False
           end
           object tvDetalleORDEN_AV: TcxGridDBColumn
@@ -158,10 +158,9 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   object unqryMaestro: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT va.ID_ATRIBUTO_VA,  va.ID_VA,'
+      'SELECT va.ID_ATB_VA,  va.ID_VAR_VA,'
       
-        '       COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA) AS NOMBRE_ATRIB' +
-        'UTO, '
+        '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, '
       '       va.ORDEN_VA '
       '    FROM fza_variaciones_atributos va '
       '    ORDER BY va.ORDEN_VA')
@@ -173,31 +172,31 @@ inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT  '
-      '             atr.ID_ATRIBUTO_VA,  '
-      '             val.ID_VALOR_AV AS ID_CONJUNTO_AC,  '
-      '             val.VALOR_AV AS NOMBRE_AC,  '
+      '             atr.ID_ATB_VA,  '
+      '             val.ID_AV AS ID_AC,  '
+      '             val.AV AS NOMBRE_AC,  '
       '             val.ORDEN_AV,  '
       '             0 AS ASIGNADO  '
       '        FROM fza_variaciones_atributos atr  '
       '        JOIN fza_articulos_conjuntos_asign asign  '
-      '          ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA  '
-      '         AND asign.CODIGO_ARTICULO_ACA = '#39'DEMO-CAMISA'#39'  '
+      '          ON asign.ID_VA_ACA = atr.ID_ATB_VA  '
+      '         AND asign.CODIGO_ART_ACA = '#39'DEMO-CAMISA'#39'  '
       '        JOIN fza_atributos_conjuntos_det det  '
-      '          ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA  '
+      '          ON det.ID_AC_ACD = asign.ID_AC_ACA  '
       '        JOIN fza_atributos_valores val  '
-      '          ON val.ID_VALOR_AV = det.ID_VALOR_ACD  '
+      '          ON val.ID_AV = det.ID_AV_ACD  '
       '       '
       '')
     MasterSource = dsMaestro
-    MasterFields = 'ID_ATRIBUTO_VA'
-    DetailFields = 'ID_ATRIBUTO_VA'
+    MasterFields = 'ID_ATB_VA'
+    DetailFields = 'ID_ATB_VA'
     Active = True
     Left = 680
     Top = 56
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'ID_ATRIBUTO_VA'
+        Name = 'ID_ATB_VA'
         ParamType = ptInput
         Value = 'CO'
       end>

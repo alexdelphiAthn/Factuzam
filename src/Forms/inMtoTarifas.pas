@@ -163,11 +163,11 @@ begin
   begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-         (not(FieldByName('CODIGO_FAMILIA_ARTICULO').IsNull))
+         (not(FieldByName('CODIGO_FAM_ART').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Familias',
-              FieldByName('CODIGO_FAMILIA_ARTICULO').AsString)
+              FieldByName('CODIGO_FAM_ART').AsString)
       else
         ShowMto(Self.Owner,
                 'Familias');
@@ -181,11 +181,11 @@ begin
   begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-        (not(FieldByName('CODIGO_PROVEEDOR').IsNull))
+        (not(FieldByName('CODIGO_PRV_PRV').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Proveedores',
-              FieldByName('CODIGO_PROVEEDOR').AsString)
+              FieldByName('CODIGO_PRV_PRV').AsString)
       else
         ShowMto(Self.Owner,
                 'Proveedores');
@@ -214,7 +214,7 @@ begin
       Exit;
   end;
 
-  codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TARIFA').AsString;
+  codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString;
 
   res := TfrmModalAddBlockTarifa.Ejecutar(
            Self,
@@ -236,11 +236,11 @@ begin
   begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-        (not(FieldByName('CODIGO_ARTICULO_TARIFA').Isnull))
+        (not(FieldByName('CODIGO_ART_ARTTAR').Isnull))
        ) then
       ShowMto(Self.Owner,
               'Articulos',
-              FieldByName('CODIGO_ARTICULO_TARIFA').AsString)
+              FieldByName('CODIGO_ART_ARTTAR').AsString)
       else
         ShowMto(Self.Owner,
                 'Articulos');
@@ -252,7 +252,7 @@ begin
   inherited;
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
-  pkFieldName := 'CODIGO_TARIFA';
+  pkFieldName := 'CODIGO_TAR_ARTTAR';
 end;
 
 procedure TfrmMtoTarifas.dsTablaGStateChange(Sender: TObject);

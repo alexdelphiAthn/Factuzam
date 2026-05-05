@@ -30,7 +30,7 @@ type
     procedure TamanoDoble(Ancho, Alto: Boolean);
     procedure EscribirLinea(const Texto: string);
     procedure EscribirTexto(const Texto: string);
-    procedure SaltarLineas(Cantidad: Integer);
+    procedure SaltarLineas(CANTIDAD_ARTVIN: Integer);
     procedure LineaSeparadora(Caracter: Char = '-');
     procedure ImprimirImagen(Bitmap: Vcl.Graphics.TBitmap;
                              Escala: Integer = 3);
@@ -188,9 +188,9 @@ begin
   FComandos.Append(Texto);
 end;
 
-procedure TTicketTermico.SaltarLineas(Cantidad: Integer);
+procedure TTicketTermico.SaltarLineas(CANTIDAD_ARTVIN: Integer);
 begin
-  FComandos.Append(ESC + 'd' + Chr(Cantidad));
+  FComandos.Append(ESC + 'd' + Chr(CANTIDAD_ARTVIN));
 end;
 
 procedure TTicketTermico.LineaSeparadora(Caracter: Char);

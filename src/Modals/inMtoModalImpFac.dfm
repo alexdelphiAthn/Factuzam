@@ -4,17 +4,17 @@ inherited frmPrintFac: TfrmPrintFac
   ClientWidth = 414
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 432
-  ExplicitHeight = 304
+  ExplicitWidth = 430
+  ExplicitHeight = 296
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 260
     Width = 154
     Height = 257
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 260
+    ExplicitLeft = 258
     ExplicitWidth = 154
-    ExplicitHeight = 257
+    ExplicitHeight = 249
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,9 +28,9 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 239
+      Top = 231
       Width = 152
-      ExplicitTop = 231
+      ExplicitTop = 223
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -133,7 +133,7 @@ inherited frmPrintFac: TfrmPrintFac
     ScriptText.Strings = (
       'procedure RetencionTotalOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_RETENCION_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RETENCION_FAC"> <> 0 then'
       '  begin'
       '    RetencionTotal.Visible := True;'
       '    Retencion.Visible:= True;'
@@ -147,7 +147,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure ImpuestosTotalOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_IMPUESTOS_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_IMPUESTOS_FAC"> <> 0 then'
       '  begin'
       '    ImpuestosTotal.Visible := True;'
       '    Impuestos.Visible:= True;'
@@ -161,7 +161,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleNOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAN_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAN_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleN.Visible := True;'
       '    FacturasTOTAL_IVAN_FACTURA.Visible := True;'
@@ -181,7 +181,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleROnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAR_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAR_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleR.Visible := True;'
       '    FacturasTOTAL_IVAR_FACTURA.Visible := True;'
@@ -201,7 +201,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleSOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAS_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAS_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleS.Visible := True;'
       '    FacturasTOTAL_IVAS_FACTURA.Visible := True;'
@@ -221,7 +221,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleEOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '    if <Facturas."TOTAL_BASEI_IVAE_FACTURA"> <> 0 then'
+      '    if <Facturas."TOTAL_BASEI_IVAE_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleE.Visible := True;'
       '    FacturasTOTAL_IVAE_FACTURA.Visible := True;'
@@ -238,8 +238,8 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_REE_FACTURA.Visible := False;'
       '  end;'
       
-        '  if (<Facturas."TOTAL_BASEI_IVAE_FACTURA"> = <Facturas."TOTAL_B' +
-        'ASES_FACTURA">) then'
+        '  if (<Facturas."TOTAL_BASEI_IVAE_FAC"> = <Facturas."TOTAL_BASES' +
+        '_FAC">) then'
       '  begin'
       '    CajaIVA.Visible := False;'
       '    CajaTitulosIVA.Visible := False;'
@@ -256,7 +256,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_REN_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_REN_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_REN_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_REN_FACTURA.Visible := True;'
       '    FacturasTOTAL_REN_FACTURA.Visible := True;'
@@ -272,7 +272,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_RER_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_RER_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RER_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_RER_FACTURA.Visible := True;'
       '    FacturasTOTAL_RER_FACTURA1.Visible := True;'
@@ -289,7 +289,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_RES_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_RES_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RES_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_RES_FACTURA.Visible := True;'
       '    FacturasTOTAL_RES_FACTURA.Visible := True;'
@@ -306,7 +306,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_REE_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '    if <Facturas."TOTAL_REE_FACTURA"> <> 0 then'
+      '    if <Facturas."TOTAL_REE_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_REE_FACTURA.Visible := True;'
       '    FacturasTOTAL_REE_FACTURA.Visible := True;'
@@ -321,10 +321,10 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure RetencionPorcOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  If (( <Facturas."TOTAL_REE_FACTURA"> +'
-      '        <Facturas."TOTAL_RES_FACTURA"> +'
-      '        <Facturas."TOTAL_RER_FACTURA"> +'
-      '        <Facturas."TOTAL_REN_FACTURA"> ) = 0) then'
+      '  If (( <Facturas."TOTAL_REE_FAC"> +'
+      '        <Facturas."TOTAL_RES_FAC"> +'
+      '        <Facturas."TOTAL_RER_FAC"> +'
+      '        <Facturas."TOTAL_REN_FAC"> ) = 0) then'
       '  begin'
       '    RetencionPorc.Visible := False;'
       '    RetencionTot.Visible := False;'
@@ -343,7 +343,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure DetailData1OnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  If (<Facturas."ESFECHADEENTREGA_FACTURA"> <> '#39'S'#39') then'
+      '  If (<Facturas."ESFECHADEENTREGA_FAC"> <> '#39'S'#39') then'
       '   begin              '
       
         '    // LineasFacturasDESCRIPCION_ARTICULO_FACTURA_LINEA.Width :=' +
@@ -367,7 +367,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FechaEntregaTittleOnBeforePrint(Sender: TfrxComponent)' +
         ';'
       'begin'
-      '  If (<Facturas."ESFECHADEENTREGA_FACTURA"> <> '#39'S'#39') then'
+      '  If (<Facturas."ESFECHADEENTREGA_FAC"> <> '#39'S'#39') then'
       '    FechaEntregaTittle.Visible := False'
       '  else'
       '    FechaEntregaTittle.Visible := True;                 '
@@ -397,7 +397,7 @@ inherited frmPrintFac: TfrmPrintFac
         Width = 64.252010000000000000
         Height = 18.897650000000000000
         OnBeforePrint = 'FacturasTOTAL_RER_FACTURAOnBeforePrint'
-        DataField = 'TOTAL_RER_FACTURA'
+        DataField = 'TOTAL_RER_FAC'
         DisplayFormat.DecimalSeparator = ','
         DisplayFormat.FormatStr = '%2.3m'
         DisplayFormat.Kind = fkNumeric
@@ -409,7 +409,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_RER_FACTURA"]')
+          '[Facturas."TOTAL_RER_FAC"]')
         ParentFont = False
       end
       object FacturasTOTAL_RES_FACTURA: TfrxMemoView
@@ -420,7 +420,7 @@ inherited frmPrintFac: TfrmPrintFac
         Width = 64.252010000000000000
         Height = 18.897650000000000000
         OnBeforePrint = 'FacturasTOTAL_RES_FACTURAOnBeforePrint'
-        DataField = 'TOTAL_RES_FACTURA'
+        DataField = 'TOTAL_RES_FAC'
         DisplayFormat.DecimalSeparator = ','
         DisplayFormat.FormatStr = '%2.3m'
         DisplayFormat.Kind = fkNumeric
@@ -432,7 +432,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_RES_FACTURA"]')
+          '[Facturas."TOTAL_RES_FAC"]')
         ParentFont = False
       end
     end
@@ -454,7 +454,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_LIQUIDO_FACTURA"]')
+          '[Facturas."TOTAL_LIQUIDO_FAC"]')
         ParentFont = False
       end
       object Memo21: TfrxMemoView
@@ -476,7 +476,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[<Facturas."TOTAL_RETENCION_FACTURA"> * (-1)]')
+          '[<Facturas."TOTAL_RETENCION_FAC"> * (-1)]')
         ParentFont = False
       end
       object Memo23: TfrxMemoView
@@ -497,7 +497,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_IMPUESTOS_FACTURA"]')
+          '[Facturas."TOTAL_IMPUESTOS_FAC"]')
         ParentFont = False
       end
       object Memo25: TfrxMemoView
@@ -518,7 +518,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_BASES_FACTURA"]')
+          '[Facturas."TOTAL_BASES_FAC"]')
         ParentFont = False
       end
     end
@@ -557,7 +557,7 @@ inherited frmPrintFac: TfrmPrintFac
     ScriptText.Strings = (
       'procedure RetencionTotalOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_RETENCION_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RETENCION_FAC"> <> 0 then'
       '  begin'
       '    txtRetencionTotal.Visible := True;'
       '    Retencion.Visible:= True;'
@@ -571,7 +571,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure ImpuestosTotalOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_IMPUESTOS_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_IMPUESTOS_FAC"> <> 0 then'
       '  begin'
       '    ImpuestosTotal.Visible := True;'
       '    Impuestos.Visible:= True;'
@@ -585,7 +585,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleNOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAN_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAN_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleN.Visible := True;'
       '    FacturasTOTAL_IVAN_FACTURA.Visible := True;'
@@ -605,7 +605,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleROnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAR_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAR_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleR.Visible := True;'
       '    FacturasTOTAL_IVAR_FACTURA.Visible := True;'
@@ -625,7 +625,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleSOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if <Facturas."TOTAL_BASEI_IVAS_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_BASEI_IVAS_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleS.Visible := True;'
       '    FacturasTOTAL_IVAS_FACTURA.Visible := True;'
@@ -645,7 +645,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure BaseImponibleEOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '    if <Facturas."TOTAL_BASEI_IVAE_FACTURA"> <> 0 then'
+      '    if <Facturas."TOTAL_BASEI_IVAE_FAC"> <> 0 then'
       '  begin'
       '    BaseImponibleE.Visible := True;'
       '    FacturasTOTAL_IVAE_FACTURA.Visible := True;'
@@ -662,8 +662,8 @@ inherited frmPrintFac: TfrmPrintFac
       '    FacturasTOTAL_REE_FACTURA.Visible := False;'
       '  end;'
       
-        '  if (<Facturas."TOTAL_BASEI_IVAE_FACTURA"> = <Facturas."TOTAL_B' +
-        'ASES_FACTURA">) then'
+        '  if (<Facturas."TOTAL_BASEI_IVAE_FAC"> = <Facturas."TOTAL_BASES' +
+        '_FAC">) then'
       '  begin'
       '    CajaIVA.Visible := False;'
       '    CajaTitulosIVA.Visible := False;'
@@ -680,7 +680,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_REN_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_REN_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_REN_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_REN_FACTURA.Visible := True;'
       '    FacturasTOTAL_REN_FACTURA.Visible := True;'
@@ -696,7 +696,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_RER_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_RER_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RER_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_RER_FACTURA.Visible := True;'
       '    FacturasTOTAL_RER_FACTURA.Visible := True;'
@@ -713,7 +713,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_RES_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '  if <Facturas."TOTAL_RES_FACTURA"> <> 0 then'
+      '  if <Facturas."TOTAL_RES_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_RES_FACTURA.Visible := True;'
       '    FacturasTOTAL_RES_FACTURA.Visible := True;'
@@ -730,7 +730,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FacturasTOTAL_REE_FACTURAOnBeforePrint(Sender: TfrxCom' +
         'ponent);'
       'begin'
-      '    if <Facturas."TOTAL_REE_FACTURA"> <> 0 then'
+      '    if <Facturas."TOTAL_REE_FAC"> <> 0 then'
       '  begin'
       '    FacturasPORCEN_REE_FACTURA.Visible := True;'
       '    FacturasTOTAL_REE_FACTURA.Visible := True;'
@@ -745,10 +745,10 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure RetencionPorcOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  If (( <Facturas."TOTAL_REE_FACTURA"> +'
-      '        <Facturas."TOTAL_RES_FACTURA"> +'
-      '        <Facturas."TOTAL_RER_FACTURA"> +'
-      '        <Facturas."TOTAL_REN_FACTURA"> ) = 0) then'
+      '  If (( <Facturas."TOTAL_REE_FAC"> +'
+      '        <Facturas."TOTAL_RES_FAC"> +'
+      '        <Facturas."TOTAL_RER_FAC"> +'
+      '        <Facturas."TOTAL_REN_FAC"> ) = 0) then'
       '  begin'
       '    RetencionPorc.Visible := False;'
       '    RetencionTot.Visible := False;'
@@ -851,7 +851,7 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure DetailData1OnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  If (<Facturas."ESFECHADEENTREGA_FACTURA"> <> '#39'S'#39') then'
+      '  If (<Facturas."ESFECHADEENTREGA_FAC"> <> '#39'S'#39') then'
       '   begin'
       
         '    // LineasFacturasDESCRIPCION_ARTICULO_FACTURA_LINEA.Width :=' +
@@ -870,7 +870,7 @@ inherited frmPrintFac: TfrmPrintFac
         'procedure FechaEntregaTittleOnBeforePrint(Sender: TfrxComponent)' +
         ';'
       'begin'
-      '  If (<Facturas."ESFECHADEENTREGA_FACTURA"> <> '#39'S'#39') then'
+      '  If (<Facturas."ESFECHADEENTREGA_FAC"> <> '#39'S'#39') then'
       '    FechaEntregaTittle.Visible := False'
       '  else'
       '    FechaEntregaTittle.Visible := True;'
@@ -881,8 +881,8 @@ inherited frmPrintFac: TfrmPrintFac
         ' TfrxComponent);'
       'begin'
       
-        '  IF (<Facturas."POBLACION_EMPRESA_FACTURA"> = <Facturas."PROVIN' +
-        'CIA_EMPRESA_FACTURA">) then'
+        '  IF (<Facturas."POBLACION_EMPRESA_FAC"> = <Facturas."PROVINCIA_' +
+        'EMPRESA_FAC">) then'
       '    FacturasPROVINCIA_EMPRESA_FACTURA.Visible := False'
       '  else'
       '    FacturasPROVINCIA_EMPRESA_FACTURA.Visible := True;'
@@ -894,8 +894,8 @@ inherited frmPrintFac: TfrmPrintFac
         ' TfrxComponent);'
       'begin'
       
-        '  IF (<Facturas."POBLACION_CLIENTE_FACTURA"> = <Facturas."PROVIN' +
-        'CIA_CLIENTE_FACTURA">) then'
+        '  IF (<Facturas."POBLACION_CLIENTE_FAC"> = <Facturas."PROVINCIA_' +
+        'CLIENTE_FAC">) then'
       '    FacturasPROVINCIA_CLIENTE_FACTURA.Visible := False'
       '  else'
       '    FacturasPROVINCIA_CLIENTE_FACTURA.Visible := True;'
@@ -903,17 +903,17 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure ImpuestosOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  If (( <Facturas."TOTAL_REE_FACTURA"> +'
-      '        <Facturas."TOTAL_RES_FACTURA"> +'
-      '        <Facturas."TOTAL_RER_FACTURA"> +'
-      '        <Facturas."TOTAL_REN_FACTURA"> ) = 0) then'
+      '  If (( <Facturas."TOTAL_REE_FAC"> +'
+      '        <Facturas."TOTAL_RES_FAC"> +'
+      '        <Facturas."TOTAL_RER_FAC"> +'
+      '        <Facturas."TOTAL_REN_FAC"> ) = 0) then'
       
         '    Impuestos.Memo.Text := '#39'Total [Facturas."PALABRA_REPORTS_ZON' +
-        'A_IVA_FACTURA"]'#39
+        'A_IVA_FAC"]'#39
       '  else'
       
         '    Impuestos.Memo.Text := '#39'Total [Facturas."PALABRA_REPORTS_ZON' +
-        'A_IVA_FACTURA"] + R.E.'#39
+        'A_IVA_FAC"] + R.E.'#39
       'end;'
       ''
       'procedure mNumPaginasOnBeforePrint(Sender: TfrxComponent);'
@@ -926,18 +926,18 @@ inherited frmPrintFac: TfrmPrintFac
       ''
       'procedure FormaPagoOnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if ((<Facturas."ESVERBANCOEMPRESA_FORMAPAGO"> = '#39'S'#39') and'
-      '      (<Facturas."ESCONTADO_FORMAPAGO"> = '#39'N'#39') and'
-      '      (<Facturas."IBAN_EMPRESA"> <> '#39#39'))  then'
+      '  if ((<Facturas."ESVERBANCOEMPRESA_FORMA_PAGO_FP"> = '#39'S'#39') and'
+      '      (<Facturas."ESCONTADO_FORMA_PAGO_FP"> = '#39'N'#39') and'
+      '      (<Facturas."IBAN_EMP"> <> '#39#39'))  then'
       
         '    FormaPago.Memo.Text := Trim(FormaPago.Memo.Text) + '#39'     '#39' +' +
-        ' <Facturas."IBAN_EMPRESA">;'
-      '  if ((<Facturas."ESVERBANCOEMPRESA_FORMAPAGO"> = '#39'N'#39') and'
-      '      (<Facturas."ESCONTADO_FORMAPAGO"> = '#39'N'#39') and'
-      '      (<Facturas."IBAN_CLIENTE"> <> '#39#39')) then'
+        ' <Facturas."IBAN_EMP">;'
+      '  if ((<Facturas."ESVERBANCOEMPRESA_FORMA_PAGO_FP"> = '#39'N'#39') and'
+      '      (<Facturas."ESCONTADO_FORMA_PAGO_FP"> = '#39'N'#39') and'
+      '      (<Facturas."IBAN_CLI"> <> '#39#39')) then'
       
         '    FormaPago.Memo.Text := Trim(FormaPago.Memo.Text) + '#39'     '#39' +' +
-        ' <Facturas."IBAN_CLIENTE">;'
+        ' <Facturas."IBAN_CLI">;'
       '  if (<Facturas."VENCIMIENTOS_RECIBOS"> <> '#39#39') then'
       
         '    FormaPago.Memo.Text := FormaPago.Memo.Text + '#39'Vencimiento/s:' +
@@ -946,35 +946,31 @@ inherited frmPrintFac: TfrmPrintFac
         'end;procedure LineasFacturasTOTAL_LINEAOnBeforePrint(Sender: Tfr' +
         'xComponent);'
       'begin'
-      
-        '  if (<Lineas Facturas."ESIMP_INCL_TARIFA_FACTURA_LINEA"> = '#39'S'#39')' +
-        ' then'
+      '  if (<Lineas Facturas."ESIMP_INCL_TARIFA_FACLIN"> = '#39'S'#39') then'
       
         '    LineasFacturasTOTAL_LINEA.Memo.Text := '#39'[Lineas Facturas."TO' +
-        'TAL_FACTURA_LINEA"]'#39
+        'TAL_FACLIN"]'#39
       '  else'
       
         '    LineasFacturasTOTAL_LINEA.Memo.Text := '#39'[<Lineas Facturas."C' +
-        'ANTIDAD_FACTURA_LINEA"> '#39'+'
+        'ANTIDAD_FACLIN"> '#39'+'
       
         '                                           '#39'*<Lineas Facturas."P' +
-        'RECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA">]'#39';'
+        'RECIO_VENTA_SIVA_ARTICULO_FACLIN">]'#39';'
       'end;'
       ''
       
         'procedure PrecioUnitarioLineasFacturasOnBeforePrint(Sender: Tfrx' +
         'Component);'
       'begin'
-      
-        '  if (<Lineas Facturas."ESIMP_INCL_TARIFA_FACTURA_LINEA"> = '#39'S'#39')' +
-        ' then'
+      '  if (<Lineas Facturas."ESIMP_INCL_TARIFA_FACLIN"> = '#39'S'#39') then'
       
         '    PrecioUnitarioLineasFacturas.Memo.Text := '#39'[<Lineas Facturas' +
-        '."PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA">]'#39
+        '."PRECIO_VENTA_CIVA_ARTICULO_FACLIN">]'#39
       '  else'
       
         '    PrecioUnitarioLineasFacturas.Memo.Text := '#39'[<Lineas Facturas' +
-        '."PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA">]'#39
+        '."PRECIO_VENTA_SIVA_ARTICULO_FACLIN">]'#39
       'end;'
       ''
       'begin'
@@ -1029,8 +1025,8 @@ inherited frmPrintFac: TfrmPrintFac
           Memo.UTF8W = (
             ''
             
-              '[<Lineas Facturas."CANTIDAD_FACTURA_LINEA">*<Lineas Facturas."PR' +
-              'ECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA">]')
+              '[<Lineas Facturas."CANTIDAD_FACLIN">*<Lineas Facturas."PRECIO_VE' +
+              'NTA_SIVA_ARTICULO_FACLIN">]')
           ParentFont = False
         end
         object LineasFacturasCANTIDAD_FACTURA_LINEA: TfrxMemoView
@@ -1049,8 +1045,8 @@ inherited frmPrintFac: TfrmPrintFac
           HAlign = haRight
           Memo.UTF8W = (
             
-              '[Lineas Facturas."CANTIDAD_FACTURA_LINEA"] [Lineas Facturas."TIP' +
-              'O_CANTIDAD_ARTICULO_FACTURA_LINEA"]')
+              '[Lineas Facturas."CANTIDAD_FACLIN"] [Lineas Facturas."TIPO_CANTI' +
+              'DAD_ARTICULO_FACLIN"]')
           ParentFont = False
           Formats = <
             item
@@ -1066,7 +1062,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 79.370130000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'PrecioUnitarioLineasFacturasOnBeforePrint'
-          DataField = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+          DataField = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -1078,7 +1074,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Lineas Facturas."PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA"]')
+            '[Lineas Facturas."PRECIO_VENTA_SIVA_ARTICULO_FACLIN"]')
           ParentFont = False
         end
         object LineasFacturasPORCEN_IVA_FACTURA_LINEA: TfrxMemoView
@@ -1099,7 +1095,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haCenter
           Memo.UTF8W = (
-            '[Lineas Facturas."PORCEN_IVA_FACTURA_LINEA"]')
+            '[Lineas Facturas."PORCENTAJE_IVA_FACLIN"]')
           ParentFont = False
         end
         object LineasFacturasFECHA_ENTREGA_FACTURA_LINEA: TfrxMemoView
@@ -1109,7 +1105,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 3.779530000000000000
           Width = 79.370130000000000000
           Height = 18.897650000000000000
-          DataField = 'FECHA_ENTREGA_FACTURA_LINEA'
+          DataField = 'FECHA_ENTREGA_FACLIN'
           DataSet = dmFacturas.fxdstPrintLinFac
           DataSetName = 'Lineas Facturas'
           DisplayFormat.FormatStr = 'dd/mm/yyyy'
@@ -1121,7 +1117,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Lineas Facturas."FECHA_ENTREGA_FACTURA_LINEA"]')
+            '[Lineas Facturas."FECHA_ENTREGA_FACLIN"]')
           ParentFont = False
         end
         object LineasFacturasDESCRIPCION_ARTICULO_FACTURA_LINEA: TfrxMemoView
@@ -1132,7 +1128,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 272.126160000000000000
           Height = 18.897650000000000000
           StretchMode = smMaxHeight
-          DataField = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+          DataField = 'DESCRIPCION_ARTICULO_FACLIN'
           DataSet = dmFacturas.fxdstPrintLinFac
           DataSetName = 'Lineas Facturas'
           Font.Charset = DEFAULT_CHARSET
@@ -1143,7 +1139,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           LineSpacing = 4.000000000000000000
           Memo.UTF8W = (
-            '[Lineas Facturas."DESCRIPCION_ARTICULO_FACTURA_LINEA"]')
+            '[Lineas Facturas."DESCRIPCION_ARTICULO_FACLIN"]')
           ParentFont = False
           WordBreak = True
         end
@@ -1165,7 +1161,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_LIQUIDO_FACTURA"]')
+          '[Facturas."TOTAL_LIQUIDO_FAC"]')
         ParentFont = False
       end
       object Memo21: TfrxMemoView
@@ -1187,7 +1183,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[<Facturas."TOTAL_RETENCION_FACTURA"> * (-1)]')
+          '[<Facturas."TOTAL_RETENCION_FAC"> * (-1)]')
         ParentFont = False
       end
       object Memo23: TfrxMemoView
@@ -1208,7 +1204,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_IMPUESTOS_FACTURA"]')
+          '[Facturas."TOTAL_IMPUESTOS_FAC"]')
         ParentFont = False
       end
       object Memo25: TfrxMemoView
@@ -1229,7 +1225,7 @@ inherited frmPrintFac: TfrmPrintFac
         Frame.Typ = []
         HAlign = haRight
         Memo.UTF8W = (
-          '[Facturas."TOTAL_BASES_FACTURA"]')
+          '[Facturas."TOTAL_BASES_FAC"]')
         ParentFont = False
       end
       object PageHeader1: TfrxPageHeader
@@ -1311,7 +1307,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 211.653680000000000000
           Width = 340.157700000000000000
           Height = 18.897650000000000000
-          DataField = 'RAZONSOCIAL_EMPRESA_FACTURA'
+          DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
@@ -1319,7 +1315,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."RAZONSOCIAL_EMPRESA_FACTURA"]')
+            '[Facturas."RAZON_SOCIAL_EMPRESA_FAC"]')
           ParentFont = False
         end
         object FacturasDIRECCION1_EMPRESA_FACTURA: TfrxMemoView
@@ -1337,8 +1333,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."DIRECCION1_EMPRESA_FACTURA"] [Facturas."DIRECCION2_EM' +
-              'PRESA_FACTURA"]')
+              '[Facturas."DIRECCION1_EMPRESA_FAC"] [Facturas."DIRECCION2_EMPRES' +
+              'A_FAC"]')
           ParentFont = False
           Formats = <
             item
@@ -1361,8 +1357,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."CPOSTAL_EMPRESA_FACTURA"]   [Facturas."POBLACION_EMPR' +
-              'ESA_FACTURA"]')
+              '[Facturas."CODIGO_POSTAL_EMPRESA_FAC"]   [Facturas."POBLACION_EM' +
+              'PRESA_FAC"]')
           ParentFont = False
         end
         object FacturasPROVINCIA_EMPRESA_FACTURA: TfrxMemoView
@@ -1381,7 +1377,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PROVINCIA_EMPRESA_FACTURA"]')
+            '[Facturas."PROVINCIA_EMPRESA_FAC"]')
           ParentFont = False
         end
         object FacturasMOVIL_EMPRESA_FACTURA: TfrxMemoView
@@ -1398,7 +1394,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."MOVIL_EMPRESA_FACTURA"]')
+            '[Facturas."MOVIL_EMPRESA_FAC"]')
           ParentFont = False
           Formats = <
             item
@@ -1447,7 +1443,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 211.653680000000000000
           Width = 347.716760000000000000
           Height = 18.897650000000000000
-          DataField = 'RAZONSOCIAL_CLIENTE_FACTURA'
+          DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
@@ -1455,7 +1451,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."RAZONSOCIAL_CLIENTE_FACTURA"]')
+            '[Facturas."RAZON_SOCIAL_CLIENTE_FAC"]')
           ParentFont = False
         end
         object FacturasDIRECCION1_EMPRESA_FACTURA1: TfrxMemoView
@@ -1473,8 +1469,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."DIRECCION1_CLIENTE_FACTURA"] [Facturas."DIRECCION2_CL' +
-              'IENTE_FACTURA"]')
+              '[Facturas."DIRECCION1_CLIENTE_FAC"] [Facturas."DIRECCION2_CLIENT' +
+              'E_FAC"]')
           ParentFont = False
         end
         object FacturasCPOSTAL_CLIENTE_FACTURA: TfrxMemoView
@@ -1492,8 +1488,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."CPOSTAL_CLIENTE_FACTURA"]   [Facturas."POBLACION_CLIE' +
-              'NTE_FACTURA"]')
+              '[Facturas."CODIGO_POSTAL_CLIENTE_FAC"]   [Facturas."POBLACION_CL' +
+              'IENTE_FAC"]')
           ParentFont = False
         end
         object FacturasPROVINCIA_CLIENTE_FACTURA: TfrxMemoView
@@ -1512,8 +1508,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Facturas."PROVINCIA_CLIENTE_FACTURA"]   [Facturas."NOMBRE_PAIS_' +
-              'CLIENTE_FACTURA"]')
+              '[Facturas."PROVINCIA_CLIENTE_FAC"]   [Facturas."NOMBRE_PAI_CLIEN' +
+              'TE_FAC"]')
           ParentFont = False
           Formats = <
             item
@@ -1537,7 +1533,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'NIF: [Facturas."NIF_CLIENTE_FACTURA"]')
+            'NIF: [Facturas."NIF_CLIENTE_FAC"]')
           ParentFont = False
         end
         object Memo6: TfrxMemoView
@@ -1553,7 +1549,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Fecha: [Facturas."FECHA_FACTURA"]')
+            'Fecha: [Facturas."FECHA_FAC"]')
           ParentFont = False
         end
         object FacturasNRO_FACTURA: TfrxMemoView
@@ -1571,8 +1567,8 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Memo.UTF8W = (
             
-              'N'#250'mero de Factura: [Facturas."SERIE_FACTURA"].[Facturas."NRO_FAC' +
-              'TURA"]')
+              'N'#250'mero de Factura: [Facturas."SERIE_FAC"].[Facturas."NUMERO_FAC"' +
+              ']')
           ParentFont = False
           Formats = <
             item
@@ -1627,7 +1623,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'Cantidad')
+            'CANTIDAD_ARTVIN')
           ParentFont = False
         end
         object Memo11: TfrxMemoView
@@ -1661,7 +1657,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haCenter
           Memo.UTF8W = (
-            '% [Facturas."PALABRA_REPORTS_ZONA_IVA_FACTURA"]')
+            '% [Facturas."PALABRA_REPORTS_ZONA_IVA_FAC"]')
           ParentFont = False
         end
         object FechaEntregaTittle: TfrxMemoView
@@ -1697,7 +1693,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."MOVIL_CLIENTE_FACTURA"]')
+            '[Facturas."MOVIL_CLIENTE_FAC"]')
           ParentFont = False
           Formats = <
             item
@@ -1722,7 +1718,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           Frame.Width = 1.500000000000000000
           Memo.UTF8W = (
-            'NIF: [Facturas."NIF_EMPRESA_FACTURA"]')
+            'NIF: [Facturas."NIF_EMPRESA_FAC"]')
           ParentFont = False
         end
         object Memo12: TfrxMemoView
@@ -1739,7 +1735,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."EMAIL_CLIENTE_FACTURA"]')
+            '[Facturas."EMAIL_CLIENTE_FAC"]')
           ParentFont = False
         end
         object Memo13: TfrxMemoView
@@ -1770,7 +1766,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."EMAIL_EMPRESA_FACTURA"]')
+            '[Facturas."EMAIL_EMPRESA_FAC"]')
           ParentFont = False
         end
       end
@@ -1794,7 +1790,7 @@ inherited frmPrintFac: TfrmPrintFac
           Left = 64.252010000000000000
           Width = 94.488250000000000000
           Height = 18.897650000000000000
-          DataField = 'NRO_FACTURA'
+          DataField = 'NUMERO_FAC'
           DataSet = dmFacturas.fxdsPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
@@ -1804,7 +1800,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."NRO_FACTURA"]')
+            '[Facturas."NUMERO_FAC"]')
           ParentFont = False
         end
       end
@@ -1886,7 +1882,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_BASEI_IVAN_FACTURA"]')
+            '[Facturas."TOTAL_BASEI_IVAN_FAC"]')
           ParentFont = False
         end
         object BaseImponibleCajaIVA: TfrxMemoView
@@ -1913,7 +1909,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 94.488250000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'BaseImponibleEOnBeforePrint'
-          DataField = 'TOTAL_BASEI_IVAE_FACTURA'
+          DataField = 'TOTAL_BASEI_IVAE_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -1925,7 +1921,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_BASEI_IVAE_FACTURA"]')
+            '[Facturas."TOTAL_BASEI_IVAE_FAC"]')
           ParentFont = False
         end
         object TituloPorcenCajaIVA: TfrxMemoView
@@ -1941,7 +1937,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '% [Facturas."PALABRA_REPORTS_ZONA_IVA_FACTURA"]')
+            '% [Facturas."PALABRA_REPORTS_ZONA_IVA_FAC"]')
           ParentFont = False
         end
         object TituloTotalCajaIVA: TfrxMemoView
@@ -1957,7 +1953,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Total [Facturas."PALABRA_REPORTS_ZONA_IVA_FACTURA"]')
+            'Total [Facturas."PALABRA_REPORTS_ZONA_IVA_FAC"]')
           ParentFont = False
         end
         object RetencionPorc: TfrxMemoView
@@ -2011,7 +2007,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_IVAN_FACTURA"]')
+            '[Facturas."TOTAL_IVAN_FAC"]')
           ParentFont = False
         end
         object FacturasPORCEN_IVAN_FACTURA: TfrxMemoView
@@ -2030,7 +2026,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_IVAN_FACTURA"]%')
+            '[Facturas."PORCENTAJE_IVAN_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_IVAR_FACTURA: TfrxMemoView
@@ -2049,7 +2045,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_IVAR_FACTURA"]%')
+            '[Facturas."PORCENTAJE_IVAR_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_IVAS_FACTURA: TfrxMemoView
@@ -2068,7 +2064,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_IVAS_FACTURA"]%')
+            '[Facturas."PORCENTAJE_IVAS_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_IVAE_FACTURA: TfrxMemoView
@@ -2087,7 +2083,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_IVAE_FACTURA"]%')
+            '[Facturas."PORCENTAJE_IVAE_FAC"]%')
           ParentFont = False
         end
         object FacturasTOTAL_IVAR_FACTURA: TfrxMemoView
@@ -2097,7 +2093,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 62.913420000000000000
           Width = 56.692950000000000000
           Height = 18.897650000000000000
-          DataField = 'TOTAL_IVAR_FACTURA'
+          DataField = 'TOTAL_IVAR_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2109,7 +2105,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_IVAR_FACTURA"]')
+            '[Facturas."TOTAL_IVAR_FAC"]')
           ParentFont = False
         end
         object FacturasTOTAL_IVAS_FACTURA: TfrxMemoView
@@ -2119,7 +2115,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 89.370130000000000000
           Width = 56.692950000000000000
           Height = 18.897650000000000000
-          DataField = 'TOTAL_IVAS_FACTURA'
+          DataField = 'TOTAL_IVAS_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2131,7 +2127,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_IVAS_FACTURA"]')
+            '[Facturas."TOTAL_IVAS_FAC"]')
           ParentFont = False
         end
         object FacturasTOTAL_IVAE_FACTURA: TfrxMemoView
@@ -2141,7 +2137,7 @@ inherited frmPrintFac: TfrmPrintFac
           Top = 115.826840000000000000
           Width = 56.692950000000000000
           Height = 18.897650000000000000
-          DataField = 'TOTAL_IVAE_FACTURA'
+          DataField = 'TOTAL_IVAE_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2153,7 +2149,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_IVAE_FACTURA"]')
+            '[Facturas."TOTAL_IVAE_FAC"]')
           ParentFont = False
         end
         object FacturasPORCEN_REN_FACTURA: TfrxMemoView
@@ -2173,7 +2169,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_REN_FACTURA"]%')
+            '[Facturas."PORCENTAJE_REN_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_RER_FACTURA: TfrxMemoView
@@ -2193,7 +2189,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_RER_FACTURA"]%')
+            '[Facturas."PORCENTAJE_RER_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_REE_FACTURA: TfrxMemoView
@@ -2213,7 +2209,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_REE_FACTURA"]%')
+            '[Facturas."PORCENTAJE_REE_FAC"]%')
           ParentFont = False
         end
         object FacturasPORCEN_RES_FACTURA: TfrxMemoView
@@ -2233,7 +2229,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."PORCEN_RES_FACTURA"]%')
+            '[Facturas."PORCENTAJE_RES_FAC"]%')
           ParentFont = False
         end
         object FacturasTOTAL_REN_FACTURA: TfrxMemoView
@@ -2244,7 +2240,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 64.252010000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'FacturasTOTAL_REN_FACTURAOnBeforePrint'
-          DataField = 'TOTAL_REN_FACTURA'
+          DataField = 'TOTAL_REN_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2255,7 +2251,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."TOTAL_REN_FACTURA"]')
+            '[Facturas."TOTAL_REN_FAC"]')
           ParentFont = False
         end
         object FacturasTOTAL_REE_FACTURA: TfrxMemoView
@@ -2266,7 +2262,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 64.252010000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'FacturasTOTAL_REE_FACTURAOnBeforePrint'
-          DataField = 'TOTAL_REE_FACTURA'
+          DataField = 'TOTAL_REE_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2277,7 +2273,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."TOTAL_REE_FACTURA"]')
+            '[Facturas."TOTAL_REE_FAC"]')
           ParentFont = False
         end
         object BaseImponibleR: TfrxMemoView
@@ -2288,7 +2284,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 94.488250000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'BaseImponibleROnBeforePrint'
-          DataField = 'TOTAL_BASEI_IVAR_FACTURA'
+          DataField = 'TOTAL_BASEI_IVAR_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2300,7 +2296,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_BASEI_IVAR_FACTURA"]')
+            '[Facturas."TOTAL_BASEI_IVAR_FAC"]')
           ParentFont = False
         end
         object BaseImponibleS: TfrxMemoView
@@ -2311,7 +2307,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 94.488250000000000000
           Height = 18.897650000000000000
           OnBeforePrint = 'BaseImponibleSOnBeforePrint'
-          DataField = 'TOTAL_BASEI_IVAS_FACTURA'
+          DataField = 'TOTAL_BASEI_IVAS_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2323,7 +2319,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_BASEI_IVAS_FACTURA"]')
+            '[Facturas."TOTAL_BASEI_IVAS_FAC"]')
           ParentFont = False
         end
         object FacturasTOTAL_RER_FACTURA: TfrxMemoView
@@ -2336,7 +2332,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'FacturasTOTAL_RER_FACTURAOnBeforePrint'
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataField = 'TOTAL_RER_FACTURA'
+          DataField = 'TOTAL_RER_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2347,7 +2343,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."TOTAL_RER_FACTURA"]')
+            '[Facturas."TOTAL_RER_FAC"]')
           ParentFont = False
         end
         object FacturasTOTAL_RES_FACTURA: TfrxMemoView
@@ -2360,7 +2356,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'FacturasTOTAL_RES_FACTURAOnBeforePrint'
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataField = 'TOTAL_RES_FACTURA'
+          DataField = 'TOTAL_RES_FAC'
           DisplayFormat.DecimalSeparator = ','
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
@@ -2371,7 +2367,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."TOTAL_RES_FACTURA"]')
+            '[Facturas."TOTAL_RES_FAC"]')
           ParentFont = False
         end
         object Retencion: TfrxMemoView
@@ -2391,7 +2387,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Retenci'#243'n IRPF [Facturas."PORCEN_RETENCION_FACTURA"]%')
+            'Retenci'#243'n IRPF [Facturas."PORCENTAJE_RETENCION_FAC"]%')
           ParentFont = False
         end
         object txtRetencionTotal: TfrxMemoView
@@ -2413,7 +2409,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[<Facturas."TOTAL_RETENCION_FACTURA"> * (-1)]')
+            '[<Facturas."TOTAL_RETENCION_FAC"> * (-1)]')
           ParentFont = False
         end
         object ImpuestosTotal: TfrxMemoView
@@ -2434,7 +2430,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_IMPUESTOS_FACTURA"]')
+            '[Facturas."TOTAL_IMPUESTOS_FAC"]')
           ParentFont = False
         end
         object Impuestos: TfrxMemoView
@@ -2475,7 +2471,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_BASES_FACTURA"]')
+            '[Facturas."TOTAL_BASES_FAC"]')
           ParentFont = False
         end
         object TotalBaseImponible: TfrxMemoView
@@ -2512,13 +2508,9 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
-              '[VarToStr(<Facturas."TEXTO_LEGAL_FACTURA_CLIENTE_FACTURA">)+'#39'  '#39 +
-              '+'
-            
-              ' VarToStr(<Facturas."TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA">) +'#39'  ' +
-              #39'+'
-            ' VarToStr(<Facturas."COMENTARIOS_FACTURA">)]')
+            '[VarToStr(<Facturas."TEXTO_LEGAL_CLIENTE_FAC">)+'#39'  '#39'+'
+            ' VarToStr(<Facturas."TEXTO_LEGAL_EMPRESA_FAC">) +'#39'  '#39'+'
+            ' VarToStr(<Facturas."COMENTARIOS_FAC">)]')
           ParentFont = False
         end
         object FormaPago: TfrxMemoView
@@ -2538,7 +2530,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Forma de Pago: [Facturas."DESCRIPCION_FORMAPAGO"]')
+            'Forma de Pago: [Facturas."DESCRIPCION_FORMA_PAGO_FP"]')
           ParentFont = False
         end
         object mNumPaginas: TfrxMemoView
@@ -2597,7 +2589,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Width = 1.500000000000000000
           HAlign = haRight
           Memo.UTF8W = (
-            '[Facturas."TOTAL_LIQUIDO_FACTURA"]')
+            '[Facturas."TOTAL_LIQUIDO_FAC"]')
           ParentFont = False
         end
       end

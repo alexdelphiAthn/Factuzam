@@ -1,4 +1,4 @@
-inherited frmGenFacRec: TfrmGenFacRec
+﻿inherited frmGenFacRec: TfrmGenFacRec
   Left = 516
   Top = 286
   HorzScrollBar.Visible = False
@@ -108,10 +108,10 @@ inherited frmGenFacRec: TfrmGenFacRec
   object cmbSerieFactura: TcxLookupComboBox [8]
     Left = 16
     Top = 135
-    Properties.KeyFieldNames = 'SERIE_CONTADOR'
+    Properties.KeyFieldNames = 'SERIE_CON'
     Properties.ListColumns = <
       item
-        FieldName = 'SERIE_CONTADOR'
+        FieldName = 'SERIE_CON'
       end>
     Properties.ListOptions.ShowHeader = False
     Properties.ReadOnly = False

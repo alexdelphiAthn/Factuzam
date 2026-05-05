@@ -1,4 +1,4 @@
-inherited dmTarifas: TdmTarifas
+﻿inherited dmTarifas: TdmTarifas
   Width = 400
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
@@ -13,15 +13,14 @@ inherited dmTarifas: TdmTarifas
     SQL.Strings = (
       'select *'
       'from fza_usuarios_perfiles'
-      'where (KEY_PERFILES = '#39'dmFamilias'#39' '
-      'OR KEY_PERFILES='#39'frmMtoFamilias'#39')')
+      'where (KEY_USUPER = '#39'dmFamilias'#39' '
+      'OR KEY_USUPER='#39'frmMtoFamilias'#39')')
   end
   object unstrdprcContador: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT'
     SQL.Strings = (
       
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, @pcont); SELECT CAST(@pcont AS' +
-        ' SIGNED) AS '#39'@pcont'#39)
+        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, @pcont); SELECT CAST(@pcont AS SIGNED) AS '#39'@pcont'#39)
     Connection = dmConn.conUni
     Left = 8
     Top = 84
@@ -45,46 +44,35 @@ inherited dmTarifas: TdmTarifas
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_tarifas'
       
-        '  (CODIGO_ARTICULO_TARIFA, CODIGO_VARIACION_TARIFA, CODIGO_UNICO' +
-        '_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOFINAL, FECHA_DESDE_' +
-        'TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USUARIO' +
-        'ALTA, USUARIOMODIF)'
+        '  (CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIOFINAL, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       
-        '  (:CODIGO_ARTICULO_TARIFA, :CODIGO_VARIACION_TARIFA, :CODIGO_UN' +
-        'ICO_TARIFA, :CODIGO_TARIFA, :ACTIVO_TARIFA, :PRECIOFINAL, :FECHA' +
-        '_DESDE_TARIFA, :FECHA_HASTA_TARIFA, :INSTANTEMODIF, :INSTANTEALT' +
-        'A, :USUARIOALTA, :USUARIOMODIF)')
+        '  (:CODIGO_ART_ARTTAR, :CODIGO_VARIACION_TARIFA, :CODIGO_UNICO_ARTTAR, :CODIGO_TAR_ARTTAR, :ESACTIVO_ARTTAR, :PRECIOFINAL, :FECHA_DESDE_ARTTAR, :FECHA_HASTA_ARTTAR, :INSTANTE_MODIF, :INSTANTE_ALTA, :U' +
+        'SUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_tarifas'
       'SET'
       
-        '  CODIGO_ARTICULO_TARIFA = :CODIGO_ARTICULO_TARIFA, CODIGO_VARIA' +
-        'CION_TARIFA = :CODIGO_VARIACION_TARIFA, CODIGO_UNICO_TARIFA = :C' +
-        'ODIGO_UNICO_TARIFA, CODIGO_TARIFA = :CODIGO_TARIFA, ACTIVO_TARIF' +
-        'A = :ACTIVO_TARIFA, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_TARI' +
-        'FA = :FECHA_DESDE_TARIFA, FECHA_HASTA_TARIFA = :FECHA_HASTA_TARI' +
-        'FA, INSTANTEMODIF = :INSTANTEMODIF, INSTANTEALTA = :INSTANTEALTA' +
-        ', USUARIOALTA = :USUARIOALTA, USUARIOMODIF = :USUARIOMODIF'
+        '  CODIGO_ART_ARTTAR = :CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA = :CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR = :CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR = :ESA' +
+        'CTIVO_ARTTAR, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_ARTTAR = :FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR = :FECHA_HASTA_ARTTAR, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_' +
+        'ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :Old_CODIGO_UNICO_TARIFA'
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT CODIGO_ARTICULO_TARIFA, CODIGO_VARIACION_TARIFA, CODIGO_U' +
-        'NICO_TARIFA, CODIGO_TARIFA, ACTIVO_TARIFA, PRECIOFINAL, FECHA_DE' +
-        'SDE_TARIFA, FECHA_HASTA_TARIFA, INSTANTEMODIF, INSTANTEALTA, USU' +
-        'ARIOALTA, USUARIOMODIF FROM fza_articulos_tarifas'
+        'SELECT CODIGO_ART_ARTTAR, CODIGO_VARIACION_TARIFA, CODIGO_UNICO_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIOFINAL, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_' +
+        'ALTA, USUARIO_MODIF FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_TARIFA = :CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :CODIGO_UNICO_ARTTAR')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_tarifas')
     Connection = dmConn.conUni
@@ -93,8 +81,8 @@ inherited dmTarifas: TdmTarifas
       '  FROM vi_articulos_tarifas'
       '')
     MasterSource = frmMtoTarifas.dsTablaG
-    MasterFields = 'CODIGO_TARIFA'
-    DetailFields = 'CODIGO_TARIFA'
+    MasterFields = 'CODIGO_TAR_ARTTAR'
+    DetailFields = 'CODIGO_TAR_ARTTAR'
     Active = True
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
@@ -104,7 +92,7 @@ inherited dmTarifas: TdmTarifas
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_TARIFA'
+        Name = 'CODIGO_TAR_ARTTAR'
         ParamType = ptInput
         Value = '0'
       end>
