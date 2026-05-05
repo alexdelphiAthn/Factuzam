@@ -152,10 +152,13 @@ uses
 
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 { TdmInventarios }
 
 procedure TdmInventarios.DataModuleCreate(Sender: TObject);
 begin
+  inherited;
   // Asignación de la conexión global a todos los queries del módulo
   unqryTablaG.Connection           := oConn;
   unqryLineas.Connection           := oConn;
@@ -855,4 +858,7 @@ begin
   end;
 end;
 
+
+initialization
+  ForceReferenceToClass(TdmInventarios);
 end.

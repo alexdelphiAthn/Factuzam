@@ -3,6 +3,7 @@ inherited dmInventarios: TdmInventarios
   Width = 1125
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
+    Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT '
       '   CODIGO_EMP_INV,'
