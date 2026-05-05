@@ -328,76 +328,113 @@
             DataBinding.FieldName = 'OBSERVACIONES_PAGO'
             Width = 131
           end
-          object colValRol: TcxGridDBColumn
-            Caption = 'Rol vale'
+        end
+        object cxLevelPagos: TcxGridLevel
+          GridView = cxViewPagos
+        end
+      end
+    end
+    object tsVales: TcxTabSheet
+      Caption = 'Vales'
+      ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object cxGridVales: TcxGrid
+        Left = 0
+        Top = 0
+        Width = 1196
+        Height = 330
+        Align = alClient
+        TabOrder = 0
+        object cxViewVales: TcxGridDBTableView
+          DataController.Summary.FooterSummaryItems = <
+            item
+              Format = '#,##0.00 '#8364
+              Kind = skSum
+              Column = colValVNominal
+            end
+            item
+              Format = '#,##0.00 '#8364
+              Kind = skSum
+              Column = colValVRedimido
+            end>
+          OptionsData.Deleting = False
+          OptionsData.Editing = False
+          OptionsData.Inserting = False
+          OptionsView.Footer = True
+          OptionsView.GroupByBox = False
+          object colValVRol: TcxGridDBColumn
+            Caption = 'Rol'
             DataBinding.FieldName = 'ROL_VL'
-            Width = 97
+            Width = 70
           end
-          object colValCodigo: TcxGridDBColumn
+          object colValVCodigo: TcxGridDBColumn
             Caption = 'C'#243'd. vale'
             DataBinding.FieldName = 'CODIGO_VL'
-            Width = 168
+            Width = 180
           end
-          object colValPin: TcxGridDBColumn
+          object colValVPin: TcxGridDBColumn
             Caption = 'PIN'
             DataBinding.FieldName = 'PIN_SEGURIDAD_VL'
             Width = 70
           end
-          object colValEstado: TcxGridDBColumn
-            Caption = 'Estado vale'
+          object colValVEstado: TcxGridDBColumn
+            Caption = 'Estado'
             DataBinding.FieldName = 'ESTADO_VL'
-            Width = 167
+            Width = 110
           end
-          object colValNominal: TcxGridDBColumn
+          object colValVNominal: TcxGridDBColumn
             Caption = 'Nominal'
             DataBinding.FieldName = 'IMPORTE_NOMINAL_VL'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 100
           end
-          object colValRedimido: TcxGridDBColumn
+          object colValVRedimido: TcxGridDBColumn
             Caption = 'Redimido'
             DataBinding.FieldName = 'IMPORTE_REDIMIDO_VL'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00 '#8364
             Width = 100
           end
-          object colValEmision: TcxGridDBColumn
+          object colValVEmision: TcxGridDBColumn
             Caption = 'F. Emisi'#243'n'
             DataBinding.FieldName = 'FECHA_EMISION_VL'
             PropertiesClassName = 'TcxDateEditProperties'
             Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
             Properties.Kind = ckDateTime
-            Width = 120
+            Width = 130
           end
-          object colValCaducidad: TcxGridDBColumn
+          object colValVCaducidad: TcxGridDBColumn
             Caption = 'F. Caducidad'
             DataBinding.FieldName = 'FECHA_CADUCIDAD_VL'
             PropertiesClassName = 'TcxDateEditProperties'
             Properties.DisplayFormat = 'dd/mm/yyyy'
-            Width = 149
+            Width = 110
           end
-          object colValRedencion: TcxGridDBColumn
+          object colValVRedencion: TcxGridDBColumn
             Caption = 'F. Redenci'#243'n'
             DataBinding.FieldName = 'FECHA_REDENCION_VL'
             PropertiesClassName = 'TcxDateEditProperties'
             Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
             Properties.Kind = ckDateTime
-            Width = 120
+            Width = 130
           end
-          object colValPadre: TcxGridDBColumn
+          object colValVPadre: TcxGridDBColumn
             Caption = 'Vale padre'
             DataBinding.FieldName = 'CODIGO_PADRE_VL'
             Width = 140
           end
-          object colValObs: TcxGridDBColumn
-            Caption = 'Obs. vale'
+          object colValVObs: TcxGridDBColumn
+            Caption = 'Observaciones'
             DataBinding.FieldName = 'OBSERVACIONES_VL'
-            Width = 180
+            Width = 200
           end
         end
-        object cxLevelPagos: TcxGridLevel
-          GridView = cxViewPagos
+        object cxLevelVales: TcxGridLevel
+          GridView = cxViewVales
         end
       end
     end

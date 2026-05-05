@@ -1,4 +1,4 @@
-﻿unit inMtoConsultaOpe;
+unit inMtoConsultaOpe;
 
 interface
 
@@ -29,6 +29,7 @@ type
     pcHijos:          TcxPageControl;
     tsOperacion:      TcxTabSheet;
     tsPagos:          TcxTabSheet;
+    tsVales:          TcxTabSheet;
     tsMovimientos:    TcxTabSheet;
     tsCliente:        TcxTabSheet;
     tsDepositos:      TcxTabSheet;
@@ -40,6 +41,9 @@ type
     cxGridPagos:      TcxGrid;
     cxViewPagos:      TcxGridDBTableView;
     cxLevelPagos:     TcxGridLevel;
+    cxGridVales:      TcxGrid;
+    cxViewVales:      TcxGridDBTableView;
+    cxLevelVales:     TcxGridLevel;
     cxGridMov:        TcxGrid;
     cxViewMov:        TcxGridDBTableView;
     cxLevelMov:       TcxGridLevel;
@@ -125,6 +129,7 @@ begin
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
   cxViewPagos.DataController.DataSource   := FdmConsulta.dsPagos;
+  cxViewVales.DataController.DataSource   := FdmConsulta.dsVales;
   cxViewMov.DataController.DataSource     := FdmConsulta.dsMovimientos;
   cxViewCli.DataController.DataSource     := FdmConsulta.dsCliente;
   cxViewDep.DataController.DataSource     := FdmConsulta.dsDepositos;
@@ -134,7 +139,7 @@ begin
   tmrBusqueda.Enabled  := False;
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
-                        // esté en el grid o en el edit de búsqueda
+                        // este en el grid o en el edit de busqueda
 end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
@@ -166,7 +171,7 @@ end;
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);
 begin
   inherited;
-  Caption := Format('Buscar operaciones — Empresa %s / Almacén %s / Caja %s',
+  Caption := Format('Buscar operaciones — Empresa %s / Almacen %s / Caja %s',
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
   RestaurarLayout;
@@ -198,6 +203,7 @@ begin
   if not FLayout.Disponible then Exit;
   FLayout.RestaurarGrid('Operacion',   cxViewOpe);
   FLayout.RestaurarGrid('Pagos',       cxViewPagos);
+  FLayout.RestaurarGrid('Vales',       cxViewVales);
   FLayout.RestaurarGrid('Movimientos', cxViewMov);
   FLayout.RestaurarGrid('Cliente',     cxViewCli);
   FLayout.RestaurarGrid('Depositos',   cxViewDep);
@@ -216,12 +222,13 @@ begin
     Layout.GuardarGrid('Maestro',     cxViewMaestro);
     Layout.GuardarGrid('Operacion',   cxViewOpe);
     Layout.GuardarGrid('Pagos',       cxViewPagos);
+    Layout.GuardarGrid('Vales',       cxViewVales);
     Layout.GuardarGrid('Movimientos', cxViewMov);
     Layout.GuardarGrid('Cliente',     cxViewCli);
     Layout.GuardarGrid('Depositos',   cxViewDep);
     Layout.GuardarGrid('FacturaCab',  cxViewFacCab);
     Layout.GuardarGrid('FacturaLin',  cxViewFacLin);
-    if Layout.PreguntarYGrabar('Personalización Consulta Operaciones') then
+    if Layout.PreguntarYGrabar('Personalizacion Consulta Operaciones') then
       ShowMessage('Layout guardado.');
   finally
     Layout.Free;
@@ -259,6 +266,7 @@ begin
   PagActiva := pcHijos.ActivePage;
   tsOperacion.TabVisible   := True;   // siempre visible
   tsPagos.TabVisible       := FdmConsulta.TienePagos;
+  tsVales.TabVisible       := FdmConsulta.TieneVales;
   tsMovimientos.TabVisible := FdmConsulta.TieneMovimientos;
   tsCliente.TabVisible     := FdmConsulta.TieneCliente;
   tsDepositos.TabVisible   := FdmConsulta.TieneDepositos;
@@ -325,7 +333,7 @@ begin
     ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
   if (not FdmConsulta.TieneFactura) and (not FdmConsulta.TieneDepositos) then
   begin
-    ShowMessage('Esta operación no tiene ticket ni depósito asociado.');
+    ShowMessage('Esta operacion no tiene ticket ni deposito asociado.');
     Exit;
   end;
   if Trim(sCliente) <> '' then

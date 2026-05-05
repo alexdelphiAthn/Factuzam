@@ -1,29 +1,25 @@
 ﻿unit UniDataConsultaOpe;
 
 // =============================================================================
-//  Módulo de datos para la consulta de operaciones de caja (F10 Buscar/Modificar).
+//  Modulo de datos para la consulta de operaciones de caja (F10 Buscar/Modificar).
 //
-//  Expone 7 queries (1 maestro + 7 para pestañas) que se refrescan al
-//  cambiar la fila del maestro. TODO ES SÓLO LECTURA.
+//  Expone 8 queries (1 maestro + 7 para pestañas) que se refrescan al
+//  cambiar la fila del maestro. TODO ES SOLO LECTURA.
 //
 //  El filtrado del maestro es por:
-//    - Fecha + empresa/almacén/caja (contexto fijo heredado del menú)
-//    - Texto libre (número operación, nº factura, cliente, concepto,
-//                   descripción/código/SKU de artículos en líneas de factura)
+//    - Fecha + empresa/almacen/caja (contexto fijo heredado del menu)
+//    - Texto libre (numero operacion, nº factura, cliente, concepto,
+//                   descripcion/codigo/SKU de articulos en lineas de factura)
 //
-//  NOTA sobre qryPagos:
-//    La pestaña "Pagos" ahora muestra también los vales de la operación.
-//    Se construye como UNION de dos conjuntos:
-//
-//    (A) Líneas de fza_caja_pagos, con LEFT JOIN a fza_caja_vales para los
-//        pagos de tipo VALE (cruce por REFERENCIA_FACPAG = CODIGO_VL si viene
-//        informada; fallback por empresa+almacén+caja+operación+importe).
-//
-//    (B) Vales EMITIDOS en esta operación (típicamente vale de cambio) que
-//        no tienen línea de pago asociada — aparecen como fila "sólo vale".
-//
-//    Así cada línea de pago sale una vez y cada vale sale una vez, sin
-//    duplicar ni perder información.
+//  Pestañas:
+//    - Operacion    : filas crudas de fza_caja_operaciones.
+//    - Pagos        : lineas de fza_caja_pagos. SOLO pagos, sin vales.
+//    - Vales        : vales emitidos y/o redimidos en esta operacion (NUEVO).
+//    - Movimientos  : kardex (fza_movimientos_almacen).
+//    - Cliente      : ficha cliente.
+//    - Depositos    : depositos tocados, agrupados por ID_DEPOSITO_DEP
+//                     para evitar duplicados (alta + cobro_inicial juntos).
+//    - Factura      : cabecera + lineas (fza_facturas / fza_facturas_lineas).
 // =============================================================================
 
 interface
@@ -36,6 +32,7 @@ type
     qryMaestro:      TUniQuery;
     qryOperacion:    TUniQuery;
     qryPagos:        TUniQuery;
+    qryVales:        TUniQuery;
     qryMovimientos:  TUniQuery;
     qryCliente:      TUniQuery;
     qryDepositos:    TUniQuery;
@@ -44,6 +41,7 @@ type
     dsMaestro:       TDataSource;
     dsOperacion:     TDataSource;
     dsPagos:         TDataSource;
+    dsVales:         TDataSource;
     dsMovimientos:   TDataSource;
     dsCliente:       TDataSource;
     dsDepositos:     TDataSource;
@@ -60,6 +58,7 @@ type
                                   ATextoLibre: string);
     procedure RefrescarPestanasHijas;
     function  TienePagos:       Boolean;
+    function  TieneVales:       Boolean;
     function  TieneMovimientos: Boolean;
     function  TieneCliente:     Boolean;
     function  TieneDepositos:   Boolean;
@@ -85,6 +84,7 @@ begin
   qryMaestro.Connection     := oConn;
   qryOperacion.Connection   := oConn;
   qryPagos.Connection       := oConn;
+  qryVales.Connection       := oConn;
   qryMovimientos.Connection := oConn;
   qryCliente.Connection     := oConn;
   qryDepositos.Connection   := oConn;
@@ -92,9 +92,9 @@ begin
   qryFacturaLin.Connection  := oConn;
 
   // ------------------------------------------------------------------
-  //  Grid MAESTRO: una fila por NUMERO_OPERACION_OPCAJA del día.
-  //  Agrupa los distintos tipos de operación (VENTA, DEV, CB, ...) de
-  //  una misma numeración en una sola fila visible.
+  //  Grid MAESTRO: una fila por NUMERO_OPERACION_OPCAJA del dia.
+  //  Agrupa los distintos tipos de operacion (VENTA, DEV, CB, ...) de
+  //  una misma numeracion en una sola fila visible.
   // ------------------------------------------------------------------
   qryMaestro.SQL.Text :=
     'SELECT o.CODIGO_EMP_OPCAJA, '                                    +
@@ -107,10 +107,11 @@ begin
     '                    SEPARATOR '','')            AS TIPOS_OP, '       +
     '       GROUP_CONCAT(DISTINCT NULLIF(o.CONCEPTO_GASTO_INGRESO_OPCAJA,'''') ' +
     '                    SEPARATOR '' | '')          AS CONCEPTOS, '      +
-    '       SUM(o.IMPORTE_TOTAL_OPCAJA)              AS IMPORTE_TOTAL, '  +
+    '       COALESCE(MAX(f.TOTAL_LIQUIDO_FAC), '                          +
+    '                SUM(o.IMPORTE_TOTAL_OPCAJA))    AS IMPORTE_TOTAL, '  +
     '       MAX(f.SERIE_FAC)                     AS SERIE_FAC, '  +
     '       MAX(f.NUMERO_FAC)                       AS NUMERO_FAC, '    +
-    '       MAX(COALESCE(f.CODIGO_CLI_FAC, c.CODIGO_CLI_OPCAJA)) ' +
+    '       MAX(COALESCE(f.CODIGO_CLI_FAC, o.CODIGO_CLI_OPCAJA)) ' +
     '                                                AS CLIENTE, '        +
     '       MAX(cli.RAZON_SOCIAL_CLI)             AS RAZON_SOCIAL_CLI,'+
     '       MAX(o.USUARIO_ALTA)                       AS EMPLEADO '        +
@@ -120,16 +121,9 @@ begin
     '   AND f.CODIGO_ALM_FAC   = o.CODIGO_ALM_OPCAJA '        +
     '   AND f.CODIGO_CAJA_FAC      = o.CODIGO_CAJA_OPCAJA '           +
     '   AND f.NUMERO_OPERACION_FAC = o.NUMERO_OPERACION_OPCAJA '      +
-    '  LEFT JOIN fza_caja_operaciones c '                                 +
-    '    ON c.CODIGO_EMP_OPCAJA   = o.CODIGO_EMP_OPCAJA '         +
-    '   AND c.CODIGO_ALM_OPCAJA   = o.CODIGO_ALM_OPCAJA '         +
-    '   AND c.CODIGO_CAJA_OPCAJA      = o.CODIGO_CAJA_OPCAJA '            +
-    '   AND c.NUMERO_OPERACION_OPCAJA = o.NUMERO_OPERACION_OPCAJA '       +
-    '   AND c.CODIGO_CLI_OPCAJA IS NOT NULL '                         +
-    '   AND c.CODIGO_CLI_OPCAJA <> '''' '                             +
     '  LEFT JOIN fza_clientes cli '                                       +
     '    ON cli.CODIGO_CLI_CLI = COALESCE(f.CODIGO_CLI_FAC, '     +
-    '                                     c.CODIGO_CLI_OPCAJA) '      +
+    '                                     o.CODIGO_CLI_OPCAJA) '      +
     ' WHERE DATE(o.FECHA_OPERACION_OPCAJA) = :PFECHA '                    +
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
@@ -158,8 +152,8 @@ begin
     ' ORDER BY FECHA_OP DESC ';
 
   // ------------------------------------------------------------------
-  //  Pestaña OPERACIÓN: filas crudas de fza_caja_operaciones.
-  //  Una misma numeración puede tener varias filas (VENTA + DEV + CB).
+  //  Pestaña OPERACION: filas crudas de fza_caja_operaciones.
+  //  Una misma numeracion puede tener varias filas (VENTA + DEV + CB).
   // ------------------------------------------------------------------
   qryOperacion.SQL.Text :=
     'SELECT FECHA_OPERACION_OPCAJA, '                                     +
@@ -179,95 +173,73 @@ begin
     ' ORDER BY FECHA_OPERACION_OPCAJA, TIPO_OPERACION_OPCAJA ';
 
   // ------------------------------------------------------------------
-  //  Pestaña PAGOS (ampliada): líneas de pago + vales emitidos/redimidos.
-  //
-  //  Bloque A -> líneas de fza_caja_pagos con LEFT JOIN a fza_caja_vales
-  //              cuando el pago es de tipo VALE (redención).
-  //  Bloque B -> vales EMITIDOS en esta operación que no tienen línea
-  //              de pago propia (típicamente vale de cambio).
-  //
-  //  El cruce del bloque A sobre vales usa:
-  //    - REFERENCIA_FACPAG = CODIGO_VL  (cruce exacto, convención nueva)
-  //    - fallback: mismo empresa+almacén+caja+operación de redención +
-  //                IMPORTE_REDIMIDO_VL = IMPORTE_ENTREGADO_PAGO
-  //
-  //  Si no existe aún la columna fza_caja_formas_pago.NOMBRE_FORMAP,
-  //  ajustar el SELECT devolviendo NULL para DESCRIPCION_FORMA_PAGO_CFP.
+  //  Pestaña PAGOS: solo lineas de fza_caja_pagos.
+  //  Los vales (emitidos / redimidos) van en su propia pestaña.
   // ------------------------------------------------------------------
   qryPagos.SQL.Text :=
-    '(SELECT p.NUMERO_LINEA_PAGO, '                                       +
-    '        p.CODIGO_FP_CFP, '                                           +
-    '        fp.DESCRIPCION_FORMA_PAGO_CFP      AS DESCRIPCION_FORMA_PAGO_CFP, '          +
-    '        p.IMPORTE_ENTREGADO_PAGO, '                                  +
-    '        p.IMPORTE_CAMBIO_PAGO, '                                     +
-    '        (p.IMPORTE_ENTREGADO_PAGO - p.IMPORTE_CAMBIO_PAGO) '         +
-    '                                   AS IMPORTE_NETO_PAGO, '           +
-    '        p.CODIGO_DIVISA_PAGO, '                                      +
-    '        p.RED_BLOCKCHAIN_PAGO, '                                          +
-    '        p.FACTOR_CAMBIO_PAGO, '                                      +
-    '        p.IMPORTE_DIVISA_PAGO, '                                     +
-    '        p.REFERENCIA_FACPAG, '                                         +
-    '        p.OBSERVACIONES_PAGO, '                                      +
-    '        v.CODIGO_VL, '                                               +
-    '        v.CODIGO_PADRE_VL, '                                         +
-    '        v.PIN_SEGURIDAD_VL, '                                        +
-    '        v.ESTADO_VL, '                                               +
-    '        v.IMPORTE_NOMINAL_VL, '                                      +
-    '        v.IMPORTE_REDIMIDO_VL, '                                     +
-    '        v.FECHA_EMISION_VL, '                                        +
-    '        v.FECHA_CADUCIDAD_VL, '                                      +
-    '        v.FECHA_REDENCION_VL, '                                      +
-    '        v.OBSERVACIONES_VL, '                                        +
-    '        CASE WHEN v.CODIGO_VL IS NOT NULL THEN ''RED'' END '         +
-    '                                   AS ROL_VL '                       +
-    '   FROM fza_caja_pagos p '                                           +
-    '   LEFT JOIN fza_caja_formas_pago fp '                               +
-    '     ON fp.CODIGO_FP_CFP = p.CODIGO_FP_CFP '                         +
-    '   LEFT JOIN fza_caja_vales v '                                      +
-    '     ON p.CODIGO_FP_CFP = ''VALE'' '                                 +
-    '    AND v.CODIGO_EMP_RED_VL   = p.CODIGO_EMP_PAGO '          +
-    '    AND v.CODIGO_ALM_RED_VL   = p.CODIGO_ALM_PAGO '          +
-    '    AND v.CODIGO_CAJA_RED_VL      = p.CODIGO_CAJA_PAGO '             +
-    '    AND v.NUMERO_OPERACION_RED_VL = p.NUMERO_OPERACION_PAGO '        +
-    '    AND ( v.CODIGO_VL = p.REFERENCIA_FACPAG '                          +
-    '          OR ( COALESCE(p.REFERENCIA_FACPAG,'''') = '''' '             +
-    '               AND v.IMPORTE_REDIMIDO_VL = p.IMPORTE_ENTREGADO_PAGO ' +
-    '             ) '                                                     +
-    '        ) '                                                          +
-    '  WHERE p.CODIGO_EMP_PAGO   = :PEMP '                            +
-    '    AND p.CODIGO_ALM_PAGO   = :PALM '                            +
-    '    AND p.CODIGO_CAJA_PAGO      = :PCAJA '                           +
-    '    AND p.NUMERO_OPERACION_PAGO = :PNUMOP ) '                        +
-    'UNION ALL '                                                          +
-    '(SELECT NULL AS NUMERO_LINEA_PAGO, '                                 +
-    '        NULL AS CODIGO_FP_CFP, '                                     +
-    '        NULL AS DESCRIPCION_FORMA_PAGO_CFP, '                                +
-    '        NULL AS IMPORTE_ENTREGADO_PAGO, '                            +
-    '        NULL AS IMPORTE_CAMBIO_PAGO, '                               +
-    '        NULL AS IMPORTE_NETO_PAGO, '                                 +
-    '        NULL AS CODIGO_DIVISA_PAGO, '                                +
-    '        NULL AS RED_BLOCKCHAIN_PAGO, '                                    +
-    '        NULL AS FACTOR_CAMBIO_PAGO, '                                +
-    '        NULL AS IMPORTE_DIVISA_PAGO, '                               +
-    '        NULL AS REFERENCIA_FACPAG, '                                   +
-    '        NULL AS OBSERVACIONES_PAGO, '                                +
-    '        v.CODIGO_VL, '                                               +
-    '        v.CODIGO_PADRE_VL, '                                         +
-    '        v.PIN_SEGURIDAD_VL, '                                        +
-    '        v.ESTADO_VL, '                                               +
-    '        v.IMPORTE_NOMINAL_VL, '                                      +
-    '        v.IMPORTE_REDIMIDO_VL, '                                     +
-    '        v.FECHA_EMISION_VL, '                                        +
-    '        v.FECHA_CADUCIDAD_VL, '                                      +
-    '        v.FECHA_REDENCION_VL, '                                      +
-    '        v.OBSERVACIONES_VL, '                                        +
-    '        ''EMI'' AS ROL_VL '                                          +
-    '   FROM fza_caja_vales v '                                           +
-    '  WHERE v.CODIGO_EMP_EMI_VL   = :PEMP '                          +
-    '    AND v.CODIGO_ALM_EMI_VL   = :PALM '                          +
-    '    AND v.CODIGO_CAJA_EMI_VL      = :PCAJA '                         +
-    '    AND v.NUMERO_OPERACION_EMI_VL = :PNUMOP ) '                      +
-    'ORDER BY NUMERO_LINEA_PAGO IS NULL, NUMERO_LINEA_PAGO, ROL_VL ';
+    'SELECT p.NUMERO_LINEA_PAGO, '                                    +
+    '       p.CODIGO_FP_CFP, '                                        +
+    '       fp.DESCRIPCION_FORMA_PAGO_CFP, '                          +
+    '       p.IMPORTE_ENTREGADO_PAGO, '                               +
+    '       p.IMPORTE_CAMBIO_PAGO, '                                  +
+    '       (p.IMPORTE_ENTREGADO_PAGO - p.IMPORTE_CAMBIO_PAGO) '      +
+    '                                AS IMPORTE_NETO_PAGO, '          +
+    '       p.CODIGO_DIVISA_PAGO, '                                   +
+    '       p.RED_BLOCKCHAIN_PAGO, '                                  +
+    '       p.FACTOR_CAMBIO_PAGO, '                                   +
+    '       p.IMPORTE_DIVISA_PAGO, '                                  +
+    '       p.REFERENCIA_FACPAG, '                                    +
+    '       p.OBSERVACIONES_PAGO '                                    +
+    '  FROM fza_caja_pagos p '                                        +
+    '  LEFT JOIN fza_caja_formas_pago fp '                            +
+    '    ON fp.CODIGO_FP_CFP = p.CODIGO_FP_CFP '                      +
+    ' WHERE p.CODIGO_EMP_PAGO        = :PEMP '                        +
+    '   AND p.CODIGO_ALM_PAGO        = :PALM '                        +
+    '   AND p.CODIGO_CAJA_PAGO       = :PCAJA '                       +
+    '   AND p.NUMERO_OPERACION_PAGO  = :PNUMOP '                      +
+    ' ORDER BY p.NUMERO_LINEA_PAGO ';
+
+  // ------------------------------------------------------------------
+  //  Pestaña VALES: vales emitidos y redimidos en esta operacion.
+  //  ROL_VL = 'EMI' (emitido aqui) | 'RED' (redimido aqui).
+  //  Si un vale se emite y se redime en la misma operacion (raro pero
+  //  posible), aparecera dos veces, una por rol -- es lo correcto.
+  // ------------------------------------------------------------------
+  qryVales.SQL.Text :=
+    '(SELECT ''EMI''                AS ROL_VL, '                      +
+    '        v.CODIGO_VL, '                                           +
+    '        v.CODIGO_PADRE_VL, '                                     +
+    '        v.PIN_SEGURIDAD_VL, '                                    +
+    '        v.ESTADO_VL, '                                           +
+    '        v.IMPORTE_NOMINAL_VL, '                                  +
+    '        v.IMPORTE_REDIMIDO_VL, '                                 +
+    '        v.FECHA_EMISION_VL, '                                    +
+    '        v.FECHA_CADUCIDAD_VL, '                                  +
+    '        v.FECHA_REDENCION_VL, '                                  +
+    '        v.OBSERVACIONES_VL '                                     +
+    '   FROM fza_caja_vales v '                                       +
+    '  WHERE v.CODIGO_EMP_EMI_VL        = :PEMP '                     +
+    '    AND v.CODIGO_ALM_EMI_VL        = :PALM '                     +
+    '    AND v.CODIGO_CAJA_EMI_VL       = :PCAJA '                    +
+    '    AND v.NUMERO_OPERACION_EMI_VL  = :PNUMOP) '                  +
+    'UNION ALL '                                                      +
+    '(SELECT ''RED''                AS ROL_VL, '                      +
+    '        v.CODIGO_VL, '                                           +
+    '        v.CODIGO_PADRE_VL, '                                     +
+    '        v.PIN_SEGURIDAD_VL, '                                    +
+    '        v.ESTADO_VL, '                                           +
+    '        v.IMPORTE_NOMINAL_VL, '                                  +
+    '        v.IMPORTE_REDIMIDO_VL, '                                 +
+    '        v.FECHA_EMISION_VL, '                                    +
+    '        v.FECHA_CADUCIDAD_VL, '                                  +
+    '        v.FECHA_REDENCION_VL, '                                  +
+    '        v.OBSERVACIONES_VL '                                     +
+    '   FROM fza_caja_vales v '                                       +
+    '  WHERE v.CODIGO_EMP_RED_VL        = :PEMP '                     +
+    '    AND v.CODIGO_ALM_RED_VL        = :PALM '                     +
+    '    AND v.CODIGO_CAJA_RED_VL       = :PCAJA '                    +
+    '    AND v.NUMERO_OPERACION_RED_VL  = :PNUMOP) '                  +
+    'ORDER BY ROL_VL, CODIGO_VL ';
 
   // ------------------------------------------------------------------
   //  Pestaña MOVIMIENTOS: filas de fza_caja_movimientos (stock/kardex).
@@ -295,7 +267,7 @@ begin
     ' ORDER BY m.NUMERO_MOV, m.LINEA_MOV ';
 
   // ------------------------------------------------------------------
-  //  Pestaña CLIENTE: ficha del cliente asociado a la operación.
+  //  Pestaña CLIENTE: ficha del cliente asociado a la operacion.
   // ------------------------------------------------------------------
   qryCliente.SQL.Text :=
     'SELECT c.CODIGO_CLI_CLI, '                                           +
@@ -312,26 +284,40 @@ begin
     ' WHERE c.CODIGO_CLI_CLI = :PCLI ';
 
   // ------------------------------------------------------------------
-  //  Pestaña DEPÓSITOS: depósitos tocados por esta operación.
-  //  ROL = ALTA / CANCELACION / COBRO_PARCIAL según haga falta.
+  //  Pestaña DEPOSITOS: depositos tocados por esta operacion.
+  //  La vista fza_caja_depositos_view devuelve hasta 3 filas por
+  //  deposito (ALTA, CANCELACION, COBRO_INICIAL/COBRO_PARCIAL).
+  //  Aqui las colapsamos a UNA sola fila por ID_DEPOSITO_DEP, y en
+  //  ROL_EN_OPERACION concatenamos los roles que toco esta operacion.
   // ------------------------------------------------------------------
   qryDepositos.SQL.Text :=
-    'SELECT DISTINCT  '                                         +
-    '       d.ID_DEPOSITO_DEP, '                                          +
-    '       d.CODIGO_CLI_DEP, '                                       +
-    '       d.CODIGO_ART_DEP, '                                      +
-    '       d.CODIGO_UNIDAD_DEP, '                                        +
-    '       d.CODIGO_ALM_DEP, '                                       +
-    '       d.CANTIDAD_PENDIENTE_DEP, '                                   +
-    '       d.PRECIO_VENTA_DEP, '                                         +
-    '       d.IMPORTE_ANTICIPO_DEP, '                                     +
-    '       d.ESTADO_DEP, '                                               +
-    '       d.FECHA_CREACION_DEP '                                        +
-    '  FROM fza_caja_depositos_view d '                                   +
-    ' WHERE d.CODIGO_EMPRESA_OP   = :PEMP '                               +
-    '   AND d.CODIGO_ALMACEN_OP   = :PALM '                               +
-    '   AND d.CODIGO_CAJA_OP      = :PCAJA '                              +
-    '   AND d.NUMERO_OPERACION_OP = :PNUMOP ';
+    'SELECT d.ID_DEPOSITO_DEP, '                                      +
+    '       MAX(d.CODIGO_CLI_DEP)            AS CODIGO_CLI_DEP, '     +
+    '       MAX(d.CODIGO_ART_DEP)            AS CODIGO_ART_DEP, '     +
+    '       MAX(d.CODIGO_UNIDAD_DEP)         AS CODIGO_UNIDAD_DEP, '  +
+    '       MAX(d.CODIGO_ALM_DEP)            AS CODIGO_ALM_DEP, '     +
+    '       MAX(d.CANTIDAD_PENDIENTE_DEP)    AS CANTIDAD_PENDIENTE_DEP, ' +
+    '       MAX(d.PRECIO_VENTA_DEP)          AS PRECIO_VENTA_DEP, '   +
+    '       MAX(d.PORCENTAJE_IVA_DEP)        AS PORCENTAJE_IVA_DEP, ' +
+    '       MAX(d.IMPORTE_ANTICIPO_DEP)      AS IMPORTE_ANTICIPO_DEP, ' +
+    '       MAX(d.IMPORTE_PENDIENTE_DEP)     AS IMPORTE_PENDIENTE_DEP, ' +
+    '       MAX(d.ESTADO_DEP)                AS ESTADO_DEP, '         +
+    '       MIN(d.FECHA_CREACION_DEP)        AS FECHA_CREACION_DEP, ' +
+    '       MAX(d.FECHA_ENTREGA_DEP)         AS FECHA_ENTREGA_DEP, '  +
+    '       MAX(d.EMPRESA_CANCEL_DEP)        AS EMPRESA_CANCEL_DEP, ' +
+    '       MAX(d.ALMACEN_CANCEL_DEP)        AS ALMACEN_CANCEL_DEP, ' +
+    '       MAX(d.CAJA_CANCEL_DEP)           AS CAJA_CANCEL_DEP, '    +
+    '       MAX(d.NUMERO_OPERACION_CANCEL_DEP) AS NUMERO_OPERACION_CANCEL_DEP, ' +
+    '       GROUP_CONCAT(DISTINCT d.ROL_EN_OPERACION '                +
+    '                    ORDER BY d.ROL_EN_OPERACION '                +
+    '                    SEPARATOR '','')      AS ROL_EN_OPERACION '  +
+    '  FROM fza_caja_depositos_view d '                               +
+    ' WHERE d.CODIGO_EMPRESA_OP   = :PEMP '                           +
+    '   AND d.CODIGO_ALMACEN_OP   = :PALM '                           +
+    '   AND d.CODIGO_CAJA_OP      = :PCAJA '                          +
+    '   AND d.NUMERO_OPERACION_OP = :PNUMOP '                         +
+    ' GROUP BY d.ID_DEPOSITO_DEP '                                    +
+    ' ORDER BY d.ID_DEPOSITO_DEP ';
 
   // ------------------------------------------------------------------
   //  Pestaña FACTURA (cabecera).
@@ -353,7 +339,7 @@ begin
     '   AND f.NUMERO_OPERACION_FAC = :PNUMOP ';
 
   // ------------------------------------------------------------------
-  //  Pestaña FACTURA (líneas).
+  //  Pestaña FACTURA (lineas).
   // ------------------------------------------------------------------
   qryFacturaLin.SQL.Text :=
     'SELECT l.LINEA_FACLIN, '                                      +
@@ -384,6 +370,7 @@ begin
   begin
     qryOperacion.Close;
     qryPagos.Close;
+    qryVales.Close;
     qryMovimientos.Close;
     qryCliente.Close;
     qryDepositos.Close;
@@ -400,7 +387,7 @@ begin
   sSerie  := qryMaestro.FieldByName('SERIE_FAC').AsString;
   sNroFac := qryMaestro.FieldByName('NUMERO_FAC').AsString;
 
-  // --- Operación ---
+  // --- Operacion ---
   qryOperacion.Close;
   qryOperacion.ParamByName('PEMP').AsString    := sEmp;
   qryOperacion.ParamByName('PALM').AsString    := sAlm;
@@ -408,13 +395,21 @@ begin
   qryOperacion.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryOperacion, 'Operaciones');
 
-  // --- Pagos + Vales ---
+  // --- Pagos ---
   qryPagos.Close;
   qryPagos.ParamByName('PEMP').AsString    := sEmp;
   qryPagos.ParamByName('PALM').AsString    := sAlm;
   qryPagos.ParamByName('PCAJA').AsString   := sCaja;
   qryPagos.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryPagos, 'Pagos');
+
+  // --- Vales ---
+  qryVales.Close;
+  qryVales.ParamByName('PEMP').AsString    := sEmp;
+  qryVales.ParamByName('PALM').AsString    := sAlm;
+  qryVales.ParamByName('PCAJA').AsString   := sCaja;
+  qryVales.ParamByName('PNUMOP').AsString  := sNumOp;
+  AbrirSeguro(qryVales, 'Vales');
 
   // --- Movimientos ---
   qryMovimientos.Close;
@@ -423,6 +418,7 @@ begin
   qryMovimientos.ParamByName('PCAJA').AsString   := sCaja;
   qryMovimientos.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryMovimientos, 'Movimientos');
+
   // --- Cliente ---
   qryCliente.Close;
   if Trim(sCli) <> '' then
@@ -430,14 +426,16 @@ begin
     qryCliente.ParamByName('PCLI').AsString := sCli;
     AbrirSeguro(qryCliente, 'Clientes');
   end;
-  // --- Depósitos ---
+
+  // --- Depositos ---
   qryDepositos.Close;
   qryDepositos.ParamByName('PEMP').AsString    := sEmp;
   qryDepositos.ParamByName('PALM').AsString    := sAlm;
   qryDepositos.ParamByName('PCAJA').AsString   := sCaja;
   qryDepositos.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryDepositos, 'Depósitos');
-  // --- Factura (cabecera + líneas) ---
+  AbrirSeguro(qryDepositos, 'Depositos');
+
+  // --- Factura (cabecera + lineas) ---
   qryFactura.Close;
   qryFacturaLin.Close;
   qryFactura.ParamByName('PEMP').AsString    := sEmp;
@@ -449,7 +447,7 @@ begin
   begin
     qryFacturaLin.ParamByName('PSERIE').AsString  := sSerie;
     qryFacturaLin.ParamByName('PNROFAC').AsString := sNroFac;
-    AbrirSeguro(qryFacturaLin, 'Líneas de Facturas');
+    AbrirSeguro(qryFacturaLin, 'Lineas de Facturas');
   end;
 end;
 
@@ -466,6 +464,7 @@ begin
   try
     qryOperacion.Close;
     qryPagos.Close;
+    qryVales.Close;
     qryMovimientos.Close;
     qryCliente.Close;
     qryDepositos.Close;
@@ -496,7 +495,7 @@ begin
     begin
       q.Close;
       // Registramos pero no propagamos: un fallo en una pestaña no debe
-      // tirar el maestro ni las demás pestañas.
+      // tirar el maestro ni las demas pestañas.
       showmessage((Format('[ConsultaOpe] Error abriendo %s: %s',
                                      [sNombre, E.Message])));
     end;
@@ -507,6 +506,11 @@ end;
 function TdmConsultaOpe.TienePagos: Boolean;
 begin
   Result := qryPagos.Active and (not qryPagos.IsEmpty);
+end;
+
+function TdmConsultaOpe.TieneVales: Boolean;
+begin
+  Result := qryVales.Active and (not qryVales.IsEmpty);
 end;
 
 function TdmConsultaOpe.TieneMovimientos: Boolean;
