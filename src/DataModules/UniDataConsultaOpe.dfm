@@ -15,6 +15,10 @@ object dmConsultaOpe: TdmConsultaOpe
     Left = 458
     Top = 63
   end
+  object qryVales: TUniQuery
+    Left = 458
+    Top = 230
+  end
   object qryMovimientos: TUniQuery
     Left = 570
     Top = 66
@@ -49,6 +53,11 @@ object dmConsultaOpe: TdmConsultaOpe
     DataSet = qryPagos
     Left = 456
     Top = 143
+  end
+  object dsVales: TDataSource
+    DataSet = qryVales
+    Left = 568
+    Top = 230
   end
   object dsMovimientos: TDataSource
     DataSet = qryMovimientos

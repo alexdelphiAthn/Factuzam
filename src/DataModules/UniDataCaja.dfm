@@ -1,4 +1,4 @@
-﻿object dmCajaOpe: TdmCajaOpe
+object dmCajaOpe: TdmCajaOpe
   OnCreate = DataModuleCreate
   Height = 346
   Width = 791
@@ -515,12 +515,14 @@
       '    N.ID_ATRIBUTO'
       'FROM fza_articulos_skus SKU'
       
-        'JOIN fza_atributos_sku AT ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA'
+        'JOIN fza_atributos_sku AT ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_U' +
+        'NIDAD_SKU_SA'
       'JOIN fza_atributos_valores V ON AT.ID_AV_SA = V.ID_AV'
       'JOIN vi_atributos_nombres N ON V.ID_VA_AV = N.ID_ATRIBUTO'
       'WHERE SKU.CODIGO_ART_SKU = :ARTICULO'
       
-        '-- IMPORTANTE: Ordenamos por ID o por un campo ORDEN_VISUAL_ARTVIN si lo tienes'
+        '-- IMPORTANTE: Ordenamos por ID o por un campo ORDEN_VISUAL_ARTV' +
+        'IN si lo tienes'
       'ORDER BY N.ID_ATRIBUTO ASC '
       'LIMIT 5;')
     Left = 540

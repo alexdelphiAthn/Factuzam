@@ -339,12 +339,15 @@ type
   public
     procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
-    procedure MarcarValeComoCanjeado(const ACodigoVale: string;
-                                 ACodigoCaja: string;
-                                 ACodigoAlmacen: string;
-                                 ANumOperacion: string;
-                                 ASerie: string;
-                                 ANumFactura: String);
+    procedure MarcarValeComoCanjeado(QryTrx:           TUniQuery;
+                                     const ACodigoVale: string;
+                                     const AEmpresa:    string;
+                                     const ACodigoAlmacen: string;
+                                     const ACodigoCaja:    string;
+                                     const ANumOperacion:  string;
+                                     const ASerie:         string;
+                                     const ANumFactura:    string;
+                                     AImporteRedimido:     Currency);
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
@@ -1485,28 +1488,23 @@ begin
         Inc(NumLineaPago);
         InsertarPagoCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE, NumLineaPago,
-          'VALE', DatosCobro.ValesRecogidos[i].ImporteAplicado, 0);
+          'VALE', DatosCobro.ValesRecogidos[i].ImporteAplicado, 0,
+          '', '', 1, 0,
+          DatosCobro.ValesRecogidos[i].CodigoVale);   // <-- referencia al vale
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
           DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
           NumFactura, SerieGenerada, Cab.CodigoCliente,
           'Vale canjeado: ' + DatosCobro.ValesRecogidos[i].CodigoVale);
+        // Marcar el vale como redimido. La nueva firma recibe QryTrx para
+        // unirse a la transaccion, ademas del importe y la empresa.
+        MarcarValeComoCanjeado(
+          QryTrx,
+          DatosCobro.ValesRecogidos[i].CodigoVale,
+          AEmpresa, AAlmacen, ACaja, NumOperacionVE,
+          SerieGenerada, NumFactura,
+          DatosCobro.ValesRecogidos[i].ImporteAplicado);
       end;
-      MarcarValeComoCanjeado(
-        DatosCobro.ValesRecogidos[i].CodigoVale, ACaja, AAlmacen, NumOperacionVE,
-        SerieGenerada, NumFactura);
-    end;
-    if DatosCobro.ImporteValeEmitido > 0 then
-    begin
-      ValeGenerado := EmitirNuevoVale(
-        AEmpresa, AAlmacen, ACaja, NumOperacionVE, SerieGenerada, NumFactura,
-        DatosCobro.ImporteValeEmitido);
-      DatosCobro.CodigoValeEmitido := ValeGenerado;
-      InsertarOperacionCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VL',
-        -DatosCobro.ImporteValeEmitido, UsuarioCaja,
-        NumFactura, SerieGenerada, Cab.CodigoCliente,
-        'Vale emitido: ' + ValeGenerado);
     end;
     // =======================================================================
     // PASO 7: ALBARÁN DE DEPÓSITO
@@ -2198,39 +2196,52 @@ begin
   ConfigurarEstructuraLineas;
 end;
 
-procedure TdmCajaOpe.MarcarValeComoCanjeado(const ACodigoVale: string;
-                                 ACodigoCaja: string;
-                                 ACodigoAlmacen: string;
-                                 ANumOperacion: string;
-                                 ASerie: string;
-                                 ANumFactura: String);
+procedure TdmCajaOpe.MarcarValeComoCanjeado(QryTrx: TUniQuery;
+                                            const ACodigoVale: string;
+                                            const AEmpresa: string;
+                                            const ACodigoAlmacen: string;
+                                            const ACodigoCaja: string;
+                                            const ANumOperacion: string;
+                                            const ASerie: string;
+                                            const ANumFactura: string;
+                                            AImporteRedimido: Currency);
 var
-  qry: TUniQuery;
+  FilasAfectadas: Integer;
 begin
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := oConn;
-    qry.SQL.Text :=
-      'UPDATE fza_caja_vales ' +
-      '   SET ESTADO_VL = ''CANJEADO'', ' +
-      '       FECHA_CANJE_VL = NOW(), ' +
-      '       CODIGO_CAJA_CANJE_VL = :caja, ' +
-      '       CODIGO_ALMACEN_CANJE_VL = :almacen, ' +
-      '       NUMERO_OPERACION_CANJE_VL = :numop, ' +
-      '       SERIE_FACTURA_CANJE_VL = :serie, ' +
-      '       NRO_FACTURA_CANJE_VL = :numfac ' +
-      ' WHERE CODIGO_VL = :codigo ' +
-      '   AND ESTADO_VL = ''PENDIENTE''';
-    qry.ParamByName('codigo').AsString := ACodigoVale;
-    qry.ParamByName('caja').AsString := ACodigoCaja;
-    qry.ParamByName('almacen').AsString := ACodigoAlmacen;
-    qry.ParamByName('numop').AsString := ANumOperacion;
-    qry.ParamByName('serie').AsString := ASerie;
-    qry.ParamByName('numfac').AsString := ANumFactura;
-    qry.ExecSQL;
-  finally
-    qry.Free;
-  end;
+  QryTrx.SQL.Text :=
+    'UPDATE fza_caja_vales ' +
+    '   SET ESTADO_VL               = ''REDIMIDO'', ' +
+    '       FECHA_REDENCION_VL      = NOW(), ' +
+    '       IMPORTE_REDIMIDO_VL     = :importe, ' +
+    '       CODIGO_EMP_RED_VL       = :empresa, ' +
+    '       CODIGO_ALM_RED_VL       = :almacen, ' +
+    '       CODIGO_CAJA_RED_VL      = :caja, ' +
+    '       NUMERO_OPERACION_RED_VL = :numop, ' +
+    '       SERIE_FAC_RED_VL        = NULLIF(:serie, ''''), ' +
+    '       NUMERO_FAC_RED_VL       = NULLIF(:numfac, ''''), ' +
+    '       USUARIO_MODIF           = :usuario, ' +
+    '       INSTANTE_MODIF          = NOW() ' +
+    ' WHERE CODIGO_VL = :codigo ' +
+    '   AND ESTADO_VL = ''PENDIENTE''';
+  QryTrx.ParamByName('codigo').AsString    := ACodigoVale;
+  QryTrx.ParamByName('importe').AsCurrency := AImporteRedimido;
+  QryTrx.ParamByName('empresa').AsString   := AEmpresa;
+  QryTrx.ParamByName('almacen').AsString   := ACodigoAlmacen;
+  QryTrx.ParamByName('caja').AsString      := ACodigoCaja;
+  QryTrx.ParamByName('numop').AsString     := ANumOperacion;
+  QryTrx.ParamByName('serie').AsString     := ASerie;
+  QryTrx.ParamByName('numfac').AsString    := ANumFactura;
+  QryTrx.ParamByName('usuario').AsString   := inLibGlobalVar.oUser;
+  QryTrx.Execute;
+  // Validar que se haya marcado realmente el vale.
+  // Si RowsAffected = 0, el vale no existe, ya estaba redimido, o el codigo
+  // venia mal. En cualquier caso, abortamos la transaccion completa.
+  FilasAfectadas := QryTrx.RowsAffected;
+  if FilasAfectadas <> 1 then
+    raise Exception.CreateFmt(
+      'No se pudo redimir el vale "%s". Filas afectadas: %d. ' +
+      'Posibles causas: el vale no existe, ya fue redimido, esta caducado o anulado.',
+      [ACodigoVale, FilasAfectadas]);
 end;
 
 procedure TdmCajaOpe.InsertarCabeceraFactura(
