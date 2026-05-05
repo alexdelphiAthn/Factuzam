@@ -25,7 +25,7 @@ uses
   cxMemo, cxSpinEdit, cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
-  dxCoreGraphics, strUtils;
+  dxCoreGraphics, strUtils, cxCalc;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -114,7 +114,6 @@ type
     lblTotalUnidades: TcxLabel;
     txtTOTAL_UNIDADES_DIFERENCIA: TcxDBTextEdit;
     lblTotalEuros: TcxLabel;
-    txtTOTAL_EUROS_DIFERENCIA: TcxDBTextEdit;
     pnlAuditoria: TPanel;
     lblUsuarioAlta: TcxLabel;
     txtUSUARIOALTA: TcxDBTextEdit;
@@ -125,6 +124,7 @@ type
     lblInstanteModif: TcxLabel;
     txtINSTANTEMODIF: TcxDBTextEdit;
     splSplitterFicha: TcxSplitter;
+    cxDBCurrencyEdit1: TcxDBCurrencyEdit;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);

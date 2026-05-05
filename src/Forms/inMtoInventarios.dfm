@@ -33,7 +33,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object colCODIGO_EMP_INV: TcxGridDBColumn
               Caption = 'Empresa'
               DataBinding.FieldName = 'CODIGO_EMP_INV'
-              Width = 80
+              Width = 102
             end
             object colCODIGO_ALM_INV: TcxGridDBColumn
               Caption = 'Almac'#233'n'
@@ -48,7 +48,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object colNUMERO_INV: TcxGridDBColumn
               Caption = 'N'#250'mero'
               DataBinding.FieldName = 'NUMERO_INV'
-              Width = 100
+              Width = 88
             end
             object colFECHA_INV: TcxGridDBColumn
               Caption = 'Fecha'
@@ -56,12 +56,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               PropertiesClassName = 'TcxDateEditProperties'
               Properties.SaveTime = False
               Properties.ShowTime = False
-              Width = 90
+              Width = 127
             end
             object colESTADO_INV: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_INV'
-              Width = 90
+              Width = 134
             end
             object colDESCRIPCION_INV: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
@@ -255,7 +255,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             ClientRectRight = 1132
             ClientRectTop = 29
             object tsDetalle: TcxTabSheet
-              Caption = '2. Detalle del inventario'
+              Caption = '&2. Detalle del inventario'
               ImageIndex = 1
               object pnlDetalleTop: TPanel
                 Left = 0
@@ -332,7 +332,9 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                       Kind = skSum
                       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     end>
-                  OptionsBehavior.IncSearch = True
+                  OptionsBehavior.FocusCellOnTab = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   object tvLineasLINEA: TcxGridDBColumn
@@ -471,7 +473,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               end
             end
             object tsMovsRegul: TcxTabSheet
-              Caption = '3. Movimientos regularizados'
+              Caption = '&3. Movimientos regularizados'
               ImageIndex = 2
               object pnlMovsTop: TPanel
                 Left = 0
@@ -564,12 +566,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               end
             end
             object tsCabecera: TcxTabSheet
-              Caption = '4.Otros'
+              Caption = '&4.Otros'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
@@ -604,7 +602,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Left = 16
                     Top = 32
                     Caption = 'Total unidades de descuadre'
-                    TabOrder = 2
+                    TabOrder = 1
                   end
                   object txtTOTAL_UNIDADES_DIFERENCIA: TcxDBTextEdit
                     Left = 265
@@ -619,15 +617,14 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Left = 52
                     Top = 76
                     Caption = 'Variaci'#243'n econ'#243'mica ('#8364')'
-                    TabOrder = 3
+                    TabOrder = 2
                   end
-                  object txtTOTAL_EUROS_DIFERENCIA: TcxDBTextEdit
+                  object cxDBCurrencyEdit1: TcxDBCurrencyEdit
                     Left = 265
-                    Top = 74
+                    Top = 72
                     DataBinding.DataField = 'TOTAL_EUROS_DIFERENCIA_INV'
                     DataBinding.DataSource = dsTablaG
-                    Properties.ReadOnly = True
-                    TabOrder = 1
+                    TabOrder = 3
                     Width = 177
                   end
                 end
@@ -747,6 +744,9 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         Width = 1140
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1140
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end
@@ -797,6 +797,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
     end
   end
   inherited dsTablaG: TDataSource
+    DataSet = dmInventarios.unqryTablaG
     OnDataChange = dsTablaGDataChange
   end
   object dlgAbrir: TOpenDialog
