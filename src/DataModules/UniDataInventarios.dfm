@@ -217,30 +217,31 @@ inherited dmInventarios: TdmInventarios
   object unqryMovsRegul: TUniQuery
     SQL.Strings = (
       'SELECT '
-      '   m.NUMERO_MOV, m.TIPO_MOV,'
+      '   m.NUMERO_MOV, m.LINEA_MOV, m.TIPO_MOV,'
       '   m.CODIGO_ART_MOV, m.CODIGO_UNIDAD_MOV,'
+      '   m.DESCRIPCION_ARTICULO_MOV,'
       '   m.CANTIDAD_MOV, m.PRECIO_MEDIO_MOV,'
       '   (m.CANTIDAD_MOV * m.PRECIO_MEDIO_MOV) AS COSTE_MOV,'
       '   m.FECHA_MOV, m.ESACTIVO_MOV'
       'FROM fza_movimientos_almacen m'
-      'WHERE m.CODIGO_ALM_MOV = :ALMACEN'
-      '  AND m.NUMERO_MOV LIKE :PATRON'
-      '  AND m.TIPO_DOC_MOV = '#39'IN'#39
-      '  AND m.SERIE_MOV    = :SERIE'
+      'WHERE m.CODIGO_EMP_MOV  = :EMPRESA'
+      '  AND m.CODIGO_ALM_MOV  = :ALMACEN'
+      '  AND m.TIPO_DOC_MOV    = '#39'IN'#39
+      '  AND m.SERIE_DOC_MOV   = :SERIE'
       '  AND m.NUMERO_DOC_MOV  = :NUMERO'
-      'ORDER BY m.NUMERO_MOV')
+      'ORDER BY m.LINEA_MOV')
     Left = 250
     Top = 198
     ParamData = <
       item
         DataType = ftString
-        Name = 'ALMACEN'
+        Name = 'EMPRESA'
         ParamType = ptInput
         Value = nil
       end
       item
         DataType = ftString
-        Name = 'PATRON'
+        Name = 'ALMACEN'
         ParamType = ptInput
         Value = nil
       end

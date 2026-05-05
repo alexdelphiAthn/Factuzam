@@ -30,6 +30,16 @@ uses
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
     dlgAbrir: TOpenDialog;
+    // Columnas del grid de la pestana Lista (view heredado cxGrdDBTabPrin)
+    colCODIGO_EMP_INV: TcxGridDBColumn;
+    colCODIGO_ALM_INV: TcxGridDBColumn;
+    colSERIE_INV: TcxGridDBColumn;
+    colNUMERO_INV: TcxGridDBColumn;
+    colFECHA_INV: TcxGridDBColumn;
+    colESTADO_INV: TcxGridDBColumn;
+    colDESCRIPCION_INV: TcxGridDBColumn;
+    colTOT_UDS_DIF_INV: TcxGridDBColumn;
+    colTOT_EUR_DIF_INV: TcxGridDBColumn;
     pnlTopFicha: TPanel;
     pnlBodyFicha: TPanel;
     lblEmpresa: TcxLabel;
@@ -118,6 +128,7 @@ type
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure pcDetailChange(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
@@ -209,16 +220,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin
-  // Llamado por TfrmMtoGen — el padre crea aquí el data module
-  inherited;
-  dmmInventarios := tdmDataModule as TdmInventarios;
+  // CRÍTICO: la variable global dmmInventarios sobrevive al cierre del
+  // formulario anterior. Si la dejamos apuntar al data module liberado,
+  // los TcxDBLookupComboBox dispararán EditValueChanged durante la apertura
+  // del nuevo unqryTablaG (eso lo hace el framework inLibShowMto.CrearDataModule)
+  // ANTES de que lleguemos a reasignar dmmInventarios más abajo, y los
+  // handlers usarán el puntero colgante → ACCESS_VIOLATION.
+  // Por eso lo limpiamos justo antes de inherited.
+  dmmInventarios := nil;
 
-  // Vinculamos el dataset principal al dsTablaG heredado y lo abrimos.
-  // Sin esta asignación el grid de la pestaña Lista queda vacío y
-  // AplicarEtiquetas del padre no puede leer el nombre de la tabla origen.
-  dsTablaG.DataSet := dmmInventarios.unqryTablaG;
-  if not dmmInventarios.unqryTablaG.Active then
-    dmmInventarios.unqryTablaG.Open;
+  // El framework inLibShowMto.CrearDataModule hace:
+  //   - Crea el data module
+  //   - dsTablaG.DataSet := unqryTablaG
+  //   - unqryTablaG.Open  (esto emite valores a los combos enlazados)
+  inherited;
+
+  dmmInventarios := tdmDataModule as TdmInventarios;
 
   // Datasources locales que apuntan a queries del data module
   cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
@@ -227,6 +244,12 @@ begin
                                                      dmmInventarios.dsAlmacenes;
   cbbSERIE_INVENTARIO.Properties.ListSource :=
                                                         dmmInventarios.dsSeries;
+
+  // Grids de detalle (cdsLineas) y movimientos regularizados (unqryMovsRegul).
+  // Los views se enlazan a los datasources del data module aquí porque en
+  // tiempo de diseño aún no existen los datasources.
+  tvLineas.DataController.DataSource := dmmInventarios.dsLineas;
+  tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
@@ -242,6 +265,33 @@ begin
   ActualizarColumnasDinamicas('');
 end;
 
+procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  // Importante: el padre TfrmMtoGen libera tdmDataModule en su Destroy.
+  // Si dejamos que la variable global dmmInventarios siga apuntando a un
+  // objeto liberado y los lookups del formulario sigan enlazados a sus
+  // datasources internos, el siguiente acceso provoca un ACCESS_VIOLATION
+  // (típicamente al reabrir la ventana).
+
+  // Desvincular ListSource de los lookups que apuntan al data module.
+  if Assigned(cbbCODIGO_EMPRESA_INVENTARIO) then
+    cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource := nil;
+  if Assigned(cbbCODIGO_ALMACEN_INVENTARIO) then
+    cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource := nil;
+  if Assigned(cbbSERIE_INVENTARIO) then
+    cbbSERIE_INVENTARIO.Properties.ListSource := nil;
+
+  // Desvincular los DataSources de los grids.
+  if Assigned(tvLineas) then
+    tvLineas.DataController.DataSource := nil;
+  if Assigned(tvMovs) then
+    tvMovs.DataController.DataSource := nil;
+
+  // Limpiar la referencia global para no dejar puntero colgante.
+  dmmInventarios := nil;
+end;
+
 procedure TfrmMtoInventarios.ResetForm;
 begin
   inherited;
@@ -249,11 +299,23 @@ begin
 end;
 
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);
+var
+  ds: TDataSet;
 begin
   if pcDetail.ActivePage = tsDetalle then
     CargarLineasYRefrescar
   else if pcDetail.ActivePage = tsMovsRegul then
+  begin
+    ds := dsTablaG.DataSet;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+      dmmInventarios.SetClavesActivas(
+        ds.FieldByName('CODIGO_EMP_INV').AsString,
+        ds.FieldByName('CODIGO_ALM_INV').AsString,
+        ds.FieldByName('SERIE_INV').AsString,
+        ds.FieldByName('NUMERO_INV').AsString
+      );
     dmmInventarios.CargarMovimientosRegularizacion;
+  end;
 
   ActualizarEstadoUI;
 end;
@@ -269,6 +331,7 @@ var
   emp: string;
 begin
   inherited;
+  if (csDestroying in ComponentState) then Exit;
 
   // Si cambia el registro activo, recargamos el lookup de almacenes
   if (Field = nil) or
@@ -349,8 +412,24 @@ begin
 end;
 
 procedure TfrmMtoInventarios.CargarLineasYRefrescar;
+var
+  ds: TDataSet;
 begin
-  if (dsTablaG.DataSet = nil) or dsTablaG.DataSet.IsEmpty then Exit;
+  ds := dsTablaG.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+
+  // IMPORTANTE: tras un Post de cabecera nueva, AfterScroll NO siempre se
+  // dispara (no hay cambio de registro real). Si no resincronizamos las
+  // claves del data module con los valores actuales de la cabecera, las
+  // líneas recién insertadas por la modal de carga no se ven, porque
+  // unqryLineas se reabre con parámetros desactualizados.
+  dmmInventarios.SetClavesActivas(
+    ds.FieldByName('CODIGO_EMP_INV').AsString,
+    ds.FieldByName('CODIGO_ALM_INV').AsString,
+    ds.FieldByName('SERIE_INV').AsString,
+    ds.FieldByName('NUMERO_INV').AsString
+  );
+
   dmmInventarios.CargarLineasInventario;
 
   // Tras cargar, intentamos detectar el artículo padre del primer registro
@@ -369,7 +448,14 @@ procedure TfrmMtoInventarios.cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChan
 var
   emp: string;
 begin
+  // Guards: este evento puede dispararse durante el cierre de la ventana
+  // (cuando el manager hace AForm.Hide y AForm.Parent := nil), antes y después
+  // de FormDestroy. Si el ciclo de vida ha desmontado el dataset principal
+  // o el data module, no podemos tocar el data module.
+  if (csDestroying in ComponentState) then Exit;
   if dmmInventarios = nil then Exit;
+  if (dsTablaG = nil) or (dsTablaG.DataSet = nil) then Exit;
+
   emp := VarToStr(cbbCODIGO_EMPRESA_INVENTARIO.EditValue);
   dmmInventarios.CargarAlmacenesPorEmpresa(emp);
 
@@ -404,6 +490,31 @@ begin
   // Optimización: si es el mismo padre, no repintamos
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
   FUltimoArticuloPadre := ArticuloPadre;
+
+  // Guard: durante FormCreate puede llamarse antes de que dmmInventarios
+  // esté asignado, o tras FormDestroy. En ese caso solo ocultamos columnas.
+  if dmmInventarios = nil then
+  begin
+    if Assigned(tvLineas) then
+    begin
+      tvLineas.BeginUpdate;
+      try
+        for i := 1 to 5 do
+        begin
+          Col := ObtenerColumnaSkuPorTag(i);
+          if Col <> nil then
+          begin
+            Col.Visible := False;
+            Col.Options.Editing := False;
+            Col.Caption := '-';
+          end;
+        end;
+      finally
+        tvLineas.EndUpdate;
+      end;
+    end;
+    Exit;
+  end;
 
   NombresAtributos := TStringList.Create;
   try
@@ -988,4 +1099,3 @@ initialization
   ForceReferenceToClass(TfrmMtoInventarios);
 
 end.
-

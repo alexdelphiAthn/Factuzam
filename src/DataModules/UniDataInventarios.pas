@@ -172,6 +172,42 @@ begin
   unspAplicar.Connection           := oConn;
   unspEliminarRegul.Connection     := oConn;
 
+  // CRÍTICO: por defecto UniDAC genera UPDATEs con todos los campos en el
+  // WHERE para control optimista de concurrencia. La tabla tiene
+  // INSTANTE_MODIF con ON UPDATE CURRENT_TIMESTAMP, por lo que el segundo
+  // UPDATE sobre una misma fila falla con "Record not found or changed by
+  // another user" porque el INSTANTE_MODIF antiguo ya no existe en BD.
+  //
+  // Solución: especificar UPDATE/DELETE personalizados que sólo usan la PK.
+  unqryLineas.SQLUpdate.Text :=
+    'UPDATE fza_inventarios_lineas SET '                              + sLineBreak +
+    '  CODIGO_ART_INVLIN              = :CODIGO_ART_INVLIN,'          + sLineBreak +
+    '  CODIGO_UNIDAD_INVLIN           = :CODIGO_UNIDAD_INVLIN,'       + sLineBreak +
+    '  LOTE_INVLIN                    = :LOTE_INVLIN,'                + sLineBreak +
+    '  FECHA_CADUCIDAD_INVLIN         = :FECHA_CADUCIDAD_INVLIN,'     + sLineBreak +
+    '  DESCRIPCION_ARTICULO_INVLIN    = :DESCRIPCION_ARTICULO_INVLIN,'+ sLineBreak +
+    '  CANTIDAD_TEORICA_INVLIN        = :CANTIDAD_TEORICA_INVLIN,'    + sLineBreak +
+    '  CANTIDAD_FISICA_INVLIN         = :CANTIDAD_FISICA_INVLIN,'     + sLineBreak +
+    '  CANTIDAD_DIFERENCIA_INVLIN     = :CANTIDAD_DIFERENCIA_INVLIN,' + sLineBreak +
+    '  PRECIO_MEDIO_INVLIN            = :PRECIO_MEDIO_INVLIN,'        + sLineBreak +
+    '  PRECIO_MEDIO_NUEVO_INVLIN      = :PRECIO_MEDIO_NUEVO_INVLIN,'  + sLineBreak +
+    '  TOTAL_COSTE_DIFERENCIA_INVLIN  = :TOTAL_COSTE_DIFERENCIA_INVLIN,' + sLineBreak +
+    '  FECHA_RECUENTO_INVLIN          = :FECHA_RECUENTO_INVLIN,'      + sLineBreak +
+    '  USUARIO_MODIF                  = :USUARIO_MODIF '              + sLineBreak +
+    'WHERE CODIGO_EMP_INVLIN          = :OLD_CODIGO_EMP_INVLIN '      + sLineBreak +
+    '  AND CODIGO_ALM_INVLIN          = :OLD_CODIGO_ALM_INVLIN '      + sLineBreak +
+    '  AND SERIE_INV_INVLIN           = :OLD_SERIE_INV_INVLIN '       + sLineBreak +
+    '  AND NUMERO_INV_INVLIN          = :OLD_NUMERO_INV_INVLIN '      + sLineBreak +
+    '  AND LINEA_INVLIN               = :OLD_LINEA_INVLIN ';
+
+  unqryLineas.SQLDelete.Text :=
+    'DELETE FROM fza_inventarios_lineas '                             + sLineBreak +
+    'WHERE CODIGO_EMP_INVLIN          = :OLD_CODIGO_EMP_INVLIN '      + sLineBreak +
+    '  AND CODIGO_ALM_INVLIN          = :OLD_CODIGO_ALM_INVLIN '      + sLineBreak +
+    '  AND SERIE_INV_INVLIN           = :OLD_SERIE_INV_INVLIN '       + sLineBreak +
+    '  AND NUMERO_INV_INVLIN          = :OLD_NUMERO_INV_INVLIN '      + sLineBreak +
+    '  AND LINEA_INVLIN               = :OLD_LINEA_INVLIN ';
+
   // Apertura de los lookups
   if not unqryEmpresas.Active   then unqryEmpresas.Open;
   if not unqryAlmacenes.Active  then unqryAlmacenes.Open;
@@ -245,11 +281,15 @@ end;
 procedure TdmInventarios.CargarMovimientosRegularizacion;
 begin
   unqryMovsRegul.Close;
-  if (FCodigoEmpresa = '') or (FNumero = '') then Exit;
+  if (FCodigoEmpresa = '') or (FCodigoAlmacen = '') or
+     (FSerie = '') or (FNumero = '') then Exit;
 
-  // Los movimientos generados por el inventario tienen el formato 'IV-{NRO}-{LINEA}E' o 'IV-{NRO}-{LINEA}S'
+  // Los movimientos de regularización solo existen si el inventario ya
+  // ha sido APLICADO. Si el estado es ABIERTO o CANCELADO, no consultamos.
+  if GetEstadoInventario <> 'APLICADO' then Exit;
+
+  unqryMovsRegul.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
   unqryMovsRegul.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-  unqryMovsRegul.ParamByName('PATRON').AsString  := 'IV-' + FNumero + '-%';
   unqryMovsRegul.ParamByName('SERIE').AsString   := FSerie;
   unqryMovsRegul.ParamByName('NUMERO').AsString  := FNumero;
   unqryMovsRegul.Open;
