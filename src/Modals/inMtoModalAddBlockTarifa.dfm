@@ -132,28 +132,27 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   end
   inherited pnlCabeceraComun: TPanel
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 1180
     inherited chkSoloActivos: TcxCheckBox
       Top = 6
       ExplicitTop = 6
-      ExplicitWidth = 203
-      ExplicitHeight = 23
     end
     inherited chkExcluirYaCargados: TcxCheckBox
       Left = 223
       Top = 6
       ExplicitLeft = 223
       ExplicitTop = 6
-      ExplicitWidth = 265
-      ExplicitHeight = 23
     end
     inherited chkSoloConStock: TcxCheckBox
       Left = 494
       Top = 6
       ExplicitLeft = 494
       ExplicitTop = 6
-      ExplicitWidth = 225
-      ExplicitHeight = 23
+    end
+    inherited lblStockAviso: TcxLabel
+      Left = 18
+      Top = 28
+      ExplicitLeft = 18
+      ExplicitTop = 28
     end
     inherited btnPrevisualizar: TcxButton
       Left = 888
@@ -168,17 +167,8 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   end
   inherited pcFiltros: TcxPageControl
     inherited tsFamilias: TcxTabSheet
-      ExplicitLeft = 2
-      ExplicitTop = 29
-      ExplicitWidth = 1176
-      ExplicitHeight = 307
       inherited pnlFamiliasTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 1176
-        inherited chkPropagarHijos: TcxCheckBox
-          ExplicitWidth = 299
-          ExplicitHeight = 23
-        end
         inherited btnExpandirFamilias: TcxButton
           Left = 313
           ExplicitLeft = 313
@@ -200,20 +190,11 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
           ExplicitTop = 6
         end
       end
-      inherited tlFamilias: TcxDBTreeList
-        ExplicitWidth = 1176
-        ExplicitHeight = 272
-      end
     end
     inherited tsProveedores: TcxTabSheet
       Caption = '&2_Proveedores '
-      ExplicitLeft = 2
-      ExplicitTop = 29
-      ExplicitWidth = 1176
-      ExplicitHeight = 307
       inherited pnlProveedoresTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 1176
         inherited edtFiltroProveedor: TcxTextEdit
           ExplicitHeight = 27
         end
@@ -241,13 +222,8 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
     end
     inherited tsPropiedades: TcxTabSheet
       Caption = '&3_Propiedades '
-      ExplicitLeft = 2
-      ExplicitTop = 29
-      ExplicitWidth = 1176
-      ExplicitHeight = 307
       inherited pnlPropiedadesTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 1176
         inherited cbxPropiedad: TcxComboBox
           Left = 176
           ExplicitLeft = 176
@@ -306,14 +282,12 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       inherited chkLstAlmacenes: TcxCheckListBox
         Top = 113
         Height = 194
+        ExplicitTop = 113
+        ExplicitHeight = 194
       end
     end
     inherited tsFechaAlta: TcxTabSheet
       Caption = '&5_Fecha alta '
-      ExplicitLeft = 2
-      ExplicitTop = 29
-      ExplicitWidth = 1176
-      ExplicitHeight = 307
       inherited chkAplicarFechaAlta: TcxCheckBox
         ExplicitWidth = 322
         ExplicitHeight = 23
@@ -344,16 +318,9 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       end
     end
   end
-  inherited splitterPreview: TcxSplitter
-    ExplicitTop = 488
-    ExplicitWidth = 1180
-  end
   inherited pnlPreview: TPanel
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 1180
     inherited grdPreview: TcxGrid
-      ExplicitTop = 0
-      ExplicitHeight = 220
       inherited tvPreview: TcxGridDBTableView
         inherited colPrevCodigo: TcxGridDBColumn
           Width = 193

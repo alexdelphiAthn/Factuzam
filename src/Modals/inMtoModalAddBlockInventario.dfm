@@ -1,12 +1,14 @@
 inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   Caption = 'A'#241'adir Bloque - Carga masiva en Inventario'
   StyleElements = [seFont, seClient, seBorder]
+  ExplicitLeft = 3
+  ExplicitTop = -71
   TextHeight = 19
   inherited pnlCabeceraExtra: TPanel
-    Height = 70
+    Height = 64
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 1178
-    ExplicitHeight = 70
+    ExplicitWidth = 1180
+    ExplicitHeight = 64
     object lblInventarioInfo: TcxLabel
       Left = 12
       Top = 12
@@ -25,29 +27,26 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
     end
   end
   inherited pnlCabeceraComun: TPanel
-    Top = 70
+    Top = 64
     StyleElements = [seFont, seClient, seBorder]
     ExplicitTop = 70
-    ExplicitWidth = 1178
-    inherited chkSoloActivos: TcxCheckBox
-      ExplicitWidth = 203
-      ExplicitHeight = 23
-    end
     inherited chkExcluirYaCargados: TcxCheckBox
       Left = 221
       Top = 6
       ExplicitLeft = 221
       ExplicitTop = 6
-      ExplicitWidth = 265
-      ExplicitHeight = 23
     end
     inherited chkSoloConStock: TcxCheckBox
       Left = 494
       Top = 6
       ExplicitLeft = 494
       ExplicitTop = 6
-      ExplicitWidth = 225
-      ExplicitHeight = 23
+    end
+    inherited lblStockAviso: TcxLabel
+      Left = 18
+      Top = 30
+      ExplicitLeft = 18
+      ExplicitTop = 30
     end
     inherited btnPrevisualizar: TcxButton
       Left = 928
@@ -57,22 +56,15 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
     end
   end
   inherited pcFiltros: TcxPageControl
-    Top = 120
-    Height = 368
+    Top = 114
+    Height = 374
     ExplicitTop = 120
-    ExplicitWidth = 1178
     ExplicitHeight = 360
-    ClientRectBottom = 366
+    ClientRectBottom = 372
     inherited tsFamilias: TcxTabSheet
-      ExplicitWidth = 1174
       ExplicitHeight = 329
       inherited pnlFamiliasTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 1174
-        inherited chkPropagarHijos: TcxCheckBox
-          ExplicitWidth = 299
-          ExplicitHeight = 23
-        end
         inherited btnExpandirFamilias: TcxButton
           Left = 313
           ExplicitLeft = 313
@@ -95,8 +87,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
         end
       end
       inherited tlFamilias: TcxDBTreeList
-        Height = 302
-        ExplicitWidth = 1174
+        Height = 308
         ExplicitHeight = 294
       end
     end
@@ -125,7 +116,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
         end
       end
       inherited grdProveedores: TcxGrid
-        Height = 302
+        Height = 308
         ExplicitWidth = 1176
         ExplicitHeight = 302
       end
@@ -134,8 +125,6 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       ExplicitHeight = 337
       inherited pnlPropiedadesTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitLeft = 32
-        ExplicitTop = -6
         inherited cbxPropiedad: TcxComboBox
           Left = 165
           Top = 2
@@ -157,7 +146,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
         end
       end
       inherited grdPropValores: TcxGrid
-        Height = 302
+        Height = 308
         ExplicitWidth = 1176
         ExplicitHeight = 302
       end
@@ -195,8 +184,9 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
       inherited chkLstAlmacenes: TcxCheckListBox
         Top = 113
-        Height = 224
-        ExplicitHeight = 257
+        Height = 230
+        ExplicitTop = 113
+        ExplicitHeight = 224
       end
     end
     inherited tsFechaAlta: TcxTabSheet
@@ -235,18 +225,9 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
     end
   end
-  inherited splitterPreview: TcxSplitter
-    ExplicitTop = 480
-    ExplicitWidth = 1178
-  end
   inherited pnlPreview: TPanel
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitTop = 490
-    ExplicitWidth = 1178
     inherited grdPreview: TcxGrid
-      ExplicitTop = 0
-      ExplicitWidth = 1178
-      ExplicitHeight = 220
       inherited tvPreview: TcxGridDBTableView
         inherited colPrevFamilia: TcxGridDBColumn
           Width = 203
@@ -272,7 +253,5 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   end
   inherited pnlBotonera: TPanel
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitTop = 710
-    ExplicitWidth = 1178
   end
 end

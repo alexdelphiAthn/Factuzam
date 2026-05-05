@@ -334,6 +334,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     end>
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsBehavior.FocusCellOnCycle = True
                   OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
@@ -568,6 +569,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsCabecera: TcxTabSheet
               Caption = '&4.Otros'
               ImageIndex = 0
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
