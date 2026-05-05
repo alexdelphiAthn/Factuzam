@@ -1,5 +1,5 @@
 inherited frmMtoInventarios: TfrmMtoInventarios
-  Caption = 'Inventarios'
+  Caption = 'Mantenimiento de Inventarios'
   ClientHeight = 720
   ClientWidth = 1280
   StyleElements = [seFont, seClient, seBorder]
@@ -15,7 +15,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
     inherited pcPantalla: TcxPageControl
       Width = 1140
       Height = 680
-      Properties.ActivePage = tsLista
       ExplicitWidth = 1140
       ExplicitHeight = 680
       ClientRectBottom = 678
@@ -30,6 +29,62 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           Height = 649
           ExplicitWidth = 1136
           ExplicitHeight = 649
+          inherited cxGrdDBTabPrin: TcxGridDBTableView
+            object colCODIGO_EMP_INV: TcxGridDBColumn
+              Caption = 'Empresa'
+              DataBinding.FieldName = 'CODIGO_EMP_INV'
+              Width = 80
+            end
+            object colCODIGO_ALM_INV: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'CODIGO_ALM_INV'
+              Width = 80
+            end
+            object colSERIE_INV: TcxGridDBColumn
+              Caption = 'Serie'
+              DataBinding.FieldName = 'SERIE_INV'
+              Width = 80
+            end
+            object colNUMERO_INV: TcxGridDBColumn
+              Caption = 'N'#250'mero'
+              DataBinding.FieldName = 'NUMERO_INV'
+              Width = 100
+            end
+            object colFECHA_INV: TcxGridDBColumn
+              Caption = 'Fecha'
+              DataBinding.FieldName = 'FECHA_INV'
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.SaveTime = False
+              Properties.ShowTime = False
+              Width = 90
+            end
+            object colESTADO_INV: TcxGridDBColumn
+              Caption = 'Estado'
+              DataBinding.FieldName = 'ESTADO_INV'
+              Width = 90
+            end
+            object colDESCRIPCION_INV: TcxGridDBColumn
+              Caption = 'Descripci'#243'n'
+              DataBinding.FieldName = 'DESCRIPCION_INV'
+              Width = 260
+            end
+            object colTOT_UDS_DIF_INV: TcxGridDBColumn
+              Caption = 'Uds. diferencia'
+              DataBinding.FieldName = 'TOTAL_UNIDADES_DIFERENCIA_INV'
+              PropertiesClassName = 'TcxCalcEditProperties'
+              Properties.DisplayFormat = '+,0.00;-,0.00'
+              HeaderAlignmentHorz = taRightJustify
+              Width = 110
+            end
+            object colTOT_EUR_DIF_INV: TcxGridDBColumn
+              Caption = #8364' diferencia'
+              DataBinding.FieldName = 'TOTAL_EUROS_DIFERENCIA_INV'
+              PropertiesClassName = 'TcxCalcEditProperties'
+              Properties.DisplayFormat = '+,0.00 '#8364';-,0.00 '#8364
+              HeaderAlignmentHorz = taRightJustify
+              Width = 120
+            end
+          end
         end
       end
       inherited tsFicha: TcxTabSheet
