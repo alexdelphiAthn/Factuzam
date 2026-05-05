@@ -56,7 +56,7 @@ procedure TfrmMtoPaises.CrearTablaPrincipal;
 begin
   inherited;
   dmmPaises := tdmDataModule as TdmPaises;
-  pkFieldName := '`COD_PAIS';
+  pkFieldName := '`CODIGO_PAI_PAI';
 end;
 
 initialization

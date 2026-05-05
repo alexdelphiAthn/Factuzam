@@ -1,4 +1,4 @@
-inherited frmModalAddBlockBase: TfrmModalAddBlockBase
+﻿inherited frmModalAddBlockBase: TfrmModalAddBlockBase
   BorderIcons = [biSystemMenu]
   Caption = 'Carga masiva con filtros'
   ClientHeight = 760
@@ -163,7 +163,7 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
         ExplicitWidth = 1171
         ExplicitHeight = 267
         object tlcolFamiliasNombre: TcxDBTreeListColumn
-          DataBinding.FieldName = 'NOMBRE_FAMILIA'
+          DataBinding.FieldName = 'NOMBRE_FAM_FAM'
           Width = 600
           Position.ColIndex = 0
           Position.RowIndex = 0
@@ -171,7 +171,7 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
         end
         object tlcolFamiliasCodigo: TcxDBTreeListColumn
           Visible = False
-          DataBinding.FieldName = 'CODIGO_FAMILIA'
+          DataBinding.FieldName = 'CODIGO_FAM_FAM'
           Width = 120
           Position.ColIndex = 1
           Position.RowIndex = 0
@@ -243,15 +243,15 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
           OptionsSelection.MultiSelectMode = msmPersistent
           OptionsView.GroupByBox = False
           object colProvCodigo: TcxGridDBColumn
-            DataBinding.FieldName = 'CODIGO_PROVEEDOR'
+            DataBinding.FieldName = 'CODIGO_PRV_PRV'
             Width = 120
           end
           object colProvRazonSocial: TcxGridDBColumn
-            DataBinding.FieldName = 'RAZONSOCIAL_PROVEEDOR'
+            DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
             Width = 400
           end
           object colProvNif: TcxGridDBColumn
-            DataBinding.FieldName = 'NIF_PROVEEDOR'
+            DataBinding.FieldName = 'NIF_PRV'
             Width = 150
           end
         end
@@ -324,12 +324,12 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
           OptionsSelection.MultiSelect = True
           OptionsSelection.MultiSelectMode = msmPersistent
           object colPropIdValor: TcxGridDBColumn
-            DataBinding.FieldName = 'ID_VALOR_PV'
+            DataBinding.FieldName = 'ID_PV_ARTPROP'
             Visible = False
           end
           object colPropPropiedad: TcxGridDBColumn
             Caption = 'Propiedad'
-            DataBinding.FieldName = 'NOMBRE_PROPIEDAD'
+            DataBinding.FieldName = 'NOMBRE_PROP_PROP'
             GroupIndex = 0
             SortIndex = 0
             SortOrder = soAscending
@@ -337,7 +337,7 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
           end
           object colPropValor: TcxGridDBColumn
             Caption = 'Valor'
-            DataBinding.FieldName = 'VALOR_PV'
+            DataBinding.FieldName = 'PV'
             Width = 500
           end
         end
@@ -361,9 +361,7 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
           Left = 8
           Top = 8
           Caption = 
-            'Marca uno o varios almacenes para acotar el filtro "S'#243'lo con sto' +
-            'ck". Si no marcas ninguno y activas el filtro, no se incluir'#225' ni' +
-            'ng'#250'n art'#237'culo.'
+            'Marca uno o varios almacenes para acotar el filtro "S'#243'lo con stock". Si no marcas ninguno y activas el filtro, no se incluir'#225' ning'#250'n art'#237'culo.'
           TabOrder = 3
         end
         object rgStockCombinacion: TcxRadioGroup
@@ -566,15 +564,15 @@ inherited frmModalAddBlockBase: TfrmModalAddBlockBase
         OptionsData.Inserting = False
         OptionsView.GroupByBox = False
         object colPrevCodigo: TcxGridDBColumn
-          DataBinding.FieldName = 'CODIGO_ARTICULO'
+          DataBinding.FieldName = 'CODIGO_ART_ART'
           Width = 130
         end
         object colPrevDescripcion: TcxGridDBColumn
-          DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+          DataBinding.FieldName = 'DESCRIPCION_ART'
           Width = 280
         end
         object colPrevFamilia: TcxGridDBColumn
-          DataBinding.FieldName = 'NOMBRE_FAMILIA'
+          DataBinding.FieldName = 'NOMBRE_FAM_FAM'
           Width = 150
         end
         object colPrevProveedor: TcxGridDBColumn

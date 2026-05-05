@@ -1,4 +1,4 @@
-inherited frmMtoGrupos: TfrmMtoGrupos
+﻿inherited frmMtoGrupos: TfrmMtoGrupos
   Caption = 'Grupos'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -10,12 +10,12 @@ inherited frmMtoGrupos: TfrmMtoGrupos
             OptionsData.Editing = True
             object cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn
               Caption = 'Nombre Grupo'
-              DataBinding.FieldName = 'GRUPO_GRUPO'
+              DataBinding.FieldName = 'GRUPO_USUGRP'
               Width = 136
             end
             object cxGrdDBTabPrinESGRUPOADMINISTRADOR: TcxGridDBColumn
               Caption = 'Es Grupo Administrador'
-              DataBinding.FieldName = 'ESGRUPOADMINISTRADOR_GRUPO'
+              DataBinding.FieldName = 'ESGRUPOADMINISTRADOR_USUGRP'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -53,7 +53,7 @@ inherited frmMtoGrupos: TfrmMtoGrupos
           object txtNOMBRE_GRUPO: TcxDBTextEdit
             Left = 221
             Top = 38
-            DataBinding.DataField = 'GRUPO_GRUPO'
+            DataBinding.DataField = 'GRUPO_USUGRP'
             DataBinding.DataSource = dsTablaG
             TabOrder = 2
             Width = 197
@@ -61,7 +61,7 @@ inherited frmMtoGrupos: TfrmMtoGrupos
           object cxDBCheckBox1: TcxDBCheckBox
             Left = 254
             Top = 77
-            DataBinding.DataField = 'ESGRUPOADMINISTRADOR_GRUPO'
+            DataBinding.DataField = 'ESGRUPOADMINISTRADOR_USUGRP'
             DataBinding.DataSource = dsTablaG
             Properties.ValueChecked = 'S'
             Properties.ValueUnchecked = 'N'
@@ -125,22 +125,22 @@ inherited frmMtoGrupos: TfrmMtoGrupos
             OptionsView.Indicator = True
             object tvUsuariosUSUARIO_USUARIO: TcxGridDBColumn
               Caption = 'Usuario'
-              DataBinding.FieldName = 'USUARIO_USUARIO'
+              DataBinding.FieldName = 'USUARIO_USU'
               Width = 133
             end
             object tvUsuariosGRUPO_USUARIO: TcxGridDBColumn
               Caption = 'Grupo'
-              DataBinding.FieldName = 'GRUPO_USUARIO'
+              DataBinding.FieldName = 'GRUPO_USU'
               Width = 140
             end
             object tvUsuariosEMPRESADEF_USUARIO: TcxGridDBColumn
               Caption = 'Empresa por defecto'
-              DataBinding.FieldName = 'EMPRESADEF_USUARIO'
+              DataBinding.FieldName = 'EMPRESA_DEFECTO_USU'
               Width = 156
             end
             object tvUsuariosULTIMOLOGIN_USUARIO: TcxGridDBColumn
               Caption = #218'ltima conexi'#243'n'
-              DataBinding.FieldName = 'ULTIMOLOGIN_USUARIO'
+              DataBinding.FieldName = 'ULTIMO_LOGIN_USU'
               Width = 177
             end
           end

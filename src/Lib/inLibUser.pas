@@ -86,10 +86,10 @@ begin
     qPerfil.Open;
     while not qPerfil.Eof do
     begin
-      oDictValue.sValue := qPerfil.FieldByName('VALUE_PERFILES').AsString;
+      oDictValue.sValue := qPerfil.FieldByName('VALUE_USUPER').AsString;
       oDictValue.sValueText :=
-                        qPerfil.FieldByName('VALUE_TEXT_PERFILES').AsWideString;
-      oPerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_PERFILES').AsString,
+                        qPerfil.FieldByName('VALUE_TEXT_USUPER').AsWideString;
+      oPerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_USUPER').AsString,
                                oDictValue);
       qPerfil.Next;
     end;

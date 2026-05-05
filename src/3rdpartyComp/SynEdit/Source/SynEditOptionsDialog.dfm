@@ -1,4 +1,4 @@
-object fmEditorOptionsDialog: TfmEditorOptionsDialog
+﻿object fmEditorOptionsDialog: TfmEditorOptionsDialog
   Left = 580
   Top = 154
   BorderStyle = bsDialog
@@ -384,8 +384,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Will indent the caret on new lines with the same amount of leadi' +
-            'ng white space as the preceding line'
+            'Will indent the caret on new lines with the same amount of leading white space as the preceding line'
           Caption = 'Auto indent'
           TabOrder = 0
         end
@@ -395,8 +394,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Allows you to select a block of text and drag it within the docu' +
-            'ment to another location'
+            'Allows you to select a block of text and drag it within the document to another location'
           Caption = 'Drag and drop editing'
           TabOrder = 1
         end
@@ -406,8 +404,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'When scrolling with page-up and page-down commands, only scroll ' +
-            'a half page at a time'
+            'When scrolling with page-up and page-down commands, only scroll a half page at a time'
           Caption = 'Half page scroll'
           TabOrder = 11
         end
@@ -444,8 +441,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Allows the cursor to go past the last character into the white s' +
-            'pace at the end of a line'
+            'Allows the cursor to go past the last character into the white space at the end of a line'
           Caption = 'Scroll past end of line'
           TabOrder = 14
         end
@@ -455,8 +451,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Shows a hint of the visible line numbers when scrolling vertical' +
-            'ly'
+            'Shows a hint of the visible line numbers when scrolling vertically'
           Caption = 'Show scroll hint'
           TabOrder = 15
         end
@@ -466,8 +461,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'When tabbing, the cursor will go to the next non-white space cha' +
-            'racter of the previous line'
+            'When tabbing, the cursor will go to the next non-white space character of the previous line'
           Caption = 'Smart tabs'
           TabOrder = 5
         end
@@ -495,8 +489,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Let the editor accept tab characters instead of going to the nex' +
-            't control'
+            'Let the editor accept tab characters instead of going to the next control'
           Caption = 'Want tabs'
           TabOrder = 4
         end
@@ -515,8 +508,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'When moving through lines the X position will always stay the sa' +
-            'me'
+            'When moving through lines the X position will always stay the same'
           Caption = 'Maintain caret column'
           TabOrder = 3
         end
@@ -535,9 +527,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'When undoing/redoing actions, handle all continous changes of th' +
-            'e same kind in one call instead undoing/redoing each command sep' +
-            'arately'
+            'When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately'
           Caption = 'Group undo'
           TabOrder = 19
         end
@@ -556,8 +546,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'When clicking with the right mouse for a popup menu, move the cu' +
-            'rsor to that location'
+            'When clicking with the right mouse for a popup menu, move the cursor to that location'
           Caption = 'Right mouse moves cursor'
           TabOrder = 20
         end
@@ -576,9 +565,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'if enabled, then the scrollbars will only show when necessary.  ' +
-            'If you have ScrollPastEOL, then it the horizontal bar will alway' +
-            's be there (it uses MaxLength instead)'
+            'if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)'
           Caption = 'Hide scrollbars as necessary'
           TabOrder = 9
         end
@@ -588,8 +575,7 @@ object fmEditorOptionsDialog: TfmEditorOptionsDialog
           Width = 170
           Height = 17
           Hint = 
-            'Disables the scroll bar arrow buttons when you can'#39't scroll in t' +
-            'hat direction any more'
+            'Disables the scroll bar arrow buttons when you can'#39't scroll in that direction any more'
           Caption = 'Disable scroll arrows'
           TabOrder = 10
         end

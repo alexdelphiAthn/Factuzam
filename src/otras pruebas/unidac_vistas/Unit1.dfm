@@ -1,4 +1,4 @@
-object Form1: TForm1
+﻿object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
@@ -62,8 +62,7 @@ object Form1: TForm1
       'VALUES (:ClienteID, :Nombre, :Email);'
       ''
       
-        'INSERT INTO TablaDireccion (DireccionID, RefClienteID, Calle, Ci' +
-        'udad)'
+        'INSERT INTO TablaDireccion (DireccionID, RefClienteID, Calle, Ciudad)'
       'VALUES (:DireccionID, :ClienteID, :Calle, :Ciudad);')
     SQLDelete.Strings = (
       '-- 1. Primero borramos el detalle (Hijo)'

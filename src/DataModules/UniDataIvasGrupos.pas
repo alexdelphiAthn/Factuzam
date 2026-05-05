@@ -44,12 +44,12 @@ begin
   inherited;
   with unqryTablaG do
   begin
-    FindField('GRUPO_ZONA_IVA').AsString := '0';
-    FindField('ESIRPF_IMP_INCL_ZONA_IVA').AsString := 'N';
-    FindField('ESIVAAGRICOLA_ZONA_IVA').AsString := 'N';
-    FindField('ESAPLICA_RE_ZONA_IVA').AsString := 'S';
-    FindField('ESDEFAULT_ZONA_IVA').AsString := 'N';
-    FindField('PALABRA_REPORTS_ZONA_IVA').AsString := 'IVA';
+    FindField('IVA_IVAGRP').AsString := '0';
+    FindField('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString := 'N';
+    FindField('ESIVAAGRICOLA_IVA_IVAGRP').AsString := 'N';
+    FindField('ESAPLICA_RE_IVA_IVAGRP').AsString := 'S';
+    FindField('ESDEFAULT_IVA_IVAGRP').AsString := 'N';
+    FindField('PALABRA_REPORTS_IVA_IVAGRP').AsString := 'IVA';
   end;
 end;
 
@@ -64,8 +64,8 @@ begin
   bError := False;
   with unqryTablaG do
   begin
-    sCodigo := Trim(FindField('GRUPO_ZONA_IVA').AsString);
-    sDescripcion := Trim(FindField('DESCRIPCION_ZONA_IVA').AsString);
+    sCodigo := Trim(FindField('IVA_IVAGRP').AsString);
+    sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
     if ((sDescripcion = '') or (SimbolosProhibidos(sDescripcion))) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
@@ -84,17 +84,17 @@ begin
     end;
     if (bError = False) then
     begin
-      if (FindField('ESDEFAULT_ZONA_IVA').AsString = 'S') then
+      if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then
       begin
         unqrySol := TUniQuery.Create(nil);
         unqrySol.Connection := oConn;
-        unqrySol.SQL.Text := 'SELECT ESDEFAULT_ZONA_IVA ' +
+        unqrySol.SQL.Text := 'SELECT ESDEFAULT_IVA_IVAGRP ' +
                              '  FROM vi_ivas_grupos ' +
-                             ' WHERE ESDEFAULT_ZONA_IVA = ' + QuotedStr('S');
+                             ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
         if (DataSet.State = dsEdit) then
         begin
           unqrySol.SQL.Text := unqrySol.SQL.Text +
-                               ' AND GRUPO_ZONA_IVA <> ' + sCodigo;
+                               ' AND IVA_IVAGRP <> ' + sCodigo;
         end;
         unqrySol.Open;
         if (unqrySol.RecordCount > 0) then
@@ -123,9 +123,9 @@ end;
 procedure TdmIvasGrupos.GetCodigoAutoIvaGrupo;
 begin
 
-  if unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString = '0' then
+  if unqryTablaG.FindField('IVA_IVAGRP').AsString = '0' then
   begin
-    unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString :=
+    unqryTablaG.FindField('IVA_IVAGRP').AsString :=
                                                  ObtenerSiguienteContador('IG');
 //    with unstrdprcContador do
 //    begin
@@ -136,7 +136,7 @@ begin
 //      ParamByName('pUSUARIO_MODIF').AsString := oUser;
 //      ParamByName('ptipodoc').AsString :=  'IG';
 //      ExecProc;
-//      unqryTablaG.FindField('GRUPO_ZONA_IVA').AsString :=
+//      unqryTablaG.FindField('IVA_IVAGRP').AsString :=
 //                                                  ParamByName('pcont').AsString;
 //    end;
   end;

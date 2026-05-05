@@ -1,4 +1,4 @@
-inherited frmMtoPaises: TfrmMtoPaises
+﻿inherited frmMtoPaises: TfrmMtoPaises
   Caption = 'Paises'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -14,27 +14,27 @@ inherited frmMtoPaises: TfrmMtoPaises
             OptionsData.Editing = True
             object dbcGrdDBTabPrinCOD_PAIS: TcxGridDBColumn
               Caption = 'C'#243'digo Pais'
-              DataBinding.FieldName = 'COD_PAIS'
+              DataBinding.FieldName = 'CODIGO_PAI_PAI'
               Width = 109
             end
             object dbcGrdDBTabPrinCOD_PAIS_ALPHA3: TcxGridDBColumn
               Caption = 'C'#243'digo Alpha3'
-              DataBinding.FieldName = 'COD_PAIS_ALPHA3'
+              DataBinding.FieldName = 'COD_ALPHA3_PAI'
               Width = 148
             end
             object dbcGrdDBTabPrinNOMBRE_SPA_PAIS: TcxGridDBColumn
               Caption = 'Nombre Espa'#241'ol Pais'
-              DataBinding.FieldName = 'NOMBRE_SPA_PAIS'
+              DataBinding.FieldName = 'NOMBRE_SPA_PAI'
               Width = 290
             end
             object dbcGrdDBTabPrinNOMBRE_ENG_PAIS: TcxGridDBColumn
               Caption = 'Nombre Ingl'#233's Pais'
-              DataBinding.FieldName = 'NOMBRE_ENG_PAIS'
+              DataBinding.FieldName = 'NOMBRE_ENG_PAI'
               Width = 294
             end
             object dbcGrdDBTabPrinORDEN_PAIS: TcxGridDBColumn
               Caption = 'Orden en Listados'
-              DataBinding.FieldName = 'ORDEN_PAIS'
+              DataBinding.FieldName = 'ORDEN_PAI'
               HeaderAlignmentHorz = taRightJustify
               Width = 171
             end

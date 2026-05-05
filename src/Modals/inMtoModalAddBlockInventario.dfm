@@ -1,4 +1,4 @@
-inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
+﻿inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   Caption = 'A'#241'adir Bloque - Carga masiva en Inventario'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19
@@ -17,9 +17,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       Left = 12
       Top = 38
       Caption = 
-        'Se a'#241'adir'#225' una l'#237'nea por cada SKU con stock>0 en el almac'#233'n del ' +
-        'inventario. Las cantidades te'#243'ricas se calcular'#225'n despu'#233's pulsan' +
-        'do "Recalcular te'#243'rico/PMP".'
+        'Se a'#241'adir'#225' una l'#237'nea por cada SKU con stock>0 en el almac'#233'n del inventario. Las cantidades te'#243'ricas se calcular'#225'n despu'#233's pulsando "Recalcular te'#243'rico/PMP".'
       Style.TextColor = clNavy
       TabOrder = 1
     end

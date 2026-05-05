@@ -523,11 +523,11 @@ end;
 //  Result := false;
 //  unqryTestBD := TUniQuery.Create(nil);
 //  unqryTestBD.Connection := ucConexion;
-//  unqryTestBD.SQL.Text := 'SELECT VALUE_PERFILES ' +
+//  unqryTestBD.SQL.Text := 'SELECT VALUE_USUPER ' +
 //                          '  FROM fza_usuarios_perfiles ' +
-//                          ' WHERE SUBKEY_PERFILES = ' +
+//                          ' WHERE SUBKEY_USUPER = ' +
 //                                                QuotedStr('DataBaseVersion')  +
-//                          '   AND VALUE_PERFILES = :VerBBDD ' ;
+//                          '   AND VALUE_USUPER = :VerBBDD ' ;
 //  unqryTestBD.ParamByName('VerBBDD').AsString := inLibGlobalVar.oVersion;
 //  unqryTestBD.Open;
 //  if (unqryTestBD.RecordCount = 1) then
@@ -660,9 +660,9 @@ var
   sResult           : string;
 begin
   qryGrupo := TUniQuery.Create(Self);
-  qryGrupo.SQL.Text := ' SELECT GRUPO_USUARIO, ESGRUPOADMINISTRADOR_GRUPO ' +
+  qryGrupo.SQL.Text := ' SELECT GRUPO_USU, ESGRUPOADMINISTRADOR_USUGRP ' +
                         '  FROM VI_USUARIOS  ' +
-                        ' WHERE USUARIO_USUARIO = ' + QuotedStr(sUser);
+                        ' WHERE USUARIO_USU = ' + QuotedStr(sUser);
   qryGrupo.Connection := conn;
   qryGrupo.Open;
   sResult := qryGrupo.Fields[0].AsString;
@@ -753,14 +753,14 @@ begin
     begin
       Log.LogInfo('Login Correcto');
       tbUsers.Edit;
-      tbUsers.FieldByName('ULTIMOLOGIN_USUARIO').AsDateTime := Now;
+      tbUsers.FieldByName('ULTIMO_LOGIN_USU').AsDateTime := Now;
       tbUsers.Post;
       oUser := edtUser.Text;
       oGroup := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
       orootGroup := sGrupoAdmin;
-      oEmpresa   := tbUsers.FieldByName('EMPRESADEF_USUARIO').AsString;
-      oAlmacen   := tbUsers.FieldByName('ALMACENDEF_USUARIO').AsString;
-      oCaja      := tbUsers.FieldByName('CAJADEF_USUARIO').AsString;
+      oEmpresa   := tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString;
+      oAlmacen   := tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString;
+      oCaja      := tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString;
       tbUsers.Close;
       sUserPassOK := 'true';
       SetIniValues;
@@ -775,7 +775,7 @@ function TfrmLogon.ExisteUser(sNom: string; f: TUniConnection): Boolean;
 begin
   tbUsers.Open;
   tbUsers.First;
-  Result := tbUsers.Locate('USUARIO_USUARIO', sNom, []);
+  Result := tbUsers.Locate('USUARIO_USU', sNom, []);
 end;
 
 function TfrmLogon.LoginCorrecto(sNom, sPassLogin: string;
@@ -788,8 +788,8 @@ begin
   begin
     sPassMd5 := sMd5(sPassLogin);
   end;
-  tbUsers.Locate('USUARIO_USUARIO', sNom, []);
-  sPAssBD := tbUsers.FindField('PASSWORD_USUARIO').AsString;
+  tbUsers.Locate('USUARIO_USU', sNom, []);
+  sPAssBD := tbUsers.FindField('PASSWORD_USU').AsString;
   if sPassMd5 = sPassBD then
     Result := True
   else

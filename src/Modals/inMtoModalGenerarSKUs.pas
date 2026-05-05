@@ -93,8 +93,8 @@ begin
     CodigoNuevoSKU := FCodigoArticulo + '/' + NombreSKU;
     unqryMaestro.Connection.ExecSQL(
       'INSERT IGNORE INTO fza_articulos_skus ' +
-      '(CODIGO_UNIDAD_SKU, CODIGO_ARTICULO_SKU, CODIGO_VAR_SKU, ' +
-      'ESACTIVO_SKU, INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      '(CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+      'ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:cod, :art, :var, ''S'', ' +
       ' CURRENT_TIMESTAMP, ''SISTEMA'', ''SISTEMA'')',
       [CodigoNuevoSKU, FCodigoArticulo, FTipoVariacion]
@@ -106,7 +106,7 @@ begin
       begin
         unqryMaestro.Connection.ExecSQL(
           'INSERT IGNORE INTO fza_atributos_sku ' +
-          '(CODIGO_UNIDAD_SA, ID_VALOR_SA) ' +
+          '(CODIGO_UNIDAD_SKU_SA, ID_AV_SA) ' +
           'VALUES (:cod, :val)',
           [CodigoNuevoSKU, StrToInt(IdStr)]
         );
@@ -150,57 +150,57 @@ begin
   unqryDetalle.Connection := oConn;
   unqryMaestro.Close;
   unqryMaestro.SQL.Text :=
-    'SELECT va.ID_ATRIBUTO_VA, ' +
-    '       COALESCE(va.NOMBRE_VA, va.ID_ATRIBUTO_VA) AS NOMBRE_ATRIBUTO, ' +
+    'SELECT va.ID_ATB_VA, ' +
+    '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, ' +
     '       va.ORDEN_VA ' +
     'FROM fza_variaciones_atributos va ' +
-    'WHERE va.ID_VA = :var ' +
+    'WHERE va.ID_VAR_VA = :var ' +
     'ORDER BY va.ORDEN_VA';
   unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
   unqryMaestro.Open;
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
-    'SELECT ID_ATRIBUTO_VA, MAX(ID_CONJUNTO_AC) AS ID_CONJUNTO_AC, ' +
+    'SELECT ID_ATB_VA, MAX(ID_AC) AS ID_AC, ' +
     'NOMBRE_AC, MIN(ORDEN_AV) AS ORDEN_AV, 0 AS ASIGNADO ' +
     'FROM ( ' +
     '  /* 1. Valores que vienen del conjunto global asignado */ ' +
-    '  SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, ' +
-    '  val.VALOR_AV AS NOMBRE_AC, det.ORDEN_ACD AS ORDEN_AV ' +
+    '  SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, ' +
+    '  val.AV AS NOMBRE_AC, det.ORDEN_ACD AS ORDEN_AV ' +
     '  FROM fza_variaciones_atributos atr ' +
     '  JOIN fza_articulos_conjuntos_asign asign ' +
-    '    ON asign.ID_ATRIBUTO_ACA = atr.ID_ATRIBUTO_VA ' +
-    '   AND asign.CODIGO_ARTICULO_ACA = :Articulo ' +
+    '    ON asign.ID_VA_ACA = atr.ID_ATB_VA ' +
+    '   AND asign.CODIGO_ART_ACA = :Articulo ' +
     '  JOIN fza_atributos_conjuntos_det det ' +
-    '    ON det.ID_CONJUNTO_ACD = asign.ID_CONJUNTO_ACA ' +
+    '    ON det.ID_AC_ACD = asign.ID_AC_ACA ' +
     '  JOIN fza_atributos_valores val ' +
-    '    ON val.ID_VALOR_AV = det.ID_VALOR_ACD ' +
-    '  WHERE atr.ID_VA = :Variacion ' +
+    '    ON val.ID_AV = det.ID_AV_ACD ' +
+    '  WHERE atr.ID_VAR_VA = :Variacion ' +
     '  UNION ' +
     '  /* 2. Valores que ya forman parte de algún SKU de este artículo */ ' +
-    '  SELECT atr.ID_ATRIBUTO_VA, val.ID_VALOR_AV AS ID_CONJUNTO_AC, ' +
-    '  val.VALOR_AV AS NOMBRE_AC, val.ORDEN_AV AS ORDEN_AV ' +
+    '  SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, ' +
+    '  val.AV AS NOMBRE_AC, val.ORDEN_AV AS ORDEN_AV ' +
     '  FROM fza_variaciones_atributos atr ' +
     '  JOIN fza_atributos_valores val ' +
-    '    ON val.ID_VA_AV = atr.ID_ATRIBUTO_VA ' +
+    '    ON val.ID_VA_AV = atr.ID_ATB_VA ' +
     '  JOIN fza_atributos_sku asku ' +
-    '    ON asku.ID_VALOR_SA = val.ID_VALOR_AV ' +
+    '    ON asku.ID_AV_SA = val.ID_AV ' +
     '  JOIN fza_articulos_skus skus ' +
-    '    ON skus.CODIGO_UNIDAD_SKU = asku.CODIGO_UNIDAD_SA ' +
-    '   AND skus.CODIGO_ARTICULO_SKU = :Articulo ' +
-    '  WHERE atr.ID_VA = :Variacion ' +
+    '    ON skus.CODIGO_UNIDAD_SKU = asku.CODIGO_UNIDAD_SKU_SA ' +
+    '   AND skus.CODIGO_ART_SKU = :Articulo ' +
+    '  WHERE atr.ID_VAR_VA = :Variacion ' +
     ') AS combinados ' +
-    'GROUP BY ID_ATRIBUTO_VA, NOMBRE_AC ' +
+    'GROUP BY ID_ATB_VA, NOMBRE_AC ' +
     'ORDER BY ORDEN_AV';
   unqryDetalle.Options.LocalMasterDetail := True;
   unqryDetalle.CachedUpdates := True;
   unqryDetalle.ParamByName('Articulo').AsString  := FCodigoArticulo;
   unqryDetalle.ParamByName('Variacion').AsString := FTipoVariacion;
   unqryDetalle.MasterSource := dsMaestro;
-  unqryDetalle.MasterFields := 'ID_ATRIBUTO_VA';
+  unqryDetalle.MasterFields := 'ID_ATB_VA';
   unqryDetalle.Open;
   unqryDetalle.FieldByName('ASIGNADO').ReadOnly := False;
-  unqryDetalle.FieldByName('ID_ATRIBUTO_VA').ReadOnly := False;
-  unqryDetalle.FieldByName('ID_CONJUNTO_AC').ReadOnly := False;
+  unqryDetalle.FieldByName('ID_ATB_VA').ReadOnly := False;
+  unqryDetalle.FieldByName('ID_AC').ReadOnly := False;
   unqryDetalle.FieldByName('NOMBRE_AC').ReadOnly := False;
 end;
 
@@ -230,7 +230,7 @@ begin
       begin
         DimActual := TDimensionSKU.Create;
         DimActual.IdAtributo :=
-          unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
+          unqryMaestro.FieldByName('ID_ATB_VA').AsString;
         DimActual.NombreAtributo :=
           unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
         DimDict.Add(DimActual.IdAtributo, DimActual);
@@ -241,7 +241,7 @@ begin
           if unqryDetalle.FieldByName('ASIGNADO').AsInteger = 1 then
           begin
             ValorActual.IdConjunto :=
-              unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger;
+              unqryDetalle.FieldByName('ID_AC').AsInteger;
             ValorActual.NombreValor :=
               unqryDetalle.FieldByName('NOMBRE_AC').AsString;
             DimActual.Valores.Add(ValorActual);
@@ -298,7 +298,7 @@ begin
   if OrdenStr = '' then Exit;
   OrdenVal := StrToIntDef(OrdenStr, 100);
   // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
-  IdAtrSel := unqryMaestro.FieldByName('ID_ATRIBUTO_VA').AsString;
+  IdAtrSel := unqryMaestro.FieldByName('ID_ATB_VA').AsString;
   qTemp := TUniQuery.Create(nil);
   try
     qTemp.Connection := unqryMaestro.Connection;
@@ -306,23 +306,23 @@ begin
     // FASE 1: OBTENER EL CONJUNTO ACTUAL (Si lo tiene)
     // =========================================================================
     qTemp.SQL.Text :=
-      'SELECT aca.ID_CONJUNTO_ACA, ac.NOMBRE_AC ' +
+      'SELECT aca.ID_AC_ACA, ac.NOMBRE_AC ' +
       'FROM fza_articulos_conjuntos_asign aca ' +
       'LEFT JOIN fza_atributos_conjuntos ac ' +
-      '  ON ac.ID_CONJUNTO_AC = aca.ID_CONJUNTO_ACA ' +
-      'WHERE aca.CODIGO_ARTICULO_ACA = :Articulo ' +
-      '  AND aca.ID_ATRIBUTO_ACA = :Atributo';
+      '  ON ac.ID_AC = aca.ID_AC_ACA ' +
+      'WHERE aca.CODIGO_ART_ACA = :Articulo ' +
+      '  AND aca.ID_VA_ACA = :Atributo';
     qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
     qTemp.ParamByName('Atributo').AsString := IdAtrSel;
     qTemp.Open;
-    if qTemp.IsEmpty or (qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger <= 0)
+    if qTemp.IsEmpty or (qTemp.FieldByName('ID_AC_ACA').AsInteger <= 0)
     then begin
       IdConjuntoAsignado := 0;
       NombreConjunto     := '';
     end
     else
     begin
-      IdConjuntoAsignado := qTemp.FieldByName('ID_CONJUNTO_ACA').AsInteger;
+      IdConjuntoAsignado := qTemp.FieldByName('ID_AC_ACA').AsInteger;
       NombreConjunto     := qTemp.FieldByName('NOMBRE_AC').AsString;
     end;
     // =========================================================================
@@ -330,19 +330,19 @@ begin
     // =========================================================================
     qTemp.Close;
     qTemp.SQL.Text :=
-      'SELECT ID_VALOR_AV FROM fza_atributos_valores ' +
-      'WHERE ID_VA_AV = :IdVa AND TRIM(UPPER(VALOR_AV)) = UPPER(:Valor)';
+      'SELECT ID_AV FROM fza_atributos_valores ' +
+      'WHERE ID_VA_AV = :IdVa AND TRIM(UPPER(AV)) = UPPER(:Valor)';
     qTemp.ParamByName('IdVa').AsString := IdAtrSel;
     qTemp.ParamByName('Valor').AsString := NuevoNombre;
     qTemp.Open;
     if not qTemp.IsEmpty then
-      IdNuevoValor := qTemp.FieldByName('ID_VALOR_AV').AsInteger
+      IdNuevoValor := qTemp.FieldByName('ID_AV').AsInteger
     else
     begin
       qTemp.Close;
       qTemp.SQL.Text :=
-        'INSERT INTO fza_atributos_valores (ID_VA_AV, VALOR_AV, ORDEN_AV, ' +
-        'INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        'INSERT INTO fza_atributos_valores (ID_VA_AV, AV, ORDEN_AV, ' +
+        'INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
         'VALUES (:IdVa, :Valor, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'', ' +
         '''SISTEMA'')';
       qTemp.ParamByName('IdVa').AsString   := IdAtrSel;
@@ -378,9 +378,9 @@ begin
       begin
         qTemp.Close;
         qTemp.SQL.Text :=
-          'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_CONJUNTO_ACD, ' +
-          'ID_VALOR_ACD, ORDEN_ACD, INSTANTEALTA, USUARIOALTA, ' +
-          'USUARIOMODIF) ' +
+          'INSERT IGNORE INTO fza_atributos_conjuntos_det (ID_AC_ACD, ' +
+          'ID_AV_ACD, ORDEN_ACD, INSTANTE_ALTA, USUARIO_ALTA, ' +
+          'USUARIO_MODIF) ' +
           'VALUES (:Conj, :Val, :Orden, CURRENT_TIMESTAMP, ''SISTEMA'',' +
           ' ''SISTEMA'')';
         qTemp.ParamByName('Conj').AsInteger  := IdConjuntoAsignado;
@@ -408,8 +408,8 @@ begin
   // FASE 5: INYECCIÓN EN MEMORIA PARA GENERAR EL SKU
   // =========================================================================
   unqryDetalle.Append;
-  unqryDetalle.FieldByName('ID_ATRIBUTO_VA').AsString := IdAtrSel;
-  unqryDetalle.FieldByName('ID_CONJUNTO_AC').AsInteger := IdNuevoValor;
+  unqryDetalle.FieldByName('ID_ATB_VA').AsString := IdAtrSel;
+  unqryDetalle.FieldByName('ID_AC').AsInteger := IdNuevoValor;
   unqryDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
 
   if unqryDetalle.FindField('ORDEN_AV') <> nil then

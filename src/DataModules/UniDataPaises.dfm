@@ -1,40 +1,34 @@
-inherited dmPaises: TdmPaises
+﻿inherited dmPaises: TdmPaises
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_paises'
       
-        '  (COD_PAIS, COD_PAIS_ALPHA3, NOMBRE_SPA_PAIS, NOMBRE_ENG_PAIS, ' +
-        'ORDEN_PAIS)'
+        '  (CODIGO_PAI_PAI, COD_ALPHA3_PAI, NOMBRE_SPA_PAI, NOMBRE_ENG_PAI, ORDEN_PAI)'
       'VALUES'
       
-        '  (:COD_PAIS, :COD_PAIS_ALPHA3, :NOMBRE_SPA_PAIS, :NOMBRE_ENG_PA' +
-        'IS, :ORDEN_PAIS)')
+        '  (:CODIGO_PAI_PAI, :COD_ALPHA3_PAI, :NOMBRE_SPA_PAI, :NOMBRE_ENG_PAI, :ORDEN_PAI)')
     SQLDelete.Strings = (
       'DELETE FROM fza_paises'
       'WHERE'
-      '  COD_PAIS = :Old_COD_PAIS')
+      '  CODIGO_PAI_PAI = :Old_COD_PAIS')
     SQLUpdate.Strings = (
       'UPDATE fza_paises'
       'SET'
       
-        '  COD_PAIS = :COD_PAIS, COD_PAIS_ALPHA3 = :COD_PAIS_ALPHA3, NOMB' +
-        'RE_SPA_PAIS = :NOMBRE_SPA_PAIS, NOMBRE_ENG_PAIS = :NOMBRE_ENG_PA' +
-        'IS, ORDEN_PAIS = :ORDEN_PAIS'
+        '  CODIGO_PAI_PAI = :CODIGO_PAI_PAI, COD_ALPHA3_PAI = :COD_ALPHA3_PAI, NOMBRE_SPA_PAI = :NOMBRE_SPA_PAI, NOMBRE_ENG_PAI = :NOMBRE_ENG_PAI, ORDEN_PAI = :ORDEN_PAI'
       'WHERE'
-      '  COD_PAIS = :Old_COD_PAIS')
+      '  CODIGO_PAI_PAI = :Old_COD_PAIS')
     SQLLock.Strings = (
       
-        'SELECT COD_PAIS, COD_PAIS_ALPHA3, NOMBRE_SPA_PAIS, NOMBRE_ENG_PA' +
-        'IS, ORDEN_PAIS FROM fza_paises'
+        'SELECT CODIGO_PAI_PAI, COD_ALPHA3_PAI, NOMBRE_SPA_PAI, NOMBRE_ENG_PAI, ORDEN_PAI FROM fza_paises'
       'WHERE'
-      '  COD_PAIS = :Old_COD_PAIS'
+      '  CODIGO_PAI_PAI = :Old_COD_PAIS'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT COD_PAIS, COD_PAIS_ALPHA3, NOMBRE_SPA_PAIS, NOMBRE_ENG_PA' +
-        'IS, ORDEN_PAIS FROM fza_paises'
+        'SELECT CODIGO_PAI_PAI, COD_ALPHA3_PAI, NOMBRE_SPA_PAI, NOMBRE_ENG_PAI, ORDEN_PAI FROM fza_paises'
       'WHERE'
-      '  COD_PAIS = :COD_PAIS')
+      '  CODIGO_PAI_PAI = :CODIGO_PAI_PAI')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_paises')
     Connection = dmConn.conUni

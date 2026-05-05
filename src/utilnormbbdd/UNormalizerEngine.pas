@@ -341,7 +341,7 @@ begin
   AddOwn('fza_familias_atributos',             ['ATRIBUTO']);
   AddOwn('fza_familias_atributos_defecto',     ['ATRIBUTO']);
   AddOwn('fza_familias_claves_info_defecto',   ['INFO']);
-  AddOwn('fza_caja_formas_pago',               ['FORMAPAGO','FORMAP','FORMA_PAGO']);
+  AddOwn('fza_caja_formas_pago',               ['FORMAPAGO','FORMAP']);
   AddOwn('fza_atributos_basicos',              ['BASICO']);
   AddOwn('fza_atributos_conjuntos',            ['CONJUNTO']);
   AddOwn('fza_atributos_conjuntos_det',        ['CONJUNTO','DET']);
@@ -544,6 +544,14 @@ begin
   AddException('fza_pedidos',                             'NRO_PEDIDO',                           'NUMERO_PED');
   AddException('fza_pedidos',                             'NRO_PEDIDO_ABONO_PEDIDO',              'NUMERO_PED_ABONO_PED');
   AddException('fza_pedidos',                             'SERIE_PEDIDO_ABONO_PEDIDO',            'SERIE_PED_ABONO_PED');
+
+  // === Excepciones añadidas tras revisión manual (21 columnas que el motor
+  //     omitía por contener dígitos en el nombre - ver fix de ParseDefinitionLine).
+  //     De las 21, 18 salen correctas con la regla automática. Estas 3 son
+  //     decisiones explícitas que se apartan del libro de estilo automático: ===
+  AddException('fza_paises',                              'COD_PAIS_ALPHA3',                      'COD_ALPHA3_PAI');
+  AddException('fza_paises',                              'COD_PAIS_ALPHA2',                      'COD_ALPHA2_PAI');
+  AddException('fza_pedidos_lineas',                      'CODEAN13PRODPS_PEDIDO_LINEA',          'CODBAR_ART_PEDLIN');
 end;
 
 procedure TFactuzamNormalizer.SetTableSuffix(const TableName, Suffix: string);
@@ -813,12 +821,6 @@ begin
 
   if Core = '' then
     Result := Suffix
-  else if (Core = Suffix) or Core.EndsWith('_' + Suffix) then
-    // El Core ya termina con el sufijo de la tabla (típicamente porque
-    // ReplaceFKConcepts ha generado CODIGO_FAM cuando la tabla es _FAM,
-    // o NOMBRE_ART cuando la tabla es _ART, etc.). En ese caso, NO
-    // duplicamos: 'CODIGO_FAM' ya identifica suficientemente la columna.
-    Result := Core
   else
     Result := Core + '_' + Suffix;
 end;
@@ -834,7 +836,10 @@ begin
   Definition := '';
   Trim := Line.TrimRight([',', #13]);
   // Patrón: espacios + `NOMBRE` + espacios + resto
-  M := TRegEx.Match(Trim, '^\s*`([A-Za-z_]+)`\s+(.+?)\s*,?\s*$');
+  // Importante: el nombre de columna puede contener DIGITOS (ej:
+  // DIRECCION1_CLIENTE, COD_PAIS_ALPHA2, QRCODE_BASE64_*). El regex
+  // anterior solo aceptaba [A-Za-z_] y se le escapaban casos así.
+  M := TRegEx.Match(Trim, '^\s*`([A-Za-z0-9_]+)`\s+(.+?)\s*,?\s*$');
   if M.Success then
   begin
     ColName := M.Groups[1].Value;

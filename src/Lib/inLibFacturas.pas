@@ -7,66 +7,66 @@ uses
   Datasnap.DBClient, Datasnap.Provider, inLibGlobalVar;
 
 const
-  fnrofaclin = 'NRO_FACTURA_LINEA';
-  fserielin = 'SERIE_FACTURA_LINEA';
-  fnrolin = 'LINEA_FACTURA_LINEA';
-  fescon = 'ESCONSOLIDADA_FACTURA';
-  fcodart = 'CODIGO_ARTICULO_FACTURA_LINEA';
-  fdesart = 'DESCRIPCION_ARTICULO_FACTURA_LINEA';
-  fcodprov = 'CODIGO_PROVEEDOR_FACTURA_LINEA';
-  frazprov = 'RAZONSOCIAL_PROVEEDOR_FACTURA_LINEA';
-  fpprov = 'ESPROVEEDORPRINCIPAL_FACTURA_LINEA';
-  fcodfam = 'CODIGO_FAMILIA_FACTURA_LINEA';
-  fnomfam = 'NOMBRE_FAMILIA_FACTURA_LINEA';
-  ffechentr = 'FECHA_ENTREGA_FACTURA_LINEA';
-  ftipocant = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA';
-  fimpcl = 'ESIMP_INCL_TARIFA_FACTURA_LINEA';
-  ftipiva = 'TIPOIVA_ARTICULO_FACTURA_LINEA';
-  fdescripcion = 'DESCRIPCION_ARTICULO_FACTURA_LINEA';
-  fcodtariflin = 'CODIGO_TARIFA_FACTURA_LINEA';
-  fcant = 'CANTIDAD_FACTURA_LINEA';
-  fpreciosal = 'PRECIOSALIDA_FACTURA_LINEA';
-  fprecultc = 'PRECIO_ULT_COMPRA_FACTURA_LINEA';
-  fpordto = 'PORCEN_DTO_FACTURA_LINEA';
-  fdto = 'PRECIO_DTO_FACTURA_LINEA';
-  fpresiva = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA';
-  fporiva = 'PORCEN_IVA_FACTURA_LINEA';
-  fpreciva = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA';
-  ftotciva = 'TOTAL_FACTURA_LINEA';
-  ftotsiva = 'TOTAL_FACTURASIVA_LINEA';
+  fnrofaclin = 'NUMERO_FAC_FACLIN';
+  fserielin = 'SERIE_FAC_FACLIN';
+  fnrolin = 'LINEA_FACLIN';
+  fescon = 'ESCONSOLIDADA_FAC';
+  fcodart = 'CODIGO_ART_FACLIN';
+  fdesart = 'DESCRIPCION_ARTICULO_FACLIN';
+  fcodprov = 'CODIGO_PRV_FACLIN';
+  frazprov = 'RAZON_SOCIAL_PROVEEDOR_FACLIN';
+  fpprov = 'ESPROVEEDORPRINCIPAL_FACLIN';
+  fcodfam = 'CODIGO_FAM_FACLIN';
+  fnomfam = 'NOMBRE_FAM_FACLIN';
+  ffechentr = 'FECHA_ENTREGA_FACLIN';
+  ftipocant = 'TIPO_CANTIDAD_ARTICULO_FACLIN';
+  fimpcl = 'ESIMP_INCL_TARIFA_FACLIN';
+  ftipiva = 'TIPO_IVA_ARTICULO_FACLIN';
+  fdescripcion = 'DESCRIPCION_ARTICULO_FACLIN';
+  fcodtariflin = 'CODIGO_TAR_FACLIN';
+  fcant = 'CANTIDAD_FACLIN';
+  fpreciosal = 'PRECIO_SALIDA_FACLIN';
+  fprecultc = 'PRECIO_ULT_COMPRA_FACLIN';
+  fpordto = 'PORCENTAJE_DTO_FACLIN';
+  fdto = 'PRECIO_DTO_FACLIN';
+  fpresiva = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN';
+  fporiva = 'PORCENTAJE_IVA_FACLIN';
+  fpreciva = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN';
+  ftotciva = 'TOTAL_FACLIN';
+  ftotsiva = 'TOTAL_FAC_SIVA_FACLIN';
 
-  ffechfac = 'FECHA_FACTURA';
-  fnrofac = 'NRO_FACTURA';
-  fseriefac = 'SERIE_FACTURA';
-  fcodemp = 'CODIGO_EMPRESA_FACTURA';
-  fcodcli = 'CODIGO_CLIENTE_FACTURA';
-  factfij = 'ESVENTA_ACTIVO_FIJO_FACTURA';
-  fcreart = 'ESCREARARTICULOS_FACTURA';
-  fporivan = 'PORCEN_IVAN_FACTURA';
-  ftotivan = 'TOTAL_IVAN_FACTURA';
-  fporren = 'PORCEN_REN_FACTURA';
-  ftotren = 'TOTAL_REN_FACTURA';
-  ftotbasen = 'TOTAL_BASEI_IVAN_FACTURA';
-  fporivar = 'PORCEN_IVAR_FACTURA';
-  ftotivar = 'TOTAL_IVAR_FACTURA';
-  fporrer = 'PORCEN_RER_FACTURA';
-  ftotrer = 'TOTAL_RER_FACTURA';
-  ftotbaser = 'TOTAL_BASEI_IVAR_FACTURA';
-  fporivas = 'PORCEN_IVAS_FACTURA';
-  ftotivas = 'TOTAL_IVAS_FACTURA';
-  fporres = 'PORCEN_RES_FACTURA';
-  ftotres = 'TOTAL_RES_FACTURA';
-  ftotbases = 'TOTAL_BASEI_IVAS_FACTURA';
-  fporivae = 'PORCEN_IVAE_FACTURA';
-  ftotivae = 'TOTAL_IVAE_FACTURA';
-  fporree = 'PORCEN_REE_FACTURA';
-  ftotree = 'TOTAL_REE_FACTURA';
-  ftotbasee = 'TOTAL_BASEI_IVAE_FACTURA';
-  ftotallifac = 'TOTAL_LIQUIDO_FACTURA';
-  fporirpf = 'PORCEN_RETENCION_FACTURA';
-  ftotirpf = 'TOTAL_RETENCION_FACTURA';
-  ftotimp = 'TOTAL_IMPUESTOS_FACTURA';
-  ftotbasefac = 'TOTAL_BASES_FACTURA';
+  ffechfac = 'FECHA_FAC';
+  fnrofac = 'NUMERO_FAC';
+  fseriefac = 'SERIE_FAC';
+  fcodemp = 'CODIGO_EMP_FAC';
+  fcodcli = 'CODIGO_CLI_FAC';
+  factfij = 'ESVENTA_ACTIVO_FIJO_FAC';
+  fcreart = 'ESCREARARTICULOS_FAC';
+  fporivan = 'PORCENTAJE_IVAN_FAC';
+  ftotivan = 'TOTAL_IVAN_FAC';
+  fporren = 'PORCENTAJE_REN_FAC';
+  ftotren = 'TOTAL_REN_FAC';
+  ftotbasen = 'TOTAL_BASEI_IVAN_FAC';
+  fporivar = 'PORCENTAJE_IVAR_FAC';
+  ftotivar = 'TOTAL_IVAR_FAC';
+  fporrer = 'PORCENTAJE_RER_FAC';
+  ftotrer = 'TOTAL_RER_FAC';
+  ftotbaser = 'TOTAL_BASEI_IVAR_FAC';
+  fporivas = 'PORCENTAJE_IVAS_FAC';
+  ftotivas = 'TOTAL_IVAS_FAC';
+  fporres = 'PORCENTAJE_RES_FAC';
+  ftotres = 'TOTAL_RES_FAC';
+  ftotbases = 'TOTAL_BASEI_IVAS_FAC';
+  fporivae = 'PORCENTAJE_IVAE_FAC';
+  ftotivae = 'TOTAL_IVAE_FAC';
+  fporree = 'PORCENTAJE_REE_FAC';
+  ftotree = 'TOTAL_REE_FAC';
+  ftotbasee = 'TOTAL_BASEI_IVAE_FAC';
+  ftotallifac = 'TOTAL_LIQUIDO_FAC';
+  fporirpf = 'PORCENTAJE_RETENCION_FAC';
+  ftotirpf = 'TOTAL_RETENCION_FAC';
+  ftotimp = 'TOTAL_IMPUESTOS_FAC';
+  ftotbasefac = 'TOTAL_BASES_FAC';
 
 type
   TTipoIVA = (tivaNormal, tivaReducido, tivaSuperReducido, tivaExento);
@@ -660,38 +660,38 @@ procedure TFacturaTotales.LeerDatosFactura;
 begin
   with _unqryFac do
   begin
-    _fechaFactura      := FieldByName('FECHA_FACTURA').AsDateTime;
-    _codigoEmpresa := FieldByName('CODIGO_EMPRESA_FACTURA').AsString;
+    _fechaFactura      := FieldByName('FECHA_FAC').AsDateTime;
+    _codigoEmpresa := FieldByName('CODIGO_EMP_FAC').AsString;
     _configuracion.EsFacturaSimplificada :=
-                 SameText(FieldByName('TIPO_FACTURA').AsString, 'SIMPLIFICADA');
+                 SameText(FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA');
     VerificarYCompletarDatosEmpresa;
     VerificarYCompletarDatosCliente;
     _configuracion.EsRegimenAgricolaEmpresa :=
-      (FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString = 'S');
+      (FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString = 'S');
     _configuracion.EsRegimenAgricolaCliente :=
-      (FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString = 'S');
+      (FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString = 'S');
     _configuracion.EsIntracomunitario       :=
-             (FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString = 'S');
+             (FieldByName('ESINTRACOMUNITARIO_CLIENTE_FAC').AsString = 'S');
     _configuracion.EsVentaActivoFijo        :=
-                    (FieldByName('ESVENTA_ACTIVO_FIJO_FACTURA').AsString = 'S');
+                    (FieldByName('ESVENTA_ACTIVO_FIJO_FAC').AsString = 'S');
     _configuracion.AplicaRetencionesCliente :=
-                  (FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString = 'S');
+                  (FieldByName('ESRETENCIONES_CLIENTE_FAC').AsString = 'S');
     _configuracion.AplicaRetencionesEmpresa :=
-                  (FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString = 'S');
+                  (FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString = 'S');
     _configuracion.IVAExento  :=
-                   (FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString = 'S');
+                   (FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString = 'S');
     _configuracion.IVARecargo :=
-                  (FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString = 'S');
-    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA') <> nil then
+                  (FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString = 'S');
+    if FindField('ESIRPF_IMP_INCL_ZONA_IVA_FAC') <> nil then
        _configuracion.IRPFImpuestoIncluido :=
-                (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString = 'S')
+                (FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString = 'S')
     else
        _configuracion.IRPFImpuestoIncluido := False;
-    if SameText(FindField('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString, 'N') then
+    if SameText(FindField('ESAPLICA_RE_ZONA_IVA_FAC').AsString, 'N') then
        _configuracion.AplicaRecargo := false;
-    _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
-    _CodigoIVA    := FieldByName('CODIGO_IVA_FACTURA').AsString;
-    _dPorRetencion := FieldByName('PORCEN_RETENCION_FACTURA').AsFloat;
+    _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
+    _CodigoIVA    := FieldByName('CODIGO_IVA_FAC').AsString;
+    _dPorRetencion := FieldByName('PORCENTAJE_RETENCION_FAC').AsFloat;
   end;
   LeerPorcentajesDesdeFactura;
 end;
@@ -702,15 +702,15 @@ begin
     Exit;
   with _unqryFac do
   begin
-    _porcentajes.IVANormal := FieldByName('PORCEN_IVAN_FACTURA').AsFloat;
-    _porcentajes.IVAReducido := FieldByName('PORCEN_IVAR_FACTURA').AsFloat;
-    _porcentajes.IVASuperReducido := FieldByName('PORCEN_IVAS_FACTURA').AsFloat;
-    _porcentajes.IVAExento := FieldByName('PORCEN_IVAE_FACTURA').AsFloat;
+    _porcentajes.IVANormal := FieldByName('PORCENTAJE_IVAN_FAC').AsFloat;
+    _porcentajes.IVAReducido := FieldByName('PORCENTAJE_IVAR_FAC').AsFloat;
+    _porcentajes.IVASuperReducido := FieldByName('PORCENTAJE_IVAS_FAC').AsFloat;
+    _porcentajes.IVAExento := FieldByName('PORCENTAJE_IVAE_FAC').AsFloat;
     // Leer recargos de equivalencia
-    _porcentajes.REcNormal := FieldByName('PORCEN_REN_FACTURA').AsFloat;
-    _porcentajes.REcReducido := FieldByName('PORCEN_RER_FACTURA').AsFloat;
-    _porcentajes.REcSuperReducido := FieldByName('PORCEN_RES_FACTURA').AsFloat;
-    _porcentajes.REcExento := FieldByName('PORCEN_REE_FACTURA').AsFloat;
+    _porcentajes.REcNormal := FieldByName('PORCENTAJE_REN_FAC').AsFloat;
+    _porcentajes.REcReducido := FieldByName('PORCENTAJE_RER_FAC').AsFloat;
+    _porcentajes.REcSuperReducido := FieldByName('PORCENTAJE_RES_FAC').AsFloat;
+    _porcentajes.REcExento := FieldByName('PORCENTAJE_REE_FAC').AsFloat;
   end;
 end;
 
@@ -723,7 +723,7 @@ begin
   try
     Qry.Connection := inLibGlobalVar.oConn;
     Qry.SQL.Text := 'SELECT * FROM vi_ivas ' +
-                    ' WHERE GRUPO_ZONA_IVA = :grupo ' +
+                    ' WHERE IVA_IVAGRP = :grupo ' +
                     '   AND FECHA_DESDE_IVA <= :fecha ' +
                     '   AND (FECHA_HASTA_IVA >= :fecha OR FECHA_HASTA_IVA IS NULL)';
     Qry.ParamByName('grupo').AsString := sGrupoZona;
@@ -733,21 +733,21 @@ begin
     begin
       if _unqryFac.State = dsBrowse then _unqryFac.Edit;
       // Asignación al DataSet de la Factura (Persistencia)
-      _unqryFac.FieldByName('PORCEN_IVAN_FACTURA').AsFloat := Qry.FieldByName('PORCENNORMAL_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_REN_FACTURA').AsFloat  := Qry.FieldByName('PORCENNORMAL_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_IVAR_FACTURA').AsFloat := Qry.FieldByName('PORCENREDUCIDO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_RER_FACTURA').AsFloat  := Qry.FieldByName('PORCENREDUCIDO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_IVAS_FACTURA').AsFloat := Qry.FieldByName('PORCENSUPERREDUCIDO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_RES_FACTURA').AsFloat  := Qry.FieldByName('PORCENSUPERREDUCIDO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_IVAE_FACTURA').AsFloat := Qry.FieldByName('PORCENEXENTO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCEN_REE_FACTURA').AsFloat  := Qry.FieldByName('PORCENEXENTO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FACTURA').AsString := Qry.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA').AsString;
-      _unqryFac.FieldByName('ESAPLICA_RE_ZONA_IVA_FACTURA').AsString     := Qry.FieldByName('ESAPLICA_RE_ZONA_IVA').AsString;
-      _unqryFac.FieldByName('CODIGO_IVA_FACTURA').AsString               := Qry.FieldByName('CODIGO_IVA').AsString;
-      _unqryFac.FieldByName('ESIVAAGRICOLA_ZONA_IVA_FACTURA').AsString   := Qry.FieldByName('ESIVAAGRICOLA_ZONA_IVA').AsString;
+      _unqryFac.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_REN_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_RER_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_RES_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_REE_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString := Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
+      _unqryFac.FieldByName('ESAPLICA_RE_ZONA_IVA_FAC').AsString     := Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
+      _unqryFac.FieldByName('CODIGO_IVA_FAC').AsString               := Qry.FieldByName('CODIGO_IVA').AsString;
+      _unqryFac.FieldByName('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString   := Qry.FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
       // Actualizar también la estructura interna de trabajo (_configuracion y _porcentajes)
-      _configuracion.AplicaRecargo        := (Qry.FieldByName('ESAPLICA_RE_ZONA_IVA').AsString = 'S');
-      _configuracion.IRPFImpuestoIncluido := (Qry.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA').AsString = 'S');
+      _configuracion.AplicaRecargo        := (Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString = 'S');
+      _configuracion.IRPFImpuestoIncluido := (Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString = 'S');
       _grupoZonaIVA                       := sGrupoZona;
       _codigoIVA                          := Qry.FieldByName('CODIGO_IVA').AsString;
       LeerPorcentajesDesdeFactura; // Sincroniza _porcentajes con los nuevos valores del DataSet
@@ -826,9 +826,9 @@ var
   tieneDatosMinimos: Boolean;
 begin
   // Primero verificamos los datos mínimos del cliente
-  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FACTURA').AsString);
-  sRazon := Trim(_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
-  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString);
+  sRazon := Trim(_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
+  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString);
   tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
   // Si es Simplificada O no tiene datos mínimos O no aplica recargo por config: devolvemos 0
   if _configuracion.EsFacturaSimplificada or
@@ -973,9 +973,9 @@ begin
     _totales.TotalRetencion := 0;
     Exit;
   end;
-  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FACTURA').AsString);
-  sRazon := Trim(_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString);
-  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString);
+  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString);
+  sRazon := Trim(_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
+  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString);
   tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
   if not tieneDatosMinimos then
   begin
@@ -1024,46 +1024,46 @@ begin
   begin
     if State = dsBrowse then Edit;
     // Bases imponibles
-    FieldByName('TOTAL_BASEI_IVAN_FACTURA').AsFloat :=
+    FieldByName('TOTAL_BASEI_IVAN_FAC').AsFloat :=
                                          _totales.IVAN.BaseImponible;
-    FieldByName('TOTAL_BASEI_IVAR_FACTURA').AsFloat :=
+    FieldByName('TOTAL_BASEI_IVAR_FAC').AsFloat :=
                                          _totales.IVAR.BaseImponible;
-    FieldByName('TOTAL_BASEI_IVAS_FACTURA').AsFloat :=
+    FieldByName('TOTAL_BASEI_IVAS_FAC').AsFloat :=
                                          _totales.IVAS.BaseImponible;
-    FieldByName('TOTAL_BASEI_IVAE_FACTURA').AsFloat :=
+    FieldByName('TOTAL_BASEI_IVAE_FAC').AsFloat :=
                                          _totales.IVAE.BaseImponible;
-    FieldByName('TOTAL_BASES_FACTURA').AsFloat := _totales.TotalBases;
+    FieldByName('TOTAL_BASES_FAC').AsFloat := _totales.TotalBases;
     // Importes de IVA
-    FieldByName('TOTAL_IVAN_FACTURA').AsFloat := _totales.TotalIVANormal;
-    FieldByName('TOTAL_IVAR_FACTURA').AsFloat := _totales.TotalIVAReducido;
-    FieldByName('TOTAL_IVAS_FACTURA').AsFloat :=
+    FieldByName('TOTAL_IVAN_FAC').AsFloat := _totales.TotalIVANormal;
+    FieldByName('TOTAL_IVAR_FAC').AsFloat := _totales.TotalIVAReducido;
+    FieldByName('TOTAL_IVAS_FAC').AsFloat :=
                                             _totales.TotalIVASuperReducido;
-    FieldByName('TOTAL_IVAE_FACTURA').AsFloat := _totales.TotalIVAExento;
+    FieldByName('TOTAL_IVAE_FAC').AsFloat := _totales.TotalIVAExento;
     // Importes de Recargo Equivalencia
-    FieldByName('TOTAL_REN_FACTURA').AsFloat := _totales.IVAN.ImporteRE;
-    FieldByName('TOTAL_RER_FACTURA').AsFloat := _totales.IVAR.ImporteRE;
-    FieldByName('TOTAL_RES_FACTURA').AsFloat := _totales.IVAS.ImporteRE;
-    FieldByName('TOTAL_REE_FACTURA').AsFloat := _totales.IVAE.ImporteRE;
+    FieldByName('TOTAL_REN_FAC').AsFloat := _totales.IVAN.ImporteRE;
+    FieldByName('TOTAL_RER_FAC').AsFloat := _totales.IVAR.ImporteRE;
+    FieldByName('TOTAL_RES_FAC').AsFloat := _totales.IVAS.ImporteRE;
+    FieldByName('TOTAL_REE_FAC').AsFloat := _totales.IVAE.ImporteRE;
     // Totales generales
-    FieldByName('TOTAL_IMPUESTOS_FACTURA').AsFloat := _totales.TotalImpuestos;
-    FieldByName('TOTAL_RETENCION_FACTURA').AsFloat := _totales.TotalRetencion;
-    FieldByName('PORCEN_RETENCION_FACTURA').AsFloat := _dPorRetencion;
-    FieldByName('TOTAL_LIQUIDO_FACTURA').AsFloat := _totales.TotalLiquido;
+    FieldByName('TOTAL_IMPUESTOS_FAC').AsFloat := _totales.TotalImpuestos;
+    FieldByName('TOTAL_RETENCION_FAC').AsFloat := _totales.TotalRetencion;
+    FieldByName('PORCENTAJE_RETENCION_FAC').AsFloat := _dPorRetencion;
+    FieldByName('TOTAL_LIQUIDO_FAC').AsFloat := _totales.TotalLiquido;
     // Actualizar configuración aplicada
-    FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString :=
+    FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString :=
       IfThen(_configuracion.IVAExento, 'S', 'N');
-    FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString :=
+    FieldByName('ESRETENCIONES_CLIENTE_FAC').AsString :=
       IfThen(_configuracion.AplicaRetencionesCliente, 'S', 'N');
-    FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString :=
+    FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString :=
       IfThen(_configuracion.AplicaRetencionesEmpresa, 'S', 'N');
-    FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString :=
+    FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
       IfThen(_configuracion.AplicaRecargo, 'S', 'N');
     // Actualizar porcentajes aplicados
-    FieldByName('PORCEN_IVAN_FACTURA').AsFloat := _porcentajes.IVANormal;
-    FieldByName('PORCEN_IVAR_FACTURA').AsFloat := _porcentajes.IVAReducido;
-    FieldByName('PORCEN_IVAS_FACTURA').AsFloat :=
+    FieldByName('PORCENTAJE_IVAN_FAC').AsFloat := _porcentajes.IVANormal;
+    FieldByName('PORCENTAJE_IVAR_FAC').AsFloat := _porcentajes.IVAReducido;
+    FieldByName('PORCENTAJE_IVAS_FAC').AsFloat :=
                                               _porcentajes.IVASuperReducido;
-    FieldByName('PORCEN_IVAE_FACTURA').AsFloat := _porcentajes.IVAExento;
+    FieldByName('PORCENTAJE_IVAE_FAC').AsFloat := _porcentajes.IVAExento;
   end;
 end;
 
@@ -1168,13 +1168,13 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
-    Qry.SQL.Text := 'SELECT PORCENRETENCION_RETENCION ' +
+    Qry.SQL.Text := 'SELECT PORCENTAJE_EMPRET ' +
                     '  FROM fza_empresas_retenciones ' +
-                    ' WHERE CODIGO_EMPRESA_RETENCION = :EMP ' +
-                    '   AND FECHA_DESDE_RETENCION <= :FECHA ' +
-                    '   AND (FECHA_HASTA_RETENCION >= :FECHA ' +
-                    '        OR FECHA_HASTA_RETENCION IS NULL) ' +
-                    ' ORDER BY FECHA_DESDE_RETENCION DESC LIMIT 1';
+                    ' WHERE CODIGO_EMP_EMPRET = :EMP ' +
+                    '   AND FECHA_DESDE_EMPRET <= :FECHA ' +
+                    '   AND (FECHA_HASTA_EMPRET >= :FECHA ' +
+                    '        OR FECHA_HASTA_EMPRET IS NULL) ' +
+                    ' ORDER BY FECHA_DESDE_EMPRET DESC LIMIT 1';
     Qry.ParamByName('EMP').AsString := CodEmpresa;
     Qry.ParamByName('FECHA').AsDateTime := _FechaFactura;
     Qry.Open;
@@ -1193,12 +1193,12 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := inLibGlobalVar.oConn;
-    Qry.SQL.Text := 'SELECT GRUPO_ZONA_IVA, CODIGO_IVA, ' +
-                    '       PORCENNORMAL_IVA, PORCENEXENTO_IVA, ' +
-                    '       PORCENREDUCIDO_IVA, PORCENSUPERREDUCIDO_IVA ' +
+    Qry.SQL.Text := 'SELECT IVA_IVAGRP, CODIGO_IVA, ' +
+                    '       PORCENTAJE_NORMAL_IVA, PORCENTAJE_EXENTO_IVA, ' +
+                    '       PORCENTAJE_REDUCIDO_IVA, PORCENTAJE_SUPERREDUCIDO_IVA ' +
                     '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_ZONA_IVA = ''S'' ' +
-                    '   AND CODIGO_EMPRESA = :EMP ' +
+                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ''S'' ' +
+                    '   AND CODIGO_EMP_EMP = :EMP ' +
                     '   AND FECHA_DESDE_IVA <= :FECHA ' +
                     '   AND (   FECHA_HASTA_IVA IS NULL ' +
                     '        OR FECHA_HASTA_IVA >= :FECHA)';
@@ -1207,14 +1207,14 @@ begin
     Qry.Open;
     if not Qry.IsEmpty then
     begin
-      _GrupoZonaIVA := Qry.FieldByName('GRUPO_ZONA_IVA').AsString;
+      _GrupoZonaIVA := Qry.FieldByName('IVA_IVAGRP').AsString;
       _CodigoIVA    := Qry.FieldByName('CODIGO_IVA').AsString;
-      _porcentajes.IVANormal := Qry.FieldByName('PORCENNORMAL_IVA').AsCurrency;
-      _porcentajes.IVAExento := Qry.FieldByName('PORCENEXENTO_IVA').AsCurrency;
+      _porcentajes.IVANormal := Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsCurrency;
+      _porcentajes.IVAExento := Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsCurrency;
       _porcentajes.IVAReducido :=
-                               Qry.FieldByName('PORCENREDUCIDO_IVA').AsCurrency;
+                               Qry.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsCurrency;
       _porcentajes.IVASuperReducido :=
-                          Qry.FieldByName('PORCENSUPERREDUCIDO_IVA').AsCurrency;
+                          Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsCurrency;
       Result := True;
     end;
   finally
@@ -1227,11 +1227,11 @@ var
   Qry: TUniQuery;
   sCodCli: string;
 begin
-  sCodCli := _unqryFac.FieldByName('CODIGO_CLIENTE_FACTURA').AsString;
+  sCodCli := _unqryFac.FieldByName('CODIGO_CLI_FAC').AsString;
   if (sCodCli = '') or
      (sCodCli = '0') or
      (sCodCli = 'VENTA CONTADO') or //no hay cliente
-     (_unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString <> '') then
+     (_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString <> '') then
     Exit;
   Qry := TUniQuery.Create(nil);
   try
@@ -1239,55 +1239,55 @@ begin
     Qry.SQL.Text := '    SELECT * ' +
                     '      FROM fza_clientes ' +
                     ' LEFT JOIN fza_tarifas ' +
-                    '        ON fza_clientes.TARIFA_ARTICULO_CLIENTE = ' +
-                    '           fza_tarifas.CODIGO_TARIFA ' +
-                    '     WHERE CODIGO_CLIENTE = :cliente';
+                    '        ON fza_clientes.TARIFA_ARTICULO_CLI = ' +
+                    '           fza_tarifas.CODIGO_TAR_ARTTAR ' +
+                    '     WHERE CODIGO_CLI_CLI = :cliente';
     Qry.ParamByName('cliente').AsString := sCodCli;
     Qry.Open;
     if not Qry.IsEmpty then
     begin
       if (_unqryFac.State = dsBrowse) then
         _unqryFac.Edit;
-      _unqryFac.FieldByName('RAZONSOCIAL_CLIENTE_FACTURA').AsString :=
-                                Qry.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
-      _unqryFac.FieldByName('NIF_CLIENTE_FACTURA').AsString         :=
-                                        Qry.FieldByName('NIF_CLIENTE').AsString;
-      _unqryFac.FieldByName('MOVIL_CLIENTE_FACTURA').AsString       :=
-                                      Qry.FieldByName('MOVIL_CLIENTE').AsString;
-      _unqryFac.FieldByName('EMAIL_CLIENTE_FACTURA').AsString       :=
-                                      Qry.FieldByName('EMAIL_CLIENTE').AsString;
-      _unqryFac.FieldByName('DIRECCION1_CLIENTE_FACTURA').AsString  :=
-                                 Qry.FieldByName('DIRECCION1_CLIENTE').AsString;
-      _unqryFac.FieldByName('DIRECCION2_CLIENTE_FACTURA').AsString  :=
-                                 Qry.FieldByName('DIRECCION2_CLIENTE').AsString;
-      _unqryFac.FieldByName('POBLACION_CLIENTE_FACTURA').AsString   :=
-                                  Qry.FieldByName('POBLACION_CLIENTE').AsString;
-      _unqryFac.FieldByName('PROVINCIA_CLIENTE_FACTURA').AsString   :=
-                                  Qry.FieldByName('PROVINCIA_CLIENTE').AsString;
-      _unqryFac.FieldByName('CPOSTAL_CLIENTE_FACTURA').AsString     :=
-                                    Qry.FieldByName('CPOSTAL_CLIENTE').AsString;
-      _unqryFac.FieldByName('NOMBRE_PAIS_CLIENTE_FACTURA').AsString :=
-                                Qry.FieldByName('NOMBRE_PAIS_CLIENTE').AsString;
-      _unqryFac.FieldByName('CODIGO_PAIS_CLIENTE_FACTURA').AsString :=
-                                Qry.FieldByName('CODIGO_PAIS_CLIENTE').AsString;
-      _unqryFac.FieldByName('ESIVA_RECARGO_CLIENTE_FACTURA').AsString :=
-                              Qry.FieldByName('ESIVA_RECARGO_CLIENTE').AsString;
-      _unqryFac.FieldByName('ESIVA_EXENTO_CLIENTE_FACTURA').AsString  :=
-                               Qry.FieldByName('ESIVA_EXENTO_CLIENTE').AsString;
+      _unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString :=
+                                Qry.FieldByName('RAZON_SOCIAL_CLI').AsString;
+      _unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString         :=
+                                        Qry.FieldByName('NIF_CLI').AsString;
+      _unqryFac.FieldByName('MOVIL_CLIENTE_FAC').AsString       :=
+                                      Qry.FieldByName('MOVIL_CLI').AsString;
+      _unqryFac.FieldByName('EMAIL_CLIENTE_FAC').AsString       :=
+                                      Qry.FieldByName('EMAIL_CLI').AsString;
+      _unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString  :=
+                                 Qry.FieldByName('DIRECCION1_CLI').AsString;
+      _unqryFac.FieldByName('DIRECCION2_CLIENTE_FAC').AsString  :=
+                                 Qry.FieldByName('DIRECCION2_CLI').AsString;
+      _unqryFac.FieldByName('POBLACION_CLIENTE_FAC').AsString   :=
+                                  Qry.FieldByName('POBLACION_CLI').AsString;
+      _unqryFac.FieldByName('PROVINCIA_CLIENTE_FAC').AsString   :=
+                                  Qry.FieldByName('PROVINCIA_CLI').AsString;
+      _unqryFac.FieldByName('CODIGO_POSTAL_CLIENTE_FAC').AsString     :=
+                                    Qry.FieldByName('CODIGO_POSTAL_CLI').AsString;
+      _unqryFac.FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString :=
+                                Qry.FieldByName('NOMBRE_PAI_CLI').AsString;
+      _unqryFac.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString :=
+                                Qry.FieldByName('CODIGO_PAI_CLI').AsString;
+      _unqryFac.FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
+                              Qry.FieldByName('ESIVA_RECARGO_CLI').AsString;
+      _unqryFac.FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString  :=
+                               Qry.FieldByName('ESIVA_EXENTO_CLI').AsString;
       _unqryFac.FieldByName(
-                        'ESREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA').AsString :=
-                  Qry.FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE').AsString;
-      _unqryFac.FieldByName('ESRETENCIONES_CLIENTE_FACTURA').AsString :=
-                              Qry.FieldByName('ESRETENCIONES_CLIENTE').AsString;
-      _unqryFac.FieldByName('ESINTRACOMUNITARIO_CLIENTE_FACTURA').AsString :=
-                         Qry.FieldByName('ESINTRACOMUNITARIO_CLIENTE').AsString;
-      _unqryFac.FieldByName('FORMA_PAGO_FACTURA').AsString :=
-                          Qry.FieldByName('CODIGO_FORMA_PAGO_CLIENTE').AsString;
-      _unqryFac.FieldByName('TARIFA_ARTICULO_CLIENTE_FACTURA').AsString :=
-                            Qry.FieldByName('TARIFA_ARTICULO_CLIENTE').AsString;
-      if Qry.FindField('ESIMP_INCL_TARIFA').AsString <> '' then
-        _unqryFac.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FACTURA').AsString :=
-                                    Qry.FindField('ESIMP_INCL_TARIFA').AsString;
+                        'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
+                  Qry.FieldByName('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
+      _unqryFac.FieldByName('ESRETENCIONES_CLIENTE_FAC').AsString :=
+                              Qry.FieldByName('ESRETENCIONES_CLI').AsString;
+      _unqryFac.FieldByName('ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
+                         Qry.FieldByName('ESINTRACOMUNITARIO_CLI').AsString;
+      _unqryFac.FieldByName('FORMA_PAGO_FAC').AsString :=
+                          Qry.FieldByName('CODIGO_FP_CLI').AsString;
+      _unqryFac.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
+                            Qry.FieldByName('TARIFA_ARTICULO_CLI').AsString;
+      if Qry.FindField('ESIMP_INCL_TAR').AsString <> '' then
+        _unqryFac.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
+                                    Qry.FindField('ESIMP_INCL_TAR').AsString;
     end;
   finally
     Qry.Free;
@@ -1298,7 +1298,7 @@ procedure TFacturaTotales.VerificarYCompletarDatosEmpresa;
 var
   Qry: TUniQuery;
 begin
-  if (_unqryFac.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString <> '') then
+  if (_unqryFac.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString <> '') then
     Exit;
   if _codigoEmpresa = '' then
     Exit;
@@ -1307,46 +1307,46 @@ begin
     Qry.Connection := inLibGlobalVar.oConn;
     Qry.SQL.Text := 'SELECT * ' +
                     '  FROM fza_empresas ' +
-                    ' WHERE CODIGO_EMPRESA = :empresa';
+                    ' WHERE CODIGO_EMP_EMP = :empresa';
     Qry.ParamByName('empresa').AsString := _codigoEmpresa;
     Qry.Open;
     if not Qry.IsEmpty then
     begin
       if (_unqryFac.State = dsBrowse) then
         _unqryFac.Edit;
-      _unqryFac.FieldByName('RAZONSOCIAL_EMPRESA_FACTURA').AsString :=
-                                Qry.FieldByName('RAZONSOCIAL_EMPRESA').AsString;
-      _unqryFac.FieldByName('NIF_EMPRESA_FACTURA').AsString         :=
-                                        Qry.FieldByName('NIF_EMPRESA').AsString;
-      _unqryFac.FieldByName('MOVIL_EMPRESA_FACTURA').AsString       :=
-                                      Qry.FieldByName('MOVIL_EMPRESA').AsString;
-      _unqryFac.FieldByName('EMAIL_EMPRESA_FACTURA').AsString       :=
-                                      Qry.FieldByName('EMAIL_EMPRESA').AsString;
-      _unqryFac.FieldByName('DIRECCION1_EMPRESA_FACTURA').AsString  :=
-                                 Qry.FieldByName('DIRECCION1_EMPRESA').AsString;
-      _unqryFac.FieldByName('DIRECCION2_EMPRESA_FACTURA').AsString  :=
-                                 Qry.FieldByName('DIRECCION2_EMPRESA').AsString;
-      _unqryFac.FieldByName('POBLACION_EMPRESA_FACTURA').AsString   :=
-                                  Qry.FieldByName('POBLACION_EMPRESA').AsString;
-      _unqryFac.FieldByName('PROVINCIA_EMPRESA_FACTURA').AsString   :=
-                                  Qry.FieldByName('PROVINCIA_EMPRESA').AsString;
-      _unqryFac.FieldByName('CPOSTAL_EMPRESA_FACTURA').AsString     :=
-                                    Qry.FieldByName('CPOSTAL_EMPRESA').AsString;
-      _unqryFac.FieldByName('NOMBRE_PAIS_EMPRESA_FACTURA').AsString :=
-                                Qry.FieldByName('NOMBRE_PAIS_EMPRESA').AsString;
-      _unqryFac.FieldByName('CODIGO_PAIS_EMPRESA_FACTURA').AsString :=
-                                Qry.FieldByName('CODIGO_PAIS_EMPRESA').AsString;
-      _unqryFac.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString :=
-                             Qry.FieldByName('GRUPO_ZONA_IVA_EMPRESA').AsString;
-      _unqryFac.FieldByName('ESRETENCIONES_EMPRESA_FACTURA').AsString :=
-                              Qry.FieldByName('ESRETENCIONES_EMPRESA').AsString;
+      _unqryFac.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString :=
+                                Qry.FieldByName('RAZON_SOCIAL_EMP').AsString;
+      _unqryFac.FieldByName('NIF_EMPRESA_FAC').AsString         :=
+                                        Qry.FieldByName('NIF_EMP').AsString;
+      _unqryFac.FieldByName('MOVIL_EMPRESA_FAC').AsString       :=
+                                      Qry.FieldByName('MOVIL_EMP').AsString;
+      _unqryFac.FieldByName('EMAIL_EMPRESA_FAC').AsString       :=
+                                      Qry.FieldByName('EMAIL_EMP').AsString;
+      _unqryFac.FieldByName('DIRECCION1_EMPRESA_FAC').AsString  :=
+                                 Qry.FieldByName('DIRECCION1_EMP').AsString;
+      _unqryFac.FieldByName('DIRECCION2_EMPRESA_FAC').AsString  :=
+                                 Qry.FieldByName('DIRECCION2_EMP').AsString;
+      _unqryFac.FieldByName('POBLACION_EMPRESA_FAC').AsString   :=
+                                  Qry.FieldByName('POBLACION_EMP').AsString;
+      _unqryFac.FieldByName('PROVINCIA_EMPRESA_FAC').AsString   :=
+                                  Qry.FieldByName('PROVINCIA_EMP').AsString;
+      _unqryFac.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString     :=
+                                    Qry.FieldByName('CODIGO_POSTAL_EMP').AsString;
+      _unqryFac.FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString :=
+                                Qry.FieldByName('NOMBRE_PAI_EMP').AsString;
+      _unqryFac.FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString :=
+                                Qry.FieldByName('CODIGO_PAI_EMP').AsString;
+      _unqryFac.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString :=
+                             Qry.FieldByName('GRUPO_ZONA_IVA_EMP').AsString;
+      _unqryFac.FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString :=
+                              Qry.FieldByName('ESRETENCIONES_EMP').AsString;
       _unqryFac.FieldByName(
-                        'ESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA').AsString :=
-                  Qry.FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA').AsString;
-      _unqryFac.FieldByName('TEXTO_LEGAL_FACTURA_EMPRESA_FACTURA').AsString :=
-                        Qry.FieldByName('TEXTO_LEGAL_FACTURA_EMPRESA').AsString;
+                        'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString :=
+                  Qry.FieldByName('ESREGIMENESPECIALAGRICOLA_EMP').AsString;
+      _unqryFac.FieldByName('TEXTO_LEGAL_EMPRESA_FAC').AsString :=
+                        Qry.FieldByName('TEXTO_LEGAL_FACTURA_EMP').AsString;
       var sGrupo := _unqryFac.FieldByName(
-                                     'GRUPO_ZONA_IVA_EMPRESA_FACTURA').AsString;
+                                     'GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
       CargarConfiguracionIVA(sGrupo);
     end;
   finally

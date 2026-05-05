@@ -1,4 +1,4 @@
-inherited frmPrintRecFac: TfrmPrintRecFac
+﻿inherited frmPrintRecFac: TfrmPrintRecFac
   Caption = 'Imprimir Recibos'
   ClientHeight = 253
   ClientWidth = 434
@@ -146,8 +146,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FACTURA_RECIBO">]\[<Recibos."NRO_FACTURA_RECIBO' +
-              '">]\[IntToStr(<Recibos."NRO_PLAZO_RECIBO">)]')
+              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToStr(<Recibos."NUMERO_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
@@ -200,7 +199,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."LOCALIDAD_EXPEDICION_RECIBO"]')
+            '[Recibos."LOCALIDAD_EXPEDICION_RECIBO_REC"]')
           ParentFont = False
         end
         object Memo6: TfrxMemoView
@@ -396,7 +395,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."RAZONSOCIAL_CLIENTE_RECIBO"]')
+            '[Recibos."RAZON_SOCIAL_CLI_REC"]')
           ParentFont = False
         end
         object FacturasDIRECCION1_CLIENTE: TfrxMemoView
@@ -410,7 +409,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."DIRECCION1_CLIENTE_RECIBO"]')
+            '[Recibos."DIRECCION1_CLIENTE_RECIBO_REC"]')
         end
         object FacturasCPOSTAL_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -423,7 +422,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."CPOSTAL_CLIENTE_RECIBO"]')
+            '[Recibos."CODIGO_POSTAL_CLI_REC"]')
         end
         object FacturasPOBLACION_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -436,7 +435,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."POBLACION_CLIENTE_RECIBO"]')
+            '[Recibos."POBLACION_CLI_REC"]')
         end
         object FacturasPROVINCIA_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -454,7 +453,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."PROVINCIA_CLIENTE_RECIBO"]')
+            '[Recibos."PROVINCIA_CLI_REC"]')
           ParentFont = False
         end
         object FacturasCODIGO_CLIENTE: TfrxMemoView
@@ -474,7 +473,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Recibos."CODIGO_CLIENTE_RECIBO"]')
+            '[Recibos."CODIGO_CLI_REC"]')
           ParentFont = False
         end
         object Memo20: TfrxMemoView
@@ -504,7 +503,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."IMPORTE_LETRA_RECIBO"]')
+            '[Recibos."IMPORTE_LETRA_RECIBO_REC"]')
         end
         object FacturasIBAN: TfrxMemoView
           IndexTag = 1
@@ -517,7 +516,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."IBAN_CLIENTE_RECIBO"]')
+            '[Recibos."IBAN_CLI_REC"]')
         end
         object FacturasFECHA_EXPEDICION: TfrxMemoView
           IndexTag = 1
@@ -532,7 +531,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkDateTime
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."FECHA_EXPEDICION_RECIBO"]')
+            '[Recibos."FECHA_EXPEDICION_RECIBO_REC"]')
         end
         object FacturasFECHA_VENCIMIENTO: TfrxMemoView
           IndexTag = 1
@@ -547,7 +546,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkDateTime
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."FECHA_VENCIMIENTO_RECIBO"]')
+            '[Recibos."FECHA_VENCIMIENTO_RECIBO_REC"]')
         end
         object FacturasEUROS_RECIBO: TfrxMemoView
           IndexTag = 1
@@ -569,7 +568,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Recibos."EUROS_RECIBO"]')
+            '[Recibos."EUROS_RECIBO_REC"]')
           ParentFont = False
         end
         object Line1: TfrxLineView
@@ -677,8 +676,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FACTURA_RECIBO">]\[<Recibos."NRO_FACTURA_RECIBO' +
-              '">]\[IntToStr(<Recibos."NRO_PLAZO_RECIBO">)]')
+              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToStr(<Recibos."NUMERO_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
@@ -731,7 +729,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."LOCALIDAD_EXPEDICION_RECIBO"]')
+            '[Recibos."LOCALIDAD_EXPEDICION_RECIBO_REC"]')
           ParentFont = False
         end
         object Memo6: TfrxMemoView
@@ -927,7 +925,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."RAZONSOCIAL_CLIENTE_RECIBO"]')
+            '[Recibos."RAZON_SOCIAL_CLI_REC"]')
           ParentFont = False
         end
         object FacturasDIRECCION1_CLIENTE: TfrxMemoView
@@ -941,7 +939,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."DIRECCION1_CLIENTE_RECIBO"]')
+            '[Recibos."DIRECCION1_CLIENTE_RECIBO_REC"]')
         end
         object FacturasCPOSTAL_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -954,7 +952,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."CPOSTAL_CLIENTE_RECIBO"]')
+            '[Recibos."CODIGO_POSTAL_CLI_REC"]')
         end
         object FacturasPOBLACION_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -967,7 +965,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."POBLACION_CLIENTE_RECIBO"]')
+            '[Recibos."POBLACION_CLI_REC"]')
         end
         object FacturasPROVINCIA_CLIENTE: TfrxMemoView
           IndexTag = 1
@@ -985,7 +983,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."PROVINCIA_CLIENTE_RECIBO"]')
+            '[Recibos."PROVINCIA_CLI_REC"]')
           ParentFont = False
         end
         object FacturasCODIGO_CLIENTE: TfrxMemoView
@@ -1005,7 +1003,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Recibos."CODIGO_CLIENTE_RECIBO"]')
+            '[Recibos."CODIGO_CLI_REC"]')
           ParentFont = False
         end
         object Memo20: TfrxMemoView
@@ -1035,7 +1033,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."IMPORTE_LETRA_RECIBO"]')
+            '[Recibos."IMPORTE_LETRA_RECIBO_REC"]')
         end
         object FacturasIBAN: TfrxMemoView
           IndexTag = 1
@@ -1048,7 +1046,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."IBAN_CLIENTE_RECIBO"]')
+            '[Recibos."IBAN_CLI_REC"]')
         end
         object FacturasFECHA_EXPEDICION: TfrxMemoView
           IndexTag = 1
@@ -1063,7 +1061,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkDateTime
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."FECHA_EXPEDICION_RECIBO"]')
+            '[Recibos."FECHA_EXPEDICION_RECIBO_REC"]')
         end
         object FacturasFECHA_VENCIMIENTO: TfrxMemoView
           IndexTag = 1
@@ -1078,7 +1076,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkDateTime
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Recibos."FECHA_VENCIMIENTO_RECIBO"]')
+            '[Recibos."FECHA_VENCIMIENTO_RECIBO_REC"]')
         end
         object FacturasEUROS_RECIBO: TfrxMemoView
           IndexTag = 1
@@ -1100,7 +1098,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[Recibos."EUROS_RECIBO"]')
+            '[Recibos."EUROS_RECIBO_REC"]')
           ParentFont = False
         end
         object Line1: TfrxLineView

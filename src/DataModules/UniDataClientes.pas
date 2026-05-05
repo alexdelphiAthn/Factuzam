@@ -69,7 +69,7 @@ begin
   unqryCliPrint.Connection := oConn;
   unqryCliPrint.SQL.Text := ' SELECT * ' +
                             ' from vi_clientes ' +
-                            ' where CODIGO_CLIENTE = :CODIGO';
+                            ' where CODIGO_CLI_CLI = :CODIGO';
   unqryCliPrint.ParamByName('CODIGO').AsString := sCodCli;
   unqryCliPrint.Open;
   cdsEtiquetas.Data := dtstprvEtiquetas.Data;
@@ -89,12 +89,12 @@ begin
   for i := 1 to iNroEspaciosBlanco do
   begin
     cdsEtiquetas.Insert;
-    cdsEtiquetas.FieldByName('CODIGO_CLIENTE').AsString := '0';
-    cdsEtiquetas.FieldByName('RAZONSOCIAL_CLIENTE').AsString := '';
-    cdsEtiquetas.FieldByName('INSTANTEMODIF').AsString := '';
-    cdsEtiquetas.FieldByName('INSTANTEALTA').AsString := '';
-    cdsEtiquetas.FieldByName('USUARIOMODIF').AsString := '';
-    cdsEtiquetas.FieldByName('USUARIOALTA').AsString := '';
+    cdsEtiquetas.FieldByName('CODIGO_CLI_CLI').AsString := '0';
+    cdsEtiquetas.FieldByName('RAZON_SOCIAL_CLI').AsString := '';
+    cdsEtiquetas.FieldByName('INSTANTE_MODIF').AsString := '';
+    cdsEtiquetas.FieldByName('INSTANTE_ALTA').AsString := '';
+    cdsEtiquetas.FieldByName('USUARIO_MODIF').AsString := '';
+    cdsEtiquetas.FieldByName('USUARIO_ALTA').AsString := '';
     cdsEtiquetas.Post;
   end;
 end;
@@ -136,14 +136,14 @@ end;
 
 procedure TdmClientes.GetCodigoAutoCliente;
 begin
-  if (unqryTablaG.FindField('CODIGO_CLIENTE').AsString = '0') then
+  if (unqryTablaG.FindField('CODIGO_CLI_CLI').AsString = '0') then
   begin
-    unqryTablaG.FindField('CODIGO_CLIENTE').AsString :=
+    unqryTablaG.FindField('CODIGO_CLI_CLI').AsString :=
                                                  ObtenerSiguienteContador('CL');
   end;
-  if (unqryTablaG.FindField('ORDEN_CLIENTE').AsString = '0') then
+  if (unqryTablaG.FindField('ORDEN_CLI').AsString = '0') then
   begin
-    unqryTablaG.FindField('ORDEN_CLIENTE').AsString :=
+    unqryTablaG.FindField('ORDEN_CLI').AsString :=
                                                  ObtenerSiguienteContador('CO');
   end;
 end;
@@ -152,14 +152,14 @@ procedure TdmClientes.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_clientes');
-  unqryTablaG.FindField('CODIGO_FORMA_PAGO_CLIENTE').AsString :=
+  unqryTablaG.FindField('CODIGO_FP_CLI').AsString :=
                                                 GetDefaultValue('fza_formapago',
-                                                             'CODIGO_FORMAPAGO',
-                                                         'ESDEFAULT_FORMAPAGO');
-  unqryTablaG.FindField('TARIFA_ARTICULO_CLIENTE').AsString :=
+                                                             'CODIGO_FP_FP',
+                                                         'ESDEFAULT_FORMA_PAGO_FP');
+  unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
                                                   GetDefaultValue('fza_tarifas',
-                                                                'CODIGO_TARIFA',
-                                                            'ESDEFAULT_TARIFA');
+                                                                'CODIGO_TAR_ARTTAR',
+                                                            'ESDEFAULT_TAR');
 end;
 
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -181,11 +181,11 @@ begin
          unqryRetenciones.Post; *)
   with unqryTablaG do
   begin
-    if (Trim(FindField('RAZONSOCIAL_CLIENTE').AsString) = '') then
+    if (Trim(FindField('RAZON_SOCIAL_CLI').AsString) = '') then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                         'para el campo Razón Social de Cliente',
-               [FindField('RAZONSOCIAL_CLIENTE').AsString]);
+               [FindField('RAZON_SOCIAL_CLI').AsString]);
         Abort;
     end
     else

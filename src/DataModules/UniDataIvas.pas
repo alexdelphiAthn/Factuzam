@@ -48,15 +48,15 @@ begin
   with unqryTablaG do
   begin
     FindField('CODIGO_IVA').AsString := '0';
-    FindField('GRUPO_ZONA_IVA').AsString := '0';
-    FindField('PORCENEXENTO_IVA').AsString := '0';
-    FindField('PORCENEXENTO_RE_IVA').AsString := '0';
-    FindField('PORCENNORMAL_IVA').AsString := '0';
-    FindField('PORCENNORMAL_RE_IVA').AsString := '0';
-    FindField('PORCENREDUCIDO_IVA').AsString := '0';
-    FindField('PORCENREDUCIDO_RE_IVA').AsString := '0';
-    FindField('PORCENSUPERREDUCIDO_IVA').AsString := '0';
-    FindField('PORCENSUPERREDUCIDO_RE_IVA').AsString := '0';
+    FindField('IVA_IVAGRP').AsString := '0';
+    FindField('PORCENTAJE_EXENTO_IVA').AsString := '0';
+    FindField('PORCENTAJE_EXENTO_RE_IVA').AsString := '0';
+    FindField('PORCENTAJE_NORMAL_IVA').AsString := '0';
+    FindField('PORCENTAJE_NORMAL_RE_IVA').AsString := '0';
+    FindField('PORCENTAJE_REDUCIDO_IVA').AsString := '0';
+    FindField('PORCENTAJE_REDUCIDO_RE_IVA').AsString := '0';
+    FindField('PORCENTAJE_SUPERREDUCIDO_IVA').AsString := '0';
+    FindField('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString := '0';
     FindField('FECHA_DESDE_IVA').AsDateTime := Now;
   end;
 end;
@@ -80,11 +80,11 @@ begin
                                                                      [sCodigo]);
       bError := True;
     end;
-    if ((FindField('GRUPO_ZONA_IVA').AsString = '0') or
-        (not ExisteGrupoZonaIVA(FindField('GRUPO_ZONA_IVA').AsString))) then
+    if ((FindField('IVA_IVAGRP').AsString = '0') or
+        (not ExisteGrupoZonaIVA(FindField('IVA_IVAGRP').AsString))) then
     begin
       ShowMessageFmt('%s no es un valor válido o no existe para grupo de IVAS',
-                                        [FindField('GRUPO_ZONA_IVA').AsString]);
+                                        [FindField('IVA_IVAGRP').AsString]);
       bError := True;
     end;
     if (not(bError)) then
@@ -97,9 +97,9 @@ begin
           unqrySol.Connection := oConn;
           unqrySol.SQL.Text := 'SELECT * ' +
                                '  FROM vi_ivas ' +
-                               ' WHERE GRUPO_ZONA_IVA = :GRUPO_ZONA_IVA';
-          unqrySol.ParamByName('GRUPO_ZONA_IVA').AsString :=
-                                           FindField('GRUPO_ZONA_IVA').AsString;
+                               ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
+          unqrySol.ParamByName('IVA_IVAGRP').AsString :=
+                                           FindField('IVA_IVAGRP').AsString;
           unqrySol.Open;
         end;
         if ((not(bError)) and
@@ -111,7 +111,7 @@ begin
                                  'Error en la fecha.' + 'O se han establecido'+
                                  ' dos periodos activos en el mismo periodo' +
                                  ' para la zona %s',
-                                  [FindField('DESCRIPCION_ZONA_IVA').AsString]);
+                                  [FindField('DESCRIPCION_IVA_IVAGRP').AsString]);
           bError := True;
         end;
       end;
@@ -144,8 +144,8 @@ begin
   unqrySol.Connection := oConn;
   unqrySol.SQL.Text := 'SELECT * ' +
                        '  FROM fza_ivas_grupos ' +
-                       ' WHERE GRUPO_ZONA_IVA = :GRUPO_ZONA_IVA';
-  unqrySol.ParamByName('GRUPO_ZONA_IVA').AsString := sCodigoGrupo;
+                       ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
+  unqrySol.ParamByName('IVA_IVAGRP').AsString := sCodigoGrupo;
   unqrySol.Open;
   if unqrySol.RecordCount = 0 then
     Result := False

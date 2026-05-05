@@ -1,4 +1,4 @@
-inherited frmModalGenFilter: TfrmModalGenFilter
+﻿inherited frmModalGenFilter: TfrmModalGenFilter
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Filtrar por grupos de datos'
@@ -113,52 +113,52 @@ inherited frmModalGenFilter: TfrmModalGenFilter
             OptionsSelection.MultiSelectMode = msmPersistent
             OptionsView.GroupByBox = False
             object tvEmpCODIGO_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_EMPRESA'
+              DataBinding.FieldName = 'CODIGO_EMP_EMP'
             end
             object tvEmpRAZONSOCIAL_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'RAZONSOCIAL_EMPRESA'
+              DataBinding.FieldName = 'RAZON_SOCIAL_EMP'
             end
             object tvEmpNIF_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'NIF_EMPRESA'
+              DataBinding.FieldName = 'NIF_EMP'
             end
             object tvEmpMOVIL_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'MOVIL_EMPRESA'
+              DataBinding.FieldName = 'MOVIL_EMP'
             end
             object tvEmpEMAIL_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'EMAIL_EMPRESA'
+              DataBinding.FieldName = 'EMAIL_EMP'
             end
             object tvEmpDIRECCION1_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION1_EMPRESA'
+              DataBinding.FieldName = 'DIRECCION1_EMP'
             end
             object tvEmpDIRECCION2_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION2_EMPRESA'
+              DataBinding.FieldName = 'DIRECCION2_EMP'
             end
             object tvEmpCPOSTAL_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'CPOSTAL_EMPRESA'
+              DataBinding.FieldName = 'CODIGO_POSTAL_EMP'
             end
             object tvEmpPOBLACION_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'POBLACION_EMPRESA'
+              DataBinding.FieldName = 'POBLACION_EMP'
             end
             object tvEmpPROVINCIA_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'PROVINCIA_EMPRESA'
+              DataBinding.FieldName = 'PROVINCIA_EMP'
             end
             object tvEmpPAIS_EMPRESA: TcxGridDBColumn
               DataBinding.FieldName = 'PAIS_EMPRESA'
             end
             object tvEmpSERIE_CONTADOR_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'SERIE_CONTADOR_EMPRESA'
+              DataBinding.FieldName = 'SERIE_CON_EMP'
             end
             object tvEmpGRUPO_ZONA_IVA_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'GRUPO_ZONA_IVA_EMPRESA'
+              DataBinding.FieldName = 'GRUPO_ZONA_IVA_EMP'
             end
             object tvEmpESRETENCIONES_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESRETENCIONES_EMPRESA'
+              DataBinding.FieldName = 'ESRETENCIONES_EMP'
             end
             object tvEmpESREGIMENESPECIALAGRICOLA_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA'
+              DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_EMP'
             end
             object tvEmpTEXTO_LEGAL_FACTURA_EMPRESA: TcxGridDBColumn
-              DataBinding.FieldName = 'TEXTO_LEGAL_FACTURA_EMPRESA'
+              DataBinding.FieldName = 'TEXTO_LEGAL_FACTURA_EMP'
             end
           end
           object lvEmp: TcxGridLevel
@@ -191,8 +191,8 @@ inherited frmModalGenFilter: TfrmModalGenFilter
           Bands = <
             item
             end>
-          DataController.ParentField = 'CODIGO_SUBFAMILIA'
-          DataController.KeyField = 'CODIGO_FAMILIA'
+          DataController.ParentField = 'CODIGO_SUBFAMILIA_FAM'
+          DataController.KeyField = 'CODIGO_FAM_FAM'
           Navigator.Buttons.CustomButtons = <>
           OptionsBehavior.CopyCaptionsToClipboard = False
           OptionsCustomizing.BandCustomizing = False
@@ -213,7 +213,7 @@ inherited frmModalGenFilter: TfrmModalGenFilter
           ExplicitWidth = 250
           ExplicitHeight = 369
           object cxDBTreeList1cxDBTreeListColumn1: TcxDBTreeListColumn
-            DataBinding.FieldName = 'NOMBRE_FAMILIA'
+            DataBinding.FieldName = 'NOMBRE_FAM_FAM'
             Width = 210
             Position.ColIndex = 0
             Position.RowIndex = 0

@@ -1,4 +1,4 @@
-inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
+﻿inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
   Left = 5
   Top = 4
   Caption = 'Generador de Procesos'
@@ -36,30 +36,30 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_GENERADORPROCESO: TcxGridDBColumn
               Caption = 'C'#243'digo Proceso'
-              DataBinding.FieldName = 'CODIGO_GENERADORPROCESO'
+              DataBinding.FieldName = 'CODIGO_GENERADOR_PROCESO_GP'
             end
             object cxgrdbclmnGrdDBTabPrinNOMBRE_GENERADORPROCESO: TcxGridDBColumn
               Caption = 'Nombre Proceso'
-              DataBinding.FieldName = 'NOMBRE_GENERADORPROCESO'
+              DataBinding.FieldName = 'NOMBRE_GENERADOR_PROCESO_GP'
               Width = 471
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Visible = False
               VisibleForCustomization = False
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Visible = False
               VisibleForCustomization = False
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Visible = False
               VisibleForCustomization = False
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Visible = False
               VisibleForCustomization = False
             end
@@ -111,7 +111,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object txtCODIGO_FAMILIA: TcxDBTextEdit
               Left = 95
               Top = 17
-              DataBinding.DataField = 'CODIGO_GENERADORPROCESO'
+              DataBinding.DataField = 'CODIGO_GENERADOR_PROCESO_GP'
               DataBinding.DataSource = dsTablaG
               Properties.ReadOnly = False
               TabOrder = 0
@@ -134,7 +134,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object txtNOMBRE_FAMILIA: TcxDBTextEdit
               Left = 94
               Top = 62
-              DataBinding.DataField = 'NOMBRE_GENERADORPROCESO'
+              DataBinding.DataField = 'NOMBRE_GENERADOR_PROCESO_GP'
               DataBinding.DataSource = dsTablaG
               TabOrder = 3
               Width = 570
@@ -228,7 +228,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Width = 703
                   Height = 253
                   Cursor = crIBeam
-                  DataField = 'PROCESO_GENERADORPROCESO'
+                  DataField = 'PROCESO_GENERADOR_PROCESO_GP'
                   DataSource = dsTablaG
                   Align = alClient
                   Font.Charset = DEFAULT_CHARSET
@@ -468,9 +468,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         OptionsView.GroupFooters = gfAlwaysVisible
                       end
                       object tv2: TcxGridDBTableView
-                        DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
-                        DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
-                        DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
+                        DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
+                        DataController.KeyFieldNames = 'LINEA_FACLIN'
+                        DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
                         OptionsBehavior.ColumnHeaderHints = False
                         OptionsCustomize.ColumnFiltering = False
                         OptionsCustomize.ColumnGrouping = False
@@ -482,35 +482,35 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         OptionsView.GroupByBox = False
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA1: TcxGridDBColumn
                           Caption = 'Nro Linea'
-                          DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                          DataBinding.FieldName = 'LINEA_FACLIN'
                           Width = 28
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA1: TcxGridDBColumn
                           Caption = 'C'#243'digo Art'#237'culo'
-                          DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                          DataBinding.FieldName = 'CODIGO_ART_FACLIN'
                           Width = 164
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA1: TcxGridDBColumn
                           Caption = 'Descripci'#243'n'
-                          DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                          DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
                           Width = 162
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA1: TcxGridDBColumn
-                          Caption = 'Cantidad'
-                          DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                          Caption = 'CANTIDAD_ARTVIN'
+                          DataBinding.FieldName = 'CANTIDAD_FACLIN'
                           Width = 84
                         end
                         object cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
-                          Caption = 'Tipo Cantidad'
-                          DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                          Caption = 'Tipo CANTIDAD_ARTVIN'
+                          DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                         end
                         object cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Precio SIVA'
-                          DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                          DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                         end
                         object cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Porcentaje IVA'
-                          DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                          DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
                           PropertiesClassName = 'TcxSpinEditProperties'
                           Properties.DisplayFormat = '0.00 %'
                           Properties.EditFormat = '0.00 %'
@@ -520,23 +520,23 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         end
                         object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Tipo IVA'
-                          DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+                          DataBinding.FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA1: TcxGridDBColumn
                           Caption = 'Precio CIVA'
-                          DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                          DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                           PropertiesClassName = 'TcxCurrencyEditProperties'
                           Width = 84
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA1: TcxGridDBColumn
                           Caption = 'Total'
-                          DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                          DataBinding.FieldName = 'TOTAL_FACLIN'
                           PropertiesClassName = 'TcxCurrencyEditProperties'
                           Width = 84
                         end
                         object cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA1: TcxGridDBColumn
                           Caption = 'Fecha de Entrega'
-                          DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                          DataBinding.FieldName = 'FECHA_ENTREGA_FACLIN'
                           PropertiesClassName = 'TcxDateEditProperties'
                         end
                       end
@@ -674,9 +674,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   OptionsView.GroupFooters = gfAlwaysVisible
                 end
                 object tv3: TcxGridDBTableView
-                  DataController.DetailKeyFieldNames = 'NRO_FACTURA_LINEA; SERIE_FACTURA_LINEA'
-                  DataController.KeyFieldNames = 'LINEA_FACTURA_LINEA'
-                  DataController.MasterKeyFieldNames = 'NRO_FACTURA; SERIE_FACTURA'
+                  DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
+                  DataController.KeyFieldNames = 'LINEA_FACLIN'
+                  DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
                   OptionsBehavior.ColumnHeaderHints = False
                   OptionsCustomize.ColumnFiltering = False
                   OptionsCustomize.ColumnGrouping = False
@@ -688,35 +688,35 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   OptionsView.GroupByBox = False
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA11: TcxGridDBColumn
                     Caption = 'Nro Linea'
-                    DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'LINEA_FACLIN'
                     Width = 28
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA11: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_ART_FACLIN'
                     Width = 164
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA11: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
                     Width = 162
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA11: TcxGridDBColumn
-                    Caption = 'Cantidad'
-                    DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                    Caption = 'CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 84
                   end
                   object cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
-                    Caption = 'Tipo Cantidad'
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                    Caption = 'Tipo CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Precio SIVA'
-                    DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Porcentaje IVA'
-                    DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.DisplayFormat = '0.00 %'
                     Properties.EditFormat = '0.00 %'
@@ -726,23 +726,23 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   end
                   object cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Tipo IVA'
-                    DataBinding.FieldName = 'TIPOIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TIPO_IVA_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA11: TcxGridDBColumn
                     Caption = 'Precio CIVA'
-                    DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA11: TcxGridDBColumn
                     Caption = 'Total'
-                    DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TOTAL_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 84
                   end
                   object cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA11: TcxGridDBColumn
                     Caption = 'Fecha de Entrega'
-                    DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'FECHA_ENTREGA_FACLIN'
                     PropertiesClassName = 'TcxDateEditProperties'
                   end
                 end
@@ -794,7 +794,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -829,7 +829,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3
@@ -842,7 +842,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 7
@@ -866,7 +866,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 4
@@ -921,44 +921,44 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             ExplicitHeight = 440
             inherited tvPerfil: TcxGridDBTableView
               object cxgrdbclmnPerfilUSUARIO_GRUPO_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'USUARIO_GRUPO_PERFILES'
+                DataBinding.FieldName = 'USUARIO_GRUPO_USUPER'
                 Width = 167
               end
               object cxgrdbclmnPerfilKEY_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'KEY_PERFILES'
+                DataBinding.FieldName = 'KEY_USUPER'
                 Width = 112
               end
               object cxgrdbclmnPerfilSUBKEY_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'SUBKEY_PERFILES'
+                DataBinding.FieldName = 'SUBKEY_USUPER'
                 Width = 291
               end
               object cxgrdbclmnPerfilVALUE_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_PERFILES'
+                DataBinding.FieldName = 'VALUE_USUPER'
                 Width = 188
               end
               object cxgrdbclmnPerfilVALUE_TEXT_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_TEXT_PERFILES'
+                DataBinding.FieldName = 'VALUE_TEXT_USUPER'
                 PropertiesClassName = 'TcxBlobEditProperties'
                 Properties.BlobEditKind = bekMemo
               end
               object cxgrdbclmnPerfilTYPE_BLOB_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'TYPE_BLOB_PERFILES'
+                DataBinding.FieldName = 'TYPE_BLOB_USUPER'
               end
               object cxgrdbclmnPerfilVALUE_BLOB_PERFILES: TcxGridDBColumn
-                DataBinding.FieldName = 'VALUE_BLOB_PERFILES'
+                DataBinding.FieldName = 'VALUE_BLOB_USUPER'
               end
               object cxgrdbclmnPerfilINSTANTEMODIF: TcxGridDBColumn
-                DataBinding.FieldName = 'INSTANTEMODIF'
+                DataBinding.FieldName = 'INSTANTE_MODIF'
               end
               object cxgrdbclmnPerfilINSTANTEALTA: TcxGridDBColumn
-                DataBinding.FieldName = 'INSTANTEALTA'
+                DataBinding.FieldName = 'INSTANTE_ALTA'
               end
               object cxgrdbclmnPerfilUSUARIOALTA: TcxGridDBColumn
-                DataBinding.FieldName = 'USUARIOALTA'
+                DataBinding.FieldName = 'USUARIO_ALTA'
                 Width = 88
               end
               object cxgrdbclmnPerfilUSUARIOMODIF: TcxGridDBColumn
-                DataBinding.FieldName = 'USUARIOMODIF'
+                DataBinding.FieldName = 'USUARIO_MODIF'
                 Width = 96
               end
             end

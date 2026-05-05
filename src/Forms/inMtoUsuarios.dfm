@@ -1,4 +1,4 @@
-inherited frmMtoUsuarios: TfrmMtoUsuarios
+﻿inherited frmMtoUsuarios: TfrmMtoUsuarios
   Caption = 'Usuarios'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -14,17 +14,17 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
             OptionsData.Editing = True
             object cxGrdDBTabPrinUSUARIO_USUARIO: TcxGridDBColumn
               Caption = 'Nombre de Usuario'
-              DataBinding.FieldName = 'USUARIO_USUARIO'
+              DataBinding.FieldName = 'USUARIO_USU'
               Width = 189
             end
             object cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn
               Caption = 'Grupo'
-              DataBinding.FieldName = 'GRUPO_USUARIO'
+              DataBinding.FieldName = 'GRUPO_USU'
               PropertiesClassName = 'TcxLookupComboBoxProperties'
-              Properties.KeyFieldNames = 'GRUPO_GRUPO'
+              Properties.KeyFieldNames = 'GRUPO_USUGRP'
               Properties.ListColumns = <
                 item
-                  FieldName = 'GRUPO_GRUPO'
+                  FieldName = 'GRUPO_USUGRP'
                 end>
               Properties.ListOptions.ShowHeader = False
               Properties.ListSource = dmUsuarios.dsGrupos
@@ -32,7 +32,7 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
             end
             object cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn
               Caption = 'Es Administrador'
-              DataBinding.FieldName = 'ESGRUPOADMINISTRADOR_GRUPO'
+              DataBinding.FieldName = 'ESGRUPOADMINISTRADOR_USUGRP'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ReadOnly = True
               Properties.ValueChecked = 'S'
@@ -41,16 +41,16 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
             end
             object cxGrdDBTabPrinEMPRESADEF_USUARIO: TcxGridDBColumn
               Caption = 'Empresa por defecto en documentos'
-              DataBinding.FieldName = 'EMPRESADEF_USUARIO'
+              DataBinding.FieldName = 'EMPRESA_DEFECTO_USU'
               PropertiesClassName = 'TcxLookupComboBoxProperties'
-              Properties.KeyFieldNames = 'CODIGO_EMPRESA'
+              Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
               Properties.ListColumns = <
                 item
                   MinWidth = 60
-                  FieldName = 'CODIGO_EMPRESA'
+                  FieldName = 'CODIGO_EMP_EMP'
                 end
                 item
-                  FieldName = 'RAZONSOCIAL_EMPRESA'
+                  FieldName = 'RAZON_SOCIAL_EMP'
                 end>
               Properties.ListOptions.ColumnSorting = False
               Properties.ListSource = dmUsuarios.dsEmpresas
@@ -58,12 +58,12 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
             end
             object cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn
               Caption = 'Raz'#243'n Social Empresa'
-              DataBinding.FieldName = 'RAZONSOCIAL_EMPRESA'
+              DataBinding.FieldName = 'RAZON_SOCIAL_EMP'
               Width = 218
             end
             object cxGrdDBTabPrinPASSWORD_USUARIO: TcxGridDBColumn
               Caption = 'Password Encriptado'
-              DataBinding.FieldName = 'PASSWORD_USUARIO'
+              DataBinding.FieldName = 'PASSWORD_USU'
               PropertiesClassName = 'TcxTextEditProperties'
               Properties.EchoMode = eemPassword
               Properties.PasswordChar = '*'
@@ -72,7 +72,7 @@ inherited frmMtoUsuarios: TfrmMtoUsuarios
             end
             object cxGrdDBTabPrinULTIMOLOGIN_USUARIO: TcxGridDBColumn
               Caption = #218'ltima Conexi'#243'n'
-              DataBinding.FieldName = 'ULTIMOLOGIN_USUARIO'
+              DataBinding.FieldName = 'ULTIMO_LOGIN_USU'
               PropertiesClassName = 'TcxDateEditProperties'
               Properties.ReadOnly = True
               Width = 190

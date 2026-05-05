@@ -1,4 +1,4 @@
-inherited frmPrint: TfrmPrint
+﻿inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
@@ -163,10 +163,10 @@ inherited frmPrint: TfrmPrint
     SQL.Strings = (
       'select *'
       'from fza_usuarios_perfiles'
-      'where (KEY_PERFILES = :FormName)'
-      'and (USUARIO_GRUPO_PERFILES = :Usuario OR'
-      '     USUARIO_GRUPO_PERFILES = :Grupo   OR'
-      '     USUARIO_GRUPO_PERFILES = :Todos)')
+      'where (KEY_USUPER = :FormName)'
+      'and (USUARIO_GRUPO_USUPER = :Usuario OR'
+      '     USUARIO_GRUPO_USUPER = :Grupo   OR'
+      '     USUARIO_GRUPO_USUPER = :Todos)')
     Left = 16
     Top = 8
     ParamData = <

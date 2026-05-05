@@ -53,7 +53,7 @@ begin
     Connection := inLibGlobalVar.oConn;
     SQL.Text :=  'SELECT * '+
                  '  FROM fza_usuarios_grupos ' +
-                 ' WHERE GRUPO_GRUPO = :grupo ';
+                 ' WHERE GRUPO_USUGRP = :grupo ';
     ParamByName('grupo').AsString := sUsuario;
     Open;
     Result := unqrySol.RecordCount > 0;
@@ -88,7 +88,7 @@ begin
   bError := False;
   with unqryTablaG do
   begin
-    sUsuario := Trim(FindField('USUARIO_USUARIO').AsString);
+    sUsuario := Trim(FindField('USUARIO_USU').AsString);
     if ((sUsuario = '') or (SimbolosProhibidos(sUsuario))) then
     begin
       ShowMessageFmt('%s no es un valor de registro v�lido ' +

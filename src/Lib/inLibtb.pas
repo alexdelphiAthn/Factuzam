@@ -267,23 +267,23 @@ begin
   ValorCurrency := StrToCurrDef(VarToStr(NuevoValor), 0);
   Calculador := TLinFac.Create(cdsLineas, cdsCabecera, True);
   try
-    if SameText(NombreCampo, 'PRECIOSALIDA_FACTURA_LINEA') then
+    if SameText(NombreCampo, 'PRECIO_SALIDA_FACLIN') then
       Calculador.PrecioSal := ValorCurrency
-    else if SameText(NombreCampo, 'CANTIDAD_FACTURA_LINEA') then
+    else if SameText(NombreCampo, 'CANTIDAD_FACLIN') then
       Calculador.Cant := ValorCurrency
-    else if SameText(NombreCampo, 'PORCEN_DTO_FACTURA_LINEA') then
+    else if SameText(NombreCampo, 'PORCENTAJE_DTO_FACLIN') then
       Calculador.PorDto := ValorCurrency
-    else if SameText(NombreCampo, 'PRECIO_DTO_FACTURA_LINEA') then
+    else if SameText(NombreCampo, 'PRECIO_DTO_FACLIN') then
       Calculador.Dto := ValorCurrency
     else if SameText(NombreCampo,
-                                 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA') then
+                                 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN') then
       Calculador.PreSiva := ValorCurrency
     else if SameText(NombreCampo,
-                                 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA') then
+                                 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN') then
       Calculador.PreCiva := ValorCurrency
-    else if SameText(NombreCampo, 'TIPOIVA_ARTICULO_FACTURA_LINEA') then
+    else if SameText(NombreCampo, 'TIPO_IVA_ARTICULO_FACLIN') then
       Calculador.TipoIva := VarToStr(NuevoValor) // El Tipo IVA es string
-    else if SameText(NombreCampo, 'TOTAL_FACTURA_LINEA') then
+    else if SameText(NombreCampo, 'TOTAL_FACLIN') then
     begin
       TotalBruto := Calculador.PrecioSal * Calculador.Cant;
       if TotalBruto <> 0 then
@@ -292,7 +292,7 @@ begin
         Diferencia := 0;
       Calculador.Dto := Diferencia;
     end
-    else if SameText(NombreCampo, 'TOTAL_FACTURASIVA_LINEA') then
+    else if SameText(NombreCampo, 'TOTAL_FAC_SIVA_FACLIN') then
     begin
       TotalBruto := Calculador.PrecioSal * Calculador.Cant;
       if TotalBruto <> 0 then
@@ -370,21 +370,21 @@ begin
   try
     qryDefaults.Connection := inLibGlobalVar.oConn;
     // Buscamos todos los valores configurados para esa tabla específica
-    qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF, ' +
-                            '       VALOR_DEFECTO_DEF, ' +
-                            '       TIPO_DATO_DEF ' +
+    qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF_VD, ' +
+                            '       VALOR_DEF_VD, ' +
+                            '       TIPO_DATO_DEF_VD ' +
                             '  FROM fza_valores_defecto ' +
-                            ' WHERE TABLA_OBJETIVO_DEF = ' +
+                            ' WHERE TABLA_OBJETIVO_DEF_VD = ' +
                                                          QuotedStr(NombreTabla);
     qryDefaults.Open;
     while not qryDefaults.Eof do
     begin
       var oField := unqryDestino.FindField(
-                        qryDefaults.FieldByName('CAMPO_OBJETIVO_DEF').AsString);
+                        qryDefaults.FieldByName('CAMPO_OBJETIVO_DEF_VD').AsString);
       if Assigned(oField) then
       begin
-        var sValor := qryDefaults.FieldByName('VALOR_DEFECTO_DEF').AsString;
-        var sTipo  := qryDefaults.FieldByName('TIPO_DATO_DEF').AsString;
+        var sValor := qryDefaults.FieldByName('VALOR_DEF_VD').AsString;
+        var sTipo  := qryDefaults.FieldByName('TIPO_DATO_DEF_VD').AsString;
         if sTipo = 'INTEGER' then
           oField.AsInteger := StrToIntDef(sValor, 0)
         else if sTipo = 'FLOAT' then
@@ -1116,7 +1116,7 @@ begin
 end;
 
 function AnsiOccurs(const str: string; const substr: string): integer;
-// Devuelve la cantidad de veces que una subcadena está en una cadena
+// Devuelve la cantidad_artvin de veces que una subcadena está en una cadena
 // Versión ANSI
 var
  p, q: PChar;

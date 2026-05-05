@@ -1,4 +1,4 @@
-inherited dmFormasdePago: TdmFormasdePago
+﻿inherited dmFormasdePago: TdmFormasdePago
   Height = 155
   Width = 522
   inherited unqryTablaG: TUniQuery
@@ -14,8 +14,8 @@ inherited dmFormasdePago: TdmFormasdePago
     SQL.Strings = (
       'select *'
       'from fza_usuarios_perfiles'
-      'where (KEY_PERFILES = '#39'dmFormasdePago'#39' '
-      'OR KEY_PERFILES='#39'frmMtoFormasdePago'#39')')
+      'where (KEY_USUPER = '#39'dmFormasdePago'#39' '
+      'OR KEY_USUPER='#39'frmMtoFormasdePago'#39')')
   end
   object unstrdprcContador: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT'
@@ -27,14 +27,10 @@ inherited dmFormasdePago: TdmFormasdePago
     SQLInsert.Strings = (
       'INSERT INTO fza_historia'
       
-        '  (ID, CODIGO_ARTICULO, DESCRIPCION_ARTICULO, CODIGO_CLIENTE, PR' +
-        'ECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NRO_FACTU' +
-        'RA, LINEA_LINEA, ODONTOLOGO, SERIE_FACTURA)'
+        '  (ID, CODIGO_ART_ART, DESCRIPCION_ART, CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NUMERO_FAC, LINEA_LINEA, ODONTOLOGO, SERIE_FAC)'
       'VALUES'
       
-        '  (:ID, :CODIGO_ARTICULO, :DESCRIPCION_ARTICULO, :CODIGO_CLIENTE' +
-        ', :PRECIOVENTA_ARTICULO, :FECHA, :ZONA, :DESCRIPCION_HISTORIA, :' +
-        'NRO_FACTURA, :LINEA_LINEA, :ODONTOLOGO, :SERIE_FACTURA)')
+        '  (:ID, :CODIGO_ART_ART, :DESCRIPCION_ART, :CODIGO_CLI_CLI, :PRECIOVENTA_ARTICULO, :FECHA, :ZONA, :DESCRIPCION_HISTORIA, :NUMERO_FAC, :LINEA_LINEA, :ODONTOLOGO, :SERIE_FAC)')
     SQLDelete.Strings = (
       'DELETE FROM fza_historia'
       'WHERE'
@@ -43,12 +39,8 @@ inherited dmFormasdePago: TdmFormasdePago
       'UPDATE fza_historia'
       'SET'
       
-        '  ID = :ID, CODIGO_ARTICULO = :CODIGO_ARTICULO, DESCRIPCION_ARTI' +
-        'CULO = :DESCRIPCION_ARTICULO, CODIGO_CLIENTE = :CODIGO_CLIENTE, ' +
-        'PRECIOVENTA_ARTICULO = :PRECIOVENTA_ARTICULO, FECHA = :FECHA, ZO' +
-        'NA = :ZONA, DESCRIPCION_HISTORIA = :DESCRIPCION_HISTORIA, NRO_FA' +
-        'CTURA = :NRO_FACTURA, LINEA_LINEA = :LINEA_LINEA, ODONTOLOGO = :' +
-        'ODONTOLOGO, SERIE_FACTURA = :SERIE_FACTURA'
+        '  ID = :ID, CODIGO_ART_ART = :CODIGO_ART_ART, DESCRIPCION_ART = :DESCRIPCION_ART, CODIGO_CLI_CLI = :CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO = :PRECIOVENTA_ARTICULO, FECHA = :FECHA, ZONA = :ZONA, DESCRIPC' +
+        'ION_HISTORIA = :DESCRIPCION_HISTORIA, NUMERO_FAC = :NUMERO_FAC, LINEA_LINEA = :LINEA_LINEA, ODONTOLOGO = :ODONTOLOGO, SERIE_FAC = :SERIE_FAC'
       'WHERE'
       '  ID = :Old_ID')
     SQLLock.Strings = (
@@ -58,9 +50,7 @@ inherited dmFormasdePago: TdmFormasdePago
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT ID, CODIGO_ARTICULO, DESCRIPCION_ARTICULO, CODIGO_CLIENTE' +
-        ', PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NRO_F' +
-        'ACTURA, LINEA_LINEA, ODONTOLOGO, SERIE_FACTURA FROM fza_historia'
+        'SELECT ID, CODIGO_ART_ART, DESCRIPCION_ART, CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NUMERO_FAC, LINEA_LINEA, ODONTOLOGO, SERIE_FAC FROM fza_historia'
       'WHERE'
       '  ID = :ID')
     SQLRecCount.Strings = (
@@ -70,11 +60,11 @@ inherited dmFormasdePago: TdmFormasdePago
       'select *'
       'from vi_fac_lin_busquedas l'
       'inner join vi_fac_busquedas f'
-      'on l.NRO_FACTURA_LINEA = F.NRO_FACTURA'
-      'AND l.SERIE_FACTURA_LINEA = F.SERIE_FACTURA'
+      'on l.NUMERO_FAC_FACLIN = F.NUMERO_FAC'
+      'AND l.SERIE_FAC_FACLIN = F.SERIE_FAC'
       '')
-    MasterFields = 'CODIGO_FORMAPAGO'
-    DetailFields = 'FORMA_PAGO_FACTURA'
+    MasterFields = 'CODIGO_FP_FP'
+    DetailFields = 'FORMA_PAGO_FAC'
     ReadOnly = True
     Active = True
     Left = 215
@@ -82,7 +72,7 @@ inherited dmFormasdePago: TdmFormasdePago
     ParamData = <
       item
         DataType = ftUnknown
-        Name = 'CODIGO_FORMAPAGO'
+        Name = 'CODIGO_FP_FP'
         Value = nil
       end>
   end
@@ -90,14 +80,10 @@ inherited dmFormasdePago: TdmFormasdePago
     SQLInsert.Strings = (
       'INSERT INTO fza_historia'
       
-        '  (ID, CODIGO_ARTICULO, DESCRIPCION_ARTICULO, CODIGO_CLIENTE, PR' +
-        'ECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NRO_FACTU' +
-        'RA, LINEA_LINEA, ODONTOLOGO, SERIE_FACTURA)'
+        '  (ID, CODIGO_ART_ART, DESCRIPCION_ART, CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NUMERO_FAC, LINEA_LINEA, ODONTOLOGO, SERIE_FAC)'
       'VALUES'
       
-        '  (:ID, :CODIGO_ARTICULO, :DESCRIPCION_ARTICULO, :CODIGO_CLIENTE' +
-        ', :PRECIOVENTA_ARTICULO, :FECHA, :ZONA, :DESCRIPCION_HISTORIA, :' +
-        'NRO_FACTURA, :LINEA_LINEA, :ODONTOLOGO, :SERIE_FACTURA)')
+        '  (:ID, :CODIGO_ART_ART, :DESCRIPCION_ART, :CODIGO_CLI_CLI, :PRECIOVENTA_ARTICULO, :FECHA, :ZONA, :DESCRIPCION_HISTORIA, :NUMERO_FAC, :LINEA_LINEA, :ODONTOLOGO, :SERIE_FAC)')
     SQLDelete.Strings = (
       'DELETE FROM fza_historia'
       'WHERE'
@@ -106,12 +92,8 @@ inherited dmFormasdePago: TdmFormasdePago
       'UPDATE fza_historia'
       'SET'
       
-        '  ID = :ID, CODIGO_ARTICULO = :CODIGO_ARTICULO, DESCRIPCION_ARTI' +
-        'CULO = :DESCRIPCION_ARTICULO, CODIGO_CLIENTE = :CODIGO_CLIENTE, ' +
-        'PRECIOVENTA_ARTICULO = :PRECIOVENTA_ARTICULO, FECHA = :FECHA, ZO' +
-        'NA = :ZONA, DESCRIPCION_HISTORIA = :DESCRIPCION_HISTORIA, NRO_FA' +
-        'CTURA = :NRO_FACTURA, LINEA_LINEA = :LINEA_LINEA, ODONTOLOGO = :' +
-        'ODONTOLOGO, SERIE_FACTURA = :SERIE_FACTURA'
+        '  ID = :ID, CODIGO_ART_ART = :CODIGO_ART_ART, DESCRIPCION_ART = :DESCRIPCION_ART, CODIGO_CLI_CLI = :CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO = :PRECIOVENTA_ARTICULO, FECHA = :FECHA, ZONA = :ZONA, DESCRIPC' +
+        'ION_HISTORIA = :DESCRIPCION_HISTORIA, NUMERO_FAC = :NUMERO_FAC, LINEA_LINEA = :LINEA_LINEA, ODONTOLOGO = :ODONTOLOGO, SERIE_FAC = :SERIE_FAC'
       'WHERE'
       '  ID = :Old_ID')
     SQLLock.Strings = (
@@ -121,9 +103,7 @@ inherited dmFormasdePago: TdmFormasdePago
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
-        'SELECT ID, CODIGO_ARTICULO, DESCRIPCION_ARTICULO, CODIGO_CLIENTE' +
-        ', PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NRO_F' +
-        'ACTURA, LINEA_LINEA, ODONTOLOGO, SERIE_FACTURA FROM fza_historia'
+        'SELECT ID, CODIGO_ART_ART, DESCRIPCION_ART, CODIGO_CLI_CLI, PRECIOVENTA_ARTICULO, FECHA, ZONA, DESCRIPCION_HISTORIA, NUMERO_FAC, LINEA_LINEA, ODONTOLOGO, SERIE_FAC FROM fza_historia'
       'WHERE'
       '  ID = :ID')
     SQLRecCount.Strings = (
@@ -131,8 +111,8 @@ inherited dmFormasdePago: TdmFormasdePago
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_fac_busquedas')
-    MasterFields = 'CODIGO_FORMAPAGO'
-    DetailFields = 'FORMA_PAGO_FACTURA'
+    MasterFields = 'CODIGO_FP_FP'
+    DetailFields = 'FORMA_PAGO_FAC'
     ReadOnly = True
     Active = True
     Left = 359
@@ -140,7 +120,7 @@ inherited dmFormasdePago: TdmFormasdePago
     ParamData = <
       item
         DataType = ftUnknown
-        Name = 'CODIGO_FORMAPAGO'
+        Name = 'CODIGO_FP_FP'
         Value = nil
       end>
   end

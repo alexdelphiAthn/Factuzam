@@ -100,12 +100,12 @@ begin
   begin
     sql.Text :=  '  SELECT *  ' +
                  '    FROM fza_usuarios_perfiles ' +
-                 '   WHERE (   USUARIO_GRUPO_PERFILES = :user ' +
-                 '          OR USUARIO_GRUPO_PERFILES = :group' +
-                 '          OR USUARIO_GRUPO_PERFILES = :todos)' +
-                 '     AND KEY_PERFILES = :key ' +
-                 '     AND TYPE_BLOB_PERFILES IS NULL ' +
-                 'ORDER BY USUARIO_GRUPO_PERFILES, KEY_PERFILES';
+                 '   WHERE (   USUARIO_GRUPO_USUPER = :user ' +
+                 '          OR USUARIO_GRUPO_USUPER = :group' +
+                 '          OR USUARIO_GRUPO_USUPER = :todos)' +
+                 '     AND KEY_USUPER = :key ' +
+                 '     AND TYPE_BLOB_USUPER IS NULL ' +
+                 'ORDER BY USUARIO_GRUPO_USUPER, KEY_USUPER';
     ParamByName('user').AsString := oUser;
     ParamByName('group').AsString := oGroup;
     ParamByName('key').AsString := pskey;
@@ -115,19 +115,19 @@ begin
     while not Eof do
     begin
       objFieldsProfile.pUSUARIO_GRUPO_PERFILES:=
-                                   FindField('USUARIO_GRUPO_PERFILES').AsString;
+                                   FindField('USUARIO_GRUPO_USUPER').AsString;
       objFieldsProfile.pKEY_PERFILES:=
-                                             FindField('KEY_PERFILES').AsString;
+                                             FindField('KEY_USUPER').AsString;
       objFieldsProfile.pSUBKEY_PERFILES:=
-                                          FindField('SUBKEY_PERFILES').AsString;
+                                          FindField('SUBKEY_USUPER').AsString;
       objFieldsProfile.pVALUE_PERFILES:=
-                                           FindField('VALUE_PERFILES').AsString;
+                                           FindField('VALUE_USUPER').AsString;
       objFieldsProfile.pVALUE_TEXT_PERFILES         :=
-                                  FindField('VALUE_TEXT_PERFILES').AsWideString;
+                                  FindField('VALUE_TEXT_USUPER').AsWideString;
       //objFieldsProfile.pTYPE_BLOB_PERFILES
-      //:= FindField('TYPE_BLOB_PERFILES').AsVariant;
+      //:= FindField('TYPE_BLOB_USUPER').AsVariant;
       //objFieldsProfile.pVALUE_BLOB_PERFILES
-      //:= FindField('VALUE_BLOB_PERFILES').AsString;
+      //:= FindField('VALUE_BLOB_USUPER').AsString;
       AddRecordToDict(objFieldsProfile, oDict);
       Next;
     end;
@@ -154,12 +154,12 @@ begin
   try
     unqryDelete.Connection := oConn;
     unqryDelete.SQL.Text := 'DELETE FROM fza_usuarios_perfiles ' +
-                            ' WHERE USUARIO_GRUPO_PERFILES = :UserGroup ' +
-                            '   AND KEY_PERFILES = :Key';
+                            ' WHERE USUARIO_GRUPO_USUPER = :UserGroup ' +
+                            '   AND KEY_USUPER = :Key';
 
     // Si pasamos un SubKey, lo añadimos a la condición de borrado
     if sSubKey <> '' then
-      unqryDelete.SQL.Add(' AND SUBKEY_PERFILES = :SubKey');
+      unqryDelete.SQL.Add(' AND SUBKEY_USUPER = :SubKey');
 
     unqryDelete.ParamByName('UserGroup').AsString := sUserGroup;
     unqryDelete.ParamByName('Key').AsString := sKey;
@@ -179,13 +179,13 @@ begin
   begin
     Close;
     // Delegamos la jerarquía al motor SQL. El que quede primero será el de mayor prioridad.
-    SQL.Text := '  SELECT VALUE_PERFILES ' +
+    SQL.Text := '  SELECT VALUE_USUPER ' +
                 '    FROM fza_usuarios_perfiles ' +
-                '   WHERE KEY_PERFILES = :key ' +
-                '     AND SUBKEY_PERFILES = :subkey ' +
-                '     AND USUARIO_GRUPO_PERFILES IN (:user, :group, :todos) ' +
-                '     AND TYPE_BLOB_PERFILES IS NULL ' +
-                'ORDER BY CASE USUARIO_GRUPO_PERFILES ' +
+                '   WHERE KEY_USUPER = :key ' +
+                '     AND SUBKEY_USUPER = :subkey ' +
+                '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
+                '     AND TYPE_BLOB_USUPER IS NULL ' +
+                'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
                 '            WHEN :user THEN 1 ' +
                 '            WHEN :group THEN 2 ' +
                 '            WHEN :todos THEN 3 ' +
@@ -199,7 +199,7 @@ begin
 
     // Como está ordenado por prioridad, si hay registros, el primero es el correcto
     if not IsEmpty then
-      Result := FieldByName('VALUE_PERFILES').AsString;
+      Result := FieldByName('VALUE_USUPER').AsString;
 
     Close;
   end;
@@ -211,11 +211,11 @@ begin
   with unqryPerfiles do
   begin
     Close;
-    SQL.Text := '  SELECT SUBKEY_PERFILES ' +
+    SQL.Text := '  SELECT SUBKEY_USUPER ' +
                 '    FROM fza_usuarios_perfiles ' +
-                '   WHERE KEY_PERFILES = :key ' +
-                '     AND USUARIO_GRUPO_PERFILES IN (:user, :group, :todos) ' +
-                'ORDER BY CASE USUARIO_GRUPO_PERFILES ' +
+                '   WHERE KEY_USUPER = :key ' +
+                '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
+                'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
                 '            WHEN :user THEN 1 ' +
                 '            WHEN :group THEN 2 ' +
                 '            WHEN :todos THEN 3 ' +
@@ -227,7 +227,7 @@ begin
     Open;
 
     if not IsEmpty then
-      Result := FieldByName('SUBKEY_PERFILES').AsString;
+      Result := FieldByName('SUBKEY_USUPER').AsString;
 
     Close;
   end;
@@ -257,7 +257,7 @@ var
 begin
   if (AItems = nil) or (AItems.Count = 0) then Exit;
 
-  // El usuario que está grabando, para USUARIOALTA / USUARIOMODIF
+  // El usuario que está grabando, para USUARIO_ALTA / USUARIO_MODIF
   sUsuarioActual := inLibGlobalVar.oUser;
 
   qry := TUniQuery.Create(nil);
@@ -275,8 +275,8 @@ begin
       sSQL.Clear;
       sSQL.Append(
         'INSERT INTO fza_usuarios_perfiles ' +
-        '(USUARIO_GRUPO_PERFILES, KEY_PERFILES, SUBKEY_PERFILES, VALUE_PERFILES, ' +
-        ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+        '(USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER, ' +
+        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
         'VALUES ');
 
       for i := iStart to iEnd do
@@ -289,8 +289,8 @@ begin
 
       sSQL.Append(
         ' ON DUPLICATE KEY UPDATE ' +
-        '  VALUE_PERFILES = VALUES(VALUE_PERFILES), ' +
-        '  USUARIOMODIF   = VALUES(USUARIOMODIF)');
+        '  VALUE_USUPER = VALUES(VALUE_USUPER), ' +
+        '  USUARIO_MODIF   = VALUES(USUARIO_MODIF)');
 
       qry.SQL.Text := sSQL.ToString;
       qry.ParamByName('ua').AsString := sUsuarioActual;

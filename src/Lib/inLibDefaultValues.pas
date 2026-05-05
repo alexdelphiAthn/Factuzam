@@ -40,7 +40,7 @@ begin
 //        if Assigned(AForm.unqryPerfiles) then
 //        begin
 //          AForm.unqryPerfiles.Close;
-//          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_articulos ORDER BY DESCRIPCION_ARTICULO';
+//          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_articulos ORDER BY DESCRIPCION_ART';
 //          // AForm.unqryPerfiles.Open; // Opcional, o dejar que el form lo abra al mostrarse
 //        end;
 
@@ -48,8 +48,8 @@ begin
         begin
           AForm.FConfigAlta.TituloVentana := 'Alta Rápida de Artículo';
           AForm.FConfigAlta.Tabla := 'fza_articulos';         // Tabla física escritura
-          AForm.FConfigAlta.CampoCodigo := 'CODIGO_ARTICULO'; // Campo PK
-          AForm.FConfigAlta.CampoDescripcion := 'DESCRIPCION_ARTICULO';
+          AForm.FConfigAlta.CampoCodigo := 'CODIGO_ART_ART'; // Campo PK
+          AForm.FConfigAlta.CampoDescripcion := 'DESCRIPCION_ART';
 
           // Al llamar a esto, el botón se hace visible y se cargan los defaults
           AForm.CargarDefaultsDesdeBD('fza_articulos');
@@ -73,7 +73,7 @@ begin
 
         // B. ESCRITURA
         AForm.FConfigAlta.Tabla := 'fza_clientes';
-        AForm.FConfigAlta.CampoCodigo := 'CODIGO_CLIENTE';
+        AForm.FConfigAlta.CampoCodigo := 'CODIGO_CLI_CLI';
         AForm.FConfigAlta.CampoDescripcion := 'RAZON_SOCIAL';
 
         // C. DEFAULTS (Busca en BD la config de 'fza_clientes' y el contador 'CL')
@@ -87,7 +87,7 @@ begin
       begin
          AForm.FConfigAlta.TituloVentana := 'Nueva Empresa';
          AForm.FConfigAlta.Tabla := 'fza_empresas';
-         AForm.FConfigAlta.CampoCodigo := 'CODIGO_EMPRESA';
+         AForm.FConfigAlta.CampoCodigo := 'CODIGO_EMP_EMP';
          AForm.FConfigAlta.CampoDescripcion := 'NOMBRE_EMPRESA';
          AForm.CargarDefaultsDesdeBD('fza_empresas');
       end;

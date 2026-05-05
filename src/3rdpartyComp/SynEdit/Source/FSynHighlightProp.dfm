@@ -1,4 +1,4 @@
-object fmHighLightSettings: TfmHighLightSettings
+﻿object fmHighLightSettings: TfmHighLightSettings
   Left = 259
   Top = 148
   Caption = 'Highlighting properties'
@@ -73,8 +73,7 @@ object fmHighLightSettings: TfmHighLightSettings
             Width = 180
             Height = 108
             Hint = 
-              'Left click to select foreground color. Right click to select bac' +
-              'kground color'
+              'Left click to select foreground color. Right click to select background color'
             Anchors = [akLeft, akTop, akRight]
             ClickEnablesColor = True
             Ctl3D = True

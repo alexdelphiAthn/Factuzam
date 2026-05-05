@@ -95,7 +95,7 @@ begin
     FieldName := Column.DataBinding.FieldName;
     if VarIsNull(ValoEditado) or (not VarIsNumeric(ValoEditado)) then
     begin
-      FieldName := 'PRECIOSALIDA_FACTURA_LINEA';
+      FieldName := 'PRECIO_SALIDA_FACLIN';
       if cdsLineas.FindField(FieldName) <> nil then
         ValoEditado := cdsLineas.FieldByName(FieldName).Value
       else
@@ -400,7 +400,7 @@ begin
       oColumn.Index := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', ''), oColumn.Index);
     end;
 
-    // 3. Restaurar el Filtro (Desde VALUE_TEXT_PERFILES)
+    // 3. Restaurar el Filtro (Desde VALUE_TEXT_USUPER)
     // Se requiere una función que lea el ValueText del diccionario
     sFiltroBase64 := GetPerfilValueTextDef(oPerfilDic, sName + '_Filtro', '');
 

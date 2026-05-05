@@ -1,4 +1,4 @@
-object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
+﻿object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Left = 0
   Top = 0
   BorderIcons = []
@@ -324,7 +324,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Styles.Header = cxStyle1
             object cxgrdbclmnCodigo: TcxGridDBColumn
               Caption = 'C'#243'digo'
-              DataBinding.FieldName = 'CODIGO_FORMAP'
+              DataBinding.FieldName = 'CODIGO_FP_CFP'
               Visible = False
               HeaderAlignmentHorz = taCenter
               Options.Editing = False
@@ -333,7 +333,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             end
             object dbmDescripcion: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
-              DataBinding.FieldName = 'DESCRIPCION_FORMAP'
+              DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_CFP'
               Options.Editing = False
               Options.Focusing = False
               Styles.Header = cxStyle1
@@ -351,11 +351,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               Width = 249
             end
             object dbtvFormasPagoColumn1: TcxGridDBColumn
-              DataBinding.FieldName = 'ESDIVISA_FORMAP'
+              DataBinding.FieldName = 'ESDIVISA_FORMA_PAGO_CFP'
               Visible = False
             end
             object dbtvFormasPagoColumn2: TcxGridDBColumn
-              DataBinding.FieldName = 'ES_CRIPTO_FORMAP'
+              DataBinding.FieldName = 'ESCRIPTO_FORMA_PAGO_CFP'
               Visible = False
             end
             object dbtvFormasPagoColumn3: TcxGridDBColumn

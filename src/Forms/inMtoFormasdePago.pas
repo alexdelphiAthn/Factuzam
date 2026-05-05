@@ -243,8 +243,8 @@ begin
   with tvFacturacion.DataController.DataSource.DataSet do
   ShowMto(Self.Owner,
           'Facturas',
-          FieldByName('NRO_FACTURA').AsString + ',' +
-          FieldByName('SERIE_FACTURA').AsString);
+          FieldByName('NUMERO_FAC').AsString + ',' +
+          FieldByName('SERIE_FAC').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.actFacturasExecute(Sender: TObject);
@@ -253,8 +253,8 @@ begin
   with tvFacturacion.DataController.DataSet do
     if (
         (pcPestana.ActivePage = tsVentas)        and
-        (not(FieldByName('NRO_FACTURA').IsNull))  and
-        (not(FieldByName('SERIE_FACTURA').IsNull))
+        (not(FieldByName('NUMERO_FAC').IsNull))  and
+        (not(FieldByName('SERIE_FAC').IsNull))
        ) then
       btnIraFacturaClick(Sender)
     else
@@ -266,7 +266,7 @@ procedure TfrmMtoFormasdePago.btExportarExcelClick(Sender: TObject);
 begin
   inherited;
     ExportarExcel(cxgrdFacturas, 'Historico_Formas_de_pago' +
-                dsTablaG.Dataset.FieldByName('DESCRIPCION_FORMAPAGO').AsString);
+                dsTablaG.Dataset.FieldByName('DESCRIPCION_FORMA_PAGO_FP').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.btnGrabarClick(Sender: TObject);
@@ -284,7 +284,7 @@ begin
   with tvLineasFacturacion.DataController.DataSet do
     ShowMto(Self.Owner,
             'Articulos',
-            FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString);
+            FieldByName('CODIGO_ART_FACLIN').AsString);
 
 end;
 
@@ -294,7 +294,7 @@ begin
   with tvFacturacion.DataController.DataSet do
     ShowMto(Self.Owner,
             'Clientes',
-            FieldByName('CODIGO_CLIENTE_FACTURA').AsString);
+            FieldByName('CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.btnIraEmpresaClick(Sender: TObject);
@@ -303,7 +303,7 @@ begin
   ShowMto(Self.Owner,
           'Empresas',
           tvFacturacion.DataController.DataSet.FieldByName(
-                                            'CODIGO_EMPRESA_FACTURA').AsString);
+                                            'CODIGO_EMP_FAC').AsString);
 
 end;
 
@@ -315,7 +315,7 @@ begin
   tvLineasFacturacion.DataController.DataSource :=
                                                dmmFormasdePago.dsFacturasLineas;
   pcPestana.ActivePage := tsMasDatos;
-  pkFieldName := 'CODIGO_FORMAPAGO';
+  pkFieldName := 'CODIGO_FP_FP';
 end;
 
 procedure TfrmMtoFormasdePago.dsTablaGStateChange(Sender: TObject);

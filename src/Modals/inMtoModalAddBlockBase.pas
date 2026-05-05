@@ -41,7 +41,7 @@ type
   TStockCombinacion = (scCualquiera, scTodos, scSumaPositiva);
 
   // Resultado base. Los hijos pueden extender con un record propio si necesitan
-  // mas campos (p.ej. tarifa: precio_dto, ajuste; inventario: nro_inventario).
+  // mas campos (p.ej. tarifa: precio_dto, ajuste; inventario: numero_inv).
   TAddBlockBaseResult = record
     Aceptado          : Boolean;
     NumInsertados     : Integer;
@@ -419,18 +419,18 @@ procedure TfrmModalAddBlockBase.CargarFamilias;
 begin
   FQryFamilias.Connection := FConn;
   FQryFamilias.SQL.Text :=
-    'SELECT CODIGO_FAMILIA, ' +
-    '       COALESCE(CODIGO_SUBFAMILIA, '''') AS CODIGO_PADRE, ' +
-    '       NOMBRE_FAMILIA, DESCRIPCION_FAMILIA ' +
+    'SELECT CODIGO_FAM_FAM, ' +
+    '       COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS CODIGO_PADRE, ' +
+    '       NOMBRE_FAM_FAM, DESCRIPCION_FAM ' +
     'FROM fza_articulos_familias ' +
-    'WHERE ACTIVO_FAMILIA = ''S'' ' +
-    'ORDER BY COALESCE(CODIGO_SUBFAMILIA,''''), ORDEN_FAMILIA, NOMBRE_FAMILIA';
+    'WHERE ESACTIVO_FAM = ''S'' ' +
+    'ORDER BY COALESCE(CODIGO_SUBFAMILIA_FAM,''''), ORDEN_FAM, NOMBRE_FAM_FAM';
   FQryFamilias.Open;
 
   tlFamilias.BeginUpdate;
   try
     tlFamilias.DataController.DataSource := FDsFamilias;
-    tlFamilias.DataController.KeyField    := 'CODIGO_FAMILIA';
+    tlFamilias.DataController.KeyField    := 'CODIGO_FAM_FAM';
     tlFamilias.DataController.ParentField := 'CODIGO_PADRE';
     tlFamilias.RootValue := '';
   finally
@@ -443,10 +443,10 @@ procedure TfrmModalAddBlockBase.CargarProveedores;
 begin
   FQryProveedores.Connection := FConn;
   FQryProveedores.SQL.Text :=
-    'SELECT CODIGO_PROVEEDOR, RAZONSOCIAL_PROVEEDOR, NIF_PROVEEDOR ' +
+    'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NIF_PRV ' +
     'FROM fza_proveedores ' +
-    'WHERE ACTIVO_PROVEEDOR = ''S'' ' +
-    'ORDER BY RAZONSOCIAL_PROVEEDOR';
+    'WHERE ESACTIVO_PRV = ''S'' ' +
+    'ORDER BY RAZON_SOCIAL_PRV';
   FQryProveedores.Open;
   tvProveedores.DataController.DataSource := FDsProveedores;
 end;
@@ -459,10 +459,10 @@ begin
   try
     qry.Connection := FConn;
     qry.SQL.Text :=
-      'SELECT CODIGO_PROPIEDAD, NOMBRE_PROPIEDAD ' +
+      'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP ' +
       'FROM fza_propiedades ' +
-      'WHERE ACTIVO_PROPIEDAD = ''S'' AND TIPO_VALOR = ''LISTA'' ' +
-      'ORDER BY NOMBRE_PROPIEDAD';
+      'WHERE ESACTIVO_PROP = ''S'' AND TIPO_VALOR_PROP = ''LISTA'' ' +
+      'ORDER BY NOMBRE_PROP_PROP';
     qry.Open;
     cbxPropiedad.Properties.Items.Clear;
     FCodigosPropiedades.Clear;
@@ -472,8 +472,8 @@ begin
 
     while not qry.Eof do
     begin
-      cbxPropiedad.Properties.Items.Add(qry.FieldByName('NOMBRE_PROPIEDAD').AsString);
-      FCodigosPropiedades.Add(qry.FieldByName('CODIGO_PROPIEDAD').AsString);
+      cbxPropiedad.Properties.Items.Add(qry.FieldByName('NOMBRE_PROP_PROP').AsString);
+      FCodigosPropiedades.Add(qry.FieldByName('CODIGO_PROP_ARTPROP').AsString);
       qry.Next;
     end;
     cbxPropiedad.ItemIndex := 0;
@@ -490,20 +490,20 @@ begin
   if ACodigoPropiedad = '' then
   begin
     FQryPropValores.SQL.Text :=
-      'SELECT v.ID_VALOR_PV, v.ID_PROPIEDAD_PV, p.NOMBRE_PROPIEDAD, v.VALOR_PV ' +
+      'SELECT v.ID_PV_ARTPROP, v.ID_PROP_PV, p.NOMBRE_PROP_PROP, v.PV ' +
       'FROM fza_propiedades_valores v ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = v.ID_PROPIEDAD_PV ' +
-      'WHERE v.ESACTIVO_PV = ''S'' AND p.TIPO_VALOR = ''LISTA'' ' +
-      'ORDER BY p.NOMBRE_PROPIEDAD, v.VALOR_PV';
+      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = v.ID_PROP_PV ' +
+      'WHERE v.ESACTIVO_PV = ''S'' AND p.TIPO_VALOR_PROP = ''LISTA'' ' +
+      'ORDER BY p.NOMBRE_PROP_PROP, v.PV';
   end
   else
   begin
     FQryPropValores.SQL.Text :=
-      'SELECT v.ID_VALOR_PV, v.ID_PROPIEDAD_PV, p.NOMBRE_PROPIEDAD, v.VALOR_PV ' +
+      'SELECT v.ID_PV_ARTPROP, v.ID_PROP_PV, p.NOMBRE_PROP_PROP, v.PV ' +
       'FROM fza_propiedades_valores v ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROPIEDAD = v.ID_PROPIEDAD_PV ' +
-      'WHERE v.ESACTIVO_PV = ''S'' AND v.ID_PROPIEDAD_PV = :PROP ' +
-      'ORDER BY v.VALOR_PV';
+      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = v.ID_PROP_PV ' +
+      'WHERE v.ESACTIVO_PV = ''S'' AND v.ID_PROP_PV = :PROP ' +
+      'ORDER BY v.PV';
     FQryPropValores.ParamByName('PROP').AsString := ACodigoPropiedad;
   end;
   FQryPropValores.Open;
@@ -520,22 +520,22 @@ begin
   try
     qry.Connection := FConn;
     qry.SQL.Text :=
-      'SELECT CODIGO_ALMACEN_ALM, NOMBRE_ALMACEN_ALM, TIPO_USO_ALM ' +
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, TIPO_USO_ALM ' +
       'FROM fza_almacenes ' +
       'WHERE ESACTIVO_ALM = ''S'' ' +
       '  AND (TIPO_USO_ALM IN (''ESTANDAR'',''ESTANDARD'',''DEPOSITO'',''DEPOSITO'')' +
       '       OR TIPO_USO_ALM IS NULL) ' +
-      'ORDER BY ORDEN_ALM, NOMBRE_ALMACEN_ALM';
+      'ORDER BY ORDEN_ALM, NOMBRE_ALM_ALM';
     qry.Open;
     while not qry.Eof do
     begin
       it := chkLstAlmacenes.Items.Add;
       it.Text :=
-        qry.FieldByName('CODIGO_ALMACEN_ALM').AsString +
+        qry.FieldByName('CODIGO_ALM_ALM').AsString +
         ' - ' +
-        qry.FieldByName('NOMBRE_ALMACEN_ALM').AsString;
+        qry.FieldByName('NOMBRE_ALM_ALM').AsString;
       it.ItemObject := TStringList.Create;
-      TStringList(it.ItemObject).Add(qry.FieldByName('CODIGO_ALMACEN_ALM').AsString);
+      TStringList(it.ItemObject).Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
       qry.Next;
     end;
   finally
@@ -676,7 +676,7 @@ begin
   else
   begin
     FQryProveedores.Filter :=
-      Format('RAZONSOCIAL_PROVEEDOR LIKE ''%%%s%%''',
+      Format('RAZON_SOCIAL_PRV LIKE ''%%%s%%''',
              [StringReplace(txt, '''', '''''', [rfReplaceAll])]);
     FQryProveedores.Filtered := True;
   end;
@@ -927,13 +927,13 @@ begin
 
   sql := TStringList.Create;
   try
-    sql.Add('SELECT a.CODIGO_ARTICULO,');
-    sql.Add('       a.DESCRIPCION_ARTICULO,');
-    sql.Add('       a.CODIGO_FAMILIA_ARTICULO,');
-    sql.Add('       f.NOMBRE_FAMILIA,');
-    sql.Add('       (SELECT GROUP_CONCAT(ap.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR)');
+    sql.Add('SELECT a.CODIGO_ART_ART,');
+    sql.Add('       a.DESCRIPCION_ART,');
+    sql.Add('       a.CODIGO_FAM_ART,');
+    sql.Add('       f.NOMBRE_FAM_FAM,');
+    sql.Add('       (SELECT GROUP_CONCAT(ap.CODIGO_PRV_AP)');
     sql.Add('          FROM fza_articulos_proveedores ap');
-    sql.Add('         WHERE ap.CODIGO_ARTICULO_ARTICULO_PROVEEDOR = a.CODIGO_ARTICULO');
+    sql.Add('         WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART');
     sql.Add('       ) AS PROVEEDORES,');
 
     // STOCK total filtrado por almacenes seleccionados (si hay)
@@ -941,10 +941,10 @@ begin
     sql.Add('                   FROM fza_articulos_stockactual s');
     sql.Add('                   LEFT JOIN fza_articulos_skus sk');
     sql.Add('                          ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK');
-    sql.Add('                  WHERE COALESCE(sk.CODIGO_ARTICULO_SKU, s.CODIGO_UNIDAD_STK)');
-    sql.Add('                        = a.CODIGO_ARTICULO');
+    sql.Add('                  WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)');
+    sql.Add('                        = a.CODIGO_ART_ART');
     if csvAlm <> '' then
-      sql.Add('                    AND s.CODIGO_ALMACEN_STK IN (' + csvAlm + ')');
+      sql.Add('                    AND s.CODIGO_ALM_STK IN (' + csvAlm + ')');
     sql.Add('                ), 0) AS STOCK_TOTAL,');
 
     // Columnas extra del hijo (debe terminar en coma si las hay)
@@ -959,11 +959,11 @@ begin
 
     sql.Add('  FROM fza_articulos a');
     sql.Add('  LEFT JOIN fza_articulos_familias f');
-    sql.Add('    ON f.CODIGO_FAMILIA = a.CODIGO_FAMILIA_ARTICULO');
+    sql.Add('    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART');
     sql.Add(' WHERE 1 = 1');
 
     if chkSoloActivos.Checked then
-      sql.Add('   AND a.ACTIVO_ARTICULO = ''S''');
+      sql.Add('   AND a.ESACTIVO_ART = ''S''');
 
     if chkExcluirYaCargados.Checked and (excluir <> '') then
       sql.Add('   AND ' + excluir);
@@ -981,21 +981,21 @@ begin
             sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
             sql.Add('                LEFT JOIN fza_articulos_skus sk2');
             sql.Add('                       ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('                WHERE COALESCE(sk2.CODIGO_ARTICULO_SKU, s2.CODIGO_UNIDAD_STK)');
-            sql.Add('                      = a.CODIGO_ARTICULO');
+            sql.Add('                WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add('                      = a.CODIGO_ART_ART');
             sql.Add('                  AND s2.CANTIDAD_STK > 0');
-            sql.Add('                  AND s2.CODIGO_ALMACEN_STK IN (' + csvAlm + '))');
+            sql.Add('                  AND s2.CODIGO_ALM_STK IN (' + csvAlm + '))');
           end;
         scTodos:
           begin
-            sql.Add('   AND (SELECT COUNT(DISTINCT s2.CODIGO_ALMACEN_STK)');
+            sql.Add('   AND (SELECT COUNT(DISTINCT s2.CODIGO_ALM_STK)');
             sql.Add('          FROM fza_articulos_stockactual s2');
             sql.Add('          LEFT JOIN fza_articulos_skus sk2');
             sql.Add('                 ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('         WHERE COALESCE(sk2.CODIGO_ARTICULO_SKU, s2.CODIGO_UNIDAD_STK)');
-            sql.Add('               = a.CODIGO_ARTICULO');
+            sql.Add('         WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add('               = a.CODIGO_ART_ART');
             sql.Add('           AND s2.CANTIDAD_STK > 0');
-            sql.Add('           AND s2.CODIGO_ALMACEN_STK IN (' + csvAlm + ')');
+            sql.Add('           AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
             sql.Add('       ) = ' + IntToStr(Length(arrAlm)));
           end;
         scSumaPositiva:
@@ -1004,9 +1004,9 @@ begin
             sql.Add('                   FROM fza_articulos_stockactual s2');
             sql.Add('                   LEFT JOIN fza_articulos_skus sk2');
             sql.Add('                          ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('                  WHERE COALESCE(sk2.CODIGO_ARTICULO_SKU, s2.CODIGO_UNIDAD_STK)');
-            sql.Add('                        = a.CODIGO_ARTICULO');
-            sql.Add('                    AND s2.CODIGO_ALMACEN_STK IN (' + csvAlm + ')');
+            sql.Add('                  WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add('                        = a.CODIGO_ART_ART');
+            sql.Add('                    AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
             sql.Add('                ), 0) > 0');
           end;
       end;
@@ -1017,31 +1017,31 @@ begin
     begin
       if chkPropagarHijos.Checked then
       begin
-        sql.Add('   AND a.CODIGO_FAMILIA_ARTICULO IN (');
+        sql.Add('   AND a.CODIGO_FAM_ART IN (');
         sql.Add('     WITH RECURSIVE arbol AS (');
-        sql.Add('       SELECT CODIGO_FAMILIA, CODIGO_SUBFAMILIA');
+        sql.Add('       SELECT CODIGO_FAM_FAM, CODIGO_SUBFAMILIA_FAM');
         sql.Add('         FROM fza_articulos_familias');
-        sql.Add('        WHERE CODIGO_FAMILIA IN (' + csvFam + ')');
+        sql.Add('        WHERE CODIGO_FAM_FAM IN (' + csvFam + ')');
         sql.Add('       UNION ALL');
-        sql.Add('       SELECT h.CODIGO_FAMILIA, h.CODIGO_SUBFAMILIA');
+        sql.Add('       SELECT h.CODIGO_FAM_FAM, h.CODIGO_SUBFAMILIA_FAM');
         sql.Add('         FROM fza_articulos_familias h');
-        sql.Add('         JOIN arbol a2 ON h.CODIGO_SUBFAMILIA = a2.CODIGO_FAMILIA');
+        sql.Add('         JOIN arbol a2 ON h.CODIGO_SUBFAMILIA_FAM = a2.CODIGO_FAM_FAM');
         sql.Add('     )');
-        sql.Add('     SELECT CODIGO_FAMILIA FROM arbol');
+        sql.Add('     SELECT CODIGO_FAM_FAM FROM arbol');
         sql.Add('   )');
       end
       else
-        sql.Add('   AND a.CODIGO_FAMILIA_ARTICULO IN (' + csvFam + ')');
+        sql.Add('   AND a.CODIGO_FAM_ART IN (' + csvFam + ')');
     end;
 
     // PROVEEDORES
     if csvProv <> '' then
     begin
       sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_proveedores apx');
-      sql.Add('                WHERE apx.CODIGO_ARTICULO_ARTICULO_PROVEEDOR = a.CODIGO_ARTICULO');
-      sql.Add('                  AND apx.CODIGO_PROVEEDOR_ARTICULO_PROVEEDOR IN (' + csvProv + ')');
+      sql.Add('                WHERE apx.CODIGO_ART_AP = a.CODIGO_ART_ART');
+      sql.Add('                  AND apx.CODIGO_PRV_AP IN (' + csvProv + ')');
       if chkSoloPrincipal.Checked then
-        sql.Add('                  AND apx.ESPROVEEDORPRINCIPAL_ARTICULO_PROVEEDOR = ''S''');
+        sql.Add('                  AND apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
       sql.Add('              )');
     end;
 
@@ -1049,15 +1049,15 @@ begin
     if csvPropV <> '' then
     begin
       sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_propiedades pp');
-      sql.Add('                WHERE pp.CODIGO_ARTICULO = a.CODIGO_ARTICULO');
-      sql.Add('                  AND pp.ID_VALOR_PV IN (' + csvPropV + '))');
+      sql.Add('                WHERE pp.CODIGO_ART_ART = a.CODIGO_ART_ART');
+      sql.Add('                  AND pp.ID_PV_ARTPROP IN (' + csvPropV + '))');
     end;
 
     // FECHA DE ALTA
     if chkAplicarFechaAlta.Checked then
     begin
-      sql.Add('   AND a.INSTANTEALTA >= :P_ALTA_DESDE');
-      sql.Add('   AND a.INSTANTEALTA <  :P_ALTA_HASTA');
+      sql.Add('   AND a.INSTANTE_ALTA >= :P_ALTA_DESDE');
+      sql.Add('   AND a.INSTANTE_ALTA <  :P_ALTA_HASTA');
     end;
 
     // VENTAS
@@ -1067,24 +1067,24 @@ begin
       begin
         sql.Add('   AND (SELECT COUNT(*) FROM fza_facturas_lineas fl');
         sql.Add('         JOIN fza_facturas fc');
-        sql.Add('           ON fc.NRO_FACTURA   = fl.NRO_FACTURA_LINEA');
-        sql.Add('          AND fc.SERIE_FACTURA = fl.SERIE_FACTURA_LINEA');
-        sql.Add('        WHERE fl.CODIGO_ARTICULO_FACTURA_LINEA = a.CODIGO_ARTICULO');
-        sql.Add('          AND fc.FECHA_FACTURA BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA');
+        sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
+        sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
+        sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
+        sql.Add('          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA');
         sql.Add('       ) >= :P_NUM_MIN_VTAS');
       end
       else
       begin
         sql.Add('   AND NOT EXISTS (SELECT 1 FROM fza_facturas_lineas fl');
         sql.Add('         JOIN fza_facturas fc');
-        sql.Add('           ON fc.NRO_FACTURA   = fl.NRO_FACTURA_LINEA');
-        sql.Add('          AND fc.SERIE_FACTURA = fl.SERIE_FACTURA_LINEA');
-        sql.Add('        WHERE fl.CODIGO_ARTICULO_FACTURA_LINEA = a.CODIGO_ARTICULO');
-        sql.Add('          AND fc.FECHA_FACTURA BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
+        sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
+        sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
+        sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
+        sql.Add('          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
       end;
     end;
 
-    sql.Add(' ORDER BY a.CODIGO_FAMILIA_ARTICULO, a.CODIGO_ARTICULO');
+    sql.Add(' ORDER BY a.CODIGO_FAM_ART, a.CODIGO_ART_ART');
 
     Result := sql.Text;
   finally

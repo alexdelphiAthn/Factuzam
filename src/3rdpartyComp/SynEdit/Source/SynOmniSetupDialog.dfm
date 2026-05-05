@@ -1,4 +1,4 @@
-object SynOmniSynSetup: TSynOmniSynSetup
+﻿object SynOmniSynSetup: TSynOmniSynSetup
   Left = 917
   Top = 105
   HelpContext = 115

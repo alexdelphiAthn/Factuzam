@@ -1,4 +1,4 @@
-object dmPerfiles: TdmPerfiles
+﻿object dmPerfiles: TdmPerfiles
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   Height = 188
@@ -9,7 +9,7 @@ object dmPerfiles: TdmPerfiles
     SQL.Strings = (
       'SELECT * '
       'FROM fza_usuarios_perfiles '
-      'WHERE USUARIO_GRUPO_PERFILES = '#39'Nothing'#39)
+      'WHERE USUARIO_GRUPO_USUPER = '#39'Nothing'#39)
     BeforePost = unqryPerfilesBeforePost
     Left = 110
     Top = 70
@@ -18,8 +18,7 @@ object dmPerfiles: TdmPerfiles
     StoredProcName = 'PRC_CREAR_ACTUALIZAR_KEY'
     SQL.Strings = (
       
-        'CALL PRC_CREAR_ACTUALIZAR_KEY(:pUSUARIO, :pKEY, :pSUBKEY, :pVALU' +
-        'E, :pVALUE_TEXT, :pUSUARIO_MODIF)')
+        'CALL PRC_CREAR_ACTUALIZAR_KEY(:pUSUARIO, :pKEY, :pSUBKEY, :pVALUE, :pVALUE_TEXT, :pUSUARIO_MODIF)')
     Connection = dmConn.conUni
     Left = 230
     Top = 70

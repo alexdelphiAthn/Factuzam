@@ -486,7 +486,7 @@ begin
   formulario := TfrmPrintCliEti.Create(Application);
   try
     formulario.edtCodCli.Text :=
-                        dsTablaG.Dataset.FieldByName('CODIGO_CLIENTE').AsString;
+                        dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString;
     formulario.ShowModal;
   finally
     FreeAndNil(formulario);
@@ -496,7 +496,7 @@ end;
 procedure TfrmMtoClientes.btnExportarClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdClientesFacturas, 'Historico_Facturas_Cliente_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_CLIENTE').AsString);
+                       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
 end;
 
 procedure TfrmMtoClientes.btnIraEmpresaClick(Sender: TObject);
@@ -505,7 +505,7 @@ begin
   ShowMto(Self.Owner,
           'Empresas',
           tvFacturacion.DataController.DataSet.FieldByName(
-                                            'CODIGO_EMPRESA_FACTURA').AsString);
+                                            'CODIGO_EMP_FAC').AsString);
 end;
 
 procedure TfrmMtoClientes.btnIraFacturaClick(Sender: TObject);
@@ -514,9 +514,9 @@ var
 begin
   inherited;
   sNroFactura := tvFacturacion.DataController.DataSet.FieldByName(
-                                                        'NRO_FACTURA').AsString;
+                                                        'NUMERO_FAC').AsString;
   sSerieFactura := tvFacturacion.DataController.DataSet.FieldByName(
-                                                      'SERIE_FACTURA').AsString;
+                                                      'SERIE_FAC').AsString;
   ShowMto(Self.Owner,
           'Facturas',
           sNroFactura+','+ sSerieFactura);
@@ -537,7 +537,7 @@ begin
   with tvLineasFacturacion.DataController.DataSet do
     ShowMto(Self.Owner,
             'Articulos',
-            FieldByName('CODIGO_ARTICULO_FACTURA_LINEA').AsString);
+            FieldByName('CODIGO_ART_FACLIN').AsString);
 end;
 
 procedure TfrmMtoClientes.btnNuevoClienteClick(Sender: TObject);
@@ -567,7 +567,7 @@ begin
   inherited;
   EsIBANErr := False;
   stErr := TStringList.Create;
-  sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_CLIENTE').Text,
+  sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_CLI').Text,
                          ' ', '', [rfReplaceAll]);
   iLen := Length(sIBAN);
   sPref := (Copy(sIBAN, 1, 2));
@@ -588,7 +588,7 @@ begin
     sPref4 := TIBAN.GenerarIBAN('ES', sIBAN);
     if (dsTablaG.State = dsBrowse) then
       dsTablaG.DataSet.Edit;
-    dsTablaG.DataSet.FieldByName('IBAN_CLIENTE').Text := sPref4 + sIBAN;
+    dsTablaG.DataSet.FieldByName('IBAN_CLI').Text := sPref4 + sIBAN;
   end;
   if (not(EsIBANErr) and (StrToIntDef(sPref, 0) = 0)) then
   begin
@@ -617,14 +617,14 @@ begin
   cbbTARIFA.Properties.ListSource := dmmClientes.dsTarifas;
   cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
-  Self.pkFieldName := 'CODIGO_CLIENTE';
+  Self.pkFieldName := 'CODIGO_CLI_CLI';
 end;
 
 procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxgrdPrestamosCliente, 'Historico_Prestamos_Cliente_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_CLIENTE').AsString);
+                       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
 
 end;
 
@@ -634,7 +634,7 @@ begin
   with tvDepositosCliente.DataController.DataSet do
     ShowMto(Self.Owner,
             'Articulos',
-            FieldByName('CODIGO_ARTICULO_DEP').AsString);
+            FieldByName('CODIGO_ART_DEP').AsString);
 end;
 
 procedure TfrmMtoClientes.dsTablaGStateChange(Sender: TObject);
@@ -658,7 +658,7 @@ begin
   inherited;
   if (dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit) then
   begin
-    dsTablaG.DataSet.FieldByName('NOMBRE_PAIS_CLIENTE').AsString :=
+    dsTablaG.DataSet.FieldByName('NOMBRE_PAI_CLI').AsString :=
                          dmmClientes.unqryPaises.FieldByName('NOMBRE').AsString;
   end;
 end;

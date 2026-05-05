@@ -181,21 +181,21 @@ begin
   try
     qry.Connection := FConn;
     qry.SQL.Text :=
-      'SELECT CODIGO_TARIFA, NOMBRE_TARIFA ' +
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR ' +
       'FROM fza_tarifas ' +
-      'WHERE ACTIVO_TARIFA = ''S'' ' +
-      'ORDER BY ORDEN_TARIFA, CODIGO_TARIFA';
+      'WHERE ESACTIVO_ARTTAR = ''S'' ' +
+      'ORDER BY ORDEN_TAR, CODIGO_TAR_ARTTAR';
     qry.Open;
     cbxTarifa.Properties.Items.Clear;
     cbxTarifaOrigen.Properties.Items.Clear;
     while not qry.Eof do
     begin
       cbxTarifa.Properties.Items.Add(
-        qry.FieldByName('CODIGO_TARIFA').AsString + ' - ' +
-        qry.FieldByName('NOMBRE_TARIFA').AsString);
+        qry.FieldByName('CODIGO_TAR_ARTTAR').AsString + ' - ' +
+        qry.FieldByName('NOMBRE_TAR_TAR').AsString);
       cbxTarifaOrigen.Properties.Items.Add(
-        qry.FieldByName('CODIGO_TARIFA').AsString + ' - ' +
-        qry.FieldByName('NOMBRE_TARIFA').AsString);
+        qry.FieldByName('CODIGO_TAR_ARTTAR').AsString + ' - ' +
+        qry.FieldByName('NOMBRE_TAR_TAR').AsString);
       qry.Next;
     end;
   finally
@@ -359,18 +359,18 @@ begin
   if tarOrigen <> '' then
   begin
     Result :=
-      '(SELECT t.PRECIOSALIDA_TARIFA' +
+      '(SELECT t.PRECIO_SALIDA_ARTTAR' +
       '  FROM fza_articulos_tarifas t' +
-      ' WHERE t.CODIGO_ARTICULO_TARIFA = a.CODIGO_ARTICULO' +
-      '   AND t.CODIGO_TARIFA = :P_TARIFA_ORIG_S' +
-      '   AND t.ACTIVO_TARIFA = ''S''' +
-      ' ORDER BY t.FECHA_DESDE_TARIFA DESC LIMIT 1) AS PRECIO_SALIDA_ORIG, ' +
-      '(SELECT t.PRECIOFINAL_TARIFA' +
+      ' WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
+      '   AND t.CODIGO_TAR_ARTTAR = :P_TARIFA_ORIG_S' +
+      '   AND t.ESACTIVO_ARTTAR = ''S''' +
+      ' ORDER BY t.FECHA_DESDE_ARTTAR DESC LIMIT 1) AS PRECIO_SALIDA_ORIG, ' +
+      '(SELECT t.PRECIO_FINAL_ARTTAR' +
       '  FROM fza_articulos_tarifas t' +
-      ' WHERE t.CODIGO_ARTICULO_TARIFA = a.CODIGO_ARTICULO' +
-      '   AND t.CODIGO_TARIFA = :P_TARIFA_ORIG_F' +
-      '   AND t.ACTIVO_TARIFA = ''S''' +
-      ' ORDER BY t.FECHA_DESDE_TARIFA DESC LIMIT 1) AS PRECIO_FINAL_ORIG,';
+      ' WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
+      '   AND t.CODIGO_TAR_ARTTAR = :P_TARIFA_ORIG_F' +
+      '   AND t.ESACTIVO_ARTTAR = ''S''' +
+      ' ORDER BY t.FECHA_DESDE_ARTTAR DESC LIMIT 1) AS PRECIO_FINAL_ORIG,';
   end
   else
     Result := '0 AS PRECIO_SALIDA_ORIG, 0 AS PRECIO_FINAL_ORIG,';
@@ -380,8 +380,8 @@ function TfrmModalAddBlockTarifa.SubquerYaCargado: string;
 begin
   Result :=
     'CASE WHEN EXISTS (SELECT 1 FROM fza_articulos_tarifas ta' +
-    '                   WHERE ta.CODIGO_ARTICULO_TARIFA = a.CODIGO_ARTICULO' +
-    '                     AND ta.CODIGO_TARIFA = :P_TARIFA_CHK)' +
+    '                   WHERE ta.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
+    '                     AND ta.CODIGO_TAR_ARTTAR = :P_TARIFA_CHK)' +
     '     THEN ''S'' ELSE ''N'' END';
 end;
 
@@ -389,8 +389,8 @@ function TfrmModalAddBlockTarifa.WhereExcluirYaCargados: string;
 begin
   Result :=
     'NOT EXISTS (SELECT 1 FROM fza_articulos_tarifas tx' +
-    '             WHERE tx.CODIGO_ARTICULO_TARIFA = a.CODIGO_ARTICULO' +
-    '               AND tx.CODIGO_TARIFA = :P_TARIFA_EXCL)';
+    '             WHERE tx.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
+    '               AND tx.CODIGO_TAR_ARTTAR = :P_TARIFA_EXCL)';
 end;
 
 procedure TfrmModalAddBlockTarifa.VincularParametrosExtra(AQry: TUniQuery);
@@ -472,12 +472,12 @@ begin
     ins.Connection := FConn;
     ins.SQL.Text :=
       'INSERT INTO fza_articulos_tarifas (' +
-      '  CODIGO_ARTICULO_TARIFA, CODIGO_UNIDAD_TARIFA, CODIGO_TARIFA,' +
-      '  ACTIVO_TARIFA, PRECIOSALIDA_TARIFA, PRECIOFINAL_TARIFA,' +
-      '  PORCEN_DTO_TARIFA, FECHA_DESDE_TARIFA, FECHA_HASTA_TARIFA,' +
-      '  USUARIOALTA, USUARIOMODIF, INSTANTEALTA' +
+      '  CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR,' +
+      '  ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR,' +
+      '  PORCENTAJE_DTO_ARTTAR, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR,' +
+      '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
       ') VALUES (' +
-      '  :CODIGO_ARTICULO, '''', :CODIGO_TARIFA,' +
+      '  :CODIGO_ART_ART, '''', :CODIGO_TAR_ARTTAR,' +
       '  ''S'', :PRECIO_SALIDA, :PRECIO_FINAL,' +
       '  :PORCEN_DTO, :FECHA_DESDE, :FECHA_HASTA,' +
       '  :USR, :USR2, NOW()' +
@@ -516,9 +516,9 @@ begin
           dto        := spnPorcenDto.Value;
         end;
 
-        ins.ParamByName('CODIGO_ARTICULO').AsString :=
-          FSqlPreview.FieldByName('CODIGO_ARTICULO').AsString;
-        ins.ParamByName('CODIGO_TARIFA').AsString  := codigoTar;
+        ins.ParamByName('CODIGO_ART_ART').AsString :=
+          FSqlPreview.FieldByName('CODIGO_ART_ART').AsString;
+        ins.ParamByName('CODIGO_TAR_ARTTAR').AsString  := codigoTar;
         ins.ParamByName('PRECIO_SALIDA').AsFloat   := precSalida;
         ins.ParamByName('PRECIO_FINAL').AsFloat    := precFinal;
         ins.ParamByName('PORCEN_DTO').AsFloat      := dto;
@@ -533,7 +533,7 @@ begin
         ins.ParamByName('USR2').AsString := usuario;
 
         ins.Execute;
-        codigos.Add(FSqlPreview.FieldByName('CODIGO_ARTICULO').AsString);
+        codigos.Add(FSqlPreview.FieldByName('CODIGO_ART_ART').AsString);
         Inc(ANumInsertados);
 
         FSqlPreview.Next;

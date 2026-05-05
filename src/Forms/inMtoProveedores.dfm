@@ -35,12 +35,12 @@
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_CLIENTE: TcxGridDBColumn
               Caption = 'C'#243'digo'
-              DataBinding.FieldName = 'CODIGO_PROVEEDOR'
+              DataBinding.FieldName = 'CODIGO_PRV_PRV'
               Width = 81
             end
             object cxgrdbclmnGrdDBTabPrinACTIVO_CLIENTE: TcxGridDBColumn
               Caption = 'Activo'
-              DataBinding.FieldName = 'ACTIVO_PROVEEDOR'
+              DataBinding.FieldName = 'ESACTIVO_PRV'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -48,103 +48,103 @@
             end
             object cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_CLIENTE: TcxGridDBColumn
               Caption = 'Raz'#243'n Social'
-              DataBinding.FieldName = 'RAZONSOCIAL_PROVEEDOR'
+              DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
               Width = 212
             end
             object cxgrdbclmnGrdDBTabPrinNIF_CLIENTE: TcxGridDBColumn
               Caption = 'Nif Cif'
-              DataBinding.FieldName = 'NIF_PROVEEDOR'
+              DataBinding.FieldName = 'NIF_PRV'
               PropertiesClassName = 'TcxMaskEditProperties'
               Width = 104
             end
             object cxgrdbclmnGrdDBTabPrinMOVIL_CLIENTE: TcxGridDBColumn
               Caption = 'Tel'#233'fono M'#243'vil'
-              DataBinding.FieldName = 'MOVIL_PROVEEDOR'
+              DataBinding.FieldName = 'MOVIL_PRV'
               Width = 113
             end
             object cxgrdbclmnGrdDBTabPrinTELEFONO_CLIENTE: TcxGridDBColumn
               Caption = 'Tel'#233'fono Fijo'
-              DataBinding.FieldName = 'TELEFONO_PROVEEDOR'
+              DataBinding.FieldName = 'TELEFONO_PRV'
               Width = 121
             end
             object cxgrdbclmnGrdDBTabPrinEMAIL_CLIENTE: TcxGridDBColumn
               Caption = 'Email'
-              DataBinding.FieldName = 'EMAIL_PROVEEDOR'
+              DataBinding.FieldName = 'EMAIL_PRV'
               Width = 196
             end
             object cxgrdbclmnGrdDBTabPrinDIRECCION1_CLIENTE: TcxGridDBColumn
               Caption = 'Direcci'#243'n'
-              DataBinding.FieldName = 'DIRECCION1_PROVEEDOR'
+              DataBinding.FieldName = 'DIRECCION1_PRV'
               Width = 251
             end
             object cxgrdbclmnGrdDBTabPrinDIRECCION2_CLIENTE: TcxGridDBColumn
               Caption = 'M'#225's Direcci'#243'n'
-              DataBinding.FieldName = 'DIRECCION2_PROVEEDOR'
+              DataBinding.FieldName = 'DIRECCION2_PRV'
               Width = 77
             end
             object cxgrdbclmnGrdDBTabPrinPOBLACION_CLIENTE: TcxGridDBColumn
               Caption = 'Poblaci'#243'n'
-              DataBinding.FieldName = 'POBLACION_PROVEEDOR'
+              DataBinding.FieldName = 'POBLACION_PRV'
               Width = 146
             end
             object cxgrdbclmnGrdDBTabPrinPROVINCIA_CLIENTE: TcxGridDBColumn
               Caption = 'Provincia'
-              DataBinding.FieldName = 'PROVINCIA_PROVEEDOR'
+              DataBinding.FieldName = 'PROVINCIA_PRV'
               Width = 135
             end
             object cxgrdbclmnGrdDBTabPrinCPOSTAL_CLIENTE: TcxGridDBColumn
               Caption = 'C'#243'digo Postal'
-              DataBinding.FieldName = 'CPOSTAL_PROVEEDOR'
+              DataBinding.FieldName = 'CODIGO_POSTAL_PRV'
               Width = 95
             end
             object cxgrdbclmnGrdDBTabPrinPAIS_CLIENTE: TcxGridDBColumn
               Caption = 'Pa'#237's'
-              DataBinding.FieldName = 'PAIS_PROVEEDOR'
+              DataBinding.FieldName = 'PAIS_PRV'
               Width = 118
             end
             object cxgrdbclmnGrdDBTabPrinOBSERVACIONES_CLIENTE: TcxGridDBColumn
               Caption = 'Observaciones'
-              DataBinding.FieldName = 'OBSERVACIONES_PROVEEDOR'
+              DataBinding.FieldName = 'OBSERVACIONES_PRV'
               Width = 192
             end
             object cxgrdbclmnGrdDBTabPrinREFERENCIA_CLIENTE: TcxGridDBColumn
               Caption = 'Referencia'
-              DataBinding.FieldName = 'REFERENCIA_PROVEEDOR'
+              DataBinding.FieldName = 'REFERENCIA_PRV'
               Width = 184
             end
             object cxgrdbclmnGrdDBTabPrinCONTACTO_CLIENTE: TcxGridDBColumn
               Caption = 'Contacto'
-              DataBinding.FieldName = 'CONTACTO_PROVEEDOR'
+              DataBinding.FieldName = 'CONTACTO_PRV'
               Width = 151
             end
             object cxgrdbclmnGrdDBTabPrinTELEFONO_CONTACTO_CLIENTE: TcxGridDBColumn
               Caption = 'Tel'#233'fono de Contacto'
-              DataBinding.FieldName = 'TELEFONO_CONTACTO_PROVEEDOR'
+              DataBinding.FieldName = 'TELEFONO_CONTACTO_PRV'
               Width = 140
             end
             object cxgrdbclmnGrdDBTabPrinIBAN_CLIENTE: TcxGridDBColumn
               Caption = 'Nro Cuenta'
-              DataBinding.FieldName = 'IBAN_PROVEEDOR'
+              DataBinding.FieldName = 'IBAN_PRV'
               Visible = False
               Width = 50
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               PropertiesClassName = 'TcxDateEditProperties'
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               PropertiesClassName = 'TcxDateEditProperties'
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Visible = False
               Width = 74
             end
             object cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Visible = False
               Width = 108
             end
@@ -175,7 +175,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'CODIGO_PROVEEDOR'
+            DataBinding.DataField = 'CODIGO_PRV_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 1
             Width = 149
@@ -198,7 +198,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'RAZONSOCIAL_PROVEEDOR'
+            DataBinding.DataField = 'RAZON_SOCIAL_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 3
             Width = 497
@@ -221,7 +221,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'TELEFONO_PROVEEDOR'
+            DataBinding.DataField = 'TELEFONO_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 10
             Width = 150
@@ -255,7 +255,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'EMAIL_PROVEEDOR'
+            DataBinding.DataField = 'EMAIL_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 5
             Width = 307
@@ -278,7 +278,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'NIF_PROVEEDOR'
+            DataBinding.DataField = 'NIF_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 6
             Width = 149
@@ -290,7 +290,7 @@
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataBinding.DataField = 'MOVIL_PROVEEDOR'
+            DataBinding.DataField = 'MOVIL_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 7
             Width = 139
@@ -299,7 +299,7 @@
             Left = 224
             Top = 62
             Caption = 'Activo'
-            DataBinding.DataField = 'ACTIVO_PROVEEDOR'
+            DataBinding.DataField = 'ESACTIVO_PRV'
             DataBinding.DataSource = dsTablaG
             Properties.ValueChecked = 'S'
             Properties.ValueUnchecked = 'N'
@@ -350,7 +350,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'DIRECCION1_PROVEEDOR'
+                DataBinding.DataField = 'DIRECCION1_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
                 Width = 303
@@ -388,7 +388,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'CPOSTAL_PROVEEDOR'
+                DataBinding.DataField = 'CODIGO_POSTAL_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 4
                 Width = 77
@@ -413,7 +413,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'POBLACION_PROVEEDOR'
+                DataBinding.DataField = 'POBLACION_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 6
                 Width = 303
@@ -425,7 +425,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'PROVINCIA_PROVEEDOR'
+                DataBinding.DataField = 'PROVINCIA_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 8
                 Width = 303
@@ -450,7 +450,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'PAIS_PROVEEDOR'
+                DataBinding.DataField = 'PAIS_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 10
                 Width = 303
@@ -475,7 +475,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'DIRECCION2_PROVEEDOR'
+                DataBinding.DataField = 'DIRECCION2_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 2
                 Width = 304
@@ -586,41 +586,41 @@
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
                     object cxgrdbclmnArticulosCODIGO_PROVEEDOR: TcxGridDBColumn
-                      DataBinding.FieldName = 'CODIGO_PROVEEDOR'
+                      DataBinding.FieldName = 'CODIGO_PRV_PRV'
                       Visible = False
                       VisibleForCustomization = False
                     end
                     object cxgrdbclmnArticulosCODIGO_ARTICULO: TcxGridDBColumn
                       Caption = 'C'#243'digo Art'#237'culo'
-                      DataBinding.FieldName = 'CODIGO_ARTICULO'
+                      DataBinding.FieldName = 'CODIGO_ART_ART'
                       Options.Editing = False
                       Width = 135
                     end
                     object cxgrdbclmnArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn
                       Caption = 'Descripci'#243'n'
-                      DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                      DataBinding.FieldName = 'DESCRIPCION_ART'
                       Options.Editing = False
                       Width = 269
                     end
                     object cxgrdbclmnArticulosCODIGO_FAMILIA: TcxGridDBColumn
                       Caption = 'C'#243'digo Familia'
-                      DataBinding.FieldName = 'CODIGO_FAMILIA'
+                      DataBinding.FieldName = 'CODIGO_FAM_FAM'
                       Options.Editing = False
                       Width = 130
                     end
                     object cxgrdbclmnArticulosDESCRIPCION_FAMILIA: TcxGridDBColumn
                       Caption = 'Familia'
-                      DataBinding.FieldName = 'DESCRIPCION_FAMILIA'
+                      DataBinding.FieldName = 'DESCRIPCION_FAM'
                       Options.Editing = False
                       Width = 222
                     end
                     object cxgrdbclmnArticulosTIPO_CATNTIDAD_ARTICULO: TcxGridDBColumn
-                      Caption = 'Tipo Cantidad'
+                      Caption = 'Tipo CANTIDAD_ARTVIN'
                       DataBinding.FieldName = 'TIPO_CATNTIDAD_ARTICULO'
                       Width = 127
                     end
                     object cxgrdbclmnArticulosESACTIVO_FIJO_ARTICULO: TcxGridDBColumn
-                      DataBinding.FieldName = 'ESACTIVO_FIJO_ARTICULO'
+                      DataBinding.FieldName = 'ESACTIVO_FIJO_ART'
                       Visible = False
                       VisibleForCustomization = False
                     end
@@ -640,22 +640,22 @@
                       Width = 183
                     end
                     object cxgrdbclmnArticulosINSTANTEMODIF: TcxGridDBColumn
-                      DataBinding.FieldName = 'INSTANTEMODIF'
+                      DataBinding.FieldName = 'INSTANTE_MODIF'
                       Visible = False
                       VisibleForCustomization = False
                     end
                     object cxgrdbclmnArticulosINSTANTEALTA: TcxGridDBColumn
-                      DataBinding.FieldName = 'INSTANTEALTA'
+                      DataBinding.FieldName = 'INSTANTE_ALTA'
                       Visible = False
                       VisibleForCustomization = False
                     end
                     object cxgrdbclmnArticulosUSUARIOALTA: TcxGridDBColumn
-                      DataBinding.FieldName = 'USUARIOALTA'
+                      DataBinding.FieldName = 'USUARIO_ALTA'
                       Visible = False
                       VisibleForCustomization = False
                     end
                     object cxgrdbclmnArticulosUSUARIOMODIF: TcxGridDBColumn
-                      DataBinding.FieldName = 'USUARIOMODIF'
+                      DataBinding.FieldName = 'USUARIO_MODIF'
                       Visible = False
                       VisibleForCustomization = False
                     end
@@ -740,99 +740,99 @@
                   OptionsView.Indicator = True
                   object cxgrdbclmnLinFacNRO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nro Fact.'
-                    DataBinding.FieldName = 'NRO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'NUMERO_FAC_FACLIN'
                     Width = 83
                   end
                   object cxgrdbclmnLinFacSERIE_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Serie'
-                    DataBinding.FieldName = 'SERIE_FACTURA_LINEA'
+                    DataBinding.FieldName = 'SERIE_FAC_FACLIN'
                     Width = 59
                   end
                   object cxgrdbclmnLinFacLINEA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nro Linea'
-                    DataBinding.FieldName = 'LINEA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'LINEA_FACLIN'
                     Width = 96
                   end
                   object cxgrdbclmnLinFacCANTIDAD_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Cantidad'
-                    DataBinding.FieldName = 'CANTIDAD_FACTURA_LINEA'
+                    Caption = 'CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 89
                   end
                   object cxgrdbclmnLinFacTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Tipo Cantidad'
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACTURA_LINEA'
+                    Caption = 'Tipo CANTIDAD_ARTVIN'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     Width = 93
                   end
                   object cxgrdbclmnLinFacCODIGO_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_ART_FACLIN'
                     Visible = False
                     VisibleForCustomization = False
                   end
                   object cxgrdbclmnLinFacCODIGO_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Familia'
-                    DataBinding.FieldName = 'CODIGO_FAMILIA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_FAM_FACLIN'
                     Visible = False
                     VisibleForCustomization = False
                   end
                   object cxgrdbclmnLinFacNOMBRE_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nombre Familia'
-                    DataBinding.FieldName = 'NOMBRE_FAMILIA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'NOMBRE_FAM_FACLIN'
                     Visible = False
                     VisibleForCustomization = False
                   end
                   object cxgrdbclmnLinFacDESCRIPCION_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Descripci'#243'n Art'#237'culo'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
                     Width = 176
                   end
                   object cxgrdbclmnLinFacNOMBRE_TARIFA: TcxGridDBColumn
                     Caption = 'Tarifa'
-                    DataBinding.FieldName = 'NOMBRE_TARIFA'
+                    DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     Width = 73
                   end
                   object cxgrdbclmnLinFacESIMP_INCL_TARIFA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Imp Incl'
-                    DataBinding.FieldName = 'ESIMP_INCL_TARIFA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'ESIMP_INCL_TARIFA_FACLIN'
                     Width = 60
                   end
                   object cxgrdbclmnLinFacPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio SIVA'
-                    DataBinding.FieldName = 'PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                   end
                   object dbcLinFacNOMBRE_TIPO_IVA: TcxGridDBColumn
                     Caption = 'Tipo de IVA'
-                    DataBinding.FieldName = 'NOMBRE_TIPO_IVA'
+                    DataBinding.FieldName = 'NOMBRE_TIPO_IVA_IVATIP'
                   end
                   object cxgrdbclmnLinFacPORCEN_IVA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = '% IVA'
-                    DataBinding.FieldName = 'PORCEN_IVA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PORCENTAJE_IVA_FACLIN'
                     Width = 57
                   end
                   object cxgrdbclmnLinFacPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio CIVA'
-                    DataBinding.FieldName = 'PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                     Width = 120
                   end
                   object cxgrdbclmnLinFacTOTAL_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Total Linea'
-                    DataBinding.FieldName = 'TOTAL_FACTURA_LINEA'
+                    DataBinding.FieldName = 'TOTAL_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Options.Editing = False
                     Width = 97
                   end
                   object cxgrdbclmnLinFacFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Fecha Entrega'
-                    DataBinding.FieldName = 'FECHA_ENTREGA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'FECHA_ENTREGA_FACLIN'
                     PropertiesClassName = 'TcxDateEditProperties'
                   end
                   object dbcLinFacCODIGO_TARIFA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Tarifa Empleada'
-                    DataBinding.FieldName = 'CODIGO_TARIFA_FACTURA_LINEA'
+                    DataBinding.FieldName = 'CODIGO_TAR_FACLIN'
                     Width = 149
                   end
                   object dbcLinFacCODIGO_CLIENTE_FACTURA: TcxGridDBColumn
-                    DataBinding.FieldName = 'CODIGO_CLIENTE_FACTURA'
+                    DataBinding.FieldName = 'CODIGO_CLI_FAC'
                   end
                 end
                 object cxgrdlvlLinFac: TcxGridLevel
@@ -925,7 +925,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'REFERENCIA_PROVEEDOR'
+                DataBinding.DataField = 'REFERENCIA_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 4
                 Width = 519
@@ -950,7 +950,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'CONTACTO_PROVEEDOR'
+                DataBinding.DataField = 'CONTACTO_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
                 Width = 188
@@ -962,7 +962,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'IBAN_PROVEEDOR'
+                DataBinding.DataField = 'IBAN_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 8
                 Width = 323
@@ -998,7 +998,7 @@
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                DataBinding.DataField = 'TELEFONO_CONTACTO_PROVEEDOR'
+                DataBinding.DataField = 'TELEFONO_CONTACTO_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 1
                 Width = 188
@@ -1006,7 +1006,7 @@
               object cxdbm2: TcxDBMemo
                 Left = 126
                 Top = 101
-                DataBinding.DataField = 'OBSERVACIONES_PROVEEDOR'
+                DataBinding.DataField = 'OBSERVACIONES_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 6
                 Height = 89
@@ -1031,7 +1031,7 @@
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -1066,7 +1066,7 @@
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3
@@ -1079,7 +1079,7 @@
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 7
@@ -1103,7 +1103,7 @@
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 4
@@ -1135,7 +1135,7 @@
               object cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit
                 Left = 520
                 Top = 138
-                DataBinding.DataField = 'ORDEN_PROVEEDOR'
+                DataBinding.DataField = 'ORDEN_PRV'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
                 Width = 106

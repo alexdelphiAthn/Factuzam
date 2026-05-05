@@ -177,16 +177,16 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT SERIE_SERIE AS SERIE_CONTADOR              ' +
+    qry.SQL.Text := 'SELECT EMPSER AS SERIE_CON              ' +
                     '  FROM vi_empresas_series                         ' +
-                    ' WHERE CODIGO_EMPRESA_SERIE = :EMPRESA            ' +
-                    '   AND CODIGO_ALMACEN_SERIE = :ALMACEN            ' +
-                    '   AND CODIGO_CAJA_SERIE = :CAJA                  ' +
-                    '   AND TIPODOC_SERIE     = ' + QuotedStr('FC')      +
-                    '   AND SUBTIPO_SERIE = ' + QuotedStr('SIMPLIFICADA') +
-                    '   AND (FECHA_DESDE_SERIE <= :FECHA               ' +
-                    '        AND (FECHA_HASTA_SERIE >= :FECHA          ' +
-                    '             OR FECHA_HASTA_SERIE IS NULL ))      ';
+                    ' WHERE CODIGO_EMP_EMPSER = :EMPRESA            ' +
+                    '   AND CODIGO_ALM_EMPSER = :ALMACEN            ' +
+                    '   AND CODIGO_CAJA_EMPSER = :CAJA                  ' +
+                    '   AND TIPO_DOC_EMPSER     = ' + QuotedStr('FC')      +
+                    '   AND SUBTIPO_EMPSER = ' + QuotedStr('SIMPLIFICADA') +
+                    '   AND (FECHA_DESDE_EMPSER <= :FECHA               ' +
+                    '        AND (FECHA_HASTA_EMPSER >= :FECHA          ' +
+                    '             OR FECHA_HASTA_EMPSER IS NULL ))      ';
     qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
     qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
     qry.ParamByName('CAJA').AsString := FCodigoCaja;
@@ -197,7 +197,7 @@ begin
       cbbSerie1.Properties.Items.Clear;
       while not qry.Eof do
       begin
-        cbbSerie1.Properties.Items.Add(qry.FieldByName('SERIE_CONTADOR').AsString);
+        cbbSerie1.Properties.Items.Add(qry.FieldByName('SERIE_CON').AsString);
         qry.Next;
       end;
     finally
@@ -305,7 +305,7 @@ var
 begin
   // Protección: no permitir borrar líneas de vales
   if (DataSet.State = dsEdit) and
-     (DataSet.FieldByName('CODIGO_FORMAP').AsString = 'VALE') then
+     (DataSet.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') then
   begin
     // Si es un vale, solo permitir cambiar el importe a 0 para "desactivarlo"
     // pero mejor aún, impedirlo totalmente
@@ -313,8 +313,8 @@ begin
   end;
 
   Importe := DataSet.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-  EsDivisa := DataSet.FieldByName('ESDIVISA_FORMAP').AsString = 'S';
-  EsCripto := DataSet.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S';
+  EsDivisa := DataSet.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
+  EsCripto := DataSet.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
   if Abs(Importe) < 0.01 then
   begin
     DataSet.FieldByName('REFERENCIA').AsString := '';
@@ -349,8 +349,8 @@ begin
     qry.Connection := oConn;
     qry.SQL.Text := '  SELECT * ' +
                     '    FROM fza_caja_formas_pago ' +
-                    '   WHERE ES_ACTIVO_FORMAP = ''S'' ' +
-                    'ORDER BY ORDEN_VISUAL_FORMAP';
+                    '   WHERE ESACTIVO_FORMA_PAGO_CFP = ''S'' ' +
+                    'ORDER BY ORDEN_VISUAL_FORMA_PAGO_CFP';
     qry.Open;
 
     with FMemTablePagos do
@@ -461,8 +461,8 @@ var
   EditProps: TcxCurrencyEditProperties;
   ActiveEdit: TcxCustomEdit;
 begin
-  EsCripto := (FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S');
-  EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S');
+  EsCripto := (FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S');
+  EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S');
   ActiveEdit := dbtvFormasPago.Controller.EditingController.Edit;
   if not Assigned(ActiveEdit) then Exit;
   if not (ActiveEdit is TcxCurrencyEdit) then Exit;
@@ -503,7 +503,7 @@ procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditing(
   var AAllow: Boolean);
 begin
   inherited;
-  if FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString = 'VALE' then
+  if FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE' then
     AAllow := False;
 end;
 
@@ -513,12 +513,12 @@ var
   dr: TDatosReferencia;
   EsDivisa, EsCripto: Boolean;
 begin
-  EsDivisa := FMemTablePagos.FieldByName('ESDIVISA_FORMAP').AsString = 'S';
-  EsCripto  := FMemTablePagos.FieldByName('ES_CRIPTO_FORMAP').AsString = 'S';
-  fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FORMAP').AsString;
-  fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMAP').AsString;
+  EsDivisa := FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
+  EsCripto  := FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
+  fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
+  fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
   fp.RequiereReferencia :=
-          FMemTablePagos.FieldByName('ES_REQ_REFERENCIA_FORMAP').AsString = 'S';
+          FMemTablePagos.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S';
   dr.Init;
   dr.EsDivisa  := EsDivisa;
   dr.EsCripto  := EsCripto;
@@ -579,8 +579,8 @@ begin
   RecordIndex := ARecord.RecordIndex;
   if RecordIndex < 0 then Exit;
   var DC := dbtvFormasPago.DataController;
-  IdxDivisa  := DC.GetItemByFieldName('ESDIVISA_FORMAP').Index;
-  IdxCripto  := DC.GetItemByFieldName('ES_CRIPTO_FORMAP').Index;
+  IdxDivisa  := DC.GetItemByFieldName('ESDIVISA_FORMA_PAGO_CFP').Index;
+  IdxCripto  := DC.GetItemByFieldName('ESCRIPTO_FORMA_PAGO_CFP').Index;
   IdxImporte := DC.GetItemByFieldName('IMPORTE_ENTREGADO').Index;
   IdxEsDivisa := DC.GetItemByFieldName('ESIMPORTE_DIVISA').Index;
   EsDivisa :=
@@ -880,19 +880,19 @@ begin
     qryCli := TUniQuery.Create(nil);
     try
       qryCli.Connection := inLibGlobalVar.oConn;
-      qryCli.SQL.Text := 'SELECT RAZONSOCIAL_CLIENTE, ' +
-                         '       ESPERMITE_DEUDA_CLIENTE, ' +
-                         '       TOTAL_LIMITE_CREDITO_CLIENTE, ' +
-                         '       TOTAL_DEUDA_CLIENTE ' +
+      qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, ' +
+                         '       ESPERMITE_DEUDA_CLI, ' +
+                         '       TOTAL_LIMITE_CREDITO_CLI, ' +
+                         '       TOTAL_DEUDA_CLI ' +
                          '  FROM fza_clientes ' +
-                         ' WHERE CODIGO_CLIENTE = :COD LIMIT 1';
+                         ' WHERE CODIGO_CLI_CLI = :COD LIMIT 1';
       qryCli.ParamByName('COD').AsString := FCodigoCliente;
       qryCli.Open;
       if not qryCli.IsEmpty then
       begin
-        NomCliente := qryCli.FieldByName('RAZONSOCIAL_CLIENTE').AsString;
-        PermiteDeuda := (qryCli.FieldByName('ESPERMITE_DEUDA_CLIENTE').AsString = 'S');
-        LimiteCredito := qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLIENTE').AsCurrency;
+        NomCliente := qryCli.FieldByName('RAZON_SOCIAL_CLI').AsString;
+        PermiteDeuda := (qryCli.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S');
+        LimiteCredito := qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLI').AsCurrency;
         DeudaActual := 0;
         FDatosCobro.EstablecerCliente(FCodigoCliente,
                                       NomCliente,

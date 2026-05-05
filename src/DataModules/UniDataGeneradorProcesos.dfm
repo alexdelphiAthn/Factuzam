@@ -1,4 +1,4 @@
-inherited dmGeneradorProcesos: TdmGeneradorProcesos
+﻿inherited dmGeneradorProcesos: TdmGeneradorProcesos
   Height = 169
   Width = 689
   PixelsPerInch = 120
@@ -22,8 +22,7 @@ inherited dmGeneradorProcesos: TdmGeneradorProcesos
     StoredProcName = 'PRC_GET_NEXT_CONT'
     SQL.Strings = (
       
-        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELE' +
-        'CT @pcont AS '#39'@pcont'#39)
+        'CALL PRC_GET_NEXT_CONT(:pTipoDoc, :pUSUARIO_MODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
     Connection = dmConn.conUni
     Left = 8
     Top = 84
@@ -47,11 +46,11 @@ inherited dmGeneradorProcesos: TdmGeneradorProcesos
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT '
-      '  CAST(CODIGO_METADATO AS CHAR) AS CODIGO_METADATO,'
-      '  NOMBRE_METADATO,'
-      '  PARENT_METADATO'
+      '  CAST(CODIGO_META_META AS CHAR) AS CODIGO_META_META,'
+      '  NOMBRE_META_META,'
+      '  PARENT_META'
       'FROM fza_metadatos'
-      'ORDER BY PARENT_METADATO, NOMBRE_METADATO')
+      'ORDER BY PARENT_META, NOMBRE_META_META')
     AutoCalcFields = False
     Left = 184
     Top = 88

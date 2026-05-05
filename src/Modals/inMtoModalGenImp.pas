@@ -183,7 +183,7 @@ begin
       Form.lstFormatos.Clear;
       while not Eof do
       begin
-        form.lstFormatos.AddItem(FieldByName('VALUE_PERFILES').AsString, nil);
+        form.lstFormatos.AddItem(FieldByName('VALUE_USUPER').AsString, nil);
         Next;
       end;
       form.lstFormatos.ItemIndex := 0;
@@ -290,10 +290,10 @@ begin
       sDescripcion := sElegido;
       memStream := TMemoryStream.Create;
       try
-        if unqryPerfiles.Locate('VALUE_PERFILES', sDescripcion, []) then
+        if unqryPerfiles.Locate('VALUE_USUPER', sDescripcion, []) then
         begin
           TBlobField(unqryPerfiles.FieldByName(
-                                'VALUE_BLOB_PERFILES')).SaveToStream(memStream);
+                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
           memStream.Position := 0;
           frxrprt1.LoadFromStream(memStream);
         end
@@ -320,14 +320,14 @@ var
 begin
   unqrySol := TUniQuery.Create(nil);
   unqrySol.Connection := oConn;
-  unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_PERFILES ' +
+  unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
                        '  FROM fza_usuarios_perfiles ' +
-                       ' WHERE KEY_PERFILES = :NombreReport ' +
-                       '   AND VALUE_PERFILES = :Descripcion ';
+                       ' WHERE KEY_USUPER = :NombreReport ' +
+                       '   AND VALUE_USUPER = :Descripcion ';
   unqrySol.ParamByName('NombreReport').AsString := Self.Name;
   unqrySol.ParamByName('Descripcion').AsString := sElegido;
   unqrySol.Open;
-  sUserProp := unqrySol.FindField('USUARIO_GRUPO_PERFILES').AsString;
+  sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
   if not((inLibGlobalVar.orootGroup = 'S') or
       (oUser = sUserProp) or
       (oGroup = sUserProp)) then
@@ -342,8 +342,8 @@ begin
   begin
     unqrySol.SQL.Text := 'DELETE  ' +
                          '  FROM fza_usuarios_perfiles ' +
-                         ' WHERE KEY_PERFILES = :NombreReport ' +
-                         '   AND VALUE_PERFILES = :Descripcion ';
+                         ' WHERE KEY_USUPER = :NombreReport ' +
+                         '   AND VALUE_USUPER = :Descripcion ';
     unqrySol.ParamByName('NombreReport').AsString := Self.Name;
     unqrySol.ParamByName('Descripcion').AsString := sElegido;
 
@@ -399,7 +399,7 @@ begin
     try
       frxrprt1.SaveToStream(memStream);
       memStream.Position:=0;
-      if unqryPerfiles.Locate('VALUE_PERFILES',sDescripcion, []) then
+      if unqryPerfiles.Locate('VALUE_USUPER',sDescripcion, []) then
       begin
         if ( Application.MessageBox( 'El informe ya existe. ' +
                                     '¿Desea reemplazar el informe?',
@@ -413,16 +413,16 @@ begin
         unqryPerfiles.Insert;
       if (bGuardar) then
       begin
-        unqryPerfiles.FieldByName('USUARIO_GRUPO_PERFILES').AsString :=
+        unqryPerfiles.FieldByName('USUARIO_GRUPO_USUPER').AsString :=
                                                                       sPermisos;
-        unqryPerfiles.FieldByName('KEY_PERFILES').AsString := Self.Name;
-        unqryPerfiles.FieldByName('SUBKEY_PERFILES').AsString := frxrprt1.Name +
+        unqryPerfiles.FieldByName('KEY_USUPER').AsString := Self.Name;
+        unqryPerfiles.FieldByName('SUBKEY_USUPER').AsString := frxrprt1.Name +
                                                              '_' + sDescripcion;
-        unqryPerfiles.FieldByName('VALUE_PERFILES').AsString := sDescripcion;
-        unqryPerfiles.FieldByName('INSTANTEALTA').AsDateTime := Now;
-        unqryPerfiles.FieldByName('USUARIOMODIF').AsString := oUser;
-        unqryPerfiles.FieldByName('USUARIOALTA').AsString := oUser;
-        TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_PERFILES')).
+        unqryPerfiles.FieldByName('VALUE_USUPER').AsString := sDescripcion;
+        unqryPerfiles.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+        unqryPerfiles.FieldByName('USUARIO_MODIF').AsString := oUser;
+        unqryPerfiles.FieldByName('USUARIO_ALTA').AsString := oUser;
+        TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_USUPER')).
                                                       LoadFromStream(memStream);
         //https://forums.devart.com/viewtopic.php?t=19115
         unqryPerfiles.Post;

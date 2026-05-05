@@ -59,7 +59,7 @@ procedure TfrmMtoIvasGrupos.CrearTablaPrincipal;
 begin
   inherited;
   dmmIvasGrupos := tdmDataModule as TdmIvasGrupos;
-  pkFieldName := 'GRUPO_ZONA_IVA';
+  pkFieldName := 'IVA_IVAGRP';
 end;
 
 procedure TfrmMtoIvasGrupos.dsTablaGStateChange(Sender: TObject);

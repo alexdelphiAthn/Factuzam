@@ -1,4 +1,4 @@
-object frmMain: TfrmMain
+﻿object frmMain: TfrmMain
   Left = 327
   Top = 112
   BorderIcons = [biSystemMenu, biMinimize]
