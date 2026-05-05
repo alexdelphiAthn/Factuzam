@@ -1,5 +1,5 @@
-﻿inherited frmMtoInventarios: TfrmMtoInventarios
-  Caption = 'Mantenimiento de Inventarios'
+inherited frmMtoInventarios: TfrmMtoInventarios
+  Caption = 'Inventarios'
   ClientHeight = 720
   ClientWidth = 1280
   StyleElements = [seFont, seClient, seBorder]
@@ -15,6 +15,7 @@
     inherited pcPantalla: TcxPageControl
       Width = 1140
       Height = 680
+      Properties.ActivePage = tsLista
       ExplicitWidth = 1140
       ExplicitHeight = 680
       ClientRectBottom = 678
@@ -105,11 +106,17 @@
               Caption = 'Serie'
               TabOrder = 4
             end
-            object cbbSERIE_INVENTARIO: TcxDBComboBox
+            object cbbSERIE_INVENTARIO: TcxDBLookupComboBox
               Left = 121
               Top = 78
               DataBinding.DataField = 'SERIE_INV'
               DataBinding.DataSource = dsTablaG
+              Properties.KeyFieldNames = 'EMPSER'
+              Properties.ListColumns = <
+                item
+                  Width = 120
+                  FieldName = 'EMPSER'
+                end>
               TabOrder = 5
               Width = 120
             end
@@ -504,6 +511,10 @@
             object tsCabecera: TcxTabSheet
               Caption = '4.Otros'
               ImageIndex = 0
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
@@ -735,7 +746,8 @@
   end
   object dlgAbrir: TOpenDialog
     Filter = 
-      'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Excel (*.xlsx)|*.xlsx|Todos|*.*'
+      'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Excel (*.xlsx)|*.xlsx|Tod' +
+      'os|*.*'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist]
     Left = 948
     Top = 224

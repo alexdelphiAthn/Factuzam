@@ -25,16 +25,16 @@ type
     dsLineas: TDataSource;
 
     // === CAMPOS CALCULADOS DE cdsLineas ===
-    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField;
-    cdsLineasSERIE_INVENTARIO_LINEA: TStringField;
-    cdsLineasNRO_INVENTARIO_LINEA: TStringField;
-    cdsLineasLINEA_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField;
-    cdsLineasLOTE_INVENTARIO_LINEA: TStringField;
+    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasNRO_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField;
     cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField;
-    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField;
+    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField;
     cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFMTBCDField;
     cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFMTBCDField;
     cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFMTBCDField;
@@ -135,6 +135,7 @@ type
     property Numero: string read FNumero;
 
     procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
+    procedure CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
   end;
 
 var
@@ -717,6 +718,21 @@ begin
   unqryAlmacenes.Open;
 end;
 
+procedure TdmInventarios.CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
+begin
+  // Solo aplicable si la SQL de unqrySeries declara el parámetro :EMPRESA
+  // (ver dfm: tabla fza_empresas_series filtrada por CODIGO_EMP_EMPSER).
+  unqrySeries.Close;
+  if ACodigoEmpresa = '' then
+  begin
+    unqrySeries.Open;
+    Exit;
+  end;
+  if unqrySeries.Params.FindParam('EMPRESA') <> nil then
+    unqrySeries.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
+  unqrySeries.Open;
+end;
+
 procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);
 var
   i, NumLinea: Integer;
@@ -800,3 +816,4 @@ begin
 end;
 
 end.
+

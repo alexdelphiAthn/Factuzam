@@ -37,7 +37,7 @@ type
     lblAlmacen: TcxLabel;
     cbbCODIGO_ALMACEN_INVENTARIO: TcxDBLookupComboBox;
     lblSerie: TcxLabel;
-    cbbSERIE_INVENTARIO: TcxDBComboBox;
+    cbbSERIE_INVENTARIO: TcxDBLookupComboBox;
     lblNumero: TcxLabel;
     txtNRO_INVENTARIO: TcxDBTextEdit;
     lblFecha: TcxLabel;
@@ -209,24 +209,24 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin
-  // Llamado por TfrmMtoGen — aquí se crea el DataModule de la pantalla
-//  dmmInventarios := TdmInventarios.Create(Self);
+  // Llamado por TfrmMtoGen — el padre crea aquí el data module
   inherited;
-//  tdmDataModule := dmmInventarios;
   dmmInventarios := tdmDataModule as TdmInventarios;
-  // Vinculamos el dataset principal al heredado dsTablaG
-//  dsTablaG.DataSet := dmmInventarios.unqryTablaG;
 
-  // Datasources locales que apuntan a queries del DataModule
-   cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
+  // Vinculamos el dataset principal al dsTablaG heredado y lo abrimos.
+  // Sin esta asignación el grid de la pestaña Lista queda vacío y
+  // AplicarEtiquetas del padre no puede leer el nombre de la tabla origen.
+  dsTablaG.DataSet := dmmInventarios.unqryTablaG;
+  if not dmmInventarios.unqryTablaG.Active then
+    dmmInventarios.unqryTablaG.Open;
+
+  // Datasources locales que apuntan a queries del data module
+  cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
                                                       dmmInventarios.dsEmpresas;
-   cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
+  cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
                                                      dmmInventarios.dsAlmacenes;
-//   cbbSERIE_INVENTARIO := dmmInventarios.dsSeries;
-//    dmmInventarios.dsLineasLocal;
-//   dmmInventarios.dsMovsLocal;
-//    dmmInventarios.dsFamilias;
-//    dmmInventarios.dsProveedores;
+  cbbSERIE_INVENTARIO.Properties.ListSource :=
+                                                        dmmInventarios.dsSeries;
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
@@ -279,7 +279,13 @@ begin
     begin
       emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString;
       if dmmInventarios <> nil then
+      begin
         dmmInventarios.CargarAlmacenesPorEmpresa(emp);
+        // Si fza_empresas_series tiene CODIGO_EMP_EMPSER y quieres filtrar
+        // las series por empresa, descomenta la siguiente línea (y añade
+        // el parámetro :EMPRESA en la SQL de unqrySeries).
+        // dmmInventarios.CargarSeriesPorEmpresa(emp);
+      end;
     end;
   end;
 
@@ -982,3 +988,4 @@ initialization
   ForceReferenceToClass(TfrmMtoInventarios);
 
 end.
+

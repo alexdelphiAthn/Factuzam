@@ -1,4 +1,4 @@
-﻿inherited dmInventarios: TdmInventarios
+inherited dmInventarios: TdmInventarios
   Height = 457
   Width = 1125
   PixelsPerInch = 120
@@ -84,39 +84,39 @@
     OnNewRecord = cdsLineasNewRecord
     Left = 282
     Top = 22
-    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_EMP_INVLIN'
       Size = 10
     end
-    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_ALM_INVLIN'
       Size = 10
     end
-    object cdsLineasSERIE_INVENTARIO_LINEA: TStringField
+    object cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField
       FieldName = 'SERIE_INV_INVLIN'
     end
-    object cdsLineasNRO_INVENTARIO_LINEA: TStringField
+    object cdsLineasNRO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'NUMERO_INV_INVLIN'
     end
-    object cdsLineasLINEA_INVENTARIO_LINEA: TStringField
+    object cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField
       FieldName = 'LINEA_INVLIN'
       Size = 4
     end
-    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_ART_INVLIN'
     end
-    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_UNIDAD_INVLIN'
       Size = 50
     end
-    object cdsLineasLOTE_INVENTARIO_LINEA: TStringField
+    object cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField
       FieldName = 'LOTE_INVLIN'
       Size = 50
     end
     object cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField
       FieldName = 'FECHA_CADUCIDAD_INVLIN'
     end
-    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField
+    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
       Size = 200
     end
