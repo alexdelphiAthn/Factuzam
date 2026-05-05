@@ -220,34 +220,15 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin
-  // CRÍTICO: la variable global dmmInventarios sobrevive al cierre del
-  // formulario anterior. Si la dejamos apuntar al data module liberado,
-  // los TcxDBLookupComboBox dispararán EditValueChanged durante la apertura
-  // del nuevo unqryTablaG (eso lo hace el framework inLibShowMto.CrearDataModule)
-  // ANTES de que lleguemos a reasignar dmmInventarios más abajo, y los
-  // handlers usarán el puntero colgante → ACCESS_VIOLATION.
-  // Por eso lo limpiamos justo antes de inherited.
   dmmInventarios := nil;
-
-  // El framework inLibShowMto.CrearDataModule hace:
-  //   - Crea el data module
-  //   - dsTablaG.DataSet := unqryTablaG
-  //   - unqryTablaG.Open  (esto emite valores a los combos enlazados)
   inherited;
-
   dmmInventarios := tdmDataModule as TdmInventarios;
-
   // Datasources locales que apuntan a queries del data module
   cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
                                                       dmmInventarios.dsEmpresas;
   cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
                                                      dmmInventarios.dsAlmacenes;
-  cbbSERIE_INVENTARIO.Properties.ListSource :=
-                                                        dmmInventarios.dsSeries;
-
-  // Grids de detalle (cdsLineas) y movimientos regularizados (unqryMovsRegul).
-  // Los views se enlazan a los datasources del data module aquí porque en
-  // tiempo de diseño aún no existen los datasources.
+  cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
   tvLineas.DataController.DataSource := dmmInventarios.dsLineas;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
 end;
@@ -260,7 +241,6 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
-
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -268,27 +248,16 @@ end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
   inherited;
-  // Importante: el padre TfrmMtoGen libera tdmDataModule en su Destroy.
-  // Si dejamos que la variable global dmmInventarios siga apuntando a un
-  // objeto liberado y los lookups del formulario sigan enlazados a sus
-  // datasources internos, el siguiente acceso provoca un ACCESS_VIOLATION
-  // (típicamente al reabrir la ventana).
-
-  // Desvincular ListSource de los lookups que apuntan al data module.
   if Assigned(cbbCODIGO_EMPRESA_INVENTARIO) then
     cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource := nil;
   if Assigned(cbbCODIGO_ALMACEN_INVENTARIO) then
     cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource := nil;
   if Assigned(cbbSERIE_INVENTARIO) then
     cbbSERIE_INVENTARIO.Properties.ListSource := nil;
-
-  // Desvincular los DataSources de los grids.
   if Assigned(tvLineas) then
     tvLineas.DataController.DataSource := nil;
   if Assigned(tvMovs) then
     tvMovs.DataController.DataSource := nil;
-
-  // Limpiar la referencia global para no dejar puntero colgante.
   dmmInventarios := nil;
 end;
 
