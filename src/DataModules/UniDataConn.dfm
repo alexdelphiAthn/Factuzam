@@ -6,7 +6,7 @@ object dmConn: TdmConn
   object conUni: TUniConnection
     ProviderName = 'MySQL'
     Port = 3306
-    Database = 'factuzam2'
+    Database = 'factuzam'
     SpecificOptions.Strings = (
       'MySQL.UseUnicode=True')
     Options.DefaultSortType = stCaseInsensitive

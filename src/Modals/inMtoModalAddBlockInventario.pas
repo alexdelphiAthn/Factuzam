@@ -194,8 +194,8 @@ begin
     'NOT EXISTS (SELECT 1 FROM fza_inventarios_lineas ilx' +
     '             WHERE ilx.CODIGO_EMP_INVLIN = :P_INV_EMP_X' +
     '               AND ilx.CODIGO_ALM_INVLIN = :P_INV_ALM_X' +
-    '               AND ilx.SERIE_INV_INVLIN          = :P_INV_SER_X' +
-    '               AND ilx.NUMERO_INV_INVLIN            = :P_INV_NRO_X' +
+    '               AND ilx.SERIE_INV_INVLIN  = :P_INV_SER_X' +
+    '               AND ilx.NUMERO_INV_INVLIN = :P_INV_NRO_X' +
     '               AND ilx.CODIGO_ART_INVLIN = a.CODIGO_ART_ART)';
 end;
 
