@@ -336,7 +336,7 @@ begin
                    'Consulte con el Administrador', [sUserProp])
   else
   begin
-    iButtonSel := MessageDlg('�Est� seguro de borrar el formato?',
+    iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
                              mtCustom,[mbYes,mbNo], 0);
   if (iButtonSel = mrYes) then
   begin

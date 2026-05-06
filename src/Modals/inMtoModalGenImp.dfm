@@ -1,4 +1,4 @@
-﻿inherited frmPrint: TfrmPrint
+inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
@@ -10,8 +10,8 @@
   Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 361
-  ExplicitHeight = 295
+  ExplicitWidth = 359
+  ExplicitHeight = 287
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 199
