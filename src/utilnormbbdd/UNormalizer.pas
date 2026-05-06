@@ -62,6 +62,7 @@ type
     btnScanCode: TButton;
     btnApplyCodeReplacements: TButton;
     btnGenerateApplyScript: TButton;
+    btnFixOldParams: TButton;
     GridCodeMatches: TStringGrid;
     lblCodeInfo: TLabel;
 
@@ -94,6 +95,7 @@ type
     procedure btnAuditCodeClick(Sender: TObject);
     procedure btnExportAuditClick(Sender: TObject);
     procedure btnGenerateApplyScriptClick(Sender: TObject);
+    procedure btnFixOldParamsClick(Sender: TObject);
   private
     FNormalizer:    TFactuzamNormalizer;
     FSourceSQL:     string;
@@ -846,6 +848,91 @@ begin
   finally
     Stats.Free;
     Plan.Free;
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TFormNormalizer.btnFixOldParamsClick(Sender: TObject);
+var
+  Stats: TFileChangeList;
+  Fixes: TOldParamFixList;
+  i:     Integer;
+  Fix:   TOldParamFix;
+begin
+  if ListBoxFolders.Items.Count = 0 then
+  begin
+    MessageDlg('No hay carpetas que escanear. Añade al menos una.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
+  // Aseguramos que las carpetas configuradas en la UI están en el scanner.
+  FProjectScanner.ClearFolders;
+  for i := 0 to ListBoxFolders.Items.Count - 1 do
+    FProjectScanner.AddFolder(ListBoxFolders.Items[i]);
+
+  // Pasada 1: PREVIEW (no toca disco). Sirve para que el usuario sepa
+  // exactamente cuántos cambios se aplicarían y en qué archivos.
+  Fixes := TOldParamFixList.Create;
+  Screen.Cursor := crHourGlass;
+  try
+    FProjectScanner.PreviewOldParameterFixes(Fixes);
+
+    if Fixes.Count = 0 then
+    begin
+      Log('No hay parámetros Old_* desincronizados. Nada que sanear.');
+      MessageDlg('No se han encontrado parámetros Old_* desincronizados.',
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+
+    Log(Format('Detectados %d parámetro(s) Old_* desincronizados.',
+      [Fixes.Count]));
+    // Volcamos los primeros casos al log para inspección rápida.
+    for i := 0 to Min(Fixes.Count - 1, 19) do
+    begin
+      Fix := Fixes[i];
+      Log(Format('  [%s]  col=%s  %s -> %s',
+        [ExtractFileName(Fix.FilePath), Fix.ColumnName,
+         Fix.OldParam, Fix.NewParam]));
+    end;
+    if Fixes.Count > 20 then
+      Log(Format('  ...y %d más (ver fichero corregido)', [Fixes.Count - 20]));
+  finally
+    Fixes.Free;
+    Screen.Cursor := crDefault;
+  end;
+
+  // Confirmación antes de tocar disco
+  if MessageDlg(
+       'Se han detectado parámetros Old_* desincronizados en los .dfm.'#13#10 +
+       'Se reescribirán para que coincidan con el nombre actual de la columna.'#13#10 +
+       'Se creará un backup .bak de cada archivo modificado (si no existe).'#13#10#13#10 +
+       '¿Aplicar los cambios?',
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    Log('Cancelado por el usuario. No se ha modificado nada.');
+    Exit;
+  end;
+
+  // Pasada 2: APLICAR
+  Stats := TFileChangeList.Create;
+  Fixes := TOldParamFixList.Create;
+  Screen.Cursor := crHourGlass;
+  try
+    FProjectScanner.FixOldParameters(Stats, Fixes);
+    Log(Format('Saneado completado: %d fichero(s) modificado(s), %d parámetro(s) corregido(s).',
+      [Stats.Count, Fixes.Count]));
+    MessageDlg(Format(
+      'Saneado completado.'#13#10 +
+      '  Ficheros modificados: %d'#13#10 +
+      '  Parámetros corregidos: %d'#13#10#13#10 +
+      'Se han creado backups .bak junto a cada original.',
+      [Stats.Count, Fixes.Count]),
+      mtInformation, [mbOK], 0);
+  finally
+    Stats.Free;
+    Fixes.Free;
     Screen.Cursor := crDefault;
   end;
 end;

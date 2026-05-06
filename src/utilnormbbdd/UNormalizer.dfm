@@ -302,6 +302,15 @@ object FormNormalizer: TFormNormalizer
           TabOrder = 5
           OnClick = btnGenerateApplyScriptClick
         end
+        object btnFixOldParams: TButton
+          Left = 688
+          Top = 128
+          Width = 172
+          Height = 25
+          Caption = 'Sanear par'#225'metros Old_*'
+          TabOrder = 6
+          OnClick = btnFixOldParamsClick
+        end
       end
       object GridCodeMatches: TStringGrid
         Left = 0

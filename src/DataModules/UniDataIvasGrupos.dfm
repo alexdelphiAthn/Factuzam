@@ -13,7 +13,7 @@
     SQLDelete.Strings = (
       'DELETE FROM fza_ivas_grupos'
       'WHERE'
-      '  IVA_IVAGRP = :Old_GRUPO_ZONA_IVA')
+      '  IVA_IVAGRP = :Old_IVA_IVAGRP')
     SQLUpdate.Strings = (
       'UPDATE fza_ivas_grupos'
       'SET'
@@ -22,11 +22,11 @@
         'E_IVA_IVAGRP = :ESAPLICA_RE_IVA_IVAGRP, ESDEFAULT_IVA_IVAGRP = :ESDEFAULT_IVA_IVAGRP, PALABRA_REPORTS_IVA_IVAGRP = :PALABRA_REPORTS_IVA_IVAGRP, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTA' +
         'NTE_ALTA, USUARIO_ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  IVA_IVAGRP = :Old_GRUPO_ZONA_IVA')
+      '  IVA_IVAGRP = :Old_IVA_IVAGRP')
     SQLLock.Strings = (
       'SELECT * FROM fza_ivas_grupos'
       'WHERE'
-      '  IVA_IVAGRP = :Old_GRUPO_ZONA_IVA'
+      '  IVA_IVAGRP = :Old_IVA_IVAGRP'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       

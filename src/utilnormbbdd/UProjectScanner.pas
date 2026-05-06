@@ -57,6 +57,21 @@ type
 
   TFileChangeList = TList<TFileChangeStat>;
 
+  {
+    Estadística por fichero de la pasada FixOldParameters: cuántos parámetros
+    Old_* desincronizados se han realineado con el nombre actual de la columna.
+  }
+  TOldParamFix = record
+    FilePath:    string;
+    LineNumber:  Integer;
+    LineText:    string;   // línea ya re-empaquetada (o la original si era corta)
+    ColumnName:  string;   // nombre actual de la columna en el WHERE
+    OldParam:    string;   // nombre antiguo del parámetro encontrado (sin ':')
+    NewParam:    string;   // nombre nuevo asignado (sin ':')
+  end;
+
+  TOldParamFixList = TList<TOldParamFix>;
+
   TPlanPair = record
     OldName: string;
     NewName: string;
@@ -72,6 +87,11 @@ type
     FRenamePlan:  TPlanPairList;
     FOnLog:       TProc<string>;
 
+    // Estado temporal usado durante FixOldParameters / PreviewOldParameterFixes.
+    // OldParamEvaluator los lee/escribe; CoreFixOldParams los inicializa.
+    FOldFixCount:    Integer;
+    FOldFixCallback: TProc<string, string, string>;
+
     procedure Log(const S: string);
     function  CollectFiles: TArray<string>;
     function  IsBoundary(C: Char): Boolean;
@@ -82,6 +102,13 @@ type
     procedure DoScanJoinedDfm(const FilePath, RawText: string;
                               AOutMatches: TFileMatchList;
                               var TotalMatches: Integer);
+
+    // Evaluador del regex usado en CoreFixOldParams. Va como método porque
+    // un anonymous method local no se infiere correctamente como
+    // TMatchEvaluator en algunas versiones del compilador (E2010).
+    function  OldParamEvaluator(const M: TMatch): string;
+    function  CoreFixOldParams(const Source: string; out NewSource: string;
+                               AOnFix: TProc<string, string, string>): Integer;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -111,6 +138,33 @@ type
       Devuelve estadísticas por fichero.
     }
     procedure ApplyReplacements(AStats: TFileChangeList);
+
+    {
+      Pasada de SANEADO de parámetros Old_* en .dfm.
+
+      Tras un renombrado masivo de columnas, los SQLDelete/SQLUpdate/SQLLock
+      generados por UniDAC siguen llevando los parámetros Old_* con el nombre
+      ANTIGUO de la columna. Ej:
+          WHERE `LINEA_FACLIN` = :`Old_LINEA_FACTURA_LINEA`
+                                    ^^^ nombre obsoleto ^^^
+      UniDAC no consigue mapear el parámetro a su campo y falla en runtime.
+
+      Esta pasada localiza esos casos y reescribe el parámetro Old_* tomando
+      el nombre de la columna que está a la izquierda del '='. Resultado:
+          WHERE `LINEA_FACLIN` = :`Old_LINEA_FACLIN`
+
+      No requiere conocer el plan de renombrado: solo reglas SQL/DFM. Si el
+      Old_* ya coincide con la columna, no toca nada.
+
+      PreviewOldParameterFixes: solo detecta y rellena la lista. NO modifica.
+      FixOldParameters: detecta, modifica los .dfm y crea backup .bak.
+
+      Solo procesa archivos .dfm (los .pas no contienen SQL de UniDAC con
+      parámetros Old_* en este formato).
+    }
+    procedure PreviewOldParameterFixes(AOutFixes: TOldParamFixList);
+    procedure FixOldParameters(AStats: TFileChangeList;
+                               AOutFixes: TOldParamFixList = nil);
 
     property OnLog: TProc<string> read FOnLog write FOnLog;
     property Folders: TStringList read FFolders;
@@ -934,6 +988,395 @@ begin
   end;
 
   Log(Format('Reemplazos aplicados a %d ficheros.', [AStats.Count]));
+end;
+
+{
+  TProjectScanner.OldParamEvaluator
+
+  Evaluador del regex utilizado por CoreFixOldParams. Está como método (no
+  como anonymous method) porque algunas versiones del compilador Delphi
+  fallan al inferir un anonymous method local como TMatchEvaluator
+  (error E2010 'Incompatible types: TMatchEvaluator and Procedure').
+
+  Lee/escribe los campos temporales FOldFixCount y FOldFixCallback que
+  CoreFixOldParams inicializa antes de llamar a Replace.
+}
+function TProjectScanner.OldParamEvaluator(const M: TMatch): string;
+var
+  ColOpen, ColName, ColClose: string;
+  ParOpen, ParOld, ParClose: string;
+  NewParam: string;
+begin
+  ColOpen   := M.Groups[1].Value;
+  ColName   := M.Groups[2].Value;
+  ColClose  := M.Groups[3].Value;
+  ParOpen   := M.Groups[4].Value;
+  ParOld    := M.Groups[5].Value;
+  ParClose  := M.Groups[6].Value;
+
+  // Validación de coherencia: o ambas comillas backticks o ninguna
+  if (ColOpen <> ColClose) or (ParOpen <> ParClose) then
+  begin
+    Result := M.Value;
+    Exit;
+  end;
+
+  // Si la columna que está a la izquierda del '=' es ELLA MISMA un
+  // alias Old_*, no hay nada que alinear.
+  if SameText(Copy(ColName, 1, 4), 'Old_') then
+  begin
+    Result := M.Value;
+    Exit;
+  end;
+
+  // Si ya está alineado (Old_<ColName>), no contamos cambio.
+  if SameText(ParOld, ColName) then
+  begin
+    Result := M.Value;
+    Exit;
+  end;
+
+  NewParam := 'Old_' + ColName;
+
+  Inc(FOldFixCount);
+  if Assigned(FOldFixCallback) then
+    FOldFixCallback(ColName, 'Old_' + ParOld, NewParam);
+
+  Result :=
+    ColOpen + ColName + ColClose +
+    ' = ' +
+    ':' + ParOpen + NewParam + ParClose;
+end;
+
+{
+  TProjectScanner.CoreFixOldParams
+
+  Recorre el contenido de un .dfm (con cadenas ya unidas por
+  JoinPascalStringContinuations) y reescribe los parámetros Old_*
+  para alinearlos con el nombre de la columna que está a la izquierda
+  del '=' en una cláusula WHERE de UPDATE/DELETE/SELECT FOR UPDATE.
+
+  Patrón aceptado:
+      `COLUMNA` = :`Old_<lo_que_sea>`
+      `COLUMNA` = :Old_<lo_que_sea>
+       COLUMNA  = :`Old_<lo_que_sea>`
+       COLUMNA  = :Old_<lo_que_sea>
+
+  El formato del parámetro (con/sin backticks) se preserva. Solo cambia
+  la parte tras "Old_".
+
+  Si AOnFix se pasa, se invoca por cada cambio con (ColName, OldName, NewName).
+  Devuelve el número de reemplazos efectuados.
+}
+function TProjectScanner.CoreFixOldParams(const Source: string;
+  out NewSource: string;
+  AOnFix: TProc<string, string, string>): Integer;
+const
+  // Grupos:
+  //  1: backtick de apertura de la columna o vacío
+  //  2: nombre de la columna
+  //  3: backtick de cierre de la columna o vacío
+  //  4: backtick de apertura del parámetro o vacío
+  //  5: nombre antiguo del parámetro tras "Old_"
+  //  6: backtick de cierre del parámetro o vacío
+  PATTERN =
+    '(`?)([A-Za-z_][A-Za-z0-9_]*)(`?)' +     // columna (con/sin backticks)
+    '\s*=\s*' +
+    ':(`?)Old_([A-Za-z_][A-Za-z0-9_]*)(`?)';  // :Old_xxx (con/sin backticks)
+var
+  Re:    TRegEx;
+  Eval:  TMatchEvaluator;
+begin
+  FOldFixCount    := 0;
+  FOldFixCallback := AOnFix;
+  try
+    // Asignación intermedia OBLIGATORIA para que el compilador convierta
+    // el método de instancia al tipo TMatchEvaluator (reference to function).
+    // Pasarlo en línea (Re.Replace(Source, OldParamEvaluator)) provoca
+    // E2010 'Incompatible types: TMatchEvaluator and Procedure' en algunas
+    // versiones del compilador Delphi. Es el mismo patrón documentado
+    // oficialmente por Embarcadero.
+    Eval := OldParamEvaluator;
+
+    Re := TRegEx.Create(PATTERN);
+    NewSource := Re.Replace(Source, Eval);
+    Result := FOldFixCount;
+  finally
+    FOldFixCallback := nil;
+  end;
+end;
+
+procedure TProjectScanner.PreviewOldParameterFixes(AOutFixes: TOldParamFixList);
+var
+  Files:    TArray<string>;
+  F:        string;
+  Original, Joined, Dummy: string;
+  Bytes:    TBytes;
+  DetectedEnc: TEncoding;
+  HasBOM:   Boolean;
+  BOMSize:  Integer;
+  Changes:  Integer;
+begin
+  AOutFixes.Clear;
+
+  Files := CollectFiles;
+  Log(Format('Buscando parámetros Old_* desincronizados en %d ficheros…',
+    [Length(Files)]));
+
+  for F in Files do
+  begin
+    if not SameText(ExtractFileExt(F), '.dfm') then
+      Continue;
+
+    DetectedEnc := nil;
+    try
+      Bytes := TFile.ReadAllBytes(F);
+
+      HasBOM  := False;
+      BOMSize := 0;
+      if (Length(Bytes) >= 3)
+         and (Bytes[0] = $EF) and (Bytes[1] = $BB) and (Bytes[2] = $BF) then
+      begin
+        DetectedEnc := TEncoding.UTF8;
+        HasBOM := True; BOMSize := 3;
+      end
+      else if (Length(Bytes) >= 2)
+              and (Bytes[0] = $FF) and (Bytes[1] = $FE) then
+      begin
+        DetectedEnc := TEncoding.Unicode;
+        HasBOM := True; BOMSize := 2;
+      end
+      else if (Length(Bytes) >= 2)
+              and (Bytes[0] = $FE) and (Bytes[1] = $FF) then
+      begin
+        DetectedEnc := TEncoding.BigEndianUnicode;
+        HasBOM := True; BOMSize := 2;
+      end
+      else
+      begin
+        try
+          Original := TEncoding.UTF8.GetString(Bytes);
+          if Pos(#$FFFD, Original) > 0 then
+            DetectedEnc := TEncoding.ANSI
+          else
+            DetectedEnc := TEncoding.UTF8;
+        except
+          DetectedEnc := TEncoding.ANSI;
+        end;
+      end;
+
+      if HasBOM then
+        Original := DetectedEnc.GetString(Bytes, BOMSize, Length(Bytes) - BOMSize)
+      else
+        Original := DetectedEnc.GetString(Bytes);
+    except
+      on E: Exception do
+      begin
+        Log(Format('[ERROR] Lectura %s: %s', [F, E.Message]));
+        Continue;
+      end;
+    end;
+
+    Joined := JoinPascalStringContinuations(Original);
+
+    Changes := CoreFixOldParams(Joined, Dummy,
+      procedure(ACol, AOld, ANew: string)
+      var
+        Fix: TOldParamFix;
+      begin
+        Fix.FilePath   := F;
+        Fix.LineNumber := 0;     // no se calcula en preview rápido
+        Fix.LineText   := '';
+        Fix.ColumnName := ACol;
+        Fix.OldParam   := AOld;
+        Fix.NewParam   := ANew;
+        AOutFixes.Add(Fix);
+      end);
+
+    if Changes > 0 then
+      Log(Format('  %s: %d parámetro(s) Old_* a corregir',
+        [ExtractFileName(F), Changes]));
+  end;
+
+  Log(Format('Total: %d parámetro(s) Old_* desincronizados en %d fichero(s).',
+    [AOutFixes.Count, Length(Files)]));
+end;
+
+procedure TProjectScanner.FixOldParameters(AStats: TFileChangeList;
+                                           AOutFixes: TOldParamFixList);
+var
+  Files:    TArray<string>;
+  F:        string;
+  Original, Modified, Joined: string;
+  Replacements: Integer;
+  Stat:     TFileChangeStat;
+  BackupPath: string;
+  Bytes:    TBytes;
+  DetectedEnc: TEncoding;
+  HasBOM:   Boolean;
+  BOMSize:  Integer;
+  PreambleBOM: TBytes;
+  NewBuf:   TBytes;
+begin
+  AStats.Clear;
+  if Assigned(AOutFixes) then
+    AOutFixes.Clear;
+
+  Files := CollectFiles;
+  Log(Format('Saneando parámetros Old_* en %d ficheros…', [Length(Files)]));
+
+  for F in Files do
+  begin
+    // Solo procesamos .dfm: los Old_* en este formato son artefactos de
+    // los SQLDelete/SQLUpdate de UniDAC que viven en los .dfm.
+    if not SameText(ExtractFileExt(F), '.dfm') then
+      Continue;
+
+    DetectedEnc := nil;
+    try
+      // Lectura con detección de BOM/codificación (mismo patrón que
+      // ApplyReplacements para garantizar que el .dfm queda compilable).
+      Bytes := TFile.ReadAllBytes(F);
+
+      HasBOM  := False;
+      BOMSize := 0;
+      if (Length(Bytes) >= 3)
+         and (Bytes[0] = $EF) and (Bytes[1] = $BB) and (Bytes[2] = $BF) then
+      begin
+        DetectedEnc := TEncoding.UTF8;
+        HasBOM := True; BOMSize := 3;
+      end
+      else if (Length(Bytes) >= 2)
+              and (Bytes[0] = $FF) and (Bytes[1] = $FE) then
+      begin
+        DetectedEnc := TEncoding.Unicode;
+        HasBOM := True; BOMSize := 2;
+      end
+      else if (Length(Bytes) >= 2)
+              and (Bytes[0] = $FE) and (Bytes[1] = $FF) then
+      begin
+        DetectedEnc := TEncoding.BigEndianUnicode;
+        HasBOM := True; BOMSize := 2;
+      end
+      else
+      begin
+        try
+          Original := TEncoding.UTF8.GetString(Bytes);
+          if Pos(#$FFFD, Original) > 0 then
+            DetectedEnc := TEncoding.ANSI
+          else
+            DetectedEnc := TEncoding.UTF8;
+        except
+          DetectedEnc := TEncoding.ANSI;
+        end;
+      end;
+
+      if HasBOM then
+        Original := DetectedEnc.GetString(Bytes, BOMSize, Length(Bytes) - BOMSize)
+      else
+        Original := DetectedEnc.GetString(Bytes);
+    except
+      on E: Exception do
+      begin
+        Log(Format('[ERROR] Lectura %s: %s', [F, E.Message]));
+        Continue;
+      end;
+    end;
+
+    // Unimos las cadenas Pascal continuadas con + para que un patrón
+    // partido por el formateo de Delphi (p.ej. ':`Old_NRO_FAC' + 'TURA_LINEA`')
+    // sí sea detectable por el regex. Imprescindible.
+    Joined := JoinPascalStringContinuations(Original);
+
+    Replacements := CoreFixOldParams(Joined, Modified,
+      procedure(ACol, AOld, ANew: string)
+      var
+        Fix: TOldParamFix;
+      begin
+        if Assigned(AOutFixes) then
+        begin
+          Fix.FilePath   := F;
+          Fix.LineNumber := 0;
+          Fix.LineText   := '';
+          Fix.ColumnName := ACol;
+          Fix.OldParam   := AOld;
+          Fix.NewParam   := ANew;
+          AOutFixes.Add(Fix);
+        end;
+      end);
+
+    if Replacements = 0 then
+      Continue;
+
+    // Re-empaquetar las cadenas largas para que ningún literal supere
+    // ~200 chars (RLINK32 falla a partir de ~4096).
+    Modified := RewrapLongDfmStrings(Modified, 200);
+
+    if Modified = Original then
+      Continue;
+
+    // Backup
+    BackupPath := F + '.bak';
+    if not FileExists(BackupPath) then
+    begin
+      try
+        TFile.Copy(F, BackupPath, False);
+      except
+        on E: Exception do
+        begin
+          Log(Format('[ERROR] No se pudo crear backup de %s: %s',
+            [F, E.Message]));
+          Continue;
+        end;
+      end;
+    end;
+
+    try
+      // Forzar BOM para .dfm UTF-8 (RLINK32 lo exige con caracteres > 0x7F)
+      if (DetectedEnc = TEncoding.UTF8) and (not HasBOM) then
+        HasBOM := True;
+
+      try
+        Bytes := DetectedEnc.GetBytes(Modified);
+      except
+        on E: Exception do
+        begin
+          Log(Format('  [INFO] %s no se puede guardar en %s; convertido a UTF-8 BOM (%s)',
+            [ExtractFileName(F), DetectedEnc.EncodingName, E.Message]));
+          DetectedEnc := TEncoding.UTF8;
+          HasBOM      := True;
+          Bytes       := DetectedEnc.GetBytes(Modified);
+        end;
+      end;
+
+      if HasBOM then
+      begin
+        PreambleBOM := DetectedEnc.GetPreamble;
+        if Length(PreambleBOM) > 0 then
+        begin
+          SetLength(NewBuf, Length(PreambleBOM) + Length(Bytes));
+          Move(PreambleBOM[0], NewBuf[0], Length(PreambleBOM));
+          if Length(Bytes) > 0 then
+            Move(Bytes[0], NewBuf[Length(PreambleBOM)], Length(Bytes));
+          Bytes := NewBuf;
+        end;
+      end;
+
+      TFile.WriteAllBytes(F, Bytes);
+
+      Stat.FilePath     := F;
+      Stat.Replacements := Replacements;
+      Stat.Backup       := BackupPath;
+      AStats.Add(Stat);
+      Log(Format('  Saneado: %s (%d Old_* corregidos, backup: %s)',
+        [F, Replacements, BackupPath]));
+    except
+      on E: Exception do
+        Log(Format('[ERROR] Escritura %s: %s', [F, E.Message]));
+    end;
+  end;
+
+  Log(Format('Saneado aplicado a %d ficheros.', [AStats.Count]));
 end;
 
 end.

@@ -12,7 +12,7 @@
       'DELETE FROM `fza_contadores`'
       'WHERE'
       
-        '  `TIPO_DOC_CON` = :`Old_TIPODOC_CONTADOR` AND `EMPRESA_CON` = :`Old_EMPRESA_CONTADOR` AND `SERIE_CON` = :`Old_SERIE_CONTADOR`')
+        '  `TIPO_DOC_CON` = :`Old_TIPO_DOC_CON` AND `EMPRESA_CON` = :`Old_EMPRESA_CON` AND `SERIE_CON` = :`Old_SERIE_CON`')
     SQLUpdate.Strings = (
       'UPDATE `fza_contadores`'
       'SET'
@@ -21,13 +21,13 @@
         '= :`DEFAULT_CON`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       
-        '  `TIPO_DOC_CON` = :`Old_TIPODOC_CONTADOR` AND `EMPRESA_CON` = :`Old_EMPRESA_CONTADOR` AND `SERIE_CON` = :`Old_SERIE_CONTADOR`')
+        '  `TIPO_DOC_CON` = :`Old_TIPO_DOC_CON` AND `EMPRESA_CON` = :`Old_EMPRESA_CON` AND `SERIE_CON` = :`Old_SERIE_CON`')
     SQLLock.Strings = (
       
         'SELECT `TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF` FROM `fza_contadores`'
       'WHERE'
       
-        '  `TIPO_DOC_CON` = :`Old_TIPODOC_CONTADOR` AND `EMPRESA_CON` = :`Old_EMPRESA_CONTADOR` AND `SERIE_CON` = :`Old_SERIE_CONTADOR`'
+        '  `TIPO_DOC_CON` = :`Old_TIPO_DOC_CON` AND `EMPRESA_CON` = :`Old_EMPRESA_CON` AND `SERIE_CON` = :`Old_SERIE_CON`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
