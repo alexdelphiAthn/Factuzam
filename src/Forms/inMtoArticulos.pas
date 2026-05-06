@@ -1135,21 +1135,19 @@ end;
 procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
 begin
   inherited;
-
   // 1. Comprobaciones básicas del estado del formulario
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
     Exit;
-
   // 2. Asegurar que los objetos de datos existen
   if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
     Exit;
-
   // 3. Comprobar que el dataset está activo, no está vacío y no está bloqueado
-
-  if dmmArticulos.unqryTablaG.IsEmpty then Exit;
-  if dmmArticulos.unqryTablaG.ControlsDisabled then Exit;
-  if not dmmArticulos.unqryTablaG.Active then Exit;
-
+  if dmmArticulos.unqryTablaG.IsEmpty then
+    Exit;
+  if dmmArticulos.unqryTablaG.ControlsDisabled then
+    Exit;
+  if not dmmArticulos.unqryTablaG.Active then
+    Exit;
   // 4. Validar el estado de edición y la interacción REAL del usuario
   if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
   begin
