@@ -208,7 +208,7 @@ end;
 procedure TfrmMtoGen.AplicarEtiquetas;
 var
   i:integer;
-  cxGrid: TcxGridDBTableView;
+  cxGrid: TcxCustomGridTableView;
 begin
   if (DsTablaG.Dataset <> nil) then
     lblTablaOrigen.Caption :=
@@ -218,9 +218,9 @@ begin
   begin
     for i:= 0 to Self.Componentcount - 1 do
     begin
-      if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
+      if (Self.Components[i] is TcxCustomGridTableView) then
       begin
-        cxGrid := (Self.Components[i] as TcxGridDBTableView);
+        cxGrid := TcxCustomGridTableView(Self.Components[i]);
 
         // Segunda validación segura
         if SameText(Trim(GetPerfilValueDef(oPerfilDic,
@@ -255,14 +255,14 @@ end;
 procedure TfrmMtoGen.btnCargarColumnasClick(Sender: TObject);
 var
   i:Integer;
-  cxGrid : TcxGridDBTableView;
+  cxGrid : TcxCustomGridTableView;
 begin
   inherited;
   for i:= 0 to Self.Componentcount - 1 do
   begin
-      if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
+      if (Self.Components[i] is TcxCustomGridTableView) then
     begin
-      cxGrid := (Self.Components[i] as TcxGridDBTableView);
+      cxGrid := TcxCustomGridTableView(Self.Components[i]);
       GetSettingsColumn(cxGrid, Self.Name, Self.Owner);
     end;
   end;
@@ -344,7 +344,7 @@ var
   bGuardar: Boolean;
   sPermisos: string;
   i: Integer;
-  cxGrid: TcxGridDBTableView;
+  cxGrid: TcxCustomGridTableView;
   oList: TPerfilList;
   item: TPerfilItem;
 begin
@@ -391,9 +391,9 @@ begin
 
     // 2. Ajustes de cada grid
     for i := 0 to Self.ComponentCount - 1 do
-      if Self.Components[i].ClassNameIs('TcxGridDBTableView') then
+      if Self.Components[i] is TcxCustomGridTableView then
       begin
-        cxGrid := TcxGridDBTableView(Self.Components[i]);
+        cxGrid := TcxCustomGridTableView(Self.Components[i]);
 
         // reset sigue siendo su propia transacción (borra primero)
 
@@ -426,7 +426,7 @@ var
   bGuardar: Boolean;
   sPermisos:String;
   i:Integer;
-  cxGrid : TcxGridDBTableView;
+  cxGrid : TcxCustomGridTableView;
 begin
   inherited;
   bGuardar := False;
@@ -444,9 +444,9 @@ begin
   begin
     for i:= 0 to Self.Componentcount - 1 do
     begin
-      if (Self.Components[i].ClassNameis('TcxGridDBTableView')) then
+      if (Self.Components[i] is TcxCustomGridTableView) then
       begin
-        cxGrid := (Self.Components[i] as TcxGridDBTableView);
+        cxGrid := TcxCustomGridTableView(Self.Components[i]);
         (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
                                                      Self.Name,
                                                      sPermisos);
