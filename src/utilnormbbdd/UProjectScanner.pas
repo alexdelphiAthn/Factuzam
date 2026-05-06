@@ -170,6 +170,24 @@ type
     property Folders: TStringList read FFolders;
   end;
 
+{
+  Funciones públicas reutilizables (también las usa UFR3DBPatcher).
+}
+
+{
+  Reemplazo case-aware: matchea OldName ignorando mayúsculas, exigiendo
+  boundary (no letra/dígito/'_' a izq y dcha) y devuelve NewName con el
+  case original conservado (UPPER->UPPER, lower->lower, mixto->NewName).
+}
+function CaseAwareReplace(const Source, OldName, NewName: string;
+                          out MatchCount: Integer): string;
+
+{
+  Une cadenas Pascal continuadas con '+' a través de saltos de línea
+  ('foo' + \n 'bar') -> 'foobar'. Útil para .dfm.
+}
+function JoinPascalStringContinuations(const Source: string): string;
+
 implementation
 
 { TPlanPair }

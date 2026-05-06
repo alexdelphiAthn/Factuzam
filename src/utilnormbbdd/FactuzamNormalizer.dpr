@@ -6,7 +6,8 @@ uses
   UNormalizerEngine in 'UNormalizerEngine.pas',
   UConfigEditor in 'UConfigEditor.pas' {FormConfigEditor},
   UProjectScanner in 'UProjectScanner.pas',
-  UDBObjectScanner in 'UDBObjectScanner.pas';
+  UDBObjectScanner in 'UDBObjectScanner.pas',
+  UFR3SQLDumpPatcher in 'UFR3SQLDumpPatcher.pas';
 
 {$R *.res}
 
