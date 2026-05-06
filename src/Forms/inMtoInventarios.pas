@@ -313,14 +313,9 @@ begin
       if dmmInventarios <> nil then
       begin
         dmmInventarios.CargarAlmacenesPorEmpresa(emp);
-        // Si fza_empresas_series tiene CODIGO_EMP_EMPSER y quieres filtrar
-        // las series por empresa, descomenta la siguiente línea (y añade
-        // el parámetro :EMPRESA en la SQL de unqrySeries).
-        // dmmInventarios.CargarSeriesPorEmpresa(emp);
       end;
     end;
   end;
-
   if Field = nil then
     ActualizarEstadoUI;
 end;
@@ -385,7 +380,8 @@ var
   ds: TDataSet;
 begin
   ds := dsTablaG.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+    Exit;
 
   // IMPORTANTE: tras un Post de cabecera nueva, AfterScroll NO siempre se
   // dispara (no hay cambio de registro real). Si no resincronizamos las
@@ -398,17 +394,12 @@ begin
     ds.FieldByName('SERIE_INV').AsString,
     ds.FieldByName('NUMERO_INV').AsString
   );
-
   dmmInventarios.CargarLineasInventario;
-
-  // Tras cargar, intentamos detectar el artículo padre del primer registro
-  // y ajustar las columnas dinámicas
   if dmmInventarios.cdsLineas.Active and
      not dmmInventarios.cdsLineas.IsEmpty then
   begin
-    ActualizarColumnasDinamicas(
-      dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString
-    );
+    ActualizarColumnasDinamicas(dmmInventarios.cdsLineas.FieldByName(
+                                                 'CODIGO_ART_INVLIN').AsString);
   end;
 end;
 
@@ -421,13 +412,14 @@ begin
   // (cuando el manager hace AForm.Hide y AForm.Parent := nil), antes y después
   // de FormDestroy. Si el ciclo de vida ha desmontado el dataset principal
   // o el data module, no podemos tocar el data module.
-  if (csDestroying in ComponentState) then Exit;
-  if dmmInventarios = nil then Exit;
-  if (dsTablaG = nil) or (dsTablaG.DataSet = nil) then Exit;
-
+  if (csDestroying in ComponentState) then
+    Exit;
+  if dmmInventarios = nil then
+    Exit;
+  if (dsTablaG = nil) or (dsTablaG.DataSet = nil) then
+    Exit;
   emp := VarToStr(cbbCODIGO_EMPRESA_INVENTARIO.EditValue);
   dmmInventarios.CargarAlmacenesPorEmpresa(emp);
-
   // Si el almacén ya escrito no pertenece a la nueva empresa, lo limpiamos
   if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
     dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').Clear;
@@ -624,15 +616,14 @@ procedure TfrmMtoInventarios.tvLineasFocusedRecordChanged(
 var
   ArtPadre: string;
 begin
-  // Cuando cambia la fila activa, ajustamos columnas dinámicas a su artículo
-  if (AFocusedRecord <> nil) and dmmInventarios.cdsLineas.Active and
-     not dmmInventarios.cdsLineas.IsEmpty then
-  begin
-    ArtPadre := dmmInventarios.cdsLineas.FieldByName(
-                            'CODIGO_ART_INVLIN').AsString;
-    ActualizarColumnasDinamicas(ArtPadre);
-  end;
+  if (AFocusedRecord = nil) or (dmmInventarios = nil) or
+     (not dmmInventarios.cdsLineas.Active) or
+     dmmInventarios.cdsLineas.IsEmpty then
+    Exit;
+  ArtPadre := dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
+  ActualizarColumnasDinamicas(ArtPadre);
 end;
+
 
 procedure TfrmMtoInventarios.tvLineasArticuloPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);

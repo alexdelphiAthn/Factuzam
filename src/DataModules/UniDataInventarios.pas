@@ -80,7 +80,11 @@ type
     // === STORED PROCEDURES ===
     unspActualizarTeorico: TUniStoredProc;     // PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO
     unspAplicar: TUniStoredProc;               // PRC_FZA_INVENTARIOS_APLICAR
-    unspEliminarRegul: TUniStoredProc;         // PRC_FZA_INVENTARIOS_ELIMINAR_REGUL (nuevo)
+    unspEliminarRegul: TUniStoredProc;
+    cdsLineasINSTANTE_ALTA: TDateTimeField;
+    cdsLineasUSUARIO_ALTA: TWideStringField;
+    cdsLineasUSUARIO_MODIF: TWideStringField;
+    cdsLineasINSTANTE_MODIF: TDateTimeField;         // PRC_FZA_INVENTARIOS_ELIMINAR_REGUL (nuevo)
 
     // === EVENTOS DE DATASET ===
     procedure DataModuleCreate(Sender: TObject);
@@ -96,6 +100,7 @@ type
     FSerie: string;
     FNumero: string;
     FUsuario: string;
+    FDesempaquetando: Boolean;
   public
     // === CONFIGURACIÓN ===
     procedure SetClavesActivas(const AEmpresa, AAlmacen, ASerie, ANumero: string);
@@ -137,9 +142,7 @@ type
     procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
     procedure CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
   private
-    procedure SincronizarAtributosCDS;
-    procedure FallbackRellenarAtributosDesdeBD(
-                                              const Sku, ArticuloPadre: string);
+    procedure DesempaquetarAtributosDesdeSku;
   end;
 
 var
@@ -160,152 +163,73 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TdmInventarios }
 
-// =============================================================================
-//  FIX: FallbackRellenarAtributosDesdeBD repetia el primer atributo en
-//       todas las columnas
-//
-//  Causa: vi_atributos_nombres tiene una fila por cada (articulo_padre,
-//  tipo_atributo). El JOIN n.ID_ATRIBUTO = v.ID_VA_AV sin filtrar por
-//  CODIGO_ART_PADRE_ARTVIN multiplica las filas: para el SKU
-//  BOTIN-ANIT/MARRON/37, la fila con AV='MARRON' (ID_VA_AV='CO') hace match
-//--  con TODAS las filas de la vista que tengan ID_ATRIBUTO='CO' (todos los
-//--  articulos padre que usan Color). El ORDER BY orden_visual ordena las
-//--  filas resultantes pero no las deduplica, asi que las 5 primeras pueden
-//--  ser todas el mismo valor 'MARRON' con ORDEN_VISUAL=1, y la fila de '37'
-//--  con ORDEN_VISUAL=2 queda fuera del LIMIT 5.
-//
-//  Solucion: anadir filtro por l.CODIGO_ART_INVLIN al SELECT del fallback.
-// =============================================================================
-
-
-// 1) En la SECCION INTERFACE de TdmInventarios, cambia la firma del
-//    metodo privado:
-//
-//      private
-//        procedure SincronizarAtributosCDS;
-//        procedure FallbackRellenarAtributosDesdeBD(const Sku: string);
-//
-//    Por:
-//
-//      private
-//        procedure SincronizarAtributosCDS;
-//        procedure FallbackRellenarAtributosDesdeBD(const Sku, ArticuloPadre: string);
-
-
-// 2) En la implementacion, sustituye SincronizarAtributosCDS por esta version
-//    que pasa tambien el articulo padre al fallback:
-
-procedure TdmInventarios.SincronizarAtributosCDS;
-var
-  Bm: TBookmark;
-  i: Integer;
-  Sku, ArtPadre: string;
-  ValorBD, NombreBD: string;
+procedure TdmInventarios.CargarLineasInventario;
 begin
-  if (not cdsLineas.Active) or cdsLineas.IsEmpty then Exit;
+  if (FCodigoEmpresa = '') or (FNumero = '') then
+  begin
+    if cdsLineas.Active then cdsLineas.EmptyDataSet;
+    Exit;
+  end;
 
+  unqryLineas.Close;
+  unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+  unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+  unqryLineas.ParamByName('SERIE').AsString   := FSerie;
+  unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
+  unqryLineas.Open;
+  var iCount := unqryLineas.RecordCount;
+  if cdsLineas.Active then cdsLineas.Close;
+  cdsLineas.Open;
+
+  // Volcado instantaneo de los valores de atributos a partir del SKU
+  DesempaquetarAtributosDesdeSku;
+end;
+
+procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
+var
+  Sku, ValorAtr: string;
+  Partes: TArray<string>;
+  i: Integer;
+begin
+  if (not cdsLineas.Active) or cdsLineas.IsEmpty then
+    Exit;
+  FDesempaquetando := True;
   cdsLineas.DisableControls;
-  Bm := cdsLineas.GetBookmark;
   try
     cdsLineas.First;
     while not cdsLineas.Eof do
     begin
-      Sku      := cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
-      ArtPadre := cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
-
-      for i := 1 to 5 do
+      Sku := cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+      if Sku <> '' then
       begin
-        // Intento 1: campos del SQL (ATTRn_VALOR_BD) si existen
-        if cdsLineas.FindField('ATTR' + IntToStr(i) + '_VALOR_BD') <> nil then
-          ValorBD := cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR_BD').AsString
-        else
-          ValorBD := '';
-
-        if cdsLineas.FindField('ATTR' + IntToStr(i) + '_NOMBRE_BD') <> nil then
-          NombreBD := cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_NOMBRE_BD').AsString
-        else
-          NombreBD := '';
-
-        if (ValorBD <> '') or (NombreBD <> '') then
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
         begin
           if not (cdsLineas.State in [dsEdit, dsInsert]) then
             cdsLineas.Edit;
-          cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString  := ValorBD;
-          cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_NOMBRE').AsString := NombreBD;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              ValorAtr := Partes[i]
+            else
+              ValorAtr := '';
+            cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString := ValorAtr;
+          end;
+          cdsLineas.Post;  // AfterPost ya no enviara a BD (FDesempaquetando=True)
         end;
       end;
-
-      // Si tras el copiado no hay nada en ATTR1_VALOR pero el SKU/articulo
-      // padre tiene datos, fallback con consulta directa
-      if (cdsLineas.FieldByName('ATTR1_VALOR').AsString = '') and
-         (Sku <> '') and (ArtPadre <> '') then
-        FallbackRellenarAtributosDesdeBD(Sku, ArtPadre);
-
-      if cdsLineas.State in [dsEdit, dsInsert] then
-        cdsLineas.Post;
-
       cdsLineas.Next;
     end;
+    cdsLineas.MergeChangeLog;
   finally
-    if cdsLineas.BookmarkValid(Bm) then
-      cdsLineas.GotoBookmark(Bm);
-    cdsLineas.FreeBookmark(Bm);
     cdsLineas.EnableControls;
-  end;
-
-  cdsLineas.MergeChangeLog;
-end;
-
-
-// 3) Sustituye FallbackRellenarAtributosDesdeBD por esta version que filtra
-//    tambien por CODIGO_ART_PADRE_ARTVIN, identica al SELECT que ya sabemos
-//    que devuelve correctamente las dos filas (Color y Talla):
-
-procedure TdmInventarios.FallbackRellenarAtributosDesdeBD(
-  const Sku, ArticuloPadre: string);
-var
-  qry: TUniQuery;
-  i: Integer;
-begin
-  if (Sku = '') or (ArticuloPadre = '') then Exit;
-  if not (cdsLineas.State in [dsEdit, dsInsert]) then
-    cdsLineas.Edit;
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := oConn;
-    qry.SQL.Text :=
-      'SELECT v.AV AS NOMBRE_VALOR_AV, n.NOMBRE_ATRIBUTO, '            + sLineBreak +
-      '       n.ORDEN_VISUAL_ATRIBUTO '                                + sLineBreak +
-      '  FROM fza_atributos_sku sa '                                   + sLineBreak +
-      '  JOIN fza_atributos_valores v ON v.ID_AV = sa.ID_AV_SA '       + sLineBreak +
-      '  JOIN vi_atributos_nombres n  ON n.ID_ATRIBUTO = v.ID_VA_AV '  + sLineBreak +
-      '                              AND n.CODIGO_ART_PADRE_ARTVIN = :PADRE ' + sLineBreak +
-      ' WHERE sa.CODIGO_UNIDAD_SKU_SA = :SKU '                         + sLineBreak +
-      ' ORDER BY n.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
-    qry.ParamByName('SKU').AsString   := Sku;
-    qry.ParamByName('PADRE').AsString := ArticuloPadre;
-    qry.Open;
-
-    i := 1;
-    while not qry.Eof and (i <= 5) do
-    begin
-      cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString  :=
-        qry.FieldByName('NOMBRE_VALOR_AV').AsString;
-      cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_NOMBRE').AsString :=
-        qry.FieldByName('NOMBRE_ATRIBUTO').AsString;
-      Inc(i);
-      qry.Next;
-    end;
-  finally
-    qry.Free;
+    FDesempaquetando := False;
   end;
 end;
 
 procedure TdmInventarios.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  // Asignación de la conexión global a todos los queries del módulo
   unqryTablaG.Connection           := oConn;
   unqryLineas.Connection           := oConn;
   unqryMovsRegul.Connection        := oConn;
@@ -321,13 +245,6 @@ begin
   unspAplicar.Connection           := oConn;
   unspEliminarRegul.Connection     := oConn;
 
-  // CRÍTICO: por defecto UniDAC genera UPDATEs con todos los campos en el
-  // WHERE para control optimista de concurrencia. La tabla tiene
-  // INSTANTE_MODIF con ON UPDATE CURRENT_TIMESTAMP, por lo que el segundo
-  // UPDATE sobre una misma fila falla con "Record not found or changed by
-  // another user" porque el INSTANTE_MODIF antiguo ya no existe en BD.
-  //
-  // Solución: especificar UPDATE/DELETE personalizados que sólo usan la PK.
   unqryLineas.SQLUpdate.Text :=
     'UPDATE fza_inventarios_lineas SET '                              + sLineBreak +
     '  CODIGO_ART_INVLIN              = :CODIGO_ART_INVLIN,'          + sLineBreak +
@@ -379,15 +296,14 @@ end;
 procedure TdmInventarios.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
   // Cuando navegamos por las cabeceras, refrescamos las dependientes
-  if DataSet.IsEmpty then Exit;
-
-  SetClavesActivas(
-    DataSet.FieldByName('CODIGO_EMP_INV').AsString,
-    DataSet.FieldByName('CODIGO_ALM_INV').AsString,
-    DataSet.FieldByName('SERIE_INV').AsString,
-    DataSet.FieldByName('NUMERO_INV').AsString
-  );
-
+  if DataSet.IsEmpty then
+    Exit;
+  if DataSet.ControlsDisabled then
+    Exit;
+  SetClavesActivas( DataSet.FieldByName('CODIGO_EMP_INV').AsString,
+                    DataSet.FieldByName('CODIGO_ALM_INV').AsString,
+                    DataSet.FieldByName('SERIE_INV').AsString,
+                    DataSet.FieldByName('NUMERO_INV').AsString );
   CargarLineasInventario;
   CargarMovimientosRegularizacion;
 end;
@@ -406,26 +322,6 @@ begin
       DataSet.FieldByName('TIPO_DOC_INV').AsString := 'IN';
   end;
   DataSet.FieldByName('USUARIO_MODIF').AsString := FUsuario;
-end;
-
-procedure TdmInventarios.CargarLineasInventario;
-begin
-  if (FCodigoEmpresa = '') or (FNumero = '') then
-  begin
-    if cdsLineas.Active then cdsLineas.EmptyDataSet;
-    Exit;
-  end;
-
-  unqryLineas.Close;
-  unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-  unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-  unqryLineas.ParamByName('SERIE').AsString   := FSerie;
-  unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
-  unqryLineas.Open;
-
-  if cdsLineas.Active then cdsLineas.Close;
-    cdsLineas.Open;
-  SincronizarAtributosCDS;
 end;
 
 procedure TdmInventarios.CargarMovimientosRegularizacion;
@@ -572,7 +468,11 @@ end;
 
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-  // Persistencia inmediata a BD
+  // Durante el desempaquetado de atributos in-memory NO debemos enviar
+  // cambios a BD: esos campos no existen en fza_inventarios_lineas.
+  if FDesempaquetando then
+    Exit;
+
   if cdsLineas.ChangeCount > 0 then
     cdsLineas.ApplyUpdates(0);
 end;

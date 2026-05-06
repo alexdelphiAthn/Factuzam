@@ -248,7 +248,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             Height = 463
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDetalle
+            Properties.ActivePage = tsMovsRegul
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 461
             ClientRectLeft = 2
@@ -493,7 +493,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 object btnEliminarRegularizacion: TcxButton
                   Left = 560
                   Top = 10
-                  Width = 120
+                  Width = 241
                   Height = 30
                   Caption = 'Eliminar regularizaci'#243'n'
                   TabOrder = 0
@@ -569,10 +569,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsCabecera: TcxTabSheet
               Caption = '&4.Otros'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
