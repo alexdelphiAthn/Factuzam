@@ -74,6 +74,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
         object pnlTopFicha: TPanel
@@ -206,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsGeneral
+            Properties.ActivePage = tsMovimientos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -312,18 +314,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_SKUS'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 948
                 Top = 0
@@ -486,10 +480,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&5_Tarifas'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -771,10 +761,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -943,10 +929,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1167,10 +1149,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0
@@ -1320,11 +1298,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
-              object cxGrid6: TcxGrid
+              object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 948
@@ -1560,49 +1534,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Align = alRight
                 TabOrder = 1
                 object cxButton11: TcxButton
-                  Left = 7
-                  Top = 165
+                  Left = 3
+                  Top = 13
                   Width = 116
                   Height = 34
                   Caption = '&Exp Excel'
-                  TabOrder = 1
-                  OnClick = btnExportarProveedorClick
-                end
-                object cxButton12: TcxButton
-                  Left = 5
-                  Top = 21
-                  Width = 116
-                  Height = 34
-                  Caption = '&A'#241'adir SKU'
                   TabOrder = 0
-                  OnClick = btnAddProveedorClick
-                end
-                object cxButton13: TcxButton
-                  Left = 6
-                  Top = 58
-                  Width = 116
-                  Height = 34
-                  Caption = '&A'#241'adir CB'
-                  TabOrder = 2
-                  OnClick = btnAddProveedorClick
-                end
-                object cxButton14: TcxButton
-                  Left = 6
-                  Top = 61
-                  Width = 116
-                  Height = 34
-                  Caption = 'A'#241'adir C&B'
-                  TabOrder = 3
-                  OnClick = btnAddProveedorClick
-                end
-                object cxButton15: TcxButton
-                  Left = 6
-                  Top = 101
-                  Width = 116
-                  Height = 34
-                  Caption = '&Verificar CB'
-                  TabOrder = 4
-                  OnClick = btnAddProveedorClick
+                  OnClick = cxButton11Click
                 end
               end
             end
@@ -1793,6 +1731,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 1
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324
@@ -1853,7 +1792,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
     Top = 424
   end
   object ActionListArticulos: TActionList [4]
-    Left = 592
+    Left = 528
     Top = 352
     object actFacturas: TAction
       Caption = 'actFacturas'

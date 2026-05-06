@@ -192,15 +192,11 @@ type
     cxButton8: TcxButton;
     cxButton9: TcxButton;
     cxButton10: TcxButton;
-    cxGrid6: TcxGrid;
+    cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
     cxGridLevel5: TcxGridLevel;
     Panel3: TPanel;
     cxButton11: TcxButton;
-    cxButton12: TcxButton;
-    cxButton13: TcxButton;
-    cxButton14: TcxButton;
-    cxButton15: TcxButton;
     tvStockAlmacen: TcxGridDBColumn;
     tvStockColor: TcxGridDBColumn;
     tvStockDBColumn42: TcxGridDBColumn;
@@ -282,6 +278,7 @@ type
     procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
+    procedure cxButton11Click(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -1126,6 +1123,13 @@ begin
 
   ActualizarVisibilidadVariaciones;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+end;
+
+procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);
+begin
+  inherited;
+  ExportarExcel(cxGrdMovimientos, 'Movimientos_Artículo_' +
+                dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
