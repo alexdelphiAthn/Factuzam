@@ -1,4 +1,4 @@
-﻿inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
+inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
   Left = 5
   Top = 4
   Caption = 'Generador de Procesos'
@@ -21,18 +21,18 @@
       TabOrder = 1
       ExplicitWidth = 859
       ExplicitHeight = 531
-      ClientRectBottom = 527
-      ClientRectRight = 855
+      ClientRectBottom = 529
+      ClientRectRight = 857
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 851
-        ExplicitHeight = 497
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 855
+        ExplicitHeight = 500
         inherited cxGrdPrincipal: TcxGrid
-          Width = 851
-          Height = 497
-          ExplicitWidth = 851
-          ExplicitHeight = 497
+          Width = 855
+          Height = 500
+          ExplicitWidth = 855
+          ExplicitHeight = 500
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_GENERADORPROCESO: TcxGridDBColumn
               Caption = 'C'#243'digo Proceso'
@@ -67,12 +67,14 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 851
-        ExplicitHeight = 497
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 855
+        ExplicitHeight = 500
         object pnl1: TPanel
           Left = 0
           Top = 0
-          Width = 851
+          Width = 855
           Height = 113
           Align = alTop
           TabOrder = 0
@@ -104,7 +106,7 @@
           object Panel1: TPanel
             Left = 1
             Top = 1
-            Width = 849
+            Width = 853
             Height = 111
             Align = alClient
             TabOrder = 0
@@ -143,32 +145,32 @@
         end
         object pnl2: TPanel
           Left = 0
-          Top = 121
-          Width = 851
-          Height = 376
+          Top = 123
+          Width = 855
+          Height = 377
           Align = alClient
           TabOrder = 1
           object pcPestana: TcxPageControl
             Left = 1
             Top = 1
-            Width = 849
-            Height = 374
+            Width = 853
+            Height = 375
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsSQL
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 370
-            ClientRectLeft = 4
-            ClientRectRight = 845
-            ClientRectTop = 30
+            ClientRectBottom = 373
+            ClientRectLeft = 2
+            ClientRectRight = 851
+            ClientRectTop = 29
             object tsSQL: TcxTabSheet
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
               OnShow = tsSQLShow
               object pnl6: TPanel
                 Left = 0
-                Top = 255
-                Width = 841
+                Top = 259
+                Width = 849
                 Height = 85
                 Align = alBottom
                 TabOrder = 0
@@ -179,21 +181,21 @@
                   Properties.ReadOnly = True
                   TabOrder = 0
                   Height = 83
-                  Width = 839
+                  Width = 847
                 end
               end
               object pnl7: TPanel
                 Left = 0
                 Top = 0
-                Width = 841
-                Height = 255
+                Width = 849
+                Height = 259
                 Align = alClient
                 TabOrder = 1
                 object Panel2: TPanel
-                  Left = 723
+                  Left = 731
                   Top = 1
                   Width = 117
-                  Height = 253
+                  Height = 257
                   Align = alRight
                   TabOrder = 0
                   object btnBonito: TButton
@@ -207,10 +209,10 @@
                   end
                 end
                 object ScrollBar1: TScrollBar
-                  Left = 704
+                  Left = 712
                   Top = 1
                   Width = 19
-                  Height = 253
+                  Height = 257
                   Align = alRight
                   Kind = sbVertical
                   Max = 10
@@ -225,8 +227,8 @@
                 object DBSynEdit1: TDBSynEdit
                   Left = 1
                   Top = 1
-                  Width = 703
-                  Height = 253
+                  Width = 711
+                  Height = 257
                   Cursor = crIBeam
                   DataField = 'PROCESO_GENERADOR_PROCESO_GP'
                   DataSource = dsTablaG
@@ -280,32 +282,32 @@
               object cxspltr2: TcxSplitter
                 Left = 377
                 Top = 0
-                Width = 8
-                Height = 340
+                Width = 10
+                Height = 344
                 HotZoneClassName = 'TcxMediaPlayer9Style'
                 Control = pnlTree
               end
               object pnlTabs: TPanel
-                Left = 385
+                Left = 387
                 Top = 0
-                Width = 456
-                Height = 340
+                Width = 462
+                Height = 344
                 Align = alClient
                 Caption = 'pnlTabs'
                 TabOrder = 1
                 object pcMetadato: TcxPageControl
                   Left = 1
                   Top = 1
-                  Width = 454
-                  Height = 338
+                  Width = 460
+                  Height = 342
                   Align = alClient
                   TabOrder = 0
                   Properties.ActivePage = tsEstructura
                   Properties.CustomButtons.Buttons = <>
-                  ClientRectBottom = 334
-                  ClientRectLeft = 4
-                  ClientRectRight = 450
-                  ClientRectTop = 30
+                  ClientRectBottom = 340
+                  ClientRectLeft = 2
+                  ClientRectRight = 458
+                  ClientRectTop = 29
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
@@ -323,16 +325,16 @@
                     object Panel3: TPanel
                       Left = 0
                       Top = 0
-                      Width = 446
-                      Height = 304
+                      Width = 456
+                      Height = 311
                       Align = alClient
                       BevelOuter = bvNone
                       TabOrder = 1
                       object syndtEstructura: TSynEdit
                         Left = 0
                         Top = 0
-                        Width = 427
-                        Height = 304
+                        Width = 437
+                        Height = 311
                         Align = alClient
                         ParentColor = True
                         ParentFont = True
@@ -396,10 +398,10 @@
                           end>
                       end
                       object ScrollBar2: TScrollBar
-                        Left = 427
+                        Left = 437
                         Top = 0
                         Width = 19
-                        Height = 304
+                        Height = 311
                         Align = alRight
                         Kind = sbVertical
                         Max = 10
@@ -419,8 +421,8 @@
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
-                      Width = 329
-                      Height = 304
+                      Width = 339
+                      Height = 311
                       Margins.Left = 4
                       Margins.Top = 4
                       Margins.Right = 4
@@ -545,10 +547,10 @@
                       end
                     end
                     object pnlFacturaOpts1: TPanel
-                      Left = 329
+                      Left = 339
                       Top = 0
                       Width = 117
-                      Height = 304
+                      Height = 311
                       Align = alRight
                       TabOrder = 1
                       object btnExportarExcelMeta: TcxButton
@@ -577,13 +579,13 @@
                 Left = 0
                 Top = 0
                 Width = 377
-                Height = 340
+                Height = 344
                 Align = alLeft
                 Caption = 'pnlTree'
                 TabOrder = 2
                 object pnlTreeBotton: TPanel
                   Left = 1
-                  Top = 298
+                  Top = 302
                   Width = 375
                   Height = 41
                   Align = alBottom
@@ -608,7 +610,7 @@
                   Left = 1
                   Top = 1
                   Width = 375
-                  Height = 297
+                  Height = 301
                   Align = alClient
                   HideSelection = False
                   Indent = 19
@@ -624,8 +626,8 @@
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 724
-                Height = 340
+                Width = 732
+                Height = 344
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -751,10 +753,10 @@
                 end
               end
               object pnlFacturaOpts: TPanel
-                Left = 724
+                Left = 732
                 Top = 0
                 Width = 117
-                Height = 340
+                Height = 344
                 Align = alRight
                 TabOrder = 1
                 object btnExportarExcel: TcxButton
@@ -782,8 +784,8 @@
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
-                Top = 261
-                Width = 841
+                Top = 265
+                Width = 849
                 Height = 79
                 Align = alBottom
                 TabOrder = 0
@@ -890,35 +892,35 @@
         object cxspltr1: TcxSplitter
           Left = 0
           Top = 113
-          Width = 851
-          Height = 8
+          Width = 855
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 851
-        ExplicitHeight = 497
+        ExplicitWidth = 855
+        ExplicitHeight = 500
         inherited pnlPerfilTop: TPanel
-          Width = 851
+          Width = 855
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 851
+          ExplicitWidth = 855
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 851
-          Height = 440
+          Width = 855
+          Height = 443
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 851
-          ExplicitHeight = 440
+          ExplicitWidth = 855
+          ExplicitHeight = 443
           inherited cxgrdPerfil: TcxGrid
-            Width = 851
-            Height = 440
-            ExplicitWidth = 851
-            ExplicitHeight = 440
+            Width = 855
+            Height = 443
+            ExplicitWidth = 855
+            ExplicitHeight = 443
             inherited tvPerfil: TcxGridDBTableView
               object cxgrdbclmnPerfilUSUARIO_GRUPO_PERFILES: TcxGridDBColumn
                 DataBinding.FieldName = 'USUARIO_GRUPO_USUPER'
@@ -975,6 +977,9 @@
         Width = 859
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
         inherited nvNavegador: TcxDBNavigator
           Width = 282
           ExplicitWidth = 282
@@ -1022,11 +1027,11 @@
     CommentAttri.Foreground = clGray
     ConditionalCommentAttri.Foreground = clRed
     ConsoleOutputAttri.Foreground = clBlue
-    DataTypeAttri.Foreground = clBlack
+    DataTypeAttri.Foreground = clNavy
     DelimitedIdentifierAttri.Background = clWhite
     DelimitedIdentifierAttri.Foreground = clGreen
     IdentifierAttri.Background = clWhite
-    IdentifierAttri.Foreground = clGreen
+    IdentifierAttri.Foreground = clForestgreen
     KeyAttri.Foreground = clBlue
     NumberAttri.Foreground = clNavy
     PLSQLAttri.Foreground = clBlue
