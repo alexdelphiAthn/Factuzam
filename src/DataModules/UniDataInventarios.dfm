@@ -209,6 +209,20 @@ inherited dmInventarios: TdmInventarios
       DisplayFormat = ',0.00'
       Calculated = True
     end
+    object cdsLineasINSTANTE_ALTA: TDateTimeField
+      FieldName = 'INSTANTE_ALTA'
+    end
+    object cdsLineasUSUARIO_ALTA: TWideStringField
+      FieldName = 'USUARIO_ALTA'
+      Size = 50
+    end
+    object cdsLineasUSUARIO_MODIF: TWideStringField
+      FieldName = 'USUARIO_MODIF'
+      Size = 50
+    end
+    object cdsLineasINSTANTE_MODIF: TDateTimeField
+      FieldName = 'INSTANTE_MODIF'
+    end
   end
   object dsLineas: TDataSource
     DataSet = cdsLineas

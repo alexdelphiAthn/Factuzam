@@ -285,24 +285,23 @@ begin
   qrySkus := TUniQuery.Create(nil);
   try
     qrySkus.Connection := FConn;
-    // Una linea por cada CODIGO_UNIDAD_STK con stock>0 en el almacen.
-    // Para articulos con variaciones: enlazamos via skus.
-    // Para articulos sin variaciones: CODIGO_UNIDAD_STK = CODIGO_ART_ART.
+
     qrySkus.SQL.Text :=
-      'SELECT s.CODIGO_UNIDAD_STK   AS SKU,' +
+      'SELECT sk.CODIGO_UNIDAD_SKU AS SKU,' +
+      '       a.DESCRIPCION_ART  AS DESC_ART' +
+      '  FROM fza_articulos_skus sk' +
+      '  JOIN fza_articulos a ON a.CODIGO_ART_ART = sk.CODIGO_ART_SKU' +
+      ' WHERE sk.CODIGO_ART_SKU = :ART' +
+      ' UNION ' +
+      'SELECT a.CODIGO_ART_ART  AS SKU,' +
       '       a.DESCRIPCION_ART AS DESC_ART' +
-      '  FROM fza_articulos_stockactual s' +
-      '  LEFT JOIN fza_articulos_skus sk' +
-      '         ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK' +
-      '  JOIN fza_articulos a' +
-      '    ON a.CODIGO_ART_ART =' +
-      '       COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)' +
-      ' WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK) = :ART' +
-      '   AND s.CODIGO_ALM_STK = :ALM' +
-      '   AND s.CANTIDAD_STK > 0' +
-      ' ORDER BY s.CODIGO_UNIDAD_STK';
-    qrySkus.ParamByName('ART').AsString := ACodigoArticulo;
-    qrySkus.ParamByName('ALM').AsString := FAlmacen;
+      '  FROM fza_articulos a' +
+      ' WHERE a.CODIGO_ART_ART = :ART2' +
+      '   AND NOT EXISTS (SELECT 1 FROM fza_articulos_skus sk2' +
+      '                    WHERE sk2.CODIGO_ART_SKU = a.CODIGO_ART_ART)' +
+      ' ORDER BY SKU';
+    qrySkus.ParamByName('ART').AsString  := ACodigoArticulo;
+    qrySkus.ParamByName('ART2').AsString := ACodigoArticulo;
     qrySkus.Open;
 
     while not qrySkus.Eof do
@@ -310,12 +309,12 @@ begin
       sku         := qrySkus.FieldByName('SKU').AsString;
       descripcion := qrySkus.FieldByName('DESC_ART').AsString;
 
-      AIns.ParamByName('LINEA').AsString           := Format('%.4d', [ALineaActual]);
+      AIns.ParamByName('LINEA').AsString          := Format('%.4d', [ALineaActual]);
       AIns.ParamByName('CODIGO_ART_ART').AsString := ACodigoArticulo;
-      AIns.ParamByName('CODIGO_UNIDAD').AsString   := sku;
-      AIns.ParamByName('DESCRIPCION').AsString     := descripcion;
-      AIns.ParamByName('USR').AsString             := AUsuario;
-      AIns.ParamByName('USR2').AsString            := AUsuario;
+      AIns.ParamByName('CODIGO_UNIDAD').AsString  := sku;
+      AIns.ParamByName('DESCRIPCION').AsString    := descripcion;
+      AIns.ParamByName('USR').AsString            := AUsuario;
+      AIns.ParamByName('USR2').AsString           := AUsuario;
       AIns.Execute;
 
       Inc(ALineaActual);

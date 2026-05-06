@@ -1,13 +1,11 @@
 inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   Caption = 'A'#241'adir Bloque - Carga masiva en Inventario'
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = -71
   TextHeight = 19
   inherited pnlCabeceraExtra: TPanel
     Height = 64
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 1180
+    ExplicitWidth = 1178
     ExplicitHeight = 64
     object lblInventarioInfo: TcxLabel
       Left = 12
@@ -29,7 +27,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   inherited pnlCabeceraComun: TPanel
     Top = 64
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitTop = 70
+    ExplicitTop = 64
     inherited chkExcluirYaCargados: TcxCheckBox
       Left = 221
       Top = 6
@@ -58,11 +56,11 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   inherited pcFiltros: TcxPageControl
     Top = 114
     Height = 374
-    ExplicitTop = 120
-    ExplicitHeight = 360
+    ExplicitTop = 114
+    ExplicitHeight = 366
     ClientRectBottom = 372
     inherited tsFamilias: TcxTabSheet
-      ExplicitHeight = 329
+      ExplicitHeight = 335
       inherited pnlFamiliasTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
         inherited btnExpandirFamilias: TcxButton
@@ -88,11 +86,11 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
       inherited tlFamilias: TcxDBTreeList
         Height = 308
-        ExplicitHeight = 294
+        ExplicitHeight = 300
       end
     end
     inherited tsProveedores: TcxTabSheet
-      ExplicitHeight = 337
+      ExplicitHeight = 343
       inherited pnlProveedoresTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
         inherited edtFiltroProveedor: TcxTextEdit
@@ -122,7 +120,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
     end
     inherited tsPropiedades: TcxTabSheet
-      ExplicitHeight = 337
+      ExplicitHeight = 343
       inherited pnlPropiedadesTop: TPanel
         StyleElements = [seFont, seClient, seBorder]
         inherited cbxPropiedad: TcxComboBox
@@ -152,7 +150,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
     end
     inherited tsAlmacenes: TcxTabSheet
-      ExplicitHeight = 337
+      ExplicitHeight = 343
       inherited pnlAlmacenesTop: TPanel
         Height = 113
         StyleElements = [seFont, seClient, seBorder]
@@ -186,11 +184,11 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
         Top = 113
         Height = 230
         ExplicitTop = 113
-        ExplicitHeight = 224
+        ExplicitHeight = 230
       end
     end
     inherited tsFechaAlta: TcxTabSheet
-      ExplicitHeight = 337
+      ExplicitHeight = 343
       inherited chkAplicarFechaAlta: TcxCheckBox
         ExplicitWidth = 322
         ExplicitHeight = 23
@@ -203,7 +201,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       end
     end
     inherited tsVentas: TcxTabSheet
-      ExplicitHeight = 337
+      ExplicitHeight = 343
       inherited chkConVenta: TcxCheckBox
         ExplicitWidth = 297
         ExplicitHeight = 23
