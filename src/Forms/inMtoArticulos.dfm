@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMovimientos
+            Properties.ActivePage = tsTarifas
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -314,10 +314,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_SKUS'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 948
                 Top = 0
@@ -858,6 +866,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object cxgrdbclmnProveedoresPRECIO_ULT_COMPRA: TcxGridDBColumn
                     Caption = 'Precio '#218'ltima Compra'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 194
                   end
                   object cxgrdbclmnProveedoresFECHA_VALIDEZ: TcxGridDBColumn
@@ -929,6 +938,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1149,6 +1162,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrid5: TcxGrid
                 Left = 0
                 Top = 0

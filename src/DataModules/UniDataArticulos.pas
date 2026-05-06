@@ -49,7 +49,7 @@ type
     procedure unqryTarifasArticulosBeforePost(DataSet: TDataSet);
     procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
   private
-    { Private declarations }
+    procedure QuitarEscribiblesVista;
   public
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
@@ -244,6 +244,37 @@ begin
   unqryVariacionesArticulos.Open;
   unqryStockArticulos.Open;
   unqryMovimientosArticulos.Open;
+  QuitarEscribiblesVista;
+end;
+
+procedure TdmArticulos.QuitarEscribiblesVista;
+const
+  // Únicas columnas que pertenecen realmente a fza_articulos_tarifas
+  CamposEscribibles: array[0..14] of string = (
+    'CODIGO_ART_ARTTAR',  'CODIGO_UNICO_ARTTAR',  'CODIGO_UNIDAD_ARTTAR',
+    'CODIGO_TAR_ARTTAR',  'ESACTIVO_ARTTAR',
+    'PRECIO_SALIDA_ARTTAR','PRECIO_FINAL_ARTTAR','PRECIO_DTO_ARTTAR','PORCENTAJE_DTO_ARTTAR',
+    'FECHA_DESDE_ARTTAR', 'FECHA_HASTA_ARTTAR',
+    'INSTANTE_MODIF',     'INSTANTE_ALTA',         'USUARIO_ALTA',  'USUARIO_MODIF'
+  );
+
+  function EsEscribible(const NombreCampo: string): Boolean;
+  var s: string;
+  begin
+    Result := False;
+    for s in CamposEscribibles do
+      if SameText(s, NombreCampo) then Exit(True);
+  end;
+
+var
+  i: Integer;
+begin
+  inherited;
+  if not unqryTarifasArticulos.Active then
+    unqryTarifasArticulos.Open;
+  for i := 0 to unqryTarifasArticulos.Fields.Count - 1 do
+    if not EsEscribible(unqryTarifasArticulos.Fields[i].FieldName) then
+      unqryTarifasArticulos.Fields[i].Required := False;
 end;
 
 procedure TdmArticulos.FillTarifas(lst: TcxListView);
