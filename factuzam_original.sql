@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 06/05/2026 8:31:56
+-- Backup generado: 06/05/2026 19:16:25
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -376,6 +376,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('10', '016', NULL, 3, NULL, 'N', '2024-10-06 20:13:41', '2024-10-06 20:13:41', 'Administrador', 'Administrador', NULL),
   ('10', 'CEBADA', NULL, 0.08, '2023-03-16 00:00:00', 'S', '2023-11-04 17:27:48', '2023-03-16 15:34:56', 'Administrador', 'Administrador', NULL),
   ('11', 'ALFALFA', NULL, 0.25, '2023-05-03 00:00:00', 'S', '2023-05-24 12:53:58', '2023-03-04 13:40:00', 'Administrador', 'Administrador', NULL),
+  ('15', 'BOTIN-ANIT', NULL, NULL, NULL, 'S', '2026-05-06 19:14:50', '2026-05-06 19:14:50', 'Administrador', 'Administrador', NULL),
   ('17', 'ALFALFA', NULL, 0.17, '2023-05-25 00:00:00', 'N', '2023-03-03 14:30:45', '2023-03-03 14:30:45', 'Administrador', 'Administrador', NULL),
   ('20', 'ALFALFA', NULL, 0.1, '2023-03-02 00:00:00', 'N', '2023-03-04 18:14:28', '2023-03-03 14:02:47', 'Administrador', 'Administrador', NULL),
   ('7', '013', NULL, 5, '2023-10-20 00:00:00', 'S', '2023-11-04 14:56:50', '2023-11-04 14:56:50', 'Administrador', 'Administrador', NULL),
@@ -383,7 +384,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('FER', '016', NULL, 25, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador', NULL),
   ('LAIBENSE', 'PATITORICO', NULL, 1.5, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador', NULL),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador', NULL);
--- 17 registros exportados
+-- 18 registros exportados
 
 
 -- Tabla: fza_articulos_skus
@@ -724,9 +725,10 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('SRV-ENVIO', 59, '', 'VENTAMAYOR', 'S', 6, 5.95, NULL, 0.833333, '2026-05-03 00:00:00', NULL, '2026-05-03 17:32:04', '2026-05-03 17:32:04', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA', 60, '', 'VENTAMAYOR', 'S', 10, 10, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:32:04', '2026-05-03 17:32:04', 'Administrador', 'Administrador'),
   ('DEMO-BASICO', 61, '', 'PVP', 'S', 0, 0, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:34:15', '2026-05-03 17:34:15', 'Administrador', 'Administrador'),
-  ('DEMO-PRO', 62, '', 'PVP', 'S', 0, 0, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:34:15', '2026-05-03 17:34:15', 'Administrador', 'Administrador');
+  ('DEMO-PRO', 62, '', 'PVP', 'S', 0, 0, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:34:15', '2026-05-03 17:34:15', 'Administrador', 'Administrador'),
+  ('BOTIN-ANIT', 63, '', '3', 'S', 79.9, 60, NULL, 24.906133, '2026-05-06 00:00:00', NULL, '2026-05-06 19:12:02', '2026-05-06 19:12:02', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 59 registros exportados
+-- 60 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1599,7 +1601,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('EO', '-', '-', 6, 3, 'S', 'S', '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador'),
   ('ES', '-', '-', 13, 3, 'S', 'S', '2026-05-05 14:19:46', '2023-05-13 12:25:25', 'Administrador', 'Administrador'),
   ('FA', '-', '-', 4, 3, 'S', 'S', '2024-10-06 20:30:10', '2023-06-02 13:04:22', 'Administrador', 'Administrador'),
-  ('FC', '008', 'ANA/2023', 5, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
+  ('FC', '008', 'ANA/2023', 1, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
   ('FC', '012', '2026.A1', 119, 6, 'S', 'N', '2026-05-05 16:57:32', '2026-02-01 07:03:46', 'Administrador', '1'),
@@ -1612,7 +1614,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 130, 3, 'S', 'S', '2026-05-05 19:14:57', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 134, 3, 'S', 'S', '2026-05-06 19:07:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 1, 2, 'S', 'S', '2026-05-05 13:54:16', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -2231,7 +2233,7 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000115', '2026.A1', '012', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-28 17:32:57', '2026-04-28 17:32:57', '1', '1', 'GEN', '1', '00000143', NULL),
   ('000116', '2026.A1', '012', '0060', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL),
   ('000116', '2026.A1', '012', '0070', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CHAQ-CUERO/MARRON/L', NULL, NULL, 'S', 60, 0, 0, 49.5868, 'N', 21, 60, -60, -49.5868, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL),
-  ('000117', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-05 09:20:45', '2026-05-05 09:20:45', '1', '1', 'GEN', '1', '00000145', '0000000224'),
+  ('000117', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero feo', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-05 09:20:45', '2026-05-05 09:20:45', '1', 'Administrador', 'GEN', '1', '00000145', '0000000224'),
   ('000118', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-05 16:57:32', '2026-05-05 16:57:32', '1', '1', 'GEN', '1', '00000146', '0000000226');
 -- 148 registros exportados
 
@@ -2394,1832 +2396,153 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('004', 'SELECT FACTURAS', '-- =============================================================================
--- FIX: el DELETE de lineas sin diferencia se ejecutaba en el RECALCULO,
---      borrando lineas que el usuario aun iba a teclear.
---
--- Ahora:
---   - PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO: NO borra. Solo recalcula.
---     Asi el usuario puede pulsar "Recalcular" cuantas veces quiera durante
---     el conteo fisico sin perder lineas.
---   - PRC_FZA_INVENTARIOS_APLICAR: tras llamar al recalculo interno,
---     borra las lineas sin diferencia ANTES de generar los movimientos.
---     Asi el grid del usuario solo conserva las lineas relevantes tras
---     regularizar.
--- =============================================================================
-
-
--- ----------------------------------------------------------------------------
--- 1) PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO  (se quita el DELETE)
--- ----------------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`;
-DELIMITER ;;
-CREATE PROCEDURE `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE   VARCHAR(20),
-    IN p_NRO     VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-    DECLARE v_FECHA_CABECERA DATETIME;
-    DECLARE v_FECHA_DEFECTO  DATETIME;
-
-    DECLARE v_LINEA          VARCHAR(4);
-    DECLARE v_SKU            VARCHAR(50);
-    DECLARE v_FISICA         DECIMAL(19,6);
-    DECLARE v_PMP_NUEVO      DECIMAL(19,6);
-    DECLARE v_FECHA_RECUENTO DATETIME;
-
-    DECLARE v_STOCK_HIST     DECIMAL(19,6);
-    DECLARE v_PMP_HIST       DECIMAL(19,6);
-    DECLARE v_DIF_CANTIDAD   DECIMAL(19,6);
-    DECLARE v_TOTAL_COSTE_DIF DECIMAL(19,6);
-
-    DECLARE cur_lineas CURSOR FOR
-        SELECT LINEA_INVLIN,
-               CODIGO_UNIDAD_INVLIN,
-               CANTIDAD_FISICA_INVLIN,
-               PRECIO_MEDIO_NUEVO_INVLIN,
-               FECHA_RECUENTO_INVLIN
-          FROM fza_inventarios_lineas
-         WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-           AND CODIGO_ALM_INVLIN = p_ALMACEN
-           AND SERIE_INV_INVLIN  = p_SERIE
-           AND NUMERO_INV_INVLIN = p_NRO;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    SELECT ESTADO_INV, FECHA_INV
-      INTO v_ESTADO, v_FECHA_CABECERA
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO != ''ABIERTO'' THEN
-        SIGNAL SQLSTATE ''45000''
-          SET MESSAGE_TEXT = ''Error: El inventario no esta ABIERTO, no se puede recalcular.'';
-    END IF;
-
-    SET v_FECHA_DEFECTO = TIMESTAMP(DATE_SUB(DATE(v_FECHA_CABECERA), INTERVAL 1 DAY), ''23:59:59'');
-
-    OPEN cur_lineas;
-
-    read_loop: LOOP
-        FETCH cur_lineas
-         INTO v_LINEA, v_SKU, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
-
-        IF v_DONE THEN
-            LEAVE read_loop;
-        END IF;
-
-        IF v_FECHA_RECUENTO IS NULL THEN
-            SET v_FECHA_RECUENTO = v_FECHA_DEFECTO;
-        END IF;
-
-        SET v_STOCK_HIST = 0;
-        SET v_PMP_HIST   = 0;
-
-        BEGIN
-            DECLARE CONTINUE HANDLER FOR NOT FOUND BEGIN END;
-            SELECT IFNULL(SUM(IF(TIPO_MOV = ''E'', CANTIDAD_MOV, -CANTIDAD_MOV)), 0)
-              INTO v_STOCK_HIST
-              FROM fza_movimientos_almacen
-             WHERE CODIGO_ALM_MOV    = p_ALMACEN
-               AND CODIGO_UNIDAD_MOV = v_SKU
-               AND FECHA_MOV        <= v_FECHA_RECUENTO
-               AND ESACTIVO_MOV      = ''S'';
-        END;
-
-        BEGIN
-            DECLARE CONTINUE HANDLER FOR NOT FOUND BEGIN END;
-            SELECT IFNULL(PRECIO_MEDIO_MOV, 0)
-              INTO v_PMP_HIST
-              FROM fza_movimientos_almacen
-             WHERE CODIGO_ALM_MOV    = p_ALMACEN
-               AND CODIGO_UNIDAD_MOV = v_SKU
-               AND FECHA_MOV        <= v_FECHA_RECUENTO
-               AND ESACTIVO_MOV      = ''S''
-             ORDER BY FECHA_MOV DESC, NUMERO_MOV DESC
-             LIMIT 1;
-        END;
-
-        SET v_DIF_CANTIDAD = v_FISICA - v_STOCK_HIST;
-
-        IF v_PMP_NUEVO = 0 OR v_PMP_NUEVO IS NULL THEN
-            SET v_PMP_NUEVO = v_PMP_HIST;
-        END IF;
-
-        SET v_TOTAL_COSTE_DIF = (v_FISICA * v_PMP_NUEVO) - (v_STOCK_HIST * v_PMP_HIST);
-
-        UPDATE fza_inventarios_lineas
-           SET CANTIDAD_TEORICA_INVLIN       = v_STOCK_HIST,
-               PRECIO_MEDIO_INVLIN           = v_PMP_HIST,
-               PRECIO_MEDIO_NUEVO_INVLIN     = v_PMP_NUEVO,
-               CANTIDAD_DIFERENCIA_INVLIN    = v_DIF_CANTIDAD,
-               TOTAL_COSTE_DIFERENCIA_INVLIN = v_TOTAL_COSTE_DIF,
-               FECHA_RECUENTO_INVLIN         = v_FECHA_RECUENTO,
-               USUARIO_MODIF                 = p_USUARIO,
-               INSTANTE_MODIF                = NOW()
-         WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-           AND CODIGO_ALM_INVLIN = p_ALMACEN
-           AND SERIE_INV_INVLIN  = p_SERIE
-           AND NUMERO_INV_INVLIN = p_NRO
-           AND LINEA_INVLIN      = v_LINEA;
-
-    END LOOP;
-
-    CLOSE cur_lineas;
-
-    -- NOTA: ya NO borramos lineas sin diferencia aqui. La purga se hace
-    -- en PRC_FZA_INVENTARIOS_APLICAR, justo antes de generar los movimientos.
-
-    UPDATE fza_inventarios
-       SET TOTAL_UNIDADES_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(CANTIDAD_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           ),
-           TOTAL_EUROS_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(TOTAL_COSTE_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           ),
-           USUARIO_MODIF  = p_USUARIO,
-           INSTANTE_MODIF = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO;
-
-    COMMIT;
-END ;;
-DELIMITER ;
-
-
--- ----------------------------------------------------------------------------
--- 2) PRC_FZA_INVENTARIOS_APLICAR  (purga lineas sin diferencia tras recalcular)
--- ----------------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_APLICAR`;
-DELIMITER ;;
-CREATE PROCEDURE `PRC_FZA_INVENTARIOS_APLICAR`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE   VARCHAR(20),
-    IN p_NRO     VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE   INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-    DECLARE v_FECHA_CABECERA DATETIME;
-    DECLARE v_FECHA_DEFECTO  DATETIME;
-
-    DECLARE v_LINEA     VARCHAR(4);
-    DECLARE v_ARTICULO  VARCHAR(20);
-    DECLARE v_SKU       VARCHAR(50);
-    DECLARE v_TEORICA   DECIMAL(19,6);
-    DECLARE v_FISICA    DECIMAL(19,6);
-    DECLARE v_PMP_NUEVO DECIMAL(19,6);
-    DECLARE v_FECHA_RECUENTO DATETIME;
-    DECLARE v_FECHA_SALIDA   DATETIME;
-
-    DECLARE v_MOV_SALIDA  VARCHAR(20);
-    DECLARE v_MOV_ENTRADA VARCHAR(20);
-
-    DECLARE cur_lineas CURSOR FOR
-        SELECT l.LINEA_INVLIN,
-               l.CODIGO_ART_INVLIN,
-               l.CODIGO_UNIDAD_INVLIN,
-               l.CANTIDAD_TEORICA_INVLIN,
-               l.CANTIDAD_FISICA_INVLIN,
-               l.PRECIO_MEDIO_NUEVO_INVLIN,
-               l.FECHA_RECUENTO_INVLIN
-          FROM fza_inventarios_lineas l
-         WHERE l.CODIGO_EMP_INVLIN = p_EMPRESA
-           AND l.CODIGO_ALM_INVLIN = p_ALMACEN
-           AND l.SERIE_INV_INVLIN  = p_SERIE
-           AND l.NUMERO_INV_INVLIN = p_NRO;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    -- Recalculamos antes (deja teoricas, PMPs y diferencias al dia)
-    CALL PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO(
-        p_EMPRESA, p_ALMACEN, p_SERIE, p_NRO, p_USUARIO
-    );
-
-    START TRANSACTION;
-
-    SELECT ESTADO_INV, FECHA_INV
-      INTO v_ESTADO, v_FECHA_CABECERA
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO != ''ABIERTO'' THEN
-        SIGNAL SQLSTATE ''45000''
-          SET MESSAGE_TEXT = ''Error: El inventario ya fue aplicado o esta cancelado.'';
-    END IF;
-
-    SET v_FECHA_DEFECTO = TIMESTAMP(DATE_SUB(DATE(v_FECHA_CABECERA), INTERVAL 1 DAY), ''23:59:59'');
-
-    -- *** PURGA DE LINEAS SIN REGULARIZACION ***
-    -- Borramos aqui (no en el recalculo) las lineas que no aportan al
-    -- regularizar: ni diferencia de cantidad ni diferencia de coste.
-    -- Esto es el momento correcto: el usuario ya ha decidido aplicar.
-    DELETE FROM fza_inventarios_lineas
-     WHERE CODIGO_EMP_INVLIN              = p_EMPRESA
-       AND CODIGO_ALM_INVLIN              = p_ALMACEN
-       AND SERIE_INV_INVLIN               = p_SERIE
-       AND NUMERO_INV_INVLIN              = p_NRO
-       AND IFNULL(CANTIDAD_DIFERENCIA_INVLIN,    0) = 0
-       AND IFNULL(TOTAL_COSTE_DIFERENCIA_INVLIN, 0) = 0;
-
-    -- Recalculamos totales de cabecera tras la purga (los que quedan)
-    UPDATE fza_inventarios
-       SET TOTAL_UNIDADES_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(CANTIDAD_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           ),
-           TOTAL_EUROS_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(TOTAL_COSTE_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           )
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO;
-
-    OPEN cur_lineas;
-
-    read_loop: LOOP
-        FETCH cur_lineas
-         INTO v_LINEA, v_ARTICULO, v_SKU, v_TEORICA, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
-
-        IF v_DONE THEN
-            LEAVE read_loop;
-        END IF;
-
-        IF v_FECHA_RECUENTO IS NULL THEN
-            SET v_FECHA_RECUENTO = v_FECHA_DEFECTO;
-        END IF;
-
-        SET v_FECHA_SALIDA = DATE_SUB(v_FECHA_RECUENTO, INTERVAL 1 SECOND);
-
-        SET v_MOV_SALIDA  = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''S''), 20);
-        SET v_MOV_ENTRADA = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''E''), 20);
-
-        IF v_TEORICA > 0 THEN
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''S'', v_TEORICA, 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            UPDATE fza_movimientos_almacen
-               SET FECHA_MOV = v_FECHA_SALIDA
-             WHERE NUMERO_MOV = v_MOV_SALIDA;
-
-        ELSEIF v_TEORICA < 0 THEN
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''E'', ABS(v_TEORICA), 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            UPDATE fza_movimientos_almacen
-               SET FECHA_MOV = v_FECHA_SALIDA
-             WHERE NUMERO_MOV = v_MOV_SALIDA;
-        END IF;
-
-        IF v_FISICA > 0 THEN
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_ENTRADA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''E'', v_FISICA, v_PMP_NUEVO, (v_FISICA * v_PMP_NUEVO),
-                p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            UPDATE fza_movimientos_almacen
-               SET FECHA_MOV = v_FECHA_RECUENTO
-             WHERE NUMERO_MOV = v_MOV_ENTRADA;
-        END IF;
-
-        CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_EMPRESA, v_SKU, p_ALMACEN);
-
-    END LOOP;
-
-    CLOSE cur_lineas;
-
-    UPDATE fza_inventarios
-       SET ESTADO_INV     = ''APLICADO'',
-           USUARIO_MODIF  = p_USUARIO,
-           INSTANTE_MODIF = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO;
-
-    COMMIT;
-END ;;
-DELIMITER ;', '2026-05-06 08:14:04', '2023-04-29 12:04:43', 'Administrador', 'Administrador'),
-  ('005', 'borrado perfiles por mto', 'delete from fza_usuarios_perfiles 
-      where key_perfiles = ''frmMtoFormasdePago''
-        and subkey_perfiles like ''tvLineasFacturacion%''', '2023-05-27 16:56:53', '2023-05-08 13:41:02', 'Administrador', 'Administrador'),
-  ('006', 'combo facturas', '   
-SELECT SERIE_CON_CLI AS SERIE_CON 
-  FROM vi_clientes                              
- WHERE SERIE_CON_CLI IS NOT NULL       
-   AND CODIGO_CLI_CLI = ''AGRICULTOR''                
- UNION                                          
-SELECT EMPSER AS SERIE_CON            
-  FROM vi_empresas_series                       
- WHERE CODIGO_EMP_EMPSER = ''007''          
-   AND (FECHA_DESDE_EMPSER >= ''12-05-2023''             
-        AND (FECHA_HASTA_EMPSER <= ''12-05-2023''        
-             OR FECHA_HASTA_EMPSER IS NULL ))    
- UNION                                          
-SELECT SERIE_CON_EMP AS SERIE_CON 
-  FROM vi_empresas                              
- WHERE SERIE_CON_EMP IS NOT NULL       
-   AND  CODIGO_EMP_EMP = ''007''               
- UNION                                          
- SELECT SERIE_CON                          
-   FROM vi_contadores                           
-  WHERE tipodoc_contador = ''FC''
-  ', '2023-05-13 13:53:12', '2023-05-13 13:47:20', 'Administrador', 'Administrador'),
-  ('074', NULL, '-- 1. Quitamos la Primary Key actual
-ALTER TABLE `fza_caja_operaciones` DROP PRIMARY KEY;
-
--- 2. Añadimos el nuevo campo autonumérico como Primary Key
-ALTER TABLE `fza_caja_operaciones` ADD COLUMN `ID_OPCAJA` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
-
--- 3. Volvemos a crear tu antigua PK como un índice para no perder rendimiento
-ALTER TABLE `fza_caja_operaciones` ADD INDEX `IDX_AGRUPACION_OPCAJA` (`CODIGO_EMP_OPCAJA`, `CODIGO_ALM_OPCAJA`, `CODIGO_CAJA_OPCAJA`, `NUMERO_OPERACION_OPCAJA`);', '2026-04-02 19:06:21', '2026-04-02 19:06:21', 'Administrador', 'Administrador'),
-  ('075', NULL, 'DELIMITER //
-
-CREATE OR REPLACE PROCEDURE `PRC_GET_NEXT_OP_CAJA`(
-    IN  pEmpresa  VARCHAR(10),
-    IN  pAlmacen  VARCHAR(10),
-    IN  pCaja     VARCHAR(10),
-    IN  pUsuario  VARCHAR(100),
-    OUT pSerie    VARCHAR(12),
-    OUT pcont     VARCHAR(20)
-)
-BEGIN    
-    DECLARE pPADD    BIGINT;
-    DECLARE vSerie   VARCHAR(12);
-
-    START TRANSACTION;
-
-        /* 1. Obtener serie vigente */        
-        SELECT EMPSER          
-          INTO vSerie          
-          FROM fza_empresas_series         
-         WHERE TIPO_DOC_EMPSER        = ''OV''           
-           AND CODIGO_EMP_EMPSER = pEmpresa           
-           AND CODIGO_ALM_EMPSER = pAlmacen           
-           AND CODIGO_CAJA_EMPSER    = pCaja           
-           AND FECHA_DESDE_EMPSER   <= CURDATE()
-           AND (FECHA_HASTA_EMPSER  >= CURDATE() OR FECHA_HASTA_EMPSER IS NULL)
-         LIMIT 1;
-
-        /* 2. Crear serie si no existe (Sustituye el bloque de Error) */
-        IF vSerie IS NULL THEN            
-            SET vSerie = ''OV''; /* Nombre por defecto de la nueva serie */
-            
-            INSERT INTO fza_empresas_series (
-                TIPO_DOC_EMPSER,
-                CODIGO_EMP_EMPSER,
-                CODIGO_ALM_EMPSER,
-                CODIGO_CAJA_EMPSER,
-                EMPSER,
-                FECHA_DESDE_EMPSER,
-                FECHA_HASTA_EMPSER
-                /* Descomenta y ajusta si tu tabla tiene columnas de auditoría:
-                , INSTANTE_ALTA,
-                USUARIO_ALTA
-                */
-            ) VALUES (
-                ''OV'',
-                pEmpresa,
-                pAlmacen,
-                pCaja,
-                vSerie,
-                CURDATE(),
-                NULL
-                /*
-                , CURRENT_TIMESTAMP,
-                pUsuario
-                */
-            );
-        END IF;
-
-        /* 3. Crear fila de contador si no existe */        
-        IF NOT EXISTS (
-            SELECT 1              
-              FROM fza_contadores             
-             WHERE TIPO_DOC_CON = ''OV''               
-               AND EMPRESA_CON = pEmpresa               
-               AND SERIE_CON   = vSerie        
-        ) THEN            
-            INSERT INTO fza_contadores (
-                TIPO_DOC_CON,
-                EMPRESA_CON,
-                SERIE_CON,
-                CON,
-                NUM_DIGITOS_CON,
-                ESACTIVO_CON,
-                DEFAULT_CON,
-                INSTANTE_ALTA,
-                USUARIO_ALTA,
-                USUARIO_MODIF)
-            VALUES (
-                ''OV'',
-                pEmpresa,
-                vSerie,
-                1,
-                8,
-                ''S'',
-                ''S'',
-                CURRENT_TIMESTAMP,
-                pUsuario,
-                pUsuario);
-        END IF;
-
-        /* 4. Bloquear fila y leer dígitos */        
-        SELECT NUM_DIGITOS_CON          
-          INTO pPADD          
-          FROM fza_contadores         
-         WHERE TIPO_DOC_CON = ''OV''           
-           AND EMPRESA_CON = pEmpresa           
-           AND SERIE_CON   = vSerie         
-         LIMIT 1           
-           FOR UPDATE;
-
-        /* 5. Incrementar */        
-        UPDATE fza_contadores           
-           SET CON = CON + 1,
-               USUARIO_MODIF      = pUsuario         
-         WHERE TIPO_DOC_CON  = ''OV''           
-           AND EMPRESA_CON  = pEmpresa           
-           AND SERIE_CON    = vSerie;
-
-        /* 6. Devolver serie y número formateado */        
-        SET pSerie := vSerie;
-
-        SELECT LPAD(CON - 1, pPADD, ''0'')
-          INTO pcont          
-          FROM fza_contadores         
-         WHERE TIPO_DOC_CON = ''OV''           
-           AND EMPRESA_CON = pEmpresa           
-           AND SERIE_CON   = vSerie         
-         LIMIT 1;
-
-    COMMIT;
-END //
-
-DELIMITER ;', '2026-04-02 20:03:14', '2026-04-02 20:03:04', 'Administrador', 'Administrador'),
-  ('076', 'Modificar PRC_GENERAR_CODIGO_VALE', 'DELIMITER $$
-CREATE OR REPLACE PROCEDURE `PRC_GENERAR_CODIGO_VALE`(IN pEmpresa VARCHAR(10),
-    IN pAlmacen VARCHAR(10),
-    IN pCaja VARCHAR(10),
-    IN pNumOperacion VARCHAR(20),
-    IN pUsuario VARCHAR(100),
-    OUT pCodigoFinal VARCHAR(100))
-BEGIN
-    /* DECLARE vContador VARCHAR(20); */
-    
-    /* 1. Obtenemos el contador secuencial (Le pasamos ''VL'' y el Usuario) */
-    /* CALL PRC_GET_NEXT_CONT(''VL'', pUsuario, vContador); */
-    
-    /* 2. Construimos el código final concatenando todo */
-    /* Resultado ejemplo: 00014_VL_1_ALM01_CAJ1_4509 */
-    SET pCodigoFinal = CONCAT(pEmpresa, ''_'', pAlmacen, ''_'', pCaja, ''_'', pNumOperacion);
-    
-END;
-$$
-DELIMITER ;', '2026-04-04 08:22:06', '2026-04-04 08:22:06', 'Administrador', 'Administrador'),
-  ('077', NULL, 'ALTER TABLE fza_depositos_cliente
-  ADD COLUMN CODIGO_CAJA_DEP varchar(10) DEFAULT NULL COMMENT ''Caja donde se realizó el depósito'',
-  ADD COLUMN NUMERO_OPERACION_DEP varchar(20) DEFAULT NULL COMMENT ''Número de operación de caja en la creación'';', '2026-04-04 19:12:24', '2026-04-04 19:12:24', 'Administrador', 'Administrador'),
-  ('078', NULL, '
-CREATE PROCEDURE PRC_FZA_DEPOSITOS_INSERT (
-    IN p_ID_DEP VARCHAR(20),
-    IN p_EMP VARCHAR(20),
-    IN p_ALM_DEP VARCHAR(10),
-    IN p_CLI VARCHAR(20),
-    IN p_ART VARCHAR(50),
-    IN p_SKU VARCHAR(50),
-    IN p_PRECIO DECIMAL(19,6),
-    IN p_CANTIDAD DECIMAL(19,6),
-    IN p_ANTICIPO DECIMAL(19,6),
-    IN p_TIPOIVA CHAR(1),
-    IN p_PORCIVA DECIMAL(19,6),
-    IN p_IMPINCL CHAR(1),
-    IN p_CAJA VARCHAR(10),        -- NUEVO
-    IN p_NUMOP VARCHAR(20),       -- NUEVO
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
-
-    /* Manejo de errores para asegurar la consistencia */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-
-    START TRANSACTION;
-
-    /* 1. Insertamos el depósito en la tabla */
-    INSERT INTO fza_depositos_cliente (
-        ID_DEPOSITO_DEP, CODIGO_EMP_DEP, CODIGO_ALM_DEP,
-        CODIGO_CLI_DEP, CODIGO_ART_DEP, CODIGO_UNIDAD_DEP,
-        ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP,
-        TIPO_IVA_DEP, PORCENTAJE_IVA_DEP, ESIMP_INCL_DEP,
-        CODIGO_CAJA_DEP, NUMERO_OPERACION_DEP, /* NUEVOS CAMPOS */
-        INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF
-    ) VALUES (
-        p_ID_DEP, p_EMP, p_ALM_DEP,
-        p_CLI, p_ART, p_SKU, 
-        ''PENDIENTE'', p_PRECIO, p_CANTIDAD, p_ANTICIPO,
-        p_TIPOIVA, p_PORCIVA, p_IMPINCL,
-        p_CAJA, p_NUMOP, /* NUEVOS VALORES */
-        NOW(), p_USUARIO, NOW(), p_USUARIO
-    );
-
-    /* 2. Calculamos la nueva deuda (Lógica adaptada de tu trigger) */
-    SET v_deuda_nueva = (p_PRECIO * COALESCE(p_CANTIDAD, 1)) - COALESCE(p_ANTICIPO, 0);
-
-    /* 3. Si hay deuda generada, actualizamos el cliente */
-    IF v_deuda_nueva > 0 AND p_CLI IS NOT NULL THEN
-        UPDATE fza_clientes 
-           SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) + v_deuda_nueva 
-         WHERE CODIGO_CLI_CLI = p_CLI;
-    END IF;
-
-    COMMIT;
-END;', '2026-04-04 23:49:26', '2026-04-04 19:12:47', 'Administrador', 'Administrador'),
-  ('079', NULL, 'ALTER TABLE fza_movimientos_almacen
-  ADD COLUMN CODIGO_ALM_DOC_MOV varchar(10) DEFAULT NULL COMMENT ''Almacén/Tienda donde se originó el ticket/operación'',
-  ADD COLUMN NUMERO_OPERACION_DOC_MOV varchar(20) DEFAULT NULL COMMENT ''Número de operación de caja que causó el movimiento'';', '2026-04-04 22:44:27', '2026-04-04 22:44:27', 'Administrador', 'Administrador'),
-  ('080', NULL, '
-delimiter $$
-CREATE PROCEDURE PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT (
-    IN p_NUMERO_MOV VARCHAR(20),
-    IN p_TIPO_DOC_MOV VARCHAR(20),
-    IN p_SERIE_DOC_MOV VARCHAR(20),
-    IN p_NRO_DOC_MOV VARCHAR(20),
-    IN p_LINEA_MOV VARCHAR(10),
-    IN p_CODIGO_EMPRESA_MOV VARCHAR(20),
-    IN p_CODIGO_ALMACEN_MOV VARCHAR(10),
-    IN p_CODIGO_ALMACEN_CONTRA_MOV VARCHAR(10),  -- <--- AÑADIDO: Almacén Contra
-    IN p_CODIGO_UNIDAD_MOV VARCHAR(50),
-    IN p_TIPO_MOVIMIENTO_MOV VARCHAR(1), 
-    IN p_CANTIDAD_MOV DECIMAL(19,6),
-    IN p_PRECIO_MEDIO_MOV DECIMAL(19,6), 
-    IN p_TOTAL_COSTE_MOV DECIMAL(19,6),  
-    IN p_USUARIO VARCHAR(100),
-    IN p_ALMACEN_DOC VARCHAR(10),        
-    IN p_NUMOP_DOC VARCHAR(20)           
-)
-BEGIN
-    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_PrecioFinal DECIMAL(19,6);
-    DECLARE v_CosteFinal DECIMAL(19,6);
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    -- 1. Obtener el PMP actual del stock
-    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
-      INTO v_PMPActual
-      FROM fza_articulos_stockactual
-     WHERE CODIGO_ALM_STK = p_CODIGO_ALMACEN_MOV
-       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
-     LIMIT 1;
-
-    -- 2. Lógica de re-cálculo
-    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
-        SET v_PrecioFinal = v_PMPActual;
-        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
-    ELSE
-        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
-        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
-    END IF;
-
-    -- 3. Insertar el Movimiento de Almacén real
-    INSERT INTO fza_movimientos_almacen (
-        NUMERO_MOV,                                       
-        TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV,
-        CODIGO_EMP_MOV, CODIGO_ALM_MOV, CODIGO_ALM_CONTRA_MOV, -- <--- AÑADIDO
-        CODIGO_UNIDAD_MOV, TIPO_MOV, CANTIDAD_MOV, 
-        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
-        FECHA_MOV, USUARIO_ALTA, USUARIO_MODIF,
-        CODIGO_ALM_DOC_MOV, NUMERO_OPERACION_DOC_MOV  
-    ) VALUES (
-        p_NUMERO_MOV,                                     
-        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
-        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_ALMACEN_CONTRA_MOV, -- <--- AÑADIDO
-        p_CODIGO_UNIDAD_MOV, p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
-        v_PrecioFinal, v_CosteFinal, 
-        NOW(), p_USUARIO, p_USUARIO,
-        p_ALMACEN_DOC, p_NUMOP_DOC                        
-    );
-
-    -- 4. Actualizar Stock
-    INSERT INTO fza_articulos_stockactual (
-        CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
-        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF
-    ) VALUES (
-        p_CODIGO_ALMACEN_MOV, 
-        p_CODIGO_UNIDAD_MOV,
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
-        v_PrecioFinal, 
-        NOW()
-    )
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
-        INSTANTE_MODIF = NOW();
-
-    COMMIT;
-END $$
-delimiter ;', '2026-04-04 23:46:04', '2026-04-04 22:44:59', 'Administrador', 'Administrador'),
-  ('081', NULL, 'DELIMITER $$
-
--- 2. Creamos el procedimiento. El motor ignorará los ; internos.
-CREATE OR REPLACE PROCEDURE pr_demo_silenciosa()
-BEGIN
-    SELECT ''Esta es una prueba exitosa'' AS mensaje;
-END $$
--- 3. Aquí usamos $$ para indicar que el CREATE PROCEDURE ha terminado.
-
--- 4. (Opcional pero muy recomendado) Devolvemos el delimitador a la normalidad.
-DELIMITER ;', '2026-04-05 00:07:35', '2026-04-05 00:07:35', 'Administrador', 'Administrador'),
-  ('082', NULL, 'drop PROCEDURE `pr_demo_silenciosa`', '2026-04-05 06:16:05', '2026-04-05 06:16:05', 'Administrador', 'Administrador'),
-  ('083', 'Modificar PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', 'DELIMITER $$
-CREATE OR REPLACE PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
-	IN `p_NUMERO_MOV` VARCHAR(20),
-	IN `p_TIPO_DOC_MOV` VARCHAR(20),
-	IN `p_SERIE_DOC_MOV` VARCHAR(20),
-	IN `p_NRO_DOC_MOV` VARCHAR(20),
-	IN `p_LINEA_MOV` VARCHAR(10),
-	IN `p_CODIGO_EMPRESA_MOV` VARCHAR(20),
-	IN `p_CODIGO_ALMACEN_MOV` VARCHAR(10),
-	IN `p_CODIGO_ALMACEN_CONTRA_MOV` VARCHAR(10),
-	IN `p_CODIGO_UNIDAD_MOV` VARCHAR(50),
-	IN `p_TIPO_MOVIMIENTO_MOV` VARCHAR(1),
-	IN `p_CANTIDAD_MOV` DECIMAL(19,6),
-	IN `p_PRECIO_MEDIO_MOV` DECIMAL(19,6),
-	IN `p_TOTAL_COSTE_MOV` DECIMAL(19,6),
-	IN `p_USUARIO` VARCHAR(100),
-	IN `p_ALMACEN_DOC` VARCHAR(10),
-	IN `p_NUMOP_DOC` VARCHAR(20),
-    IN `p_CODCLIENTE` VARCHAR(20),
-    IN `p_CODARTICULO` VARCHAR(20)
-)
-BEGIN
-    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_PrecioFinal DECIMAL(19,6);
-    DECLARE v_CosteFinal DECIMAL(19,6);
-
---     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
---     BEGIN
---         ROLLBACK;
---         RESIGNAL;
---     END;
--- 
---     START TRANSACTION;
-
-    /* 1. Obtener el PMP actual del stock */
-    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
-      INTO v_PMPActual
-      FROM fza_articulos_stockactual
-     WHERE CODIGO_ALM_STK = p_CODIGO_ALMACEN_MOV
-       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
-     LIMIT 1;
-
-    /* 2. Lógica de re-cálculo */
-    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
-        SET v_PrecioFinal = v_PMPActual;
-        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
-    ELSE
-        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
-        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
-    END IF;
-
-    /* 3. Insertar el Movimiento de Almacén real */
-    INSERT INTO fza_movimientos_almacen (
-        NUMERO_MOV,                                       
-        TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV,
-        CODIGO_EMP_MOV, CODIGO_ALM_MOV, CODIGO_ALM_CONTRA_MOV, /* <--- AÑADIDO */
-        CODIGO_UNIDAD_MOV, TIPO_MOV, CANTIDAD_MOV, 
-        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV, 
-        FECHA_MOV, USUARIO_ALTA, USUARIO_MODIF,
-        CODIGO_ALM_DOC_MOV, NUMERO_OPERACION_DOC_MOV, CODIGO_CLI_MOV, 
-        CODIGO_ART_MOV  
-    ) VALUES (
-        p_NUMERO_MOV,                                     
-        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
-        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_ALMACEN_CONTRA_MOV, /* <--- AÑADIDO */
-        p_CODIGO_UNIDAD_MOV, p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV, 
-        v_PrecioFinal, v_CosteFinal, 
-        NOW(), p_USUARIO, p_USUARIO,
-        p_ALMACEN_DOC, p_NUMOP_DOC, p_CODCLIENTE, p_CODARTICULO                        
-    );
-
-    /* 4. Actualizar Stock */
-    INSERT INTO fza_articulos_stockactual (
-        CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
-        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF
-    ) VALUES (
-        p_CODIGO_ALMACEN_MOV, 
-        p_CODIGO_UNIDAD_MOV,
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
-        v_PrecioFinal, 
-        NOW()
-    )
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
-        INSTANTE_MODIF = NOW();
-
---    COMMIT;
-END
-$$
-DELIMITER ;', '2026-04-05 06:20:41', '2026-04-05 06:20:41', 'Administrador', 'Administrador'),
-  ('084', NULL, 'DELIMITER $$
-
-DROP PROCEDURE IF EXISTS `PRC_FZA_DEPOSITOS_UPDATE`$$
-
-CREATE PROCEDURE `PRC_FZA_DEPOSITOS_UPDATE`(
-    IN SKU VARCHAR(50),
-    IN CLI VARCHAR(20),
-    IN ESTADO VARCHAR(15),
-    IN INC_ANTICIPO DECIMAL(19,6),
-    IN USUARIO VARCHAR(100)
-)
-BEGIN
-    /* Variables para almacenar los datos actuales del depósito */
-    DECLARE v_ID_DEPOSITO VARCHAR(20);
-    DECLARE v_OLD_ESTADO VARCHAR(15);
-    DECLARE v_OLD_PRECIO DECIMAL(19,6);
-    DECLARE v_OLD_CANTIDAD_PTE DECIMAL(19,6);
-    DECLARE v_OLD_ANTICIPO DECIMAL(19,6);
-
-    /* Variables para calcular los nuevos valores y la deuda */
-    DECLARE v_NUEVO_ESTADO VARCHAR(15);
-    DECLARE v_NUEVO_ANTICIPO DECIMAL(19,6);
-    DECLARE v_deuda_antigua DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_deuda_nueva DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_diferencia DECIMAL(19,6) DEFAULT 0;
-
-    /* Manejador de errores: Deshace todo si algo falla */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    /* 1. Buscar el depósito que coincide con el Cliente y el SKU */
-    /* Buscamos el que esté ''PENDIENTE'' y lo bloqueamos para evitar concurrencia */
-    SELECT ID_DEPOSITO_DEP, ESTADO_DEP, PRECIO_VENTA_DEP, CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP
-      INTO v_ID_DEPOSITO, v_OLD_ESTADO, v_OLD_PRECIO, v_OLD_CANTIDAD_PTE, v_OLD_ANTICIPO
-      FROM fza_depositos_cliente
-     WHERE CODIGO_CLI_DEP = CLI
-       AND CODIGO_UNIDAD_DEP = SKU
-       AND ESTADO_DEP = ''PENDIENTE''
-     LIMIT 1 /* Por seguridad, nos quedamos con uno en caso de anomalía de datos */
-       FOR UPDATE;
-
-    /* Solo procedemos si encontramos un depósito válido */
-    IF v_ID_DEPOSITO IS NOT NULL THEN
-
-        /* 2. Calcular los nuevos valores a guardar */
-        /* Sumamos el anticipo actual con el incremento que viene de Delphi */
-        SET v_NUEVO_ANTICIPO = v_OLD_ANTICIPO + COALESCE(INC_ANTICIPO, 0);
-        
-        /* Si Delphi manda NULL (ParamByName(''ESTADO'').Clear), mantenemos el estado anterior */
-        SET v_NUEVO_ESTADO = COALESCE(ESTADO, v_OLD_ESTADO); 
-
-        /* 3. Calcular la variación de la deuda para actualizar al cliente */
-        IF v_OLD_ESTADO = ''PENDIENTE'' THEN
-            SET v_deuda_antigua = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_OLD_ANTICIPO;
-        END IF;
-
-        IF v_NUEVO_ESTADO = ''PENDIENTE'' THEN
-            SET v_deuda_nueva = (v_OLD_PRECIO * COALESCE(v_OLD_CANTIDAD_PTE, 1)) - v_NUEVO_ANTICIPO;
-        END IF;
-
-        SET v_diferencia = v_deuda_nueva - v_deuda_antigua;
-
-        /* 4. Actualizar la tabla del depósito */
-        UPDATE fza_depositos_cliente
-           SET IMPORTE_ANTICIPO_DEP = v_NUEVO_ANTICIPO,
-               ESTADO_DEP = v_NUEVO_ESTADO,
-               USUARIO_MODIF = USUARIO,
-               INSTANTE_MODIF = NOW()
-         WHERE ID_DEPOSITO_DEP = v_ID_DEPOSITO;
-
-        /* 5. Actualizar la deuda total en el cliente si hubo cambios */
-        IF v_diferencia <> 0 THEN
-            UPDATE fza_clientes
-               SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) + v_diferencia
-             WHERE CODIGO_CLI_CLI = CLI;
-        END IF;
-
-    END IF;
-
-    COMMIT;
-END
-$$
-
-DELIMITER ;', '2026-04-05 08:16:32', '2026-04-05 08:16:32', 'Administrador', 'Administrador'),
-  ('085', NULL, 'delete from fza_caja_operaciones;
-delete from fza_depositos_cliente;
-update fza_clientes Set TOTAL_DEUDA_CLI = 0;', '2026-04-06 19:40:05', '2026-04-06 19:39:35', 'Administrador', 'Administrador'),
-  ('086', NULL, 'select * from fza_depositos_cliente where NUMERO_OPERACION_DEP = ''00000070''', '2026-04-06 20:10:07', '2026-04-06 20:02:07', 'Administrador', 'Administrador'),
-  ('087', NULL, 'SELECT * FROM fza_facturas_lineas WHERE NUMERO_OPERACION_FAC = ''00000070''', '2026-04-06 20:35:10', '2026-04-06 20:11:42', 'Administrador', 'Administrador'),
-  ('121', NULL, 'DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ELIMINAR_REGUL`;
-DELIMITER ;;
-CREATE PROCEDURE `PRC_FZA_INVENTARIOS_ELIMINAR_REGUL`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE   VARCHAR(20),
-    IN p_NRO     VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE   INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-    DECLARE v_PATRON VARCHAR(50);
-
-    -- Cursor para recorrer los SKUs afectados (para recalcular Kardex tras borrar)
-    DECLARE v_SKU VARCHAR(50);
-    DECLARE cur_skus CURSOR FOR
-        SELECT DISTINCT CODIGO_UNIDAD_MOV
-          FROM fza_movimientos_almacen
-         WHERE CODIGO_ALM_MOV = p_ALMACEN
-           AND NUMERO_MOV LIKE v_PATRON;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-
-    -- Blindaje transaccional
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    -- 1. Verificar estado del inventario (debe estar APLICADO)
-    SELECT ESTADO_INV INTO v_ESTADO
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV          = p_SERIE
-       AND NUMERO_INV            = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO IS NULL THEN
-        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT =
-            ''Error: el inventario no existe.'';
-    END IF;
-
-    IF v_ESTADO <> ''APLICADO'' THEN
-        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT =
-            ''Error: el inventario debe estar APLICADO para eliminar la regularización.'';
-    END IF;
-
-    SET v_PATRON = CONCAT(''IV-'', p_NRO, ''-%'');
-
-    -- 2. Recoger lista de SKUs afectados ANTES de borrar (para recalcular después)
-    DROP TEMPORARY TABLE IF EXISTS tmp_skus_afectados;
-    CREATE TEMPORARY TABLE tmp_skus_afectados (sku VARCHAR(50) PRIMARY KEY);
-
-    INSERT INTO tmp_skus_afectados (sku)
-    SELECT DISTINCT CODIGO_UNIDAD_MOV
-      FROM fza_movimientos_almacen
-     WHERE CODIGO_ALM_MOV = p_ALMACEN
-       AND NUMERO_MOV LIKE v_PATRON;
-
-    -- 3. BORRAR los movimientos generados por el inventario
-    DELETE FROM fza_movimientos_almacen
-     WHERE CODIGO_ALM_MOV = p_ALMACEN
-       AND NUMERO_MOV LIKE v_PATRON;
-
-    -- 4. Recalcular el Kardex de cada SKU afectado para que fza_articulos_stockactual
-    --    quede consistente con la nueva realidad (sin los movimientos del inventario)
-    BEGIN
-        DECLARE done2 INT DEFAULT FALSE;
-        DECLARE c2 CURSOR FOR SELECT sku FROM tmp_skus_afectados;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done2 = TRUE;
-        OPEN c2;
-        bucle: LOOP
-            FETCH c2 INTO v_SKU;
-            IF done2 THEN LEAVE bucle; END IF;
-            CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_ALMACEN, v_SKU);
-        END LOOP;
-        CLOSE c2;
-    END;
-
-    -- 5. Marcar el inventario como ABIERTO de nuevo
-    UPDATE fza_inventarios
-       SET ESTADO_INV = ''ABIERTO'',
-           USUARIO_MODIF      = p_USUARIO,
-           INSTANTE_MODIF     = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV          = p_SERIE
-       AND NUMERO_INV            = p_NRO;
-
-    DROP TEMPORARY TABLE IF EXISTS tmp_skus_afectados;
-
-    COMMIT;
-END ;;
-DELIMITER ;
-', '2026-05-02 05:54:27', '2026-05-02 05:54:27', 'Administrador', 'Administrador'),
-  ('122', NULL, 'DROP VIEW IF EXISTS `vi_articulos_tarifas`;
- 
-CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_tarifas` AS
-WITH 
--- Paso 1: filas "lógicas" sobre las que la vista debe iterar.
---   - Si el artículo tiene SKUs activos -> una fila por SKU.
---   - Si NO tiene SKUs                  -> una fila con CODIGO_UNIDAD = ''''.
-unidades AS (
-    SELECT
-        a.CODIGO_ART_ART                AS CODIGO_ART_ART,
-        skus.CODIGO_UNIDAD_SKU           AS CODIGO_UNIDAD,
-        skus.CODIGO_VAR_SKU              AS CODIGO_VAR_SKU,
-        skus.ESACTIVO_SKU                AS ESACTIVO_SKU,
-        ''S''                              AS TIENE_SKU
-    FROM fza_articulos a
-    JOIN fza_articulos_skus skus
-      ON skus.CODIGO_ART_SKU = a.CODIGO_ART_ART
-     AND skus.ESACTIVO_SKU = ''S''
-    UNION ALL
-    SELECT
-        a.CODIGO_ART_ART,
-        ''''                               AS CODIGO_UNIDAD,
-        NULL                             AS CODIGO_VAR_SKU,
-        NULL                             AS ESACTIVO_SKU,
-        ''N''                              AS TIENE_SKU
-    FROM fza_articulos a
-    WHERE NOT EXISTS (
-        SELECT 1 FROM fza_articulos_skus s
-        WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART
-          AND s.ESACTIVO_SKU = ''S''
-    )
-),
--- Paso 2: descripción legible del SKU concatenando sus valores de atributos.
---   Ej: "ROJO / L"  (vacío para artículos sin SKU).
-sku_desc AS (
-    SELECT
-        sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,
-        GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') AS DESCRIPCION_SKU
-    FROM fza_atributos_sku sa
-    JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
-    GROUP BY sa.CODIGO_UNIDAD_SKU_SA
-)
+  ('130', NULL, 'SELECT 
+  USUARIO_GRUPO_USUPER,
+  KEY_USUPER,
+  SUBKEY_USUPER,
+  HEX(LEFT(VALUE_BLOB_USUPER, 4)) AS magic,
+  LENGTH(VALUE_BLOB_USUPER)        AS bytes
+FROM fza_usuarios_perfiles
+WHERE KEY_USUPER IN (''frmPrintFac'',''frmPrintRecFac'')
+  AND VALUE_BLOB_USUPER IS NOT NULL
+LIMIT 5;', '2026-05-06 17:06:55', '2026-05-06 17:06:55', 'Administrador', 'Administrador'),
+  ('131', NULL, 'DROP VIEW vi_articulos_tarifas;
+CREATE VIEW vi_articulos_tarifas AS
+SELECT u.CODIGO_ART_ART AS CODIGO_ART_ARTTAR,
+       u.CODIGO_UNIDAD AS CODIGO_UNIDAD_ARTTAR,
+       t.CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR,
+       t.NOMBRE_TAR_TAR AS NOMBRE_TAR_TAR,
+       ts.CODIGO_UNICO_ARTTAR AS CODIGO_UNICO_TARIFA_SKU,
+       tp.CODIGO_UNICO_ARTTAR AS CODIGO_UNICO_TARIFA_PADRE,
+       coalesce(ts.CODIGO_UNICO_ARTTAR,tp.CODIGO_UNICO_ARTTAR) AS CODIGO_UNICO_ARTTAR,
+       case when ts.CODIGO_UNICO_ARTTAR is not null then ''ESPECIFICO_SKU''
+            when tp.CODIGO_UNICO_ARTTAR is not null then ''HEREDADO_PADRE''
+            else ''SIN_PRECIO'' end AS ORIGEN_PRECIO,
+       coalesce(ts.PRECIO_SALIDA_ARTTAR,tp.PRECIO_SALIDA_ARTTAR) AS PRECIO_SALIDA_ARTTAR,
+       coalesce(ts.PRECIO_FINAL_ARTTAR,tp.PRECIO_FINAL_ARTTAR) AS PRECIO_FINAL_ARTTAR,
+       coalesce(ts.PRECIO_DTO_ARTTAR,tp.PRECIO_DTO_ARTTAR) AS PRECIO_DTO_ARTTAR,
+       coalesce(ts.PORCENTAJE_DTO_ARTTAR,tp.PORCENTAJE_DTO_ARTTAR) AS PORCENTAJE_DTO_ARTTAR,
+       coalesce(ts.FECHA_DESDE_ARTTAR,tp.FECHA_DESDE_ARTTAR) AS FECHA_DESDE_ARTTAR,
+       coalesce(ts.FECHA_HASTA_ARTTAR,tp.FECHA_HASTA_ARTTAR) AS FECHA_HASTA_ARTTAR,
+       t.ESACTIVO_ARTTAR AS ESACTIVO_ARTTAR,
+       t.ESIMP_INCL_TAR AS ESIMP_INCL_TAR,
+       t.ESDEFAULT_TAR AS ESDEFAULT_TAR,
+       a.DESCRIPCION_ART AS DESCRIPCION_ART,
+       a.TIPO_CANTIDAD_ART AS TIPO_CANTIDAD_ART,
+       a.ESVARIACION_ART AS ESVARIACION_ART,
+       iv.CODIGO_ABREVIATURA_IVA_IVATIP AS TIPO_IVA_ARTICULO,
+       u.TIENE_SKU AS TIENE_SKU,
+       u.ESACTIVO_SKU AS ESACTIVO_SKU,
+       sd.DESCRIPCION_SKU AS DESCRIPCION_SKU,
+       ap.CODIGO_PRV_AP AS CODIGO_PRV_PRV,
+       p.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV,
+       ap.PRECIO_ULT_COMPRA_AP AS PRECIO_ULT_COMPRA,
+       ap.FECHA_VALIDEZ_AP AS FECHA_VALIDEZ,
+       a.CODIGO_FAM_ART AS CODIGO_FAM_ART,
+       af.DESCRIPCION_FAM AS DESCRIPCION_FAM,
+       (select count(distinct va.ID_ATB_VA)
+        from (fza_articulos_skus sk join fza_variaciones_atributos va on(sk.CODIGO_VAR_SKU = va.ID_VAR_VA))
+        where sk.CODIGO_ART_SKU = a.CODIGO_ART_ART) AS NUM_ATRIBUTOS_REQ,
+       coalesce(ts.INSTANTE_MODIF,tp.INSTANTE_MODIF) AS INSTANTE_MODIF,
+       coalesce(ts.INSTANTE_ALTA,tp.INSTANTE_ALTA) AS INSTANTE_ALTA,
+       coalesce(ts.USUARIO_ALTA,tp.USUARIO_ALTA) AS USUARIO_ALTA,
+       coalesce(ts.USUARIO_MODIF,tp.USUARIO_MODIF) AS USUARIO_MODIF
+FROM (((((((((
+       -- 1. Subconsulta inyectada de lo que era "WITH unidades AS (...)"
+       (SELECT a.CODIGO_ART_ART AS CODIGO_ART_ART,
+               skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD,
+               skus.CODIGO_VAR_SKU AS CODIGO_VAR_SKU,
+               skus.ESACTIVO_SKU AS ESACTIVO_SKU,
+               ''S'' AS TIENE_SKU
+        FROM (fza_articulos a join fza_articulos_skus skus on(skus.CODIGO_ART_SKU = a.CODIGO_ART_ART and skus.ESACTIVO_SKU = ''S''))
+        UNION ALL
+        SELECT a.CODIGO_ART_ART AS CODIGO_ART_ART,
+               '''' AS CODIGO_UNIDAD,
+               NULL AS CODIGO_VAR_SKU,
+               NULL AS ESACTIVO_SKU,
+               ''N'' AS TIENE_SKU
+        FROM fza_articulos a
+        WHERE NOT EXISTS(select 1 from fza_articulos_skus s where s.CODIGO_ART_SKU = a.CODIGO_ART_ART and s.ESACTIVO_SKU = ''S'' limit 1)
+       ) u
+       JOIN fza_articulos a on(a.CODIGO_ART_ART = u.CODIGO_ART_ART))
+       JOIN fza_tarifas t on(t.ESACTIVO_ARTTAR = ''S''))
+       LEFT JOIN fza_articulos_tarifas ts on(ts.CODIGO_ART_ARTTAR = u.CODIGO_ART_ART and ts.CODIGO_UNIDAD_ARTTAR = u.CODIGO_UNIDAD and ts.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR and ts.ESACTIVO_ARTTAR = ''S'' and u.CODIGO_UNIDAD <> '''' and coalesce(ts.FECHA_HASTA_ARTTAR,''9999-12-31'') >= curdate()))
+       LEFT JOIN fza_articulos_tarifas tp on(tp.CODIGO_ART_ARTTAR = u.CODIGO_ART_ART and (tp.CODIGO_UNIDAD_ARTTAR is null or tp.CODIGO_UNIDAD_ARTTAR = '''') and tp.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR and tp.ESACTIVO_ARTTAR = ''S'' and coalesce(tp.FECHA_HASTA_ARTTAR,''9999-12-31'') >= curdate()))
+       LEFT JOIN fza_articulos_proveedores ap on(ap.CODIGO_ART_AP = a.CODIGO_ART_ART and ap.ESPROVEEDORPRINCIPAL_AP = ''S''))
+       LEFT JOIN fza_proveedores p on(p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP))
+       LEFT JOIN fza_articulos_familias af on(af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART))
+       LEFT JOIN fza_ivas_tipos iv on(iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART))
+       -- 2. Subconsulta inyectada de lo que era "sku_desc"
+       LEFT JOIN (
+         SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,
+                group_concat(av.AV order by av.ORDEN_AV ASC separator '' / '') AS DESCRIPCION_SKU
+         FROM (fza_atributos_sku sa join fza_atributos_valores av on(av.ID_AV = sa.ID_AV_SA))
+         GROUP BY sa.CODIGO_UNIDAD_SKU_SA
+       ) sd on(sd.CODIGO_UNIDAD = u.CODIGO_UNIDAD))
+ORDER BY t.ORDEN_TAR, a.ORDEN_ART, u.CODIGO_UNIDAD;', '2026-05-06 17:45:32', '2026-05-06 17:45:32', 'Administrador', 'Administrador'),
+  ('132', NULL, 'select * from vi_articulos_tarifas where CODIGO_TAR_ARTTAR = ''PVP''', '2026-05-06 19:07:58', '2026-05-06 19:02:44', 'Administrador', 'Administrador'),
+  ('133', NULL, 'DROP VIEW vi_articulos_tarifas;
+CREATE OR REPLACE VIEW vi_articulos_tarifas AS
 SELECT
-    -- Identificación
-    u.CODIGO_ART_ART                                         AS CODIGO_ART_ARTTAR,
-    u.CODIGO_UNIDAD                                           AS CODIGO_UNIDAD_ARTTAR,
-    t.CODIGO_TAR_ARTTAR                                           AS CODIGO_TAR_ARTTAR,
-    t.NOMBRE_TAR_TAR                                           AS NOMBRE_TAR_TAR,
-    -- PK del registro existente (si lo hay) -> útil para UPDATE/DELETE en cliente
-    ts.CODIGO_UNICO_ARTTAR                                    AS CODIGO_UNICO_TARIFA_SKU,
-    tp.CODIGO_UNICO_ARTTAR                                    AS CODIGO_UNICO_TARIFA_PADRE,
-    -- CODIGO_UNICO_ARTTAR "efectivo" (compatibilidad con código antiguo):
-    --   el del SKU si existe, si no el del padre, si no NULL.
-    COALESCE(ts.CODIGO_UNICO_ARTTAR, tp.CODIGO_UNICO_ARTTAR)  AS CODIGO_UNICO_ARTTAR,
- 
-    -- Origen del precio
-    CASE
-        WHEN ts.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''ESPECIFICO_SKU''
-        WHEN tp.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''HEREDADO_PADRE''
-        ELSE ''SIN_PRECIO''
-    END                                                       AS ORIGEN_PRECIO,
- 
-    -- Precios resueltos (SKU > padre > NULL)
-    COALESCE(ts.PRECIO_SALIDA_ARTTAR, tp.PRECIO_SALIDA_ARTTAR)  AS PRECIO_SALIDA_ARTTAR,
-    COALESCE(ts.PRECIO_FINAL_ARTTAR,  tp.PRECIO_FINAL_ARTTAR)   AS PRECIO_FINAL_ARTTAR,
-    COALESCE(ts.PRECIO_DTO_ARTTAR,   tp.PRECIO_DTO_ARTTAR)    AS PRECIO_DTO_ARTTAR,
-    COALESCE(ts.PORCENTAJE_DTO_ARTTAR,   tp.PORCENTAJE_DTO_ARTTAR)    AS PORCENTAJE_DTO_ARTTAR,
- 
-    -- Vigencia (la del registro que aplica)
-    COALESCE(ts.FECHA_DESDE_ARTTAR, tp.FECHA_DESDE_ARTTAR)    AS FECHA_DESDE_ARTTAR,
-    COALESCE(ts.FECHA_HASTA_ARTTAR, tp.FECHA_HASTA_ARTTAR)    AS FECHA_HASTA_ARTTAR,
- 
-    -- Flags de tarifa y artículo
-    t.ESACTIVO_ARTTAR                                           AS ESACTIVO_ARTTAR,
-    t.ESIMP_INCL_TAR                                       AS ESIMP_INCL_TAR,
-    t.ESDEFAULT_TAR                                        AS ESDEFAULT_TAR,
-    a.DESCRIPCION_ART                                    AS DESCRIPCION_ART,
-    a.TIPO_CANTIDAD_ART                                  AS TIPO_CANTIDAD_ART,
-    a.ESVARIACION_ART                                    AS ESVARIACION_ART,
-    iv.CODIGO_ABREVIATURA_IVA_IVATIP                            AS TIPO_IVA_ARTICULO,
- 
-    -- Datos del SKU
-    u.TIENE_SKU                                               AS TIENE_SKU,
-    u.ESACTIVO_SKU                                            AS ESACTIVO_SKU,
-    sd.DESCRIPCION_SKU                                        AS DESCRIPCION_SKU,
- 
-    -- Proveedor principal (igual que la vista anterior)
-    ap.CODIGO_PRV_AP                    AS CODIGO_PRV_PRV,
-    p.RAZON_SOCIAL_PRV                                   AS RAZON_SOCIAL_PRV,
-    ap.PRECIO_ULT_COMPRA_AP                   AS PRECIO_ULT_COMPRA,
-    ap.FECHA_VALIDEZ_AP                       AS FECHA_VALIDEZ,
- 
-    -- Familia
-    a.CODIGO_FAM_ART                                 AS CODIGO_FAM_ART,
-    af.DESCRIPCION_FAM                                    AS DESCRIPCION_FAM,
- 
-    -- Nº atributos requeridos para validar SKU completo (igual que antes)
-    (SELECT COUNT(DISTINCT va.ID_ATB_VA)
-       FROM fza_articulos_skus sk
-       JOIN fza_variaciones_atributos va ON sk.CODIGO_VAR_SKU = va.ID_VAR_VA
-      WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART)       AS NUM_ATRIBUTOS_REQ,
- 
-    -- Auditoría: la del registro que aporta el precio (SKU si existe, si no padre).
-    COALESCE(ts.INSTANTE_MODIF, tp.INSTANTE_MODIF)              AS INSTANTE_MODIF,
-    COALESCE(ts.INSTANTE_ALTA,  tp.INSTANTE_ALTA)               AS INSTANTE_ALTA,
-    COALESCE(ts.USUARIO_ALTA,   tp.USUARIO_ALTA)                AS USUARIO_ALTA,
-    COALESCE(ts.USUARIO_MODIF,  tp.USUARIO_MODIF)               AS USUARIO_MODIF
- 
-FROM unidades u
-JOIN fza_articulos a            ON a.CODIGO_ART_ART = u.CODIGO_ART_ART
--- Producto cartesiano contra todas las tarifas activas
-JOIN fza_tarifas t              ON t.ESACTIVO_ARTTAR = ''S''
- 
--- Tarifa específica del SKU (si existe) — solo vigentes hoy o futuras
-LEFT JOIN fza_articulos_tarifas ts
-       ON ts.CODIGO_ART_ARTTAR = u.CODIGO_ART_ART
-      AND ts.CODIGO_UNIDAD_ARTTAR   = u.CODIGO_UNIDAD
-      AND ts.CODIGO_TAR_ARTTAR          = t.CODIGO_TAR_ARTTAR
-      AND ts.ESACTIVO_ARTTAR          = ''S''
-      AND u.CODIGO_UNIDAD <> ''''
-      AND COALESCE(ts.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
- 
--- Tarifa "padre" (a nivel artículo, sin SKU) — solo vigentes hoy o futuras
-LEFT JOIN fza_articulos_tarifas tp
-       ON tp.CODIGO_ART_ARTTAR = u.CODIGO_ART_ART
-      AND (tp.CODIGO_UNIDAD_ARTTAR IS NULL OR tp.CODIGO_UNIDAD_ARTTAR = '''')
-      AND tp.CODIGO_TAR_ARTTAR          = t.CODIGO_TAR_ARTTAR
-      AND tp.ESACTIVO_ARTTAR          = ''S''
-      AND COALESCE(tp.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
- 
--- Resto de joins informativos (igual que la vista anterior)
-LEFT JOIN fza_articulos_proveedores ap
-       ON ap.CODIGO_ART_AP = a.CODIGO_ART_ART
-      AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
-LEFT JOIN fza_proveedores p
-       ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
-LEFT JOIN fza_articulos_familias af
-       ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
-LEFT JOIN fza_ivas_tipos iv
-       ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
-LEFT JOIN sku_desc sd
-       ON sd.CODIGO_UNIDAD = u.CODIGO_UNIDAD
- 
-ORDER BY t.ORDEN_TAR, a.ORDEN_ART, u.CODIGO_UNIDAD;
- 
-', '2026-05-03 17:49:08', '2026-05-03 17:49:08', 'Administrador', 'Administrador'),
-  ('123', NULL, 'DROP VIEW fza_caja_depositos_view ;
-CREATE VIEW fza_caja_depositos_view AS
-
--- =============================================================================
---  Rama 1: ALTA del depósito.
---  La operación que figura en CODIGO_EMP/ALM/CAJA/NUMERO_OPERACION_OP es la
---  operación de caja en la que se dio de alta el depósito (NUMERO_OPERACION_DEP).
--- =============================================================================
-SELECT
-  ''ALTA''                              AS ROL_EN_OPERACION,
-  d.ID_DEPOSITO_DEP                   AS ID_DEPOSITO_DEP,
-  d.CODIGO_EMP_DEP                    AS CODIGO_EMPRESA_OP,
-  d.CODIGO_ALM_DEP                    AS CODIGO_ALMACEN_OP,
-  d.CODIGO_CAJA_DEP                   AS CODIGO_CAJA_OP,
-  d.NUMERO_OPERACION_DEP              AS NUMERO_OPERACION_OP,
-  d.CODIGO_CLI_DEP                    AS CODIGO_CLI_DEP,
-  d.CODIGO_ART_DEP                    AS CODIGO_ART_DEP,
-  d.CODIGO_UNIDAD_DEP                 AS CODIGO_UNIDAD_DEP,
-  d.CODIGO_ALM_DEP                    AS CODIGO_ALM_DEP,
-  d.CANTIDAD_PENDIENTE_DEP            AS CANTIDAD_PENDIENTE_DEP,
-  d.PRECIO_VENTA_DEP                  AS PRECIO_VENTA_DEP,
-  d.PORCENTAJE_IVA_DEP                AS PORCENTAJE_IVA_DEP,
-  d.IMPORTE_ANTICIPO_DEP              AS IMPORTE_ANTICIPO_DEP,
-  (d.PRECIO_VENTA_DEP - d.IMPORTE_ANTICIPO_DEP) AS IMPORTE_PENDIENTE_DEP,
-  d.ESTADO_DEP                        AS ESTADO_DEP,
-  d.FECHA_CREACION_DEP                AS FECHA_CREACION_DEP,
-  d.FECHA_ENTREGA_DEP                 AS FECHA_ENTREGA_DEP,
-  d.EMPRESA_CANCEL_DEP                AS EMPRESA_CANCEL_DEP,
-  d.ALMACEN_CANCEL_DEP                AS ALMACEN_CANCEL_DEP,
-  d.CAJA_CANCEL_DEP                   AS CAJA_CANCEL_DEP,
-  d.NUMERO_OPERACION_CANCEL_DEP       AS NUMERO_OPERACION_CANCEL_DEP
-FROM fza_depositos_cliente d
-WHERE d.NUMERO_OPERACION_DEP IS NOT NULL
-  AND d.NUMERO_OPERACION_DEP <> ''''
-
-UNION ALL
-
--- =============================================================================
---  Rama 2: CANCELACIÓN.
---  La operación que figura en CODIGO_EMP/ALM/CAJA/NUMERO_OPERACION_OP es la
---  operación que canceló el depósito (los campos *_CANCEL_DEP).
--- =============================================================================
-SELECT
-  ''CANCELACION''                       AS ROL_EN_OPERACION,
-  d.ID_DEPOSITO_DEP                   AS ID_DEPOSITO_DEP,
-  d.EMPRESA_CANCEL_DEP                AS CODIGO_EMPRESA_OP,
-  d.ALMACEN_CANCEL_DEP                AS CODIGO_ALMACEN_OP,
-  d.CAJA_CANCEL_DEP                   AS CODIGO_CAJA_OP,
-  d.NUMERO_OPERACION_CANCEL_DEP       AS NUMERO_OPERACION_OP,
-  d.CODIGO_CLI_DEP                    AS CODIGO_CLI_DEP,
-  d.CODIGO_ART_DEP                    AS CODIGO_ART_DEP,
-  d.CODIGO_UNIDAD_DEP                 AS CODIGO_UNIDAD_DEP,
-  d.CODIGO_ALM_DEP                    AS CODIGO_ALM_DEP,
-  d.CANTIDAD_PENDIENTE_DEP            AS CANTIDAD_PENDIENTE_DEP,
-  d.PRECIO_VENTA_DEP                  AS PRECIO_VENTA_DEP,
-  d.PORCENTAJE_IVA_DEP                AS PORCENTAJE_IVA_DEP,
-  d.IMPORTE_ANTICIPO_DEP              AS IMPORTE_ANTICIPO_DEP,
-  (d.PRECIO_VENTA_DEP - d.IMPORTE_ANTICIPO_DEP) AS IMPORTE_PENDIENTE_DEP,
-  d.ESTADO_DEP                        AS ESTADO_DEP,
-  d.FECHA_CREACION_DEP                AS FECHA_CREACION_DEP,
-  d.FECHA_ENTREGA_DEP                 AS FECHA_ENTREGA_DEP,
-  d.EMPRESA_CANCEL_DEP                AS EMPRESA_CANCEL_DEP,
-  d.ALMACEN_CANCEL_DEP                AS ALMACEN_CANCEL_DEP,
-  d.CAJA_CANCEL_DEP                   AS CAJA_CANCEL_DEP,
-  d.NUMERO_OPERACION_CANCEL_DEP       AS NUMERO_OPERACION_CANCEL_DEP
-FROM fza_depositos_cliente d
-WHERE d.NUMERO_OPERACION_CANCEL_DEP IS NOT NULL
-  AND d.NUMERO_OPERACION_CANCEL_DEP <> ''''
-
-UNION ALL
-
--- =============================================================================
---  Rama 3: COBROS asociados al depósito.
---    ''DE'' = COBRO_INICIAL  (entrega/anticipo en la misma o en otra operación)
---    ''CB'' = COBRO_PARCIAL  (cobro a cuenta posterior)
---  La operación que figura en CODIGO_EMP/ALM/CAJA/NUMERO_OPERACION_OP es la
---  operación de caja del cobro.
--- =============================================================================
-SELECT
-  CASE o.TIPO_OPERACION_OPCAJA
-    WHEN ''DE'' THEN ''COBRO_INICIAL''
-    WHEN ''CB'' THEN ''COBRO_PARCIAL''
-  END                                 AS ROL_EN_OPERACION,
-  d.ID_DEPOSITO_DEP                   AS ID_DEPOSITO_DEP,
-  o.CODIGO_EMP_OPCAJA                 AS CODIGO_EMPRESA_OP,
-  o.CODIGO_ALM_OPCAJA                 AS CODIGO_ALMACEN_OP,
-  o.CODIGO_CAJA_OPCAJA                AS CODIGO_CAJA_OP,
-  o.NUMERO_OPERACION_OPCAJA           AS NUMERO_OPERACION_OP,
-  d.CODIGO_CLI_DEP                    AS CODIGO_CLI_DEP,
-  d.CODIGO_ART_DEP                    AS CODIGO_ART_DEP,
-  d.CODIGO_UNIDAD_DEP                 AS CODIGO_UNIDAD_DEP,
-  d.CODIGO_ALM_DEP                    AS CODIGO_ALM_DEP,
-  d.CANTIDAD_PENDIENTE_DEP            AS CANTIDAD_PENDIENTE_DEP,
-  d.PRECIO_VENTA_DEP                  AS PRECIO_VENTA_DEP,
-  d.PORCENTAJE_IVA_DEP                AS PORCENTAJE_IVA_DEP,
-  d.IMPORTE_ANTICIPO_DEP              AS IMPORTE_ANTICIPO_DEP,
-  (d.PRECIO_VENTA_DEP - d.IMPORTE_ANTICIPO_DEP) AS IMPORTE_PENDIENTE_DEP,
-  d.ESTADO_DEP                        AS ESTADO_DEP,
-  d.FECHA_CREACION_DEP                AS FECHA_CREACION_DEP,
-  d.FECHA_ENTREGA_DEP                 AS FECHA_ENTREGA_DEP,
-  d.EMPRESA_CANCEL_DEP                AS EMPRESA_CANCEL_DEP,
-  d.ALMACEN_CANCEL_DEP                AS ALMACEN_CANCEL_DEP,
-  d.CAJA_CANCEL_DEP                   AS CAJA_CANCEL_DEP,
-  d.NUMERO_OPERACION_CANCEL_DEP       AS NUMERO_OPERACION_CANCEL_DEP
-FROM fza_caja_operaciones o
-JOIN fza_depositos_cliente d
-  ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA
-WHERE o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'')
-  AND o.ID_DEPOSITO_OPCAJA IS NOT NULL;', '2026-05-05 08:50:06', '2026-05-05 08:49:42', 'Administrador', 'Administrador'),
-  ('124', NULL, 'SELECT NUMERO_OPERACION_OPCAJA,
-       TIPO_OPERACION_OPCAJA,
-       IMPORTE_TOTAL_OPCAJA,
-       CONCEPTO_GASTO_INGRESO_OPCAJA,
-       ID_DEPOSITO_OPCAJA
-  FROM fza_caja_operaciones
- WHERE CODIGO_EMP_OPCAJA   = ''012''
-   AND CODIGO_ALM_OPCAJA   = ''GEN''
-   AND CODIGO_CAJA_OPCAJA  = ''1''
-   AND NUMERO_OPERACION_OPCAJA = ''00000138''
- ORDER BY FECHA_OPERACION_OPCAJA, TIPO_OPERACION_OPCAJA;', '2026-05-05 09:11:55', '2026-05-05 09:11:55', 'Administrador', 'Administrador'),
-  ('125', NULL, 'SELECT CODIGO_VL,
-       ESTADO_VL,
-       IMPORTE_NOMINAL_VL,
-       IMPORTE_REDIMIDO_VL,
-       FECHA_REDENCION_VL,
-       CODIGO_EMP_RED_VL,
-       CODIGO_ALM_RED_VL,
-       CODIGO_CAJA_RED_VL,
-       NUMERO_OPERACION_RED_VL,
-       INSTANTE_MODIF
-  FROM fza_caja_vales
- WHERE DATE(FECHA_REDENCION_VL) = CURDATE()
-    OR DATE(INSTANTE_MODIF)     = CURDATE()
- ORDER BY INSTANTE_MODIF DESC;', '2026-05-05 09:27:10', '2026-05-05 09:27:10', 'Administrador', 'Administrador'),
-  ('126', NULL, '-- =====================================================================
--- Fix: SP_RECALCULAR_PMP_SKU_ALMACEN se llamaba con 2 args en vez de 3
---      en PRC_FZA_INVENTARIOS_APLICAR y PRC_FZA_INVENTARIOS_ELIMINAR_REGUL
---
--- Firma correcta: SP_RECALCULAR_PMP_SKU_ALMACEN(empresa, sku, almacen)
--- =====================================================================
-
-DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_APLICAR`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_INVENTARIOS_APLICAR`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE VARCHAR(20),
-    IN p_NRO VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-
-    /* Variables del cursor */
-    DECLARE v_LINEA VARCHAR(4);
-    DECLARE v_ARTICULO VARCHAR(20);
-    DECLARE v_SKU VARCHAR(50);
-    DECLARE v_TEORICA DECIMAL(19,6);
-    DECLARE v_FISICA DECIMAL(19,6);
-    DECLARE v_PMP_NUEVO DECIMAL(19,6);
-    DECLARE v_FECHA_RECUENTO DATETIME;
-    
-    DECLARE v_MOV_SALIDA VARCHAR(20);
-    DECLARE v_MOV_ENTRADA VARCHAR(20);
-
-    /* Cursor que carga la "foto" exacta del pasado */
-    DECLARE cur_lineas CURSOR FOR
-        SELECT LINEA_INVLIN,
-               CODIGO_ART_INVLIN,
-               CODIGO_UNIDAD_INVLIN,
-               CANTIDAD_TEORICA_INVLIN, /* La foto del pasado */
-               CANTIDAD_FISICA_INVLIN,  /* Lo que se contó */
-               PRECIO_MEDIO_NUEVO_INVLIN,
-               IFNULL(FECHA_RECUENTO_INVLIN, FECHA_INV) /* Si no hay fecha de línea, usa la de cabecera */
-          FROM fza_inventarios_lineas l
-          JOIN fza_inventarios c 
-            ON c.CODIGO_EMP_INV = l.CODIGO_EMP_INVLIN
-           AND c.CODIGO_ALM_INV = l.CODIGO_ALM_INVLIN
-           AND c.SERIE_INV = l.SERIE_INV_INVLIN
-           AND c.NUMERO_INV = l.NUMERO_INV_INVLIN
-         WHERE l.CODIGO_EMP_INVLIN = p_EMPRESA
-           AND l.CODIGO_ALM_INVLIN = p_ALMACEN
-           AND l.SERIE_INV_INVLIN = p_SERIE
-           AND l.NUMERO_INV_INVLIN = p_NRO;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-    
-    /* Blindaje transaccional */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    SELECT ESTADO_INV INTO v_ESTADO
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV = p_SERIE
-       AND NUMERO_INV = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO != ''ABIERTO'' THEN
-        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT = ''Error: El inventario ya fue aplicado o está cancelado.'';
-    END IF;
-
-    OPEN cur_lineas;
-
-    read_loop: LOOP
-        FETCH cur_lineas INTO v_LINEA, v_ARTICULO, v_SKU, v_TEORICA, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
-
-        IF v_DONE THEN
-            LEAVE read_loop;
-        END IF;
-
-        SET v_MOV_SALIDA = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''S''), 20);
-        SET v_MOV_ENTRADA = LEFT(CONCAT(''IV-'', p_NRO, ''-'', v_LINEA, ''E''), 20);
-
-        /* 1. FASE DE VACIADO HISTÓRICO */
-        IF v_TEORICA > 0 THEN
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''S'', v_TEORICA, 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            
-            /* Hacemos el "truco" de viajar en el tiempo actualizando la fecha generada por el insert nativo */
-            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
-            
-        ELSEIF v_TEORICA < 0 THEN
-            /* Anulación de stock negativo histórico */
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_SALIDA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''E'', ABS(v_TEORICA), 0, 0, p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_SALIDA;
-        END IF;
-
-        /* 2. FASE DE LLENADO HISTÓRICO */
-        IF v_FISICA > 0 THEN
-            CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
-                v_MOV_ENTRADA, ''IN'', p_SERIE, p_NRO, v_LINEA,
-                p_EMPRESA, p_ALMACEN, NULL, v_SKU,
-                ''E'', v_FISICA, v_PMP_NUEVO, (v_FISICA * v_PMP_NUEVO), p_USUARIO, p_ALMACEN, NULL, NULL, NULL, v_ARTICULO
-            );
-            
-            UPDATE fza_movimientos_almacen SET FECHA_MOV = v_FECHA_RECUENTO WHERE NUMERO_MOV = v_MOV_ENTRADA;
-        END IF;
-
-        /* 3. EFECTO DOMINÓ: Forzamos el recálculo del Kardex para este SKU */
-        /* Esto pondrá en orden la tabla fza_articulos_stockactual y revalorizará las ventas hechas después del inventario */
-        CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_EMPRESA, v_SKU, p_ALMACEN);
-
-    END LOOP;
-
-    CLOSE cur_lineas;
-
-    /* Marcamos el documento como cerrado */
-    UPDATE fza_inventarios
-       SET ESTADO_INV = ''APLICADO'',
-           USUARIO_MODIF = p_USUARIO,
-           INSTANTE_MODIF = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV = p_SERIE
-       AND NUMERO_INV = p_NRO;
-
-    COMMIT;
-END ;;
-DELIMITER ;
-
-
-DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ELIMINAR_REGUL`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_INVENTARIOS_ELIMINAR_REGUL`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE   VARCHAR(20),
-    IN p_NRO     VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE   INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-    DECLARE v_PATRON VARCHAR(50);
-
-    /* Cursor para recorrer los SKUs afectados (para recalcular Kardex tras borrar) */
-    DECLARE v_SKU VARCHAR(50);
-    DECLARE cur_skus CURSOR FOR
-        SELECT DISTINCT CODIGO_UNIDAD_MOV
-          FROM fza_movimientos_almacen
-         WHERE CODIGO_ALM_MOV = p_ALMACEN
-           AND NUMERO_MOV LIKE v_PATRON;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-
-    /* Blindaje transaccional */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    /* 1. Verificar estado del inventario (debe estar APLICADO) */
-    SELECT ESTADO_INV INTO v_ESTADO
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV          = p_SERIE
-       AND NUMERO_INV            = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO IS NULL THEN
-        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT =
-            ''Error: el inventario no existe.'';
-    END IF;
-
-    IF v_ESTADO <> ''APLICADO'' THEN
-        SIGNAL SQLSTATE ''45000'' SET MESSAGE_TEXT =
-            ''Error: el inventario debe estar APLICADO para eliminar la regularización.'';
-    END IF;
-
-    SET v_PATRON = CONCAT(''IV-'', p_NRO, ''-%'');
-
-    /* 2. Recoger lista de SKUs afectados ANTES de borrar (para recalcular después) */
-    DROP TEMPORARY TABLE IF EXISTS tmp_skus_afectados;
-    CREATE TEMPORARY TABLE tmp_skus_afectados (sku VARCHAR(50) PRIMARY KEY);
-
-    INSERT INTO tmp_skus_afectados (sku)
-    SELECT DISTINCT CODIGO_UNIDAD_MOV
-      FROM fza_movimientos_almacen
-     WHERE CODIGO_ALM_MOV = p_ALMACEN
-       AND NUMERO_MOV LIKE v_PATRON;
-
-    /* 3. BORRAR los movimientos generados por el inventario */
-    DELETE FROM fza_movimientos_almacen
-     WHERE CODIGO_ALM_MOV = p_ALMACEN
-       AND NUMERO_MOV LIKE v_PATRON;
-
-    /* 4. Recalcular el Kardex de cada SKU afectado para que fza_articulos_stockactual */
-    /*    quede consistente con la nueva realidad (sin los movimientos del inventario) */
-    BEGIN
-        DECLARE done2 INT DEFAULT FALSE;
-        DECLARE c2 CURSOR FOR SELECT sku FROM tmp_skus_afectados;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done2 = TRUE;
-        OPEN c2;
-        bucle: LOOP
-            FETCH c2 INTO v_SKU;
-            IF done2 THEN LEAVE bucle; END IF;
-            CALL SP_RECALCULAR_PMP_SKU_ALMACEN(p_EMPRESA, v_SKU, p_ALMACEN);
-        END LOOP;
-        CLOSE c2;
-    END;
-
-    /* 5. Marcar el inventario como ABIERTO de nuevo */
-    UPDATE fza_inventarios
-       SET ESTADO_INV = ''ABIERTO'',
-           USUARIO_MODIF      = p_USUARIO,
-           INSTANTE_MODIF     = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV          = p_SERIE
-       AND NUMERO_INV            = p_NRO;
-
-    DROP TEMPORARY TABLE IF EXISTS tmp_skus_afectados;
-
-    COMMIT;
-END ;;
-DELIMITER ;', '2026-05-05 16:35:54', '2026-05-05 16:35:54', 'Administrador', 'Administrador'),
-  ('127', NULL, '-- =====================================================================
--- Fix: PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT no rellenaba
---      PRECIO_COSTE_UNITARIO_MOV. Como SP_RECALCULAR_PMP_SKU_ALMACEN
---      usa esa columna para calcular el PMP, el resultado siempre
---      salía a 0 y machacaba el PRECIO_MEDIO_MOV correcto.
---
--- Solución: el INSERT ahora también escribe PRECIO_COSTE_UNITARIO_MOV
--- con el mismo valor que PRECIO_MEDIO_MOV (v_PrecioFinal).
--- Para entradas es el precio al que entra la unidad; para salidas es
--- el PMP del momento — en ambos casos el valor correcto.
--- =====================================================================
-
--- Procedimiento: PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT
-DROP PROCEDURE IF EXISTS `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`(
-    IN `p_NUMERO_MOV` VARCHAR(20),
-    IN `p_TIPO_DOC_MOV` VARCHAR(20),
-    IN `p_SERIE_DOC_MOV` VARCHAR(20),
-    IN `p_NRO_DOC_MOV` VARCHAR(20),
-    IN `p_LINEA_MOV` VARCHAR(10),
-    IN `p_CODIGO_EMPRESA_MOV` VARCHAR(20),
-    IN `p_CODIGO_ALMACEN_MOV` VARCHAR(10),
-    IN `p_CODIGO_ALMACEN_CONTRA_MOV` VARCHAR(10),
-    IN `p_CODIGO_UNIDAD_MOV` VARCHAR(50),
-    IN `p_TIPO_MOVIMIENTO_MOV` VARCHAR(1),
-    IN `p_CANTIDAD_MOV` DECIMAL(19,6),
-    IN `p_PRECIO_MEDIO_MOV` DECIMAL(19,6),
-    IN `p_TOTAL_COSTE_MOV` DECIMAL(19,6),
-    IN `p_USUARIO` VARCHAR(100),
-    IN `p_ALMACEN_DOC` VARCHAR(10),
-    IN `p_NUMOP_DOC` VARCHAR(20),
-    IN `p_CODIGO_CAJA_DOC_MOV` VARCHAR(10), /* <--- AÑADIDO PARÁMETRO */
-    IN `p_CODCLIENTE` VARCHAR(20),
-    IN `p_CODARTICULO` VARCHAR(20)
-)
-BEGIN
-    DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_PrecioFinal DECIMAL(19,6);
-    DECLARE v_CosteFinal DECIMAL(19,6);
-
-/* DECLARE EXIT HANDLER FOR SQLEXCEPTION  */
-/* BEGIN */
-/* ROLLBACK; */
-/* RESIGNAL; */
-/* END; */
-/* */
-/* START TRANSACTION; */
-
-    /* 1. Obtener el PMP actual del stock */
-    SELECT IFNULL(PRECIO_MEDIO_STK, 0)
-      INTO v_PMPActual
-      FROM fza_articulos_stockactual
-     WHERE CODIGO_ALM_STK = p_CODIGO_ALMACEN_MOV
-       AND CODIGO_UNIDAD_STK = p_CODIGO_UNIDAD_MOV
-     LIMIT 1;
-
-    /* 2. Lógica de re-cálculo */
-    IF p_TIPO_MOVIMIENTO_MOV = ''S'' THEN
-        SET v_PrecioFinal = v_PMPActual;
-        SET v_CosteFinal  = p_CANTIDAD_MOV * v_PMPActual;
-    ELSE
-        SET v_PrecioFinal = p_PRECIO_MEDIO_MOV;
-        SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
-    END IF;
-
-    /* 3. Insertar el Movimiento de Almacén real */
-    INSERT INTO fza_movimientos_almacen (
-        NUMERO_MOV,
-        TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV,
-        CODIGO_EMP_MOV, CODIGO_ALM_MOV, CODIGO_ALM_CONTRA_MOV,
-        CODIGO_UNIDAD_MOV, TIPO_MOV, CANTIDAD_MOV,
-        PRECIO_COSTE_UNITARIO_MOV,
-        PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV,
-        FECHA_MOV, USUARIO_ALTA, USUARIO_MODIF,
-        CODIGO_ALM_DOC_MOV, NUMERO_OPERACION_DOC_MOV, CODIGO_CAJA_DOC_MOV,
-        CODIGO_CLI_MOV, CODIGO_ART_MOV
-    ) VALUES (
-        p_NUMERO_MOV,
-        p_TIPO_DOC_MOV, p_SERIE_DOC_MOV, p_NRO_DOC_MOV, p_LINEA_MOV,
-        p_CODIGO_EMPRESA_MOV, p_CODIGO_ALMACEN_MOV, p_CODIGO_ALMACEN_CONTRA_MOV,
-        p_CODIGO_UNIDAD_MOV, p_TIPO_MOVIMIENTO_MOV, p_CANTIDAD_MOV,
-        v_PrecioFinal,
-        v_PrecioFinal, v_CosteFinal,
-        NOW(), p_USUARIO, p_USUARIO,
-        p_ALMACEN_DOC, p_NUMOP_DOC, p_CODIGO_CAJA_DOC_MOV,
-        p_CODCLIENTE, p_CODARTICULO
-    );
-
-    /* 4. Actualizar Stock */
-    INSERT INTO fza_articulos_stockactual (
-        CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
-        CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF
-    ) VALUES (
-        p_CODIGO_ALMACEN_MOV, 
-        p_CODIGO_UNIDAD_MOV,
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', p_CANTIDAD_MOV, -p_CANTIDAD_MOV),
-        IF(p_TIPO_MOVIMIENTO_MOV = ''E'', v_CosteFinal, -v_CosteFinal),
-        v_PrecioFinal, 
-        NOW()
-    )
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK = CANTIDAD_STK + VALUES(CANTIDAD_STK),
-        VALOR_TOTAL_STK = VALOR_TOTAL_STK + VALUES(VALOR_TOTAL_STK),
-        PRECIO_MEDIO_STK = IF(CANTIDAD_STK > 0, VALOR_TOTAL_STK / CANTIDAD_STK, 0),
-        INSTANTE_MODIF = NOW();
-
-/* COMMIT; */
-END ;;
-DELIMITER ;', '2026-05-05 16:43:26', '2026-05-05 16:40:33', 'Administrador', 'Administrador'),
-  ('128', NULL, '-- =============================================================================
--- Procedimiento: PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO  (CORREGIDO)
---
--- Bug original: los SELECT ... INTO de v_STOCK_HIST y v_PMP_HIST disparaban
--- el CONTINUE HANDLER FOR NOT FOUND cuando el SKU no tenia movimientos
--- previos en ese almacen, poniendo v_DONE = TRUE y abortando el bucle
--- prematuramente. Resultado: solo se actualizaba la primera linea (o las
--- primeras que casualmente tuvieran historico).
---
--- Fix: aislamos los SELECT ... INTO dentro de bloques BEGIN ... END con su
--- propio CONTINUE HANDLER FOR NOT FOUND inerte, de forma que el handler del
--- cursor (que controla v_DONE) no se ve afectado por consultas que no
--- devuelven filas.
--- =============================================================================
-DROP PROCEDURE IF EXISTS `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`;
-DELIMITER ;;
-CREATE PROCEDURE `PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO`(
-    IN p_EMPRESA VARCHAR(10),
-    IN p_ALMACEN VARCHAR(10),
-    IN p_SERIE   VARCHAR(20),
-    IN p_NRO     VARCHAR(20),
-    IN p_USUARIO VARCHAR(100)
-)
-BEGIN
-    DECLARE v_DONE INT DEFAULT FALSE;
-    DECLARE v_ESTADO VARCHAR(20);
-    DECLARE v_FECHA_CABECERA DATETIME;
-
-    /* Variables del cursor */
-    DECLARE v_LINEA          VARCHAR(4);
-    DECLARE v_SKU            VARCHAR(50);
-    DECLARE v_FISICA         DECIMAL(19,6);
-    DECLARE v_PMP_NUEVO      DECIMAL(19,6);
-    DECLARE v_FECHA_RECUENTO DATETIME;
-
-    /* Variables para el calculo historico */
-    DECLARE v_STOCK_HIST     DECIMAL(19,6);
-    DECLARE v_PMP_HIST       DECIMAL(19,6);
-    DECLARE v_DIF_CANTIDAD   DECIMAL(19,6);
-    DECLARE v_TOTAL_COSTE_DIF DECIMAL(19,6);
-
-    DECLARE cur_lineas CURSOR FOR
-        SELECT LINEA_INVLIN,
-               CODIGO_UNIDAD_INVLIN,
-               CANTIDAD_FISICA_INVLIN,
-               PRECIO_MEDIO_NUEVO_INVLIN,
-               FECHA_RECUENTO_INVLIN
-          FROM fza_inventarios_lineas
-         WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-           AND CODIGO_ALM_INVLIN = p_ALMACEN
-           AND SERIE_INV_INVLIN  = p_SERIE
-           AND NUMERO_INV_INVLIN = p_NRO;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_DONE = TRUE;
-
-    /* Blindaje transaccional */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-    /* 1. Obtener estado y fecha global del inventario */
-    SELECT ESTADO_INV, FECHA_INV
-      INTO v_ESTADO, v_FECHA_CABECERA
-      FROM fza_inventarios
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO
-       FOR UPDATE;
-
-    IF v_ESTADO != ''ABIERTO'' THEN
-        SIGNAL SQLSTATE ''45000''
-          SET MESSAGE_TEXT = ''Error: El inventario no esta ABIERTO, no se puede recalcular.'';
-    END IF;
-
-    OPEN cur_lineas;
-
-    read_loop: LOOP
-        FETCH cur_lineas
-         INTO v_LINEA, v_SKU, v_FISICA, v_PMP_NUEVO, v_FECHA_RECUENTO;
-
-        IF v_DONE THEN
-            LEAVE read_loop;
-        END IF;
-
-        /* Si la linea no tiene hora de recuento, hereda la de la cabecera */
-        IF v_FECHA_RECUENTO IS NULL THEN
-            SET v_FECHA_RECUENTO = v_FECHA_CABECERA;
-        END IF;
-
-        SET v_STOCK_HIST = 0;
-        SET v_PMP_HIST   = 0;
-
-        /* ------------------------------------------------------------------ *
-         * 2. Stock teorico a la fecha del recuento                           *
-         *    Aislamos el SELECT INTO en su propio bloque con su propio       *
-         *    handler para que un eventual NOT FOUND NO contamine v_DONE.     *
-         * ------------------------------------------------------------------ */
-        BEGIN
-            DECLARE CONTINUE HANDLER FOR NOT FOUND BEGIN END;
-            SELECT IFNULL(SUM(IF(TIPO_MOV = ''E'', CANTIDAD_MOV, -CANTIDAD_MOV)), 0)
-              INTO v_STOCK_HIST
-              FROM fza_movimientos_almacen
-             WHERE CODIGO_ALM_MOV    = p_ALMACEN
-               AND CODIGO_UNIDAD_MOV = v_SKU
-               AND FECHA_MOV        <= v_FECHA_RECUENTO
-               AND ESACTIVO_MOV      = ''S'';
-        END;
-
-        /* ------------------------------------------------------------------ *
-         * 3. PMP historico (PMP del ultimo movimiento <= fecha de recuento). *
-         *    Este es el SELECT que rompia el cursor: cuando el SKU no tenia  *
-         *    movimientos previos no devolvia fila y disparaba NOT FOUND en   *
-         *    el handler externo, abortando el LOOP.                          *
-         * ------------------------------------------------------------------ */
-        BEGIN
-            DECLARE CONTINUE HANDLER FOR NOT FOUND BEGIN END;
-            SELECT IFNULL(PRECIO_MEDIO_MOV, 0)
-              INTO v_PMP_HIST
-              FROM fza_movimientos_almacen
-             WHERE CODIGO_ALM_MOV    = p_ALMACEN
-               AND CODIGO_UNIDAD_MOV = v_SKU
-               AND FECHA_MOV        <= v_FECHA_RECUENTO
-               AND ESACTIVO_MOV      = ''S''
-             ORDER BY FECHA_MOV DESC, NUMERO_MOV DESC
-             LIMIT 1;
-        END;
-
-        /* 4. Diferencia de cantidad */
-        SET v_DIF_CANTIDAD = v_FISICA - v_STOCK_HIST;
-
-        /* Si el usuario no fijo PMP nuevo (revalorizacion), mantenemos el historico */
-        IF v_PMP_NUEVO = 0 OR v_PMP_NUEVO IS NULL THEN
-            SET v_PMP_NUEVO = v_PMP_HIST;
-        END IF;
-
-        /* 5. Coste de la diferencia (doble impacto: cantidad y/o revalorizacion) */
-        SET v_TOTAL_COSTE_DIF = (v_FISICA * v_PMP_NUEVO) - (v_STOCK_HIST * v_PMP_HIST);
-
-        /* 6. Grabar el recalculo en la linea */
-        UPDATE fza_inventarios_lineas
-           SET CANTIDAD_TEORICA_INVLIN       = v_STOCK_HIST,
-               PRECIO_MEDIO_INVLIN           = v_PMP_HIST,
-               PRECIO_MEDIO_NUEVO_INVLIN     = v_PMP_NUEVO,
-               CANTIDAD_DIFERENCIA_INVLIN    = v_DIF_CANTIDAD,
-               TOTAL_COSTE_DIFERENCIA_INVLIN = v_TOTAL_COSTE_DIF,
-               USUARIO_MODIF                 = p_USUARIO,
-               INSTANTE_MODIF                = NOW()
-         WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-           AND CODIGO_ALM_INVLIN = p_ALMACEN
-           AND SERIE_INV_INVLIN  = p_SERIE
-           AND NUMERO_INV_INVLIN = p_NRO
-           AND LINEA_INVLIN      = v_LINEA;
-
-    END LOOP;
-
-    CLOSE cur_lineas;
-
-    /* 7. Recalcular totales de la cabecera */
-    UPDATE fza_inventarios
-       SET TOTAL_UNIDADES_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(CANTIDAD_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           ),
-           TOTAL_EUROS_DIFERENCIA_INV = (
-               SELECT IFNULL(SUM(TOTAL_COSTE_DIFERENCIA_INVLIN), 0)
-                 FROM fza_inventarios_lineas
-                WHERE CODIGO_EMP_INVLIN = p_EMPRESA
-                  AND CODIGO_ALM_INVLIN = p_ALMACEN
-                  AND SERIE_INV_INVLIN  = p_SERIE
-                  AND NUMERO_INV_INVLIN = p_NRO
-           ),
-           USUARIO_MODIF  = p_USUARIO,
-           INSTANTE_MODIF = NOW()
-     WHERE CODIGO_EMP_INV = p_EMPRESA
-       AND CODIGO_ALM_INV = p_ALMACEN
-       AND SERIE_INV      = p_SERIE
-       AND NUMERO_INV     = p_NRO;
-
-    COMMIT;
-END ;;
-DELIMITER ;', '2026-05-05 17:02:25', '2026-05-05 17:02:25', 'Administrador', 'Administrador'),
-  ('129', NULL, 'SELECT 
-  sa.CODIGO_UNIDAD_SKU_SA AS SKU,
-  sa.ID_AV_SA,
-  v.ID_AV, v.ID_VA_AV, v.AV,
-  n.ID_ATRIBUTO, n.NOMBRE_ATRIBUTO, n.ORDEN_VISUAL_ATRIBUTO,
-  n.CODIGO_ART_PADRE_ARTVIN
-FROM fza_atributos_sku sa
-JOIN fza_atributos_valores v ON v.ID_AV = sa.ID_AV_SA
-JOIN vi_atributos_nombres n  ON n.ID_ATRIBUTO = v.ID_VA_AV
-                            AND n.CODIGO_ART_PADRE_ARTVIN = ''BOTIN-ANIT''
-WHERE sa.CODIGO_UNIDAD_SKU_SA = ''BOTIN-ANIT/MARRON/37'';', '2026-05-05 19:14:57', '2026-05-05 19:14:57', 'Administrador', 'Administrador');
--- 26 registros exportados
+  at.CODIGO_ART_ARTTAR,
+  COALESCE(at.CODIGO_UNIDAD_ARTTAR, '''')              AS CODIGO_UNIDAD_ARTTAR,
+  at.CODIGO_TAR_ARTTAR,
+  t.NOMBRE_TAR_TAR,
+  at.CODIGO_UNICO_ARTTAR,
+  CASE
+    WHEN at.CODIGO_UNIDAD_ARTTAR IS NOT NULL
+     AND at.CODIGO_UNIDAD_ARTTAR <> ''''               THEN ''ESPECIFICO_SKU''
+    ELSE                                                  ''HEREDADO_PADRE''
+  END                                                AS ORIGEN_PRECIO,
+  at.PRECIO_SALIDA_ARTTAR,
+  at.PRECIO_FINAL_ARTTAR,
+  at.PRECIO_DTO_ARTTAR,
+  at.PORCENTAJE_DTO_ARTTAR,
+  at.FECHA_DESDE_ARTTAR,
+  at.FECHA_HASTA_ARTTAR,
+  at.ESACTIVO_ARTTAR,
+  t.ESIMP_INCL_TAR,
+  t.ESDEFAULT_TAR,
+  a.DESCRIPCION_ART,
+  a.TIPO_CANTIDAD_ART,
+  a.ESVARIACION_ART,
+  iv.CODIGO_ABREVIATURA_IVA_IVATIP                   AS TIPO_IVA_ARTICULO,
+  CASE WHEN sk.CODIGO_UNIDAD_SKU IS NOT NULL
+       THEN ''S'' ELSE ''N'' END                         AS TIENE_SKU,
+  sk.ESACTIVO_SKU,
+  sd.DESCRIPCION_SKU,
+  ap.CODIGO_PRV_AP                                   AS CODIGO_PRV_PRV,
+  p.RAZON_SOCIAL_PRV,
+  ap.PRECIO_ULT_COMPRA_AP                            AS PRECIO_ULT_COMPRA,
+  ap.FECHA_VALIDEZ_AP                                AS FECHA_VALIDEZ,
+  a.CODIGO_FAM_ART,
+  af.DESCRIPCION_FAM,
+  at.INSTANTE_MODIF,
+  at.INSTANTE_ALTA,
+  at.USUARIO_ALTA,
+  at.USUARIO_MODIF
+FROM            fza_articulos_tarifas    at
+JOIN            fza_tarifas              t    ON t.CODIGO_TAR_ARTTAR        = at.CODIGO_TAR_ARTTAR
+JOIN            fza_articulos            a    ON a.CODIGO_ART_ART           = at.CODIGO_ART_ARTTAR
+LEFT JOIN       fza_articulos_skus       sk   ON sk.CODIGO_ART_SKU          = at.CODIGO_ART_ARTTAR
+                                             AND sk.CODIGO_UNIDAD_SKU       = at.CODIGO_UNIDAD_ARTTAR
+                                             AND sk.ESACTIVO_SKU            = ''S''
+LEFT JOIN (
+  SELECT  sa.CODIGO_UNIDAD_SKU_SA                                      AS CODIGO_UNIDAD,
+          GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '')     AS DESCRIPCION_SKU
+    FROM  fza_atributos_sku        sa
+    JOIN  fza_atributos_valores    av   ON av.ID_AV = sa.ID_AV_SA
+   GROUP  BY sa.CODIGO_UNIDAD_SKU_SA
+)                                       sd   ON sd.CODIGO_UNIDAD           = at.CODIGO_UNIDAD_ARTTAR
+LEFT JOIN       fza_articulos_proveedores ap  ON ap.CODIGO_ART_AP           = a.CODIGO_ART_ART
+                                             AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
+LEFT JOIN       fza_proveedores          p    ON p.CODIGO_PRV_PRV           = ap.CODIGO_PRV_AP
+LEFT JOIN       fza_articulos_familias   af   ON af.CODIGO_FAM_FAM          = a.CODIGO_FAM_ART
+LEFT JOIN       fza_ivas_tipos           iv   ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+WHERE  at.ESACTIVO_ARTTAR = ''S''
+  AND  COALESCE(at.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+ORDER  BY t.ORDEN_TAR, a.ORDEN_ART, at.CODIGO_UNIDAD_ARTTAR;', '2026-05-06 19:07:32', '2026-05-06 19:07:32', 'Administrador', 'Administrador');
+-- 4 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -5676,9 +3999,10 @@ CREATE TABLE `fza_tarifas` (
 
 -- Datos de fza_tarifas
 INSERT INTO `fza_tarifas` (`CODIGO_TAR_ARTTAR`, `ESACTIVO_ARTTAR`, `ORDEN_TAR`, `NOMBRE_TAR_TAR`, `ESIMP_INCL_TAR`, `ESDEFAULT_TAR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('3', 'S', NULL, 'REBAJAS', 'S', 'N', '2026-05-06 19:02:19', '2026-05-06 19:02:19', 'Administrador', 'Administrador'),
   ('PVP', 'S', 1, 'PVP', 'S', 'S', '2026-01-04 22:09:22', '2022-09-05 09:30:49', 'Administrador', 'Administrador'),
   ('VENTAMAYOR', 'S', 2, 'VENTA MAYOR', 'N', 'N', '2026-01-04 22:09:26', '2022-09-05 09:31:19', 'Administrador', 'Administrador');
--- 2 registros exportados
+-- 3 registros exportados
 
 
 -- Tabla: fza_tipos_documentos
@@ -5743,7 +4067,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-06 08:31:46', '2026-05-06 08:31:46', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-06 19:00:44', '2026-05-06 19:00:44', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -11205,7 +9529,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS with unidades as (select `a`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`skus`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD`,`skus`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`skus`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,'S' AS `TIENE_SKU` from (`fza_articulos` `a` join `fza_articulos_skus` `skus` on(`skus`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART` and `skus`.`ESACTIVO_SKU` = 'S')) union all select `a`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,'' AS `CODIGO_UNIDAD`,NULL AS `CODIGO_VAR_SKU`,NULL AS `ESACTIVO_SKU`,'N' AS `TIENE_SKU` from `fza_articulos` `a` where !exists(select 1 from `fza_articulos_skus` `s` where `s`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART` and `s`.`ESACTIVO_SKU` = 'S' limit 1)), sku_desc as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`)select `u`.`CODIGO_ART_ART` AS `CODIGO_ART_ARTTAR`,`u`.`CODIGO_UNIDAD` AS `CODIGO_UNIDAD_ARTTAR`,`t`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`ts`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_TARIFA_SKU`,`tp`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_TARIFA_PADRE`,coalesce(`ts`.`CODIGO_UNICO_ARTTAR`,`tp`.`CODIGO_UNICO_ARTTAR`) AS `CODIGO_UNICO_ARTTAR`,case when `ts`.`CODIGO_UNICO_ARTTAR` is not null then 'ESPECIFICO_SKU' when `tp`.`CODIGO_UNICO_ARTTAR` is not null then 'HEREDADO_PADRE' else 'SIN_PRECIO' end AS `ORIGEN_PRECIO`,coalesce(`ts`.`PRECIO_SALIDA_ARTTAR`,`tp`.`PRECIO_SALIDA_ARTTAR`) AS `PRECIO_SALIDA_ARTTAR`,coalesce(`ts`.`PRECIO_FINAL_ARTTAR`,`tp`.`PRECIO_FINAL_ARTTAR`) AS `PRECIO_FINAL_ARTTAR`,coalesce(`ts`.`PRECIO_DTO_ARTTAR`,`tp`.`PRECIO_DTO_ARTTAR`) AS `PRECIO_DTO_ARTTAR`,coalesce(`ts`.`PORCENTAJE_DTO_ARTTAR`,`tp`.`PORCENTAJE_DTO_ARTTAR`) AS `PORCENTAJE_DTO_ARTTAR`,coalesce(`ts`.`FECHA_DESDE_ARTTAR`,`tp`.`FECHA_DESDE_ARTTAR`) AS `FECHA_DESDE_ARTTAR`,coalesce(`ts`.`FECHA_HASTA_ARTTAR`,`tp`.`FECHA_HASTA_ARTTAR`) AS `FECHA_HASTA_ARTTAR`,`t`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`t`.`ESDEFAULT_TAR` AS `ESDEFAULT_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,`u`.`TIENE_SKU` AS `TIENE_SKU`,`u`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`sd`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`ap`.`PRECIO_ULT_COMPRA_AP` AS `PRECIO_ULT_COMPRA`,`ap`.`FECHA_VALIDEZ_AP` AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,(select count(distinct `va`.`ID_ATB_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VAR_VA`)) where `sk`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`) AS `NUM_ATRIBUTOS_REQ`,coalesce(`ts`.`INSTANTE_MODIF`,`tp`.`INSTANTE_MODIF`) AS `INSTANTE_MODIF`,coalesce(`ts`.`INSTANTE_ALTA`,`tp`.`INSTANTE_ALTA`) AS `INSTANTE_ALTA`,coalesce(`ts`.`USUARIO_ALTA`,`tp`.`USUARIO_ALTA`) AS `USUARIO_ALTA`,coalesce(`ts`.`USUARIO_MODIF`,`tp`.`USUARIO_MODIF`) AS `USUARIO_MODIF` from (((((((((`unidades` `u` join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `u`.`CODIGO_ART_ART`)) join `fza_tarifas` `t` on(`t`.`ESACTIVO_ARTTAR` = 'S')) left join `fza_articulos_tarifas` `ts` on(`ts`.`CODIGO_ART_ARTTAR` = `u`.`CODIGO_ART_ART` and `ts`.`CODIGO_UNIDAD_ARTTAR` = `u`.`CODIGO_UNIDAD` and `ts`.`CODIGO_TAR_ARTTAR` = `t`.`CODIGO_TAR_ARTTAR` and `ts`.`ESACTIVO_ARTTAR` = 'S' and `u`.`CODIGO_UNIDAD` <> '' and coalesce(`ts`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate())) left join `fza_articulos_tarifas` `tp` on(`tp`.`CODIGO_ART_ARTTAR` = `u`.`CODIGO_ART_ART` and (`tp`.`CODIGO_UNIDAD_ARTTAR` is null or `tp`.`CODIGO_UNIDAD_ARTTAR` = '') and `tp`.`CODIGO_TAR_ARTTAR` = `t`.`CODIGO_TAR_ARTTAR` and `tp`.`ESACTIVO_ARTTAR` = 'S' and coalesce(`tp`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate())) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) left join `sku_desc` `sd` on(`sd`.`CODIGO_UNIDAD` = `u`.`CODIGO_UNIDAD`)) order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`u`.`CODIGO_UNIDAD`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `at`.`CODIGO_ART_ARTTAR` AS `CODIGO_ART_ARTTAR`,coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') AS `CODIGO_UNIDAD_ARTTAR`,`at`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`at`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_ARTTAR`,case when `at`.`CODIGO_UNIDAD_ARTTAR` is not null and `at`.`CODIGO_UNIDAD_ARTTAR` <> '' then 'ESPECIFICO_SKU' else 'HEREDADO_PADRE' end AS `ORIGEN_PRECIO`,`at`.`PRECIO_SALIDA_ARTTAR` AS `PRECIO_SALIDA_ARTTAR`,`at`.`PRECIO_FINAL_ARTTAR` AS `PRECIO_FINAL_ARTTAR`,`at`.`PRECIO_DTO_ARTTAR` AS `PRECIO_DTO_ARTTAR`,`at`.`PORCENTAJE_DTO_ARTTAR` AS `PORCENTAJE_DTO_ARTTAR`,`at`.`FECHA_DESDE_ARTTAR` AS `FECHA_DESDE_ARTTAR`,`at`.`FECHA_HASTA_ARTTAR` AS `FECHA_HASTA_ARTTAR`,`at`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`t`.`ESDEFAULT_TAR` AS `ESDEFAULT_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,case when `sk`.`CODIGO_UNIDAD_SKU` is not null then 'S' else 'N' end AS `TIENE_SKU`,`sk`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`sd`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`ap`.`PRECIO_ULT_COMPRA_AP` AS `PRECIO_ULT_COMPRA`,`ap`.`FECHA_VALIDEZ_AP` AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`at`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`at`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`at`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`at`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((((`fza_articulos_tarifas` `at` join `fza_tarifas` `t` on(`t`.`CODIGO_TAR_ARTTAR` = `at`.`CODIGO_TAR_ARTTAR`)) join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `at`.`CODIGO_ART_ARTTAR`)) left join `fza_articulos_skus` `sk` on(`sk`.`CODIGO_ART_SKU` = `at`.`CODIGO_ART_ARTTAR` and `sk`.`CODIGO_UNIDAD_SKU` = `at`.`CODIGO_UNIDAD_ARTTAR` and `sk`.`ESACTIVO_SKU` = 'S')) left join (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`) `sd` on(`sd`.`CODIGO_UNIDAD` = `at`.`CODIGO_UNIDAD_ARTTAR`)) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) where `at`.`ESACTIVO_ARTTAR` = 'S' and coalesce(`at`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate() order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`at`.`CODIGO_UNIDAD_ARTTAR`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -15075,4 +13399,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 06/05/2026 8:31:56
+-- Backup completado: 06/05/2026 19:16:30
