@@ -1,12 +1,10 @@
-﻿inherited frmMtoTarifas: TfrmMtoTarifas
+inherited frmMtoTarifas: TfrmMtoTarifas
   Left = 5
   Top = 4
   Caption = 'Tarifas'
   ClientHeight = 614
   ClientWidth = 1036
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 1036
   ExplicitHeight = 614
   TextHeight = 19
@@ -15,14 +13,14 @@
     Height = 614
     TabOrder = 0
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 715
+    ExplicitWidth = 896
     ExplicitHeight = 614
     inherited pcPantalla: TcxPageControl
       Width = 896
       Height = 574
       TabOrder = 1
       Properties.ActivePage = tsLista
-      ExplicitWidth = 715
+      ExplicitWidth = 896
       ExplicitHeight = 574
       ClientRectBottom = 572
       ClientRectRight = 894
@@ -99,7 +97,6 @@
           Height = 113
           Align = alTop
           TabOrder = 0
-          ExplicitWidth = 711
           object cxdbtxtdt1: TcxDBTextEdit
             Left = 104
             Top = 33
@@ -132,7 +129,6 @@
             Height = 111
             Align = alClient
             TabOrder = 0
-            ExplicitWidth = 709
             object txtCODIGO_TARIFA: TcxDBTextEdit
               Left = 101
               Top = 9
@@ -214,7 +210,10 @@
             object tsArticulos: TcxTabSheet
               Caption = '&1_Art'#237'culos'
               ImageIndex = 0
+              ExplicitLeft = 0
+              ExplicitTop = 0
               ExplicitWidth = 705
+              ExplicitHeight = 0
               object pnl6: TPanel
                 Left = 759
                 Top = 0
@@ -567,11 +566,10 @@
             object tsOtros: TcxTabSheet
               Caption = '&2_Otros'
               ImageIndex = 3
-              ExplicitWidth = 705
               object pnl3: TPanel
                 Left = 0
                 Top = 308
-                Width = 705
+                Width = 886
                 Height = 79
                 Align = alBottom
                 TabOrder = 0
@@ -687,18 +685,18 @@
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 711
+        ExplicitWidth = 892
         ExplicitHeight = 543
         inherited pnlPerfilTop: TPanel
-          Width = 711
+          Width = 892
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 711
+          ExplicitWidth = 892
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 711
+          Width = 892
           Height = 486
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 711
@@ -716,11 +714,11 @@
       Width = 896
       TabOrder = 0
       StyleElements = [seFont, seClient, seBorder]
-      ExplicitWidth = 715
+      ExplicitWidth = 896
       inherited pnlTopGrid: TPanel
         Width = 896
         StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 715
+        ExplicitWidth = 896
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
         end
@@ -732,7 +730,7 @@
     Height = 614
     TabOrder = 1
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 715
+    ExplicitLeft = 896
     ExplicitHeight = 614
     inherited pButtonGen: TPanel
       Top = 416
@@ -750,6 +748,7 @@
     end
   end
   inherited dsTablaG: TDataSource
+    DataSet = dmTarifas.unqryTablaG
     Left = 404
     Top = 375
   end
