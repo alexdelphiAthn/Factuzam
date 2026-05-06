@@ -13,7 +13,7 @@
     SQLDelete.Strings = (
       'DELETE FROM `fza_articulos_familias`'
       'WHERE'
-      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`')
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAM_FAM`')
     SQLUpdate.Strings = (
       'UPDATE `fza_articulos_familias`'
       'SET'
@@ -22,11 +22,11 @@
         'M_FAM` = :`NOMBRE_FAM_FAM`, `DESCRIPCION_FAM` = :`DESCRIPCION_FAM`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUA' +
         'RIO_MODIF`'
       'WHERE'
-      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`')
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAM_FAM`')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_familias'
       'WHERE'
-      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAMILIA`'
+      '  `CODIGO_FAM_FAM` = :`Old_CODIGO_FAM_FAM`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
@@ -69,7 +69,7 @@
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_tarifas'
       'SET'
@@ -78,11 +78,11 @@
         'CTIVO_ARTTAR, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_ARTTAR = :FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR = :FECHA_HASTA_ARTTAR, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_' +
         'ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA'
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
@@ -144,7 +144,7 @@
       'DELETE FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP')
     SQLUpdate.Strings = (
       'UPDATE fza_familias_atributos'
       'SET'
@@ -152,13 +152,13 @@
         '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP, ESREQUERIDO_FA = :ESREQUERIDO_FA, ORDEN_MOSTRAR_FA = :ORDEN_MOSTRAR_FA'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP')
     SQLLock.Strings = (
       
         'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD'
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
@@ -211,7 +211,7 @@
       'DELETE FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP')
     SQLUpdate.Strings = (
       'UPDATE fza_familias_atributos'
       'SET'
@@ -219,13 +219,13 @@
         '  CODIGO_FAM_FAM = :CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP, ESREQUERIDO_FA = :ESREQUERIDO_FA, ORDEN_MOSTRAR_FA = :ORDEN_MOSTRAR_FA'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD')
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP')
     SQLLock.Strings = (
       
         'SELECT CODIGO_FAM_FAM, CODIGO_PROP_ARTPROP, ESREQUERIDO_FA, ORDEN_MOSTRAR_FA FROM fza_familias_atributos'
       'WHERE'
       
-        '  CODIGO_FAM_FAM = :Old_CODIGO_FAMILIA AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROPIEDAD'
+        '  CODIGO_FAM_FAM = :Old_CODIGO_FAM_FAM AND CODIGO_PROP_ARTPROP = :Old_CODIGO_PROP_ARTPROP'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       

@@ -10,19 +10,19 @@
     SQLDelete.Strings = (
       'DELETE FROM fza_paises'
       'WHERE'
-      '  CODIGO_PAI_PAI = :Old_COD_PAIS')
+      '  CODIGO_PAI_PAI = :Old_CODIGO_PAI_PAI')
     SQLUpdate.Strings = (
       'UPDATE fza_paises'
       'SET'
       
         '  CODIGO_PAI_PAI = :CODIGO_PAI_PAI, COD_ALPHA3_PAI = :COD_ALPHA3_PAI, NOMBRE_SPA_PAI = :NOMBRE_SPA_PAI, NOMBRE_ENG_PAI = :NOMBRE_ENG_PAI, ORDEN_PAI = :ORDEN_PAI'
       'WHERE'
-      '  CODIGO_PAI_PAI = :Old_COD_PAIS')
+      '  CODIGO_PAI_PAI = :Old_CODIGO_PAI_PAI')
     SQLLock.Strings = (
       
         'SELECT CODIGO_PAI_PAI, COD_ALPHA3_PAI, NOMBRE_SPA_PAI, NOMBRE_ENG_PAI, ORDEN_PAI FROM fza_paises'
       'WHERE'
-      '  CODIGO_PAI_PAI = :Old_COD_PAIS'
+      '  CODIGO_PAI_PAI = :Old_CODIGO_PAI_PAI'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       

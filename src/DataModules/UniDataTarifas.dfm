@@ -52,7 +52,7 @@
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_tarifas'
       'SET'
@@ -61,11 +61,11 @@
         'CTIVO_ARTTAR, PRECIOFINAL = :PRECIOFINAL, FECHA_DESDE_ARTTAR = :FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR = :FECHA_HASTA_ARTTAR, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_' +
         'ALTA = :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA')
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR')
     SQLLock.Strings = (
       'SELECT * FROM fza_articulos_tarifas'
       'WHERE'
-      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_TARIFA'
+      '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR'
       'FOR UPDATE')
     SQLRefresh.Strings = (
       
