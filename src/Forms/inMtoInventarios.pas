@@ -66,7 +66,7 @@ type
     btnEliminarLinea: TcxButton;
     btnRecalcularDetalle: TcxButton;
     btnCargarExcel: TcxButton;
-    btnExportarMovs: TcxButton;
+    btnExportarInv: TcxButton;
     cxgrdLineas: TcxGrid;
     tvLineas: TcxGridDBTableView;
     tvLineasLINEA: TcxGridDBColumn;
@@ -125,6 +125,7 @@ type
     txtINSTANTEMODIF: TcxDBTextEdit;
     splSplitterFicha: TcxSplitter;
     cxDBCurrencyEdit1: TcxDBCurrencyEdit;
+    btnIraArticulo: TcxButton;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
@@ -159,7 +160,7 @@ type
 
     // Movs Regularizados
     procedure btnEliminarRegularizacionClick(Sender: TObject);
-    procedure btnExportarMovsClick(Sender: TObject);
+    procedure btnExportarInvClick(Sender: TObject);
 
     // Cargas masivas
     procedure btnCargarPorFamiliaClick(Sender: TObject);
@@ -831,7 +832,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoInventarios.btnExportarMovsClick(Sender: TObject);
+procedure TfrmMtoInventarios.btnExportarInvClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdMovs, 'Movimientos_Inventario_' +
                 dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString);

@@ -88,6 +88,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
         ExplicitWidth = 1136
         ExplicitHeight = 649
         object pnlTopFicha: TPanel
@@ -248,14 +250,14 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             Height = 463
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMovsRegul
+            Properties.ActivePage = tsDetalle
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 461
             ClientRectLeft = 2
             ClientRectRight = 1132
             ClientRectTop = 29
             object tsDetalle: TcxTabSheet
-              Caption = '&2. Detalle del inventario'
+              Caption = '&1. Detalle del inventario'
               ImageIndex = 1
               object pnlDetalleTop: TPanel
                 Left = 0
@@ -301,14 +303,23 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   TabOrder = 3
                   OnClick = btnCargarExcelClick
                 end
-                object btnExportarMovs: TcxButton
+                object btnExportarInv: TcxButton
                   Left = 718
                   Top = 11
                   Width = 150
                   Height = 30
                   Caption = 'Exportar a Excel'
                   TabOrder = 4
-                  OnClick = btnExportarMovsClick
+                  OnClick = btnExportarInvClick
+                end
+                object btnIraArticulo: TcxButton
+                  Left = 886
+                  Top = 11
+                  Width = 150
+                  Height = 30
+                  Caption = 'Ir a Art'#237'culo'
+                  TabOrder = 5
+                  OnClick = btnExportarInvClick
                 end
               end
               object cxgrdLineas: TcxGrid
@@ -347,10 +358,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object tvLineasARTICULO: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_INVLIN'
+                    Visible = False
                     Width = 130
                   end
                   object tvLineasUNIDAD: TcxGridDBColumn
-                    Caption = 'SKU completo'
+                    Caption = 'SKU/Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_INVLIN'
                     Width = 180
                   end
@@ -474,7 +486,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               end
             end
             object tsMovsRegul: TcxTabSheet
-              Caption = '&3. Movimientos regularizados'
+              Caption = '&2. Movimientos regularizados'
               ImageIndex = 2
               object pnlMovsTop: TPanel
                 Left = 0
@@ -567,7 +579,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               end
             end
             object tsCabecera: TcxTabSheet
-              Caption = '&4.Otros'
+              Caption = '&3.Otros'
               ImageIndex = 0
               object pnlCabecera: TPanel
                 Left = 0

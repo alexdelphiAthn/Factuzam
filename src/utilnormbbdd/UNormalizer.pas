@@ -63,6 +63,7 @@ type
     btnApplyCodeReplacements: TButton;
     btnGenerateApplyScript: TButton;
     btnFixOldParams: TButton;
+    btnPatchFR3Dump: TButton;
     GridCodeMatches: TStringGrid;
     lblCodeInfo: TLabel;
 
@@ -96,6 +97,7 @@ type
     procedure btnExportAuditClick(Sender: TObject);
     procedure btnGenerateApplyScriptClick(Sender: TObject);
     procedure btnFixOldParamsClick(Sender: TObject);
+    procedure btnPatchFR3DumpClick(Sender: TObject);
   private
     FNormalizer:    TFactuzamNormalizer;
     FSourceSQL:     string;
@@ -131,7 +133,7 @@ implementation
 
 uses
   System.UITypes, System.StrUtils,
-  UConfigEditor;
+  UConfigEditor, UFR3SQLDumpPatcher;
 
 procedure TFormNormalizer.FormCreate(Sender: TObject);
 begin
@@ -933,6 +935,135 @@ begin
   finally
     Stats.Free;
     Fixes.Free;
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TFormNormalizer.btnPatchFR3DumpClick(Sender: TObject);
+var
+  Patcher:    TFR3DumpPatcher;
+  Plan:       TPlanPairList;
+  Fixes:      TFR3DumpRowFixList;
+  OpenDlg:    TOpenDialog;
+  SaveDlg:    TSaveDialog;
+  InputFile:  string;
+  OutputFile: string;
+  DefaultOut: string;
+  BaseDir, BaseName, BaseExt: string;
+  Changed:    Boolean;
+  i:          Integer;
+  Fix:        TFR3DumpRowFix;
+begin
+  // 1) Pedir archivo de ENTRADA (dump original)
+  OpenDlg := TOpenDialog.Create(Self);
+  try
+    OpenDlg.Title  := 'Selecciona el dump SQL ORIGINAL (no se modificará)';
+    OpenDlg.Filter := 'Archivos SQL (*.sql)|*.sql|Todos|*.*';
+    if not OpenDlg.Execute then Exit;
+    InputFile := OpenDlg.FileName;
+  finally
+    OpenDlg.Free;
+  end;
+
+  // 2) Construir nombre por defecto del archivo de salida:
+  //    <basename>_dfmfr3patched.sql en la misma carpeta
+  BaseDir  := ExtractFilePath(InputFile);
+  BaseName := ChangeFileExt(ExtractFileName(InputFile), '');
+  BaseExt  := ExtractFileExt(InputFile);
+  if BaseExt = '' then BaseExt := '.sql';
+  DefaultOut := IncludeTrailingPathDelimiter(BaseDir) +
+                BaseName + '_dfmfr3patched' + BaseExt;
+
+  // 3) Pedir archivo de SALIDA
+  SaveDlg := TSaveDialog.Create(Self);
+  try
+    SaveDlg.Title       := 'Archivo de salida (NO debe coincidir con la entrada)';
+    SaveDlg.Filter      := 'Archivos SQL (*.sql)|*.sql|Todos|*.*';
+    SaveDlg.DefaultExt  := 'sql';
+    SaveDlg.FileName    := DefaultOut;
+    SaveDlg.Options     := SaveDlg.Options + [ofOverwritePrompt];
+    if not SaveDlg.Execute then Exit;
+    OutputFile := SaveDlg.FileName;
+  finally
+    SaveDlg.Free;
+  end;
+
+  if SameFileName(InputFile, OutputFile) then
+  begin
+    MessageDlg('El archivo de salida no puede coincidir con el de entrada.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  if FColumnPlan.Count = 0 then
+  begin
+    MessageDlg(
+      'No hay plan de renombrado cargado.'#13#10 +
+      'Genera el plan primero desde la pestaña SQL.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
+  if MessageDlg(
+       Format('Entrada (intacta):'#13#10'  %s'#13#10#13#10 +
+              'Salida (se creará/sobreescribirá):'#13#10'  %s'#13#10#13#10 +
+              'Solo se procesarán filas con KEY_USUPER en (frmPrintFac, frmPrintRecFac).'#13#10#13#10 +
+              '¿Continuar?',
+              [InputFile, OutputFile]),
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+
+  Plan    := BuildPlanPairList;
+  Fixes   := TFR3DumpRowFixList.Create;
+  Patcher := TFR3DumpPatcher.Create;
+  Screen.Cursor := crHourGlass;
+  try
+    Patcher.OnLog :=
+      procedure(S: string)
+      begin
+        Log(S);
+      end;
+    Patcher.SetRenamePlan(Plan);
+    Patcher.SetKeyFilter('frmPrintFac,frmPrintRecFac');
+
+    Changed := Patcher.ProcessDumpFile(InputFile, OutputFile, Fixes);
+
+    if not Changed then
+    begin
+      MessageDlg(Format(
+        'Procesado correctamente, sin cambios necesarios.'#13#10 +
+        'El archivo de salida es una copia 1:1 de la entrada:'#13#10 +
+        '  %s', [OutputFile]),
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+
+    // Resumen detallado al log
+    Log(Format('--- Cambios por fila (%d) ---', [Fixes.Count]));
+    for i := 0 to Min(Fixes.Count - 1, 49) do
+    begin
+      Fix := Fixes[i];
+      if Fix.ErrorMsg <> '' then
+        Log(Format('  [ERR ] [%s/%s/%s] %s',
+          [Fix.UsuarioGrupo, Fix.KeyName, Fix.SubKey, Fix.ErrorMsg]))
+      else
+        Log(Format('  [%4d] [%s/%s/%s] %d->%d bytes',
+          [Fix.Replacements,
+           Fix.UsuarioGrupo, Fix.KeyName, Fix.SubKey,
+           Fix.BytesBefore, Fix.BytesAfter]));
+    end;
+    if Fixes.Count > 50 then
+      Log(Format('  ...y %d más', [Fixes.Count - 50]));
+
+    MessageDlg(Format(
+      'Dump parcheado correctamente.'#13#10 +
+      '  Filas con cambios:  %d'#13#10 +
+      '  Salida:             %s',
+      [Fixes.Count, OutputFile]),
+      mtInformation, [mbOK], 0);
+  finally
+    Patcher.Free;
+    Fixes.Free;
+    Plan.Free;
     Screen.Cursor := crDefault;
   end;
 end;

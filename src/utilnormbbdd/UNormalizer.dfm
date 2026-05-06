@@ -226,7 +226,7 @@ object FormNormalizer: TFormNormalizer
         Left = 0
         Top = 0
         Width = 1168
-        Height = 145
+        Height = 193
         Align = alTop
         BevelOuter = bvNone
         Padding.Left = 8
@@ -234,7 +234,6 @@ object FormNormalizer: TFormNormalizer
         Padding.Right = 8
         Padding.Bottom = 8
         TabOrder = 0
-        ExplicitWidth = 1166
         object lblFolders: TLabel
           Left = 8
           Top = 12
@@ -311,17 +310,27 @@ object FormNormalizer: TFormNormalizer
           TabOrder = 6
           OnClick = btnFixOldParamsClick
         end
+        object btnPatchFR3Dump: TButton
+          Left = 688
+          Top = 159
+          Width = 172
+          Height = 25
+          Caption = 'Parchear reports en dump SQL'
+          TabOrder = 7
+          OnClick = btnPatchFR3DumpClick
+        end
       end
       object GridCodeMatches: TStringGrid
         Left = 0
-        Top = 145
+        Top = 193
         Width = 1168
-        Height = 461
+        Height = 413
         Align = alClient
         DefaultRowHeight = 18
         FixedCols = 0
         RowCount = 2
         TabOrder = 1
+        ExplicitTop = 145
         ExplicitWidth = 1166
         ExplicitHeight = 453
       end
