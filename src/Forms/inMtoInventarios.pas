@@ -715,13 +715,14 @@ begin
     ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
     if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
     begin
+      // Mismo patron que inMtoCajaOpe: NO ponemos guard FInicializandoCombo
+      // alrededor de ItemIndex := 0 aqui. El fin es justamente que la
+      // asignacion dispare OnAtributoChanged, que a su vez hace PostEditValue
+      // (commit del valor al campo ATTR1_VALOR via la DataLink) y rebuild
+      // del SKU. Si ponemos guard, el campo se queda vacio y al salir de
+      // la celda no hay valor (que era el bug previo).
       Combo.OnEnter := ForzarDespliegue;
-      FInicializandoCombo := True;
-      try
-        Combo.ItemIndex := 0;
-      finally
-        FInicializandoCombo := False;
-      end;
+      Combo.ItemIndex := 0;
     end;
   end;
 end;
@@ -766,8 +767,25 @@ begin
 
   Edit.PostEditValue;
 
+  // Defensa: aseguramos que el campo ATTRn_VALOR tiene el valor del editor.
+  // Aunque la DataLink deberia hacerlo, en algunos casos no se sincroniza
+  // antes de que GenerarSkuFinal lea, dejando el SKU sin atributos.
+  if (Edit is TcxComboBox) then
+  begin
+    var ColIdx := TcxComboBox(Edit).Tag;
+    if (ColIdx >= 1) and (ColIdx <= 5) then
+      dmmInventarios.cdsLineas.FieldByName(
+        'ATTR' + IntToStr(ColIdx) + '_VALOR').AsString :=
+                                          VarToStr(TcxComboBox(Edit).EditValue);
+  end;
+
   SkuNuevo := dmmInventarios.GenerarSkuFinal(
                 dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString);
+  // Si por algun motivo el SKU sale vacio (no deberia), nos quedamos con
+  // el codigo del articulo. CODIGO_UNIDAD_INVLIN es NOT NULL en BD y dejarlo
+  // vacio dispararia "Field value required" al hacer Post.
+  if Trim(SkuNuevo) = '' then
+    SkuNuevo := dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
   dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := SkuNuevo;
 
   NumAtributosRequeridos :=
