@@ -1,9 +1,9 @@
-﻿object frmMtoOpeCaja: TfrmMtoOpeCaja
+object frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 437
-  ClientWidth = 1366
+  ClientHeight = 429
+  ClientWidth = 1364
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@
   object pnlUp1: TPanel
     Left = 0
     Top = 0
-    Width = 1366
+    Width = 1364
     Height = 89
     Align = alTop
     TabOrder = 0
@@ -120,21 +120,19 @@
   object pnlCli1: TPanel
     Left = 0
     Top = 89
-    Width = 1366
-    Height = 348
+    Width = 1364
+    Height = 340
     Align = alClient
     TabOrder = 3
     object Panel1: TPanel
       Left = 1
-      Top = 257
-      Width = 1366
+      Top = 241
+      Width = 1362
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 249
-      ExplicitWidth = 1364
       DesignSize = (
-        1364
+        1362
         98)
       object btnF12: TcxButton
         Left = 10
@@ -259,7 +257,7 @@
         Transparent = True
       end
       object lblTotal: TcxLabel
-        Left = 878
+        Left = 874
         Top = 4
         Anchors = [akTop, akRight]
         AutoSize = False
@@ -283,7 +281,7 @@
         TabOrder = 0
         Height = 80
         Width = 423
-        AnchorX = 1301
+        AnchorX = 1297
       end
       object btnF8: TcxButton
         Left = 224
@@ -362,15 +360,15 @@
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 1364
-      Height = 248
+      Width = 1362
+      Height = 240
       Align = alClient
       TabOrder = 0
       object cxGrid1: TcxGrid
         Left = 1
         Top = 1
-        Width = 1364
-        Height = 128
+        Width = 1360
+        Height = 112
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -381,8 +379,6 @@
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1362
-        ExplicitHeight = 120
         object cxGrid1DBTableView1: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -472,17 +468,15 @@
       end
       object pnl1: TPanel
         Left = 1
-        Top = 139
-        Width = 1364
+        Top = 123
+        Width = 1360
         Height = 116
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 131
-        ExplicitWidth = 1362
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1362
+          Width = 1358
           Height = 114
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -494,7 +488,6 @@
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1360
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
@@ -521,14 +514,12 @@
       end
       object cxspltr1: TcxSplitter
         Left = 1
-        Top = 129
-        Width = 1364
+        Top = 113
+        Width = 1360
         Height = 10
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 121
-        ExplicitWidth = 1362
       end
     end
   end
@@ -651,7 +642,8 @@
       'SELECT '
       '    CODIGO_ART_ART as INPUT_BUSQUEDA,'
       
-        '    CODIGO_ART_ART AS CODIGO_PADRE,   -- El valor real que guardaremos'
+        '    CODIGO_ART_ART AS CODIGO_PADRE,   -- El valor real que guard' +
+        'aremos'
       '    DESCRIPCION_ART'
       'FROM vi_articulos_list'
       'WHERE CODIGO_ART_ART LIKE :TOKEN'
