@@ -4,7 +4,7 @@ interface
 
 uses
   System.Generics.Collections, Vcl.Forms, Vcl.Controls, cxPC, System.Classes,
-  winapi.Windows, winapi.Messages;
+  winapi.Windows, winapi.Messages, System.SysUtils;
 
 type
   TEmbeddedFormManager = class(TComponent)
@@ -61,7 +61,7 @@ begin
     AForm.BorderStyle := bsNone;
     NewTab := TcxTabSheet.Create(FPageControl);
     NewTab.PageControl := FPageControl;
-    NewTab.Caption := ATitle;
+    NewTab.Caption := ATitle + ' ';
     AForm.Parent := NewTab;
     AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
     AForm.Align := alClient;
@@ -86,41 +86,8 @@ end;
 
 procedure TEmbeddedFormManager.CloseAll;
 begin
-  // Iteramos al revés porque vamos a eliminar elementos de la lista
-//  while FForms.Count > 0 do
-//  begin
-//    InternalCloseForm(FForms.Last);
-//  end;
   FForms.Clear;
 end;
-
-//procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
-//                                         const ATitle: string;
-//                                         ASelect: Boolean = True);
-//var
-//  NewTab: TcxTabSheet;
-//begin
-//  SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
-//  try
-//    AForm.BorderStyle := bsNone;
-//    NewTab := TcxTabSheet.Create(FPageControl);
-//    NewTab.PageControl := FPageControl;
-//    NewTab.Caption := ATitle;
-//    AForm.Parent := NewTab;
-//    AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
-//    AForm.Align := alClient;
-//    FForms.Add(AForm);
-//    if ASelect then
-//      FPageControl.ActivePage := NewTab;
-//  finally
-//    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
-//    RedrawWindow(FPageControl.Handle, nil, 0,
-//                 RDW_ERASE or RDW_FRAME or
-//                 RDW_INVALIDATE or RDW_ALLCHILDREN);
-//    AForm.Visible := True;
-//    AForm.Show;
-//  end;
-//end;
 
 function TEmbeddedFormManager.FindFormByCaption(const ATitle: string): TForm;
 var
@@ -130,7 +97,7 @@ begin
   for F in FForms do
   begin
     if (F.Parent is TcxTabSheet) and
-       (TcxTabSheet(F.Parent).Caption = ATitle) then
+       (Trim(TcxTabSheet(F.Parent).Caption) = Trim(ATitle)) then
       Exit(F);
   end;
 end;
@@ -140,21 +107,6 @@ function TEmbeddedFormManager.GetEnumerator: TList<TForm>.TEnumerator;
 begin
   Result := FForms.GetEnumerator;
 end;
-
-(*procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm);
-var
-  ParentTab: TcxTabSheet;
-begin
-  if AForm = nil then
-    Exit;
-  ParentTab := nil;
-  if AForm.Parent is TcxTabSheet then
-    ParentTab := TcxTabSheet(AForm.Parent);
-  FForms.Remove(AForm);
-  AForm.Free;
-  if ParentTab <> nil then
-    ParentTab.Free;
-end; *)
 
 procedure TEmbeddedFormManager.CloseActiveForm;
 var
