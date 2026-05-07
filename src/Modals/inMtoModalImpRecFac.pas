@@ -20,7 +20,8 @@ uses
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturas,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
+  frxExportBaseImageSettingsDialog, frCoreClasses;
 
 type
   TfrmPrintRecFac = class(TfrmPrint)
