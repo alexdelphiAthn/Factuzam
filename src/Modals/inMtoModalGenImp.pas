@@ -62,11 +62,7 @@ type
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnPDFClick(Sender: TObject);
-    //procedure btn5Click(Sender: TObject);
     procedure btnVistaPreliminarClick(Sender: TObject);
-    //procedure rbRangoFechasClick(Sender: TObject);
-    //procedure rbActualClick(Sender: TObject);
-    //procedure frxpdfxprtPedWebBeforeExport(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -75,12 +71,9 @@ type
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
-//    frLocalization: TfrLocalizationController;
-    { Private declarations }
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
-    { Public declarations }
     procedure preparar_consulta; virtual; abstract;
     procedure AfterReportLoaded; virtual;
     procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
