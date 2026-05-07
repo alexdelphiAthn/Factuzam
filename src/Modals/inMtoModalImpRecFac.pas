@@ -60,17 +60,13 @@ begin
 end;
 
 procedure TfrmPrintRecFac.preparar_consulta;
-var
-  pDM: TdmFacturas;
 begin
   inherited;
-  if dmFac <> nil then
-    pDM := dmFac
-  else
-    pDM := dmmFacturas;
+  with dmFac do
+  begin
   if rbActual.Checked = true then
   begin
-    with pDM.unqryRecibosPrint do
+    with unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -82,12 +78,12 @@ begin
       Params.ParamByName('serie').AsString := edtSerie.text;
       Params.ParamByName('recibo').AsString := edtPlazoRecFac.text;
     end;
-    pDM.unqryRecibosPrint.Open;
-    pDM.fxdsRecibos.UpdateBounds;
+    unqryRecibosPrint.Open;
+    fxdsRecibos.UpdateBounds;
   end;
   if rbRangoFechas.Checked = true then
   begin
-    with pDM.unqryRecibosPrint do
+    with unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -97,8 +93,9 @@ begin
       Params.ParamByName('numfac').AsString := edtNroFac.text;
       Params.ParamByName('serie').AsString := edtSerie.text;
     end;
-    pDM.unqryRecibosPrint.Open;
-    pDM.fxdsRecibos.UpdateBounds;
+    unqryRecibosPrint.Open;
+    fxdsRecibos.UpdateBounds;
+  end;
   end;
 end;
 

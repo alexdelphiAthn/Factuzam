@@ -494,11 +494,13 @@ type
   private
     procedure CheckConsolidacion;
     procedure AsignarControles;
+  public
+    dmmFacturas : TdmFacturas;
   end;
 
-var
-  //frmMtoFacturas: TfrmMtoFacturas;
-  dmmFacturas : TdmFacturas;
+//var
+//  //frmMtoFacturas: TfrmMtoFacturas;
+//  dmmFacturas : TdmFacturas;
 
 implementation
 
@@ -647,17 +649,15 @@ end;
 procedure TfrmMtoFacturas.btnImprimirReciboClick(Sender: TObject);
 var
   form:TfrmPrintRecFac;
-  pDM: TdmFacturas;
 begin
   inherited;
-  pDM := (Self.tdmDataModule as TdmFacturas);
   form := TfrmPrintRecFac.Create(Application);
   try
-    form.dmFac := pDM;
+    form.dmFac := dmmFacturas;
     form.edtNroFac.Text := dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
     form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
     form.edtPlazoRecFac.Text :=
-                pDM.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
+                dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
     form.ShowModal;
   finally
     form.Free;
@@ -859,7 +859,7 @@ begin
   try
     form.edtNroFac.Text := dsTablaG.DataSet.findField(fnrofac).AsString;
     form.edtSerie.Text := dsTablaG.DataSet.findField(fseriefac).AsString;
-    form.dmFac := (Self.tdmDataModule as TdmFacturas);
+    form.dmFac := dmmFacturas;
     form.ShowModal;
   finally
     form.Free;
@@ -891,6 +891,7 @@ begin
   inherited;
    form := TfrmGenFacRec.Create(Self);
    try
+     form.dmFac := dmmFacturas;
      form.ShowModal;
    finally
      form.Free;
