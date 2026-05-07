@@ -443,12 +443,12 @@ begin
               (DataSet.FindField('PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
   end;
-  oLinFac := TLinFac.Create(dmmFacturas.unqryLinFac,
-                            dmmFacturas.unqryTablaG);
+  oLinFac := TLinFac.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac,
+                            (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG);
   oLinFac.Cant := 1;
   FreeAndNil(oLinFac);
-  facTotales := TFacturaTotales.Create(dmmFacturas.unqryTablaG,
-                                       dmmFacturas.unqryLinFac);
+  facTotales := TFacturaTotales.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG,
+                                       (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac);
   facTotales.ProcesarFacturaCompleta;//(oLinFac);
   FreeAndNil(facTotales);
 end;
@@ -843,7 +843,7 @@ function TdmFacturas.GetTipoIVA(sTipoIVA: string): Currency;
 var
   fPorcen:Currency;
 begin
-  with dmmFacturas.unqryTablaG do
+  with (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG do
   begin
   case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
     0: fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
