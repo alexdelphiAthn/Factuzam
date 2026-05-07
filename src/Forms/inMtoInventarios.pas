@@ -146,6 +146,8 @@ type
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasUnidadPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+    procedure tvLineasUnidadPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
     procedure tvLineasUdsFisicasPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasGetCellHint(Sender: TcxCustomGridTableView;
@@ -186,6 +188,19 @@ type
     function ObtenerColumnaSkuPorTag(NumColumn: Integer): TcxGridDBColumn;
 //    procedure ConstruirSkuDesdeAtributos;
 
+    // === BUSQUEDA UNIFICADA DE ARTICULOS (codigo, SKU o codigo de barras) ===
+    procedure ResolverInputArticulo(const AInput: string;
+                                    out ACodigoPadre: string;
+                                    out ACodigoSku: string;
+                                    out ADescripcion: string;
+                                    out ATipoArt: string;
+                                    out AEncontrado: Boolean);
+    procedure RellenarLineaDesdeBusqueda(const AInput: string;
+                                         var AResolvedValue: string;
+                                         var AError: Boolean;
+                                         var AErrorText: TCaption);
+    function BuscarArticuloDialog: string;
+
     // === ACTUALIZACIÓN UI SEGÚN ESTADO ===
     procedure ActualizarEstadoUI;
     procedure HabilitarEdicionLineas(Habilitado: Boolean);
@@ -211,6 +226,8 @@ uses
   inLibUser,
   inLibShowMto,
   inLibDevExp,
+  inLibGenBusq,
+  inLibGlobalVar,
   inMtoPrincipal, inMtoModalAddBlockInventario;
 
 {$R *.dfm}
@@ -671,25 +688,177 @@ end;
 procedure TfrmMtoInventarios.tvLineasUnidadPropertiesValidate(Sender: TObject;
   var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
 var
-  Sku: string;
-  CantTeo, PMPAct: Currency;
+  Input, Resolved: string;
 begin
   Error := False;
-  Sku := Trim(VarToStr(DisplayValue));
-  if Sku = '' then Exit;
+  Input := Trim(VarToStr(DisplayValue));
+  if Input = '' then Exit;
+  Resolved := Input;
+  RellenarLineaDesdeBusqueda(Input, Resolved, Error, ErrorText);
+  if not Error then
+    DisplayValue := Resolved;
+end;
 
-  // Cuando se introduce un SKU directamente (escaneo), validamos
+procedure TfrmMtoInventarios.tvLineasUnidadPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+var
+  Edit: TcxCustomEdit;
+  Codigo, Resolved: string;
+  ErrText: TCaption;
+  Err: Boolean;
+begin
+  Codigo := BuscarArticuloDialog;
+  if Codigo = '' then Exit;
+  Resolved := Codigo;
+  Err := False;
+  ErrText := '';
+  RellenarLineaDesdeBusqueda(Codigo, Resolved, Err, ErrText);
+  if Err then
+  begin
+    ShowMessage(ErrText);
+    Exit;
+  end;
+  // Reflejamos el SKU resuelto en el editor en pantalla
+  if Sender is TcxCustomEdit then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    Edit.EditValue := Resolved;
+  end;
+end;
+
+function TfrmMtoInventarios.BuscarArticuloDialog: string;
+const
+  SQL =
+    'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.TIPO_ART, ' +
+    '       a.CODIGO_FAM_ART, f.DESCRIPCION_FAM, ' +
+    '       a.TIPO_CANTIDAD_ART, a.ESVARIACION_ART ' +
+    '  FROM fza_articulos a ' +
+    '  LEFT JOIN fza_articulos_familias f ' +
+    '    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
+    ' WHERE a.ESACTIVO_ART = ''S'' ' +
+    ' ORDER BY a.ORDEN_ART, a.CODIGO_ART_ART';
+var
+  sCodigo: string;
+begin
+  Result := '';
+  if TBusquedaUtils.EjecutarBusqueda(
+       'Búsqueda de Artículos',
+       SQL,
+       'CODIGO_ART_ART',
+       sCodigo,
+       'frmMtoArtInvSearch') then
+    Result := sCodigo;
+end;
+
+procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
+                                                  out ACodigoPadre: string;
+                                                  out ACodigoSku: string;
+                                                  out ADescripcion: string;
+                                                  out ATipoArt: string;
+                                                  out AEncontrado: Boolean);
+var
+  qry: TUniQuery;
+begin
+  ACodigoPadre := '';
+  ACodigoSku   := '';
+  ADescripcion := '';
+  ATipoArt     := '';
+  AEncontrado  := False;
+  if Trim(AInput) = '' then Exit;
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    // vi_caja_busqueda_unificada agrupa CODIGO_ART, CODIGO_UNIDAD_SKU y
+    // CODIGO_BARRAS_CB en una sola vista. Aunque tiene "caja" en el nombre
+    // los datos son genericos y la reusamos aqui.
+    qry.SQL.Text :=
+      'SELECT CODIGO_PADRE, CODIGO_SKU, DESCRIPCION_ART, TIPO_ART ' +
+      '  FROM vi_caja_busqueda_unificada ' +
+      ' WHERE INPUT_BUSQUEDA = :COD ' +
+      '    OR CODIGO_SKU      = :COD ' +
+      '    OR CODIGO_PADRE    = :COD ' +
+      ' LIMIT 1';
+    qry.ParamByName('COD').AsString := AInput;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      ACodigoPadre := qry.FieldByName('CODIGO_PADRE').AsString;
+      ACodigoSku   := qry.FieldByName('CODIGO_SKU').AsString;
+      ADescripcion := qry.FieldByName('DESCRIPCION_ART').AsString;
+      ATipoArt     := qry.FieldByName('TIPO_ART').AsString;
+      AEncontrado  := True;
+    end;
+  finally
+    qry.Free;
+  end;
+end;
+
+procedure TfrmMtoInventarios.RellenarLineaDesdeBusqueda(const AInput: string;
+                                                       var AResolvedValue: string;
+                                                       var AError: Boolean;
+                                                       var AErrorText: TCaption);
+var
+  CodPadre, CodSku, Desc, TipoArt, Tmp: string;
+  Encontrado: Boolean;
+  CantTeo, PMPAct: Currency;
+  NumAtr: Integer;
+begin
+  AError := False;
+  AErrorText := '';
+
+  ResolverInputArticulo(AInput, CodPadre, CodSku, Desc, TipoArt, Encontrado);
+  if not Encontrado then
+  begin
+    AError := True;
+    AErrorText := 'No se ha encontrado ningún artículo con ese código, SKU o código de barras';
+    Exit;
+  end;
+
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
 
-  dmmInventarios.RellenarDatosSku(Sku, CantTeo, PMPAct);
-  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency := CantTeo;
-  dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency  := CantTeo;
-  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       := PMPAct;
-  dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := PMPAct;
-  dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime     := Now;
+  // Conteo de atributos del articulo padre (para columnas dinamicas SKU1..5)
+  dmmInventarios.RellenarDatosArticulo(CodPadre, Tmp, NumAtr, Tmp);
 
-  RellenarAtributosDesdeSku(Sku);
+  dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString          := CodPadre;
+  dmmInventarios.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString := Desc;
+  dmmInventarios.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NumAtr;
+
+  ActualizarColumnasDinamicas(CodPadre);
+
+  if CodSku <> '' then
+  begin
+    // Match por SKU o codigo de barras: ya tenemos el SKU concreto
+    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := CodSku;
+    AResolvedValue := CodSku;
+    dmmInventarios.RellenarDatosSku(CodSku, CantTeo, PMPAct);
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    RellenarAtributosDesdeSku(CodSku);
+  end
+  else if NumAtr = 0 then
+  begin
+    // Articulo sin variaciones: SKU = codigo articulo
+    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := CodPadre;
+    AResolvedValue := CodPadre;
+    dmmInventarios.RellenarDatosSku(CodPadre, CantTeo, PMPAct);
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+  end
+  else
+  begin
+    // Articulo padre con variaciones: dejamos que el usuario rellene los
+    // atributos en SKU1..SKU5 para construir el SKU final.
+    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').Clear;
+    AResolvedValue := '';
+  end;
 end;
 
 procedure TfrmMtoInventarios.tvLineasUdsFisicasPropertiesValidate(Sender: TObject;
