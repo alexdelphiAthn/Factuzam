@@ -822,14 +822,12 @@ begin
               sql.Connection := oConn;
 
               // --- AÑADIDOS LOS FILTROS DE FECHAS AQUÍ TAMBIÉN ---
-              sql.SQL.Text := 'SELECT t.PRECIO_SALIDA_ARTTAR, t.ESIMP_INCL_TAR, t.TIPO_IVA_ARTICULO, t.PORCENTAJE_DTO_ARTTAR, ' +
-                              '       (SELECT COUNT(*) FROM vi_atributos_nombres n ' +
-                              '         WHERE n.CODIGO_ART_PADRE_ARTVIN = t.CODIGO_ART_ARTTAR) AS NUM_ATRIBUTOS_REQ ' +
-                              '  FROM vi_articulos_tarifas t ' +
-                              ' WHERE t.CODIGO_TAR_ARTTAR = :CODTARIFA ' +
-                              '   AND t.CODIGO_ART_ARTTAR = :CODIGOARTICULO ' +
-                              '   AND t.FECHA_DESDE_ARTTAR <= :FECHA ' +
-                              '   AND (t.FECHA_HASTA_ARTTAR IS NULL OR t.FECHA_HASTA_ARTTAR >= :FECHA) ' +
+              sql.SQL.Text := 'SELECT PRECIO_SALIDA_ARTTAR, ESIMP_INCL_TAR, TIPO_IVA_ARTICULO, PORCENTAJE_DTO_ARTTAR, NUM_ATRIBUTOS_REQ ' +
+                              '  FROM vi_articulos_tarifas ' +
+                              ' WHERE CODIGO_TAR_ARTTAR = :CODTARIFA ' +
+                              '   AND CODIGO_ART_ARTTAR = :CODIGOARTICULO ' +
+                              '   AND FECHA_DESDE_ARTTAR <= :FECHA ' +
+                              '   AND (FECHA_HASTA_ARTTAR IS NULL OR FECHA_HASTA_ARTTAR >= :FECHA) ' +
                               ' LIMIT 1';
 
               sql.ParamByName('CODTARIFA').AsString := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
