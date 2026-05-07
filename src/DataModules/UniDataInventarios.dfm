@@ -81,6 +81,7 @@ inherited dmInventarios: TdmInventarios
     Params = <>
     ProviderName = 'udspLineas'
     AfterPost = cdsLineasAfterPost
+    BeforePost = cdsLineasBeforePost
     BeforeDelete = cdsLineasBeforeDelete
     OnCalcFields = cdsLineasCalcFields
     OnNewRecord = cdsLineasNewRecord

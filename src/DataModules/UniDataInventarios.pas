@@ -92,6 +92,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure cdsLineasAfterPost(DataSet: TDataSet);
+    procedure cdsLineasBeforePost(DataSet: TDataSet);
     procedure cdsLineasBeforeDelete(DataSet: TDataSet);
     procedure cdsLineasCalcFields(DataSet: TDataSet);
     procedure cdsLineasNewRecord(DataSet: TDataSet);
@@ -545,16 +546,23 @@ end;
 
 procedure TdmInventarios.cdsLineasNewRecord(DataSet: TDataSet);
 begin
-  // Defaults al insertar una línea nueva
+  // Defaults al insertar una línea nueva.
+  // Inicializamos a '' los campos NOT NULL del BD (CODIGO_ART_INVLIN,
+  // CODIGO_UNIDAD_INVLIN) en vez de dejarlos NULL: asi al pulsar Grabar el
+  // TClientDataSet.Post no falla con "Field value required" antes de que
+  // cdsLineasBeforePost pueda dar un mensaje claro.
   DataSet.FieldByName('CODIGO_EMP_INVLIN').AsString := FCodigoEmpresa;
   DataSet.FieldByName('CODIGO_ALM_INVLIN').AsString := FCodigoAlmacen;
-  DataSet.FieldByName('SERIE_INV_INVLIN').AsString          := FSerie;
-  DataSet.FieldByName('NUMERO_INV_INVLIN').AsString            := FNumero;
-  DataSet.FieldByName('LINEA_INVLIN').AsString          := GenerarSiguienteLinea;
-  DataSet.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency := 0;
-  DataSet.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency := 0;
-  DataSet.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency    := 0;
-  DataSet.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := 0;
+  DataSet.FieldByName('SERIE_INV_INVLIN').AsString  := FSerie;
+  DataSet.FieldByName('NUMERO_INV_INVLIN').AsString := FNumero;
+  DataSet.FieldByName('LINEA_INVLIN').AsString      := GenerarSiguienteLinea;
+  DataSet.FieldByName('CODIGO_ART_INVLIN').AsString    := '';
+  DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := '';
+  DataSet.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency    := 0;
+  DataSet.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency     := 0;
+  DataSet.FieldByName('CANTIDAD_DIFERENCIA_INVLIN').AsCurrency := 0;
+  DataSet.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency        := 0;
+  DataSet.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency  := 0;
   DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger        := 0;
   DataSet.FieldByName('USUARIO_ALTA').AsString                         := FUsuario;
   DataSet.FieldByName('USUARIO_MODIF').AsString                        := FUsuario;
@@ -574,6 +582,23 @@ begin
     DataSet.FieldByName('UDS_REGULARIZADAS').AsCurrency := Diferencia
   else
     DataSet.FieldByName('UDS_REGULARIZADAS').AsCurrency := 0;
+end;
+
+procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
+begin
+  // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
+  // "Field value required" del TClientDataSet.
+  if FDesempaquetando then Exit;
+  if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
+    raise Exception.Create(
+      'No se puede grabar una linea sin articulo. Selecciona un articulo o '+
+      'elimina la linea (linea ' +
+      DataSet.FieldByName('LINEA_INVLIN').AsString + ').');
+  // Si por alguna razon CODIGO_UNIDAD_INVLIN ha quedado vacio, lo rellenamos
+  // con el codigo del articulo. CODIGO_UNIDAD_INVLIN es NOT NULL en BD.
+  if Trim(DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '' then
+    DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
+      DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
 end;
 
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
