@@ -1,4 +1,4 @@
-﻿inherited frmMtoFacturas: TfrmMtoFacturas
+inherited frmMtoFacturas: TfrmMtoFacturas
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -9,6 +9,7 @@
   ClientWidth = 1231
   Scaled = False
   StyleElements = [seFont, seClient, seBorder]
+  ExplicitTop = -117
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
@@ -39,7 +40,6 @@
       Margins.Right = 5
       Margins.Bottom = 5
       TabOrder = 1
-      Properties.ActivePage = tsLista
       ExplicitWidth = 1087
       ExplicitHeight = 804
       ClientRectBottom = 802
@@ -690,7 +690,7 @@
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsRegistro
+            Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 424
             ClientRectLeft = 2
@@ -754,7 +754,7 @@
                     Caption = 'Nro Linea'
                     DataBinding.FieldName = 'LINEA_FACLIN'
                     PropertiesClassName = 'TcxTextEditProperties'
-                    Width = 87
+                    Width = 104
                   end
                   object ctbCODIGO_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
@@ -778,7 +778,7 @@
                         Default = True
                         Kind = bkEllipsis
                       end>
-                    Width = 136
+                    Width = 153
                   end
                   object ctbNOMBRE_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nombre Familia'
@@ -821,17 +821,17 @@
                     VisibleForEditForm = bTrue
                     Width = 300
                   end
+                  object ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
+                    Caption = 'Tipo Cantidad'
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
+                    Width = 136
+                  end
                   object ctbCANTIDAD_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'CANTIDAD_ARTVIN'
+                    Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     PropertiesClassName = 'TcxSpinEditProperties'
                     Properties.OnEditValueChanged = cxgrdbclmntv1CANTIDAD_FACTURA_LINEAPropertiesEditValueChanged
-                    Width = 81
-                  end
-                  object ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Tipo de CANTIDAD_ARTVIN'
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
-                    Width = 153
+                    Width = 90
                   end
                   object ctbPRECIOSALIDA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio Salida'
@@ -860,7 +860,7 @@
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.ReadOnly = False
                     Properties.OnEditValueChanged = cxgrdbclmntv1PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged
-                    Width = 156
+                    Width = 162
                   end
                   object ctbIMP_INCL_TARIFA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'ImpIncl'
@@ -918,6 +918,7 @@
                     DataBinding.FieldName = 'TOTAL_FAC_SIVA_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged
+                    Width = 125
                   end
                   object ctbFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Fecha Entrega'
@@ -1107,7 +1108,7 @@
               ImageIndex = 2
               object lblTotalaPagar: TcxLabel
                 Left = 105
-                Top = 237
+                Top = 199
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1118,7 +1119,7 @@
               end
               object curTotalAPagar: TcxDBCurrencyEdit
                 Left = 230
-                Top = 233
+                Top = 195
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1132,7 +1133,7 @@
               end
               object curTOTAL_LIQUIDO_FACTURA: TcxDBCurrencyEdit
                 Left = 230
-                Top = 183
+                Top = 154
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1145,7 +1146,7 @@
               end
               object lblTotalRetencionFactura: TcxLabel
                 Left = 18
-                Top = 187
+                Top = 158
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1156,7 +1157,7 @@
               end
               object lblPorcRetencionFactura: TcxLabel
                 Left = 49
-                Top = 138
+                Top = 118
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1167,7 +1168,7 @@
               end
               object spnRetencion: TcxDBSpinEdit
                 Left = 230
-                Top = 134
+                Top = 114
                 DataBinding.DataField = 'PORCENTAJE_RETENCION_FAC'
                 DataBinding.DataSource = dsTablaG
                 Properties.AssignedValues.MinValue = True
@@ -1206,7 +1207,7 @@
               end
               object curTOTAL_BASES_FACTURA: TcxDBCurrencyEdit
                 Left = 230
-                Top = 84
+                Top = 73
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1221,7 +1222,7 @@
               end
               object lbl1TotalImpuestos: TcxLabel
                 Left = 79
-                Top = 88
+                Top = 77
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1231,8 +1232,8 @@
                 Transparent = True
               end
               object lblFormadePago: TcxLabel
-                Left = 79
-                Top = 274
+                Left = 90
+                Top = 253
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1242,8 +1243,8 @@
                 Transparent = True
               end
               object cbbFORMAPAGO: TcxDBLookupComboBox
-                Left = 214
-                Top = 270
+                Left = 230
+                Top = 253
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1271,8 +1272,8 @@
                 Width = 195
               end
               object btnGenerarRecibos: TcxButton
-                Left = 249
-                Top = 304
+                Left = 171
+                Top = 287
                 Width = 160
                 Height = 25
                 Caption = 'Generar &Recibo/s'
@@ -1652,10 +1653,6 @@
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 926
                 Top = 0
@@ -1706,6 +1703,15 @@
                   Caption = 'E&xp Excel'
                   TabOrder = 4
                   OnClick = btnExportarRecibosClick
+                end
+                object cxButton1: TcxButton
+                  Left = 3
+                  Top = 190
+                  Width = 152
+                  Height = 25
+                  Caption = 'Generar &Recibo/s'
+                  TabOrder = 5
+                  OnClick = btnGenerarRecibosClick
                 end
               end
               object pnlBodyRecibos: TPanel
@@ -2111,7 +2117,7 @@
                 object lbl: TLabel
                   Left = 50
                   Top = 20
-                  Width = 170
+                  Width = 98
                   Height = 19
                   Caption = 'ID_FACCON'
                   FocusControl = spID_CONSOLIDACION

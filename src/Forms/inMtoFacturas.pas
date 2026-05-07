@@ -400,6 +400,7 @@ type
     cxLabel3: TcxLabel;
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
+    cxButton1: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
