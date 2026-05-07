@@ -653,11 +653,11 @@ begin
   inherited;
   form := TfrmPrintRecFac.Create(Application);
   try
+    form.dmFac := dmmFacturas;
     form.edtNroFac.Text := dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
     form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
     form.edtPlazoRecFac.Text :=
                 dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
-    form.dmFac := dmmFacturas;
     form.ShowModal;
   finally
     form.Free;
