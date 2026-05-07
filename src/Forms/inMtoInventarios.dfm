@@ -346,6 +346,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
+                  OptionsBehavior.AlwaysShowEditor = True
                   OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
