@@ -1,16 +1,16 @@
 inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
-  ClientHeight = 257
-  ClientWidth = 414
+  ClientHeight = 249
+  ClientWidth = 412
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 430
   ExplicitHeight = 296
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 260
+    Left = 258
     Width = 154
-    Height = 257
+    Height = 249
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 258
     ExplicitWidth = 154

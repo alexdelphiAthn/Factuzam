@@ -38,7 +38,7 @@ type
     procedure preparar_consulta; override;
     { Private declarations }
   public
-    { Public declarations }
+    dmFac: TdmFacturas;
   end;
 
 var
@@ -53,6 +53,8 @@ implementation
 procedure TfrmPrintRecFac.preparar_consulta;
 begin
   inherited;
+  with dmFac do
+  begin
   if rbActual.Checked = true then
   begin
     with dmmFacturas.unqryRecibosPrint do
@@ -84,6 +86,7 @@ begin
     end;
     dmmFacturas.unqryRecibosPrint.Open;
     dmmFacturas.fxdsRecibos.UpdateBounds;
+  end;
   end;
 end;
 
