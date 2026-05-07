@@ -12,7 +12,8 @@ interface
 
 uses
   System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
-  Classes, Windows, Forms, vcl.Menus, Controls, Uni,   System.SysUtils,
+  Classes, Windows, Forms, vcl.Menus, Controls, Data.DB, Uni,
+  System.SysUtils,
   System.StrUtils, inLibUser, Vcl.Buttons, Types;
 
 type
@@ -25,6 +26,7 @@ type
      FMenuItem:string;
      FShortCut:string;
      FDataUnit:string;
+     FNumVentanas:Integer;
      FmnMenuItem:TMenuItem;
      function GetCall:string;
      procedure SetCall(Value:string);
@@ -40,6 +42,8 @@ type
      procedure SetmnMenuItem(Value:TMenuItem);
      function GetDataUnit: string;
      procedure SetDataUnit(const Value: string);
+     function GetNumVentanas: Integer;
+     procedure SetNumVentanas(const Value: Integer);
    public
      constructor Create(pCall,
                         pCaption,
@@ -47,6 +51,7 @@ type
                         pUnitForm,
                         pShortCut,
                         pDataUnit:string;
+                        pNumVentanas:Integer;
                         pOwn:TComponent);
      Property Call   : string read GetCall write SetCall;
      Property Caption   : string read GetCaption write SetCaption;
@@ -55,6 +60,7 @@ type
      Property mnMenuItem   : TMenuItem read GetmnMenuItem write SetmnMenuItem;
      Property ShortCut     : string read GetShortCut write SetShortCut;
      Property DataUnit     : string read GetDataUnit write SetDataUnit;
+     Property NumVentanas  : Integer read GetNumVentanas write SetNumVentanas;
    private
  end;
 
@@ -85,6 +91,7 @@ constructor TfzaForm.Create(pCall,
                             pUnitForm,
                             pShortCut,
                             pDataUnit: string;
+                            pNumVentanas: Integer;
                             pOwn:TComponent  );
 var
   frmOpen2:TfrmMtoPrincipal;
@@ -95,6 +102,10 @@ begin
   FMenuItem := pMenuITem;
   FShortCut := pShortCut;
   FDataUnit := pDataUnit;
+  if pNumVentanas < 1 then
+    FNumVentanas := 1
+  else
+    FNumVentanas := pNumVentanas;
   frmOpen2 := (pOwn as TfrmMtoPrincipal);
   FmnMenuItem := (frmOpen2.FindComponent(FMenuITem) as TMenuItem);
 end;
@@ -117,6 +128,11 @@ end;
 function TfzaForm.GetMenuItem: string;
 begin
   Result := FMenuItem;
+end;
+
+function TfzaForm.GetNumVentanas: Integer;
+begin
+  Result := FNumVentanas;
 end;
 
 function TfzaForm.GetmnMenuItem: TMenuItem;
@@ -154,6 +170,14 @@ begin
   FMenuItem := Value;
 end;
 
+procedure TfzaForm.SetNumVentanas(const Value: Integer);
+begin
+  if Value < 1 then
+    FNumVentanas := 1
+  else
+    FNumVentanas := Value;
+end;
+
 procedure TfzaForm.SetmnMenuItem(Value: TMenuItem);
 begin
   FmnMenuItem := Value;
@@ -175,6 +199,8 @@ procedure TfzaWinF.Charge(nConn: TUniConnection);
 var
   qrySol: TUniQuery;
   ozaForm:TfzaForm;
+  fldNumVent: TField;
+  iNumVent: Integer;
 begin
   qrySol := TUniQuery.Create(nil);
   try
@@ -185,12 +211,18 @@ begin
     begin
       With qrySol do
       begin
+        fldNumVent := FindField('NUM_VENTANAS_WINF');
+        if (fldNumVent <> nil) and (not fldNumVent.IsNull) then
+          iNumVent := fldNumVent.AsInteger
+        else
+          iNumVent := 1;
         ozaForm := TfzaForm.Create(FieldByName('CALL_WINF').AsString,
                                    FieldByName('CAPTION_WINF').AsString,
                                    FieldByName('MENUITEM_WINF').AsString,
                                    FieldByName('UNITF_WINF').AsString,
                                    FieldByName('SHORTCUT_WINF').AsString,
                                    FieldByName('DATAMODULE_WINF').AsString,
+                                   iNumVent,
                                    Self.FOwner);
       end;
       FList.Add(ozaForm);
