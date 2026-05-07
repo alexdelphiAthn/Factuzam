@@ -704,16 +704,22 @@ begin
 
   with dmmGeneradorProcesos do
   begin
-    // 1. Miramos si hay texto seleccionado en alguno de los dos editores
-  sSQL := '';
-  if Trim(DBSynEdit1.SelText) <> '' then
-    sSQL := DBSynEdit1.SelText
-  else if Trim(syndtEstructura.SelText) <> '' then
-    sSQL := syndtEstructura.SelText;
+    // 1. Editor activo: el que tiene el foco si es uno de los SynEdit; si no,
+    //    el principal (DBSynEdit1). Asi no nos comemos selecciones residuales
+    //    de syndtEstructura cuando el usuario esta editando en DBSynEdit1.
+    var ActiveEditor: TCustomSynEdit;
+    if syndtEstructura.Focused then
+      ActiveEditor := syndtEstructura
+    else
+      ActiveEditor := DBSynEdit1;
 
-    // 2. Si no hay selección (o el foco está en un botón/grid), cogemos todo el texto del campo
-    if sSQL = '' then
-      sSQL := unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
+    // 2. Si hay seleccion en el editor activo, ejecutamos solo eso.
+    //    Si no, ejecutamos todo el texto VISIBLE de ese editor (no el del
+    //    campo del dataset, que puede estar desfasado respecto a lo escrito).
+    if Trim(ActiveEditor.SelText) <> '' then
+      sSQL := ActiveEditor.SelText
+    else
+      sSQL := ActiveEditor.Lines.Text;
 
     sSQL := Trim(sSQL);
 
