@@ -1461,6 +1461,9 @@ begin
     end;
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
+    // Las lineas con CODIGO_FP_CFP='VALE' se omiten aqui: las inserta PASO 6
+    // junto con la operacion 'VR' y la marca de redimido en fza_caja_vales,
+    // garantizando que la REFERENCIA al codigo de vale quede registrada.
     // =======================================================================
     NumLineaPago := 0;
     DatosCobro.MemTablePagos.First;
@@ -1468,7 +1471,7 @@ begin
     begin
       var CodigoFP  := DatosCobro.MemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
       var ImporteFP := DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
-      if Abs(ImporteFP) > 0.001 then
+      if (Abs(ImporteFP) > 0.001) and (CodigoFP <> 'VALE') then
       begin
         Inc(NumLineaPago);
         InsertarPagoCaja(

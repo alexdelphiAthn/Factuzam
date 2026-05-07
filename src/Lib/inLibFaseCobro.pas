@@ -267,6 +267,7 @@ constructor TDatosFaseCobro.Create(AMemTable: TVirtualTable);
 begin
   inherited Create;
   FMemTablePagos := AMemTable;
+  FValesRecogidos := TList<TValeAplicado>.Create;
   FImporteBruto := 0;
   FImporteDescuentoLineal := 0;
   FPorcentajeDescuentoGlobal := 0;
@@ -285,6 +286,7 @@ end;
 
 destructor TDatosFaseCobro.Destroy;
 begin
+  FValesRecogidos.Free;
   inherited;
 end;
 
@@ -458,6 +460,8 @@ end;
 
 procedure TDatosFaseCobro.RegistrarValeRecogido(ACodigoVale: string;
   AImporte: Currency);
+var
+  ValeAplicado: TValeAplicado;
 begin
   if not Assigned(FMemTablePagos) then Exit;
   FMemTablePagos.Append;
@@ -478,6 +482,10 @@ begin
   FMemTablePagos.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   FMemTablePagos.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
   FMemTablePagos.Post;
+  ValeAplicado.CodigoVale      := ACodigoVale;
+  ValeAplicado.PinSeguridad    := '';
+  ValeAplicado.ImporteAplicado := AImporte;
+  FValesRecogidos.Add(ValeAplicado);
 end;
 
 function TDatosFaseCobro.TieneArticulosDevueltos: Boolean;
