@@ -690,7 +690,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsTotales
+            Properties.ActivePage = tsRecibos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 424
             ClientRectLeft = 2

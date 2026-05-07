@@ -655,6 +655,7 @@ begin
     form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
     form.edtPlazoRecFac.Text :=
                 dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
+    form.dmFac := dmmFacturas;
     form.ShowModal;
   finally
     form.Free;

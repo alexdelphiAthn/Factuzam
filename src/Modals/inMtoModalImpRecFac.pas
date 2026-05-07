@@ -20,7 +20,8 @@ uses
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturas,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
+  frxExportBaseImageSettingsDialog, frCoreClasses;
 
 type
   TfrmPrintRecFac = class(TfrmPrint)
@@ -37,7 +38,7 @@ type
     procedure preparar_consulta; override;
     { Private declarations }
   public
-    { Public declarations }
+    dmFac: TdmFacturas;
   end;
 
 var
@@ -52,6 +53,8 @@ implementation
 procedure TfrmPrintRecFac.preparar_consulta;
 begin
   inherited;
+  with dmFac do
+  begin
   if rbActual.Checked = true then
   begin
     with dmmFacturas.unqryRecibosPrint do
@@ -83,6 +86,7 @@ begin
     end;
     dmmFacturas.unqryRecibosPrint.Open;
     dmmFacturas.fxdsRecibos.UpdateBounds;
+  end;
   end;
 end;
 
