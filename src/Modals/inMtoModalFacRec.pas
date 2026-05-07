@@ -30,7 +30,9 @@ uses
   dxSkinOffice2010Blue, dxSkinOffice2010Silver, dxSkinOffice2013DarkGray,
   dxSkinOffice2013LightGray, dxSkinOffice2013White, dxSkinOffice2016Colorful,
   dxSkinOffice2016Dark, dxSkinOffice2019Black, dxSkinOffice2019Colorful,
-  dxSkinOffice2019DarkGray, dxSkinOffice2019White, dxSkinPumpkin, dxSkinSeven,
+  inMtoFacturas,
+  UniDataFacturas,  dxSkinOffice2019DarkGray, dxSkinOffice2019White,
+  dxSkinPumpkin, dxSkinSeven,
   dxSkinSevenClassic, dxSkinSharp, dxSkinSharpPlus, dxSkinSilver,
   dxSkinSpringtime, dxSkinStardust, dxSkinSummer2008, dxSkinTheAsphaltWorld,
   dxSkinTheBezier, dxSkinsDefaultPainters, dxSkinValentine,
@@ -64,6 +66,8 @@ type
     procedure btnGenerarClick(Sender: TObject);
     procedure chkAbonarClick(Sender: TObject);
     procedure chkDuplicarClick(Sender: TObject);
+  public
+    dmFac : TdmFacturas;
   end;
 
 var
@@ -72,8 +76,7 @@ var
 implementation
 
 uses
-  inMtoFacturas,
-  UniDataFacturas,
+
   inLibUser,
   inLibtb,
   inLibGlobalVar;
@@ -140,7 +143,7 @@ begin
       SavedCursor := Screen.Cursor;
       try
         Screen.Cursor:=crHourglass;
-        with dmmFacturas.unstrdprcDuplicarFactura do
+        with dmFac.unstrdprcDuplicarFactura do
         begin
          ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
          ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
@@ -152,7 +155,7 @@ begin
          ExecProc;
          edtSerieFacAbono.Text := ParamByName('pidseriefacturaabono').AsString;
          edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
-         dmmFacturas.unqryTablaG.Refresh;
+         dmFac.unqryTablaG.Refresh;
         end;
       finally
         Screen.Cursor:=SavedCursor;

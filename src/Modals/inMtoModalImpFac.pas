@@ -109,10 +109,7 @@ end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
-  if dmFac <> nil then
-    frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqryTablaG)
-  else
-    frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG);
+  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqrytablaG);
 end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
@@ -144,8 +141,6 @@ end;
 
 procedure TfrmPrintFac.preparar_consulta;
 begin
-  if dmFac = nil then
-    dmFac := dmmFacturas;
   with dmFac do
   begin
   if rbActual.Checked = true then
