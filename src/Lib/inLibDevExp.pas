@@ -14,7 +14,7 @@ uses
     Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
     Dialogs, DB, ADODB, DBCtrls, StdCtrls, cxGridExportLink, dxCore,
     ExtCtrls, Grids, DBGrids, ComCtrls, Buttons, Mask,
-    cxControls, cxContainer, cxEdit, System.strUtils,
+    cxControls, cxContainer, cxEdit, System.strUtils, cxGridDBDataDefinitions,
     cxTextEdit, cxMaskEdit, cxDBEdit, cxNavigator, cxLookAndFeelPainters,
     cxButtons, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
     cxDBLookupComboBox, cxImage, jpeg, cxCalendar, cxStyles, cxCustomData,
@@ -155,13 +155,13 @@ procedure GetSettingsColumn(cxgrdtvVista: TcxCustomGridTableView;
                             sUserGroup:String = 'Todos');
 var
   i: Integer;
-  oItem: TcxCustomGridTableItem;
+  oItem: TcxGridColumn ;
   sVistaName, sColumnName, sValue: string;
 begin
   sVistaName := cxgrdtvVista.Name;
   for i := 0 to cxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i];
+    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
     if (oItem.Visible) then
@@ -250,7 +250,7 @@ procedure CollectSettingsColumnProfile(cxgrdtvVista: TcxCustomGridTableView;
                                         AList: TPerfilList);
 var
   i: Integer;
-  oItem: TcxCustomGridTableItem;
+  oItem: TcxGridColumn;
   sVistaName, sColumnName, sPrefix: string;
   LStream: TMemoryStream;
   BStream: TStringStream;
@@ -299,7 +299,7 @@ begin
   // 1. Recolección de propiedades de columnas (Para el Batch)
   for i := 0 to cxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i];
+    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
     sPrefix := sVistaName + '_' + sColumnName + '_';
@@ -352,7 +352,7 @@ procedure GetSettingsColumnProfile( cxgrdtvVista: TcxCustomGridTableView;
                                     sProfile: String);
 var
   i: Integer;
-  oItem: TcxCustomGridTableItem;
+  oItem: TcxGridColumn;
   sVistaName, sColumnName, sValue: string;
   LStream: TMemoryStream;
   BStream: TStringStream;
@@ -360,7 +360,7 @@ begin
   sVistaName := cxgrdtvVista.Name;
   for i := 0 to cxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i];
+    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
 
@@ -425,7 +425,7 @@ procedure PonerAnchosTitulos(cxgrdtvVista: TcxCustomGridTableView;
                              sDes: string;
                              var oPerfilDic: TProfileDicc);
 var
-  oItem: TcxCustomGridTableItem;
+  oItem: TcxGridColumn;
   i: Integer;
   sName, sColumnName, sSubKey, sFiltroBase64: string;
   LStream: TMemoryStream;
@@ -438,7 +438,7 @@ begin
     // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
     for i := 0 to cxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i];
+      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
@@ -456,7 +456,7 @@ begin
     // 2. Restaurar la posición física de las columnas (Index)
     for i := 0 to cxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i];
+      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
@@ -466,10 +466,12 @@ begin
     // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex / RowIndex
     for i := 0 to cxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i];
+      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then Continue;
-      if not (oItem is TcxGridDBBandedColumn) then Continue;
+      if sColumnName = '' then
+        Continue;
+      if not (oItem is TcxGridDBBandedColumn) then
+        Continue;
       sSubKey := sName + '_' + sColumnName;
       with TcxGridDBBandedColumn(oItem).Position do
       begin
