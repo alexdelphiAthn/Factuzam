@@ -59,6 +59,7 @@ type
     procedure btnExcelClick(Sender: TObject);
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
     procedure ConfigurarNombrePDF;
     function ObtenerNombreFactura(ADataSet: TDataSet): string;
   public
@@ -99,9 +100,19 @@ begin
   end;
 end;
 
+procedure TfrmPrintFac.AfterReportLoaded;
+begin
+  inherited;
+  if dmFac <> nil then
+    RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+end;
+
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
-  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG);
+  if dmFac <> nil then
+    frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqryTablaG)
+  else
+    frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG);
 end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
@@ -133,6 +144,8 @@ end;
 
 procedure TfrmPrintFac.preparar_consulta;
 begin
+  if dmFac = nil then
+    dmFac := dmmFacturas;
   with dmFac do
   begin
   if rbActual.Checked = true then

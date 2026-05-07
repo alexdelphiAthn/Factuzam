@@ -82,8 +82,12 @@ type
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
     { Public declarations }
     procedure preparar_consulta; virtual; abstract;
+    procedure AfterReportLoaded; virtual;
     procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
   end;
+
+procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
+                                           DM: TDataModule);
 
 var
   frmPrint: TfrmPrint;
@@ -91,9 +95,67 @@ var
 implementation
 
 uses
-  inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam;
+  inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
+  System.Generics.Collections, System.Rtti;
 
 {$R *.dfm}
+
+procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
+                                           DM: TDataModule);
+var
+  Map: TDictionary<string, TfrxDBDataset>;
+  i: Integer;
+  comp: TComponent;
+  ds: TfrxDBDataset;
+  obj: TfrxComponent;
+  ctx: TRttiContext;
+  rType: TRttiType;
+  prop: TRttiProperty;
+  curVal: TValue;
+  curObj: TObject;
+  newDs: TfrxDBDataset;
+begin
+  if (Report = nil) or (DM = nil) then Exit;
+  Map := TDictionary<string, TfrxDBDataset>.Create;
+  ctx := TRttiContext.Create;
+  try
+    for i := 0 to DM.ComponentCount - 1 do
+    begin
+      comp := DM.Components[i];
+      if (comp is TfrxDBDataset) and
+         (TfrxDBDataset(comp).UserName <> '') then
+        Map.AddOrSetValue(TfrxDBDataset(comp).UserName,
+                          TfrxDBDataset(comp));
+    end;
+    if Map.Count = 0 then Exit;
+    Report.DataSets.Clear;
+    for ds in Map.Values do
+      Report.DataSets.Add(ds);
+    for i := 0 to Report.AllObjects.Count - 1 do
+    begin
+      obj := TfrxComponent(Report.AllObjects[i]);
+      rType := ctx.GetType(obj.ClassType);
+      prop := rType.GetProperty('DataSet');
+      if (prop = nil) or (not prop.IsReadable) or
+         (not prop.IsWritable) then Continue;
+      curVal := prop.GetValue(obj);
+      if curVal.IsEmpty then Continue;
+      curObj := curVal.AsObject;
+      if (curObj is TfrxDBDataset) and
+         Map.TryGetValue(TfrxDBDataset(curObj).UserName, newDs) and
+         (newDs <> curObj) then
+        prop.SetValue(obj, newDs);
+    end;
+  finally
+    ctx.Free;
+    Map.Free;
+  end;
+end;
+
+procedure TfrmPrint.AfterReportLoaded;
+begin
+  // Hook para descendientes: re-enlazar DataSets del informe
+end;
 
 procedure TfrmPrint.actSalirExecute(Sender: TObject);
 begin
@@ -109,6 +171,7 @@ begin
   Consultar_Formularios(True);
   if (sElegido <> '') then
   begin
+    AfterReportLoaded;
     frxrprt1.PrepareReport(True);
     frxrprt1.DesignReport();
   end;
@@ -123,6 +186,7 @@ begin
   Consultar_Formularios;
   if (sElegido <> '') then
   begin
+    AfterReportLoaded;
     frxrprt1.PrepareReport(True);
     frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
     frxrprt1.Export(frxlsxprtExcel);
@@ -137,6 +201,7 @@ begin
   Consultar_Formularios;
     if (sElegido <> '') then
   begin
+    AfterReportLoaded;
     frxrprt1.PrepareReport(True);
     frxrprt1.Print;
   end;
@@ -155,6 +220,7 @@ begin
   Consultar_Formularios;
     if (sElegido <> '') then
   begin
+    AfterReportLoaded;
     frxrprt1.PrepareReport(True);
     frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
     frxrprt1.Export(frxpdfxprtPedWeb);
@@ -168,7 +234,10 @@ begin
   Self.Hide;
   Consultar_Formularios;
   if (sElegido <> '') then
+  begin
+    AfterReportLoaded;
     frxrprt1.ShowReport;
+  end;
   Self.Show;
 end;
 
