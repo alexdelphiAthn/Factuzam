@@ -843,15 +843,6 @@ begin
     Edit := TcxCustomEdit(Sender);
     Edit.EditValue := Resolved;
   end;
-  // Si el articulo tiene variaciones (Resolved vacio = SKU pendiente),
-  // movemos el foco al primer atributo dinamico para que el usuario
-  // pueda elegir Color/Talla/... directamente.
-  if (Resolved = '') and Assigned(tvLineasSKU1) and tvLineasSKU1.Visible then
-  begin
-    tvLineas.Controller.FocusedColumn := tvLineasSKU1;
-    if tvLineas.Controller.EditingController <> nil then
-      tvLineas.Controller.EditingController.ShowEdit;
-  end;
 end;
 
 function TfrmMtoInventarios.BuscarArticuloDialog: string;
