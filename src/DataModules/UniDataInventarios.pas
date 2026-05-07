@@ -89,6 +89,7 @@ type
     // === EVENTOS DE DATASET ===
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGAfterScroll(DataSet: TDataSet);
+    procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure cdsLineasAfterPost(DataSet: TDataSet);
     procedure cdsLineasBeforeDelete(DataSet: TDataSet);
@@ -101,6 +102,9 @@ type
     FNumero: string;
     FUsuario: string;
     FDesempaquetando: Boolean;
+    function ObtenerSeriePorDefecto(const AEmpresa,
+                                          ATipoDoc: string): string;
+    procedure GetCodigoAutoInventario;
   public
     // === CONFIGURACIÓN ===
     procedure SetClavesActivas(const AEmpresa, AAlmacen, ASerie, ANumero: string);
@@ -308,6 +312,28 @@ begin
   CargarMovimientosRegularizacion;
 end;
 
+procedure TdmInventarios.unqryTablaGAfterInsert(DataSet: TDataSet);
+begin
+  inherited;
+  // Pre-rellenamos los datos por defecto del usuario logueado al crear un
+  // inventario nuevo, igual que hace facturas:
+  //   - empresa/almacen del usuario (oEmpresa/oAlmacen, cargados en login)
+  //   - serie por defecto de la empresa para tipo IN
+  //   - NUMERO_INV='0' como marcador para que BeforePost asigne el contador
+  //     real desde fza_contadores via PRC_GET_NEXT_CONT_FACT_SERIE.
+  if Trim(oEmpresa) <> '' then
+    DataSet.FieldByName('CODIGO_EMP_INV').AsString := oEmpresa;
+  if Trim(oAlmacen) <> '' then
+    DataSet.FieldByName('CODIGO_ALM_INV').AsString := oAlmacen;
+  DataSet.FieldByName('TIPO_DOC_INV').AsString := 'IN';
+  DataSet.FieldByName('FECHA_INV').AsDateTime  := Now;
+  DataSet.FieldByName('ESTADO_INV').AsString   := 'ABIERTO';
+  DataSet.FieldByName('NUMERO_INV').AsString   := '0';
+  if Trim(oEmpresa) <> '' then
+    DataSet.FieldByName('SERIE_INV').AsString  :=
+                                       ObtenerSeriePorDefecto(oEmpresa, 'IN');
+end;
+
 procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   // Forzamos campos de auditoría
@@ -320,8 +346,70 @@ begin
       DataSet.FieldByName('ESTADO_INV').AsString := 'ABIERTO';
     if DataSet.FieldByName('TIPO_DOC_INV').AsString = '' then
       DataSet.FieldByName('TIPO_DOC_INV').AsString := 'IN';
+    // Si el numero viene a '0' (recien insertado), tomamos el contador real
+    // de fza_contadores. El SP esta nombrado como FACT_SERIE pero es generico
+    // y acepta cualquier tipo de documento + serie + empresa.
+    if DataSet.FieldByName('NUMERO_INV').AsString = '0' then
+      GetCodigoAutoInventario;
   end;
   DataSet.FieldByName('USUARIO_MODIF').AsString := FUsuario;
+end;
+
+function TdmInventarios.ObtenerSeriePorDefecto(const AEmpresa,
+                                                     ATipoDoc: string): string;
+var
+  qry: TUniQuery;
+begin
+  Result := '';
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT EMPSER ' +
+      '  FROM fza_empresas_series ' +
+      ' WHERE CODIGO_EMP_EMPSER = :EMPRESA ' +
+      '   AND TIPO_DOC_EMPSER  = :TIPO ' +
+      '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= NOW()) ' +
+      '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= NOW()) ' +
+      ' ORDER BY FECHA_DESDE_EMPSER DESC ' +
+      ' LIMIT 1';
+    qry.ParamByName('EMPRESA').AsString := AEmpresa;
+    qry.ParamByName('TIPO').AsString    := ATipoDoc;
+    qry.Open;
+    if not qry.IsEmpty then
+      Result := qry.FieldByName('EMPSER').AsString;
+  finally
+    qry.Free;
+  end;
+end;
+
+procedure TdmInventarios.GetCodigoAutoInventario;
+var
+  sp: TUniStoredProc;
+begin
+  if unqryTablaG.FindField('NUMERO_INV').AsString <> '0' then Exit;
+  sp := TUniStoredProc.Create(nil);
+  try
+    sp.Connection := oConn;
+    sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+    sp.Params.Clear;
+    sp.Params.CreateParam(ftString, 'pserie',           ptInput);
+    sp.Params.CreateParam(ftString, 'ptipodoc',         ptInput);
+    sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR',ptInput);
+    sp.Params.CreateParam(ftString, 'pUSUARIOMODIF',    ptInput);
+    sp.Params.CreateParam(ftString, 'pcont',            ptOutput);
+    sp.ParamByName('pserie').AsString :=
+                            unqryTablaG.FindField('SERIE_INV').AsString;
+    sp.ParamByName('ptipodoc').AsString := 'IN';
+    sp.ParamByName('pEMPRESA_CONTADOR').AsString :=
+                            unqryTablaG.FindField('CODIGO_EMP_INV').AsString;
+    sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+    sp.ExecProc;
+    unqryTablaG.FindField('NUMERO_INV').AsString :=
+                                              sp.ParamByName('pcont').AsString;
+  finally
+    sp.Free;
+  end;
 end;
 
 procedure TdmInventarios.CargarMovimientosRegularizacion;
