@@ -4,8 +4,8 @@ inherited frmPrintFac: TfrmPrintFac
   ClientWidth = 412
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 430
-  ExplicitHeight = 296
+  ExplicitWidth = 428
+  ExplicitHeight = 288
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 258

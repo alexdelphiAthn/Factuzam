@@ -101,7 +101,7 @@ end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
-  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmmFacturas.unqrytablaG);
+  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqrytablaG);
 end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;

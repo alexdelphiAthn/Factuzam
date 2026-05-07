@@ -57,7 +57,7 @@ begin
   begin
   if rbActual.Checked = true then
   begin
-    with dmmFacturas.unqryRecibosPrint do
+    with unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -69,12 +69,12 @@ begin
       Params.ParamByName('serie').AsString := edtSerie.text;
       Params.ParamByName('recibo').AsString := edtPlazoRecFac.text;
     end;
-    dmmFacturas.unqryRecibosPrint.Open;
-    dmmFacturas.fxdsRecibos.UpdateBounds;
+    unqryRecibosPrint.Open;
+    fxdsRecibos.UpdateBounds;
   end;
   if rbRangoFechas.Checked = true then
   begin
-    with dmmFacturas.unqryRecibosPrint do
+    with unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -84,8 +84,8 @@ begin
       Params.ParamByName('numfac').AsString := edtNroFac.text;
       Params.ParamByName('serie').AsString := edtSerie.text;
     end;
-    dmmFacturas.unqryRecibosPrint.Open;
-    dmmFacturas.fxdsRecibos.UpdateBounds;
+    unqryRecibosPrint.Open;
+    fxdsRecibos.UpdateBounds;
   end;
   end;
 end;

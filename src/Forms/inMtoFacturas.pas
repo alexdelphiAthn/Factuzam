@@ -494,11 +494,13 @@ type
   private
     procedure CheckConsolidacion;
     procedure AsignarControles;
+  public
+    dmmFacturas : TdmFacturas;
   end;
 
-var
-  //frmMtoFacturas: TfrmMtoFacturas;
-  dmmFacturas : TdmFacturas;
+//var
+//  //frmMtoFacturas: TfrmMtoFacturas;
+//  dmmFacturas : TdmFacturas;
 
 implementation
 
@@ -889,6 +891,7 @@ begin
   inherited;
    form := TfrmGenFacRec.Create(Self);
    try
+     form.dmFac := dmmFacturas;
      form.ShowModal;
    finally
      form.Free;
