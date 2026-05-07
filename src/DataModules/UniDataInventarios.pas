@@ -116,6 +116,7 @@ type
     // === GESTIÓN DE LÍNEAS ===
     function GenerarSiguienteLinea: string;
     function ExisteLineaConSku(const ASku: string): Boolean;
+    function GenerarSkuFinal(const AArticuloBase: string): string;
     procedure RellenarDatosArticulo(const ACodigoArticulo: string;
                                     out ADescripcion: string;
                                     out ANumAtributos: Integer;
@@ -477,6 +478,27 @@ begin
       cdsLineas.GotoBookmark(Bookmark);
     cdsLineas.FreeBookmark(Bookmark);
     cdsLineas.EnableControls;
+  end;
+end;
+
+function TdmInventarios.GenerarSkuFinal(const AArticuloBase: string): string;
+var
+  i, NumAttr: Integer;
+  ValorAttr: string;
+begin
+  // Construye el SKU concatenando ARTICULO/ATTR1/ATTR2/... con los valores
+  // que haya rellenados en cdsLineas. Si algun valor falta, se omite (el SKU
+  // queda incompleto, lo que el llamante interpreta para decidir si ya hay
+  // que recalcular teoricas/PMP).
+  Result := AArticuloBase;
+  if not cdsLineas.Active then Exit;
+  if cdsLineas.FindField('NUM_ATRIBUTOS_REQ_INV_LINEA') = nil then Exit;
+  NumAttr := cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+  for i := 1 to NumAttr do
+  begin
+    ValorAttr := cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString;
+    if Trim(ValorAttr) <> '' then
+      Result := Result + '/' + ValorAttr;
   end;
 end;
 
