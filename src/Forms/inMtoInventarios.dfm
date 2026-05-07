@@ -332,6 +332,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 object tvLineas: TcxGridDBTableView
                   OnEditing = tvLineasEditing
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
+                  OnInitEdit = tvLineasInitEdit
                   DataController.Summary.FooterSummaryItems = <
                     item
                       Format = '#,##0.00'
@@ -346,6 +347,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
+                  OptionsBehavior.AlwaysShowEditor = True
                   OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
@@ -384,6 +386,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Tag = 1
                     Caption = 'SKU 1'
                     DataBinding.FieldName = 'ATTR1_VALOR'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
                     Visible = False
                     Width = 80
                   end
@@ -391,6 +395,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Tag = 2
                     Caption = 'SKU 2'
                     DataBinding.FieldName = 'ATTR2_VALOR'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
                     Visible = False
                     Width = 80
                   end
@@ -398,6 +404,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Tag = 3
                     Caption = 'SKU 3'
                     DataBinding.FieldName = 'ATTR3_VALOR'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
                     Visible = False
                     Width = 80
                   end
@@ -405,6 +413,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Tag = 4
                     Caption = 'SKU 4'
                     DataBinding.FieldName = 'ATTR4_VALOR'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
                     Visible = False
                     Width = 80
                   end
@@ -412,6 +422,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Tag = 5
                     Caption = 'SKU 5'
                     DataBinding.FieldName = 'ATTR5_VALOR'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
                     Visible = False
                     Width = 80
                   end
