@@ -364,6 +364,14 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object tvLineasUNIDAD: TcxGridDBColumn
                     Caption = 'SKU/Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_INVLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = tvLineasUnidadPropertiesButtonClick
+                    Properties.OnValidate = tvLineasUnidadPropertiesValidate
                     Width = 180
                   end
                   object tvLineasDESCRIPCION: TcxGridDBColumn
