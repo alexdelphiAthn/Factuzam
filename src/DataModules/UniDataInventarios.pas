@@ -605,15 +605,19 @@ begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create('Solo se puede recalcular un inventario en estado ABIERTO');
 
-  // Aseguramos que cualquier cambio pendiente se persiste antes de llamar al SP.
-  // Si el usuario tenia una linea recien insertada/editada y pulsaba el boton
-  // sin Tab/Enter previo, ChangeCount era 0 hasta hacer Post: la linea no se
-  // commiteaba, el SP corria, y CargarLineasInventario la dejaba fuera al
-  // releer de la BD ("desaparecia" la linea recien hecha).
+  // Aseguramos que cualquier cambio pendiente se persiste antes de llamar al
+  // SP. Si la linea recien insertada esta incompleta (sin articulo picado)
+  // hacer Post da "Field value required". Cancelamos en ese caso.
   if cdsLineas.Active then
   begin
     if cdsLineas.State in [dsInsert, dsEdit] then
-      cdsLineas.Post;
+    begin
+      if (Trim(cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString) = '') or
+         (Trim(cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '') then
+        cdsLineas.Cancel
+      else
+        cdsLineas.Post;
+    end;
     if cdsLineas.ChangeCount > 0 then
       cdsLineas.ApplyUpdates(0);
   end;
@@ -640,7 +644,13 @@ begin
   if cdsLineas.Active then
   begin
     if cdsLineas.State in [dsInsert, dsEdit] then
-      cdsLineas.Post;
+    begin
+      if (Trim(cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString) = '') or
+         (Trim(cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '') then
+        cdsLineas.Cancel
+      else
+        cdsLineas.Post;
+    end;
     if cdsLineas.ChangeCount > 0 then
       cdsLineas.ApplyUpdates(0);
   end;
