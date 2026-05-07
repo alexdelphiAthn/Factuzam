@@ -415,6 +415,13 @@ begin
 
     // Lo guardamos en tu perfil con la clave terminada en "_Filtro"
     odmPerfiles.GrabarPerfil(sProfile, sName, cxgrdtvVista.Name + '_Filtro', sValue);
+
+    // Guardar el ancho general del componente TcxGrid contenedor
+    if Assigned(cxgrdtvVista.Control) then
+    begin
+      sValue := IntToStr(cxgrdtvVista.Control.Width);
+      odmPerfiles.GrabarPerfil(sProfile, sName, cxgrdtvVista.Name + '_GridTotalWidth', sValue);
+    end;
   finally
     LStream.Free;
     BStream.Free;
@@ -500,6 +507,14 @@ begin
       end;
     end;
 
+    // Restaurar el ancho general del componente TcxGrid contenedor
+    if Assigned(cxgrdtvVista.Control) then
+    begin
+      sSubKey := cxgrdtvVista.Name + '_GridTotalWidth';
+      cxgrdtvVista.Control.Width :=
+                         StrToIntDef(GetPerfilValueDef(oPerfilDic, sSubKey, ''),
+                                     cxgrdtvVista.Control.Width);
+    end;
   finally
     cxgrdtvVista.EndUpdate;
   end;
