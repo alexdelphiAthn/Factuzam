@@ -163,6 +163,7 @@ type
     procedure tvLineasInitEdit(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
     procedure OnAtributoChanged(Sender: TObject);
+    procedure ForzarDespliegue(Sender: TObject);
 
     // Movs Regularizados
     procedure btnEliminarRegularizacionClick(Sender: TObject);
@@ -654,6 +655,7 @@ var
   Qry: TUniQuery;
   ArticuloPadre: string;
   OrdenColumna: Integer;
+  ValorActual: Variant;
 begin
   // Solo nos interesan las columnas dinamicas SKU1..SKU5 (Tag = 1..5).
   // Al iniciar la edicion, poblamos el combo con los valores validos del
@@ -664,6 +666,7 @@ begin
   Combo := TcxComboBox(AEdit);
   Combo.Tag := AItem.Tag;
   Combo.Properties.OnEditValueChanged := OnAtributoChanged;
+  Combo.OnEnter := nil;
   OrdenColumna := AItem.Tag;
 
   if dmmInventarios.cdsLineas.Active then
@@ -704,6 +707,44 @@ begin
   finally
     Qry.Free;
   end;
+
+  // Si la celda esta vacia, preseleccionamos la primera opcion y, al entrar
+  // el editor, abrimos el dropdown automaticamente (igual que inMtoCajaOpe).
+  if Combo.Properties.Items.Count > 0 then
+  begin
+    ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
+    if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
+    begin
+      Combo.OnEnter := ForzarDespliegue;
+      FInicializandoCombo := True;
+      try
+        Combo.ItemIndex := 0;
+      finally
+        FInicializandoCombo := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoInventarios.ForzarDespliegue(Sender: TObject);
+var
+  Combo: TcxComboBox;
+begin
+  if not (Sender is TcxComboBox) then Exit;
+  Combo := TcxComboBox(Sender);
+  // Reasignamos ItemIndex con el guard FInicializandoCombo para que
+  // OnAtributoChanged no recalcule un SKU intermedio antes de que el usuario
+  // confirme.
+  FInicializandoCombo := True;
+  try
+    if Combo.Properties.Items.Count > 0 then
+      Combo.ItemIndex := 0;
+  finally
+    FInicializandoCombo := False;
+  end;
+  if not Combo.DroppedDown then
+    Combo.DroppedDown := True;
+  Combo.OnEnter := nil;
 end;
 
 procedure TfrmMtoInventarios.OnAtributoChanged(Sender: TObject);
@@ -717,7 +758,7 @@ begin
   // Talla, ...) reconstruimos el SKU (CODIGO_ART/ATTR1/ATTR2/...). Si tras
   // la edicion el SKU es ya completo (tantos '/' como atributos requeridos)
   // disparamos el recalculo teorico/PMP de la linea automaticamente.
-  if FProcesandoAtributo then Exit;
+  if FInicializandoCombo or FProcesandoAtributo then Exit;
   if not (Sender is TcxCustomEdit) then Exit;
   Edit := TcxCustomEdit(Sender);
   if not dmmInventarios.cdsLineas.Active then Exit;
@@ -842,6 +883,17 @@ begin
   begin
     Edit := TcxCustomEdit(Sender);
     Edit.EditValue := Resolved;
+  end;
+  // Si el articulo tiene variaciones (NUM_ATRIBUTOS > 0), movemos el foco
+  // al primer atributo dinamico para que el usuario pueda elegir
+  // Color/Talla/... directamente.
+  if (dmmInventarios.cdsLineas.FieldByName(
+       'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger > 0) and
+     Assigned(tvLineasSKU1) and tvLineasSKU1.Visible then
+  begin
+    tvLineas.Controller.FocusedColumn := tvLineasSKU1;
+    if tvLineas.Controller.EditingController <> nil then
+      tvLineas.Controller.EditingController.ShowEdit;
   end;
 end;
 
@@ -973,10 +1025,12 @@ begin
   end
   else
   begin
-    // Articulo padre con variaciones: dejamos que el usuario rellene los
-    // atributos en SKU1..SKU5 para construir el SKU final.
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').Clear;
-    AResolvedValue := '';
+    // Articulo padre con variaciones: el SKU empieza siendo el codigo del
+    // articulo (sin atributos todavia) para que el usuario tenga referencia
+    // visual de la linea. Cada vez que rellene un atributo, OnAtributoChanged
+    // reconstruira el SKU concatenando los valores.
+    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := CodPadre;
+    AResolvedValue := CodPadre;
   end;
 end;
 
