@@ -25,8 +25,7 @@ type
                        ValoresBusqueda: string):Boolean;
   procedure ShowMto(Owner: TComponent;
                     sCall:String;
-                    sBusq:string = '';
-                    bMultiple: Boolean = False);
+                    sBusq:string = '');
   function CrearDataModule(sDataUnit:String;var pOwner:TfrmMtoGen):TObject;
 
 implementation
@@ -39,8 +38,7 @@ implementation
 
 procedure ShowMto(Owner: TComponent;
                   sCall: String;
-                  sBusq:string = '';
-                  bMultiple: Boolean = False);
+                  sBusq:string = '');
 var
   frmMain: TfrmMtoPrincipal;
   ofzaF: TfzaForm;
@@ -70,17 +68,23 @@ begin
     Exit;
   end;
   NewCaption := ofzaF.Caption;
-  if bMultiple then
+  if ofzaF.NumVentanas > 1 then
   begin
     iNum := 1;
     NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
-    // Buscamos un nombre que no esté pillado (Facturas 1, Facturas 2...)
-    while (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
+    // Buscamos un hueco libre dentro del límite (ej: Facturas 1..N)
+    while (iNum <= ofzaF.NumVentanas) and
+          (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
     begin
       Inc(iNum);
       NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
     end;
-    TargetForm := nil; // Forzamos creación
+    if iNum > ofzaF.NumVentanas then
+      // Todas las instancias están ocupadas: activamos la primera
+      TargetForm := frmMain.FormManager.FindFormByCaption(
+                                                ofzaF.Caption + ' 1')
+    else
+      TargetForm := nil; // Forzamos creación
   end
   else
     TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);

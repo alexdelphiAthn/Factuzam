@@ -907,7 +907,7 @@ end;
 procedure TfrmMtoPrincipal.mnuFacturasClick(Sender: TObject);
 begin
   if (mnuFacturas.Visible) then
-    ShowMto(Self, 'Facturas', '', true);
+    ShowMto(Self, 'Facturas');
 end;
 
 procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);
