@@ -2924,7 +2924,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Properties.OnChange = chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURAPropertiesChange
                     TabOrder = 16
                     Transparent = True
-                    Width = 345
+                    Width = 295
                   end
                   object chkRETENCION_EMPRESA_FACTURA: TcxDBCheckBox
                     Left = 372
