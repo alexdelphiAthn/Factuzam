@@ -130,6 +130,7 @@ type
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure AplicarEtiquetas; override;
     procedure pcDetailChange(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
@@ -159,6 +160,9 @@ type
       ANewItemRecordFocusingChanged: Boolean);
     procedure tvLineasEditing(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; var AAllow: Boolean);
+    procedure tvLineasInitEdit(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+    procedure OnAtributoChanged(Sender: TObject);
 
     // Movs Regularizados
     procedure btnEliminarRegularizacionClick(Sender: TObject);
@@ -261,6 +265,20 @@ begin
   FInicializandoCombo := False;
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
+end;
+
+procedure TfrmMtoInventarios.AplicarEtiquetas;
+begin
+  inherited;
+  // Solo queremos UNA columna de input para el articulo (la unificada
+  // tvLineasUNIDAD, que admite codigo de articulo, SKU o codigo de barras).
+  // Forzamos a que la antigua columna de articulo no se vea aunque algun
+  // perfil de usuario la haya marcado como visible.
+  if Assigned(tvLineasARTICULO) then
+  begin
+    tvLineasARTICULO.Visible := False;
+    tvLineasARTICULO.VisibleForCustomization := False;
+  end;
 end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
@@ -562,7 +580,8 @@ var
   qry: TUniQuery;
   i: Integer;
 begin
-  // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5
+  // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5,
+  // mapeadas por ORDEN_VISUAL_ATRIBUTO (igual que en inMtoCajaOpe).
   if Sku = '' then Exit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
@@ -570,21 +589,21 @@ begin
   try
     qry.Connection := dmmInventarios.unqryArticulo.Connection;
     qry.SQL.Text :=
-      'SELECT V.NOMBRE_VALOR_AV, N.ORDEN_VISUAL_ATRIBUTO ' +
+      'SELECT DISTINCT N.ORDEN_VISUAL_ATRIBUTO, V.AV ' +
       '  FROM fza_atributos_sku AT ' +
       '  JOIN fza_atributos_valores V ON AT.ID_AV_SA = V.ID_AV ' +
       '  JOIN vi_atributos_nombres N  ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
       ' WHERE AT.CODIGO_UNIDAD_SKU_SA = :SKU ' +
-      ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
+      ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO';
     qry.ParamByName('SKU').AsString := Sku;
     qry.Open;
 
-    i := 1;
-    while not qry.Eof and (i <= 5) do
+    while not qry.Eof do
     begin
-      dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
-        qry.FieldByName('NOMBRE_VALOR_AV').AsString;
-      Inc(i);
+      i := qry.FieldByName('ORDEN_VISUAL_ATRIBUTO').AsInteger;
+      if (i >= 1) and (i <= 5) then
+        dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
+          qry.FieldByName('AV').AsString;
       qry.Next;
     end;
   finally
@@ -625,6 +644,106 @@ begin
   begin
     AAllow := False;
     ShowMessage('El inventario no está ABIERTO. No se puede editar.');
+  end;
+end;
+
+procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;
+  AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+var
+  Combo: TcxComboBox;
+  Qry: TUniQuery;
+  ArticuloPadre: string;
+  OrdenColumna: Integer;
+begin
+  // Solo nos interesan las columnas dinamicas SKU1..SKU5 (Tag = 1..5).
+  // Al iniciar la edicion, poblamos el combo con los valores validos del
+  // atributo correspondiente para el articulo padre actual.
+  if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
+  if not (AEdit is TcxComboBox) then Exit;
+
+  Combo := TcxComboBox(AEdit);
+  Combo.Tag := AItem.Tag;
+  Combo.Properties.OnEditValueChanged := OnAtributoChanged;
+  OrdenColumna := AItem.Tag;
+
+  if dmmInventarios.cdsLineas.Active then
+    ArticuloPadre := dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString
+  else
+    ArticuloPadre := '';
+
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn;
+    Qry.SQL.Text :=
+        '  SELECT DISTINCT V.AV ' +
+        '    FROM fza_atributos_valores V ' +
+        '    JOIN vi_atributos_nombres N ' +
+        '      ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
+        '    JOIN fza_atributos_sku REL ' +
+        '      ON V.ID_AV = REL.ID_AV_SA ' +
+        '    JOIN fza_articulos_skus S ' +
+        '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
+        '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
+        '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE ' +
+        '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN ' +
+        '   ORDER BY V.AV';
+    Qry.ParamByName('PADRE').AsString  := ArticuloPadre;
+    Qry.ParamByName('ORDEN').AsInteger := OrdenColumna;
+    Qry.Open;
+    Combo.Properties.Items.BeginUpdate;
+    try
+      Combo.Properties.Items.Clear;
+      while not Qry.Eof do
+      begin
+        Combo.Properties.Items.Add(Qry.FieldByName('AV').AsString);
+        Qry.Next;
+      end;
+    finally
+      Combo.Properties.Items.EndUpdate;
+    end;
+  finally
+    Qry.Free;
+  end;
+end;
+
+procedure TfrmMtoInventarios.OnAtributoChanged(Sender: TObject);
+var
+  Edit: TcxCustomEdit;
+  SkuNuevo: string;
+  CantTeo, PMPAct: Currency;
+  NumAtributosRequeridos, NumSeparadores, i: Integer;
+begin
+  // Cada vez que se selecciona un valor en una columna de atributo (Color,
+  // Talla, ...) reconstruimos el SKU (CODIGO_ART/ATTR1/ATTR2/...). Si tras
+  // la edicion el SKU es ya completo (tantos '/' como atributos requeridos)
+  // disparamos el recalculo teorico/PMP de la linea automaticamente.
+  if FProcesandoAtributo then Exit;
+  if not (Sender is TcxCustomEdit) then Exit;
+  Edit := TcxCustomEdit(Sender);
+  if not dmmInventarios.cdsLineas.Active then Exit;
+  if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
+
+  Edit.PostEditValue;
+
+  SkuNuevo := dmmInventarios.GenerarSkuFinal(
+                dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString);
+  dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := SkuNuevo;
+
+  NumAtributosRequeridos :=
+        dmmInventarios.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+  NumSeparadores := 0;
+  for i := 1 to Length(SkuNuevo) do
+    if SkuNuevo[i] = '/' then
+      Inc(NumSeparadores);
+
+  if (NumAtributosRequeridos > 0) and (NumSeparadores = NumAtributosRequeridos) then
+  begin
+    dmmInventarios.RellenarDatosSku(SkuNuevo, CantTeo, PMPAct);
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
+    dmmInventarios.cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
   end;
 end;
 
@@ -955,8 +1074,8 @@ begin
     dmmInventarios.cdsLineas.Post;
   dmmInventarios.cdsLineas.Append;
 
-  // Foco en la columna artículo
-  tvLineas.Controller.FocusedColumn := tvLineasARTICULO;
+  // Foco en la columna unificada (SKU/Articulo)
+  tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
 end;
