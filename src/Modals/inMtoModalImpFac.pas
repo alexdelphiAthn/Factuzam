@@ -59,6 +59,7 @@ type
     procedure btnExcelClick(Sender: TObject);
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
     procedure ConfigurarNombrePDF;
     function ObtenerNombreFactura(ADataSet: TDataSet): string;
   public
@@ -97,6 +98,13 @@ begin
   finally
     fPreview.Free;
   end;
+end;
+
+procedure TfrmPrintFac.AfterReportLoaded;
+begin
+  inherited;
+  if dmFac <> nil then
+    RebindReportDataSetsByDataModule(frxrprt1, dmFac);
 end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;

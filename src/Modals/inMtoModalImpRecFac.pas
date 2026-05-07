@@ -36,9 +36,11 @@ type
     procedure rbRangoFechasClick(Sender: TObject);
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
     { Private declarations }
   public
     dmFac: TdmFacturas;
+    { Public declarations }
   end;
 
 var
@@ -49,6 +51,13 @@ implementation
 {$R *.dfm}
 
 { TfrmPrintRecFac }
+
+procedure TfrmPrintRecFac.AfterReportLoaded;
+begin
+  inherited;
+  if dmFac <> nil then
+    RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+end;
 
 procedure TfrmPrintRecFac.preparar_consulta;
 begin
