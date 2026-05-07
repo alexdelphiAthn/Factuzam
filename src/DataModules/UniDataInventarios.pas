@@ -605,9 +605,18 @@ begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create('Solo se puede recalcular un inventario en estado ABIERTO');
 
-  // Aseguramos que cualquier cambio pendiente se persiste antes de llamar al SP
-  if cdsLineas.Active and (cdsLineas.ChangeCount > 0) then
-    cdsLineas.ApplyUpdates(0);
+  // Aseguramos que cualquier cambio pendiente se persiste antes de llamar al SP.
+  // Si el usuario tenia una linea recien insertada/editada y pulsaba el boton
+  // sin Tab/Enter previo, ChangeCount era 0 hasta hacer Post: la linea no se
+  // commiteaba, el SP corria, y CargarLineasInventario la dejaba fuera al
+  // releer de la BD ("desaparecia" la linea recien hecha).
+  if cdsLineas.Active then
+  begin
+    if cdsLineas.State in [dsInsert, dsEdit] then
+      cdsLineas.Post;
+    if cdsLineas.ChangeCount > 0 then
+      cdsLineas.ApplyUpdates(0);
+  end;
 
   unspActualizarTeorico.Close;
   unspActualizarTeorico.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
@@ -627,8 +636,14 @@ begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create('Solo se puede aplicar un inventario en estado ABIERTO');
 
-  if cdsLineas.Active and (cdsLineas.ChangeCount > 0) then
-    cdsLineas.ApplyUpdates(0);
+  // Mismo Post defensivo que en RecalcularTeorico.
+  if cdsLineas.Active then
+  begin
+    if cdsLineas.State in [dsInsert, dsEdit] then
+      cdsLineas.Post;
+    if cdsLineas.ChangeCount > 0 then
+      cdsLineas.ApplyUpdates(0);
+  end;
 
   unspAplicar.Close;
   unspAplicar.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
