@@ -1,18 +1,20 @@
-﻿inherited frmPrintRecFac: TfrmPrintRecFac
+inherited frmPrintRecFac: TfrmPrintRecFac
   Caption = 'Imprimir Recibos'
   ClientHeight = 253
   ClientWidth = 434
-  ExplicitWidth = 446
-  ExplicitHeight = 291
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 450
+  ExplicitHeight = 292
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 290
     Height = 253
-    ExplicitLeft = 284
-    ExplicitHeight = 244
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 288
+    ExplicitHeight = 245
     inherited btnSalir: TcxButton
       Top = 227
-      ExplicitTop = 218
+      ExplicitTop = 219
     end
   end
   object lblcxlbl1: TcxLabel [1]
@@ -146,7 +148,8 @@
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToStr(<Recibos."NUMERO_PLAZO_REC">)]')
+              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToS' +
+              'tr(<Recibos."NUMERO_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
@@ -626,7 +629,7 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 343.937230000000000000
-        Top = 18.897650000000000000
+        Top = 16.000000000000000000
         Width = 755.906000000000000000
         DataSet = dmFacturas.fxdsRecibos
         DataSetName = 'Recibos'
@@ -637,6 +640,8 @@
           Top = 59.252010000000000000
           Width = 343.937230000000000000
           Height = 49.133890000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmFacturas.fxdsPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
@@ -676,7 +681,8 @@
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToStr(<Recibos."NUMERO_PLAZO_REC">)]')
+              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToS' +
+              'tr(<Recibos."NUMERO_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
