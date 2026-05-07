@@ -21,6 +21,7 @@ inherited dmInventarios: TdmInventarios
       '   USUARIO_ALTA,  USUARIO_MODIF'
       'FROM fza_inventarios'
       'ORDER BY FECHA_INV DESC')
+    AfterInsert = unqryTablaGAfterInsert
     AfterScroll = unqryTablaGAfterScroll
     Left = 50
     Top = 22
