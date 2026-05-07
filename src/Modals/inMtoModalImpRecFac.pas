@@ -36,9 +36,11 @@ type
     procedure rbRangoFechasClick(Sender: TObject);
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
     { Private declarations }
   public
     dmFac: TdmFacturas;
+    { Public declarations }
   end;
 
 var
@@ -50,14 +52,25 @@ implementation
 
 { TfrmPrintRecFac }
 
-procedure TfrmPrintRecFac.preparar_consulta;
+procedure TfrmPrintRecFac.AfterReportLoaded;
 begin
   inherited;
-  with dmFac do
-  begin
+  if dmFac <> nil then
+    RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+end;
+
+procedure TfrmPrintRecFac.preparar_consulta;
+var
+  pDM: TdmFacturas;
+begin
+  inherited;
+  if dmFac <> nil then
+    pDM := dmFac
+  else
+    pDM := dmmFacturas;
   if rbActual.Checked = true then
   begin
-    with dmmFacturas.unqryRecibosPrint do
+    with pDM.unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -69,12 +82,12 @@ begin
       Params.ParamByName('serie').AsString := edtSerie.text;
       Params.ParamByName('recibo').AsString := edtPlazoRecFac.text;
     end;
-    dmmFacturas.unqryRecibosPrint.Open;
-    dmmFacturas.fxdsRecibos.UpdateBounds;
+    pDM.unqryRecibosPrint.Open;
+    pDM.fxdsRecibos.UpdateBounds;
   end;
   if rbRangoFechas.Checked = true then
   begin
-    with dmmFacturas.unqryRecibosPrint do
+    with pDM.unqryRecibosPrint do
     begin
       Params.Clear;
       SQL.Text := '     SELECT *  ' +
@@ -84,9 +97,8 @@ begin
       Params.ParamByName('numfac').AsString := edtNroFac.text;
       Params.ParamByName('serie').AsString := edtSerie.text;
     end;
-    dmmFacturas.unqryRecibosPrint.Open;
-    dmmFacturas.fxdsRecibos.UpdateBounds;
-  end;
+    pDM.unqryRecibosPrint.Open;
+    pDM.fxdsRecibos.UpdateBounds;
   end;
 end;
 
