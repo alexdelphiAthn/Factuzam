@@ -130,6 +130,7 @@ type
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure AplicarEtiquetas; override;
     procedure pcDetailChange(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
@@ -261,6 +262,20 @@ begin
   FInicializandoCombo := False;
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
+end;
+
+procedure TfrmMtoInventarios.AplicarEtiquetas;
+begin
+  inherited;
+  // Solo queremos UNA columna de input para el articulo (la unificada
+  // tvLineasUNIDAD, que admite codigo de articulo, SKU o codigo de barras).
+  // Forzamos a que la antigua columna de articulo no se vea aunque algun
+  // perfil de usuario la haya marcado como visible.
+  if Assigned(tvLineasARTICULO) then
+  begin
+    tvLineasARTICULO.Visible := False;
+    tvLineasARTICULO.VisibleForCustomization := False;
+  end;
 end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
@@ -562,7 +577,8 @@ var
   qry: TUniQuery;
   i: Integer;
 begin
-  // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5
+  // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5,
+  // mapeadas por ORDEN_VISUAL_ATRIBUTO (igual que en inMtoCajaOpe).
   if Sku = '' then Exit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
@@ -570,21 +586,21 @@ begin
   try
     qry.Connection := dmmInventarios.unqryArticulo.Connection;
     qry.SQL.Text :=
-      'SELECT V.NOMBRE_VALOR_AV, N.ORDEN_VISUAL_ATRIBUTO ' +
+      'SELECT DISTINCT N.ORDEN_VISUAL_ATRIBUTO, V.AV ' +
       '  FROM fza_atributos_sku AT ' +
       '  JOIN fza_atributos_valores V ON AT.ID_AV_SA = V.ID_AV ' +
       '  JOIN vi_atributos_nombres N  ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
       ' WHERE AT.CODIGO_UNIDAD_SKU_SA = :SKU ' +
-      ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
+      ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO';
     qry.ParamByName('SKU').AsString := Sku;
     qry.Open;
 
-    i := 1;
-    while not qry.Eof and (i <= 5) do
+    while not qry.Eof do
     begin
-      dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
-        qry.FieldByName('NOMBRE_VALOR_AV').AsString;
-      Inc(i);
+      i := qry.FieldByName('ORDEN_VISUAL_ATRIBUTO').AsInteger;
+      if (i >= 1) and (i <= 5) then
+        dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
+          qry.FieldByName('AV').AsString;
       qry.Next;
     end;
   finally
@@ -955,8 +971,8 @@ begin
     dmmInventarios.cdsLineas.Post;
   dmmInventarios.cdsLineas.Append;
 
-  // Foco en la columna artículo
-  tvLineas.Controller.FocusedColumn := tvLineasARTICULO;
+  // Foco en la columna unificada (SKU/Articulo)
+  tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
 end;
