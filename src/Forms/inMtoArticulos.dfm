@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsProveedores
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -312,10 +312,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 TabOrder = 3
               end
             end
-            object tsPropiedades: TcxTabSheet
-              Caption = '&3_Propiedades'
-              ImageIndex = 9
-            end
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
@@ -388,6 +384,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
             end
+            object tsPropiedades: TcxTabSheet
+              Caption = '&3_Propiedades'
+              ImageIndex = 9
+            end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
@@ -404,7 +404,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Width = 116
                   Height = 34
                   Caption = '&Exp Excel'
-                  TabOrder = 1
+                  TabOrder = 0
                   OnClick = btnExportarProveedorClick
                 end
                 object cxButton1: TcxButton
@@ -422,7 +422,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Width = 116
                   Height = 34
                   Caption = '&Verificar CB'
-                  TabOrder = 3
+                  TabOrder = 1
                   OnClick = btnVerificarCBClick
                 end
               end
@@ -535,12 +535,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Width = 100
                   end
                   object tvSkusESPRINCIPAL_CB: TcxGridDBColumn
-                    Caption = 'Principal'
+                    Caption = 'Etiqueta'
                     DataBinding.FieldName = 'ESPRINCIPAL_CB'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
-                    Width = 70
+                    Width = 87
                   end
                   object tvSkusID_CB: TcxGridDBColumn
                     DataBinding.FieldName = 'ID_CB'
