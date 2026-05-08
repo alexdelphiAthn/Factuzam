@@ -595,6 +595,7 @@ inherited dmArticulos: TdmArticulos
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM vi_articulos_skus_extendida')
     BeforePost = unqryVariacionesArticulosBeforePost
+    BeforeDelete = unqryVariacionesArticulosBeforeDelete
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
