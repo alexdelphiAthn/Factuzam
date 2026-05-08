@@ -271,6 +271,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
+    procedure cxDBComboBox1PropertiesEditValueChanged(Sender: TObject);
     procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
@@ -333,12 +334,20 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
 var
-  HayVars: Boolean;
+  HayVars, EsEstandar: Boolean;
+  Tipo: string;
 begin
   HayVars := False;
-  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
+  EsEstandar := True;
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) and
+     (not dmmArticulos.unqryTablaG.IsEmpty) then
+  begin
     HayVars := dmmArticulos.unqryTablaG.FieldByName(
                                      'ESVARIACION_ART').AsWideString = 'S';
+    Tipo := Trim(dmmArticulos.unqryTablaG.FieldByName('TIPO_ART').AsString);
+    // Por defecto se considera ESTANDAR si está vacío (compat. con altas)
+    EsEstandar := (Tipo = '') or SameText(Tipo, 'ESTANDAR');
+  end;
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
   // La pestaña "SKUs y CB" siempre visible: cuando el artículo no tiene
@@ -347,6 +356,10 @@ begin
   tsSKUS.TabVisible  := True;
   // Sólo tiene sentido la generación masiva de SKUs si hay variaciones
   addSkuAll.Visible  := HayVars;
+  // Stock y movimientos sólo aplican a artículos físicos (ESTANDAR)
+  tvSkusSTOCK_TOTAL.Visible := EsEstandar;
+  tsMovimientos.TabVisible  := EsEstandar;
+  cxTabSheet3.TabVisible    := EsEstandar; // pestaña Stock
 end;
 
 procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
@@ -1503,6 +1516,19 @@ begin
   inherited;
   ExportarExcel(cxGrdMovimientos, 'Movimientos_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
+end;
+
+procedure TfrmMtoArticulos.cxDBComboBox1PropertiesEditValueChanged(Sender: TObject);
+begin
+  inherited;
+  if (csLoading in ComponentState) or (csDestroying in ComponentState) then
+    Exit;
+  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
+    Exit;
+  if not dmmArticulos.unqryTablaG.Active then
+    Exit;
+  // Refrescamos visibilidad de stock/movimientos según el nuevo TIPO_ART
+  ActualizarVisibilidadVariaciones;
 end;
 
 procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);

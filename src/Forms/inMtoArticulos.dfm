@@ -281,6 +281,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Properties.Items.Strings = (
                     'ESTANDAR'
                     'SERVICIO')
+                  Properties.OnEditValueChanged = cxDBComboBox1PropertiesEditValueChanged
                   TabOrder = 3
                   Width = 167
                 end
