@@ -1152,7 +1152,16 @@ begin
   if not PuedeEditar then Exit;
 
   if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
-    dmmInventarios.cdsLineas.Post;
+  begin
+    // Si la línea actual no tiene artículo, posteala dispara cdsLineasBeforePost
+    // y aborta con excepción. Como el usuario está pidiendo otra línea,
+    // descartamos el placeholder vacío en vez de fallar.
+    if Trim(dmmInventarios.cdsLineas.FieldByName(
+                                'CODIGO_ART_INVLIN').AsString) = '' then
+      dmmInventarios.cdsLineas.Cancel
+    else
+      dmmInventarios.cdsLineas.Post;
+  end;
   dmmInventarios.cdsLineas.Append;
 
   // Foco en la columna unificada (SKU/Articulo)
@@ -1174,9 +1183,8 @@ begin
     Exit;
   end;
 
-  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
-    dmmInventarios.cdsLineas.Post;
-
+  // Comprobar el artículo ANTES de intentar postear: si la línea actual es
+  // un placeholder sin artículo, postear lanzaría cdsLineasBeforePost.
   CodigoArticulo := Trim(dmmInventarios.cdsLineas.FieldByName(
                           'CODIGO_ART_INVLIN').AsString);
   if CodigoArticulo = '' then
@@ -1184,6 +1192,9 @@ begin
     ShowMessage('La línea actual no tiene artículo asignado.');
     Exit;
   end;
+
+  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
+    dmmInventarios.cdsLineas.Post;
 
   Insertados := 0;
   Screen.Cursor := crHourGlass;
