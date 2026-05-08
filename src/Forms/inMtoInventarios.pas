@@ -63,6 +63,7 @@ type
     tsDetalle: TcxTabSheet;
     pnlDetalleTop: TPanel;
     btnAnadirLinea: TcxButton;
+    btnAnadirSkusArt: TcxButton;
     btnEliminarLinea: TcxButton;
     btnRecalcularDetalle: TcxButton;
     btnCargarExcel: TcxButton;
@@ -141,6 +142,7 @@ type
 
     // Detalle
     procedure btnAnadirLineaClick(Sender: TObject);
+    procedure btnAnadirSkusArtClick(Sender: TObject);
     procedure btnEliminarLineaClick(Sender: TObject);
     procedure btnRecalcularDetalleClick(Sender: TObject);
     procedure tvLineasArticuloPropertiesValidate(Sender: TObject;
@@ -1150,6 +1152,57 @@ begin
   tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoInventarios.btnAnadirSkusArtClick(Sender: TObject);
+var
+  CodigoArticulo: string;
+  Insertados: Integer;
+begin
+  if not PuedeEditar then Exit;
+
+  if dmmInventarios.cdsLineas.IsEmpty then
+  begin
+    ShowMessage('Sitúate sobre una línea con artículo para añadir sus SKUs.');
+    Exit;
+  end;
+
+  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
+    dmmInventarios.cdsLineas.Post;
+
+  CodigoArticulo := Trim(dmmInventarios.cdsLineas.FieldByName(
+                          'CODIGO_ART_INVLIN').AsString);
+  if CodigoArticulo = '' then
+  begin
+    ShowMessage('La línea actual no tiene artículo asignado.');
+    Exit;
+  end;
+
+  Insertados := 0;
+  Screen.Cursor := crHourGlass;
+  try
+    try
+      Insertados := dmmInventarios.CargarSkusConMovimientosArticulo(
+                                                              CodigoArticulo);
+    except
+      on E: Exception do
+      begin
+        Screen.Cursor := crDefault;
+        ShowMessage('Error al añadir SKUs: ' + E.Message);
+        Exit;
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+
+  if Insertados = 0 then
+    ShowMessage(Format('No se ha añadido ningún SKU. El artículo %s no tiene ' +
+                       'movimientos en este almacén o todos sus SKUs ya están ' +
+                       'en el inventario.', [CodigoArticulo]))
+  else
+    ShowMessage(Format('Añadidos %d SKUs del artículo %s.',
+                       [Insertados, CodigoArticulo]));
 end;
 
 procedure TfrmMtoInventarios.btnEliminarLineaClick(Sender: TObject);
