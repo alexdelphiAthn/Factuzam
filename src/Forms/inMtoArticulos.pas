@@ -975,7 +975,8 @@ const
 var
   qrySinCB, qryConCB, qryInsert: TUniQuery;
   CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB, sPlaceholder: string;
-  iSinCB, iConCB, iGen, iFab: Integer;
+  iSinCB, iConCB, iGen, iFab, iFabExist: Integer;
+  bIntentoFab: Boolean;
 begin
   inherited;
   // 1) Asegurar que el artículo está guardado
@@ -996,6 +997,8 @@ begin
   qryConCB := TUniQuery.Create(nil);
   qryInsert := TUniQuery.Create(nil);
   iGen := 0;
+  iFabExist := 0;
+  bIntentoFab := False;
   iFab := 0;
   try
     qrySinCB.Connection := oConn;
@@ -1088,10 +1091,12 @@ begin
            mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         Screen.Cursor := crHourGlass;
+        bIntentoFab := True;
         try
-          // Solo creamos placeholder si todavía no existe ninguno para ese SKU
+          // INSERT IGNORE: si el placeholder ya existe (colisión PK) se
+          // ignora silenciosamente; los errores reales siguen propagándose.
           qryInsert.SQL.Text :=
-            'INSERT INTO fza_codigos_barras '                          +
+            'INSERT IGNORE INTO fza_codigos_barras '                   +
             '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
             '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
             'VALUES (:CB, :SKU, :TIPO, ''N'', CURRENT_TIMESTAMP, :USR, :USR)';
@@ -1105,16 +1110,17 @@ begin
             if Length(sPlaceholder) > 50 then
               sPlaceholder := Copy(sPlaceholder, 1, 50);
 
-            try
-              qryInsert.ParamByName('CB').AsString   := sPlaceholder;
-              qryInsert.ParamByName('SKU').AsString  := sSku;
-              qryInsert.ParamByName('TIPO').AsString := CB_TIPO_FAB;
-              qryInsert.ParamByName('USR').AsString  := oUser;
-              qryInsert.ExecSQL;
-              Inc(iFab);
-            except
-              // Si ya existe el placeholder para ese SKU lo ignoramos
-            end;
+            qryInsert.ParamByName('CB').AsString   := sPlaceholder;
+            qryInsert.ParamByName('SKU').AsString  := sSku;
+            qryInsert.ParamByName('TIPO').AsString := CB_TIPO_FAB;
+            qryInsert.ParamByName('USR').AsString  := oUser;
+            qryInsert.ExecSQL;
+            // Solo contamos los inserts efectivos. INSERT IGNORE devuelve
+            // RowsAffected=0 si ya existía la PK.
+            if qryInsert.RowsAffected > 0 then
+              Inc(iFab)
+            else
+              Inc(iFabExist);
             qryConCB.Next;
           end;
         finally
@@ -1124,13 +1130,15 @@ begin
     end;
     qryConCB.Close;
 
-    if (iGen > 0) or (iFab > 0) then
+    // Refrescamos y reportamos siempre que el usuario haya pedido alguna acción
+    if (iGen > 0) or bIntentoFab then
     begin
       dmmArticulos.unqryVariacionesArticulos.Refresh;
-      ShowMessage(Format('Generación finalizada.' + sLineBreak +
-                         '- Códigos internos EAN-13 creados: %d' + sLineBreak +
-                         '- Placeholders de fabricante creados: %d',
-                         [iGen, iFab]));
+      ShowMessage(Format('Generación finalizada.'                  + sLineBreak +
+                         '- Códigos internos EAN-13 creados: %d'    + sLineBreak +
+                         '- Placeholders de fabricante creados: %d' + sLineBreak +
+                         '- Placeholders de fabricante ya existentes: %d',
+                         [iGen, iFab, iFabExist]));
     end;
   finally
     FreeAndNil(qryInsert);
