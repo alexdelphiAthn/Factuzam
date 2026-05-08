@@ -276,49 +276,63 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   TabOrder = 0
                   OnClick = btnAnadirLineaClick
                 end
+                object btnAnadirSkusArt: TcxButton
+                  Left = 143
+                  Top = 11
+                  Width = 170
+                  Height = 30
+                  Caption = '+ SKUs con mov.'
+                  Hint =
+                    'A'#241'ade todos los SKUs del art'#237'culo de la l'#237'nea actual que tengan' +
+                    ' movimientos en el almac'#233'n del inventario.'
+                  ParentShowHint = False
+                  ShowHint = True
+                  TabOrder = 1
+                  OnClick = btnAnadirSkusArtClick
+                end
                 object btnEliminarLinea: TcxButton
-                  Left = 147
+                  Left = 319
                   Top = 11
                   Width = 154
                   Height = 30
                   Caption = '- Eliminar l'#237'nea'
-                  TabOrder = 1
+                  TabOrder = 2
                   OnClick = btnEliminarLineaClick
                 end
                 object btnRecalcularDetalle: TcxButton
-                  Left = 307
+                  Left = 479
                   Top = 11
-                  Width = 237
+                  Width = 200
                   Height = 30
                   Caption = 'Recalcular te'#243'rico/PMP'
-                  TabOrder = 2
+                  TabOrder = 3
                   OnClick = btnRecalcularDetalleClick
                 end
                 object btnCargarExcel: TcxButton
-                  Left = 559
+                  Left = 685
                   Top = 11
-                  Width = 145
+                  Width = 130
                   Height = 30
                   Caption = 'Cargar Excel'
-                  TabOrder = 3
+                  TabOrder = 4
                   OnClick = btnCargarExcelClick
                 end
                 object btnExportarInv: TcxButton
-                  Left = 718
+                  Left = 821
                   Top = 11
-                  Width = 150
+                  Width = 140
                   Height = 30
                   Caption = 'Exportar a Excel'
-                  TabOrder = 4
+                  TabOrder = 5
                   OnClick = btnExportarInvClick
                 end
                 object btnIraArticulo: TcxButton
-                  Left = 886
+                  Left = 967
                   Top = 11
-                  Width = 150
+                  Width = 130
                   Height = 30
                   Caption = 'Ir a Art'#237'culo'
-                  TabOrder = 5
+                  TabOrder = 6
                   OnClick = btnExportarInvClick
                 end
               end
