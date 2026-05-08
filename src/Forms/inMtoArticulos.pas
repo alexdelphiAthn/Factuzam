@@ -539,7 +539,8 @@ var
   HaySolapamiento, TieneUserHasta, DbHastaIsNull: Boolean;
   UserDesde, UserHasta, DbDesde, DbHasta: TDate;
   Cond1, Cond2: Boolean;
-  codArticulo:String;
+  codArticulo: String;
+  PrecioPadre: Double;
 begin
   inherited;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
@@ -738,9 +739,24 @@ begin
                     dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := chkSkus.Items[i].Text;
 
                   dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString := chkTarifas.Items[j].Text;
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := 0;
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat := 0;
+
+                  // Para filas de SKU heredamos el precio del padre (fila del
+                  // artículo en la misma tarifa) si existe; si no, queda a 0.
+                  if chkSkus.Items[i].Text = 'ARTÍCULO' then
+                    PrecioPadre := 0
+                  else
+                    PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
+                                                 codArticulo,
+                                                 chkTarifas.Items[j].Text);
+
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
+                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
+                  // Si arranca a 0 la tarifa nace inactiva (sin preguntar);
+                  // BeforePost se encarga de las transiciones posteriores.
+                  if PrecioPadre > 0 then
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S'
+                  else
+                    dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'N';
 
                   // Aplicamos las fechas que eligió el usuario
                   dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
