@@ -348,9 +348,9 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Top = 61
                   Width = 116
                   Height = 34
-                  Caption = '&A'#241'adir CB'
+                  Caption = '&Generar CB'
                   TabOrder = 2
-                  OnClick = btnAddProveedorClick
+                  OnClick = btnGenerarCBClick
                 end
                 object cxButton5: TcxButton
                   Left = 0
@@ -359,7 +359,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Height = 34
                   Caption = '&Verificar CB'
                   TabOrder = 3
-                  OnClick = btnAddProveedorClick
+                  OnClick = btnVerificarCBClick
                 end
               end
               object cxGrid2: TcxGrid
