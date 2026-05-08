@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsSKUs
+            Properties.ActivePage = tsLineasFactura
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -491,7 +491,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 953
                 object tvTarifas: TcxGridDBBandedTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1249,7 +1248,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                ExplicitWidth = 948
                 object tvStock: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True

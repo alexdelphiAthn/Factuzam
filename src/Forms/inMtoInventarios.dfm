@@ -282,10 +282,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Top = 11
                   Width = 170
                   Height = 30
+                  Hint = 
+                    'A'#241'ade todos los SKUs del art'#237'culo de la l'#237'nea actual que tengan ' +
+                    'movimientos en el almac'#233'n del inventario.'
                   Caption = '+ SKUs con mov.'
-                  Hint =
-                    'A'#241'ade todos los SKUs del art'#237'culo de la l'#237'nea actual que tengan' +
-                    ' movimientos en el almac'#233'n del inventario.'
                   ParentShowHint = False
                   ShowHint = True
                   TabOrder = 1
@@ -334,7 +334,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Height = 30
                   Caption = 'Ir a Art'#237'culo'
                   TabOrder = 6
-                  OnClick = btnExportarInvClick
+                  OnClick = btnIraArticuloClick
                 end
               end
               object cxgrdLineas: TcxGrid
@@ -359,10 +359,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                       Kind = skSum
                       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     end>
+                  OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
-                  OptionsBehavior.AlwaysShowEditor = True
                   OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
@@ -550,10 +550,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               object cxgrdMovs: TcxGrid
                 Left = 0
                 Top = 50
-                Width = 1130
+                Width = 1009
                 Height = 382
                 Align = alClient
                 TabOrder = 1
+                ExplicitWidth = 1130
                 object tvMovs: TcxGridDBTableView
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
@@ -610,6 +611,34 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 end
                 object cxgrdlvlMovs: TcxGridLevel
                   GridView = tvMovs
+                end
+              end
+              object Panel3: TPanel
+                Left = 1009
+                Top = 50
+                Width = 121
+                Height = 382
+                Align = alRight
+                TabOrder = 2
+                ExplicitLeft = 948
+                ExplicitTop = 0
+                ExplicitHeight = 425
+                object cxButton11: TcxButton
+                  Left = 3
+                  Top = 11
+                  Width = 116
+                  Height = 34
+                  Caption = '&Exp Excel'
+                  TabOrder = 0
+                end
+                object btnIraArticuloMov: TcxButton
+                  Left = 3
+                  Top = 51
+                  Width = 116
+                  Height = 34
+                  Caption = 'Ir a Art'#237'culo'
+                  TabOrder = 1
+                  OnClick = btnIraArticuloMovClick
                 end
               end
             end
@@ -847,6 +876,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
   inherited dsTablaG: TDataSource
     DataSet = dmInventarios.unqryTablaG
     OnDataChange = dsTablaGDataChange
+    Left = 120
+    Top = 432
   end
   object dlgAbrir: TOpenDialog
     Filter = 
@@ -855,5 +886,15 @@ inherited frmMtoInventarios: TfrmMtoInventarios
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist]
     Left = 948
     Top = 224
+  end
+  object ActionManager1: TActionManager
+    Left = 624
+    Top = 344
+    StyleName = 'Platform Default'
+    object actMovimiento: TAction
+      Caption = 'actIraArticulos'
+      ShortCut = 16449
+      OnExecute = actMovimientoExecute
+    end
   end
 end

@@ -25,7 +25,8 @@ uses
   cxMemo, cxSpinEdit, cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
-  dxCoreGraphics, strUtils, cxCalc;
+  dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
+  Vcl.ActnMan;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -127,6 +128,11 @@ type
     splSplitterFicha: TcxSplitter;
     cxDBCurrencyEdit1: TcxDBCurrencyEdit;
     btnIraArticulo: TcxButton;
+    Panel3: TPanel;
+    cxButton11: TcxButton;
+    btnIraArticuloMov: TcxButton;
+    ActionManager1: TActionManager;
+    actMovimiento: TAction;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
@@ -182,6 +188,9 @@ type
     procedure btnCargarClick(Sender: TObject);
     procedure cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
       Sender: TObject);
+    procedure actMovimientoExecute(Sender: TObject);
+    procedure btnIraArticuloClick(Sender: TObject);
+    procedure btnIraArticuloMovClick(Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
@@ -303,7 +312,7 @@ end;
 procedure TfrmMtoInventarios.ResetForm;
 begin
   inherited;
-  pcDetail.ActivePage := tsCabecera;
+  pcDetail.ActivePage := tsDetalle;
 end;
 
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);
@@ -502,6 +511,21 @@ begin
   else
     Result := nil;
   end;
+end;
+
+procedure TfrmMtoInventarios.actMovimientoExecute(Sender: TObject);
+begin
+  inherited;
+  if (pcDetail.ActivePage = tsDetalle) then
+      with tvLineas.DataController.DataSet do
+  ShowMto(Self.Owner,
+          'Articulos',
+          FieldByName('CODIGO_ART_INVLIN').AsString)
+  else
+      with tvMovs.DataController.DataSet do
+  ShowMto(Self.Owner,
+          'Articulos',
+          FieldByName('CODIGO_ART_MOV').AsString);
 end;
 
 procedure TfrmMtoInventarios.ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -1290,6 +1314,18 @@ procedure TfrmMtoInventarios.btnExportarInvClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdMovs, 'Movimientos_Inventario_' +
                 dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString);
+end;
+
+procedure TfrmMtoInventarios.btnIraArticuloClick(Sender: TObject);
+begin
+  inherited;
+  actMovimientoExecute(Self);
+end;
+
+procedure TfrmMtoInventarios.btnIraArticuloMovClick(Sender: TObject);
+begin
+  inherited;
+  actMovimientoExecute(Self);
 end;
 
 // ============================================================================
