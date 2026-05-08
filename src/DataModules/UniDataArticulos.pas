@@ -13,7 +13,8 @@ interface
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
-  Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView;
+  Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
+  System.Variants;
 
 type
   TdmArticulos = class(TdmBase)
@@ -56,6 +57,8 @@ type
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
     procedure FillTarifas(lst:TcxListView);
     function ReconstruirStock: string;
+    function ObtenerPrecioTarifaPadre(const aCodArt,
+                                            aCodTarifa: string): Double;
   end;
 
 //var
@@ -339,6 +342,9 @@ procedure TdmArticulos.unqryTarifasArticulosBeforePost(DataSet: TDataSet);
 var
   unqrySol: TUniQuery;
   PKValue: Integer;
+  oldPrecio, newPrecio: Double;
+  esActivo: string;
+  vOld: Variant;
 begin
   inherited;
   with unqryTarifasArticulos do
@@ -355,6 +361,46 @@ begin
     begin
       // Si estamos editando, cogemos su ID real
       PKValue := FieldByName('CODIGO_UNICO_ARTTAR').AsInteger;
+    end;
+
+    // ----------------------------------------------------------------
+    // Activación / desactivación según transición del precio de salida
+    // ----------------------------------------------------------------
+    newPrecio := FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
+    esActivo  := FindField('ESACTIVO_ARTTAR').AsString;
+
+    if State = dsInsert then
+    begin
+      // En alta, si nace a 0 lo dejamos inactivo por defecto (sin preguntar).
+      // Las altas con precio>0 conservan el ESACTIVO que les haya puesto el alta masiva.
+      if newPrecio = 0 then
+        FindField('ESACTIVO_ARTTAR').AsString := 'N';
+    end
+    else if State = dsEdit then
+    begin
+      vOld := FindField('PRECIO_SALIDA_ARTTAR').OldValue;
+      if VarIsNull(vOld) or VarIsEmpty(vOld) then
+        oldPrecio := 0
+      else
+        oldPrecio := vOld;
+
+      // De >0 a 0 estando activa -> preguntar si desactivar
+      if (oldPrecio > 0) and (newPrecio = 0) and (esActivo = 'S') then
+      begin
+        if MessageDlg('El precio de salida pasa a 0. ' +
+                      '¿Desea desactivar la tarifa?',
+                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+          FindField('ESACTIVO_ARTTAR').AsString := 'N';
+      end;
+
+      // De 0 a >0 estando inactiva -> preguntar si activar
+      if (oldPrecio = 0) and (newPrecio > 0) and (esActivo = 'N') then
+      begin
+        if MessageDlg('El precio de salida es mayor que 0. ' +
+                      '¿Desea activar la tarifa?',
+                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+          FindField('ESACTIVO_ARTTAR').AsString := 'S';
+      end;
     end;
 
     unqrySol := TUniQuery.Create(nil);
@@ -414,6 +460,39 @@ begin
     unqrySol.Close;
   finally
     FreeAndNil(unqrySol);
+  end;
+end;
+
+function TdmArticulos.ObtenerPrecioTarifaPadre(const aCodArt,
+                                                     aCodTarifa: string): Double;
+var
+  qry: TUniQuery;
+begin
+  Result := 0;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    // Fila padre = misma tarifa, mismo artículo, sin SKU específico,
+    // activa y vigente en la fecha actual.
+    qry.SQL.Text :=
+      'SELECT PRECIO_SALIDA_ARTTAR '                                       +
+      '  FROM fza_articulos_tarifas '                                      +
+      ' WHERE CODIGO_ART_ARTTAR = :ART '                                   +
+      '   AND CODIGO_TAR_ARTTAR = :TAR '                                   +
+      '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = '''' '                +
+      '   AND ESACTIVO_ARTTAR = ''S'' '                                    +
+      '   AND (FECHA_DESDE_ARTTAR IS NULL OR FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
+      '   AND (FECHA_HASTA_ARTTAR IS NULL OR FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
+      ' ORDER BY FECHA_DESDE_ARTTAR DESC '                                 +
+      ' LIMIT 1';
+    qry.ParamByName('ART').AsString := aCodArt;
+    qry.ParamByName('TAR').AsString := aCodTarifa;
+    qry.Open;
+    if not qry.IsEmpty then
+      Result := qry.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
+    qry.Close;
+  finally
+    FreeAndNil(qry);
   end;
 end;
 
