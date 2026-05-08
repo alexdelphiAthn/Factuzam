@@ -1060,6 +1060,17 @@ begin
     Exit;
   end;
 
+  // Solo se admiten artículos físicos (TIPO_ART='ESTANDAR') en inventarios.
+  // SERVICIO/KIT no llevan stock, así que no tiene sentido recontarlos.
+  if not SameText(TipoArt, 'ESTANDAR') then
+  begin
+    AError := True;
+    AErrorText := Format('El artículo %s es de tipo "%s" y no controla ' +
+                         'stock; no se puede inventariar.',
+                         [CodPadre, TipoArt]);
+    Exit;
+  end;
+
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
 
