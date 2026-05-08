@@ -619,6 +619,55 @@ inherited dmArticulos: TdmArticulos
     Left = 144
     Top = 296
   end
+  object unqrySkus: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_articulos_skus'
+      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,'
+      '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
+      'VALUES'
+      '  (:CODIGO_UNIDAD_SKU, :CODIGO_ART_SKU,'
+      '   COALESCE(NULLIF(:CODIGO_VAR_SKU, ''''), ''TC''),'
+      '   COALESCE(NULLIF(:ESACTIVO_SKU, ''''), ''S''),'
+      '   CURRENT_TIMESTAMP, :USUARIO_ALTA, :USUARIO_MODIF)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_articulos_skus'
+      'WHERE CODIGO_UNIDAD_SKU = :Old_CODIGO_UNIDAD_SKU')
+    SQLUpdate.Strings = (
+      'UPDATE fza_articulos_skus'
+      'SET'
+      '  ESACTIVO_SKU = :ESACTIVO_SKU,'
+      '  USUARIO_MODIF = :USUARIO_MODIF'
+      'WHERE CODIGO_UNIDAD_SKU = :Old_CODIGO_UNIDAD_SKU')
+    SQLLock.Strings = (
+      'SELECT * FROM fza_articulos_skus'
+      'WHERE CODIGO_UNIDAD_SKU = :Old_CODIGO_UNIDAD_SKU'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      'SELECT * FROM fza_articulos_skus'
+      'WHERE CODIGO_UNIDAD_SKU = :CODIGO_UNIDAD_SKU')
+    BeforePost = unqrySkusBeforePost
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select *'
+      'from fza_articulos_skus')
+    MasterSource = frmMtoArticulos.dsTablaG
+    MasterFields = 'CODIGO_ART_ART'
+    DetailFields = 'CODIGO_ART_SKU'
+    Active = True
+    Left = 232
+    Top = 296
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_ART_ART'
+        ParamType = ptInput
+      end>
+  end
+  object dsSkus: TDataSource
+    DataSet = unqrySkus
+    Left = 232
+    Top = 344
+  end
   object unqryStockArticulos: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
