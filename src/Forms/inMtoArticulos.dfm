@@ -316,8 +316,80 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Caption = '&3_Propiedades'
               ImageIndex = 9
             end
+            object tsSkuMto: TcxTabSheet
+              Caption = '&4_SKUs'
+              ImageIndex = 6
+              object pnlSkuMto: TPanel
+                Left = 948
+                Top = 0
+                Width = 121
+                Height = 425
+                Align = alRight
+                TabOrder = 0
+                object addSkuAll: TcxButton
+                  Left = 0
+                  Top = 21
+                  Width = 116
+                  Height = 34
+                  Caption = '&A'#241'adir SKU'
+                  TabOrder = 0
+                  OnClick = addSkuAllClick
+                end
+              end
+              object cxgrdSkuMto: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 948
+                Height = 425
+                Align = alClient
+                TabOrder = 1
+                object tvSkuMto: TcxGridDBTableView
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.Insert.Visible = True
+                  Navigator.Buttons.Delete.Visible = True
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.Post.Visible = True
+                  Navigator.Buttons.Cancel.Visible = True
+                  Navigator.Visible = True
+                  DataController.DataSource = dmArticulos.dsSkus
+                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                  OptionsBehavior.AlwaysShowEditor = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsBehavior.IncSearch = True
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.Appending = True
+                  OptionsView.GroupByBox = False
+                  OptionsView.Indicator = True
+                  object tvSkuMtoCODIGO_UNIDAD_SKU: TcxGridDBColumn
+                    Caption = 'C'#243'digo SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                    Width = 350
+                  end
+                  object tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn
+                    Caption = 'Variaci'#243'n'
+                    DataBinding.FieldName = 'CODIGO_VAR_SKU'
+                    Width = 80
+                  end
+                  object tvSkuMtoESACTIVO_SKU: TcxGridDBColumn
+                    Caption = 'Activo'
+                    DataBinding.FieldName = 'ESACTIVO_SKU'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 70
+                  end
+                  object tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_ART_SKU'
+                    Visible = False
+                  end
+                end
+                object cxgrdSkuMtoLevel: TcxGridLevel
+                  GridView = tvSkuMto
+                end
+              end
+            end
             object tsSKUs: TcxTabSheet
-              Caption = '&4_SKUS y CB'
+              Caption = '&4_C'#243'digos de Barras'
               ImageIndex = 6
               object Panel1: TPanel
                 Left = 948
@@ -334,15 +406,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Caption = '&Exp Excel'
                   TabOrder = 1
                   OnClick = btnExportarProveedorClick
-                end
-                object addSkuAll: TcxButton
-                  Left = 0
-                  Top = 21
-                  Width = 116
-                  Height = 34
-                  Caption = '&A'#241'adir SKU'
-                  TabOrder = 0
-                  OnClick = addSkuAllClick
                 end
                 object cxButton1: TcxButton
                   Left = 0
