@@ -165,62 +165,59 @@ inherited dmArticulos: TdmArticulos
   end
   object unqryProveedoresArticulos: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO `fza_articulos_proveedores`'
-      '      (`CODIGO_PRV_AP`, '
-      '       `CODIGO_ART_AP`, '
-      '       `REF_PROVEEDOR_AP`, '
-      '       `PRECIO_ULT_COMPRA_AP`, '
-      '       `FECHA_VALIDEZ_AP`, '
-      '       `ESPROVEEDORPRINCIPAL_AP`,'
-      '       `INSTANTE_MODIF`, '
-      '       `INSTANTE_ALTA`, '
-      '       `USUARIO_ALTA`, '
-      '       `USUARIO_MODIF`)'
+      'INSERT INTO fza_articulos_proveedores'
+      
+        '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_ULT_CO' +
+        'MPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE_MOD' +
+        'IF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR_AP)'
       'VALUES'
-      '      (:`CODIGO_PRV_PRV`, '
-      '       :`CODIGO_ART_ART`, '
-      '       :`REF_PROVEEDOR_AP`, '
-      '       :`PRECIO_ULT_COMPRA`, '
-      '       :`FECHA_VALIDEZ`, '
-      '       :`ESPROVEEDORPRINCIPAL`,'
-      '       :`INSTANTE_MODIF`, '
-      '       :`INSTANTE_ALTA`, '
-      '       :`USUARIO_ALTA`, '
-      '       :`USUARIO_MODIF`)')
+      
+        '  (:CODIGO_PRV_AP, :CODIGO_ART_AP, :REF_PROVEEDOR_AP, :PRECIO_UL' +
+        'T_COMPRA_AP, :FECHA_VALIDEZ_AP, :ESPROVEEDORPRINCIPAL_AP, :INSTA' +
+        'NTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF, :REFPR' +
+        'OVEEDOR_AP)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_proveedores'
       'WHERE'
-      '  CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
-      '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
+      
+        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
+        'DIGO_ART_AP')
     SQLUpdate.Strings = (
       'UPDATE fza_articulos_proveedores'
       'SET'
-      '  CODIGO_PRV_AP           = :CODIGO_PRV_PRV,'
-      '  CODIGO_ART_AP           = :CODIGO_ART_ART,'
-      '  REF_PROVEEDOR_AP        = :REF_PROVEEDOR_AP,'
-      '  PRECIO_ULT_COMPRA_AP    = :PRECIO_ULT_COMPRA,'
-      '  FECHA_VALIDEZ_AP        = :FECHA_VALIDEZ,'
-      '  ESPROVEEDORPRINCIPAL_AP = :ESPROVEEDORPRINCIPAL,'
-      '  INSTANTE_MODIF          = :INSTANTE_MODIF,'
-      '  INSTANTE_ALTA           = :INSTANTE_ALTA,'
-      '  USUARIO_ALTA            = :USUARIO_ALTA,'
-      '  USUARIO_MODIF           = :USUARIO_MODIF'
+      
+        '  CODIGO_PRV_AP = :CODIGO_PRV_AP, CODIGO_ART_AP = :CODIGO_ART_AP' +
+        ', REF_PROVEEDOR_AP = :REF_PROVEEDOR_AP, PRECIO_ULT_COMPRA_AP = :' +
+        'PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP = :FECHA_VALIDEZ_AP, ESPR' +
+        'OVEEDORPRINCIPAL_AP = :ESPROVEEDORPRINCIPAL_AP, INSTANTE_MODIF =' +
+        ' :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_ALTA =' +
+        ' :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF, REFPROVEEDOR_AP ' +
+        '= :REFPROVEEDOR_AP'
       'WHERE'
-      '  CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
-      '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
+      
+        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
+        'DIGO_ART_AP')
     SQLLock.Strings = (
-      'SELECT *'
-      '  FROM fza_articulos_proveedores'
-      ' WHERE'
-      '       CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
-      '   AND CODIGO_ART_AP = :Old_CODIGO_ART_ART'
-      '   FOR UPDATE')
-    SQLRefresh.Strings = (
-      'SELECT *'
-      '  FROM vi_articulos_proveedores'
+      
+        'SELECT CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_UL' +
+        'T_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE' +
+        '_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR' +
+        '_AP FROM fza_articulos_proveedores'
       'WHERE'
-      '      `CODIGO_PRV_AP` = :`CODIGO_PRV_PRV` '
-      '  AND `CODIGO_ART_AP`  = :`CODIGO_ART_ART`')
+      
+        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
+        'DIGO_ART_AP'
+      'FOR UPDATE')
+    SQLRefresh.Strings = (
+      
+        'SELECT CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_UL' +
+        'T_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE' +
+        '_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR' +
+        '_AP FROM fza_articulos_proveedores'
+      'WHERE'
+      
+        '  CODIGO_PRV_AP = :CODIGO_PRV_AP AND CODIGO_ART_AP = :CODIGO_ART' +
+        '_AP')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_proveedores')
     Connection = dmConn.conUni
@@ -239,7 +236,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'BOLSO-PIEL'
+        Value = 'SRV-ENVIO'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -311,7 +308,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'BOLSO-PIEL'
+        Value = 'SRV-ENVIO'
       end>
   end
   object dsLinFacturasArticulos: TDataSource
@@ -574,8 +571,8 @@ inherited dmArticulos: TdmArticulos
       '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       '  (:CODIGO_BARRAS_CB, :CODIGO_UNIDAD_SKU,'
-      '   COALESCE(NULLIF(:TIPO_CODIGO_CB, ''''), ''EAN13''),'
-      '   COALESCE(NULLIF(:ESPRINCIPAL_CB, ''''), ''N''),'
+      '   COALESCE(NULLIF(:TIPO_CODIGO_CB, '#39#39'), '#39'EAN13'#39'),'
+      '   COALESCE(NULLIF(:ESPRINCIPAL_CB, '#39#39'), '#39'N'#39'),'
       '   CURRENT_TIMESTAMP, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_codigos_barras'
@@ -584,8 +581,10 @@ inherited dmArticulos: TdmArticulos
       'UPDATE fza_codigos_barras'
       'SET'
       '  CODIGO_BARRAS_CB = :CODIGO_BARRAS_CB,'
-      '  TIPO_CODIGO_CB = COALESCE(NULLIF(:TIPO_CODIGO_CB, ''''), ''EAN13''),'
-      '  ESPRINCIPAL_CB = COALESCE(NULLIF(:ESPRINCIPAL_CB, ''''), ''N''),'
+      
+        '  TIPO_CODIGO_CB = COALESCE(NULLIF(:TIPO_CODIGO_CB, '#39#39'), '#39'EAN13'#39 +
+        '),'
+      '  ESPRINCIPAL_CB = COALESCE(NULLIF(:ESPRINCIPAL_CB, '#39#39'), '#39'N'#39'),'
       '  USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE ID_CB = :Old_ID_CB')
     SQLLock.Strings = (
@@ -597,8 +596,6 @@ inherited dmArticulos: TdmArticulos
       'WHERE ID_CB = :ID_CB')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM vi_articulos_skus_extendida')
-    BeforePost = unqryVariacionesArticulosBeforePost
-    BeforeDelete = unqryVariacionesArticulosBeforeDelete
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
@@ -607,6 +604,8 @@ inherited dmArticulos: TdmArticulos
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
     Active = True
+    BeforePost = unqryVariacionesArticulosBeforePost
+    BeforeDelete = unqryVariacionesArticulosBeforeDelete
     Left = 144
     Top = 216
     ParamData = <
@@ -614,7 +613,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'BOLSO-PIEL'
+        Value = 'SRV-ENVIO'
       end>
   end
   object dsVariacionesArticulos: TDataSource
@@ -625,12 +624,14 @@ inherited dmArticulos: TdmArticulos
   object unqrySkus: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_skus'
-      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,'
+      
+        '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_S' +
+        'KU,'
       '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       '  (:CODIGO_UNIDAD_SKU, :CODIGO_ART_SKU,'
-      '   COALESCE(NULLIF(:CODIGO_VAR_SKU, ''''), ''TC''),'
-      '   COALESCE(NULLIF(:ESACTIVO_SKU, ''''), ''S''),'
+      '   COALESCE(NULLIF(:CODIGO_VAR_SKU, '#39#39'), '#39'TC'#39'),'
+      '   COALESCE(NULLIF(:ESACTIVO_SKU, '#39#39'), '#39'S'#39'),'
       '   CURRENT_TIMESTAMP, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_skus'
@@ -648,7 +649,6 @@ inherited dmArticulos: TdmArticulos
     SQLRefresh.Strings = (
       'SELECT * FROM fza_articulos_skus'
       'WHERE CODIGO_UNIDAD_SKU = :CODIGO_UNIDAD_SKU')
-    BeforePost = unqrySkusBeforePost
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
@@ -657,6 +657,7 @@ inherited dmArticulos: TdmArticulos
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
     Active = True
+    BeforePost = unqrySkusBeforePost
     Left = 232
     Top = 296
     ParamData = <
@@ -664,6 +665,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
+        Value = 'SRV-ENVIO'
       end>
   end
   object dsSkus: TDataSource
@@ -710,7 +712,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'BOLSO-PIEL'
+        Value = 'SRV-ENVIO'
       end>
   end
   object dsMovimientosArticulos: TDataSource
