@@ -1007,7 +1007,7 @@ const
 var
   qrySkus, qryInsert, qryDel: TUniQuery;
   CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB: string;
-  iGenerados, iSaltados, iLimpiados: Integer;
+  iGenerados, iVacios, iSaltados, iLimpiados: Integer;
 begin
   inherited;
   // 1) Asegurar que el artículo está guardado
@@ -1028,6 +1028,7 @@ begin
   qryInsert := TUniQuery.Create(nil);
   qryDel    := TUniQuery.Create(nil);
   iGenerados := 0;
+  iVacios    := 0;
   iSaltados  := 0;
   iLimpiados := 0;
   try
@@ -1057,13 +1058,13 @@ begin
     //    y luego los huecos para los códigos de fabricante.
     qrySkus.SQL.Text :=
       'SELECT sku.CODIGO_UNIDAD_SKU, '                                 +
-      '       EXISTS (SELECT 1 FROM fza_codigos_barras p '             +
-      '                WHERE p.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU ' +
-      '                  AND p.ESPRINCIPAL_CB = ''S'') AS HAS_PRIN, '  +
-      '       EXISTS (SELECT 1 FROM fza_codigos_barras v '             +
-      '                WHERE v.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU ' +
-      '                  AND COALESCE(v.CODIGO_BARRAS_CB, '''') = '''') ' +
-      '              AS HAS_EMPTY '                                    +
+      '       (SELECT COUNT(*) FROM fza_codigos_barras p '             +
+      '         WHERE p.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU '     +
+      '           AND p.ESPRINCIPAL_CB = ''S'') AS NUM_PRIN, '         +
+      '       (SELECT COUNT(*) FROM fza_codigos_barras v '             +
+      '         WHERE v.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU '     +
+      '           AND COALESCE(v.CODIGO_BARRAS_CB, '''') = '''') '     +
+      '              AS NUM_EMPTY '                                    +
       '  FROM fza_articulos_skus sku '                                 +
       ' WHERE sku.CODIGO_ART_SKU = :ART '                              +
       '   AND sku.ESACTIVO_SKU = ''S''';
@@ -1103,7 +1104,7 @@ begin
       begin
         sSku := qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString;
 
-        if not qrySkus.FieldByName('HAS_PRIN').AsBoolean then
+        if qrySkus.FieldByName('NUM_PRIN').AsInteger = 0 then
         begin
           // Fase A: principal con contador EAN-13
           sCounter := ObtenerSiguienteContador(CB_TIPO_DOC);
@@ -1129,7 +1130,7 @@ begin
           qryInsert.ExecSQL;
           Inc(iGenerados);
         end
-        else if not qrySkus.FieldByName('HAS_EMPTY').AsBoolean then
+        else if qrySkus.FieldByName('NUM_EMPTY').AsInteger = 0 then
         begin
           // Fase B: fila vacía para el código del fabricante
           qryInsert.SQL.Text :=
