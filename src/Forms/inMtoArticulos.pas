@@ -183,15 +183,12 @@ type
     tvSkusSTOCK_TOTAL: TcxGridDBColumn;
     cxButton1: TcxButton;
     cxButton5: TcxButton;
-    cxGrid5: TcxGrid;
+    cxGrdStock: TcxGrid;
     tvStock: TcxGridDBTableView;
     cxGridLevel4: TcxGridLevel;
     Panel2: TPanel;
-    cxButton6: TcxButton;
+    btStockExportarExcel: TcxButton;
     cxButton7: TcxButton;
-    cxButton8: TcxButton;
-    cxButton9: TcxButton;
-    cxButton10: TcxButton;
     cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
     cxGridLevel5: TcxGridLevel;
@@ -279,6 +276,7 @@ type
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
     procedure cxButton11Click(Sender: TObject);
+    procedure btStockExportarExcelClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -862,6 +860,13 @@ begin
   pcPantalla.Properties.ActivePage := tsFicha;
   tsFicha.SetFocus;
   txtDESCRIPCION_ARTICULO.SetFocus;
+end;
+
+procedure TfrmMtoArticulos.btStockExportarExcelClick(Sender: TObject);
+begin
+  inherited;
+  ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
+                dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoArticulos.IncorporarTarifas;
