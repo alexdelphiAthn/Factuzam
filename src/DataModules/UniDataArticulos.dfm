@@ -565,6 +565,15 @@ inherited dmArticulos: TdmArticulos
     Top = 264
   end
   object unqryVariacionesArticulos: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_codigos_barras'
+      '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB,'
+      '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
+      'VALUES'
+      '  (:CODIGO_BARRAS_CB, :CODIGO_UNIDAD_SKU,'
+      '   COALESCE(NULLIF(:TIPO_CODIGO_CB, ''''), ''EAN13''),'
+      '   COALESCE(NULLIF(:ESPRINCIPAL_CB, ''''), ''N''),'
+      '   CURRENT_TIMESTAMP, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_codigos_barras'
       'WHERE ID_CB = :Old_ID_CB')
@@ -572,6 +581,8 @@ inherited dmArticulos: TdmArticulos
       'UPDATE fza_codigos_barras'
       'SET'
       '  CODIGO_BARRAS_CB = :CODIGO_BARRAS_CB,'
+      '  TIPO_CODIGO_CB = COALESCE(NULLIF(:TIPO_CODIGO_CB, ''''), ''EAN13''),'
+      '  ESPRINCIPAL_CB = COALESCE(NULLIF(:ESPRINCIPAL_CB, ''''), ''N''),'
       '  USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE ID_CB = :Old_ID_CB')
     SQLLock.Strings = (
@@ -580,7 +591,7 @@ inherited dmArticulos: TdmArticulos
       'FOR UPDATE')
     SQLRefresh.Strings = (
       'SELECT * FROM vi_articulos_skus_extendida'
-      'WHERE CODIGO_UNIDAD_SKU = :CODIGO_UNIDAD_SKU')
+      'WHERE ID_CB = :ID_CB')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM vi_articulos_skus_extendida')
     BeforePost = unqryVariacionesArticulosBeforePost
