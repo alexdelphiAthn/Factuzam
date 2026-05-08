@@ -892,6 +892,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
     Top = 288
     object actIraArticulo: TAction
       Caption = 'actIraArticulo'
+      ShortCut = 16449
       OnExecute = actIraArticuloExecute
     end
   end
