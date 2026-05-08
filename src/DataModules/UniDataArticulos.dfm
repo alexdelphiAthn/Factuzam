@@ -166,58 +166,40 @@ inherited dmArticulos: TdmArticulos
   object unqryProveedoresArticulos: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_proveedores'
-      
-        '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_ULT_CO' +
-        'MPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE_MOD' +
-        'IF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR_AP)'
+      '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP,'
+      '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP,'
+      '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
-      
-        '  (:CODIGO_PRV_AP, :CODIGO_ART_AP, :REF_PROVEEDOR_AP, :PRECIO_UL' +
-        'T_COMPRA_AP, :FECHA_VALIDEZ_AP, :ESPROVEEDORPRINCIPAL_AP, :INSTA' +
-        'NTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF, :REFPR' +
-        'OVEEDOR_AP)')
+      '  (:CODIGO_PRV_PRV, :CODIGO_ART_ART, :REF_PROVEEDOR,'
+      '   :PRECIO_ULT_COMPRA, :FECHA_VALIDEZ, :ESPROVEEDORPRINCIPAL,'
+      '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_proveedores'
-      'WHERE'
-      
-        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
-        'DIGO_ART_AP')
+      'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
+      '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
     SQLUpdate.Strings = (
-      'UPDATE fza_articulos_proveedores'
-      'SET'
-      
-        '  CODIGO_PRV_AP = :CODIGO_PRV_AP, CODIGO_ART_AP = :CODIGO_ART_AP' +
-        ', REF_PROVEEDOR_AP = :REF_PROVEEDOR_AP, PRECIO_ULT_COMPRA_AP = :' +
-        'PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP = :FECHA_VALIDEZ_AP, ESPR' +
-        'OVEEDORPRINCIPAL_AP = :ESPROVEEDORPRINCIPAL_AP, INSTANTE_MODIF =' +
-        ' :INSTANTE_MODIF, INSTANTE_ALTA = :INSTANTE_ALTA, USUARIO_ALTA =' +
-        ' :USUARIO_ALTA, USUARIO_MODIF = :USUARIO_MODIF, REFPROVEEDOR_AP ' +
-        '= :REFPROVEEDOR_AP'
-      'WHERE'
-      
-        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
-        'DIGO_ART_AP')
+      'UPDATE fza_articulos_proveedores SET'
+      '  CODIGO_PRV_AP           = :CODIGO_PRV_PRV,'
+      '  CODIGO_ART_AP           = :CODIGO_ART_ART,'
+      '  REF_PROVEEDOR_AP        = :REF_PROVEEDOR,'
+      '  PRECIO_ULT_COMPRA_AP    = :PRECIO_ULT_COMPRA,'
+      '  FECHA_VALIDEZ_AP        = :FECHA_VALIDEZ,'
+      '  ESPROVEEDORPRINCIPAL_AP = :ESPROVEEDORPRINCIPAL,'
+      '  INSTANTE_MODIF          = :INSTANTE_MODIF,'
+      '  INSTANTE_ALTA           = :INSTANTE_ALTA,'
+      '  USUARIO_ALTA            = :USUARIO_ALTA,'
+      '  USUARIO_MODIF           = :USUARIO_MODIF'
+      'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
+      '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
     SQLLock.Strings = (
-      
-        'SELECT CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_UL' +
-        'T_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE' +
-        '_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR' +
-        '_AP FROM fza_articulos_proveedores'
-      'WHERE'
-      
-        '  CODIGO_PRV_AP = :Old_CODIGO_PRV_AP AND CODIGO_ART_AP = :Old_CO' +
-        'DIGO_ART_AP'
+      'SELECT * FROM fza_articulos_proveedores'
+      'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
+      '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      
-        'SELECT CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, PRECIO_UL' +
-        'T_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, INSTANTE' +
-        '_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF, REFPROVEEDOR' +
-        '_AP FROM fza_articulos_proveedores'
-      'WHERE'
-      
-        '  CODIGO_PRV_AP = :CODIGO_PRV_AP AND CODIGO_ART_AP = :CODIGO_ART' +
-        '_AP')
+      'SELECT * FROM vi_articulos_proveedores'
+      'WHERE CODIGO_PRV_PRV = :CODIGO_PRV_PRV'
+      '  AND CODIGO_ART_ART = :CODIGO_ART_ART')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_articulos_proveedores')
     Connection = dmConn.conUni
