@@ -1105,6 +1105,7 @@ begin
     end;
 
     dmmArticulos.unqryVariacionesArticulos.Refresh;
+    ActualizarVisibilidadVariaciones;
     ShowMessage(Format('Generación finalizada.'                       + sLineBreak +
                        '- Filas vacías nuevas: %d'                     + sLineBreak +
                        '- SKUs que ya tenían fila vacía: %d'           + sLineBreak +
