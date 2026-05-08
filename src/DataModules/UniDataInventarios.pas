@@ -13,7 +13,7 @@ interface
 uses
   System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
   Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
-  UniDataGen;
+  UniDataGen, vcl.Controls;
 
 type
   TdmInventarios = class(TdmBase)                    // Cabecera (heredado de TdmBase)
