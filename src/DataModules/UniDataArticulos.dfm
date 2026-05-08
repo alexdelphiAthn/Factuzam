@@ -165,39 +165,23 @@ inherited dmArticulos: TdmArticulos
   end
   object unqryProveedoresArticulos: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO `fza_articulos_proveedores`'
-      '      (`CODIGO_PRV_AP`, '
-      '       `CODIGO_ART_AP`, '
-      '       `REF_PROVEEDOR_AP`, '
-      '       `PRECIO_ULT_COMPRA_AP`, '
-      '       `FECHA_VALIDEZ_AP`, '
-      '       `ESPROVEEDORPRINCIPAL_AP`,'
-      '       `INSTANTE_MODIF`, '
-      '       `INSTANTE_ALTA`, '
-      '       `USUARIO_ALTA`, '
-      '       `USUARIO_MODIF`)'
+      'INSERT INTO fza_articulos_proveedores'
+      '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP,'
+      '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP,'
+      '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
-      '      (:`CODIGO_PRV_PRV`, '
-      '       :`CODIGO_ART_ART`, '
-      '       :`REF_PROVEEDOR_AP`, '
-      '       :`PRECIO_ULT_COMPRA`, '
-      '       :`FECHA_VALIDEZ`, '
-      '       :`ESPROVEEDORPRINCIPAL`,'
-      '       :`INSTANTE_MODIF`, '
-      '       :`INSTANTE_ALTA`, '
-      '       :`USUARIO_ALTA`, '
-      '       :`USUARIO_MODIF`)')
+      '  (:CODIGO_PRV_PRV, :CODIGO_ART_ART, :REF_PROVEEDOR,'
+      '   :PRECIO_ULT_COMPRA, :FECHA_VALIDEZ, :ESPROVEEDORPRINCIPAL,'
+      '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_proveedores'
-      'WHERE'
-      '  CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
+      'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
       '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
     SQLUpdate.Strings = (
-      'UPDATE fza_articulos_proveedores'
-      'SET'
+      'UPDATE fza_articulos_proveedores SET'
       '  CODIGO_PRV_AP           = :CODIGO_PRV_PRV,'
       '  CODIGO_ART_AP           = :CODIGO_ART_ART,'
-      '  REF_PROVEEDOR_AP        = :REF_PROVEEDOR_AP,'
+      '  REF_PROVEEDOR_AP        = :REF_PROVEEDOR,'
       '  PRECIO_ULT_COMPRA_AP    = :PRECIO_ULT_COMPRA,'
       '  FECHA_VALIDEZ_AP        = :FECHA_VALIDEZ,'
       '  ESPROVEEDORPRINCIPAL_AP = :ESPROVEEDORPRINCIPAL,'
@@ -205,8 +189,7 @@ inherited dmArticulos: TdmArticulos
       '  INSTANTE_ALTA           = :INSTANTE_ALTA,'
       '  USUARIO_ALTA            = :USUARIO_ALTA,'
       '  USUARIO_MODIF           = :USUARIO_MODIF'
-      'WHERE'
-      '  CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
+      'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
       '  AND CODIGO_ART_AP = :Old_CODIGO_ART_ART')
     SQLLock.Strings = (
       'SELECT *'
