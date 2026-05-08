@@ -162,10 +162,19 @@ type
     cxDBComboBox1: TcxDBComboBox;
     tvProveedoresColumn1: TcxGridDBColumn;
     cxDBCheckBox1: TcxDBCheckBox;
+    tsSkuMto: TcxTabSheet;
+    pnlSkuMto: TPanel;
+    addSkuAll: TcxButton;
+    cxgrdSkuMto: TcxGrid;
+    tvSkuMto: TcxGridDBTableView;
+    tvSkuMtoCODIGO_UNIDAD_SKU: TcxGridDBColumn;
+    tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn;
+    tvSkuMtoESACTIVO_SKU: TcxGridDBColumn;
+    tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn;
+    cxgrdSkuMtoLevel: TcxGridLevel;
     tsSKUs: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
-    addSkuAll: TcxButton;
     cxGrid2: TcxGrid;
     tvSkus: TcxGridDBTableView;
     tvSkusCODIGO_UNIDAD_SKU: TcxGridDBColumn;
@@ -353,11 +362,12 @@ begin
   end;
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
-  // La pestaña "SKUs y CB" siempre visible: cuando el artículo no tiene
-  // variaciones se presenta una única fila con SKU = código del artículo
-  // (gestionada por AsegurarSkuArticuloSinVariaciones).
+  // Pestaña "Códigos de Barras" siempre visible (incluso para artículos
+  // sin variaciones, con un único SKU = código del artículo).
   tsSKUS.TabVisible  := True;
-  // Sólo tiene sentido la generación masiva de SKUs si hay variaciones
+  // Pestaña dedicada a SKUs sólo si el artículo usa variaciones.
+  tsSkuMto.TabVisible := HayVars;
+  // Generación masiva de SKUs únicamente con variaciones.
   addSkuAll.Visible  := HayVars;
   // Stock y movimientos sólo aplican a artículos físicos (ESTANDAR)
   tvSkusSTOCK_TOTAL.Visible := EsEstandar;
@@ -432,14 +442,12 @@ begin
   // 4. Llamamos a nuestra pantalla mágica
   if TfrmMtoModalGenerarSKUs.Ejecutar(CodArticulo, TipoVariacion) then
   begin
-    // Si la pantalla devuelve True (es decir, el usuario le dio a "Generar" y se guardaron los SKUs),
-    // refrescamos el dataset que alimenta el Grid de SKUs para que aparezcan al instante.
-
-    // Asumiendo que el nombre de tu query es este según tu nomenclatura:
-//    dmmArticulos.unqryVariacionesArticulos.Close;
-//    dmmArticulos.unqryVariacionesArticulos.Open;
+    // Si la pantalla devuelve True, refrescamos los datasets afectados.
   end;
-  dmmArticulos.unqryVariacionesArticulos.Refresh;
+  dmmArticulos.unqrySkus.Close;
+  dmmArticulos.unqrySkus.Open;
+  dmmArticulos.unqryVariacionesArticulos.Close;
+  dmmArticulos.unqryVariacionesArticulos.Open;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -922,6 +930,11 @@ begin
        (dmmArticulos.unqryVariacionesArticulos.State = dsEdit)) then
   begin
     dmmArticulos.unqryVariacionesArticulos.Post;
+  end;
+  if ( (dmmArticulos.unqrySkus.State = dsInsert) or
+       (dmmArticulos.unqrySkus.State = dsEdit)) then
+  begin
+    dmmArticulos.unqrySkus.Post;
   end;
   if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
        (dmmArticulos.unqryTablaG.State = dsEdit)) then
@@ -1512,6 +1525,7 @@ begin
   // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
   // para que la rejilla SKUs y CB tenga al menos una fila editable
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
+  dmmArticulos.unqrySkus.Refresh;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
 end;
