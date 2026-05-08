@@ -999,13 +999,10 @@ const
   CB_PREFIJO     = '21';
   CB_NUM_DIGITOS = 10;
   CB_TIPO_INT    = 'EAN13';
-  CB_TIPO_FAB    = 'EAN13';
-  CB_PLACEHOLDER = '_FAB_';
 var
-  qrySinCB, qryConCB, qryInsert: TUniQuery;
-  CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB, sPlaceholder: string;
-  iSinCB, iConCB, iGen, iFab, iFabExist: Integer;
-  bIntentoFab: Boolean;
+  qrySinCB, qryInsert, qryDel: TUniQuery;
+  CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB: string;
+  iSinCB, iGen, iLimpiados: Integer;
 begin
   inherited;
   // 1) Asegurar que el artículo está guardado
@@ -1022,19 +1019,30 @@ begin
   // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
 
-  qrySinCB := TUniQuery.Create(nil);
-  qryConCB := TUniQuery.Create(nil);
+  qrySinCB  := TUniQuery.Create(nil);
   qryInsert := TUniQuery.Create(nil);
+  qryDel    := TUniQuery.Create(nil);
   iGen := 0;
-  iFabExist := 0;
-  bIntentoFab := False;
-  iFab := 0;
+  iLimpiados := 0;
   try
-    qrySinCB.Connection := oConn;
-    qryConCB.Connection := oConn;
+    qrySinCB.Connection  := oConn;
     qryInsert.Connection := oConn;
+    qryDel.Connection    := oConn;
 
-    // 2) SKUs activos del artículo SIN ningún código de barras
+    // 2) Limpieza: borrar cualquier placeholder _FAB_ residual de versiones
+    //    anteriores. El CB del fabricante queda vacío y se rellena
+    //    manualmente desde la rejilla cuando el usuario lo conozca.
+    qryDel.SQL.Text :=
+      'DELETE cb FROM fza_codigos_barras cb '                          +
+      '  JOIN fza_articulos_skus sku '                                 +
+      '    ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB '            +
+      ' WHERE sku.CODIGO_ART_SKU = :ART '                              +
+      '   AND LEFT(cb.CODIGO_BARRAS_CB, 5) = ''_FAB_''';
+    qryDel.ParamByName('ART').AsString := CodArticulo;
+    qryDel.ExecSQL;
+    iLimpiados := qryDel.RowsAffected;
+
+    // 3) SKUs activos del artículo SIN ningún código de barras
     qrySinCB.SQL.Text :=
       'SELECT sku.CODIGO_UNIDAD_SKU '                                 +
       '  FROM fza_articulos_skus sku '                                +
@@ -1046,13 +1054,17 @@ begin
     qrySinCB.Open;
     iSinCB := qrySinCB.RecordCount;
 
-    // 3) Preguntar si desea generar EAN13 interno para los SKU sin CB
+    // 4) Preguntar si desea generar EAN-13 interno para los SKU sin CB
     if iSinCB > 0 then
     begin
       if MessageDlg(
-           Format('Hay %d SKU(s) sin código de barras. ' + sLineBreak +
-                  '¿Desea generar un código interno EAN-13 (prefijo "%s") ' +
-                  'para todos ellos?', [iSinCB, CB_PREFIJO]),
+           Format('Hay %d SKU(s) sin código de barras.' + sLineBreak +
+                  '¿Desea generar un código EAN-13 interno (prefijo "%s") ' +
+                  'para todos ellos?'                   + sLineBreak +
+                  sLineBreak +
+                  'El código de barras del fabricante se deja vacío y se ' +
+                  'rellena manualmente desde la pestaña CB.',
+                  [iSinCB, CB_PREFIJO]),
            mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         Screen.Cursor := crHourGlass;
@@ -1069,7 +1081,6 @@ begin
             sSku := qrySinCB.FieldByName('CODIGO_UNIDAD_SKU').AsString;
             // contador común (empresa '-'), padding CB_NUM_DIGITOS dígitos
             sCounter := ObtenerSiguienteContador(CB_TIPO_DOC);
-            // Saneamos: aseguramos longitud y solo dígitos
             if Length(sCounter) > CB_NUM_DIGITOS then
               sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
                                CB_NUM_DIGITOS)
@@ -1092,87 +1103,27 @@ begin
         end;
       end;
     end
-    else
+    else if iLimpiados = 0 then
       ShowMessage('Todos los SKU del artículo ya tienen al menos un código ' +
                   'de barras.');
     qrySinCB.Close;
 
-    // 4) SKUs activos que YA tienen al menos un CB (incluye los recién creados)
-    qryConCB.SQL.Text :=
-      'SELECT sku.CODIGO_UNIDAD_SKU '                                 +
-      '  FROM fza_articulos_skus sku '                                +
-      ' WHERE sku.CODIGO_ART_SKU = :CODIGO_ART_ART '                  +
-      '   AND sku.ESACTIVO_SKU = ''S'' '                              +
-      '   AND EXISTS (SELECT 1 FROM fza_codigos_barras cb '           +
-      '                WHERE cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU)';
-    qryConCB.ParamByName('CODIGO_ART_ART').AsString := CodArticulo;
-    qryConCB.Open;
-    iConCB := qryConCB.RecordCount;
-
-    // 5) Preguntar si desea añadir un CB del fabricante (placeholder por SKU)
-    if iConCB > 0 then
-    begin
-      if MessageDlg(
-           Format('¿Desea añadir además un código de barras del fabricante ' +
-                  '(vacío) por SKU para rellenarlo manualmente? ' + sLineBreak +
-                  'Se crearán %d registros marcados como pendientes.',
-                  [iConCB]),
-           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      begin
-        Screen.Cursor := crHourGlass;
-        bIntentoFab := True;
-        try
-          // INSERT IGNORE: si el placeholder ya existe (colisión PK) se
-          // ignora silenciosamente; los errores reales siguen propagándose.
-          qryInsert.SQL.Text :=
-            'INSERT IGNORE INTO fza_codigos_barras '                   +
-            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-            'VALUES (:CB, :SKU, :TIPO, ''N'', CURRENT_TIMESTAMP, :USR, :USR)';
-
-          qryConCB.First;
-          while not qryConCB.Eof do
-          begin
-            sSku := qryConCB.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-            // Placeholder único por SKU (se edita luego en la rejilla)
-            sPlaceholder := CB_PLACEHOLDER + sSku;
-            if Length(sPlaceholder) > 50 then
-              sPlaceholder := Copy(sPlaceholder, 1, 50);
-
-            qryInsert.ParamByName('CB').AsString   := sPlaceholder;
-            qryInsert.ParamByName('SKU').AsString  := sSku;
-            qryInsert.ParamByName('TIPO').AsString := CB_TIPO_FAB;
-            qryInsert.ParamByName('USR').AsString  := oUser;
-            qryInsert.ExecSQL;
-            // Solo contamos los inserts efectivos. INSERT IGNORE devuelve
-            // RowsAffected=0 si ya existía la PK.
-            if qryInsert.RowsAffected > 0 then
-              Inc(iFab)
-            else
-              Inc(iFabExist);
-            qryConCB.Next;
-          end;
-        finally
-          Screen.Cursor := crDefault;
-        end;
-      end;
-    end;
-    qryConCB.Close;
-
-    // Refrescamos y reportamos siempre que el usuario haya pedido alguna acción
-    if (iGen > 0) or bIntentoFab then
+    // 5) Refrescar y reportar
+    if (iGen > 0) or (iLimpiados > 0) then
     begin
       dmmArticulos.unqryVariacionesArticulos.Refresh;
-      ShowMessage(Format('Generación finalizada.'                  + sLineBreak +
-                         '- Códigos internos EAN-13 creados: %d'    + sLineBreak +
-                         '- Placeholders de fabricante creados: %d' + sLineBreak +
-                         '- Placeholders de fabricante ya existentes: %d',
-                         [iGen, iFab, iFabExist]));
+      ShowMessage(Format('Acción finalizada.'                          + sLineBreak +
+                         '- EAN-13 internos creados: %d'                + sLineBreak +
+                         '- Placeholders _FAB_ obsoletos eliminados: %d'+ sLineBreak +
+                         sLineBreak +
+                         'El código de barras del fabricante queda vacío ' +
+                         'hasta que lo rellene manualmente en la pestaña CB.',
+                         [iGen, iLimpiados]));
     end;
   finally
     FreeAndNil(qryInsert);
-    FreeAndNil(qryConCB);
     FreeAndNil(qrySinCB);
+    FreeAndNil(qryDel);
   end;
 end;
 

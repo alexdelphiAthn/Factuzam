@@ -565,55 +565,25 @@ inherited dmArticulos: TdmArticulos
     Top = 264
   end
   object unqryVariacionesArticulos: TUniQuery
-    SQLInsert.Strings = (
-      'INSERT INTO fza_articulos_variaciones_def'
-      
-        '  (CODIGO_VARIACION_VARIACION, CODIGO_VARIACION, CODIGO_ARTICULO' +
-        '_VARIACION, CODIGO_COLUMNA_VARIACION, CODIGO_UNIDAD_VARIACION, C' +
-        'ODIGO_UNICO_UNIDAD_VARIACION, VALOR_VARIACION, VALOR2_VARIACION,' +
-        ' INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
-      'VALUES'
-      
-        '  (:CODIGO_VARIACION_VARIACION, :CODIGO_VARIACION, :CODIGO_ARTIC' +
-        'ULO_VARIACION, :CODIGO_COLUMNA_VARIACION, :CODIGO_UNIDAD_VARIACI' +
-        'ON, :CODIGO_UNICO_UNIDAD_VARIACION, :VALOR_VARIACION, :VALOR2_VA' +
-        'RIACION, :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARI' +
-        'O_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM fza_articulos_variaciones_def'
-      'WHERE'
-      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION')
+      'DELETE FROM fza_codigos_barras'
+      'WHERE ID_CB = :Old_ID_CB')
     SQLUpdate.Strings = (
-      'UPDATE fza_articulos_variaciones_def'
+      'UPDATE fza_codigos_barras'
       'SET'
-      
-        '  CODIGO_VARIACION_VARIACION = :CODIGO_VARIACION_VARIACION, CODI' +
-        'GO_VARIACION = :CODIGO_VARIACION, CODIGO_ARTICULO_VARIACION = :C' +
-        'ODIGO_ARTICULO_VARIACION, CODIGO_COLUMNA_VARIACION = :CODIGO_COL' +
-        'UMNA_VARIACION, CODIGO_UNIDAD_VARIACION = :CODIGO_UNIDAD_VARIACI' +
-        'ON, CODIGO_UNICO_UNIDAD_VARIACION = :CODIGO_UNICO_UNIDAD_VARIACI' +
-        'ON, VALOR_VARIACION = :VALOR_VARIACION, VALOR2_VARIACION = :VALO' +
-        'R2_VARIACION, INSTANTE_MODIF = :INSTANTE_MODIF, INSTANTE_ALTA = ' +
-        ':INSTANTE_ALTA, USUARIO_ALTA = :USUARIO_ALTA, USUARIO_MODIF = :U' +
-        'SUARIO_MODIF'
-      'WHERE'
-      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION')
+      '  CODIGO_BARRAS_CB = :CODIGO_BARRAS_CB,'
+      '  USUARIO_MODIF = :USUARIO_MODIF'
+      'WHERE ID_CB = :Old_ID_CB')
     SQLLock.Strings = (
-      'SELECT * FROM fza_articulos_variaciones_def'
-      'WHERE'
-      '  CODIGO_UNIDAD_VARIACION = :Old_CODIGO_UNIDAD_VARIACION'
+      'SELECT * FROM fza_codigos_barras'
+      'WHERE ID_CB = :Old_ID_CB'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      
-        'SELECT CODIGO_VARIACION_VARIACION, CODIGO_VARIACION, CODIGO_ARTI' +
-        'CULO_VARIACION, CODIGO_COLUMNA_VARIACION, CODIGO_UNIDAD_VARIACIO' +
-        'N, CODIGO_UNICO_UNIDAD_VARIACION, VALOR_VARIACION, VALOR2_VARIAC' +
-        'ION, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF ' +
-        'FROM fza_articulos_variaciones_def'
-      'WHERE'
-      '  CODIGO_UNIDAD_VARIACION = :CODIGO_UNIDAD_VARIACION')
+      'SELECT * FROM vi_articulos_skus_extendida'
+      'WHERE CODIGO_UNIDAD_SKU = :CODIGO_UNIDAD_SKU')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM fza_articulos_variaciones_def')
+      'SELECT COUNT(*) FROM vi_articulos_skus_extendida')
+    BeforePost = unqryVariacionesArticulosBeforePost
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
