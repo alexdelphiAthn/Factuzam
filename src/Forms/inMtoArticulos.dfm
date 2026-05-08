@@ -208,7 +208,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet3
+            Properties.ActivePage = tsSKUs
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -316,7 +316,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               ImageIndex = 9
             end
             object tsSKUs: TcxTabSheet
-              Caption = '&4_SKUS'
+              Caption = '&4_SKUS y CB'
               ImageIndex = 6
               object Panel1: TPanel
                 Left = 948
@@ -327,7 +327,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 TabOrder = 0
                 object cxButton2: TcxButton
                   Left = 0
-                  Top = 165
+                  Top = 141
                   Width = 116
                   Height = 34
                   Caption = '&Exp Excel'
@@ -483,7 +483,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 953
+                Width = 936
                 Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
@@ -491,6 +491,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
+                ExplicitWidth = 953
                 object tvTarifas: TcxGridDBBandedTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -809,9 +810,9 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts2: TPanel
-                Left = 953
+                Left = 936
                 Top = 0
-                Width = 116
+                Width = 133
                 Height = 425
                 Align = alRight
                 BevelOuter = bvNone
@@ -819,38 +820,28 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object btnIraTarifa: TcxButton
                   Left = 3
                   Top = 16
-                  Width = 105
+                  Width = 124
                   Height = 34
                   Caption = 'Ir a &Tarifa'
                   TabOrder = 0
                   OnClick = btnIraTarifaClick
                 end
-                object btnCrearTarifa: TcxButton
-                  Left = 7
-                  Top = 200
-                  Width = 104
-                  Height = 34
-                  Caption = 'C&rear Tarifa'
-                  TabOrder = 1
-                  Visible = False
-                  OnClick = btnCrearTarifaClick
-                end
                 object btnExportarTarifa: TcxButton
                   Left = 4
                   Top = 113
-                  Width = 105
+                  Width = 123
                   Height = 34
                   Caption = '&Exp Excel'
-                  TabOrder = 2
+                  TabOrder = 1
                   OnClick = btnExportarTarifaClick
                 end
                 object btnAddSKU: TcxButton
                   Left = 4
                   Top = 65
-                  Width = 104
+                  Width = 123
                   Height = 34
-                  Caption = 'A&'#241'adir SKU'
-                  TabOrder = 3
+                  Caption = 'A&'#241'adir precio'
+                  TabOrder = 2
                   OnClick = btnAddSKUClick
                 end
               end
