@@ -4,9 +4,10 @@
 -- 1) Limpia placeholders obsoletos `_FAB_xxx` de fza_codigos_barras.
 -- 2) Convierte la PK de fza_codigos_barras en autonumérica (ID_CB) para
 --    eliminar las colisiones por CODIGO_BARRAS_CB y permitir múltiples
---    códigos por SKU sin restricciones artificiales.
--- 3) Reconstruye vi_articulos_skus_extendida para exponer ID_CB y elegir
---    el código representativo (principal > menor ID).
+--    códigos por SKU (interno, fabricante, rebajas, original, etc.).
+-- 3) Reconstruye vi_articulos_skus_extendida con una fila por (SKU, CB):
+--    los SKUs sin código de barras siguen apareciendo (LEFT JOIN) con
+--    ID_CB nulo, listos para que el usuario rellene su CB.
 -- ----------------------------------------------------------------------------
 -- Idempotente: se puede ejecutar dos veces sin romper nada.
 -- ============================================================================
@@ -17,7 +18,8 @@ DELETE FROM fza_codigos_barras
  WHERE LEFT(CODIGO_BARRAS_CB, 5) = '_FAB_';
 
 -- 2) Añadimos ID_CB autonumérico como nueva PK. CODIGO_BARRAS_CB pasa a ser
---    columna normal con índice no único.
+--    columna normal con índice no único (un SKU puede tener varios CB y
+--    varios SKU pueden compartir el mismo CB del fabricante).
 SET @has_id := (
   SELECT COUNT(*)
     FROM information_schema.columns
@@ -45,9 +47,9 @@ SET @sql := IF(@has_idx = 0,
   'SELECT ''IDX_BARRAS_CB ya existe, se omite'' AS info');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- 3) Reconstruimos la vista para que la rejilla de la pestaña CB pueda
---    usar ID_CB como clave de UPDATE/DELETE y muestre el barcode principal
---    de cada SKU (en su defecto, el de menor ID).
+-- 3) Reconstruimos la vista. Una fila por cada (SKU, CB) y los SKUs sin
+--    códigos siguen apareciendo (LEFT JOIN) con ID_CB e CODIGO_BARRAS_CB
+--    nulos, lo que permite usar la rejilla para añadirles uno.
 DROP VIEW IF EXISTS vi_articulos_skus_extendida;
 CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_skus_extendida AS
 SELECT
@@ -66,13 +68,7 @@ SELECT
   sku.USUARIO_MODIF
 FROM fza_articulos_skus sku
 LEFT JOIN fza_codigos_barras cb
-  ON cb.ID_CB = (
-    SELECT cb2.ID_CB
-      FROM fza_codigos_barras cb2
-     WHERE cb2.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-     ORDER BY (cb2.ESPRINCIPAL_CB = 'S') DESC, cb2.ID_CB ASC
-     LIMIT 1
-  )
+  ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
 LEFT JOIN (
   SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
     FROM fza_articulos_stockactual
