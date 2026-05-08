@@ -604,9 +604,9 @@ end;
 
 procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
 var
-  CodArticulo, CodSku: string;
+  CodArticulo, CodSku, Valor, SkuRebuilt: string;
   Atribs: array[0..4] of string;
-  i: Integer;
+  i, NumAtr: Integer;
 begin
   // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
   // "Field value required" del TClientDataSet.
@@ -622,14 +622,41 @@ begin
     DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
       DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
 
+  CodArticulo := DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+
+  // BACKSTOP: si el artículo tiene atributos requeridos, reconstruimos el SKU
+  // a partir de ATTRn_VALOR aquí mismo. Así, aunque OnAtributoChanged falle
+  // silenciosamente al cambiar Color/Talla, no dejamos pasar al Post (y luego
+  // a PRC_FZA_INVENTARIOS_APLICAR) una línea con CODIGO_UNIDAD_INVLIN igual
+  // al artículo padre, que generaba movimientos huérfanos sin SKU.
+  NumAtr := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+  if NumAtr > 0 then
+  begin
+    SkuRebuilt := CodArticulo;
+    for i := 1 to NumAtr do
+    begin
+      Valor := Trim(DataSet.FieldByName('ATTR' + IntToStr(i) +
+                                                          '_VALOR').AsString);
+      if Valor = '' then
+        raise Exception.CreateFmt(
+          'La línea %s del artículo %s requiere %d atributos y el atributo ' +
+          'nº %d está sin rellenar. Completa todos los selectores ' +
+          '(Color, Talla, …) o elimina la línea.',
+          [DataSet.FieldByName('LINEA_INVLIN').AsString,
+           CodArticulo, NumAtr, i]);
+      SkuRebuilt := SkuRebuilt + '/' + Valor;
+    end;
+    if DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString <> SkuRebuilt then
+      DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := SkuRebuilt;
+  end;
+
   // Validación de SKU: si la línea apunta a un SKU con atributos
   // (CODIGO_UNIDAD_INVLIN ≠ CODIGO_ART_INVLIN) que no existe en
   // fza_articulos_skus, preguntar al usuario si quiere crearlo. Sin esto,
   // PRC_FZA_INVENTARIOS_APLICAR genera movimientos huérfanos sobre un SKU
   // que no existe ni en fza_articulos_skus ni en fza_atributos_sku, y el
   // stock no aparece bien en las pestañas de stock pivotado.
-  CodArticulo := DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
-  CodSku      := DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+  CodSku := DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
   if (CodSku <> CodArticulo) and (not SkuExiste(CodSku)) then
   begin
     if MessageDlg(
