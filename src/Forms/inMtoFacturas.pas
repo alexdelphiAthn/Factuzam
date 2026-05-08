@@ -676,8 +676,7 @@ end;
 procedure TfrmMtoFacturas.actArticuloExecute(Sender: TObject);
 begin
   inherited;
-    if (
-        (pcDetail.ActivePage = tsLineasFactura)) then
+    if ((pcDetail.ActivePage = tsLineasFactura)) then
        btnIraArticuloClick(Sender)
     else
       ShowMto(Self.Owner, 'Articulos');
