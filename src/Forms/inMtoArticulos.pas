@@ -277,6 +277,8 @@ type
     procedure cxButton11Click(Sender: TObject);
     procedure btStockExportarExcelClick(Sender: TObject);
     procedure btReconstruirStockClick(Sender: TObject);
+    procedure btnGenerarCBClick(Sender: TObject);
+    procedure btnVerificarCBClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -320,7 +322,9 @@ uses
   inMtoFacturas,
   inMtoModalArtTar,
   inLibGlobalVar,
-  inMtoModalGenerarSKUs;
+  inMtoModalGenerarSKUs,
+  inLibEAN13,
+  inLibtb;
 
 {$R *.dfm}
 
@@ -903,6 +907,254 @@ begin
   if sMensaje = '' then
     sMensaje := 'Stock reconstruido.';
   ShowMessage(sMensaje);
+end;
+
+procedure TfrmMtoArticulos.btnGenerarCBClick(Sender: TObject);
+const
+  // EAN-13 interno para artículos: prefijo '21' + 10 dígitos contador + control
+  // Tipos de documento reservados para CB internos:
+  //   BA = artículos (prefijo 21), BD = documentos (22),
+  //   BE = empleados (23),         BC = clientes   (24)
+  CB_TIPO_DOC    = 'BA';
+  CB_PREFIJO     = '21';
+  CB_NUM_DIGITOS = 10;
+  CB_TIPO_INT    = 'EAN13';
+  CB_TIPO_FAB    = 'EAN13';
+  CB_PLACEHOLDER = '_FAB_';
+var
+  qrySinCB, qryConCB, qryInsert: TUniQuery;
+  CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB, sPlaceholder: string;
+  iSinCB, iConCB, iGen, iFab: Integer;
+begin
+  inherited;
+  // 1) Asegurar que el artículo está guardado
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
+
+  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  if CodArticulo = '' then
+  begin
+    ShowMessage('Seleccione o guarde un artículo antes de generar códigos de barras.');
+    Exit;
+  end;
+
+  qrySinCB := TUniQuery.Create(nil);
+  qryConCB := TUniQuery.Create(nil);
+  qryInsert := TUniQuery.Create(nil);
+  iGen := 0;
+  iFab := 0;
+  try
+    qrySinCB.Connection := oConn;
+    qryConCB.Connection := oConn;
+    qryInsert.Connection := oConn;
+
+    // 2) SKUs activos del artículo SIN ningún código de barras
+    qrySinCB.SQL.Text :=
+      'SELECT sku.CODIGO_UNIDAD_SKU '                                 +
+      '  FROM fza_articulos_skus sku '                                +
+      ' WHERE sku.CODIGO_ART_SKU = :CODIGO_ART_ART '                  +
+      '   AND sku.ESACTIVO_SKU = ''S'' '                              +
+      '   AND NOT EXISTS (SELECT 1 FROM fza_codigos_barras cb '       +
+      '                    WHERE cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU)';
+    qrySinCB.ParamByName('CODIGO_ART_ART').AsString := CodArticulo;
+    qrySinCB.Open;
+    iSinCB := qrySinCB.RecordCount;
+
+    // 3) Preguntar si desea generar EAN13 interno para los SKU sin CB
+    if iSinCB > 0 then
+    begin
+      if MessageDlg(
+           Format('Hay %d SKU(s) sin código de barras. ' + sLineBreak +
+                  '¿Desea generar un código interno EAN-13 (prefijo "%s") ' +
+                  'para todos ellos?', [iSinCB, CB_PREFIJO]),
+           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          qryInsert.SQL.Text :=
+            'INSERT INTO fza_codigos_barras '                          +
+            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+            'VALUES (:CB, :SKU, :TIPO, ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
+
+          qrySinCB.First;
+          while not qrySinCB.Eof do
+          begin
+            sSku := qrySinCB.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+            // contador común (empresa '-'), padding CB_NUM_DIGITOS dígitos
+            sCounter := ObtenerSiguienteContador(CB_TIPO_DOC);
+            // Saneamos: aseguramos longitud y solo dígitos
+            if Length(sCounter) > CB_NUM_DIGITOS then
+              sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
+                               CB_NUM_DIGITOS)
+            else
+              sCounter := StringOfChar('0', CB_NUM_DIGITOS - Length(sCounter)) +
+                          sCounter;
+            sCodigo12 := CB_PREFIJO + sCounter;            // 12 dígitos
+            sCodigoCB := sCodigo12 + CalcularDigitoEAN13(sCodigo12); // 13 dígitos
+
+            qryInsert.ParamByName('CB').AsString   := sCodigoCB;
+            qryInsert.ParamByName('SKU').AsString  := sSku;
+            qryInsert.ParamByName('TIPO').AsString := CB_TIPO_INT;
+            qryInsert.ParamByName('USR').AsString  := oUser;
+            qryInsert.ExecSQL;
+            Inc(iGen);
+            qrySinCB.Next;
+          end;
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+    end
+    else
+      ShowMessage('Todos los SKU del artículo ya tienen al menos un código ' +
+                  'de barras.');
+    qrySinCB.Close;
+
+    // 4) SKUs activos que YA tienen al menos un CB (incluye los recién creados)
+    qryConCB.SQL.Text :=
+      'SELECT sku.CODIGO_UNIDAD_SKU '                                 +
+      '  FROM fza_articulos_skus sku '                                +
+      ' WHERE sku.CODIGO_ART_SKU = :CODIGO_ART_ART '                  +
+      '   AND sku.ESACTIVO_SKU = ''S'' '                              +
+      '   AND EXISTS (SELECT 1 FROM fza_codigos_barras cb '           +
+      '                WHERE cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU)';
+    qryConCB.ParamByName('CODIGO_ART_ART').AsString := CodArticulo;
+    qryConCB.Open;
+    iConCB := qryConCB.RecordCount;
+
+    // 5) Preguntar si desea añadir un CB del fabricante (placeholder por SKU)
+    if iConCB > 0 then
+    begin
+      if MessageDlg(
+           Format('¿Desea añadir además un código de barras del fabricante ' +
+                  '(vacío) por SKU para rellenarlo manualmente? ' + sLineBreak +
+                  'Se crearán %d registros marcados como pendientes.',
+                  [iConCB]),
+           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          // Solo creamos placeholder si todavía no existe ninguno para ese SKU
+          qryInsert.SQL.Text :=
+            'INSERT INTO fza_codigos_barras '                          +
+            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+            'VALUES (:CB, :SKU, :TIPO, ''N'', CURRENT_TIMESTAMP, :USR, :USR)';
+
+          qryConCB.First;
+          while not qryConCB.Eof do
+          begin
+            sSku := qryConCB.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+            // Placeholder único por SKU (se edita luego en la rejilla)
+            sPlaceholder := CB_PLACEHOLDER + sSku;
+            if Length(sPlaceholder) > 50 then
+              sPlaceholder := Copy(sPlaceholder, 1, 50);
+
+            try
+              qryInsert.ParamByName('CB').AsString   := sPlaceholder;
+              qryInsert.ParamByName('SKU').AsString  := sSku;
+              qryInsert.ParamByName('TIPO').AsString := CB_TIPO_FAB;
+              qryInsert.ParamByName('USR').AsString  := oUser;
+              qryInsert.ExecSQL;
+              Inc(iFab);
+            except
+              // Si ya existe el placeholder para ese SKU lo ignoramos
+            end;
+            qryConCB.Next;
+          end;
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+    end;
+    qryConCB.Close;
+
+    if (iGen > 0) or (iFab > 0) then
+    begin
+      dmmArticulos.unqryVariacionesArticulos.Refresh;
+      ShowMessage(Format('Generación finalizada.' + sLineBreak +
+                         '- Códigos internos EAN-13 creados: %d' + sLineBreak +
+                         '- Placeholders de fabricante creados: %d',
+                         [iGen, iFab]));
+    end;
+  finally
+    FreeAndNil(qryInsert);
+    FreeAndNil(qryConCB);
+    FreeAndNil(qrySinCB);
+  end;
+end;
+
+procedure TfrmMtoArticulos.btnVerificarCBClick(Sender: TObject);
+var
+  qry: TUniQuery;
+  CodArticulo, sCodigo, sSku, sTipo, sErrores: string;
+  iOk, iKo, iSkip: Integer;
+begin
+  inherited;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
+
+  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  if CodArticulo = '' then
+  begin
+    ShowMessage('Seleccione o guarde un artículo antes de verificar.');
+    Exit;
+  end;
+
+  qry := TUniQuery.Create(nil);
+  iOk  := 0;
+  iKo  := 0;
+  iSkip := 0;
+  sErrores := '';
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT cb.CODIGO_BARRAS_CB, cb.CODIGO_UNIDAD_CB, cb.TIPO_CODIGO_CB ' +
+      '  FROM fza_codigos_barras cb '                                       +
+      '  JOIN fza_articulos_skus sku '                                      +
+      '    ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB '                 +
+      ' WHERE sku.CODIGO_ART_SKU = :CODIGO_ART_ART';
+    qry.ParamByName('CODIGO_ART_ART').AsString := CodArticulo;
+    qry.Open;
+    while not qry.Eof do
+    begin
+      sCodigo := qry.FieldByName('CODIGO_BARRAS_CB').AsString;
+      sSku    := qry.FieldByName('CODIGO_UNIDAD_CB').AsString;
+      sTipo   := qry.FieldByName('TIPO_CODIGO_CB').AsString;
+
+      // Saltamos los placeholders pendientes de rellenar
+      if (sCodigo = '') or (Pos('_FAB_', sCodigo) = 1) then
+      begin
+        Inc(iSkip);
+      end
+      else if EsEAN13Valido(sCodigo) then
+        Inc(iOk)
+      else
+      begin
+        Inc(iKo);
+        sErrores := sErrores + sLineBreak + '  ' + sCodigo + '  (SKU ' + sSku +
+                    ', Tipo ' + sTipo + ')';
+      end;
+      qry.Next;
+    end;
+    qry.Close;
+
+    if iKo = 0 then
+      ShowMessage(Format('Verificación OK.' + sLineBreak +
+                         '- EAN-13 válidos: %d' + sLineBreak +
+                         '- Pendientes (placeholder/vacío): %d',
+                         [iOk, iSkip]))
+    else
+      ShowMessage(Format('Verificación con incidencias.' + sLineBreak +
+                         '- EAN-13 válidos: %d' + sLineBreak +
+                         '- EAN-13 NO válidos: %d' + sLineBreak +
+                         '- Pendientes: %d' + sLineBreak +
+                         'Códigos no válidos:%s',
+                         [iOk, iKo, iSkip, sErrores]));
+  finally
+    FreeAndNil(qry);
+  end;
 end;
 
 procedure TfrmMtoArticulos.IncorporarTarifas;
