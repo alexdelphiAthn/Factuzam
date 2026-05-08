@@ -1046,59 +1046,66 @@ begin
     qryDel.ExecSQL;
     iLimpiados := qryDel.RowsAffected;
 
-    // 3) SKUs activos que aún NO tienen un CB principal (ESPRINCIPAL_CB='S').
-    //    Otros códigos secundarios (fabricante, rebajas...) no afectan;
-    //    el principal es el que va en la etiqueta y se autogenera por SKU.
+    // 3) Botón progresivo, idempotente. Por cada SKU activo:
+    //      Fase A: si aún no tiene principal (ESPRINCIPAL_CB='S') →
+    //              crear EAN-13 interno como principal.
+    //      Fase B: si ya tiene principal pero no tiene fila vacía →
+    //              crear fila vacía (CODIGO_BARRAS_CB='') para el código
+    //              del fabricante (a rellenar manualmente).
+    //      Fase C: si ya tiene principal y vacía → no hacer nada.
+    //    Pulsando dos veces el usuario obtiene primero los principales
+    //    y luego los huecos para los códigos de fabricante.
     qrySkus.SQL.Text :=
-      'SELECT sku.CODIGO_UNIDAD_SKU '                                 +
-      '  FROM fza_articulos_skus sku '                                +
-      ' WHERE sku.CODIGO_ART_SKU = :ART '                             +
-      '   AND sku.ESACTIVO_SKU = ''S'' '                              +
-      '   AND NOT EXISTS (SELECT 1 FROM fza_codigos_barras cb '       +
-      '                    WHERE cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU ' +
-      '                      AND cb.ESPRINCIPAL_CB = ''S'')';
+      'SELECT sku.CODIGO_UNIDAD_SKU, '                                 +
+      '       EXISTS (SELECT 1 FROM fza_codigos_barras p '             +
+      '                WHERE p.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU ' +
+      '                  AND p.ESPRINCIPAL_CB = ''S'') AS HAS_PRIN, '  +
+      '       EXISTS (SELECT 1 FROM fza_codigos_barras v '             +
+      '                WHERE v.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU ' +
+      '                  AND COALESCE(v.CODIGO_BARRAS_CB, '''') = '''') ' +
+      '              AS HAS_EMPTY '                                    +
+      '  FROM fza_articulos_skus sku '                                 +
+      ' WHERE sku.CODIGO_ART_SKU = :ART '                              +
+      '   AND sku.ESACTIVO_SKU = ''S''';
     qrySkus.ParamByName('ART').AsString := CodArticulo;
     qrySkus.Open;
 
-    if (qrySkus.RecordCount = 0) and (iLimpiados = 0) then
+    if qrySkus.RecordCount = 0 then
     begin
-      ShowMessage('Todos los SKU activos del artículo ya tienen código de ' +
-                  'barras principal.');
+      qrySkus.Close;
+      if iLimpiados = 0 then
+        ShowMessage('El artículo no tiene SKUs activos.');
+      Exit;
+    end;
+
+    if MessageDlg(
+         '¿Generar códigos de barras pendientes?'           + sLineBreak +
+         sLineBreak +
+         'Para cada SKU activo:'                            + sLineBreak +
+         '  · Si no tiene principal: se genera un EAN-13 ' +
+                'interno (prefijo "' + CB_PREFIJO + '").'   + sLineBreak +
+         '  · Si tiene principal pero no fila vacía: se ' +
+                'crea una fila vacía para el código del '   +
+                'fabricante (a rellenar manualmente).'     + sLineBreak +
+         '  · Si ya tiene ambos, se respeta.'                + sLineBreak +
+         sLineBreak +
+         'Pulse Sí para continuar.',
+         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    begin
       qrySkus.Close;
       Exit;
     end;
 
-    if qrySkus.RecordCount > 0 then
-    begin
-      if MessageDlg(
-           Format('Se generará un EAN-13 interno (prefijo "%s") como código ' +
-                  'principal para %d SKU(s).' + sLineBreak +
-                  'Los SKUs que ya tienen principal se respetan. ' +
-                  'Códigos secundarios (fabricante, rebajas...) no se tocan.' +
-                  sLineBreak + sLineBreak +
-                  '¿Continuar?',
-                  [CB_PREFIJO, qrySkus.RecordCount]),
-           mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Screen.Cursor := crHourGlass;
+    try
+      qrySkus.First;
+      while not qrySkus.Eof do
       begin
-        qrySkus.Close;
-        Exit;
-      end;
+        sSku := qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString;
 
-      qryInsert.SQL.Text :=
-        'INSERT INTO fza_codigos_barras '                              +
-        '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, '     +
-        '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:CB, :SKU, :TIPO, ''S'', '                            +
-        '        CURRENT_TIMESTAMP, :USR, :USR)';
-
-      Screen.Cursor := crHourGlass;
-      try
-        qrySkus.First;
-        while not qrySkus.Eof do
+        if not qrySkus.FieldByName('HAS_PRIN').AsBoolean then
         begin
-          sSku := qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-
-          // Contador común (empresa '-'), padding CB_NUM_DIGITOS dígitos
+          // Fase A: principal con contador EAN-13
           sCounter := ObtenerSiguienteContador(CB_TIPO_DOC);
           if Length(sCounter) > CB_NUM_DIGITOS then
             sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
@@ -1106,22 +1113,45 @@ begin
           else
             sCounter := StringOfChar('0', CB_NUM_DIGITOS - Length(sCounter)) +
                         sCounter;
-          sCodigo12 := CB_PREFIJO + sCounter;            // 12 dígitos
-          sCodigoCB := sCodigo12 + CalcularDigitoEAN13(sCodigo12); // 13
+          sCodigo12 := CB_PREFIJO + sCounter;
+          sCodigoCB := sCodigo12 + CalcularDigitoEAN13(sCodigo12);
 
+          qryInsert.SQL.Text :=
+            'INSERT INTO fza_codigos_barras '                          +
+            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+            'VALUES (:CB, :SKU, :TIPO, ''S'', '                        +
+            '        CURRENT_TIMESTAMP, :USR, :USR)';
           qryInsert.ParamByName('CB').AsString   := sCodigoCB;
           qryInsert.ParamByName('SKU').AsString  := sSku;
           qryInsert.ParamByName('TIPO').AsString := CB_TIPO_INT;
           qryInsert.ParamByName('USR').AsString  := oUser;
           qryInsert.ExecSQL;
           Inc(iGenerados);
-          qrySkus.Next;
-        end;
-      finally
-        Screen.Cursor := crDefault;
+        end
+        else if not qrySkus.FieldByName('HAS_EMPTY').AsBoolean then
+        begin
+          // Fase B: fila vacía para el código del fabricante
+          qryInsert.SQL.Text :=
+            'INSERT INTO fza_codigos_barras '                          +
+            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+            'VALUES ('''', :SKU, ''EAN13'', ''N'', '                   +
+            '        CURRENT_TIMESTAMP, :USR, :USR)';
+          qryInsert.ParamByName('SKU').AsString := sSku;
+          qryInsert.ParamByName('USR').AsString := oUser;
+          qryInsert.ExecSQL;
+          Inc(iVacios);
+        end
+        else
+          Inc(iSaltados);
+
+        qrySkus.Next;
       end;
+    finally
+      Screen.Cursor := crDefault;
+      qrySkus.Close;
     end;
-    qrySkus.Close;
 
     // Close+Open en lugar de Refresh: las filas recién insertadas necesitan
     // que el dataset reabra la vista para que ID_CB aparezca en la rejilla
@@ -1131,12 +1161,10 @@ begin
     ActualizarVisibilidadVariaciones;
     ShowMessage(Format('Generación finalizada.'                       + sLineBreak +
                        '- EAN-13 internos creados: %d'                 + sLineBreak +
-                       '- SKUs que ya tenían principal: %d'            + sLineBreak +
-                       '- Placeholders _FAB_ obsoletos eliminados: %d' + sLineBreak +
-                       sLineBreak +
-                       'Para añadir códigos del fabricante, rebajas u otros, ' +
-                       'use el botón "+" de la rejilla.',
-                       [iGenerados, iSaltados, iLimpiados]));
+                       '- Filas vacías de fabricante creadas: %d'      + sLineBreak +
+                       '- SKUs ya completos (saltados): %d'            + sLineBreak +
+                       '- Placeholders _FAB_ obsoletos eliminados: %d',
+                       [iGenerados, iVacios, iSaltados, iLimpiados]));
   finally
     FreeAndNil(qryInsert);
     FreeAndNil(qrySkus);
