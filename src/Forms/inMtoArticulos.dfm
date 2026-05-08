@@ -1348,14 +1348,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 1
                   OnClick = btStockExportarExcelClick
                 end
-                object cxButton7: TcxButton
+                object btReconstruirStock: TcxButton
                   Left = 5
                   Top = 21
                   Width = 164
                   Height = 34
                   Caption = '&Reconstruir Stock'
                   TabOrder = 0
-                  OnClick = btnAddProveedorClick
+                  OnClick = btReconstruirStockClick
                 end
               end
             end

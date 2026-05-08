@@ -55,6 +55,7 @@ type
     function ArticuloTieneProvPrin(sArt:String):Boolean;
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
     procedure FillTarifas(lst:TcxListView);
+    function ReconstruirStock: string;
   end;
 
 //var
@@ -395,6 +396,24 @@ begin
 
     if ((State = dsInsert) or (State = dsEdit)) then
       oDmConn.ActualizarUserTimeModif(DataSet);
+  end;
+end;
+
+function TdmArticulos.ReconstruirStock: string;
+var
+  unqrySol: TUniQuery;
+begin
+  Result := '';
+  unqrySol := TUniQuery.Create(nil);
+  try
+    unqrySol.Connection := oConn;
+    unqrySol.SQL.Text := 'CALL PRC_RECALCULAR_STOCK()';
+    unqrySol.Open;
+    if not unqrySol.IsEmpty then
+      Result := unqrySol.FieldByName('MENSAJE').AsString;
+    unqrySol.Close;
+  finally
+    FreeAndNil(unqrySol);
   end;
 end;
 
