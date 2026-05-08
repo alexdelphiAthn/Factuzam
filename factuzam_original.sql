@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 08/05/2026 14:07:37
+-- Backup generado: 08/05/2026 14:55:29
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -576,7 +576,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, -3, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
   ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-08 14:14:49', 10, 10, 0, 0, 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
@@ -2555,7 +2555,7 @@ INSERT INTO `fza_inventarios` (`CODIGO_EMP_INV`, `CODIGO_ALM_INV`, `SERIE_INV`, 
   ('012', 'GEN', 'A1', '02', 'IN', '2026-05-08 07:32:02', 'APLICADO', NULL, NULL, -17, -75, '2026-05-08 07:52:58', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '03', 'IN', '2026-05-08 08:09:58', 'APLICADO', NULL, NULL, -6, -835, '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '04', 'IN', '2026-05-08 08:24:04', 'APLICADO', NULL, NULL, 0, 0, '2026-05-08 14:01:45', NULL, 'Administrador', 'Administrador'),
-  ('012', 'GEN', 'A1', '05', 'IN', '2026-05-08 14:02:00', 'ABIERTO', NULL, NULL, 0, 0, '2026-05-08 14:02:04', NULL, 'Administrador', 'Administrador'),
+  ('012', 'GEN', 'A1', '05', 'IN', '2026-05-08 14:02:00', 'APLICADO', NULL, NULL, 0, 5, '2026-05-08 14:14:49', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '1', 'IN', '2026-05-05 00:00:00', 'APLICADO', 'INVENTARIO PARCIAL AJUSTE PRECIOS Y STOCK', NULL, -28, -503, '2026-05-05 17:48:24', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '2', 'IN', '2026-05-05 00:00:00', 'APLICADO', 'INVENTARIO POR AJUSTE PARCIAL', NULL, -4, 92, '2026-05-05 18:57:46', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', 'IN', '2026-05-06 00:00:00', 'APLICADO', 'kk', NULL, -2, -20, '2026-05-06 08:15:17', NULL, 'Administrador', 'Administrador'),
@@ -2603,6 +2603,7 @@ INSERT INTO `fza_inventarios_lineas` (`CODIGO_EMP_INVLIN`, `CODIGO_ALM_INVLIN`, 
   ('012', 'GEN', 'A1', '03', '0002', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/MARRON/43', NULL, NULL, 'Bota Montaña Impermeable', 6, 4, -2, 40, 5, -220, '2026-05-07 23:59:59', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '03', '0003', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', NULL, NULL, 'Bota Montaña Impermeable', 8, 3, -5, 40, 5, -305, '2026-05-07 23:59:59', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '03', '0004', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, NULL, 'Bota Montaña Impermeable', 9, 5, -4, 40, 5, -335, '2026-05-07 23:59:59', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador'),
+  ('012', 'GEN', 'A1', '05', '0001', 'DEMO-CAMISA', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 'Camisa Lino Demo', 1, 1, 0, 5, 10, 5, '2026-05-08 14:12:38', '2026-05-08 14:14:49', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '1', '0001', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/37', '', NULL, 'Botín Ante Mujer', 0, 12, 12, 0, 10, 120, '2026-05-04 23:59:59', '2026-05-05 17:29:55', '2026-05-05 14:01:21', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '1', '0002', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/38', '', NULL, 'Botín Ante Mujer', -1, 14, 15, 0, 10, 140, '2026-05-04 23:59:59', '2026-05-05 17:29:55', '2026-05-05 14:01:21', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '1', '0003', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', '', NULL, 'Botín Ante Mujer', 0, 12, 12, 0, 10, 120, '2026-05-04 23:59:59', '2026-05-05 17:29:55', '2026-05-05 14:01:21', 'Administrador', 'Administrador'),
@@ -2646,7 +2647,7 @@ INSERT INTO `fza_inventarios_lineas` (`CODIGO_EMP_INVLIN`, `CODIGO_ALM_INVLIN`, 
   ('012', 'GEN', 'A1', '3', '0002', 'CINTURON-PIEL', 'CINTURON-PIEL', '', NULL, 'Cinturón Piel Reversible', 7, 5, -2, 5, 5, -10, '2026-05-05 23:59:59', '2026-05-06 08:15:17', '2026-05-06 08:00:16', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', '0003', 'SOMBRERO-PJM', 'SOMBRERO-PJM', '', NULL, 'Sombrero Panamá Verano', 7, 6, -1, 15, 15, -15, '2026-05-05 23:59:59', '2026-05-06 08:15:17', '2026-05-06 08:00:16', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '4', '0001', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, NULL, 'Zapatilla Deportiva Running', -1, 1, 2, 0, 5, 5, '2026-05-08 07:13:25', '2026-05-08 07:13:42', NULL, 'Administrador', 'Administrador');
--- 51 registros exportados
+-- 52 registros exportados
 
 
 -- Tabla: fza_ivas
@@ -3218,6 +3219,8 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-03-0003S', 'IN', 'A1', '03', '0003', '012', 'GEN', '2026-05-07 23:59:58', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', NULL, 'S', 8, 0, 15, 5, NULL, NULL, NULL, 'S', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-03-0004E', 'IN', 'A1', '03', '0004', '012', 'GEN', '2026-05-07 23:59:59', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, 'E', 5, 5, 25, 5, NULL, NULL, NULL, 'S', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-03-0004S', 'IN', 'A1', '03', '0004', '012', 'GEN', '2026-05-07 23:59:58', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, 'S', 9, 0, 25, 5, NULL, NULL, NULL, 'S', '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
+  ('IV-05-0001E', 'IN', 'A1', '05', '0001', '012', 'GEN', '2026-05-08 14:12:38', 'DEMO-CAMISA', 'DEMO-CAMISA/AMARILLO/L', NULL, 'E', 1, 10, 10, 10, NULL, NULL, NULL, 'S', '2026-05-08 14:14:49', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
+  ('IV-05-0001S', 'IN', 'A1', '05', '0001', '012', 'GEN', '2026-05-08 14:12:37', 'DEMO-CAMISA', 'DEMO-CAMISA/AMARILLO/L', NULL, 'S', 1, 0, 10, 10, NULL, NULL, NULL, 'S', '2026-05-08 14:14:49', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-1-0001E', 'IN', 'A1', '1', '0001', '012', 'GEN', '2026-05-04 23:59:59', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/37', NULL, 'E', 12, 10, 120, 10, NULL, NULL, NULL, 'S', '2026-05-05 17:29:55', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-1-0002E', 'IN', 'A1', '1', '0002', '012', 'GEN', '2026-05-04 23:59:59', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/38', NULL, 'E', 14, 10, 140, 10, NULL, NULL, NULL, 'S', '2026-05-05 17:29:55', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-1-0002S', 'IN', 'A1', '1', '0002', '012', 'GEN', '2026-05-04 23:59:58', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/38', NULL, 'E', 1, 0, 140, 10, NULL, NULL, NULL, 'S', '2026-05-05 17:29:55', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
@@ -3289,7 +3292,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 309 registros exportados
+-- 311 registros exportados
 
 
 -- Tabla: fza_paises
@@ -4082,7 +4085,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-08 13:50:58', '2026-05-08 13:50:58', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-08 14:44:40', '2026-05-08 14:44:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -13508,4 +13511,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 08/05/2026 14:07:41
+-- Backup completado: 08/05/2026 14:55:33
