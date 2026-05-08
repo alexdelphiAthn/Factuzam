@@ -311,7 +311,30 @@ var
   ds: TDataSet;
 begin
   if pcDetail.ActivePage = tsDetalle then
-    CargarLineasYRefrescar
+  begin
+    // Si la cabecera está sin grabar (dsInsert/dsEdit), la grabamos
+    // automáticamente: las líneas referencian (EMP/ALM/SERIE/NRO) y el
+    // número definitivo se asigna en unqryTablaGBeforePost desde fza_contadores.
+    ds := dsTablaG.DataSet;
+    if (ds <> nil) and ds.Active and (ds.State in [dsInsert, dsEdit]) then
+    begin
+      try
+        ds.Post;
+      except
+        on E: Exception do
+        begin
+          ShowMessage(
+            'No se ha podido grabar automáticamente la cabecera del '+
+            'inventario:'#13#10 + E.Message + #13#10#13#10 +
+            'Completa los datos en la pestaña Cabecera y vuelve a entrar '+
+            'en Detalle.');
+          pcDetail.ActivePage := tsCabecera;
+          Exit;
+        end;
+      end;
+    end;
+    CargarLineasYRefrescar;
+  end
   else if pcDetail.ActivePage = tsMovsRegul then
   begin
     ds := dsTablaG.DataSet;
