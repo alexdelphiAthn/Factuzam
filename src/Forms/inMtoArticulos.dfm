@@ -996,7 +996,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   end
                   object tvProveedoresColumn1: TcxGridDBColumn
                     Caption = 'Modelo Proveedor'
-                    DataBinding.FieldName = 'REF_PROVEEDOR_AP'
+                    DataBinding.FieldName = 'REF_PROVEEDOR'
                     Width = 181
                   end
                   object cxgrdbclmnProveedoresCODIGO_PROVEEDOR: TcxGridDBColumn
