@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 08/05/2026 14:55:29
+-- Backup generado: 08/05/2026 16:58:20
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -471,6 +471,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('PANT-CHIN/GRIS/42', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('PANT-CHIN/NEGRO/40', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('PANT-CHIN/NEGRO/42', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  ('SRV-ENVIO', 'SRV-ENVIO', '-', 'S', '2026-05-08 16:42:43', '2026-05-08 16:42:43', 'Administrador', 'Administrador'),
   ('SUDADERA-HOOD/GRIS/M', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/GRIS/S', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD/NEGRO/L', 'SUDADERA-HOOD', 'TC', 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO'),
@@ -511,7 +512,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 105 registros exportados
+-- 106 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -535,75 +536,75 @@ CREATE TABLE `fza_articulos_stockactual` (
 
 -- Datos de fza_articulos_stockactual
 INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, `CANTIDAD_STK`, `INSTANTE_MODIF`, `VALOR_TOTAL_STK`, `PRECIO_MEDIO_STK`, `CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, `CANTIDAD_PTE_TRASPASAR_STK`, `CANTIDAD_PTE_RECTRASPASAR_STK`) VALUES
-  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, -16, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 11, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, -13, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, -3, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-08 14:14:49', 10, 10, 0, 0, 0, 0),
-  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-08 08:17:02', 25, 5, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-08 08:17:02', 20, 5, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-08 08:17:02', 15, 5, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-08 08:17:02', 25, 5, 0, 0, 0, 0),
-  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-08 07:53:23', 0, 0, 0, 0, 0, 0);
+  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, -16, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 11, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, -13, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, -3, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-08 16:47:06', 0, 0, 0, 0, 0, 0);
 -- 69 registros exportados
 
 
@@ -693,9 +694,12 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('DEMO-BASICO', 61, '', 'PVP', 'S', 0, 0, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:34:15', '2026-05-03 17:34:15', 'Administrador', 'Administrador'),
   ('DEMO-PRO', 62, '', 'PVP', 'S', 0, 0, NULL, 0, '2026-05-03 00:00:00', NULL, '2026-05-03 17:34:15', '2026-05-03 17:34:15', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT', 63, '', '3', 'S', 79.9, 60, NULL, 24.906133, '2026-05-06 00:00:00', NULL, '2026-05-06 19:12:02', '2026-05-06 19:12:02', 'Administrador', 'Administrador'),
-  ('SUDADERA-HOOD', 64, '', '3', 'S', 45, 31.5, 13.5, 30, '2026-05-06 00:00:00', NULL, '2026-05-06 19:39:29', '2026-05-06 19:39:29', 'Administrador', 'Administrador');
+  ('SUDADERA-HOOD', 64, '', '3', 'S', 45, 31.5, 13.5, 30, '2026-05-06 00:00:00', NULL, '2026-05-06 19:39:29', '2026-05-06 19:39:29', 'Administrador', 'Administrador'),
+  ('FALD-JEAN', 65, 'FALD-JEAN/VAQUERO/L', '3', 'N', 0, 0, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
+  ('FALD-JEAN', 66, 'FALD-JEAN/VAQUERO/L', 'PVP', 'N', 0, 0, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
+  ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 61 registros exportados
+-- 64 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1519,11 +1523,18 @@ ALTER TABLE `fza_codigos_barras` ADD INDEX `IDX_UNIDAD_CB` (`CODIGO_UNIDAD_CB`);
 
 -- Datos de fza_codigos_barras
 INSERT INTO `fza_codigos_barras` (`CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB`, `TIPO_CODIGO_CB`, `ESPRINCIPAL_CB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('_FAB_FALD-JEAN/VAQUERO/L', 'FALD-JEAN/VAQUERO/L', 'EAN13', 'N', '2026-05-08 16:57:29', '2026-05-08 16:57:29', 'Administrador', 'Administrador'),
+  ('_FAB_FALD-JEAN/VAQUERO/M', 'FALD-JEAN/VAQUERO/M', 'EAN13', 'N', '2026-05-08 16:57:29', '2026-05-08 16:57:29', 'Administrador', 'Administrador'),
+  ('_FAB_FALD-JEAN/VAQUERO/S', 'FALD-JEAN/VAQUERO/S', 'EAN13', 'N', '2026-05-08 16:57:29', '2026-05-08 16:57:29', 'Administrador', 'Administrador'),
+  ('2100000000012', 'FALD-JEAN/VAQUERO/L', 'EAN13', 'S', '2026-05-08 16:17:16', '2026-05-08 16:17:16', 'Administrador', 'Administrador'),
+  ('2100000000029', 'FALD-JEAN/VAQUERO/M', 'EAN13', 'S', '2026-05-08 16:17:16', '2026-05-08 16:17:16', 'Administrador', 'Administrador'),
+  ('2100000000036', 'FALD-JEAN/VAQUERO/S', 'EAN13', 'S', '2026-05-08 16:17:16', '2026-05-08 16:17:16', 'Administrador', 'Administrador'),
+  ('2100000000043', 'SRV-ENVIO', 'EAN13', 'S', '2026-05-08 16:42:47', '2026-05-08 16:42:47', 'Administrador', 'Administrador'),
   ('8410000000100', 'ZAP-OXFORD/NEGRO/42', 'EAN13', 'S', '2026-01-08 20:30:32', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('8410000000101', 'ZAP-OXFORD/MARRON/43', 'EAN13', 'S', '2026-01-08 20:30:41', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('8410000000200', 'ZAP-TACÓN/ROJO/37', 'EAN13', 'S', '2026-01-08 20:31:00', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('8410000000201', 'ZAP-TACÓN/38/NEGRO', 'EAN13', 'S', '2026-01-04 22:06:12', '2026-01-04 22:06:12', 'DEMO', 'DEMO');
--- 4 registros exportados
+-- 11 registros exportados
 
 
 -- Tabla: fza_config_campos
@@ -1574,10 +1585,10 @@ CREATE TABLE `fza_contadores` (
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
-  ('BA', '-', '-', 1, 10, 'S', 'S', '2026-05-08 00:00:00', '2026-05-08 00:00:00', 'Administrador', 'Administrador'),
-  ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 00:00:00', '2026-05-08 00:00:00', 'Administrador', 'Administrador'),
-  ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 00:00:00', '2026-05-08 00:00:00', 'Administrador', 'Administrador'),
-  ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 00:00:00', '2026-05-08 00:00:00', 'Administrador', 'Administrador'),
+  ('BA', '-', '-', 5, 10, 'S', 'S', '2026-05-08 16:42:47', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('CL', '-', '-', 322, 3, 'S', 'S', '2026-02-26 19:58:55', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
   ('CO', '-', '-', 6, 3, 'S', 'S', '2023-06-30 12:49:26', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
   ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-12 09:38:07', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
@@ -1597,7 +1608,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 140, 3, 'S', 'S', '2026-05-08 06:41:06', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 141, 3, 'S', 'S', '2026-05-08 16:13:41', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 6, 2, 'S', 'S', '2026-05-08 14:02:04', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -1607,7 +1618,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador');
--- 31 registros exportados
+-- 35 registros exportados
 
 
 -- Tabla: fza_depositos_cliente
@@ -2525,8 +2536,63 @@ END ;;
 DELIMITER ;', '2026-05-08 06:40:38', '2026-05-08 06:40:38', 'Administrador', 'Administrador'),
   ('139', NULL, 'CALL SP_RECALCULAR_PMP_SKU_ALMACEN(''012'', ''FALD-JEAN/VAQUERO/L'', ''GEN'');
 SELECT * FROM fza_articulos_stockactual
- WHERE CODIGO_UNIDAD_STK = ''FALD-JEAN/VAQUERO/L'' AND CODIGO_ALM_STK = ''GEN'';', '2026-05-08 06:41:06', '2026-05-08 06:41:06', 'Administrador', 'Administrador');
--- 3 registros exportados
+ WHERE CODIGO_UNIDAD_STK = ''FALD-JEAN/VAQUERO/L'' AND CODIGO_ALM_STK = ''GEN'';', '2026-05-08 06:41:06', '2026-05-08 06:41:06', 'Administrador', 'Administrador'),
+  ('140', NULL, '-- ================================================================
+-- Factuzam: Códigos de barras internos por SKU (EAN-13)
+-- ================================================================
+-- Reserva los tipos de documento BA/BC/BD/BE para los códigos de
+-- barras internos y precrea sus contadores (empresa ''-'', serie ''-'',
+-- 10 dígitos) para que PRC_GET_NEXT_CONT devuelva el padding correcto.
+--
+-- Convención de prefijos EAN-13 internos:
+--   BA -> Artículos   (prefijo 21 + 10 dígitos contador + control)
+--   BD -> Documentos  (prefijo 22 + 10 dígitos contador + control)
+--   BE -> Empleados   (prefijo 23 + 10 dígitos contador + control)
+--   BC -> Clientes    (prefijo 24 + 10 dígitos contador + control)
+--
+-- Idempotente: usa INSERT IGNORE, se puede re-ejecutar sin efectos.
+-- IMPORTANTE: Hacer backup antes de aplicar a producción.
+-- ================================================================
+
+SET FOREIGN_KEY_CHECKS=0;
+START TRANSACTION;
+
+-- ----------------------------------------------------------------
+-- 1. Tipos de documento reservados para códigos de barras internos
+-- ----------------------------------------------------------------
+INSERT IGNORE INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`, `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+VALUES
+  (''BA'', ''CÓDIGOS DE BARRAS DE ARTÍCULOS'',  ''fza_codigos_barras''),
+  (''BC'', ''CÓDIGOS DE BARRAS DE CLIENTES'',   ''fza_codigos_barras''),
+  (''BD'', ''CÓDIGOS DE BARRAS DE DOCUMENTOS'', ''fza_codigos_barras''),
+  (''BE'', ''CÓDIGOS DE BARRAS DE EMPLEADOS'',  ''fza_codigos_barras'');
+
+-- ----------------------------------------------------------------
+-- 2. Contadores globales (empresa ''-'') con padding de 10 dígitos
+-- ----------------------------------------------------------------
+INSERT IGNORE INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
+   `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  (''BA'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
+  (''BC'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
+  (''BD'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
+  (''BE'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador'');
+
+-- ----------------------------------------------------------------
+-- 3. Verificación rápida
+-- ----------------------------------------------------------------
+-- Debe devolver 4 filas:
+SELECT TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ESACTIVO_CON
+  FROM fza_contadores
+ WHERE TIPO_DOC_CON IN (''BA'',''BC'',''BD'',''BE'')
+   AND EMPRESA_CON = ''-'';
+
+COMMIT;
+SET FOREIGN_KEY_CHECKS=1;', '2026-05-08 16:13:41', '2026-05-08 16:13:41', 'Administrador', 'Administrador');
+-- 4 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -2559,12 +2625,11 @@ INSERT INTO `fza_inventarios` (`CODIGO_EMP_INV`, `CODIGO_ALM_INV`, `SERIE_INV`, 
   ('012', 'GEN', 'A1', '02', 'IN', '2026-05-08 07:32:02', 'APLICADO', NULL, NULL, -17, -75, '2026-05-08 07:52:58', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '03', 'IN', '2026-05-08 08:09:58', 'APLICADO', NULL, NULL, -6, -835, '2026-05-08 08:17:02', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '04', 'IN', '2026-05-08 08:24:04', 'APLICADO', NULL, NULL, 0, 0, '2026-05-08 14:01:45', NULL, 'Administrador', 'Administrador'),
-  ('012', 'GEN', 'A1', '05', 'IN', '2026-05-08 14:02:00', 'APLICADO', NULL, NULL, 0, 5, '2026-05-08 14:14:49', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '1', 'IN', '2026-05-05 00:00:00', 'APLICADO', 'INVENTARIO PARCIAL AJUSTE PRECIOS Y STOCK', NULL, -28, -503, '2026-05-05 17:48:24', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '2', 'IN', '2026-05-05 00:00:00', 'APLICADO', 'INVENTARIO POR AJUSTE PARCIAL', NULL, -4, 92, '2026-05-05 18:57:46', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', 'IN', '2026-05-06 00:00:00', 'APLICADO', 'kk', NULL, -2, -20, '2026-05-06 08:15:17', NULL, 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '4', 'IN', '2026-05-07 00:00:00', 'APLICADO', NULL, NULL, 2, 5, '2026-05-08 07:13:42', NULL, 'Administrador', 'Administrador');
--- 9 registros exportados
+-- 8 registros exportados
 
 
 -- Tabla: fza_inventarios_lineas
@@ -4067,7 +4132,7 @@ INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIP
   ('RT', 'RETENCIONES POR EMPRESA', 'fza_empresas_retenciones'),
   ('TR', 'TRASPASOS ALMACÉN', 'fza_caja_operaciones'),
   ('VE', 'VENTAS CONTADO', 'fza_caja_operaciones');
--- 24 registros exportados
+-- 28 registros exportados
 
 
 -- Tabla: fza_usuarios
@@ -4093,7 +4158,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-08 14:44:40', '2026-05-08 14:44:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-08 16:53:21', '2026-05-08 16:53:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -13519,4 +13584,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 08/05/2026 14:55:33
+-- Backup completado: 08/05/2026 16:58:24

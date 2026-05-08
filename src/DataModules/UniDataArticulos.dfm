@@ -236,7 +236,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'BOLSO-PIEL'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -308,7 +308,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'BOLSO-PIEL'
       end>
   end
   object dsLinFacturasArticulos: TDataSource
@@ -629,7 +629,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'BOLSO-PIEL'
       end>
   end
   object dsVariacionesArticulos: TDataSource
@@ -676,7 +676,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'VEST-FLOR'
+        Value = 'BOLSO-PIEL'
       end>
   end
   object dsMovimientosArticulos: TDataSource
