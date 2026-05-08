@@ -50,6 +50,7 @@ type
     procedure unqryTarifasArticulosBeforePost(DataSet: TDataSet);
     procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforePost(DataSet: TDataSet);
+    procedure unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
   private
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -201,7 +202,11 @@ begin
       ActualizarSkuActivo(sSku, fldAct.AsString);
 
     DataSet.Cancel;
-    DataSet.Refresh;
+    // Close+Open para que el dataset reflote ID_CB del nuevo registro:
+    // un Refresh sobre detail master/detail puede no traer las filas
+    // recién insertadas con sus IDs.
+    DataSet.Close;
+    DataSet.Open;
     Abort;
   end;
 
@@ -209,6 +214,20 @@ begin
   // El SQLUpdate del framework no lo tocaría: lo actualizamos a mano.
   if bChangedActivo then
     ActualizarSkuActivo(sSku, fldAct.AsString);
+end;
+
+procedure TdmArticulos.unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
+var
+  fldId: TField;
+begin
+  inherited;
+  // Filas "fantasma" del LEFT JOIN: el SKU no tiene ningún CB asociado
+  // (ID_CB nulo). No hay nada que borrar en fza_codigos_barras.
+  fldId := DataSet.FindField('ID_CB');
+  if (fldId = nil) or fldId.IsNull then
+    raise ERangeError.Create(
+      'Esta fila representa un SKU sin códigos de barras: no hay nada ' +
+      'que eliminar. Si quiere desactivar el SKU use la pestaña SKUs.');
 end;
 
 procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
