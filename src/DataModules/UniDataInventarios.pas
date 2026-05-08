@@ -214,6 +214,11 @@ begin
         begin
           if not (cdsLineas.State in [dsEdit, dsInsert]) then
             cdsLineas.Edit;
+          // Tantos atributos como segmentos haya tras el código de artículo.
+          // Sin esto, GenerarSkuFinal itera 0 veces sobre las líneas cargadas
+          // de BBDD y el SKU se queda obsoleto al cambiar Color/Talla.
+          cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
+                                                          Length(Partes) - 1;
           for i := 1 to 5 do
           begin
             if i < Length(Partes) then

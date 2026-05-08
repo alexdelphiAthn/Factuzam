@@ -765,6 +765,13 @@ begin
   if not (Sender is TcxCustomEdit) then Exit;
   Edit := TcxCustomEdit(Sender);
   if not dmmInventarios.cdsLineas.Active then Exit;
+  if dmmInventarios.cdsLineas.IsEmpty then Exit;
+  // El TcxComboBox de cxGrid puede disparar OnEditValueChanged mientras el
+  // dataset sigue en dsBrowse (al cambiar de valor en una línea ya guardada).
+  // Forzamos la transición a dsEdit para que PostEditValue/escritura de campos
+  // y el rebuild del SKU se realicen sobre un registro editable.
+  if dmmInventarios.cdsLineas.State = dsBrowse then
+    dmmInventarios.cdsLineas.Edit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
   Edit.PostEditValue;
