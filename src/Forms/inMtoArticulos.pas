@@ -110,7 +110,6 @@ type
     btnExportarProveedor: TcxButton;
     pnlFacturaOpts2: TPanel;
     btnIraTarifa: TcxButton;
-    btnCrearTarifa: TcxButton;
     btnExportarTarifa: TcxButton;
     btnIraCliente: TcxButton;
     cxgrdbclmnProveedoresRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
