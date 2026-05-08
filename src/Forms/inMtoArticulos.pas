@@ -187,7 +187,7 @@ type
     cxGridLevel4: TcxGridLevel;
     Panel2: TPanel;
     btStockExportarExcel: TcxButton;
-    cxButton7: TcxButton;
+    btReconstruirStock: TcxButton;
     cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
     cxGridLevel5: TcxGridLevel;
@@ -276,6 +276,7 @@ type
     procedure btnAddSKUClick(Sender: TObject);
     procedure cxButton11Click(Sender: TObject);
     procedure btStockExportarExcelClick(Sender: TObject);
+    procedure btReconstruirStockClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -866,6 +867,42 @@ begin
   inherited;
   ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
+end;
+
+procedure TfrmMtoArticulos.btReconstruirStockClick(Sender: TObject);
+var
+  sMensaje: string;
+begin
+  inherited;
+  if Application.MessageBox(
+       '¿Desea reconstruir la tabla de stock a partir de los movimientos de ' +
+       'almacén? Esta operación borrará el stock actual y lo regenerará.',
+       'Reconstruir Stock',
+       MB_YESNO + MB_ICONQUESTION) <> ID_YES then
+    Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    try
+      sMensaje := dmmArticulos.ReconstruirStock;
+      if dmmArticulos.unqryTablaG.Active and
+         (not dmmArticulos.unqryTablaG.IsEmpty) then
+        dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
+    except
+      on E: Exception do
+      begin
+        Screen.Cursor := crDefault;
+        ShowMessage('Error al reconstruir el stock: ' + E.Message);
+        Exit;
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+
+  if sMensaje = '' then
+    sMensaje := 'Stock reconstruido.';
+  ShowMessage(sMensaje);
 end;
 
 procedure TfrmMtoArticulos.IncorporarTarifas;
