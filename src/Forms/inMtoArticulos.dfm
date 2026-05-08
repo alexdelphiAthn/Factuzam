@@ -466,6 +466,23 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'CODIGO_BARRAS_CB'
                     Width = 194
                   end
+                  object tvSkusTIPO_CODIGO_CB: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO_CODIGO_CB'
+                    Width = 100
+                  end
+                  object tvSkusESPRINCIPAL_CB: TcxGridDBColumn
+                    Caption = 'Principal'
+                    DataBinding.FieldName = 'ESPRINCIPAL_CB'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 70
+                  end
+                  object tvSkusID_CB: TcxGridDBColumn
+                    DataBinding.FieldName = 'ID_CB'
+                    Visible = False
+                  end
                   object tvSkusSTOCK_TOTAL: TcxGridDBColumn
                     Caption = 'Stock Total'
                     DataBinding.FieldName = 'STOCK_TOTAL'
