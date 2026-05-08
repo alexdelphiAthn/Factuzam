@@ -1089,7 +1089,7 @@ procedure TfrmMtoArticulos.btnVerificarCBClick(Sender: TObject);
 var
   qry: TUniQuery;
   CodArticulo, sCodigo, sSku, sTipo, sErrores: string;
-  iOk, iKo, iSkip: Integer;
+  iOk13, iOk8, iKo, iSkip: Integer;
 begin
   inherited;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
@@ -1103,8 +1103,9 @@ begin
   end;
 
   qry := TUniQuery.Create(nil);
-  iOk  := 0;
-  iKo  := 0;
+  iOk13 := 0;
+  iOk8  := 0;
+  iKo   := 0;
   iSkip := 0;
   sErrores := '';
   try
@@ -1125,16 +1126,17 @@ begin
 
       // Saltamos los placeholders pendientes de rellenar
       if (sCodigo = '') or (Pos('_FAB_', sCodigo) = 1) then
-      begin
-        Inc(iSkip);
-      end
-      else if EsEAN13Valido(sCodigo) then
-        Inc(iOk)
+        Inc(iSkip)
+      else if (Length(sCodigo) = 13) and EsEAN13Valido(sCodigo) then
+        Inc(iOk13)
+      else if (Length(sCodigo) = 8) and EsEAN8Valido(sCodigo) then
+        Inc(iOk8)
       else
       begin
         Inc(iKo);
         sErrores := sErrores + sLineBreak + '  ' + sCodigo + '  (SKU ' + sSku +
-                    ', Tipo ' + sTipo + ')';
+                    ', Tipo ' + sTipo + ', Long ' + IntToStr(Length(sCodigo)) +
+                    ')';
       end;
       qry.Next;
     end;
@@ -1143,15 +1145,17 @@ begin
     if iKo = 0 then
       ShowMessage(Format('Verificación OK.' + sLineBreak +
                          '- EAN-13 válidos: %d' + sLineBreak +
+                         '- EAN-8  válidos: %d' + sLineBreak +
                          '- Pendientes (placeholder/vacío): %d',
-                         [iOk, iSkip]))
+                         [iOk13, iOk8, iSkip]))
     else
       ShowMessage(Format('Verificación con incidencias.' + sLineBreak +
                          '- EAN-13 válidos: %d' + sLineBreak +
-                         '- EAN-13 NO válidos: %d' + sLineBreak +
+                         '- EAN-8  válidos: %d' + sLineBreak +
+                         '- NO válidos: %d' + sLineBreak +
                          '- Pendientes: %d' + sLineBreak +
                          'Códigos no válidos:%s',
-                         [iOk, iKo, iSkip, sErrores]));
+                         [iOk13, iOk8, iKo, iSkip, sErrores]));
   finally
     FreeAndNil(qry);
   end;
