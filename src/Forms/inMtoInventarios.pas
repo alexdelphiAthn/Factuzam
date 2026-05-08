@@ -131,8 +131,8 @@ type
     Panel3: TPanel;
     cxButton11: TcxButton;
     btnIraArticuloMov: TcxButton;
-    ActionManager1: TActionManager;
-    actMovimiento: TAction;
+    ActionList1: TActionList;
+    actIraArticulo: TAction;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
@@ -188,9 +188,9 @@ type
     procedure btnCargarClick(Sender: TObject);
     procedure cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
       Sender: TObject);
-    procedure actMovimientoExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnIraArticuloMovClick(Sender: TObject);
+    procedure actIraArticuloExecute(Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
@@ -513,10 +513,10 @@ begin
   end;
 end;
 
-procedure TfrmMtoInventarios.actMovimientoExecute(Sender: TObject);
+procedure TfrmMtoInventarios.actIraArticuloExecute(Sender: TObject);
 begin
   inherited;
-  if (pcDetail.ActivePage = tsDetalle) then
+   if (pcDetail.ActivePage = tsDetalle) then
       with tvLineas.DataController.DataSet do
   ShowMto(Self.Owner,
           'Articulos',
@@ -1319,13 +1319,13 @@ end;
 procedure TfrmMtoInventarios.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
-  actMovimientoExecute(Self);
+  actIraArticuloExecute(Self);
 end;
 
 procedure TfrmMtoInventarios.btnIraArticuloMovClick(Sender: TObject);
 begin
   inherited;
-  actMovimientoExecute(Self);
+  actIraArticuloExecute(Self);
 end;
 
 // ============================================================================

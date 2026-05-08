@@ -887,14 +887,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
     Left = 948
     Top = 224
   end
-  object ActionManager1: TActionManager
-    Left = 624
-    Top = 344
-    StyleName = 'Platform Default'
-    object actMovimiento: TAction
-      Caption = 'actIraArticulos'
-      ShortCut = 16449
-      OnExecute = actMovimientoExecute
+  object ActionList1: TActionList
+    Left = 608
+    Top = 288
+    object actIraArticulo: TAction
+      Caption = 'actIraArticulo'
+      OnExecute = actIraArticuloExecute
     end
   end
 end
