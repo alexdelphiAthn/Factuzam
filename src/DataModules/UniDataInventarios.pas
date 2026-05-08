@@ -133,6 +133,9 @@ type
     procedure CompletarUnidadesNoLeidas;
     procedure CargarDesdeListaSkus(ALista: TStringList);
     function  CargarSkusConMovimientosArticulo(const ACodigoArticulo: string): Integer;
+    function  SkuExiste(const ASku: string): Boolean;
+    function  CrearSkuDesdeLinea(const ACodigoArticulo, ASku: string;
+                                 const AAtributos: array of string): Boolean;
 
     // === ACCIONES SOBRE INVENTARIO ===
     function GetEstadoInventario: string;
@@ -158,6 +161,7 @@ var
 implementation
 
 uses
+  Vcl.Dialogs,          // MessageDlg para validación de SKU en BeforePost
   inLibUser,            // Usuario logueado
   inLibGlobalVar,
   UniDataConn;      // oConn
@@ -599,6 +603,10 @@ begin
 end;
 
 procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
+var
+  CodArticulo, CodSku: string;
+  Atribs: array[0..4] of string;
+  i: Integer;
 begin
   // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
   // "Field value required" del TClientDataSet.
@@ -613,6 +621,37 @@ begin
   if Trim(DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '' then
     DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
       DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+
+  // Validación de SKU: si la línea apunta a un SKU con atributos
+  // (CODIGO_UNIDAD_INVLIN ≠ CODIGO_ART_INVLIN) que no existe en
+  // fza_articulos_skus, preguntar al usuario si quiere crearlo. Sin esto,
+  // PRC_FZA_INVENTARIOS_APLICAR genera movimientos huérfanos sobre un SKU
+  // que no existe ni en fza_articulos_skus ni en fza_atributos_sku, y el
+  // stock no aparece bien en las pestañas de stock pivotado.
+  CodArticulo := DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+  CodSku      := DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+  if (CodSku <> CodArticulo) and (not SkuExiste(CodSku)) then
+  begin
+    if MessageDlg(
+         Format(
+           'El SKU "%s" no existe en la base de datos.'#13#10#13#10 +
+           '¿Quieres crearlo automáticamente con los atributos seleccionados ' +
+           'y guardar la línea?'#13#10#13#10 +
+           'Sí: se crea el SKU (fza_articulos_skus + fza_atributos_sku) y ' +
+           'se graba la línea.'#13#10 +
+           'No: no se graba. Cambia los atributos a una combinación válida ' +
+           'o pulsa "- Eliminar línea".',
+           [CodSku]),
+         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      raise Exception.CreateFmt(
+        'SKU "%s" no existe. La línea no se ha grabado. Cambia los ' +
+        'atributos o elimina la línea.', [CodSku]);
+
+    for i := 0 to 4 do
+      Atribs[i] := DataSet.FieldByName('ATTR' + IntToStr(i + 1) +
+                                                          '_VALOR').AsString;
+    CrearSkuDesdeLinea(CodArticulo, CodSku, Atribs);
+  end;
 end;
 
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
@@ -1047,6 +1086,107 @@ begin
     finally
       cdsLineas.EnableControls;
     end;
+  finally
+    qry.Free;
+  end;
+end;
+
+function TdmInventarios.SkuExiste(const ASku: string): Boolean;
+var
+  qry: TUniQuery;
+begin
+  Result := False;
+  if Trim(ASku) = '' then Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
+                    ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
+    qry.ParamByName('SKU').AsString := ASku;
+    qry.Open;
+    Result := not qry.IsEmpty;
+    qry.Close;
+  finally
+    qry.Free;
+  end;
+end;
+
+function TdmInventarios.CrearSkuDesdeLinea(const ACodigoArticulo, ASku: string;
+  const AAtributos: array of string): Boolean;
+var
+  qry: TUniQuery;
+  i, IdAv: Integer;
+  ValorAtrib: string;
+begin
+  // Crea fza_articulos_skus + fza_atributos_sku para un SKU que no existía,
+  // a partir del artículo padre y los valores de atributo de la línea.
+  // CODIGO_VAR_SKU se hereda del primer SKU existente del artículo o, si no
+  // hay ninguno, de fza_articulos.TIPO_VARIACION_ART.
+  Result := False;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+
+    // 1) Insertar la cabecera del SKU.
+    qry.SQL.Text :=
+      'INSERT IGNORE INTO fza_articulos_skus ' +
+      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+      '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'SELECT :SKU, :ART, ' +
+      '       COALESCE( ' +
+      '         (SELECT s.CODIGO_VAR_SKU FROM fza_articulos_skus s ' +
+      '           WHERE s.CODIGO_ART_SKU = :ART LIMIT 1), ' +
+      '         (SELECT a.TIPO_VARIACION_ART FROM fza_articulos a ' +
+      '           WHERE a.CODIGO_ART_ART = :ART) ' +
+      '       ), ''S'', NOW(), :USR, :USR';
+    qry.ParamByName('SKU').AsString := ASku;
+    qry.ParamByName('ART').AsString := ACodigoArticulo;
+    qry.ParamByName('USR').AsString := FUsuario;
+    qry.ExecSQL;
+
+    // 2) Insertar la relación con cada valor de atributo. La posición i+1
+    //    corresponde al ORDEN_VISUAL_ATRIBUTO de vi_atributos_nombres.
+    for i := 0 to High(AAtributos) do
+    begin
+      ValorAtrib := Trim(AAtributos[i]);
+      if ValorAtrib = '' then Continue;
+
+      qry.SQL.Text :=
+        'SELECT v.ID_AV ' +
+        '  FROM fza_atributos_valores v ' +
+        '  JOIN vi_atributos_nombres n ON v.ID_VA_AV = n.ID_ATRIBUTO ' +
+        ' WHERE n.CODIGO_ART_PADRE_ARTVIN = :ART ' +
+        '   AND n.ORDEN_VISUAL_ATRIBUTO = :ORDEN ' +
+        '   AND v.AV = :VALOR ' +
+        '   AND COALESCE(v.ESACTIVO_AV, ''S'') = ''S'' ' +
+        ' LIMIT 1';
+      qry.ParamByName('ART').AsString    := ACodigoArticulo;
+      qry.ParamByName('ORDEN').AsInteger := i + 1;
+      qry.ParamByName('VALOR').AsString  := ValorAtrib;
+      qry.Open;
+      if qry.IsEmpty then
+      begin
+        qry.Close;
+        raise Exception.CreateFmt(
+          'No se encontró el valor "%s" en el atributo nº %d del artículo %s. ' +
+          'No se ha podido crear el SKU %s.',
+          [ValorAtrib, i + 1, ACodigoArticulo, ASku]);
+      end;
+      IdAv := qry.FieldByName('ID_AV').AsInteger;
+      qry.Close;
+
+      qry.SQL.Text :=
+        'INSERT IGNORE INTO fza_atributos_sku ' +
+        '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, ' +
+        '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:SKU, :IDAV, NOW(), :USR, :USR)';
+      qry.ParamByName('SKU').AsString   := ASku;
+      qry.ParamByName('IDAV').AsInteger := IdAv;
+      qry.ParamByName('USR').AsString   := FUsuario;
+      qry.ExecSQL;
+    end;
+
+    Result := True;
   finally
     qry.Free;
   end;
