@@ -298,6 +298,7 @@ type
     procedure BtnAddPropClick(Sender: TObject);
   public
     procedure ActualizarVisibilidadVariaciones;
+    procedure AsegurarSkuArticuloSinVariaciones(const aCodArticulo: string);
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
   end;
@@ -334,12 +335,62 @@ procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
 var
   HayVars: Boolean;
 begin
+  HayVars := False;
   if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) then
     HayVars := dmmArticulos.unqryTablaG.FieldByName(
                                      'ESVARIACION_ART').AsWideString = 'S';
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
-  tsSKUS.TabVisible := HayVars;
+  // La pestaña "SKUs y CB" siempre visible: cuando el artículo no tiene
+  // variaciones se presenta una única fila con SKU = código del artículo
+  // (gestionada por AsegurarSkuArticuloSinVariaciones).
+  tsSKUS.TabVisible  := True;
+  // Sólo tiene sentido la generación masiva de SKUs si hay variaciones
+  addSkuAll.Visible  := HayVars;
+end;
+
+procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
+                                                     const aCodArticulo: string);
+var
+  qry: TUniQuery;
+  bTieneVar: Boolean;
+begin
+  if aCodArticulo = '' then Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+
+    // 1) ¿El artículo tiene variaciones? Si las tiene, no hacemos nada
+    qry.SQL.Text := 'SELECT ESVARIACION_ART FROM fza_articulos ' +
+                    ' WHERE CODIGO_ART_ART = :C';
+    qry.ParamByName('C').AsString := aCodArticulo;
+    qry.Open;
+    bTieneVar := (not qry.IsEmpty) and
+                 (qry.FieldByName('ESVARIACION_ART').AsString = 'S');
+    qry.Close;
+    if bTieneVar then Exit;
+
+    // 2) ¿Existe ya algún SKU para este artículo?
+    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
+                    ' WHERE CODIGO_ART_SKU = :C LIMIT 1';
+    qry.ParamByName('C').AsString := aCodArticulo;
+    qry.Open;
+    if not qry.IsEmpty then Exit;
+    qry.Close;
+
+    // 3) Insertamos un SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_skus '                                     +
+      '   (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,' +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                    +
+      'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
+    qry.ParamByName('SKU').AsString := aCodArticulo;
+    qry.ParamByName('ART').AsString := aCodArticulo;
+    qry.ParamByName('USR').AsString := oUser;
+    qry.ExecSQL;
+  finally
+    FreeAndNil(qry);
+  end;
 end;
 
 procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
@@ -938,6 +989,9 @@ begin
     Exit;
   end;
 
+  // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
+  AsegurarSkuArticuloSinVariaciones(CodArticulo);
+
   qrySinCB := TUniQuery.Create(nil);
   qryConCB := TUniQuery.Create(nil);
   qryInsert := TUniQuery.Create(nil);
@@ -1101,6 +1155,8 @@ begin
     ShowMessage('Seleccione o guarde un artículo antes de verificar.');
     Exit;
   end;
+
+  AsegurarSkuArticuloSinVariaciones(CodArticulo);
 
   qry := TUniQuery.Create(nil);
   iOk13 := 0;
@@ -1419,6 +1475,10 @@ begin
     FGestorVar.CargarVariaciones(CodArticulo);
 
   ActualizarVisibilidadVariaciones;
+  // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
+  // para que la rejilla SKUs y CB tenga al menos una fila editable
+  AsegurarSkuArticuloSinVariaciones(CodArticulo);
+  dmmArticulos.unqryVariacionesArticulos.Refresh;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
 end;
 
