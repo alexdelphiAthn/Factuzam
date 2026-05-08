@@ -440,21 +440,29 @@ end;
 function TdmInventarios.GenerarSiguienteLinea: string;
 var
   Maximo: Integer;
+  Clone: TClientDataSet;
 begin
   Maximo := 0;
   if cdsLineas.Active and (cdsLineas.RecordCount > 0) then
   begin
-    cdsLineas.DisableControls;
+    // Iteramos a través de un clon del cursor para no mover el cursor real
+    // de cdsLineas. Esto es crítico cuando GenerarSiguienteLinea se llama
+    // desde cdsLineasNewRecord (durante Append): mover el cursor con .First
+    // mientras el dataset está en dsInsert dispararía el Post automático
+    // del registro recién insertado, todavía con CODIGO_ART_INVLIN vacío,
+    // y haría saltar cdsLineasBeforePost con "(linea )" sin número.
+    Clone := TClientDataSet.Create(nil);
     try
-      cdsLineas.First;
-      while not cdsLineas.Eof do
+      Clone.CloneCursor(cdsLineas, True);
+      Clone.First;
+      while not Clone.Eof do
       begin
-        if StrToIntDef(cdsLineas.FieldByName('LINEA_INVLIN').AsString, 0) > Maximo then
-          Maximo := StrToIntDef(cdsLineas.FieldByName('LINEA_INVLIN').AsString, 0);
-        cdsLineas.Next;
+        if StrToIntDef(Clone.FieldByName('LINEA_INVLIN').AsString, 0) > Maximo then
+          Maximo := StrToIntDef(Clone.FieldByName('LINEA_INVLIN').AsString, 0);
+        Clone.Next;
       end;
     finally
-      cdsLineas.EnableControls;
+      Clone.Free;
     end;
   end;
   Result := Format('%.4d', [Maximo + 1]);
