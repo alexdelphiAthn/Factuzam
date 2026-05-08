@@ -36,6 +36,8 @@ type
     dsVariaciones: TDataSource;
     unqryVariacionesArticulos: TUniQuery;
     dsVariacionesArticulos: TDataSource;
+    unqrySkus: TUniQuery;
+    dsSkus: TDataSource;
     unqryStockArticulos: TUniQuery;
     dsStockArticulos: TDataSource;
     unqryMovimientosArticulos: TUniQuery;
@@ -51,6 +53,7 @@ type
     procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforePost(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
+    procedure unqrySkusBeforePost(DataSet: TDataSet);
   private
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -161,6 +164,22 @@ begin
   // El SQLUpdate del framework no lo tocaría: lo actualizamos a mano.
   if bChangedActivo then
     ActualizarSkuActivo(sSku, fldAct.AsString);
+end;
+
+procedure TdmArticulos.unqrySkusBeforePost(DataSet: TDataSet);
+begin
+  inherited;
+  if DataSet.State = dsInsert then
+  begin
+    if Trim(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString) = '' then
+      raise ERangeError.Create('Indique el código del SKU.');
+    // Article code se hereda del master/detail, pero por seguridad lo
+    // forzamos al artículo activo si está vacío.
+    if Trim(DataSet.FieldByName('CODIGO_ART_SKU').AsString) = '' then
+      DataSet.FieldByName('CODIGO_ART_SKU').AsString :=
+        unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  end;
+  oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
 procedure TdmArticulos.unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
@@ -304,10 +323,13 @@ begin
   unqryTiposIVA.Connection := oConn;
   unqryTarifas.Connection := oConn;
   unqryVariacionesArticulos.Connection := oConn;
+  unqrySkus.Connection := oConn;
   unqryStockArticulos.Connection := oConn;
   unqryMovimientosArticulos.Connection := oConn;
 //  unqryStockArticulos.MasterSource := (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryVariacionesArticulos.MasterSource :=
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  unqrySkus.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryLinFacturasArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
@@ -324,6 +346,7 @@ begin
   unqryLinFacturasArticulos.Open;
   unqryVariaciones.Open;
   unqryVariacionesArticulos.Open;
+  unqrySkus.Open;
   unqryStockArticulos.Open;
   unqryMovimientosArticulos.Open;
   QuitarEscribiblesVista;
