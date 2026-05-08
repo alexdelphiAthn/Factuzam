@@ -125,14 +125,12 @@ end;
 
 procedure TdmArticulos.unqryVariacionesArticulosBeforePost(DataSet: TDataSet);
 var
-  fldCB, fldAct, fldSku, fldId: TField;
-  sNewCB, sSku, sTipo, sPrin: string;
+  fldCB, fldAct, fldSku: TField;
+  sSku: string;
   bChangedActivo: Boolean;
-  qry: TUniQuery;
 begin
   inherited;
 
-  fldId  := DataSet.FindField('ID_CB');
   fldCB  := DataSet.FindField('CODIGO_BARRAS_CB');
   fldAct := DataSet.FindField('ESACTIVO_SKU');
   fldSku := DataSet.FindField('CODIGO_UNIDAD_SKU');
@@ -146,12 +144,10 @@ begin
       raise ERangeError.Create(
         'Indique el código de SKU al añadir un nuevo código de barras. ' +
         'Para crear un SKU nuevo use la pestaña SKUs.');
-    if (fldCB = nil) or (Trim(fldCB.AsString) = '') then
-      raise ERangeError.Create(
-        'Introduzca el código de barras antes de guardar la fila.');
+    if (fldCB = nil) then
+      raise ERangeError.Create('Falta el campo CODIGO_BARRAS_CB.');
     oDmConn.ActualizarUserTimeModif(DataSet);
-    // Dejamos que el framework lance SQLInsert (sobre fza_codigos_barras).
-    Exit;
+    Exit; // El framework lanza SQLInsert
   end;
 
   if DataSet.State <> dsEdit then Exit;
@@ -160,55 +156,6 @@ begin
 
   bChangedActivo := (fldAct <> nil) and
                     (VarToStr(fldAct.OldValue) <> fldAct.AsString);
-
-  // Caso especial: la fila representa un SKU sin ningún CB (ID_CB nulo
-  // por LEFT JOIN). Si el usuario ha tecleado un código, lo insertamos
-  // manualmente; el framework no puede usar SQLUpdate sobre ID_CB nulo.
-  if (fldId <> nil) and fldId.IsNull and (fldCB <> nil) then
-  begin
-    sNewCB := Trim(fldCB.AsString);
-    if sNewCB = '' then
-    begin
-      if bChangedActivo then
-        ActualizarSkuActivo(sSku, fldAct.AsString);
-      Exit;
-    end;
-
-    sTipo := Trim(VarToStr(DataSet.FieldByName('TIPO_CODIGO_CB').Value));
-    if sTipo = '' then sTipo := 'EAN13';
-    sPrin := Trim(VarToStr(DataSet.FieldByName('ESPRINCIPAL_CB').Value));
-    if sPrin = '' then sPrin := 'N';
-
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := oConn;
-      qry.SQL.Text :=
-        'INSERT INTO fza_codigos_barras '                              +
-        '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, '     +
-        '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:CB, :SKU, :TIPO, :PRIN, '                            +
-        '        CURRENT_TIMESTAMP, :USR, :USR)';
-      qry.ParamByName('CB').AsString   := sNewCB;
-      qry.ParamByName('SKU').AsString  := sSku;
-      qry.ParamByName('TIPO').AsString := sTipo;
-      qry.ParamByName('PRIN').AsString := sPrin;
-      qry.ParamByName('USR').AsString  := oUser;
-      qry.ExecSQL;
-    finally
-      FreeAndNil(qry);
-    end;
-
-    if bChangedActivo then
-      ActualizarSkuActivo(sSku, fldAct.AsString);
-
-    DataSet.Cancel;
-    // Close+Open para que el dataset reflote ID_CB del nuevo registro:
-    // un Refresh sobre detail master/detail puede no traer las filas
-    // recién insertadas con sus IDs.
-    DataSet.Close;
-    DataSet.Open;
-    Abort;
-  end;
 
   // ESACTIVO_SKU vive en fza_articulos_skus, no en fza_codigos_barras.
   // El SQLUpdate del framework no lo tocaría: lo actualizamos a mano.
@@ -221,13 +168,13 @@ var
   fldId: TField;
 begin
   inherited;
-  // Filas "fantasma" del LEFT JOIN: el SKU no tiene ningún CB asociado
-  // (ID_CB nulo). No hay nada que borrar en fza_codigos_barras.
+  // Defensivo por si la vista volviera a permitir filas sin ID_CB:
+  // sin ID_CB no hay nada que borrar en fza_codigos_barras.
   fldId := DataSet.FindField('ID_CB');
   if (fldId = nil) or fldId.IsNull then
     raise ERangeError.Create(
-      'Esta fila representa un SKU sin códigos de barras: no hay nada ' +
-      'que eliminar. Si quiere desactivar el SKU use la pestaña SKUs.');
+      'Esta fila no representa un código de barras existente. No hay ' +
+      'nada que eliminar.');
 end;
 
 procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
