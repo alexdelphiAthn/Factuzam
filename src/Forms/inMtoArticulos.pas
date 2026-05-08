@@ -918,6 +918,11 @@ begin
   begin
     dmmArticulos.unqryTarifasArticulos.Post;
   end;
+  if ( (dmmArticulos.unqryVariacionesArticulos.State = dsInsert) or
+       (dmmArticulos.unqryVariacionesArticulos.State = dsEdit)) then
+  begin
+    dmmArticulos.unqryVariacionesArticulos.Post;
+  end;
   if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
        (dmmArticulos.unqryTablaG.State = dsEdit)) then
   begin
