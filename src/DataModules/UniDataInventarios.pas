@@ -760,6 +760,15 @@ begin
       cdsLineas.ApplyUpdates(0);
   end;
 
+  // Salvaguarda: no aplicar un inventario sin líneas. Sin esto, la SP
+  // PRC_FZA_INVENTARIOS_APLICAR cambia el estado a APLICADO sin generar
+  // ningún movimiento, y cualquier línea con diferencia 0 se purga al
+  // entrar en la SP, dejando un inventario vacío y aplicado.
+  if (not cdsLineas.Active) or cdsLineas.IsEmpty then
+    raise Exception.Create(
+      'No se puede aplicar un inventario sin líneas. Añade al menos una ' +
+      'línea con diferencia de cantidad o de coste antes de regularizar.');
+
   unspAplicar.Close;
   unspAplicar.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
   unspAplicar.ParamByName('p_ALMACEN').AsString := FCodigoAlmacen;
