@@ -14,7 +14,7 @@ uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
-  System.Variants;
+  System.Variants, vcl.Controls;
 
 type
   TdmArticulos = class(TdmBase)
