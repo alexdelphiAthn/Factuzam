@@ -132,6 +132,7 @@ type
     procedure CargarTodosArticulosConStock;
     procedure CompletarUnidadesNoLeidas;
     procedure CargarDesdeListaSkus(ALista: TStringList);
+    function  CargarSkusConMovimientosArticulo(const ACodigoArticulo: string): Integer;
 
     // === ACCIONES SOBRE INVENTARIO ===
     function GetEstadoInventario: string;
@@ -213,6 +214,11 @@ begin
         begin
           if not (cdsLineas.State in [dsEdit, dsInsert]) then
             cdsLineas.Edit;
+          // Tantos atributos como segmentos haya tras el código de artículo.
+          // Sin esto, GenerarSkuFinal itera 0 veces sobre las líneas cargadas
+          // de BBDD y el SKU se queda obsoleto al cambiar Color/Talla.
+          cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
+                                                          Length(Partes) - 1;
           for i := 1 to 5 do
           begin
             if i < Length(Partes) then
@@ -952,6 +958,84 @@ begin
         qry.Next;
       end;
       cdsLineas.ApplyUpdates(0);
+    finally
+      cdsLineas.EnableControls;
+    end;
+  finally
+    qry.Free;
+  end;
+end;
+
+function TdmInventarios.CargarSkusConMovimientosArticulo(
+  const ACodigoArticulo: string): Integer;
+var
+  qry: TUniQuery;
+  NumLinea: Integer;
+  Sku: string;
+begin
+  // Inserta una línea de inventario por cada SKU distinto del artículo
+  // ACodigoArticulo que tenga al menos un movimiento en el almacén actual.
+  // Salta SKUs que ya estén presentes en este inventario.
+  // Devuelve el número de líneas insertadas.
+  Result := 0;
+  if Trim(ACodigoArticulo) = '' then
+    raise Exception.Create('Debe indicar un artículo (la línea actual está vacía).');
+  if GetEstadoInventario <> 'ABIERTO' then
+    raise Exception.Create('Solo se pueden añadir SKUs en un inventario ABIERTO');
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT DISTINCT m.CODIGO_UNIDAD_MOV AS CODIGO_UNIDAD_SKU, ' +
+      '       m.CODIGO_ART_MOV    AS CODIGO_ART_SKU, ' +
+      '       a.DESCRIPCION_ART, ' +
+      '       COALESCE(stk.CANTIDAD_STK, 0)     AS CANTIDAD_TEORICA, ' +
+      '       COALESCE(stk.PRECIO_MEDIO_STK, 0) AS PMP ' +
+      '  FROM fza_movimientos_almacen m ' +
+      '  JOIN fza_articulos a ' +
+      '    ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV ' +
+      '  LEFT JOIN fza_articulos_stockactual stk ' +
+      '    ON stk.CODIGO_UNIDAD_STK = m.CODIGO_UNIDAD_MOV ' +
+      '   AND stk.CODIGO_ALM_STK    = :ALMACEN ' +
+      ' WHERE m.CODIGO_ART_MOV = :ARTICULO ' +
+      '   AND m.CODIGO_ALM_MOV = :ALMACEN ' +
+      ' ORDER BY m.CODIGO_UNIDAD_MOV';
+    qry.ParamByName('ARTICULO').AsString := ACodigoArticulo;
+    qry.ParamByName('ALMACEN').AsString  := FCodigoAlmacen;
+    qry.Open;
+
+    if qry.IsEmpty then Exit;
+
+    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
+    cdsLineas.DisableControls;
+    try
+      while not qry.Eof do
+      begin
+        Sku := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+        if (Sku <> '') and (not ExisteLineaConSku(Sku)) then
+        begin
+          cdsLineas.Append;
+          cdsLineas.FieldByName('LINEA_INVLIN').AsString          := Format('%.4d', [NumLinea]);
+          cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString     := qry.FieldByName('CODIGO_ART_SKU').AsString;
+          cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString  := Sku;
+          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString := qry.FieldByName('DESCRIPCION_ART').AsString;
+          cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   := qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
+          // FISICA = 0: el usuario aún tiene que contar
+          cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    := 0;
+          cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       := qry.FieldByName('PMP').AsCurrency;
+          cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := qry.FieldByName('PMP').AsCurrency;
+          cdsLineas.Post;
+          Inc(NumLinea);
+          Inc(Result);
+        end;
+        qry.Next;
+      end;
+      if Result > 0 then
+      begin
+        cdsLineas.ApplyUpdates(0);
+        DesempaquetarAtributosDesdeSku;
+      end;
     finally
       cdsLineas.EnableControls;
     end;
