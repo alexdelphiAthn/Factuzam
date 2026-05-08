@@ -252,6 +252,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             TabOrder = 0
             Properties.ActivePage = tsDetalle
             Properties.CustomButtons.Buttons = <>
+            OnChange = pcDetailChange
             ClientRectBottom = 461
             ClientRectLeft = 2
             ClientRectRight = 1132
