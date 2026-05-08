@@ -317,7 +317,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               ImageIndex = 9
             end
             object tsSkuMto: TcxTabSheet
-              Caption = '&4_SKUs'
+              Caption = '&2_SKUs'
               ImageIndex = 6
               object pnlSkuMto: TPanel
                 Left = 948
@@ -389,7 +389,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               end
             end
             object tsSKUs: TcxTabSheet
-              Caption = '&4_C'#243'digos de Barras'
+              Caption = '&4_CB'
               ImageIndex = 6
               object Panel1: TPanel
                 Left = 948
