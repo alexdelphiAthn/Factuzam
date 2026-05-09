@@ -648,14 +648,12 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                     Caption = 'Entregada'
                     DataBinding.FieldName = 'CANTIDAD_ENTREGADA_PEDLIN'
                     Width = 90
-                    Styles.Content.Color = 14745312
                   end
                   object cxgrdcPedLinPEND: TcxGridDBColumn
                     Caption = 'Pendiente'
                     DataBinding.FieldName = 'CANTIDAD_PENDIENTE_PEDLIN'
                     Options.Editing = False
                     Width = 90
-                    Styles.Content.Color = 12903679
                   end
                   object cxgrdcPedLinESEN: TcxGridDBColumn
                     Caption = 'Entregada?'
