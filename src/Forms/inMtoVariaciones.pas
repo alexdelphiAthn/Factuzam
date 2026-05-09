@@ -60,11 +60,11 @@ type
     cxgrdArticulos: TcxGrid;
     tvArticulos: TcxGridDBTableView;
     cxgrdlvlArticulos: TcxGridLevel;
-    tvArticulosCODIGO_ART: TcxGridDBColumn;
+    tvArticulosCODIGO_ART_ART: TcxGridDBColumn;
     tvArticulosDESCRIPCION_ART: TcxGridDBColumn;
     tvArticulosESACTIVO_ART: TcxGridDBColumn;
     tvArticulosCODIGO_FAM_ART: TcxGridDBColumn;
-    tvArticulosNOMBRE_FAM: TcxGridDBColumn;
+    tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn;
     tvArticulosESVARIACION_ART: TcxGridDBColumn;
     splArticulosSkus: TcxSplitter;
     pnlSkus: TPanel;
