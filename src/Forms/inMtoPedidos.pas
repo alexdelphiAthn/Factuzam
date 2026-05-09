@@ -161,6 +161,9 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
+var
+  colEnt, colPend: TcxGridDBColumn;
+  stEnt, stPend: TcxStyle;
 begin
   inherited;
   dmmPedidos := TdmPedidos.Create(Self);
@@ -169,6 +172,23 @@ begin
   tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
   dmmPedidos.OpenTables;
+
+  colEnt  := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_ENTREGADA_PEDLIN');
+  colPend := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PENDIENTE_PEDLIN');
+  if colEnt <> nil then
+  begin
+    stEnt := TcxStyle.Create(Self);
+    stEnt.AssignedValues := [svColor];
+    stEnt.Color := $00E0FFE0;
+    colEnt.Styles.Content := stEnt;
+  end;
+  if colPend <> nil then
+  begin
+    stPend := TcxStyle.Create(Self);
+    stPend.AssignedValues := [svColor];
+    stPend.Color := $00C4E1FF;
+    colPend.Styles.Content := stPend;
+  end;
 end;
 
 procedure TfrmMtoPedidos.btnNuevoClick(Sender: TObject);
