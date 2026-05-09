@@ -3,24 +3,33 @@ inherited frmMtoPedidos: TfrmMtoPedidos
   ClientHeight = 765
   ClientWidth = 1085
   StyleElements = [seFont, seClient, seBorder]
+  ExplicitTop = -38
   ExplicitWidth = 1085
   ExplicitHeight = 765
   TextHeight = 19
-  OnCreate = FormCreate
   inherited pButtonPage: TPanel
     Width = 945
     Height = 765
     StyleElements = [seFont, seClient, seBorder]
+    ExplicitWidth = 945
+    ExplicitHeight = 765
     inherited pcPantalla: TcxPageControl
       Width = 945
       Height = 725
-      Properties.ActivePage = tsLista
-      ClientRectBottom = 721
-      ClientRectRight = 941
+      ExplicitWidth = 945
+      ExplicitHeight = 725
+      ClientRectBottom = 723
+      ClientRectRight = 943
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 941
+        ExplicitHeight = 694
         inherited cxGrdPrincipal: TcxGrid
-          Width = 937
-          Height = 691
+          Width = 941
+          Height = 694
+          ExplicitWidth = 941
+          ExplicitHeight = 694
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdPedNUMERO_PED: TcxGridDBColumn
               Caption = 'Nro Pedido'
@@ -86,10 +95,14 @@ inherited frmMtoPedidos: TfrmMtoPedidos
         end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 941
+        ExplicitHeight = 694
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 937
+          Width = 941
           Height = 230
           Align = alTop
           BevelOuter = bvNone
@@ -97,20 +110,23 @@ inherited frmMtoPedidos: TfrmMtoPedidos
           object pcCab: TcxPageControl
             Left = 0
             Top = 0
-            Width = 937
+            Width = 941
             Height = 230
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsCabecera
-            ClientRectBottom = 226
-            ClientRectRight = 933
-            ClientRectTop = 24
+            Properties.CustomButtons.Buttons = <>
+            ClientRectBottom = 228
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 29
             object tsCabecera: TcxTabSheet
               Caption = 'Cabecera'
               object lblNroPedido: TcxLabel
                 Left = 8
                 Top = 12
                 Caption = 'N'#250'mero'
+                TabOrder = 9
               end
               object txtNUMERO_PED: TcxDBTextEdit
                 Left = 8
@@ -124,6 +140,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 106
                 Top = 12
                 Caption = 'Serie'
+                TabOrder = 10
               end
               object txtSERIE_PED: TcxDBTextEdit
                 Left = 106
@@ -137,6 +154,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 184
                 Top = 12
                 Caption = 'Fecha'
+                TabOrder = 11
               end
               object dteFECHA_PED: TcxDBDateEdit
                 Left = 184
@@ -150,6 +168,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 302
                 Top = 12
                 Caption = 'Fecha entrega'
+                TabOrder = 12
               end
               object dteFECHA_ENTREGA_PED: TcxDBDateEdit
                 Left = 302
@@ -163,6 +182,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 420
                 Top = 12
                 Caption = 'Estado'
+                TabOrder = 13
               end
               object txtESTADO_PED: TcxDBTextEdit
                 Left = 420
@@ -177,6 +197,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 540
                 Top = 12
                 Caption = 'ID PrestaShop'
+                TabOrder = 14
               end
               object txtIDPS_PED: TcxDBTextEdit
                 Left = 540
@@ -188,13 +209,14 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Width = 90
               end
               object lblRefPS: TcxLabel
-                Left = 638
-                Top = 12
+                Left = 540
+                Top = 68
                 Caption = 'Ref. PrestaShop'
+                TabOrder = 15
               end
               object txtREFERENCIAPS_PED: TcxDBTextEdit
-                Left = 638
-                Top = 32
+                Left = 540
+                Top = 88
                 DataBinding.DataField = 'REFERENCIAPS_PED'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
@@ -205,6 +227,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Left = 8
                 Top = 80
                 Caption = 'Empresa Emisora'
+                TabOrder = 16
               end
               object btnCODIGO_EMP: TcxDBButtonEdit
                 Left = 8
@@ -224,13 +247,15 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 100
                 DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_PED'
                 DataBinding.DataSource = dsTablaG
-                Style.Font.Style = [fsBold]
+                TabOrder = 17
+                Height = 21
                 Width = 380
               end
               object lblCodigoCliente: TcxLabel
                 Left = 8
                 Top = 140
                 Caption = 'Cliente'
+                TabOrder = 18
               end
               object btnCODIGO_CLI: TcxDBButtonEdit
                 Left = 8
@@ -250,7 +275,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 160
                 DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
                 DataBinding.DataSource = dsTablaG
-                Style.Font.Style = [fsBold]
+                TabOrder = 19
+                Height = 21
                 Width = 380
               end
             end
@@ -259,14 +285,15 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object grpEmpresa: TcxGroupBox
                 Left = 4
                 Top = 4
-                Width = 920
-                Height = 192
                 Caption = 'Datos Empresa Emisora'
                 TabOrder = 0
+                Height = 192
+                Width = 920
                 object lblNIFEmp: TcxLabel
                   Left = 12
                   Top = 24
                   Caption = 'NIF'
+                  TabOrder = 9
                 end
                 object txtNIF_EMPRESA_PED: TcxDBTextEdit
                   Left = 12
@@ -280,6 +307,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 152
                   Top = 24
                   Caption = 'M'#243'vil'
+                  TabOrder = 10
                 end
                 object txtMOVIL_EMPRESA_PED: TcxDBTextEdit
                   Left = 152
@@ -293,6 +321,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Left = 292
                   Top = 24
                   Caption = 'Email'
+                  TabOrder = 11
                 end
                 object txtEMAIL_EMPRESA_PED: TcxDBTextEdit
                   Left = 292
@@ -357,10 +386,10 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object grpClienteFiscal: TcxGroupBox
                 Left = 4
                 Top = 4
-                Width = 920
-                Height = 192
                 Caption = 'Datos Cliente Fiscal'
                 TabOrder = 0
+                Height = 192
+                Width = 920
                 object txtRAZON_SOCIAL_CLIENTE_FISCAL_PED: TcxDBTextEdit
                   Left = 12
                   Top = 24
@@ -448,10 +477,10 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object grpClienteEnvio: TcxGroupBox
                 Left = 4
                 Top = 4
-                Width = 920
-                Height = 192
                 Caption = 'Datos Cliente Env'#237'o'
                 TabOrder = 0
+                Height = 192
+                Width = 920
                 object txtNOMBRE_CLI_ENVIO_PED: TcxDBTextEdit
                   Left = 12
                   Top = 24
@@ -523,7 +552,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
         object pnlBotonesAcciones: TPanel
           Left = 0
           Top = 230
-          Width = 937
+          Width = 941
           Height = 40
           Align = alTop
           BevelOuter = bvNone
@@ -534,8 +563,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 120
             Height = 28
             Caption = 'A'#241'adir l'#237'nea'
-            OnClick = btnAnadirLineaClick
             TabOrder = 0
+            OnClick = btnAnadirLineaClick
           end
           object btnBorrarLinea: TcxButton
             Left = 130
@@ -543,8 +572,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 120
             Height = 28
             Caption = 'Borrar l'#237'nea'
-            OnClick = btnBorrarLineaClick
             TabOrder = 1
+            OnClick = btnBorrarLineaClick
           end
           object btnEntregarTodo: TcxButton
             Left = 256
@@ -552,8 +581,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 130
             Height = 28
             Caption = 'Marcar todo entregado'
-            OnClick = btnEntregarTodoClick
             TabOrder = 2
+            OnClick = btnEntregarTodoClick
           end
           object btnCrearAlbaran: TcxButton
             Left = 392
@@ -561,6 +590,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 130
             Height = 28
             Caption = 'Crear albar'#225'n'
+            TabOrder = 3
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -11
@@ -568,7 +598,6 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Font.Style = [fsBold]
             ParentFont = False
             OnClick = btnCrearAlbaranClick
-            TabOrder = 3
           end
           object btnImportarPS: TcxButton
             Left = 528
@@ -576,8 +605,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 160
             Height = 28
             Caption = 'Importar de PrestaShop'
-            OnClick = btnImportarPSClick
             TabOrder = 4
+            OnClick = btnImportarPSClick
           end
           object btnImprimir: TcxButton
             Left = 694
@@ -585,54 +614,52 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 100
             Height = 28
             Caption = 'Imprimir'
-            OnClick = btnImprimirClick
             TabOrder = 5
+            OnClick = btnImprimirClick
           end
         end
         object pnlBodyFicha: TPanel
           Left = 0
           Top = 270
-          Width = 937
-          Height = 380
+          Width = 941
+          Height = 384
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
           object pcPedido: TcxPageControl
             Left = 0
             Top = 0
-            Width = 937
-            Height = 380
+            Width = 941
+            Height = 384
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsLineasPedido
-            ClientRectBottom = 376
-            ClientRectRight = 933
-            ClientRectTop = 24
+            Properties.CustomButtons.Buttons = <>
+            ClientRectBottom = 382
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 29
             object tsLineasPedido: TcxTabSheet
               Caption = 'L'#237'neas Pedido'
               object cxGrdPedidosLineas: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 933
-                Height = 352
+                Width = 937
+                Height = 353
                 Align = alClient
                 TabOrder = 0
                 object tvPedidosLineas: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   object cxgrdcPedLinLINEA: TcxGridDBColumn
                     Caption = 'L'#237'nea'
                     DataBinding.FieldName = 'LINEA_PEDLIN'
-                    Width = 50
+                    Width = 65
                   end
                   object cxgrdcPedLinART: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_PEDLIN'
-                    Width = 130
+                    Width = 154
                   end
                   object cxgrdcPedLinDESCR: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
@@ -647,19 +674,19 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   object cxgrdcPedLinENT: TcxGridDBColumn
                     Caption = 'Entregada'
                     DataBinding.FieldName = 'CANTIDAD_ENTREGADA_PEDLIN'
-                    Width = 90
+                    Width = 119
                   end
                   object cxgrdcPedLinPEND: TcxGridDBColumn
                     Caption = 'Pendiente'
                     DataBinding.FieldName = 'CANTIDAD_PENDIENTE_PEDLIN'
                     Options.Editing = False
-                    Width = 90
+                    Width = 110
                   end
                   object cxgrdcPedLinESEN: TcxGridDBColumn
                     Caption = 'Entregada?'
                     DataBinding.FieldName = 'ESENTREGADA_PEDLIN'
                     Options.Editing = False
-                    Width = 70
+                    Width = 111
                   end
                   object cxgrdcPedLinPSIVA: TcxGridDBColumn
                     Caption = 'PVP S/IVA'
@@ -692,15 +719,11 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               object cxGrdAlbaranes: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 933
-                Height = 352
+                Width = 937
+                Height = 353
                 Align = alClient
                 TabOrder = 0
                 object tvAlbaranes: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   object cxgrdcAlbNUMERO_ALB: TcxGridDBColumn
                     Caption = 'N'#250'mero'
                     DataBinding.FieldName = 'NUMERO_ALB'
@@ -733,19 +756,15 @@ inherited frmMtoPedidos: TfrmMtoPedidos
               end
             end
             object tsMensajes: TcxTabSheet
-              Caption = 'Mensajes'
+              Caption = 'Mensajes con el cliente'
               object cxGrdMensajes: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 933
-                Height = 352
+                Width = 937
+                Height = 353
                 Align = alClient
                 TabOrder = 0
                 object tvMensajes: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   object cxgrdcMsgFecha: TcxGridDBColumn
                     Caption = 'Fecha'
                     DataBinding.FieldName = 'FECHAPS_MENSAJE_PEDIDO'
@@ -754,7 +773,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   object cxgrdcMsgEmpleado: TcxGridDBColumn
                     Caption = 'Empleado'
                     DataBinding.FieldName = 'IDEMPLEADOPS_MENSAJE_PEDIDO'
-                    Width = 80
+                    Width = 120
                   end
                   object cxgrdcMsgTexto: TcxGridDBColumn
                     Caption = 'Mensaje'
@@ -776,16 +795,16 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 DataBinding.DataField = 'OBSERVACIONES_PED'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                Height = 352
-                Width = 933
+                Height = 353
+                Width = 937
               end
             end
           end
         end
         object pnlBottomTotales: TPanel
           Left = 0
-          Top = 650
-          Width = 937
+          Top = 654
+          Width = 941
           Height = 40
           Align = alBottom
           BevelOuter = bvNone
@@ -794,6 +813,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Left = 380
             Top = 8
             Caption = 'Bases'
+            TabOrder = 3
           end
           object curTOTAL_BASES_PED: TcxDBCurrencyEdit
             Left = 425
@@ -808,6 +828,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Left = 540
             Top = 8
             Caption = 'IVA'
+            TabOrder = 4
           end
           object curTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit
             Left = 570
@@ -822,7 +843,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Left = 690
             Top = 8
             Caption = 'TOTAL'
-            Style.Font.Style = [fsBold]
+            TabOrder = 5
           end
           object curTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit
             Left = 740
@@ -830,11 +851,69 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             DataBinding.DataField = 'TOTAL_LIQUIDO_PED'
             DataBinding.DataSource = dsTablaG
             Properties.ReadOnly = True
-            Style.Font.Style = [fsBold]
             TabOrder = 2
             Width = 130
           end
         end
+      end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 941
+        ExplicitHeight = 694
+        inherited pnlPerfilTop: TPanel
+          Width = 941
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 941
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 941
+          Height = 637
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 941
+          ExplicitHeight = 637
+          inherited cxgrdPerfil: TcxGrid
+            Width = 941
+            Height = 637
+            ExplicitWidth = 941
+            ExplicitHeight = 637
+          end
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      Width = 945
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitWidth = 945
+      inherited pnlTopGrid: TPanel
+        Width = 945
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 945
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    Left = 945
+    Height = 765
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 945
+    ExplicitHeight = 765
+    inherited pButtonGen: TPanel
+      Top = 567
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitTop = 567
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end
