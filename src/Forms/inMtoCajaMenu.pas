@@ -136,7 +136,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe;
+  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -153,6 +153,9 @@ procedure TfrmMtoMenuCaja.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
   frmMtoMenuCaja := nil;
+  if Assigned(frmMtoPrincipal) and
+     (frmMtoPrincipal.WindowState = wsMinimized) then
+    frmMtoPrincipal.WindowState := wsNormal;
 end;
 
 procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
