@@ -11,6 +11,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   Font.Name = 'Segoe UI'
   Font.Style = []
   KeyPreview = True
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
