@@ -147,7 +147,7 @@ begin
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
     ParamByName('pserie').AsString    := unqryTablaG.FieldByName('SERIE_ALB').AsString;
-    ParamByName('ptipodoc').AsString  := 'AL';
+    ParamByName('ptipodoc').AsString  := 'AV';
     ParamByName('pUSUARIOMODIF').AsString := oUser;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
                                   unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
