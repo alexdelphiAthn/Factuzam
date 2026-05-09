@@ -23,34 +23,61 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPropiedades,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, cxDBEdit, cxDropDownEdit, cxSplitter, cxMaskEdit;
 
 type
   TfrmMtoPropiedades = class(TfrmMtoGen)
-    cxGrdDBTabPrinCODIGO_PROP_ARTPROP: TcxGridDBColumn;
-    cxGrdDBTabPrinNOMBRE_PROP_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinTIPO_VALOR_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinESACTIVO_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinNUM_ART_USOS: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinCODIGO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNOMBRE: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinTIPO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinACTIVO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNUMARTUSOS: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+
+    pnl1: TPanel;
+    Panel1: TPanel;
+    lblCodigo: TcxLabel;
+    txtCODIGO: TcxDBTextEdit;
+    lblNombre: TcxLabel;
+    txtNOMBRE: TcxDBTextEdit;
+    lblTipo: TcxLabel;
+    cmbTIPO: TcxDBComboBox;
+    chkACTIVO: TcxDBCheckBox;
+    cxspltr1: TcxSplitter;
+    pnl2: TPanel;
+    pcPestana: TcxPageControl;
+
+    tsValores: TcxTabSheet;
+    cxgrdValores: TcxGrid;
+    tvValores: TcxGridDBTableView;
+    lvValores: TcxGridLevel;
+    tvValoresPV: TcxGridDBColumn;
+    tvValoresDESCRIPCION_PV: TcxGridDBColumn;
+    tvValoresESACTIVO_PV: TcxGridDBColumn;
+    tvValoresINSTANTEALTA: TcxGridDBColumn;
+    tvValoresUSUARIOALTA: TcxGridDBColumn;
+
     tsArticulos: TcxTabSheet;
-    cxGrdArticulos: TcxGrid;
-    cxGrdArtView: TcxGridDBTableView;
-    cxGrdArtLevel: TcxGridLevel;
-    cxGrdArtCODIGO_ART_ART: TcxGridDBColumn;
-    cxGrdArtDESCRIPCION_ARTICULO: TcxGridDBColumn;
-    cxGrdArtVALOR_LISTA: TcxGridDBColumn;
-    cxGrdArtVALOR_LIBRE_ARTPROP: TcxGridDBColumn;
-    cxGrdArtINSTANTE_ALTA: TcxGridDBColumn;
-    cxGrdArtUSUARIO_ALTA: TcxGridDBColumn;
+    cxgrdArticulos: TcxGrid;
+    tvArticulos: TcxGridDBTableView;
+    lvArticulos: TcxGridLevel;
+    tvArticulosCODIGO_ART_ART: TcxGridDBColumn;
+    tvArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn;
+    tvArticulosVALOR_LISTA: TcxGridDBColumn;
+    tvArticulosVALOR_LIBRE_ARTPROP: TcxGridDBColumn;
+    tvArticulosINSTANTEALTA: TcxGridDBColumn;
+    tvArticulosUSUARIOALTA: TcxGridDBColumn;
+
     alPropiedades: TActionList;
     actGoArticulo: TAction;
+
     procedure dsTablaGStateChange(Sender: TObject);
     procedure actGoArticuloExecute(Sender: TObject);
     procedure actGoArticuloUpdate(Sender: TObject);
+    procedure unqryValoresBeforePost(DataSet: TDataSet);
   private
     dmmPropiedades: TdmPropiedades;
   public
@@ -76,24 +103,50 @@ begin
   inherited;
   dmmPropiedades := tdmDataModule as TdmPropiedades;
   pkFieldName := '`CODIGO_PROP_ARTPROP';
-  cxGrdArtView.DataController.DataSource := dmmPropiedades.dsArticulos;
+
+  dmmPropiedades.unqryArticulos.Connection := oConn;
+  dmmPropiedades.unqryValores.Connection   := oConn;
   if not dmmPropiedades.unqryArticulos.Active then
     dmmPropiedades.unqryArticulos.Open;
+  if not dmmPropiedades.unqryValores.Active then
+    dmmPropiedades.unqryValores.Open;
+
+  tvArticulos.DataController.DataSource := dmmPropiedades.dsArticulos;
+  tvValores.DataController.DataSource   := dmmPropiedades.dsValores;
+  dmmPropiedades.unqryValores.BeforePost := unqryValoresBeforePost;
 end;
 
 procedure TfrmMtoPropiedades.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   if dsTablaG.State = dsInsert then
-    cxGrdDBTabPrinCODIGO_PROP_ARTPROP.Options.Editing := True
+    txtCODIGO.Properties.ReadOnly := False
   else
-    cxGrdDBTabPrinCODIGO_PROP_ARTPROP.Options.Editing := False;
+    txtCODIGO.Properties.ReadOnly := True;
+end;
+
+procedure TfrmMtoPropiedades.unqryValoresBeforePost(DataSet: TDataSet);
+begin
+  if (DataSet.State = dsInsert) and
+     Assigned(dmmPropiedades) and
+     dmmPropiedades.unqryTablaG.Active and
+     not dmmPropiedades.unqryTablaG.IsEmpty then
+  begin
+    if DataSet.FieldByName('ID_PROP_PV').IsNull then
+      DataSet.FieldByName('ID_PROP_PV').AsString :=
+        dmmPropiedades.unqryTablaG.FieldByName('CODIGO_PROP_ARTPROP').AsString;
+    if (DataSet.FindField('ESACTIVO_PV') <> nil) and
+       DataSet.FieldByName('ESACTIVO_PV').IsNull then
+      DataSet.FieldByName('ESACTIVO_PV').AsString := 'S';
+  end;
+  oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
 procedure TfrmMtoPropiedades.actGoArticuloUpdate(Sender: TObject);
 begin
   TAction(Sender).Enabled :=
-    (pcPantalla.ActivePage = tsArticulos) and
+    (pcPantalla.ActivePage = tsFicha) and
+    (pcPestana.ActivePage = tsArticulos) and
     Assigned(dmmPropiedades) and
     Assigned(dmmPropiedades.unqryArticulos) and
     dmmPropiedades.unqryArticulos.Active and
