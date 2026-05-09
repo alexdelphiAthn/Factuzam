@@ -4,13 +4,10 @@ inherited dmVariaciones: TdmVariaciones
     SQLInsert.Strings = (
       'INSERT INTO `fza_variaciones`'
       
-        '  (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INS' +
-        'TANTEMODIF`, `INSTANTEALTA`, `USUARIOALTA`, `USUARIOMODIF`)'
+        '  (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
       
-        '  (:`CODIGO_VAR`, :`NOMBRE_VAR`, :`ESACTIVO_VAR`, :`ORDEN_VAR`, ' +
-        ':`INSTANTEMODIF`, :`INSTANTEALTA`, :`USUARIOALTA`, :`USUARIOMODI' +
-        'F`)')
+        '  (:`CODIGO_VAR`, :`NOMBRE_VAR`, :`ESACTIVO_VAR`, :`ORDEN_VAR`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_variaciones`'
       'WHERE'
@@ -19,11 +16,8 @@ inherited dmVariaciones: TdmVariaciones
       'UPDATE `fza_variaciones`'
       'SET'
       
-        '  `CODIGO_VAR` = :`CODIGO_VAR`, `NOMBRE_VAR` = :`NOMBRE_VAR`, `E' +
-        'SACTIVO_VAR` = :`ESACTIVO_VAR`, `ORDEN_VAR` = :`ORDEN_VAR`, `INS' +
-        'TANTEMODIF` = :`INSTANTEMODIF`, `INSTANTEALTA` = :`INSTANTEALTA`' +
-        ', `USUARIOALTA` = :`USUARIOALTA`, `USUARIOMODIF` = :`USUARIOMODI' +
-        'F`'
+        '  `CODIGO_VAR` = :`CODIGO_VAR`, `NOMBRE_VAR` = :`NOMBRE_VAR`, `ESACTIVO_VAR` = :`ESACTIVO_VAR`, `ORDEN_VAR` = :`ORDEN_VAR`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `U' +
+        'SUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       '  `CODIGO_VAR` = :`Old_CODIGO_VAR`')
     SQLLock.Strings = (
@@ -49,15 +43,15 @@ inherited dmVariaciones: TdmVariaciones
   object unqryArticulosVariacion: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT CODIGO_ARTICULO, DESCRIPCION_ARTICULO, ACTIVO_ARTICULO,'
-      '       CODIGO_FAMILIA_ARTICULO, NOMBRE_FAMILIA,'
-      '       ESVARIACION_ARTICULO, TIPO_VARIACION_ARTICULO,'
-      '       ORDEN_ARTICULO, INSTANTEALTA, INSTANTEMODIF,'
-      '       USUARIOALTA, USUARIOMODIF'
+      'SELECT CODIGO_ART, DESCRIPCION_ART, ESACTIVO_ART,'
+      '       CODIGO_FAM_ART, NOMBRE_FAM,'
+      '       ESVARIACION_ART, TIPO_VARIACION_ART,'
+      '       ORDEN_ART, INSTANTE_ALTA, INSTANTE_MODIF,'
+      '       USUARIO_ALTA, USUARIO_MODIF'
       '  FROM vi_articulos'
-      ' ORDER BY ORDEN_ARTICULO, CODIGO_ARTICULO')
+      ' ORDER BY ORDEN_ART, CODIGO_ART')
     MasterFields = 'CODIGO_VAR'
-    DetailFields = 'TIPO_VARIACION_ARTICULO'
+    DetailFields = 'TIPO_VARIACION_ART'
     Left = 200
     ParamData = <
       item

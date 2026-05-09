@@ -14,12 +14,12 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             OptionsData.Editing = True
             object cxGrdDBTabPrinCODIGO_EMPRESA_PAGO: TcxGridDBColumn
               Caption = 'Empresa'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_PAGO'
+              DataBinding.FieldName = 'CODIGO_EMP_PAGO'
               Width = 90
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_PAGO: TcxGridDBColumn
               Caption = 'Almac'#233'n'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_PAGO'
+              DataBinding.FieldName = 'CODIGO_ALM_PAGO'
               Width = 90
             end
             object cxGrdDBTabPrinCODIGO_CAJA_PAGO: TcxGridDBColumn
@@ -44,7 +44,7 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             end
             object cxGrdDBTabPrinCODIGO_FORMAP: TcxGridDBColumn
               Caption = 'Forma de Pago'
-              DataBinding.FieldName = 'CODIGO_FORMAP'
+              DataBinding.FieldName = 'CODIGO_FP_CFP'
               Width = 120
             end
             object cxGrdDBTabPrinCODIGO_DIVISA_PAGO: TcxGridDBColumn
@@ -54,7 +54,7 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             end
             object cxGrdDBTabPrinRED_BLOCKCHAIN: TcxGridDBColumn
               Caption = 'Red Blockchain'
-              DataBinding.FieldName = 'RED_BLOCKCHAIN'
+              DataBinding.FieldName = 'RED_BLOCKCHAIN_PAGO'
               Width = 130
             end
             object cxGrdDBTabPrinFACTOR_CAMBIO_PAGO: TcxGridDBColumn
@@ -79,7 +79,7 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             end
             object cxGrdDBTabPrinREFERENCIA_PAGO: TcxGridDBColumn
               Caption = 'Referencia'
-              DataBinding.FieldName = 'REFERENCIA_PAGO'
+              DataBinding.FieldName = 'REFERENCIA_FACPAG'
               Width = 200
             end
             object cxGrdDBTabPrinOBSERVACIONES_PAGO: TcxGridDBColumn
@@ -89,20 +89,20 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
