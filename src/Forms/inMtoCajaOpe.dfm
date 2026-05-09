@@ -755,5 +755,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       ShortCut = 32891
       OnExecute = actGuardarLayoutExecute
     end
+    object actAbrirArticulos: TAction
+      Caption = 'Art'#237'culos'
+      ShortCut = 16449
+      OnExecute = actAbrirArticulosExecute
+    end
   end
 end
