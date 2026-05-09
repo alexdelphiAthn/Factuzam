@@ -160,7 +160,11 @@ uses
   inMtoCajaOperacionesHist in 'src\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
   UniDataCajaOperacionesHist in 'src\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TdmCajaOperacionesHist},
   inMtoDepositosCliente in 'src\Forms\inMtoDepositosCliente.pas' {frmMtoDepositosCliente},
-  UniDataDepositosCliente in 'src\DataModules\UniDataDepositosCliente.pas' {dmDepositosCliente: TdmDepositosCliente};
+  UniDataDepositosCliente in 'src\DataModules\UniDataDepositosCliente.pas' {dmDepositosCliente: TdmDepositosCliente},
+  inMtoPropiedades in 'src\Forms\inMtoPropiedades.pas' {frmMtoPropiedades},
+  UniDataPropiedades in 'src\DataModules\UniDataPropiedades.pas' {dmPropiedades: TdmPropiedades},
+  inMtoPropiedadesValores in 'src\Forms\inMtoPropiedadesValores.pas' {frmMtoPropiedadesValores},
+  UniDataPropiedadesValores in 'src\DataModules\UniDataPropiedadesValores.pas' {dmPropiedadesValores: TdmPropiedadesValores};
 
 var
   frmLogon: TfrmLogon;
