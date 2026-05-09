@@ -4134,7 +4134,7 @@ INSERT INTO `fza_winforms` VALUES ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTar
 INSERT INTO `fza_winforms` VALUES ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 1);
 INSERT INTO `fza_winforms` VALUES ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+M', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1);
 INSERT INTO `fza_winforms` VALUES ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 1);
-INSERT INTO `fza_winforms` VALUES ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+U', 'UniDataVariaciones.TdmVariaciones', 1);
+INSERT INTO `fza_winforms` VALUES ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 1);
 INSERT INTO `fza_winforms` VALUES ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 1);
 INSERT INTO `fza_winforms` VALUES ('MovimientosAlmacen', 'Movimientos de Almacén', 'Movimientosdealmacn1', 'inMtoMovimientosAlmacen.TfrmMtoMovimientosAlmacen', 'Ctrl+W', 'UniDataMovimientosAlmacen.TdmMovimientosAlmacen', 1);
 INSERT INTO `fza_winforms` VALUES ('DepositosCliente', 'Depósitos de Clientes', 'mnuDepositosCliente', 'inMtoDepositosCliente.TfrmMtoDepositosCliente', 'Ctrl+D', 'UniDataDepositosCliente.TdmDepositosCliente', 1);
