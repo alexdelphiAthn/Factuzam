@@ -50,10 +50,19 @@ var
   dmDat: TdmBase;
   sPkTab: String;
   iNum : Integer;
+  iForm: Integer;
   NewCaption: string;
 begin
   if not (Owner is TfrmMtoPrincipal) then Exit;
   frmMain := TfrmMtoPrincipal(Owner);
+  if frmMain.WindowState = wsMinimized then
+    frmMain.WindowState := wsNormal;
+  for iForm := 0 to Screen.FormCount - 1 do
+  begin
+    if (Screen.Forms[iForm].ClassName = 'TfrmMtoMenuCaja') and
+       (Screen.Forms[iForm].WindowState <> wsMinimized) then
+      Screen.Forms[iForm].WindowState := wsMinimized;
+  end;
   if frmMain.FormManager = nil then
     frmMain.FormManager := TEmbeddedFormManager.Create(frmMain.pcPrincipal);
   ofzaF := frmMain.oFzaWinf.GetElement(sCall);
