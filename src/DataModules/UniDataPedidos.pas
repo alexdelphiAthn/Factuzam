@@ -87,6 +87,8 @@ uses
 
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 { TdmPedidos }
 
 procedure TdmPedidos.DataModuleCreate(Sender: TObject);
@@ -830,5 +832,8 @@ begin
     qMsg.Free;
   end;
 end;
+
+initialization
+  ForceReferenceToClass(TdmPedidos);
 
 end.
