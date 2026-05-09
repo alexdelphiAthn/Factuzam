@@ -190,142 +190,18 @@ INSERT INTO `fza_articulos_familias` VALUES ('ROPA', 'S', 1, 'N', NULL, 'Ropa de
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_articulos_propiedades`;
 CREATE TABLE `fza_articulos_propiedades`  (
-  `CODIGO_ART_ART` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `CODIGO_PROP_ARTPROP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'FK a fza_propiedades',
-  `ID_PV_ARTPROP` int NULL DEFAULT NULL COMMENT 'Si TIPO_VALOR=LISTA, FK a fza_propiedades_valores',
-  `VALOR_LIBRE_ARTPROP` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Si TIPO_VALOR=TEXTO_LIBRE/NUMERO/BOOLEANO, valor directo',
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT current_timestamp(),
-  `USUARIO_ALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  PRIMARY KEY (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`) USING BTREE,
-  INDEX `IDX_VALOR_LISTA`(`ID_PV_ARTPROP` ASC) USING BTREE
+  `CODIGO_ARTICULO_AP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ID_VALOR_AP` int NOT NULL COMMENT 'FK hacia fza_atributos_valores',
+  `INSTANTEALTA` timestamp NOT NULL DEFAULT current_timestamp(),
+  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_ARTICULO_AP`, `ID_VALOR_AP`) USING BTREE,
+  INDEX `IDX_VALOR_AP`(`ID_VALOR_AP` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_articulos_propiedades
--- (muestra reducida; el dump completo está en factuzam_original.sql)
 -- ----------------------------
-INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'COMPOSICION', NULL, '100% Seda natural', '2026-03-22 18:32:14', 'DEMO');
-INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'TEMPORADA',   11,   NULL,                '2026-03-22 18:32:14', 'DEMO');
-INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'MATERIAL',    18,   NULL,                '2026-03-22 18:32:14', 'DEMO');
-
--- ----------------------------
--- Table structure for fza_propiedades
--- ----------------------------
-DROP TABLE IF EXISTS `fza_propiedades`;
-CREATE TABLE `fza_propiedades`  (
-  `CODIGO_PROP_ARTPROP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Identificador único (ej: MATERIAL, MARCA, EDAD_MAX)',
-  `NOMBRE_PROP_PROP` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'Nombre público para la web o app',
-  `TIPO_VALOR_PROP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'LISTA' COMMENT 'Cómo se rellena: LISTA, TEXTO_LIBRE, NUMERO, BOOLEANO',
-  `ESACTIVO_PROP` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT current_timestamp(),
-  `USUARIO_ALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `USUARIO_MODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  PRIMARY KEY (`CODIGO_PROP_ARTPROP`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of fza_propiedades
--- ----------------------------
-INSERT INTO `fza_propiedades` VALUES ('ACTIVIDAD',    'Actividad deportiva', 'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('ALTURA_TAC',   'Altura tacón (cm)',   'NUMERO',      'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('CAPACIDAD_L',  'Capacidad (litros)',  'NUMERO',      'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('CIERRE',       'Tipo de cierre',      'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('COMPOSICION',  'Composición textil',  'TEXTO_LIBRE', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('ES_ECO',       'Producto Eco/BIO',    'BOOLEANO',    'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('ESTILO',       'Estilo',              'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('GENERO',       'Género',              'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('IMPERMEAB',    'Impermeable',         'BOOLEANO',    'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('LAVADO',       'Instruc. de lavado',  'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('MARCA',        'Marca',               'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('MATERIAL',     'Material',            'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('ORIGEN',       'País de origen',      'TEXTO_LIBRE', 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('PESO_GR',      'Peso (gramos)',       'NUMERO',      'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('TEMPORADA',    'Temporada',           'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('TIPO_SUELA',   'Tipo de suela',       'LISTA',       'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades` VALUES ('TRANSPIRABLE', 'Transpirable',        'BOOLEANO',    'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-
--- ----------------------------
--- Table structure for fza_propiedades_valores
--- ----------------------------
-DROP TABLE IF EXISTS `fza_propiedades_valores`;
-CREATE TABLE `fza_propiedades_valores`  (
-  `ID_PV_ARTPROP` int NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del valor de la propiedad',
-  `ID_PROP_PV` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'FK hacia fza_propiedades',
-  `PV` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'El valor real (ej: Acero, Lego)',
-  `DESCRIPCION_PV` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Descripción comercial ampliada',
-  `ESACTIVO_PV` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT 'S',
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `USUARIO_ALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `USUARIO_MODIF` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  PRIMARY KEY (`ID_PV_ARTPROP`) USING BTREE,
-  INDEX `IDX_PROPIEDAD_PV`(`ID_PROP_PV` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of fza_propiedades_valores
--- ----------------------------
-INSERT INTO `fza_propiedades_valores` VALUES ( 1, 'MARCA',     'Zara',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 2, 'MARCA',     'Mango',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 3, 'MARCA',     'El Corte Inglés',       NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 4, 'MARCA',     'Nike',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 5, 'MARCA',     'Adidas',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 6, 'MARCA',     'Camper',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 7, 'MARCA',     'Loewe',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 8, 'MARCA',     'Marca propia',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES ( 9, 'TEMPORADA', 'Primavera/Verano 2025', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (10, 'TEMPORADA', 'Otoño/Invierno 2025',   NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (11, 'TEMPORADA', 'Primavera/Verano 2026', NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (12, 'TEMPORADA', 'Otoño/Invierno 2026',   NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (13, 'TEMPORADA', 'Todo el año',           NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (14, 'MATERIAL',  'Algodón 100%',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (15, 'MATERIAL',  'Algodón/Poliéster',     NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (16, 'MATERIAL',  'Lana',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (17, 'MATERIAL',  'Lana merino',           NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (18, 'MATERIAL',  'Seda',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (19, 'MATERIAL',  'Piel natural',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (20, 'MATERIAL',  'Piel sintética',        NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (21, 'MATERIAL',  'Cuero',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (22, 'MATERIAL',  'Ante',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (23, 'MATERIAL',  'Denim / Vaquero',       NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (24, 'MATERIAL',  'Poliéster reciclado',   NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (25, 'MATERIAL',  'Lino',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (26, 'MATERIAL',  'Paño',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (27, 'MATERIAL',  'Tejido técnico',        NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (28, 'GENERO',    'Mujer',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (29, 'GENERO',    'Hombre',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (30, 'GENERO',    'Unisex',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (31, 'GENERO',    'Niña',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (32, 'GENERO',    'Niño',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (33, 'ESTILO',    'Casual',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (34, 'ESTILO',    'Elegante',              NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (35, 'ESTILO',    'Deportivo',             NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (36, 'ESTILO',    'Bohemio',               NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (37, 'ESTILO',    'Clásico',               NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (38, 'ESTILO',    'Urban',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (39, 'ESTILO',    'Outdoor',               NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (40, 'LAVADO',    'Lavado a mano',         NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (41, 'LAVADO',    'Lavadora 30°',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (42, 'LAVADO',    'Lavadora 40°',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (43, 'LAVADO',    'Limpieza en seco',      NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (44, 'LAVADO',    'No lavar con agua',     NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (45, 'TIPO_SUELA','Goma',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (46, 'TIPO_SUELA','Cuero',                 NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (47, 'TIPO_SUELA','EVA / Foam',            NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (48, 'TIPO_SUELA','Vibram',                NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (49, 'TIPO_SUELA','Tpu antidesliz.',       NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (50, 'CIERRE',    'Cremallera',            NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (51, 'CIERRE',    'Imán',                  NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (52, 'CIERRE',    'Hebilla',               NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (53, 'CIERRE',    'Solapa abatible',       NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (54, 'CIERRE',    'Sin cierre',            NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (55, 'ACTIVIDAD', 'Running',               NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (56, 'ACTIVIDAD', 'Yoga / Pilates',        NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (57, 'ACTIVIDAD', 'Ciclismo',              NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (58, 'ACTIVIDAD', 'Senderismo',            NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (59, 'ACTIVIDAD', 'Fitness / Gym',         NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
-INSERT INTO `fza_propiedades_valores` VALUES (60, 'ACTIVIDAD', 'Multideporte',          NULL, 'S', '2026-03-22 18:32:14', '2026-03-22 18:32:14', 'DEMO', 'DEMO');
+INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 203, '2026-01-06 12:31:02', 'Sistema');
 
 -- ----------------------------
 -- Table structure for fza_articulos_proveedores
@@ -4232,40 +4108,30 @@ CREATE TABLE `fza_winforms`  (
   `UNITF_WINF` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `SHORTCUT_WINF` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
   `DATAMODULE_WINF` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL,
-  `NUM_VENTANAS_WINF` int NOT NULL DEFAULT 1,
   PRIMARY KEY (`CALL_WINF`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_winforms
 -- ----------------------------
-INSERT INTO `fza_winforms` VALUES ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes', 1);
-INSERT INTO `fza_winforms` VALUES ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos', 1);
-INSERT INTO `fza_winforms` VALUES ('Clientes', 'Clientes', 'mnuClientes', 'inMtoClientes.TfrmMtoClientes', 'Ctrl+K', 'UniDataClientes.TdmClientes', 1);
-INSERT INTO `fza_winforms` VALUES ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores', 1);
-INSERT INTO `fza_winforms` VALUES ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas', 1);
-INSERT INTO `fza_winforms` VALUES ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturas.TfrmMtoFacturas', 'Ctrl+F', 'UniDataFacturas.TdmFacturas', 99);
-INSERT INTO `fza_winforms` VALUES ('Familias', 'Familias', 'mnuFamilias', 'inMtoFamilias.TfrmMtoFamilias', 'Ctrl+N', 'UniDataFamilias.TdmFamilias', 1);
-INSERT INTO `fza_winforms` VALUES ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Ctrl+Q', 'UniDataFormasdePago.TdmFormasdePago', 1);
-INSERT INTO `fza_winforms` VALUES ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'Ctrl+G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos', 1);
-INSERT INTO `fza_winforms` VALUES ('Grupos', 'Grupos de Usuarios', 'mnuGrupos', 'inMtoGrupos.TfrmMtoGrupos', 'Ctrl+J', 'UniDataGrupos.TdmGrupos', 1);
-INSERT INTO `fza_winforms` VALUES ('Ivas', 'Impuestos IVA', 'mnuIvas', 'inMtoIvas.TfrmMtoIvas', 'Ctrl+I', 'UniDataIvas.TdmIvas', 1);
-INSERT INTO `fza_winforms` VALUES ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'Ctrl+O', 'UniDataIvasGrupos.TdmIvasGrupos', 1);
-INSERT INTO `fza_winforms` VALUES ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL, 1);
-INSERT INTO `fza_winforms` VALUES ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+L', 'UniDataPaises.TdmPaises', 1);
-INSERT INTO `fza_winforms` VALUES ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 1);
-INSERT INTO `fza_winforms` VALUES ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas', 1);
-INSERT INTO `fza_winforms` VALUES ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 1);
-INSERT INTO `fza_winforms` VALUES ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1);
-INSERT INTO `fza_winforms` VALUES ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 1);
-INSERT INTO `fza_winforms` VALUES ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 1);
-INSERT INTO `fza_winforms` VALUES ('MovimientosAlmacen', 'Movimientos de Almacén', 'Movimientosdealmacn1', 'inMtoMovimientosAlmacen.TfrmMtoMovimientosAlmacen', 'Ctrl+M', 'UniDataMovimientosAlmacen.TdmMovimientosAlmacen', 1);
-INSERT INTO `fza_winforms` VALUES ('DepositosCliente', 'Depósitos de Clientes', 'mnuDepositosCliente', 'inMtoDepositosCliente.TfrmMtoDepositosCliente', 'Ctrl+D', 'UniDataDepositosCliente.TdmDepositosCliente', 1);
-INSERT INTO `fza_winforms` VALUES ('CajaPagosHist', 'Histórico de Pagos de Caja', 'mnuCajaPagosHist', 'inMtoCajaPagosHist.TfrmMtoCajaPagosHist', 'Ctrl+Alt+P', 'UniDataCajaPagosHist.TdmCajaPagosHist', 1);
-INSERT INTO `fza_winforms` VALUES ('CajaValesHist', 'Histórico de Vales', 'mnuCajaValesHist', 'inMtoCajaValesHist.TfrmMtoCajaValesHist', 'Ctrl+Alt+L', 'UniDataCajaValesHist.TdmCajaValesHist', 1);
-INSERT INTO `fza_winforms` VALUES ('CajaOperacionesHist', 'Histórico de Operaciones de Caja', 'mnuCajaOperacionesHist', 'inMtoCajaOperacionesHist.TfrmMtoCajaOperacionesHist', 'Ctrl+Alt+O', 'UniDataCajaOperacionesHist.TdmCajaOperacionesHist', 1);
-INSERT INTO `fza_winforms` VALUES ('Propiedades', 'Propiedades', 'mnuPropiedades', 'inMtoPropiedades.TfrmMtoPropiedades', 'Ctrl+Y', 'UniDataPropiedades.TdmPropiedades', 1);
-INSERT INTO `fza_winforms` VALUES ('PropiedadesValores', 'Valores de Propiedades', 'mnuPropiedadesValores', 'inMtoPropiedadesValores.TfrmMtoPropiedadesValores', 'Ctrl+Alt+Y', 'UniDataPropiedadesValores.TdmPropiedadesValores', 1);
+INSERT INTO `fza_winforms` VALUES ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes');
+INSERT INTO `fza_winforms` VALUES ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos');
+INSERT INTO `fza_winforms` VALUES ('Clientes', 'Clientes', 'mnuClientes', 'inMtoClientes.TfrmMtoClientes', 'Ctrl+K', 'UniDataClientes.TdmClientes');
+INSERT INTO `fza_winforms` VALUES ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores');
+INSERT INTO `fza_winforms` VALUES ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas');
+INSERT INTO `fza_winforms` VALUES ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturas.TfrmMtoFacturas', 'Ctrl+F', 'UniDataFacturas.TdmFacturas');
+INSERT INTO `fza_winforms` VALUES ('Familias', 'Familias', 'mnuFamilias', 'inMtoFamilias.TfrmMtoFamilias', 'Ctrl+N', 'UniDataFamilias.TdmFamilias');
+INSERT INTO `fza_winforms` VALUES ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Ctrl+Q', 'UniDataFormasdePago.TdmFormasdePago');
+INSERT INTO `fza_winforms` VALUES ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'Ctrl+G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos');
+INSERT INTO `fza_winforms` VALUES ('Grupos', 'Grupos de Usuarios', 'mnuGrupos', 'inMtoGrupos.TfrmMtoGrupos', 'Ctrl+J', 'UniDataGrupos.TdmGrupos');
+INSERT INTO `fza_winforms` VALUES ('Ivas', 'Impuestos IVA', 'mnuIvas', 'inMtoIvas.TfrmMtoIvas', 'Ctrl+I', 'UniDataIvas.TdmIvas');
+INSERT INTO `fza_winforms` VALUES ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'Ctrl+O', 'UniDataIvasGrupos.TdmIvasGrupos');
+INSERT INTO `fza_winforms` VALUES ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL);
+INSERT INTO `fza_winforms` VALUES ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+L', 'UniDataPaises.TdmPaises');
+INSERT INTO `fza_winforms` VALUES ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores');
+INSERT INTO `fza_winforms` VALUES ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas');
+INSERT INTO `fza_winforms` VALUES ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios');
+INSERT INTO `fza_winforms` VALUES ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+M', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles');
 
 -- ----------------------------
 -- View structure for vi_articulos
