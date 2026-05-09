@@ -242,10 +242,20 @@ VALUES
 
 
 -- -------------------------------------------------------------------
---  Tipo de documento Albarán para los contadores numéricos.
+--  Tipos de documento para los contadores numéricos.
+--  Reservamos los códigos para los flujos de venta mayor (PE/AV) y
+--  para los flujos de compras (PC/AB/FP) que vendrán a continuación.
+--  'AL' está cogido por VENTA PRÉSTAMO, así que para el albarán de
+--  venta mayor usamos 'AV'.
 -- -------------------------------------------------------------------
 
 INSERT IGNORE INTO `fza_tipos_documentos`
-  (`CODIGO_TD`, `DESCRIPCION_TD`)
+  (`CODIGO_TIPO_DOCUMENTO_TD`,
+   `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
 VALUES
-  ('AL', 'Albarán de Venta');
+  ('PE', 'PEDIDO DE VENTA MAYOR',   'fza_pedidos'),
+  ('AV', 'ALBARÁN DE VENTA MAYOR',  'fza_albaranes'),
+  ('PC', 'PEDIDO DE COMPRAS',       'fza_pedidos_compras'),
+  ('AB', 'ALBARÁN DE COMPRAS',      'fza_albaranes_compras'),
+  ('FP', 'FACTURA DE COMPRAS',      'fza_facturas_compras');
