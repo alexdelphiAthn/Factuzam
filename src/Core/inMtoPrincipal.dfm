@@ -985,11 +985,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           ShortCut = 16460
           OnClick = mnuPaisesClick
         end
-        object mnuArticulosPropiedades: TMenuItem
-          Caption = 'Propiedades de Art'#237'culos'
-          ShortCut = 16450
-          OnClick = mnuArticulosPropiedadesClick
-        end
         object mnuPropiedades: TMenuItem
           Caption = 'Propiedades'
           ShortCut = 16473
