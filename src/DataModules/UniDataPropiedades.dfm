@@ -63,4 +63,38 @@ inherited dmPropiedades: TdmPropiedades
     Left = 144
     Top = 88
   end
+  object unqryValores: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO `fza_propiedades_valores`'
+      '  (`ID_PROP_PV`, `PV`, `DESCRIPCION_PV`, `ESACTIVO_PV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+      'VALUES'
+      '  (:`ID_PROP_PV`, :`PV`, :`DESCRIPCION_PV`, :`ESACTIVO_PV`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+    SQLDelete.Strings = (
+      'DELETE FROM `fza_propiedades_valores`'
+      'WHERE'
+      '  `ID_PV_ARTPROP` = :`Old_ID_PV_ARTPROP`')
+    SQLUpdate.Strings = (
+      'UPDATE `fza_propiedades_valores`'
+      'SET'
+      '  `ID_PROP_PV` = :`ID_PROP_PV`, `PV` = :`PV`, `DESCRIPCION_PV` = :`DESCRIPCION_PV`, `ESACTIVO_PV` = :`ESACTIVO_PV`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      'WHERE'
+      '  `ID_PV_ARTPROP` = :`Old_ID_PV_ARTPROP`')
+    SQLRefresh.Strings = (
+      'SELECT * FROM `fza_propiedades_valores`'
+      'WHERE'
+      '  `ID_PV_ARTPROP` = :`ID_PV_ARTPROP`')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_propiedades_valores'
+      'WHERE ID_PROP_PV = :CODIGO_PROP_ARTPROP'
+      'ORDER BY PV')
+    MasterSource = frmMtoPropiedades.dsTablaG
+    Left = 248
+    Top = 24
+  end
+  object dsValores: TDataSource
+    DataSet = unqryValores
+    Left = 248
+    Top = 88
+  end
 end
