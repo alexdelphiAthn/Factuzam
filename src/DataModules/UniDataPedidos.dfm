@@ -3,15 +3,8 @@
   Top = 0
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  ClientHeight = 480
-  ClientWidth = 632
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
-  Font.Style = []
-  TextHeight = 15
+  Height = 480
+  Width = 632
   object unqryPedidosLineas: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_pedidos_lineas'
