@@ -25,8 +25,17 @@ cantidades entregadas en cada línea del pedido.
 ### SQL (en este mismo directorio)
 - `01_schema_pedidos_albaranes.sql` — `ALTER`s sobre `fza_pedidos` y
   `fza_pedidos_lineas`, creación de `fza_albaranes` y `fza_albaranes_lineas`,
-  vistas `vi_*`, tres procedimientos para crear albarán (inicio/línea/fin),
-  alta en `fza_winforms` y en `fza_tipos_documentos`.
+  vistas `vi_*`, alta en `fza_winforms` y en `fza_tipos_documentos`.
+  **Sólo DDL e INSERTs**: este archivo se ejecuta sin problemas desde el
+  menú "Utilidades > Ejecutar Script" de Factuzam (TUniScript).
+- `02_procedimientos_pedidos_albaranes.sql` — Procedimientos almacenados
+  `PRC_PED_CREAR_ALBARAN_INICIO/_LINEA/_FIN`. Usa `DELIMITER $$`, así que
+  **sólo se puede ejecutar desde HeidiSQL / mysql CLI / Workbench** y
+  no desde el script runner interno. **No es obligatorio ejecutarlo**:
+  Factuzam crea los procedimientos automáticamente la primera vez que el
+  usuario pulsa "Crear Albarán", mediante
+  `TdmPedidos.InstalarProcedimientos`, que envía cada `CREATE PROCEDURE`
+  al servidor como una sola sentencia (sin `DELIMITER`).
 
 ### Librerías
 - `src/Lib/inLibPresta.pas`           — copia para producción del modelo `TOrder`.
@@ -53,10 +62,21 @@ cantidades entregadas en cada línea del pedido.
 
 ## Despliegue
 
-1. Ejecutar `01_schema_pedidos_albaranes.sql` contra la base de datos.
-2. Recompilar `fzam.dproj`.
-3. Las pantallas de Pedidos y Albaranes están disponibles desde el menú
-   `Ventas Mayor → Pedidos / Albaranes`.
+### Vía A — Todo desde Factuzam (recomendada)
+
+1. Recompilar `fzam.dproj`.
+2. Ejecutar `01_schema_pedidos_albaranes.sql` desde "Utilidades > Ejecutar
+   Script" en Factuzam.
+3. Las pantallas de Pedidos y Albaranes ya están disponibles desde
+   `Ventas Mayor → Pedidos (Ctrl+Alt+P) / Albaranes (Ctrl+Alt+A)`.
+4. La primera vez que se pulse "Crear Albarán", Factuzam crea los tres
+   procedimientos automáticamente.
+
+### Vía B — Cliente externo (HeidiSQL / mysql CLI / Workbench)
+
+1. Ejecutar `01_schema_pedidos_albaranes.sql`.
+2. Ejecutar `02_procedimientos_pedidos_albaranes.sql`.
+3. Recompilar `fzam.dproj`.
 
 ## Notas de implementación
 
