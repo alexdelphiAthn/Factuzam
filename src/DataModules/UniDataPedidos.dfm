@@ -1,6 +1,4 @@
-﻿object dmPedidos: TdmPedidos
-  Left = 0
-  Top = 0
+﻿inherited dmPedidos: TdmPedidos
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   Height = 480
@@ -162,7 +160,7 @@
     Left = 384
     Top = 80
   end
-  object unqryTablaG: TUniQuery
+  inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_pedidos'
       
@@ -274,7 +272,7 @@
     Left = 48
     Top = 24
   end
-  object unqryPerfiles: TUniQuery
+  inherited unqryPerfiles: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
@@ -282,7 +280,7 @@
     Left = 496
     Top = 96
   end
-  object dsPerfiles: TDataSource
+  inherited dsPerfiles: TDataSource
     DataSet = unqryPerfiles
     Left = 495
     Top = 32
