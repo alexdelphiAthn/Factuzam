@@ -213,6 +213,28 @@ begin
   if (DsTablaG.Dataset <> nil) then
     lblTablaOrigen.Caption :=
                 GetTableNameFromQuery((dsTablaG.Dataset as TUNIQuery).SQL.Text);
+  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False')),
+              'True') then
+  begin
+    for i:= 0 to Self.Componentcount - 1 do
+    begin
+      if (Self.Components[i] is TcxCustomGridTableView) then
+      begin
+        cxGrid := TcxCustomGridTableView(Self.Components[i]);
+
+        if SameText(Trim(GetPerfilValueDef(oPerfilDic,
+                          cxGrid.Name + '__oCreateItems', 'False')), 'True') then
+        begin
+          cxGrid.BeginUpdate;
+          try
+            cxGrid.DataController.CreateAllItems;
+          finally
+            cxGrid.EndUpdate;
+          end;
+        end;
+      end;
+    end;
+  end;
   if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')),
               'True') then
   begin

@@ -2923,8 +2923,50 @@ SELECT
   ap.USUARIO_ALTA             AS USUARIO_ALTA,
   ap.USUARIO_MODIF            AS USUARIO_MODIF
 FROM fza_articulos_proveedores ap
-LEFT JOIN fza_proveedores p ON ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV;', '2026-05-08 20:18:37', '2026-05-08 20:18:37', 'Administrador', 'Administrador');
--- 13 registros exportados
+LEFT JOIN fza_proveedores p ON ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV;', '2026-05-08 20:18:37', '2026-05-08 20:18:37', 'Administrador', 'Administrador'),
+  ('150', NULL, '-- Recrea vi_articulos exponiendo el modelo del proveedor principal y la temporada
+DROP VIEW IF EXISTS vi_articulos;
+CREATE ALGORITHM=UNDEFINED VIEW vi_articulos AS
+SELECT
+  art.CODIGO_ART_ART          AS CODIGO_ART_ART,
+  art.ESACTIVO_ART            AS ESACTIVO_ART,
+  art.ORDEN_ART               AS ORDEN_ART,
+  art.DESCRIPCION_ART         AS DESCRIPCION_ART,
+  art.ESVARIACION_ART         AS ESVARIACION_ART,
+  art.ESTRAZABLE_ART          AS ESTRAZABLE_ART,
+  art.TIPO_ART                AS TIPO_ART,
+  art.TIPO_VARIACION_ART      AS TIPO_VARIACION_ART,
+  art.CODIGO_FAM_ART          AS CODIGO_FAM_ART,
+  fam.DESCRIPCION_FAM         AS DESCRIPCION_FAM,
+  fam.NOMBRE_FAM_FAM          AS NOMBRE_FAM_FAM,
+  art.TIPO_IVA_ART            AS TIPO_IVA_ART,
+  iva.NOMBRE_TIPO_IVA_IVATIP  AS NOMBRE_TIPO_IVA_IVATIP,
+  art.ESACTIVO_FIJO_ART       AS ESACTIVO_FIJO_ART,
+  art.TIPO_CANTIDAD_ART       AS TIPO_CANTIDAD_ART,
+  prv.RAZON_SOCIAL_PRV        AS RAZON_SOCIAL_PRV,
+  ap.REF_PROVEEDOR_AP         AS REF_PROVEEDOR,
+  COALESCE(pv.PV, atemp.VALOR_LIBRE_ARTPROP) AS TEMPORADA_ART,
+  art.INSTANTE_MODIF          AS INSTANTE_MODIF,
+  art.INSTANTE_ALTA           AS INSTANTE_ALTA,
+  art.USUARIO_ALTA            AS USUARIO_ALTA,
+  art.USUARIO_MODIF           AS USUARIO_MODIF
+FROM fza_articulos art
+LEFT JOIN fza_articulos_familias fam
+       ON art.CODIGO_FAM_ART = fam.CODIGO_FAM_FAM
+LEFT JOIN fza_articulos_proveedores ap
+       ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP
+      AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
+LEFT JOIN fza_proveedores prv
+       ON ap.CODIGO_PRV_AP = prv.CODIGO_PRV_PRV
+LEFT JOIN fza_ivas_tipos iva
+       ON art.TIPO_IVA_ART = iva.CODIGO_ABREVIATURA_IVA_IVATIP
+LEFT JOIN fza_articulos_propiedades atemp
+       ON art.CODIGO_ART_ART = atemp.CODIGO_ART_ART
+      AND atemp.CODIGO_PROP_ARTPROP = ''TEMPORADA''
+LEFT JOIN fza_propiedades_valores pv
+       ON atemp.ID_PV_ARTPROP = pv.ID_PV_ARTPROP
+ORDER BY art.ORDEN_ART;', '2026-05-09 10:00:00', '2026-05-09 10:00:00', 'Administrador', 'Administrador');
+-- 14 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -4793,6 +4835,7 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoAppParam', 'appImpresoraInformes', 'Microsoft Print to PDF', NULL, NULL, NULL, '2026-04-15 06:01:36', '2026-04-15 06:01:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appTema', 'SevenClassic', NULL, NULL, NULL, '2026-05-01 15:08:59', '2026-04-14 13:23:51', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin__oCreateItems', 'True', NULL, NULL, NULL, '2026-05-09 10:00:00', '2026-05-09 10:00:00', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Index', '0', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
@@ -4832,7 +4875,7 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_Width', '130', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oCreateItems', 'True', NULL, NULL, NULL, '2026-05-09 10:00:00', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-08 20:10:18', '2026-05-08 20:10:18', 'Administrador', 'Administrador'),
@@ -10018,7 +10061,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `fza_caja_depositos_view` AS select 'ALTA' AS `
 
 -- Vista: vi_articulos
 DROP VIEW IF EXISTS `vi_articulos`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos` AS select `fza_articulos`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`fza_articulos`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`fza_articulos`.`ORDEN_ART` AS `ORDEN_ART`,`fza_articulos`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`fza_articulos`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`fza_articulos`.`ESTRAZABLE_ART` AS `ESTRAZABLE_ART`,`fza_articulos`.`TIPO_ART` AS `TIPO_ART`,`fza_articulos`.`TIPO_VARIACION_ART` AS `TIPO_VARIACION_ART`,`fza_articulos`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fza_articulos_familias`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`fza_articulos_familias`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`fza_articulos`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`fza_ivas_tipos`.`NOMBRE_TIPO_IVA_IVATIP` AS `NOMBRE_TIPO_IVA_IVATIP`,`fza_articulos`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`fza_articulos`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`fza_proveedores`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`fza_articulos`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_articulos`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_articulos`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_articulos`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((`fza_articulos` left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAM_ART` = `fza_articulos_familias`.`CODIGO_FAM_FAM`)) left join `fza_articulos_proveedores` on(`fza_articulos`.`CODIGO_ART_ART` = `fza_articulos_proveedores`.`CODIGO_ART_AP` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` on(`fza_articulos_proveedores`.`CODIGO_PRV_AP` = `fza_proveedores`.`CODIGO_PRV_PRV`)) left join `fza_ivas_tipos` on(`fza_articulos`.`TIPO_IVA_ART` = `fza_ivas_tipos`.`CODIGO_ABREVIATURA_IVA_IVATIP`)) order by `fza_articulos`.`ORDEN_ART`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos` AS select `art`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`art`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`art`.`ORDEN_ART` AS `ORDEN_ART`,`art`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`art`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`art`.`ESTRAZABLE_ART` AS `ESTRAZABLE_ART`,`art`.`TIPO_ART` AS `TIPO_ART`,`art`.`TIPO_VARIACION_ART` AS `TIPO_VARIACION_ART`,`art`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fam`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`fam`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`art`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`iva`.`NOMBRE_TIPO_IVA_IVATIP` AS `NOMBRE_TIPO_IVA_IVATIP`,`art`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`art`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`ap`.`REF_PROVEEDOR_AP` AS `REF_PROVEEDOR`,coalesce(`pv`.`PV`,`atemp`.`VALOR_LIBRE_ARTPROP`) AS `TEMPORADA_ART`,`art`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`art`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`art`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`art`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((`fza_articulos` `art` left join `fza_articulos_familias` `fam` on(`art`.`CODIGO_FAM_ART` = `fam`.`CODIGO_FAM_FAM`)) left join `fza_articulos_proveedores` `ap` on(`art`.`CODIGO_ART_ART` = `ap`.`CODIGO_ART_AP` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `prv` on(`ap`.`CODIGO_PRV_AP` = `prv`.`CODIGO_PRV_PRV`)) left join `fza_ivas_tipos` `iva` on(`art`.`TIPO_IVA_ART` = `iva`.`CODIGO_ABREVIATURA_IVA_IVATIP`)) left join `fza_articulos_propiedades` `atemp` on(`art`.`CODIGO_ART_ART` = `atemp`.`CODIGO_ART_ART` and `atemp`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA')) left join `fza_propiedades_valores` `pv` on(`atemp`.`ID_PV_ARTPROP` = `pv`.`ID_PV_ARTPROP`)) order by `art`.`ORDEN_ART`;
 
 -- Vista: vi_articulos_conjuntos_slots
 DROP VIEW IF EXISTS `vi_articulos_conjuntos_slots`;
