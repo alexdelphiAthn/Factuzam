@@ -513,7 +513,7 @@ end;
 
 procedure TfrmMtoMenuCaja.lblBuscarModificarMouseEnter(Sender: TObject);
 begin
-  ChangeMenuItemColors(lblF10, lblBuscarModificar, clWebOrange);
+  ChangeMenuItemColors(lblF10, lblBuscarModificar, clBlue);
 end;
 
 procedure TfrmMtoMenuCaja.lblBuscarModificarMouseLeave(Sender: TObject);
