@@ -91,10 +91,13 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lblEmpresaDblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure JvMonthCalendar1Click(Sender: TObject);
     procedure lblBuscarModificarClick(Sender: TObject);
     procedure lblF10Click(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
   private
     FVentasCal: TVentasCalendarioCache;
     procedure AbrirBuscarModificar;
@@ -138,6 +141,19 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoMenuCaja.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.ExStyle   := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
+
+procedure TfrmMtoMenuCaja.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  frmMtoMenuCaja := nil;
+end;
 
 procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
