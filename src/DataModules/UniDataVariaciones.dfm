@@ -35,4 +35,30 @@ inherited dmVariaciones: TdmVariaciones
     Active = True
     Left = 24
   end
+  object unqryArticulosVariacion: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ARTICULO, DESCRIPCION_ARTICULO, ACTIVO_ARTICULO,'
+      '       CODIGO_FAMILIA_ARTICULO, NOMBRE_FAMILIA,'
+      '       ESVARIACION_ARTICULO, TIPO_VARIACION_ARTICULO,'
+      '       ORDEN_ARTICULO, INSTANTEALTA, INSTANTEMODIF,'
+      '       USUARIOALTA, USUARIOMODIF'
+      '  FROM vi_articulos'
+      ' ORDER BY ORDEN_ARTICULO, CODIGO_ARTICULO')
+    MasterFields = 'CODIGO_VAR'
+    DetailFields = 'TIPO_VARIACION_ARTICULO'
+    Active = False
+    Left = 200
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_VAR'
+        ParamType = ptInput
+      end>
+  end
+  object dsArticulosVariacion: TDataSource
+    DataSet = unqryArticulosVariacion
+    Left = 200
+    Top = 80
+  end
 end
