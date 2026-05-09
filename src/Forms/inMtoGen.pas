@@ -210,19 +210,22 @@ var
   i:integer;
   cxGrid: TcxCustomGridTableView;
   oDBCtrl: TcxGridDBDataController;
+  oGrids: TList<TcxCustomGridTableView>;
 begin
   if (DsTablaG.Dataset <> nil) then
     lblTablaOrigen.Caption :=
                 GetTableNameFromQuery((dsTablaG.Dataset as TUNIQuery).SQL.Text);
-  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False')),
-              'True') then
-  begin
-    for i:= 0 to Self.Componentcount - 1 do
-    begin
-      if (Self.Components[i] is TcxCustomGridTableView) then
-      begin
-        cxGrid := TcxCustomGridTableView(Self.Components[i]);
+  oGrids := TList<TcxCustomGridTableView>.Create;
+  try
+    for i := 0 to Self.ComponentCount - 1 do
+      if Self.Components[i] is TcxCustomGridTableView then
+        oGrids.Add(TcxCustomGridTableView(Self.Components[i]));
 
+    if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False')),
+                'True') then
+    begin
+      for cxGrid in oGrids do
+      begin
         if SameText(Trim(GetPerfilValueDef(oPerfilDic,
                           cxGrid.Name + '__oCreateItems', 'False')), 'True') then
         begin
@@ -239,16 +242,11 @@ begin
         end;
       end;
     end;
-  end;
-  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')),
-              'True') then
-  begin
-    for i:= 0 to Self.Componentcount - 1 do
+    if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')),
+                'True') then
     begin
-      if (Self.Components[i] is TcxCustomGridTableView) then
+      for cxGrid in oGrids do
       begin
-        cxGrid := TcxCustomGridTableView(Self.Components[i]);
-
         // Segunda validación segura
         if SameText(Trim(GetPerfilValueDef(oPerfilDic,
                           cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
@@ -258,6 +256,8 @@ begin
         end;
       end;
     end;
+  finally
+    oGrids.Free;
   end;
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
   if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')), 'True') then
