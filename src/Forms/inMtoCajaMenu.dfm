@@ -21628,6 +21628,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     OnClick = JvMonthCalendar1Click
     OnDblClick = JvMonthCalendar1DblClick
     OnGetMonthBoldInfo = JvMonthCalendar1GetMonthBoldInfo
+    OnKeyDown = JvMonthCalendar1KeyDown
     StyleElements = [seFont, seClient]
   end
   object Timer1: TTimer

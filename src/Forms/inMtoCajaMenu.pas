@@ -86,6 +86,8 @@ type
     procedure JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
       Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
     procedure JvMonthCalendar1DblClick(Sender: TObject);
+    procedure JvMonthCalendar1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FormDestroy(Sender: TObject);
     procedure lblESCClick(Sender: TObject);
     procedure lblFechaMouseEnter(Sender: TObject);
@@ -384,6 +386,31 @@ procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
 begin
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', JvMonthCalendar1.Date);
   FFechaCaja := JvMonthCalendar1.Date;
+end;
+
+procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // El calendario reclama las flechas y Enter al nivel de Win32, así que las
+  // capturamos aquí para que la navegación del menú funcione aun con el foco
+  // sobre él. Key := 0 evita además que el calendario las procese.
+  case Key of
+    VK_UP:
+      begin
+        SetSelectedIndex(FSelectedIndex - 1);
+        Key := 0;
+      end;
+    VK_DOWN:
+      begin
+        SetSelectedIndex(FSelectedIndex + 1);
+        Key := 0;
+      end;
+    VK_RETURN:
+      begin
+        ExecuteSelectedItem;
+        Key := 0;
+      end;
+  end;
 end;
 
 procedure TfrmMtoMenuCaja.cxButton1Click(Sender: TObject);
