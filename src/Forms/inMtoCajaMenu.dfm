@@ -21229,6 +21229,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     TabOrder = 5
     Transparent = True
+    OnClick = lblEntradaCambioClick
     OnMouseEnter = lblF6MouseEnter
     OnMouseLeave = lblF6MouseLeave
     Height = 37
@@ -21258,6 +21259,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.WordWrap = True
     TabOrder = 6
     Transparent = True
+    OnClick = lblEntradaCambioClick
     OnMouseEnter = lblEntradaCambioMouseEnter
     OnMouseLeave = lblEntradaCambioMouseLeave
     Height = 41
@@ -21287,6 +21289,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     TabOrder = 7
     Transparent = True
+    OnClick = lblGastosCajaClick
     OnMouseEnter = lblF7MouseEnter
     OnMouseLeave = lblF7MouseLeave
     Height = 41
@@ -21316,6 +21319,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.WordWrap = True
     TabOrder = 8
     Transparent = True
+    OnClick = lblGastosCajaClick
     OnMouseEnter = lblGastosCajaMouseEnter
     OnMouseLeave = lblGastosCajaMouseLeave
     Height = 43
@@ -21344,6 +21348,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.WordWrap = True
     TabOrder = 9
     Transparent = True
+    OnClick = lblArqueoClick
     OnMouseEnter = lblArqueoMouseEnter
     OnMouseLeave = lblArqueoMouseLeave
     Height = 65
@@ -21373,6 +21378,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     TabOrder = 10
     Transparent = True
+    OnClick = lblArqueoClick
     OnMouseEnter = lblF11MouseEnter
     OnMouseLeave = lblF11MouseLeave
     Height = 52
@@ -21539,6 +21545,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.Orientation = cxoRight
     TabOrder = 16
     Transparent = True
+    OnClick = lblTraspasosClick
     OnMouseEnter = lblF3MouseEnter
     OnMouseLeave = lblF3MouseLeave
     Height = 36
@@ -21568,6 +21575,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Properties.WordWrap = True
     TabOrder = 17
     Transparent = True
+    OnClick = lblTraspasosClick
     OnMouseEnter = lblTraspasosMouseEnter
     OnMouseLeave = lblTraspasosMouseLeave
     Height = 43
