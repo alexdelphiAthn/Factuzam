@@ -63,6 +63,8 @@ type
                        View: TcxGridDBTableView;
                        cdsLineas, cdsCabecera: TDataSet;
                        OnUpdateTotal: TUpdateTotalEvent = nil);
+  function GetDBDataController(AView: TcxCustomGridTableView): TcxGridDBDataController;
+
 implementation
 
   uses inMtoGen,
