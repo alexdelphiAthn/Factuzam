@@ -403,12 +403,12 @@ begin
     item.UserGroup := sPermisos;
     item.KeyPerfil := Self.Name;
     for var par in [
-      TPair<string,string>.Create('oRenameComponents', 'False'),
-      TPair<string,string>.Create('oCreateItems',      'False'),
-      TPair<string,string>.Create('oBusqGlobal',       'Grid'),
+      TPair<string,string>.Create('oRenameComponents', GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
+      TPair<string,string>.Create('oCreateItems',      GetPerfilValueDef(oPerfilDic, 'oCreateItems',      'False')),
+      TPair<string,string>.Create('oBusqGlobal',       GetPerfilValueDef(oPerfilDic, 'oBusqGlobal',       'Grid')),
       TPair<string,string>.Create('oApplyWidth',       'True'),
-      TPair<string,string>.Create('oMostrarPerfil',    'False'),
-      TPair<string,string>.Create('oGetSQLFromDB',     'False')
+      TPair<string,string>.Create('oMostrarPerfil',    GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil',    'False')),
+      TPair<string,string>.Create('oGetSQLFromDB',     GetPerfilValueDef(oPerfilDic, 'oGetSQLFromDB',     'False'))
     ] do
     begin
       item.SubKey := par.Key;
@@ -427,6 +427,11 @@ begin
 
         item.SubKey := cxGrid.Name + '__oApplyWidth';
         item.Value  := 'True';
+        oList.Add(item);
+
+        item.SubKey := cxGrid.Name + '__oCreateItems';
+        item.Value  := GetPerfilValueDef(oPerfilDic,
+                                         cxGrid.Name + '__oCreateItems', 'False');
         oList.Add(item);
 
         CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
