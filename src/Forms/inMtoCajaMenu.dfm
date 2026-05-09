@@ -16,6 +16,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnShortCut = FormShortCut
   TextHeight = 15
   object Shape1: TShape
     Left = 258

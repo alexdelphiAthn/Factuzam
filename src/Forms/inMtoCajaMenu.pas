@@ -96,6 +96,7 @@ type
     procedure lblEmpresaDblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure JvMonthCalendar1Click(Sender: TObject);
     procedure lblBuscarModificarClick(Sender: TObject);
     procedure lblF10Click(Sender: TObject);
@@ -268,23 +269,28 @@ begin
     VK_F5:     lblVentasClick(Sender);
     VK_ESCAPE: lblESCClick(Sender);
     VK_F10:    AbrirBuscarModificar;
+  end;
+end;
+
+procedure TfrmMtoMenuCaja.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+begin
+  // OnShortCut se dispara antes que el OnKeyDown del control con foco, así
+  // que el calendario u otros controles no se quedan con las flechas/Enter.
+  case Msg.CharCode of
     VK_UP:
-      // El calendario usa flechas para navegar entre días si tiene el foco
-      if not JvMonthCalendar1.Focused then
       begin
         SetSelectedIndex(FSelectedIndex - 1);
-        Key := 0;
+        Handled := True;
       end;
     VK_DOWN:
-      if not JvMonthCalendar1.Focused then
       begin
         SetSelectedIndex(FSelectedIndex + 1);
-        Key := 0;
+        Handled := True;
       end;
     VK_RETURN:
       begin
         ExecuteSelectedItem;
-        Key := 0;
+        Handled := True;
       end;
   end;
 end;
