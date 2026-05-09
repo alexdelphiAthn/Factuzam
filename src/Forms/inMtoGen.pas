@@ -220,7 +220,6 @@ begin
     for i := 0 to Self.ComponentCount - 1 do
       if Self.Components[i] is TcxCustomGridTableView then
         oGrids.Add(TcxCustomGridTableView(Self.Components[i]));
-
     if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False')),
                 'True') then
     begin
