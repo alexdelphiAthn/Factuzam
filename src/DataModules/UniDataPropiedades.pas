@@ -18,6 +18,8 @@ type
   TdmPropiedades = class(TdmBase)
     unqryArticulos: TUniQuery;
     dsArticulos: TDataSource;
+    unqryValores: TUniQuery;
+    dsValores: TDataSource;
   private
     { Private declarations }
   public

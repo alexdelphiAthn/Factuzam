@@ -80,74 +80,232 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
         end
       end
       inherited tsFicha: TcxTabSheet
-        TabVisible = False
+        TabVisible = True
         ExplicitLeft = 4
         ExplicitTop = 30
         ExplicitWidth = 943
         ExplicitHeight = 484
+        object pnlCabFicha: TPanel
+          Left = 0
+          Top = 0
+          Width = 943
+          Height = 110
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          object lblCodigo: TcxLabel
+            Left = 18
+            Top = 16
+            Caption = 'C'#243'digo'
+            Transparent = True
+          end
+          object edtCodigo: TcxDBTextEdit
+            Left = 110
+            Top = 13
+            DataBinding.DataField = 'CODIGO_PROP_ARTPROP'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 0
+            Width = 180
+          end
+          object lblNombre: TcxLabel
+            Left = 18
+            Top = 47
+            Caption = 'Nombre'
+            Transparent = True
+          end
+          object edtNombre: TcxDBTextEdit
+            Left = 110
+            Top = 44
+            DataBinding.DataField = 'NOMBRE_PROP_PROP'
+            DataBinding.DataSource = dsTablaG
+            TabOrder = 1
+            Width = 420
+          end
+          object lblTipo: TcxLabel
+            Left = 18
+            Top = 78
+            Caption = 'Tipo de valor'
+            Transparent = True
+          end
+          object cmbTipo: TcxDBComboBox
+            Left = 110
+            Top = 75
+            DataBinding.DataField = 'TIPO_VALOR_PROP'
+            DataBinding.DataSource = dsTablaG
+            Properties.DropDownListStyle = lsFixedList
+            Properties.Items.Strings = (
+              'LISTA'
+              'TEXTO_LIBRE'
+              'NUMERO'
+              'BOOLEANO')
+            TabOrder = 2
+            Width = 180
+          end
+          object chkActivo: TcxDBCheckBox
+            Left = 320
+            Top = 78
+            Caption = 'Activo'
+            DataBinding.DataField = 'ESACTIVO_PROP'
+            DataBinding.DataSource = dsTablaG
+            Properties.ValueChecked = 'S'
+            Properties.ValueUnchecked = 'N'
+            TabOrder = 3
+            Transparent = True
+            Width = 100
+          end
+        end
+        object splFicha: TcxSplitter
+          Left = 0
+          Top = 110
+          Width = 943
+          Height = 8
+          HotZoneClassName = 'TcxMediaPlayer9Style'
+          AlignSplitter = salTop
+          Control = pnlCabFicha
+        end
+        object pnlBodyFicha: TPanel
+          Left = 0
+          Top = 118
+          Width = 943
+          Height = 366
+          Align = alClient
+          BevelOuter = bvNone
+          TabOrder = 1
+          object pcDetalleFicha: TcxPageControl
+            Left = 0
+            Top = 0
+            Width = 943
+            Height = 366
+            Align = alClient
+            TabOrder = 0
+            Properties.ActivePage = tsValores
+            Properties.CustomButtons.Buttons = <>
+            ClientRectBottom = 364
+            ClientRectLeft = 2
+            ClientRectRight = 941
+            ClientRectTop = 29
+            object tsValores: TcxTabSheet
+              Caption = '&Valores Disponibles'
+              ImageIndex = 0
+              object cxGrdValores: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 939
+                Height = 335
+                Align = alClient
+                TabOrder = 0
+                object cxGrdValView: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.DataSource = nil
+                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                  OptionsBehavior.IncSearch = True
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.Appending = True
+                  OptionsData.Editing = True
+                  OptionsView.GroupByBox = False
+                  OptionsView.Indicator = True
+                  object cxGrdValPV: TcxGridDBColumn
+                    Caption = 'Valor'
+                    DataBinding.FieldName = 'PV'
+                    Width = 240
+                  end
+                  object cxGrdValDESCRIPCION_PV: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_PV'
+                    Width = 320
+                  end
+                  object cxGrdValESACTIVO_PV: TcxGridDBColumn
+                    Caption = 'Activo'
+                    DataBinding.FieldName = 'ESACTIVO_PV'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 80
+                  end
+                  object cxGrdValINSTANTE_ALTA: TcxGridDBColumn
+                    Caption = 'Instante Alta'
+                    DataBinding.FieldName = 'INSTANTE_ALTA'
+                    Options.Editing = False
+                    Width = 150
+                  end
+                  object cxGrdValUSUARIO_ALTA: TcxGridDBColumn
+                    Caption = 'Usuario Alta'
+                    DataBinding.FieldName = 'USUARIO_ALTA'
+                    Options.Editing = False
+                    Width = 130
+                  end
+                end
+                object cxGrdValLevel: TcxGridLevel
+                  GridView = cxGrdValView
+                end
+              end
+            end
+            object tsArticulos: TcxTabSheet
+              Caption = '&Art'#237'culos'
+              ImageIndex = 1
+              object cxGrdArticulos: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 939
+                Height = 335
+                Align = alClient
+                TabOrder = 0
+                object cxGrdArtView: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.DataSource = nil
+                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                  OptionsBehavior.IncSearch = True
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.Deleting = False
+                  OptionsData.DeletingConfirmation = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  OptionsView.Indicator = True
+                  object cxGrdArtCODIGO_ART_ART: TcxGridDBColumn
+                    Caption = 'C'#243'digo Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_ART'
+                    Width = 160
+                  end
+                  object cxGrdArtDESCRIPCION_ARTICULO: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                    Width = 280
+                  end
+                  object cxGrdArtVALOR_LISTA: TcxGridDBColumn
+                    Caption = 'Valor (lista)'
+                    DataBinding.FieldName = 'VALOR_LISTA'
+                    Width = 200
+                  end
+                  object cxGrdArtVALOR_LIBRE_ARTPROP: TcxGridDBColumn
+                    Caption = 'Valor libre'
+                    DataBinding.FieldName = 'VALOR_LIBRE_ARTPROP'
+                    Width = 200
+                  end
+                  object cxGrdArtINSTANTE_ALTA: TcxGridDBColumn
+                    Caption = 'Instante Alta'
+                    DataBinding.FieldName = 'INSTANTE_ALTA'
+                    Width = 150
+                  end
+                  object cxGrdArtUSUARIO_ALTA: TcxGridDBColumn
+                    Caption = 'Usuario Alta'
+                    DataBinding.FieldName = 'USUARIO_ALTA'
+                    Width = 130
+                  end
+                end
+                object cxGrdArtLevel: TcxGridLevel
+                  GridView = cxGrdArtView
+                end
+              end
+            end
+          end
+        end
       end
       inherited tsPerfil: TcxTabSheet
         inherited pnlPerfilTop: TPanel
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
-          end
-        end
-      end
-      object tsArticulos: TcxTabSheet
-        Caption = 'Art'#237'culos que la usan'
-        ImageIndex = 3
-        object cxGrdArticulos: TcxGrid
-          Left = 0
-          Top = 0
-          Width = 947
-          Height = 487
-          Align = alClient
-          TabOrder = 0
-          object cxGrdArtView: TcxGridDBTableView
-            Navigator.Buttons.CustomButtons = <>
-            DataController.DataSource = nil
-            DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-            OptionsBehavior.IncSearch = True
-            OptionsCustomize.ColumnHiding = True
-            OptionsData.Deleting = False
-            OptionsData.DeletingConfirmation = False
-            OptionsData.Editing = False
-            OptionsData.Inserting = False
-            OptionsView.GroupByBox = False
-            OptionsView.Indicator = True
-            object cxGrdArtCODIGO_ART_ART: TcxGridDBColumn
-              Caption = 'C'#243'digo Art'#237'culo'
-              DataBinding.FieldName = 'CODIGO_ART_ART'
-              Width = 160
-            end
-            object cxGrdArtDESCRIPCION_ARTICULO: TcxGridDBColumn
-              Caption = 'Descripci'#243'n'
-              DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
-              Width = 280
-            end
-            object cxGrdArtVALOR_LISTA: TcxGridDBColumn
-              Caption = 'Valor (lista)'
-              DataBinding.FieldName = 'VALOR_LISTA'
-              Width = 200
-            end
-            object cxGrdArtVALOR_LIBRE_ARTPROP: TcxGridDBColumn
-              Caption = 'Valor libre'
-              DataBinding.FieldName = 'VALOR_LIBRE_ARTPROP'
-              Width = 200
-            end
-            object cxGrdArtINSTANTE_ALTA: TcxGridDBColumn
-              Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTE_ALTA'
-              Width = 150
-            end
-            object cxGrdArtUSUARIO_ALTA: TcxGridDBColumn
-              Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIO_ALTA'
-              Width = 130
-            end
-          end
-          object cxGrdArtLevel: TcxGridLevel
-            GridView = cxGrdArtView
           end
         end
       end
