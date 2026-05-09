@@ -34,8 +34,6 @@ type
     unstrdprcCrearAlbaranFin:    TUniStoredProc;
     fxdsPrintPed: TfrxDBDataset;
     fxdstPrintLinPed: TfrxDBDataset;
-    unqryPerfiles: TUniQuery;
-    dsPerfiles: TDataSource;
     unqryAlbaranes: TUniQuery;
     dsAlbaranes:    TDataSource;
     unqryMensajes: TUniQuery;
@@ -519,8 +517,8 @@ begin
       '         CANTIDAD_PENDIENTE_PEDLIN = CANTIDAD_PEDLIN - (IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad), ' +
       '         ESENTREGADA_PEDLIN        = CASE WHEN CANTIDAD_PEDLIN <= IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad ' +
       '                                          THEN ''S'' ELSE ''N'' END, ' +
-      '         INSTANTE_MODIF             = NOW(), ' +
-      '         USUARIO_MODIF              = p_USUARIO ' +
+      '         INSTANTE_MODIF            = NOW(), ' +
+      '         USUARIO_MODIF             = p_USUARIO ' +
       '   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED ' +
       '     AND SERIE_PED_PEDLIN  = p_SERIE_PED ' +
       '     AND LINEA_PEDLIN      = p_LINEA_PED; ' +
