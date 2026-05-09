@@ -70,6 +70,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               PropertiesClassName = 'TcxTextEditProperties'
               Width = 130
             end
+            object cxgrdbclmnGrdDBTabPrinREF_PROVEEDOR: TcxGridDBColumn
+              Caption = 'Modelo Proveedor'
+              DataBinding.FieldName = 'REF_PROVEEDOR'
+              PropertiesClassName = 'TcxTextEditProperties'
+              Width = 150
+            end
+            object cxgrdbclmnGrdDBTabPrinTEMPORADA_ART: TcxGridDBColumn
+              Caption = 'Temporada'
+              DataBinding.FieldName = 'TEMPORADA_ART'
+              PropertiesClassName = 'TcxTextEditProperties'
+              Width = 150
+            end
           end
         end
       end
