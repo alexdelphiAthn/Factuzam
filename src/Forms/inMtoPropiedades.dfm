@@ -1,14 +1,16 @@
 inherited frmMtoPropiedades: TfrmMtoPropiedades
   Caption = 'Propiedades'
+  StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19
   inherited pButtonPage: TPanel
+    StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
       Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 947
+        ExplicitHeight = 487
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO: TcxGridDBColumn
@@ -64,7 +66,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
         end
       end
       inherited tsFicha: TcxTabSheet
-        TabVisible = True
         ExplicitLeft = 4
         ExplicitTop = 30
         ExplicitWidth = 943
@@ -72,14 +73,14 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
         object pnl1: TPanel
           Left = 0
           Top = 0
-          Width = 943
+          Width = 947
           Height = 113
           Align = alTop
           TabOrder = 0
           object Panel1: TPanel
             Left = 1
             Top = 1
-            Width = 941
+            Width = 945
             Height = 111
             Align = alClient
             TabOrder = 0
@@ -145,42 +146,50 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Properties.ValueUnchecked = 'N'
               TabOrder = 6
               Transparent = True
-              Width = 100
             end
           end
         end
         object cxspltr1: TcxSplitter
           Left = 0
           Top = 113
-          Width = 943
+          Width = 947
           Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitWidth = 10
         end
         object pnl2: TPanel
           Left = 0
           Top = 123
-          Width = 943
-          Height = 361
+          Width = 947
+          Height = 364
           Align = alClient
           TabOrder = 1
+          ExplicitWidth = 943
+          ExplicitHeight = 361
           object pcPestana: TcxPageControl
             Left = 1
             Top = 1
-            Width = 941
-            Height = 359
+            Width = 945
+            Height = 362
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsValores
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 357
+            ExplicitWidth = 941
+            ExplicitHeight = 359
+            ClientRectBottom = 360
             ClientRectLeft = 2
-            ClientRectRight = 939
+            ClientRectRight = 943
             ClientRectTop = 29
             object tsValores: TcxTabSheet
               Caption = '&1_Valores Disponibles'
               ImageIndex = 0
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdValores: TcxGrid
                 Left = 0
                 Top = 0
@@ -189,8 +198,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
                 Align = alClient
                 TabOrder = 0
                 object tvValores: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.DataSource = nil
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   OptionsBehavior.IncSearch = True
                   OptionsCustomize.ColumnHiding = True
@@ -234,6 +241,10 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             object tsArticulos: TcxTabSheet
               Caption = '&2_Art'#237'culos'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdArticulos: TcxGrid
                 Left = 0
                 Top = 0
@@ -242,8 +253,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
                 Align = alClient
                 TabOrder = 0
                 object tvArticulos: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.DataSource = nil
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   OptionsBehavior.IncSearch = True
                   OptionsCustomize.ColumnHiding = True
@@ -293,27 +302,43 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
       end
       inherited tsPerfil: TcxTabSheet
         inherited pnlPerfilTop: TPanel
+          StyleElements = [seFont, seClient, seBorder]
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
+        inherited pnlPerfilDetail: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+        end
       end
     end
     inherited pnlTopPage: TPanel
+      StyleElements = [seFont, seClient, seBorder]
       inherited pnlTopGrid: TPanel
+        StyleElements = [seFont, seClient, seBorder]
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
         end
-        inherited nvNavegador: TcxDBNavigator
-          Width = 240
-          ExplicitWidth = 240
-        end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    StyleElements = [seFont, seClient, seBorder]
+    inherited pButtonGen: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmPropiedades.unqryTablaG
-    OnStateChange = dsTablaGStateChange
   end
   object alPropiedades: TActionList
     Left = 360

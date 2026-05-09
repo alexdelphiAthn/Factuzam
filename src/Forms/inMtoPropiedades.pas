@@ -90,7 +90,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto;
+  inLibWin, inLibShowMto, inLibGlobalVar;
 
 {$R *.dfm}
 

@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-  inMtoVariaciones;
+  inMtoVariaciones, inLibGlobalVar;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
