@@ -99,6 +99,15 @@ type
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   private
+    type
+      TMenuItem = record
+        KeyLabel: TcxLabel;
+        DescLabel: TcxLabel;
+        HoverColor: TColor;
+        OriginalKeyColor: TColor;
+        OriginalDescColor: TColor;
+      end;
+  private
     FVentasCal: TVentasCalendarioCache;
     procedure AbrirBuscarModificar;
   private
@@ -117,11 +126,17 @@ type
     FOriginalSalirColor: TColor;
     FOriginalF3Color: TColor;
     FOriginalTraspasosColor: TColor;
+    // Navegación por teclado
+    FMenuItems: array of TMenuItem;
+    FSelectedIndex: Integer;
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
     procedure RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                     OriginalFKeyColor,
                                     OriginalDescColor: TColor);
+    procedure InitMenuItems;
+    procedure SetSelectedIndex(NewIndex: Integer);
+    procedure ExecuteSelectedItem;
     procedure AbrirSelectorCaja;
     procedure RecargarCalendario;
   public
@@ -231,6 +246,10 @@ begin
   FFechaCaja := Now;
   FOriginalESCColor := lblESC.Style.TextColor;
   FOriginalSalirColor := lblSalir.Style.TextColor;
+
+  InitMenuItems;
+  FSelectedIndex := -1;
+  SetSelectedIndex(0);
 end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
@@ -245,6 +264,24 @@ begin
     VK_F5:     lblVentasClick(Sender);
     VK_ESCAPE: lblESCClick(Sender);
     VK_F10:    AbrirBuscarModificar;
+    VK_UP:
+      // El calendario usa flechas para navegar entre días si tiene el foco
+      if not JvMonthCalendar1.Focused then
+      begin
+        SetSelectedIndex(FSelectedIndex - 1);
+        Key := 0;
+      end;
+    VK_DOWN:
+      if not JvMonthCalendar1.Focused then
+      begin
+        SetSelectedIndex(FSelectedIndex + 1);
+        Key := 0;
+      end;
+    VK_RETURN:
+      begin
+        ExecuteSelectedItem;
+        Key := 0;
+      end;
   end;
 end;
 
@@ -360,6 +397,69 @@ procedure TfrmMtoMenuCaja.RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
 begin
   FKeyLabel.Style.TextColor := OriginalFKeyColor;
   DescLabel.Style.TextColor := OriginalDescColor;
+end;
+
+// =============================================================================
+// Navegación por teclado: Up / Down resaltan, Enter ejecuta el OnClick
+// =============================================================================
+
+procedure TfrmMtoMenuCaja.InitMenuItems;
+
+  procedure AddItem(Idx: Integer; KeyLbl, DescLbl: TcxLabel;
+                    OrigKey, OrigDesc, Hover: TColor);
+  begin
+    FMenuItems[Idx].KeyLabel         := KeyLbl;
+    FMenuItems[Idx].DescLabel        := DescLbl;
+    FMenuItems[Idx].HoverColor       := Hover;
+    FMenuItems[Idx].OriginalKeyColor := OrigKey;
+    FMenuItems[Idx].OriginalDescColor:= OrigDesc;
+  end;
+
+begin
+  SetLength(FMenuItems, 7);
+  AddItem(0, lblF5,  lblVentas,          FOriginalF5Color,  FOriginalVentasColor,          clBlue);
+  AddItem(1, lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor, clWebOrange);
+  AddItem(2, lblF6,  lblEntradaCambio,   FOriginalF6Color,  FOriginalEntradaCambioColor,   clWebOrange);
+  AddItem(3, lblF7,  lblGastosCaja,      FOriginalF7Color,  FOriginalGastosCajaColor,      clWebOrange);
+  AddItem(4, lblF11, lblArqueo,          FOriginalF11Color, FOriginalArqueoColor,          clWebOrange);
+  AddItem(5, lblF3,  lblTraspasos,       FOriginalF3Color,  FOriginalTraspasosColor,       clWebOrange);
+  AddItem(6, lblESC, lblSalir,           FOriginalESCColor, FOriginalSalirColor,           clBlue);
+end;
+
+procedure TfrmMtoMenuCaja.SetSelectedIndex(NewIndex: Integer);
+var
+  Cnt: Integer;
+begin
+  Cnt := Length(FMenuItems);
+  if Cnt = 0 then Exit;
+
+  // Wrap circular: -1 va al último, Cnt vuelve al primero
+  NewIndex := ((NewIndex mod Cnt) + Cnt) mod Cnt;
+  if NewIndex = FSelectedIndex then Exit;
+
+  if (FSelectedIndex >= 0) and (FSelectedIndex < Cnt) then
+    RestoreMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
+                          FMenuItems[FSelectedIndex].DescLabel,
+                          FMenuItems[FSelectedIndex].OriginalKeyColor,
+                          FMenuItems[FSelectedIndex].OriginalDescColor);
+
+  FSelectedIndex := NewIndex;
+
+  ChangeMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
+                       FMenuItems[FSelectedIndex].DescLabel,
+                       FMenuItems[FSelectedIndex].HoverColor);
+end;
+
+procedure TfrmMtoMenuCaja.ExecuteSelectedItem;
+var
+  Item: TMenuItem;
+begin
+  if (FSelectedIndex < 0) or (FSelectedIndex >= Length(FMenuItems)) then Exit;
+  Item := FMenuItems[FSelectedIndex];
+  if Assigned(Item.DescLabel.OnClick) then
+    Item.DescLabel.OnClick(Item.DescLabel)
+  else if Assigned(Item.KeyLabel.OnClick) then
+    Item.KeyLabel.OnClick(Item.KeyLabel);
 end;
 
 // F5 - Ventas
