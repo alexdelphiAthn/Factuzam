@@ -144,7 +144,23 @@ uses
   inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
-  inLibDBStructure in 'src\Lib\inLibDBStructure.pas';
+  inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
+  inMtoArticulosPropiedades in 'src\Forms\inMtoArticulosPropiedades.pas' {frmMtoArticulosPropiedades},
+  UniDataArticulosPropiedades in 'src\DataModules\UniDataArticulosPropiedades.pas' {dmArticulosPropiedades: TdmArticulosPropiedades},
+  inMtoVariaciones in 'src\Forms\inMtoVariaciones.pas' {frmMtoVariaciones},
+  UniDataVariaciones in 'src\DataModules\UniDataVariaciones.pas' {dmVariaciones: TdmVariaciones},
+  inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
+  UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TdmAtributosConjuntos},
+  inMtoMovimientosAlmacen in 'src\Forms\inMtoMovimientosAlmacen.pas' {frmMtoMovimientosAlmacen},
+  UniDataMovimientosAlmacen in 'src\DataModules\UniDataMovimientosAlmacen.pas' {dmMovimientosAlmacen: TdmMovimientosAlmacen},
+  inMtoCajaPagosHist in 'src\Forms\inMtoCajaPagosHist.pas' {frmMtoCajaPagosHist},
+  UniDataCajaPagosHist in 'src\DataModules\UniDataCajaPagosHist.pas' {dmCajaPagosHist: TdmCajaPagosHist},
+  inMtoCajaValesHist in 'src\Forms\inMtoCajaValesHist.pas' {frmMtoCajaValesHist},
+  UniDataCajaValesHist in 'src\DataModules\UniDataCajaValesHist.pas' {dmCajaValesHist: TdmCajaValesHist},
+  inMtoCajaOperacionesHist in 'src\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
+  UniDataCajaOperacionesHist in 'src\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TdmCajaOperacionesHist},
+  inMtoDepositosCliente in 'src\Forms\inMtoDepositosCliente.pas' {frmMtoDepositosCliente},
+  UniDataDepositosCliente in 'src\DataModules\UniDataDepositosCliente.pas' {dmDepositosCliente: TdmDepositosCliente};
 
 var
   frmLogon: TfrmLogon;
