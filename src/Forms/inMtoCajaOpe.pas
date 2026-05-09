@@ -94,6 +94,8 @@ type
     cxLabel7: TcxLabel;
     actCargarCta: TAction;
     actGuardarLayout: TAction;
+    actAbrirArticulos: TAction;
+    procedure actAbrirArticulosExecute(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -1492,12 +1494,6 @@ end;
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1KeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  if (Key = Ord('A')) and (Shift = [ssCtrl]) then
-  begin
-    Key := 0;
-    ShowMto(frmMtoPrincipal, 'Articulos');
-    Exit;
-  end;
   if (Key = VK_ESCAPE) then
   begin
     if DatosCaja.cdsLineas.State = dsInsert then
@@ -1712,6 +1708,18 @@ end;
 procedure TfrmMtoOpeCaja.actGuardarLayoutExecute(Sender: TObject);
 begin
   GuardarLayoutCaja;
+end;
+
+procedure TfrmMtoOpeCaja.actAbrirArticulosExecute(Sender: TObject);
+var
+  sCodArt: string;
+begin
+  sCodArt := '';
+  if Assigned(DatosCaja) and
+     Assigned(DatosCaja.cdsLineas) and
+     DatosCaja.cdsLineas.Active then
+    sCodArt := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+  ShowMto(frmMtoPrincipal, 'Articulos', sCodArt);
 end;
 
 procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
