@@ -27,50 +27,49 @@ uses
 
 type
   TfrmMtoPropiedades = class(TfrmMtoGen)
-    cxGrdDBTabPrinCODIGO_PROP_ARTPROP: TcxGridDBColumn;
-    cxGrdDBTabPrinNOMBRE_PROP_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinTIPO_VALOR_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinESACTIVO_PROP: TcxGridDBColumn;
-    cxGrdDBTabPrinNUM_ART_USOS: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinCODIGO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNOMBRE: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinTIPO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinACTIVO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNUMARTUSOS: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
 
-    pnlCabFicha: TPanel;
-    splFicha: TcxSplitter;
-    pnlBodyFicha: TPanel;
-
+    pnl1: TPanel;
+    Panel1: TPanel;
     lblCodigo: TcxLabel;
-    edtCodigo: TcxDBTextEdit;
+    txtCODIGO: TcxDBTextEdit;
     lblNombre: TcxLabel;
-    edtNombre: TcxDBTextEdit;
+    txtNOMBRE: TcxDBTextEdit;
     lblTipo: TcxLabel;
-    cmbTipo: TcxDBComboBox;
-    chkActivo: TcxDBCheckBox;
+    cmbTIPO: TcxDBComboBox;
+    chkACTIVO: TcxDBCheckBox;
+    cxspltr1: TcxSplitter;
+    pnl2: TPanel;
+    pcPestana: TcxPageControl;
 
-    pcDetalleFicha: TcxPageControl;
     tsValores: TcxTabSheet;
+    cxgrdValores: TcxGrid;
+    tvValores: TcxGridDBTableView;
+    lvValores: TcxGridLevel;
+    tvValoresPV: TcxGridDBColumn;
+    tvValoresDESCRIPCION_PV: TcxGridDBColumn;
+    tvValoresESACTIVO_PV: TcxGridDBColumn;
+    tvValoresINSTANTEALTA: TcxGridDBColumn;
+    tvValoresUSUARIOALTA: TcxGridDBColumn;
+
     tsArticulos: TcxTabSheet;
-
-    cxGrdValores: TcxGrid;
-    cxGrdValView: TcxGridDBTableView;
-    cxGrdValLevel: TcxGridLevel;
-    cxGrdValPV: TcxGridDBColumn;
-    cxGrdValDESCRIPCION_PV: TcxGridDBColumn;
-    cxGrdValESACTIVO_PV: TcxGridDBColumn;
-    cxGrdValINSTANTE_ALTA: TcxGridDBColumn;
-    cxGrdValUSUARIO_ALTA: TcxGridDBColumn;
-
-    cxGrdArticulos: TcxGrid;
-    cxGrdArtView: TcxGridDBTableView;
-    cxGrdArtLevel: TcxGridLevel;
-    cxGrdArtCODIGO_ART_ART: TcxGridDBColumn;
-    cxGrdArtDESCRIPCION_ARTICULO: TcxGridDBColumn;
-    cxGrdArtVALOR_LISTA: TcxGridDBColumn;
-    cxGrdArtVALOR_LIBRE_ARTPROP: TcxGridDBColumn;
-    cxGrdArtINSTANTE_ALTA: TcxGridDBColumn;
-    cxGrdArtUSUARIO_ALTA: TcxGridDBColumn;
+    cxgrdArticulos: TcxGrid;
+    tvArticulos: TcxGridDBTableView;
+    lvArticulos: TcxGridLevel;
+    tvArticulosCODIGO_ART_ART: TcxGridDBColumn;
+    tvArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn;
+    tvArticulosVALOR_LISTA: TcxGridDBColumn;
+    tvArticulosVALOR_LIBRE_ARTPROP: TcxGridDBColumn;
+    tvArticulosINSTANTEALTA: TcxGridDBColumn;
+    tvArticulosUSUARIOALTA: TcxGridDBColumn;
 
     alPropiedades: TActionList;
     actGoArticulo: TAction;
@@ -105,7 +104,6 @@ begin
   dmmPropiedades := tdmDataModule as TdmPropiedades;
   pkFieldName := '`CODIGO_PROP_ARTPROP';
 
-  // Conexión y arranque de los datasets de detalle (master-detail vivo).
   dmmPropiedades.unqryArticulos.Connection := oConn;
   dmmPropiedades.unqryValores.Connection   := oConn;
   if not dmmPropiedades.unqryArticulos.Active then
@@ -113,24 +111,22 @@ begin
   if not dmmPropiedades.unqryValores.Active then
     dmmPropiedades.unqryValores.Open;
 
-  cxGrdArtView.DataController.DataSource := dmmPropiedades.dsArticulos;
-  cxGrdValView.DataController.DataSource := dmmPropiedades.dsValores;
+  tvArticulos.DataController.DataSource := dmmPropiedades.dsArticulos;
+  tvValores.DataController.DataSource   := dmmPropiedades.dsValores;
   dmmPropiedades.unqryValores.BeforePost := unqryValoresBeforePost;
 end;
 
 procedure TfrmMtoPropiedades.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
-  // El código de la propiedad solo se edita en alta.
   if dsTablaG.State = dsInsert then
-    edtCodigo.Properties.ReadOnly := False
+    txtCODIGO.Properties.ReadOnly := False
   else
-    edtCodigo.Properties.ReadOnly := True;
+    txtCODIGO.Properties.ReadOnly := True;
 end;
 
 procedure TfrmMtoPropiedades.unqryValoresBeforePost(DataSet: TDataSet);
 begin
-  // Auto-asociar el valor a la propiedad activa al dar de alta.
   if (DataSet.State = dsInsert) and
      Assigned(dmmPropiedades) and
      dmmPropiedades.unqryTablaG.Active and
@@ -139,11 +135,10 @@ begin
     if DataSet.FieldByName('ID_PROP_PV').IsNull then
       DataSet.FieldByName('ID_PROP_PV').AsString :=
         dmmPropiedades.unqryTablaG.FieldByName('CODIGO_PROP_ARTPROP').AsString;
-    if DataSet.FindField('ESACTIVO_PV') <> nil then
-      if DataSet.FieldByName('ESACTIVO_PV').IsNull then
-        DataSet.FieldByName('ESACTIVO_PV').AsString := 'S';
+    if (DataSet.FindField('ESACTIVO_PV') <> nil) and
+       DataSet.FieldByName('ESACTIVO_PV').IsNull then
+      DataSet.FieldByName('ESACTIVO_PV').AsString := 'S';
   end;
-  // Audit fields (las nombres con _ los rellena el helper estándar).
   oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
@@ -151,7 +146,7 @@ procedure TfrmMtoPropiedades.actGoArticuloUpdate(Sender: TObject);
 begin
   TAction(Sender).Enabled :=
     (pcPantalla.ActivePage = tsFicha) and
-    (pcDetalleFicha.ActivePage = tsArticulos) and
+    (pcPestana.ActivePage = tsArticulos) and
     Assigned(dmmPropiedades) and
     Assigned(dmmPropiedades.unqryArticulos) and
     dmmPropiedades.unqryArticulos.Active and
