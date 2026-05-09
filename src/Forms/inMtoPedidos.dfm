@@ -1,4 +1,4 @@
-﻿inherited frmMtoPedidos: TfrmMtoPedidos
+inherited frmMtoPedidos: TfrmMtoPedidos
   Caption = 'Mantenimiento de Pedidos'
   ClientHeight = 765
   ClientWidth = 1085
@@ -6,1269 +6,833 @@
   ExplicitWidth = 1085
   ExplicitHeight = 765
   TextHeight = 19
+  OnCreate = FormCreate
   inherited pButtonPage: TPanel
     Width = 945
     Height = 765
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitWidth = 945
-    ExplicitHeight = 765
     inherited pcPantalla: TcxPageControl
       Width = 945
       Height = 725
       Properties.ActivePage = tsLista
-      ExplicitWidth = 945
-      ExplicitHeight = 725
       ClientRectBottom = 721
       ClientRectRight = 941
       inherited tsLista: TcxTabSheet
-        ExplicitWidth = 937
-        ExplicitHeight = 691
         inherited cxGrdPrincipal: TcxGrid
           Width = 937
           Height = 691
-          ExplicitWidth = 937
-          ExplicitHeight = 691
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            object dbcGrdDBTabPrinIDPS_PEDIDO: TcxGridDBColumn
-              Caption = 'C'#243'digo PrestaShop'
-              DataBinding.FieldName = 'IDPS_PED'
-            end
-            object dbcGrdDBTabPrinFECHAPS_PEDIDO: TcxGridDBColumn
-              Caption = 'Fecha Pedido PrestaShop'
-              DataBinding.FieldName = 'FECHAPS_PED'
-              Width = 219
-            end
-            object dbcGrdDBTabPrinCODIGO_EMPRESA_PEDIDO: TcxGridDBColumn
-              Caption = 'C'#243'digo Empresa Emisora'
-              DataBinding.FieldName = 'CODIGO_EMP_PED'
-              Width = 220
-            end
-            object dbcGrdDBTabPrinFECHA_PEDIDO: TcxGridDBColumn
-              Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_PED'
-              Width = 110
-            end
-            object dbcGrdDBTabPrinNRO_PEDIDO: TcxGridDBColumn
+            object dbcGrdPedNUMERO_PED: TcxGridDBColumn
               Caption = 'Nro Pedido'
               DataBinding.FieldName = 'NUMERO_PED'
+              Width = 90
             end
-            object dbcGrdDBTabPrinSERIE_PEDIDO: TcxGridDBColumn
-              Caption = 'Serie Pedido'
+            object dbcGrdPedSERIE_PED: TcxGridDBColumn
+              Caption = 'Serie'
               DataBinding.FieldName = 'SERIE_PED'
-              Width = 128
+              Width = 70
             end
-            object dbcGrdDBTabPrinCODIGO_CLIENTE_PEDIDO: TcxGridDBColumn
-              Caption = 'C'#243'digo Cliente'
+            object dbcGrdPedFECHA_PED: TcxGridDBColumn
+              Caption = 'Fecha'
+              DataBinding.FieldName = 'FECHA_PED'
+              Width = 100
+            end
+            object dbcGrdPedESTADO_PED: TcxGridDBColumn
+              Caption = 'Estado'
+              DataBinding.FieldName = 'ESTADO_PED'
+              Width = 110
+            end
+            object dbcGrdPedCODIGO_EMP_PED: TcxGridDBColumn
+              Caption = 'Empresa'
+              DataBinding.FieldName = 'CODIGO_EMP_PED'
+              Width = 90
+            end
+            object dbcGrdPedRSEMP_PED: TcxGridDBColumn
+              Caption = 'Raz'#243'n Social Empresa'
+              DataBinding.FieldName = 'RAZON_SOCIAL_EMPRESA_PED'
+              Width = 220
+            end
+            object dbcGrdPedCODIGO_CLI_PED: TcxGridDBColumn
+              Caption = 'Cliente'
               DataBinding.FieldName = 'CODIGO_CLI_PED'
-              Width = 139
+              Width = 90
             end
-            object dbcGrdDBTabPrinEMAIL_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'EMAIL_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinNIF_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NIF_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinNOMBRE_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Nombre Cliente Env'#237'o'
-              DataBinding.FieldName = 'NOMBRE_CLI_ENVIO_PED'
-              Width = 248
-            end
-            object dbcGrdDBTabPrinMOVIL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'M'#243'vil Cliente Env'#237'o'
-              DataBinding.FieldName = 'MOVIL_CLIENTE_ENVIO_PED'
-              Width = 182
-            end
-            object dbcGrdDBTabPrinDIRECCION1_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Direcci'#243'n 1 Cliente Env'#237'o'
-              DataBinding.FieldName = 'DIRECCION1_CLIENTE_ENVIO_PED'
-              Width = 218
-            end
-            object dbcGrdDBTabPrinDIRECCION2_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Direcci'#243'n 2 Cliente Env'#237'o'
-              DataBinding.FieldName = 'DIRECCION2_CLIENTE_ENVIO_PED'
-              Width = 218
-            end
-            object dbcGrdDBTabPrinCPOSTAL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'C'#243'digo Postal Cliente Env'#237'o'
-              DataBinding.FieldName = 'CODIGO_POSTAL_CLIENTE_ENVIO_PED'
-            end
-            object dbcGrdDBTabPrinPOBLACION_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Poblaci'#243'n Cliente Env'#237'o'
-              DataBinding.FieldName = 'POBLACION_CLIENTE_ENVIO_PED'
-              Width = 204
-            end
-            object dbcGrdDBTabPrinPROVINCIA_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Provincia Cliente Env'#237'o'
-              DataBinding.FieldName = 'PROVINCIA_CLIENTE_ENVIO_PED'
-              Width = 210
-            end
-            object dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'C'#243'digo Pa'#237's Cliente Env'#237'o'
-              DataBinding.FieldName = 'CODIGO_PAI_CLIENTE_ENVIO_PED'
-            end
-            object dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn
-              Caption = 'Pa'#237's Cliente Env'#237'o'
-              DataBinding.FieldName = 'NOMBRE_PAI_CLIENTE_ENVIO_PED'
-              Width = 154
-            end
-            object dbcGrdDBTabPrinRAZONSOCIAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              Caption = 'Raz'#243'n Social Cliente Fiscal'
+            object dbcGrdPedRSCLI_PED: TcxGridDBColumn
+              Caption = 'Raz'#243'n Social Cliente'
               DataBinding.FieldName = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
-              Width = 231
+              Width = 220
             end
-            object dbcGrdDBTabPrinMOVIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              Caption = 'M'#243'vil Cliente Fiscal'
-              DataBinding.FieldName = 'MOVIL_CLIENTE_FISCAL_PED'
+            object dbcGrdPedIDPS_PED: TcxGridDBColumn
+              Caption = 'ID PrestaShop'
+              DataBinding.FieldName = 'IDPS_PED'
+              Width = 90
             end
-            object dbcGrdDBTabPrinEMAIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              Caption = 'Email Cliente Fiscal'
-              DataBinding.FieldName = 'EMAIL_CLIENTE_FISCAL_PED'
-              Width = 170
-            end
-            object dbcGrdDBTabPrinDIRECCION1_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION1_CLIENTE_FISCAL_PED'
-              Width = 324
-            end
-            object dbcGrdDBTabPrinDIRECCION2_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DIRECCION2_CLIENTE_FISCAL_PED'
-              Width = 324
-            end
-            object dbcGrdDBTabPrinPOBLACION_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'POBLACION_CLIENTE_FISCAL_PED'
-              Width = 314
-            end
-            object dbcGrdDBTabPrinPROVINCIA_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PROVINCIA_CLIENTE_FISCAL_PED'
-              Width = 310
-            end
-            object dbcGrdDBTabPrinCPOSTAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_POSTAL_CLIENTE_FISCAL_PED'
-            end
-            object dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_PAI_CLIENTE_FISCAL_PED'
-            end
-            object dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NOMBRE_PAI_CLIENTE_FISCAL_PED'
-              Width = 1582
-            end
-            object dbcGrdDBTabPrinREFERENCIAPS_PEDIDO: TcxGridDBColumn
+            object dbcGrdPedREFPS_PED: TcxGridDBColumn
+              Caption = 'Ref. PrestaShop'
               DataBinding.FieldName = 'REFERENCIAPS_PED'
+              Width = 110
             end
-            object dbcGrdDBTabPrinFORMAPAGOPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'FORMAPAGOPS_PED'
+            object dbcGrdPedFECHAPS_PED: TcxGridDBColumn
+              Caption = 'Fecha PrestaShop'
+              DataBinding.FieldName = 'FECHAPS_PED'
+              Width = 130
             end
-            object dbcGrdDBTabPrinDESCRIPCION_FORMAPAGO: TcxGridDBColumn
-              DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
-            end
-            object dbcGrdDBTabPrinTRANSPORTISTAPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TRANSPORTISTAPS_PED'
-            end
-            object dbcGrdDBTabPrinESTADOPEDIDOPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESTADOPEDIDOPS_PED'
-            end
-            object dbcGrdDBTabPrinESTADOMENSAJEPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESTADOMENSAJEPS_PED'
-            end
-            object dbcGrdDBTabPrinIDHILOPS_MENSAJES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'IDHILOPS_MENSAJES_PED'
-            end
-            object dbcGrdDBTabPrinESIVA_RECARGO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVA_RECARGO_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESIVA_EXENTO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVA_EXENTO_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESREGIMENESPECIALAGRICOLA_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESRETENCIONES_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESRETENCIONES_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinTARIFA_ARTICULO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TARIFA_ARTICULO_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESIMP_INCL_TARIFA_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESINTRACOMUNITARIO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESINTRACOMUNITARIO_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinESIRPF_IMP_INCL_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_PED'
-            end
-            object dbcGrdDBTabPrinESAPLICA_RE_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESAPLICA_RE_ZONA_IVA_PED'
-            end
-            object dbcGrdDBTabPrinESIVAAGRICOLA_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESIVAAGRICOLA_ZONA_IVA_PED'
-            end
-            object dbcGrdDBTabPrinPALABRA_REPORTS_ZONA_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PALABRA_REPORTS_ZONA_IVA_PED'
-            end
-            object dbcGrdDBTabPrinCODIGO_IVA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CODIGO_IVA_PED'
-            end
-            object dbcGrdDBTabPrinESVENTA_ACTIVO_FIJO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESVENTA_ACTIVO_FIJO_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_IVAN_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAN_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_REN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_REN_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_REN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_REN_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_BASEI_IVAN_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAN_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_IVAR_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAR_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_RER_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_RER_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_RER_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RER_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_BASEI_IVAR_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAR_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_IVAS_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAS_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_RES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_RES_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_RES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RES_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_BASEI_IVAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAS_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_IVAE_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IVAE_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_REE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_REE_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_REE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_REE_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_BASEI_IVAE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASEI_IVAE_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_BASES_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_BASES_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_IMPUESTOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_IMPUESTOS_PED'
-            end
-            object dbcGrdDBTabPrinFORMA_PAGO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'FORMA_PAGO_PED'
-            end
-            object dbcGrdDBTabPrinPORCEN_RETENCION_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'PORCENTAJE_RETENCION_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_RETENCION_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_RETENCION_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_LIQUIDO_PEDIDO: TcxGridDBColumn
+            object dbcGrdPedTOTAL_LIQUIDO_PED: TcxGridDBColumn
+              Caption = 'Total'
               DataBinding.FieldName = 'TOTAL_LIQUIDO_PED'
-            end
-            object dbcGrdDBTabPrinTOTAL_PAGADOREALPS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TOTAL_PAGADOREALPS_PED'
-            end
-            object dbcGrdDBTabPrinNRO_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'NUMERO_PED_ABONO_PED'
-            end
-            object dbcGrdDBTabPrinSERIE_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'SERIE_PED_ABONO_PED'
-            end
-            object dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_CLIENTE_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TEXTO_LEGAL_CLIENTE_PED'
-            end
-            object dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_EMPRESA_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'TEXTO_LEGAL_EMPRESA_PED'
-            end
-            object dbcGrdDBTabPrinDOCUMENTO_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'DOCUMENTO_PED'
-            end
-            object dbcGrdDBTabPrinCOMENTARIOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'COMENTARIOS_PED'
-            end
-            object dbcGrdDBTabPrinCONTADOR_LINEAS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'CONTADOR_LINEAS_PED'
-            end
-            object dbcGrdDBTabPrinESCREARARTICULOS_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESCREARARTICULOS_PED'
-            end
-            object dbcGrdDBTabPrinESDESCRIPCIONES_AMP_PEDIDO: TcxGridDBColumn
-              DataBinding.FieldName = 'ESDESCRIPCIONES_AMP_PED'
+              Width = 110
             end
           end
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 852
-        ExplicitHeight = 691
-        object pnlTopPedido: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 937
-          Height = 241
+          Height = 230
           Align = alTop
+          BevelOuter = bvNone
           TabOrder = 0
-          ExplicitWidth = 852
           object pcCab: TcxPageControl
-            Left = 1
-            Top = 1
-            Width = 935
-            Height = 239
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
+            Left = 0
+            Top = 0
+            Width = 937
+            Height = 230
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDatosCliente
-            Properties.CustomButtons.Buttons = <>
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 1079
-            ExplicitHeight = 337
-            ClientRectBottom = 235
-            ClientRectLeft = 4
-            ClientRectRight = 931
-            ClientRectTop = 30
+            Properties.ActivePage = tsCabecera
+            ClientRectBottom = 226
+            ClientRectRight = 933
+            ClientRectTop = 24
             object tsCabecera: TcxTabSheet
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              Caption = '&Cabecera Factura '
-              ImageIndex = 0
-              object lblNroFactura: TcxLabel
-                Left = 45
-                Top = 16
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'Nro Factura'
-                TabOrder = 1
-                Transparent = True
-              end
-              object lblFechaFactura: TcxLabel
-                Left = 95
-                Top = 200
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'Fecha'
-                TabOrder = 3
-                Transparent = True
-              end
-              object dteFECHA_FACTURA: TcxDBDateEdit
-                Left = 155
-                Top = 196
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                DataBinding.DataField = 'FECHA_FAC'
-                DataBinding.DataSource = dsTablaG
-                Properties.DateButtons = [btnClear, btnToday]
-                TabOrder = 10
-                Width = 143
-              end
-              object lblSerieFactura: TcxLabel
-                Left = 35
-                Top = 154
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'Serie Factura'
-                TabOrder = 6
-                Transparent = True
-              end
-              object btnCODIGO_CLIENTE: TcxDBButtonEdit
-                Left = 159
-                Top = 105
-                DataBinding.DataField = 'CODIGO_CLI_FAC'
-                DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
-                  item
-                    Default = True
-                    Kind = bkEllipsis
-                  end>
-                TabOrder = 4
-                Width = 104
-              end
-              object lblCodigoCliente: TcxLabel
-                Left = 18
-                Top = 109
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'C'#243'digo Cliente'
-                TabOrder = 7
-                Transparent = True
-              end
-              object cxdblblRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel
-                Left = 269
-                Top = 60
-                DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 8
-                Transparent = True
-                Height = 21
-                Width = 332
-              end
-              object cxdblblRAZONSOCIAL_CLIENTE_FACTURA: TcxDBLabel
-                Left = 269
-                Top = 109
-                DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
-                DataBinding.DataSource = dsTablaG
-                ParentFont = False
-                TabOrder = 9
-                Transparent = True
-                Height = 21
-                Width = 412
-              end
-              object btnCODIGO_EMPRESA_FACTURA: TcxDBButtonEdit
-                Left = 155
-                Top = 58
-                DataBinding.DataField = 'CODIGO_EMP_FAC'
-                DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
-                  item
-                    Default = True
-                    Kind = bkEllipsis
-                  end>
-                TabOrder = 2
-                Width = 104
-              end
-              object lblCodigoEmpresa: TcxLabel
-                Left = 7
-                Top = 62
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'C'#243'digo Empresa'
-                ParentFont = False
-                TabOrder = 11
-                Transparent = True
-              end
-              object txtNRO_FACTURA: TcxDBTextEdit
-                Left = 155
+              Caption = 'Cabecera'
+              object lblNroPedido: TcxLabel
+                Left = 8
                 Top = 12
-                DataBinding.DataField = 'NUMERO_FAC'
+                Caption = 'N'#250'mero'
+              end
+              object txtNUMERO_PED: TcxDBTextEdit
+                Left = 8
+                Top = 32
+                DataBinding.DataField = 'NUMERO_PED'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 0
+                Width = 90
+              end
+              object lblSerie: TcxLabel
+                Left = 106
+                Top = 12
+                Caption = 'Serie'
+              end
+              object txtSERIE_PED: TcxDBTextEdit
+                Left = 106
+                Top = 32
+                DataBinding.DataField = 'SERIE_PED'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 1
+                Width = 70
+              end
+              object lblFecha: TcxLabel
+                Left = 184
+                Top = 12
+                Caption = 'Fecha'
+              end
+              object dteFECHA_PED: TcxDBDateEdit
+                Left = 184
+                Top = 32
+                DataBinding.DataField = 'FECHA_PED'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 2
+                Width = 110
+              end
+              object lblFechaEntrega: TcxLabel
+                Left = 302
+                Top = 12
+                Caption = 'Fecha entrega'
+              end
+              object dteFECHA_ENTREGA_PED: TcxDBDateEdit
+                Left = 302
+                Top = 32
+                DataBinding.DataField = 'FECHA_ENTREGA_PED'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 3
+                Width = 110
+              end
+              object lblEstado: TcxLabel
+                Left = 420
+                Top = 12
+                Caption = 'Estado'
+              end
+              object txtESTADO_PED: TcxDBTextEdit
+                Left = 420
+                Top = 32
+                DataBinding.DataField = 'ESTADO_PED'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
-                TabOrder = 0
-                Width = 121
+                TabOrder = 4
+                Width = 110
               end
-              object cbbSerieFactura: TcxDBLookupComboBox
-                Left = 155
-                Top = 150
-                BeepOnEnter = False
-                DataBinding.DataField = 'SERIE_FAC'
+              object lblIDPS: TcxLabel
+                Left = 540
+                Top = 12
+                Caption = 'ID PrestaShop'
+              end
+              object txtIDPS_PED: TcxDBTextEdit
+                Left = 540
+                Top = 32
+                DataBinding.DataField = 'IDPS_PED'
                 DataBinding.DataSource = dsTablaG
-                Properties.DropDownListStyle = lsEditList
-                Properties.ImmediateDropDownWhenKeyPressed = False
-                Properties.IncrementalFiltering = False
-                Properties.KeyFieldNames = 'SERIE_CON'
-                Properties.ListColumns = <
-                  item
-                    Caption = 'Serie'
-                    FieldName = 'SERIE_CON'
-                  end>
-                Properties.ListOptions.ColumnSorting = False
-                Properties.ListOptions.ShowHeader = False
                 Properties.ReadOnly = True
                 TabOrder = 5
-                Width = 145
+                Width = 90
+              end
+              object lblRefPS: TcxLabel
+                Left = 638
+                Top = 12
+                Caption = 'Ref. PrestaShop'
+              end
+              object txtREFERENCIAPS_PED: TcxDBTextEdit
+                Left = 638
+                Top = 32
+                DataBinding.DataField = 'REFERENCIAPS_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                TabOrder = 6
+                Width = 110
+              end
+              object lblCodigoEmpresa: TcxLabel
+                Left = 8
+                Top = 80
+                Caption = 'Empresa Emisora'
+              end
+              object btnCODIGO_EMP: TcxDBButtonEdit
+                Left = 8
+                Top = 100
+                DataBinding.DataField = 'CODIGO_EMP_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.Buttons = <
+                  item
+                    Default = True
+                    Kind = bkEllipsis
+                  end>
+                TabOrder = 7
+                Width = 130
+              end
+              object cxdblblRAZON_SOCIAL_EMPRESA_PED: TcxDBLabel
+                Left = 144
+                Top = 100
+                DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_PED'
+                DataBinding.DataSource = dsTablaG
+                Style.Font.Style = [fsBold]
+                Width = 380
+              end
+              object lblCodigoCliente: TcxLabel
+                Left = 8
+                Top = 140
+                Caption = 'Cliente'
+              end
+              object btnCODIGO_CLI: TcxDBButtonEdit
+                Left = 8
+                Top = 160
+                DataBinding.DataField = 'CODIGO_CLI_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.Buttons = <
+                  item
+                    Default = True
+                    Kind = bkEllipsis
+                  end>
+                TabOrder = 8
+                Width = 130
+              end
+              object cxdblblRAZON_SOCIAL_CLIENTE_PED: TcxDBLabel
+                Left = 144
+                Top = 160
+                DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
+                DataBinding.DataSource = dsTablaG
+                Style.Font.Style = [fsBold]
+                Width = 380
               end
             end
             object tsEmpresa: TcxTabSheet
-              Caption = 'Datos E&mpresa Emisora -'
-              Color = clBtnFace
-              ImageIndex = 2
-              ParentColor = False
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
-              object cxgrpbxEmpresa: TcxGroupBox
-                Left = 22
-                Top = 13
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'Empresa'
+              Caption = 'Empresa'
+              object grpEmpresa: TcxGroupBox
+                Left = 4
+                Top = 4
+                Width = 920
+                Height = 192
+                Caption = 'Datos Empresa Emisora'
                 TabOrder = 0
-                Height = 277
-                Width = 770
-                object txtDIRECCION1_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 14
-                  Top = 55
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION1_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 1
-                  Width = 328
+                object lblNIFEmp: TcxLabel
+                  Left = 12
+                  Top = 24
+                  Caption = 'NIF'
                 end
-                object txtCPOSTAL_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 13
-                  Top = 115
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_POSTAL_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 3
-                  Width = 75
-                end
-                object txtPROVINCIA_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 114
-                  Top = 169
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'PROVINCIA_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 5
-                  Width = 228
-                end
-                object txtPAIS_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 177
-                  Top = 202
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'NOMBRE_PAI_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 6
-                  Width = 165
-                end
-                object txtDIRECCION2_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 14
-                  Top = 79
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION2_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 2
-                  Width = 328
-                end
-                object lblProvinciaEmpresa: TcxLabel
-                  Left = 23
-                  Top = 173
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Provincia'
-                  TabOrder = 10
-                  Transparent = True
-                end
-                object lblPaisEmpresa: TcxLabel
-                  Left = 66
-                  Top = 206
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Pa'#237's'
-                  TabOrder = 11
-                  Transparent = True
-                end
-                object txtRAZONSOCIAL_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 14
-                  Top = 22
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
+                object txtNIF_EMPRESA_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 44
+                  DataBinding.DataField = 'NIF_EMPRESA_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 0
-                  Width = 328
+                  Width = 130
                 end
-                object txtNIF_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 505
-                  Top = 29
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'NIF_EMPRESA_FAC'
+                object lblMovEmp: TcxLabel
+                  Left = 152
+                  Top = 24
+                  Caption = 'M'#243'vil'
+                end
+                object txtMOVIL_EMPRESA_PED: TcxDBTextEdit
+                  Left = 152
+                  Top = 44
+                  DataBinding.DataField = 'MOVIL_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 1
+                  Width = 130
+                end
+                object lblEmailEmp: TcxLabel
+                  Left = 292
+                  Top = 24
+                  Caption = 'Email'
+                end
+                object txtEMAIL_EMPRESA_PED: TcxDBTextEdit
+                  Left = 292
+                  Top = 44
+                  DataBinding.DataField = 'EMAIL_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 2
+                  Width = 220
+                end
+                object txtDIRECCION1_EMPRESA_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 84
+                  DataBinding.DataField = 'DIRECCION1_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 3
+                  Width = 350
+                end
+                object txtDIRECCION2_EMPRESA_PED: TcxDBTextEdit
+                  Left = 372
+                  Top = 84
+                  DataBinding.DataField = 'DIRECCION2_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 4
+                  Width = 250
+                end
+                object txtPOBLACION_EMPRESA_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 116
+                  DataBinding.DataField = 'POBLACION_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 5
+                  Width = 200
+                end
+                object txtPROVINCIA_EMPRESA_PED: TcxDBTextEdit
+                  Left = 220
+                  Top = 116
+                  DataBinding.DataField = 'PROVINCIA_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 6
+                  Width = 200
+                end
+                object txtCODIGO_POSTAL_EMPRESA_PED: TcxDBTextEdit
+                  Left = 428
+                  Top = 116
+                  DataBinding.DataField = 'CODIGO_POSTAL_EMPRESA_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 7
-                  Width = 247
+                  Width = 80
                 end
-                object lblNIFEmpresa: TcxLabel
-                  Left = 389
-                  Top = 33
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'NIF Empresa'
-                  ParentFont = False
-                  TabOrder = 12
-                  Transparent = True
-                end
-                object lblMovilEmpresa: TcxLabel
-                  Left = 369
-                  Top = 66
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'M'#243'vil Empresa'
-                  ParentFont = False
-                  TabOrder = 13
-                  Transparent = True
-                end
-                object txtMOVIL_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 505
-                  Top = 62
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'MOVIL_EMPRESA_FAC'
+                object txtNOMBRE_PAI_EMPRESA_PED: TcxDBTextEdit
+                  Left = 516
+                  Top = 116
+                  DataBinding.DataField = 'NOMBRE_PAI_EMPRESA_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 8
-                  Width = 247
+                  Width = 150
                 end
-                object txtEMAIL_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 505
-                  Top = 95
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'EMAIL_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 9
-                  Width = 247
-                end
-                object lblEmailEmpresa: TcxLabel
-                  Left = 372
-                  Top = 99
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Email Empresa'
-                  ParentFont = False
-                  TabOrder = 15
-                  Transparent = True
-                end
-                object chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TcxDBCheckBox
-                  Left = 372
-                  Top = 167
-                  Caption = 'Empresa es agricultor/ganadero/pesca (S'#243'lo REAGP)'
-                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.MultiLine = True
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 16
-                  Transparent = True
-                  Width = 242
-                end
-                object chkRETENCION_EMPRESA_FACTURA: TcxDBCheckBox
-                  Left = 372
-                  Top = 138
-                  Caption = 'Empresa practica retenci'#243'n en Factura'
-                  DataBinding.DataField = 'ESRETENCIONES_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 14
-                  Transparent = True
-                end
-                object cxdbmPOBLACION_EMPRESA_FACTURA: TcxDBMemo
-                  Left = 91
-                  Top = 115
-                  DataBinding.DataField = 'POBLACION_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ScrollBars = ssVertical
-                  TabOrder = 4
-                  Height = 49
-                  Width = 251
-                end
-                object cbbCanalIVA: TcxDBLookupComboBox
-                  Left = 112
-                  Top = 233
-                  DataBinding.DataField = 'GRUPO_ZONA_IVA_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'IVA_IVAGRP'
-                  Properties.ListColumns = <
-                    item
-                      Caption = 'Zona de IVA'
-                      FieldName = 'DESCRIPCION_IVA_IVAGRP'
-                    end>
-                  Properties.ListOptions.ShowHeader = False
-                  Properties.ReadOnly = True
-                  TabOrder = 18
-                  Width = 363
-                end
-                object lblCanalIVA: TcxLabel
-                  Left = 20
-                  Top = 237
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Canal IVA'
-                  TabOrder = 17
-                  Transparent = True
-                end
-                object txtNOMBRE_PAIS_EMPRESA_FACTURA: TcxDBTextEdit
-                  Left = 111
-                  Top = 202
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_PAI_EMPRESA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 19
-                  Width = 58
-                end
-              end
-              object btnUpdateEmpresa: TcxButton
-                Left = 799
-                Top = 72
-                Width = 142
-                Height = 122
-                Caption = 'Dar de Alta o &Actualizar Empresa'
-                TabOrder = 1
-                WordWrap = True
-              end
-              object btnIrAEmpresa: TcxButton
-                Left = 799
-                Top = 256
-                Width = 142
-                Height = 34
-                Caption = 'I&r a Empresa'
-                TabOrder = 2
-              end
-              object cxdblblCODIGO_EMPRESA_FACTURA: TcxDBLabel
-                Left = 799
-                Top = 23
-                DataBinding.DataField = 'CODIGO_EMP_FAC'
-                DataBinding.DataSource = dsTablaG
-                ParentFont = False
-                Style.Font.Charset = ANSI_CHARSET
-                Style.Font.Color = clPurple
-                Style.Font.Height = -20
-                Style.Font.Name = 'Lucida Sans'
-                Style.Font.Style = []
-                Style.IsFontAssigned = True
-                TabOrder = 3
-                Transparent = True
-                Height = 26
-                Width = 142
               end
             end
             object tsDatosCliente: TcxTabSheet
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              Caption = 'Datos Cli&ente -'
-              ImageIndex = 1
-              object cxgrpbxCliente: TcxGroupBox
-                Left = 22
-                Top = 13
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Caption = 'Cliente'
+              Caption = 'Cliente Fiscal'
+              object grpClienteFiscal: TcxGroupBox
+                Left = 4
+                Top = 4
+                Width = 920
+                Height = 192
+                Caption = 'Datos Cliente Fiscal'
                 TabOrder = 0
-                Height = 277
-                Width = 763
-                object txtDIRECCION1_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 13
-                  Top = 57
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION1_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 1
-                  Width = 328
-                end
-                object txtCPOSTAL_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 13
-                  Top = 115
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_POSTAL_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 3
-                  Width = 70
-                end
-                object txtPOBLACION_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 92
-                  Top = 114
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'POBLACION_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 4
-                  Width = 247
-                end
-                object txtPROVINCIA_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 113
-                  Top = 147
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'PROVINCIA_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 5
-                  Width = 228
-                end
-                object txtPAIS_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 113
-                  Top = 180
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'NOMBRE_PAI_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 6
-                  Width = 228
-                end
-                object txtDIRECCION2_CLIENTE_FACTURA1: TcxDBTextEdit
-                  Left = 13
-                  Top = 81
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION2_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 2
-                  Width = 328
-                end
-                object lblcxlbl6: TcxLabel
-                  Left = 26
-                  Top = 148
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Provincia'
-                  TabOrder = 10
-                  Transparent = True
-                end
-                object lblcxlbl13: TcxLabel
-                  Left = 13
-                  Top = 181
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Pa'#237's'
-                  TabOrder = 11
-                  Transparent = True
-                end
-                object txtRAZONSOCIAL_CLIENTE_FACTURA: TcxDBTextEdit
-                  Left = 13
-                  Top = 26
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
+                object txtRAZON_SOCIAL_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 24
+                  DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 0
-                  Width = 328
+                  Width = 320
                 end
-                object txtNIF_CLIENTE_FACTURA: TcxDBTextEdit
-                  Left = 464
-                  Top = 26
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'NIF_CLIENTE_FAC'
+                object txtNIF_CLIENTE_PED: TcxDBTextEdit
+                  Left = 342
+                  Top = 24
+                  DataBinding.DataField = 'NIF_CLIENTE_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 1
+                  Width = 130
+                end
+                object txtEMAIL_CLIENTE_PED: TcxDBTextEdit
+                  Left = 482
+                  Top = 24
+                  DataBinding.DataField = 'EMAIL_CLIENTE_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 2
+                  Width = 220
+                end
+                object txtMOVIL_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 712
+                  Top = 24
+                  DataBinding.DataField = 'MOVIL_CLIENTE_FISCAL_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 3
+                  Width = 130
+                end
+                object txtDIRECCION1_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 60
+                  DataBinding.DataField = 'DIRECCION1_CLIENTE_FISCAL_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 4
+                  Width = 350
+                end
+                object txtDIRECCION2_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 372
+                  Top = 60
+                  DataBinding.DataField = 'DIRECCION2_CLIENTE_FISCAL_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 5
+                  Width = 250
+                end
+                object txtPOBLACION_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 96
+                  DataBinding.DataField = 'POBLACION_CLIENTE_FISCAL_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 6
+                  Width = 200
+                end
+                object txtPROVINCIA_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 220
+                  Top = 96
+                  DataBinding.DataField = 'PROVINCIA_CLIENTE_FISCAL_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 7
-                  Width = 289
+                  Width = 200
                 end
-                object lblNif: TcxLabel
-                  Left = 425
-                  Top = 27
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'NIF'
-                  TabOrder = 12
-                  Transparent = True
-                end
-                object lblTelefonoMovil: TcxLabel
-                  Left = 359
-                  Top = 59
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Tfno. M'#243'vil'
-                  TabOrder = 13
-                  Transparent = True
-                end
-                object txtMOVIL_CLIENTE_FACTURA: TcxDBTextEdit
-                  Left = 464
-                  Top = 58
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'MOVIL_CLIENTE_FAC'
+                object txtCODIGO_POSTAL_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 428
+                  Top = 96
+                  DataBinding.DataField = 'CODIGO_POSTAL_CLIENTE_FISCAL_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 8
-                  Width = 289
+                  Width = 80
                 end
-                object txtEMAIL_CLIENTE_FACTURA: TcxDBTextEdit
-                  Left = 464
-                  Top = 91
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'EMAIL_CLIENTE_FAC'
+                object txtNOMBRE_PAI_CLIENTE_FISCAL_PED: TcxDBTextEdit
+                  Left = 516
+                  Top = 96
+                  DataBinding.DataField = 'NOMBRE_PAI_CLIENTE_FISCAL_PED'
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 9
-                  Width = 289
-                end
-                object lblEmail: TcxLabel
-                  Left = 407
-                  Top = 92
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Email'
-                  TabOrder = 14
-                  Transparent = True
-                end
-                object chkESIVA_RECARGO_CLIENTE_FACTURA: TcxDBCheckBox
-                  Left = 378
-                  Top = 151
-                  Caption = 'Aplicar Recargo de Equivalencia'
-                  DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 16
-                  Transparent = True
-                end
-                object chkREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA: TcxDBCheckBox
-                  Left = 378
-                  Top = 177
-                  Caption = 'Cliente es agricultor/ganadero/pesca'
-                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 17
-                  Transparent = True
-                end
-                object chkRETENCIONES_EMPRESA_FACTURA3: TcxDBCheckBox
-                  Left = 378
-                  Top = 124
-                  Caption = 'Aplicar IRPF (Es profesional)'
-                  DataBinding.DataField = 'ESRETENCIONES_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 15
-                  Transparent = True
-                end
-                object chkEXTRANJERO: TcxDBCheckBox
-                  Left = 13
-                  Top = 217
-                  Caption = 'IVA Exento'
-                  DataBinding.DataField = 'ESIVA_EXENTO_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 18
-                  Transparent = True
-                end
-                object cbbTARIFA_ARTICULOS_CLIENTES: TcxDBLookupComboBox
-                  Left = 547
-                  Top = 207
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'TARIFA_ARTICULO_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
-                  Properties.ListColumns = <
-                    item
-                      FieldName = 'NOMBRE_TAR_TAR'
-                    end>
-                  Properties.ListOptions.ShowHeader = False
-                  Properties.ReadOnly = True
-                  TabOrder = 21
-                  Width = 205
-                end
-                object lblTarifaArticulosCliente: TcxLabel
-                  Left = 407
-                  Top = 211
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Tarifa Art'#237'culos'
-                  Style.BorderStyle = ebsNone
-                  TabOrder = 20
-                  Transparent = True
-                end
-                object chkIVA_EXENTO_CLIENTE_FACTURA: TcxDBCheckBox
-                  Left = 132
-                  Top = 217
-                  Caption = 'Cliente intracomunitario'
-                  DataBinding.DataField = 'ESINTRACOMUNITARIO_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 19
-                  Transparent = True
-                end
-                object chkImpIncl: TcxDBCheckBox
-                  Left = 407
-                  Top = 242
-                  Caption = 'Precios Venta con Impuestos Incluidos'
-                  DataBinding.DataField = 'ESIMP_INCL_TARIFA_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ReadOnly = True
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 22
-                  Transparent = True
-                end
-                object txtCODIGO_PAIS_CLIENTE_FACTURA: TcxDBTextEdit
-                  Left = 57
-                  Top = 179
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_PAI_CLIENTE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 23
-                  Width = 54
+                  Width = 150
                 end
               end
-              object btnUpdateCliente: TcxButton
-                Left = 792
-                Top = 72
-                Width = 142
-                Height = 122
-                Caption = 'Dar de Alta o &Actualizar Cliente'
-                TabOrder = 1
-                WordWrap = True
-              end
-              object btnIrACliente: TcxButton
-                Left = 792
-                Top = 256
-                Width = 142
-                Height = 34
-                Caption = 'I&r a Cliente'
-                TabOrder = 2
-              end
-              object cxdblblCODIGO_CLIENTE_FACTURA: TcxDBLabel
-                Left = 803
-                Top = 23
-                DataBinding.DataField = 'CODIGO_CLI_FAC'
-                DataBinding.DataSource = dsTablaG
-                ParentFont = False
-                Style.Font.Charset = ANSI_CHARSET
-                Style.Font.Color = clWindowText
-                Style.Font.Height = -20
-                Style.Font.Name = 'Lucida Sans'
-                Style.Font.Style = []
-                Style.TextColor = clPurple
-                Style.IsFontAssigned = True
-                TabOrder = 3
-                Transparent = True
-                Height = 27
-                Width = 131
+            end
+            object tsEnvio: TcxTabSheet
+              Caption = 'Direcci'#243'n Env'#237'o'
+              object grpClienteEnvio: TcxGroupBox
+                Left = 4
+                Top = 4
+                Width = 920
+                Height = 192
+                Caption = 'Datos Cliente Env'#237'o'
+                TabOrder = 0
+                object txtNOMBRE_CLI_ENVIO_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 24
+                  DataBinding.DataField = 'NOMBRE_CLI_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 0
+                  Width = 320
+                end
+                object txtMOVIL_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 342
+                  Top = 24
+                  DataBinding.DataField = 'MOVIL_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 1
+                  Width = 130
+                end
+                object txtDIRECCION1_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 60
+                  DataBinding.DataField = 'DIRECCION1_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 2
+                  Width = 350
+                end
+                object txtDIRECCION2_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 372
+                  Top = 60
+                  DataBinding.DataField = 'DIRECCION2_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 3
+                  Width = 250
+                end
+                object txtPOBLACION_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 12
+                  Top = 96
+                  DataBinding.DataField = 'POBLACION_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 4
+                  Width = 200
+                end
+                object txtPROVINCIA_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 220
+                  Top = 96
+                  DataBinding.DataField = 'PROVINCIA_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 5
+                  Width = 200
+                end
+                object txtCODIGO_POSTAL_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 428
+                  Top = 96
+                  DataBinding.DataField = 'CODIGO_POSTAL_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 6
+                  Width = 80
+                end
+                object txtNOMBRE_PAI_CLIENTE_ENVIO_PED: TcxDBTextEdit
+                  Left = 516
+                  Top = 96
+                  DataBinding.DataField = 'NOMBRE_PAI_CLIENTE_ENVIO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 7
+                  Width = 150
+                end
               end
             end
           end
         end
-        object pcPedido: TcxPageControl
+        object pnlBotonesAcciones: TPanel
           Left = 0
-          Top = 241
+          Top = 230
           Width = 937
-          Height = 450
-          Align = alClient
+          Height = 40
+          Align = alTop
+          BevelOuter = bvNone
           TabOrder = 1
-          Properties.ActivePage = tsLineasPedido
-          Properties.CustomButtons.Buttons = <>
-          ExplicitWidth = 852
-          ClientRectBottom = 446
-          ClientRectLeft = 4
-          ClientRectRight = 933
-          ClientRectTop = 30
-          object tsLineasPedido: TcxTabSheet
-            Caption = 'L'#237'neas de Pedido'
-            ImageIndex = 1
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 844
-            ExplicitHeight = 0
-            object cxGrdPedidosLineas: TcxGrid
-              Left = 0
-              Top = 0
-              Width = 929
-              Height = 416
-              Align = alClient
-              TabOrder = 0
-              ExplicitWidth = 844
-              ExplicitHeight = 346
-              object tvPedidosLineas: TcxGridDBTableView
+          object btnAnadirLinea: TcxButton
+            Left = 4
+            Top = 6
+            Width = 120
+            Height = 28
+            Caption = 'A'#241'adir l'#237'nea'
+            OnClick = btnAnadirLineaClick
+            TabOrder = 0
+          end
+          object btnBorrarLinea: TcxButton
+            Left = 130
+            Top = 6
+            Width = 120
+            Height = 28
+            Caption = 'Borrar l'#237'nea'
+            OnClick = btnBorrarLineaClick
+            TabOrder = 1
+          end
+          object btnEntregarTodo: TcxButton
+            Left = 256
+            Top = 6
+            Width = 130
+            Height = 28
+            Caption = 'Marcar todo entregado'
+            OnClick = btnEntregarTodoClick
+            TabOrder = 2
+          end
+          object btnCrearAlbaran: TcxButton
+            Left = 392
+            Top = 6
+            Width = 130
+            Height = 28
+            Caption = 'Crear albar'#225'n'
+            OnClick = btnCrearAlbaranClick
+            TabOrder = 3
+            Style.Font.Style = [fsBold]
+          end
+          object btnImportarPS: TcxButton
+            Left = 528
+            Top = 6
+            Width = 160
+            Height = 28
+            Caption = 'Importar de PrestaShop'
+            OnClick = btnImportarPSClick
+            TabOrder = 4
+          end
+          object btnImprimir: TcxButton
+            Left = 694
+            Top = 6
+            Width = 100
+            Height = 28
+            Caption = 'Imprimir'
+            OnClick = btnImprimirClick
+            TabOrder = 5
+          end
+        end
+        object pnlBodyFicha: TPanel
+          Left = 0
+          Top = 270
+          Width = 937
+          Height = 380
+          Align = alClient
+          BevelOuter = bvNone
+          TabOrder = 2
+          object pcPedido: TcxPageControl
+            Left = 0
+            Top = 0
+            Width = 937
+            Height = 380
+            Align = alClient
+            TabOrder = 0
+            Properties.ActivePage = tsLineasPedido
+            ClientRectBottom = 376
+            ClientRectRight = 933
+            ClientRectTop = 24
+            object tsLineasPedido: TcxTabSheet
+              Caption = 'L'#237'neas Pedido'
+              object cxGrdPedidosLineas: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 933
+                Height = 352
+                Align = alClient
+                TabOrder = 0
+                object tvPedidosLineas: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <>
+                  DataController.Summary.SummaryGroups = <>
+                  OptionsView.Footer = True
+                  OptionsView.GroupByBox = False
+                  object cxgrdcPedLinLINEA: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_PEDLIN'
+                    Width = 50
+                  end
+                  object cxgrdcPedLinART: TcxGridDBColumn
+                    Caption = 'C'#243'digo Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_PEDLIN'
+                    Width = 130
+                  end
+                  object cxgrdcPedLinDESCR: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_PEDLIN'
+                    Width = 240
+                  end
+                  object cxgrdcPedLinCANT: TcxGridDBColumn
+                    Caption = 'Pedida'
+                    DataBinding.FieldName = 'CANTIDAD_PEDLIN'
+                    Width = 80
+                  end
+                  object cxgrdcPedLinENT: TcxGridDBColumn
+                    Caption = 'Entregada'
+                    DataBinding.FieldName = 'CANTIDAD_ENTREGADA_PEDLIN'
+                    Width = 90
+                    Styles.Content.Color = 14745312
+                  end
+                  object cxgrdcPedLinPEND: TcxGridDBColumn
+                    Caption = 'Pendiente'
+                    DataBinding.FieldName = 'CANTIDAD_PENDIENTE_PEDLIN'
+                    Options.Editing = False
+                    Width = 90
+                    Styles.Content.Color = 12903679
+                  end
+                  object cxgrdcPedLinESEN: TcxGridDBColumn
+                    Caption = 'Entregada?'
+                    DataBinding.FieldName = 'ESENTREGADA_PEDLIN'
+                    Options.Editing = False
+                    Width = 70
+                  end
+                  object cxgrdcPedLinPSIVA: TcxGridDBColumn
+                    Caption = 'PVP S/IVA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN'
+                    Width = 90
+                  end
+                  object cxgrdcPedLinPCIVA: TcxGridDBColumn
+                    Caption = 'PVP C/IVA'
+                    DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN'
+                    Width = 90
+                  end
+                  object cxgrdcPedLinTOT: TcxGridDBColumn
+                    Caption = 'Total'
+                    DataBinding.FieldName = 'TOTAL_PEDLIN'
+                    Width = 100
+                  end
+                  object cxgrdcPedLinALM: TcxGridDBColumn
+                    Caption = 'Almac'#233'n'
+                    DataBinding.FieldName = 'CODIGO_ALMACEN_PEDLIN'
+                    Width = 80
+                  end
+                end
+                object cxGrdPedidosLineasLevel1: TcxGridLevel
+                  GridView = tvPedidosLineas
+                end
               end
-              object cxGrdPedidosLineasLevel1: TcxGridLevel
-                GridView = tvPedidosLineas
+            end
+            object tsAlbaranes: TcxTabSheet
+              Caption = 'Albaranes'
+              object cxGrdAlbaranes: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 933
+                Height = 352
+                Align = alClient
+                TabOrder = 0
+                object tvAlbaranes: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <>
+                  DataController.Summary.SummaryGroups = <>
+                  object cxgrdcAlbNUMERO_ALB: TcxGridDBColumn
+                    Caption = 'N'#250'mero'
+                    DataBinding.FieldName = 'NUMERO_ALB'
+                    Width = 90
+                  end
+                  object cxgrdcAlbSERIE_ALB: TcxGridDBColumn
+                    Caption = 'Serie'
+                    DataBinding.FieldName = 'SERIE_ALB'
+                    Width = 70
+                  end
+                  object cxgrdcAlbFECHA_ALB: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHA_ALB'
+                    Width = 100
+                  end
+                  object cxgrdcAlbESTADO_ALB: TcxGridDBColumn
+                    Caption = 'Estado'
+                    DataBinding.FieldName = 'ESTADO_ALB'
+                    Width = 110
+                  end
+                  object cxgrdcAlbTOTAL_LIQUIDO_ALB: TcxGridDBColumn
+                    Caption = 'Total'
+                    DataBinding.FieldName = 'TOTAL_LIQUIDO_ALB'
+                    Width = 110
+                  end
+                end
+                object cxGrdAlbaranesLevel: TcxGridLevel
+                  GridView = tvAlbaranes
+                end
+              end
+            end
+            object tsMensajes: TcxTabSheet
+              Caption = 'Mensajes'
+              object cxGrdMensajes: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 933
+                Height = 352
+                Align = alClient
+                TabOrder = 0
+                object tvMensajes: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <>
+                  DataController.Summary.SummaryGroups = <>
+                  object cxgrdcMsgFecha: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHAPS_MENSAJE_PEDIDO'
+                    Width = 130
+                  end
+                  object cxgrdcMsgEmpleado: TcxGridDBColumn
+                    Caption = 'Empleado'
+                    DataBinding.FieldName = 'IDEMPLEADOPS_MENSAJE_PEDIDO'
+                    Width = 80
+                  end
+                  object cxgrdcMsgTexto: TcxGridDBColumn
+                    Caption = 'Mensaje'
+                    DataBinding.FieldName = 'MENSAJEPS_MENSAJE_PEDIDO'
+                    Width = 600
+                  end
+                end
+                object cxGrdMensajesLevel: TcxGridLevel
+                  GridView = tvMensajes
+                end
+              end
+            end
+            object tsObservaciones: TcxTabSheet
+              Caption = 'Observaciones'
+              object memObservaciones: TcxDBMemo
+                Left = 0
+                Top = 0
+                Align = alClient
+                DataBinding.DataField = 'OBSERVACIONES_PED'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 0
+                Height = 352
+                Width = 933
               end
             end
           end
         end
-      end
-      inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 937
-        ExplicitHeight = 691
-        inherited pnlPerfilTop: TPanel
+        object pnlBottomTotales: TPanel
+          Left = 0
+          Top = 650
           Width = 937
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 937
-        end
-        inherited pnlPerfilDetail: TPanel
-          Width = 937
-          Height = 634
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 852
-          ExplicitHeight = 634
-          inherited cxgrdPerfil: TcxGrid
-            Width = 937
-            Height = 634
-            ExplicitWidth = 852
-            ExplicitHeight = 634
+          Height = 40
+          Align = alBottom
+          BevelOuter = bvNone
+          TabOrder = 3
+          object lblTotalBases: TcxLabel
+            Left = 380
+            Top = 8
+            Caption = 'Bases'
+          end
+          object curTOTAL_BASES_PED: TcxDBCurrencyEdit
+            Left = 425
+            Top = 8
+            DataBinding.DataField = 'TOTAL_BASES_PED'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 0
+            Width = 100
+          end
+          object lblTotalImpuestos: TcxLabel
+            Left = 540
+            Top = 8
+            Caption = 'IVA'
+          end
+          object curTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit
+            Left = 570
+            Top = 8
+            DataBinding.DataField = 'TOTAL_IMPUESTOS_PED'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 1
+            Width = 100
+          end
+          object lblTotalLiquido: TcxLabel
+            Left = 690
+            Top = 8
+            Caption = 'TOTAL'
+            Style.Font.Style = [fsBold]
+          end
+          object curTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit
+            Left = 740
+            Top = 8
+            DataBinding.DataField = 'TOTAL_LIQUIDO_PED'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            Style.Font.Style = [fsBold]
+            TabOrder = 2
+            Width = 130
           end
         end
       end
     end
-    inherited pnlTopPage: TPanel
-      Width = 945
-      StyleElements = [seFont, seClient, seBorder]
-      ExplicitWidth = 945
-      inherited pnlTopGrid: TPanel
-        Width = 945
-        StyleElements = [seFont, seClient, seBorder]
-        ExplicitWidth = 945
-        inherited sbExportExcel: TSpeedButton
-          Left = 815
-          Top = 9
-          ExplicitLeft = 815
-          ExplicitTop = 9
-        end
-        inherited nvNavegador: TcxDBNavigator
-          Width = 350
-          ExplicitWidth = 350
-        end
-      end
-    end
-  end
-  inherited pButtonRightBar: TPanel
-    Left = 945
-    Height = 765
-    StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 945
-    ExplicitHeight = 765
-    inherited pButtonGen: TPanel
-      Top = 567
-      StyleElements = [seFont, seClient, seBorder]
-      ExplicitTop = 567
-    end
-    inherited pButtonBDStat: TPanel
-      StyleElements = [seFont, seClient, seBorder]
-      inherited pnStateDataSet: TPanel
-        StyleElements = [seFont, seClient, seBorder]
-      end
-      inherited pnlDataSetName: TPanel
-        StyleElements = [seFont, seClient, seBorder]
-      end
-    end
-  end
-  inherited Localizer1: TcxLocalizer
-    Left = 544
-    Top = 8
-  end
-  inherited dsTablaG: TDataSource
-    Left = 632
-    Top = 8
   end
 end

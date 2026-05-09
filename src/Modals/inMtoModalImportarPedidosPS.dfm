@@ -1,0 +1,155 @@
+object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
+  Left = 0
+  Top = 0
+  BorderStyle = bsDialog
+  Caption = 'Importar pedidos de PrestaShop'
+  ClientHeight = 540
+  ClientWidth = 920
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 15
+  object pnlTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 920
+    Height = 90
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = ''
+    TabOrder = 0
+    object lblBaseURL: TcxLabel
+      Left = 8
+      Top = 8
+      Caption = 'URL base API PrestaShop (ej. http://midominio.com/api)'
+    end
+    object edtBaseURL: TcxTextEdit
+      Left = 8
+      Top = 28
+      TabOrder = 0
+      Width = 540
+    end
+    object lblApiKey: TcxLabel
+      Left = 8
+      Top = 50
+      Caption = 'API Key'
+    end
+    object edtApiKey: TcxTextEdit
+      Left = 8
+      Top = 64
+      TabOrder = 1
+      Width = 540
+      Properties.EchoMode = eemPassword
+    end
+    object btnConectar: TcxButton
+      Left = 560
+      Top = 26
+      Width = 130
+      Height = 30
+      Caption = 'Conectar y listar'
+      OnClick = btnConectarClick
+      TabOrder = 2
+      Style.Font.Style = [fsBold]
+    end
+  end
+  object pnlMid: TPanel
+    Left = 0
+    Top = 90
+    Width = 920
+    Height = 400
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 1
+    object cxgrdPedidos: TcxGrid
+      Left = 0
+      Top = 0
+      Width = 920
+      Height = 400
+      Align = alClient
+      TabOrder = 0
+      object tvPedidos: TcxGridTableView
+        DataController.Summary.DefaultGroupSummaryItems = <>
+        DataController.Summary.FooterSummaryItems = <>
+        DataController.Summary.SummaryGroups = <>
+        OptionsView.GroupByBox = False
+        object colSel: TcxGridColumn
+          Caption = 'Sel.'
+          PropertiesClassName = 'TcxCheckBoxProperties'
+          Width = 50
+        end
+        object colId: TcxGridColumn
+          Caption = 'ID PS'
+          Width = 70
+        end
+        object colRef: TcxGridColumn
+          Caption = 'Referencia'
+          Width = 110
+        end
+        object colFecha: TcxGridColumn
+          Caption = 'Fecha'
+          Width = 130
+        end
+        object colCliente: TcxGridColumn
+          Caption = 'Cliente'
+          Width = 220
+        end
+        object colTotal: TcxGridColumn
+          Caption = 'Total'
+          Width = 100
+        end
+        object colEstado: TcxGridColumn
+          Caption = 'Estado'
+          Width = 160
+        end
+        object colImportado: TcxGridColumn
+          Caption = 'Importado?'
+          Width = 80
+        end
+      end
+      object cxgrdlvlPedidos: TcxGridLevel
+        GridView = tvPedidos
+      end
+    end
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 490
+    Width = 920
+    Height = 50
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    object lblEstado: TcxLabel
+      Left = 8
+      Top = 14
+      Caption = 'Listo'
+      Style.Font.Style = [fsItalic]
+    end
+    object btnImportar: TcxButton
+      Left = 660
+      Top = 12
+      Width = 120
+      Height = 28
+      Caption = 'Importar selecci'#243'n'
+      OnClick = btnImportarClick
+      TabOrder = 0
+      Style.Font.Style = [fsBold]
+    end
+    object btnCerrar: TcxButton
+      Left = 790
+      Top = 12
+      Width = 100
+      Height = 28
+      Caption = 'Cerrar'
+      OnClick = btnCerrarClick
+      TabOrder = 1
+    end
+  end
+end
