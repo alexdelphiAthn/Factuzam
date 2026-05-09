@@ -14,12 +14,12 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             OptionsData.Editing = True
             object cxGrdDBTabPrinCODIGO_EMPRESA_OPCAJA: TcxGridDBColumn
               Caption = 'Empresa'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_OPCAJA'
+              DataBinding.FieldName = 'CODIGO_EMP_OPCAJA'
               Width = 90
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_OPCAJA: TcxGridDBColumn
               Caption = 'Almac'#233'n'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_OPCAJA'
+              DataBinding.FieldName = 'CODIGO_ALM_OPCAJA'
               Width = 90
             end
             object cxGrdDBTabPrinCODIGO_CAJA_OPCAJA: TcxGridDBColumn
@@ -54,17 +54,17 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_OPCAJA: TcxGridDBColumn
               Caption = 'Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_OPCAJA'
+              DataBinding.FieldName = 'CODIGO_CLI_OPCAJA'
               Width = 130
             end
             object cxGrdDBTabPrinSERIE_FACTURA_OPCAJA: TcxGridDBColumn
               Caption = 'Serie Factura'
-              DataBinding.FieldName = 'SERIE_FACTURA_OPCAJA'
+              DataBinding.FieldName = 'SERIE_FAC_OPCAJA'
               Width = 110
             end
             object cxGrdDBTabPrinNRO_FACTURA_OPCAJA: TcxGridDBColumn
               Caption = 'Nro Factura'
-              DataBinding.FieldName = 'NRO_FACTURA_OPCAJA'
+              DataBinding.FieldName = 'NUMERO_FAC_OPCAJA'
               Width = 110
             end
             object cxGrdDBTabPrinESTADO_DEVOLUCION_OPCAJA: TcxGridDBColumn
@@ -102,7 +102,7 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             end
             object cxGrdDBTabPrinES_TRASPASO_OPCAJA: TcxGridDBColumn
               Caption = 'Es Traspaso'
-              DataBinding.FieldName = 'ES_TRASPASO_OPCAJA'
+              DataBinding.FieldName = 'ESTRASPASO_OPCAJA'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
@@ -110,13 +110,13 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             end
             object cxGrdDBTabPrinCODIGO_EMPRESA_CONTRA_OPCAJA: TcxGridDBColumn
               Caption = 'Empresa Contra'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_CONTRA_OPCAJA'
+              DataBinding.FieldName = 'CODIGO_EMP_CONTRA_OPCAJA'
               Width = 130
               Visible = False
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_CONTRA_OPCAJA: TcxGridDBColumn
               Caption = 'Almac'#233'n Contra'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_CONTRA_OPCAJA'
+              DataBinding.FieldName = 'CODIGO_ALM_CONTRA_OPCAJA'
               Width = 130
               Visible = False
             end
@@ -127,26 +127,26 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130
