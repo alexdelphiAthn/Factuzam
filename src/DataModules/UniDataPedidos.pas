@@ -34,8 +34,6 @@ type
     unstrdprcCrearAlbaranFin:    TUniStoredProc;
     fxdsPrintPed: TfrxDBDataset;
     fxdstPrintLinPed: TfrxDBDataset;
-    unqryPerfiles: TUniQuery;
-    dsPerfiles: TDataSource;
     unqryAlbaranes: TUniQuery;
     dsAlbaranes:    TDataSource;
     unqryMensajes: TUniQuery;
