@@ -77,6 +77,13 @@ type
     mnuAlmacen: TMenuItem;
     Movimientosdealmacn1: TMenuItem;
     mnuInventarios: TMenuItem;
+    mnuArticulosPropiedades: TMenuItem;
+    mnuVariaciones: TMenuItem;
+    mnuAtributosConjuntos: TMenuItem;
+    mnuCajaPagosHist: TMenuItem;
+    mnuCajaValesHist: TMenuItem;
+    mnuCajaOperacionesHist: TMenuItem;
+    mnuDepositosCliente: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -84,6 +91,14 @@ type
     procedure mnuFormaPagoVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
     procedure mnuInventariosClick(Sender: TObject);
+    procedure mnuArticulosPropiedadesClick(Sender: TObject);
+    procedure mnuVariacionesClick(Sender: TObject);
+    procedure mnuAtributosConjuntosClick(Sender: TObject);
+    procedure mnuCajaPagosHistClick(Sender: TObject);
+    procedure mnuCajaValesHistClick(Sender: TObject);
+    procedure mnuCajaOperacionesHistClick(Sender: TObject);
+    procedure Movimientosdealmacn1Click(Sender: TObject);
+    procedure mnuDepositosClienteClick(Sender: TObject);
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -1021,6 +1036,54 @@ begin
   finally
     FreeAndNil(frmMtoAppParam);
   end;
+end;
+
+procedure TfrmMtoPrincipal.mnuArticulosPropiedadesClick(Sender: TObject);
+begin
+  if (mnuArticulosPropiedades.Visible) then
+    ShowMto(Self, 'ArticulosPropiedades');
+end;
+
+procedure TfrmMtoPrincipal.mnuVariacionesClick(Sender: TObject);
+begin
+  if (mnuVariaciones.Visible) then
+    ShowMto(Self, 'Variaciones');
+end;
+
+procedure TfrmMtoPrincipal.mnuAtributosConjuntosClick(Sender: TObject);
+begin
+  if (mnuAtributosConjuntos.Visible) then
+    ShowMto(Self, 'AtributosConjuntos');
+end;
+
+procedure TfrmMtoPrincipal.mnuCajaPagosHistClick(Sender: TObject);
+begin
+  if (mnuCajaPagosHist.Visible) then
+    ShowMto(Self, 'CajaPagosHist');
+end;
+
+procedure TfrmMtoPrincipal.mnuCajaValesHistClick(Sender: TObject);
+begin
+  if (mnuCajaValesHist.Visible) then
+    ShowMto(Self, 'CajaValesHist');
+end;
+
+procedure TfrmMtoPrincipal.mnuCajaOperacionesHistClick(Sender: TObject);
+begin
+  if (mnuCajaOperacionesHist.Visible) then
+    ShowMto(Self, 'CajaOperacionesHist');
+end;
+
+procedure TfrmMtoPrincipal.Movimientosdealmacn1Click(Sender: TObject);
+begin
+  if (Movimientosdealmacn1.Visible) then
+    ShowMto(Self, 'MovimientosAlmacen');
+end;
+
+procedure TfrmMtoPrincipal.mnuDepositosClienteClick(Sender: TObject);
+begin
+  if (mnuDepositosCliente.Visible) then
+    ShowMto(Self, 'DepositosCliente');
 end;
 
 end.
