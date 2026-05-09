@@ -540,6 +540,24 @@
             <FormType>dfm</FormType>
             <DesignClass>TdmDepositosCliente</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedades.pas">
+            <Form>frmMtoPropiedades</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedades.pas">
+            <Form>dmPropiedades</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmPropiedades</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedadesValores.pas">
+            <Form>frmMtoPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedadesValores.pas">
+            <Form>dmPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmPropiedadesValores</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
