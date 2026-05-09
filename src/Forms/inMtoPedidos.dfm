@@ -767,17 +767,17 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 object tvMensajes: TcxGridDBTableView
                   object cxgrdcMsgFecha: TcxGridDBColumn
                     Caption = 'Fecha'
-                    DataBinding.FieldName = 'FECHAPS_MENSAJE_PEDIDO'
+                    DataBinding.FieldName = 'FECHAPS_PEDMSG'
                     Width = 130
                   end
                   object cxgrdcMsgEmpleado: TcxGridDBColumn
                     Caption = 'Empleado'
-                    DataBinding.FieldName = 'IDEMPLEADOPS_MENSAJE_PEDIDO'
+                    DataBinding.FieldName = 'IDEMPLEADOPS_PEDMSG'
                     Width = 120
                   end
                   object cxgrdcMsgTexto: TcxGridDBColumn
                     Caption = 'Mensaje'
-                    DataBinding.FieldName = 'MENSAJEPS_MENSAJE_PEDIDO'
+                    DataBinding.FieldName = 'MENSAJEPS_PEDMSG'
                     Width = 600
                   end
                 end
