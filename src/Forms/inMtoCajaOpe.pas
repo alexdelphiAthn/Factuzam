@@ -2403,6 +2403,7 @@ begin
   else
   begin
     TargetForm := TfrmMtoOpeCaja.Create(Application);
+    TargetForm.PopupParent := Self.PopupParent;
     TargetForm.Tag := NextIndex;
     TargetForm.Caption := Format('Operación %d - (Caja Real %s)', [NextIndex, Self.FCodigoCaja]);
     TargetForm.PrepararValores(Self.FCodigoEmpresa,
