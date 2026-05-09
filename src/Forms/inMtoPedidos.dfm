@@ -561,9 +561,14 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Width = 130
             Height = 28
             Caption = 'Crear albar'#225'n'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = [fsBold]
+            ParentFont = False
             OnClick = btnCrearAlbaranClick
             TabOrder = 3
-            Style.Font.Style = [fsBold]
           end
           object btnImportarPS: TcxButton
             Left = 528
