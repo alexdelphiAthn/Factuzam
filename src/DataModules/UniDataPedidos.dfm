@@ -1,7 +1,9 @@
 ﻿object dmPedidos: TdmPedidos
   Left = 0
   Top = 0
-  ClientHeight = 371
+  OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
+  ClientHeight = 480
   ClientWidth = 632
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -66,6 +68,7 @@
     DetailFields = 'NUMERO_PED_PEDLIN;SERIE_PED_PEDLIN'
     AfterInsert = unqryPedidosLineasAfterInsert
     BeforePost = unqryPedidosLineasBeforePost
+    AfterPost = unqryPedidosLineasAfterPost
     Left = 48
     Top = 80
     ParamData = <
@@ -273,6 +276,8 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_pedidos')
+    AfterInsert = unqryTablaGAfterInsert
+    BeforePost = unqryTablaGBeforePost
     Left = 48
     Top = 24
   end
@@ -288,5 +293,70 @@
     DataSet = unqryPerfiles
     Left = 495
     Top = 32
+  end
+  object unqryAlbaranes: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_albaranes'
+      'WHERE NUMERO_PED_ALB = :NUMERO_PED'
+      '  AND SERIE_PED_ALB  = :SERIE_PED'
+      'ORDER BY FECHA_ALB DESC, NUMERO_ALB DESC')
+    MasterFields = 'NUMERO_PED;SERIE_PED'
+    DetailFields = 'NUMERO_PED_ALB;SERIE_PED_ALB'
+    Left = 384
+    Top = 200
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_PED'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_PED'
+        Value = nil
+      end>
+  end
+  object dsAlbaranes: TDataSource
+    DataSet = unqryAlbaranes
+    Left = 464
+    Top = 200
+  end
+  object unqryMensajes: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_pedidos_mensajes M'
+      'WHERE M.IDPS_MENSAJES_PEDIDO = :IDHILO')
+    Left = 384
+    Top = 256
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'IDHILO'
+        Value = nil
+      end>
+  end
+  object dsMensajes: TDataSource
+    DataSet = unqryMensajes
+    Left = 464
+    Top = 256
+  end
+  object unstrdprcCrearAlbaranInicio: TUniStoredProc
+    StoredProcName = 'PRC_PED_CREAR_ALBARAN_INICIO'
+    Connection = dmConn.conUni
+    Left = 256
+    Top = 200
+  end
+  object unstrdprcCrearAlbaranLinea: TUniStoredProc
+    StoredProcName = 'PRC_PED_CREAR_ALBARAN_LINEA'
+    Connection = dmConn.conUni
+    Left = 256
+    Top = 256
+  end
+  object unstrdprcCrearAlbaranFin: TUniStoredProc
+    StoredProcName = 'PRC_PED_CREAR_ALBARAN_FIN'
+    Connection = dmConn.conUni
+    Left = 256
+    Top = 312
   end
 end

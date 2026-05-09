@@ -138,6 +138,10 @@ type
     Acercade1: TMenuItem;
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
+    mnuPedidosVenta: TMenuItem;
+    mnuAlbaranesVenta: TMenuItem;
+    procedure mnuPedidosVentaClick(Sender: TObject);
+    procedure mnuAlbaranesVentaClick(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
     procedure mnuProveedoresClick(Sender: TObject);
@@ -959,6 +963,20 @@ begin
   inherited;
   if mnuFormaPagoVenta.Visible then
     ShowMto(Self, 'FormasdePago');
+end;
+
+procedure TfrmMtoPrincipal.mnuPedidosVentaClick(Sender: TObject);
+begin
+  inherited;
+  if mnuPedidosVenta.Visible then
+    ShowMto(Self, 'Pedidos');
+end;
+
+procedure TfrmMtoPrincipal.mnuAlbaranesVentaClick(Sender: TObject);
+begin
+  inherited;
+  if mnuAlbaranesVenta.Visible then
+    ShowMto(Self, 'Albaranes');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
