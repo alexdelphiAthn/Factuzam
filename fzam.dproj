@@ -325,10 +325,29 @@
             <Form>dmGenFilter</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoPedidos.pas"/>
-        <DCCReference Include="src\DataModules\UniDataPedidos.pas">
-            <Form>/cxButtonHelper in &apos;cxButtonHelper.pas&apos;;</Form>
+        <DCCReference Include="src\Forms\inMtoPedidos.pas">
+            <Form>frmMtoPedidos</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPedidos.pas">
+            <Form>dmPedidos</Form>
+            <DesignClass>TdmPedidos</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAlbaranes.pas">
+            <Form>frmMtoAlbaranes</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAlbaranes.pas">
+            <Form>dmAlbaranes</Form>
+            <DesignClass>TdmAlbaranes</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImportarPedidosPS.pas">
+            <Form>frmModalImportarPedidosPS</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Lib\ScanDateTime.pas"/>
+        <DCCReference Include="src\Lib\inLibPresta.pas"/>
+        <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
         <DCCReference Include="src\Forms\inMtoPaises.pas">
             <Form>frmMtoPaises</Form>
         </DCCReference>

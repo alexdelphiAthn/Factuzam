@@ -1,4 +1,12 @@
-﻿unit inMtoPedidos;
+{*******************************************************}
+{                                                       }
+{       FactuZam - Mantenimiento de Pedidos             }
+{                                                       }
+{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
+{                                                       }
+{*******************************************************}
+
+unit inMtoPedidos;
 
 interface
 
@@ -15,183 +23,138 @@ uses
   dxDateRanges, dxScrollbarAnnotations, Vcl.Menus, cxBlobEdit, dxShellDialogs,
   JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls, cxRadioGroup,
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
-  cxDBLabel, cxButtonEdit;
+  cxDBLabel, cxButtonEdit, System.Generics.Collections,
+  cxGridBandedTableView, cxGridDBBandedTableView;
 
 type
   TfrmMtoPedidos = class(TfrmMtoGen)
-    pnlTopPedido: TPanel;
+    pnlTopFicha: TPanel;
+    pcCab: TcxPageControl;
+    tsCabecera: TcxTabSheet;
+    tsEmpresa: TcxTabSheet;
+    tsDatosCliente: TcxTabSheet;
+    tsEnvio: TcxTabSheet;
+    pnlBodyFicha: TPanel;
     pcPedido: TcxPageControl;
     tsLineasPedido: TcxTabSheet;
+    tsAlbaranes: TcxTabSheet;
+    tsMensajes: TcxTabSheet;
+    tsObservaciones: TcxTabSheet;
+    pnlBottomTotales: TPanel;
     cxGrdPedidosLineas: TcxGrid;
     tvPedidosLineas: TcxGridDBTableView;
     cxGrdPedidosLineasLevel1: TcxGridLevel;
-    dbcGrdDBTabPrinNRO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinSERIE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinFECHA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCODIGO_EMPRESA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCODIGO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinNIF_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinEMAIL_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinREFERENCIAPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinIDPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinFECHAPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinFORMAPAGOPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDESCRIPCION_FORMAPAGO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTRANSPORTISTAPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESTADOPEDIDOPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESTADOMENSAJEPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinIDHILOPS_MENSAJES_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinNOMBRE_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinMOVIL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDIRECCION1_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDIRECCION2_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPOBLACION_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPROVINCIA_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCPOSTAL_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_ENVIO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinRAZONSOCIAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinMOVIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinEMAIL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDIRECCION1_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDIRECCION2_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPOBLACION_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPROVINCIA_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCPOSTAL_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCODIGO_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinNOMBRE_PAIS_CLIENTE_FISCAL_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESIVA_RECARGO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESIVA_EXENTO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESREGIMENESPECIALAGRICOLA_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESRETENCIONES_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTARIFA_ARTICULO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESIMP_INCL_TARIFA_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESINTRACOMUNITARIO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESIRPF_IMP_INCL_ZONA_IVA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESAPLICA_RE_ZONA_IVA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESIVAAGRICOLA_ZONA_IVA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPALABRA_REPORTS_ZONA_IVA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCODIGO_IVA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESVENTA_ACTIVO_FIJO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_IVAN_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_IVAN_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_REN_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_REN_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_BASEI_IVAN_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_IVAR_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_IVAR_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_RER_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_RER_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_BASEI_IVAR_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_IVAS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_IVAS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_RES_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_RES_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_BASEI_IVAS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_IVAE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_IVAE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_REE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_REE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_BASEI_IVAE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_BASES_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_IMPUESTOS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinFORMA_PAGO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinPORCEN_RETENCION_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_RETENCION_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_LIQUIDO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTOTAL_PAGADOREALPS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinNRO_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinSERIE_PEDIDO_ABONO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_CLIENTE_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinTEXTO_LEGAL_PEDIDO_EMPRESA_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinDOCUMENTO_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCOMENTARIOS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinCONTADOR_LINEAS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESCREARARTICULOS_PEDIDO: TcxGridDBColumn;
-    dbcGrdDBTabPrinESDESCRIPCIONES_AMP_PEDIDO: TcxGridDBColumn;
-    pcCab: TcxPageControl;
-    tsCabecera: TcxTabSheet;
-    lblNroFactura: TcxLabel;
-    lblFechaFactura: TcxLabel;
-    dteFECHA_FACTURA: TcxDBDateEdit;
-    lblSerieFactura: TcxLabel;
-    btnCODIGO_CLIENTE: TcxDBButtonEdit;
-    lblCodigoCliente: TcxLabel;
-    cxdblblRAZONSOCIAL_EMPRESA_FACTURA: TcxDBLabel;
-    cxdblblRAZONSOCIAL_CLIENTE_FACTURA: TcxDBLabel;
-    btnCODIGO_EMPRESA_FACTURA: TcxDBButtonEdit;
+    cxGrdAlbaranes: TcxGrid;
+    tvAlbaranes: TcxGridDBTableView;
+    cxGrdAlbaranesLevel: TcxGridLevel;
+    cxGrdMensajes: TcxGrid;
+    tvMensajes: TcxGridDBTableView;
+    cxGrdMensajesLevel: TcxGridLevel;
+
+    // Cabecera
+    lblNroPedido: TcxLabel;
+    txtNUMERO_PED: TcxDBTextEdit;
+    lblSerie: TcxLabel;
+    txtSERIE_PED: TcxDBTextEdit;
+    lblFecha: TcxLabel;
+    dteFECHA_PED: TcxDBDateEdit;
+    lblFechaEntrega: TcxLabel;
+    dteFECHA_ENTREGA_PED: TcxDBDateEdit;
+    lblEstado: TcxLabel;
+    txtESTADO_PED: TcxDBTextEdit;
+    lblIDPS: TcxLabel;
+    txtIDPS_PED: TcxDBTextEdit;
+    lblRefPS: TcxLabel;
+    txtREFERENCIAPS_PED: TcxDBTextEdit;
+
+    btnCODIGO_EMP: TcxDBButtonEdit;
     lblCodigoEmpresa: TcxLabel;
-    txtNRO_FACTURA: TcxDBTextEdit;
-    cbbSerieFactura: TcxDBLookupComboBox;
-    tsEmpresa: TcxTabSheet;
-    cxgrpbxEmpresa: TcxGroupBox;
-    txtDIRECCION1_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtCPOSTAL_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtPROVINCIA_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtPAIS_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtDIRECCION2_EMPRESA_FACTURA: TcxDBTextEdit;
-    lblProvinciaEmpresa: TcxLabel;
-    lblPaisEmpresa: TcxLabel;
-    txtRAZONSOCIAL_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtNIF_EMPRESA_FACTURA: TcxDBTextEdit;
-    lblNIFEmpresa: TcxLabel;
-    lblMovilEmpresa: TcxLabel;
-    txtMOVIL_EMPRESA_FACTURA: TcxDBTextEdit;
-    txtEMAIL_EMPRESA_FACTURA: TcxDBTextEdit;
-    lblEmailEmpresa: TcxLabel;
-    chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TcxDBCheckBox;
-    chkRETENCION_EMPRESA_FACTURA: TcxDBCheckBox;
-    cxdbmPOBLACION_EMPRESA_FACTURA: TcxDBMemo;
-    cbbCanalIVA: TcxDBLookupComboBox;
-    lblCanalIVA: TcxLabel;
-    txtNOMBRE_PAIS_EMPRESA_FACTURA: TcxDBTextEdit;
-    btnUpdateEmpresa: TcxButton;
-    btnIrAEmpresa: TcxButton;
-    cxdblblCODIGO_EMPRESA_FACTURA: TcxDBLabel;
-    tsDatosCliente: TcxTabSheet;
-    cxgrpbxCliente: TcxGroupBox;
-    txtDIRECCION1_CLIENTE_FACTURA1: TcxDBTextEdit;
-    txtCPOSTAL_CLIENTE_FACTURA1: TcxDBTextEdit;
-    txtPOBLACION_CLIENTE_FACTURA1: TcxDBTextEdit;
-    txtPROVINCIA_CLIENTE_FACTURA1: TcxDBTextEdit;
-    txtPAIS_CLIENTE_FACTURA1: TcxDBTextEdit;
-    txtDIRECCION2_CLIENTE_FACTURA1: TcxDBTextEdit;
-    lblcxlbl6: TcxLabel;
-    lblcxlbl13: TcxLabel;
-    txtRAZONSOCIAL_CLIENTE_FACTURA: TcxDBTextEdit;
-    txtNIF_CLIENTE_FACTURA: TcxDBTextEdit;
-    lblNif: TcxLabel;
-    lblTelefonoMovil: TcxLabel;
-    txtMOVIL_CLIENTE_FACTURA: TcxDBTextEdit;
-    txtEMAIL_CLIENTE_FACTURA: TcxDBTextEdit;
-    lblEmail: TcxLabel;
-    chkESIVA_RECARGO_CLIENTE_FACTURA: TcxDBCheckBox;
-    chkREGIMENESPECIALAGRICOLA_CLIENTE_FACTURA: TcxDBCheckBox;
-    chkRETENCIONES_EMPRESA_FACTURA3: TcxDBCheckBox;
-    chkEXTRANJERO: TcxDBCheckBox;
-    cbbTARIFA_ARTICULOS_CLIENTES: TcxDBLookupComboBox;
-    lblTarifaArticulosCliente: TcxLabel;
-    chkIVA_EXENTO_CLIENTE_FACTURA: TcxDBCheckBox;
-    chkImpIncl: TcxDBCheckBox;
-    txtCODIGO_PAIS_CLIENTE_FACTURA: TcxDBTextEdit;
-    btnUpdateCliente: TcxButton;
-    btnIrACliente: TcxButton;
-    cxdblblCODIGO_CLIENTE_FACTURA: TcxDBLabel;
+    cxdblblRAZON_SOCIAL_EMPRESA_PED: TcxDBLabel;
+    btnCODIGO_CLI: TcxDBButtonEdit;
+    lblCodigoCliente: TcxLabel;
+    cxdblblRAZON_SOCIAL_CLIENTE_PED: TcxDBLabel;
+
+    // Empresa
+    grpEmpresa: TcxGroupBox;
+    txtNIF_EMPRESA_PED: TcxDBTextEdit;
+    lblNIFEmp: TcxLabel;
+    txtMOVIL_EMPRESA_PED: TcxDBTextEdit;
+    lblMovEmp: TcxLabel;
+    txtEMAIL_EMPRESA_PED: TcxDBTextEdit;
+    lblEmailEmp: TcxLabel;
+    txtDIRECCION1_EMPRESA_PED: TcxDBTextEdit;
+    txtDIRECCION2_EMPRESA_PED: TcxDBTextEdit;
+    txtPOBLACION_EMPRESA_PED: TcxDBTextEdit;
+    txtPROVINCIA_EMPRESA_PED: TcxDBTextEdit;
+    txtCODIGO_POSTAL_EMPRESA_PED: TcxDBTextEdit;
+    txtNOMBRE_PAI_EMPRESA_PED: TcxDBTextEdit;
+
+    // Cliente fiscal
+    grpClienteFiscal: TcxGroupBox;
+    txtRAZON_SOCIAL_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtNIF_CLIENTE_PED: TcxDBTextEdit;
+    txtEMAIL_CLIENTE_PED: TcxDBTextEdit;
+    txtMOVIL_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtDIRECCION1_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtDIRECCION2_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtPOBLACION_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtPROVINCIA_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtCODIGO_POSTAL_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+    txtNOMBRE_PAI_CLIENTE_FISCAL_PED: TcxDBTextEdit;
+
+    // Cliente envío
+    grpClienteEnvio: TcxGroupBox;
+    txtNOMBRE_CLI_ENVIO_PED: TcxDBTextEdit;
+    txtMOVIL_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtDIRECCION1_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtDIRECCION2_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtPOBLACION_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtPROVINCIA_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtCODIGO_POSTAL_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+    txtNOMBRE_PAI_CLIENTE_ENVIO_PED: TcxDBTextEdit;
+
+    // Totales
+    lblTotalBases: TcxLabel;
+    curTOTAL_BASES_PED: TcxDBCurrencyEdit;
+    lblTotalImpuestos: TcxLabel;
+    curTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit;
+    lblTotalLiquido: TcxLabel;
+    curTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit;
+
+    // Botones de acción
+    pnlBotonesAcciones: TPanel;
+    btnAnadirLinea: TcxButton;
+    btnBorrarLinea: TcxButton;
+    btnEntregarTodo: TcxButton;
+    btnCrearAlbaran: TcxButton;
+    btnImportarPS: TcxButton;
+    btnImprimir: TcxButton;
+
+    // Observaciones
+    memObservaciones: TcxDBMemo;
+
+    procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure btnAnadirLineaClick(Sender: TObject);
     procedure btnBorrarLineaClick(Sender: TObject);
+    procedure btnEntregarTodoClick(Sender: TObject);
+    procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure btnImportarPSClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
   private
-    { Private declarations }
+    procedure RellenarLineasAlEntregarTodo;
   public
-    { Public declarations }
+    dmmPedidos: TdmPedidos;
   end;
 
 var
   frmMtoPedidos: TfrmMtoPedidos;
-  dmmPedidos:TdmPedidos;
+
 implementation
+
+uses
+  inMtoModalImportarPedidosPS;
 
 {$R *.dfm}
 
@@ -201,13 +164,16 @@ begin
   dmmPedidos := TdmPedidos.Create(Self);
   dsTablaG.DataSet := dmmPedidos.unqryTablaG;
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
+  tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
+  dmmPedidos.OpenTables;
 end;
 
 procedure TfrmMtoPedidos.btnNuevoClick(Sender: TObject);
 begin
   inherited;
+  pcCab.ActivePage    := tsCabecera;
   pcPedido.ActivePage := tsLineasPedido;
-  //cxdbtNRO_PEDIDO.SetFocus;
 end;
 
 procedure TfrmMtoPedidos.btnGrabarClick(Sender: TObject);
@@ -222,18 +188,133 @@ end;
 
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);
 begin
+  inherited;
   dmmPedidos.unqryPedidosLineas.Append;
 end;
 
 procedure TfrmMtoPedidos.btnBorrarLineaClick(Sender: TObject);
 begin
+  inherited;
   if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
                 mtConfirmation,
                 [mbYes, mbNo],
-                0 ) = mrYes then
-  begin
+                0) = mrYes then
     dmmPedidos.unqryPedidosLineas.Delete;
+end;
+
+procedure TfrmMtoPedidos.RellenarLineasAlEntregarTodo;
+var
+  ds: TDataSet;
+  fCant, fEntr: Double;
+begin
+  ds := dmmPedidos.unqryPedidosLineas;
+  if not ds.Active then Exit;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      fCant := ds.FieldByName('CANTIDAD_PEDLIN').AsFloat;
+      fEntr := ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+      if fEntr < fCant then
+      begin
+        ds.Edit;
+        ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := fCant;
+        ds.Post;
+      end;
+      ds.Next;
+    end;
+  finally
+    ds.EnableControls;
   end;
+end;
+
+procedure TfrmMtoPedidos.btnEntregarTodoClick(Sender: TObject);
+begin
+  inherited;
+  if MessageDlg('Marcar todas las líneas como entregadas en su totalidad?',
+                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    RellenarLineasAlEntregarTodo;
+end;
+
+procedure TfrmMtoPedidos.btnCrearAlbaranClick(Sender: TObject);
+var
+  ds: TDataSet;
+  lst: TList<TPair<string, Currency>>;
+  par: TPair<string, Currency>;
+  fEntrPend, fYaAlbaranado, fEntrega: Double;
+  sNumeroAlb, sSerieAlb: string;
+begin
+  inherited;
+  // Antes de crear, asegurar que el pedido esté guardado
+  if dsTablaG.State in dsEditModes then
+    dsTablaG.DataSet.Post;
+  ds := dmmPedidos.unqryPedidosLineas;
+  if not ds.Active or (ds.RecordCount = 0) then
+  begin
+    ShowMessage('El pedido no tiene líneas');
+    Exit;
+  end;
+  lst := TList<TPair<string, Currency>>.Create;
+  try
+    ds.DisableControls;
+    try
+      ds.First;
+      while not ds.Eof do
+      begin
+        // Cantidad a albaranar = entregada en pedido - lo ya albaranado
+        // Como CANTIDAD_ENTREGADA_PEDLIN se actualiza por trigger del propio
+        // procedimiento, usamos la diferencia inferida por el cliente:
+        // (cantidad introducida en la columna entregada - 0 cada vez)
+        fEntrPend := ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+        // El procedimiento PRC_PED_CREAR_ALBARAN_LINEA sólo tomará lo
+        // pendiente real comparando con CANTIDAD_PEDLIN. Aquí enviamos
+        // la cantidad que el usuario marca.
+        if fEntrPend > 0 then
+        begin
+          par.Key   := ds.FieldByName('LINEA_PEDLIN').AsString;
+          par.Value := fEntrPend;
+          lst.Add(par);
+        end;
+        ds.Next;
+      end;
+    finally
+      ds.EnableControls;
+    end;
+    if lst.Count = 0 then
+    begin
+      ShowMessage('No hay líneas con cantidad entregada para crear el albarán.');
+      Exit;
+    end;
+    if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst) then
+      ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
+    else
+      ShowMessage('No se pudo crear el albarán.');
+  finally
+    lst.Free;
+  end;
+end;
+
+procedure TfrmMtoPedidos.btnImportarPSClick(Sender: TObject);
+var
+  form: TfrmModalImportarPedidosPS;
+begin
+  inherited;
+  form := TfrmModalImportarPedidosPS.Create(Self);
+  try
+    form.dmPedidos := dmmPedidos;
+    form.ShowModal;
+    dmmPedidos.unqryTablaG.Close;
+    dmmPedidos.unqryTablaG.Open;
+  finally
+    form.Free;
+  end;
+end;
+
+procedure TfrmMtoPedidos.btnImprimirClick(Sender: TObject);
+begin
+  inherited;
+  // Hook FastReport
 end;
 
 end.
