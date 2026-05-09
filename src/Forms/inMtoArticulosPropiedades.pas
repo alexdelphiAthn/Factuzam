@@ -27,10 +27,13 @@ uses
 
 type
   TfrmMtoArticulosPropiedades = class(TfrmMtoGen)
-    cxGrdDBTabPrinCODIGO_ARTICULO_AP: TcxGridDBColumn;
-    cxGrdDBTabPrinID_VALOR_AP: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinCODIGO_ART_ART: TcxGridDBColumn;
+    cxGrdDBTabPrinCODIGO_PROP_ARTPROP: TcxGridDBColumn;
+    cxGrdDBTabPrinID_PV_ARTPROP: TcxGridDBColumn;
+    cxGrdDBTabPrinVALOR_LIBRE_ARTPROP: TcxGridDBColumn;
+    cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
+    procedure dsTablaGStateChange(Sender: TObject);
   private
     dmmArticulosPropiedades: TdmArticulosPropiedades;
   public
@@ -55,7 +58,23 @@ procedure TfrmMtoArticulosPropiedades.CrearTablaPrincipal;
 begin
   inherited;
   dmmArticulosPropiedades := tdmDataModule as TdmArticulosPropiedades;
-  pkFieldName := '`CODIGO_ARTICULO_AP;ID_VALOR_AP';
+  pkFieldName := '`CODIGO_ART_ART;CODIGO_PROP_ARTPROP';
+end;
+
+procedure TfrmMtoArticulosPropiedades.dsTablaGStateChange(Sender: TObject);
+begin
+  inherited;
+  // En alta se permite editar las claves; en edición no.
+  if dsTablaG.State = dsInsert then
+  begin
+    cxGrdDBTabPrinCODIGO_ART_ART.Options.Editing := True;
+    cxGrdDBTabPrinCODIGO_PROP_ARTPROP.Options.Editing := True;
+  end
+  else
+  begin
+    cxGrdDBTabPrinCODIGO_ART_ART.Options.Editing := False;
+    cxGrdDBTabPrinCODIGO_PROP_ARTPROP.Options.Editing := False;
+  end;
 end;
 
 initialization

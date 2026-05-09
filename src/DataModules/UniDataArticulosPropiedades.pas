@@ -16,6 +16,11 @@ uses
 
 type
   TdmArticulosPropiedades = class(TdmBase)
+    unqryPropiedades: TUniQuery;
+    dsPropiedades: TDataSource;
+    unqryValores: TUniQuery;
+    dsValores: TDataSource;
+    procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -26,9 +31,22 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
+uses inLibGlobalVar;
+
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmArticulosPropiedades.DataModuleCreate(Sender: TObject);
+begin
+  inherited;
+  unqryPropiedades.Connection := oConn;
+  unqryValores.Connection := oConn;
+  if not unqryPropiedades.Active then
+    unqryPropiedades.Open;
+  if not unqryValores.Active then
+    unqryValores.Open;
+end;
 
 initialization
   ForceReferenceToClass(TdmArticulosPropiedades);

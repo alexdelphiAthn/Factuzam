@@ -190,18 +190,23 @@ INSERT INTO `fza_articulos_familias` VALUES ('ROPA', 'S', 1, 'N', NULL, 'Ropa de
 -- ----------------------------
 DROP TABLE IF EXISTS `fza_articulos_propiedades`;
 CREATE TABLE `fza_articulos_propiedades`  (
-  `CODIGO_ARTICULO_AP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  `ID_VALOR_AP` int NOT NULL COMMENT 'FK hacia fza_atributos_valores',
-  `INSTANTEALTA` timestamp NOT NULL DEFAULT current_timestamp(),
-  `USUARIOALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
-  PRIMARY KEY (`CODIGO_ARTICULO_AP`, `ID_VALOR_AP`) USING BTREE,
-  INDEX `IDX_VALOR_AP`(`ID_VALOR_AP` ASC) USING BTREE
+  `CODIGO_ART_ART` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_PROP_ARTPROP` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL COMMENT 'FK a fza_propiedades',
+  `ID_PV_ARTPROP` int NULL DEFAULT NULL COMMENT 'Si TIPO_VALOR=LISTA, FK a fza_propiedades_valores',
+  `VALOR_LIBRE_ARTPROP` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NULL DEFAULT NULL COMMENT 'Si TIPO_VALOR=TEXTO_LIBRE/NUMERO/BOOLEANO, valor directo',
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT current_timestamp(),
+  `USUARIO_ALTA` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`) USING BTREE,
+  INDEX `IDX_VALOR_LISTA`(`ID_PV_ARTPROP` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_spanish_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of fza_articulos_propiedades
+-- (muestra reducida; el dump completo está en factuzam_original.sql)
 -- ----------------------------
-INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 203, '2026-01-06 12:31:02', 'Sistema');
+INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'COMPOSICION', NULL, '100% Seda natural', '2026-03-22 18:32:14', 'DEMO');
+INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'TEMPORADA',   11,   NULL,                '2026-03-22 18:32:14', 'DEMO');
+INSERT INTO `fza_articulos_propiedades` VALUES ('BLUS-SEDA', 'MATERIAL',    18,   NULL,                '2026-03-22 18:32:14', 'DEMO');
 
 -- ----------------------------
 -- Table structure for fza_propiedades
