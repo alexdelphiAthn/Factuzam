@@ -54,7 +54,7 @@ inherited dmPropiedades: TdmPropiedades
       '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
       'WHERE ap.CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP'
       'ORDER BY ap.CODIGO_ART_ART')
-    DataSource = dsTablaG
+    MasterSource = frmMtoPropiedades.dsTablaG
     Left = 144
     Top = 24
   end
