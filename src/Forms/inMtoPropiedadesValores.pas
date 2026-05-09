@@ -6,7 +6,7 @@
 {                                                       }
 {*******************************************************}
 
-unit inMtoArticulosPropiedades;
+unit inMtoPropiedadesValores;
 
 interface
 
@@ -20,25 +20,30 @@ uses
   cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization, Vcl.StdCtrls,
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataArticulosPropiedades,
+  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPropiedadesValores,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type
-  TfrmMtoArticulosPropiedades = class(TfrmMtoGen)
-    cxGrdDBTabPrinCODIGO_ARTICULO_AP: TcxGridDBColumn;
-    cxGrdDBTabPrinID_VALOR_AP: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
+  TfrmMtoPropiedadesValores = class(TfrmMtoGen)
+    cxGrdDBTabPrinID_PV_ARTPROP: TcxGridDBColumn;
+    cxGrdDBTabPrinID_PROP_PV: TcxGridDBColumn;
+    cxGrdDBTabPrinPV: TcxGridDBColumn;
+    cxGrdDBTabPrinDESCRIPCION_PV: TcxGridDBColumn;
+    cxGrdDBTabPrinESACTIVO_PV: TcxGridDBColumn;
+    cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn;
+    cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn;
   private
-    dmmArticulosPropiedades: TdmArticulosPropiedades;
+    dmmPropiedadesValores: TdmPropiedadesValores;
   public
     procedure CrearTablaPrincipal; override;
   end;
 
 var
-  frmMtoArticulosPropiedades: TfrmMtoArticulosPropiedades;
+  frmMtoPropiedadesValores: TfrmMtoPropiedadesValores;
 
 implementation
 
@@ -49,15 +54,15 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
-{ TfrmMtoArticulosPropiedades }
+{ TfrmMtoPropiedadesValores }
 
-procedure TfrmMtoArticulosPropiedades.CrearTablaPrincipal;
+procedure TfrmMtoPropiedadesValores.CrearTablaPrincipal;
 begin
   inherited;
-  dmmArticulosPropiedades := tdmDataModule as TdmArticulosPropiedades;
-  pkFieldName := '`CODIGO_ARTICULO_AP;ID_VALOR_AP';
+  dmmPropiedadesValores := tdmDataModule as TdmPropiedadesValores;
+  pkFieldName := '`ID_PV_ARTPROP';
 end;
 
 initialization
-  ForceReferenceToClass(TfrmMtoArticulosPropiedades);
+  ForceReferenceToClass(TfrmMtoPropiedadesValores);
 end.
