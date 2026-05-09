@@ -517,8 +517,8 @@ begin
       '         CANTIDAD_PENDIENTE_PEDLIN = CANTIDAD_PEDLIN - (IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad), ' +
       '         ESENTREGADA_PEDLIN        = CASE WHEN CANTIDAD_PEDLIN <= IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad ' +
       '                                          THEN ''S'' ELSE ''N'' END, ' +
-      '         INSTANTEMODIF             = NOW(), ' +
-      '         USUARIOMODIF              = p_USUARIO ' +
+      '         INSTANTE_MODIF            = NOW(), ' +
+      '         USUARIO_MODIF             = p_USUARIO ' +
       '   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED ' +
       '     AND SERIE_PED_PEDLIN  = p_SERIE_PED ' +
       '     AND LINEA_PEDLIN      = p_LINEA_PED; ' +
@@ -557,11 +557,11 @@ begin
       '     AND IFNULL(ESENTREGADA_PEDLIN, ''N'') <> ''S''; ' +
       '  IF v_pendientes = 0 THEN ' +
       '    UPDATE fza_pedidos SET ESTADO_PED = ''ENTREGADO'', ' +
-      '           INSTANTEMODIF = NOW(), USUARIOMODIF = p_USUARIO ' +
+      '           INSTANTE_MODIF = NOW(), USUARIO_MODIF = p_USUARIO ' +
       '     WHERE NUMERO_PED = p_NUMERO_PED AND SERIE_PED = p_SERIE_PED; ' +
       '  ELSE ' +
       '    UPDATE fza_pedidos SET ESTADO_PED = ''PARCIAL'', ' +
-      '           INSTANTEMODIF = NOW(), USUARIOMODIF = p_USUARIO ' +
+      '           INSTANTE_MODIF = NOW(), USUARIO_MODIF = p_USUARIO ' +
       '     WHERE NUMERO_PED = p_NUMERO_PED AND SERIE_PED = p_SERIE_PED; ' +
       '  END IF; ' +
       'END');
@@ -725,7 +725,7 @@ begin
       ' POBLACION_CLIENTE_FISCAL_PED, PROVINCIA_CLIENTE_FISCAL_PED, ' +
       ' CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
       ' TOTAL_LIQUIDO_PED, TOTAL_PAGADOREALPS_PED, ' +
-      ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, ' +
       '        :IDPS, :FECHAPS, :REFPS, ' +
       '        :FORMAPAGO, :TRANSP, :ESTADOPS, ' +
@@ -775,7 +775,7 @@ begin
       ' CODBAR_ART_PEDLIN, DESCRIPCION_ARTICULO_PEDLIN, ' +
       ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
       ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
-      ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:NUMERO, :SERIE, :LIN, ' +
       '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
       '        :EAN13, :DESCR, ' +
@@ -805,9 +805,9 @@ begin
     // Mensajes (si hay)
     qMsg.Connection := inLibGlobalVar.oConn;
     qMsg.SQL.Text :=
-      'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDIDO, IDMENSAJEPS_MENSAJE_PEDIDO, ' +
-      ' IDEMPLEADOPS_MENSAJE_PEDIDO, MENSAJEPS_MENSAJE_PEDIDO, FECHAPS_MENSAJE_PEDIDO, ' +
-      ' INSTANTEALTA, USUARIOALTA, USUARIOMODIF) ' +
+      'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, IDMENSAJEPS_PEDMSG, ' +
+      ' IDEMPLEADOPS_PEDMSG, MENSAJEPS_PEDMSG, FECHAPS_PEDMSG, ' +
+      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:HILO, :IDM, :IDE, :MSG, :FECHA, NOW(), :USU, :USU)';
     for tm in aOrder.MensajesPedido.LMensajes do
     begin
