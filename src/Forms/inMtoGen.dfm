@@ -119,6 +119,7 @@ inherited frmMtoGen: TfrmMtoGen
       object tsPerfil: TcxTabSheet
         Caption = 'Perfil'
         ImageIndex = 2
+        TabVisible = False
         object pnlPerfilTop: TPanel
           Left = 0
           Top = 0

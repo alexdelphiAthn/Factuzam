@@ -985,6 +985,21 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           ShortCut = 16460
           OnClick = mnuPaisesClick
         end
+        object mnuArticulosPropiedades: TMenuItem
+          Caption = 'Propiedades de Art'#237'culos'
+          ShortCut = 16450
+          OnClick = mnuArticulosPropiedadesClick
+        end
+        object mnuVariaciones: TMenuItem
+          Caption = 'Tipos de Variaciones'
+          ShortCut = 16470
+          OnClick = mnuVariacionesClick
+        end
+        object mnuAtributosConjuntos: TMenuItem
+          Caption = 'Colecciones de Atributos'
+          ShortCut = 16467
+          OnClick = mnuAtributosConjuntosClick
+        end
       end
       object Salir1: TMenuItem
         Bitmap.Data = {
@@ -1309,11 +1324,33 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       object FormasdePagoCaja1: TMenuItem
         Caption = 'Formas de Pago Caja'
       end
+      object mnuDepositosCliente: TMenuItem
+        Caption = 'Dep'#243'sitos de Clientes'
+        ShortCut = 16452
+        OnClick = mnuDepositosClienteClick
+      end
+      object mnuCajaPagosHist: TMenuItem
+        Caption = 'Hist'#243'rico de Pagos de Caja'
+        ShortCut = 49232
+        OnClick = mnuCajaPagosHistClick
+      end
+      object mnuCajaValesHist: TMenuItem
+        Caption = 'Hist'#243'rico de Vales'
+        ShortCut = 49228
+        OnClick = mnuCajaValesHistClick
+      end
+      object mnuCajaOperacionesHist: TMenuItem
+        Caption = 'Hist'#243'rico de Operaciones'
+        ShortCut = 49231
+        OnClick = mnuCajaOperacionesHistClick
+      end
     end
     object mnuAlmacen: TMenuItem
       Caption = 'Almac'#233'n'
       object Movimientosdealmacn1: TMenuItem
         Caption = 'Movimientos de almac'#233'n'
+        ShortCut = 16471
+        OnClick = Movimientosdealmacn1Click
       end
       object mnuInventarios: TMenuItem
         Caption = 'Inventarios'

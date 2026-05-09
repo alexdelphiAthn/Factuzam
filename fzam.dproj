@@ -468,6 +468,78 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
+        <DCCReference Include="src\Forms\inMtoArticulosPropiedades.pas">
+            <Form>frmMtoArticulosPropiedades</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataArticulosPropiedades.pas">
+            <Form>dmArticulosPropiedades</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmArticulosPropiedades</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoVariaciones.pas">
+            <Form>frmMtoVariaciones</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataVariaciones.pas">
+            <Form>dmVariaciones</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmVariaciones</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAtributosConjuntos.pas">
+            <Form>frmMtoAtributosConjuntos</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAtributosConjuntos.pas">
+            <Form>dmAtributosConjuntos</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmAtributosConjuntos</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoMovimientosAlmacen.pas">
+            <Form>frmMtoMovimientosAlmacen</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataMovimientosAlmacen.pas">
+            <Form>dmMovimientosAlmacen</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmMovimientosAlmacen</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaPagosHist.pas">
+            <Form>frmMtoCajaPagosHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaPagosHist.pas">
+            <Form>dmCajaPagosHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmCajaPagosHist</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaValesHist.pas">
+            <Form>frmMtoCajaValesHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaValesHist.pas">
+            <Form>dmCajaValesHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmCajaValesHist</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaOperacionesHist.pas">
+            <Form>frmMtoCajaOperacionesHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaOperacionesHist.pas">
+            <Form>dmCajaOperacionesHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmCajaOperacionesHist</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDepositosCliente.pas">
+            <Form>frmMtoDepositosCliente</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataDepositosCliente.pas">
+            <Form>dmDepositosCliente</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmDepositosCliente</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
