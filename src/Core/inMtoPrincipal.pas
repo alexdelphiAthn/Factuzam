@@ -864,10 +864,13 @@ begin
     if frmMtoMenuCaja.WindowState = wsMinimized then
       frmMtoMenuCaja.WindowState := wsNormal;
     frmMtoMenuCaja.BringToFront;
-    Exit;
+  end
+  else
+  begin
+    frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application);
+    frmMtoMenuCaja.Show;
   end;
-  frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application);
-  frmMtoMenuCaja.Show;
+  Self.WindowState := wsMinimized;
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
