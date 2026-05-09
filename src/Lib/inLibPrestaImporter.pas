@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam - Importador de pedidos PrestaShop     }
 {                                                       }
@@ -12,7 +12,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  XMLIntf, XMLDoc, REST.Client, REST.Types,
+  XMLIntf, XMLDoc, REST.Client, REST.Types, system.Variants,
   REST.Authenticator.Basic,
   inLibPresta;
 
