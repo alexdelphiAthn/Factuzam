@@ -10255,7 +10255,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 1),
   ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas', 1),
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 1),
-  ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', NULL, 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1),
+  ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1),
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 1),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 1),
   ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 1),

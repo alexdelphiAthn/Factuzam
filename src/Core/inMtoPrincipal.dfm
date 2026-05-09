@@ -2316,6 +2316,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
             249F01070E420000000000000000000000000000000000000000000000000000
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Perfiles'
+          ShortCut = 16471
           OnClick = mnuPerfilesClick
         end
       end
