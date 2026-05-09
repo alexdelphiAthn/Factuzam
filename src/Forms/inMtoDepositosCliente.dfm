@@ -19,17 +19,17 @@ inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
             end
             object cxGrdDBTabPrinCODIGO_EMPRESA_DEP: TcxGridDBColumn
               Caption = 'Empresa'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_DEP'
+              DataBinding.FieldName = 'CODIGO_EMP_DEP'
               Width = 90
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_DEP: TcxGridDBColumn
               Caption = 'Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_DEP'
+              DataBinding.FieldName = 'CODIGO_CLI_DEP'
               Width = 130
             end
             object cxGrdDBTabPrinCODIGO_ARTICULO_DEP: TcxGridDBColumn
               Caption = 'Art'#237'culo'
-              DataBinding.FieldName = 'CODIGO_ARTICULO_DEP'
+              DataBinding.FieldName = 'CODIGO_ART_DEP'
               Width = 160
             end
             object cxGrdDBTabPrinCODIGO_UNIDAD_DEP: TcxGridDBColumn
@@ -74,7 +74,7 @@ inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
             end
             object cxGrdDBTabPrinPORCEN_IVA_DEP: TcxGridDBColumn
               Caption = '% IVA'
-              DataBinding.FieldName = 'PORCEN_IVA_DEP'
+              DataBinding.FieldName = 'PORCENTAJE_IVA_DEP'
               Width = 80
             end
             object cxGrdDBTabPrinESIMP_INCL_DEP: TcxGridDBColumn
@@ -87,26 +87,26 @@ inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130

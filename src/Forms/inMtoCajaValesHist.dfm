@@ -49,12 +49,12 @@ inherited frmMtoCajaValesHist: TfrmMtoCajaValesHist
             end
             object cxGrdDBTabPrinCODIGO_EMPRESA_EMI_VL: TcxGridDBColumn
               Caption = 'Empresa Emi.'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_EMI_VL'
+              DataBinding.FieldName = 'CODIGO_EMP_EMI_VL'
               Width = 110
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_EMI_VL: TcxGridDBColumn
               Caption = 'Almac'#233'n Emi.'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_EMI_VL'
+              DataBinding.FieldName = 'CODIGO_ALM_EMI_VL'
               Width = 110
             end
             object cxGrdDBTabPrinCODIGO_CAJA_EMI_VL: TcxGridDBColumn
@@ -69,12 +69,12 @@ inherited frmMtoCajaValesHist: TfrmMtoCajaValesHist
             end
             object cxGrdDBTabPrinSERIE_FACTURA_EMI_VL: TcxGridDBColumn
               Caption = 'Serie Fac. Emi.'
-              DataBinding.FieldName = 'SERIE_FACTURA_EMI_VL'
+              DataBinding.FieldName = 'SERIE_FAC_EMI_VL'
               Width = 110
             end
             object cxGrdDBTabPrinNRO_FACTURA_EMI_VL: TcxGridDBColumn
               Caption = 'Nro. Fac. Emi.'
-              DataBinding.FieldName = 'NRO_FACTURA_EMI_VL'
+              DataBinding.FieldName = 'NUMERO_FAC_EMI_VL'
               Width = 110
             end
             object cxGrdDBTabPrinFECHA_REDENCION_VL: TcxGridDBColumn
@@ -89,13 +89,13 @@ inherited frmMtoCajaValesHist: TfrmMtoCajaValesHist
             end
             object cxGrdDBTabPrinCODIGO_EMPRESA_RED_VL: TcxGridDBColumn
               Caption = 'Empresa Red.'
-              DataBinding.FieldName = 'CODIGO_EMPRESA_RED_VL'
+              DataBinding.FieldName = 'CODIGO_EMP_RED_VL'
               Width = 110
               Visible = False
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_RED_VL: TcxGridDBColumn
               Caption = 'Almac'#233'n Red.'
-              DataBinding.FieldName = 'CODIGO_ALMACEN_RED_VL'
+              DataBinding.FieldName = 'CODIGO_ALM_RED_VL'
               Width = 110
               Visible = False
             end
@@ -113,19 +113,19 @@ inherited frmMtoCajaValesHist: TfrmMtoCajaValesHist
             end
             object cxGrdDBTabPrinSERIE_FACTURA_RED_VL: TcxGridDBColumn
               Caption = 'Serie Fac. Red.'
-              DataBinding.FieldName = 'SERIE_FACTURA_RED_VL'
+              DataBinding.FieldName = 'SERIE_FAC_RED_VL'
               Width = 110
               Visible = False
             end
             object cxGrdDBTabPrinNRO_FACTURA_RED_VL: TcxGridDBColumn
               Caption = 'Nro. Fac. Red.'
-              DataBinding.FieldName = 'NRO_FACTURA_RED_VL'
+              DataBinding.FieldName = 'NUMERO_FAC_RED_VL'
               Width = 110
               Visible = False
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_VL: TcxGridDBColumn
               Caption = 'Cliente'
-              DataBinding.FieldName = 'CODIGO_CLIENTE_VL'
+              DataBinding.FieldName = 'CODIGO_CLI_VL'
               Width = 130
             end
             object cxGrdDBTabPrinOBSERVACIONES_VL: TcxGridDBColumn
@@ -135,26 +135,26 @@ inherited frmMtoCajaValesHist: TfrmMtoCajaValesHist
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130

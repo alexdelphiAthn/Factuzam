@@ -69,7 +69,7 @@ procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaPagosHist := tdmDataModule as TdmCajaPagosHist;
-  pkFieldName := '`CODIGO_EMPRESA_PAGO;CODIGO_ALMACEN_PAGO;CODIGO_CAJA_PAGO;' +
+  pkFieldName := '`CODIGO_EMP_PAGO;CODIGO_ALM_PAGO;CODIGO_CAJA_PAGO;' +
                  'SERIE_OPERACION_PAGO;NUMERO_OPERACION_PAGO;NUMERO_LINEA_PAGO';
 end;
 

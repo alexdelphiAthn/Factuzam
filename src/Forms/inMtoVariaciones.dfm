@@ -40,26 +40,26 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130
@@ -198,17 +198,17 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                   OptionsView.NoDataToDisplayInfoText = '<No hay art'#237'culos que usen este tipo de variaci'#243'n>'
                   object tvArticulosCODIGO_ARTICULO: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO'
+                    DataBinding.FieldName = 'CODIGO_ART'
                     Width = 160
                   end
                   object tvArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                    DataBinding.FieldName = 'DESCRIPCION_ART'
                     Width = 320
                   end
                   object tvArticulosACTIVO_ARTICULO: TcxGridDBColumn
                     Caption = 'Activo'
-                    DataBinding.FieldName = 'ACTIVO_ARTICULO'
+                    DataBinding.FieldName = 'ESACTIVO_ART'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
@@ -216,17 +216,17 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                   end
                   object tvArticulosCODIGO_FAMILIA_ARTICULO: TcxGridDBColumn
                     Caption = 'C'#243'digo Familia'
-                    DataBinding.FieldName = 'CODIGO_FAMILIA_ARTICULO'
+                    DataBinding.FieldName = 'CODIGO_FAM_ART'
                     Width = 130
                   end
                   object tvArticulosNOMBRE_FAMILIA: TcxGridDBColumn
                     Caption = 'Familia'
-                    DataBinding.FieldName = 'NOMBRE_FAMILIA'
+                    DataBinding.FieldName = 'NOMBRE_FAM'
                     Width = 180
                   end
                   object tvArticulosESVARIACION_ARTICULO: TcxGridDBColumn
                     Caption = 'Tiene Variaciones'
-                    DataBinding.FieldName = 'ESVARIACION_ARTICULO'
+                    DataBinding.FieldName = 'ESVARIACION_ART'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
@@ -259,7 +259,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtUSUARIOALTA: TcxDBTextEdit
                   Left = 160
                   Top = 13
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 0
@@ -275,7 +275,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtINSTANTEALTA: TcxDBTextEdit
                   Left = 160
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 1
@@ -291,7 +291,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtUSUARIOMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 13
-                  DataBinding.DataField = 'USUARIOMODIF'
+                  DataBinding.DataField = 'USUARIO_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -307,7 +307,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtINSTANTEMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3

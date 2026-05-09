@@ -319,7 +319,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM fza_pedidos_mensajes M'
-      'WHERE M.IDPS_MENSAJES_PEDIDO = :IDHILO')
+      'WHERE M.IDPS_MENSAJES_PEDMSG = :IDHILO')
     Left = 384
     Top = 256
     ParamData = <
