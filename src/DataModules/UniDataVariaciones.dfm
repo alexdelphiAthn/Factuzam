@@ -49,12 +49,14 @@ inherited dmVariaciones: TdmVariaciones
   object unqryArticulosVariacion: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT CODIGO_ART, DESCRIPCION_ART, ESACTIVO_ART,'
-      '       CODIGO_FAM_ART, NOMBRE_FAM,'
-      '       ESVARIACION_ART, TIPO_VARIACION_ART,'
-      '       ORDEN_ART'
-      '  FROM vi_articulos'
-      ' ORDER BY ORDEN_ART, CODIGO_ART')
+      'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.ESACTIVO_ART,'
+      '       a.CODIGO_FAM_ART, f.NOMBRE_FAM_FAM,'
+      '       a.ESVARIACION_ART, a.TIPO_VARIACION_ART,'
+      '       a.ORDEN_ART'
+      '  FROM fza_articulos a'
+      '  LEFT JOIN fza_articulos_familias f'
+      '    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART'
+      ' ORDER BY a.ORDEN_ART, a.CODIGO_ART_ART')
     MasterFields = 'CODIGO_VAR'
     DetailFields = 'TIPO_VARIACION_ART'
     Active = False
@@ -135,14 +137,14 @@ inherited dmVariaciones: TdmVariaciones
       '  FROM fza_articulos_skus'
       ' ORDER BY CODIGO_UNIDAD_SKU')
     MasterSource = dsArticulosVariacion
-    MasterFields = 'CODIGO_ART'
+    MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
     Active = False
     Left = 376
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_ART'
+        Name = 'CODIGO_ART_ART'
         ParamType = ptInput
       end>
   end
