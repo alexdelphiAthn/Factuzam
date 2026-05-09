@@ -572,6 +572,7 @@ function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
 
 var
   Component: TComponent;
+  ActiveForm: TCustomForm;
   ts: TcxTabSheet;
   I: Integer;
   iPageActive: Integer;
@@ -612,6 +613,26 @@ begin
       Result := True;
       Exit;
     end;
+  end;
+  ActiveForm := Screen.ActiveForm;
+  if Assigned(ActiveForm) and
+     (ActiveForm <> Self) and
+     (ActiveForm.Parent = nil) then
+  begin
+    Result := False;
+    for I := 0 to ActiveForm.ComponentCount - 1 do
+    begin
+      Component := ActiveForm.Components[I];
+      if Component is TActionList then
+      begin
+        if TActionList(Component).IsShortCut(Message) then
+        begin
+          Result := True;
+          Break;
+        end;
+      end;
+    end;
+    Exit;
   end;
   I := 0;
   Result := True;
