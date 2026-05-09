@@ -12,9 +12,9 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             OptionsData.Editing = True
-            object cxGrdDBTabPrinID_CONJUNTO_AC: TcxGridDBColumn
+            object cxGrdDBTabPrinID_AC: TcxGridDBColumn
               Caption = 'ID Conjunto'
-              DataBinding.FieldName = 'ID_CONJUNTO_AC'
+              DataBinding.FieldName = 'ID_AC'
               Options.Editing = False
               Width = 100
             end
@@ -23,14 +23,14 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               DataBinding.FieldName = 'NOMBRE_AC'
               Width = 280
             end
-            object cxGrdDBTabPrinID_VARIACION_AC: TcxGridDBColumn
+            object cxGrdDBTabPrinID_VAR_AC: TcxGridDBColumn
               Caption = 'Variaci'#243'n'
-              DataBinding.FieldName = 'ID_VARIACION_AC'
+              DataBinding.FieldName = 'ID_VAR_AC'
               Width = 130
             end
-            object cxGrdDBTabPrinID_ATRIBUTO_AC: TcxGridDBColumn
+            object cxGrdDBTabPrinID_VA_AC: TcxGridDBColumn
               Caption = 'Atributo'
-              DataBinding.FieldName = 'ID_ATRIBUTO_AC'
+              DataBinding.FieldName = 'ID_VA_AC'
               Width = 130
             end
             object cxGrdDBTabPrinESACTIVO_AC: TcxGridDBColumn
@@ -41,28 +41,28 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               Properties.ValueUnchecked = 'N'
               Width = 80
             end
-            object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
+            object cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
-            object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
+            object cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
-            object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
+            object cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
-            object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
+            object cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130
