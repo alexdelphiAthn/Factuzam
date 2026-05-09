@@ -1302,12 +1302,12 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuPedidosVenta: TMenuItem
         Caption = '&Pedidos'
-        ShortCut = 16464
+        ShortCut = 49232
         OnClick = mnuPedidosVentaClick
       end
       object mnuAlbaranesVenta: TMenuItem
         Caption = '&Albaranes'
-        ShortCut = 16449
+        ShortCut = 49217
         OnClick = mnuAlbaranesVentaClick
       end
       object Listados1: TMenuItem
