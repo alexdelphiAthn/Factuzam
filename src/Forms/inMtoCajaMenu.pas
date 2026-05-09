@@ -265,6 +265,7 @@ begin
   end;
   frm := TfrmConsultaOpe.Create(Application);
   try
+    frm.PopupParent := Self;
     frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
     frm.Show;
   except
@@ -368,6 +369,7 @@ var
 begin
   frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
   try
+    frmMtoOpeCaja.PopupParent := Self;
     frmMtoOpeCaja.Tag := 1;
     frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)', [Self.FCaja]);
     frmMtoOpeCaja.PrepararValores(Self.FEmpresa, Self.FAlmacen, Self.FCaja,
