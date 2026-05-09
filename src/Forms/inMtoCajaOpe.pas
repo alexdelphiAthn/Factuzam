@@ -1711,8 +1711,15 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.actAbrirArticulosExecute(Sender: TObject);
+var
+  sCodArt: string;
 begin
-  ShowMto(frmMtoPrincipal, 'Articulos');
+  sCodArt := '';
+  if Assigned(DatosCaja) and
+     Assigned(DatosCaja.cdsLineas) and
+     DatosCaja.cdsLineas.Active then
+    sCodArt := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+  ShowMto(frmMtoPrincipal, 'Articulos', sCodArt);
 end;
 
 procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
