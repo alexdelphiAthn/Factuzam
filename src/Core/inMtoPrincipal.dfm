@@ -1349,7 +1349,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Caption = 'Almac'#233'n'
       object Movimientosdealmacn1: TMenuItem
         Caption = 'Movimientos de almac'#233'n'
-        ShortCut = 16471
+        ShortCut = 16461
         OnClick = Movimientosdealmacn1Click
       end
       object mnuInventarios: TMenuItem
@@ -2316,7 +2316,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
             249F01070E420000000000000000000000000000000000000000000000000000
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Perfiles'
-          ShortCut = 16461
           OnClick = mnuPerfilesClick
         end
       end
