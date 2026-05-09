@@ -55,21 +55,25 @@ type
     procedure lblF10MouseEnter(Sender: TObject);
     procedure lblF10MouseLeave(Sender: TObject);
     // Eventos F6
+    procedure lblEntradaCambioClick(Sender: TObject);
     procedure lblEntradaCambioMouseEnter(Sender: TObject);
     procedure lblEntradaCambioMouseLeave(Sender: TObject);
     procedure lblF6MouseEnter(Sender: TObject);
     procedure lblF6MouseLeave(Sender: TObject);
     // Eventos F7
+    procedure lblGastosCajaClick(Sender: TObject);
     procedure lblGastosCajaMouseEnter(Sender: TObject);
     procedure lblGastosCajaMouseLeave(Sender: TObject);
     procedure lblF7MouseEnter(Sender: TObject);
     procedure lblF7MouseLeave(Sender: TObject);
     // Eventos F11
+    procedure lblArqueoClick(Sender: TObject);
     procedure lblArqueoMouseEnter(Sender: TObject);
     procedure lblArqueoMouseLeave(Sender: TObject);
     procedure lblF11MouseEnter(Sender: TObject);
     procedure lblF11MouseLeave(Sender: TObject);
     // Eventos F3
+    procedure lblTraspasosClick(Sender: TObject);
     procedure lblTraspasosMouseEnter(Sender: TObject);
     procedure lblTraspasosMouseLeave(Sender: TObject);
     procedure lblF3MouseEnter(Sender: TObject);
@@ -542,6 +546,11 @@ begin
     AbrirSelectorCaja;
 end;
 
+procedure TfrmMtoMenuCaja.lblEntradaCambioClick(Sender: TObject);
+begin
+  // TODO: implementar acción de Entrada de Cambio
+end;
+
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF6, lblEntradaCambio, clWebOrange);
@@ -565,6 +574,11 @@ begin
 end;
 
 // F7 - Gastos por Caja
+procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
+begin
+  // TODO: implementar acción de Gastos por Caja
+end;
+
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF7, lblGastosCaja, clWebOrange);
@@ -599,6 +613,11 @@ begin
 end;
 
 // F11 - Arqueo
+procedure TfrmMtoMenuCaja.lblArqueoClick(Sender: TObject);
+begin
+  // TODO: implementar acción de Arqueo
+end;
+
 procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF11, lblArqueo, clWebOrange);
@@ -622,6 +641,11 @@ begin
 end;
 
 // F3 - Traspasos
+procedure TfrmMtoMenuCaja.lblTraspasosClick(Sender: TObject);
+begin
+  // TODO: implementar acción de Traspasos
+end;
+
 procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
 begin
   ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
