@@ -21,7 +21,7 @@ uses
   dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView, cxGridDBTableView, cxGrid, dxmdaset, cxTextEdit, dxBevel,
+  cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset, cxTextEdit, dxBevel,
   inLibDevExp, cxGridExportLink, inLibUser, System.UITypes, UniDataPerfiles,
   Uni, inLibDir, inLibtb, Data.DBCommon, inLibWin, UniDataConn, cxBlobEdit,
   dxCore, dxScrollbarAnnotations, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
@@ -209,6 +209,7 @@ procedure TfrmMtoGen.AplicarEtiquetas;
 var
   i:integer;
   cxGrid: TcxCustomGridTableView;
+  oDBCtrl: TcxGridDBDataController;
 begin
   if (DsTablaG.Dataset <> nil) then
     lblTablaOrigen.Caption :=
@@ -225,11 +226,15 @@ begin
         if SameText(Trim(GetPerfilValueDef(oPerfilDic,
                           cxGrid.Name + '__oCreateItems', 'False')), 'True') then
         begin
-          cxGrid.BeginUpdate;
-          try
-            cxGrid.DataController.CreateAllItems;
-          finally
-            cxGrid.EndUpdate;
+          oDBCtrl := GetDBDataController(cxGrid);
+          if oDBCtrl <> nil then
+          begin
+            cxGrid.BeginUpdate;
+            try
+              oDBCtrl.CreateAllItems;
+            finally
+              cxGrid.EndUpdate;
+            end;
           end;
         end;
       end;
