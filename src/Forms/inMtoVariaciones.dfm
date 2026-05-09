@@ -40,26 +40,26 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTEALTA'
+              DataBinding.FieldName = 'INSTANTE_ALTA'
               Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTEMODIF'
+              DataBinding.FieldName = 'INSTANTE_MODIF'
               Options.Editing = False
               Visible = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIOALTA'
+              DataBinding.FieldName = 'USUARIO_ALTA'
               Options.Editing = False
               Width = 130
             end
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIOMODIF'
+              DataBinding.FieldName = 'USUARIO_MODIF'
               Options.Editing = False
               Visible = False
               Width = 130
@@ -385,7 +385,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtUSUARIOALTA: TcxDBTextEdit
                   Left = 160
                   Top = 13
-                  DataBinding.DataField = 'USUARIOALTA'
+                  DataBinding.DataField = 'USUARIO_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 0
@@ -401,7 +401,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtINSTANTEALTA: TcxDBTextEdit
                   Left = 160
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEALTA'
+                  DataBinding.DataField = 'INSTANTE_ALTA'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 1
@@ -417,7 +417,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtUSUARIOMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 13
-                  DataBinding.DataField = 'USUARIOMODIF'
+                  DataBinding.DataField = 'USUARIO_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 2
@@ -433,7 +433,7 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                 object txtINSTANTEMODIF: TcxDBTextEdit
                   Left = 560
                   Top = 45
-                  DataBinding.DataField = 'INSTANTEMODIF'
+                  DataBinding.DataField = 'INSTANTE_MODIF'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3

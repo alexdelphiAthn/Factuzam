@@ -76,7 +76,7 @@ procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  pkFieldName := '`CODIGO_EMPRESA_OPCAJA;CODIGO_ALMACEN_OPCAJA;' +
+  pkFieldName := '`CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
                  'CODIGO_CAJA_OPCAJA;NUMERO_OPERACION_OPCAJA';
 end;
 
