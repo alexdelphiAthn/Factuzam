@@ -835,19 +835,20 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
-var
-  frmMtoMenuCaja: TfrmMtoMenuCaja;
 begin
   inherited;
-  if mnuMenuCaja.Visible then
+  if not mnuMenuCaja.Visible then Exit;
+  if Assigned(frmMtoMenuCaja) then
   begin
-    try
-      frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Self);
-      frmMtoMenuCaja.ShowModal;
-    finally
-      FreeAndNil(frmMtoMenuCaja);
-    end;
+    if frmMtoMenuCaja.WindowState = wsMinimized then
+      frmMtoMenuCaja.WindowState := wsNormal;
+    frmMtoMenuCaja.BringToFront;
+    Exit;
   end;
+  frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application);
+  frmMtoMenuCaja.PopupMode   := pmExplicit;
+  frmMtoMenuCaja.PopupParent := Self;
+  frmMtoMenuCaja.Show;
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
