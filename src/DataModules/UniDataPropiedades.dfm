@@ -1,10 +1,17 @@
 inherited dmPropiedades: TdmPropiedades
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_propiedades`'
-      '  (`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP`, `ESACTIVO_PROP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+      
+        '  (`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP`,' +
+        ' `ESACTIVO_PROP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_AL' +
+        'TA`, `USUARIO_MODIF`)'
       'VALUES'
-      '  (:`CODIGO_PROP_ARTPROP`, :`NOMBRE_PROP_PROP`, :`TIPO_VALOR_PROP`, :`ESACTIVO_PROP`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+      
+        '  (:`CODIGO_PROP_ARTPROP`, :`NOMBRE_PROP_PROP`, :`TIPO_VALOR_PRO' +
+        'P`, :`ESACTIVO_PROP`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USU' +
+        'ARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_propiedades`'
       'WHERE'
@@ -12,7 +19,12 @@ inherited dmPropiedades: TdmPropiedades
     SQLUpdate.Strings = (
       'UPDATE `fza_propiedades`'
       'SET'
-      '  `CODIGO_PROP_ARTPROP` = :`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_PROP` = :`NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP` = :`TIPO_VALOR_PROP`, `ESACTIVO_PROP` = :`ESACTIVO_PROP`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      
+        '  `CODIGO_PROP_ARTPROP` = :`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_P' +
+        'ROP` = :`NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP` = :`TIPO_VALOR_PRO' +
+        'P`, `ESACTIVO_PROP` = :`ESACTIVO_PROP`, `INSTANTE_MODIF` = :`INS' +
+        'TANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA`' +
+        ' = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       '  `CODIGO_PROP_ARTPROP` = :`Old_CODIGO_PROP_ARTPROP`')
     SQLLock.Strings = (
@@ -30,7 +42,9 @@ inherited dmPropiedades: TdmPropiedades
     SQL.Strings = (
       'SELECT p.*,'
       '       (SELECT COUNT(*) FROM fza_articulos_propiedades ap'
-      '         WHERE ap.CODIGO_PROP_ARTPROP = p.CODIGO_PROP_ARTPROP) AS NUM_ART_USOS'
+      
+        '         WHERE ap.CODIGO_PROP_ARTPROP = p.CODIGO_PROP_ARTPROP) A' +
+        'S NUM_ART_USOS'
       'FROM fza_propiedades p'
       'ORDER BY p.CODIGO_PROP_ARTPROP'
       '')
@@ -41,7 +55,7 @@ inherited dmPropiedades: TdmPropiedades
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT ap.CODIGO_ART_ART,'
-      '       a.DESCRIPCION_ARTICULO,'
+      '       a.DESCRIPCION_ART,'
       '       ap.ID_PV_ARTPROP,'
       '       pv.PV               AS VALOR_LISTA,'
       '       ap.VALOR_LIBRE_ARTPROP,'
@@ -49,7 +63,7 @@ inherited dmPropiedades: TdmPropiedades
       '       ap.USUARIO_ALTA'
       'FROM fza_articulos_propiedades ap'
       'LEFT JOIN fza_articulos a'
-      '       ON a.CODIGO_ARTICULO = ap.CODIGO_ART_ART'
+      '       ON a.CODIGO_ART_ART = ap.CODIGO_ART_ART'
       'LEFT JOIN fza_propiedades_valores pv'
       '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
       'WHERE ap.CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP'
@@ -57,6 +71,12 @@ inherited dmPropiedades: TdmPropiedades
     MasterSource = frmMtoPropiedades.dsTablaG
     Left = 144
     Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_PROP_ARTPROP'
+        Value = nil
+      end>
   end
   object dsArticulos: TDataSource
     DataSet = unqryArticulos
