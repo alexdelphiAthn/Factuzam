@@ -16,6 +16,9 @@ uses
 
 type
   TdmVariaciones = class(TdmBase)
+    unqryArticulosVariacion: TUniQuery;
+    dsArticulosVariacion: TDataSource;
+    procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -24,11 +27,23 @@ type
 
 implementation
 
+uses
+  inMtoVariaciones;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmVariaciones.DataModuleCreate(Sender: TObject);
+begin
+  inherited;
+  unqryArticulosVariacion.Connection := oConn;
+  unqryArticulosVariacion.MasterSource :=
+                                  (GetOwnerForm<TfrmMtoVariaciones>).dsTablaG;
+  unqryArticulosVariacion.Open;
+end;
 
 initialization
   ForceReferenceToClass(TdmVariaciones);
