@@ -992,7 +992,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuVariaciones: TMenuItem
           Caption = 'Tipos de Variaciones'
-          ShortCut = 16470
+          ShortCut = 16469
           OnClick = mnuVariacionesClick
         end
         object mnuAtributosConjuntos: TMenuItem
