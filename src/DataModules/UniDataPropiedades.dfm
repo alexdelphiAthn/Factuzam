@@ -41,15 +41,15 @@ inherited dmPropiedades: TdmPropiedades
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT ap.CODIGO_ART_ART,'
-      '       a.DESCRIPCION_ARTICULO,'
+      '       a.DESCRIPCION_ART  AS DESCRIPCION_ARTICULO,'
       '       ap.ID_PV_ARTPROP,'
-      '       pv.PV               AS VALOR_LISTA,'
+      '       pv.PV              AS VALOR_LISTA,'
       '       ap.VALOR_LIBRE_ARTPROP,'
       '       ap.INSTANTE_ALTA,'
       '       ap.USUARIO_ALTA'
       'FROM fza_articulos_propiedades ap'
       'LEFT JOIN fza_articulos a'
-      '       ON a.CODIGO_ARTICULO = ap.CODIGO_ART_ART'
+      '       ON a.CODIGO_ART_ART = ap.CODIGO_ART_ART'
       'LEFT JOIN fza_propiedades_valores pv'
       '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
       'WHERE ap.CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP'
