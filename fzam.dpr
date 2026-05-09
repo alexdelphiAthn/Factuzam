@@ -145,8 +145,6 @@ uses
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
-  inMtoArticulosPropiedades in 'src\Forms\inMtoArticulosPropiedades.pas' {frmMtoArticulosPropiedades},
-  UniDataArticulosPropiedades in 'src\DataModules\UniDataArticulosPropiedades.pas' {dmArticulosPropiedades: TdmArticulosPropiedades},
   inMtoVariaciones in 'src\Forms\inMtoVariaciones.pas' {frmMtoVariaciones},
   UniDataVariaciones in 'src\DataModules\UniDataVariaciones.pas' {dmVariaciones: TdmVariaciones},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},

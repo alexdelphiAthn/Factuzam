@@ -468,15 +468,6 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
-        <DCCReference Include="src\Forms\inMtoArticulosPropiedades.pas">
-            <Form>frmMtoArticulosPropiedades</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataArticulosPropiedades.pas">
-            <Form>dmArticulosPropiedades</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmArticulosPropiedades</DesignClass>
-        </DCCReference>
         <DCCReference Include="src\Forms\inMtoVariaciones.pas">
             <Form>frmMtoVariaciones</Form>
             <FormType>dfm</FormType>
