@@ -158,6 +158,8 @@ uses
 
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -316,5 +318,8 @@ begin
   inherited;
   // Hook FastReport
 end;
+
+initialization
+  ForceReferenceToClass(TfrmMtoPedidos);
 
 end.
