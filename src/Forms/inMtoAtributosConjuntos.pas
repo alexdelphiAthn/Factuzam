@@ -27,15 +27,15 @@ uses
 
 type
   TfrmMtoAtributosConjuntos = class(TfrmMtoGen)
-    cxGrdDBTabPrinID_CONJUNTO_AC: TcxGridDBColumn;
+    cxGrdDBTabPrinID_AC: TcxGridDBColumn;
     cxGrdDBTabPrinNOMBRE_AC: TcxGridDBColumn;
-    cxGrdDBTabPrinID_VARIACION_AC: TcxGridDBColumn;
-    cxGrdDBTabPrinID_ATRIBUTO_AC: TcxGridDBColumn;
+    cxGrdDBTabPrinID_VAR_AC: TcxGridDBColumn;
+    cxGrdDBTabPrinID_VA_AC: TcxGridDBColumn;
     cxGrdDBTabPrinESACTIVO_AC: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
-    cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
-    cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+    cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn;
+    cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
+    cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn;
     procedure dsTablaGStateChange(Sender: TObject);
   private
     dmmAtributosConjuntos: TdmAtributosConjuntos;
@@ -61,14 +61,14 @@ procedure TfrmMtoAtributosConjuntos.CrearTablaPrincipal;
 begin
   inherited;
   dmmAtributosConjuntos := tdmDataModule as TdmAtributosConjuntos;
-  pkFieldName := '`ID_CONJUNTO_AC';
+  pkFieldName := 'ID_AC';
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
-  // ID_CONJUNTO_AC es AUTO_INCREMENT, no editable.
-  cxGrdDBTabPrinID_CONJUNTO_AC.Options.Editing := False;
+  // ID_AC es AUTO_INCREMENT, no editable.
+  cxGrdDBTabPrinID_AC.Options.Editing := False;
 end;
 
 initialization
