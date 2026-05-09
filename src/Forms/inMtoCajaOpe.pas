@@ -215,7 +215,8 @@ uses
   inLibUser,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
-  inMtoModalGenImpSave, inLibLayoutForm;
+  inMtoModalGenImpSave, inLibLayoutForm,
+  inLibShowMto, inMtoPrincipal;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -1491,6 +1492,12 @@ end;
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1KeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
+  if (Key = Ord('A')) and (Shift = [ssCtrl]) then
+  begin
+    Key := 0;
+    ShowMto(frmMtoPrincipal, 'Articulos');
+    Exit;
+  end;
   if (Key = VK_ESCAPE) then
   begin
     if DatosCaja.cdsLineas.State = dsInsert then
