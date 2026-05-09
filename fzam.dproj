@@ -157,6 +157,9 @@
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
+        <DCCReference Include="src\Lib\ScanDateTime.pas"/>
+        <DCCReference Include="src\Lib\inLibPresta.pas"/>
+        <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -345,9 +348,6 @@
             <Form>frmModalImportarPedidosPS</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\Lib\ScanDateTime.pas"/>
-        <DCCReference Include="src\Lib\inLibPresta.pas"/>
-        <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
         <DCCReference Include="src\Forms\inMtoPaises.pas">
             <Form>frmMtoPaises</Form>
         </DCCReference>
