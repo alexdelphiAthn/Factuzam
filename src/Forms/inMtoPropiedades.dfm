@@ -259,7 +259,7 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
                   end
                   object tvArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
+                    DataBinding.FieldName = 'DESCRIPCION_ART'
                     Width = 280
                   end
                   object tvArticulosVALOR_LISTA: TcxGridDBColumn
