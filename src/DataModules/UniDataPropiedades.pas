@@ -6,7 +6,7 @@
 {                                                       }
 {*******************************************************}
 
-unit UniDataArticulosPropiedades;
+unit UniDataPropiedades;
 
 interface
 
@@ -15,7 +15,9 @@ uses
   inLibUser, UniDataConn;
 
 type
-  TdmArticulosPropiedades = class(TdmBase)
+  TdmPropiedades = class(TdmBase)
+    unqryArticulos: TUniQuery;
+    dsArticulos: TDataSource;
   private
     { Private declarations }
   public
@@ -31,5 +33,5 @@ implementation
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 initialization
-  ForceReferenceToClass(TdmArticulosPropiedades);
+  ForceReferenceToClass(TdmPropiedades);
 end.

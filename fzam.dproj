@@ -487,15 +487,6 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
-        <DCCReference Include="src\Forms\inMtoArticulosPropiedades.pas">
-            <Form>frmMtoArticulosPropiedades</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataArticulosPropiedades.pas">
-            <Form>dmArticulosPropiedades</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmArticulosPropiedades</DesignClass>
-        </DCCReference>
         <DCCReference Include="src\Forms\inMtoVariaciones.pas">
             <Form>frmMtoVariaciones</Form>
             <FormType>dfm</FormType>
@@ -558,6 +549,24 @@
             <Form>dmDepositosCliente</Form>
             <FormType>dfm</FormType>
             <DesignClass>TdmDepositosCliente</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedades.pas">
+            <Form>frmMtoPropiedades</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedades.pas">
+            <Form>dmPropiedades</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmPropiedades</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedadesValores.pas">
+            <Form>frmMtoPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedadesValores.pas">
+            <Form>dmPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmPropiedadesValores</DesignClass>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

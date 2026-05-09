@@ -77,7 +77,8 @@ type
     mnuAlmacen: TMenuItem;
     Movimientosdealmacn1: TMenuItem;
     mnuInventarios: TMenuItem;
-    mnuArticulosPropiedades: TMenuItem;
+    mnuPropiedades: TMenuItem;
+    mnuPropiedadesValores: TMenuItem;
     mnuVariaciones: TMenuItem;
     mnuAtributosConjuntos: TMenuItem;
     mnuCajaPagosHist: TMenuItem;
@@ -91,7 +92,8 @@ type
     procedure mnuFormaPagoVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
     procedure mnuInventariosClick(Sender: TObject);
-    procedure mnuArticulosPropiedadesClick(Sender: TObject);
+    procedure mnuPropiedadesClick(Sender: TObject);
+    procedure mnuPropiedadesValoresClick(Sender: TObject);
     procedure mnuVariacionesClick(Sender: TObject);
     procedure mnuAtributosConjuntosClick(Sender: TObject);
     procedure mnuCajaPagosHistClick(Sender: TObject);
@@ -1056,10 +1058,16 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.mnuArticulosPropiedadesClick(Sender: TObject);
+procedure TfrmMtoPrincipal.mnuPropiedadesClick(Sender: TObject);
 begin
-  if (mnuArticulosPropiedades.Visible) then
-    ShowMto(Self, 'ArticulosPropiedades');
+  if (mnuPropiedades.Visible) then
+    ShowMto(Self, 'Propiedades');
+end;
+
+procedure TfrmMtoPrincipal.mnuPropiedadesValoresClick(Sender: TObject);
+begin
+  if (mnuPropiedadesValores.Visible) then
+    ShowMto(Self, 'PropiedadesValores');
 end;
 
 procedure TfrmMtoPrincipal.mnuVariacionesClick(Sender: TObject);
