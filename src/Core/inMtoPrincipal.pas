@@ -846,8 +846,6 @@ begin
     Exit;
   end;
   frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application);
-  frmMtoMenuCaja.PopupMode   := pmExplicit;
-  frmMtoMenuCaja.PopupParent := Self;
   frmMtoMenuCaja.Show;
 end;
 
