@@ -12,9 +12,10 @@
 --  el menú "Utilidades > Ejecutar Script" de Factuzam (TUniScript
 --  divide por ';' y no admite DELIMITER).
 --
---  La lógica de creación de albarán a partir de un pedido vive en
---  Pascal (UniDataPedidos.CrearAlbaranDesdePedido), no en stored
---  procedures, precisamente para evitar este problema.
+--  Es IDEMPOTENTE: re-ejecutarlo no falla aunque ya esté aplicado.
+--  Los procedimientos almacenados están en 02_procedimientos_*.sql
+--  y/o se instalan automáticamente desde Pascal cuando se usa
+--  "Crear Albarán" por primera vez.
 -- ===================================================================
 
 -- -------------------------------------------------------------------
@@ -22,22 +23,28 @@
 --  Cabecera del pedido. Mantenemos los campos existentes y añadimos
 --  columnas nuevas para gestionar el ciclo de entregas y la
 --  integración con PrestaShop.
+--
+--  Todas las cláusulas usan "IF NOT EXISTS" para que el script sea
+--  idempotente: se puede re-ejecutar sin errores aunque ya esté
+--  parcialmente aplicado (requisito MariaDB >= 10.0.2 para columnas
+--  y >= 10.5.2 para índices; si tu MariaDB es anterior, comenta los
+--  IF NOT EXISTS de los índices).
 -- -------------------------------------------------------------------
 
 ALTER TABLE `fza_pedidos`
-  ADD COLUMN `ESCONSOLIDADO_PED` varchar(1) DEFAULT 'N'
+  ADD COLUMN IF NOT EXISTS `ESCONSOLIDADO_PED` varchar(1) DEFAULT 'N'
       COMMENT 'S si el pedido ya no se puede modificar (todo entregado o cerrado)' AFTER `FECHA_PED`,
-  ADD COLUMN `ESTADO_PED`        varchar(20) DEFAULT 'ABIERTO'
+  ADD COLUMN IF NOT EXISTS `ESTADO_PED`        varchar(20) DEFAULT 'ABIERTO'
       COMMENT 'ABIERTO, PARCIAL, ENTREGADO, CANCELADO, IMPORTADO' AFTER `ESCONSOLIDADO_PED`,
-  ADD COLUMN `FECHA_ENTREGA_PED` date NULL
+  ADD COLUMN IF NOT EXISTS `FECHA_ENTREGA_PED` date NULL
       COMMENT 'Fecha prevista de entrega del pedido' AFTER `ESTADO_PED`,
-  ADD COLUMN `OBSERVACIONES_PED` varchar(2000) DEFAULT '' AFTER `COMENTARIOS_PED`;
+  ADD COLUMN IF NOT EXISTS `OBSERVACIONES_PED` varchar(2000) DEFAULT '' AFTER `COMENTARIOS_PED`;
 
 ALTER TABLE `fza_pedidos`
-  ADD INDEX `IDX_PED_CLIENTE_FECHA` (`CODIGO_CLI_PED`, `FECHA_PED`),
-  ADD INDEX `IDX_PED_EMPRESA`       (`CODIGO_EMP_PED`),
-  ADD INDEX `IDX_PED_IDPS`          (`IDPS_PED`),
-  ADD INDEX `IDX_PED_ESTADO`        (`ESTADO_PED`);
+  ADD INDEX IF NOT EXISTS `IDX_PED_CLIENTE_FECHA` (`CODIGO_CLI_PED`, `FECHA_PED`),
+  ADD INDEX IF NOT EXISTS `IDX_PED_EMPRESA`       (`CODIGO_EMP_PED`),
+  ADD INDEX IF NOT EXISTS `IDX_PED_IDPS`          (`IDPS_PED`),
+  ADD INDEX IF NOT EXISTS `IDX_PED_ESTADO`        (`ESTADO_PED`);
 
 
 -- -------------------------------------------------------------------
@@ -46,17 +53,17 @@ ALTER TABLE `fza_pedidos`
 -- -------------------------------------------------------------------
 
 ALTER TABLE `fza_pedidos_lineas`
-  ADD COLUMN `CANTIDAD_ENTREGADA_PEDLIN` decimal(19,6) DEFAULT 0.000000
+  ADD COLUMN IF NOT EXISTS `CANTIDAD_ENTREGADA_PEDLIN` decimal(19,6) DEFAULT 0.000000
       COMMENT 'Total entregado acumulado de la línea' AFTER `CANTIDAD_PEDLIN`,
-  ADD COLUMN `CANTIDAD_PENDIENTE_PEDLIN` decimal(19,6) DEFAULT 0.000000
+  ADD COLUMN IF NOT EXISTS `CANTIDAD_PENDIENTE_PEDLIN` decimal(19,6) DEFAULT 0.000000
       COMMENT 'Cantidad - entregada (campo calculado para reportes)' AFTER `CANTIDAD_ENTREGADA_PEDLIN`,
-  ADD COLUMN `ESENTREGADA_PEDLIN` varchar(1) DEFAULT 'N'
+  ADD COLUMN IF NOT EXISTS `ESENTREGADA_PEDLIN` varchar(1) DEFAULT 'N'
       COMMENT 'S si pendiente=0' AFTER `CANTIDAD_PENDIENTE_PEDLIN`,
-  ADD COLUMN `CODIGO_ALMACEN_PEDLIN` varchar(10) NULL AFTER `ESENTREGADA_PEDLIN`;
+  ADD COLUMN IF NOT EXISTS `CODIGO_ALMACEN_PEDLIN` varchar(10) NULL AFTER `ESENTREGADA_PEDLIN`;
 
 ALTER TABLE `fza_pedidos_lineas`
-  ADD INDEX `IDX_PEDLIN_ARTICULO` (`CODIGO_ART_PEDLIN`),
-  ADD INDEX `IDX_PEDLIN_PENDIENTE` (`ESENTREGADA_PEDLIN`);
+  ADD INDEX IF NOT EXISTS `IDX_PEDLIN_ARTICULO`  (`CODIGO_ART_PEDLIN`),
+  ADD INDEX IF NOT EXISTS `IDX_PEDLIN_PENDIENTE` (`ESENTREGADA_PEDLIN`);
 
 
 -- -------------------------------------------------------------------
@@ -65,8 +72,7 @@ ALTER TABLE `fza_pedidos_lineas`
 --  marcadas como "entregadas".
 -- -------------------------------------------------------------------
 
-DROP TABLE IF EXISTS `fza_albaranes`;
-CREATE TABLE `fza_albaranes` (
+CREATE TABLE IF NOT EXISTS `fza_albaranes` (
   `NUMERO_ALB`                              varchar(20) NOT NULL,
   `SERIE_ALB`                               varchar(20) NOT NULL,
   `FECHA_ALB`                               date NULL,
@@ -157,8 +163,7 @@ CREATE TABLE `fza_albaranes` (
 --  del pedido del que procede.
 -- -------------------------------------------------------------------
 
-DROP TABLE IF EXISTS `fza_albaranes_lineas`;
-CREATE TABLE `fza_albaranes_lineas` (
+CREATE TABLE IF NOT EXISTS `fza_albaranes_lineas` (
   `NUMERO_ALB_ALBLIN`                       varchar(20) NOT NULL,
   `SERIE_ALB_ALBLIN`                        varchar(20) NOT NULL,
   `LINEA_ALBLIN`                            varchar(4)  NOT NULL,

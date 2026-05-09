@@ -1,7 +1,7 @@
 -- ===================================================================
 --  Procedimientos almacenados para Pedidos / Albaranes
 --
---  IMPORTANTE: este archivo usa "DELIMITER $$" y por tanto sólo se
+--  IMPORTANTE: este archivo usa "DELIMITER ;;" y por tanto sólo se
 --  puede ejecutar desde clientes que entienden esa instrucción
 --  (mysql CLI, HeidiSQL, MySQL Workbench, DBeaver, etc.).
 --
@@ -12,9 +12,9 @@
 --  TdmPedidos.InstalarProcedimientos (UniDataPedidos.pas).
 -- ===================================================================
 
-DELIMITER $$
+DELIMITER ;;
 
-DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_INICIO` $$
+DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_INICIO` ;;
 CREATE PROCEDURE `PRC_PED_CREAR_ALBARAN_INICIO` (
   IN  p_NUMERO_PED varchar(20),
   IN  p_SERIE_PED  varchar(20),
@@ -102,9 +102,9 @@ BEGIN
 
   SET p_NUMERO_ALB = v_numero;
   SET p_SERIE_ALB  = v_serie;
-END$$
+END;;
 
-DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_LINEA` $$
+DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_LINEA` ;;
 CREATE PROCEDURE `PRC_PED_CREAR_ALBARAN_LINEA` (
   IN  p_NUMERO_ALB    varchar(20),
   IN  p_SERIE_ALB     varchar(20),
@@ -181,9 +181,9 @@ PRC: BEGIN
    WHERE `NUMERO_PED_PEDLIN` = p_NUMERO_PED
      AND `SERIE_PED_PEDLIN`  = p_SERIE_PED
      AND `LINEA_PEDLIN`      = p_LINEA_PED;
-END$$
+END;;
 
-DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_FIN` $$
+DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_FIN` ;;
 CREATE PROCEDURE `PRC_PED_CREAR_ALBARAN_FIN` (
   IN p_NUMERO_ALB varchar(20),
   IN p_SERIE_ALB  varchar(20),
@@ -235,6 +235,6 @@ BEGIN
      WHERE `NUMERO_PED` = p_NUMERO_PED
        AND `SERIE_PED`  = p_SERIE_PED;
   END IF;
-END$$
+END;;
 
 DELIMITER ;
