@@ -56,7 +56,7 @@ begin
   if not (Owner is TfrmMtoPrincipal) then Exit;
   frmMain := TfrmMtoPrincipal(Owner);
   if frmMain.WindowState = wsMinimized then
-    frmMain.WindowState := wsNormal;
+    frmMain.WindowState := wsMaximized;
   for iForm := 0 to Screen.FormCount - 1 do
   begin
     if (Screen.Forms[iForm].ClassName = 'TfrmMtoMenuCaja') and

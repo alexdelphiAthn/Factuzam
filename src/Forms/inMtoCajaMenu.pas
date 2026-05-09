@@ -155,7 +155,7 @@ begin
   frmMtoMenuCaja := nil;
   if Assigned(frmMtoPrincipal) and
      (frmMtoPrincipal.WindowState = wsMinimized) then
-    frmMtoPrincipal.WindowState := wsNormal;
+    frmMtoPrincipal.WindowState := wsMaximized;
 end;
 
 procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
