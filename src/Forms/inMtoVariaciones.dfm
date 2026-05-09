@@ -170,77 +170,203 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
             Height = 371
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsArticulos
+            Properties.ActivePage = tsAtributos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 367
             ClientRectLeft = 4
             ClientRectRight = 939
             ClientRectTop = 30
-            object tsArticulos: TcxTabSheet
-              Caption = '&1_Art'#237'culos'
+            object tsAtributos: TcxTabSheet
+              Caption = '&1_Atributos'
               ImageIndex = 0
-              object cxgrdArticulos: TcxGrid
+              object cxgrdAtributos: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 935
                 Height = 337
                 Align = alClient
                 TabOrder = 0
-                object tvArticulos: TcxGridDBTableView
+                object tvAtributos: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.Insert.Visible = True
+                  Navigator.Buttons.Delete.Visible = True
+                  Navigator.Buttons.Post.Visible = True
+                  Navigator.Buttons.Cancel.Visible = True
                   Navigator.Visible = True
                   DataController.DataModeController.SmartRefresh = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
-                  OptionsData.Deleting = False
-                  OptionsData.Editing = False
-                  OptionsData.Inserting = False
+                  OptionsData.Appending = True
                   OptionsView.GroupByBox = False
-                  OptionsView.NoDataToDisplayInfoText = '<No hay art'#237'culos que usen este tipo de variaci'#243'n>'
-                  object tvArticulosCODIGO_ARTICULO: TcxGridDBColumn
-                    Caption = 'C'#243'digo Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ARTICULO'
-                    Width = 160
-                  end
-                  object tvArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn
-                    Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO'
-                    Width = 320
-                  end
-                  object tvArticulosACTIVO_ARTICULO: TcxGridDBColumn
-                    Caption = 'Activo'
-                    DataBinding.FieldName = 'ACTIVO_ARTICULO'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Width = 70
-                  end
-                  object tvArticulosCODIGO_FAMILIA_ARTICULO: TcxGridDBColumn
-                    Caption = 'C'#243'digo Familia'
-                    DataBinding.FieldName = 'CODIGO_FAMILIA_ARTICULO'
+                  OptionsView.Indicator = True
+                  OptionsView.NoDataToDisplayInfoText = '<No hay atributos para este tipo de variaci'#243'n>'
+                  object tvAtributosID_VAR_VA: TcxGridDBColumn
+                    Caption = 'C'#243'digo Variaci'#243'n'
+                    DataBinding.FieldName = 'ID_VAR_VA'
+                    Options.Editing = False
+                    Visible = False
                     Width = 130
                   end
-                  object tvArticulosNOMBRE_FAMILIA: TcxGridDBColumn
-                    Caption = 'Familia'
-                    DataBinding.FieldName = 'NOMBRE_FAMILIA'
-                    Width = 180
+                  object tvAtributosID_ATB_VA: TcxGridDBColumn
+                    Caption = 'C'#243'digo Atributo'
+                    DataBinding.FieldName = 'ID_ATB_VA'
+                    Width = 140
                   end
-                  object tvArticulosESVARIACION_ARTICULO: TcxGridDBColumn
-                    Caption = 'Tiene Variaciones'
-                    DataBinding.FieldName = 'ESVARIACION_ARTICULO'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Width = 130
+                  object tvAtributosNOMBRE_VA: TcxGridDBColumn
+                    Caption = 'Nombre'
+                    DataBinding.FieldName = 'NOMBRE_VA'
+                    Width = 280
+                  end
+                  object tvAtributosORDEN_VA: TcxGridDBColumn
+                    Caption = 'Orden'
+                    DataBinding.FieldName = 'ORDEN_VA'
+                    PropertiesClassName = 'TcxSpinEditProperties'
+                    HeaderAlignmentHorz = taRightJustify
+                    Width = 100
                   end
                 end
-                object cxgrdlvlArticulos: TcxGridLevel
-                  GridView = tvArticulos
+                object cxgrdlvlAtributos: TcxGridLevel
+                  GridView = tvAtributos
+                end
+              end
+            end
+            object tsArticulos: TcxTabSheet
+              Caption = '&2_Art'#237'culos'
+              ImageIndex = 1
+              object pnlArticulos: TPanel
+                Left = 0
+                Top = 0
+                Width = 935
+                Height = 180
+                Align = alTop
+                BevelOuter = bvNone
+                TabOrder = 0
+                object cxgrdArticulos: TcxGrid
+                  Left = 0
+                  Top = 0
+                  Width = 935
+                  Height = 180
+                  Align = alClient
+                  TabOrder = 0
+                  object tvArticulos: TcxGridDBTableView
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Visible = True
+                    DataController.DataModeController.SmartRefresh = True
+                    OptionsCustomize.ColumnGrouping = False
+                    OptionsData.Deleting = False
+                    OptionsData.Editing = False
+                    OptionsData.Inserting = False
+                    OptionsView.GroupByBox = False
+                    OptionsView.NoDataToDisplayInfoText = '<No hay art'#237'culos que usen este tipo de variaci'#243'n>'
+                    object tvArticulosCODIGO_ART: TcxGridDBColumn
+                      Caption = 'C'#243'digo Art'#237'culo'
+                      DataBinding.FieldName = 'CODIGO_ART'
+                      Width = 160
+                    end
+                    object tvArticulosDESCRIPCION_ART: TcxGridDBColumn
+                      Caption = 'Descripci'#243'n'
+                      DataBinding.FieldName = 'DESCRIPCION_ART'
+                      Width = 320
+                    end
+                    object tvArticulosESACTIVO_ART: TcxGridDBColumn
+                      Caption = 'Activo'
+                      DataBinding.FieldName = 'ESACTIVO_ART'
+                      PropertiesClassName = 'TcxCheckBoxProperties'
+                      Properties.ValueChecked = 'S'
+                      Properties.ValueUnchecked = 'N'
+                      Width = 70
+                    end
+                    object tvArticulosCODIGO_FAM_ART: TcxGridDBColumn
+                      Caption = 'C'#243'digo Familia'
+                      DataBinding.FieldName = 'CODIGO_FAM_ART'
+                      Width = 130
+                    end
+                    object tvArticulosNOMBRE_FAM: TcxGridDBColumn
+                      Caption = 'Familia'
+                      DataBinding.FieldName = 'NOMBRE_FAM'
+                      Width = 180
+                    end
+                    object tvArticulosESVARIACION_ART: TcxGridDBColumn
+                      Caption = 'Tiene Variaciones'
+                      DataBinding.FieldName = 'ESVARIACION_ART'
+                      PropertiesClassName = 'TcxCheckBoxProperties'
+                      Properties.ValueChecked = 'S'
+                      Properties.ValueUnchecked = 'N'
+                      Width = 130
+                    end
+                  end
+                  object cxgrdlvlArticulos: TcxGridLevel
+                    GridView = tvArticulos
+                  end
+                end
+              end
+              object splArticulosSkus: TcxSplitter
+                Left = 0
+                Top = 180
+                Width = 935
+                Height = 8
+                HotZoneClassName = 'TcxMediaPlayer9Style'
+                AlignSplitter = salTop
+                Control = pnlSkus
+              end
+              object pnlSkus: TPanel
+                Left = 0
+                Top = 188
+                Width = 935
+                Height = 149
+                Align = alClient
+                BevelOuter = bvNone
+                TabOrder = 2
+                object cxgrdSkus: TcxGrid
+                  Left = 0
+                  Top = 0
+                  Width = 935
+                  Height = 149
+                  Align = alClient
+                  TabOrder = 0
+                  object tvSkus: TcxGridDBTableView
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Visible = True
+                    DataController.DataModeController.SmartRefresh = True
+                    OptionsCustomize.ColumnGrouping = False
+                    OptionsData.Deleting = False
+                    OptionsData.Editing = False
+                    OptionsData.Inserting = False
+                    OptionsView.GroupByBox = False
+                    OptionsView.NoDataToDisplayInfoText = '<Selecciona un art'#237'culo para ver sus SKUs>'
+                    object tvSkusCODIGO_UNIDAD_SKU: TcxGridDBColumn
+                      Caption = 'C'#243'digo SKU'
+                      DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                      Width = 280
+                    end
+                    object tvSkusCODIGO_ART_SKU: TcxGridDBColumn
+                      Caption = 'C'#243'digo Art'#237'culo'
+                      DataBinding.FieldName = 'CODIGO_ART_SKU'
+                      Width = 160
+                    end
+                    object tvSkusCODIGO_VAR_SKU: TcxGridDBColumn
+                      Caption = 'C'#243'digo Variaci'#243'n'
+                      DataBinding.FieldName = 'CODIGO_VAR_SKU'
+                      Width = 130
+                    end
+                    object tvSkusESACTIVO_SKU: TcxGridDBColumn
+                      Caption = 'Activo'
+                      DataBinding.FieldName = 'ESACTIVO_SKU'
+                      PropertiesClassName = 'TcxCheckBoxProperties'
+                      Properties.ValueChecked = 'S'
+                      Properties.ValueUnchecked = 'N'
+                      Width = 70
+                    end
+                  end
+                  object cxgrdlvlSkus: TcxGridLevel
+                    GridView = tvSkus
+                  end
                 end
               end
             end
             object tsAuditoria: TcxTabSheet
-              Caption = '&2_Otros'
-              ImageIndex = 1
+              Caption = '&3_Otros'
+              ImageIndex = 2
               object pnlAuditoria: TPanel
                 Left = 0
                 Top = 0
