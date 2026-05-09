@@ -55,11 +55,7 @@ inherited dmPropiedades: TdmPropiedades
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT ap.CODIGO_ART_ART,'
-<<<<<<< HEAD
-      '       a.DESCRIPCION_ART,'
-=======
       '       a.DESCRIPCION_ART  AS DESCRIPCION_ARTICULO,'
->>>>>>> 08d1414831554d6b2c9b99cf535c783c31dfbd51
       '       ap.ID_PV_ARTPROP,'
       '       pv.PV              AS VALOR_LISTA,'
       '       ap.VALOR_LIBRE_ARTPROP,'
