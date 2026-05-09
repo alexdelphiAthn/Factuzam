@@ -258,9 +258,9 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                     OptionsData.Inserting = False
                     OptionsView.GroupByBox = False
                     OptionsView.NoDataToDisplayInfoText = '<No hay art'#237'culos que usen este tipo de variaci'#243'n>'
-                    object tvArticulosCODIGO_ART: TcxGridDBColumn
+                    object tvArticulosCODIGO_ART_ART: TcxGridDBColumn
                       Caption = 'C'#243'digo Art'#237'culo'
-                      DataBinding.FieldName = 'CODIGO_ART'
+                      DataBinding.FieldName = 'CODIGO_ART_ART'
                       Width = 160
                     end
                     object tvArticulosDESCRIPCION_ART: TcxGridDBColumn
@@ -281,9 +281,9 @@ inherited frmMtoVariaciones: TfrmMtoVariaciones
                       DataBinding.FieldName = 'CODIGO_FAM_ART'
                       Width = 130
                     end
-                    object tvArticulosNOMBRE_FAM: TcxGridDBColumn
+                    object tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn
                       Caption = 'Familia'
-                      DataBinding.FieldName = 'NOMBRE_FAM'
+                      DataBinding.FieldName = 'NOMBRE_FAM_FAM'
                       Width = 180
                     end
                     object tvArticulosESVARIACION_ART: TcxGridDBColumn
