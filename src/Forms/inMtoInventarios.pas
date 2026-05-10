@@ -244,6 +244,8 @@ uses
   inLibDevExp,
   inLibGenBusq,
   inLibGlobalVar,
+  inLibArticulosValidador,
+  inLibArticulosAtributosLookup,
   inMtoPrincipal, inMtoModalAddBlockInventario;
 
 {$R *.dfm}
@@ -627,37 +629,28 @@ end;
 
 procedure TfrmMtoInventarios.RellenarAtributosDesdeSku(const Sku: string);
 var
-  qry: TUniQuery;
-  i: Integer;
+  Lookup  : TArticulosAtributosLookup;
+  Valores : TArray<TArticuloAtributoValor>;
+  V       : TArticuloAtributoValor;
+  i       : Integer;
 begin
   // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5,
-  // mapeadas por ORDEN_VISUAL_ATRIBUTO (igual que en inMtoCajaOpe).
+  // mapeadas por ORDEN_VISUAL_ATRIBUTO (= ORDEN_VA del atributo).
   if Sku = '' then Exit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
-  qry := TUniQuery.Create(nil);
+  Lookup := TArticulosAtributosLookup.Create(inLibGlobalVar.oConn);
   try
-    qry.Connection := dmmInventarios.unqryArticulo.Connection;
-    qry.SQL.Text :=
-      'SELECT DISTINCT N.ORDEN_VISUAL_ATRIBUTO, V.AV ' +
-      '  FROM fza_atributos_sku AT ' +
-      '  JOIN fza_atributos_valores V ON AT.ID_AV_SA = V.ID_AV ' +
-      '  JOIN vi_atributos_nombres N  ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
-      ' WHERE AT.CODIGO_UNIDAD_SKU_SA = :SKU ' +
-      ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO';
-    qry.ParamByName('SKU').AsString := Sku;
-    qry.Open;
-
-    while not qry.Eof do
+    Valores := Lookup.ObtenerAtributosDeSku(Sku);
+    for V in Valores do
     begin
-      i := qry.FieldByName('ORDEN_VISUAL_ATRIBUTO').AsInteger;
+      i := V.Orden;
       if (i >= 1) and (i <= 5) then
-        dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
-          qry.FieldByName('AV').AsString;
-      qry.Next;
+        dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString
+                                                                       := V.Valor;
     end;
   finally
-    qry.Free;
+    Lookup.Free;
   end;
 end;
 
@@ -1002,7 +995,8 @@ procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
                                                   out ATipoArt: string;
                                                   out AEncontrado: Boolean);
 var
-  qry: TUniQuery;
+  Validador  : TArticulosValidador;
+  Resolucion : TArtResolucionEntrada;
 begin
   ACodigoPadre := '';
   ACodigoSku   := '';
@@ -1011,31 +1005,17 @@ begin
   AEncontrado  := False;
   if Trim(AInput) = '' then Exit;
 
-  qry := TUniQuery.Create(nil);
+  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
   try
-    qry.Connection := oConn;
-    // vi_caja_busqueda_unificada agrupa CODIGO_ART, CODIGO_UNIDAD_SKU y
-    // CODIGO_BARRAS_CB en una sola vista. Aunque tiene "caja" en el nombre
-    // los datos son genericos y la reusamos aqui.
-    qry.SQL.Text :=
-      'SELECT CODIGO_PADRE, CODIGO_SKU, DESCRIPCION_ART, TIPO_ART ' +
-      '  FROM vi_caja_busqueda_unificada ' +
-      ' WHERE INPUT_BUSQUEDA = :COD ' +
-      '    OR CODIGO_SKU      = :COD ' +
-      '    OR CODIGO_PADRE    = :COD ' +
-      ' LIMIT 1';
-    qry.ParamByName('COD').AsString := AInput;
-    qry.Open;
-    if not qry.IsEmpty then
-    begin
-      ACodigoPadre := qry.FieldByName('CODIGO_PADRE').AsString;
-      ACodigoSku   := qry.FieldByName('CODIGO_SKU').AsString;
-      ADescripcion := qry.FieldByName('DESCRIPCION_ART').AsString;
-      ATipoArt     := qry.FieldByName('TIPO_ART').AsString;
-      AEncontrado  := True;
-    end;
+    Resolucion := Validador.Resolver(AInput);
+    if not Resolucion.Encontrado then Exit;
+    ACodigoPadre := Resolucion.CodigoArticulo;
+    ACodigoSku   := Resolucion.CodigoSku;
+    ADescripcion := Resolucion.DescripcionArticulo;
+    ATipoArt     := Resolucion.TipoArticulo;
+    AEncontrado  := True;
   finally
-    qry.Free;
+    Validador.Free;
   end;
 end;
 
