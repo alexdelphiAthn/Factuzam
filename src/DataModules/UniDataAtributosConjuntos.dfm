@@ -119,7 +119,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     SQL.Strings = (
       'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.ESACTIVO_ART,'
       '       a.CODIGO_FAM_ART, f.NOMBRE_FAM_FAM,'
-      '       asg.ID_AC_ACA, asg.ID_VA_ACA, asg.ESGENERACION_AUTO_ACA'
+      '       asg.ID_AC_ACA'
       '  FROM fza_articulos_conjuntos_asign asg'
       '  INNER JOIN fza_articulos a ON a.CODIGO_ART_ART = asg.CODIGO_ART_ACA'
       '  LEFT JOIN fza_articulos_familias f ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART'
