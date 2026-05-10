@@ -39,6 +39,7 @@ type
     pcAlbaran: TcxPageControl;
     tsLineasAlbaran: TcxTabSheet;
     tsFacturas: TcxTabSheet;
+    tsMovimientos: TcxTabSheet;
     tsObservaciones: TcxTabSheet;
     pnlBottomTotales: TPanel;
     cxgrdLineasAlbaran: TcxGrid;
@@ -47,6 +48,9 @@ type
     cxGrdFacturas: TcxGrid;
     tvFacturas: TcxGridDBTableView;
     cxGrdFacturasLevel: TcxGridLevel;
+    cxGrdMovimientos: TcxGrid;
+    tvMovimientos: TcxGridDBTableView;
+    cxGrdMovimientosLevel: TcxGridLevel;
 
     // Cabecera
     lblNroAlbaran: TcxLabel;
@@ -163,6 +167,7 @@ begin
   dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
+  tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   dmmAlbaranes.OpenTables;
 
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
