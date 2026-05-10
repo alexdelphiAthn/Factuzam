@@ -772,6 +772,18 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Properties.OnEditValueChanged = cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged
                     Width = 152
                   end
+                  object ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn
+                    Caption = 'SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Width = 180
+                  end
+                  object ctbDESCRIPCION_VARIACION_FACTURA_LINEA: TcxGridDBColumn
+                    Caption = 'Variaci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_VARIACION_FACLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Width = 140
+                  end
                   object ctbCODIGO_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Familia'
                     DataBinding.FieldName = 'CODIGO_FAM_FACLIN'
