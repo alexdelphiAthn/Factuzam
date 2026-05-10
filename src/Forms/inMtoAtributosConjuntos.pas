@@ -23,7 +23,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosConjuntos,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit;
 
 type
   TfrmMtoAtributosConjuntos = class(TfrmMtoGen)
@@ -36,6 +36,40 @@ type
     cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn;
+    pnlTopFicha: TPanel;
+    pnlBodyFicha: TPanel;
+    lblNombre: TcxLabel;
+    txtNOMBRE_AC: TcxDBTextEdit;
+    chkESACTIVO_AC: TcxDBCheckBox;
+    lblIdVar: TcxLabel;
+    txtID_VAR_AC: TcxDBTextEdit;
+    lblIdVa: TcxLabel;
+    txtID_VA_AC: TcxDBTextEdit;
+    lblIdAc: TcxLabel;
+    txtID_AC: TcxDBTextEdit;
+    splSplitterFicha: TcxSplitter;
+    pnlButtonFicha: TPanel;
+    pcDetail: TcxPageControl;
+    tsValores: TcxTabSheet;
+    cxgrdValores: TcxGrid;
+    tvValores: TcxGridDBTableView;
+    cxgrdlvlValores: TcxGridLevel;
+    tvValoresID_AC_ACD: TcxGridDBColumn;
+    tvValoresID_AV_ACD: TcxGridDBColumn;
+    tvValoresAV: TcxGridDBColumn;
+    tvValoresDESCRIPCION_AV: TcxGridDBColumn;
+    tvValoresESACTIVO_AV: TcxGridDBColumn;
+    tvValoresORDEN_ACD: TcxGridDBColumn;
+    tsAuditoria: TcxTabSheet;
+    pnlAuditoria: TPanel;
+    lblUsuarioAlta: TcxLabel;
+    txtUSUARIOALTA: TcxDBTextEdit;
+    lblInstanteAlta: TcxLabel;
+    txtINSTANTEALTA: TcxDBTextEdit;
+    lblUsuarioModif: TcxLabel;
+    txtUSUARIOMODIF: TcxDBTextEdit;
+    lblInstanteModif: TcxLabel;
+    txtINSTANTEMODIF: TcxDBTextEdit;
     procedure dsTablaGStateChange(Sender: TObject);
   private
     dmmAtributosConjuntos: TdmAtributosConjuntos;
@@ -61,6 +95,7 @@ procedure TfrmMtoAtributosConjuntos.CrearTablaPrincipal;
 begin
   inherited;
   dmmAtributosConjuntos := tdmDataModule as TdmAtributosConjuntos;
+  tvValores.DataController.DataSource := dmmAtributosConjuntos.dsConjuntoDetalle;
   pkFieldName := 'ID_AC';
 end;
 
