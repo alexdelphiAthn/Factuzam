@@ -273,6 +273,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   object tvArticulos: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
                     Navigator.Visible = True
+                    OnFocusedRecordChanged = tvArticulosFocusedRecordChanged
                     DataController.DataModeController.SmartRefresh = True
                     DataController.DataSource = dmTarifas.dsArticulosTarifas
                     DataController.Summary.DefaultGroupSummaryItems = <
