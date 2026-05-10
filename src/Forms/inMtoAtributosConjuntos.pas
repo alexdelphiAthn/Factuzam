@@ -23,7 +23,8 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosConjuntos,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit;
+  dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit, cxDBLookupComboBox,
+  cxDBLookupEdit, cxLookupEdit, cxDropDownEdit;
 
 type
   TfrmMtoAtributosConjuntos = class(TfrmMtoGen)
@@ -56,10 +57,18 @@ type
     cxgrdlvlValores: TcxGridLevel;
     tvValoresID_AC_ACD: TcxGridDBColumn;
     tvValoresID_AV_ACD: TcxGridDBColumn;
-    tvValoresAV: TcxGridDBColumn;
-    tvValoresDESCRIPCION_AV: TcxGridDBColumn;
-    tvValoresESACTIVO_AV: TcxGridDBColumn;
     tvValoresORDEN_ACD: TcxGridDBColumn;
+    tsArticulos: TcxTabSheet;
+    cxgrdArticulos: TcxGrid;
+    tvArticulos: TcxGridDBTableView;
+    cxgrdlvlArticulos: TcxGridLevel;
+    tvArticulosCODIGO_ART_ART: TcxGridDBColumn;
+    tvArticulosDESCRIPCION_ART: TcxGridDBColumn;
+    tvArticulosESACTIVO_ART: TcxGridDBColumn;
+    tvArticulosCODIGO_FAM_ART: TcxGridDBColumn;
+    tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn;
+    tvArticulosID_VA_ACA: TcxGridDBColumn;
+    tvArticulosESGENERACION_AUTO_ACA: TcxGridDBColumn;
     tsAuditoria: TcxTabSheet;
     pnlAuditoria: TPanel;
     lblUsuarioAlta: TcxLabel;
@@ -95,7 +104,10 @@ procedure TfrmMtoAtributosConjuntos.CrearTablaPrincipal;
 begin
   inherited;
   dmmAtributosConjuntos := tdmDataModule as TdmAtributosConjuntos;
-  tvValores.DataController.DataSource := dmmAtributosConjuntos.dsConjuntoDetalle;
+  tvValores.DataController.DataSource   := dmmAtributosConjuntos.dsConjuntoDetalle;
+  tvArticulos.DataController.DataSource := dmmAtributosConjuntos.dsArticulosConjunto;
+  (tvValoresID_AV_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
+                                            dmmAtributosConjuntos.dsValoresLookup;
   pkFieldName := 'ID_AC';
 end;
 

@@ -18,6 +18,10 @@ type
   TdmAtributosConjuntos = class(TdmBase)
     unqryConjuntoDetalle: TUniQuery;
     dsConjuntoDetalle: TDataSource;
+    unqryValoresLookup: TUniQuery;
+    dsValoresLookup: TDataSource;
+    unqryArticulosConjunto: TUniQuery;
+    dsArticulosConjunto: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryConjuntoDetalleAfterInsert(DataSet: TDataSet);
     procedure unqryConjuntoDetalleBeforePost(DataSet: TDataSet);
@@ -45,9 +49,16 @@ begin
   inherited;
   LDsTablaG := (GetOwnerForm<TfrmMtoAtributosConjuntos>).dsTablaG;
 
+  unqryValoresLookup.Connection := oConn;
+  unqryValoresLookup.Open;
+
   unqryConjuntoDetalle.Connection := oConn;
   unqryConjuntoDetalle.MasterSource := LDsTablaG;
   unqryConjuntoDetalle.Open;
+
+  unqryArticulosConjunto.Connection := oConn;
+  unqryArticulosConjunto.MasterSource := LDsTablaG;
+  unqryArticulosConjunto.Open;
 end;
 
 procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(DataSet: TDataSet);
@@ -61,7 +72,7 @@ procedure TdmAtributosConjuntos.unqryConjuntoDetalleBeforePost(DataSet: TDataSet
 begin
   inherited;
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
-    raise Exception.Create('El identificador del valor (ID_AV_ACD) es obligatorio.');
+    raise Exception.Create('Selecciona un valor para añadirlo a la colección.');
 end;
 
 initialization

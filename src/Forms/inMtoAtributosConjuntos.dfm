@@ -11,7 +11,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
         ExplicitHeight = 484
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            OptionsData.Editing = True
+            OptionsData.Editing = False
             object cxGrdDBTabPrinID_AC: TcxGridDBColumn
               Caption = 'ID Conjunto'
               DataBinding.FieldName = 'ID_AC'
@@ -227,30 +227,37 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                     Width = 110
                   end
                   object tvValoresID_AV_ACD: TcxGridDBColumn
-                    Caption = 'ID Valor'
-                    DataBinding.FieldName = 'ID_AV_ACD'
-                    Width = 100
-                  end
-                  object tvValoresAV: TcxGridDBColumn
                     Caption = 'Valor'
-                    DataBinding.FieldName = 'AV'
-                    Options.Editing = False
-                    Width = 160
-                  end
-                  object tvValoresDESCRIPCION_AV: TcxGridDBColumn
-                    Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_AV'
-                    Options.Editing = False
-                    Width = 280
-                  end
-                  object tvValoresESACTIVO_AV: TcxGridDBColumn
-                    Caption = 'Activo'
-                    DataBinding.FieldName = 'ESACTIVO_AV'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Options.Editing = False
-                    Width = 70
+                    DataBinding.FieldName = 'ID_AV_ACD'
+                    PropertiesClassName = 'TcxLookupComboBoxProperties'
+                    Properties.DropDownAutoSize = True
+                    Properties.DropDownSizeable = True
+                    Properties.ImmediatePost = True
+                    Properties.KeyFieldNames = 'ID_AV'
+                    Properties.ListColumns = <
+                      item
+                        Caption = 'C'#243'd'
+                        MinWidth = 50
+                        Width = 60
+                        FieldName = 'ID_AV'
+                      end
+                      item
+                        Caption = 'Pos'
+                        Width = 60
+                        FieldName = 'ID_VA_AV'
+                      end
+                      item
+                        Caption = 'Valor'
+                        Width = 120
+                        FieldName = 'AV'
+                      end
+                      item
+                        Caption = 'Descripci'#243'n'
+                        Width = 220
+                        FieldName = 'DESCRIPCION_AV'
+                      end>
+                    Properties.ListFieldIndex = 2
+                    Width = 220
                   end
                   object tvValoresORDEN_ACD: TcxGridDBColumn
                     Caption = 'Orden'
@@ -265,9 +272,75 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                 end
               end
             end
-            object tsAuditoria: TcxTabSheet
-              Caption = '&2_Otros'
+            object tsArticulos: TcxTabSheet
+              Caption = '&2_Art'#237'culos'
               ImageIndex = 1
+              object cxgrdArticulos: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 935
+                Height = 337
+                Align = alClient
+                TabOrder = 0
+                object tvArticulos: TcxGridDBTableView
+                  Navigator.Visible = True
+                  DataController.DataModeController.SmartRefresh = True
+                  OptionsCustomize.ColumnGrouping = False
+                  OptionsData.Deleting = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  OptionsView.NoDataToDisplayInfoText = '<Ning'#250'n art'#237'culo usa esta colecci'#243'n>'
+                  object tvArticulosCODIGO_ART_ART: TcxGridDBColumn
+                    Caption = 'C'#243'digo Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_ART'
+                    Width = 160
+                  end
+                  object tvArticulosDESCRIPCION_ART: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ART'
+                    Width = 320
+                  end
+                  object tvArticulosESACTIVO_ART: TcxGridDBColumn
+                    Caption = 'Activo'
+                    DataBinding.FieldName = 'ESACTIVO_ART'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 70
+                  end
+                  object tvArticulosCODIGO_FAM_ART: TcxGridDBColumn
+                    Caption = 'C'#243'digo Familia'
+                    DataBinding.FieldName = 'CODIGO_FAM_ART'
+                    Width = 130
+                  end
+                  object tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn
+                    Caption = 'Familia'
+                    DataBinding.FieldName = 'NOMBRE_FAM_FAM'
+                    Width = 180
+                  end
+                  object tvArticulosID_VA_ACA: TcxGridDBColumn
+                    Caption = 'Posici'#243'n'
+                    DataBinding.FieldName = 'ID_VA_ACA'
+                    Width = 100
+                  end
+                  object tvArticulosESGENERACION_AUTO_ACA: TcxGridDBColumn
+                    Caption = 'Auto-SKU'
+                    DataBinding.FieldName = 'ESGENERACION_AUTO_ACA'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 90
+                  end
+                end
+                object cxgrdlvlArticulos: TcxGridLevel
+                  GridView = tvArticulos
+                end
+              end
+            end
+            object tsAuditoria: TcxTabSheet
+              Caption = '&3_Otros'
+              ImageIndex = 2
               object pnlAuditoria: TPanel
                 Left = 0
                 Top = 0
