@@ -1074,8 +1074,9 @@ begin
                 dsTablaG.DataSet.FindField(fseriefac).AsString,
                 dsTablaG.DataSet.FindField(fcodemp).AsString,
                 dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
-  if (sSubtipo <> '') then
-    dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
+  if (sSubtipo = '') then
+    sSubtipo := 'NORMAL';
+  dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
 procedure TfrmMtoFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
