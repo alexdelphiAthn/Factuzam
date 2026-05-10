@@ -133,12 +133,6 @@ type
     procedure actProveedoresExecute(Sender: TObject);
     procedure btAddBlockClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
-    procedure tvArticulosFocusedRecordChanged(
-      Sender: TcxCustomGridTableView;
-      APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
-      ANewItemRecordFocusingChanged: Boolean);
-  private
-    procedure ActualizarVisibilidadColumnaSKU;
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -259,35 +253,6 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
-  ActualizarVisibilidadColumnaSKU;
-end;
-
-procedure TfrmMtoTarifas.ActualizarVisibilidadColumnaSKU;
-var
-  ds: TDataSet;
-  fldTieneSku: TField;
-begin
-  if dmmTarifas = nil then Exit;
-  ds := dmmTarifas.unqryArticulosTarifas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
-  begin
-    tvArticulosCODIGO_UNICO_TARIFA_SKU.Visible := True;
-    Exit;
-  end;
-  fldTieneSku := ds.FindField('TIENE_SKU');
-  if fldTieneSku = nil then
-    Exit;
-  tvArticulosCODIGO_UNICO_TARIFA_SKU.Visible :=
-    SameText(fldTieneSku.AsString, 'S');
-end;
-
-procedure TfrmMtoTarifas.tvArticulosFocusedRecordChanged(
-  Sender: TcxCustomGridTableView;
-  APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
-  ANewItemRecordFocusingChanged: Boolean);
-begin
-  inherited;
-  ActualizarVisibilidadColumnaSKU;
 end;
 
 procedure TfrmMtoTarifas.dsTablaGStateChange(Sender: TObject);
