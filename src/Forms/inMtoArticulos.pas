@@ -923,17 +923,18 @@ end;
 procedure TfrmMtoArticulos.dbcTarifasMARGENButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 var
-  ds         : TDataSet;
-  unicoFld   : TField;
-  unico      : Integer;
-  codigoArt  : string;
-  descArt    : string;
-  codigoTar  : string;
-  nombreTar  : string;
-  descSku    : string;
-  coste      : Double;
-  precSalida : Double;
-  res        : TCalcularMargenResult;
+  ds           : TDataSet;
+  unicoFld     : TField;
+  unico        : Integer;
+  codigoArt    : string;
+  codigoUnidad : string;
+  descArt      : string;
+  codigoTar    : string;
+  nombreTar    : string;
+  descSku      : string;
+  coste        : Double;
+  precSalida   : Double;
+  res          : TCalcularMargenResult;
 begin
   inherited;
   ds := dmmArticulos.unqryTarifasArticulos;
@@ -960,6 +961,10 @@ begin
     nombreTar := ds.FieldByName('NOMBRE_TAR_TAR').AsString;
   if ds.FindField('DESCRIPCION_SKU') <> nil then
     descSku := ds.FieldByName('DESCRIPCION_SKU').AsString;
+  if ds.FindField('CODIGO_UNIDAD_ARTTAR') <> nil then
+    codigoUnidad := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString
+  else
+    codigoUnidad := '';
   coste      := ds.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
   precSalida := ds.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
 
@@ -967,7 +972,8 @@ begin
     Self,
     (ds as TUniQuery).Connection,
     unico,
-    codigoArt, descArt,
+    codigoArt, codigoUnidad,
+    descArt,
     codigoTar, nombreTar,
     descSku,
     coste, precSalida);

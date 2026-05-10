@@ -5,9 +5,11 @@
 {       Modal: Calcular margen comercial                }
 {       (a partir de coste, margen, ajuste y menos      }
 {        calcula el precio de salida en vivo; al        }
-{        aceptar persiste sólo coste en                 }
-{        fza_articulos_proveedores y precio salida en   }
-{        fza_articulos_tarifas)                         }
+{        aceptar persiste el coste en                   }
+{        fza_articulos_skus_costes (si la fila es de    }
+{        SKU específico) o en fza_articulos_proveedores }
+{        (si es la fila padre del artículo), y el       }
+{        precio salida en fza_articulos_tarifas)        }
 {                                                       }
 {*******************************************************}
 
@@ -75,6 +77,7 @@ type
     FConn               : TUniConnection;
     FCodigoUnicoArttar  : Integer;
     FCodigoArtArt       : string;
+    FCodigoUnidadArttar : string;
     FResultado          : TCalcularMargenResult;
 
     function  CalcularPrecioSalida: Double;
@@ -82,16 +85,17 @@ type
 
   public
     class function Ejecutar(
-      AOwner             : TComponent;
-      AConn              : TUniConnection;
-      ACodigoUnicoArttar : Integer;
-      const ACodigoArt   : string;
-      const ADescArt     : string;
-      const ACodigoTar   : string;
-      const ANombreTar   : string;
-      const ADescSku     : string;
-      ACoste             : Double;
-      APrecioSalidaAct   : Double): TCalcularMargenResult;
+      AOwner                    : TComponent;
+      AConn                     : TUniConnection;
+      ACodigoUnicoArttar        : Integer;
+      const ACodigoArt          : string;
+      const ACodigoUnidadArttar : string;
+      const ADescArt            : string;
+      const ACodigoTar          : string;
+      const ANombreTar          : string;
+      const ADescSku            : string;
+      ACoste                    : Double;
+      APrecioSalidaAct          : Double): TCalcularMargenResult;
   end;
 
 implementation
@@ -106,24 +110,26 @@ uses
 // ============================================================================
 
 class function TfrmModalCalcularMargen.Ejecutar(
-  AOwner             : TComponent;
-  AConn              : TUniConnection;
-  ACodigoUnicoArttar : Integer;
-  const ACodigoArt   : string;
-  const ADescArt     : string;
-  const ACodigoTar   : string;
-  const ANombreTar   : string;
-  const ADescSku     : string;
-  ACoste             : Double;
-  APrecioSalidaAct   : Double): TCalcularMargenResult;
+  AOwner                    : TComponent;
+  AConn                     : TUniConnection;
+  ACodigoUnicoArttar        : Integer;
+  const ACodigoArt          : string;
+  const ACodigoUnidadArttar : string;
+  const ADescArt            : string;
+  const ACodigoTar          : string;
+  const ANombreTar          : string;
+  const ADescSku            : string;
+  ACoste                    : Double;
+  APrecioSalidaAct          : Double): TCalcularMargenResult;
 var
   frm: TfrmModalCalcularMargen;
 begin
   frm := TfrmModalCalcularMargen.Create(AOwner);
   try
-    frm.FConn              := AConn;
-    frm.FCodigoUnicoArttar := ACodigoUnicoArttar;
-    frm.FCodigoArtArt      := ACodigoArt;
+    frm.FConn               := AConn;
+    frm.FCodigoUnicoArttar  := ACodigoUnicoArttar;
+    frm.FCodigoArtArt       := ACodigoArt;
+    frm.FCodigoUnidadArttar := ACodigoUnidadArttar;
 
     frm.edtArticulo.Text   := ACodigoArt + ' - ' + ADescArt;
     frm.edtTarifa.Text     := ACodigoTar + ' - ' + ANombreTar;
@@ -269,27 +275,48 @@ begin
 
     FConn.StartTransaction;
     try
-      // 1. Coste -> proveedor principal del artículo
-      qry.SQL.Text :=
-        'UPDATE fza_articulos_proveedores SET ' +
-        '  PRECIO_ULT_COMPRA_AP = :p_coste, ' +
-        '  USUARIO_MODIF        = :p_usuario, ' +
-        '  INSTANTE_MODIF       = NOW() ' +
-        'WHERE CODIGO_ART_AP            = :p_art ' +
-        '  AND ESPROVEEDORPRINCIPAL_AP  = ''S''';
-      qry.ParamByName('p_coste').AsFloat   := FResultado.PrecioCoste;
-      qry.ParamByName('p_usuario').AsString := oUser;
-      qry.ParamByName('p_art').AsString    := FCodigoArtArt;
-      qry.Execute;
-      filasCoste := qry.RowsAffected;
-
-      if filasCoste = 0 then
+      // 1. Coste -> destino según el tipo de fila de tarifa enfocada:
+      //    - SKU específico (CODIGO_UNIDAD_ARTTAR <> '')
+      //         -> fza_articulos_skus_costes (coste por SKU)
+      //    - Padre (CODIGO_UNIDAD_ARTTAR = '')
+      //         -> fza_articulos_proveedores (proveedor principal del art.)
+      if FCodigoUnidadArttar <> '' then
       begin
-        // No hay proveedor principal: avisamos pero seguimos con el precio salida
-        FConn.Rollback;
-        AMensaje := 'El artículo no tiene un proveedor marcado como principal. ' +
-                    'Asigna uno en la pestaña Proveedores antes de guardar el coste.';
-        Exit;
+        qry.SQL.Text :=
+          'INSERT INTO fza_articulos_skus_costes ' +
+          '       (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, ' +
+          '        INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+          'VALUES (:p_sku, :p_coste, ' +
+          '        CURRENT_TIMESTAMP, :p_usuario, :p_usuario) ' +
+          'ON DUPLICATE KEY UPDATE ' +
+          '   PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), ' +
+          '   USUARIO_MODIF          = VALUES(USUARIO_MODIF)';
+        qry.ParamByName('p_sku').AsString     := FCodigoUnidadArttar;
+        qry.ParamByName('p_coste').AsFloat    := FResultado.PrecioCoste;
+        qry.ParamByName('p_usuario').AsString := oUser;
+        qry.Execute;
+      end
+      else
+      begin
+        qry.SQL.Text :=
+          'UPDATE fza_articulos_proveedores SET ' +
+          '  PRECIO_ULT_COMPRA_AP = :p_coste, ' +
+          '  USUARIO_MODIF        = :p_usuario, ' +
+          '  INSTANTE_MODIF       = NOW() ' +
+          'WHERE CODIGO_ART_AP            = :p_art ' +
+          '  AND ESPROVEEDORPRINCIPAL_AP  = ''S''';
+        qry.ParamByName('p_coste').AsFloat    := FResultado.PrecioCoste;
+        qry.ParamByName('p_usuario').AsString := oUser;
+        qry.ParamByName('p_art').AsString     := FCodigoArtArt;
+        qry.Execute;
+        filasCoste := qry.RowsAffected;
+        if filasCoste = 0 then
+        begin
+          FConn.Rollback;
+          AMensaje := 'El artículo no tiene un proveedor marcado como principal. ' +
+                      'Asigna uno en la pestaña Proveedores antes de guardar el coste.';
+          Exit;
+        end;
       end;
 
       // 2. Precio salida -> registro de tarifa enfocado.
