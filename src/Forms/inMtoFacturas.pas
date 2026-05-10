@@ -416,6 +416,7 @@ type
                                       Shift: TShiftState);
     procedure cbbSerieFacturaKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure cbbSerieFacturaPropertiesChange(Sender: TObject);
     procedure dteFECHA_FACTURAKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure btnCODIGO_CLIENTEPropertiesButtonClick(Sender: TObject;
@@ -1055,6 +1056,22 @@ begin
   inherited;
   if ((Key = VK_DOWN) and (Shift = [ssShift])) then
     cbbSerieFactura.DroppedDown := True;
+end;
+
+procedure TfrmMtoFacturas.cbbSerieFacturaPropertiesChange(Sender: TObject);
+var
+  sSubtipo: string;
+begin
+  inherited;
+  if ((dsTablaG.DataSet.State <> dsEdit) and
+      (dsTablaG.DataSet.State <> dsInsert)) then
+    Exit;
+  sSubtipo := dmmFacturas.GetSubtipoSerieEmpresa(
+                dsTablaG.DataSet.FindField(fseriefac).AsString,
+                dsTablaG.DataSet.FindField(fcodemp).AsString,
+                dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
+  if (sSubtipo <> '') then
+    dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
 procedure TfrmMtoFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(

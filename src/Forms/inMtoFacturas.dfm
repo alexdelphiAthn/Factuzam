@@ -2644,6 +2644,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Properties.ListOptions.ShowHeader = False
                   Properties.ListSource = dmFacturas.dsSeries
                   Properties.ReadOnly = True
+                  Properties.OnChange = cbbSerieFacturaPropertiesChange
                   TabOrder = 5
                   Width = 145
                 end
