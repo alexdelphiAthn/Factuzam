@@ -103,6 +103,9 @@ type
 
   TArticuloDatos = record
     Encontrado          : Boolean;
+    RequiereSku         : Boolean;       // tiene >1 SKU activo y no se pasó
+                                         //  uno: descripción/IVA están
+                                         //  rellenos pero precio/PMP no.
     Mensaje             : string;
 
     CodigoArticulo      : string;
@@ -212,6 +215,7 @@ end;
 procedure TArticuloDatos.Clear;
 begin
   Encontrado          := False;
+  RequiereSku         := False;
   Mensaje             := '';
   CodigoArticulo      := '';
   CodigoSku           := '';
@@ -324,17 +328,19 @@ end;
 
 function TArticulosResolver.ResolverPrecio(const ACodigoArt, ACodigoSku,
   ACodigoTarifa: string; const AFecha: TDateTime): TArticuloPrecio;
-var q: TUniQuery;
+var
+  q      : TUniQuery;
+  dFecha : TDateTime;
 begin
   Result.Clear;
   if ACodigoArt = '' then Exit;
+  Result.CodigoTarifa := ACodigoTarifa;
 
+  // 1er intento: vista vi_articulos_tarifas. Resuelve la herencia SKU>padre
+  // y agrega margen/ajustes efectivos. Filtra hoy con CURDATE().
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
-    // La vista vi_articulos_tarifas ya hace la herencia (SKU > padre) con su
-    // CTE `unidades`; aquí filtramos por la unidad concreta o por el padre
-    // sin SKU.
     q.SQL.Text :=
       'SELECT v.CODIGO_TAR_ARTTAR, v.NOMBRE_TAR_TAR, v.ORIGEN_PRECIO, ' +
       '       v.PRECIO_SALIDA_ARTTAR, v.PRECIO_FINAL_ARTTAR, ' +
@@ -353,12 +359,60 @@ begin
     q.ParamByName('sku').AsString := ACodigoSku;
     q.ParamByName('tar').AsString := ACodigoTarifa;
     q.Open;
-    if q.IsEmpty then
+    if not q.IsEmpty then
     begin
-      Result.CodigoTarifa := ACodigoTarifa;
+      RellenarPrecioDesdeQry(q, Result, AFecha);
       Exit;
     end;
-    RellenarPrecioDesdeQry(q, Result, AFecha);
+  finally
+    q.Free;
+  end;
+
+  // 2º intento: la vista no emite fila con CODIGO_UNIDAD_ARTTAR='' cuando
+  // el artículo tiene SKUs activos. Para casos en que el llamante quiere
+  // ver el precio del padre (ej. caja mostrando línea provisional mientras
+  // pide talla/color, o consulta de precio histórica), o para una fecha
+  // distinta de hoy, consultamos la tabla cruda con prioridad SKU>padre.
+  if AFecha = 0 then dFecha := Now else dFecha := AFecha;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'SELECT t.CODIGO_TAR_ARTTAR, ' +
+      '       tar.NOMBRE_TAR_TAR, ' +
+      '       CASE WHEN t.CODIGO_UNIDAD_ARTTAR = :sku AND :sku <> '''' ' +
+      '            THEN ''ESPECIFICO_SKU'' ELSE ''HEREDADO_PADRE'' END ' +
+      '              AS ORIGEN_PRECIO, ' +
+      '       t.PRECIO_SALIDA_ARTTAR, t.PRECIO_FINAL_ARTTAR, ' +
+      '       t.PRECIO_DTO_ARTTAR, t.PORCENTAJE_DTO_ARTTAR, ' +
+      '       COALESCE(t.PORCENTAJE_MARGEN_ARTTAR,    tar.PORCENTAJE_MARGEN_TAR) ' +
+      '              AS PORCENTAJE_MARGEN_EFECTIVO, ' +
+      '       COALESCE(t.VALOR_MULTIPLO_AJUSTE_ARTTAR, tar.VALOR_MULTIPLO_AJUSTE_TAR) ' +
+      '              AS VALOR_MULTIPLO_AJUSTE_EFECTIVO, ' +
+      '       COALESCE(t.VALOR_MENOS_AJUSTE_ARTTAR,    tar.VALOR_MENOS_AJUSTE_TAR) ' +
+      '              AS VALOR_MENOS_AJUSTE_EFECTIVO, ' +
+      '       tar.ESIMP_INCL_TAR, tar.ESDEFAULT_TAR, ' +
+      '       t.FECHA_DESDE_ARTTAR, t.FECHA_HASTA_ARTTAR ' +
+      '  FROM fza_articulos_tarifas t ' +
+      '  JOIN fza_tarifas tar ON tar.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR ' +
+      ' WHERE t.CODIGO_ART_ARTTAR = :art ' +
+      '   AND t.CODIGO_TAR_ARTTAR = :tar ' +
+      '   AND t.ESACTIVO_ARTTAR   = ''S'' ' +
+      '   AND (t.CODIGO_UNIDAD_ARTTAR = :sku ' +
+      '        OR t.CODIGO_UNIDAD_ARTTAR IS NULL ' +
+      '        OR t.CODIGO_UNIDAD_ARTTAR = '''') ' +
+      '   AND (t.FECHA_DESDE_ARTTAR IS NULL OR t.FECHA_DESDE_ARTTAR <= :fec) ' +
+      '   AND (t.FECHA_HASTA_ARTTAR IS NULL OR t.FECHA_HASTA_ARTTAR >= :fec) ' +
+      ' ORDER BY CASE WHEN t.CODIGO_UNIDAD_ARTTAR = :sku AND :sku <> '''' ' +
+      '               THEN 0 ELSE 1 END ' +
+      ' LIMIT 1';
+    q.ParamByName('art').AsString   := ACodigoArt;
+    q.ParamByName('sku').AsString   := ACodigoSku;
+    q.ParamByName('tar').AsString   := ACodigoTarifa;
+    q.ParamByName('fec').AsDateTime := dFecha;
+    q.Open;
+    if not q.IsEmpty then
+      RellenarPrecioDesdeQry(q, Result, AFecha);
   finally
     q.Free;
   end;
@@ -489,18 +543,13 @@ begin
 
   // Si el artículo tiene SKUs y el llamante no pasó uno: si hay un único
   // SKU activo (servicios / artículos sin variación), lo resolvemos solos;
-  // si hay >1, exigimos SKU explícito.
+  // si hay >1, marcamos RequiereSku — los datos básicos (descripción,
+  // familia, IVA…) se llenan igual para que la UI pueda mostrarlos
+  // mientras pide la talla/color, pero precio/PMP/coste se dejan a 0.
   if (sSku = '') and (iNumSkus = 1) then
     sSku := sUnico
   else if (sSku = '') and (iNumSkus > 1) then
-  begin
-    Result.CodigoArticulo := ACodigoArt;
-    Result.TieneSku       := True;
-    Result.Mensaje :=
-      'El artículo "' + ACodigoArt + '" tiene SKUs (talla/color). ' +
-      'Indica un SKU concreto antes de resolver datos.';
-    Exit;
-  end;
+    Result.RequiereSku := True;
 
   // Datos básicos del artículo + SKU si lo hay
   q := TUniQuery.Create(nil);
@@ -559,6 +608,16 @@ begin
 
   Result.Encontrado := Result.CodigoArticulo <> '';
   if not Result.Encontrado then Exit;
+
+  // Si no tenemos SKU concreto (artículo padre con varios SKUs), dejamos
+  // sin tocar precio/PMP/coste: el llamante pedirá talla/color y volverá.
+  if Result.RequiereSku then
+  begin
+    Result.Mensaje :=
+      'El artículo "' + ACodigoArt + '" tiene SKUs. ' +
+      'Indica uno para obtener precio definitivo.';
+    Exit;
+  end;
 
   // Tarifa solicitada
   sTarifa := ACodigoTarifa;
