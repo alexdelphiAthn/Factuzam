@@ -268,6 +268,7 @@ type
     cbbCanalIVA: TcxDBLookupComboBox;
     lblCanalIVA: TcxLabel;
     ctbCODIGO_FAMILIA_FACTURA_LINEA: TcxGridDBColumn;
+    ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn;
     ctbNOMBRE_FAMILIA_FACTURA_LINEA: TcxGridDBColumn;
     ctbFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
     btnExportarLineas: TcxButton;
