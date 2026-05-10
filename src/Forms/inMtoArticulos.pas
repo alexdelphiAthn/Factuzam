@@ -756,6 +756,8 @@ begin
     chkSkus.Top := 2000;
     chkSkus.Align := alTop;
     chkSkus.Items.Add.Text := 'ARTÍCULO';
+    if dmmArticulos.unqryVariacionesArticulos.Active = False then
+      dmmArticulos.unqryVariacionesArticulos.Open;
     with dmmArticulos.unqryVariacionesArticulos do
     begin
       DisableControls;
@@ -786,73 +788,57 @@ begin
     qryTodasTarifas := TUniQuery.Create(nil);
     try
       qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
-      qryTodasTarifas.SQL.Text := 'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas WHERE ESACTIVO_ARTTAR = ''S'' ORDER BY ORDEN_TAR';
+      qryTodasTarifas.SQL.Text := '  SELECT CODIGO_TAR_ARTTAR ' +
+                                  '    FROM fza_tarifas ' +
+                                  '   WHERE ESACTIVO_ARTTAR = ''S'' ' +
+                                  'ORDER BY ORDEN_TAR';
       qryTodasTarifas.Open;
 
       while not qryTodasTarifas.Eof do
       begin
-        chkTarifas.Items.Add.Text := qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+        chkTarifas.Items.Add.Text :=
+                      qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString;
         qryTodasTarifas.Next;
       end;
     finally
       qryTodasTarifas.Free;
     end;
-
-    // Mostramos tu modal
     frmSel.ShowModal;
-
-    // Si el usuario aceptó
     if frmSel.sFicha = 'S' then
     begin
-      // Leemos las fechas seleccionadas por el usuario en el formulario
       UserDesde := dtpDesde.Date;
       TieneUserHasta := not VarIsNull(dtpHasta.EditValue);
       if TieneUserHasta then UserHasta := dtpHasta.Date;
-
       dmmArticulos.unqryTarifasArticulos.DisableControls;
-
       TarifasActivas := TStringList.Create;
       TarifasActivas.Sorted := True;
       TarifasActivas.Duplicates := dupIgnore;
-
       try
-        // ====================================================================
-        // 1. PRE-ESCANEO: Comprobación matemática de solapamiento de rangos
-        // ====================================================================
         Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
-
         dmmArticulos.unqryTarifasArticulos.First;
         while not dmmArticulos.unqryTarifasArticulos.Eof do
         begin
-          // Leemos el rango de fechas de la tarifa en base de datos
-          DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime;
-          DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').IsNull;
+          DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                               'FECHA_DESDE_ARTTAR').AsDateTime;
+          DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                                   'FECHA_HASTA_ARTTAR').IsNull;
           if not DbHastaIsNull then
-            DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime;
-
-          // Lógica de solapamiento: (InicioA <= FinB) Y (InicioB <= FinA)
-          // Si alguno de los fines es nulo, se considera infinito.
+            DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                               'FECHA_HASTA_ARTTAR').AsDateTime;
           Cond1 := (not TieneUserHasta) or (DbDesde <= UserHasta);
           Cond2 := DbHastaIsNull or (UserDesde <= DbHasta);
-
           HaySolapamiento := Cond1 and Cond2;
-
           if HaySolapamiento then
           begin
             LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString + '|' +
                           dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
             TarifasActivas.Add(LlaveUnica); // Marcamos combinación como ocupada en estas fechas
           end;
-
           dmmArticulos.unqryTarifasArticulos.Next;
         end;
         if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
           dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
         dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
-
-        // ====================================================================
-        // 2. INSERCIÓN SEGURA (Ignorando solapamientos)
-        // ====================================================================
         for i := 0 to chkSkus.Items.Count - 1 do
         begin
           if chkSkus.Items[i].Checked then
