@@ -37,30 +37,37 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
   end
   object unqryConjuntoDetalle: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO `fza_atributos_conjuntos_det`'
-      '  (`ID_AC_ACD`, `ID_AV_ACD`, `ORDEN_ACD`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+      'INSERT INTO fza_atributos_conjuntos_det'
+      '  (ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
+      '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
-      '  (:`ID_AC_ACD`, :`ID_AV_ACD`, :`ORDEN_ACD`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+      '  (:ID_AC_ACD, :ID_AV_ACD, :ORDEN_ACD,'
+      '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM `fza_atributos_conjuntos_det`'
+      'DELETE FROM fza_atributos_conjuntos_det'
       'WHERE'
-      '  `ID_AC_ACD` = :`Old_ID_AC_ACD`'
-      '  AND `ID_AV_ACD` = :`Old_ID_AV_ACD`')
+      '  ID_AC_ACD = :Old_ID_AC_ACD'
+      '  AND ID_AV_ACD = :Old_ID_AV_ACD')
     SQLUpdate.Strings = (
-      'UPDATE `fza_atributos_conjuntos_det`'
+      'UPDATE fza_atributos_conjuntos_det'
       'SET'
-      '  `ID_AC_ACD` = :`ID_AC_ACD`, `ID_AV_ACD` = :`ID_AV_ACD`, `ORDEN_ACD` = :`ORDEN_ACD`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      '  ID_AC_ACD = :ID_AC_ACD, ID_AV_ACD = :ID_AV_ACD,'
+      '  ORDEN_ACD = :ORDEN_ACD,'
+      '  INSTANTE_MODIF = :INSTANTE_MODIF,'
+      '  USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
-      '  `ID_AC_ACD` = :`Old_ID_AC_ACD`'
-      '  AND `ID_AV_ACD` = :`Old_ID_AV_ACD`')
+      '  ID_AC_ACD = :Old_ID_AC_ACD'
+      '  AND ID_AV_ACD = :Old_ID_AV_ACD')
     SQLLock.Strings = (
-      'SELECT * FROM `fza_atributos_conjuntos_det`'
-      'WHERE'
-      '  `ID_AC_ACD` = :`Old_ID_AC_ACD`'
-      '  AND `ID_AV_ACD` = :`Old_ID_AV_ACD`'
-      'FOR UPDATE')
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
+      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
+      '  FROM fza_atributos_conjuntos_det'
+      ' WHERE ID_AC_ACD = :Old_ID_AC_ACD'
+      '   AND ID_AV_ACD = :Old_ID_AV_ACD'
+      ' FOR UPDATE')
     SQLRefresh.Strings = (
-      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD'
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
+      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
       '  FROM fza_atributos_conjuntos_det'
       ' WHERE ID_AC_ACD = :ID_AC_ACD'
       '   AND ID_AV_ACD = :ID_AV_ACD')
@@ -68,7 +75,8 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       'SELECT COUNT(*) FROM fza_atributos_conjuntos_det')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD'
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
+      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
       '  FROM fza_atributos_conjuntos_det'
       ' ORDER BY ORDEN_ACD, ID_AV_ACD')
     MasterFields = 'ID_AC'
