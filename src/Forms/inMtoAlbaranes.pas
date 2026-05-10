@@ -23,17 +23,32 @@ uses
   dxDateRanges, dxScrollbarAnnotations, Vcl.Menus, cxBlobEdit, dxShellDialogs,
   JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls, cxRadioGroup,
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
-  cxDBLabel, cxButtonEdit, UniDataAlbaranes;
+  cxDBLabel, cxButtonEdit, System.Generics.Collections,
+  cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoGen)
+    pnlTopFicha: TPanel;
+    pcCab: TcxPageControl;
+    tsCabecera: TcxTabSheet;
+    tsEmpresa: TcxTabSheet;
+    tsDatosCliente: TcxTabSheet;
+    tsEnvio: TcxTabSheet;
+    pnlBotonesAcciones: TPanel;
+    pnlBodyFicha: TPanel;
     pcAlbaran: TcxPageControl;
     tsLineasAlbaran: TcxTabSheet;
+    tsFacturas: TcxTabSheet;
+    tsObservaciones: TcxTabSheet;
+    pnlBottomTotales: TPanel;
     cxgrdLineasAlbaran: TcxGrid;
     tvLineasAlbaran: TcxGridDBTableView;
     cxgrdlvlLineasAlbaran: TcxGridLevel;
-    pcCab: TcxPageControl;
-    tsCabecera: TcxTabSheet;
+    cxGrdFacturas: TcxGrid;
+    tvFacturas: TcxGridDBTableView;
+    cxGrdFacturasLevel: TcxGridLevel;
+
+    // Cabecera
     lblNroAlbaran: TcxLabel;
     txtNUMERO_ALB: TcxDBTextEdit;
     lblSerieAlbaran: TcxLabel;
@@ -45,25 +60,82 @@ type
     lblPedidoOrigen: TcxLabel;
     txtNUMERO_PED_ALB: TcxDBTextEdit;
     txtSERIE_PED_ALB: TcxDBTextEdit;
+    lblFacturaDestino: TcxLabel;
+    txtNUMERO_FAC_ALB: TcxDBTextEdit;
+    txtSERIE_FAC_ALB: TcxDBTextEdit;
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_ALB: TcxDBButtonEdit;
     cxdblblRAZON_SOCIAL_EMPRESA_ALB: TcxDBLabel;
     lblCodigoCliente: TcxLabel;
     btnCODIGO_CLI_ALB: TcxDBButtonEdit;
     cxdblblRAZON_SOCIAL_CLIENTE_ALB: TcxDBLabel;
-    pnlBottomTotales: TPanel;
+
+    // Empresa
+    grpEmpresa: TcxGroupBox;
+    lblNIFEmp: TcxLabel;
+    txtNIF_EMPRESA_ALB: TcxDBTextEdit;
+    lblMovEmp: TcxLabel;
+    txtMOVIL_EMPRESA_ALB: TcxDBTextEdit;
+    lblEmailEmp: TcxLabel;
+    txtEMAIL_EMPRESA_ALB: TcxDBTextEdit;
+    txtDIRECCION1_EMPRESA_ALB: TcxDBTextEdit;
+    txtDIRECCION2_EMPRESA_ALB: TcxDBTextEdit;
+    txtPOBLACION_EMPRESA_ALB: TcxDBTextEdit;
+    txtPROVINCIA_EMPRESA_ALB: TcxDBTextEdit;
+    txtCODIGO_POSTAL_EMPRESA_ALB: TcxDBTextEdit;
+    txtNOMBRE_PAI_EMPRESA_ALB: TcxDBTextEdit;
+
+    // Cliente fiscal
+    grpClienteFiscal: TcxGroupBox;
+    txtRAZON_SOCIAL_CLIENTE_ALB: TcxDBTextEdit;
+    txtNIF_CLIENTE_ALB: TcxDBTextEdit;
+    txtEMAIL_CLIENTE_ALB: TcxDBTextEdit;
+    txtMOVIL_CLIENTE_ALB: TcxDBTextEdit;
+    txtDIRECCION1_CLIENTE_ALB: TcxDBTextEdit;
+    txtDIRECCION2_CLIENTE_ALB: TcxDBTextEdit;
+    txtPOBLACION_CLIENTE_ALB: TcxDBTextEdit;
+    txtPROVINCIA_CLIENTE_ALB: TcxDBTextEdit;
+    txtCODIGO_POSTAL_CLIENTE_ALB: TcxDBTextEdit;
+    txtNOMBRE_PAI_CLIENTE_ALB: TcxDBTextEdit;
+
+    // Cliente envío
+    grpClienteEnvio: TcxGroupBox;
+    txtNOMBRE_CLI_ENVIO_ALB: TcxDBTextEdit;
+    txtMOVIL_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtDIRECCION1_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtDIRECCION2_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtPOBLACION_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtPROVINCIA_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtCODIGO_POSTAL_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+    txtNOMBRE_PAI_CLIENTE_ENVIO_ALB: TcxDBTextEdit;
+
+    // Totales
     lblTotalBases: TcxLabel;
     curTOTAL_BASES_ALB: TcxDBCurrencyEdit;
     lblTotalImpuestos: TcxLabel;
     curTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit;
     lblTotalLiquido: TcxLabel;
     curTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
+
+    // Observaciones
+    memObservaciones: TcxDBMemo;
+
+    // Botones de acción
+    btnAnadirLinea: TcxButton;
+    btnBorrarLinea: TcxButton;
+    btnFacturarSeleccionadas: TcxButton;
+    btnFacturarTodo: TcxButton;
+    btnFacturarPorFechas: TcxButton;
     btnImprimir: TcxButton;
-    btnFacturar: TcxButton;
+
     procedure FormCreate(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
-    procedure btnFacturarClick(Sender: TObject);
+    procedure btnAnadirLineaClick(Sender: TObject);
+    procedure btnBorrarLineaClick(Sender: TObject);
+    procedure btnFacturarSeleccionadasClick(Sender: TObject);
+    procedure btnFacturarTodoClick(Sender: TObject);
+    procedure btnFacturarPorFechasClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
   public
     dmmAlbaranes: TdmAlbaranes;
@@ -74,22 +146,41 @@ var
 
 implementation
 
+uses
+  inMtoModalFacturarAlbaranesFechas;
+
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
+var
+  colFact: TcxGridDBColumn;
+  stFact: TcxStyle;
 begin
   inherited;
   dmmAlbaranes := TdmAlbaranes.Create(Self);
   dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
+  tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   dmmAlbaranes.OpenTables;
+
+  // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
+  colFact := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN');
+  if colFact <> nil then
+  begin
+    stFact := TcxStyle.Create(Self);
+    stFact.AssignedValues := [svColor];
+    stFact.Color := $00C4E1FF;
+    colFact.Styles.Content := stFact;
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.btnNuevoClick(Sender: TObject);
 begin
   inherited;
-  pcAlbaran.ActivePage := tsLineasAlbaran;
   pcCab.ActivePage    := tsCabecera;
+  pcAlbaran.ActivePage := tsLineasAlbaran;
 end;
 
 procedure TfrmMtoAlbaranes.btnGrabarClick(Sender: TObject);
@@ -102,18 +193,126 @@ begin
   end;
 end;
 
-procedure TfrmMtoAlbaranes.btnFacturarClick(Sender: TObject);
+procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
-  ShowMessage('La generación de factura desde albarán se realiza desde la ' +
-              'pantalla de Facturas seleccionando los albaranes pendientes ' +
-              'del cliente.');
+  dmmAlbaranes.unqryAlbaranesLineas.Append;
+end;
+
+procedure TfrmMtoAlbaranes.btnBorrarLineaClick(Sender: TObject);
+begin
+  inherited;
+  if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
+                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    dmmAlbaranes.unqryAlbaranesLineas.Delete;
+end;
+
+procedure TfrmMtoAlbaranes.btnFacturarSeleccionadasClick(Sender: TObject);
+var
+  ds: TDataSet;
+  lst: TList<string>;
+  sNumFac, sSerFac, sLinea, sFacturada: string;
+  i, iLineaCol, iFactCol: Integer;
+  rec: TcxCustomGridRecord;
+begin
+  inherited;
+  if dsTablaG.State in dsEditModes then
+    dsTablaG.DataSet.Post;
+  ds := dmmAlbaranes.unqryAlbaranesLineas;
+  if not ds.Active or (ds.RecordCount = 0) then
+  begin
+    ShowMessage('El albarán no tiene líneas.');
+    Exit;
+  end;
+  if tvLineasAlbaran.Controller.SelectedRowCount = 0 then
+  begin
+    ShowMessage('Seleccione las líneas a facturar en la rejilla ' +
+                '(Ctrl+click para selección múltiple).');
+    Exit;
+  end;
+  lst := TList<string>.Create;
+  try
+    iLineaCol := -1;
+    iFactCol  := -1;
+    if tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBLIN') <> nil then
+      iLineaCol := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBLIN').Index;
+    if tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN') <> nil then
+      iFactCol := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN').Index;
+    if iLineaCol < 0 then Exit;
+
+    for i := 0 to tvLineasAlbaran.Controller.SelectedRowCount - 1 do
+    begin
+      rec := tvLineasAlbaran.Controller.SelectedRows[i];
+      sLinea := VarToStr(rec.Values[iLineaCol]);
+      if iFactCol >= 0 then
+        sFacturada := VarToStr(rec.Values[iFactCol])
+      else
+        sFacturada := 'N';
+      if (sLinea <> '') and (sFacturada <> 'S') then
+        lst.Add(sLinea);
+    end;
+
+    if lst.Count = 0 then
+    begin
+      ShowMessage('Las líneas seleccionadas ya están facturadas.');
+      Exit;
+    end;
+    if MessageDlg(Format('¿Generar factura con %d línea(s) del albarán?',
+                         [lst.Count]),
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+    if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, lst) then
+      ShowMessageFmt('Factura creada: %s / %s', [sSerFac, sNumFac])
+    else
+      ShowMessage('No se pudo crear la factura.');
+  finally
+    lst.Free;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnFacturarTodoClick(Sender: TObject);
+var
+  sNumFac, sSerFac: string;
+begin
+  inherited;
+  if dsTablaG.State in dsEditModes then
+    dsTablaG.DataSet.Post;
+  if not dmmAlbaranes.unqryAlbaranesLineas.Active or
+     (dmmAlbaranes.unqryAlbaranesLineas.RecordCount = 0) then
+  begin
+    ShowMessage('El albarán no tiene líneas.');
+    Exit;
+  end;
+  if MessageDlg('¿Facturar todas las líneas pendientes del albarán?',
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+  if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, nil) then
+    ShowMessageFmt('Factura creada: %s / %s', [sSerFac, sNumFac])
+  else
+    ShowMessage('No se pudo crear la factura.');
+end;
+
+procedure TfrmMtoAlbaranes.btnFacturarPorFechasClick(Sender: TObject);
+var
+  form: TfrmModalFacturarAlbaranesFechas;
+begin
+  inherited;
+  form := TfrmModalFacturarAlbaranesFechas.Create(Self);
+  try
+    form.dmmAlbaranes := dmmAlbaranes;
+    form.ShowModal;
+    dmmAlbaranes.unqryTablaG.Close;
+    dmmAlbaranes.unqryTablaG.Open;
+  finally
+    form.Free;
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.btnImprimirClick(Sender: TObject);
 begin
   inherited;
-  // Hook para FastReport: cargar fxdsPrintAlb / fxdstPrintLinAlb y mostrar.
+  // Hook FastReport: cargar fxdsPrintAlb / fxdstPrintLinAlb y mostrar.
 end;
+
+initialization
+  ForceReferenceToClass(TfrmMtoAlbaranes);
 
 end.
