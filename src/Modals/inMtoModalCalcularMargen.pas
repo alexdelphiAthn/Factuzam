@@ -3,9 +3,11 @@
 {       FactuZam                                        }
 {                                                       }
 {       Modal: Calcular margen comercial                }
-{       (a partir del precio de coste, margen y         }
-{        ajustes de redondeo, calcula el precio de      }
-{        salida y lo persiste en el artículo-tarifa)    }
+{       (a partir de coste, margen, ajuste y menos      }
+{        calcula el precio de salida en vivo; al        }
+{        aceptar persiste sólo coste en                 }
+{        fza_articulos_proveedores y precio salida en   }
+{        fza_articulos_tarifas)                         }
 {                                                       }
 {*******************************************************}
 
@@ -22,18 +24,15 @@ uses
   inMtoFrmBase,
   cxClasses, cxContainer, cxEdit, cxLookAndFeels, cxLookAndFeelPainters,
   cxControls, cxGraphics, cxStyles, cxLocalization,
-  cxLabel, cxButtons, cxTextEdit, cxMaskEdit,
-  cxCurrencyEdit,
+  cxLabel, cxButtons, cxTextEdit, cxMaskEdit, cxCurrencyEdit,
   Vcl.Menus, dxCore, dxSkinsForm,
   JvComponentBase, JvEnterTab;
 
 type
   TCalcularMargenResult = record
-    Aceptado              : Boolean;
-    PorcentajeMargen      : Double;
-    ValorMultiploAjuste   : Double;
-    ValorMenosAjuste      : Double;
-    PrecioSalidaCalculado : Double;
+    Aceptado            : Boolean;
+    PrecioCoste         : Double;
+    PrecioSalidaFinal   : Double;
   end;
 
   TfrmModalCalcularMargen = class(TfrmBase)
@@ -54,8 +53,8 @@ type
 
     lblMargen: TcxLabel;
     edtMargen: TcxCurrencyEdit;
-    lblMultiplo: TcxLabel;
-    edtMultiplo: TcxCurrencyEdit;
+    lblAjuste: TcxLabel;
+    edtAjuste: TcxCurrencyEdit;
     lblMenos: TcxLabel;
     edtMenos: TcxCurrencyEdit;
 
@@ -75,6 +74,7 @@ type
   private
     FConn               : TUniConnection;
     FCodigoUnicoArttar  : Integer;
+    FCodigoArtArt       : string;
     FResultado          : TCalcularMargenResult;
 
     function  CalcularPrecioSalida: Double;
@@ -91,10 +91,7 @@ type
       const ANombreTar   : string;
       const ADescSku     : string;
       ACoste             : Double;
-      APrecioSalidaAct   : Double;
-      APorcenMargenIni   : Double;
-      AMultiploIni       : Double;
-      AMenosIni          : Double): TCalcularMargenResult;
+      APrecioSalidaAct   : Double): TCalcularMargenResult;
   end;
 
 implementation
@@ -118,10 +115,7 @@ class function TfrmModalCalcularMargen.Ejecutar(
   const ANombreTar   : string;
   const ADescSku     : string;
   ACoste             : Double;
-  APrecioSalidaAct   : Double;
-  APorcenMargenIni   : Double;
-  AMultiploIni       : Double;
-  AMenosIni          : Double): TCalcularMargenResult;
+  APrecioSalidaAct   : Double): TCalcularMargenResult;
 var
   frm: TfrmModalCalcularMargen;
 begin
@@ -129,19 +123,26 @@ begin
   try
     frm.FConn              := AConn;
     frm.FCodigoUnicoArttar := ACodigoUnicoArttar;
+    frm.FCodigoArtArt      := ACodigoArt;
 
     frm.edtArticulo.Text   := ACodigoArt + ' - ' + ADescArt;
     frm.edtTarifa.Text     := ACodigoTar + ' - ' + ANombreTar;
-    if ADescSku = '' then
+    if Trim(ADescSku) = '' then
       frm.edtSku.Text := '(sin SKU)'
     else
       frm.edtSku.Text := ADescSku;
 
     frm.edtCoste.Value         := ACoste;
     frm.edtPrecioActual.Value  := APrecioSalidaAct;
-    frm.edtMargen.Value        := APorcenMargenIni;
-    frm.edtMultiplo.Value      := AMultiploIni;
-    frm.edtMenos.Value         := AMenosIni;
+    // Cálculo inverso: si hay coste y precio salida actuales, deduce el
+    // margen implícito (con ajuste 0 y menos 0 como punto de partida) para
+    // que el modal abra ya cuadrado con la situación actual.
+    frm.edtAjuste.Value        := 0;
+    frm.edtMenos.Value         := 0;
+    if (ACoste > 0) and (APrecioSalidaAct > 0) then
+      frm.edtMargen.Value := (APrecioSalidaAct / ACoste) * 100
+    else
+      frm.edtMargen.Value := 100;
     frm.RecalcularPrecioSalida(nil);
 
     frm.ShowModal;
@@ -184,26 +185,24 @@ begin
 
   if edtCoste.Value <= 0 then
   begin
-    ShowMessage('No se puede calcular el margen: el precio de coste debe ser distinto de cero.');
+    ShowMessage('El precio de coste debe ser mayor que cero.');
     Exit;
   end;
 
-  if edtMargen.Value < 0 then
+  if edtMargen.Value <= 0 then
   begin
-    ShowMessage('El margen no puede ser negativo.');
+    ShowMessage('El margen debe ser mayor que cero.');
     Exit;
   end;
 
-  if edtMultiplo.Value < 0 then
+  if edtAjuste.Value < 0 then
   begin
-    ShowMessage('El múltiplo de ajuste no puede ser negativo.');
+    ShowMessage('El ajuste no puede ser negativo.');
     Exit;
   end;
 
-  FResultado.PorcentajeMargen      := edtMargen.Value;
-  FResultado.ValorMultiploAjuste   := edtMultiplo.Value;
-  FResultado.ValorMenosAjuste      := edtMenos.Value;
-  FResultado.PrecioSalidaCalculado := CalcularPrecioSalida;
+  FResultado.PrecioCoste       := edtCoste.Value;
+  FResultado.PrecioSalidaFinal := CalcularPrecioSalida;
 
   if FCodigoUnicoArttar > 0 then
   begin
@@ -229,20 +228,20 @@ end;
 
 function TfrmModalCalcularMargen.CalcularPrecioSalida: Double;
 var
-  bruto, multiplo, menos: Double;
+  bruto, ajuste, menos: Double;
 begin
   Result := 0;
   if edtCoste.Value <= 0 then Exit;
+  if edtMargen.Value <= 0 then Exit;
 
-  // precio = coste * (1 + margen/100)
-  // Si margen = 120: coste*2.20  (duplica + 20 %)
-  // Si margen = 100: coste*2     (duplica)
-  // Si margen = 50:  coste*1.5
-  bruto := edtCoste.Value * (1 + edtMargen.Value / 100);
+  // precio = coste * margen / 100
+  // margen 100 -> coste tal cual; 120 -> coste*1.20; 250 -> coste*2.50; 400 -> coste*4
+  bruto := edtCoste.Value * edtMargen.Value / 100;
 
-  multiplo := edtMultiplo.Value;
-  if multiplo > 0 then
-    bruto := Round(bruto / multiplo) * multiplo;
+  ajuste := edtAjuste.Value;
+  if ajuste > 0 then
+    // Redondea hacia arriba al siguiente múltiplo del ajuste
+    bruto := Ceil(bruto / ajuste) * ajuste;
 
   menos := edtMenos.Value;
   bruto := bruto - menos;
@@ -258,40 +257,75 @@ end;
 
 function TfrmModalCalcularMargen.PersistirCambios(out AMensaje: string): Boolean;
 var
-  upd: TUniQuery;
+  qry: TUniQuery;
+  filasCoste: Integer;
 begin
   Result   := False;
   AMensaje := '';
 
-  upd := TUniQuery.Create(nil);
+  qry := TUniQuery.Create(nil);
   try
-    upd.Connection := FConn;
-    upd.SQL.Text :=
-      'UPDATE fza_articulos_tarifas SET ' +
-      '  PORCENTAJE_MARGEN_ARTTAR     = :p_margen, ' +
-      '  VALOR_MULTIPLO_AJUSTE_ARTTAR = :p_multiplo, ' +
-      '  VALOR_MENOS_AJUSTE_ARTTAR    = :p_menos, ' +
-      '  PRECIO_SALIDA_ARTTAR         = :p_salida, ' +
-      '  USUARIO_MODIF                = :p_usuario, ' +
-      '  INSTANTE_MODIF               = NOW() ' +
-      'WHERE CODIGO_UNICO_ARTTAR = :p_unico';
+    qry.Connection := FConn;
 
-    upd.ParamByName('p_margen').AsFloat   := FResultado.PorcentajeMargen;
-    upd.ParamByName('p_multiplo').AsFloat := FResultado.ValorMultiploAjuste;
-    upd.ParamByName('p_menos').AsFloat    := FResultado.ValorMenosAjuste;
-    upd.ParamByName('p_salida').AsFloat   := FResultado.PrecioSalidaCalculado;
-    upd.ParamByName('p_usuario').AsString := oUser;
-    upd.ParamByName('p_unico').AsInteger  := FCodigoUnicoArttar;
-
+    FConn.StartTransaction;
     try
-      upd.Execute;
+      // 1. Coste -> proveedor principal del artículo
+      qry.SQL.Text :=
+        'UPDATE fza_articulos_proveedores SET ' +
+        '  PRECIO_ULT_COMPRA_AP = :p_coste, ' +
+        '  USUARIO_MODIF        = :p_usuario, ' +
+        '  INSTANTE_MODIF       = NOW() ' +
+        'WHERE CODIGO_ART_AP            = :p_art ' +
+        '  AND ESPROVEEDORPRINCIPAL_AP  = ''S''';
+      qry.ParamByName('p_coste').AsFloat   := FResultado.PrecioCoste;
+      qry.ParamByName('p_usuario').AsString := oUser;
+      qry.ParamByName('p_art').AsString    := FCodigoArtArt;
+      qry.Execute;
+      filasCoste := qry.RowsAffected;
+
+      if filasCoste = 0 then
+      begin
+        // No hay proveedor principal: avisamos pero seguimos con el precio salida
+        FConn.Rollback;
+        AMensaje := 'El artículo no tiene un proveedor marcado como principal. ' +
+                    'Asigna uno en la pestaña Proveedores antes de guardar el coste.';
+        Exit;
+      end;
+
+      // 2. Precio salida -> registro de tarifa enfocado.
+      //    Recalcula PRECIO_FINAL_ARTTAR igual que el handler manual del grid:
+      //      precio final = precio salida - precio dto
+      //    Recalcula también PORCENTAJE_DTO_ARTTAR contra el nuevo precio
+      //    salida (igual que el handler manual de PRECIO_DTO):
+      //      porcentaje dto = (precio dto / precio salida) * 100
+      qry.SQL.Text :=
+        'UPDATE fza_articulos_tarifas SET ' +
+        '  PRECIO_SALIDA_ARTTAR  = :p_salida, ' +
+        '  PRECIO_FINAL_ARTTAR   = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), ' +
+        '  PORCENTAJE_DTO_ARTTAR = CASE ' +
+        '                            WHEN :p_salida > 0 ' +
+        '                              THEN (COALESCE(PRECIO_DTO_ARTTAR, 0) / :p_salida) * 100 ' +
+        '                            ELSE 0 ' +
+        '                          END, ' +
+        '  USUARIO_MODIF         = :p_usuario, ' +
+        '  INSTANTE_MODIF        = NOW() ' +
+        'WHERE CODIGO_UNICO_ARTTAR = :p_unico';
+      qry.ParamByName('p_salida').AsFloat  := FResultado.PrecioSalidaFinal;
+      qry.ParamByName('p_usuario').AsString := oUser;
+      qry.ParamByName('p_unico').AsInteger  := FCodigoUnicoArttar;
+      qry.Execute;
+
+      FConn.Commit;
       Result := True;
     except
       on E: Exception do
+      begin
+        FConn.Rollback;
         AMensaje := E.Message;
+      end;
     end;
   finally
-    upd.Free;
+    qry.Free;
   end;
 end;
 
