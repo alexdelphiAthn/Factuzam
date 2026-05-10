@@ -439,6 +439,9 @@ type
     procedure
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
+    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(Sender: TObject);
+    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+      Sender: TObject);
     procedure sbRectificarClick(Sender: TObject);
     procedure sbImprimirClick(Sender: TObject);
     procedure chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange(
@@ -883,6 +886,115 @@ procedure TfrmMtoFacturas.btnReciboPagadoClick(Sender: TObject);
 begin
   inherited;
   CambiarEstadoRecibo('Pagado');
+end;
+
+procedure TfrmMtoFacturas.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
+  Sender: TObject);
+var
+  Combo    : TcxComboBox;
+  Resolver : TArticulosResolver;
+  Skus     : TArray<TArticuloSkuItem>;
+  Item     : TArticuloSkuItem;
+  CodArt   : string;
+begin
+  inherited;
+  if not (Sender is TcxComboBox) then Exit;
+  Combo := Sender as TcxComboBox;
+
+  // El combo se rellena en cada apertura con los SKUs del artículo de la
+  // fila activa. dropDownListStyle=lsEditList permite también escribir un
+  // valor que no esté en la lista (ej. SKU escaneado o tecleado a mano).
+  CodArt := dmmFacturas.unqryLinFac.FindField('CODIGO_ART_FACLIN').AsString;
+  Combo.Properties.Items.BeginUpdate;
+  try
+    Combo.Properties.Items.Clear;
+    if CodArt = '' then Exit;
+    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    try
+      Skus := Resolver.ListarSkus(CodArt);
+      for Item in Skus do
+        Combo.Properties.Items.Add(Item.CodigoSku);
+    finally
+      Resolver.Free;
+    end;
+  finally
+    Combo.Properties.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoFacturas.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e          : TcxCustomEdit;
+  Lin        : TDataSet;
+  Resolver   : TArticulosResolver;
+  Datos      : TArticuloDatos;
+  Precio     : TArticuloPrecio;
+  CodTarifa  : string;
+  FechaFac   : TDateTime;
+  CodArt     : string;
+  CodSku     : string;
+  iPorcen    : Integer;
+  fPorcen    : Currency;
+  sTipoIVA   : string;
+begin
+  inherited;
+  Lin := dmmFacturas.unqryLinFac;
+  if not (Lin.State in [dsInsert, dsEdit]) then Exit;
+
+  e      := Sender as TcxCustomEdit;
+  CodSku := Trim(VarToStr(e.EditingValue));
+  CodArt := Lin.FindField('CODIGO_ART_FACLIN').AsString;
+  if (CodSku = '') or (CodArt = '') then Exit;
+
+  CodTarifa := dmmFacturas.unqryTablaG.FindField(
+                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+  FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
+
+  Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+  try
+    Datos  := Resolver.ResolverDatos(CodArt, CodSku, CodTarifa, FechaFac);
+    Precio := Datos.PrecioPedido;
+    // Si el SKU tecleado a mano no pertenece al artículo, ResolverDatos lo
+    // ignora y deja CodigoSku vacío. En ese caso no tocamos el precio.
+    if Datos.CodigoSku = '' then Exit;
+
+    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
+      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := Datos.CodigoSku;
+    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := Datos.DescripcionSku;
+
+    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat   := Precio.PrecioSalida;
+    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat  := Precio.PorcentajeDto;
+    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat      := Precio.PrecioDto;
+    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+                                          IfThen(Precio.EsImpIncl, 'S', 'N');
+
+    sTipoIVA := Datos.TipoIVA;
+    iPorcen  := 0;
+    case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
+      0: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
+      1: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
+      2: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
+      3: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
+    end;
+    fPorcen := iPorcen / 100;
+    if Precio.EsImpIncl then
+    begin
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      if (1 + fPorcen) <> 0 then
+        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+                                                  Precio.PrecioFinal / (1 + fPorcen);
+    end
+    else
+    begin
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+                                                  Precio.PrecioFinal * (1 + fPorcen);
+    end;
+  finally
+    Resolver.Free;
+  end;
 end;
 
 procedure TfrmMtoFacturas.sbRectificarClick(Sender: TObject);
@@ -1344,12 +1456,25 @@ begin
     end;
 
     // Si el padre tiene varios SKUs aún sin elegir, dejamos PRECIO_SALIDA y
-    // PRECIO_VENTA_*_FACLIN a 0 hasta que el usuario complete el SKU.
+    // PRECIO_VENTA_*_FACLIN a 0 hasta que el usuario complete el SKU. Movemos
+    // el foco a la columna SKU y abrimos su dropdown automáticamente.
     if Datos.RequiereSku then
     begin
       Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := 0;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := 0;
       Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := 0;
+      // Diferimos para que termine el ciclo de edición actual antes de
+      // saltar a la celda contigua.
+      TThread.ForceQueue(nil,
+        procedure
+        var Edit: TcxCustomEdit;
+        begin
+          tvLineasFactura.Controller.FocusedColumn := ctbCODIGO_UNIDAD_FACTURA_LINEA;
+          tvLineasFactura.Controller.EditingController.ShowEdit;
+          Edit := tvLineasFactura.Controller.EditingController.Edit;
+          if Edit is TcxComboBox then
+            (Edit as TcxComboBox).DroppedDown := True;
+        end);
       Exit;
     end;
 

@@ -47,7 +47,7 @@ unit inLibArticulosResolver;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, Uni;
 
 type
@@ -99,6 +99,12 @@ type
     Encontrado         : Boolean;
 
     procedure Clear;
+  end;
+
+  TArticuloSkuItem = record
+    CodigoSku      : string;     // CODIGO_UNIDAD_SKU
+    DescripcionSku : string;     // GROUP_CONCAT de los AV del SKU (ej. "NEGRO / M")
+    EsActivo       : Boolean;
   end;
 
   TArticuloDatos = record
@@ -165,6 +171,11 @@ type
     // los almacenes con stock.
     function ResolverPMP(const ACodigoSku: string;
                          const ACodigoAlmacen: string = ''): TArticuloPMP;
+
+    // Lista los SKUs de un artículo con su descripción legible. Por defecto
+    // sólo SKUs activos; pasa AIncluirInactivos=True para listar todos.
+    function ListarSkus(const ACodigoArt: string;
+                        AIncluirInactivos: Boolean = False): TArray<TArticuloSkuItem>;
   end;
 
 implementation
@@ -639,4 +650,51 @@ begin
     Result.PMP := ResolverPMP(Result.CodigoSku, ACodigoAlmacen);
 end;
 
+function TArticulosResolver.ListarSkus(const ACodigoArt: string;
+  AIncluirInactivos: Boolean): TArray<TArticuloSkuItem>;
+var
+  q     : TUniQuery;
+  Lst   : TList<TArticuloSkuItem>;
+  Item  : TArticuloSkuItem;
+  sFiltroAct: string;
+begin
+  Result := nil;
+  if ACodigoArt = '' then Exit;
+
+  if AIncluirInactivos then sFiltroAct := ''
+  else                      sFiltroAct := '   AND sk.ESACTIVO_SKU = ''S'' ';
+
+  Lst := TList<TArticuloSkuItem>.Create;
+  q   := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'SELECT sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
+      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') ' +
+      '          FROM fza_atributos_sku sa ' +
+      '          JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
+      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU) AS DESCRIPCION_SKU ' +
+      '  FROM fza_articulos_skus sk ' +
+      ' WHERE sk.CODIGO_ART_SKU = :art ' +
+      sFiltroAct +
+      ' ORDER BY sk.CODIGO_UNIDAD_SKU';
+    q.ParamByName('art').AsString := ACodigoArt;
+    q.Open;
+    while not q.Eof do
+    begin
+      Item := Default(TArticuloSkuItem);
+      Item.CodigoSku      := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      Item.DescripcionSku := q.FieldByName('DESCRIPCION_SKU').AsString;
+      Item.EsActivo       := q.FieldByName('ESACTIVO_SKU').AsString = 'S';
+      Lst.Add(Item);
+      q.Next;
+    end;
+    Result := Lst.ToArray;
+  finally
+    q.Free;
+    Lst.Free;
+  end;
+end;
+
 end.
+
