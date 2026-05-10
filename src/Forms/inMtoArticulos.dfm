@@ -220,7 +220,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsProveedores
+            Properties.ActivePage = tsTarifas
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -762,8 +762,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                         Default = True
                         Kind = bkEllipsis
                       end>
-                    Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     Properties.ReadOnly = True
+                    Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     OnGetDisplayText = dbcTarifasMARGENGetDisplayText
                     Width = 90
                     Position.BandIndex = 1
