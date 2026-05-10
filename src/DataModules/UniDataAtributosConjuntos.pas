@@ -73,6 +73,7 @@ begin
   inherited;
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
     raise Exception.Create('Selecciona un valor para añadirlo a la colección.');
+  oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
 initialization
