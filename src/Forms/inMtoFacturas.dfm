@@ -663,6 +663,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
+        ExplicitLeft = 2
+        ExplicitTop = 29
         ExplicitWidth = 1083
         ExplicitHeight = 773
         object pnl1: TPanel
@@ -689,7 +691,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsRecibos
+            Properties.ActivePage = tsLineasFactura
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 424
             ClientRectLeft = 2
@@ -702,10 +704,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -776,9 +774,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
                     PropertiesClassName = 'TcxComboBoxProperties'
-                    Properties.DropDownListStyle = lsEditList
-                    Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
                     Properties.OnEditValueChanged = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged
+                    Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
                     Width = 180
                   end
                   object ctbDESCRIPCION_VARIACION_FACTURA_LINEA: TcxGridDBColumn
@@ -1671,10 +1668,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 926
                 Top = 0
@@ -3454,7 +3447,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3491,6 +3483,9 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
+        end
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 338
