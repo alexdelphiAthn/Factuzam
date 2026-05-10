@@ -102,6 +102,9 @@ public
     function ExisteSerieEmpresa(sSerie,
                                 sEmpresa,
                                 sTipoDoc:string): Boolean;
+    function GetSubtipoSerieEmpresa(sSerie,
+                                    sEmpresa:string;
+                                    dtFecha:TDateTime): string;
     procedure OpenTables;
   end;
 var
@@ -149,6 +152,40 @@ begin
     else
       Result := False;
     Close;
+    FreeAndNil(unqrySol);
+  end;
+end;
+
+function TdmFacturas.GetSubtipoSerieEmpresa(sSerie,
+                                            sEmpresa:string;
+                                            dtFecha:TDateTime): string;
+var
+  unqrySol: TUniQuery;
+begin
+  Result := '';
+  if ((sSerie = '') or (sEmpresa = '')) then
+    Exit;
+  unqrySol := TUniQuery.Create(nil);
+  try
+    with unqrySol do
+    begin
+      Connection := inLibGlobalVar.oConn;
+      SQL.Text := 'SELECT SUBTIPO_EMPSER ' +
+                  '  FROM fza_empresas_series ' +
+                  ' WHERE EMPSER = :Serie ' +
+                  '   AND CODIGO_EMP_EMPSER = :Empresa ' +
+                  '   AND (FECHA_DESDE_EMPSER <= :Fecha ' +
+                  '        AND (FECHA_HASTA_EMPSER >= :Fecha ' +
+                  '             OR FECHA_HASTA_EMPSER IS NULL)) ';
+      ParamByName('Serie').AsString := sSerie;
+      ParamByName('Empresa').AsString := sEmpresa;
+      ParamByName('Fecha').AsDateTime := dtFecha;
+      Open;
+      if (RecordCount <> 0) then
+        Result := FieldByName('SUBTIPO_EMPSER').AsString;
+      Close;
+    end;
+  finally
     FreeAndNil(unqrySol);
   end;
 end;
