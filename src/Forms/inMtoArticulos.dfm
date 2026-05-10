@@ -752,6 +752,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       end>
                     Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     Properties.ReadOnly = True
+                    OnGetDisplayText = dbcTarifasMARGENGetDisplayText
                     Width = 90
                     Position.BandIndex = 1
                     Position.ColIndex = 9
