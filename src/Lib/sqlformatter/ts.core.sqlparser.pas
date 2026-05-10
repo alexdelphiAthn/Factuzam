@@ -1,4 +1,19 @@
-﻿unit ts.Core.SQLParser;
+﻿{
+  Copyright (C) 2013-2023 Tim Sinaeve tim.sinaeve@gmail.com
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+}
+unit ts.Core.SQLParser;
 
 //{$MODE DELPHI}
 
@@ -251,6 +266,30 @@ implementation
 
 uses
   TypInfo;
+
+type
+  TSQLStartTransactionStatement = class(TSQLElement)
+  public
+    Modifiers: string;
+    function GetAsSQL(Options: TSQLFormatOptions;
+                      AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
+  TSQLMariaDBInsertStatement = class(TSQLInsertStatement)
+  public
+    ExtraValues: string;
+    OnDuplicateKey: string;
+    IsReplace: Boolean;
+    function GetAsSQL(Options: TSQLFormatOptions;
+                      AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
+function TSQLStartTransactionStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := 'START TRANSACTION';
+  if Modifiers <> '' then
+    Result := Result + ' ' + Modifiers;
+end;
 
 Resourcestring
   SerrUnmatchedBrace = 'Expected ).';
@@ -838,14 +877,27 @@ begin
   end;
 end;
 
-function TSQLParser.ParseInsertStatement(AParent: TSQLElement)
-  : TSQLInsertStatement;
+function TSQLParser.ParseInsertStatement(AParent: TSQLElement): TSQLInsertStatement;
+var
+  MDBInsert: TSQLMariaDBInsertStatement;
+  PCount: Integer;
+  IsReplaceStmt: Boolean;
 begin
-  // On entry, we're on the INSERT statement
-  Consume(tsqlInsert);
+  IsReplaceStmt := False;
+  if SameText(CurrentTokenString, 'REPLACE') then
+  begin
+    IsReplaceStmt := True;
+    GetNextToken;
+  end
+  else
+    Consume(tsqlInsert);
+  if (CurrentToken = tsqlIdentifier) and SameText(CurrentTokenString, 'IGNORE') then
+    GetNextToken;
   Consume(tsqlInto);
   Expect(tsqlIdentifier);
-  Result := TSQLInsertStatement(CreateElement(TSQLInsertStatement, AParent));
+  MDBInsert := TSQLMariaDBInsertStatement(CreateElement(TSQLMariaDBInsertStatement, AParent));
+  MDBInsert.IsReplace := IsReplaceStmt; // Guardamos si era un REPLACE
+  Result := MDBInsert;
   try
     Result.TableName := CreateIdentifier(Result, CurrentTokenString);
     GetNextToken;
@@ -868,10 +920,69 @@ begin
         begin
           GetNextToken;
           Result.Values := ParseValueList(Result, [eoFieldValue]);
-          GetNextToken; // consume )
+          GetNextToken; // consume el primer ')'
+          while CurrentToken = tsqlComma do
+          begin
+            MDBInsert.ExtraValues := MDBInsert.ExtraValues + ',' + sLineBreak + '  (';
+            GetNextToken; // Consumimos la coma
+            Expect(tsqlBraceOpen);
+            PCount := 1;
+            GetNextToken; // Consumimos el '('
+            while (PCount > 0) and (CurrentToken <> tsqlEOF) do
+            begin
+              if CurrentToken = tsqlBraceOpen then Inc(PCount)
+              else if CurrentToken = tsqlBraceClose then Dec(PCount);
+              if PCount > 0 then
+              begin
+                if CurrentToken = tsqlString then
+                  MDBInsert.ExtraValues := MDBInsert.ExtraValues + '''' + CurrentTokenString + ''''
+                else
+                  MDBInsert.ExtraValues := MDBInsert.ExtraValues + CurrentTokenString;
+                GetNextToken;
+                if not (CurrentToken in [tsqlComma, tsqlBraceClose, tsqlBraceOpen, tsqlDot]) and
+                   not (PreviousToken in [tsqlDot]) then
+                  MDBInsert.ExtraValues := MDBInsert.ExtraValues + ' ';
+              end;
+            end;
+            MDBInsert.ExtraValues := TrimRight(MDBInsert.ExtraValues) + ')';
+            if CurrentToken = tsqlBraceClose then GetNextToken;
+          end;
         end;
     else
       UnexpectedToken([tsqlSelect, tsqlValues]);
+    end;
+    if (CurrentToken = tsqlOn) then
+    begin
+      MDBInsert.OnDuplicateKey := 'ON ';
+      GetNextToken;
+      if (CurrentToken = tsqlIdentifier) and SameText(CurrentTokenString, 'DUPLICATE') then
+      begin
+        MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + 'DUPLICATE ';
+        GetNextToken;
+      end;
+      if (CurrentToken = tsqlKey) then
+      begin
+        MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + 'KEY ';
+        GetNextToken;
+      end;
+      if (CurrentToken = tsqlUpdate) then
+      begin
+        MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + 'UPDATE ';
+        GetNextToken;
+      end;
+      while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+      begin
+        if CurrentToken = tsqlString then
+          MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + '''' + CurrentTokenString + ''''
+        else
+          MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + CurrentTokenString;
+
+        GetNextToken;
+
+        if not (CurrentToken in [tsqlComma, tsqlBraceClose, tsqlBraceOpen, tsqlDot, tsqlSemicolon]) and
+           not (PreviousToken in [tsqlDot]) then
+          MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + ' ';
+      end;
     end;
   except
     FreeAndNil(Result);
@@ -1014,6 +1125,12 @@ begin
   C := TSQLCreateTableStatement(CreateElement(TSQLCreateTableStatement,
     AParent));
   try
+    if CurrentToken = tsqlIf then
+    begin
+      GetNextToken; // Pasamos 'IF'
+      if CurrentToken = tsqlNot then GetNextToken; // Pasamos 'NOT'
+      if CurrentToken = tsqlExists then GetNextToken; // Pasamos 'EXISTS'
+    end;
     Expect(tsqlIdentifier);
     C.ObjectName := CreateIdentifier(C, CurrentTokenString);
     GetNextToken;
@@ -1068,6 +1185,8 @@ begin
   // On entry, we are on DROP token
   C := (GetNextToken = tsqlConstraint);
   if C then
+    GetNextToken
+  else if CurrentToken = tsqlColumn then
     GetNextToken;
   Expect(tsqlIdentifier);
   if C then
@@ -1081,16 +1200,40 @@ begin
 end;
 
 function TSQLParser.ParseAddTableElement(AParent : TSQLElement)
-  : TSQLAlterTableAddElementOperation;
+                                            : TSQLAlterTableAddElementOperation;
+var
+  Tk: TSQLToken;
 begin
   Result := nil;
   try
-    case GetNextToken of
+    Tk := GetNextToken;
+    if Tk = tsqlColumn then
+      Tk := GetNextToken;
+    case Tk of
       tsqlIdentifier :
         begin
           Result := TSQLAlterTableAddElementOperation
             (CreateElement(TSQLAlterTableAddFieldOPeration, AParent));
           Result.Element := ParseTableFieldDef(Result);
+          if (CurrentToken = tsqlIdentifier) and
+             SameText(CurrentTokenString, 'COMMENT') then
+          begin
+            GetNextToken;
+            if CurrentToken = tsqlString then
+              GetNextToken;
+          end;
+          if (CurrentToken = tsqlIdentifier) and
+             SameText(CurrentTokenString, 'AFTER') then
+          begin
+            GetNextToken;
+            if CurrentToken = tsqlIdentifier then
+              GetNextToken;
+          end
+          else if (CurrentToken = tsqlIdentifier) and
+                  SameText(CurrentTokenString, 'FIRST') then
+          begin
+            GetNextToken;
+          end;
         end;
       tsqlCheck,
         tsqlConstraint,
@@ -1099,12 +1242,12 @@ begin
         tsqlUnique:
         begin
           Result := TSQLAlterTableAddElementOperation
-            (CreateElement(TSQLAlterTableAddConstraintOperation, AParent));
+                 (CreateElement(TSQLAlterTableAddConstraintOperation, AParent));
           Result.Element := ParseTableConstraint(Result);
         end
     else
       UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint, tsqlForeign,
-        tsqlPrimary, tsqlUnique]);
+                       tsqlPrimary, tsqlUnique]);
     end;
   except
     FreeAndNil(Result);
@@ -1351,27 +1494,53 @@ begin
 end;
 
 function TSQLParser.ParseIfStatement(AParent : TSQLElement) : TSQLIFStatement;
+var
+  HasBrace: Boolean;
+  Block: TSQLStatementBlock;
 begin
-  // On Entry, we're on the if token
   Consume(tsqlIf);
-  Consume(tsqlBraceOpen);
+  HasBrace := (CurrentToken = tsqlBraceOpen);
+  if HasBrace then Consume(tsqlBraceOpen);
   Result := TSQLIFStatement(CreateElement(TSQLIFStatement, AParent));
   try
     Result.Condition := ParseExprLevel1(AParent, [eoIF]);
-    Consume(tsqlBraceClose);
+    if HasBrace then Consume(tsqlBraceClose);
     Consume(tsqlThen);
-    Result.TrueBranch := ParseProcedureStatement(Result);
-    if (CurrentToken = tsqlSemicolon) and (PeekNextToken = tsqlElse) then
+    if CurrentToken <> tsqlBegin then
     begin
-      GetNextToken;
+      Block := TSQLStatementBlock(CreateElement(TSQLStatementBlock, Result));
+      while not (CurrentToken in [tsqlElse, tsqlEnd, tsqlEOF]) do
+      begin
+         Block.Statements.Add(ParseProcedureStatement(Block));
+         if CurrentToken = tsqlSemicolon then Consume(tsqlSemicolon);
+      end;
+      Result.TrueBranch := Block;
     end
-    else if (CurrentToken = tsqlElse) then
-      if not(PreviousToken = tsqlEnd) then
-        UnexpectedToken;
-    if CurrentToken = tsqlElse then
+    else
+      Result.TrueBranch := ParseProcedureStatement(Result);
+    if (CurrentToken = tsqlElse) then
     begin
       GetNextToken;
-      Result.FalseBranch := ParseProcedureStatement(Result);
+      if CurrentToken <> tsqlBegin then
+      begin
+        Block := TSQLStatementBlock(CreateElement(TSQLStatementBlock, Result));
+        while not (CurrentToken in [tsqlEnd, tsqlEOF]) do
+        begin
+           Block.Statements.Add(ParseProcedureStatement(Block));
+           if CurrentToken = tsqlSemicolon then Consume(tsqlSemicolon);
+        end;
+        Result.FalseBranch := Block;
+      end
+      else
+        Result.FalseBranch := ParseProcedureStatement(Result);
+    end;
+    if (CurrentToken = tsqlEnd) then
+    begin
+      if (PeekNextToken = tsqlIf) then
+      begin
+        GetNextToken; // Consume END
+        GetNextToken; // Consume IF
+      end;
     end;
   except
     FreeAndNil(Result);
@@ -1976,7 +2145,6 @@ end;
 
 function TSQLParser.ParseTypeDefinition(AParent : TSQLElement;
   Flags : TParseTypeFlags) : TSQLTypeDefinition;
-
 var
   TN       : string;
   AD       : Integer;
@@ -2107,15 +2275,17 @@ begin
     D.Charset := cs;
     D.Collation := Coll;
     D.Constraint := C;
-    if (not(ptfAlterDomain in Flags)) then
-    // Alternative is to raise an error in each of the following
+if (not(ptfAlterDomain in Flags)) then
     begin
+      if CurrentToken = tsqlNull then GetNextToken;
       if (CurrentToken = tsqlDefault) then
       begin
         GetNextToken;
         D.DefaultValue := CreateLiteral(D);
         GetNextToken;
       end;
+      if CurrentToken = tsqlNull then
+        GetNextToken;
       if (CurrentToken = tsqlNot) then
       begin
         GetNextToken;
@@ -2126,9 +2296,7 @@ begin
       if (CurrentToken = tsqlCheck) and not(ptfTableFieldDef in Flags) then
       begin
         D.Check := ParseCheckConstraint(D, False);
-        // Parsecheckconstraint is on next token.
       end;
-      // Constraint is before collation.
       if CurrentToken in [tsqlConstraint, tsqlCheck, tsqlUnique, tsqlPrimary,
         tsqlReferences] then
       begin
@@ -2136,13 +2304,10 @@ begin
           UnexpectedToken;
         D.Constraint := ParseFieldConstraint(AParent);
       end;
-      // table definition can have PRIMARY KEY CHECK
       if (CurrentToken = tsqlCheck) and (ptfTableFieldDef in Flags) then
       begin
         D.Check := ParseCheckConstraint(D, False);
-        // Parsecheckconstraint is on next token.
       end;
-      // Collation is after constraint in table
       if (CurrentToken = tsqlCollate) then
       begin
         if not(DT in [sdtChar, sdtVarChar, sdtNchar, sdtNVARCHAR, sdtBlob]) then
@@ -2877,9 +3042,12 @@ begin
             CreateIdentifier(Result, N);
           Consume(tsqlIdentifier);
         end;
-      tsqlIdentifier:
+      tsqlIdentifier, tsqlIf:
         begin
-          N := CurrentTokenString;
+          if CurrentToken = tsqlIf then
+            N := 'IF'
+          else
+            N := CurrentTokenString;
           if (GetNextToken <> tsqlBraceOpen) then
           begin
             if (eoCheckConstraint in EO) and not(eoTableConstraint in EO) then
@@ -3405,14 +3573,34 @@ end;
 
 function TSQLParser.ParseCreateStatement(AParent: TSQLElement; IsAlter: Boolean
   ): TSQLCreateOrAlterStatement;
+var
+  Tk: TSQLToken;
 begin
-  case GetNextToken of
+  Tk := GetNextToken;
+  if Tk = tsqlOr then
+  begin
+    GetNextToken;
+    Tk := GetNextToken;
+  end;
+  if (Tk = tsqlIdentifier) and
+     (SameText(CurrentTokenString, 'ALGORITHM') or
+      SameText(CurrentTokenString, 'DEFINER') or
+      SameText(CurrentTokenString, 'SQL')) then
+  begin
+    while not (PeekNextToken in [tsqlTable, tsqlView, tsqlProcedure,
+                                 tsqlTrigger, tsqlIndex, tsqlDomain, tsqlRole,
+                                 tsqlDatabase, tsqlEOF]) do
+    begin
+      GetNextToken;
+    end;
+    Tk := GetNextToken;
+  end;
+  case Tk of
     tsqlTable :
       if IsAlter then
         Result := ParseAlterTableStatement(AParent)
       else
         Result := ParseCreateTableStatement(AParent);
-
     tsqlUnique,
       tsqlAscending,
       tsqlDescending,
@@ -3490,6 +3678,12 @@ begin
     Error(SErrExpectedDBObject, [CurrentTokenString]);
   end;
   GetNextToken;
+  if CurrentToken = tsqlIf then
+  begin
+    GetNextToken;
+    if CurrentToken = tsqlExists then
+      GetNextToken;
+  end;
   if C = TSQLDropShadowStatement then
     Expect(tsqlIntegerNumber)
   else
@@ -4176,13 +4370,8 @@ end;
 function TSQLParser.Parse: TSQLElement;
 begin
   GetNextToken;
-
-  // 1. Limpiar puntos y comas vacíos o caracteres sueltos al final
   while CurrentToken = tsqlSemicolon do
     GetNextToken;
-
-  // 2. LA VALIDACIÓN DEBE IR EXACTAMENTE AQUÍ (ANTES DEL CASE)
-  // Añadimos tsqlUnknown por si el string termina con saltos de línea invisibles
   while CurrentToken in [tsqlSemicolon,
                          tsqlWhiteSpace,
                          tsqlComment,
@@ -4190,7 +4379,12 @@ begin
     GetNextToken;
   if CurrentToken = tsqlEOF then
     Exit(nil);
-  // 3. Inicio del Case
+  if SameText(CurrentTokenString, 'REPLACE') then
+  begin
+    // Derivamos los REPLACE hacia la función de INSERT
+    Result := ParseInsertStatement(nil);
+  end
+  else
   case CurrentToken of
     tsqlSelect, tsqlWith :
       Result := ParseSelectStatement(nil, []);
@@ -4221,10 +4415,38 @@ begin
       Result := ParseGrantStatement(nil);
     tsqlRevoke :
       Result := ParseRevokeStatement(nil);
-  else
-    UnexpectedToken; // Si la validación estuviera después del case, fallaría aquí.
-  end;
+    tsqlIdentifier:
+      begin
+        if SameText(CurrentTokenString, 'START') then
+        begin
+          GetNextToken; // Pasamos el token 'START'
+          if (CurrentToken = tsqlTransaction) or
+             SameText(CurrentTokenString, 'TRANSACTION') then
+          begin
+            Result := TSQLStartTransactionStatement(CreateElement(
+                                           TSQLStartTransactionStatement, nil));
+            GetNextToken; // Pasamos 'TRANSACTION'
+            while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+            begin
+              if TSQLStartTransactionStatement(Result).Modifiers <> '' then
+                TSQLStartTransactionStatement(Result).Modifiers :=
+                          TSQLStartTransactionStatement(Result).Modifiers + ' ';
 
+              TSQLStartTransactionStatement(Result).Modifiers :=
+                               TSQLStartTransactionStatement(Result).Modifiers +
+                                                             CurrentTokenString;
+              GetNextToken;
+            end;
+          end
+          else
+            UnexpectedToken;
+        end
+        else
+          UnexpectedToken;
+      end;
+  else
+    UnexpectedToken;
+  end;
   if Not(CurrentToken in [tsqlEOF, tsqlSemicolon]) then
   begin
     FreeAndNil(Result);
@@ -4308,6 +4530,20 @@ end;
 function TSQLParser.IsEndOfLine: Boolean;
 begin
   Result := FScanner.IsEndOfLine;
+end;
+
+{ TSQLMariaDBInsertStatement }
+
+function TSQLMariaDBInsertStatement.GetAsSQL(Options: TSQLFormatOptions;
+                                             AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := inherited GetAsSQL(Options, AIndent);
+  if IsReplace then
+    Result := StringReplace(Result, 'INSERT', 'REPLACE', [rfIgnoreCase]);
+  if ExtraValues <> '' then
+    Result := Result + ExtraValues;
+  if OnDuplicateKey <> '' then
+    Result := Result + sLineBreak + '  ' + Trim(OnDuplicateKey);
 end;
 
 end.
