@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam - Datos de Albaranes                   }
 {                                                       }
@@ -14,7 +14,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser, inMtoPrincipal,
-  frxClass, frxDBSet;
+  frxClass, frxDBSet, frCoreClasses;
 
 type
   TdmAlbaranes = class(TdmBase)
