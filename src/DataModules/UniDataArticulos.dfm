@@ -629,17 +629,18 @@ inherited dmArticulos: TdmArticulos
       'WHERE CODIGO_UNIDAD_SKU = :Old_CODIGO_UNIDAD_SKU'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      'SELECT * FROM fza_articulos_skus'
+      'SELECT * FROM vi_articulos_skus_con_coste'
       'WHERE CODIGO_UNIDAD_SKU = :CODIGO_UNIDAD_SKU')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
-      'from fza_articulos_skus')
+      'from vi_articulos_skus_con_coste')
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
     Active = True
     BeforePost = unqrySkusBeforePost
+    BeforeDelete = unqrySkusBeforeDelete
     Left = 232
     Top = 296
     ParamData = <

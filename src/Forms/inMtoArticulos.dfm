@@ -386,6 +386,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.ValueUnchecked = 'N'
                     Width = 70
                   end
+                  object tvSkuMtoPRECIO_ULT_COMPRA_SKUC: TcxGridDBColumn
+                    Caption = 'Precio '#218'lt Compra'
+                    DataBinding.FieldName = 'PRECIO_ULT_COMPRA_SKUC'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Width = 165
+                  end
+                  object tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn
+                    Caption = 'Fecha '#218'lt Compra'
+                    DataBinding.FieldName = 'FECHA_ULT_COMPRA_SKUC'
+                    PropertiesClassName = 'TcxDateEditProperties'
+                    Width = 145
+                  end
                   object tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn
                     DataBinding.FieldName = 'CODIGO_ART_SKU'
                     Visible = False

@@ -172,6 +172,8 @@ type
     tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn;
     tvSkuMtoESACTIVO_SKU: TcxGridDBColumn;
     tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn;
+    tvSkuMtoPRECIO_ULT_COMPRA_SKUC: TcxGridDBColumn;
+    tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn;
     cxgrdSkuMtoLevel: TcxGridLevel;
     tsSKUs: TcxTabSheet;
     Panel1: TPanel;
