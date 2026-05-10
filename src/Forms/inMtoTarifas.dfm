@@ -183,6 +183,57 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               TabOrder = 5
               Transparent = True
             end
+            object lblMargenTarifa: TcxLabel
+              Left = 480
+              Top = 13
+              Caption = 'Margen %'
+              TabOrder = 6
+              Transparent = True
+            end
+            object txtPORCENTAJE_MARGEN_TAR: TcxDBCurrencyEdit
+              Left = 555
+              Top = 9
+              DataBinding.DataField = 'PORCENTAJE_MARGEN_TAR'
+              DataBinding.DataSource = dsTablaG
+              Properties.DecimalPlaces = 2
+              Properties.DisplayFormat = '0.00 %'
+              TabOrder = 7
+              Width = 90
+            end
+            object lblMultiploTarifa: TcxLabel
+              Left = 480
+              Top = 47
+              Caption = 'M'#250'ltiplo'
+              TabOrder = 8
+              Transparent = True
+            end
+            object txtVALOR_MULTIPLO_AJUSTE_TAR: TcxDBCurrencyEdit
+              Left = 555
+              Top = 43
+              DataBinding.DataField = 'VALOR_MULTIPLO_AJUSTE_TAR'
+              DataBinding.DataSource = dsTablaG
+              Properties.DecimalPlaces = 4
+              Properties.DisplayFormat = '0.0000'
+              TabOrder = 9
+              Width = 90
+            end
+            object lblMenosTarifa: TcxLabel
+              Left = 480
+              Top = 81
+              Caption = 'Menos'
+              TabOrder = 10
+              Transparent = True
+            end
+            object txtVALOR_MENOS_AJUSTE_TAR: TcxDBCurrencyEdit
+              Left = 555
+              Top = 77
+              DataBinding.DataField = 'VALOR_MENOS_AJUSTE_TAR'
+              DataBinding.DataSource = dsTablaG
+              Properties.DecimalPlaces = 4
+              Properties.DisplayFormat = '0.0000'
+              TabOrder = 11
+              Width = 90
+            end
           end
         end
         object pnl2: TPanel
@@ -240,6 +291,15 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   TabOrder = 1
                   OnClick = btAddBlockClick
                 end
+                object btnCalcMargen: TcxButton
+                  Left = 3
+                  Top = 93
+                  Width = 120
+                  Height = 25
+                  Caption = 'Margen...'
+                  TabOrder = 2
+                  OnClick = btnCalcMargenClick
+                end
               end
               object cxspltr1: TcxSplitter
                 Left = 749
@@ -273,6 +333,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   object tvArticulos: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
                     Navigator.Visible = True
+                    OnFocusedRecordChanged = tvArticulosFocusedRecordChanged
                     DataController.DataModeController.SmartRefresh = True
                     DataController.DataSource = dmTarifas.dsArticulosTarifas
                     DataController.Summary.DefaultGroupSummaryItems = <
@@ -451,6 +512,57 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                     object tvArticulosPRECIOFINAL_TARIFA: TcxGridDBColumn
                       Caption = 'Precio Final'
                       DataBinding.FieldName = 'PRECIO_FINAL_ARTTAR'
+                    end
+                    object tvArticulosPORCENTAJE_MARGEN_ARTTAR: TcxGridDBColumn
+                      Caption = '% Margen'
+                      DataBinding.FieldName = 'PORCENTAJE_MARGEN_ARTTAR'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 2
+                      Properties.DisplayFormat = '0.00 %'
+                      Width = 90
+                    end
+                    object tvArticulosVALOR_MULTIPLO_AJUSTE_ARTTAR: TcxGridDBColumn
+                      Caption = 'M'#250'ltiplo'
+                      DataBinding.FieldName = 'VALOR_MULTIPLO_AJUSTE_ARTTAR'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 4
+                      Properties.DisplayFormat = '0.0000'
+                      Width = 80
+                    end
+                    object tvArticulosVALOR_MENOS_AJUSTE_ARTTAR: TcxGridDBColumn
+                      Caption = 'Menos'
+                      DataBinding.FieldName = 'VALOR_MENOS_AJUSTE_ARTTAR'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 4
+                      Properties.DisplayFormat = '0.0000'
+                      Width = 80
+                    end
+                    object tvArticulosPORCENTAJE_MARGEN_EFECTIVO: TcxGridDBColumn
+                      Caption = '% Margen efect.'
+                      DataBinding.FieldName = 'PORCENTAJE_MARGEN_EFECTIVO'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 2
+                      Properties.DisplayFormat = '0.00 %'
+                      Visible = False
+                      Width = 110
+                    end
+                    object tvArticulosVALOR_MULTIPLO_AJUSTE_EFECTIVO: TcxGridDBColumn
+                      Caption = 'M'#250'ltiplo efect.'
+                      DataBinding.FieldName = 'VALOR_MULTIPLO_AJUSTE_EFECTIVO'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 4
+                      Properties.DisplayFormat = '0.0000'
+                      Visible = False
+                      Width = 100
+                    end
+                    object tvArticulosVALOR_MENOS_AJUSTE_EFECTIVO: TcxGridDBColumn
+                      Caption = 'Menos efect.'
+                      DataBinding.FieldName = 'VALOR_MENOS_AJUSTE_EFECTIVO'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DecimalPlaces = 4
+                      Properties.DisplayFormat = '0.0000'
+                      Visible = False
+                      Width = 100
                     end
                     object tvArticulosESIMP_INCL_TARIFA: TcxGridDBColumn
                       DataBinding.FieldName = 'ESIMP_INCL_TAR'

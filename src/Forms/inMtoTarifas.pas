@@ -128,11 +128,31 @@ type
     tvArticulosESACTIVO_SKU: TcxGridDBColumn;
     tvArticulosDESCRIPCION_SKU: TcxGridDBColumn;
     tvArticulosNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
+    btnCalcMargen: TcxButton;
+    lblMargenTarifa: TcxLabel;
+    lblMultiploTarifa: TcxLabel;
+    lblMenosTarifa: TcxLabel;
+    txtPORCENTAJE_MARGEN_TAR: TcxDBCurrencyEdit;
+    txtVALOR_MULTIPLO_AJUSTE_TAR: TcxDBCurrencyEdit;
+    txtVALOR_MENOS_AJUSTE_TAR: TcxDBCurrencyEdit;
+    tvArticulosPORCENTAJE_MARGEN_ARTTAR: TcxGridDBColumn;
+    tvArticulosVALOR_MULTIPLO_AJUSTE_ARTTAR: TcxGridDBColumn;
+    tvArticulosVALOR_MENOS_AJUSTE_ARTTAR: TcxGridDBColumn;
+    tvArticulosPORCENTAJE_MARGEN_EFECTIVO: TcxGridDBColumn;
+    tvArticulosVALOR_MULTIPLO_AJUSTE_EFECTIVO: TcxGridDBColumn;
+    tvArticulosVALOR_MENOS_AJUSTE_EFECTIVO: TcxGridDBColumn;
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actFamiliasExecute(Sender: TObject);
     procedure actProveedoresExecute(Sender: TObject);
     procedure btAddBlockClick(Sender: TObject);
+    procedure btnCalcMargenClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure tvArticulosFocusedRecordChanged(
+      Sender: TcxCustomGridTableView;
+      APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
+      ANewItemRecordFocusingChanged: Boolean);
+  private
+    procedure ActualizarVisibilidadColumnaSKU;
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -150,7 +170,7 @@ uses
   inLibDevExp,
   inMtoArticulos,
   inMtoFamilias,
-  inMtoProveedores, inMtoModalAddBlockTarifa;
+  inMtoProveedores, inMtoModalAddBlockTarifa, inMtoModalCalcularMargen;
 
 {$R *.dfm}
 
@@ -253,6 +273,105 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
+  ActualizarVisibilidadColumnaSKU;
+end;
+
+procedure TfrmMtoTarifas.ActualizarVisibilidadColumnaSKU;
+var
+  ds: TDataSet;
+  fldTieneSku: TField;
+begin
+  if dmmTarifas = nil then Exit;
+  ds := dmmTarifas.unqryArticulosTarifas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+  begin
+    tvArticulosCODIGO_UNICO_TARIFA_SKU.Visible := True;
+    Exit;
+  end;
+  fldTieneSku := ds.FindField('TIENE_SKU');
+  if fldTieneSku = nil then
+    Exit;
+  tvArticulosCODIGO_UNICO_TARIFA_SKU.Visible :=
+    SameText(fldTieneSku.AsString, 'S');
+end;
+
+procedure TfrmMtoTarifas.tvArticulosFocusedRecordChanged(
+  Sender: TcxCustomGridTableView;
+  APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
+  ANewItemRecordFocusingChanged: Boolean);
+begin
+  inherited;
+  ActualizarVisibilidadColumnaSKU;
+end;
+
+procedure TfrmMtoTarifas.btnCalcMargenClick(Sender: TObject);
+var
+  ds         : TDataSet;
+  res        : TCalcularMargenResult;
+  unicoFld   : TField;
+  codigoArt  : string;
+  descArt    : string;
+  codigoTar  : string;
+  nombreTar  : string;
+  descSku    : string;
+  coste      : Double;
+  precSalida : Double;
+  margenIni  : Double;
+  multIni    : Double;
+  menosIni   : Double;
+  unico      : Integer;
+begin
+  inherited;
+  ds := dmmTarifas.unqryArticulosTarifas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+  begin
+    ShowMessage('Selecciona primero un artículo de la tarifa.');
+    Exit;
+  end;
+
+  unicoFld := ds.FindField('CODIGO_UNICO_ARTTAR');
+  if (unicoFld = nil) or unicoFld.IsNull then
+  begin
+    ShowMessage('Este artículo aún no tiene precio en la tarifa. ' +
+                'Añádelo primero (botón "Añadir Bloque") y luego calcula el margen.');
+    Exit;
+  end;
+  unico := unicoFld.AsInteger;
+
+  codigoArt  := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
+  descArt    := ds.FieldByName('DESCRIPCION_ART').AsString;
+  codigoTar  := ds.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+  nombreTar  := ds.FieldByName('NOMBRE_TAR_TAR').AsString;
+  descSku    := ds.FieldByName('DESCRIPCION_SKU').AsString;
+  coste      := ds.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
+  precSalida := ds.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
+  margenIni  := ds.FieldByName('PORCENTAJE_MARGEN_EFECTIVO').AsFloat;
+  multIni    := ds.FieldByName('VALOR_MULTIPLO_AJUSTE_EFECTIVO').AsFloat;
+  menosIni   := ds.FieldByName('VALOR_MENOS_AJUSTE_EFECTIVO').AsFloat;
+
+  if coste <= 0 then
+  begin
+    ShowMessage('El artículo no tiene precio de coste (precio última compra). ' +
+                'No se puede calcular el margen comercial.');
+    Exit;
+  end;
+
+  res := TfrmModalCalcularMargen.Ejecutar(
+    Self,
+    (ds as TUniQuery).Connection,
+    unico,
+    codigoArt, descArt,
+    codigoTar, nombreTar,
+    descSku,
+    coste, precSalida,
+    margenIni, multIni, menosIni);
+
+  if res.Aceptado then
+  begin
+    ds.Close;
+    ds.Open;
+    ActualizarVisibilidadColumnaSKU;
+  end;
 end;
 
 procedure TfrmMtoTarifas.dsTablaGStateChange(Sender: TObject);
