@@ -486,10 +486,6 @@
             <Form>frmModalAddBlockTarifa</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalCalcularMargen.pas">
-            <Form>frmModalCalcularMargen</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
         <DCCReference Include="src\Forms\inMtoVariaciones.pas">
             <Form>frmMtoVariaciones</Form>
