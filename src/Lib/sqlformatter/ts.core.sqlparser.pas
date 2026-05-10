@@ -695,11 +695,39 @@ end;
 
 function TSQLParser.ParseSelectStatement(AParent: TSQLElement;
   Flags : TSelectFlags = []): TSQLSelectStatement;
+var
+  CTE: TSQLCommonTableExpression;
 begin
-  // On entry, we're on the SELECT keyword
-  Expect(tsqlSelect);
+  // 1. Permitimos que la instrucción empiece con SELECT o con WITH
+  Expect([tsqlSelect, tsqlWith]);
+
   Result := TSQLSelectStatement(CreateElement(TSQLSelectStatement, AParent));
   try
+    if CurrentToken = tsqlWith then
+    begin
+      GetNextToken; // Consumimos la palabra 'WITH'
+      repeat
+        CTE := TSQLCommonTableExpression(CreateElement(TSQLCommonTableExpression, Result));
+        Result.WithClause.Add(CTE);
+        Expect(tsqlIdentifier);
+        CTE.Name := CreateIdentifier(CTE, CurrentTokenString);
+        GetNextToken;
+        if CurrentToken = tsqlBraceOpen then
+        begin
+          GetNextToken;
+          ParseIdentifierList(CTE, CTE.Fields);
+        end;
+        Consume(tsqlAs);
+        Consume(tsqlBraceOpen);
+        CTE.Select := ParseSelectStatement(CTE, [sfSingleTon]);
+        Consume(tsqlBraceClose); // Cierra el paréntesis de este WITH
+        if CurrentToken = tsqlComma then
+          GetNextToken
+        else
+          Break;
+      until False;
+      Expect(tsqlSelect);
+    end;
     if (PeekNextToken = tsqlTransaction) then
     begin
       Consume(tsqlSelect);
@@ -708,7 +736,14 @@ begin
       Result.TransactionName := CreateIdentifier(Result, CurrentTokenString);
     end;
     ParseSelectFieldList(Result, Result.Fields, sfSingleTon in Flags);
-    // On return, we are on the FROM keyword.
+    if (PeekNextToken = tsqlTransaction) then
+    begin
+      Consume(tsqlSelect);
+      GetNextToken;
+      Expect(tsqlIdentifier);
+      Result.TransactionName := CreateIdentifier(Result, CurrentTokenString);
+    end;
+    ParseSelectFieldList(Result, Result.Fields, sfSingleTon in Flags);
     ParseFromClause(Result, Result.Tables);
     if CurrentToken = tsqlWhere then
     begin
@@ -752,8 +787,8 @@ begin
     if (CurrentToken = tsqlIdentifier) and
        SameText(CurrentTokenString, 'LIMIT') then
     begin
-      GetNextToken; // Consumir la palabra "LIMIT"
-      Result.Limit := ParseExprLevel1(Result, []); // Leer el número (ej: 1)
+      GetNextToken;
+      Result.Limit := ParseExprLevel1(Result, []);
     end;
     if (sfInto in Flags) then
     begin
@@ -4141,7 +4176,7 @@ begin
     Exit(nil);
   // 3. Inicio del Case
   case CurrentToken of
-    tsqlSelect :
+    tsqlSelect, tsqlWith :
       Result := ParseSelectStatement(nil, []);
     tsqlUpdate :
       Result := ParseUpdateStatement(nil);
