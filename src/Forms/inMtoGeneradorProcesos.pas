@@ -663,13 +663,9 @@ var
   Formatter: ICodeFormatter;
 begin
   inherited;
-//  var sSQL := dbsyndtTexto.Lines.Text;
-//  sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
-//  // 3. Normalizar espacios múltiples
-//  while Pos('  ', sSQL) > 0 do
-//    sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
-//  Formatter := GetSQLFormatter;
-//  dbsyndtTexto.Lines.Text := Formatter.Format(sSQL);
+  var sSQL := dbSynEdit1.Lines.Text;
+  Formatter := GetSQLFormatter;
+  dbSynEdit1.Lines.Text := Formatter.Format(sSQL);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnEditarClick(Sender: TObject);
