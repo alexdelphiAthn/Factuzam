@@ -1,4 +1,4 @@
-unit inLibArticulosResolver;
+﻿unit inLibArticulosResolver;
 
 {
   Unidad: inLibArticulosResolver
@@ -348,47 +348,13 @@ var
   dFecha : TDateTime;
 begin
   Result.Clear;
-  if ACodigoArt = '' then Exit;
+  if ACodigoArt = '' then
+    Exit;
   Result.CodigoTarifa := ACodigoTarifa;
-
-  // 1er intento: vista vi_articulos_tarifas. Resuelve la herencia SKU>padre
-  // y agrega margen/ajustes efectivos. Filtra hoy con CURDATE().
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT v.CODIGO_TAR_ARTTAR, v.NOMBRE_TAR_TAR, v.ORIGEN_PRECIO, ' +
-      '       v.PRECIO_SALIDA_ARTTAR, v.PRECIO_FINAL_ARTTAR, ' +
-      '       v.PRECIO_DTO_ARTTAR, v.PORCENTAJE_DTO_ARTTAR, ' +
-      '       v.PORCENTAJE_MARGEN_EFECTIVO, ' +
-      '       v.VALOR_MULTIPLO_AJUSTE_EFECTIVO, ' +
-      '       v.VALOR_MENOS_AJUSTE_EFECTIVO, ' +
-      '       v.ESIMP_INCL_TAR, v.ESDEFAULT_TAR, ' +
-      '       v.FECHA_DESDE_ARTTAR, v.FECHA_HASTA_ARTTAR ' +
-      '  FROM vi_articulos_tarifas v ' +
-      ' WHERE v.CODIGO_ART_ARTTAR    = :art ' +
-      '   AND v.CODIGO_UNIDAD_ARTTAR = :sku ' +
-      '   AND v.CODIGO_TAR_ARTTAR    = :tar ' +
-      ' LIMIT 1';
-    q.ParamByName('art').AsString := ACodigoArt;
-    q.ParamByName('sku').AsString := ACodigoSku;
-    q.ParamByName('tar').AsString := ACodigoTarifa;
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      RellenarPrecioDesdeQry(q, Result, AFecha);
-      Exit;
-    end;
-  finally
-    q.Free;
-  end;
-
-  // 2º intento: la vista no emite fila con CODIGO_UNIDAD_ARTTAR='' cuando
-  // el artículo tiene SKUs activos. Para casos en que el llamante quiere
-  // ver el precio del padre (ej. caja mostrando línea provisional mientras
-  // pide talla/color, o consulta de precio histórica), o para una fecha
-  // distinta de hoy, consultamos la tabla cruda con prioridad SKU>padre.
-  if AFecha = 0 then dFecha := Now else dFecha := AFecha;
+  if AFecha = 0 then
+    dFecha := Now
+  else
+    dFecha := AFecha;
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
