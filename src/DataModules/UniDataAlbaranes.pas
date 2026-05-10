@@ -23,18 +23,23 @@ type
     unqryEmpDataAlb:      TUniQuery;
     unqryCliDataAlb:      TUniQuery;
     unqryArtDataLinAlb:   TUniQuery;
+    unqrySkusAlb:         TUniQuery;
     unqryFacturas:        TUniQuery;
     dsFacturas:           TDataSource;
+    unqryMovimientosAlb:  TUniQuery;
+    dsMovimientosAlb:     TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
     unstrdprcCrearFacturaInicio: TUniStoredProc;
     unstrdprcCrearFacturaLinea:  TUniStoredProc;
     unstrdprcCrearFacturaFin:    TUniStoredProc;
+    unstrdprcInsertarMovAlb:     TUniStoredProc;
     fxdsPrintAlb:    TfrxDBDataset;
     fxdstPrintLinAlb:TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
@@ -58,6 +63,12 @@ type
     // en una única factura. Devuelve número de facturas generadas.
     function FacturarAlbaranesLista(aListaAlbaranes: TStrings;
                                     bAgruparPorCliente: Boolean): Integer;
+
+    // Genera los movimientos de salida de stock asociados a las líneas del
+    // albarán cargado. Idempotente: salta líneas sin SKU y líneas que ya
+    // tengan un movimiento registrado para el documento (TIPO_DOC_MOV='AV').
+    // Devuelve el número de movimientos creados.
+    function GenerarMovimientosSalida: Integer;
   private
     FProcsInstalados: Boolean;
   end;
@@ -68,7 +79,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibtb;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -82,11 +93,14 @@ begin
   unqryEmpDataAlb.Connection             := inLibGlobalVar.oConn;
   unqryCliDataAlb.Connection             := inLibGlobalVar.oConn;
   unqryArtDataLinAlb.Connection          := inLibGlobalVar.oConn;
+  unqrySkusAlb.Connection                := inLibGlobalVar.oConn;
   unqryFacturas.Connection               := inLibGlobalVar.oConn;
+  unqryMovimientosAlb.Connection         := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaFin.Connection    := inLibGlobalVar.oConn;
+  unstrdprcInsertarMovAlb.Connection     := inLibGlobalVar.oConn;
 end;
 
 procedure TdmAlbaranes.DataModuleDestroy(Sender: TObject);
@@ -95,6 +109,8 @@ begin
     unqryAlbaranesLineas.Close;
   if Assigned(unqryFacturas) and unqryFacturas.Active then
     unqryFacturas.Close;
+  if Assigned(unqryMovimientosAlb) and unqryMovimientosAlb.Active then
+    unqryMovimientosAlb.Close;
   inherited;
 end;
 
@@ -106,6 +122,7 @@ begin
   InstalarProcedimientos;
   if not unqryAlbaranesLineas.Active then unqryAlbaranesLineas.Open;
   if not unqryFacturas.Active        then unqryFacturas.Open;
+  if not unqryMovimientosAlb.Active  then unqryMovimientosAlb.Open;
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -135,6 +152,18 @@ begin
   CalcularTotalesAlbaran;
 end;
 
+procedure TdmAlbaranes.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  inherited;
+  // Tras consolidar la cabecera y las líneas, generamos el movimiento de
+  // salida de stock para cada línea con SKU. Si ya existen movimientos para
+  // este albarán (TIPO_DOC_MOV='AV') la operación es idempotente y no
+  // duplica.
+  if (Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString) <> '') and
+     (unqryTablaG.FieldByName('NUMERO_ALB').AsString <> '0') then
+    GenerarMovimientosSalida;
+end;
+
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
 begin
   inherited;
@@ -151,6 +180,8 @@ begin
 end;
 
 procedure TdmAlbaranes.unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
+var
+  sSku, sArt: string;
 begin
   inherited;
   with unqryAlbaranesLineas do
@@ -161,6 +192,25 @@ begin
       FieldByName('TOTAL_ALBLIN').AsFloat :=
         FieldByName('CANTIDAD_ALBLIN').AsFloat *
         FieldByName('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN').AsFloat;
+
+    // Si el usuario ha tecleado un SKU pero no el artículo, lo deducimos
+    // consultando fza_articulos_skus.
+    if (FindField('CODIGO_UNIDAD_ALBLIN') <> nil) and
+       (FindField('CODIGO_ART_ALBLIN') <> nil) then
+    begin
+      sSku := Trim(FieldByName('CODIGO_UNIDAD_ALBLIN').AsString);
+      sArt := Trim(FieldByName('CODIGO_ART_ALBLIN').AsString);
+      if (sSku <> '') and (sArt = '') then
+      begin
+        unqrySkusAlb.Close;
+        unqrySkusAlb.ParamByName('pSKU').AsString := sSku;
+        unqrySkusAlb.Open;
+        if not unqrySkusAlb.Eof then
+          FieldByName('CODIGO_ART_ALBLIN').AsString :=
+                                  unqrySkusAlb.FieldByName('CODIGO_ART_SKU').AsString;
+        unqrySkusAlb.Close;
+      end;
+    end;
   end;
 end;
 
@@ -302,6 +352,18 @@ begin
     Run('ALTER TABLE fza_albaranes_lineas ' +
         'ADD COLUMN IF NOT EXISTS LINEA_FAC_ALBLIN VARCHAR(4) DEFAULT NULL');
 
+    // Columnas SKU / lote / caducidad / variación (mismo nombre lógico que en
+    // fza_facturas_lineas, sólo cambia el sufijo); permiten propagar la
+    // información hacia la factura.
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS CODIGO_UNIDAD_ALBLIN VARCHAR(50) DEFAULT NULL');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS LOTE_ALBLIN VARCHAR(50) DEFAULT NULL');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS FECHA_CADUCIDAD_ALBLIN DATE DEFAULT NULL');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS DESCRIPCION_VARIACION_ALBLIN VARCHAR(200) DEFAULT NULL');
+
     // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer albarán.
     Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_INICIO');
     Run(
@@ -393,8 +455,11 @@ begin
       '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
       '  INSERT INTO fza_facturas_lineas ( ' +
       '    NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
-      '    CODIGO_ART_FACLIN, CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN, ' +
-      '    DESCRIPCION_ARTICULO_FACLIN, TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
+      '    CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, ' +
+      '    LOTE_FACLIN, FECHA_CADUCIDAD_FACLIN, ' +
+      '    CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN, ' +
+      '    DESCRIPCION_ARTICULO_FACLIN, DESCRIPCION_VARIACION_FACLIN, ' +
+      '    TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
       '    CANTIDAD_FACLIN, CODIGO_TAR_FACLIN, ESIMP_INCL_TARIFA_FACLIN, ' +
       '    TIPO_IVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
       '    PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
@@ -402,8 +467,11 @@ begin
       '    TOTAL_FACLIN, CODIGO_ALM_FACLIN, ' +
       '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       '  SELECT p_NUMERO_FAC, p_SERIE_FAC, v_linea_fac, ' +
-      '         AL.CODIGO_ART_ALBLIN, AL.CODIGO_FAM_ALBLIN, AL.NOMBRE_FAM_ALBLIN, ' +
-      '         AL.DESCRIPCION_ARTICULO_ALBLIN, AL.TIPO_CANTIDAD_ARTICULO_ALBLIN, ' +
+      '         AL.CODIGO_ART_ALBLIN, AL.CODIGO_UNIDAD_ALBLIN, ' +
+      '         AL.LOTE_ALBLIN, AL.FECHA_CADUCIDAD_ALBLIN, ' +
+      '         AL.CODIGO_FAM_ALBLIN, AL.NOMBRE_FAM_ALBLIN, ' +
+      '         AL.DESCRIPCION_ARTICULO_ALBLIN, AL.DESCRIPCION_VARIACION_ALBLIN, ' +
+      '         AL.TIPO_CANTIDAD_ARTICULO_ALBLIN, ' +
       '         AL.CANTIDAD_ALBLIN, AL.CODIGO_TAR_ALBLIN, AL.ESIMP_INCL_TARIFA_ALBLIN, ' +
       '         AL.TIPO_IVA_ARTICULO_ALBLIN, AL.PORCENTAJE_IVA_ALBLIN, ' +
       '         AL.PRECIO_VENTA_SIVA_ARTICULO_ALBLIN, ' +
@@ -752,6 +820,128 @@ begin
   begin
     unqryFacturas.Close;
     unqryFacturas.Open;
+  end;
+end;
+
+function TdmAlbaranes.GenerarMovimientosSalida: Integer;
+var
+  qLineas: TUniQuery;
+  qExiste: TUniQuery;
+  sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
+  sLinea, sSku, sAlmacen, sArticulo: string;
+  fCantidad: Double;
+begin
+  Result := 0;
+  if not unqryTablaG.Active then Exit;
+  sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
+  sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
+  if (sNumeroAlb = '') or (sNumeroAlb = '0') then Exit;
+  sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
+  sCliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
+
+  qLineas := TUniQuery.Create(nil);
+  qExiste := TUniQuery.Create(nil);
+  try
+    qLineas.Connection := inLibGlobalVar.oConn;
+    qLineas.SQL.Text :=
+      'SELECT LINEA_ALBLIN, CODIGO_UNIDAD_ALBLIN, CODIGO_ART_ALBLIN, ' +
+      '       CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN ' +
+      '  FROM fza_albaranes_lineas ' +
+      ' WHERE NUMERO_ALB_ALBLIN = :pNUM ' +
+      '   AND SERIE_ALB_ALBLIN  = :pSER ' +
+      ' ORDER BY LINEA_ALBLIN';
+    qLineas.ParamByName('pNUM').AsString := sNumeroAlb;
+    qLineas.ParamByName('pSER').AsString := sSerieAlb;
+    qLineas.Open;
+
+    qExiste.Connection := inLibGlobalVar.oConn;
+    qExiste.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_movimientos_almacen ' +
+      ' WHERE TIPO_DOC_REF_MOV   = ''AV'' ' +
+      '   AND SERIE_DOC_REF_MOV  = :pSER ' +
+      '   AND NUMERO_DOC_REF_MOV = :pNUM ' +
+      '   AND LINEA_REF_MOV      = :pLIN';
+
+    qLineas.First;
+    while not qLineas.Eof do
+    begin
+      sLinea    := qLineas.FieldByName('LINEA_ALBLIN').AsString;
+      sSku      := Trim(qLineas.FieldByName('CODIGO_UNIDAD_ALBLIN').AsString);
+      sArticulo := qLineas.FieldByName('CODIGO_ART_ALBLIN').AsString;
+      fCantidad := qLineas.FieldByName('CANTIDAD_ALBLIN').AsFloat;
+      sAlmacen  := qLineas.FieldByName('CODIGO_ALMACEN_ALBLIN').AsString;
+
+      if (sSku <> '') and (fCantidad > 0) then
+      begin
+        // ¿Ya hay movimiento para esta línea? Si es así, saltar.
+        qExiste.Close;
+        qExiste.ParamByName('pSER').AsString := sSerieAlb;
+        qExiste.ParamByName('pNUM').AsString := sNumeroAlb;
+        qExiste.ParamByName('pLIN').AsString := sLinea;
+        qExiste.Open;
+        if qExiste.FieldByName('N').AsInteger = 0 then
+        begin
+          with unstrdprcInsertarMovAlb do
+          begin
+            Params.Clear;
+            Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
+            Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);
+            Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',       ptInput);
+            Params.CreateParam(ftString, 'p_NRO_DOC_MOV',         ptInput);
+            Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
+            Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
+            Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
+            Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',    ptInput);
+            Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',     ptInput);
+            Params.CreateParam(ftString, 'p_USUARIO',             ptInput);
+            Params.CreateParam(ftString, 'p_ALMACEN_DOC',         ptInput);
+            Params.CreateParam(ftString, 'p_NUMOP_DOC',           ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
+            Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
+            Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
+            ParamByName('p_NUMERO_MOV').AsString          :=
+                                            inLibtb.ObtenerSiguienteContador('MV');
+            ParamByName('p_TIPO_DOC_MOV').AsString        := 'AV';
+            ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieAlb;
+            ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroAlb;
+            ParamByName('p_LINEA_MOV').AsString           := sLinea;
+            ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sEmpresa;
+            ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
+            ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
+            ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
+            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+            ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
+            ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
+            ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
+            ParamByName('p_USUARIO').AsString             := oUser;
+            ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
+            ParamByName('p_NUMOP_DOC').AsString           := '';
+            ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := '';
+            ParamByName('p_CODCLIENTE').AsString          := sCliente;
+            ParamByName('p_CODARTICULO').AsString         := sArticulo;
+            ExecProc;
+          end;
+          Inc(Result);
+        end;
+        qExiste.Close;
+      end;
+      qLineas.Next;
+    end;
+  finally
+    qLineas.Free;
+    qExiste.Free;
+  end;
+
+  // Refrescar el grid de movimientos si está abierto.
+  if unqryMovimientosAlb.Active then
+  begin
+    unqryMovimientosAlb.Close;
+    unqryMovimientosAlb.Open;
   end;
 end;
 

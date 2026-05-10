@@ -66,6 +66,9 @@ type
     unqryConsolidacion: TUniQuery;
     dsErrores: TDataSource;
     unqryErrores: TUniQuery;
+    unqryMovimientosFac: TUniQuery;
+    dsMovimientosFac:    TDataSource;
+    unstrdprcInsertarMovFac: TUniStoredProc;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryLinFacBeforeInsert(DataSet: TDataSet);
@@ -106,6 +109,13 @@ public
                                     sEmpresa:string;
                                     dtFecha:TDateTime): string;
     procedure OpenTables;
+
+    // Genera movimientos de salida de stock para todas las líneas de la
+    // factura cargada (sólo se llama automáticamente en facturas
+    // simplificadas, pero se puede invocar manualmente). Idempotente: salta
+    // líneas que ya tengan un movimiento registrado para el documento
+    // (TIPO_DOC_REF_MOV='FC').
+    function GenerarMovimientosSalidaFactura: Integer;
   end;
 var
   dmFacturas: TdmFacturas;
@@ -725,10 +735,13 @@ begin
   unqryPaisesCli.Connection := inLibGlobalVar.oConn;
   unqryConsolidacion.Connection := inLibGlobalVar.oConn;
   unqryErrores.Connection := inLibGlobalVar.oConn;
+  unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
+  unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
   unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
   unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+  unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
 end;
 
 procedure TdmFacturas.OpenTables;
@@ -744,6 +757,7 @@ begin
   unqryPaisesEmp.Open;
   unqryConsolidacion.Open;
   unqryErrores.Open;
+  unqryMovimientosFac.Open;
 end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);
@@ -760,6 +774,8 @@ begin
   unqryPaisesCli.Close;
   unqryConsolidacion.Close;
   unqryErrores.Close;
+  if Assigned(unqryMovimientosFac) and unqryMovimientosFac.Active then
+    unqryMovimientosFac.Close;
   //unqrySeriesEditCombo.Close;
   //unqryCabIVA.Close;
   inherited;
@@ -972,6 +988,13 @@ procedure TdmFacturas.unqryFacAfterPost(DataSet: TDataSet);
 begin
   inherited;
   CalcularFactura;
+  // Sólo las facturas simplificadas (tickets directos sin albarán previo)
+  // generan movimientos automáticos al consolidarse.
+  if (unqryTablaG.Active) and
+     (unqryTablaG.FindField('TIPO_FAC') <> nil) and
+     (unqryTablaG.FieldByName('TIPO_FAC').AsString = 'SIMPLIFICADA') and
+     (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) <> '') then
+    GenerarMovimientosSalidaFactura;
 end;
 
 procedure TdmFacturas.unqryLinFacAfterDelete(DataSet: TDataSet);
@@ -1279,6 +1302,133 @@ begin
           GetCodigoAutoEmpresa;
         odmConn.ActualizarUserTimeModif(DataSet);
       end;
+  end;
+end;
+
+function TdmFacturas.GenerarMovimientosSalidaFactura: Integer;
+var
+  qLineas, qExiste: TUniQuery;
+  sNumeroFac, sSerieFac, sEmpresa, sCliente: string;
+  sLinea, sSku, sAlmacen, sArticulo, sCaja, sNumOp: string;
+  fCantidad: Double;
+begin
+  Result := 0;
+  if not unqryTablaG.Active then Exit;
+  sNumeroFac := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+  sSerieFac  := unqryTablaG.FieldByName('SERIE_FAC').AsString;
+  if (sNumeroFac = '') then Exit;
+  sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
+  sCliente := unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString;
+  if unqryTablaG.FindField('CODIGO_CAJA_FAC') <> nil then
+    sCaja := unqryTablaG.FieldByName('CODIGO_CAJA_FAC').AsString
+  else
+    sCaja := '';
+  if unqryTablaG.FindField('NUMERO_OPERACION_FAC') <> nil then
+    sNumOp := unqryTablaG.FieldByName('NUMERO_OPERACION_FAC').AsString
+  else
+    sNumOp := '';
+
+  qLineas := TUniQuery.Create(nil);
+  qExiste := TUniQuery.Create(nil);
+  try
+    qLineas.Connection := inLibGlobalVar.oConn;
+    qLineas.SQL.Text :=
+      'SELECT LINEA_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_ART_FACLIN, ' +
+      '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN ' +
+      '  FROM fza_facturas_lineas ' +
+      ' WHERE NUMERO_FAC_FACLIN = :pNUM ' +
+      '   AND SERIE_FAC_FACLIN  = :pSER ' +
+      ' ORDER BY LINEA_FACLIN';
+    qLineas.ParamByName('pNUM').AsString := sNumeroFac;
+    qLineas.ParamByName('pSER').AsString := sSerieFac;
+    qLineas.Open;
+
+    qExiste.Connection := inLibGlobalVar.oConn;
+    qExiste.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_movimientos_almacen ' +
+      ' WHERE TIPO_DOC_REF_MOV   = ''FC'' ' +
+      '   AND SERIE_DOC_REF_MOV  = :pSER ' +
+      '   AND NUMERO_DOC_REF_MOV = :pNUM ' +
+      '   AND LINEA_REF_MOV      = :pLIN';
+
+    qLineas.First;
+    while not qLineas.Eof do
+    begin
+      sLinea    := qLineas.FieldByName('LINEA_FACLIN').AsString;
+      sSku      := Trim(qLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+      sArticulo := qLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+      fCantidad := qLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
+      sAlmacen  := qLineas.FieldByName('CODIGO_ALM_FACLIN').AsString;
+
+      if (sSku <> '') and (fCantidad > 0) then
+      begin
+        qExiste.Close;
+        qExiste.ParamByName('pSER').AsString := sSerieFac;
+        qExiste.ParamByName('pNUM').AsString := sNumeroFac;
+        qExiste.ParamByName('pLIN').AsString := sLinea;
+        qExiste.Open;
+        if qExiste.FieldByName('N').AsInteger = 0 then
+        begin
+          with unstrdprcInsertarMovFac do
+          begin
+            Params.Clear;
+            Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
+            Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);
+            Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',       ptInput);
+            Params.CreateParam(ftString, 'p_NRO_DOC_MOV',         ptInput);
+            Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
+            Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
+            Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
+            Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',    ptInput);
+            Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',     ptInput);
+            Params.CreateParam(ftString, 'p_USUARIO',             ptInput);
+            Params.CreateParam(ftString, 'p_ALMACEN_DOC',         ptInput);
+            Params.CreateParam(ftString, 'p_NUMOP_DOC',           ptInput);
+            Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
+            Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
+            Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
+            ParamByName('p_NUMERO_MOV').AsString          :=
+                                                    ObtenerSiguienteContador('MV');
+            ParamByName('p_TIPO_DOC_MOV').AsString        := 'FC';
+            ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieFac;
+            ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroFac;
+            ParamByName('p_LINEA_MOV').AsString           := sLinea;
+            ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sEmpresa;
+            ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
+            ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
+            ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
+            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+            ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
+            ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
+            ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
+            ParamByName('p_USUARIO').AsString             := oUser;
+            ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
+            ParamByName('p_NUMOP_DOC').AsString           := sNumOp;
+            ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := sCaja;
+            ParamByName('p_CODCLIENTE').AsString          := sCliente;
+            ParamByName('p_CODARTICULO').AsString         := sArticulo;
+            ExecProc;
+          end;
+          Inc(Result);
+        end;
+        qExiste.Close;
+      end;
+      qLineas.Next;
+    end;
+  finally
+    qLineas.Free;
+    qExiste.Free;
+  end;
+
+  if unqryMovimientosFac.Active then
+  begin
+    unqryMovimientosFac.Close;
+    unqryMovimientosFac.Open;
   end;
 end;
 

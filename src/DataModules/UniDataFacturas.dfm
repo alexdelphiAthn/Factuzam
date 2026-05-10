@@ -2310,4 +2310,48 @@ inherited dmFacturas: TdmFacturas
         Value = nil
       end>
   end
+  object unqryMovimientosFac: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT NUMERO_MOV, FECHA_MOV, LINEA_MOV, '
+      '       CODIGO_ALM_MOV, NOMBRE_ALMACEN_ORIGEN, '
+      '       CODIGO_ART_MOV, CODIGO_UNIDAD_MOV, '
+      '       DESCRIPCION_ARTICULO_MOV, '
+      '       TIPO_MOV, CANTIDAD_MOV, '
+      '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
+      '  FROM vi_movimientos '
+      ' WHERE TIPO_DOC_REF_MOV   = ''FC'' '
+      '   AND SERIE_DOC_REF_MOV  = :SERIE_FAC '
+      '   AND NUMERO_DOC_REF_MOV = :NUMERO_FAC '
+      ' ORDER BY LINEA_MOV')
+    MasterSource = frmMtoFacturas.dsTablaG
+    MasterFields = 'NUMERO_FAC;SERIE_FAC'
+    ReadOnly = True
+    Left = 1155
+    Top = 196
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'NUMERO_FAC'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'SERIE_FAC'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsMovimientosFac: TDataSource
+    DataSet = unqryMovimientosFac
+    Left = 1235
+    Top = 196
+  end
+  object unstrdprcInsertarMovFac: TUniStoredProc
+    StoredProcName = 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT'
+    Connection = dmConn.conUni
+    Left = 1155
+    Top = 266
+  end
 end
