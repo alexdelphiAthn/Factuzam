@@ -22,6 +22,10 @@ START TRANSACTION;
 -- ----------------------------------------------------------------------------
 -- 1. Tabla nueva: un coste y una fecha de última compra por SKU.
 --    Sufijo SKUC (mnemo: SKU + Coste).
+--    OJO: COLLATE explícito a utf8mb4_spanish_ci, igual que el resto del
+--    esquema. Si se omite, MariaDB 10.11+ usa utf8mb4_uca1400_ai_ci por
+--    defecto y los JOIN contra fza_articulos_skus revientan con
+--    "Illegal mix of collations".
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `fza_articulos_skus_costes` (
   `CODIGO_UNIDAD_SKU_SKUC`  varchar(50)   NOT NULL COMMENT 'FK hacia fza_articulos_skus.CODIGO_UNIDAD_SKU',
@@ -32,11 +36,26 @@ CREATE TABLE IF NOT EXISTS `fza_articulos_skus_costes` (
   `USUARIO_ALTA`            varchar(100)  NOT NULL,
   `USUARIO_MODIF`           varchar(100)  NOT NULL,
   PRIMARY KEY (`CODIGO_UNIDAD_SKU_SKUC`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Reparación idempotente: si la migración se aplicó antes de añadir el
+-- COLLATE explícito, la tabla quedó en utf8mb4_uca1400_ai_ci y los JOIN
+-- contra fza_articulos_skus.CODIGO_UNIDAD_SKU (utf8mb4_spanish_ci) fallan.
+-- CONVERT TO afecta también a las columnas varchar de la tabla.
+ALTER TABLE `fza_articulos_skus_costes`
+  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
 
 -- Índice por fecha de última compra (consultas de "qué he comprado este mes").
-ALTER TABLE `fza_articulos_skus_costes`
-  ADD INDEX `IDX_SKUC_FECHA_ULT_COMPRA` (`FECHA_ULT_COMPRA_SKUC`);
+-- Idempotente: si ya existe (por una pasada anterior de la migración) lo
+-- saltamos.
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics
+                  WHERE table_schema = DATABASE()
+                    AND table_name   = 'fza_articulos_skus_costes'
+                    AND index_name   = 'IDX_SKUC_FECHA_ULT_COMPRA');
+SET @sql := IF(@has_idx = 0,
+  'ALTER TABLE fza_articulos_skus_costes ADD INDEX IDX_SKUC_FECHA_ULT_COMPRA (FECHA_ULT_COMPRA_SKUC)',
+  'SELECT ''IDX_SKUC_FECHA_ULT_COMPRA ya existe'' AS info');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
 -- 2. Pre-poblado: para los SKUs ya existentes copiamos el coste / fecha del
