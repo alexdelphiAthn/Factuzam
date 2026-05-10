@@ -271,7 +271,8 @@ begin
   r := spnRestar.Value;
   if n <= 0 then Exit;
 
-  val := Round(APrecio / n) * n - r;
+  // Ceil hacia el siguiente múltiplo de n y luego resta "menos"
+  val := Ceil(APrecio / n) * n - r;
   if val < 0 then val := 0;
   Result := Round(val * 100) / 100;
 end;

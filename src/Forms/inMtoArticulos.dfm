@@ -741,12 +741,30 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Position.ColIndex = 8
                     Position.RowIndex = 0
                   end
+                  object dbcTarifasMARGEN: TcxGridDBBandedColumn
+                    Caption = 'Margen'
+                    DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkText
+                      end>
+                    Properties.ButtonOnly = True
+                    Properties.OnButtonClick = dbcTarifasMARGENButtonClick
+                    Properties.ReadOnly = True
+                    Properties.ViewStyle = vsButtonsAutoWidth
+                    Width = 90
+                    Position.BandIndex = 1
+                    Position.ColIndex = 9
+                    Position.RowIndex = 0
+                  end
                   object cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBBandedColumn
                     DataBinding.FieldName = 'TIPO_IVA_ARTICULO'
                     Visible = False
                     VisibleForCustomization = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 9
+                    Position.ColIndex = 27
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBBandedColumn

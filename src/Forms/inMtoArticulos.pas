@@ -125,6 +125,7 @@ type
     cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBBandedColumn;
     cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBBandedColumn;
     dbcTarifasPRECIOFINAL: TcxGridDBBandedColumn;
+    dbcTarifasMARGEN: TcxGridDBBandedColumn;
     dbcTarifasPRECIOSALIDA: TcxGridDBBandedColumn;
     dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBBandedColumn;
     dbcTarifasPRECIO_DTO_TARIFA: TcxGridDBBandedColumn;
@@ -292,6 +293,7 @@ type
     procedure btReconstruirStockClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
+    procedure dbcTarifasMARGENButtonClick(Sender: TObject; AButtonIndex: Integer);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -339,6 +341,7 @@ uses
   inMtoModalArtTar,
   inLibGlobalVar,
   inMtoModalGenerarSKUs,
+  inMtoModalCalcularMargen,
   inLibEAN13,
   inLibtb;
 
@@ -922,6 +925,65 @@ begin
 
   finally
     frmSel.Free;
+  end;
+end;
+
+procedure TfrmMtoArticulos.dbcTarifasMARGENButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+var
+  ds         : TDataSet;
+  unicoFld   : TField;
+  unico      : Integer;
+  codigoArt  : string;
+  descArt    : string;
+  codigoTar  : string;
+  nombreTar  : string;
+  descSku    : string;
+  coste      : Double;
+  precSalida : Double;
+  res        : TCalcularMargenResult;
+begin
+  inherited;
+  ds := dmmArticulos.unqryTarifasArticulos;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+  begin
+    ShowMessage('Selecciona primero un precio de tarifa.');
+    Exit;
+  end;
+
+  unicoFld := ds.FindField('CODIGO_UNICO_ARTTAR');
+  if (unicoFld = nil) or unicoFld.IsNull then
+  begin
+    ShowMessage('Esta fila aún no tiene precio guardado en la tarifa. ' +
+                'Pulsa primero "Añadir precio" para crear el registro.');
+    Exit;
+  end;
+  unico := unicoFld.AsInteger;
+
+  codigoArt  := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
+  if ds.FindField('DESCRIPCION_ART') <> nil then
+    descArt := ds.FieldByName('DESCRIPCION_ART').AsString;
+  codigoTar  := ds.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+  if ds.FindField('NOMBRE_TAR_TAR') <> nil then
+    nombreTar := ds.FieldByName('NOMBRE_TAR_TAR').AsString;
+  if ds.FindField('DESCRIPCION_SKU') <> nil then
+    descSku := ds.FieldByName('DESCRIPCION_SKU').AsString;
+  coste      := ds.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
+  precSalida := ds.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
+
+  res := TfrmModalCalcularMargen.Ejecutar(
+    Self,
+    (ds as TUniQuery).Connection,
+    unico,
+    codigoArt, descArt,
+    codigoTar, nombreTar,
+    descSku,
+    coste, precSalida);
+
+  if res.Aceptado then
+  begin
+    ds.Refresh;
+    ActualizarVisibilidadColumnaSku;
   end;
 end;
 

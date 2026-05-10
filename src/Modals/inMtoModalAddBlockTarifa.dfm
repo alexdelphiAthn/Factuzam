@@ -81,7 +81,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
     object lblRestar: TcxLabel
       Left = 790
       Top = 32
-      Caption = 'Restar:'
+      Caption = 'Menos:'
       TabOrder = 15
     end
     object spnRestar: TcxCurrencyEdit
