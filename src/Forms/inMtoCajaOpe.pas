@@ -219,6 +219,7 @@ uses
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
+  inLibArticulosAtributosLookup,
   inLibShowMto, inMtoPrincipal,
   System.StrUtils;
 
@@ -934,40 +935,29 @@ end;
 
 procedure TfrmMtoOpeCaja.RellenarAtributosDesdeSku(Sku: string);
 var
-  Qry: TUniQuery;
-  i: Integer;
+  Lookup  : TArticulosAtributosLookup;
+  Valores : TArray<TArticuloAtributoValor>;
+  V       : TArticuloAtributoValor;
+  i       : Integer;
 begin
-  Qry := TUniQuery.Create(nil);
+  if Trim(Sku) = '' then Exit;
+  Lookup := TArticulosAtributosLookup.Create(inLibGlobalVar.oConn);
   try
-    Qry.Connection := oConn;
-    Qry.SQL.Text := 'SELECT DISTINCT N.ORDEN_VISUAL_ATRIBUTO, ' +
-                    '                V.AV ' +
-                    '  FROM fza_atributos_sku REL ' +
-                    '  JOIN fza_atributos_valores V ' +
-                    '    ON REL.ID_AV_SA = V.ID_AV ' +
-                    '  JOIN vi_atributos_nombres N ' +
-                    '    ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
-                    ' WHERE REL.CODIGO_UNIDAD_SKU_SA = :SKU ' +
-                    ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO';
-    Qry.ParamByName('SKU').AsString := Sku;
-    Qry.Open;
+    Valores := Lookup.ObtenerAtributosDeSku(Sku);
+    if Length(Valores) = 0 then Exit;
 
-    // Nos aseguramos de poder escribir en la memoria
     if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
       DatosCaja.cdsLineas.Edit;
 
-    while (not Qry.Eof) do
+    for V in Valores do
     begin
-      i := Qry.FieldByName('ORDEN_VISUAL_ATRIBUTO').AsInteger;
-
-      // EL TRUCO: Ignoramos la variable que venía a 0 y escribimos siempre que sea válido
+      i := V.Orden;
       if (i >= 1) and (i <= 5) then
-        DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) +
-                     '_VALOR').AsString := Qry.FieldByName('AV').AsString;
-      Qry.Next;
+        DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString
+                                                                       := V.Valor;
     end;
   finally
-    Qry.Free;
+    Lookup.Free;
   end;
 end;
 
