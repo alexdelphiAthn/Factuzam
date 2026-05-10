@@ -284,6 +284,24 @@ type
                       AIndent: Integer = 0): TSQLStringType; override;
   end;
 
+  TSQLMariaDBCreateTableStatement = class(TSQLCreateTableStatement)
+  public
+    TableOptions: string;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
+  TSQLAlterTableRawOperation = class(TSQLAlterTableOperation)
+  public
+    RawText: string;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
+  TSQLRawStatement = class(TSQLStatement)
+  public
+    RawText: string;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
 function TSQLStartTransactionStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
 begin
   Result := 'START TRANSACTION';
@@ -1017,10 +1035,8 @@ begin
   end;
 end;
 
-function TSQLParser.ParseTableFieldDef(AParent : TSQLElement)
-  : TSQLTableFieldDef;
+function TSQLParser.ParseTableFieldDef(AParent : TSQLElement): TSQLTableFieldDef;
 begin
-  // on entry, we're on the field name
   Result := TSQLTableFieldDef(CreateElement(TSQLTableFieldDef, AParent));
   try
     Result.FieldName := CreateIdentifier(Result, CurrentTokenString);
@@ -1028,15 +1044,23 @@ begin
     begin
       GetNextToken;
       Consume(tsqlComputed);
-      if CurrentToken = tsqlBy then
-        GetNextToken;
+      if CurrentToken = tsqlBy then GetNextToken;
       Consume(tsqlBraceOpen);
       Result.ComputedBy := ParseExprLevel1(Result, [eoComputedBy]);
       Consume(tsqlBraceClose);
     end
     else
+    begin
       Result.FieldType := ParseTypeDefinition(Result,
         [ptfAllowDomainName, ptfAllowConstraint, ptfTableFieldDef]);
+      if (CurrentToken = tsqlIdentifier) and
+         SameText(CurrentTokenString, 'COMMENT') then
+      begin
+        GetNextToken; // Pasamos COMMENT
+        if CurrentToken = tsqlString then
+          GetNextToken; // Pasamos el literal del comentario
+      end;
+    end;
   except
     FreeAndNil(Result);
     raise;
@@ -1114,31 +1138,27 @@ begin
   end;
 end;
 
-function TSQLParser.ParseCreateTableStatement(AParent: TSQLElement)
-  : TSQLCreateOrAlterStatement;
+function TSQLParser.ParseCreateTableStatement(AParent: TSQLElement): TSQLCreateOrAlterStatement;
 var
-  C  : TSQLCreateTableStatement;
+  C  : TSQLMariaDBCreateTableStatement; // CAMBIO: Usamos nuestra clase custom
   HC : Boolean;
 begin
-  // On enter, we're on the TABLE token.
   Consume(tsqlTable);
-  C := TSQLCreateTableStatement(CreateElement(TSQLCreateTableStatement,
-    AParent));
+  if CurrentToken = tsqlIf then
+  begin
+    GetNextToken;
+    if CurrentToken = tsqlNot then GetNextToken;
+    if CurrentToken = tsqlExists then GetNextToken;
+  end;
+  C := TSQLMariaDBCreateTableStatement(CreateElement(TSQLMariaDBCreateTableStatement, AParent));
   try
-    if CurrentToken = tsqlIf then
-    begin
-      GetNextToken; // Pasamos 'IF'
-      if CurrentToken = tsqlNot then GetNextToken; // Pasamos 'NOT'
-      if CurrentToken = tsqlExists then GetNextToken; // Pasamos 'EXISTS'
-    end;
     Expect(tsqlIdentifier);
     C.ObjectName := CreateIdentifier(C, CurrentTokenString);
     GetNextToken;
     if (CurrentToken = tsqlExternal) then
     begin
       GetNextToken;
-      if (CurrentToken = tsqlFile) then
-        GetNextToken;
+      if (CurrentToken = tsqlFile) then GetNextToken;
       Expect(tsqlString);
       C.ExternalFileName := CreateLiteral(C) as TSQLStringLiteral;
       GetNextToken;
@@ -1150,26 +1170,28 @@ begin
       case CurrentToken of
         tsqlIdentifier :
           begin
-            if HC then
-              UnexpectedToken;
+            if HC then UnexpectedToken;
             C.FieldDefs.Add(ParseTableFieldDef(C));
           end;
-        tsqlCheck,
-          tsqlConstraint,
-          tsqlForeign,
-          tsqlPrimary,
-          tsqlUnique:
+        tsqlCheck, tsqlConstraint, tsqlForeign, tsqlPrimary, tsqlUnique:
           begin
             C.Constraints.Add(ParseTableConstraint(C));
             HC := True;
           end
       else
-        UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint, tsqlForeign,
-          tsqlPrimary, tsqlUnique]);
+        UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint, tsqlForeign, tsqlPrimary, tsqlUnique]);
       end;
       Expect([tsqlBraceClose, tsqlComma]);
     until (CurrentToken = tsqlBraceClose);
-    GetNextToken;
+    GetNextToken; // Consume ')'
+    while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+    begin
+      if CurrentToken = tsqlString then
+        C.TableOptions := C.TableOptions + '''' + CurrentTokenString + ''' '
+      else
+        C.TableOptions := C.TableOptions + CurrentTokenString + ' ';
+      GetNextToken;
+    end;
     Result := C;
   except
     FreeAndNil(C);
@@ -1304,31 +1326,38 @@ begin
   end;
 end;
 
-function TSQLParser.ParseAlterTableStatement(AParent: TSQLElement)
-  : TSQLAlterTableStatement;
+function TSQLParser.ParseAlterTableStatement(AParent: TSQLElement): TSQLAlterTableStatement;
+var
+  RawOp: TSQLAlterTableRawOperation;
 begin
-  // On enter, we're on the TABLE token.
   Consume(tsqlTable);
-  Result := TSQLAlterTableStatement(CreateElement(TSQLAlterTableStatement,
-    AParent));
+  Result := TSQLAlterTableStatement(CreateElement(TSQLAlterTableStatement, AParent));
   try
     Expect(tsqlIdentifier);
     Result.ObjectName := CreateIdentifier(Result, CurrentTokenString);
     Repeat
       GetNextToken;
+      if (CurrentToken = tsqlIdentifier) and SameText(CurrentTokenString, 'CONVERT') then
+      begin
+        RawOp := TSQLAlterTableRawOperation(CreateElement(TSQLAlterTableRawOperation, Result));
+        RawOp.RawText := 'CONVERT';
+        GetNextToken;
+        while not (CurrentToken in [tsqlEOF, tsqlSemicolon, tsqlComma]) do
+        begin
+          if CurrentToken = tsqlString then
+            RawOp.RawText := RawOp.RawText + ' ''' + CurrentTokenString + ''''
+          else
+            RawOp.RawText := RawOp.RawText + ' ' + CurrentTokenString;
+          GetNextToken;
+        end;
+        Result.Operations.Add(RawOp);
+        if CurrentToken = tsqlSemicolon then Break;
+        Continue;
+      end;
       case CurrentToken of
-        tsqlAdd:
-          begin
-            Result.Operations.Add(ParseAddTableElement(Result));
-          end;
-        tsqlAlter:
-          begin
-            Result.Operations.Add(ParseAlterTableElement(Result));
-          end;
-        tsqlDrop :
-          begin
-            Result.Operations.Add(ParseDropTableElement(Result));
-          end;
+        tsqlAdd: Result.Operations.Add(ParseAddTableElement(Result));
+        tsqlAlter: Result.Operations.Add(ParseAlterTableElement(Result));
+        tsqlDrop: Result.Operations.Add(ParseDropTableElement(Result));
       else
         UnexpectedToken([tsqlAdd, tsqlAlter, tsqlDrop]);
       end;
@@ -3832,15 +3861,25 @@ begin
 end;
 
 function TSQLParser.ParseSetStatement(AParent: TSQLElement): TSQLStatement;
+var
+  Raw: TSQLRawStatement;
 begin
-  // On Entry, we're on the set statement
   Consume(tsqlSet);
-  case CurrentToken of
-    tsqlGenerator :
-      Result := ParseSetGeneratorStatement(AParent)
+  if CurrentToken = tsqlGenerator then
+    Result := ParseSetGeneratorStatement(AParent)
   else
-    // For the time being
-    UnexpectedToken;
+  begin
+    Raw := TSQLRawStatement(CreateElement(TSQLRawStatement, AParent));
+    Result := Raw;
+    Raw.RawText := 'SET';
+    while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+    begin
+      if CurrentToken = tsqlString then
+        Raw.RawText := Raw.RawText + ' ''' + CurrentTokenString + ''''
+      else
+        Raw.RawText := Raw.RawText + ' ' + CurrentTokenString;
+      GetNextToken;
+    end;
   end;
 end;
 
@@ -4381,7 +4420,6 @@ begin
     Exit(nil);
   if SameText(CurrentTokenString, 'REPLACE') then
   begin
-    // Derivamos los REPLACE hacia la función de INSERT
     Result := ParseInsertStatement(nil);
   end
   else
@@ -4440,6 +4478,22 @@ begin
           end
           else
             UnexpectedToken;
+        end
+        else if SameText(CurrentTokenString, 'PREPARE') or
+                SameText(CurrentTokenString, 'EXECUTE') or
+                SameText(CurrentTokenString, 'DEALLOCATE') then
+        begin
+          Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
+          TSQLRawStatement(Result).RawText := CurrentTokenString;
+          GetNextToken;
+          while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+          begin
+            if CurrentToken = tsqlString then
+              TSQLRawStatement(Result).RawText := TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+            else
+              TSQLRawStatement(Result).RawText := TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+            GetNextToken;
+          end;
         end
         else
           UnexpectedToken;
@@ -4544,6 +4598,23 @@ begin
     Result := Result + ExtraValues;
   if OnDuplicateKey <> '' then
     Result := Result + sLineBreak + '  ' + Trim(OnDuplicateKey);
+end;
+
+function TSQLMariaDBCreateTableStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := inherited GetAsSQL(Options, AIndent);
+  if TableOptions <> '' then
+    Result := Result + ' ' + Trim(TableOptions);
+end;
+
+function TSQLAlterTableRawOperation.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := RawText;
+end;
+
+function TSQLRawStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := RawText;
 end;
 
 end.
