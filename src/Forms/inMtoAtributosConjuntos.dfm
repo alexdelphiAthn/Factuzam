@@ -319,19 +319,6 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                     DataBinding.FieldName = 'NOMBRE_FAM_FAM'
                     Width = 180
                   end
-                  object tvArticulosID_VA_ACA: TcxGridDBColumn
-                    Caption = 'Posici'#243'n'
-                    DataBinding.FieldName = 'ID_VA_ACA'
-                    Width = 100
-                  end
-                  object tvArticulosESGENERACION_AUTO_ACA: TcxGridDBColumn
-                    Caption = 'Auto-SKU'
-                    DataBinding.FieldName = 'ESGENERACION_AUTO_ACA'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Width = 90
-                  end
                 end
                 object cxgrdlvlArticulos: TcxGridLevel
                   GridView = tvArticulos
@@ -441,5 +428,14 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
   inherited dsTablaG: TDataSource
     DataSet = dmAtributosConjuntos.unqryTablaG
     OnStateChange = dsTablaGStateChange
+  end
+  object ActionListConjuntos: TActionList
+    Left = 80
+    Top = 440
+    object actArticulo: TAction
+      Caption = 'Articulo'
+      ShortCut = 16449
+      OnExecute = actArticuloExecute
+    end
   end
 end
