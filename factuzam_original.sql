@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 10/05/2026 19:44:28
+-- Backup generado: 10/05/2026 22:53:54
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1848,7 +1848,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 161, 3, 'S', 'S', '2026-05-10 18:24:13', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 166, 3, 'S', 'S', '2026-05-10 22:49:21', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 10, 2, 'S', 'S', '2026-05-10 17:33:30', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -2640,557 +2640,6 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('137', NULL, 'DROP VIEW vi_articulos_tarifas;
-CREATE OR REPLACE
-ALGORITHM = UNDEFINED
-VIEW `vi_articulos_tarifas` AS
-SELECT
-    `arttar`.`CODIGO_ART_ARTTAR`                                       AS `CODIGO_ART_ARTTAR`,
-    COALESCE(`arttar`.`CODIGO_UNIDAD_ARTTAR`, '''')                      AS `CODIGO_UNIDAD_ARTTAR`,
-    `arttar`.`CODIGO_TAR_ARTTAR`                                       AS `CODIGO_TAR_ARTTAR`,
-    `tar`.`NOMBRE_TAR_TAR`                                             AS `NOMBRE_TAR_TAR`,
-    `arttar`.`CODIGO_UNICO_ARTTAR`                                     AS `CODIGO_UNICO_ARTTAR`,
-    NULLIF(CASE
-             WHEN `arttar`.`CODIGO_UNIDAD_ARTTAR` IS NOT NULL
-              AND `arttar`.`CODIGO_UNIDAD_ARTTAR` <> ''''
-             THEN ''ESPECIFICO_SKU''
-             ELSE ''HEREDADO_PADRE''
-           END, ''__nunca__'')                                           AS `ORIGEN_PRECIO`,
-    `arttar`.`PRECIO_SALIDA_ARTTAR`                                    AS `PRECIO_SALIDA_ARTTAR`,
-    `arttar`.`PRECIO_FINAL_ARTTAR`                                     AS `PRECIO_FINAL_ARTTAR`,
-    `arttar`.`PRECIO_DTO_ARTTAR`                                       AS `PRECIO_DTO_ARTTAR`,
-    `arttar`.`PORCENTAJE_DTO_ARTTAR`                                   AS `PORCENTAJE_DTO_ARTTAR`,
-    `arttar`.`FECHA_DESDE_ARTTAR`                                      AS `FECHA_DESDE_ARTTAR`,
-    `arttar`.`FECHA_HASTA_ARTTAR`                                      AS `FECHA_HASTA_ARTTAR`,
-    `arttar`.`ESACTIVO_ARTTAR`                                         AS `ESACTIVO_ARTTAR`,
-    `tar`.`ESIMP_INCL_TAR`                                             AS `ESIMP_INCL_TAR`,
-    `tar`.`ESDEFAULT_TAR`                                              AS `ESDEFAULT_TAR`,
-    `art`.`DESCRIPCION_ART`                                            AS `DESCRIPCION_ART`,
-    `art`.`TIPO_CANTIDAD_ART`                                          AS `TIPO_CANTIDAD_ART`,
-    `art`.`ESVARIACION_ART`                                            AS `ESVARIACION_ART`,
-    `iv`.`CODIGO_ABREVIATURA_IVA_IVATIP`                               AS `TIPO_IVA_ARTICULO`,
-    NULLIF(CASE
-             WHEN `sk`.`CODIGO_UNIDAD_SKU` IS NOT NULL THEN ''S''
-             ELSE ''N''
-           END, ''__nunca__'')                                           AS `TIENE_SKU`,
-    `sk`.`ESACTIVO_SKU`                                                AS `ESACTIVO_SKU`,
-    `sd`.`DESCRIPCION_SKU`                                             AS `DESCRIPCION_SKU`,
-    `ap`.`CODIGO_PRV_AP`                                               AS `CODIGO_PRV_PRV`,
-    `p`.`RAZON_SOCIAL_PRV`                                             AS `RAZON_SOCIAL_PRV`,
-    `ap`.`PRECIO_ULT_COMPRA_AP`                                        AS `PRECIO_ULT_COMPRA`,
-    `ap`.`FECHA_VALIDEZ_AP`                                            AS `FECHA_VALIDEZ`,
-    `art`.`CODIGO_FAM_ART`                                             AS `CODIGO_FAM_ART`,
-    `af`.`DESCRIPCION_FAM`                                             AS `DESCRIPCION_FAM`,
-    (SELECT COUNT(*)
-       FROM `vi_atributos_nombres` `n`
-      WHERE `n`.`CODIGO_ART_PADRE_ARTVIN` = `arttar`.`CODIGO_ART_ARTTAR`) AS `NUM_ATRIBUTOS_REQ`,
-    `arttar`.`INSTANTE_MODIF`                                          AS `INSTANTE_MODIF`,
-    `arttar`.`INSTANTE_ALTA`                                           AS `INSTANTE_ALTA`,
-    `arttar`.`USUARIO_ALTA`                                            AS `USUARIO_ALTA`,
-    `arttar`.`USUARIO_MODIF`                                           AS `USUARIO_MODIF`
-FROM `fza_articulos_tarifas` `arttar`
-JOIN  `fza_tarifas`  `tar` ON `tar`.`CODIGO_TAR_ARTTAR` = `arttar`.`CODIGO_TAR_ARTTAR`
-JOIN  `fza_articulos` `art` ON `art`.`CODIGO_ART_ART`   = `arttar`.`CODIGO_ART_ARTTAR`
-LEFT JOIN `fza_articulos_skus` `sk`
-       ON `sk`.`CODIGO_ART_SKU`     = `arttar`.`CODIGO_ART_ARTTAR`
-      AND `sk`.`CODIGO_UNIDAD_SKU`  = `arttar`.`CODIGO_UNIDAD_ARTTAR`
-      AND `sk`.`ESACTIVO_SKU`       = ''S''
-LEFT JOIN (
-    SELECT `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,
-           GROUP_CONCAT(`av`.`AV` ORDER BY `av`.`ORDEN_AV` ASC SEPARATOR '' / '') AS `DESCRIPCION_SKU`
-      FROM `fza_atributos_sku` `sa`
-      JOIN `fza_atributos_valores` `av` ON `av`.`ID_AV` = `sa`.`ID_AV_SA`
-     GROUP BY `sa`.`CODIGO_UNIDAD_SKU_SA`
-) `sd` ON `sd`.`CODIGO_UNIDAD` = `arttar`.`CODIGO_UNIDAD_ARTTAR`
-LEFT JOIN `fza_articulos_proveedores` `ap`
-       ON `ap`.`CODIGO_ART_AP`            = `art`.`CODIGO_ART_ART`
-      AND `ap`.`ESPROVEEDORPRINCIPAL_AP`  = ''S''
-LEFT JOIN `fza_proveedores`        `p`  ON `p`.`CODIGO_PRV_PRV`   = `ap`.`CODIGO_PRV_AP`
-LEFT JOIN `fza_articulos_familias` `af` ON `af`.`CODIGO_FAM_FAM`  = `art`.`CODIGO_FAM_ART`
-LEFT JOIN `fza_ivas_tipos`         `iv` ON `iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `art`.`TIPO_IVA_ART`
-WHERE `arttar`.`ESACTIVO_ARTTAR` = ''S''
-  AND COALESCE(`arttar`.`FECHA_HASTA_ARTTAR`, ''9999-12-31'') >= CURDATE()
-ORDER BY `tar`.`ORDEN_TAR`, `art`.`ORDEN_ART`, `arttar`.`CODIGO_UNIDAD_ARTTAR`;', '2026-05-07 17:57:17', '2026-05-07 17:57:17', 'Administrador', 'Administrador'),
-  ('138', NULL, 'DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_SKU_ALMACEN`;
-DELIMITER ;;
-CREATE PROCEDURE `SP_RECALCULAR_PMP_SKU_ALMACEN`(
-    IN `p_CodigoEmpresa` VARCHAR(20),
-    IN `p_CodigoSKU`     VARCHAR(50),
-    IN `p_CodigoAlmacen` VARCHAR(10)
-)
-BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE vIdTipo, vIdSerie, vIdNro, vIdLinea VARCHAR(20);
-    DECLARE vTipoMov VARCHAR(1);
-    DECLARE vCantidad, vPrecioCoste DECIMAL(19,6);
-
-    DECLARE vStockAcumulado DECIMAL(19,6) DEFAULT 0;
-    DECLARE vValorAcumulado DECIMAL(19,6) DEFAULT 0;
-    DECLARE vPMP_Actual     DECIMAL(19,6) DEFAULT 0;
-
-    /* Sumamos por almacen+SKU SIN filtrar por empresa, igual que hace
-       PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO y consistente con la PK de
-       fza_articulos_stockactual (almacen + SKU + lote, sin empresa). */
-    DECLARE curMovimientos CURSOR FOR
-        SELECT  TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV,
-                TIPO_MOV, CANTIDAD_MOV, PRECIO_COSTE_UNITARIO_MOV
-        FROM    fza_movimientos_almacen
-        WHERE   CODIGO_UNIDAD_MOV = p_CodigoSKU
-          AND   CODIGO_ALM_MOV    = p_CodigoAlmacen
-        ORDER BY FECHA_MOV ASC
-        FOR UPDATE;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-
-    OPEN curMovimientos;
-    read_loop: LOOP
-        FETCH curMovimientos INTO vIdTipo, vIdSerie, vIdNro, vIdLinea, vTipoMov, vCantidad, vPrecioCoste;
-        IF done THEN LEAVE read_loop; END IF;
-
-        IF vTipoMov = ''E'' THEN
-            SET vStockAcumulado = vStockAcumulado + vCantidad;
-            SET vValorAcumulado = vValorAcumulado + (vCantidad * vPrecioCoste);
-            IF vStockAcumulado > 0 THEN
-                SET vPMP_Actual = vValorAcumulado / vStockAcumulado;
-            ELSE
-                SET vPMP_Actual = vPrecioCoste;
-            END IF;
-        ELSE
-            SET vValorAcumulado = vValorAcumulado - (vCantidad * vPMP_Actual);
-            SET vStockAcumulado = vStockAcumulado - vCantidad;
-        END IF;
-
-        UPDATE fza_movimientos_almacen
-           SET PRECIO_MEDIO_MOV = vPMP_Actual,
-               TOTAL_COSTE_MOV  = IF(vTipoMov = ''E'', vCantidad * vPrecioCoste, vCantidad * vPMP_Actual)
-         WHERE TIPO_DOC_MOV   = vIdTipo
-           AND SERIE_DOC_MOV  = vIdSerie
-           AND NUMERO_DOC_MOV = vIdNro
-           AND LINEA_MOV      = vIdLinea;
-    END LOOP;
-    CLOSE curMovimientos;
-
-    INSERT INTO fza_articulos_stockactual
-        (CODIGO_ALM_STK, CODIGO_UNIDAD_STK, CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF)
-    VALUES (p_CodigoAlmacen, p_CodigoSKU, vStockAcumulado, vValorAcumulado, vPMP_Actual, NOW())
-    ON DUPLICATE KEY UPDATE
-        CANTIDAD_STK     = vStockAcumulado,
-        VALOR_TOTAL_STK  = vValorAcumulado,
-        PRECIO_MEDIO_STK = vPMP_Actual,
-        INSTANTE_MODIF   = NOW();
-END ;;
-DELIMITER ;', '2026-05-08 06:40:38', '2026-05-08 06:40:38', 'Administrador', 'Administrador'),
-  ('139', NULL, 'CALL SP_RECALCULAR_PMP_SKU_ALMACEN(''012'', ''FALD-JEAN/VAQUERO/L'', ''GEN'');
-SELECT * FROM fza_articulos_stockactual
- WHERE CODIGO_UNIDAD_STK = ''FALD-JEAN/VAQUERO/L'' AND CODIGO_ALM_STK = ''GEN'';', '2026-05-08 06:41:06', '2026-05-08 06:41:06', 'Administrador', 'Administrador'),
-  ('140', NULL, '-- ================================================================
--- Factuzam: Códigos de barras internos por SKU (EAN-13)
--- ================================================================
--- Reserva los tipos de documento BA/BC/BD/BE para los códigos de
--- barras internos y precrea sus contadores (empresa ''-'', serie ''-'',
--- 10 dígitos) para que PRC_GET_NEXT_CONT devuelva el padding correcto.
---
--- Convención de prefijos EAN-13 internos:
---   BA -> Artículos   (prefijo 21 + 10 dígitos contador + control)
---   BD -> Documentos  (prefijo 22 + 10 dígitos contador + control)
---   BE -> Empleados   (prefijo 23 + 10 dígitos contador + control)
---   BC -> Clientes    (prefijo 24 + 10 dígitos contador + control)
---
--- Idempotente: usa INSERT IGNORE, se puede re-ejecutar sin efectos.
--- IMPORTANTE: Hacer backup antes de aplicar a producción.
--- ================================================================
-
-SET FOREIGN_KEY_CHECKS=0;
-START TRANSACTION;
-
--- ----------------------------------------------------------------
--- 1. Tipos de documento reservados para códigos de barras internos
--- ----------------------------------------------------------------
-INSERT IGNORE INTO `fza_tipos_documentos`
-  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`, `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
-VALUES
-  (''BA'', ''CÓDIGOS DE BARRAS DE ARTÍCULOS'',  ''fza_codigos_barras''),
-  (''BC'', ''CÓDIGOS DE BARRAS DE CLIENTES'',   ''fza_codigos_barras''),
-  (''BD'', ''CÓDIGOS DE BARRAS DE DOCUMENTOS'', ''fza_codigos_barras''),
-  (''BE'', ''CÓDIGOS DE BARRAS DE EMPLEADOS'',  ''fza_codigos_barras'');
-
--- ----------------------------------------------------------------
--- 2. Contadores globales (empresa ''-'') con padding de 10 dígitos
--- ----------------------------------------------------------------
-INSERT IGNORE INTO `fza_contadores`
-  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
-   `ESACTIVO_CON`, `DEFAULT_CON`,
-   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
-VALUES
-  (''BA'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
-  (''BC'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
-  (''BD'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador''),
-  (''BE'', ''-'', ''-'', 1, 10, ''S'', ''S'', CURRENT_TIMESTAMP, ''Administrador'', ''Administrador'');
-
--- ----------------------------------------------------------------
--- 3. Verificación rápida
--- ----------------------------------------------------------------
--- Debe devolver 4 filas:
-SELECT TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ESACTIVO_CON
-  FROM fza_contadores
- WHERE TIPO_DOC_CON IN (''BA'',''BC'',''BD'',''BE'')
-   AND EMPRESA_CON = ''-'';
-
-COMMIT;
-SET FOREIGN_KEY_CHECKS=1;', '2026-05-08 16:13:41', '2026-05-08 16:13:41', 'Administrador', 'Administrador'),
-  ('141', NULL, '-- ============================================================================
--- Migración: pestaña CB de Artículos
--- ----------------------------------------------------------------------------
--- 1) Limpia placeholders obsoletos `_FAB_xxx` de fza_codigos_barras.
--- 2) Convierte la PK de fza_codigos_barras en autonumérica (ID_CB) para
---    eliminar las colisiones por CODIGO_BARRAS_CB y permitir múltiples
---    códigos por SKU sin restricciones artificiales.
--- 3) Reconstruye vi_articulos_skus_extendida para exponer ID_CB y elegir
---    el código representativo (principal > menor ID).
--- ----------------------------------------------------------------------------
--- Idempotente: se puede ejecutar dos veces sin romper nada.
--- ============================================================================
-
--- 1) Eliminamos placeholders obsoletos. El CB del fabricante queda vacío
---    hasta que el usuario lo introduzca manualmente desde la pestaña CB.
-DELETE FROM fza_codigos_barras
- WHERE LEFT(CODIGO_BARRAS_CB, 5) = ''_FAB_'';
-
--- 2) Añadimos ID_CB autonumérico como nueva PK. CODIGO_BARRAS_CB pasa a ser
---    columna normal con índice no único.
-SET @has_id := (
-  SELECT COUNT(*)
-    FROM information_schema.columns
-   WHERE table_schema = DATABASE()
-     AND table_name   = ''fza_codigos_barras''
-     AND column_name  = ''ID_CB''
-);
-SET @sql := IF(@has_id = 0,
-  ''ALTER TABLE fza_codigos_barras
-     DROP PRIMARY KEY,
-     ADD COLUMN ID_CB INT NOT NULL AUTO_INCREMENT FIRST,
-     ADD PRIMARY KEY (ID_CB)'',
-  ''SELECT ''''ID_CB ya existe, se omite ALTER'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_idx := (
-  SELECT COUNT(*)
-    FROM information_schema.statistics
-   WHERE table_schema = DATABASE()
-     AND table_name   = ''fza_codigos_barras''
-     AND index_name   = ''IDX_BARRAS_CB''
-);
-SET @sql := IF(@has_idx = 0,
-  ''ALTER TABLE fza_codigos_barras ADD INDEX IDX_BARRAS_CB (CODIGO_BARRAS_CB)'',
-  ''SELECT ''''IDX_BARRAS_CB ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- 3) Reconstruimos la vista para que la rejilla de la pestaña CB pueda
---    usar ID_CB como clave de UPDATE/DELETE y muestre el barcode principal
---    de cada SKU (en su defecto, el de menor ID).
-DROP VIEW IF EXISTS vi_articulos_skus_extendida;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_skus_extendida AS
-SELECT
-  sku.CODIGO_UNIDAD_SKU,
-  sku.CODIGO_ART_SKU,
-  sku.CODIGO_VAR_SKU,
-  sku.ESACTIVO_SKU,
-  cb.ID_CB,
-  cb.CODIGO_BARRAS_CB,
-  cb.TIPO_CODIGO_CB,
-  cb.ESPRINCIPAL_CB,
-  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
-  sku.INSTANTE_MODIF,
-  sku.INSTANTE_ALTA,
-  sku.USUARIO_ALTA,
-  sku.USUARIO_MODIF
-FROM fza_articulos_skus sku
-LEFT JOIN fza_codigos_barras cb
-  ON cb.ID_CB = (
-    SELECT cb2.ID_CB
-      FROM fza_codigos_barras cb2
-     WHERE cb2.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-     ORDER BY (cb2.ESPRINCIPAL_CB = ''S'') DESC, cb2.ID_CB ASC
-     LIMIT 1
-  )
-LEFT JOIN (
-  SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
-    FROM fza_articulos_stockactual
-   GROUP BY CODIGO_UNIDAD_STK
-) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-05-08 17:49:47', '2026-05-08 17:49:47', 'Administrador', 'Administrador'),
-  ('142', NULL, '-- ============================================================================
--- Migración: pestaña CB de Artículos
--- ----------------------------------------------------------------------------
--- 1) Limpia placeholders obsoletos `_FAB_xxx` de fza_codigos_barras.
--- 2) Convierte la PK de fza_codigos_barras en autonumérica (ID_CB) para
---    eliminar las colisiones por CODIGO_BARRAS_CB y permitir múltiples
---    códigos por SKU (interno, fabricante, rebajas, original, etc.).
--- 3) Reconstruye vi_articulos_skus_extendida con una fila por (SKU, CB):
---    los SKUs sin código de barras siguen apareciendo (LEFT JOIN) con
---    ID_CB nulo, listos para que el usuario rellene su CB.
--- ----------------------------------------------------------------------------
--- Idempotente: se puede ejecutar dos veces sin romper nada.
--- ============================================================================
-
--- 1) Eliminamos placeholders obsoletos. El CB del fabricante queda vacío
---    hasta que el usuario lo introduzca manualmente desde la pestaña CB.
-DELETE FROM fza_codigos_barras
- WHERE LEFT(CODIGO_BARRAS_CB, 5) = ''_FAB_'';
-
--- 2) Añadimos ID_CB autonumérico como nueva PK. CODIGO_BARRAS_CB pasa a ser
---    columna normal con índice no único (un SKU puede tener varios CB y
---    varios SKU pueden compartir el mismo CB del fabricante).
-SET @has_id := (
-  SELECT COUNT(*)
-    FROM information_schema.columns
-   WHERE table_schema = DATABASE()
-     AND table_name   = ''fza_codigos_barras''
-     AND column_name  = ''ID_CB''
-);
-SET @sql := IF(@has_id = 0,
-  ''ALTER TABLE fza_codigos_barras
-     DROP PRIMARY KEY,
-     ADD COLUMN ID_CB INT NOT NULL AUTO_INCREMENT FIRST,
-     ADD PRIMARY KEY (ID_CB)'',
-  ''SELECT ''''ID_CB ya existe, se omite ALTER'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_idx := (
-  SELECT COUNT(*)
-    FROM information_schema.statistics
-   WHERE table_schema = DATABASE()
-     AND table_name   = ''fza_codigos_barras''
-     AND index_name   = ''IDX_BARRAS_CB''
-);
-SET @sql := IF(@has_idx = 0,
-  ''ALTER TABLE fza_codigos_barras ADD INDEX IDX_BARRAS_CB (CODIGO_BARRAS_CB)'',
-  ''SELECT ''''IDX_BARRAS_CB ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- 3) Reconstruimos la vista. Una fila por cada (SKU, CB) y los SKUs sin
---    códigos siguen apareciendo (LEFT JOIN) con ID_CB e CODIGO_BARRAS_CB
---    nulos, lo que permite usar la rejilla para añadirles uno.
-DROP VIEW IF EXISTS vi_articulos_skus_extendida;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_skus_extendida AS
-SELECT
-  sku.CODIGO_UNIDAD_SKU,
-  sku.CODIGO_ART_SKU,
-  sku.CODIGO_VAR_SKU,
-  sku.ESACTIVO_SKU,
-  cb.ID_CB,
-  cb.CODIGO_BARRAS_CB,
-  cb.TIPO_CODIGO_CB,
-  cb.ESPRINCIPAL_CB,
-  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
-  sku.INSTANTE_MODIF,
-  sku.INSTANTE_ALTA,
-  sku.USUARIO_ALTA,
-  sku.USUARIO_MODIF
-FROM fza_articulos_skus sku
-LEFT JOIN fza_codigos_barras cb
-  ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-LEFT JOIN (
-  SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
-    FROM fza_articulos_stockactual
-   GROUP BY CODIGO_UNIDAD_STK
-) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-05-08 18:17:07', '2026-05-08 18:17:07', 'Administrador', 'Administrador'),
-  ('143', NULL, 'DELETE FROM fza_codigos_barras
- WHERE LEFT(CODIGO_BARRAS_CB, 5) = ''_FAB_'';
-
-SET @has_id := (SELECT COUNT(*) FROM information_schema.columns
-                 WHERE table_schema = DATABASE()
-                   AND table_name = ''fza_codigos_barras''
-                   AND column_name = ''ID_CB'');
-SET @sql := IF(@has_id = 0,
-  ''ALTER TABLE fza_codigos_barras
-     DROP PRIMARY KEY,
-     ADD COLUMN ID_CB INT NOT NULL AUTO_INCREMENT FIRST,
-     ADD PRIMARY KEY (ID_CB)'',
-  ''SELECT ''''ID_CB ya existe'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics
-                  WHERE table_schema = DATABASE()
-                    AND table_name = ''fza_codigos_barras''
-                    AND index_name = ''IDX_BARRAS_CB'');
-SET @sql := IF(@has_idx = 0,
-  ''ALTER TABLE fza_codigos_barras ADD INDEX IDX_BARRAS_CB (CODIGO_BARRAS_CB)'',
-  ''SELECT ''''IDX_BARRAS_CB ya existe'''' AS info'');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-DROP VIEW IF EXISTS vi_articulos_skus_extendida;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_skus_extendida AS
-SELECT
-  sku.CODIGO_UNIDAD_SKU, sku.CODIGO_ART_SKU, sku.CODIGO_VAR_SKU,
-  sku.ESACTIVO_SKU,
-  cb.ID_CB, cb.CODIGO_BARRAS_CB, cb.TIPO_CODIGO_CB, cb.ESPRINCIPAL_CB,
-  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
-  sku.INSTANTE_MODIF, sku.INSTANTE_ALTA, sku.USUARIO_ALTA, sku.USUARIO_MODIF
-FROM fza_articulos_skus sku
-LEFT JOIN fza_codigos_barras cb
-  ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-LEFT JOIN (
-  SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
-    FROM fza_articulos_stockactual
-   GROUP BY CODIGO_UNIDAD_STK
-) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-05-08 18:18:03', '2026-05-08 18:18:03', 'Administrador', 'Administrador'),
-  ('144', NULL, 'DROP VIEW IF EXISTS vi_articulos_skus_extendida;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_skus_extendida AS
-SELECT
-  sku.CODIGO_UNIDAD_SKU, sku.CODIGO_ART_SKU, sku.CODIGO_VAR_SKU,
-  sku.ESACTIVO_SKU,
-  cb.ID_CB, cb.CODIGO_BARRAS_CB, cb.TIPO_CODIGO_CB, cb.ESPRINCIPAL_CB,
-  COALESCE(stk.STOCK_TOTAL, 0) AS STOCK_TOTAL,
-  sku.INSTANTE_MODIF, sku.INSTANTE_ALTA, sku.USUARIO_ALTA, sku.USUARIO_MODIF
-FROM fza_articulos_skus sku
-INNER JOIN fza_codigos_barras cb
-  ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-LEFT JOIN (
-  SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK_TOTAL
-    FROM fza_articulos_stockactual
-   GROUP BY CODIGO_UNIDAD_STK
-) stk ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK;', '2026-05-08 18:47:09', '2026-05-08 18:47:09', 'Administrador', 'Administrador'),
-  ('145', NULL, 'DROP VIEW IF EXISTS vi_caja_busqueda_unificada;
-CREATE ALGORITHM=UNDEFINED VIEW vi_caja_busqueda_unificada AS
-SELECT a.CODIGO_ART_ART AS INPUT_BUSQUEDA, ''CODIGO'' AS TIPO_COINCIDENCIA,
-       a.CODIGO_ART_ART AS CODIGO_PADRE, NULL AS CODIGO_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos a WHERE a.ESACTIVO_ART = ''S''
-UNION ALL
-SELECT sku.CODIGO_UNIDAD_SKU, ''SKU'',
-       a.CODIGO_ART_ART, sku.CODIGO_UNIDAD_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos_skus sku
-  JOIN fza_articulos a ON sku.CODIGO_ART_SKU = a.CODIGO_ART_ART
- WHERE sku.ESACTIVO_SKU = ''S''
-UNION ALL
-SELECT cb.CODIGO_BARRAS_CB, ''EAN'',
-       a.CODIGO_ART_ART, sku.CODIGO_UNIDAD_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_codigos_barras cb
-  JOIN fza_articulos_skus sku ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-  JOIN fza_articulos a ON sku.CODIGO_ART_SKU = a.CODIGO_ART_ART
-UNION ALL
-SELECT ap.REF_PROVEEDOR_AP, ''MODELO_PROV'',
-       a.CODIGO_ART_ART, NULL,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos_proveedores ap
-  JOIN fza_articulos a ON ap.CODIGO_ART_AP = a.CODIGO_ART_ART
- WHERE a.ESACTIVO_ART = ''S''
-   AND ap.REF_PROVEEDOR_AP IS NOT NULL
-   AND ap.REF_PROVEEDOR_AP <> '''';', '2026-05-08 19:42:29', '2026-05-08 19:42:29', 'Administrador', 'Administrador'),
-  ('146', NULL, 'select * from vi_caja_busqueda_unificada', '2026-05-08 19:45:26', '2026-05-08 19:44:58', 'Administrador', 'Administrador'),
-  ('147', NULL, 'DROP VIEW IF EXISTS vi_caja_busqueda_unificada;
-CREATE ALGORITHM=UNDEFINED VIEW vi_caja_busqueda_unificada AS
-SELECT a.CODIGO_ART_ART AS INPUT_BUSQUEDA, ''CODIGO'' AS TIPO_COINCIDENCIA,
-       a.CODIGO_ART_ART AS CODIGO_PADRE, NULL AS CODIGO_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos a WHERE a.ESACTIVO_ART = ''S''
-UNION ALL
-SELECT sku.CODIGO_UNIDAD_SKU, ''SKU'',
-       a.CODIGO_ART_ART, sku.CODIGO_UNIDAD_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos_skus sku
-  JOIN fza_articulos a ON sku.CODIGO_ART_SKU = a.CODIGO_ART_ART
- WHERE sku.ESACTIVO_SKU = ''S''
-UNION ALL
-SELECT cb.CODIGO_BARRAS_CB, ''EAN'',
-       a.CODIGO_ART_ART, sku.CODIGO_UNIDAD_SKU,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_codigos_barras cb
-  JOIN fza_articulos_skus sku ON cb.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU
-  JOIN fza_articulos a ON sku.CODIGO_ART_SKU = a.CODIGO_ART_ART
-UNION ALL
-SELECT ap.REF_PROVEEDOR_AP, ''MODELO_PROV'',
-       a.CODIGO_ART_ART, NULL,
-       a.DESCRIPCION_ART, a.TIPO_ART
-  FROM fza_articulos_proveedores ap
-  JOIN fza_articulos a ON ap.CODIGO_ART_AP = a.CODIGO_ART_ART
- WHERE a.ESACTIVO_ART = ''S''
-   AND ap.REF_PROVEEDOR_AP IS NOT NULL
-   AND ap.REF_PROVEEDOR_AP <> '''';', '2026-05-08 19:47:54', '2026-05-08 19:47:54', 'Administrador', 'Administrador'),
-  ('148', NULL, '-- 1) Quita la columna duplicada (siempre NULL, no se usa en código)
-ALTER TABLE fza_articulos_proveedores DROP COLUMN REFPROVEEDOR_AP;
-
--- 2) Recrea la vista con alias consistentes (sin _AP en los atributos)
-DROP VIEW IF EXISTS vi_articulos_proveedores;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_proveedores AS
-SELECT
-  ap.CODIGO_PRV_AP            AS CODIGO_PRV_PRV,
-  ap.CODIGO_ART_AP            AS CODIGO_ART_ART,
-  p.RAZON_SOCIAL_PRV          AS RAZON_SOCIAL_PRV,
-  ap.REF_PROVEEDOR_AP         AS REF_PROVEEDOR,
-  ap.PRECIO_ULT_COMPRA_AP     AS PRECIO_ULT_COMPRA,
-  ap.FECHA_VALIDEZ_AP         AS FECHA_VALIDEZ,
-  ap.ESPROVEEDORPRINCIPAL_AP  AS ESPROVEEDORPRINCIPAL,
-  ap.INSTANTE_MODIF           AS INSTANTE_MODIF,
-  ap.INSTANTE_ALTA            AS INSTANTE_ALTA,
-  ap.USUARIO_ALTA             AS USUARIO_ALTA,
-  ap.USUARIO_MODIF            AS USUARIO_MODIF
-FROM fza_articulos_proveedores ap
-LEFT JOIN fza_proveedores p ON ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV;', '2026-05-08 20:09:29', '2026-05-08 20:09:29', 'Administrador', 'Administrador'),
-  ('149', NULL, '-- 1) Quita la columna duplicada (siempre NULL, no se usa en código)
-ALTER TABLE fza_articulos_proveedores DROP COLUMN REFPROVEEDOR_AP;
-
--- 2) Recrea la vista con alias consistentes (sin _AP en los atributos)
-DROP VIEW IF EXISTS vi_articulos_proveedores;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos_proveedores AS
-SELECT
-  ap.CODIGO_PRV_AP            AS CODIGO_PRV_PRV,
-  ap.CODIGO_ART_AP            AS CODIGO_ART_ART,
-  p.RAZON_SOCIAL_PRV          AS RAZON_SOCIAL_PRV,
-  ap.REF_PROVEEDOR_AP         AS REF_PROVEEDOR,
-  ap.PRECIO_ULT_COMPRA_AP     AS PRECIO_ULT_COMPRA,
-  ap.FECHA_VALIDEZ_AP         AS FECHA_VALIDEZ,
-  ap.ESPROVEEDORPRINCIPAL_AP  AS ESPROVEEDORPRINCIPAL,
-  ap.INSTANTE_MODIF           AS INSTANTE_MODIF,
-  ap.INSTANTE_ALTA            AS INSTANTE_ALTA,
-  ap.USUARIO_ALTA             AS USUARIO_ALTA,
-  ap.USUARIO_MODIF            AS USUARIO_MODIF
-FROM fza_articulos_proveedores ap
-LEFT JOIN fza_proveedores p ON ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV;', '2026-05-08 20:18:37', '2026-05-08 20:18:37', 'Administrador', 'Administrador'),
-  ('150', NULL, '-- Recrea vi_articulos exponiendo el modelo del proveedor principal y la temporada
-DROP VIEW IF EXISTS vi_articulos;
-CREATE ALGORITHM=UNDEFINED VIEW vi_articulos AS
-SELECT
-  art.CODIGO_ART_ART          AS CODIGO_ART_ART,
-  art.ESACTIVO_ART            AS ESACTIVO_ART,
-  art.ORDEN_ART               AS ORDEN_ART,
-  art.DESCRIPCION_ART         AS DESCRIPCION_ART,
-  art.ESVARIACION_ART         AS ESVARIACION_ART,
-  art.ESTRAZABLE_ART          AS ESTRAZABLE_ART,
-  art.TIPO_ART                AS TIPO_ART,
-  art.TIPO_VARIACION_ART      AS TIPO_VARIACION_ART,
-  art.CODIGO_FAM_ART          AS CODIGO_FAM_ART,
-  fam.DESCRIPCION_FAM         AS DESCRIPCION_FAM,
-  fam.NOMBRE_FAM_FAM          AS NOMBRE_FAM_FAM,
-  art.TIPO_IVA_ART            AS TIPO_IVA_ART,
-  iva.NOMBRE_TIPO_IVA_IVATIP  AS NOMBRE_TIPO_IVA_IVATIP,
-  art.ESACTIVO_FIJO_ART       AS ESACTIVO_FIJO_ART,
-  art.TIPO_CANTIDAD_ART       AS TIPO_CANTIDAD_ART,
-  prv.RAZON_SOCIAL_PRV        AS RAZON_SOCIAL_PRV,
-  ap.REF_PROVEEDOR_AP         AS REF_PROVEEDOR,
-  COALESCE(pv.PV, atemp.VALOR_LIBRE_ARTPROP) AS TEMPORADA_ART,
-  art.INSTANTE_MODIF          AS INSTANTE_MODIF,
-  art.INSTANTE_ALTA           AS INSTANTE_ALTA,
-  art.USUARIO_ALTA            AS USUARIO_ALTA,
-  art.USUARIO_MODIF           AS USUARIO_MODIF
-FROM fza_articulos art
-LEFT JOIN fza_articulos_familias fam
-       ON art.CODIGO_FAM_ART = fam.CODIGO_FAM_FAM
-LEFT JOIN fza_articulos_proveedores ap
-       ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP
-      AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
-LEFT JOIN fza_proveedores prv
-       ON ap.CODIGO_PRV_AP = prv.CODIGO_PRV_PRV
-LEFT JOIN fza_ivas_tipos iva
-       ON art.TIPO_IVA_ART = iva.CODIGO_ABREVIATURA_IVA_IVATIP
-LEFT JOIN fza_articulos_propiedades atemp
-       ON art.CODIGO_ART_ART = atemp.CODIGO_ART_ART
-      AND atemp.CODIGO_PROP_ARTPROP = ''TEMPORADA''
-LEFT JOIN fza_propiedades_valores pv
-       ON atemp.ID_PV_ARTPROP = pv.ID_PV_ARTPROP
-ORDER BY art.ORDEN_ART;', '2026-05-09 10:00:00', '2026-05-09 10:00:00', 'Administrador', 'Administrador'),
   ('151', NULL, '-- Activar oCreateItems global del form y sub-flag del grid principal
 INSERT INTO fza_usuarios_perfiles
   (USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER,
@@ -4164,8 +3613,559 @@ BEGIN
 
     COMMIT;
 END ;;
-DELIMITER ;', '2026-05-10 18:24:13', '2026-05-10 18:24:13', 'Administrador', 'Administrador');
--- 22 registros exportados
+DELIMITER ;', '2026-05-10 18:24:13', '2026-05-10 18:24:13', 'Administrador', 'Administrador'),
+  ('161', NULL, 'CREATE VIEW vi_articulos_tarifas AS with unidades as (select a.CODIGO_ART_ART AS CODIGO_ART,skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD,skus.CODIGO_VAR_SKU AS CODIGO_VAR_SKU,skus.ESACTIVO_SKU AS ESACTIVO_SKU,''S'' AS TIENE_SKU from (fza_articulos a join fza_articulos_skus skus on(skus.CODIGO_ART_SKU = a.CODIGO_ART_ART and skus.ESACTIVO_SKU = ''S'')) union all select a.CODIGO_ART_ART AS CODIGO_ART_ART,'''' AS CODIGO_UNIDAD,NULL AS CODIGO_VAR_SKU,NULL AS ESACTIVO_SKU,''N'' AS TIENE_SKU from fza_articulos a where not exists(select 1 from fza_articulos_skus s where s.CODIGO_ART_SKU = a.CODIGO_ART_ART and s.ESACTIVO_SKU = ''S'' limit 1)), sku_desc as (select sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,group_concat(av.AV order by av.ORDEN_AV ASC separator '' / '') AS DESCRIPCION_SKU from (fza_atributos_sku sa join fza_atributos_valores av on(av.ID_AV = sa.ID_AV_SA)) group by sa.CODIGO_UNIDAD_SKU_SA)select u.CODIGO_ART AS CODIGO_ART_ARTTAR,u.CODIGO_UNIDAD AS CODIGO_UNIDAD_ARTTAR,t.CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR,t.NOMBRE_TAR_TAR AS NOMBRE_TAR_TAR,ts.CODIGO_UNICO_ARTTAR AS CODIGO_UNICO_TARIFA_SKU,tp.CODIGO_UNICO_ARTTAR AS CODIGO_UNICO_TARIFA_PADRE,coalesce(ts.CODIGO_UNICO_ARTTAR,tp.CODIGO_UNICO_ARTTAR) AS CODIGO_UNICO_ARTTAR,case when ts.CODIGO_UNICO_ARTTAR is not null then ''ESPECIFICO_SKU'' when tp.CODIGO_UNICO_ARTTAR is not null then ''HEREDADO_PADRE'' else ''SIN_PRECIO'' end AS ORIGEN_PRECIO,coalesce(ts.PRECIO_SALIDA_ARTTAR,tp.PRECIO_SALIDA_ARTTAR) AS PRECIO_SALIDA_ARTTAR,coalesce(ts.PRECIO_FINAL_ARTTAR,tp.PRECIO_FINAL_ARTTAR) AS PRECIO_FINAL_ARTTAR,coalesce(ts.PRECIO_DTO_ARTTAR,tp.PRECIO_DTO_ARTTAR) AS PRECIO_DTO_ARTTAR,coalesce(ts.PORCENTAJE_DTO_ARTTAR,tp.PORCENTAJE_DTO_ARTTAR) AS PORCENTAJE_DTO_ARTTAR,coalesce(ts.PORCENTAJE_MARGEN_ARTTAR,tp.PORCENTAJE_MARGEN_ARTTAR) AS PORCENTAJE_MARGEN_ARTTAR,coalesce(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR,tp.VALOR_MULTIPLO_AJUSTE_ARTTAR) AS VALOR_MULTIPLO_AJUSTE_ARTTAR,coalesce(ts.VALOR_MENOS_AJUSTE_ARTTAR,tp.VALOR_MENOS_AJUSTE_ARTTAR) AS VALOR_MENOS_AJUSTE_ARTTAR,coalesce(ts.PORCENTAJE_MARGEN_ARTTAR,tp.PORCENTAJE_MARGEN_ARTTAR,t.PORCENTAJE_MARGEN_TAR) AS PORCENTAJE_MARGEN_EFECTIVO,coalesce(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR,tp.VALOR_MULTIPLO_AJUSTE_ARTTAR,t.VALOR_MULTIPLO_AJUSTE_TAR) AS VALOR_MULTIPLO_AJUSTE_EFECTIVO,coalesce(ts.VALOR_MENOS_AJUSTE_ARTTAR,tp.VALOR_MENOS_AJUSTE_ARTTAR,t.VALOR_MENOS_AJUSTE_TAR) AS VALOR_MENOS_AJUSTE_EFECTIVO,coalesce(ts.FECHA_DESDE_ARTTAR,tp.FECHA_DESDE_ARTTAR) AS FECHA_DESDE_ARTTAR,coalesce(ts.FECHA_HASTA_ARTTAR,tp.FECHA_HASTA_ARTTAR) AS FECHA_HASTA_ARTTAR,t.ESACTIVO_ARTTAR AS ESACTIVO_ARTTAR,t.ESIMP_INCL_TAR AS ESIMP_INCL_TAR,t.ESDEFAULT_TAR AS ESDEFAULT_TAR,a.DESCRIPCION_ART AS DESCRIPCION_ART,a.TIPO_CANTIDAD_ART AS TIPO_CANTIDAD_ART,a.ESVARIACION_ART AS ESVARIACION_ART,iv.CODIGO_ABREVIATURA_IVA_IVATIP AS TIPO_IVA_ARTICULO,u.TIENE_SKU AS TIENE_SKU,u.ESACTIVO_SKU AS ESACTIVO_SKU,sd.DESCRIPCION_SKU AS DESCRIPCION_SKU,ap.CODIGO_PRV_AP AS CODIGO_PRV_PRV,p.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV,case when u.TIENE_SKU = ''S'' then skuc.PRECIO_ULT_COMPRA_SKUC else ap.PRECIO_ULT_COMPRA_AP end AS PRECIO_ULT_COMPRA,case when u.TIENE_SKU = ''S'' then skuc.FECHA_ULT_COMPRA_SKUC else ap.FECHA_VALIDEZ_AP end AS FECHA_VALIDEZ,a.CODIGO_FAM_ART AS CODIGO_FAM_ART,af.DESCRIPCION_FAM AS DESCRIPCION_FAM,(select count(distinct va.ID_ATB_VA) from (fza_articulos_skus sk join fza_variaciones_atributos va on(sk.CODIGO_VAR_SKU = va.ID_VAR_VA)) where sk.CODIGO_ART_SKU = a.CODIGO_ART_ART) AS NUM_ATRIBUTOS_REQ,coalesce(ts.INSTANTE_MODIF,tp.INSTANTE_MODIF) AS INSTANTE_MODIF,coalesce(ts.INSTANTE_ALTA,tp.INSTANTE_ALTA) AS INSTANTE_ALTA,coalesce(ts.USUARIO_ALTA,tp.USUARIO_ALTA) AS USUARIO_ALTA,coalesce(ts.USUARIO_MODIF,tp.USUARIO_MODIF) AS USUARIO_MODIF from ((((((((((unidades u join fza_articulos a on(a.CODIGO_ART_ART = u.CODIGO_ART)) join fza_tarifas t on(t.ESACTIVO_ARTTAR = ''S'')) left join fza_articulos_tarifas ts on(ts.CODIGO_ART_ARTTAR = u.CODIGO_ART and ts.CODIGO_UNIDAD_ARTTAR = u.CODIGO_UNIDAD and ts.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR and ts.ESACTIVO_ARTTAR = ''S'' and u.CODIGO_UNIDAD <> '''' and coalesce(ts.FECHA_HASTA_ARTTAR,''9999-12-31'') >= curdate())) left join fza_articulos_tarifas tp on(tp.CODIGO_ART_ARTTAR = u.CODIGO_ART and (tp.CODIGO_UNIDAD_ARTTAR is null or tp.CODIGO_UNIDAD_ARTTAR = '''') and tp.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR and tp.ESACTIVO_ARTTAR = ''S'' and coalesce(tp.FECHA_HASTA_ARTTAR,''9999-12-31'') >= curdate())) left join fza_articulos_proveedores ap on(ap.CODIGO_ART_AP = a.CODIGO_ART_ART and ap.ESPROVEEDORPRINCIPAL_AP = ''S'')) left join fza_proveedores p on(p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP)) left join fza_articulos_familias af on(af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART)) left join fza_ivas_tipos iv on(iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART)) left join sku_desc sd on(sd.CODIGO_UNIDAD = u.CODIGO_UNIDAD)) left join fza_articulos_skus_costes skuc on(skuc.CODIGO_UNIDAD_SKU_SKUC = u.CODIGO_UNIDAD)) where ts.CODIGO_UNICO_ARTTAR is not null or tp.CODIGO_UNICO_ARTTAR is not null order by t.ORDEN_TAR,a.ORDEN_ART,u.CODIGO_UNIDAD', '2026-05-10 20:38:12', '2026-05-10 20:38:12', 'Administrador', 'Administrador'),
+  ('162', NULL, '-- ============================================================================
+-- Migración: coste por SKU (fza_articulos_skus_costes) + adaptación de vistas
+--            vi_articulos_skus_con_coste y vi_articulos_tarifas para que el
+--            coste de un artículo CON SKUs salga del SKU concreto y no del
+--            proveedor principal. Para artículos SIN SKU se conserva el
+--            coste del proveedor principal.
+-- Fecha:   2026-05-10
+-- Rama:    claude/add-sku-cost-tracking-cQ2BE
+--
+-- Aplica este script DESPUÉS de actualizar el ejecutable a la versión que
+-- incluye las columnas nuevas en la pestaña SKU del mantenimiento de
+-- artículos y la lógica de upsert sobre fza_articulos_skus_costes.
+--
+-- Sin esta migración:
+--   * la pestaña SKU pedirá columnas que aún no existen
+--   * la pestaña Tarifa seguirá mostrando el coste del proveedor principal
+--     incluso para artículos con SKUs
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ----------------------------------------------------------------------------
+-- 1. Tabla nueva: un coste y una fecha de última compra por SKU.
+--    Sufijo SKUC (mnemo: SKU + Coste).
+--    OJO: COLLATE explícito a utf8mb4_spanish_ci, igual que el resto del
+--    esquema. Si se omite, MariaDB 10.11+ usa utf8mb4_uca1400_ai_ci por
+--    defecto y los JOIN contra fza_articulos_skus revientan con
+--    "Illegal mix of collations".
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_articulos_skus_costes` (
+  `CODIGO_UNIDAD_SKU_SKUC`  varchar(50)   NOT NULL COMMENT ''FK hacia fza_articulos_skus.CODIGO_UNIDAD_SKU'',
+  `PRECIO_ULT_COMPRA_SKUC`  decimal(19,6) DEFAULT NULL,
+  `FECHA_ULT_COMPRA_SKUC`   date          DEFAULT NULL,
+  `INSTANTE_MODIF`          timestamp     NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA`           timestamp     NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`            varchar(100)  NOT NULL,
+  `USUARIO_MODIF`           varchar(100)  NOT NULL,
+  PRIMARY KEY (`CODIGO_UNIDAD_SKU_SKUC`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Reparación idempotente: si la migración se aplicó antes de añadir el
+-- COLLATE explícito, la tabla quedó en utf8mb4_uca1400_ai_ci y los JOIN
+-- contra fza_articulos_skus.CODIGO_UNIDAD_SKU (utf8mb4_spanish_ci) fallan.
+-- CONVERT TO afecta también a las columnas varchar de la tabla.
+ALTER TABLE `fza_articulos_skus_costes`
+  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
+
+-- Índice por fecha de última compra (consultas de "qué he comprado este mes").
+-- Idempotente: si ya existe (por una pasada anterior de la migración) lo
+-- saltamos.
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics
+                  WHERE table_schema = DATABASE()
+                    AND table_name   = ''fza_articulos_skus_costes''
+                    AND index_name   = ''IDX_SKUC_FECHA_ULT_COMPRA'');
+SET @sql := IF(@has_idx = 0,
+  ''ALTER TABLE fza_articulos_skus_costes ADD INDEX IDX_SKUC_FECHA_ULT_COMPRA (FECHA_ULT_COMPRA_SKUC)'',
+  ''SELECT ''''IDX_SKUC_FECHA_ULT_COMPRA ya existe'''' AS info'');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2. Pre-poblado: para los SKUs ya existentes copiamos el coste / fecha del
+--    proveedor principal del artículo padre. Así la pestaña Tarifa no pierde
+--    el dato visible que ya mostraba antes del cambio.
+--    A partir de ahora, cualquier nuevo coste de un SKU se gestionará en esta
+--    tabla; el del proveedor principal sólo gobierna a artículos SIN SKU.
+-- ----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_articulos_skus_costes`
+       (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_COMPRA_SKUC`,
+        `FECHA_ULT_COMPRA_SKUC`,
+        `INSTANTE_ALTA`,         `USUARIO_ALTA`,
+        `USUARIO_MODIF`)
+SELECT sku.`CODIGO_UNIDAD_SKU`,
+       ap.`PRECIO_ULT_COMPRA_AP`,
+       DATE(ap.`FECHA_VALIDEZ_AP`),
+       CURRENT_TIMESTAMP,
+       ''MIGRACION'',
+       ''MIGRACION''
+  FROM `fza_articulos_skus` sku
+  JOIN `fza_articulos_proveedores` ap
+    ON ap.`CODIGO_ART_AP`           = sku.`CODIGO_ART_SKU`
+   AND ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+ WHERE ap.`PRECIO_ULT_COMPRA_AP` IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 3. Vista auxiliar: SKU + coste resuelto. La pestaña SKU del mantenimiento
+--    de artículos lee de aquí.
+-- ----------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_articulos_skus_con_coste`;
+
+CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_skus_con_coste` AS
+SELECT
+  sku.`CODIGO_UNIDAD_SKU`     AS `CODIGO_UNIDAD_SKU`,
+  sku.`CODIGO_ART_SKU`        AS `CODIGO_ART_SKU`,
+  sku.`CODIGO_VAR_SKU`        AS `CODIGO_VAR_SKU`,
+  sku.`ESACTIVO_SKU`          AS `ESACTIVO_SKU`,
+  skuc.`PRECIO_ULT_COMPRA_SKUC` AS `PRECIO_ULT_COMPRA_SKUC`,
+  skuc.`FECHA_ULT_COMPRA_SKUC`  AS `FECHA_ULT_COMPRA_SKUC`,
+  sku.`INSTANTE_MODIF`        AS `INSTANTE_MODIF`,
+  sku.`INSTANTE_ALTA`         AS `INSTANTE_ALTA`,
+  sku.`USUARIO_ALTA`          AS `USUARIO_ALTA`,
+  sku.`USUARIO_MODIF`         AS `USUARIO_MODIF`
+FROM `fza_articulos_skus` sku
+LEFT JOIN `fza_articulos_skus_costes` skuc
+  ON skuc.`CODIGO_UNIDAD_SKU_SKUC` = sku.`CODIGO_UNIDAD_SKU`;
+
+-- ----------------------------------------------------------------------------
+-- 4. Recreación de vi_articulos_tarifas: el coste / fecha vienen del SKU
+--    cuando el artículo TIENE SKUs (TIENE_SKU=''S''); del proveedor principal
+--    cuando NO los tiene. Esto reemplaza la versión de la migración 137.
+-- ----------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_articulos_tarifas`;
+
+CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_tarifas` AS
+WITH
+unidades AS (
+    SELECT
+        a.CODIGO_ART_ART       AS CODIGO_ART,
+        skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD,
+        skus.CODIGO_VAR_SKU    AS CODIGO_VAR_SKU,
+        skus.ESACTIVO_SKU      AS ESACTIVO_SKU,
+        ''S''                    AS TIENE_SKU
+    FROM fza_articulos a
+    JOIN fza_articulos_skus skus
+      ON skus.CODIGO_ART_SKU = a.CODIGO_ART_ART
+     AND skus.ESACTIVO_SKU   = ''S''
+    UNION ALL
+    SELECT
+        a.CODIGO_ART_ART,
+        ''''   AS CODIGO_UNIDAD,
+        NULL AS CODIGO_VAR_SKU,
+        NULL AS ESACTIVO_SKU,
+        ''N''  AS TIENE_SKU
+    FROM fza_articulos a
+    WHERE NOT EXISTS (
+        SELECT 1 FROM fza_articulos_skus s
+         WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART
+           AND s.ESACTIVO_SKU   = ''S''
+    )
+),
+sku_desc AS (
+    SELECT
+        sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,
+        GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') AS DESCRIPCION_SKU
+    FROM fza_atributos_sku sa
+    JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
+    GROUP BY sa.CODIGO_UNIDAD_SKU_SA
+)
+SELECT
+    -- Identificación
+    u.CODIGO_ART                                                    AS CODIGO_ART_ARTTAR,
+    u.CODIGO_UNIDAD                                                 AS CODIGO_UNIDAD_ARTTAR,
+    t.CODIGO_TAR_ARTTAR                                             AS CODIGO_TAR_ARTTAR,
+    t.NOMBRE_TAR_TAR                                                AS NOMBRE_TAR_TAR,
+
+    -- PK del registro existente (SKU si lo hay, padre si no)
+    ts.CODIGO_UNICO_ARTTAR                                          AS CODIGO_UNICO_TARIFA_SKU,
+    tp.CODIGO_UNICO_ARTTAR                                          AS CODIGO_UNICO_TARIFA_PADRE,
+    COALESCE(ts.CODIGO_UNICO_ARTTAR, tp.CODIGO_UNICO_ARTTAR)        AS CODIGO_UNICO_ARTTAR,
+
+    -- Origen del precio
+    CASE
+        WHEN ts.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''ESPECIFICO_SKU''
+        WHEN tp.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''HEREDADO_PADRE''
+        ELSE ''SIN_PRECIO''
+    END                                                             AS ORIGEN_PRECIO,
+
+    -- Precios resueltos (SKU > padre > NULL)
+    COALESCE(ts.PRECIO_SALIDA_ARTTAR,    tp.PRECIO_SALIDA_ARTTAR)    AS PRECIO_SALIDA_ARTTAR,
+    COALESCE(ts.PRECIO_FINAL_ARTTAR,     tp.PRECIO_FINAL_ARTTAR)     AS PRECIO_FINAL_ARTTAR,
+    COALESCE(ts.PRECIO_DTO_ARTTAR,       tp.PRECIO_DTO_ARTTAR)       AS PRECIO_DTO_ARTTAR,
+    COALESCE(ts.PORCENTAJE_DTO_ARTTAR,   tp.PORCENTAJE_DTO_ARTTAR)   AS PORCENTAJE_DTO_ARTTAR,
+
+    -- Margen y ajustes (override en artículo-tarifa, sin defaultear todavía)
+    COALESCE(ts.PORCENTAJE_MARGEN_ARTTAR,     tp.PORCENTAJE_MARGEN_ARTTAR)     AS PORCENTAJE_MARGEN_ARTTAR,
+    COALESCE(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR, tp.VALOR_MULTIPLO_AJUSTE_ARTTAR) AS VALOR_MULTIPLO_AJUSTE_ARTTAR,
+    COALESCE(ts.VALOR_MENOS_AJUSTE_ARTTAR,    tp.VALOR_MENOS_AJUSTE_ARTTAR)    AS VALOR_MENOS_AJUSTE_ARTTAR,
+
+    -- Margen y ajustes EFECTIVOS = override en artículo-tarifa o, si no, los de la tarifa
+    COALESCE(ts.PORCENTAJE_MARGEN_ARTTAR,     tp.PORCENTAJE_MARGEN_ARTTAR,     t.PORCENTAJE_MARGEN_TAR)     AS PORCENTAJE_MARGEN_EFECTIVO,
+    COALESCE(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR, tp.VALOR_MULTIPLO_AJUSTE_ARTTAR, t.VALOR_MULTIPLO_AJUSTE_TAR) AS VALOR_MULTIPLO_AJUSTE_EFECTIVO,
+    COALESCE(ts.VALOR_MENOS_AJUSTE_ARTTAR,    tp.VALOR_MENOS_AJUSTE_ARTTAR,    t.VALOR_MENOS_AJUSTE_TAR)    AS VALOR_MENOS_AJUSTE_EFECTIVO,
+
+    -- Vigencia
+    COALESCE(ts.FECHA_DESDE_ARTTAR, tp.FECHA_DESDE_ARTTAR)          AS FECHA_DESDE_ARTTAR,
+    COALESCE(ts.FECHA_HASTA_ARTTAR, tp.FECHA_HASTA_ARTTAR)          AS FECHA_HASTA_ARTTAR,
+
+    -- Flags de tarifa y artículo
+    t.ESACTIVO_ARTTAR                                               AS ESACTIVO_ARTTAR,
+    t.ESIMP_INCL_TAR                                                AS ESIMP_INCL_TAR,
+    t.ESDEFAULT_TAR                                                 AS ESDEFAULT_TAR,
+    a.DESCRIPCION_ART                                               AS DESCRIPCION_ART,
+    a.TIPO_CANTIDAD_ART                                             AS TIPO_CANTIDAD_ART,
+    a.ESVARIACION_ART                                               AS ESVARIACION_ART,
+    iv.CODIGO_ABREVIATURA_IVA_IVATIP                                AS TIPO_IVA_ARTICULO,
+
+    -- Datos del SKU
+    u.TIENE_SKU                                                     AS TIENE_SKU,
+    u.ESACTIVO_SKU                                                  AS ESACTIVO_SKU,
+    sd.DESCRIPCION_SKU                                              AS DESCRIPCION_SKU,
+
+    -- Proveedor principal (sólo informativo; el coste no sale de aquí
+    -- cuando el artículo tiene SKUs)
+    ap.CODIGO_PRV_AP                                                AS CODIGO_PRV_PRV,
+    p.RAZON_SOCIAL_PRV                                              AS RAZON_SOCIAL_PRV,
+
+    -- Coste / fecha "última compra":
+    --   * Si TIENE_SKU=''S'': coste de la fila SKU (fza_articulos_skus_costes).
+    --   * Si TIENE_SKU=''N'': coste del proveedor principal.
+    CASE WHEN u.TIENE_SKU = ''S''
+         THEN skuc.PRECIO_ULT_COMPRA_SKUC
+         ELSE ap.PRECIO_ULT_COMPRA_AP
+    END                                                             AS PRECIO_ULT_COMPRA,
+    CASE WHEN u.TIENE_SKU = ''S''
+         THEN skuc.FECHA_ULT_COMPRA_SKUC
+         ELSE ap.FECHA_VALIDEZ_AP
+    END                                                             AS FECHA_VALIDEZ,
+
+    -- Familia
+    a.CODIGO_FAM_ART                                                AS CODIGO_FAM_ART,
+    af.DESCRIPCION_FAM                                              AS DESCRIPCION_FAM,
+
+    -- Nº atributos requeridos para validar SKU completo
+    (SELECT COUNT(DISTINCT va.ID_ATB_VA)
+       FROM fza_articulos_skus sk
+       JOIN fza_variaciones_atributos va ON sk.CODIGO_VAR_SKU = va.ID_VAR_VA
+      WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART)                   AS NUM_ATRIBUTOS_REQ,
+
+    -- Auditoría: la del registro que aporta el precio
+    COALESCE(ts.INSTANTE_MODIF, tp.INSTANTE_MODIF)                  AS INSTANTE_MODIF,
+    COALESCE(ts.INSTANTE_ALTA,  tp.INSTANTE_ALTA)                   AS INSTANTE_ALTA,
+    COALESCE(ts.USUARIO_ALTA,   tp.USUARIO_ALTA)                    AS USUARIO_ALTA,
+    COALESCE(ts.USUARIO_MODIF,  tp.USUARIO_MODIF)                   AS USUARIO_MODIF
+
+FROM unidades u
+JOIN fza_articulos a    ON a.CODIGO_ART_ART = u.CODIGO_ART
+JOIN fza_tarifas    t   ON t.ESACTIVO_ARTTAR = ''S''
+
+LEFT JOIN fza_articulos_tarifas ts
+       ON ts.CODIGO_ART_ARTTAR    = u.CODIGO_ART
+      AND ts.CODIGO_UNIDAD_ARTTAR = u.CODIGO_UNIDAD
+      AND ts.CODIGO_TAR_ARTTAR    = t.CODIGO_TAR_ARTTAR
+      AND ts.ESACTIVO_ARTTAR      = ''S''
+      AND u.CODIGO_UNIDAD <> ''''
+      AND COALESCE(ts.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+
+LEFT JOIN fza_articulos_tarifas tp
+       ON tp.CODIGO_ART_ARTTAR    = u.CODIGO_ART
+      AND (tp.CODIGO_UNIDAD_ARTTAR IS NULL OR tp.CODIGO_UNIDAD_ARTTAR = '''')
+      AND tp.CODIGO_TAR_ARTTAR    = t.CODIGO_TAR_ARTTAR
+      AND tp.ESACTIVO_ARTTAR      = ''S''
+      AND COALESCE(tp.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+
+LEFT JOIN fza_articulos_proveedores ap
+       ON ap.CODIGO_ART_AP            = a.CODIGO_ART_ART
+      AND ap.ESPROVEEDORPRINCIPAL_AP  = ''S''
+LEFT JOIN fza_proveedores p
+       ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
+LEFT JOIN fza_articulos_familias af
+       ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
+LEFT JOIN fza_ivas_tipos iv
+       ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+LEFT JOIN sku_desc sd
+       ON sd.CODIGO_UNIDAD = u.CODIGO_UNIDAD
+LEFT JOIN fza_articulos_skus_costes skuc
+       ON skuc.CODIGO_UNIDAD_SKU_SKUC = u.CODIGO_UNIDAD
+
+-- Sólo mostramos filas que ya tengan precio (específico o heredado del
+-- padre). Para añadir precio a un SKU sin tarifa el usuario usa el botón
+-- "Añadir precio" en la pestaña Tarifas.
+WHERE ts.CODIGO_UNICO_ARTTAR IS NOT NULL
+   OR tp.CODIGO_UNICO_ARTTAR IS NOT NULL
+
+ORDER BY t.ORDEN_TAR, a.ORDEN_ART, u.CODIGO_UNIDAD;
+
+-- ----------------------------------------------------------------------------
+-- 5. Verificación rápida
+-- ----------------------------------------------------------------------------
+SELECT ''fza_articulos_skus_costes'' AS objeto,
+       COUNT(*)                    AS filas
+  FROM fza_articulos_skus_costes
+UNION ALL
+SELECT ''vi_articulos_skus_con_coste'',
+       COUNT(*)
+  FROM vi_articulos_skus_con_coste;
+
+COMMIT;
+', '2026-05-10 20:52:21', '2026-05-10 20:52:21', 'Administrador', 'Administrador'),
+  ('163', NULL, '-- ============================================================================
+-- Filtrar vi_articulos_tarifas para que solo devuelva filas CON precio.
+-- Cambio único vs. la versión actual (migración 156): añade
+--   WHERE COALESCE(ts.CODIGO_UNICO_ARTTAR, tp.CODIGO_UNICO_ARTTAR) IS NOT NULL
+-- al final, antes del ORDER BY. Todo lo demás (CTEs, joins, columnas) se
+-- mantiene idéntico para no romper a los consumidores.
+-- ============================================================================
+
+DROP VIEW IF EXISTS `vi_articulos_tarifas`;
+
+CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_tarifas` AS
+WITH
+unidades AS (
+    SELECT
+        a.CODIGO_ART_ART       AS CODIGO_ART,
+        skus.CODIGO_UNIDAD_SKU AS CODIGO_UNIDAD,
+        skus.CODIGO_VAR_SKU    AS CODIGO_VAR_SKU,
+        skus.ESACTIVO_SKU      AS ESACTIVO_SKU,
+        ''S''                    AS TIENE_SKU
+    FROM fza_articulos a
+    JOIN fza_articulos_skus skus
+      ON skus.CODIGO_ART_SKU = a.CODIGO_ART_ART
+     AND skus.ESACTIVO_SKU   = ''S''
+    UNION ALL
+    SELECT
+        a.CODIGO_ART_ART,
+        ''''   AS CODIGO_UNIDAD,
+        NULL AS CODIGO_VAR_SKU,
+        NULL AS ESACTIVO_SKU,
+        ''N''  AS TIENE_SKU
+    FROM fza_articulos a
+    WHERE NOT EXISTS (
+        SELECT 1 FROM fza_articulos_skus s
+         WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART
+           AND s.ESACTIVO_SKU   = ''S''
+    )
+),
+sku_desc AS (
+    SELECT
+        sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,
+        GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') AS DESCRIPCION_SKU
+    FROM fza_atributos_sku sa
+    JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
+    GROUP BY sa.CODIGO_UNIDAD_SKU_SA
+)
+SELECT
+    u.CODIGO_ART                                                    AS CODIGO_ART_ARTTAR,
+    u.CODIGO_UNIDAD                                                 AS CODIGO_UNIDAD_ARTTAR,
+    t.CODIGO_TAR_ARTTAR                                             AS CODIGO_TAR_ARTTAR,
+    t.NOMBRE_TAR_TAR                                                AS NOMBRE_TAR_TAR,
+
+    ts.CODIGO_UNICO_ARTTAR                                          AS CODIGO_UNICO_TARIFA_SKU,
+    tp.CODIGO_UNICO_ARTTAR                                          AS CODIGO_UNICO_TARIFA_PADRE,
+    COALESCE(ts.CODIGO_UNICO_ARTTAR, tp.CODIGO_UNICO_ARTTAR)        AS CODIGO_UNICO_ARTTAR,
+
+    CASE
+        WHEN ts.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''ESPECIFICO_SKU''
+        WHEN tp.CODIGO_UNICO_ARTTAR IS NOT NULL THEN ''HEREDADO_PADRE''
+        ELSE ''SIN_PRECIO''
+    END                                                             AS ORIGEN_PRECIO,
+
+    COALESCE(ts.PRECIO_SALIDA_ARTTAR,    tp.PRECIO_SALIDA_ARTTAR)    AS PRECIO_SALIDA_ARTTAR,
+    COALESCE(ts.PRECIO_FINAL_ARTTAR,     tp.PRECIO_FINAL_ARTTAR)     AS PRECIO_FINAL_ARTTAR,
+    COALESCE(ts.PRECIO_DTO_ARTTAR,       tp.PRECIO_DTO_ARTTAR)       AS PRECIO_DTO_ARTTAR,
+    COALESCE(ts.PORCENTAJE_DTO_ARTTAR,   tp.PORCENTAJE_DTO_ARTTAR)   AS PORCENTAJE_DTO_ARTTAR,
+
+    COALESCE(ts.PORCENTAJE_MARGEN_ARTTAR,     tp.PORCENTAJE_MARGEN_ARTTAR)     AS PORCENTAJE_MARGEN_ARTTAR,
+    COALESCE(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR, tp.VALOR_MULTIPLO_AJUSTE_ARTTAR) AS VALOR_MULTIPLO_AJUSTE_ARTTAR,
+    COALESCE(ts.VALOR_MENOS_AJUSTE_ARTTAR,    tp.VALOR_MENOS_AJUSTE_ARTTAR)    AS VALOR_MENOS_AJUSTE_ARTTAR,
+
+    COALESCE(ts.PORCENTAJE_MARGEN_ARTTAR,     tp.PORCENTAJE_MARGEN_ARTTAR,     t.PORCENTAJE_MARGEN_TAR)     AS PORCENTAJE_MARGEN_EFECTIVO,
+    COALESCE(ts.VALOR_MULTIPLO_AJUSTE_ARTTAR, tp.VALOR_MULTIPLO_AJUSTE_ARTTAR, t.VALOR_MULTIPLO_AJUSTE_TAR) AS VALOR_MULTIPLO_AJUSTE_EFECTIVO,
+    COALESCE(ts.VALOR_MENOS_AJUSTE_ARTTAR,    tp.VALOR_MENOS_AJUSTE_ARTTAR,    t.VALOR_MENOS_AJUSTE_TAR)    AS VALOR_MENOS_AJUSTE_EFECTIVO,
+
+    COALESCE(ts.FECHA_DESDE_ARTTAR,  tp.FECHA_DESDE_ARTTAR)  AS FECHA_DESDE_ARTTAR,
+    COALESCE(ts.FECHA_HASTA_ARTTAR,  tp.FECHA_HASTA_ARTTAR)  AS FECHA_HASTA_ARTTAR,
+
+    t.ESACTIVO_ARTTAR                                               AS ESACTIVO_ARTTAR,
+    t.ESIMP_INCL_TAR                                                AS ESIMP_INCL_TAR,
+    t.ESDEFAULT_TAR                                                 AS ESDEFAULT_TAR,
+    a.DESCRIPCION_ART                                               AS DESCRIPCION_ART,
+    a.TIPO_CANTIDAD_ART                                             AS TIPO_CANTIDAD_ART,
+    a.ESVARIACION_ART                                               AS ESVARIACION_ART,
+    iv.CODIGO_ABREVIATURA_IVA_IVATIP                                AS TIPO_IVA_ARTICULO,
+
+    u.TIENE_SKU                                                     AS TIENE_SKU,
+    u.ESACTIVO_SKU                                                  AS ESACTIVO_SKU,
+    sd.DESCRIPCION_SKU                                              AS DESCRIPCION_SKU,
+
+    ap.CODIGO_PRV_AP                                                AS CODIGO_PRV_PRV,
+    p.RAZON_SOCIAL_PRV                                              AS RAZON_SOCIAL_PRV,
+    CASE WHEN u.TIENE_SKU = ''S'' THEN skuc.PRECIO_ULT_COMPRA_SKUC
+                                ELSE ap.PRECIO_ULT_COMPRA_AP   END  AS PRECIO_ULT_COMPRA,
+    CASE WHEN u.TIENE_SKU = ''S'' THEN skuc.FECHA_ULT_COMPRA_SKUC
+                                ELSE ap.FECHA_VALIDEZ_AP       END  AS FECHA_VALIDEZ,
+
+    a.CODIGO_FAM_ART                                                AS CODIGO_FAM_ART,
+    af.DESCRIPCION_FAM                                              AS DESCRIPCION_FAM,
+
+    (SELECT COUNT(DISTINCT va.ID_ATB_VA)
+       FROM fza_articulos_skus sk
+       JOIN fza_variaciones_atributos va ON sk.CODIGO_VAR_SKU = va.ID_VAR_VA
+      WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART)                   AS NUM_ATRIBUTOS_REQ,
+
+    COALESCE(ts.INSTANTE_MODIF, tp.INSTANTE_MODIF)                  AS INSTANTE_MODIF,
+    COALESCE(ts.INSTANTE_ALTA,  tp.INSTANTE_ALTA)                   AS INSTANTE_ALTA,
+    COALESCE(ts.USUARIO_ALTA,   tp.USUARIO_ALTA)                    AS USUARIO_ALTA,
+    COALESCE(ts.USUARIO_MODIF,  tp.USUARIO_MODIF)                   AS USUARIO_MODIF
+
+FROM unidades u
+JOIN fza_articulos a    ON a.CODIGO_ART_ART = u.CODIGO_ART
+JOIN fza_tarifas    t   ON t.ESACTIVO_ARTTAR = ''S''
+
+LEFT JOIN fza_articulos_tarifas ts
+       ON ts.CODIGO_ART_ARTTAR    = u.CODIGO_ART
+      AND ts.CODIGO_UNIDAD_ARTTAR = u.CODIGO_UNIDAD
+      AND ts.CODIGO_TAR_ARTTAR    = t.CODIGO_TAR_ARTTAR
+      AND ts.ESACTIVO_ARTTAR      = ''S''
+      AND u.CODIGO_UNIDAD <> ''''
+      AND COALESCE(ts.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+
+LEFT JOIN fza_articulos_tarifas tp
+       ON tp.CODIGO_ART_ARTTAR    = u.CODIGO_ART
+      AND (tp.CODIGO_UNIDAD_ARTTAR IS NULL OR tp.CODIGO_UNIDAD_ARTTAR = '''')
+      AND tp.CODIGO_TAR_ARTTAR    = t.CODIGO_TAR_ARTTAR
+      AND tp.ESACTIVO_ARTTAR      = ''S''
+      AND COALESCE(tp.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+
+LEFT JOIN fza_articulos_proveedores ap
+       ON ap.CODIGO_ART_AP            = a.CODIGO_ART_ART
+      AND ap.ESPROVEEDORPRINCIPAL_AP  = ''S''
+LEFT JOIN fza_proveedores p
+       ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
+LEFT JOIN fza_articulos_familias af
+       ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
+LEFT JOIN fza_ivas_tipos iv
+       ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+LEFT JOIN sku_desc sd
+       ON sd.CODIGO_UNIDAD = u.CODIGO_UNIDAD
+LEFT JOIN fza_articulos_skus_costes skuc
+       ON skuc.CODIGO_UNIDAD_SKU_SKUC = u.CODIGO_UNIDAD
+
+WHERE COALESCE(ts.CODIGO_UNICO_ARTTAR, tp.CODIGO_UNICO_ARTTAR) IS NOT NULL
+
+ORDER BY t.ORDEN_TAR, a.ORDEN_ART, u.CODIGO_UNIDAD;', '2026-05-10 22:37:01', '2026-05-10 22:34:51', 'Administrador', 'Administrador'),
+  ('164', NULL, 'select * from vi_articulos_tarifas where CODIGO_ART_ART=''DEMO-CAMISA''', '2026-05-10 22:40:15', '2026-05-10 22:39:10', 'Administrador', 'Administrador'),
+  ('165', NULL, '-- ============================================================================
+-- vi_articulos_tarifas: 1 fila por registro real de fza_articulos_tarifas
+-- (activo + fecha vigente). Ya no se "explota" por SKU.
+--   - ORIGEN_PRECIO:  ''ESPECIFICO_SKU'' (CODIGO_UNIDAD_ARTTAR <> '''') o ''PADRE''
+--   - PRECIO_ULT_COMPRA: del SKU si la fila es específica de SKU; del
+--     proveedor principal en otro caso.
+--   - DESCRIPCION_SKU / ESACTIVO_SKU: sólo en filas de SKU específico.
+-- ============================================================================
+DROP VIEW IF EXISTS `vi_articulos_tarifas`;
+
+CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_tarifas` AS
+WITH
+sku_desc AS (
+    SELECT
+        sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD,
+        GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') AS DESCRIPCION_SKU
+    FROM fza_atributos_sku sa
+    JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
+    GROUP BY sa.CODIGO_UNIDAD_SKU_SA
+)
+SELECT
+    at.CODIGO_ART_ARTTAR                                            AS CODIGO_ART_ARTTAR,
+    COALESCE(at.CODIGO_UNIDAD_ARTTAR, '''')                           AS CODIGO_UNIDAD_ARTTAR,
+    at.CODIGO_TAR_ARTTAR                                            AS CODIGO_TAR_ARTTAR,
+    t.NOMBRE_TAR_TAR                                                AS NOMBRE_TAR_TAR,
+
+    at.CODIGO_UNICO_ARTTAR                                          AS CODIGO_UNICO_ARTTAR,
+    CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+         THEN at.CODIGO_UNICO_ARTTAR END                            AS CODIGO_UNICO_TARIFA_SKU,
+    CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') =  ''''
+         THEN at.CODIGO_UNICO_ARTTAR END                            AS CODIGO_UNICO_TARIFA_PADRE,
+
+    CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+         THEN ''ESPECIFICO_SKU'' ELSE ''PADRE'' END                     AS ORIGEN_PRECIO,
+
+    at.PRECIO_SALIDA_ARTTAR                                         AS PRECIO_SALIDA_ARTTAR,
+    at.PRECIO_FINAL_ARTTAR                                          AS PRECIO_FINAL_ARTTAR,
+    at.PRECIO_DTO_ARTTAR                                            AS PRECIO_DTO_ARTTAR,
+    at.PORCENTAJE_DTO_ARTTAR                                        AS PORCENTAJE_DTO_ARTTAR,
+
+    at.PORCENTAJE_MARGEN_ARTTAR                                     AS PORCENTAJE_MARGEN_ARTTAR,
+    at.VALOR_MULTIPLO_AJUSTE_ARTTAR                                 AS VALOR_MULTIPLO_AJUSTE_ARTTAR,
+    at.VALOR_MENOS_AJUSTE_ARTTAR                                    AS VALOR_MENOS_AJUSTE_ARTTAR,
+
+    COALESCE(at.PORCENTAJE_MARGEN_ARTTAR,     t.PORCENTAJE_MARGEN_TAR)     AS PORCENTAJE_MARGEN_EFECTIVO,
+    COALESCE(at.VALOR_MULTIPLO_AJUSTE_ARTTAR, t.VALOR_MULTIPLO_AJUSTE_TAR) AS VALOR_MULTIPLO_AJUSTE_EFECTIVO,
+    COALESCE(at.VALOR_MENOS_AJUSTE_ARTTAR,    t.VALOR_MENOS_AJUSTE_TAR)    AS VALOR_MENOS_AJUSTE_EFECTIVO,
+
+    at.FECHA_DESDE_ARTTAR                                           AS FECHA_DESDE_ARTTAR,
+    at.FECHA_HASTA_ARTTAR                                           AS FECHA_HASTA_ARTTAR,
+
+    t.ESACTIVO_ARTTAR                                               AS ESACTIVO_ARTTAR,
+    t.ESIMP_INCL_TAR                                                AS ESIMP_INCL_TAR,
+    t.ESDEFAULT_TAR                                                 AS ESDEFAULT_TAR,
+    a.DESCRIPCION_ART                                               AS DESCRIPCION_ART,
+    a.TIPO_CANTIDAD_ART                                             AS TIPO_CANTIDAD_ART,
+    a.ESVARIACION_ART                                               AS ESVARIACION_ART,
+    iv.CODIGO_ABREVIATURA_IVA_IVATIP                                AS TIPO_IVA_ARTICULO,
+
+    CASE WHEN EXISTS (SELECT 1 FROM fza_articulos_skus s
+                       WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART
+                         AND s.ESACTIVO_SKU   = ''S'')
+         THEN ''S'' ELSE ''N'' END                                      AS TIENE_SKU,
+    sku.ESACTIVO_SKU                                                AS ESACTIVO_SKU,
+    sd.DESCRIPCION_SKU                                              AS DESCRIPCION_SKU,
+
+    ap.CODIGO_PRV_AP                                                AS CODIGO_PRV_PRV,
+    p.RAZON_SOCIAL_PRV                                              AS RAZON_SOCIAL_PRV,
+    CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+         THEN skuc.PRECIO_ULT_COMPRA_SKUC
+         ELSE ap.PRECIO_ULT_COMPRA_AP END                           AS PRECIO_ULT_COMPRA,
+    CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+         THEN skuc.FECHA_ULT_COMPRA_SKUC
+         ELSE ap.FECHA_VALIDEZ_AP END                               AS FECHA_VALIDEZ,
+
+    a.CODIGO_FAM_ART                                                AS CODIGO_FAM_ART,
+    af.DESCRIPCION_FAM                                              AS DESCRIPCION_FAM,
+
+    (SELECT COUNT(DISTINCT va.ID_ATB_VA)
+       FROM fza_articulos_skus sk
+       JOIN fza_variaciones_atributos va ON sk.CODIGO_VAR_SKU = va.ID_VAR_VA
+      WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART)                   AS NUM_ATRIBUTOS_REQ,
+
+    at.INSTANTE_MODIF                                               AS INSTANTE_MODIF,
+    at.INSTANTE_ALTA                                                AS INSTANTE_ALTA,
+    at.USUARIO_ALTA                                                 AS USUARIO_ALTA,
+    at.USUARIO_MODIF                                                AS USUARIO_MODIF
+
+FROM fza_articulos_tarifas at
+JOIN fza_articulos a    ON a.CODIGO_ART_ART    = at.CODIGO_ART_ARTTAR
+JOIN fza_tarifas    t   ON t.CODIGO_TAR_ARTTAR = at.CODIGO_TAR_ARTTAR
+
+LEFT JOIN fza_articulos_skus sku
+       ON sku.CODIGO_UNIDAD_SKU = at.CODIGO_UNIDAD_ARTTAR
+      AND COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+
+LEFT JOIN fza_articulos_skus_costes skuc
+       ON skuc.CODIGO_UNIDAD_SKU_SKUC = at.CODIGO_UNIDAD_ARTTAR
+      AND COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+
+LEFT JOIN fza_articulos_proveedores ap
+       ON ap.CODIGO_ART_AP            = a.CODIGO_ART_ART
+      AND ap.ESPROVEEDORPRINCIPAL_AP  = ''S''
+LEFT JOIN fza_proveedores p
+       ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
+LEFT JOIN fza_articulos_familias af
+       ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
+LEFT JOIN fza_ivas_tipos iv
+       ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+LEFT JOIN sku_desc sd
+       ON sd.CODIGO_UNIDAD = at.CODIGO_UNIDAD_ARTTAR
+
+WHERE at.ESACTIVO_ARTTAR = ''S''
+  AND t.ESACTIVO_ARTTAR  = ''S''
+  AND COALESCE(at.FECHA_HASTA_ARTTAR, ''9999-12-31'') >= CURDATE()
+
+ORDER BY t.ORDEN_TAR, a.ORDEN_ART, at.CODIGO_UNIDAD_ARTTAR;', '2026-05-10 22:49:21', '2026-05-10 22:49:21', 'Administrador', 'Administrador');
+-- 13 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -4427,64 +4427,65 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (11, 'fza_articulos_propiedades', '1'),
   (12, 'fza_articulos_proveedores', '1'),
   (13, 'fza_articulos_skus', '1'),
-  (14, 'fza_articulos_stockactual', '1'),
-  (15, 'fza_articulos_tarifas', '1'),
-  (16, 'fza_articulos_vinculos', '1'),
-  (17, 'fza_atributos_basicos', '1'),
-  (18, 'fza_atributos_conjuntos', '1'),
-  (19, 'fza_atributos_conjuntos_det', '1'),
-  (20, 'fza_atributos_sku', '1'),
-  (21, 'fza_atributos_valores', '1'),
-  (22, 'fza_atributos_valores_info', '1'),
-  (23, 'fza_caja_formas_pago', '1'),
-  (24, 'fza_caja_operaciones', '1'),
-  (25, 'fza_caja_pagos', '1'),
-  (26, 'fza_caja_vales', '1'),
-  (27, 'fza_clientes', '1'),
-  (28, 'fza_codigos_barras', '1'),
-  (29, 'fza_config_campos', '1'),
-  (30, 'fza_contadores', '1'),
-  (31, 'fza_depositos_cliente', '1'),
-  (32, 'fza_empresas', '1'),
-  (33, 'fza_empresas_retenciones', '1'),
-  (34, 'fza_empresas_series', '1'),
-  (35, 'fza_facturas', '1'),
-  (36, 'fza_facturas_consolidaciones', '1'),
-  (37, 'fza_facturas_lineas', '1'),
-  (38, 'fza_facturas_pagos', '1'),
-  (39, 'fza_familias_atributos', '1'),
-  (40, 'fza_familias_atributos_defecto', '1'),
-  (41, 'fza_familias_claves_info_defecto', '1'),
-  (42, 'fza_formas_pago', '1'),
-  (43, 'fza_generadorprocesos', '1'),
-  (44, 'fza_inventarios', '1'),
-  (45, 'fza_inventarios_lineas', '1'),
-  (46, 'fza_ivas', '1'),
-  (47, 'fza_ivas_grupos', '1'),
-  (48, 'fza_ivas_tipos', '1'),
-  (49, 'fza_ivas_zonas', '1'),
-  (50, 'fza_metadatos', '1'),
-  (51, 'fza_movimientos_almacen', '1'),
-  (52, 'fza_paises', '1'),
-  (53, 'fza_pedidos', '1'),
-  (54, 'fza_pedidos_lineas', '1'),
-  (55, 'fza_pedidos_mensajes', '1'),
-  (56, 'fza_propiedades', '1'),
-  (57, 'fza_propiedades_valores', '1'),
-  (58, 'fza_proveedores', '1'),
-  (59, 'fza_proveedores_familias', '1'),
-  (60, 'fza_proveedores_familias_conjuntos', '1'),
-  (61, 'fza_recibos', '1'),
-  (62, 'fza_tarifas', '1'),
-  (63, 'fza_tipos_documentos', '1'),
-  (64, 'fza_usuarios', '1'),
-  (65, 'fza_usuarios_grupos', '1'),
-  (66, 'fza_usuarios_perfiles', '1'),
-  (67, 'fza_valores_defecto', '1'),
-  (68, 'fza_variaciones', '1'),
-  (69, 'fza_variaciones_atributos', '1'),
-  (70, 'fza_verifactu_eventos', '1'),
-  (71, 'fza_winforms', '1'),
+  (14, 'fza_articulos_skus_costes', '1'),
+  (15, 'fza_articulos_stockactual', '1'),
+  (16, 'fza_articulos_tarifas', '1'),
+  (17, 'fza_articulos_vinculos', '1'),
+  (18, 'fza_atributos_basicos', '1'),
+  (19, 'fza_atributos_conjuntos', '1'),
+  (20, 'fza_atributos_conjuntos_det', '1'),
+  (21, 'fza_atributos_sku', '1'),
+  (22, 'fza_atributos_valores', '1'),
+  (23, 'fza_atributos_valores_info', '1'),
+  (24, 'fza_caja_formas_pago', '1'),
+  (25, 'fza_caja_operaciones', '1'),
+  (26, 'fza_caja_pagos', '1'),
+  (27, 'fza_caja_vales', '1'),
+  (28, 'fza_clientes', '1'),
+  (29, 'fza_codigos_barras', '1'),
+  (30, 'fza_config_campos', '1'),
+  (31, 'fza_contadores', '1'),
+  (32, 'fza_depositos_cliente', '1'),
+  (33, 'fza_empresas', '1'),
+  (34, 'fza_empresas_retenciones', '1'),
+  (35, 'fza_empresas_series', '1'),
+  (36, 'fza_facturas', '1'),
+  (37, 'fza_facturas_consolidaciones', '1'),
+  (38, 'fza_facturas_lineas', '1'),
+  (39, 'fza_facturas_pagos', '1'),
+  (40, 'fza_familias_atributos', '1'),
+  (41, 'fza_familias_atributos_defecto', '1'),
+  (42, 'fza_familias_claves_info_defecto', '1'),
+  (43, 'fza_formas_pago', '1'),
+  (44, 'fza_generadorprocesos', '1'),
+  (45, 'fza_inventarios', '1'),
+  (46, 'fza_inventarios_lineas', '1'),
+  (47, 'fza_ivas', '1'),
+  (48, 'fza_ivas_grupos', '1'),
+  (49, 'fza_ivas_tipos', '1'),
+  (50, 'fza_ivas_zonas', '1'),
+  (51, 'fza_metadatos', '1'),
+  (52, 'fza_movimientos_almacen', '1'),
+  (53, 'fza_paises', '1'),
+  (54, 'fza_pedidos', '1'),
+  (55, 'fza_pedidos_lineas', '1'),
+  (56, 'fza_pedidos_mensajes', '1'),
+  (57, 'fza_propiedades', '1'),
+  (58, 'fza_propiedades_valores', '1'),
+  (59, 'fza_proveedores', '1'),
+  (60, 'fza_proveedores_familias', '1'),
+  (61, 'fza_proveedores_familias_conjuntos', '1'),
+  (62, 'fza_recibos', '1'),
+  (63, 'fza_tarifas', '1'),
+  (64, 'fza_tipos_documentos', '1'),
+  (65, 'fza_usuarios', '1'),
+  (66, 'fza_usuarios_grupos', '1'),
+  (67, 'fza_usuarios_perfiles', '1'),
+  (68, 'fza_valores_defecto', '1'),
+  (69, 'fza_variaciones', '1'),
+  (70, 'fza_variaciones_atributos', '1'),
+  (71, 'fza_verifactu_eventos', '1'),
+  (72, 'fza_winforms', '1'),
   (131, 'fza_caja_depositos_view', '2'),
   (132, 'vi_albaranes', '2'),
   (133, 'vi_albaranes_lineas', '2'),
@@ -4496,49 +4497,50 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (139, 'vi_articulos_propiedades_slots', '2'),
   (140, 'vi_articulos_proveedores', '2'),
   (141, 'vi_articulos_skus', '2'),
-  (142, 'vi_articulos_skus_extendida', '2'),
-  (143, 'vi_articulos_tarifas', '2'),
-  (144, 'vi_art_busquedas', '2'),
-  (145, 'vi_atributos_nombres', '2'),
-  (146, 'vi_cajasdef', '2'),
-  (147, 'vi_caja_busqueda_unificada', '2'),
-  (148, 'vi_caja_tarifa_sku_articulos', '2'),
-  (149, 'vi_caja_totalventas', '2'),
-  (150, 'vi_caja_vales_ptes', '2'),
-  (151, 'vi_clientes', '2'),
-  (152, 'vi_cli_busquedas', '2'),
-  (153, 'vi_contadores', '2'),
-  (154, 'vi_depositos_cliente', '2'),
-  (155, 'vi_empresas', '2'),
-  (156, 'vi_empresas_retenciones', '2'),
-  (157, 'vi_empresas_series', '2'),
-  (158, 'vi_emp_busquedas', '2'),
-  (159, 'vi_facturas', '2'),
-  (160, 'vi_facturas_lineas', '2'),
-  (161, 'vi_facturas_lineas_print', '2'),
-  (162, 'vi_facturas_print', '2'),
-  (163, 'vi_fac_busquedas', '2'),
-  (164, 'vi_fac_lin_busquedas', '2'),
-  (165, 'vi_formapago', '2'),
-  (166, 'vi_info_tpv_completa', '2'),
-  (167, 'vi_ivas', '2'),
-  (168, 'vi_ivas_empresa', '2'),
-  (169, 'vi_ivas_grupos', '2'),
-  (170, 'vi_ivas_zonas', '2'),
-  (171, 'vi_movimientos', '2'),
-  (172, 'vi_paises', '2'),
-  (173, 'vi_pedidos', '2'),
-  (174, 'vi_pedidos_lineas', '2'),
-  (175, 'vi_proveedores', '2'),
-  (176, 'vi_proveedores_articulos', '2'),
-  (177, 'vi_proveedores_busquedas', '2'),
-  (178, 'vi_recibos', '2'),
-  (179, 'vi_tarifas', '2'),
-  (180, 'vi_usuarios', '2'),
-  (181, 'vi_usuarios_grupos', '2'),
-  (182, 'vi_usuarios_perfiles', '2'),
-  (183, 'vi_variaciones', '2'),
-  (184, 'v_articulos_stock_barras', '2'),
+  (142, 'vi_articulos_skus_con_coste', '2'),
+  (143, 'vi_articulos_skus_extendida', '2'),
+  (144, 'vi_articulos_tarifas', '2'),
+  (145, 'vi_art_busquedas', '2'),
+  (146, 'vi_atributos_nombres', '2'),
+  (147, 'vi_cajasdef', '2'),
+  (148, 'vi_caja_busqueda_unificada', '2'),
+  (149, 'vi_caja_tarifa_sku_articulos', '2'),
+  (150, 'vi_caja_totalventas', '2'),
+  (151, 'vi_caja_vales_ptes', '2'),
+  (152, 'vi_clientes', '2'),
+  (153, 'vi_cli_busquedas', '2'),
+  (154, 'vi_contadores', '2'),
+  (155, 'vi_depositos_cliente', '2'),
+  (156, 'vi_empresas', '2'),
+  (157, 'vi_empresas_retenciones', '2'),
+  (158, 'vi_empresas_series', '2'),
+  (159, 'vi_emp_busquedas', '2'),
+  (160, 'vi_facturas', '2'),
+  (161, 'vi_facturas_lineas', '2'),
+  (162, 'vi_facturas_lineas_print', '2'),
+  (163, 'vi_facturas_print', '2'),
+  (164, 'vi_fac_busquedas', '2'),
+  (165, 'vi_fac_lin_busquedas', '2'),
+  (166, 'vi_formapago', '2'),
+  (167, 'vi_info_tpv_completa', '2'),
+  (168, 'vi_ivas', '2'),
+  (169, 'vi_ivas_empresa', '2'),
+  (170, 'vi_ivas_grupos', '2'),
+  (171, 'vi_ivas_zonas', '2'),
+  (172, 'vi_movimientos', '2'),
+  (173, 'vi_paises', '2'),
+  (174, 'vi_pedidos', '2'),
+  (175, 'vi_pedidos_lineas', '2'),
+  (176, 'vi_proveedores', '2'),
+  (177, 'vi_proveedores_articulos', '2'),
+  (178, 'vi_proveedores_busquedas', '2'),
+  (179, 'vi_recibos', '2'),
+  (180, 'vi_tarifas', '2'),
+  (181, 'vi_usuarios', '2'),
+  (182, 'vi_usuarios_grupos', '2'),
+  (183, 'vi_usuarios_perfiles', '2'),
+  (184, 'vi_variaciones', '2'),
+  (185, 'v_articulos_stock_barras', '2'),
   (194, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (195, 'PRC_ALB_CREAR_FACTURA_FIN', '3'),
   (196, 'PRC_ALB_CREAR_FACTURA_INICIO', '3'),
@@ -4591,7 +4593,7 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (243, 'SP_RECALCULAR_PMP_SKU', '3'),
   (244, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 176 registros exportados
+-- 178 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -5776,7 +5778,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-10 19:42:27', '2026-05-10 19:42:27', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-10 22:52:12', '2026-05-10 22:52:12', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -11192,7 +11194,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS with unidades as (select `a`.`CODIGO_ART_ART` AS `CODIGO_ART`,`skus`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD`,`skus`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`skus`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,'S' AS `TIENE_SKU` from (`fza_articulos` `a` join `fza_articulos_skus` `skus` on(`skus`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART` and `skus`.`ESACTIVO_SKU` = 'S')) union all select `a`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,'' AS `CODIGO_UNIDAD`,NULL AS `CODIGO_VAR_SKU`,NULL AS `ESACTIVO_SKU`,'N' AS `TIENE_SKU` from `fza_articulos` `a` where !exists(select 1 from `fza_articulos_skus` `s` where `s`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART` and `s`.`ESACTIVO_SKU` = 'S' limit 1)), sku_desc as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`)select `u`.`CODIGO_ART` AS `CODIGO_ART_ARTTAR`,`u`.`CODIGO_UNIDAD` AS `CODIGO_UNIDAD_ARTTAR`,`t`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`ts`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_TARIFA_SKU`,`tp`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_TARIFA_PADRE`,coalesce(`ts`.`CODIGO_UNICO_ARTTAR`,`tp`.`CODIGO_UNICO_ARTTAR`) AS `CODIGO_UNICO_ARTTAR`,case when `ts`.`CODIGO_UNICO_ARTTAR` is not null then 'ESPECIFICO_SKU' when `tp`.`CODIGO_UNICO_ARTTAR` is not null then 'HEREDADO_PADRE' else 'SIN_PRECIO' end AS `ORIGEN_PRECIO`,coalesce(`ts`.`PRECIO_SALIDA_ARTTAR`,`tp`.`PRECIO_SALIDA_ARTTAR`) AS `PRECIO_SALIDA_ARTTAR`,coalesce(`ts`.`PRECIO_FINAL_ARTTAR`,`tp`.`PRECIO_FINAL_ARTTAR`) AS `PRECIO_FINAL_ARTTAR`,coalesce(`ts`.`PRECIO_DTO_ARTTAR`,`tp`.`PRECIO_DTO_ARTTAR`) AS `PRECIO_DTO_ARTTAR`,coalesce(`ts`.`PORCENTAJE_DTO_ARTTAR`,`tp`.`PORCENTAJE_DTO_ARTTAR`) AS `PORCENTAJE_DTO_ARTTAR`,coalesce(`ts`.`PORCENTAJE_MARGEN_ARTTAR`,`tp`.`PORCENTAJE_MARGEN_ARTTAR`) AS `PORCENTAJE_MARGEN_ARTTAR`,coalesce(`ts`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`tp`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`) AS `VALOR_MULTIPLO_AJUSTE_ARTTAR`,coalesce(`ts`.`VALOR_MENOS_AJUSTE_ARTTAR`,`tp`.`VALOR_MENOS_AJUSTE_ARTTAR`) AS `VALOR_MENOS_AJUSTE_ARTTAR`,coalesce(`ts`.`PORCENTAJE_MARGEN_ARTTAR`,`tp`.`PORCENTAJE_MARGEN_ARTTAR`,`t`.`PORCENTAJE_MARGEN_TAR`) AS `PORCENTAJE_MARGEN_EFECTIVO`,coalesce(`ts`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`tp`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`t`.`VALOR_MULTIPLO_AJUSTE_TAR`) AS `VALOR_MULTIPLO_AJUSTE_EFECTIVO`,coalesce(`ts`.`VALOR_MENOS_AJUSTE_ARTTAR`,`tp`.`VALOR_MENOS_AJUSTE_ARTTAR`,`t`.`VALOR_MENOS_AJUSTE_TAR`) AS `VALOR_MENOS_AJUSTE_EFECTIVO`,coalesce(`ts`.`FECHA_DESDE_ARTTAR`,`tp`.`FECHA_DESDE_ARTTAR`) AS `FECHA_DESDE_ARTTAR`,coalesce(`ts`.`FECHA_HASTA_ARTTAR`,`tp`.`FECHA_HASTA_ARTTAR`) AS `FECHA_HASTA_ARTTAR`,`t`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`t`.`ESDEFAULT_TAR` AS `ESDEFAULT_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,`u`.`TIENE_SKU` AS `TIENE_SKU`,`u`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`sd`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,case when `u`.`TIENE_SKU` = 'S' then `skuc`.`PRECIO_ULT_COMPRA_SKUC` else `ap`.`PRECIO_ULT_COMPRA_AP` end AS `PRECIO_ULT_COMPRA`,case when `u`.`TIENE_SKU` = 'S' then `skuc`.`FECHA_ULT_COMPRA_SKUC` else `ap`.`FECHA_VALIDEZ_AP` end AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,(select count(distinct `va`.`ID_ATB_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VAR_VA`)) where `sk`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`) AS `NUM_ATRIBUTOS_REQ`,coalesce(`ts`.`INSTANTE_MODIF`,`tp`.`INSTANTE_MODIF`) AS `INSTANTE_MODIF`,coalesce(`ts`.`INSTANTE_ALTA`,`tp`.`INSTANTE_ALTA`) AS `INSTANTE_ALTA`,coalesce(`ts`.`USUARIO_ALTA`,`tp`.`USUARIO_ALTA`) AS `USUARIO_ALTA`,coalesce(`ts`.`USUARIO_MODIF`,`tp`.`USUARIO_MODIF`) AS `USUARIO_MODIF` from ((((((((((`unidades` `u` join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `u`.`CODIGO_ART`)) join `fza_tarifas` `t` on(`t`.`ESACTIVO_ARTTAR` = 'S')) left join `fza_articulos_tarifas` `ts` on(`ts`.`CODIGO_ART_ARTTAR` = `u`.`CODIGO_ART` and `ts`.`CODIGO_UNIDAD_ARTTAR` = `u`.`CODIGO_UNIDAD` and `ts`.`CODIGO_TAR_ARTTAR` = `t`.`CODIGO_TAR_ARTTAR` and `ts`.`ESACTIVO_ARTTAR` = 'S' and `u`.`CODIGO_UNIDAD` <> '' and coalesce(`ts`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate())) left join `fza_articulos_tarifas` `tp` on(`tp`.`CODIGO_ART_ARTTAR` = `u`.`CODIGO_ART` and (`tp`.`CODIGO_UNIDAD_ARTTAR` is null or `tp`.`CODIGO_UNIDAD_ARTTAR` = '') and `tp`.`CODIGO_TAR_ARTTAR` = `t`.`CODIGO_TAR_ARTTAR` and `tp`.`ESACTIVO_ARTTAR` = 'S' and coalesce(`tp`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate())) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) left join `sku_desc` `sd` on(`sd`.`CODIGO_UNIDAD` = `u`.`CODIGO_UNIDAD`)) left join `fza_articulos_skus_costes` `skuc` on(`skuc`.`CODIGO_UNIDAD_SKU_SKUC` = `u`.`CODIGO_UNIDAD`)) order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`u`.`CODIGO_UNIDAD`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS with sku_desc as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`)select `at`.`CODIGO_ART_ARTTAR` AS `CODIGO_ART_ARTTAR`,coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') AS `CODIGO_UNIDAD_ARTTAR`,`at`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`at`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_ARTTAR`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_SKU`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') = '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_PADRE`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then 'ESPECIFICO_SKU' else 'PADRE' end AS `ORIGEN_PRECIO`,`at`.`PRECIO_SALIDA_ARTTAR` AS `PRECIO_SALIDA_ARTTAR`,`at`.`PRECIO_FINAL_ARTTAR` AS `PRECIO_FINAL_ARTTAR`,`at`.`PRECIO_DTO_ARTTAR` AS `PRECIO_DTO_ARTTAR`,`at`.`PORCENTAJE_DTO_ARTTAR` AS `PORCENTAJE_DTO_ARTTAR`,`at`.`PORCENTAJE_MARGEN_ARTTAR` AS `PORCENTAJE_MARGEN_ARTTAR`,`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR` AS `VALOR_MULTIPLO_AJUSTE_ARTTAR`,`at`.`VALOR_MENOS_AJUSTE_ARTTAR` AS `VALOR_MENOS_AJUSTE_ARTTAR`,coalesce(`at`.`PORCENTAJE_MARGEN_ARTTAR`,`t`.`PORCENTAJE_MARGEN_TAR`) AS `PORCENTAJE_MARGEN_EFECTIVO`,coalesce(`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`t`.`VALOR_MULTIPLO_AJUSTE_TAR`) AS `VALOR_MULTIPLO_AJUSTE_EFECTIVO`,coalesce(`at`.`VALOR_MENOS_AJUSTE_ARTTAR`,`t`.`VALOR_MENOS_AJUSTE_TAR`) AS `VALOR_MENOS_AJUSTE_EFECTIVO`,`at`.`FECHA_DESDE_ARTTAR` AS `FECHA_DESDE_ARTTAR`,`at`.`FECHA_HASTA_ARTTAR` AS `FECHA_HASTA_ARTTAR`,`t`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`t`.`ESDEFAULT_TAR` AS `ESDEFAULT_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,case when exists(select 1 from `fza_articulos_skus` `s` where `s`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART` and `s`.`ESACTIVO_SKU` = 'S' limit 1) then 'S' else 'N' end AS `TIENE_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`sd`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`PRECIO_ULT_COMPRA_SKUC` else `ap`.`PRECIO_ULT_COMPRA_AP` end AS `PRECIO_ULT_COMPRA`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`FECHA_ULT_COMPRA_SKUC` else `ap`.`FECHA_VALIDEZ_AP` end AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,(select count(distinct `va`.`ID_ATB_VA`) from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`sk`.`CODIGO_VAR_SKU` = `va`.`ID_VAR_VA`)) where `sk`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`) AS `NUM_ATRIBUTOS_REQ`,`at`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`at`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`at`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`at`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (((((((((`fza_articulos_tarifas` `at` join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `at`.`CODIGO_ART_ARTTAR`)) join `fza_tarifas` `t` on(`t`.`CODIGO_TAR_ARTTAR` = `at`.`CODIGO_TAR_ARTTAR`)) left join `fza_articulos_skus` `sku` on(`sku`.`CODIGO_UNIDAD_SKU` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_skus_costes` `skuc` on(`skuc`.`CODIGO_UNIDAD_SKU_SKUC` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) left join `sku_desc` `sd` on(`sd`.`CODIGO_UNIDAD` = `at`.`CODIGO_UNIDAD_ARTTAR`)) where `at`.`ESACTIVO_ARTTAR` = 'S' and `t`.`ESACTIVO_ARTTAR` = 'S' and coalesce(`at`.`FECHA_HASTA_ARTTAR`,'9999-12-31') >= curdate() order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`at`.`CODIGO_UNIDAD_ARTTAR`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -15305,4 +15307,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 10/05/2026 19:44:33
+-- Backup completado: 10/05/2026 22:53:59
