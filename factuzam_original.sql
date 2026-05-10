@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 10/05/2026 18:35:16
+-- Backup generado: 10/05/2026 19:00:57
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2407,7 +2407,7 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000118', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-05 16:57:32', '2026-05-05 16:57:32', '1', '1', 'GEN', '1', '00000146', '0000000226'),
   ('000119', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:29:10', '2026-05-07 17:29:10', '1', '1', 'GEN', '1', '00000147', '0000000228'),
   ('000120', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:58:22', '2026-05-07 17:58:22', '1', '1', 'GEN', '1', '00000148', '0000000230'),
-  ('000121', '2026.A1', NULL, '010', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'S', 12.95, -324.7104, -42.05, 45.4545, 'N', 21, 55, 55, 45.4545, NULL, '2026-05-10 18:09:59', '2026-05-10 18:09:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
+  ('000121', '2026.A1', NULL, '010', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'S', 12.95, 0, 0, 45.454545, 'N', 21, 55, 55, 45.4545, NULL, '2026-05-10 18:09:59', '2026-05-10 18:09:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL);
 -- 151 registros exportados
 
 
@@ -5702,7 +5702,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-10 18:13:01', '2026-05-10 18:13:01', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-10 19:00:21', '2026-05-10 19:00:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -15206,4 +15206,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 10/05/2026 18:35:21
+-- Backup completado: 10/05/2026 19:01:01
