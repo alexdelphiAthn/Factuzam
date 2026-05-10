@@ -264,6 +264,12 @@ LEFT JOIN sku_desc sd
 LEFT JOIN fza_articulos_skus_costes skuc
        ON skuc.CODIGO_UNIDAD_SKU_SKUC = u.CODIGO_UNIDAD
 
+-- Sólo mostramos filas que ya tengan precio (específico o heredado del
+-- padre). Para añadir precio a un SKU sin tarifa el usuario usa el botón
+-- "Añadir precio" en la pestaña Tarifas.
+WHERE ts.CODIGO_UNICO_ARTTAR IS NOT NULL
+   OR tp.CODIGO_UNICO_ARTTAR IS NOT NULL
+
 ORDER BY t.ORDEN_TAR, a.ORDEN_ART, u.CODIGO_UNIDAD;
 
 -- ----------------------------------------------------------------------------
