@@ -86,6 +86,8 @@ type
     procedure JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
       Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
     procedure JvMonthCalendar1DblClick(Sender: TObject);
+    procedure JvMonthCalendar1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FormDestroy(Sender: TObject);
     procedure lblESCClick(Sender: TObject);
     procedure lblFechaMouseEnter(Sender: TObject);
@@ -96,6 +98,7 @@ type
     procedure lblEmpresaDblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure JvMonthCalendar1Click(Sender: TObject);
     procedure lblBuscarModificarClick(Sender: TObject);
     procedure lblF10Click(Sender: TObject);
@@ -268,23 +271,28 @@ begin
     VK_F5:     lblVentasClick(Sender);
     VK_ESCAPE: lblESCClick(Sender);
     VK_F10:    AbrirBuscarModificar;
+  end;
+end;
+
+procedure TfrmMtoMenuCaja.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+begin
+  // OnShortCut se dispara antes que el OnKeyDown del control con foco, así
+  // que el calendario u otros controles no se quedan con las flechas/Enter.
+  case Msg.CharCode of
     VK_UP:
-      // El calendario usa flechas para navegar entre días si tiene el foco
-      if not JvMonthCalendar1.Focused then
       begin
         SetSelectedIndex(FSelectedIndex - 1);
-        Key := 0;
+        Handled := True;
       end;
     VK_DOWN:
-      if not JvMonthCalendar1.Focused then
       begin
         SetSelectedIndex(FSelectedIndex + 1);
-        Key := 0;
+        Handled := True;
       end;
     VK_RETURN:
       begin
         ExecuteSelectedItem;
-        Key := 0;
+        Handled := True;
       end;
   end;
 end;
@@ -378,6 +386,31 @@ procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
 begin
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', JvMonthCalendar1.Date);
   FFechaCaja := JvMonthCalendar1.Date;
+end;
+
+procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // El calendario reclama las flechas y Enter al nivel de Win32, así que las
+  // capturamos aquí para que la navegación del menú funcione aun con el foco
+  // sobre él. Key := 0 evita además que el calendario las procese.
+  case Key of
+    VK_UP:
+      begin
+        SetSelectedIndex(FSelectedIndex - 1);
+        Key := 0;
+      end;
+    VK_DOWN:
+      begin
+        SetSelectedIndex(FSelectedIndex + 1);
+        Key := 0;
+      end;
+    VK_RETURN:
+      begin
+        ExecuteSelectedItem;
+        Key := 0;
+      end;
+  end;
 end;
 
 procedure TfrmMtoMenuCaja.cxButton1Click(Sender: TObject);

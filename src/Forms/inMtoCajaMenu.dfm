@@ -16,6 +16,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnShortCut = FormShortCut
   TextHeight = 15
   object Shape1: TShape
     Left = 258
@@ -21627,6 +21628,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     OnClick = JvMonthCalendar1Click
     OnDblClick = JvMonthCalendar1DblClick
     OnGetMonthBoldInfo = JvMonthCalendar1GetMonthBoldInfo
+    OnKeyDown = JvMonthCalendar1KeyDown
     StyleElements = [seFont, seClient]
   end
   object Timer1: TTimer
