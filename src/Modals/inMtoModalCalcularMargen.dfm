@@ -2,164 +2,170 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Calcular margen comercial'
-  ClientHeight = 472
-  ClientWidth = 540
+  ClientHeight = 480
+  ClientWidth = 700
   Position = poScreenCenter
   OnClose = FormClose
-  ExplicitWidth = 556
-  ExplicitHeight = 511
+  ExplicitWidth = 716
+  ExplicitHeight = 519
   TextHeight = 19
   object pnlBody: TPanel [0]
     Left = 0
     Top = 0
-    Width = 540
-    Height = 412
+    Width = 700
+    Height = 420
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
     object lblArticulo: TcxLabel
       Left = 24
-      Top = 16
+      Top = 18
       Caption = 'Art'#237'culo'
+      Properties.LineOptions.Visible = False
     end
     object edtArticulo: TcxTextEdit
-      Left = 144
+      Left = 220
       Top = 14
       Properties.ReadOnly = True
       TabOrder = 0
-      Width = 369
+      Width = 450
     end
     object lblTarifa: TcxLabel
       Left = 24
-      Top = 46
+      Top = 50
       Caption = 'Tarifa'
+      Properties.LineOptions.Visible = False
     end
     object edtTarifa: TcxTextEdit
-      Left = 144
-      Top = 44
+      Left = 220
+      Top = 46
       Properties.ReadOnly = True
       TabOrder = 1
-      Width = 369
+      Width = 450
     end
     object lblSku: TcxLabel
       Left = 24
-      Top = 76
+      Top = 82
       Caption = 'SKU'
+      Properties.LineOptions.Visible = False
     end
     object edtSku: TcxTextEdit
-      Left = 144
-      Top = 74
+      Left = 220
+      Top = 78
       Properties.ReadOnly = True
       TabOrder = 2
-      Width = 369
+      Width = 450
     end
     object lblCoste: TcxLabel
       Left = 24
-      Top = 124
+      Top = 134
       Caption = 'Precio coste'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
     end
     object edtCoste: TcxCurrencyEdit
-      Left = 144
-      Top = 122
+      Left = 220
+      Top = 130
+      Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
-      Properties.ReadOnly = True
+      Properties.OnChange = RecalcularPrecioSalida
+      Style.Font.Style = [fsBold]
+      Style.IsFontAssigned = True
       TabOrder = 3
-      Width = 137
+      Width = 160
     end
     object lblMargen: TcxLabel
       Left = 24
-      Top = 162
-      Caption = 'Margen (%)'
+      Top = 174
+      Caption = 'Margen %'
     end
     object edtMargen: TcxCurrencyEdit
-      Left = 144
-      Top = 160
+      Left = 220
+      Top = 170
       Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00 %'
       Properties.OnChange = RecalcularPrecioSalida
       TabOrder = 4
-      Width = 137
+      Width = 160
     end
-    object lblMultiplo: TcxLabel
+    object lblAjuste: TcxLabel
       Left = 24
-      Top = 196
-      Caption = 'M'#250'ltiplo de ajuste'
+      Top = 210
+      Caption = 'Ajuste (siguiente m'#250'ltiplo)'
     end
-    object edtMultiplo: TcxCurrencyEdit
-      Left = 144
-      Top = 194
+    object edtAjuste: TcxCurrencyEdit
+      Left = 220
+      Top = 206
       Properties.DecimalPlaces = 4
       Properties.DisplayFormat = '0.0000'
       Properties.OnChange = RecalcularPrecioSalida
       TabOrder = 5
-      Width = 137
+      Width = 160
     end
     object lblMenos: TcxLabel
       Left = 24
-      Top = 230
-      Caption = 'Menos (resta)'
+      Top = 246
+      Caption = 'Menos (resta al final)'
     end
     object edtMenos: TcxCurrencyEdit
-      Left = 144
-      Top = 228
+      Left = 220
+      Top = 242
       Properties.DecimalPlaces = 4
       Properties.DisplayFormat = '0.0000'
       Properties.OnChange = RecalcularPrecioSalida
       TabOrder = 6
-      Width = 137
+      Width = 160
     end
     object lblPrecioActual: TcxLabel
       Left = 24
-      Top = 282
+      Top = 298
       Caption = 'Precio salida actual'
     end
     object edtPrecioActual: TcxCurrencyEdit
-      Left = 200
-      Top = 280
+      Left = 220
+      Top = 294
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.ReadOnly = True
       TabOrder = 7
-      Width = 137
+      Width = 160
     end
     object lblPrecioCalc: TcxLabel
       Left = 24
-      Top = 318
+      Top = 334
       Caption = 'Precio salida calculado'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
     end
     object edtPrecioCalc: TcxCurrencyEdit
-      Left = 200
-      Top = 316
+      Left = 220
+      Top = 330
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.ReadOnly = True
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
       TabOrder = 8
-      Width = 137
+      Width = 160
     end
     object lblFormula: TcxLabel
       Left = 24
-      Top = 360
-      Caption = 'Precio = coste'#215'(1 + margen/100), ajustado al m'#250'ltiplo y restando "Menos".'
+      Top = 376
+      Caption = 'precio = ceil(coste'#215'margen/100 / ajuste)'#215'ajuste '#8722' menos'
       Style.Font.Style = [fsItalic]
       Style.IsFontAssigned = True
     end
   end
   object pnlButtons: TPanel [1]
     Left = 0
-    Top = 412
-    Width = 540
+    Top = 420
+    Width = 700
     Height = 60
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
     object btnCancelar: TcxButton
-      Left = 60
+      Left = 100
       Top = 10
-      Width = 177
+      Width = 200
       Height = 40
       Cancel = True
       Caption = '&Cancelar (ESC)'
@@ -168,9 +174,9 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       OnClick = btnCancelarClick
     end
     object btnAceptar: TcxButton
-      Left = 303
+      Left = 400
       Top = 10
-      Width = 177
+      Width = 200
       Height = 40
       Caption = '&Aceptar (F12)'
       Default = True
