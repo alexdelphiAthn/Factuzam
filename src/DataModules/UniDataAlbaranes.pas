@@ -11,7 +11,7 @@ unit UniDataAlbaranes;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser, inMtoPrincipal,
   frxClass, frxDBSet;
@@ -23,7 +23,12 @@ type
     unqryEmpDataAlb:      TUniQuery;
     unqryCliDataAlb:      TUniQuery;
     unqryArtDataLinAlb:   TUniQuery;
+    unqryFacturas:        TUniQuery;
+    dsFacturas:           TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
+    unstrdprcCrearFacturaInicio: TUniStoredProc;
+    unstrdprcCrearFacturaLinea:  TUniStoredProc;
+    unstrdprcCrearFacturaFin:    TUniStoredProc;
     fxdsPrintAlb:    TfrxDBDataset;
     fxdstPrintLinAlb:TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
@@ -39,6 +44,22 @@ type
     procedure CopiarEmpresaaAlbaran(DataSet: TDataSet);
     procedure CopiarClienteaAlbaran(DataSet: TDataSet);
     procedure OpenTables;
+
+    // Procedimientos de facturación: instalación idempotente.
+    procedure InstalarProcedimientos;
+
+    // Genera factura del albarán cargado en pantalla con las líneas indicadas.
+    // Si aLineas es nil, se facturan todas las líneas no facturadas del albarán.
+    function CrearFacturaDesdeAlbaran(out sNumeroFac, sSerieFac: string;
+                                      aLineas: TList<string>): Boolean;
+
+    // Procesa una lista de albaranes (formato 'SERIE|NUMERO') y genera factura(s).
+    // Si bAgruparPorCliente es True, agrupa los albaranes del mismo cliente
+    // en una única factura. Devuelve número de facturas generadas.
+    function FacturarAlbaranesLista(aListaAlbaranes: TStrings;
+                                    bAgruparPorCliente: Boolean): Integer;
+  private
+    FProcsInstalados: Boolean;
   end;
 
 var
@@ -56,24 +77,35 @@ uses
 procedure TdmAlbaranes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection           := inLibGlobalVar.oConn;
-  unqryAlbaranesLineas.Connection  := inLibGlobalVar.oConn;
-  unqryEmpDataAlb.Connection       := inLibGlobalVar.oConn;
-  unqryCliDataAlb.Connection       := inLibGlobalVar.oConn;
-  unqryArtDataLinAlb.Connection    := inLibGlobalVar.oConn;
+  unqryTablaG.Connection                 := inLibGlobalVar.oConn;
+  unqryAlbaranesLineas.Connection        := inLibGlobalVar.oConn;
+  unqryEmpDataAlb.Connection             := inLibGlobalVar.oConn;
+  unqryCliDataAlb.Connection             := inLibGlobalVar.oConn;
+  unqryArtDataLinAlb.Connection          := inLibGlobalVar.oConn;
+  unqryFacturas.Connection               := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
+  unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
+  unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
+  unstrdprcCrearFacturaFin.Connection    := inLibGlobalVar.oConn;
 end;
 
 procedure TdmAlbaranes.DataModuleDestroy(Sender: TObject);
 begin
   if Assigned(unqryAlbaranesLineas) and unqryAlbaranesLineas.Active then
     unqryAlbaranesLineas.Close;
+  if Assigned(unqryFacturas) and unqryFacturas.Active then
+    unqryFacturas.Close;
   inherited;
 end;
 
 procedure TdmAlbaranes.OpenTables;
 begin
+  // Antes de abrir queries aseguramos que el esquema y los procs están al día
+  // (idempotente y barato): así las nuevas columnas de seguimiento de
+  // facturación están disponibles para el data-binding del formulario.
+  InstalarProcedimientos;
   if not unqryAlbaranesLineas.Active then unqryAlbaranesLineas.Open;
+  if not unqryFacturas.Active        then unqryFacturas.Open;
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -113,6 +145,8 @@ begin
     FieldByName('SERIE_ALB_ALBLIN').AsString  :=
                                   unqryTablaG.FieldByName('SERIE_ALB').AsString;
     FieldByName('CANTIDAD_ALBLIN').AsFloat := 1;
+    if FindField('ESFACTURADA_ALBLIN') <> nil then
+      FieldByName('ESFACTURADA_ALBLIN').AsString := 'N';
   end;
 end;
 
@@ -239,6 +273,485 @@ begin
                             DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
     FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString :=
                             DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
+  end;
+end;
+
+procedure TdmAlbaranes.InstalarProcedimientos;
+var
+  q: TUniSQL;
+
+  procedure Run(const sSql: string);
+  begin
+    q.SQL.Text := sSql;
+    q.Execute;
+  end;
+
+begin
+  if FProcsInstalados then Exit;
+  q := TUniSQL.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // Columna de seguimiento de facturación a nivel de línea (idempotente).
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS ESFACTURADA_ALBLIN VARCHAR(1) DEFAULT ''N''');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS NUMERO_FAC_ALBLIN VARCHAR(20) DEFAULT NULL');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS SERIE_FAC_ALBLIN VARCHAR(20) DEFAULT NULL');
+    Run('ALTER TABLE fza_albaranes_lineas ' +
+        'ADD COLUMN IF NOT EXISTS LINEA_FAC_ALBLIN VARCHAR(4) DEFAULT NULL');
+
+    // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer albarán.
+    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_INICIO');
+    Run(
+      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_INICIO(' +
+      '  IN  p_NUMERO_ALB varchar(20),' +
+      '  IN  p_SERIE_ALB  varchar(20),' +
+      '  IN  p_USUARIO    varchar(100),' +
+      '  OUT p_NUMERO_FAC varchar(20),' +
+      '  OUT p_SERIE_FAC  varchar(20)' +
+      ') BEGIN ' +
+      '  DECLARE v_serie  varchar(20); ' +
+      '  DECLARE v_numero varchar(20); ' +
+      '  SELECT SERIE_ALB INTO v_serie FROM fza_albaranes ' +
+      '   WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ''0'') ' +
+      '    INTO v_numero FROM fza_facturas WHERE SERIE_FAC = v_serie; ' +
+      '  INSERT INTO fza_facturas ( ' +
+      '    NUMERO_FAC, SERIE_FAC, FECHA_FAC, FASE_FAC, TIPO_FAC, ' +
+      '    CODIGO_EMP_FAC, RAZON_SOCIAL_EMPRESA_FAC, NIF_EMPRESA_FAC, ' +
+      '    MOVIL_EMPRESA_FAC, EMAIL_EMPRESA_FAC, ' +
+      '    DIRECCION1_EMPRESA_FAC, DIRECCION2_EMPRESA_FAC, ' +
+      '    POBLACION_EMPRESA_FAC, PROVINCIA_EMPRESA_FAC, ' +
+      '    CODIGO_PAI_EMPRESA_FAC, NOMBRE_PAI_EMPRESA_FAC, ' +
+      '    CODIGO_POSTAL_EMPRESA_FAC, GRUPO_ZONA_IVA_EMPRESA_FAC, ' +
+      '    CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC, ' +
+      '    MOVIL_CLIENTE_FAC, EMAIL_CLIENTE_FAC, ' +
+      '    DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC, ' +
+      '    POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC, ' +
+      '    CODIGO_POSTAL_CLIENTE_FAC, ' +
+      '    CODIGO_PAI_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC, ' +
+      '    CODIGO_IVA_FAC, ' +
+      '    ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC, ' +
+      '    ESINTRACOMUNITARIO_CLIENTE_FAC, ' +
+      '    TARIFA_ARTICULO_CLIENTE_FAC, ESIMP_INCL_TARIFA_CLIENTE_FAC, ' +
+      '    PORCENTAJE_IVAN_FAC, PORCENTAJE_IVAR_FAC, ' +
+      '    PORCENTAJE_IVAS_FAC, PORCENTAJE_IVAE_FAC, ' +
+      '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
+      '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, A.NIF_EMPRESA_ALB, ' +
+      '         A.MOVIL_EMPRESA_ALB, A.EMAIL_EMPRESA_ALB, ' +
+      '         A.DIRECCION1_EMPRESA_ALB, A.DIRECCION2_EMPRESA_ALB, ' +
+      '         A.POBLACION_EMPRESA_ALB, A.PROVINCIA_EMPRESA_ALB, ' +
+      '         A.CODIGO_PAI_EMPRESA_ALB, A.NOMBRE_PAI_EMPRESA_ALB, ' +
+      '         A.CODIGO_POSTAL_EMPRESA_ALB, A.GRUPO_ZONA_IVA_EMPRESA_ALB, ' +
+      '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, A.NIF_CLIENTE_ALB, ' +
+      '         A.MOVIL_CLIENTE_ALB, A.EMAIL_CLIENTE_ALB, ' +
+      '         A.DIRECCION1_CLIENTE_ALB, A.DIRECCION2_CLIENTE_ALB, ' +
+      '         A.POBLACION_CLIENTE_ALB, A.PROVINCIA_CLIENTE_ALB, ' +
+      '         A.CODIGO_POSTAL_CLIENTE_ALB, ' +
+      '         A.CODIGO_PAI_CLIENTE_ALB, A.NOMBRE_PAI_CLIENTE_ALB, ' +
+      '         A.CODIGO_IVA_ALB, ' +
+      '         A.ESIVA_RECARGO_CLIENTE_ALB, A.ESIVA_EXENTO_CLIENTE_ALB, ' +
+      '         A.ESINTRACOMUNITARIO_CLIENTE_ALB, ' +
+      '         A.TARIFA_ARTICULO_CLIENTE_ALB, A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
+      '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
+      '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
+      '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
+      '    FROM fza_albaranes A ' +
+      '   WHERE A.NUMERO_ALB = p_NUMERO_ALB AND A.SERIE_ALB = p_SERIE_ALB; ' +
+      '  SET p_NUMERO_FAC = v_numero; ' +
+      '  SET p_SERIE_FAC  = v_serie; ' +
+      'END');
+
+    // PRC_ALB_CREAR_FACTURA_LINEA: copia una línea concreta a la factura.
+    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_LINEA');
+    Run(
+      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_LINEA(' +
+      '  IN  p_NUMERO_FAC varchar(20),' +
+      '  IN  p_SERIE_FAC  varchar(20),' +
+      '  IN  p_NUMERO_ALB varchar(20),' +
+      '  IN  p_SERIE_ALB  varchar(20),' +
+      '  IN  p_LINEA_ALB  varchar(4),' +
+      '  IN  p_USUARIO    varchar(100)' +
+      ') PRC: BEGIN ' +
+      '  DECLARE v_linea_fac varchar(4); ' +
+      '  DECLARE v_facturada varchar(1); ' +
+      '  SELECT IFNULL(ESFACTURADA_ALBLIN, ''N'') INTO v_facturada ' +
+      '    FROM fza_albaranes_lineas ' +
+      '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
+      '     AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
+      '     AND LINEA_ALBLIN      = p_LINEA_ALB; ' +
+      '  IF v_facturada = ''S'' THEN ' +
+      '    LEAVE PRC; ' +
+      '  END IF; ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)), 0) + 10, 4, ''0'') ' +
+      '    INTO v_linea_fac FROM fza_facturas_lineas ' +
+      '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
+      '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
+      '  INSERT INTO fza_facturas_lineas ( ' +
+      '    NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
+      '    CODIGO_ART_FACLIN, CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN, ' +
+      '    DESCRIPCION_ARTICULO_FACLIN, TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
+      '    CANTIDAD_FACLIN, CODIGO_TAR_FACLIN, ESIMP_INCL_TARIFA_FACLIN, ' +
+      '    TIPO_IVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
+      '    PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
+      '    PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
+      '    TOTAL_FACLIN, CODIGO_ALM_FACLIN, ' +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      '  SELECT p_NUMERO_FAC, p_SERIE_FAC, v_linea_fac, ' +
+      '         AL.CODIGO_ART_ALBLIN, AL.CODIGO_FAM_ALBLIN, AL.NOMBRE_FAM_ALBLIN, ' +
+      '         AL.DESCRIPCION_ARTICULO_ALBLIN, AL.TIPO_CANTIDAD_ARTICULO_ALBLIN, ' +
+      '         AL.CANTIDAD_ALBLIN, AL.CODIGO_TAR_ALBLIN, AL.ESIMP_INCL_TARIFA_ALBLIN, ' +
+      '         AL.TIPO_IVA_ARTICULO_ALBLIN, AL.PORCENTAJE_IVA_ALBLIN, ' +
+      '         AL.PRECIO_VENTA_SIVA_ARTICULO_ALBLIN, ' +
+      '         AL.PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, ' +
+      '         AL.TOTAL_ALBLIN, AL.CODIGO_ALMACEN_ALBLIN, ' +
+      '         NOW(), p_USUARIO, p_USUARIO ' +
+      '    FROM fza_albaranes_lineas AL ' +
+      '   WHERE AL.NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
+      '     AND AL.SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
+      '     AND AL.LINEA_ALBLIN      = p_LINEA_ALB; ' +
+      '  UPDATE fza_albaranes_lineas ' +
+      '     SET ESFACTURADA_ALBLIN = ''S'', ' +
+      '         NUMERO_FAC_ALBLIN  = p_NUMERO_FAC, ' +
+      '         SERIE_FAC_ALBLIN   = p_SERIE_FAC, ' +
+      '         LINEA_FAC_ALBLIN   = v_linea_fac, ' +
+      '         INSTANTE_MODIF     = NOW(), ' +
+      '         USUARIO_MODIF      = p_USUARIO ' +
+      '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
+      '     AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
+      '     AND LINEA_ALBLIN      = p_LINEA_ALB; ' +
+      'END');
+
+    // PRC_ALB_CREAR_FACTURA_FIN: recalcula totales y marca albarán como facturado
+    // si todas sus líneas se han facturado.
+    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_FIN');
+    Run(
+      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_FIN(' +
+      '  IN p_NUMERO_FAC varchar(20),' +
+      '  IN p_SERIE_FAC  varchar(20),' +
+      '  IN p_NUMERO_ALB varchar(20),' +
+      '  IN p_SERIE_ALB  varchar(20),' +
+      '  IN p_USUARIO    varchar(100)' +
+      ') BEGIN ' +
+      '  DECLARE v_total_base decimal(18,6) DEFAULT 0; ' +
+      '  DECLARE v_total_iva  decimal(18,6) DEFAULT 0; ' +
+      '  DECLARE v_pendientes int DEFAULT 0; ' +
+      '  SELECT IFNULL(SUM(CANTIDAD_FACLIN * PRECIO_VENTA_SIVA_ARTICULO_FACLIN), 0), ' +
+      '         IFNULL(SUM(CANTIDAD_FACLIN * (PRECIO_VENTA_CIVA_ARTICULO_FACLIN - PRECIO_VENTA_SIVA_ARTICULO_FACLIN)), 0) ' +
+      '    INTO v_total_base, v_total_iva ' +
+      '    FROM fza_facturas_lineas ' +
+      '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
+      '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
+      '  UPDATE fza_facturas ' +
+      '     SET TOTAL_BASES_FAC     = v_total_base, ' +
+      '         TOTAL_IMPUESTOS_FAC = v_total_iva, ' +
+      '         TOTAL_LIQUIDO_FAC   = v_total_base + v_total_iva, ' +
+      '         INSTANTE_MODIF      = NOW(), ' +
+      '         USUARIO_MODIF       = p_USUARIO ' +
+      '   WHERE NUMERO_FAC = p_NUMERO_FAC AND SERIE_FAC = p_SERIE_FAC; ' +
+      '  IF p_NUMERO_ALB IS NOT NULL AND p_NUMERO_ALB <> '''' THEN ' +
+      '    SELECT COUNT(*) INTO v_pendientes ' +
+      '      FROM fza_albaranes_lineas ' +
+      '     WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
+      '       AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
+      '       AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S''; ' +
+      '    IF v_pendientes = 0 THEN ' +
+      '      UPDATE fza_albaranes ' +
+      '         SET ESTADO_ALB    = ''FACTURADO'', ' +
+      '             NUMERO_FAC_ALB = p_NUMERO_FAC, ' +
+      '             SERIE_FAC_ALB  = p_SERIE_FAC, ' +
+      '             INSTANTE_MODIF = NOW(), ' +
+      '             USUARIO_MODIF  = p_USUARIO ' +
+      '       WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
+      '    ELSE ' +
+      '      UPDATE fza_albaranes ' +
+      '         SET ESTADO_ALB    = ''PARCIAL'', ' +
+      '             INSTANTE_MODIF= NOW(), ' +
+      '             USUARIO_MODIF = p_USUARIO ' +
+      '       WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
+      '    END IF; ' +
+      '  END IF; ' +
+      'END');
+
+    FProcsInstalados := True;
+  finally
+    q.Free;
+  end;
+end;
+
+function TdmAlbaranes.CrearFacturaDesdeAlbaran(out sNumeroFac, sSerieFac: string;
+                                               aLineas: TList<string>): Boolean;
+var
+  i: Integer;
+  sNumeroAlb, sSerieAlb, sLinea: string;
+  ds: TDataSet;
+  bUsarTodas: Boolean;
+begin
+  Result     := False;
+  sNumeroFac := '';
+  sSerieFac  := '';
+  InstalarProcedimientos;
+
+  sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
+  sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
+  bUsarTodas := (aLineas = nil) or (aLineas.Count = 0);
+
+  // 1) Cabecera de la factura
+  with unstrdprcCrearFacturaInicio do
+  begin
+    Params.Clear;
+    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+    Params.CreateParam(ftString, 'p_NUMERO_FAC', ptOutput);
+    Params.CreateParam(ftString, 'p_SERIE_FAC',  ptOutput);
+    ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
+    ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
+    ParamByName('p_USUARIO').AsString    := oUser;
+    ExecProc;
+    sNumeroFac := ParamByName('p_NUMERO_FAC').AsString;
+    sSerieFac  := ParamByName('p_SERIE_FAC').AsString;
+  end;
+
+  // 2) Líneas: las indicadas, o todas las pendientes si no se pasa lista.
+  if bUsarTodas then
+  begin
+    ds := unqryAlbaranesLineas;
+    ds.DisableControls;
+    try
+      ds.First;
+      while not ds.Eof do
+      begin
+        if (ds.FindField('ESFACTURADA_ALBLIN') = nil) or
+           (ds.FieldByName('ESFACTURADA_ALBLIN').AsString <> 'S') then
+        begin
+          with unstrdprcCrearFacturaLinea do
+          begin
+            Params.Clear;
+            Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
+            Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
+            Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+            Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+            Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
+            Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+            ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
+            ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
+            ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
+            ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
+            ParamByName('p_LINEA_ALB').AsString  := ds.FieldByName('LINEA_ALBLIN').AsString;
+            ParamByName('p_USUARIO').AsString    := oUser;
+            ExecProc;
+          end;
+        end;
+        ds.Next;
+      end;
+    finally
+      ds.EnableControls;
+    end;
+  end
+  else
+  begin
+    for i := 0 to aLineas.Count - 1 do
+    begin
+      sLinea := aLineas[i];
+      if sLinea = '' then Continue;
+      with unstrdprcCrearFacturaLinea do
+      begin
+        Params.Clear;
+        Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
+        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+        Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
+        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+        ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
+        ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
+        ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
+        ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
+        ParamByName('p_LINEA_ALB').AsString  := sLinea;
+        ParamByName('p_USUARIO').AsString    := oUser;
+        ExecProc;
+      end;
+    end;
+  end;
+
+  // 3) Recalcular totales y estado del albarán.
+  with unstrdprcCrearFacturaFin do
+  begin
+    Params.Clear;
+    Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
+    Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
+    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+    ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
+    ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
+    ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
+    ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
+    ParamByName('p_USUARIO').AsString    := oUser;
+    ExecProc;
+  end;
+
+  // 4) Refrescar la pantalla.
+  unqryAlbaranesLineas.Close; unqryAlbaranesLineas.Open;
+  if unqryFacturas.Active then
+  begin
+    unqryFacturas.Close;
+    unqryFacturas.Open;
+  end;
+  unqryTablaG.RefreshRecord;
+  Result := True;
+end;
+
+function TdmAlbaranes.FacturarAlbaranesLista(aListaAlbaranes: TStrings;
+                                             bAgruparPorCliente: Boolean): Integer;
+var
+  i, iSep: Integer;
+  sLin, sSer, sNum, sCliActual, sCliAlb: string;
+  sNumFac, sSerFac, sNumFacActual, sSerFacActual: string;
+  qCli: TUniQuery;
+  qLin: TUniQuery;
+begin
+  Result := 0;
+  if (aListaAlbaranes = nil) or (aListaAlbaranes.Count = 0) then Exit;
+  InstalarProcedimientos;
+
+  qCli := TUniQuery.Create(nil);
+  qLin := TUniQuery.Create(nil);
+  try
+    qCli.Connection := inLibGlobalVar.oConn;
+    qLin.Connection := inLibGlobalVar.oConn;
+    qCli.SQL.Text :=
+      'SELECT CODIGO_CLI_ALB FROM fza_albaranes ' +
+      ' WHERE NUMERO_ALB = :pNUM AND SERIE_ALB = :pSER';
+    qLin.SQL.Text :=
+      'SELECT LINEA_ALBLIN FROM fza_albaranes_lineas ' +
+      ' WHERE NUMERO_ALB_ALBLIN = :pNUM AND SERIE_ALB_ALBLIN = :pSER ' +
+      '   AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S'' ' +
+      ' ORDER BY LINEA_ALBLIN';
+
+    sCliActual    := '';
+    sNumFacActual := '';
+    sSerFacActual := '';
+
+    for i := 0 to aListaAlbaranes.Count - 1 do
+    begin
+      sLin := aListaAlbaranes[i];
+      iSep := Pos('|', sLin);
+      if iSep <= 0 then Continue;
+      sSer := Copy(sLin, 1, iSep - 1);
+      sNum := Copy(sLin, iSep + 1, MaxInt);
+
+      // Resolver cliente del albarán
+      qCli.Close;
+      qCli.ParamByName('pNUM').AsString := sNum;
+      qCli.ParamByName('pSER').AsString := sSer;
+      qCli.Open;
+      if qCli.Eof then
+      begin
+        qCli.Close;
+        Continue;
+      end;
+      sCliAlb := qCli.FieldByName('CODIGO_CLI_ALB').AsString;
+      qCli.Close;
+
+      // Decidir si reutilizar la factura previa o crear una nueva.
+      if (not bAgruparPorCliente) or
+         (sNumFacActual = '') or
+         (sCliAlb <> sCliActual) then
+      begin
+        // Crear nueva cabecera
+        with unstrdprcCrearFacturaInicio do
+        begin
+          Params.Clear;
+          Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+          Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+          Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+          Params.CreateParam(ftString, 'p_NUMERO_FAC', ptOutput);
+          Params.CreateParam(ftString, 'p_SERIE_FAC',  ptOutput);
+          ParamByName('p_NUMERO_ALB').AsString := sNum;
+          ParamByName('p_SERIE_ALB').AsString  := sSer;
+          ParamByName('p_USUARIO').AsString    := oUser;
+          ExecProc;
+          sNumFac := ParamByName('p_NUMERO_FAC').AsString;
+          sSerFac := ParamByName('p_SERIE_FAC').AsString;
+        end;
+        sNumFacActual := sNumFac;
+        sSerFacActual := sSerFac;
+        sCliActual    := sCliAlb;
+        Inc(Result);
+      end
+      else
+      begin
+        sNumFac := sNumFacActual;
+        sSerFac := sSerFacActual;
+      end;
+
+      // Volcar todas las líneas pendientes del albarán a la factura actual.
+      qLin.Close;
+      qLin.ParamByName('pNUM').AsString := sNum;
+      qLin.ParamByName('pSER').AsString := sSer;
+      qLin.Open;
+      while not qLin.Eof do
+      begin
+        with unstrdprcCrearFacturaLinea do
+        begin
+          Params.Clear;
+          Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
+          Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
+          Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+          Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+          Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
+          Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+          ParamByName('p_NUMERO_FAC').AsString := sNumFac;
+          ParamByName('p_SERIE_FAC').AsString  := sSerFac;
+          ParamByName('p_NUMERO_ALB').AsString := sNum;
+          ParamByName('p_SERIE_ALB').AsString  := sSer;
+          ParamByName('p_LINEA_ALB').AsString  := qLin.FieldByName('LINEA_ALBLIN').AsString;
+          ParamByName('p_USUARIO').AsString    := oUser;
+          ExecProc;
+        end;
+        qLin.Next;
+      end;
+      qLin.Close;
+
+      // Cerrar el albarán: marcar como facturado si no quedan líneas pendientes.
+      with unstrdprcCrearFacturaFin do
+      begin
+        Params.Clear;
+        Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
+        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
+        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+        ParamByName('p_NUMERO_FAC').AsString := sNumFac;
+        ParamByName('p_SERIE_FAC').AsString  := sSerFac;
+        ParamByName('p_NUMERO_ALB').AsString := sNum;
+        ParamByName('p_SERIE_ALB').AsString  := sSer;
+        ParamByName('p_USUARIO').AsString    := oUser;
+        ExecProc;
+      end;
+    end;
+  finally
+    qCli.Free;
+    qLin.Free;
+  end;
+
+  // Refrescar la pantalla del albarán activo.
+  if unqryTablaG.Active then unqryTablaG.Refresh;
+  if unqryAlbaranesLineas.Active then
+  begin
+    unqryAlbaranesLineas.Close;
+    unqryAlbaranesLineas.Open;
+  end;
+  if unqryFacturas.Active then
+  begin
+    unqryFacturas.Close;
+    unqryFacturas.Open;
   end;
 end;
 
