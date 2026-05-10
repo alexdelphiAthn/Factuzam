@@ -882,14 +882,29 @@ function TSQLScanner.DoIdentifier : TSQLToken;
           begin
             Inc(TokenStr);
             if TokenStr[0] = '>' then
-              Result := tsqlLE
+            begin
+              Result := tsqlLE;
+              Inc(TokenStr);
+              FCurTokenString := '!>';
+            end
             else if (TokenStr[0] = '<') then
-              Result := tsqlGE
+            begin
+              Result := tsqlGE;
+              Inc(TokenStr);
+              FCurTokenString := '!<';
+            end
             else if (TokenStr[0] = '=') then
-              Result := tsqlNE
+            begin
+              Result := tsqlNE;
+              Inc(TokenStr);
+              FCurTokenString := '!=';
+            end
             else
-              Result := tsqlUnknown;
-            Inc(TokenStr);
+            begin
+              Result := tsqlNot; // Tratamos el '!' como si fuera un NOT clásico
+              FCurTokenString := '!';
+              // CRÍTICO: NO hacemos Inc(TokenStr) aquí para no comernos la siguiente letra
+            end;
           end;
         '|':
           begin

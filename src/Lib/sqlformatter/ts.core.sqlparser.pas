@@ -522,11 +522,12 @@ begin
       F := TSQLSelectField(CreateElement(TSQLSelectField, AParent));
       AList.Add(F);
       F.Expression := ParseExprLevel1(AParent, [eoSelectvalue]);
-      if CurrentToken in [tsqlAs, tsqlIdentifier] then
+      if CurrentToken in [tsqlAs, tsqlIdentifier, tsqlString, tsqlNull] then
       begin
         if CurrentToken = tsqlAs then
           GetNextToken;
-        Expect(tsqlIdentifier);
+        if not (CurrentToken in [tsqlIdentifier, tsqlString, tsqlNull]) then
+          Expect(tsqlIdentifier);
         F.AliasName := CreateIdentifier(F, CurrentTokenString);
         GetNextToken;
       end;
@@ -698,14 +699,13 @@ function TSQLParser.ParseSelectStatement(AParent: TSQLElement;
 var
   CTE: TSQLCommonTableExpression;
 begin
-  // 1. Permitimos que la instrucción empiece con SELECT o con WITH
+  // On entry, we're on the SELECT keyword
   Expect([tsqlSelect, tsqlWith]);
-
   Result := TSQLSelectStatement(CreateElement(TSQLSelectStatement, AParent));
   try
     if CurrentToken = tsqlWith then
     begin
-      GetNextToken; // Consumimos la palabra 'WITH'
+      GetNextToken;
       repeat
         CTE := TSQLCommonTableExpression(CreateElement(TSQLCommonTableExpression, Result));
         Result.WithClause.Add(CTE);
@@ -720,22 +720,13 @@ begin
         Consume(tsqlAs);
         Consume(tsqlBraceOpen);
         CTE.Select := ParseSelectStatement(CTE, [sfSingleTon]);
-        Consume(tsqlBraceClose); // Cierra el paréntesis de este WITH
+        Consume(tsqlBraceClose);
         if CurrentToken = tsqlComma then
           GetNextToken
         else
           Break;
       until False;
-      Expect(tsqlSelect);
     end;
-    if (PeekNextToken = tsqlTransaction) then
-    begin
-      Consume(tsqlSelect);
-      GetNextToken;
-      Expect(tsqlIdentifier);
-      Result.TransactionName := CreateIdentifier(Result, CurrentTokenString);
-    end;
-    ParseSelectFieldList(Result, Result.Fields, sfSingleTon in Flags);
     if (PeekNextToken = tsqlTransaction) then
     begin
       Consume(tsqlSelect);
@@ -2586,10 +2577,10 @@ begin
       end;
     end;
     try
-      // CORRECCIÓN: Evitar falla fatal si hay múltiples paréntesis y se comió uno de más
-      if (CurrentToken <> tsqlBraceClose) then
+      if (CurrentToken = tsqlBraceClose) then
+        GetNextToken
+      else if not (CurrentToken in [tsqlEOF, tsqlSemicolon, tsqlUnion]) then
         Error(SerrUnmatchedBrace);
-      GetNextToken;
     except
       Result.free;
       raise;
@@ -2726,6 +2717,7 @@ var
   C : TSQLElementClass;
   E : TSQLExtractElement;
   WhenNode: TSQLCaseWhenNode;
+  PCount: Integer;
 begin
   Result := nil;
   try
@@ -2921,19 +2913,43 @@ begin
           end
           else
           begin
-            L := ParseValueList(AParent, EO);
-
-            // CORRECCIÓN CRÍTICA: Consumo seguro en lugar de GetNextToken ciego.
-            // Si ParseValueList ya avanzó el escáner (por ejemplo, dejándolo sobre un "AS" sin espacios),
-            // el chequeo de seguridad impide saltarse el AS y arruinar el árbol AST.
-            if CurrentToken = tsqlBraceClose then
+            if SameText(N, 'GROUP_CONCAT') then
+            begin
+              N := N + '(';
+              PCount := 1;
               GetNextToken;
-
-          // function call
-            Result := TSQLFunctionCallExpression
-              (CreateElement(TSQLFunctionCallExpression, AParent));
-            TSQLFunctionCallExpression(Result).IDentifier := N;
-            TSQLFunctionCallExpression(Result).Arguments := L;
+              while (PCount > 0) and (CurrentToken <> tsqlEOF) do
+              begin
+                if CurrentToken = tsqlBraceOpen then Inc(PCount)
+                else if CurrentToken = tsqlBraceClose then Dec(PCount);
+                if PCount > 0 then
+                begin
+                  if (N[Length(N)] <> '(') and
+                     (CurrentToken <> tsqlDot) and
+                     (PreviousToken <> tsqlDot) then
+                    N := N + ' ';
+                  if CurrentToken = tsqlString then
+                    N := N + '''' + CurrentTokenString + ''''
+                  else
+                    N := N + CurrentTokenString;
+                  GetNextToken;
+                end;
+              end;
+              N := N + ')';
+              if CurrentToken = tsqlBraceClose then
+                GetNextToken;
+              Result := TSQLIdentifierExpression(CreateElement(TSQLIdentifierExpression, AParent));
+              TSQLIdentifierExpression(Result).Identifier := CreateIdentifier(Result, N);
+            end
+            else
+            begin
+              L := ParseValueList(AParent, EO);
+              if CurrentToken = tsqlBraceClose then
+                GetNextToken;
+              Result := TSQLFunctionCallExpression(CreateElement(TSQLFunctionCallExpression, AParent));
+              TSQLFunctionCallExpression(Result).IDentifier := N;
+              TSQLFunctionCallExpression(Result).Arguments := L;
+            end;
           end;
         end;
     else
