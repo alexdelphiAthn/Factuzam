@@ -1,35 +1,4 @@
-﻿{
-  Copyright (C) 2013-2023 Tim Sinaeve tim.sinaeve@gmail.com
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-}
-
-{
-    This file is part of the Free Component Library
-    Copyright (c) 2010 by the Free Pascal development team
-
-    SQL Abstract syntax tree
-
-    See the file COPYING.FPC, included in this distribution,
-    for details about the copyright.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
- **********************************************************************}
-
-unit ts.Core.SQLTree;
+﻿unit ts.Core.SQLTree;
 
 //{$MODE DELPHI}
 
@@ -832,10 +801,26 @@ type
     property OrderBy: TSQLOrderDirection read FOrderBy write FOrderBy;
   end;
 
+  { TSQLCommonTableExpression (CTE para soportar WITH) }
+  TSQLCommonTableExpression = class(TSQLElement)
+  private
+    FName: TSQLIdentifierName;
+    FFields: TSQLElementList;
+    FSelect: TSQLSelectStatement;
+  public
+    constructor Create(AParent: TSQLElement); override;
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+    property Name: TSQLIdentifierName read FName write FName;
+    property Fields: TSQLElementList read FFields;
+    property Select: TSQLSelectStatement read FSelect write FSelect;
+  end;
+
   { TSQLSelectStatement }
 
   TSQLSelectStatement = class(TSQLDMLStatement)
   private
+    FWithClause: TSQLElementList;
     FAll: Boolean;
     FDistinct: Boolean;
     FEndAt: TSQLExpression;
@@ -858,6 +843,7 @@ type
     destructor Destroy; override;
     function GetAsSQL(Options: TSQLFormatOptions;
       AIndent: Integer = 0): TSQLStringType; override;
+    property WithClause: TSQLElementList read FWithClause write FWithClause;
     property TransactionName: TSQLIdentifierName read FTN write FTN;
     property Tables: TSQLElementList read FTables;
     property Fields: TSQLElementList read FFields;
@@ -2240,6 +2226,7 @@ end;
 constructor TSQLSelectStatement.Create(AParent: TSQLElement);
 begin
   inherited Create(AParent);
+  FWithClause := TSQLElementList.Create(True);
   FFields := TSQLElementList.Create(True);
   FTables := TSQLElementList.Create(True);
   FGroupBy := TSQLElementList.Create(True);
@@ -2262,6 +2249,7 @@ begin
   FreeAndNil(FTN);
   FreeAndNil(FInto);
   FreeAndNil(FLimit);
+  FreeAndNil(FWithClause);
   inherited Destroy;
 end;
 
@@ -2269,6 +2257,7 @@ function TSQLSelectStatement.GetAsSQL(Options: TSQLFormatOptions;
   AIndent: Integer = 0): TSQLStringType;
 var
   NewLinePending: Boolean;
+  i:integer;
 
   procedure AddList(const AKeyWord: string; List: TSQLElementList;
     UseNewLine, UseIndent: Boolean);
@@ -2329,7 +2318,18 @@ var
   end;
 
 begin
-  Result := SQLKeyWord('SELECT', Options);
+  Result := '';
+  if Assigned(FWithClause) and (FWithClause.Count > 0) then
+  begin
+    Result := Result + SQLKeyWord('WITH ', Options);
+    for I := 0 to FWithClause.Count - 1 do
+    begin
+      if I > 0 then Result := Result + ', ' + sLineBreak;
+      Result := Result + FWithClause[I].GetAsSQL(Options, AIndent);
+    end;
+    Result := Result + sLineBreak;
+  end;
+  Result := Result + SQLKeyWord('SELECT', Options);
   if Distinct then
     Result := Result + ' ' + SQLKeyWord('DISTINCT', Options);
   NewLinePending := (sfoOneFieldPerLine in Options);
@@ -5237,6 +5237,49 @@ begin
     Result := Result + SQLKeyWord(' ELSE ', Options) + FElseExpr.GetAsSQL(Options, AIndent);
 
   Result := Result + SQLKeyWord(' END', Options);
+end;
+
+{ TSQLCommonTableExpression }
+
+constructor TSQLCommonTableExpression.Create(AParent: TSQLElement);
+begin
+  inherited Create(AParent);
+  FFields := TSQLElementList.Create(True);
+end;
+
+destructor TSQLCommonTableExpression.Destroy;
+begin
+  FreeAndNil(FName);
+  FreeAndNil(FFields);
+  FreeAndNil(FSelect);
+  inherited Destroy;
+end;
+
+function TSQLCommonTableExpression.GetAsSQL(Options: TSQLFormatOptions;
+                                          AIndent: Integer = 0): TSQLStringType;
+var
+  I: Integer;
+  S: string;
+begin
+  Result := '';
+  if Assigned(FName) then
+    Result := FName.GetAsSQL(Options, AIndent);
+
+  if Assigned(FFields) and (FFields.Count > 0) then
+  begin
+    S := '';
+    for I := 0 to FFields.Count - 1 do
+    begin
+      if S <> '' then S := S + ', ';
+      S := S + FFields[I].GetAsSQL(Options, AIndent);
+    end;
+    Result := Result + '(' + S + ')';
+  end;
+
+  Result := Result + SQLKeyWord(' AS ', Options) + '(' + sLineBreak;
+  if Assigned(FSelect) then
+    Result := Result + FSelect.GetAsSQL(Options, AIndent + 2);
+  Result := Result + sLineBreak + ')';
 end;
 
 end.
