@@ -455,7 +455,7 @@ procedure TfrmMtoMenuCaja.InitMenuItems;
 begin
   SetLength(FMenuItems, 7);
   AddItem(0, lblF5,  lblVentas,          FOriginalF5Color,  FOriginalVentasColor,          clBlue);
-  AddItem(1, lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor, clWebOrange);
+  AddItem(1, lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor, clBlue);
   AddItem(2, lblF6,  lblEntradaCambio,   FOriginalF6Color,  FOriginalEntradaCambioColor,   clWebOrange);
   AddItem(3, lblF7,  lblGastosCaja,      FOriginalF7Color,  FOriginalGastosCajaColor,      clWebOrange);
   AddItem(4, lblF11, lblArqueo,          FOriginalF11Color, FOriginalArqueoColor,          clWebOrange);
@@ -563,7 +563,7 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF10MouseEnter(Sender: TObject);
 begin
-  ChangeMenuItemColors(lblF10, lblBuscarModificar, clWebOrange);
+  ChangeMenuItemColors(lblF10, lblBuscarModificar, clBlue);
 end;
 
 procedure TfrmMtoMenuCaja.lblF10MouseLeave(Sender: TObject);
