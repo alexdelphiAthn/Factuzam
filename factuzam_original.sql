@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 10/05/2026 22:53:54
+-- Backup generado: 10/05/2026 22:58:11
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -487,7 +487,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('000', 'MANO', NULL, 2, NULL, 'S', '2025-04-18 12:05:44', '2025-04-18 12:05:44', 'Administrador', 'Administrador'),
   ('000', 'MANODEOBRA', NULL, 2, NULL, 'S', '2025-04-18 12:04:33', '2025-04-18 12:04:33', 'Administrador', 'Administrador'),
   ('000', 'SUDADERA-HOOD', NULL, 10, '2026-05-01 00:00:00', 'S', '2026-05-06 19:40:48', '2026-05-06 19:40:48', 'Administrador', 'Administrador'),
-  ('010', 'DEMO-CAMISA', 'XP2', 9, '2025-12-25 00:00:00', 'S', '2026-05-10 18:06:48', '2026-03-29 05:28:38', 'Administrador', 'Administrador'),
+  ('010', 'DEMO-CAMISA', 'XP2', 10, '2025-12-25 00:00:00', 'S', '2026-05-10 22:57:25', '2026-03-29 05:28:38', 'Administrador', 'Administrador'),
   ('010', 'FALD-JEAN', NULL, NULL, NULL, 'S', '2026-05-08 19:47:04', '2026-05-08 19:47:04', 'Administrador', 'Administrador'),
   ('010', 'PAÑITOS', NULL, 1, NULL, 'S', '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
   ('10', '016', NULL, 3, NULL, 'N', '2024-10-06 20:13:41', '2024-10-06 20:13:41', 'Administrador', 'Administrador'),
@@ -563,7 +563,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('DEMO-CAMISA/AMARILLO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:36:52', '2026-03-27 07:36:52', 'SISTEMA', 'SISTEMA'),
-  ('DEMO-CAMISA/AZULMARINO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:08:05', '2026-03-27 06:55:47', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/AZULMARINO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-10 22:54:46', '2026-03-27 06:55:47', 'SISTEMA', 'Administrador'),
   ('DEMO-CAMISA/BLANCO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:25:37', '2026-03-27 07:25:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/BLANCO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-26 19:36:46', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/COLORAO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:32:34', '2026-03-27 07:32:34', 'SISTEMA', 'SISTEMA'),
@@ -667,7 +667,7 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('CAMI-POLO/BLANCO/S', 2.23, '2026-05-04 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/AMARILLO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/AMARILLO/XL', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
-  ('DEMO-CAMISA/AZULMARINO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
+  ('DEMO-CAMISA/AZULMARINO/L', 10, '2025-12-25 00:00:00', '2026-05-10 22:54:46', '2026-05-10 19:34:55', 'MIGRACION', 'Administrador'),
   ('DEMO-CAMISA/BLANCO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/BLANCO/M', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/COLORAO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
@@ -871,7 +871,7 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('MOCHILA-SPORT', 45, '', 'VENTAMAYOR', 'S', 25, 25, NULL, NULL, NULL, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('CINTURON-PIEL', 46, '', 'VENTAMAYOR', 'S', 14, 14, NULL, NULL, NULL, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('SOMBRERO-PJM', 47, '', 'VENTAMAYOR', 'S', 22, 22, NULL, NULL, NULL, NULL, NULL, '2026-01-01 00:00:00', NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
-  ('DEMO-CAMISA', 48, '', 'PVP', 'S', 25.95, 25.95, NULL, 0, NULL, NULL, NULL, '2026-03-29 00:00:00', NULL, '2026-05-10 18:06:48', '2026-03-29 05:47:38', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 48, '', 'PVP', 'S', 28.95, 28.95, NULL, 0, NULL, NULL, NULL, '2026-03-29 00:00:00', NULL, '2026-05-10 22:57:25', '2026-03-29 05:47:38', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 50, 'VEST-FLOR/AMARILLO/XL', 'PVP', 'S', 30, 27, 3, 10, NULL, NULL, NULL, '2026-04-30 00:00:00', NULL, '2026-04-30 19:18:34', '2026-04-30 19:18:34', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 52, 'VEST-FLOR/AMARILLO/XXL', 'PVP', 'S', 70, 70, NULL, NULL, NULL, NULL, NULL, '2026-04-30 00:00:00', NULL, '2026-04-30 19:38:03', '2026-04-30 19:38:03', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 53, 'VEST-FLOR/AZUL/L', 'PVP', 'S', 25, 25, NULL, NULL, NULL, NULL, NULL, '2026-04-30 00:00:00', NULL, '2026-04-30 19:38:03', '2026-04-30 19:38:03', 'Administrador', 'Administrador'),
@@ -887,9 +887,10 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('SUDADERA-HOOD', 64, '', '3', 'S', 45, 31.5, 13.5, 30, NULL, NULL, NULL, '2026-05-06 00:00:00', NULL, '2026-05-06 19:39:29', '2026-05-06 19:39:29', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 65, 'FALD-JEAN/VAQUERO/L', '3', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 66, 'FALD-JEAN/VAQUERO/L', 'PVP', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
-  ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador');
+  ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 68, 'DEMO-CAMISA/AZULMARINO/L', 'PVP', 'S', 28.95, 28.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 22:56:57', '2026-05-10 22:56:31', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 64 registros exportados
+-- 65 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1771,9 +1772,20 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (62, '2100000000470', 'VEST-FLOR/VERDE/S', 'EAN13', 'S', '2026-05-10 17:53:16', '2026-05-10 17:53:16', 'Administrador', 'Administrador'),
   (63, '2100000000487', 'ABRIGO-PAÑO/CAMEL/L', 'EAN13', 'S', '2026-05-10 17:56:42', '2026-05-10 17:56:42', 'Administrador', 'Administrador'),
   (64, '2100000000494', 'ABRIGO-PAÑO/NEGRO/L', 'EAN13', 'S', '2026-05-10 17:56:42', '2026-05-10 17:56:42', 'Administrador', 'Administrador'),
-  (65, '2100000000500', 'ABRIGO-PAÑO/NEGRO/XL', 'EAN13', 'S', '2026-05-10 17:56:42', '2026-05-10 17:56:42', 'Administrador', 'Administrador');
+  (65, '2100000000500', 'ABRIGO-PAÑO/NEGRO/XL', 'EAN13', 'S', '2026-05-10 17:56:42', '2026-05-10 17:56:42', 'Administrador', 'Administrador'),
+  (66, '2100000000517', 'DEMO-CAMISA/AMARILLO/L', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (67, '2100000000524', 'DEMO-CAMISA/AMARILLO/XL', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (68, '2100000000531', 'DEMO-CAMISA/AZULMARINO/L', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (69, '2100000000548', 'DEMO-CAMISA/BLANCO/L', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (70, '2100000000555', 'DEMO-CAMISA/BLANCO/M', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (71, '2100000000562', 'DEMO-CAMISA/COLORAO/L', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (72, '2100000000579', 'DEMO-CAMISA/COLORAO/XL', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (73, '2100000000586', 'DEMO-CAMISA/NEGRO/L', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (74, '2100000000593', 'DEMO-CAMISA/NEGRO/M', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (75, '2100000000609', 'DEMO-CAMISA/NEGRO/S', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador'),
+  (76, '2100000000616', 'DEMO-CAMISA/NEGRO/XL', 'EAN13', 'S', '2026-05-10 22:55:54', '2026-05-10 22:55:54', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
--- 64 registros exportados
+-- 75 registros exportados
 
 
 -- Tabla: fza_config_campos
@@ -1824,7 +1836,7 @@ CREATE TABLE `fza_contadores` (
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
-  ('BA', '-', '-', 51, 10, 'S', 'S', '2026-05-10 17:56:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BA', '-', '-', 62, 10, 'S', 'S', '2026-05-10 22:55:54', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
@@ -15307,4 +15319,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 10/05/2026 22:53:59
+-- Backup completado: 10/05/2026 22:58:18
