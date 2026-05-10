@@ -223,6 +223,7 @@ begin
   AddSuf('fza_articulos_propiedades',           'ARTPROP');
   AddSuf('fza_articulos_proveedores',           'AP');
   AddSuf('fza_articulos_skus',                  'SKU');
+  AddSuf('fza_articulos_skus_costes',           'SKUC');
   AddSuf('fza_articulos_stockactual',           'STK');
   AddSuf('fza_articulos_tarifas',               'ARTTAR');
   AddSuf('fza_articulos_vinculos',              'ARTVIN');
@@ -330,6 +331,7 @@ begin
   // Tablas con sufijo COMPUESTO (varias palabras):
   AddOwn('fza_articulos_tarifas',              ['TARIFA']);
   AddOwn('fza_articulos_proveedores',          ['PROVEEDOR']);
+  AddOwn('fza_articulos_skus_costes',          ['COSTE']);
   AddOwn('fza_articulos_vinculos',             ['VINCULO']);
   AddOwn('fza_facturas_lineas',                ['FACTURA','LINEA']);
   AddOwn('fza_inventarios_lineas',             ['INVENTARIO','LINEA']);
