@@ -429,6 +429,9 @@
         <DCCReference Include="src\Lib\inLibEAN13.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosPropiedades.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosValidador.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosAtributosLookup.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosResolver.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAceptCancel.pas">
             <Form>frmModalAceptCancel</Form>
             <FormType>dfm</FormType>
