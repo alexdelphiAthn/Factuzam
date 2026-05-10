@@ -311,6 +311,7 @@ type
     procedure BtnAddPropClick(Sender: TObject);
   public
     procedure ActualizarVisibilidadVariaciones;
+    procedure ActualizarVisibilidadColumnaSku;
     procedure AsegurarSkuArticuloSinVariaciones(const aCodArticulo: string);
     procedure AsegurarSkuArticulo(const aCodArticulo: string);
     procedure CrearTablaPrincipal; override;
@@ -374,6 +375,50 @@ begin
   tvSkusSTOCK_TOTAL.Visible := EsEstandar;
   tsMovimientos.TabVisible  := EsEstandar;
   cxTabSheet3.TabVisible    := EsEstandar; // pestaña Stock
+end;
+
+procedure TfrmMtoArticulos.ActualizarVisibilidadColumnaSku;
+// Si ninguna fila del grid de tarifas tiene CODIGO_UNIDAD_ARTTAR rellenado
+// (es decir, todos los precios son a nivel de artículo padre), oculta la
+// columna SKU. En cuanto se añade un precio para un SKU concreto vuelve a
+// mostrarse.
+var
+  ds  : TDataSet;
+  fld : TField;
+  bm  : TBookmark;
+  hay : Boolean;
+begin
+  if not Assigned(dmmArticulos) then Exit;
+  ds := dmmArticulos.unqryTarifasArticulos;
+  if (ds = nil) or (not ds.Active) then
+  begin
+    tvTarifasCODIGO_UNIDAD_TARIFA.Visible := False;
+    Exit;
+  end;
+  fld := ds.FindField('CODIGO_UNIDAD_ARTTAR');
+  if fld = nil then Exit;
+
+  hay := False;
+  ds.DisableControls;
+  bm := ds.GetBookmark;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      if (not fld.IsNull) and (Trim(fld.AsString) <> '') then
+      begin
+        hay := True;
+        Break;
+      end;
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bm) then ds.GotoBookmark(bm);
+    ds.FreeBookmark(bm);
+    ds.EnableControls;
+  end;
+
+  tvTarifasCODIGO_UNIDAD_TARIFA.Visible := hay;
 end;
 
 procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
@@ -870,6 +915,7 @@ begin
         dmmArticulos.unqryTarifasArticulos.EnableControls;
       end;
       dmmArticulos.unqryTarifasArticulos.Refresh;
+      ActualizarVisibilidadColumnaSku;
 //      pcDetail.ActivePage := tsTarifas;
 //      if tvTarifas.CanFocus then tvTarifas.SetFocus;
     end;
@@ -1436,6 +1482,7 @@ begin
   FGestorVar.CargarVariaciones(                // [AÑADIR]
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
   ActualizarVisibilidadVariaciones;
+  ActualizarVisibilidadColumnaSku;
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -1596,6 +1643,7 @@ begin
   dmmArticulos.unqrySkus.Refresh;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+  ActualizarVisibilidadColumnaSku;
 end;
 
 procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);
