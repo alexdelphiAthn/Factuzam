@@ -511,6 +511,8 @@ uses
   inLibShowMto,
   inLibFacturas,
   inLibDefaultValues,
+  inLibArticulosValidador, inLibArticulosResolver,
+  System.StrUtils,
   inMtoGenSearch,
   inMtoModalFacRec,
   inMtoModalImpRecFac,
@@ -1262,49 +1264,123 @@ end;
 procedure TfrmMtoFacturas.
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
                                                                Sender: TObject);
- var
-    e: TcxCustomEdit;
-    sCodigo:String;
-    unqrySol:TUniQuery;
+var
+  e          : TcxCustomEdit;
+  sInput     : string;
+  Validador  : TArticulosValidador;
+  Resolver   : TArticulosResolver;
+  Resolucion : TArtResolucionEntrada;
+  Datos      : TArticuloDatos;
+  Precio     : TArticuloPrecio;
+  Lin        : TDataSet;
+  CodTarifa  : string;
+  FechaFac   : TDateTime;
+  iPorcen    : Integer;
+  fPorcen    : Currency;
+  sTipoIVA   : string;
 begin
   inherited;
-  with dmmFacturas.unqryLinFac do
-  begin
-    if (((State = dsInsert) or
-         (State = dsEdit))
-       ) then
+  Lin := dmmFacturas.unqryLinFac;
+  if not (Lin.State in [dsInsert, dsEdit]) then Exit;
+
+  e      := Sender as TcxCustomEdit;
+  sInput := Trim(VarToStr(e.EditingValue));
+  if sInput = '' then Exit;
+
+  CodTarifa := dmmFacturas.unqryTablaG.FindField(
+                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+  FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
+
+  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+  Resolver  := TArticulosResolver.Create(inLibGlobalVar.oConn);
+  try
+    Resolucion := Validador.Resolver(sInput);
+    if not Resolucion.Encontrado then Exit;
+
+    // Datos básicos del artículo + SKU (si lo hay) + precio en la tarifa.
+    Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
+                                    Resolucion.CodigoSku,
+                                    CodTarifa, FechaFac);
+    if not Datos.Encontrado then Exit;
+
+    // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
+    // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
+    // que en caja); PRECIO_SALIDA queda a 0 hasta que se elija el SKU.
+    if Datos.RequiereSku then
+      Precio := Resolver.ResolverPrecio(Resolucion.CodigoArticulo, '',
+                                        CodTarifa, FechaFac)
+    else
+      Precio := Datos.PrecioPedido;
+
+    Lin.FindField('CODIGO_ART_FACLIN').AsString          := Datos.CodigoArticulo;
+    // CODIGO_UNIDAD_FACLIN y DESCRIPCION_VARIACION_FACLIN ya existen en la
+    // tabla base, pero la vista vi_facturas_lineas sólo los expone tras la
+    // migración 2026-05-10. Asignación defensiva por si aún no se aplicó.
+    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
+      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString   := Datos.CodigoSku;
+    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := Datos.DescripcionSku;
+    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString := Datos.DescripcionArticulo;
+    Lin.FindField('TIPO_ARTICULO_FACLIN').AsString       := Datos.TipoArticulo;
+    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString := Datos.TipoCantidad;
+    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString   := Datos.TipoIVA;
+    Lin.FindField('CODIGO_FAM_FACLIN').AsString          := Datos.CodigoFamilia;
+    Lin.FindField('NOMBRE_FAM_FACLIN').AsString          := Datos.DescripcionFamilia;
+    Lin.FindField('CODIGO_TAR_FACLIN').AsString          := CodTarifa;
+    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString   :=
+                                          IfThen(Precio.EsImpIncl, 'S', 'N');
+    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat       := Precio.PorcentajeDto;
+    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat           := Precio.PrecioDto;
+
+    if Datos.UltimoCoste.Encontrado then
     begin
-      e := Sender as TcxCustomEdit;
-      sCodigo := VarToStr(e.EditingValue);
-      if ((sCodigo <> '') ) then
-      begin
-        dmmFacturas.unqryLinFac.FindField(
-                                  'CODIGO_ART_FACLIN').AsString :=
-                                                     VarToStr(e.EditingValue);
-        unqrySol := TUniQuery.Create(Self);
-        unqrySol.Connection := inLibGlobalVar.oConn;
-        unqrySol.SQL.Text := 'SELECT * ' +
-                             '  FROM vi_art_busquedas ' +
-                             ' WHERE CODIGO_TAR_ARTTAR = :tarifa ' +
-                             '   AND CODIGO_ART_ART = :articulo ' +
-                             '   AND FECHA_DESDE_ARTTAR < :FECHA_FAC ' +
-                             '   AND (FECHA_HASTA_ARTTAR IS NULL ' +
-                             '        OR FECHA_HASTA_ARTTAR > :FECHA_FAC)';
-        unqrySol.ParamByName('articulo').AsString := VarToStr(e.EditingValue);
-        unqrySol.ParamByName('tarifa').AsString :=
-          dmmFacturas.unqryTablaG.FindField(
-                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-        unqrySol.ParamByName('FECHA_FAC').AsDateTime :=
-                  dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-        unqrySol.Open;
-        if (unqrySol.RecordCount = 0) then
-          Sleep(0) //si no existe artículo y tarifa, no hago nada
-         else
-           dmmFacturas.CopiarArticuloaLinea(unqrySol);
-        unqrySol.Close;
-        FreeAndNil(unqrySol);
-      end;
+      Lin.FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
+                          IfThen(Datos.UltimoCoste.EsProveedorPrincipal, 'S', 'N');
+      Lin.FindField('CODIGO_PRV_FACLIN').AsString    := Datos.UltimoCoste.CodigoProveedor;
+      Lin.FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
+                                              Datos.UltimoCoste.RazonSocialProveedor;
+      Lin.FindField('PRECIO_ULT_COMPRA_FACLIN').AsFloat :=
+                                              Datos.UltimoCoste.PrecioUltCompra;
     end;
+
+    // Si el padre tiene varios SKUs aún sin elegir, dejamos PRECIO_SALIDA y
+    // PRECIO_VENTA_*_FACLIN a 0 hasta que el usuario complete el SKU.
+    if Datos.RequiereSku then
+    begin
+      Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := 0;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := 0;
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := 0;
+      Exit;
+    end;
+
+    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
+
+    // Reproducimos la conversión IVA inc./exc. que hacía CopiarArticuloaLinea
+    sTipoIVA := Datos.TipoIVA;
+    iPorcen  := 0;
+    case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
+      0: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
+      1: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
+      2: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
+      3: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
+    end;
+    fPorcen := iPorcen / 100;
+    if Precio.EsImpIncl then
+    begin
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      if (1 + fPorcen) <> 0 then
+        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+                                                  Precio.PrecioFinal / (1 + fPorcen);
+    end
+    else
+    begin
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+                                                  Precio.PrecioFinal * (1 + fPorcen);
+    end;
+  finally
+    Validador.Free;
+    Resolver.Free;
   end;
 end;
 
