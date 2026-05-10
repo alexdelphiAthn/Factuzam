@@ -748,12 +748,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.Buttons = <
                       item
                         Default = True
-                        Kind = bkText
+                        Kind = bkEllipsis
                       end>
-                    Properties.ButtonOnly = True
                     Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     Properties.ReadOnly = True
-                    Properties.ViewStyle = vsButtonsAutoWidth
                     Width = 90
                     Position.BandIndex = 1
                     Position.ColIndex = 9
