@@ -24,7 +24,8 @@ uses
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit, cxDBLookupComboBox,
-  cxDBLookupEdit, cxLookupEdit, cxDropDownEdit;
+  cxDBLookupEdit, cxLookupEdit, cxDropDownEdit,
+  System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoAtributosConjuntos = class(TfrmMtoGen)
@@ -67,8 +68,8 @@ type
     tvArticulosESACTIVO_ART: TcxGridDBColumn;
     tvArticulosCODIGO_FAM_ART: TcxGridDBColumn;
     tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn;
-    tvArticulosID_VA_ACA: TcxGridDBColumn;
-    tvArticulosESGENERACION_AUTO_ACA: TcxGridDBColumn;
+    ActionListConjuntos: TActionList;
+    actArticulo: TAction;
     tsAuditoria: TcxTabSheet;
     pnlAuditoria: TPanel;
     lblUsuarioAlta: TcxLabel;
@@ -80,6 +81,7 @@ type
     lblInstanteModif: TcxLabel;
     txtINSTANTEMODIF: TcxDBTextEdit;
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure actArticuloExecute(Sender: TObject);
   private
     dmmAtributosConjuntos: TdmAtributosConjuntos;
   public
@@ -92,7 +94,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inLibShowMto;
 
 {$R *.dfm}
 
@@ -116,6 +118,17 @@ begin
   inherited;
   // ID_AC es AUTO_INCREMENT, no editable.
   cxGrdDBTabPrinID_AC.Options.Editing := False;
+end;
+
+procedure TfrmMtoAtributosConjuntos.actArticuloExecute(Sender: TObject);
+begin
+  inherited;
+  with dmmAtributosConjuntos.dsArticulosConjunto.DataSet do
+  if ((pcDetail.ActivePage = tsArticulos) and
+      (not FieldByName('CODIGO_ART_ART').IsNull)) then
+    ShowMto(Self.Owner, 'Articulos', FieldByName('CODIGO_ART_ART').AsString)
+  else
+    ShowMto(Self.Owner, 'Articulos');
 end;
 
 initialization
