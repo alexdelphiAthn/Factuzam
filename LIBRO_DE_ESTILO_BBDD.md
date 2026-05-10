@@ -29,6 +29,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_articulos_propiedades`          | `ARTPROP` |
 | `fza_articulos_proveedores`          | `AP`      |
 | `fza_articulos_skus`                 | `SKU`     |
+| `fza_articulos_skus_costes`          | `SKUC`    |
 | `fza_articulos_stockactual`          | `STK`     |
 | `fza_articulos_tarifas`              | `ARTTAR`  |
 | `fza_articulos_vinculos`             | `ARTVIN`  |

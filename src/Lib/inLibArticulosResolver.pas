@@ -163,9 +163,13 @@ type
     function ResolverPrecio(const ACodigoArt, ACodigoSku, ACodigoTarifa: string;
                             const AFecha: TDateTime): TArticuloPrecio;
 
-    // Sólo el último coste (proveedor principal si ACodigoProveedor='').
+    // Sólo el último coste. Si ACodigoSku no es '', se busca primero en
+    // fza_articulos_skus_costes (coste por SKU) y se cae a proveedor si no
+    // hay fila. Si el artículo no tiene SKUs, se usa proveedor principal
+    // (o ACodigoProveedor si se pasa).
     function ResolverUltimoCoste(const ACodigoArt: string;
-                                 const ACodigoProveedor: string = ''): TArticuloCoste;
+                                 const ACodigoProveedor: string = '';
+                                 const ACodigoSku: string = ''): TArticuloCoste;
 
     // PMP. Si ACodigoAlmacen='' devuelve el promedio ponderado entre todos
     // los almacenes con stock.
@@ -430,7 +434,8 @@ begin
 end;
 
 function TArticulosResolver.ResolverUltimoCoste(const ACodigoArt: string;
-  const ACodigoProveedor: string): TArticuloCoste;
+  const ACodigoProveedor: string;
+  const ACodigoSku: string): TArticuloCoste;
 var q: TUniQuery;
 begin
   Result.Clear;
@@ -439,6 +444,31 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
+    // 1. Si el llamante nos pasa un SKU concreto, el coste sale de la
+    //    nueva tabla por SKU. Si la fila existe, devolvemos eso y punto.
+    if ACodigoSku <> '' then
+    begin
+      q.SQL.Text :=
+        'SELECT PRECIO_ULT_COMPRA_SKUC, FECHA_ULT_COMPRA_SKUC ' +
+        '  FROM fza_articulos_skus_costes ' +
+        ' WHERE CODIGO_UNIDAD_SKU_SKUC = :sku LIMIT 1';
+      q.ParamByName('sku').AsString := ACodigoSku;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        if not q.FieldByName('PRECIO_ULT_COMPRA_SKUC').IsNull then
+          Result.PrecioUltCompra    := q.FieldByName('PRECIO_ULT_COMPRA_SKUC').AsFloat;
+        if not q.FieldByName('FECHA_ULT_COMPRA_SKUC').IsNull then
+          Result.FechaValidezCompra := q.FieldByName('FECHA_ULT_COMPRA_SKUC').AsDateTime;
+        Result.Encontrado := True;
+        Exit;
+      end;
+      q.Close;
+    end;
+
+    // 2. Sin SKU (o sin fila por SKU): coste a nivel de artículo desde
+    //    fza_articulos_proveedores. Esto sigue siendo válido para artículos
+    //    sin SKUs y como fallback histórico.
     if ACodigoProveedor <> '' then
     begin
       q.SQL.Text :=
@@ -644,8 +674,10 @@ begin
   else
     Result.PrecioTarifaDefault := Result.PrecioPedido;
 
-  // Coste y PMP
-  Result.UltimoCoste := ResolverUltimoCoste(ACodigoArt, ACodigoProveedor);
+  // Coste y PMP. Si tenemos SKU resuelto, el coste sale de la tabla por SKU
+  // (con fallback al proveedor); si no, del proveedor principal.
+  Result.UltimoCoste := ResolverUltimoCoste(ACodigoArt, ACodigoProveedor,
+                                            Result.CodigoSku);
   if Result.CodigoSku <> '' then
     Result.PMP := ResolverPMP(Result.CodigoSku, ACodigoAlmacen);
 end;

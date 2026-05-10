@@ -54,9 +54,13 @@ type
     procedure unqryVariacionesArticulosBeforePost(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
     procedure unqrySkusBeforePost(DataSet: TDataSet);
+    procedure unqrySkusBeforeDelete(DataSet: TDataSet);
   private
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
+    procedure UpsertCosteSku(const aSku: string;
+                             aPrecioField, aFechaField: TField);
+    procedure EliminarCosteSku(const aSku: string);
   public
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
@@ -167,6 +171,8 @@ begin
 end;
 
 procedure TdmArticulos.unqrySkusBeforePost(DataSet: TDataSet);
+var
+  fldPrecio, fldFecha: TField;
 begin
   inherited;
   if DataSet.State = dsInsert then
@@ -177,9 +183,81 @@ begin
     // forzamos al artículo activo si está vacío.
     if Trim(DataSet.FieldByName('CODIGO_ART_SKU').AsString) = '' then
       DataSet.FieldByName('CODIGO_ART_SKU').AsString :=
-        unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+                              unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   end;
   oDmConn.ActualizarUserTimeModif(DataSet);
+
+  // El SQLInsert / SQLUpdate del framework sólo escribe en fza_articulos_skus.
+  // El coste y la fecha de última compra viven en fza_articulos_skus_costes:
+  // los volcamos aquí mediante UPSERT.
+  fldPrecio := DataSet.FindField('PRECIO_ULT_COMPRA_SKUC');
+  fldFecha  := DataSet.FindField('FECHA_ULT_COMPRA_SKUC');
+  if (fldPrecio <> nil) or (fldFecha <> nil) then
+    UpsertCosteSku(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString,
+                   fldPrecio, fldFecha);
+end;
+
+procedure TdmArticulos.unqrySkusBeforeDelete(DataSet: TDataSet);
+begin
+  inherited;
+  // Sin FK declarada, la fila de coste quedaría huérfana al borrar el SKU:
+  // la limpiamos antes de que el framework dispare el DELETE sobre
+  // fza_articulos_skus.
+  EliminarCosteSku(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString);
+end;
+
+procedure TdmArticulos.UpsertCosteSku(const aSku: string;
+                                     aPrecioField, aFechaField: TField);
+var
+  qry: TUniQuery;
+begin
+  if Trim(aSku) = '' then Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_skus_costes '                              +
+      '       (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, '            +
+      '        FECHA_ULT_COMPRA_SKUC, '                                     +
+      '        INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                +
+      'VALUES (:SKU, :PRECIO, :FECHA, '                                     +
+      '        CURRENT_TIMESTAMP, :USR, :USR) '                             +
+      'ON DUPLICATE KEY UPDATE '                                            +
+      '   PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), '        +
+      '   FECHA_ULT_COMPRA_SKUC  = VALUES(FECHA_ULT_COMPRA_SKUC), '         +
+      '   USUARIO_MODIF          = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('SKU').AsString := aSku;
+    if (aPrecioField <> nil) and not aPrecioField.IsNull then
+      qry.ParamByName('PRECIO').AsFloat := aPrecioField.AsFloat
+    else
+      qry.ParamByName('PRECIO').Clear;
+    if (aFechaField <> nil) and not aFechaField.IsNull then
+      qry.ParamByName('FECHA').AsDateTime := aFechaField.AsDateTime
+    else
+      qry.ParamByName('FECHA').Clear;
+    qry.ParamByName('USR').AsString := oUser;
+    qry.ExecSQL;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TdmArticulos.EliminarCosteSku(const aSku: string);
+var
+  qry: TUniQuery;
+begin
+  if Trim(aSku) = '' then Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'DELETE FROM fza_articulos_skus_costes ' +
+      ' WHERE CODIGO_UNIDAD_SKU_SKUC = :SKU';
+    qry.ParamByName('SKU').AsString := aSku;
+    qry.ExecSQL;
+  finally
+    FreeAndNil(qry);
+  end;
 end;
 
 procedure TdmArticulos.unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
