@@ -287,10 +287,13 @@ begin
         Exit;
       end;
 
-      // 2. Precio salida -> registro de tarifa enfocado
+      // 2. Precio salida -> registro de tarifa enfocado.
+      //    Recalcula PRECIO_FINAL_ARTTAR igual que el handler manual del grid:
+      //    precio final = precio salida - precio dto.
       qry.SQL.Text :=
         'UPDATE fza_articulos_tarifas SET ' +
         '  PRECIO_SALIDA_ARTTAR = :p_salida, ' +
+        '  PRECIO_FINAL_ARTTAR  = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), ' +
         '  USUARIO_MODIF        = :p_usuario, ' +
         '  INSTANTE_MODIF       = NOW() ' +
         'WHERE CODIGO_UNICO_ARTTAR = :p_unico';
