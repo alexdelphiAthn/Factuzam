@@ -294,6 +294,10 @@ type
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
     procedure dbcTarifasMARGENButtonClick(Sender: TObject; AButtonIndex: Integer);
+    procedure dbcTarifasMARGENGetDisplayText(
+      Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord;
+      var AText: string);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -985,6 +989,39 @@ begin
     ds.Refresh;
     ActualizarVisibilidadColumnaSku;
   end;
+end;
+
+procedure TfrmMtoArticulos.dbcTarifasMARGENGetDisplayText(
+  Sender: TcxCustomGridTableItem;
+  ARecord: TcxCustomGridRecord;
+  var AText: string);
+var
+  DC                 : TcxCustomDataController;
+  RecordIndex        : Integer;
+  ItemCoste, ItemSalida: TcxCustomGridTableItem;
+  vCoste, vSalida    : Variant;
+  coste, salida      : Double;
+begin
+  AText := '';
+  RecordIndex := ARecord.RecordIndex;
+  if RecordIndex < 0 then Exit;
+  DC := tvTarifas.DataController;
+  if DC = nil then Exit;
+  ItemCoste  := tvTarifas.GetColumnByFieldName('PRECIO_ULT_COMPRA');
+  ItemSalida := tvTarifas.GetColumnByFieldName('PRECIO_SALIDA_ARTTAR');
+  if (ItemCoste = nil) or (ItemSalida = nil) then Exit;
+  vCoste  := DC.Values[RecordIndex, ItemCoste.Index];
+  vSalida := DC.Values[RecordIndex, ItemSalida.Index];
+  if VarIsNull(vCoste) or VarIsEmpty(vCoste) then Exit;
+  if VarIsNull(vSalida) or VarIsEmpty(vSalida) then Exit;
+  try
+    coste  := vCoste;
+    salida := vSalida;
+  except
+    Exit;
+  end;
+  if coste > 0 then
+    AText := FormatFloat('0.00" %"', (salida / coste) * 100);
 end;
 
 procedure TfrmMtoArticulos.btnBuscarClick(Sender: TObject);
