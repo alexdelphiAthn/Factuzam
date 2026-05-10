@@ -1,14 +1,10 @@
 inherited dmAlbaranes: TdmAlbaranes
-  OnCreate = DataModuleCreate
-  OnDestroy = DataModuleDestroy
-  ClientHeight = 480
-  ClientWidth = 632
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM vi_albaranes')
     AfterInsert = unqryTablaGAfterInsert
-    BeforePost = unqryTablaGBeforePost
     Left = 48
     Top = 24
   end
