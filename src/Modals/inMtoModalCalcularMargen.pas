@@ -134,10 +134,15 @@ begin
 
     frm.edtCoste.Value         := ACoste;
     frm.edtPrecioActual.Value  := APrecioSalidaAct;
-    // Defaults editables; el usuario los ajusta en cada apertura
-    frm.edtMargen.Value        := 100;
+    // Cálculo inverso: si hay coste y precio salida actuales, deduce el
+    // margen implícito (con ajuste 0 y menos 0 como punto de partida) para
+    // que el modal abra ya cuadrado con la situación actual.
     frm.edtAjuste.Value        := 0;
     frm.edtMenos.Value         := 0;
+    if (ACoste > 0) and (APrecioSalidaAct > 0) then
+      frm.edtMargen.Value := (APrecioSalidaAct / ACoste) * 100
+    else
+      frm.edtMargen.Value := 100;
     frm.RecalcularPrecioSalida(nil);
 
     frm.ShowModal;
