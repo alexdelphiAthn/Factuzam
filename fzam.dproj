@@ -348,6 +348,10 @@
             <Form>frmModalImportarPedidosPS</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
+            <Form>frmModalFacturarAlbaranesFechas</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoPaises.pas">
             <Form>frmMtoPaises</Form>
         </DCCReference>
