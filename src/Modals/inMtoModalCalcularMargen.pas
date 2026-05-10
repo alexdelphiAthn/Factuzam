@@ -289,13 +289,21 @@ begin
 
       // 2. Precio salida -> registro de tarifa enfocado.
       //    Recalcula PRECIO_FINAL_ARTTAR igual que el handler manual del grid:
-      //    precio final = precio salida - precio dto.
+      //      precio final = precio salida - precio dto
+      //    Recalcula también PORCENTAJE_DTO_ARTTAR contra el nuevo precio
+      //    salida (igual que el handler manual de PRECIO_DTO):
+      //      porcentaje dto = (precio dto / precio salida) * 100
       qry.SQL.Text :=
         'UPDATE fza_articulos_tarifas SET ' +
-        '  PRECIO_SALIDA_ARTTAR = :p_salida, ' +
-        '  PRECIO_FINAL_ARTTAR  = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), ' +
-        '  USUARIO_MODIF        = :p_usuario, ' +
-        '  INSTANTE_MODIF       = NOW() ' +
+        '  PRECIO_SALIDA_ARTTAR  = :p_salida, ' +
+        '  PRECIO_FINAL_ARTTAR   = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), ' +
+        '  PORCENTAJE_DTO_ARTTAR = CASE ' +
+        '                            WHEN :p_salida > 0 ' +
+        '                              THEN (COALESCE(PRECIO_DTO_ARTTAR, 0) / :p_salida) * 100 ' +
+        '                            ELSE 0 ' +
+        '                          END, ' +
+        '  USUARIO_MODIF         = :p_usuario, ' +
+        '  INSTANTE_MODIF        = NOW() ' +
         'WHERE CODIGO_UNICO_ARTTAR = :p_unico';
       qry.ParamByName('p_salida').AsFloat  := FResultado.PrecioSalidaFinal;
       qry.ParamByName('p_usuario').AsString := oUser;
