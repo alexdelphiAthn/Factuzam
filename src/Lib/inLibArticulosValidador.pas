@@ -69,6 +69,8 @@ type
     EsActivoArticulo    : Boolean;
     EsVariacion         : Boolean;         // S si tiene tallas/colores
     TieneSku            : Boolean;         // tiene >=1 SKU activo
+    NumAtributosReq     : Integer;         // nº atributos del tipo de variación
+                                           // (talla+color = 2). 0 si no varía.
     RequiereSku         : Boolean;         // tiene SKU pero la coincidencia no
                                            //  trajo uno → llamante debe elegir
     SkuActivo           : Boolean;         // sólo válido si CodigoSku <> ''
@@ -117,6 +119,7 @@ begin
   EsActivoArticulo     := False;
   EsVariacion          := False;
   TieneSku             := False;
+  NumAtributosReq      := 0;
   RequiereSku          := False;
   SkuActivo            := False;
   CodigoBarrasMatch    := '';
@@ -171,7 +174,9 @@ begin
   try
     q.Connection := FConexion;
     q.SQL.Text   :=
-      'SELECT a.ESACTIVO_ART, a.ESVARIACION_ART ' +
+      'SELECT a.ESACTIVO_ART, a.ESVARIACION_ART, a.TIPO_VARIACION_ART, ' +
+      '       (SELECT COUNT(*) FROM fza_variaciones_atributos va ' +
+      '         WHERE va.ID_VAR_VA = a.TIPO_VARIACION_ART) AS NUM_ATR_REQ ' +
       '  FROM fza_articulos a ' +
       ' WHERE a.CODIGO_ART_ART = :art';
     q.ParamByName('art').AsString := R.CodigoArticulo;
@@ -184,6 +189,7 @@ begin
     end;
     R.EsActivoArticulo := q.FieldByName('ESACTIVO_ART').AsString = 'S';
     R.EsVariacion      := q.FieldByName('ESVARIACION_ART').AsString = 'S';
+    R.NumAtributosReq  := q.FieldByName('NUM_ATR_REQ').AsInteger;
   finally
     q.Free;
   end;
