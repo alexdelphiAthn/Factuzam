@@ -1668,6 +1668,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 926
                 Top = 0
@@ -3447,6 +3451,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnl1
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
