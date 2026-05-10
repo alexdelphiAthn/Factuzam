@@ -312,6 +312,7 @@ type
   public
     procedure ActualizarVisibilidadVariaciones;
     procedure AsegurarSkuArticuloSinVariaciones(const aCodArticulo: string);
+    procedure AsegurarSkuArticulo(const aCodArticulo: string);
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
   end;
@@ -405,6 +406,72 @@ begin
     qry.Close;
 
     // 3) Insertamos un SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_skus '                                     +
+      '   (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,' +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                    +
+      'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
+    qry.ParamByName('SKU').AsString := aCodArticulo;
+    qry.ParamByName('ART').AsString := aCodArticulo;
+    qry.ParamByName('USR').AsString := oUser;
+    qry.ExecSQL;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoArticulos.AsegurarSkuArticulo(const aCodArticulo: string);
+var
+  qry: TUniQuery;
+  bExisteFantasma: Boolean;
+begin
+  // Variante "fuerte" para acciones explícitas del usuario sobre códigos de
+  // barras: si el artículo no tiene NINGÚN SKU activo (incluyendo artículos
+  // con variaciones cuyas combinaciones aún no se han generado), creamos —o
+  // reactivamos— un SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
+  // para que la generación/verificación nunca falle por "no hay SKUs activos".
+  if aCodArticulo = '' then Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+
+    // 1) ¿Ya existe algún SKU activo para este artículo? Nada que hacer.
+    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus '       +
+                    ' WHERE CODIGO_ART_SKU = :C '             +
+                    '   AND ESACTIVO_SKU = ''S'' LIMIT 1';
+    qry.ParamByName('C').AsString := aCodArticulo;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      qry.Close;
+      Exit;
+    end;
+    qry.Close;
+
+    // 2) ¿Hay un SKU fantasma previo (mismo código que el artículo) inactivo?
+    //    Si existe lo reactivamos en vez de insertar otro nuevo (PK colisiona).
+    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus '       +
+                    ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
+    qry.ParamByName('SKU').AsString := aCodArticulo;
+    qry.Open;
+    bExisteFantasma := not qry.IsEmpty;
+    qry.Close;
+
+    if bExisteFantasma then
+    begin
+      qry.SQL.Text :=
+        'UPDATE fza_articulos_skus '                                        +
+        '   SET ESACTIVO_SKU = ''S'', '                                     +
+        '       INSTANTE_MODIF = CURRENT_TIMESTAMP, '                       +
+        '       USUARIO_MODIF = :USR '                                      +
+        ' WHERE CODIGO_UNIDAD_SKU = :SKU';
+      qry.ParamByName('SKU').AsString := aCodArticulo;
+      qry.ParamByName('USR').AsString := oUser;
+      qry.ExecSQL;
+      Exit;
+    end;
+
+    // 3) Insertamos el SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
     qry.SQL.Text :=
       'INSERT INTO fza_articulos_skus '                                     +
       '   (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,' +
@@ -1034,8 +1101,9 @@ begin
     Exit;
   end;
 
-  // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
-  AsegurarSkuArticuloSinVariaciones(CodArticulo);
+  // Garantizamos que el artículo tenga al menos un SKU activo (= código
+  // artículo) aunque tenga variaciones sin combinaciones generadas aún.
+  AsegurarSkuArticulo(CodArticulo);
 
   qrySkus   := TUniQuery.Create(nil);
   qryInsert := TUniQuery.Create(nil);
@@ -1203,7 +1271,7 @@ begin
     Exit;
   end;
 
-  AsegurarSkuArticuloSinVariaciones(CodArticulo);
+  AsegurarSkuArticulo(CodArticulo);
 
   qry := TUniQuery.Create(nil);
   iOk13 := 0;
