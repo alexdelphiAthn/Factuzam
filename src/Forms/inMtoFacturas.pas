@@ -511,8 +511,8 @@ uses
   inLibShowMto,
   inLibFacturas,
   inLibDefaultValues,
-  inLibArticulosValidador, inLibArticulosResolver,
-  System.StrUtils,
+  inLibArticulosValidador,
+  inLibArticulosResolver,
   inMtoGenSearch,
   inMtoModalFacRec,
   inMtoModalImpRecFac,
@@ -522,7 +522,8 @@ uses
   inMtoArticulos,
   inMtoEmpresas,
   inMtoClientes,
-  inLibGlobalVar, inLibtb;
+  inLibGlobalVar,
+  inLibtb;
 
 {$R *.dfm}
 

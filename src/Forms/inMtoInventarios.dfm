@@ -645,6 +645,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsCabecera: TcxTabSheet
               Caption = '&3.Otros'
               ImageIndex = 0
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
