@@ -541,6 +541,23 @@ begin
       unqrySol.Free;
     end;
 
+    // ----------------------------------------------------------------
+    // Sanea precio final / descuento: precio_salida >= precio_final
+    // siempre. Si no, iguala (precio_final = precio_salida) y limpia
+    // los descuentos para que no haya valores negativos en ninguna
+    // factura/etiqueta posterior (anticomercial y rompe los Z).
+    // ----------------------------------------------------------------
+    if (FindField('PRECIO_FINAL_ARTTAR').AsFloat >
+        FindField('PRECIO_SALIDA_ARTTAR').AsFloat) or
+       (FindField('PRECIO_DTO_ARTTAR').AsFloat < 0) or
+       (FindField('PORCENTAJE_DTO_ARTTAR').AsFloat < 0) then
+    begin
+      FindField('PRECIO_FINAL_ARTTAR').AsFloat   :=
+                                  FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
+      FindField('PRECIO_DTO_ARTTAR').AsFloat     := 0;
+      FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
+    end;
+
     if ((State = dsInsert) or (State = dsEdit)) then
       oDmConn.ActualizarUserTimeModif(DataSet);
   end;
