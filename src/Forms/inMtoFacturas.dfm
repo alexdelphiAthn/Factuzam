@@ -775,7 +775,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   object ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
-                    PropertiesClassName = 'TcxTextEditProperties'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsEditList
+                    Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
+                    Properties.OnEditValueChanged = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged
                     Width = 180
                   end
                   object ctbDESCRIPCION_VARIACION_FACTURA_LINEA: TcxGridDBColumn
