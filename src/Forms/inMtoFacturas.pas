@@ -352,6 +352,10 @@ type
     dbcGrdDBTabPrinINSTANTECONSO_FACTURA: TcxGridDBColumn;
     tsVerifactu: TcxTabSheet;
     tsRegistro: TcxTabSheet;
+    tsMovimientosFac: TcxTabSheet;
+    cxGrdMovimientosFac: TcxGrid;
+    tvMovimientosFac: TcxGridDBTableView;
+    cxGrdMovimientosFacLevel: TcxGridLevel;
     scrlbx1: TScrollBox;
     lbl18: TLabel;
     lbl17: TLabel;
@@ -1026,6 +1030,7 @@ begin
   tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
   tvRecibos.DataController.DataSource := dmmFacturas.dsRecibos;
+  tvMovimientosFac.DataController.DataSource := dmmFacturas.dsMovimientosFac;
   cbbPaisesEmp.Properties.ListSource := dmmFacturas.dsPaisesEmp;
   cbbPaisesCli.Properties.ListSource := dmmFacturas.dsPaisesCli;
   //tvIVA.DataController.DataSource := dsTablaG;
