@@ -731,12 +731,12 @@ begin
     lblHasta := TLabel.Create(frmSel);
     lblHasta.Parent := pnlFechas;
     lblHasta.Caption := 'Hasta (Opcional):';
-    lblHasta.Left := 280;  // <-- Aún más a la derecha (antes 260)
+    lblHasta.Left := 280;
     lblHasta.Top := 16;
 
     dtpHasta := TcxDateEdit.Create(frmSel);
     dtpHasta.Parent := pnlFechas;
-    dtpHasta.Left := 410;  // <-- Aún más a la derecha (antes 380)
+    dtpHasta.Left := 410;
     dtpHasta.Top := 13;
     dtpHasta.Width := 110;
 
@@ -923,18 +923,18 @@ end;
 procedure TfrmMtoArticulos.dbcTarifasMARGENButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 var
-  ds           : TDataSet;
-  unicoFld     : TField;
-  unico        : Integer;
-  codigoArt    : string;
-  codigoUnidad : string;
-  descArt      : string;
-  codigoTar    : string;
-  nombreTar    : string;
-  descSku      : string;
-  coste        : Double;
-  precSalida   : Double;
-  res          : TCalcularMargenResult;
+  ds         : TDataSet;
+  unicoFld   : TField;
+  unico      : Integer;
+  codigounidad : string;
+  codigoArt  : string;
+  descArt    : string;
+  codigoTar  : string;
+  nombreTar  : string;
+  descSku    : string;
+  coste      : Double;
+  precSalida : Double;
+  res        : TCalcularMargenResult;
 begin
   inherited;
   ds := dmmArticulos.unqryTarifasArticulos;
@@ -943,7 +943,6 @@ begin
     ShowMessage('Selecciona primero un precio de tarifa.');
     Exit;
   end;
-
   unicoFld := ds.FindField('CODIGO_UNICO_ARTTAR');
   if (unicoFld = nil) or unicoFld.IsNull then
   begin
@@ -952,7 +951,8 @@ begin
     Exit;
   end;
   unico := unicoFld.AsInteger;
-
+  if ds.FindField('CODIGO_UNIDAD_ARTTAR') <> nil then
+    codigoUnidad := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
   codigoArt  := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
   if ds.FindField('DESCRIPCION_ART') <> nil then
     descArt := ds.FieldByName('DESCRIPCION_ART').AsString;
@@ -961,10 +961,6 @@ begin
     nombreTar := ds.FieldByName('NOMBRE_TAR_TAR').AsString;
   if ds.FindField('DESCRIPCION_SKU') <> nil then
     descSku := ds.FieldByName('DESCRIPCION_SKU').AsString;
-  if ds.FindField('CODIGO_UNIDAD_ARTTAR') <> nil then
-    codigoUnidad := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString
-  else
-    codigoUnidad := '';
   coste      := ds.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
   precSalida := ds.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
 
@@ -972,12 +968,14 @@ begin
     Self,
     (ds as TUniQuery).Connection,
     unico,
-    codigoArt, codigoUnidad,
+    codigoArt,
+    codigoUnidad,
     descArt,
-    codigoTar, nombreTar,
+    codigoTar,
+    nombreTar,
     descSku,
-    coste, precSalida);
-
+    coste,
+    precSalida);
   if res.Aceptado then
   begin
     ds.Refresh;
