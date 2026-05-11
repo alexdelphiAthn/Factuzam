@@ -10,6 +10,22 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
+-- 0. Cambio a tabla existente: nombre visible del atributo de variación
+-- ---------------------------------------------------------------------------
+-- Permite que la UI etiquete el eje pivot con un nombre parametrizable
+-- (ej. "Sistema de tallas", "Paleta", "Duración"...) en lugar de un literal
+-- hardcoded. Aplica a toda la app, no sólo a las sesiones de compra.
+ALTER TABLE `fza_variaciones_atributos`
+  ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL
+  COMMENT 'Etiqueta a mostrar en formularios cuando este atributo pivota';
+
+-- Sugerencia de carga inicial:
+-- UPDATE fza_variaciones_atributos SET NOMBRE_VISIBLE_VA = 'Sistema de tallas'
+--   WHERE ID_ATRIBUTO_VA = 'TAL';
+-- UPDATE fza_variaciones_atributos SET NOMBRE_VISIBLE_VA = 'Paleta'
+--   WHERE ID_ATRIBUTO_VA = 'CO';
+
+-- ---------------------------------------------------------------------------
 -- 1. Cabecera de sesión
 -- ---------------------------------------------------------------------------
 CREATE TABLE `fza_compras_sesiones` (
@@ -35,17 +51,19 @@ CREATE TABLE `fza_compras_sesiones` (
   `ESPRECIOS_SIN_IVA_SES`       char(1)       NOT NULL DEFAULT 'S',
   `ESREDONDEO_VENTA_SES`        char(1)       NOT NULL DEFAULT 'N',
 
-  -- Variación elegida para los artículos de la sesión
+  -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES='N'.
   `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT 'FK fza_variaciones — TC, TEMP, etc.',
+                                  COMMENT 'FK fza_variaciones — TC, TEMP, etc. (defecto)',
   `ID_VA_PIVOT_SES`             varchar(20)   DEFAULT NULL
-                                  COMMENT 'Atributo cuyas valores pivotan a columnas',
+                                  COMMENT 'Atributo cuyos valores pivotan a columnas (defecto)',
   `ID_AC_PIVOT_SES`             int(11)       DEFAULT NULL
-                                  COMMENT 'FK fza_atributos_conjuntos para el eje pivot',
+                                  COMMENT 'FK fza_atributos_conjuntos para el eje pivot (defecto)',
   `ID_VA_FILA_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT 'Atributo cuyos valores generan filas (caso N=1)',
+                                  COMMENT 'Atributo cuyos valores generan filas (defecto)',
   `ID_AC_FILA_SES`              int(11)       DEFAULT NULL
-                                  COMMENT 'FK fza_atributos_conjuntos para el eje fila (N=1)',
+                                  COMMENT 'FK fza_atributos_conjuntos para el eje fila (defecto)',
+  `ESVAR_FIJA_SES`              char(1)       NOT NULL DEFAULT 'N'
+                                  COMMENT 'S=todas las líneas obligadas a usar la var por defecto. N=cada línea decide.',
 
   -- Prefijo y contador para EAN13 al materializar
   `PREFIJO_EAN_SES`             varchar(7)    DEFAULT NULL
@@ -157,15 +175,25 @@ CREATE TABLE `fza_compras_sesiones_lineas` (
   `DESCRIPCION_SESLIN`          varchar(1000) NOT NULL,
   `CODIGO_FAM_SESLIN`           varchar(20)   DEFAULT NULL
                                   COMMENT 'Override sobre la familia de cabecera; null = hereda',
-  `TIPO_ART_SESLIN`             varchar(10)   NOT NULL DEFAULT 'ESTANDAR',
+  `TIPO_LINEA_SESLIN`           varchar(10)   NOT NULL DEFAULT 'MATRIZ'
+                                  COMMENT 'MATRIZ | ESCALAR | SERVICIO | KIT',
+  `TIPO_ART_SESLIN`             varchar(10)   NOT NULL DEFAULT 'ESTANDAR'
+                                  COMMENT 'Derivado de TIPO_LINEA: SERVICIO=>SERVICIO, KIT=>KIT, resto=>ESTANDAR',
   `TIPO_IVA_SESLIN`             varchar(2)    DEFAULT NULL
                                   COMMENT 'Override sobre cabecera',
   `TIPO_CANTIDAD_SESLIN`        varchar(20)   NOT NULL DEFAULT 'Uds',
   `ESTRAZABLE_SESLIN`           char(1)       NOT NULL DEFAULT 'N',
 
-  -- Override de variación (si la línea usa eje distinto al de cabecera)
+  -- Override de variación por línea (sólo aplica si ESVAR_FIJA_SES='N' en cabecera)
+  `CODIGO_VAR_SESLIN`           varchar(20)   DEFAULT NULL
+                                  COMMENT 'Override sobre cabecera, null = hereda',
+  `ID_VA_PIVOT_SESLIN`          varchar(20)   DEFAULT NULL,
   `ID_AC_PIVOT_SESLIN`          int(11)       DEFAULT NULL,
+  `ID_VA_FILA_SESLIN`           varchar(20)   DEFAULT NULL,
   `ID_AC_FILA_SESLIN`           int(11)       DEFAULT NULL,
+
+  -- Cantidad escalar (sólo para TIPO_LINEA = ESCALAR o SERVICIO)
+  `CANTIDAD_ESCALAR_SESLIN`     decimal(19,6) DEFAULT NULL,
 
   -- Conflicto con artículo existente
   `ESDUPLICADO_SESLIN`          char(1)       NOT NULL DEFAULT 'N',
@@ -320,6 +348,72 @@ JOIN `fza_compras_sesiones_celdas`   C
 JOIN `fza_atributos_valores`         AVP
   ON AVP.`ID_AV`           = C.`ID_AV_PIVOT_SESCEL`
 WHERE C.`CANTIDAD_SESCEL`  > 0;
+
+-- ---------------------------------------------------------------------------
+-- 8-bis. Plantillas globales de cabecera (reutilizables al crear sesión)
+-- ---------------------------------------------------------------------------
+-- Permite guardar una configuración de cabecera + propiedades + kits con un
+-- nombre y reutilizarla al crear sesiones nuevas. Sufijos: SESPL / SESPLPROP /
+-- SESPLKIT / SESPLKITD.
+
+CREATE TABLE `fza_compras_plantillas` (
+  `CODIGO_SESPL`                varchar(20)   NOT NULL,
+  `NOMBRE_SESPL`                varchar(100)  NOT NULL,
+  `DESCRIPCION_SESPL`           varchar(255)  DEFAULT NULL,
+  `CODIGO_PRV_SESPL`            varchar(20)   DEFAULT NULL
+                                  COMMENT 'Plantilla específica de proveedor; null = global',
+  `CODIGO_FAM_SESPL`            varchar(20)   DEFAULT NULL,
+  `TIPO_IVA_SESPL`              varchar(2)    DEFAULT NULL,
+  `PORCENTAJE_MARGEN_SESPL`     decimal(7,4)  DEFAULT NULL,
+  `CODIGO_TAR_SESPL`            varchar(20)   DEFAULT NULL,
+  `CODIGO_VAR_SESPL`            varchar(20)   DEFAULT NULL,
+  `ID_VA_PIVOT_SESPL`           varchar(20)   DEFAULT NULL,
+  `ID_AC_PIVOT_SESPL`           int(11)       DEFAULT NULL,
+  `ID_VA_FILA_SESPL`            varchar(20)   DEFAULT NULL,
+  `ID_AC_FILA_SESPL`            int(11)       DEFAULT NULL,
+  `ESVAR_FIJA_SESPL`            char(1)       NOT NULL DEFAULT 'N',
+  `ESACTIVA_SESPL`              char(1)       NOT NULL DEFAULT 'S',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`CODIGO_SESPL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE `fza_compras_plantillas_props` (
+  `CODIGO_SESPL_SESPLPROP`      varchar(20)   NOT NULL,
+  `CODIGO_PROP_SESPLPROP`       varchar(20)   NOT NULL,
+  `ESFIJO_SESPLPROP`            char(1)       NOT NULL DEFAULT 'N',
+  `ID_PV_DEFECTO_SESPLPROP`     int(11)       DEFAULT NULL,
+  `VALOR_DEFECTO_SESPLPROP`     varchar(255)  DEFAULT NULL,
+  `ORDEN_SESPLPROP`             int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`, `CODIGO_PROP_SESPLPROP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE `fza_compras_plantillas_kits` (
+  `CODIGO_SESPL_SESPLKIT`       varchar(20)   NOT NULL,
+  `CODIGO_SESPLKIT`             varchar(20)   NOT NULL,
+  `NOMBRE_SESPLKIT`             varchar(100)  NOT NULL,
+  `ID_VA_DESTINO_SESPLKIT`      varchar(20)   NOT NULL,
+  `ORDEN_SESPLKIT`              int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`, `CODIGO_SESPLKIT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE `fza_compras_plantillas_kits_det` (
+  `CODIGO_SESPL_SESPLKITD`      varchar(20)   NOT NULL,
+  `CODIGO_SESPLKIT_SESPLKITD`   varchar(20)   NOT NULL,
+  `VALOR_DESTINO_SESPLKITD`     varchar(50)   NOT NULL,
+  `CANTIDAD_SESPLKITD`          decimal(19,6) NOT NULL DEFAULT 0,
+  `ORDEN_SESPLKITD`             int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLKITD`,
+               `CODIGO_SESPLKIT_SESPLKITD`,
+               `VALOR_DESTINO_SESPLKITD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ---------------------------------------------------------------------------
 -- 9. Contador propio
