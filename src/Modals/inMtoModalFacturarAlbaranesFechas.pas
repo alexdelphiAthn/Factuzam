@@ -22,7 +22,7 @@ uses
   cxDropDownEdit, cxNavigator, cxPropertiesStore, dxSkinsForm,
   cxCalendar, cxDBData,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataAlbaranes;
+  UniDataAlbaranes, dxCore, cxDateUtils, Vcl.Menus;
 
 type
   TfrmModalFacturarAlbaranesFechas = class(TForm)
