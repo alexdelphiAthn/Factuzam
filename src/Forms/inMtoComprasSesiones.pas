@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -163,11 +163,6 @@ type
     btnAddKit                : TcxButton;
     btnDelKit                : TcxButton;
     btnImportarKitPrv        : TcxButton;
-
-    // ------------------------------------------------------------------
-    // Pestaña Líneas
-    // ------------------------------------------------------------------
-    splLineas                : TPanel;
     pnlLineasTop             : TPanel;
     cxgrdLineas              : TcxGrid;
     tvLineas                 : TcxGridDBTableView;
@@ -320,12 +315,15 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibShowMto,
+  inLibWin,
+  inLibUser,
+  inLibShowMto,
   inMtoPrincipal,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
   inMtoModalSesionMaterializar,
-  inMtoModalSesionDuplicado;
+  inMtoModalSesionDuplicado,
+  inLibGlobalVar;
 
 {$R *.dfm}
 
