@@ -1163,8 +1163,9 @@ begin
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString  := Sku;
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString := qry.FieldByName('DESCRIPCION_ART').AsString;
           cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   := qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
-          // FISICA = 0: el usuario aún tiene que contar
-          cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    := 0;
+          // Recuento por defecto = teorica (igual que CargarPorFamilia/Proveedor):
+          // diferencia 0. Si el usuario hace el recuento real lo sobreescribe.
+          cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    := qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       := qry.FieldByName('PMP').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := qry.FieldByName('PMP').AsCurrency;
           cdsLineas.Post;
