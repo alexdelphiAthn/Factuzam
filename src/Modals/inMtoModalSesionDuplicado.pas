@@ -83,7 +83,7 @@ begin
   lblDescripcionExistente.Caption := FDescripcion;
   txtCodigo.Text := FCodigoArt;
   rgAccion.ItemIndex := 0; // REUSAR por defecto
-  if rgAccion.CanBeFocused then rgAccion.SetFocus;
+  if rgAccion.CanFocus then rgAccion.SetFocus;
 end;
 
 procedure TfrmModalSesionDuplicado.FormClose(Sender: TObject;
