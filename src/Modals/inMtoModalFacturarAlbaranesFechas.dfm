@@ -8,14 +8,12 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Height = -15
+  Font.Name = 'Lucida Sans'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 15
+  TextHeight = 17
   object pnlTop: TPanel
     Left = 0
     Top = 0
@@ -23,12 +21,13 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
     Height = 90
     Align = alTop
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 0
+    ExplicitWidth = 978
     object lblSerie: TcxLabel
       Left = 8
       Top = 8
       Caption = 'Serie albar'#225'n'
+      TabOrder = 5
     end
     object edtSerie: TcxTextEdit
       Left = 8
@@ -40,6 +39,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Left = 110
       Top = 8
       Caption = 'Fecha desde'
+      TabOrder = 6
     end
     object dteDesde: TcxDateEdit
       Left = 110
@@ -51,6 +51,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Left = 252
       Top = 8
       Caption = 'Fecha hasta'
+      TabOrder = 7
     end
     object dteHasta: TcxDateEdit
       Left = 252
@@ -63,17 +64,15 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Top = 28
       Caption = 'Una factura por cliente (consolidar)'
       TabOrder = 3
-      Width = 240
     end
     object btnBuscar: TcxButton
-      Left = 640
-      Top = 26
+      Left = 736
+      Top = 23
       Width = 130
       Height = 30
       Caption = 'Buscar'
-      OnClick = btnBuscarClick
       TabOrder = 4
-      Style.Font.Style = [fsBold]
+      OnClick = btnBuscarClick
     end
   end
   object pnlMid: TPanel
@@ -84,6 +83,8 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 978
+    ExplicitHeight = 392
     object cxgrdAlbaranes: TcxGrid
       Left = 0
       Top = 0
@@ -91,10 +92,9 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Height = 400
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 978
+      ExplicitHeight = 392
       object tvAlbaranes: TcxGridTableView
-        DataController.Summary.DefaultGroupSummaryItems = <>
-        DataController.Summary.FooterSummaryItems = <>
-        DataController.Summary.SummaryGroups = <>
         OptionsView.GroupByBox = False
         object colSel: TcxGridColumn
           Caption = 'Sel.'
@@ -115,7 +115,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
         end
         object colCliente: TcxGridColumn
           Caption = 'C'#243'd. Cliente'
-          Width = 100
+          Width = 153
         end
         object colRazonSocial: TcxGridColumn
           Caption = 'Raz'#243'n Social'
@@ -139,20 +139,22 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 482
+    ExplicitWidth = 978
     object lblEstado: TcxLabel
       Left = 8
       Top = 14
       Caption = 'Listo'
-      Style.Font.Style = [fsItalic]
+      TabOrder = 3
     end
     object btnSeleccionarTodos: TcxButton
-      Left = 540
+      Left = 480
       Top = 12
-      Width = 140
+      Width = 200
       Height = 28
       Caption = 'Marcar / Desmarcar'
-      OnClick = btnSeleccionarTodosClick
       TabOrder = 0
+      OnClick = btnSeleccionarTodosClick
     end
     object btnFacturar: TcxButton
       Left = 690
@@ -160,9 +162,8 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Width = 170
       Height = 28
       Caption = 'Generar facturas'
-      OnClick = btnFacturarClick
       TabOrder = 1
-      Style.Font.Style = [fsBold]
+      OnClick = btnFacturarClick
     end
     object btnCerrar: TcxButton
       Left = 870
@@ -170,8 +171,8 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Width = 100
       Height = 28
       Caption = 'Cerrar'
-      OnClick = btnCerrarClick
       TabOrder = 2
+      OnClick = btnCerrarClick
     end
   end
   object qBuscar: TUniQuery
