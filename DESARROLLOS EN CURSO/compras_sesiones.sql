@@ -10,25 +10,43 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
+-- IDEMPOTENCIA
+-- ---------------------------------------------------------------------------
+-- Este script se puede ejecutar tantas veces como haga falta:
+--   - CREATE TABLE … IF NOT EXISTS para todas las tablas.
+--   - CREATE OR REPLACE VIEW para las vistas.
+--   - El ALTER TABLE de la sección 0 se envuelve en un bloque dinámico
+--     que comprueba INFORMATION_SCHEMA antes de añadir la columna.
+--
+-- Los datos de configuración (contadores, fza_winforms, etiquetas
+-- NOMBRE_VISIBLE_VA) viven en compras_sesiones_datos.sql.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
 -- 0. Cambio a tabla existente: nombre visible del atributo de variación
 -- ---------------------------------------------------------------------------
 -- Permite que la UI etiquete el eje pivot con un nombre parametrizable
 -- (ej. "Sistema de tallas", "Paleta", "Duración"...) en lugar de un literal
 -- hardcoded. Aplica a toda la app, no sólo a las sesiones de compra.
-ALTER TABLE `fza_variaciones_atributos`
-  ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL
-  COMMENT 'Etiqueta a mostrar en formularios cuando este atributo pivota';
-
--- Sugerencia de carga inicial:
--- UPDATE fza_variaciones_atributos SET NOMBRE_VISIBLE_VA = 'Sistema de tallas'
---   WHERE ID_ATRIBUTO_VA = 'TAL';
--- UPDATE fza_variaciones_atributos SET NOMBRE_VISIBLE_VA = 'Paleta'
---   WHERE ID_ATRIBUTO_VA = 'CO';
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_variaciones_atributos'
+     AND COLUMN_NAME  = 'NOMBRE_VISIBLE_VA'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_variaciones_atributos` '
+  'ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL '
+  'COMMENT ''Etiqueta a mostrar en formularios cuando este atributo pivota''',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ---------------------------------------------------------------------------
 -- 1. Cabecera de sesión
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
   `SERIE_SES`                   varchar(12)   NOT NULL,
   `NUMERO_SES`                  varchar(12)   NOT NULL,
   `FECHA_SES`                   date          NOT NULL,
@@ -89,20 +107,16 @@ CREATE TABLE `fza_compras_sesiones` (
   `INSTANTE_MODIF`              datetime      DEFAULT NULL,
   `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
 
-  PRIMARY KEY (`SERIE_SES`, `NUMERO_SES`)
+  PRIMARY KEY (`SERIE_SES`, `NUMERO_SES`),
+  INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SES`, `FECHA_SES`),
+  INDEX `IDX_SES_ESTADO`    (`ESTADO_SES`),
+  INDEX `IDX_SES_FAM`       (`CODIGO_FAM_SES`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-ALTER TABLE `fza_compras_sesiones`
-  ADD INDEX `IDX_SES_PRV_FECHA`  (`CODIGO_PRV_SES`, `FECHA_SES`);
-ALTER TABLE `fza_compras_sesiones`
-  ADD INDEX `IDX_SES_ESTADO`     (`ESTADO_SES`);
-ALTER TABLE `fza_compras_sesiones`
-  ADD INDEX `IDX_SES_FAM`        (`CODIGO_FAM_SES`);
 
 -- ---------------------------------------------------------------------------
 -- 2. Propiedades de cabecera (fijas / variables)
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_props` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_props` (
   `SERIE_SES_SESPROP`           varchar(12)   NOT NULL,
   `NUMERO_SES_SESPROP`          varchar(12)   NOT NULL,
   `CODIGO_PROP_SESPROP`         varchar(20)   NOT NULL
@@ -118,16 +132,14 @@ CREATE TABLE `fza_compras_sesiones_props` (
   `INSTANTE_ALTA`               datetime      NOT NULL,
   `USUARIO_ALTA`                varchar(50)   NOT NULL,
 
-  PRIMARY KEY (`SERIE_SES_SESPROP`, `NUMERO_SES_SESPROP`, `CODIGO_PROP_SESPROP`)
+  PRIMARY KEY (`SERIE_SES_SESPROP`, `NUMERO_SES_SESPROP`, `CODIGO_PROP_SESPROP`),
+  INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-ALTER TABLE `fza_compras_sesiones_props`
-  ADD INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`);
 
 -- ---------------------------------------------------------------------------
 -- 3. Kits de cantidades (cabecera + detalle)
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_kits` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits` (
   `SERIE_SES_SESKIT`            varchar(12)   NOT NULL,
   `NUMERO_SES_SESKIT`           varchar(12)   NOT NULL,
   `CODIGO_SESKIT`               varchar(20)   NOT NULL
@@ -148,7 +160,7 @@ CREATE TABLE `fza_compras_sesiones_kits` (
   PRIMARY KEY (`SERIE_SES_SESKIT`, `NUMERO_SES_SESKIT`, `CODIGO_SESKIT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-CREATE TABLE `fza_compras_sesiones_kits_det` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits_det` (
   `SERIE_SES_SESKITD`           varchar(12)   NOT NULL,
   `NUMERO_SES_SESKITD`          varchar(12)   NOT NULL,
   `CODIGO_SESKIT_SESKITD`       varchar(20)   NOT NULL,
@@ -164,7 +176,7 @@ CREATE TABLE `fza_compras_sesiones_kits_det` (
 -- ---------------------------------------------------------------------------
 -- 4. Líneas (un artículo tentativo cada una)
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_lineas` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas` (
   `SERIE_SES_SESLIN`            varchar(12)   NOT NULL,
   `NUMERO_SES_SESLIN`           varchar(12)   NOT NULL,
   `LINEA_SESLIN`                int(11)       NOT NULL,
@@ -220,16 +232,14 @@ CREATE TABLE `fza_compras_sesiones_lineas` (
   `INSTANTE_MODIF`              datetime      DEFAULT NULL,
   `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
 
-  PRIMARY KEY (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`)
+  PRIMARY KEY (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`),
+  INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-ALTER TABLE `fza_compras_sesiones_lineas`
-  ADD INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`);
 
 -- ---------------------------------------------------------------------------
 -- 5. Filas de la matriz por línea (combinación de atributos no-pivot)
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_lineas_filas` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas` (
   `SERIE_SES_SESFIL`            varchar(12)   NOT NULL,
   `NUMERO_SES_SESFIL`           varchar(12)   NOT NULL,
   `LINEA_SES_SESFIL`            int(11)       NOT NULL,
@@ -246,7 +256,7 @@ CREATE TABLE `fza_compras_sesiones_lineas_filas` (
 
 -- Valores de atributo que distinguen cada fila (uno o varios).
 -- Caso típico: una sola entrada por fila: ID_VA = 'CO', VALOR = 'NEGRO'.
-CREATE TABLE `fza_compras_sesiones_lineas_filas_atr` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas_atr` (
   `SERIE_SES_SESFILAT`          varchar(12)   NOT NULL,
   `NUMERO_SES_SESFILAT`         varchar(12)   NOT NULL,
   `LINEA_SES_SESFILAT`          int(11)       NOT NULL,
@@ -263,7 +273,7 @@ CREATE TABLE `fza_compras_sesiones_lineas_filas_atr` (
 -- ---------------------------------------------------------------------------
 -- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot)
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_celdas` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
   `SERIE_SES_SESCEL`            varchar(12)   NOT NULL,
   `NUMERO_SES_SESCEL`           varchar(12)   NOT NULL,
   `LINEA_SES_SESCEL`            int(11)       NOT NULL,
@@ -276,16 +286,14 @@ CREATE TABLE `fza_compras_sesiones_celdas` (
   `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
 
   PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`,
-               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, `ID_AV_PIVOT_SESCEL`)
+               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, `ID_AV_PIVOT_SESCEL`),
+  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-ALTER TABLE `fza_compras_sesiones_celdas`
-  ADD INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`);
 
 -- ---------------------------------------------------------------------------
 -- 7. Override de propiedades variables por línea
 -- ---------------------------------------------------------------------------
-CREATE TABLE `fza_compras_sesiones_lineas_props` (
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_props` (
   `SERIE_SES_SESLPROP`          varchar(12)   NOT NULL,
   `NUMERO_SES_SESLPROP`         varchar(12)   NOT NULL,
   `LINEA_SES_SESLPROP`          int(11)       NOT NULL,
@@ -305,7 +313,7 @@ CREATE TABLE `fza_compras_sesiones_lineas_props` (
 -- ---------------------------------------------------------------------------
 
 -- Resumen de cada sesión: nº de líneas, nº de SKUs potenciales, total.
-CREATE VIEW `VI_SES_RESUMEN` AS
+CREATE OR REPLACE VIEW `VI_SES_RESUMEN` AS
 SELECT
   S.`SERIE_SES`,
   S.`NUMERO_SES`,
@@ -327,7 +335,7 @@ SELECT
 FROM `fza_compras_sesiones` S;
 
 -- Detalle "explotado" para previsualizar qué SKUs se materializarán.
-CREATE VIEW `VI_SES_PREVIEW_SKUS` AS
+CREATE OR REPLACE VIEW `VI_SES_PREVIEW_SKUS` AS
 SELECT
   L.`SERIE_SES_SESLIN`           AS SERIE,
   L.`NUMERO_SES_SESLIN`          AS NUMERO,
@@ -356,7 +364,7 @@ WHERE C.`CANTIDAD_SESCEL`  > 0;
 -- nombre y reutilizarla al crear sesiones nuevas. Sufijos: SESPL / SESPLPROP /
 -- SESPLKIT / SESPLKITD.
 
-CREATE TABLE `fza_compras_plantillas` (
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas` (
   `CODIGO_SESPL`                varchar(20)   NOT NULL,
   `NOMBRE_SESPL`                varchar(100)  NOT NULL,
   `DESCRIPCION_SESPL`           varchar(255)  DEFAULT NULL,
@@ -382,7 +390,7 @@ CREATE TABLE `fza_compras_plantillas` (
   PRIMARY KEY (`CODIGO_SESPL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-CREATE TABLE `fza_compras_plantillas_props` (
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_props` (
   `CODIGO_SESPL_SESPLPROP`      varchar(20)   NOT NULL,
   `CODIGO_PROP_SESPLPROP`       varchar(20)   NOT NULL,
   `ESFIJO_SESPLPROP`            char(1)       NOT NULL DEFAULT 'N',
@@ -393,7 +401,7 @@ CREATE TABLE `fza_compras_plantillas_props` (
   PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`, `CODIGO_PROP_SESPLPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-CREATE TABLE `fza_compras_plantillas_kits` (
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits` (
   `CODIGO_SESPL_SESPLKIT`       varchar(20)   NOT NULL,
   `CODIGO_SESPLKIT`             varchar(20)   NOT NULL,
   `NOMBRE_SESPLKIT`             varchar(100)  NOT NULL,
@@ -403,7 +411,7 @@ CREATE TABLE `fza_compras_plantillas_kits` (
   PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`, `CODIGO_SESPLKIT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-CREATE TABLE `fza_compras_plantillas_kits_det` (
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
   `CODIGO_SESPL_SESPLKITD`      varchar(20)   NOT NULL,
   `CODIGO_SESPLKIT_SESPLKITD`   varchar(20)   NOT NULL,
   `VALOR_DESTINO_SESPLKITD`     varchar(50)   NOT NULL,
