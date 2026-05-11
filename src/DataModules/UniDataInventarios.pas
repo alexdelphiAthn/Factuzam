@@ -91,6 +91,7 @@ type
     procedure unqryTablaGAfterScroll(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure cdsLineasAfterPost(DataSet: TDataSet);
     procedure cdsLineasBeforePost(DataSet: TDataSet);
     procedure cdsLineasBeforeDelete(DataSet: TDataSet);
@@ -329,12 +330,12 @@ begin
     Exit;
   if DataSet.ControlsDisabled then
     Exit;
-  // En dsInsert (recien Append/Insert), NUMERO_INV='0' es solo el marcador
-  // que BeforePost sustituira por el contador real. Si en ese momento
-  // recargamos lineas, consultaremos WHERE NUMERO_INV_INVLIN='0' y traeremos
-  // cualquier linea huerfana persistida con esa clave: el "registro fantasma".
-  if DataSet.State <> dsBrowse then
-    Exit;
+  // OJO: aqui SI hay que resincronizar y refrescar incluso durante dsInsert.
+  // Al pulsar "+" desde una cabecera ya cargada, AfterInsert pone NUMERO='0'
+  // y AfterScroll dispara. Si saltamos por completo, las lineas del inventario
+  // anterior siguen en cdsLineas y aparecen bajo la cabecera nueva (NUMERO=0).
+  // En lugar de saltar, delegamos en CargarLineasInventario, que ya rechaza
+  // FNumero='0' como marcador y vacia cdsLineas sin consultar la BD.
   SetClavesActivas( DataSet.FieldByName('CODIGO_EMP_INV').AsString,
                     DataSet.FieldByName('CODIGO_ALM_INV').AsString,
                     DataSet.FieldByName('SERIE_INV').AsString,
