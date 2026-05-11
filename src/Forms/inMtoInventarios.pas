@@ -170,6 +170,9 @@ type
       AItem: TcxCustomGridTableItem; var AAllow: Boolean);
     procedure tvLineasInitEdit(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+    procedure tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit;
+      var Key: Word; Shift: TShiftState);
     procedure OnAtributoChanged(Sender: TObject);
     procedure ForzarDespliegue(Sender: TObject);
 
@@ -767,6 +770,28 @@ begin
       Combo.ItemIndex := 0;
     end;
   end;
+end;
+
+procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
+  AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit; var Key: Word;
+  Shift: TShiftState);
+var
+  Combo: TcxComboBox;
+begin
+  // Pulsar Enter en una columna de atributo (Color, Talla, ...) sin valor
+  // seleccionado debe coger la primera opcion de la lista, igual que en
+  // inMtoCajaOpe. Sin esto, el usuario que da Enter encadenado por las
+  // celdas se queda con los atributos vacios y la linea no se puede grabar.
+  if Key <> VK_RETURN then Exit;
+  if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
+  if not (AEdit is TcxComboBox) then Exit;
+  Combo := TcxComboBox(AEdit);
+  if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') and
+     (Combo.Properties.Items.Count > 0) then
+    Combo.ItemIndex := 0;
+  if Combo.DroppedDown then
+    Combo.DroppedDown := False;
+  Combo.PostEditValue;
 end;
 
 procedure TfrmMtoInventarios.ForzarDespliegue(Sender: TObject);

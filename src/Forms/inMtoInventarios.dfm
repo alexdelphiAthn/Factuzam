@@ -346,6 +346,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
                   OnEditing = tvLineasEditing
+                  OnEditKeyDown = tvLineasEditKeyDown
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
                   OnInitEdit = tvLineasInitEdit
                   DataController.Summary.FooterSummaryItems = <
