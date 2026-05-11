@@ -1,4 +1,4 @@
-unit ScanDateTime;
+unit inLibScanDateTime;
 
 
 interface
