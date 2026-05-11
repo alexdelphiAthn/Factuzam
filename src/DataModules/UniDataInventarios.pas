@@ -94,6 +94,7 @@ type
     procedure cdsLineasAfterPost(DataSet: TDataSet);
     procedure cdsLineasBeforePost(DataSet: TDataSet);
     procedure cdsLineasBeforeDelete(DataSet: TDataSet);
+    procedure cdsLineasBeforeInsert(DataSet: TDataSet);
     procedure cdsLineasCalcFields(DataSet: TDataSet);
     procedure cdsLineasNewRecord(DataSet: TDataSet);
   private
@@ -176,11 +177,23 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmInventarios.CargarLineasInventario;
 begin
-  if (FCodigoEmpresa = '') or (FNumero = '') then
+  // FNumero='0' es el marcador de "cabecera todavia sin numero asignado":
+  // unqryTablaGAfterInsert lo pone, y BeforePost lo sustituye por el numero
+  // real via GetCodigoAutoInventario. Si consultamos lineas con '0', traemos
+  // cualquier linea huerfana persistida con esa clave de una insercion
+  // previa que se cancelo despues de grabar lineas (registro fantasma).
+  if (FCodigoEmpresa = '') or (FNumero = '') or (FNumero = '0') then
   begin
     if cdsLineas.Active then cdsLineas.EmptyDataSet;
     Exit;
   end;
+
+  // Defensa contra reentrada: cdsLineasBeforeInsert puede llamar a
+  // unqryTablaG.Post mientras cdsLineas esta a punto de entrar en dsInsert.
+  // Si en esa secuencia AfterScroll/Refresh acaba reentrando aqui, cerrar
+  // cdsLineas a mitad de un Insert deja el dataset en un estado inconsistente.
+  if cdsLineas.Active and (cdsLineas.State in [dsInsert, dsEdit]) then
+    Exit;
 
   unqryLineas.Close;
   unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
@@ -311,10 +324,16 @@ end;
 
 procedure TdmInventarios.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
-  // Cuando navegamos por las cabeceras, refrescamos las dependientes
+  // Cuando navegamos por las cabeceras, refrescamos las dependientes.
   if DataSet.IsEmpty then
     Exit;
   if DataSet.ControlsDisabled then
+    Exit;
+  // En dsInsert (recien Append/Insert), NUMERO_INV='0' es solo el marcador
+  // que BeforePost sustituira por el contador real. Si en ese momento
+  // recargamos lineas, consultaremos WHERE NUMERO_INV_INVLIN='0' y traeremos
+  // cualquier linea huerfana persistida con esa clave: el "registro fantasma".
+  if DataSet.State <> dsBrowse then
     Exit;
   SetClavesActivas( DataSet.FieldByName('CODIGO_EMP_INV').AsString,
                     DataSet.FieldByName('CODIGO_ALM_INV').AsString,
@@ -696,6 +715,46 @@ procedure TdmInventarios.cdsLineasBeforeDelete(DataSet: TDataSet);
 begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create('No se pueden eliminar líneas: el inventario no está ABIERTO');
+end;
+
+procedure TdmInventarios.cdsLineasBeforeInsert(DataSet: TDataSet);
+begin
+  // Antes de aceptar la insercion de una linea, exigimos que la cabecera
+  // tenga un NUMERO_INV definitivo. Si la cabecera sigue en dsInsert con
+  // NUMERO_INV='0' (marcador), cdsLineasNewRecord copiaria ese '0' a
+  // NUMERO_INV_INVLIN y cdsLineasAfterPost lo persistiria via ApplyUpdates.
+  // Cuando despues la cabecera reciba su numero real, esa linea queda
+  // huerfana y aparece como "registro fantasma" la siguiente vez que se
+  // inserta un inventario nuevo (FNumero='0').
+  if (unqryTablaG = nil) or (not unqryTablaG.Active) then Exit;
+  if unqryTablaG.State in [dsInsert, dsEdit] then
+  begin
+    try
+      unqryTablaG.Post;
+    except
+      on E: Exception do
+      begin
+        // Si no se puede grabar la cabecera, abortamos la insercion de
+        // linea: dejar entrar a una linea sin cabecera grabada generaria
+        // un fantasma. Re-elevamos para que el llamante vea el motivo.
+        raise Exception.Create(
+          'No se puede a' + #241 + 'adir una l' + #237 + 'nea: ' +
+          'la cabecera del inventario no se ha podido grabar.' + sLineBreak +
+          E.Message + sLineBreak +
+          'Completa los datos obligatorios de la cabecera y vuelve a intentarlo.');
+      end;
+    end;
+    // Tras el Post, BeforePost ha sustituido NUMERO_INV='0' por el numero
+    // real (via GetCodigoAutoInventario). Resincronizamos las claves activas
+    // para que cdsLineasNewRecord use el NUMERO real al rellenar la nueva
+    // linea, y no quede ningun resto del marcador '0'.
+    SetClavesActivas(
+      unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString,
+      unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString,
+      unqryTablaG.FieldByName('SERIE_INV').AsString,
+      unqryTablaG.FieldByName('NUMERO_INV').AsString
+    );
+  end;
 end;
 
 function TdmInventarios.GetEstadoInventario: string;
