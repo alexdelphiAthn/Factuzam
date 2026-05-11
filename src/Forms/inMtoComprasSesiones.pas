@@ -164,6 +164,9 @@ type
     btnDelKit                : TcxButton;
     btnImportarKitPrv        : TcxButton;
     pnlLineasTop             : TPanel;
+    pnlLineasBotones         : TPanel;
+    pnlPropsTop              : TPanel;
+    pnlKitsTop               : TPanel;
     cxgrdLineas              : TcxGrid;
     tvLineas                 : TcxGridDBTableView;
     glLineas                 : TcxGridLevel;
