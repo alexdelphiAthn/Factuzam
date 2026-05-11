@@ -77,10 +77,10 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqrySesionProps: TUniQuery
     SQL.Strings = (
-      'SELECT P.*, PR.NOMBRE_PROP, PR.TIPO_PROP'
+      'SELECT P.*, PR.NOMBRE_PROP_PROP, PR.TIPO_VALOR_PROP'
       '  FROM fza_compras_sesiones_props P'
       '  LEFT JOIN fza_propiedades PR'
-      '    ON PR.CODIGO_PROP = P.CODIGO_PROP_SESPROP'
+      '    ON PR.CODIGO_PROP_ARTPROP = P.CODIGO_PROP_SESPROP'
       'WHERE P.SERIE_SES_SESPROP = :SERIE_SES'
       '  AND P.NUMERO_SES_SESPROP = :NUMERO_SES'
       'ORDER BY P.ORDEN_SESPROP')
@@ -156,7 +156,7 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryProveedores: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_PRV, RAZON_SOCIAL_PRV FROM fza_proveedores'
+      'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV FROM fza_proveedores'
       'WHERE ESACTIVO_PRV = '#39'S'#39
       'ORDER BY RAZON_SOCIAL_PRV')
     Left = 344
@@ -196,7 +196,7 @@ object dmComprasSesiones: TdmComprasSesiones
     SQL.Strings = (
       'SELECT VA.*, COALESCE(VA.NOMBRE_VISIBLE_VA, VA.NOMBRE_VA) AS LABEL_VA'
       '  FROM fza_variaciones_atributos VA'
-      'WHERE VA.CODIGO_VAR_VA = :CODIGO_VAR_SES'
+      'WHERE VA.ID_VAR_VA = :CODIGO_VAR_SES'
       'ORDER BY VA.ORDEN_VA')
     MasterSource = dsTablaG
     Left = 56
@@ -235,10 +235,10 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryPropiedades: TUniQuery
     SQL.Strings = (
-      'SELECT P.CODIGO_PROP, P.NOMBRE_PROP, P.TIPO_PROP,'
+      'SELECT P.CODIGO_PROP_ARTPROP, P.NOMBRE_PROP_PROP, P.TIPO_VALOR_PROP,'
       '       FA.ESREQUERIDO_FA, FA.ORDEN_MOSTRAR_FA'
       '  FROM fza_familias_atributos FA'
-      '  JOIN fza_propiedades P ON P.CODIGO_PROP = FA.CODIGO_PROP_ARTPROP'
+      '  JOIN fza_propiedades P ON P.CODIGO_PROP_ARTPROP = FA.CODIGO_PROP_ARTPROP'
       'WHERE FA.CODIGO_FAM_FAM = :CODIGO_FAM_SES'
       'ORDER BY FA.ORDEN_MOSTRAR_FA')
     MasterSource = dsTablaG
@@ -252,9 +252,9 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryPropiedadesValores: TUniQuery
     SQL.Strings = (
-      'SELECT ID_PV, CODIGO_PROP_PV, VALOR_PV'
+      'SELECT ID_PV_ARTPROP, ID_PROP_PV, PV'
       '  FROM fza_propiedades_valores'
-      'ORDER BY CODIGO_PROP_PV, VALOR_PV')
+      'ORDER BY ID_PROP_PV, PV')
     Left = 440
     Top = 240
   end
@@ -277,9 +277,9 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryAlmacenes: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_ALM, NOMBRE_ALM FROM fza_almacenes'
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM FROM fza_almacenes'
       'WHERE ESACTIVO_ALM = '#39'S'#39
-      'ORDER BY NOMBRE_ALM')
+      'ORDER BY NOMBRE_ALM_ALM')
     Left = 56
     Top = 352
   end
@@ -290,8 +290,8 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryTarifas: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_TAR, NOMBRE_TAR FROM fza_tarifas'
-      'ORDER BY NOMBRE_TAR')
+      'SELECT CODIGO_TAR_TAR, NOMBRE_TAR_TAR FROM fza_tarifas'
+      'ORDER BY NOMBRE_TAR_TAR')
     Left = 152
     Top = 352
   end
@@ -302,7 +302,7 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryEmpresas: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_EMP, RAZON_SOCIAL_EMP FROM fza_empresas'
+      'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP FROM fza_empresas'
       'ORDER BY RAZON_SOCIAL_EMP')
     Left = 248
     Top = 352
