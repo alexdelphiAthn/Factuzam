@@ -57,7 +57,7 @@ function ListarPedidosResumen(const aBaseURL, aApiKey:string;
 implementation
 
 uses
-  ScanDateTime;
+  inLibScanDateTime;
 
 { TPrestaConn }
 

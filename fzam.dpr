@@ -76,8 +76,8 @@ uses
   UniDataUsuariosPerfiles in 'src\DataModules\UniDataUsuariosPerfiles.pas' {dmUsuariosPerfiles: TDataModule},
   UniDataFacturas in 'src\DataModules\UniDataFacturas.pas' {dmFacturas: TdmFacturas},
   UniDataGenFilter in 'src\DataModules\UniDataGenFilter.pas' {dmGenFilter: TDataModule},
-  inMtoPedidos in 'src\Forms\inMtoPedidos.pas',
-  UniDataPedidos in 'src\DataModules\UniDataPedidos.pas' {/cxButtonHelper in 'cxButtonHelper.pas';},
+  inMtoPedidos in 'src\Forms\inMtoPedidos.pas' {frmMtoPedidos},
+  UniDataPedidos in 'src\DataModules\UniDataPedidos.pas' {/cxButtonHelper in 'cxButtonHelper.pas';: TdmPedidos},
   inMtoPaises in 'src\Forms\inMtoPaises.pas' {frmMtoPaises},
   UniDataPaises in 'src\DataModules\UniDataPaises.pas' {dmPaises: TDataModule},
   inLibCertificates in 'src\Lib\inLibCertificates.pas',
@@ -145,14 +145,24 @@ uses
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
-  // ---- Compras: Sesiones (pre-pedidos / pre-albaranes) -----------------
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
-  inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas';
+  inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
+  inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
+  inLibArticulosValidador in 'src\Lib\inLibArticulosValidador.pas',
+  inLibArticulosResolver in 'src\Lib\inLibArticulosResolver.pas',
+  inMtoModalAddPreciosTar in 'src\Modals\inMtoModalAddPreciosTar.pas' {frmMtoModalAddPreciosTar},
+  inMtoModalCalcularMargen in 'src\Modals\inMtoModalCalcularMargen.pas' {frmModalCalcularMargen},
+  inLibArticulosAtributosLookup in 'src\Lib\inLibArticulosAtributosLookup.pas',
+  inMtoModalScriptLog in 'src\Modals\inMtoModalScriptLog.pas' {frmMtoModalScriptLog},
+  inLibPresta in 'src\Lib\inLibPresta.pas',
+  inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
+  inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
+  inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas';
 
 var
   frmLogon: TfrmLogon;
@@ -190,5 +200,9 @@ begin
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmMtoModalAltaRapida, frmMtoModalAltaRapida);
+  Application.CreateForm(TfrmMtoModalAddPreciosTar, frmMtoModalAddPreciosTar);
+  Application.CreateForm(TfrmMtoModalScriptLog, frmMtoModalScriptLog);
+  Application.CreateForm(TfrmModalImportarPedidosPS, frmModalImportarPedidosPS);
   Application.Run;
 end.

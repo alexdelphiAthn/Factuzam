@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibPresta                                                   }
 {    Tipo:       Librería                                                      }
@@ -18,7 +18,7 @@ unit inLibPresta;
 interface
 
 uses
-  SysUtils, DateUtils, ScanDateTime, System.Generics.Collections;
+  SysUtils, DateUtils, inLibScanDateTime, System.Generics.Collections;
 
 type
   TAddress = record

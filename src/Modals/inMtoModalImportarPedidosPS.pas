@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImportarPedidosPS                                   }
 {    Tipo:       Formulario (Modal)                                            }
@@ -28,7 +28,7 @@ uses
   cxDropDownEdit, cxListBox, cxCheckListBox, cxNavigator,
   cxPropertiesStore, dxSkinsForm,
   System.Generics.Collections,
-  UniDataPedidos, inLibPresta, inLibPrestaImporter;
+  UniDataPedidos, inLibPresta, inLibPrestaImporter, Vcl.Menus;
 
 type
   TfrmModalImportarPedidosPS = class(TForm)

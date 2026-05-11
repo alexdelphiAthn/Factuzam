@@ -157,9 +157,6 @@
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
-        <DCCReference Include="src\Lib\ScanDateTime.pas"/>
-        <DCCReference Include="src\Lib\inLibPresta.pas"/>
-        <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -333,24 +330,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataPedidos.pas">
-            <Form>dmPedidos</Form>
+            <Form>/cxButtonHelper in &apos;cxButtonHelper.pas&apos;;</Form>
             <DesignClass>TdmPedidos</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoAlbaranes.pas">
-            <Form>frmMtoAlbaranes</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataAlbaranes.pas">
-            <Form>dmAlbaranes</Form>
-            <DesignClass>TdmAlbaranes</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalImportarPedidosPS.pas">
-            <Form>frmModalImportarPedidosPS</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
-            <Form>frmModalFacturarAlbaranesFechas</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoPaises.pas">
             <Form>frmMtoPaises</Form>
@@ -433,9 +414,6 @@
         <DCCReference Include="src\Lib\inLibEAN13.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosPropiedades.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
-        <DCCReference Include="src\Lib\inLibArticulosValidador.pas"/>
-        <DCCReference Include="src\Lib\inLibArticulosAtributosLookup.pas"/>
-        <DCCReference Include="src\Lib\inLibArticulosResolver.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAceptCancel.pas">
             <Form>frmModalAceptCancel</Form>
             <FormType>dfm</FormType>
@@ -493,104 +471,51 @@
             <Form>frmModalAddBlockTarifa</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalAddPreciosTar.pas">
-            <Form>frmMtoModalAddPreciosTar</Form>
-            <FormType>dfm</FormType>
+        <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
+        <DCCReference Include="src\DataModules\UniDataComprasSesiones.pas">
+            <Form>dmComprasSesiones</Form>
+            <DesignClass>TdmComprasSesiones</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
+            <Form>frmMtoComprasSesiones</Form>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoComprasPlantillas.pas">
+            <Form>frmMtoComprasPlantillas</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSesionMaterializar.pas">
+            <Form>frmModalSesionMaterializar</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSesionDuplicado.pas">
+            <Form>frmModalSesionDuplicado</Form>
+        </DCCReference>
+        <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAltaRapida.pas">
             <Form>frmMtoModalAltaRapida</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalScriptLog.pas">
-            <Form>frmMtoModalScriptLog</Form>
+        <DCCReference Include="src\Lib\inLibArticulosValidador.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosResolver.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalAddPreciosTar.pas">
+            <Form>frmMtoModalAddPreciosTar</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCalcularMargen.pas">
             <Form>frmModalCalcularMargen</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
-        <DCCReference Include="src\Forms\inMtoVariaciones.pas">
-            <Form>frmMtoVariaciones</Form>
+        <DCCReference Include="src\Lib\inLibArticulosAtributosLookup.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalScriptLog.pas">
+            <Form>frmMtoModalScriptLog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataVariaciones.pas">
-            <Form>dmVariaciones</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmVariaciones</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoAtributosConjuntos.pas">
-            <Form>frmMtoAtributosConjuntos</Form>
+        <DCCReference Include="src\Lib\inLibPresta.pas"/>
+        <DCCReference Include="src\Lib\inLibScanDateTime.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalImportarPedidosPS.pas">
+            <Form>frmModalImportarPedidosPS</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataAtributosConjuntos.pas">
-            <Form>dmAtributosConjuntos</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmAtributosConjuntos</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoMovimientosAlmacen.pas">
-            <Form>frmMtoMovimientosAlmacen</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataMovimientosAlmacen.pas">
-            <Form>dmMovimientosAlmacen</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmMovimientosAlmacen</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaPagosHist.pas">
-            <Form>frmMtoCajaPagosHist</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaPagosHist.pas">
-            <Form>dmCajaPagosHist</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmCajaPagosHist</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaValesHist.pas">
-            <Form>frmMtoCajaValesHist</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaValesHist.pas">
-            <Form>dmCajaValesHist</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmCajaValesHist</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaOperacionesHist.pas">
-            <Form>frmMtoCajaOperacionesHist</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaOperacionesHist.pas">
-            <Form>dmCajaOperacionesHist</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmCajaOperacionesHist</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoDepositosCliente.pas">
-            <Form>frmMtoDepositosCliente</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataDepositosCliente.pas">
-            <Form>dmDepositosCliente</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmDepositosCliente</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoPropiedades.pas">
-            <Form>frmMtoPropiedades</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataPropiedades.pas">
-            <Form>dmPropiedades</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmPropiedades</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoPropiedadesValores.pas">
-            <Form>frmMtoPropiedadesValores</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataPropiedadesValores.pas">
-            <Form>dmPropiedadesValores</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TdmPropiedadesValores</DesignClass>
-        </DCCReference>
+        <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

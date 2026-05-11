@@ -11,10 +11,8 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 15
   object pnlTop: TPanel
     Left = 0
@@ -23,12 +21,12 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
     Height = 90
     Align = alTop
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 0
     object lblBaseURL: TcxLabel
       Left = 8
       Top = 8
       Caption = 'URL base API PrestaShop (ej. http://midominio.com/api)'
+      TabOrder = 3
     end
     object edtBaseURL: TcxTextEdit
       Left = 8
@@ -40,13 +38,14 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Left = 8
       Top = 50
       Caption = 'API Key'
+      TabOrder = 4
     end
     object edtApiKey: TcxTextEdit
       Left = 8
       Top = 64
+      Properties.EchoMode = eemPassword
       TabOrder = 1
       Width = 540
-      Properties.EchoMode = eemPassword
     end
     object btnConectar: TcxButton
       Left = 560
@@ -54,9 +53,8 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Width = 130
       Height = 30
       Caption = 'Conectar y listar'
-      OnClick = btnConectarClick
       TabOrder = 2
-      Style.Font.Style = [fsBold]
+      OnClick = btnConectarClick
     end
   end
   object pnlMid: TPanel
@@ -75,9 +73,6 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Align = alClient
       TabOrder = 0
       object tvPedidos: TcxGridTableView
-        DataController.Summary.DefaultGroupSummaryItems = <>
-        DataController.Summary.FooterSummaryItems = <>
-        DataController.Summary.SummaryGroups = <>
         OptionsView.GroupByBox = False
         object colSel: TcxGridColumn
           Caption = 'Sel.'
@@ -130,7 +125,7 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Left = 8
       Top = 14
       Caption = 'Listo'
-      Style.Font.Style = [fsItalic]
+      TabOrder = 2
     end
     object btnImportar: TcxButton
       Left = 660
@@ -138,9 +133,8 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Width = 120
       Height = 28
       Caption = 'Importar selecci'#243'n'
-      OnClick = btnImportarClick
       TabOrder = 0
-      Style.Font.Style = [fsBold]
+      OnClick = btnImportarClick
     end
     object btnCerrar: TcxButton
       Left = 790
@@ -148,8 +142,8 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Width = 100
       Height = 28
       Caption = 'Cerrar'
-      OnClick = btnCerrarClick
       TabOrder = 1
+      OnClick = btnCerrarClick
     end
   end
 end
