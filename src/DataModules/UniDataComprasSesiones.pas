@@ -81,7 +81,7 @@ type
     // Detección de duplicados al teclear código de artículo
     unqryArticuloExiste: TUniQuery;
 
-    // Contador propio (SESCOMPRA)
+    // Contador propio: TIPO_DOC_CON = 'SC' (Sesion de Compra; varchar(2))
     unstrdprcGetContadorSesion: TUniStoredProc;
 
     // Stored procs auxiliares (validación, etc.)
@@ -290,7 +290,7 @@ procedure TdmComprasSesiones.GetCodigoAutoSesion;
 begin
   with unstrdprcGetContadorSesion do
   begin
-    ParamByName('ptipodoc').AsString := 'SESCOMPRA';
+    ParamByName('ptipodoc').AsString := 'SC';
     ParamByName('pUSUARIO').AsString := oUser;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_SES').AsString :=
