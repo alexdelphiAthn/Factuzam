@@ -290,6 +290,10 @@ procedure TdmComprasSesiones.GetCodigoAutoSesion;
 begin
   with unstrdprcGetContadorSesion do
   begin
+    Params.Clear;
+    Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    Params.CreateParam(ftString, 'pcont',    ptOutput);
+    Params.CreateParam(ftString, 'pUSUARIO', ptInput);
     ParamByName('ptipodoc').AsString := 'SC';
     ParamByName('pUSUARIO').AsString := oUser;
     ExecProc;
