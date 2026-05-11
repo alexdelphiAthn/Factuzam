@@ -1,4 +1,18 @@
-﻿unit inLibGenerarTicket;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibGenerarTicket                                            }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Generación e impresión de tickets de venta en caja.                       }
+{    Compone el ticket a partir de los datos de la operación y lo imprime.     }
+{******************************************************************************}
+unit inLibGenerarTicket;
 
 interface
 uses

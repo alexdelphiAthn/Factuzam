@@ -1,18 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Modal: Calcular margen comercial                }
-{       (a partir de coste, margen, ajuste y menos      }
-{        calcula el precio de salida en vivo; al        }
-{        aceptar persiste el coste en                   }
-{        fza_articulos_skus_costes (si la fila es de    }
-{        SKU específico) o en fza_articulos_proveedores }
-{        (si es la fila padre del artículo), y el       }
-{        precio salida en fza_articulos_tarifas)        }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalCalcularMargen                                      }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal para calcular el margen comercial de un articulo o SKU.             }
+{    Persiste coste y precio de salida al aceptar.                             }
+{******************************************************************************}
 unit inMtoModalCalcularMargen;
 
 interface

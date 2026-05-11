@@ -1,4 +1,18 @@
-﻿unit inLibArticulosPropiedades;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosPropiedades                                     }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Gestión dinámica de propiedades de artículo.                              }
+{    Inyecta controles en la pestaña de propiedades y persiste sus valores.    }
+{******************************************************************************}
+unit inLibArticulosPropiedades;
 
 {
   Unidad: inLibArticuloPropiedades

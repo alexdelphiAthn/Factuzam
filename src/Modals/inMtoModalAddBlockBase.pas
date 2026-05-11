@@ -1,17 +1,17 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{       Modal base: Carga masiva con filtros            }
-{       Heredan: inMtoModalAddBlockTarifa,              }
-{                inMtoModalAddBlockInventario           }
-{                                                       }
-{       NO instanciar directamente.                     }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalAddBlockBase                                        }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal base para carga masiva de articulos con filtros.                    }
+{    NO instanciar directamente; usar las clases hijas (Tarifa/Inventario).    }
+{******************************************************************************}
 unit inMtoModalAddBlockBase;
 
 interface

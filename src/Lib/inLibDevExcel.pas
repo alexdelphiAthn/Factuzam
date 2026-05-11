@@ -1,4 +1,18 @@
-﻿unit inLibDevExcel;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibDevExcel                                                 }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Helpers para escribir en hojas dxSpreadSheet de DevExpress.               }
+{    Funciones de fusión, escritura y formato de celdas y fórmulas.            }
+{******************************************************************************}
+unit inLibDevExcel;
 
 interface
 

@@ -1,4 +1,18 @@
-﻿unit inMtoPreviewTicket;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoPreviewTicket                                            }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Previsualizador de tickets ESC/POS con exportación a PDF.                 }
+{    Interpreta los comandos de la impresora y renderiza el ticket en pantalla.}
+{******************************************************************************}
+unit inMtoPreviewTicket;
 
 interface
 uses

@@ -1,4 +1,18 @@
-﻿unit inLibCertificates;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibCertificates                                             }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Lectura del almacén de certificados digitales de Windows.                 }
+{    Expone serie, emisor, titular y caducidad de los certificados instalados. }
+{******************************************************************************}
+unit inLibCertificates;
 
 interface
 uses

@@ -1,4 +1,18 @@
-﻿unit inLibDefaultValues;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibDefaultValues                                            }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Configuración por defecto de formularios de búsqueda.                     }
+{    Aplica grids y plantillas de alta rápida por entidad del sistema.         }
+{******************************************************************************}
+unit inLibDefaultValues;
 
 interface
 

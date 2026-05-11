@@ -1,4 +1,18 @@
-﻿unit inLibFacturas;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibFacturas                                                 }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Lógica de cálculo y persistencia de facturas.                             }
+{    Totales de IVA, recargo de equivalencia y generación de líneas.           }
+{******************************************************************************}
+unit inLibFacturas;
 
 interface
 

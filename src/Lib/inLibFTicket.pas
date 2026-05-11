@@ -1,4 +1,18 @@
-﻿unit inLibFTicket;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibFTicket                                                  }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Composición y envío de tickets a impresoras térmicas ESC/POS.             }
+{    Soporta fuentes, alineación, imágenes, corte de papel y apertura de cajón.}
+{******************************************************************************}
+unit inLibFTicket;
 
 interface
 uses

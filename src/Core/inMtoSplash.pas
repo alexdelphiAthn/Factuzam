@@ -1,18 +1,18 @@
 {******************************************************************************}
 {                                                                              }
-{  M骴ulo:      inMtoSplash                                                    }
-{  Versi髇:     1.0.0                                                          }
-{  Fecha:       06/02/2026                                                     }
-{  Autor:       Alejandro Laorden Hidalgo                                      }
+{  M贸dulo:       inMtoSplash                                                   }
+{    Tipo:       Formulario (Core)                                             }
+{ Versi贸n:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripci髇:                                                                }
-{    Este formulario es un formulario de informaci髇 sobre el autor.           }
-{    No tiene ning鷑 prop髎ito funcional, pero es importante agradecer a quien }
+{  Descripci贸n:                                                                }
+{    Este formulario es un formulario de informaci贸n sobre el autor.           }
+{    No tiene ning煤n prop贸sito funcional, pero es importante agradecer a quien }
 {    te ha dado una mano.                                                      }
 {******************************************************************************}
-
 unit inMtoSplash;
 
 interface

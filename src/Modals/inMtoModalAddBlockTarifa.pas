@@ -1,12 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Modal: A~adir bloque a Tarifa                   }
-{       (carga masiva de articulos en una tarifa)       }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalAddBlockTarifa                                      }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal de carga masiva de articulos en una tarifa.                         }
+{    Hereda de AddBlockBase y permite ajustes de precio y descuento.           }
+{******************************************************************************}
 unit inMtoModalAddBlockTarifa;
 
 interface

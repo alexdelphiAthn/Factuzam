@@ -1,12 +1,17 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Modal: A~adir bloque a Inventario               }
-{       (carga masiva de SKUs en un inventario)         }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalAddBlockInventario                                  }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal de carga masiva de SKUs en un inventario.                           }
+{    Hereda de AddBlockBase y aplica filtros propios de inventario.            }
+{******************************************************************************}
 unit inMtoModalAddBlockInventario;
 
 interface

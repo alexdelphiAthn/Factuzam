@@ -1,4 +1,18 @@
-﻿unit inLibDivCurr;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibDivCurr                                                  }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Cliente de la API pública frankfurter.app (BCE).                          }
+{    Consulta tasas de cambio actuales e históricas entre divisas.             }
+{******************************************************************************}
+unit inLibDivCurr;
 
 {
   ============================================================

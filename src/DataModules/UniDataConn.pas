@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataConn                                                   }
-{    Tipo:       DataModule                                                    }
+{    Tipo:       Data Module                                                   }
 { Versión:       1.0.0                                                         }
 {   Fecha:       19/03/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -10,12 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Esta unidad proporciona la lógica necesaria para realizar la conexión     }
-{    principal de todos los datos, por aquí pasa todo desde que se hizo login  }
-{    Se declara inMtoPrincipal como FDmConn: TdmConn; y es accesible desde     }
-{    la biblioteca inLibGlobalVar como oConn                                   }
+{    principal de todos los datos, por aquí pasa todo desde que se hizo login. }
 {******************************************************************************}
-
-
 unit UniDataConn;
 
 interface

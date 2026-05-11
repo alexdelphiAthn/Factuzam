@@ -13,7 +13,6 @@
 {    de Previsualización de Hoja de Cálculo. Tiene una tradución propia.       }
 {    que es inLibdxSpreadSheetStrs_ESP, ejecutando ApplySpanishTranslation;    }
 {******************************************************************************}
-
 unit inMtoPreviewExcel;
 
 interface

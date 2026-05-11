@@ -1,4 +1,18 @@
-﻿unit inMtoCajaReferenciaPago;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoCajaReferenciaPago                                       }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Captura de referencia de pago y datos de divisa.                          }
+{    Usado para tarjeta, transferencia, criptomonedas y similares.             }
+{******************************************************************************}
+unit inMtoCajaReferenciaPago;
 {
   Formulario para captura de referencia de pago y datos de divisa
   Usado para pagos con tarjeta, transferencias, criptomonedas, etc.

@@ -1,4 +1,18 @@
-﻿unit inLibGenBusq;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibGenBusq                                                  }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Lanzamiento genérico de formularios de búsqueda.                          }
+{    Devuelve el dataset o el valor seleccionado por el usuario.               }
+{******************************************************************************}
+unit inLibGenBusq;
 
 interface
 uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,

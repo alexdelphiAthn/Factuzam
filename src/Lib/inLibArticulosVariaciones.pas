@@ -1,4 +1,19 @@
-﻿unit inLibArticulosVariaciones;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosVariaciones                                     }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Gestión dinámica de variaciones y SKUs de artículo.                       }
+{    Edita los conjuntos de atributos y el catálogo de SKUs activos del        }
+{    artículo.                                                                 }
+{******************************************************************************}
+unit inLibArticulosVariaciones;
 
 {
   Unidad: inLibArticulosVariaciones

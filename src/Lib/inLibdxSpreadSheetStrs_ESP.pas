@@ -1,4 +1,18 @@
-﻿unit inLibdxSpreadSheetStrs_ESP;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibdxSpreadSheetStrs_ESP                                    }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Traducción al castellano de los recursos de dxSpreadSheet.                }
+{    Sobrescribe los textos de menús, diálogos y mensajes del componente.      }
+{******************************************************************************}
+unit inLibdxSpreadSheetStrs_ESP;
 
 interface
   procedure ApplySpanishTranslation;

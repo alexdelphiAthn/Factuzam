@@ -1,6 +1,4 @@
-﻿unit inMtoPrincipal;
-
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPrincipal                                                }
 {    Tipo:       Formulario (Core)                                             }
@@ -15,6 +13,7 @@
 {    Principal de entrada al programa donde está el menú con todas las opcio-  }
 {    nes disponibles. Guarda estructuras como Conexión a BBDD.                 }
 {******************************************************************************}
+unit inMtoPrincipal;
 
 interface
 

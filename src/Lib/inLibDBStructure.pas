@@ -1,17 +1,17 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:      inLibDBStructure                                               }
-{    Tipo:      Unidad de utilidades (Core)                                    }
-{ Versión:      1.0.0                                                          }
-{   Fecha:      05/05/2026                                                     }
-{   Autor:      Alejandro Laorden Hidalgo                                      }
+{  Módulo:       inLibDBStructure                                              }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       05/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Verifica la estructura mínima de la base de datos Factuzam antes de       }
-{    permitir el login. Devuelve un resultado tipado con detalle de los        }
-{    objetos que faltan, para que el llamante pueda decidir qué hacer.         }
+{    permitir el login y reporta los objetos que faltan.                       }
 {******************************************************************************}
-
 unit inLibDBStructure;
 
 interface

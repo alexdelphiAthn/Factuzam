@@ -1,10 +1,10 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:      inMtoLogon                                                     }
-{    Tipo:      Formulario (Core)                                              }
-{ Versión:      1.0.0                                                          }
-{   Fecha:      06/02/2026                                                     }
-{   Autor:      Alejandro Laorden Hidalgo                                      }
+{  Módulo:       inMtoLogon                                                    }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
@@ -13,7 +13,6 @@
 {    Presenta la primera pantalla de autenficación de usuario. También permite }
 {    Configurar la conexión a MySQL/MariaDB con su contraseña. Hace copias     }
 {******************************************************************************}
-
 unit inMtoLogon;
 
 interface

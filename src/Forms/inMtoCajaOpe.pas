@@ -1,4 +1,18 @@
-﻿unit inMtoCajaOpe;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoCajaOpe                                                  }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Operativa de caja: introduccion de lineas de venta.                       }
+{    Captura articulos, atributos y descuentos del ticket actual.              }
+{******************************************************************************}
+unit inMtoCajaOpe;
 
 interface
 
