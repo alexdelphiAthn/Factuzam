@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibArticulosAtributosLookup                                 }
 {    Tipo:       Librería                                                      }
@@ -91,9 +91,9 @@ type
     function TipoDesdeCadena(const s: string): TTipoValorPropiedad;
     procedure CargarValoresAtributo(const AIdAtributo: string;
                                     const AIdConjunto: Integer;
-                                    out AValores: TArray<TArticuloAtributoValor>);
+                                  out AValores: TArray<TArticuloAtributoValor>);
     procedure CargarValoresPropiedad(const ACodigoPropiedad: string;
-                                     out AValores: TArray<TArticuloAtributoValor>);
+                                  out AValores: TArray<TArticuloAtributoValor>);
   public
     constructor Create(AConexion: TUniConnection);
 
@@ -248,7 +248,8 @@ begin
       '       aca.ID_AC_ACA, ' +
       '       ac.NOMBRE_AC ' +
       '  FROM fza_articulos a ' +
-      '  JOIN fza_variaciones_atributos va ON va.ID_VAR_VA = a.TIPO_VARIACION_ART ' +
+      '  JOIN fza_variaciones_atributos va ' +
+      '    ON va.ID_VAR_VA = a.TIPO_VARIACION_ART ' +
       '  LEFT JOIN fza_articulos_conjuntos_asign aca ' +
       '    ON aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
       '   AND aca.ID_VA_ACA      = va.ID_ATB_VA ' +
@@ -300,13 +301,18 @@ begin
   try
     q.Connection := FConexion;
     q.SQL.Text   :=
-      'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-      '       ap.ID_PV_ARTPROP, ap.VALOR_LIBRE_ARTPROP, ' +
+      'SELECT p.CODIGO_PROP_ARTPROP, ' +
+      '       p.NOMBRE_PROP_PROP, ' +
+      '       p.TIPO_VALOR_PROP, ' +
+      '       ap.ID_PV_ARTPROP, '  +
+      '       ap.VALOR_LIBRE_ARTPROP, ' +
       '       COALESCE(fa.ESREQUERIDO_FA, ''N'') AS ESREQUERIDO_FA, ' +
       '       COALESCE(fa.ORDEN_MOSTRAR_FA, 999) AS ORDEN_MOSTRAR_FA ' +
       '  FROM fza_articulos_propiedades ap ' +
-      '  JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
-      '  LEFT JOIN fza_articulos art ON art.CODIGO_ART_ART = ap.CODIGO_ART_ART ' +
+      '  JOIN fza_propiedades p ' +
+      '    ON p.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
+      '  LEFT JOIN fza_articulos art ' +
+      '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_ART ' +
       '  LEFT JOIN fza_familias_atributos fa ' +
       '    ON fa.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
       '   AND fa.CODIGO_FAM_FAM      = art.CODIGO_FAM_ART ' +
@@ -320,7 +326,8 @@ begin
       P := Default(TArticuloPropiedad);
       P.Codigo             := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
       P.Nombre             := q.FieldByName('NOMBRE_PROP_PROP').AsString;
-      P.TipoValor          := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
+      P.TipoValor          :=
+                     TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
       P.EsRequerido        := q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
       P.Orden              := q.FieldByName('ORDEN_MOSTRAR_FA').AsInteger;
       P.IdValorAsignado    := q.FieldByName('ID_PV_ARTPROP').AsInteger;
@@ -358,11 +365,16 @@ begin
   try
     q.Connection := FConexion;
     q.SQL.Text   :=
-      'SELECT av.ID_AV, av.AV, av.DESCRIPCION_AV, av.ORDEN_AV, av.ESACTIVO_AV, ' +
+      'SELECT av.ID_AV, av.AV, '   +
+      '       av.DESCRIPCION_AV, ' +
+      '       av.ORDEN_AV, ' +
+      '       av.ESACTIVO_AV, ' +
       '       va.ORDEN_VA ' +
       '  FROM fza_atributos_sku sa ' +
-      '  JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
-      '  LEFT JOIN fza_articulos_skus sk ON sk.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA ' +
+      '  JOIN fza_atributos_valores av ' +
+      '    ON av.ID_AV = sa.ID_AV_SA ' +
+      '  LEFT JOIN fza_articulos_skus sk ' +
+      '    ON sk.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA ' +
       '  LEFT JOIN fza_variaciones_atributos va ' +
       '    ON va.ID_VAR_VA = sk.CODIGO_VAR_SKU ' +
       '   AND va.ID_ATB_VA = av.ID_VA_AV ' +
