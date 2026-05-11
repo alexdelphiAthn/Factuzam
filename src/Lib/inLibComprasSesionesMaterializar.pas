@@ -9,7 +9,7 @@ unit inLibComprasSesionesMaterializar;
   el principio "nada se crea hasta el botón" sea verificable revisando
   un solo archivo.
 
-  Pasos (todos dentro de una TUniTransaction):
+  Pasos (todos dentro de una transacción de la conexión global):
     1. Validación previa (reusa inLibComprasSesiones.ValidarSesion).
     2. Verificar conflictos de código de artículo no resueltos.
     3. Para cada línea:
@@ -23,7 +23,7 @@ unit inLibComprasSesionesMaterializar;
          a. INSERT en fza_articulos_skus (CODIGO_UNIDAD compuesto).
          b. INSERT en fza_atributos_sku con los ID_AV (uno por atributo:
             fila + pivot).
-         c. Generar EAN13 con inLibEAN13.GenerarEAN13 e INSERT en
+         c. Generar EAN13 con GenerarEAN13Local (usa CalcularDigitoEAN13) e INSERT en
             fza_codigos_barras.
     5. Para líneas ESCALAR (sin matriz): INSERT en fza_codigos_barras a
        nivel de artículo (CODIGO_UNIDAD_CB = CODIGO_ART_ART) con EAN13 nuevo.
@@ -63,6 +63,54 @@ uses
   inLibGlobalVar,
   inLibEAN13,
   inLibComprasSesiones;
+
+// ---------------------------------------------------------------------------
+// Generación local de EAN13
+// ---------------------------------------------------------------------------
+// inLibEAN13 sólo expone CalcularDigitoEAN13 / EsEAN13Valido. La generación
+// del secuencial vive aquí: tomamos el siguiente correlativo dentro del
+// prefijo elegido y le añadimos el dígito de control. Se invoca dentro de
+// la transacción de materialización, por lo que dos sesiones concurrentes
+// no pueden colisionar (el SELECT + INSERT del código de barras ocurre en
+// la misma transacción que el aislamiento de MySQL garantiza vía
+// row-locking en InnoDB).
+function GenerarEAN13Local(AConn: TUniConnection;
+                           const APrefijo: string): string;
+var
+  q       : TUniQuery;
+  sPref   : string;
+  iLenSeq : Integer;
+  iNext   : Int64;
+  sBase   : string;
+  cCheck  : Char;
+begin
+  sPref := APrefijo;
+  if sPref = '' then sPref := '841';      // prefijo por defecto
+  iLenSeq := 12 - Length(sPref);
+  if iLenSeq <= 0 then
+    raise Exception.Create('PREFIJO_EAN_SES demasiado largo: ' + sPref);
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'SELECT IFNULL(MAX(CAST(SUBSTRING(CODIGO_BARRAS_CB, :pl + 1, :lq) AS UNSIGNED)), 0) + 1 AS N ' +
+      '  FROM fza_codigos_barras ' +
+      ' WHERE CODIGO_BARRAS_CB LIKE :pat ' +
+      '   AND TIPO_CODIGO_CB = ''EAN13''';
+    q.ParamByName('pl').AsInteger  := Length(sPref);
+    q.ParamByName('lq').AsInteger  := iLenSeq;
+    q.ParamByName('pat').AsString  := sPref + '%';
+    q.Open;
+    iNext := q.FieldByName('N').AsLargeInt;
+  finally
+    q.Free;
+  end;
+
+  sBase  := sPref + Format('%.*d', [iLenSeq, iNext]);
+  cCheck := inLibEAN13.CalcularDigitoEAN13(sBase);
+  Result := sBase + cCheck;
+end;
 
 // ---------------------------------------------------------------------------
 // Auxiliares internas
@@ -286,7 +334,7 @@ begin
       qIns.ExecSQL;
 
       // EAN13
-      sEAN13 := inLibEAN13.GenerarEAN13(AConn, APrefijoEAN);
+      sEAN13 := GenerarEAN13Local(AConn, APrefijoEAN);
 
       qBar.SQL.Text :=
         'INSERT INTO fza_codigos_barras ' +
@@ -348,7 +396,6 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string): Boolean;
 var
-  tx        : TUniTransaction;
   conn      : TUniConnection;
   sSerieSes, sNumSes, sPrefijoEAN: string;
   sCodigoPrv: string;
@@ -357,6 +404,7 @@ var
   sCodigoArt: string;
   iLin      : Integer;
   rPrecio   : Double;
+  bTxOwned  : Boolean;
 begin
   Result    := False;
   ASeriePed := ''; ANumPed := '';
@@ -376,13 +424,9 @@ begin
   sCodigoPrv  := ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
   sPrefijoEAN := ADM.unqryTablaG.FieldByName('PREFIJO_EAN_SES').AsString;
 
-  tx := TUniTransaction.Create(nil);
+  bTxOwned := not conn.InTransaction;
+  if bTxOwned then conn.StartTransaction;
   try
-    tx.DefaultConnection := conn;
-    tx.AddConnection(conn);
-    tx.IsolationLevel    := ilReadCommitted;
-    tx.StartTransaction;
-
     qLin := TUniQuery.Create(nil);
     try
       qLin.Connection := conn;
@@ -474,14 +518,14 @@ begin
       qLin.Free;
     end;
 
-    tx.Commit;
+    if bTxOwned and conn.InTransaction then conn.Commit;
     Result := True;
   except
     on E: Exception do
     begin
-      if tx.InTransaction then tx.Rollback;
+      if bTxOwned and conn.InTransaction then conn.Rollback;
       AMsgError := E.Message;
-      // Persistir el mensaje en MENSAJE_ERROR_SES sin transacción
+      // Persistir el mensaje en MENSAJE_ERROR_SES fuera de la transacción
       try
         qLin := TUniQuery.Create(nil);
         try
@@ -503,8 +547,6 @@ begin
       end;
     end;
   end;
-
-  tx.Free;
 end;
 
 end.
