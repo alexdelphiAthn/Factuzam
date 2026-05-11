@@ -363,7 +363,7 @@ begin
     celda.ValorPivot := FColumnas[i].ValorPivot;
     celda.Cantidad   := 0;
     celda.Editor     := CrearSpin(FContenedor, x, ATop, COL_WIDTH);
-    celda.Editor.OnEditValueChanged := OnCantidadChange;
+    celda.Editor.Properties.OnEditValueChanged := OnCantidadChange;
     celda.Editor.Tag := (F.FilaID shl 16) or FColumnas[i].IdAvPivot;
     F.Celdas.Add(celda);
     Inc(x, COL_WIDTH);
