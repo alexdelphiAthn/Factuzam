@@ -44,6 +44,19 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_caja_vales`                     | `VL`      |
 | `fza_clientes`                       | `CLI`     |
 | `fza_codigos_barras`                 | `CB`      |
+| `fza_compras_plantillas`             | `SESPL`   |
+| `fza_compras_plantillas_kits`        | `SESPLKIT`|
+| `fza_compras_plantillas_kits_det`    | `SESPLKITD`|
+| `fza_compras_plantillas_props`       | `SESPLPROP`|
+| `fza_compras_sesiones`               | `SES`     |
+| `fza_compras_sesiones_celdas`        | `SESCEL`  |
+| `fza_compras_sesiones_kits`          | `SESKIT`  |
+| `fza_compras_sesiones_kits_det`      | `SESKITD` |
+| `fza_compras_sesiones_lineas`        | `SESLIN`  |
+| `fza_compras_sesiones_lineas_filas`  | `SESFIL`  |
+| `fza_compras_sesiones_lineas_filas_atr`| `SESFILAT`|
+| `fza_compras_sesiones_lineas_props`  | `SESLPROP`|
+| `fza_compras_sesiones_props`         | `SESPROP` |
 | `fza_config_campos`                  | `CC`      |
 | `fza_contadores`                     | `CON`     |
 | `fza_depositos_cliente`              | `DEP`     |

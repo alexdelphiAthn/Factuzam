@@ -144,7 +144,15 @@ uses
   inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
-  inLibDBStructure in 'src\Lib\inLibDBStructure.pas';
+  inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
+  // ---- Compras: Sesiones (pre-pedidos / pre-albaranes) -----------------
+  UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
+  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
+  inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
+  inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
+  inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
+  inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
+  inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas';
 
 var
   frmLogon: TfrmLogon;
