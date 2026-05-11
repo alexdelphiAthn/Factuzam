@@ -179,7 +179,6 @@ type
     FStopwatch: TStopwatch;
     FLogForm: TForm;
     FLogMemo: TSynEdit;
-    FLogHigSQL: TSynSQLSyn;
     FSavedNCM: TNonClientMetrics;
     FSavedNCMValid: Boolean;
     // procedure AppException(Sender: TObject; E: Exception);
@@ -221,6 +220,7 @@ uses inLibUser,
   inMtoCajaMenu,
   inMtoCajaParam,
   inMtoModalGenFilter,
+  inMtoModalScriptLog,
   inLibCajaParam,
   inLibAppParam,
   inLibBuscarImpresora,
@@ -751,32 +751,14 @@ begin
         end;
       end;
       try
-        FLogForm := TForm.Create(Self);
-        FLogForm.Caption := 'Progreso de Ejecución del Script';
-        FLogForm.Width := 750;
-        FLogForm.Height := 500;
-        FLogForm.Position := poMainFormCenter;
-        FLogForm.OnClose := LogFormClose; // Para que se destruya al cerrar
-        FLogMemo := TSynEdit.Create(FLogForm);
-        FLogHigSQL := TSynSQLSyn.Create(FlogForm);
-        FlogMemo.Highlighter := FLogHigSQL;
-        FLogHigSQL.SQLDialect := sqlMySQL;
-        Floghigsql.Enabled := True;
-//        FlogHigSQl.Options.AutoDetectEnabled := True;
-        FLogMemo.Parent := FLogForm;
-        FLogMemo.Align := alClient;
-        FlogMemo.Gutter.AutoSize := True;
-        FlogMemo.Gutter.ShowLineNumbers := True;
-        FLogMemo.ScrollBars := TScrollstyle.ssBoth;
-        FLogMemo.ReadOnly := True;
-        FLogMemo.Font.Name := 'Consolas';
-        FLogMemo.Font.Size := 12;
-        FLogMemo.WordWrap := False;
+        var LogFrm := TfrmMtoModalScriptLog.Create(Self);
+        FLogForm := LogFrm;
+        FLogForm.OnClose := LogFormClose;
+        FLogMemo := LogFrm.LogMemo;
         FLogMemo.Lines.Add('-- INICIO DE EJECUCIÓN DEL SCRIPT --');
         FLogMemo.Lines.Add('-- Archivo: ' +
                                           ExtractFileName(openDialog.FileName));
         FLogMemo.Lines.Add('-------------------------------------------------');
-        // Mostramos la ventana de forma no modal para poder actualizarla
         FLogForm.Show;
         SqlScript.Execute;
         FdmConn.conUni.Commit;
