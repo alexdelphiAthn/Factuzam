@@ -265,8 +265,8 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryIvas: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_IVA, TIPO_IVA, DESCRIPCION_IVA FROM fza_ivas'
-      'ORDER BY ORDEN_IVA')
+      'SELECT IVA_IVAGRP, DESCRIPCION_IVA_IVAGRP FROM fza_ivas_grupos'
+      'ORDER BY IVA_IVAGRP')
     Left = 536
     Top = 240
   end
