@@ -142,6 +142,8 @@ type
     mnuAlbaranesVenta: TMenuItem;
     procedure mnuPedidosVentaClick(Sender: TObject);
     procedure mnuAlbaranesVentaClick(Sender: TObject);
+    procedure Sesiones1Click(Sender: TObject);
+    procedure CrearArtculosyunpedidoounalbarn1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
     procedure mnuProveedoresClick(Sender: TObject);
@@ -959,6 +961,21 @@ begin
   inherited;
   if mnuAlbaranesVenta.Visible then
     ShowMto(Self, 'Albaranes');
+end;
+
+procedure TfrmMtoPrincipal.Sesiones1Click(Sender: TObject);
+begin
+  inherited;
+  if Sesiones1.Visible then
+    ShowMto(Self, 'ComprasSesiones');
+end;
+
+procedure TfrmMtoPrincipal.CrearArtculosyunpedidoounalbarn1Click(
+  Sender: TObject);
+begin
+  inherited;
+  if CrearArtculosyunpedidoounalbarn1.Visible then
+    ShowMto(Self, 'ComprasSesiones');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
