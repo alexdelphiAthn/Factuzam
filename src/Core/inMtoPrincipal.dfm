@@ -1141,8 +1141,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Caption = 'Compras'
       object Sesiones1: TMenuItem
         Caption = 'Sesiones'
+        OnClick = Sesiones1Click
         object CrearArtculosyunpedidoounalbarn1: TMenuItem
           Caption = 'Crear art'#237'culos y un pedido o un albar'#225'n'
+          OnClick = CrearArtculosyunpedidoounalbarn1Click
         end
       end
       object Pedidos1: TMenuItem
