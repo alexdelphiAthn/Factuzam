@@ -290,7 +290,7 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryTarifas: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_TAR, NOMBRE_TAR FROM fza_tarifas'
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR FROM vi_tarifas'
       'ORDER BY NOMBRE_TAR')
     Left = 152
     Top = 352
