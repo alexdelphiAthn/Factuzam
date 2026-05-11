@@ -347,6 +347,7 @@ uses
   inMtoModalArtTar,
   inLibGlobalVar,
   inMtoModalGenerarSKUs,
+  inMtoModalAddPreciosTar,
   inMtoModalCalcularMargen,
   inLibEAN13,
   inLibtb;
@@ -670,13 +671,11 @@ end;
 
 procedure TfrmMtoArticulos.btnAddSKUClick(Sender: TObject);
 var
-  frmSel: TfrmModalAceptCancel;
-  lblSkus, lblTarifas, lblDesde, lblHasta: TLabel;
-  chkSkus, chkTarifas: TcxCheckListBox;
-  pnlFechas: TPanel;
-  dtpDesde, dtpHasta: TcxDateEdit;
+  frmSel: TfrmMtoModalAddPreciosTar;
   i, j: Integer;
   qryTodasTarifas: TUniQuery;
+  ListaSkus, ListaTarifas: TStringList;
+  SkusSel, TarifasSel: TStringList;
   // --- VARIABLES PARA CONTROL DE VIGENCIA ---
   TarifasActivas: TStringList;
   Bkm: TBookmark;
@@ -692,99 +691,35 @@ begin
     dmmArticulos.unqryTablaG.Post;
 
   CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-//  if dmmArticulos.unqryVariacionesArticulos.IsEmpty then
-//  begin
-//    ShowMessage('No hay SKUs generados para este artículo.');
-//    Exit;
-//  end;
 
-  // Instanciamos tu modal base
-  frmSel := TfrmModalAceptCancel.Create(Self);
+  frmSel := TfrmMtoModalAddPreciosTar.Create(Self);
+  frmSel.OnClose := nil; // evitamos el caFree heredado para poder hacer Free manual
+  ListaSkus    := TStringList.Create;
+  ListaTarifas := TStringList.Create;
+  SkusSel      := TStringList.Create;
+  TarifasSel   := TStringList.Create;
   try
-    frmSel.OnClose := nil;
-    frmSel.Caption := 'Añadir SKUs a Tarifas';
-    frmSel.Width := 550;
-    frmSel.Height := 600;
-
-    // --- SECCIÓN FECHAS (NUEVO) ---
-    pnlFechas := TPanel.Create(frmSel);
-    pnlFechas.Parent := frmSel.pnlBody;
-    pnlFechas.Align := alTop;
-    pnlFechas.Height := 50;
-    pnlFechas.Top := 500; // Lo primero de todo
-    pnlFechas.BevelOuter := bvNone;
-
-    lblDesde := TLabel.Create(frmSel);
-    lblDesde.Parent := pnlFechas;
-    lblDesde.Caption := 'Vigente Desde:';
-    lblDesde.Left := 10;
-    lblDesde.Top := 16;
-    lblDesde.Font.Style := [fsBold];
-
-    dtpDesde := TcxDateEdit.Create(frmSel);
-    dtpDesde.Parent := pnlFechas;
-    dtpDesde.Left := 150;  // <-- Aún más a la derecha (antes 130)
-    dtpDesde.Top := 13;
-    dtpDesde.Width := 110;
-    dtpDesde.Date := Date; // Por defecto hoy
-
-    lblHasta := TLabel.Create(frmSel);
-    lblHasta.Parent := pnlFechas;
-    lblHasta.Caption := 'Hasta (Opcional):';
-    lblHasta.Left := 280;
-    lblHasta.Top := 16;
-
-    dtpHasta := TcxDateEdit.Create(frmSel);
-    dtpHasta.Parent := pnlFechas;
-    dtpHasta.Left := 410;
-    dtpHasta.Top := 13;
-    dtpHasta.Width := 110;
-
-    // --- SECCIÓN SKUs ---
-    lblSkus := TLabel.Create(frmSel);
-    lblSkus.Parent := frmSel.pnlBody;
-    lblSkus.Caption := ' 1. Seleccione los SKUs:';
-    lblSkus.Font.Style := [fsBold];
-    lblSkus.AlignWithMargins := True;
-    lblSkus.Top := 1000;
-    lblSkus.Align := alTop;
-
-    chkSkus := TcxCheckListBox.Create(frmSel);
-    chkSkus.Parent := frmSel.pnlBody;
-    chkSkus.Height := 170;
-    chkSkus.AlignWithMargins := True;
-    chkSkus.Top := 2000;
-    chkSkus.Align := alTop;
-    chkSkus.Items.Add.Text := 'ARTÍCULO';
-    if dmmArticulos.unqryVariacionesArticulos.Active = False then
+    // --- CARGA DE SKUs ---
+    ListaSkus.Add('ARTÍCULO');
+    if not dmmArticulos.unqryVariacionesArticulos.Active then
       dmmArticulos.unqryVariacionesArticulos.Open;
     with dmmArticulos.unqryVariacionesArticulos do
     begin
       DisableControls;
-      First;
-      while not Eof do
-      begin
-        chkSkus.Items.Add.Text := FieldByName('CODIGO_UNIDAD_SKU').AsString;
-        Next;
+      try
+        First;
+        while not Eof do
+        begin
+          ListaSkus.Add(FieldByName('CODIGO_UNIDAD_SKU').AsString);
+          Next;
+        end;
+      finally
+        EnableControls;
       end;
-      EnableControls;
     end;
+    frmSel.CargarSkus(ListaSkus);
 
-    // --- SECCIÓN TARIFAS ---
-    lblTarifas := TLabel.Create(frmSel);
-    lblTarifas.Parent := frmSel.pnlBody;
-    lblTarifas.Caption := ' 2. Seleccione las Tarifas:';
-    lblTarifas.Font.Style := [fsBold];
-    lblTarifas.AlignWithMargins := True;
-    lblTarifas.Top := 3000;
-    lblTarifas.Align := alTop;
-
-    chkTarifas := TcxCheckListBox.Create(frmSel);
-    chkTarifas.Parent := frmSel.pnlBody;
-    chkTarifas.AlignWithMargins := True;
-    chkTarifas.Align := alClient;
-
-    // Consultamos TODAS las tarifas activas
+    // --- CARGA DE TARIFAS ACTIVAS ---
     qryTodasTarifas := TUniQuery.Create(nil);
     try
       qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
@@ -793,129 +728,113 @@ begin
                                   '   WHERE ESACTIVO_ARTTAR = ''S'' ' +
                                   'ORDER BY ORDEN_TAR';
       qryTodasTarifas.Open;
-
       while not qryTodasTarifas.Eof do
       begin
-        chkTarifas.Items.Add.Text :=
-                      qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+        ListaTarifas.Add(
+                     qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString);
         qryTodasTarifas.Next;
       end;
     finally
       qryTodasTarifas.Free;
     end;
+    frmSel.CargarTarifas(ListaTarifas);
+
     frmSel.ShowModal;
-    if frmSel.sFicha = 'S' then
-    begin
-      UserDesde := dtpDesde.Date;
-      TieneUserHasta := not VarIsNull(dtpHasta.EditValue);
-      if TieneUserHasta then UserHasta := dtpHasta.Date;
-      dmmArticulos.unqryTarifasArticulos.DisableControls;
-      TarifasActivas := TStringList.Create;
-      TarifasActivas.Sorted := True;
-      TarifasActivas.Duplicates := dupIgnore;
-      try
-        Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
-        dmmArticulos.unqryTarifasArticulos.First;
-        while not dmmArticulos.unqryTarifasArticulos.Eof do
+    if frmSel.sFicha <> 'S' then Exit;
+
+    frmSel.ObtenerSkusSeleccionados(SkusSel);
+    frmSel.ObtenerTarifasSeleccionadas(TarifasSel);
+    UserDesde      := frmSel.FechaDesde;
+    TieneUserHasta := frmSel.TieneFechaHasta;
+    if TieneUserHasta then UserHasta := frmSel.FechaHasta;
+
+    dmmArticulos.unqryTarifasArticulos.DisableControls;
+    TarifasActivas := TStringList.Create;
+    TarifasActivas.Sorted := True;
+    TarifasActivas.Duplicates := dupIgnore;
+    try
+      Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
+      dmmArticulos.unqryTarifasArticulos.First;
+      while not dmmArticulos.unqryTarifasArticulos.Eof do
+      begin
+        DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                             'FECHA_DESDE_ARTTAR').AsDateTime;
+        DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                                 'FECHA_HASTA_ARTTAR').IsNull;
+        if not DbHastaIsNull then
+          DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                             'FECHA_HASTA_ARTTAR').AsDateTime;
+        Cond1 := (not TieneUserHasta) or (DbDesde <= UserHasta);
+        Cond2 := DbHastaIsNull or (UserDesde <= DbHasta);
+        HaySolapamiento := Cond1 and Cond2;
+        if HaySolapamiento then
         begin
-          DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                               'FECHA_DESDE_ARTTAR').AsDateTime;
-          DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                                   'FECHA_HASTA_ARTTAR').IsNull;
-          if not DbHastaIsNull then
-            DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                               'FECHA_HASTA_ARTTAR').AsDateTime;
-          Cond1 := (not TieneUserHasta) or (DbDesde <= UserHasta);
-          Cond2 := DbHastaIsNull or (UserDesde <= DbHasta);
-          HaySolapamiento := Cond1 and Cond2;
-          if HaySolapamiento then
-          begin
-            LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString + '|' +
-                          dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-            TarifasActivas.Add(LlaveUnica); // Marcamos combinación como ocupada en estas fechas
-          end;
-          dmmArticulos.unqryTarifasArticulos.Next;
+          LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString + '|' +
+                        dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+          TarifasActivas.Add(LlaveUnica); // Marcamos combinación como ocupada en estas fechas
         end;
-        if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
-          dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
-        dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
-        for i := 0 to chkSkus.Items.Count - 1 do
-        begin
-          if chkSkus.Items[i].Checked then
-          begin
-            for j := 0 to chkTarifas.Items.Count - 1 do
-            begin
-              if chkTarifas.Items[j].Checked then
-              begin
-                // EVALUAMOS QUÉ GUARDAR SI ES "GENERAL"
-                if chkSkus.Items[i].Text = 'ARTÍCULO' then
-                begin
-                  // Opción recomendada: lo dejamos en blanco para que sea la tarifa global del artículo
-                  LlaveUnica := '' + '|' + chkTarifas.Items[j].Text;
-                end
-                else
-                begin
-                  LlaveUnica := chkSkus.Items[i].Text + '|' + chkTarifas.Items[j].Text;
-                end;
-
-                // Solo insertamos si la combinación NO choca en fechas
-                if TarifasActivas.IndexOf(LlaveUnica) = -1 then
-                begin
-                  dmmArticulos.unqryTarifasArticulos.Append;
-
-                  // Asignamos el valor correspondiente al campo SKU
-                  if chkSkus.Items[i].Text = 'ARTÍCULO' then
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := ''
-                  else
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := chkSkus.Items[i].Text;
-
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString := chkTarifas.Items[j].Text;
-
-                  // Para filas de SKU heredamos el precio del padre (fila del
-                  // artículo en la misma tarifa) si existe; si no, queda a 0.
-                  if chkSkus.Items[i].Text = 'ARTÍCULO' then
-                    PrecioPadre := 0
-                  else
-                    PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
-                                                 codArticulo,
-                                                 chkTarifas.Items[j].Text);
-
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
-                  // Si arranca a 0 la tarifa nace inactiva (sin preguntar);
-                  // BeforePost se encarga de las transiciones posteriores.
-                  if PrecioPadre > 0 then
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S'
-                  else
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'N';
-
-                  // Aplicamos las fechas que eligió el usuario
-                  dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
-                  if TieneUserHasta then
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
-                  else
-                    dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').Clear;
-
-                  dmmArticulos.unqryTarifasArticulos.Post;
-
-                  // Blindamos la memoria por si acaso
-                  TarifasActivas.Add(LlaveUnica);
-                end;
-              end;
-            end;
-          end;
-        end;
-      finally
-        TarifasActivas.Free;
-        dmmArticulos.unqryTarifasArticulos.EnableControls;
+        dmmArticulos.unqryTarifasArticulos.Next;
       end;
-      dmmArticulos.unqryTarifasArticulos.Refresh;
-      ActualizarVisibilidadColumnaSku;
-//      pcDetail.ActivePage := tsTarifas;
-//      if tvTarifas.CanFocus then tvTarifas.SetFocus;
-    end;
+      if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
+        dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
+      dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
 
+      for i := 0 to SkusSel.Count - 1 do
+      begin
+        for j := 0 to TarifasSel.Count - 1 do
+        begin
+          if SkusSel[i] = 'ARTÍCULO' then
+            LlaveUnica := '|' + TarifasSel[j]
+          else
+            LlaveUnica := SkusSel[i] + '|' + TarifasSel[j];
+
+          if TarifasActivas.IndexOf(LlaveUnica) <> -1 then Continue;
+
+          dmmArticulos.unqryTarifasArticulos.Append;
+          if SkusSel[i] = 'ARTÍCULO' then
+            dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := ''
+          else
+            dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := SkusSel[i];
+
+          dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString := TarifasSel[j];
+
+          // Para filas de SKU heredamos el precio del padre (fila del
+          // artículo en la misma tarifa) si existe; si no, queda a 0.
+          if SkusSel[i] = 'ARTÍCULO' then
+            PrecioPadre := 0
+          else
+            PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
+                                                       codArticulo,
+                                                       TarifasSel[j]);
+
+          dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
+          dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
+          if PrecioPadre > 0 then
+            dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S'
+          else
+            dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'N';
+
+          dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
+          if TieneUserHasta then
+            dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
+          else
+            dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').Clear;
+
+          dmmArticulos.unqryTarifasArticulos.Post;
+          TarifasActivas.Add(LlaveUnica);
+        end;
+      end;
+    finally
+      TarifasActivas.Free;
+      dmmArticulos.unqryTarifasArticulos.EnableControls;
+    end;
+    dmmArticulos.unqryTarifasArticulos.Refresh;
+    ActualizarVisibilidadColumnaSku;
   finally
+    SkusSel.Free;
+    TarifasSel.Free;
+    ListaSkus.Free;
+    ListaTarifas.Free;
     frmSel.Free;
   end;
 end;

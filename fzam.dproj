@@ -493,6 +493,18 @@
             <Form>frmModalAddBlockTarifa</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalAddPreciosTar.pas">
+            <Form>frmMtoModalAddPreciosTar</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalAltaRapida.pas">
+            <Form>frmMtoModalAltaRapida</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalScriptLog.pas">
+            <Form>frmMtoModalScriptLog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCalcularMargen.pas">
             <Form>frmModalCalcularMargen</Form>
             <FormType>dfm</FormType>
