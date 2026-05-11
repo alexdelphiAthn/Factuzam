@@ -262,8 +262,8 @@ begin
 
     qC.SQL.Text :=
       'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, C.CANTIDAD_SESCEL, ' +
-      '       AVP.VALOR_AV AS VAL_PIVOT, ' +
-      '       (SELECT GROUP_CONCAT(AV2.VALOR_AV SEPARATOR ''/'') ' +
+      '       AVP.AV AS VAL_PIVOT, ' +
+      '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'') ' +
       '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
       '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = FA.ID_AV_SESFILAT ' +
       '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +

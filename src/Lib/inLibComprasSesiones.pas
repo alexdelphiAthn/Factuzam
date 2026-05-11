@@ -198,17 +198,17 @@ begin
   try
     q.Connection := inLibGlobalVar.oConn;
     q.SQL.Text :=
-      'SELECT ACD.ID_AV_ACD, AV.VALOR_AV ' +
+      'SELECT ACD.ID_AV_ACD, AV.AV AS VALOR ' +
       '  FROM fza_atributos_conjuntos_det ACD ' +
       '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
       ' WHERE ACD.ID_AC_ACD = :p ' +
-      ' ORDER BY ACD.ORDEN_ACD, AV.VALOR_AV';
+      ' ORDER BY ACD.ORDEN_ACD, AV.AV';
     q.ParamByName('p').AsInteger := AIdAcPivot;
     q.Open;
     while not q.Eof do
     begin
       C.IdAvPivot  := q.FieldByName('ID_AV_ACD').AsInteger;
-      C.ValorPivot := q.FieldByName('VALOR_AV').AsString;
+      C.ValorPivot := q.FieldByName('VALOR').AsString;
       C.LblColumna  := nil;
       C.LblTotalCol := nil;
       FColumnas.Add(C);
@@ -245,7 +245,7 @@ begin
       F.FilaID := qF.FieldByName('ID_FILA_SESFIL').AsInteger;
       // Recoger valor de eje fila (puede haber 1 o N atributos)
       qA.SQL.Text :=
-        'SELECT AV.VALOR_AV, FA.ID_AV_SESFILAT, FA.ID_VA_SESFILAT ' +
+        'SELECT AV.AV AS VALOR, FA.ID_AV_SESFILAT, FA.ID_VA_SESFILAT ' +
         '  FROM fza_compras_sesiones_lineas_filas_atr FA ' +
         '  JOIN fza_atributos_valores AV ON AV.ID_AV = FA.ID_AV_SESFILAT ' +
         ' WHERE FA.SERIE_SES_SESFILAT = :s AND FA.NUMERO_SES_SESFILAT = :n ' +
@@ -260,7 +260,7 @@ begin
       while not qA.Eof do
       begin
         if F.EtiquetaFila <> '' then F.EtiquetaFila := F.EtiquetaFila + ' / ';
-        F.EtiquetaFila := F.EtiquetaFila + qA.FieldByName('VALOR_AV').AsString;
+        F.EtiquetaFila := F.EtiquetaFila + qA.FieldByName('VALOR').AsString;
         if F.IdAvFila = 0 then
           F.IdAvFila := qA.FieldByName('ID_AV_SESFILAT').AsInteger;
         qA.Next;

@@ -223,8 +223,8 @@ object dmComprasSesiones: TdmComprasSesiones
   end
   object unqryAtributosValores: TUniQuery
     SQL.Strings = (
-      'SELECT ID_AV, VALOR_AV, ID_VA_AV FROM fza_atributos_valores'
-      'ORDER BY ID_VA_AV, VALOR_AV')
+      'SELECT ID_AV, AV, ID_VA_AV FROM fza_atributos_valores'
+      'ORDER BY ID_VA_AV, AV')
     Left = 248
     Top = 240
   end
