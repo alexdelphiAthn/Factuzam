@@ -2,7 +2,6 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
   Caption = 'A'#241'adir precios a Tarifas'
   ClientHeight = 600
   ClientWidth = 550
-  OnCreate = FormCreate
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 566
   ExplicitHeight = 639
@@ -10,8 +9,9 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
   inherited pnlButton: TPanel
     Top = 541
     Width = 550
-    ExplicitTop = 541
-    ExplicitWidth = 550
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitTop = 533
+    ExplicitWidth = 548
     inherited btnCancelar: TcxButton
       Left = 40
       ExplicitLeft = 40
@@ -24,55 +24,17 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
   inherited pnlBody: TPanel
     Width = 550
     Height = 541
-    ExplicitWidth = 550
-    ExplicitHeight = 541
-    object pnlFechas: TPanel
-      Left = 0
-      Top = 0
-      Width = 550
-      Height = 65
-      Align = alTop
-      BevelOuter = bvNone
-      TabOrder = 0
-      object lblDesde: TLabel
-        Left = 12
-        Top = 22
-        Width = 100
-        Height = 22
-        Caption = 'Vigente desde:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -16
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object lblHasta: TLabel
-        Left = 280
-        Top = 22
-        Width = 116
-        Height = 19
-        Caption = 'Hasta (opcional):'
-      end
-      object dtpDesde: TcxDateEdit
-        Left = 150
-        Top = 19
-        TabOrder = 0
-        Width = 120
-      end
-      object dtpHasta: TcxDateEdit
-        Left = 410
-        Top = 19
-        TabOrder = 1
-        Width = 120
-      end
-    end
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 0
+    ExplicitTop = 0
+    ExplicitWidth = 548
+    ExplicitHeight = 533
     object lblSkus: TLabel
       AlignWithMargins = True
-      Left = 10
-      Top = 71
-      Width = 530
-      Height = 22
+      Left = 11
+      Top = 72
+      Width = 528
+      Height = 19
       Margins.Left = 10
       Margins.Top = 6
       Margins.Right = 10
@@ -83,31 +45,18 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Tahoma'
+      Font.Pitch = fpFixed
       Font.Style = [fsBold]
+      Font.Quality = fqClearTypeNatural
       ParentFont = False
-      ExplicitWidth = 206
-    end
-    object chkSkus: TcxCheckListBox
-      AlignWithMargins = True
-      Left = 10
-      Top = 97
-      Width = 530
-      Height = 180
-      Margins.Left = 10
-      Margins.Top = 2
-      Margins.Right = 10
-      Margins.Bottom = 4
-      Align = alTop
-      ItemHeight = 22
-      Items = <>
-      TabOrder = 1
+      ExplicitWidth = 191
     end
     object lblTarifas: TLabel
       AlignWithMargins = True
-      Left = 10
-      Top = 287
-      Width = 530
-      Height = 22
+      Left = 11
+      Top = 285
+      Width = 528
+      Height = 19
       Margins.Left = 10
       Margins.Top = 6
       Margins.Right = 10
@@ -118,24 +67,86 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Tahoma'
+      Font.Pitch = fpFixed
       Font.Style = [fsBold]
+      Font.Quality = fqClearTypeNatural
       ParentFont = False
-      ExplicitWidth = 217
+      ExplicitWidth = 206
+    end
+    object pnlFechas: TPanel
+      Left = 1
+      Top = 1
+      Width = 548
+      Height = 65
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 0
+      ExplicitWidth = 546
+      object lblDesde: TLabel
+        Left = 12
+        Top = 22
+        Width = 122
+        Height = 19
+        Caption = 'Vigente desde:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Tahoma'
+        Font.Pitch = fpFixed
+        Font.Style = [fsBold]
+        Font.Quality = fqClearTypeNatural
+        ParentFont = False
+      end
+      object lblHasta: TLabel
+        Left = 280
+        Top = 22
+        Width = 142
+        Height = 19
+        Caption = 'Hasta (opcional):'
+      end
+      object dtpDesde: TcxDateEdit
+        Left = 141
+        Top = 19
+        TabOrder = 0
+        Width = 120
+      end
+      object dtpHasta: TcxDateEdit
+        Left = 424
+        Top = 19
+        TabOrder = 1
+        Width = 120
+      end
+    end
+    object chkSkus: TcxCheckListBox
+      AlignWithMargins = True
+      Left = 11
+      Top = 95
+      Width = 528
+      Height = 180
+      Margins.Left = 10
+      Margins.Top = 2
+      Margins.Right = 10
+      Margins.Bottom = 4
+      Align = alTop
+      Items = <>
+      TabOrder = 1
+      ExplicitWidth = 526
     end
     object chkTarifas: TcxCheckListBox
       AlignWithMargins = True
-      Left = 10
-      Top = 315
-      Width = 530
-      Height = 222
+      Left = 11
+      Top = 308
+      Width = 528
+      Height = 228
       Margins.Left = 10
       Margins.Top = 2
       Margins.Right = 10
       Margins.Bottom = 4
       Align = alClient
-      ItemHeight = 22
       Items = <>
       TabOrder = 2
+      ExplicitWidth = 526
+      ExplicitHeight = 220
     end
   end
 end

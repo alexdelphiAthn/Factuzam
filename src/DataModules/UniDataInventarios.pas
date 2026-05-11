@@ -366,6 +366,11 @@ begin
                                        ObtenerSeriePorDefecto(oEmpresa, 'IN');
 end;
 
+procedure TdmInventarios.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+//
+end;
+
 procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   // Forzamos campos de auditoría

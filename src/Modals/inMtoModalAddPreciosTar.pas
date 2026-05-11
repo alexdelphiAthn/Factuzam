@@ -10,7 +10,7 @@ uses
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxClasses,
   cxLocalization, cxContainer, cxEdit, cxButtons, cxTextEdit, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxCustomListBox, cxCheckListBox,
-  inMtoModalAceptCancel;
+  inMtoModalAceptCancel, Vcl.ComCtrls, dxCore, cxDateUtils, cxCheckBox;
 
 type
   TfrmMtoModalAddPreciosTar = class(TfrmModalAceptCancel)
