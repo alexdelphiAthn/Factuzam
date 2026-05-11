@@ -1,11 +1,18 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataGeneradorProcesos                                      }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module del generador de procesos.                                    }
+{    Maneja fza_generador_procesos: metadatos, estructura, contenido y         }
+{    ejecución de comandos.                                                    }
+{******************************************************************************}
 unit UniDataGeneradorProcesos;
 
 interface

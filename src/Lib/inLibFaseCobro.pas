@@ -1,4 +1,18 @@
-﻿unit inLibFaseCobro;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibFaseCobro                                                }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Gestión de la fase de cobro en el punto de venta.                         }
+{    Totales, cambio, validación de deuda y gestión de formas de pago.         }
+{******************************************************************************}
+unit inLibFaseCobro;
 
 {
   Biblioteca para gestión de fase de cobro en punto de venta

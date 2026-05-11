@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoCajaOperacionesHist                                      }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Historico de operaciones de caja.                                         }
+{    Consulta de tickets y operaciones realizadas en el TPV.                   }
+{******************************************************************************}
 unit inMtoCajaOperacionesHist;
 
 interface

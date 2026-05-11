@@ -1,4 +1,18 @@
-﻿unit inLibGenerarTicketBD;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibGenerarTicketBD                                          }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Generación de tickets recuperando los datos desde la BBDD.                }
+{    Imprime ticket de venta, resguardo de depósito y recordatorios al cliente.}
+{******************************************************************************}
+unit inLibGenerarTicketBD;
 
 interface
 

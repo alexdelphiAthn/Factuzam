@@ -1,4 +1,18 @@
-﻿unit inLibCriptoCurr;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibCriptoCurr                                               }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Cliente de la API pública de CoinGecko v3.                                }
+{    Consulta precios y datos de mercado de criptomonedas.                     }
+{******************************************************************************}
+unit inLibCriptoCurr;
 
 {
   ============================================================

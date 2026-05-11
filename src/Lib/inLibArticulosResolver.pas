@@ -1,4 +1,18 @@
-﻿unit inLibArticulosResolver;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosResolver                                        }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Resolución consolidada de datos de artículo y tarifa.                     }
+{    Devuelve precios, IVA, último coste y PMP para un artículo o SKU.         }
+{******************************************************************************}
+unit inLibArticulosResolver;
 
 {
   Unidad: inLibArticulosResolver

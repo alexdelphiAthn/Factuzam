@@ -1,4 +1,18 @@
-﻿unit inLibCajaParam;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibCajaParam                                                }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Parámetros de configuración del punto de venta.                           }
+{    Definición, carga desde BBDD y acceso tipado a opciones de caja.          }
+{******************************************************************************}
+unit inLibCajaParam;
 
 interface
 

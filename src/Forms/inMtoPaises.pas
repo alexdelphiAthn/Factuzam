@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoPaises                                                   }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Mantenimiento de paises.                                                  }
+{    CRUD sobre fza_paises con codigos y nombres oficiales.                    }
+{******************************************************************************}
 unit inMtoPaises;
 
 interface

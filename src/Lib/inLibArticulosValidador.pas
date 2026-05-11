@@ -1,3 +1,18 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosValidador                                       }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Validador de entrada de artículo en caja y documentos.                    }
+{    Resuelve código de artículo, SKU, código de barras o referencia de        }
+{    proveedor.                                                                }
+{******************************************************************************}
 unit inLibArticulosValidador;
 
 {

@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam - Facturar Albaranes por Fechas/Serie  }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalFacturarAlbaranesFechas                             }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal para facturar albaranes filtrando por serie y rango de fechas.      }
+{    Permite agrupar por cliente al generar las facturas.                      }
+{******************************************************************************}
 unit inMtoModalFacturarAlbaranesFechas;
 
 interface

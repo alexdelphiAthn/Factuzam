@@ -1,11 +1,17 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam - Importador de pedidos PrestaShop     }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibPrestaImporter                                           }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Importador de pedidos desde la API REST de PrestaShop.                    }
+{    Conexión autenticada, listado y carga de pedidos completos.               }
+{******************************************************************************}
 unit inLibPrestaImporter;
 
 interface

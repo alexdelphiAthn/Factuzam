@@ -1,4 +1,18 @@
-﻿unit inMtoCajaFaseCobro;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoCajaFaseCobro                                            }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Formulario de la fase de cobro de caja (TPV).                             }
+{    Calcula totales, gestiona formas de pago, vales y tickets.                }
+{******************************************************************************}
+unit inMtoCajaFaseCobro;
 
 interface
 

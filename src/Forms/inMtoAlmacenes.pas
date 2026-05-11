@@ -1,18 +1,17 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  M�dulo:      inMtoBase                                                      }
-{  Versi�n:     1.0.0                                                          }
-{  Fecha:       06/02/2026                                                     }
-{  Autor:       Alejandro Laorden Hidalgo                                      }
+{  Módulo:       inMtoAlmacenes                                                }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       06/02/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripci�n:                                                                }
-{    Este formulario es el formulario base para todos los dem�s. Tiene la      }
-{    traducci�n al Espa�ol de Developer Express. S�lo sirve a prop�sito de     }
-{    herencia para generar otros formularios                                   }
+{  Descripción:                                                                }
+{    Mantenimiento de almacenes.                                               }
+{    CRUD sobre fza_almacenes por empresa.                                     }
 {******************************************************************************}
-
 unit inMtoAlmacenes;
 
 interface

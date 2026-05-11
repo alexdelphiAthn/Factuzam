@@ -1,3 +1,17 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosAtributosLookup                                 }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Lookup de atributos y propiedades de artículos.                           }
+{    Devuelve los valores posibles para construir selectores de variación.     }
+{******************************************************************************}
 unit inLibArticulosAtributosLookup;
 
 {

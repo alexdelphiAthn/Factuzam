@@ -1,11 +1,18 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataClientes                                               }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module de clientes.                                                  }
+{    Queries de fza_clientes, formas de pago, tarifas, depósitos y facturación }
+{    asociada.                                                                 }
+{******************************************************************************}
 unit UniDataClientes;
 
 interface

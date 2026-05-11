@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataCajaValesHist                                          }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module del histórico de vales de caja.                               }
+{    Contenedor de consultas sobre fza_caja_vales emitidos y redimidos.        }
+{******************************************************************************}
 unit UniDataCajaValesHist;
 
 interface

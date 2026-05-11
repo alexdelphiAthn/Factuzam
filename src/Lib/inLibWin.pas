@@ -1,11 +1,17 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibWin                                                      }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Utilidades sobre formularios, controles y entorno Windows.                }
+{    Búsqueda de componentes, carga de captions y persistencia de perfiles.    }
+{******************************************************************************}
 unit inLibWin;
 
 interface

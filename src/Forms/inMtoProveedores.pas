@@ -1,11 +1,17 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoProveedores                                              }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Mantenimiento de proveedores.                                             }
+{    CRUD sobre fza_proveedores con datos fiscales y comerciales.              }
+{******************************************************************************}
 unit inMtoProveedores;
 
 interface

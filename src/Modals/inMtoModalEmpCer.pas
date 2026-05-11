@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2023 fzam.6dvdy@slmail.me    }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalEmpCer                                              }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal de seleccion de certificado de empresa.                             }
+{    Lista los certificados disponibles y devuelve el elegido.                 }
+{******************************************************************************}
 unit inMtoModalEmpCer;
 
 interface

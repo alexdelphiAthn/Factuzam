@@ -1,4 +1,18 @@
-﻿                           unit inLibVentasCalendario;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibVentasCalendario                                         }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Caché de operaciones de caja agrupadas por día.                           }
+{    Marca en el calendario los días con actividad sin reconsultar la BBDD.    }
+{******************************************************************************}
+unit inLibVentasCalendario;
 
 // =============================================================================
 //  inLibVentasCalendario

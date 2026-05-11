@@ -1,3 +1,17 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalAddPreciosTar                                       }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal para anadir precios a SKUs en una o varias tarifas.                 }
+{    Selecciona rango de fechas, SKUs y tarifas a aplicar.                     }
+{******************************************************************************}
 unit inMtoModalAddPreciosTar;
 
 interface

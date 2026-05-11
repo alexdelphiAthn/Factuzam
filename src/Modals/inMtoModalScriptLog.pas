@@ -1,3 +1,17 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalScriptLog                                           }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal de visualizacion del log de ejecucion de scripts SQL.               }
+{    Muestra la salida con resaltado de sintaxis y autoscroll.                 }
+{******************************************************************************}
 unit inMtoModalScriptLog;
 
 interface

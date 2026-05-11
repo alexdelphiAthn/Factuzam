@@ -1,11 +1,18 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
-
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataInventarios                                            }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module de inventarios.                                               }
+{    Cabeceras y líneas de fza_inventarios, regularizaciones de stock y        }
+{    movimientos generados.                                                    }
+{******************************************************************************}
 unit UniDataInventarios;
 
 interface

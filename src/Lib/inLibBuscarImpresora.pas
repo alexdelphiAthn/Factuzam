@@ -1,4 +1,18 @@
-﻿unit inLibBuscarImpresora;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibBuscarImpresora                                          }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Búsqueda y selección de impresoras de caja.                               }
+{    Localiza la impresora por patrón y sesión, con caché por usuario.         }
+{******************************************************************************}
+unit inLibBuscarImpresora;
 
 interface
 

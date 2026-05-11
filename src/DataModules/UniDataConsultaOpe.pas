@@ -1,4 +1,19 @@
-﻿unit UniDataConsultaOpe;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataConsultaOpe                                            }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module de consulta de operaciones de caja (F10).                     }
+{    Maestro y pestañas (operación, pagos, vales, movimientos, cliente,        }
+{    depósitos, factura).                                                      }
+{******************************************************************************}
+unit UniDataConsultaOpe;
 
 // =============================================================================
 //  Modulo de datos para la consulta de operaciones de caja (F10 Buscar/Modificar).

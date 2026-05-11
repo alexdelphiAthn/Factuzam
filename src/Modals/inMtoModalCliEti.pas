@@ -1,3 +1,17 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalCliEti                                              }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal de impresion de etiquetas de clientes.                              }
+{    Permite codigo de cliente y numero de blancos a dejar.                    }
+{******************************************************************************}
 unit inMtoModalCliEti;
 
 interface

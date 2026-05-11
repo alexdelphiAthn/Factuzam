@@ -1,4 +1,18 @@
-﻿unit UniDataGenFilter;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataGenFilter                                              }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module base para filtros de mantenimientos.                          }
+{    Extiende TdmBase con consulta de empresas para filtros comunes a los Mtos.}
+{******************************************************************************}
+unit UniDataGenFilter;
 
 interface
 

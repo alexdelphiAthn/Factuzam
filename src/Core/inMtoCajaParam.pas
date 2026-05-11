@@ -1,4 +1,18 @@
-﻿unit inMtoCajaParam;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoCajaParam                                                }
+{    Tipo:       Formulario (Core)                                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Formulario de mantenimiento de parametros de caja.                        }
+{    Editor tipo inspector con categorias para la configuracion del TPV.       }
+{******************************************************************************}
+unit inMtoCajaParam;
 
 interface
 

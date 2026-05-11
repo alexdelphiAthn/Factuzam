@@ -1,4 +1,18 @@
-﻿unit inLibIBAN;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibIBAN                                                     }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Validador y generador de cuentas IBAN.                                    }
+{    Cálculo del dígito de control, validación de CCC y formateo en papel.     }
+{******************************************************************************}
+unit inLibIBAN;
 
 {******************************************************************************}
 {* Librería de validación y generación de IBAN                               *}

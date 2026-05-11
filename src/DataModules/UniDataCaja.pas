@@ -1,4 +1,18 @@
-﻿unit UniDataCaja;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataCaja                                                   }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Data module de caja (TPV).                                                }
+{    Operaciones, pagos, vales, depósitos y generación de facturas desde caja. }
+{******************************************************************************}
+unit UniDataCaja;
 
 interface
 

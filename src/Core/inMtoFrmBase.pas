@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inMtoBase                                                     }
+{  Módulo:       inMtoFrmBase                                                  }
 {    Tipo:       Formulario (Core)                                             }
 { Versión:       1.0.0                                                         }
 {   Fecha:       06/02/2026                                                    }
@@ -13,7 +13,6 @@
 {    traducción al Español de Developer Express. Sólo sirve a propósito de     }
 {    herencia para generar otros formularios                                   }
 {******************************************************************************}
-
 unit inMtoFrmBase;
 
 interface

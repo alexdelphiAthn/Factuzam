@@ -1,4 +1,18 @@
-﻿unit inLibFormManager;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibFormManager                                              }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Gestor de formularios embebidos en un cxPageControl.                      }
+{    Crea, selecciona y cierra ventanas hijas dentro del marco principal.      }
+{******************************************************************************}
+unit inLibFormManager;
 
 interface
 

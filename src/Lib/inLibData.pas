@@ -1,4 +1,18 @@
-﻿unit inLibData;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibData                                                     }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Utilidades de acceso a datos auxiliares.                                  }
+{    Lecturas puntuales sobre la conexión global del sistema.                  }
+{******************************************************************************}
+unit inLibData;
 
 interface
 uses

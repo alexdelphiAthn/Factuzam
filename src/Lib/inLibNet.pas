@@ -1,4 +1,18 @@
-﻿unit inLibNet;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibNet                                                      }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Utilidades de red.                                                        }
+{    Formateo remoto de SQL mediante el servicio sqlformat.org.                }
+{******************************************************************************}
+unit inLibNet;
 
 interface
 

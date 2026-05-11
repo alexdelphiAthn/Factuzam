@@ -1,11 +1,17 @@
-{*******************************************************}
-{                                                       }
-{       FactuZam - Mantenimiento de Albaranes           }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
-
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoAlbaranes                                                }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Mantenimiento de albaranes de venta.                                      }
+{    Cabecera, lineas y datos fiscales sobre fza_albaranes.                    }
+{******************************************************************************}
 unit inMtoAlbaranes;
 
 interface

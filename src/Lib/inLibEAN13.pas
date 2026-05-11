@@ -1,4 +1,18 @@
-﻿unit inLibEAN13;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibEAN13                                                    }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Cálculo y validación de códigos de barras EAN-8 y EAN-13.                 }
+{    Dígito de control y verificación de códigos completos.                    }
+{******************************************************************************}
+unit inLibEAN13;
 
 interface
 

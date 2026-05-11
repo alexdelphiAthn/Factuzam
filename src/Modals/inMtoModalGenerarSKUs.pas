@@ -1,4 +1,18 @@
-﻿unit inMtoModalGenerarSKUs;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoModalGenerarSKUs                                         }
+{    Tipo:       Formulario (Modal)                                            }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       11/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Modal para generar SKUs combinando dimensiones y valores de atributos.    }
+{    Hereda de AceptCancel y devuelve el conjunto de SKUs generados.           }
+{******************************************************************************}
+unit inMtoModalGenerarSKUs;
 
 interface
 
