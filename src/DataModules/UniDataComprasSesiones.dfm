@@ -1,7 +1,22 @@
-object dmComprasSesiones: TdmComprasSesiones
-  OnCreate = DataModuleCreate
+inherited dmComprasSesiones: TdmComprasSesiones
   Height = 480
   Width = 720
+  PixelsPerInch = 120
+  inherited unqryTablaG: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_compras_sesiones'
+      'ORDER BY FECHA_SES DESC, NUMERO_SES DESC')
+    AfterInsert = unqryTablaGAfterInsert
+    BeforePost = unqryTablaGBeforePost
+  end
+  inherited unqryPerfiles: TUniQuery
+    SQL.Strings = (
+      'select *'
+      'from fza_usuarios_perfiles'
+      'where (KEY_USUPER = '#39'dmComprasSesiones'#39
+      'OR KEY_USUPER='#39'frmMtoComprasSesiones'#39')')
+  end
   object unqrySesionLin: TUniQuery
     SQL.Strings = (
       'SELECT * FROM fza_compras_sesiones_lineas'
