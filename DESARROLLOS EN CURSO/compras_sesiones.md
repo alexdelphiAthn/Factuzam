@@ -96,6 +96,40 @@ Si la variación tiene un solo atributo, la matriz se degenera a una fila
 única. Si no hay variación (artículo simple), la línea expone únicamente
 una cantidad escalar.
 
+### 2.3-bis Multidimensionalidad — variación por línea
+
+Cada **línea** decide su propia variación. La cabecera define un valor por
+defecto (típicamente «sistema de tallas» activo de la empresa) y un flag
+**ESFIJO** que decide si las líneas pueden cambiarlo:
+
+- Si la variación está **fija** en cabecera, todas las líneas la heredan y
+  no se puede cambiar.
+- Si está **variable**, en el grid de líneas aparece una columna adicional
+  cuyo encabezado se lee del nuevo campo `NOMBRE_VISIBLE_VA` en
+  `fza_variaciones_atributos` (ej: «Sistema de tallas», «Paleta»,
+  «Duración»…). Cada línea elige conjunto y se redibuja su matriz.
+
+Así una sesión puede mezclar artículos con dimensiones distintas:
+
+| Línea | Tipo      | Eje fila    | Eje pivot           | Comentario               |
+|-------|-----------|-------------|---------------------|--------------------------|
+| 1     | MATRIZ    | COLOR       | TALLA caballero     | Camiseta                 |
+| 2     | MATRIZ    | COLOR       | TALLA niño          | Camiseta infantil        |
+| 3     | MATRIZ    | —           | NUMERO calzado      | Botín (sólo un eje)      |
+| 4     | ESCALAR   | —           | —                   | Bolso único              |
+| 5     | SERVICIO  | —           | —                   | Portes proveedor         |
+
+### 2.3-ter Tipos de línea
+
+`TIPO_LINEA_SESLIN` admite:
+
+- **MATRIZ** — Línea con matriz pivotada (caso típico ropa). Genera N SKUs.
+- **ESCALAR** — Artículo ESTANDAR sin variación. Cantidad única. Genera 1
+  artículo + 1 código de barras sin pasar por SKU.
+- **SERVICIO** — `TIPO_ART = SERVICIO`, sin atributos, sin SKU, sin stock.
+  Aparece igual en pedido/albarán/factura (portes, aduanas, comisión…).
+- **KIT** — Reservado, fuera de MVP.
+
 ### 2.4 Códigos
 
 | Concepto              | Origen                                                 |
@@ -127,10 +161,18 @@ acciones: **reusar** (la sesión enlaza al artículo existente y no lo crea),
 | `fza_compras_sesiones_lineas_filas_atr`| `SESFILAT`  |
 | `fza_compras_sesiones_lineas_props`    | `SESLPROP`  |
 | `fza_compras_sesiones_celdas`          | `SESCEL`    |
+| `fza_compras_plantillas`               | `SESPL`     |
+| `fza_compras_plantillas_props`         | `SESPLPROP` |
+| `fza_compras_plantillas_kits`          | `SESPLKIT`  |
+| `fza_compras_plantillas_kits_det`      | `SESPLKITD` |
 | `fza_pedidos_compra`                   | `PEDC`      |
 | `fza_pedidos_compra_lineas`            | `PEDCLIN`   |
 | `fza_albaranes_compra`                 | `ALBC`      |
 | `fza_albaranes_compra_lineas`          | `ALBCLIN`   |
+
+> Cambio adicional a tabla existente: se añade `NOMBRE_VISIBLE_VA` en
+> `fza_variaciones_atributos` para parametrizar la etiqueta del eje en la
+> UI («Sistema de tallas» para `TAL`, «Paleta» para `CO`, etc.).
 
 Los sufijos `PEDC`, `ALBC` se definen aquí pero su detalle queda fuera del
 alcance de este diseño (objetivo del módulo Compras-Documentos posterior).
@@ -432,32 +474,39 @@ En cualquier punto antes del paso 7 la sesión puede:
 
 ---
 
-## 8. Preguntas abiertas / decisiones pendientes
+## 8. Decisiones cerradas
 
-1. **Multivariación**: el diseño asume una variación por sesión. ¿Necesita
-   permitir una sesión con varias variaciones distintas (artículos de
-   ropa + artículos sin tallas en el mismo PO)? Si sí, una línea puede
-   tener su propio `TIPO_VAR_SESLIN` y degenerar a escalar. Está
-   contemplado en el DDL pero hay que pulir la UI.
+1. **Multivariación**: ✅ **variación por línea**. La cabecera fija un
+   defecto («sistema de tallas» activo, etc.). Si la variación está
+   marcada como **variable**, cada línea elige conjunto pivot y se
+   redibuja su matriz. Una sesión puede mezclar artículos con
+   dimensiones distintas + escalares + servicios.
 
-2. **Precio por talla**: ¿hay casos donde el precio de compra varía por
-   talla (XXL más caro)? Si sí, hay que mover `PRECIO_COMPRA` de la línea
-   a la celda y propagarse al SKU vía `fza_articulos_proveedores` por SKU
-   (no existe hoy; obligaría a denormalizar o crear una tabla `_SKUS`).
+2. **Precio por talla**: ✅ **precio único por línea**. `PRECIO_COMPRA`
+   vive en la línea, no en la celda.
 
-3. **Costes accesorios** (portes, aduanas) que se prorratean entre líneas:
-   ¿se gestionan aquí o en el albarán/factura posterior?
+3. **Costes accesorios** (portes, aduanas): ✅ **dentro de la sesión** como
+   líneas tipo **SERVICIO** sin atributos. Se materializan al pedido /
+   albarán / factura sin afectar al precio de los artículos.
 
-4. **Borradores compartidos**: ¿una sesión la edita un único usuario o
-   permitimos edición concurrente con check-out? Lo simple es lock de
-   sesión por usuario; aviso si otro intenta abrirla.
+4. **Concurrencia**: ✅ **sin lock**. Se detecta conflicto comparando
+   `INSTANTE_MODIF` al guardar. Si dos usuarios graban encima, el segundo
+   recibe aviso y elige reabrir o forzar.
 
-5. **Importación**: ¿hay que admitir CSV/Excel del proveedor para
-   precargar la sesión? Es un buen segundo hito, no bloquea el MVP.
+5. **Importación CSV/Excel**: ⏳ **fuera del MVP**. Hito posterior.
 
-6. **Plantilla de propiedades fijas guardada**: ¿el usuario quiere poder
-   guardar la configuración de cabecera + plantilla como «plantilla
-   reutilizable» y aplicarla a nuevas sesiones?
+6. **Plantillas de cabecera**: ✅ **plantillas globales con nombre**. Botón
+   «Guardar como plantilla» almacena cabecera + propiedades + kits en
+   `fza_compras_plantillas` (cab) + `_props` + `_kits[_det]`. Al crear
+   sesión nueva: «Nueva desde plantilla…».
+
+7. **Nombre visible del eje pivot**: ✅ **campo `NOMBRE_VISIBLE_VA`** en
+   `fza_variaciones_atributos`. Cada atributo de variación define cómo
+   se llama en la UI («Sistema de tallas» para `TAL`, «Paleta» para
+   `CO`…).
+
+8. **Tipos de línea soportados** en MVP: ✅ **MATRIZ, ESCALAR, SERVICIO**.
+   Kit/Pack queda para hito posterior.
 
 ---
 
