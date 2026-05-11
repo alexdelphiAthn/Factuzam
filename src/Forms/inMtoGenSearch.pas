@@ -21,7 +21,7 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, UniDataConn, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
-  cxMaskEdit, cxDropDownEdit, inLibtb;
+  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida;
 
 type
   TDefCampo = record
@@ -162,132 +162,59 @@ end;
 
 function TfrmMtoSearch.MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
 var
-  FormAlta: TForm;
-  ScrollBox: TScrollBox;
-  pnlBotones: TPanel;
-  btnOk, btnCancel: TcxButton;
-  edtCod, edtDesc: TcxTextEdit;
+  frm: TfrmMtoModalAltaRapida;
   lbl: TcxLabel;
-  i, TopPos, LeftMargin, ControlWidth: Integer;
   newEdit: TcxTextEdit;
   newCombo: TcxComboBox;
+  i, TopPos: Integer;
 begin
   Result := False;
-  FormAlta := TForm.Create(nil);
+  frm := TfrmMtoModalAltaRapida.Create(nil);
   try
-    FormAlta.Caption := FConfigAlta.TituloVentana;
-    FormAlta.Position := poScreenCenter;
-    FormAlta.BorderStyle := bsDialog;
-    FormAlta.Width := 450;
-    FormAlta.Height := 600;
-    FormAlta.Font.Size := 10;
-    FormAlta.Font.Name := 'Segoe UI';
-    ScrollBox := TScrollBox.Create(FormAlta);
-    ScrollBox.Parent := FormAlta;
-    ScrollBox.Align := alClient;
-    ScrollBox.BorderStyle := bsNone;
-    pnlBotones := TPanel.Create(FormAlta);
-    pnlBotones.Parent := FormAlta;
-    pnlBotones.Align := alBottom;
-    pnlBotones.Height := 50;
-    pnlBotones.BevelOuter := bvNone;
-    TopPos := 15;
-    LeftMargin := 25;       // Margen izquierdo para todo
-    ControlWidth := 380;    // Ancho grande para llenar la ventana
-    lbl := TcxLabel.Create(FormAlta);
-    lbl.Parent := ScrollBox;
-    lbl.Caption := 'C�digo:';
-    lbl.Left := LeftMargin;
-    lbl.Top := TopPos;
-    lbl.Style.Font.Style := [fsBold]; // Negrita para destacar
-    edtCod := TcxTextEdit.Create(FormAlta);
-    edtCod.Parent := ScrollBox;
-    edtCod.Left := LeftMargin;
-    edtCod.Top := TopPos + 20; // 20px debajo de la etiqueta
-    edtCod.Width := 150;       // El c�digo suele ser corto
-    edtCod.Text := sCod;
-    TopPos := TopPos + 55;
-    lbl := TcxLabel.Create(FormAlta);
-    lbl.Parent := ScrollBox;
-    lbl.Caption := 'Descripci�n:';
-    lbl.Left := LeftMargin;
-    lbl.Top := TopPos;
-    lbl.Style.Font.Style := [fsBold];
-    edtDesc := TcxTextEdit.Create(FormAlta);
-    edtDesc.Parent := ScrollBox;
-    edtDesc.Left := LeftMargin;
-    edtDesc.Top := TopPos + 20;
-    edtDesc.Width := ControlWidth; // Ancho completo
-    edtDesc.Text := sDesc;
-    TopPos := TopPos + 55;
-    // Separador visual
-    with TBevel.Create(FormAlta) do
-    begin
-      Parent := ScrollBox;
-      Left := LeftMargin; Top := TopPos; Width := ControlWidth; Height := 2;
-      Shape := bsTopLine;
-    end;
-    TopPos := TopPos + 15;
+    frm.Caption    := FConfigAlta.TituloVentana;
+    frm.edtCod.Text  := sCod;
+    frm.edtDesc.Text := sDesc;
+
+    TopPos := TfrmMtoModalAltaRapida.DynStartTop;
     for i := 0 to High(FConfigAlta.ValoresDefecto) do
     begin
-      // 1. Etiqueta (Arriba)
-      lbl := TcxLabel.Create(FormAlta);
-      lbl.Parent := ScrollBox;
-      // Quitamos guiones bajos
-      lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo, '_', ' ', [rfReplaceAll]);
-      lbl.Left := LeftMargin;
-      lbl.Top := TopPos;
+      lbl := TcxLabel.Create(frm);
+      lbl.Parent  := frm.ScrollBox;
+      lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo,
+                                                 '_', ' ', [rfReplaceAll]);
+      lbl.Left := TfrmMtoModalAltaRapida.ColMargin;
+      lbl.Top  := TopPos;
+
       if FConfigAlta.ValoresDefecto[i].Opciones <> '' then
       begin
-        newCombo := TcxComboBox.Create(FormAlta);
-        newCombo.Parent := ScrollBox;
-        newCombo.Left := LeftMargin;
-        newCombo.Top := TopPos + 20;
-        newCombo.Width := ControlWidth;
+        newCombo := TcxComboBox.Create(frm);
+        newCombo.Parent := frm.ScrollBox;
+        newCombo.Left   := TfrmMtoModalAltaRapida.ColMargin;
+        newCombo.Top    := TopPos + 20;
+        newCombo.Width  := TfrmMtoModalAltaRapida.ColWidth;
         newCombo.Properties.Items.CommaText :=
-                                         FConfigAlta.ValoresDefecto[i].Opciones;
+                                       FConfigAlta.ValoresDefecto[i].Opciones;
         newCombo.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
         newCombo.Properties.DropDownListStyle := lsFixedList;
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newCombo;
       end
       else
       begin
-        newEdit := TcxTextEdit.Create(FormAlta);
-        newEdit.Parent := ScrollBox;
-        newEdit.Left := LeftMargin;
-        newEdit.Top := TopPos + 20;
-        newEdit.Width := ControlWidth;
-        newEdit.Text := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
+        newEdit := TcxTextEdit.Create(frm);
+        newEdit.Parent := frm.ScrollBox;
+        newEdit.Left   := TfrmMtoModalAltaRapida.ColMargin;
+        newEdit.Top    := TopPos + 20;
+        newEdit.Width  := TfrmMtoModalAltaRapida.ColWidth;
+        newEdit.Text   := VarToStr(FConfigAlta.ValoresDefecto[i].Valor);
         FConfigAlta.ValoresDefecto[i].ComponenteUI := newEdit;
       end;
-      TopPos := TopPos + 55;
+      TopPos := TopPos + TfrmMtoModalAltaRapida.FieldStep;
     end;
-    TopPos := TopPos + 20;
-    with TPanel.Create(FormAlta) do
+
+    if frm.ShowModal = mrOk then
     begin
-      Parent := ScrollBox;
-      Top := TopPos;
-      Left := 1; Width := 1; Height := 1;
-      BevelOuter := bvNone;
-      Color := clNone;
-    end;
-    btnOk := TcxButton.Create(FormAlta);
-    btnOk.Parent := pnlBotones;
-    btnOk.Caption := 'Guardar';
-    btnOk.ModalResult := mrOk;
-    btnOk.Left := 230; btnOk.Top := 12;
-    btnOk.Width := 90;
-    btnOk.LookAndFeel.NativeStyle := False;
-    btnCancel := TcxButton.Create(FormAlta);
-    btnCancel.Parent := pnlBotones;
-    btnCancel.Caption := 'Cancelar';
-    btnCancel.ModalResult := mrCancel;
-    btnCancel.Left := 330; btnCancel.Top := 12;
-    btnCancel.Width := 90;
-    if FormAlta.ShowModal = mrOk then
-    begin
-      sCod := edtCod.Text;
-      sDesc := edtDesc.Text;
+      sCod  := frm.edtCod.Text;
+      sDesc := frm.edtDesc.Text;
       for i := 0 to High(FConfigAlta.ValoresDefecto) do
       begin
         if FConfigAlta.ValoresDefecto[i].ComponenteUI is TcxComboBox then
@@ -300,7 +227,7 @@ begin
       Result := (Trim(sCod) <> '');
     end;
   finally
-    FormAlta.Free;
+    frm.Free;
   end;
 end;
 
