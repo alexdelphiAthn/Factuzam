@@ -332,9 +332,11 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
-  tdmDataModule := TdmComprasSesiones.Create(Self);
+  // La base (TfrmMtoGen) ya cre� tdmDataModule v�a CrearDataModule
+  // y asign� dsTablaG.DataSet a su unqryTablaG. Aqu� s�lo casteamos
+  // a la variable global y fijamos la clave primaria del formulario.
+  if tdmDataModule = nil then Exit;
   dmComprasSesiones := tdmDataModule as TdmComprasSesiones;
-  dsTablaG.DataSet := dmComprasSesiones.unqryTablaG;
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 end;
 
@@ -638,39 +640,51 @@ procedure TfrmMtoComprasSesiones.ActualizarEstadoUI;
 var
   bEditable : Boolean;
 begin
+  // Defensivo: los botones top-bar pueden no estar creados todavia
+  // (la primera vez se llama desde dsTablaGStateChange durante el Open
+  //  inicial de unqryTablaG, antes de que el .dfm termine de construir
+  //  la jerarquia de controles de la ficha).
+  if (csDestroying in ComponentState) then Exit;
   bEditable := EsSesionEditable;
   HabilitarEdicion(bEditable);
-  btnCrearMaterializar.Enabled  := bEditable;
-  btnAnularSesion.Enabled       := bEditable;
-  btnCerrarManual.Enabled       := bEditable;
-  btnClonarSesion.Enabled       := True;  // siempre permitido
+  if Assigned(btnCrearMaterializar) then btnCrearMaterializar.Enabled := bEditable;
+  if Assigned(btnAnularSesion)      then btnAnularSesion.Enabled      := bEditable;
+  if Assigned(btnCerrarManual)      then btnCerrarManual.Enabled      := bEditable;
+  if Assigned(btnClonarSesion)      then btnClonarSesion.Enabled      := True;
 end;
 
 procedure TfrmMtoComprasSesiones.HabilitarEdicion(AHabilitar: Boolean);
 begin
-  cbbProveedor.Enabled        := AHabilitar;
-  cbbEmpresa.Enabled          := AHabilitar;
-  txtRefPrv.Enabled           := AHabilitar;
-  cbbAlmacen.Enabled          := AHabilitar;
-  cbbVariacion.Enabled        := AHabilitar;
-  cbbConjuntoPivot.Enabled    := AHabilitar;
-  cbbConjuntoFila.Enabled     := AHabilitar;
-  btnAddLinea.Enabled         := AHabilitar;
-  btnDelLinea.Enabled         := AHabilitar;
-  btnDupLinea.Enabled         := AHabilitar;
-  btnAddFila.Enabled          := AHabilitar;
-  btnDelFila.Enabled          := AHabilitar;
-  btnAddProp.Enabled          := AHabilitar;
-  btnDelProp.Enabled          := AHabilitar;
-  btnAddKit.Enabled           := AHabilitar;
-  btnDelKit.Enabled           := AHabilitar;
+  if Assigned(cbbProveedor)     then cbbProveedor.Enabled     := AHabilitar;
+  if Assigned(cbbEmpresa)       then cbbEmpresa.Enabled       := AHabilitar;
+  if Assigned(txtRefPrv)        then txtRefPrv.Enabled        := AHabilitar;
+  if Assigned(cbbAlmacen)       then cbbAlmacen.Enabled       := AHabilitar;
+  if Assigned(cbbVariacion)     then cbbVariacion.Enabled     := AHabilitar;
+  if Assigned(cbbConjuntoPivot) then cbbConjuntoPivot.Enabled := AHabilitar;
+  if Assigned(cbbConjuntoFila)  then cbbConjuntoFila.Enabled  := AHabilitar;
+  if Assigned(btnAddLinea)      then btnAddLinea.Enabled      := AHabilitar;
+  if Assigned(btnDelLinea)      then btnDelLinea.Enabled      := AHabilitar;
+  if Assigned(btnDupLinea)      then btnDupLinea.Enabled      := AHabilitar;
+  if Assigned(btnAddFila)       then btnAddFila.Enabled       := AHabilitar;
+  if Assigned(btnDelFila)       then btnDelFila.Enabled       := AHabilitar;
+  if Assigned(btnAddProp)       then btnAddProp.Enabled       := AHabilitar;
+  if Assigned(btnDelProp)       then btnDelProp.Enabled       := AHabilitar;
+  if Assigned(btnAddKit)        then btnAddKit.Enabled        := AHabilitar;
+  if Assigned(btnDelKit)        then btnDelKit.Enabled        := AHabilitar;
 end;
 
 function TfrmMtoComprasSesiones.EsSesionEditable: Boolean;
 begin
-  Result := (not dmComprasSesiones.unqryTablaG.IsEmpty) and
-            (dmComprasSesiones.unqryTablaG
-               .FieldByName('ESTADO_SES').AsString = 'BORRADOR');
+  // Defensivo: este metodo se llama durante dsTablaGStateChange que puede
+  // dispararse mientras la base abre unqryTablaG dentro de CrearDataModule,
+  // ANTES de que CrearTablaPrincipal haya asignado la global dmComprasSesiones.
+  Result := False;
+  if (dmComprasSesiones = nil) then Exit;
+  if (dmComprasSesiones.unqryTablaG = nil) then Exit;
+  if (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+  if dmComprasSesiones.unqryTablaG.IsEmpty then Exit;
+  Result := dmComprasSesiones.unqryTablaG
+              .FieldByName('ESTADO_SES').AsString = 'BORRADOR';
 end;
 
 procedure TfrmMtoComprasSesiones.ReconstruirMatrizActual;
