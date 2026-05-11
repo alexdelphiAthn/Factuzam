@@ -80,6 +80,7 @@ inherited dmInventarios: TdmInventarios
     Aggregates = <>
     Params = <>
     ProviderName = 'udspLineas'
+    BeforeInsert = cdsLineasBeforeInsert
     BeforePost = cdsLineasBeforePost
     AfterPost = cdsLineasAfterPost
     BeforeDelete = cdsLineasBeforeDelete
