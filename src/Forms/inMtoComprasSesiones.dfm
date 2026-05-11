@@ -436,13 +436,39 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 ExplicitTop = 0
                 ExplicitWidth = 0
                 ExplicitHeight = 0
+                object pnlPropsTop: TPanel
+                  Left = 0
+                  Top = 0
+                  Width = 1012
+                  Height = 36
+                  Align = alTop
+                  TabOrder = 0
+                  object btnAddProp: TcxButton
+                    Left = 8
+                    Top = 4
+                    Width = 100
+                    Height = 28
+                    Caption = '+ A'#241'adir'
+                    TabOrder = 0
+                    OnClick = btnAddPropClick
+                  end
+                  object btnDelProp: TcxButton
+                    Left = 116
+                    Top = 4
+                    Width = 100
+                    Height = 28
+                    Caption = '- Borrar'
+                    TabOrder = 1
+                    OnClick = btnDelPropClick
+                  end
+                end
                 object cxgrdProps: TcxGrid
                   Left = 0
                   Top = 36
                   Width = 1012
                   Height = 550
                   Align = alClient
-                  TabOrder = 0
+                  TabOrder = 1
                   object tvProps: TcxGridDBTableView
                     object dbcPropsCodigo: TcxGridDBColumn
                       Caption = 'C'#243'digo'
@@ -469,24 +495,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     GridView = tvProps
                   end
                 end
-                object btnAddProp: TcxButton
-                  Left = 8
-                  Top = 4
-                  Width = 100
-                  Height = 28
-                  Caption = '+ A'#241'adir'
-                  TabOrder = 1
-                  OnClick = btnAddPropClick
-                end
-                object btnDelProp: TcxButton
-                  Left = 116
-                  Top = 4
-                  Width = 100
-                  Height = 28
-                  Caption = '- Borrar'
-                  TabOrder = 2
-                  OnClick = btnDelPropClick
-                end
               end
               object tsKits: TcxTabSheet
                 Caption = 'Kits de cantidades'
@@ -494,13 +502,48 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 ExplicitTop = 0
                 ExplicitWidth = 0
                 ExplicitHeight = 0
+                object pnlKitsTop: TPanel
+                  Left = 0
+                  Top = 0
+                  Width = 1012
+                  Height = 36
+                  Align = alTop
+                  TabOrder = 0
+                  object btnAddKit: TcxButton
+                    Left = 8
+                    Top = 4
+                    Width = 100
+                    Height = 28
+                    Caption = '+ Nuevo kit'
+                    TabOrder = 0
+                    OnClick = btnAddKitClick
+                  end
+                  object btnDelKit: TcxButton
+                    Left = 116
+                    Top = 4
+                    Width = 100
+                    Height = 28
+                    Caption = '- Borrar kit'
+                    TabOrder = 1
+                    OnClick = btnDelKitClick
+                  end
+                  object btnImportarKitPrv: TcxButton
+                    Left = 224
+                    Top = 4
+                    Width = 180
+                    Height = 28
+                    Caption = 'Importar de proveedor'
+                    TabOrder = 2
+                    OnClick = btnImportarKitPrvClick
+                  end
+                end
                 object cxgrdKits: TcxGrid
                   Left = 0
                   Top = 36
                   Width = 400
                   Height = 550
                   Align = alLeft
-                  TabOrder = 0
+                  TabOrder = 1
                   object tvKits: TcxGridDBTableView
                     object dbcKitsCodigo: TcxGridDBColumn
                       Caption = 'C'#243'digo'
@@ -540,33 +583,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     GridView = tvKitsDet
                   end
                 end
-                object btnAddKit: TcxButton
-                  Left = 8
-                  Top = 4
-                  Width = 100
-                  Height = 28
-                  Caption = '+ Nuevo kit'
-                  TabOrder = 2
-                  OnClick = btnAddKitClick
-                end
-                object btnDelKit: TcxButton
-                  Left = 116
-                  Top = 4
-                  Width = 100
-                  Height = 28
-                  Caption = '- Borrar kit'
-                  TabOrder = 3
-                  OnClick = btnDelKitClick
-                end
-                object btnImportarKitPrv: TcxButton
-                  Left = 224
-                  Top = 4
-                  Width = 180
-                  Height = 28
-                  Caption = 'Importar de proveedor'
-                  TabOrder = 4
-                  OnClick = btnImportarKitPrvClick
-                end
               end
             end
           end
@@ -585,13 +601,58 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Align = alTop
               TabOrder = 0
               ExplicitWidth = 1024
+              object pnlLineasBotones: TPanel
+                Left = 1
+                Top = 1
+                Width = 1030
+                Height = 36
+                Align = alTop
+                TabOrder = 0
+                ExplicitWidth = 1022
+                object btnAddLinea: TcxButton
+                  Left = 8
+                  Top = 4
+                  Width = 110
+                  Height = 28
+                  Caption = '+ A'#241'adir l'#237'nea'
+                  TabOrder = 0
+                  OnClick = btnAddLineaClick
+                end
+                object btnDupLinea: TcxButton
+                  Left = 126
+                  Top = 4
+                  Width = 110
+                  Height = 28
+                  Caption = 'Duplicar'
+                  TabOrder = 1
+                  OnClick = btnDupLineaClick
+                end
+                object btnDelLinea: TcxButton
+                  Left = 244
+                  Top = 4
+                  Width = 110
+                  Height = 28
+                  Caption = '- Borrar'
+                  TabOrder = 2
+                  OnClick = btnDelLineaClick
+                end
+                object btnResolverDuplicado: TcxButton
+                  Left = 380
+                  Top = 4
+                  Width = 220
+                  Height = 28
+                  Caption = 'Resolver duplicado...'
+                  TabOrder = 3
+                  OnClick = btnResolverDuplicadoClick
+                end
+              end
               object cxgrdLineas: TcxGrid
                 Left = 1
                 Top = 37
                 Width = 1022
                 Height = 242
                 Align = alClient
-                TabOrder = 0
+                TabOrder = 1
                 object tvLineas: TcxGridDBTableView
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
                   object dbcLinNumero: TcxGridDBColumn
@@ -663,42 +724,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 object glLineas: TcxGridLevel
                   GridView = tvLineas
                 end
-              end
-              object btnAddLinea: TcxButton
-                Left = 8
-                Top = 4
-                Width = 110
-                Height = 28
-                Caption = '+ A'#241'adir l'#237'nea'
-                TabOrder = 1
-                OnClick = btnAddLineaClick
-              end
-              object btnDupLinea: TcxButton
-                Left = 126
-                Top = 4
-                Width = 110
-                Height = 28
-                Caption = 'Duplicar'
-                TabOrder = 2
-                OnClick = btnDupLineaClick
-              end
-              object btnDelLinea: TcxButton
-                Left = 244
-                Top = 4
-                Width = 110
-                Height = 28
-                Caption = '- Borrar'
-                TabOrder = 3
-                OnClick = btnDelLineaClick
-              end
-              object btnResolverDuplicado: TcxButton
-                Left = 380
-                Top = 4
-                Width = 220
-                Height = 28
-                Caption = 'Resolver duplicado...'
-                TabOrder = 4
-                OnClick = btnResolverDuplicadoClick
               end
             end
             object pnlLineasDetalle: TPanel
