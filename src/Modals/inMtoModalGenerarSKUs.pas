@@ -211,6 +211,7 @@ var
   ValorActual: TValorAtributo;
   i: Integer;
   BmMaestro: TBookmark;
+  DimensionesSinValores: TStringList;
 begin
   if tvDetalle.DataController.IsEditing then
     tvDetalle.DataController.Post;
@@ -257,15 +258,35 @@ begin
       tvDetalle.EndUpdate;
       tvMaestro.EndUpdate;
     end;
-    for i := FDimensiones.Count - 1 downto 0 do
-    begin
-      if FDimensiones[i].Valores.Count = 0 then
-        FDimensiones.Delete(i);
-    end;
-    if FDimensiones.Count = 0 then
-    begin
-      ShowMessage('No has marcado ningún valor para generar SKUs.');
-      Exit;
+    DimensionesSinValores := TStringList.Create;
+    try
+      for i := 0 to FDimensiones.Count - 1 do
+        if FDimensiones[i].Valores.Count = 0 then
+          DimensionesSinValores.Add(FDimensiones[i].NombreAtributo);
+
+      if FDimensiones.Count = 0 then
+      begin
+        ShowMessage('No hay dimensiones definidas para este tipo de ' +
+                    'variación.');
+        Exit;
+      end;
+
+      if DimensionesSinValores.Count = FDimensiones.Count then
+      begin
+        ShowMessage('No has marcado ningún valor para generar SKUs.');
+        Exit;
+      end;
+
+      if DimensionesSinValores.Count > 0 then
+      begin
+        ShowMessage(
+          'Debes marcar al menos un valor en cada dimensión del artículo.' +
+          sLineBreak + 'Falta marcar valores en: ' +
+          DimensionesSinValores.CommaText);
+        Exit;
+      end;
+    finally
+      DimensionesSinValores.Free;
     end;
     GenerarCombinaciones(0, '', '');
     ShowMessage('¡Combinaciones generadas con éxito!');
