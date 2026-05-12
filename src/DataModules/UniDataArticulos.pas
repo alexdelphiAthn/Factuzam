@@ -20,7 +20,8 @@ uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
-  System.Variants, vcl.Controls;
+  System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
+  frxClass, frxDBSet;
 
 type
   TdmArticulos = class(TdmBase)
@@ -50,6 +51,13 @@ type
     dsMovimientosArticulos: TDataSource;
     unqryDetallesAtributos: TUniQuery;
     dsDetallesAtributos: TDataSource;
+    unqryArtPrint: TUniQuery;
+    dtstprvEtiquetasArt: TDataSetProvider;
+    cdsEtiquetasArt: TClientDataSet;
+    dsEtiquetasArt: TDataSource;
+    fxdsEtiquetasArt: TfrxDBDataset;
+    unqryAlmacenesPrint: TUniQuery;
+    unqryTarifasPrint: TUniQuery;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
@@ -75,6 +83,16 @@ type
     function ReconstruirStock: string;
     function ObtenerPrecioTarifaPadre(const aCodArt,
                                             aCodTarifa: string): Double;
+    // El modal de etiquetas se nutre de estas tres rutinas: dos para
+    // poblar tarifa y almacenes, y la tercera para construir el dataset
+    // que consume el FastReport.
+    procedure CargarTarifasEtiquetas(items: TStrings; codigos: TStrings;
+                                     var aIdxDefault: Integer);
+    procedure CargarAlmacenesEtiquetas(lst: TcxListView);
+    procedure CrearDataSetEtiquetasArt(const aCodigoArt,
+                                             aCodTarifa,
+                                             aAlmacenesCsv: string;
+                                             aFechaTarifa: TDateTime);
   end;
 
 //var
@@ -696,6 +714,165 @@ begin
   finally
     FreeAndNil(qry);
   end;
+end;
+
+procedure TdmArticulos.CargarTarifasEtiquetas(items: TStrings;
+                                              codigos: TStrings;
+                                              var aIdxDefault: Integer);
+var
+  i: Integer;
+begin
+  items.Clear;
+  codigos.Clear;
+  aIdxDefault := -1;
+  unqryTarifasPrint.Close;
+  unqryTarifasPrint.Open;
+  unqryTarifasPrint.First;
+  i := 0;
+  while not unqryTarifasPrint.Eof do
+  begin
+    items.Add(unqryTarifasPrint.FieldByName('NOMBRE_TAR_TAR').AsString);
+    codigos.Add(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString);
+    if (aIdxDefault = -1) and
+       (unqryTarifasPrint.FieldByName('ESDEFAULT_TAR').AsString = 'S') then
+      aIdxDefault := i;
+    Inc(i);
+    unqryTarifasPrint.Next;
+  end;
+  unqryTarifasPrint.Close;
+  if (aIdxDefault = -1) and (items.Count > 0) then
+    aIdxDefault := 0;
+end;
+
+procedure TdmArticulos.CargarAlmacenesEtiquetas(lst: TcxListView);
+var
+  Itm: TListItem;
+begin
+  lst.Clear;
+  unqryAlmacenesPrint.Close;
+  unqryAlmacenesPrint.Open;
+  unqryAlmacenesPrint.First;
+  while not unqryAlmacenesPrint.Eof do
+  begin
+    Itm := lst.Items.Add;
+    Itm.Caption :=
+                unqryAlmacenesPrint.FieldByName('CODIGO_ALM_ALM').AsString;
+    Itm.SubItems.Add(
+                unqryAlmacenesPrint.FieldByName('NOMBRE_ALM_ALM').AsString);
+    unqryAlmacenesPrint.Next;
+  end;
+  unqryAlmacenesPrint.Close;
+end;
+
+procedure TdmArticulos.CrearDataSetEtiquetasArt(const aCodigoArt,
+                                                      aCodTarifa,
+                                                      aAlmacenesCsv: string;
+                                                      aFechaTarifa: TDateTime);
+const
+  // Construimos manualmente la lista IN (...) con los codigos elegidos.
+  // Los codigos vienen de fza_almacenes (validados al cargar el checklist),
+  // asi que no llegan de entrada de usuario libre.
+  cSqlEtiq =
+    'SELECT eti.*, '                                                          +
+    '       COALESCE(prc.PRECIO_SALIDA_ARTTAR, prc_pad.PRECIO_SALIDA_ARTTAR)' +
+    '         AS PRECIO_SALIDA_ARTTAR,'                                       +
+    '       COALESCE(prc.PRECIO_FINAL_ARTTAR,  prc_pad.PRECIO_FINAL_ARTTAR) ' +
+    '         AS PRECIO_FINAL_ARTTAR,'                                        +
+    '       COALESCE(prc.PRECIO_DTO_ARTTAR,    prc_pad.PRECIO_DTO_ARTTAR)   ' +
+    '         AS PRECIO_DTO_ARTTAR,'                                          +
+    '       COALESCE(prc.PORCENTAJE_DTO_ARTTAR,'                              +
+    '                prc_pad.PORCENTAJE_DTO_ARTTAR)'                          +
+    '         AS PORCENTAJE_DTO_ARTTAR,'                                      +
+    '       CASE WHEN prc.CODIGO_UNICO_ARTTAR IS NOT NULL'                    +
+    '            THEN ''ESPECIFICO_SKU'' ELSE ''PADRE'' END'                  +
+    '         AS ORIGEN_PRECIO,'                                              +
+    '       :CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR,'                         +
+    '       tar.NOMBRE_TAR_TAR     AS NOMBRE_TAR_TAR,'                        +
+    '       tar.ESIMP_INCL_TAR     AS ESIMP_INCL_TAR,'                        +
+    '       :FECHA_APLICACION      AS FECHA_APLICACION,'                      +
+    '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO'                +
+    '  FROM vi_articulos_skus_etiquetas eti'                                  +
+    '  LEFT JOIN fza_tarifas tar'                                             +
+    '    ON tar.CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR'                       +
+    '  LEFT JOIN fza_articulos_tarifas prc'                                   +
+    '    ON  prc.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                    +
+    '    AND prc.CODIGO_UNIDAD_ARTTAR= eti.CODIGO_UNIDAD_SKU'                 +
+    '    AND prc.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                    +
+    '    AND prc.ESACTIVO_ARTTAR     = ''S'''                                 +
+    '    AND COALESCE(prc.FECHA_DESDE_ARTTAR, ''0000-01-01'')'                +
+    '                                  <= :FECHA_APLICACION'                  +
+    '    AND COALESCE(prc.FECHA_HASTA_ARTTAR, ''9999-12-31'')'                +
+    '                                  >= :FECHA_APLICACION'                  +
+    '  LEFT JOIN fza_articulos_tarifas prc_pad'                               +
+    '    ON  prc_pad.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                +
+    '    AND COALESCE(prc_pad.CODIGO_UNIDAD_ARTTAR, '''') = '''''             +
+    '    AND prc_pad.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                +
+    '    AND prc_pad.ESACTIVO_ARTTAR     = ''S'''                             +
+    '    AND COALESCE(prc_pad.FECHA_DESDE_ARTTAR, ''0000-01-01'')'            +
+    '                                  <= :FECHA_APLICACION'                  +
+    '    AND COALESCE(prc_pad.FECHA_HASTA_ARTTAR, ''9999-12-31'')'            +
+    '                                  >= :FECHA_APLICACION'                  +
+    '  LEFT JOIN ('                                                           +
+    '       SELECT CODIGO_UNIDAD_STK,'                                        +
+    '              SUM(CANTIDAD_STK) AS STOCK_FILTRADO'                       +
+    '         FROM fza_articulos_stockactual'                                 +
+    '        %ALMACEN_FILTER%'                                                +
+    '        GROUP BY CODIGO_UNIDAD_STK'                                      +
+    '       ) stk'                                                            +
+    '    ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU'                    +
+    ' WHERE (:CODIGO_ART_ART = ''''  OR eti.CODIGO_ART_ART = :CODIGO_ART_ART)'+
+    '   AND eti.ESACTIVO_SKU = ''S'''                                         +
+    '   AND eti.ESACTIVO_ART = ''S'''                                         +
+    ' ORDER BY eti.CODIGO_ART_ART, eti.CODIGO_UNIDAD_SKU';
+var
+  sSql, sFiltroAlm: string;
+  i: Integer;
+  lstCod: TStringList;
+begin
+  // Limpia los codigos: solo aceptamos lo que el usuario haya marcado en el
+  // checklist (que viene de fza_almacenes). Si la lista esta vacia, no
+  // aplicamos filtro de almacen para no excluir cualquier stock.
+  sFiltroAlm := '';
+  if Trim(aAlmacenesCsv) <> '' then
+  begin
+    lstCod := TStringList.Create;
+    try
+      lstCod.StrictDelimiter := True;
+      lstCod.Delimiter       := ',';
+      lstCod.DelimitedText   := aAlmacenesCsv;
+      // Construimos la lista IN. Como los codigos pueden contener apostrofos,
+      // los duplicamos para evitar SQL injection aunque el origen sea
+      // controlado.
+      sFiltroAlm := '';
+      for i := 0 to lstCod.Count - 1 do
+      begin
+        if Trim(lstCod[i]) = '' then Continue;
+        if sFiltroAlm <> '' then sFiltroAlm := sFiltroAlm + ',';
+        sFiltroAlm := sFiltroAlm + QuotedStr(Trim(lstCod[i]));
+      end;
+    finally
+      lstCod.Free;
+    end;
+    if sFiltroAlm <> '' then
+      sFiltroAlm := 'WHERE CODIGO_ALM_STK IN (' + sFiltroAlm + ')';
+  end;
+
+  sSql := StringReplace(cSqlEtiq, '%ALMACEN_FILTER%', sFiltroAlm, [rfReplaceAll]);
+
+  unqryArtPrint.Close;
+  unqryArtPrint.SQL.Text := sSql;
+  unqryArtPrint.ParamByName('CODIGO_ART_ART').AsString    := aCodigoArt;
+  unqryArtPrint.ParamByName('CODIGO_TAR_ARTTAR').AsString := aCodTarifa;
+  unqryArtPrint.ParamByName('FECHA_APLICACION').AsDate    := aFechaTarifa;
+  unqryArtPrint.Open;
+
+  // El TClientDataSet alimenta al TfrxDBDataset; replica el patron de
+  // CrearDataSetEtiquetas de UniDataClientes.
+  cdsEtiquetasArt.Close;
+  cdsEtiquetasArt.Data := dtstprvEtiquetasArt.Data;
+  cdsEtiquetasArt.ReadOnly := False;
+  cdsEtiquetasArt.Active := True;
+  cdsEtiquetasArt.First;
 end;
 
 initialization
