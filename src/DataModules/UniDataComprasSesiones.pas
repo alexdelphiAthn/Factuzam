@@ -127,7 +127,8 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar,
+  inLibComprasSesiones;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -228,8 +229,10 @@ end;
 
 procedure TdmComprasSesiones.unqrySesionLinBeforePost(DataSet: TDataSet);
 var
-  bExiste: Boolean;
-  sDescr : string;
+  bExiste : Boolean;
+  sDescr  : string;
+  sTecla  : string;
+  sNuevo  : string;
 begin
   inherited;
   // Sincroniza TIPO_ART desde TIPO_LINEA
@@ -240,13 +243,35 @@ begin
   else
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'ESTANDAR';
 
+<<<<<<< HEAD
   // Detección de duplicado
   if unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
+=======
+  sTecla := Trim(unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
+
+  // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
+  // codigo de una familia con contador activo, expandir al siguiente
+  // numero de la serie e incrementar el contador.
+  if sTecla <> '' then
+>>>>>>> eba3096c82df2df2cb405753899fa8a9da87d995
   begin
-    ChequearDuplicado(
-      unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
-      bExiste, sDescr);
+    if inLibComprasSesiones.ResolverCodigoFamilia(
+         inLibGlobalVar.oConn, sTecla, oUser, sNuevo) then
+    begin
+      unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sNuevo;
+      // Si la familia no esta seteada en la linea, ponerla a la tecleada
+      if unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').IsNull or
+         (unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString = '') then
+        unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString := sTecla;
+      sTecla := sNuevo;
+    end;
+  end;
+
+  // Detección de duplicado
+  if sTecla <> '' then
+  begin
+    ChequearDuplicado(sTecla, bExiste, sDescr);
     if bExiste then
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S'
     else
