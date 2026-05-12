@@ -4601,16 +4601,19 @@ function TSQLParser.ParseProcedureBodyAsRaw: string;
 //  - Indentación estructural (2 espacios por nivel):
 //      Inc tras BEGIN/THEN/ELSE/LOOP/REPEAT/DO; Dec antes de END/ELSE/ELSEIF.
 //  - Saltos de línea estructurales: antes de END/ELSE/ELSEIF, tras
-//    BEGIN/THEN/ELSE/';'.
+//    BEGIN/THEN/ELSE/';', y antes de SELECT/INSERT/UPDATE/DELETE en depth 0.
 //  - Saltos de línea por cláusulas SQL: antes de FROM/WHERE/INTO/SET/VALUES/
-//    GROUP/ORDER/HAVING/LIMIT/JOIN/INNER/LEFT/RIGHT/ON/UNION (en depth 0),
-//    a indent de cláusula (+1 del bloque).
+//    GROUP/ORDER/HAVING/LIMIT/JOIN/INNER/LEFT/RIGHT/ON/UNION (en depth 0,
+//    sólo cuando ya estamos dentro de una sentencia DML), a indent + 1.
+//    Excepción: INTO inmediatamente tras INSERT NO rompe (queda
+//    "INSERT INTO" en la misma línea).
 //  - Saltos antes de AND/OR sólo dentro de WHERE/HAVING/ON.
 //  - Saltos tras ',' (depth 0) sólo dentro de SELECT-fields / SET / VALUES.
+//  - Saltos tras ',' en la lista de columnas de un INSERT (un campo por
+//    línea).
 //  - Espaciado "tight" alrededor de paréntesis, puntos, comas y ';'.
 //  - Sin espacio antes de '(' si el token anterior es identificador,
-//    keyword de función agregada o keyword de tipo (call style: IFNULL(,
-//    SUM(, decimal(, NOW(...)
+//    keyword de función agregada o keyword de tipo (call style).
 //
 // Seguimiento de profundidad: cuenta BEGIN/END pero ignora END seguido de
 // IF/WHILE/CASE/LOOP/REPEAT (cierres de sub-bloques, no del BEGIN exterior).
@@ -4624,34 +4627,45 @@ const
     tsqlFloat, tsqlDate, tsqlTime, tsqlTimeStamp, tsqlBlob,
     tsqlBraceClose, tsqlSquareBraceClose
   ];
+  // Keywords de inicio de sentencia DML (fuerzan salto al depth 0)
+  StmtStartKw : TSQLTokens = [tsqlSelect, tsqlInsert, tsqlUpdate, tsqlDelete];
 var
-  Depth        : Integer;
-  ParenDepth   : Integer;
-  Indent       : Integer;
-  ClauseIndent : Integer;
-  PrevRow      : Integer;
-  CurRow       : Integer;
-  NeedSpace    : Boolean;
-  ForceNewline : Boolean;
-  Done         : Boolean;
-  InStatement  : Boolean;
-  InWhereLike  : Boolean;
-  AllowCommaBreak : Boolean;
-  Upper        : string;
-  PeekTok      : TSQLToken;
-  PeekStr      : string;
+  Depth             : Integer;
+  ParenDepth        : Integer;
+  Indent            : Integer;
+  ClauseIndent      : Integer;
+  PrevRow           : Integer;
+  CurRow            : Integer;
+  NeedSpace         : Boolean;
+  ForceNewline      : Boolean;
+  Done              : Boolean;
+  InStatement       : Boolean;
+  InWhereLike       : Boolean;
+  AllowCommaBreak   : Boolean;
+  PendingInsertInto : Boolean;  // True desde INSERT hasta el INTO siguiente
+  AfterInsertInto   : Boolean;  // True desde INTO (post-INSERT) hasta el '(' de columnas
+  InColumnList      : Boolean;  // estamos dentro de (col1, col2, ...) tras INSERT INTO
+  ColumnListDepth   : Integer;  // ParenDepth al abrir la lista de columnas
+  Upper             : string;
+  PeekTok           : TSQLToken;
+  PeekStr           : string;
 
   function IsClauseKeyword: Boolean;
   begin
-    Result := (ParenDepth = 0) and
-      (SameText(Upper, 'FROM') or SameText(Upper, 'WHERE') or
-       SameText(Upper, 'INTO') or SameText(Upper, 'SET') or
-       SameText(Upper, 'VALUES') or SameText(Upper, 'ORDER') or
-       SameText(Upper, 'GROUP') or SameText(Upper, 'HAVING') or
-       SameText(Upper, 'LIMIT') or SameText(Upper, 'JOIN') or
-       SameText(Upper, 'INNER') or SameText(Upper, 'LEFT') or
-       SameText(Upper, 'RIGHT') or SameText(Upper, 'CROSS') or
-       SameText(Upper, 'ON') or SameText(Upper, 'UNION'));
+    if ParenDepth <> 0 then Exit(False);
+    if not InStatement then Exit(False);
+    // INTO es cláusula sólo en SELECT...INTO; tras INSERT forma parte del
+    // propio "INSERT INTO" y no debe romper.
+    if SameText(Upper, 'INTO') then
+      Exit(not PendingInsertInto);
+    Result := SameText(Upper, 'FROM') or SameText(Upper, 'WHERE') or
+              SameText(Upper, 'SET') or SameText(Upper, 'VALUES') or
+              SameText(Upper, 'ORDER') or SameText(Upper, 'GROUP') or
+              SameText(Upper, 'HAVING') or SameText(Upper, 'LIMIT') or
+              SameText(Upper, 'JOIN') or SameText(Upper, 'INNER') or
+              SameText(Upper, 'LEFT') or SameText(Upper, 'RIGHT') or
+              SameText(Upper, 'CROSS') or SameText(Upper, 'ON') or
+              SameText(Upper, 'UNION');
   end;
 
   function IsAndOrInWhere: Boolean;
@@ -4707,6 +4721,10 @@ begin
   InStatement := False;
   InWhereLike := False;
   AllowCommaBreak := False;
+  PendingInsertInto := False;
+  AfterInsertInto := False;
+  InColumnList := False;
+  ColumnListDepth := 0;
 
   while (not Done) and (CurrentToken <> tsqlEOF) do
   begin
@@ -4739,8 +4757,24 @@ begin
     if CurrentToken = tsqlBraceOpen then
       Inc(ParenDepth);
 
+    // Pre-emit: forzar salto antes de SELECT/INSERT/UPDATE/DELETE en depth 0
+    // (cubre INSERT...SELECT en la misma línea: el SELECT pasa a su propia línea).
+    if (CurrentToken in StmtStartKw) and (ParenDepth = 0) then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 0;
+    end;
+
     // Saltos por cláusula SQL / AND-OR en WHERE-like
     if IsClauseKeyword or IsAndOrInWhere then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 1;
+    end;
+
+    // Coma en lista de columnas de INSERT: un campo por línea
+    if (CurrentToken = tsqlComma) and InColumnList and
+       (ParenDepth = ColumnListDepth) then
     begin
       ForceNewline := True;
       ClauseIndent := 1;
@@ -4755,16 +4789,36 @@ begin
       InStatement := False;
       InWhereLike := False;
       AllowCommaBreak := False;
+      PendingInsertInto := False;
+      AfterInsertInto := False;
+      InColumnList := False;
       if Indent > 0 then
         Dec(Indent);
     end;
 
     AppendCurrent(CurRow);
 
-    // ParenDepth: decrement DESPUÉS de emitir ')'
+    // ParenDepth: tras emitir ')' detecta cierre de lista de columnas y decrementa
     if CurrentToken = tsqlBraceClose then
+    begin
+      if InColumnList and (ParenDepth = ColumnListDepth) then
+        InColumnList := False;
       if ParenDepth > 0 then
         Dec(ParenDepth);
+    end;
+
+    // Tras emitir '(': si esperábamos la lista de columnas de un INSERT, entramos
+    if (CurrentToken = tsqlBraceOpen) and AfterInsertInto then
+    begin
+      InColumnList := True;
+      ColumnListDepth := ParenDepth;  // ya está incrementado
+      AfterInsertInto := False;
+    end
+    else if (CurrentToken = tsqlBraceOpen) then
+    begin
+      // Cualquier otro '(' después de INSERT INTO también invalida la espera
+      // (raro: INSERT INTO sin nombre de tabla). No hacemos nada extra.
+    end;
 
     // Inc Indent tras BEGIN / THEN / ELSE / LOOP / REPEAT / DO
     if (CurrentToken = tsqlBegin) or SameText(Upper, 'THEN') or
@@ -4773,12 +4827,19 @@ begin
       Inc(Indent);
 
     // Detección de inicio de sentencia SQL
-    if (CurrentToken = tsqlSelect) or (CurrentToken = tsqlUpdate) or
-       (CurrentToken = tsqlInsert) or (CurrentToken = tsqlDelete) then
+    if CurrentToken in StmtStartKw then
     begin
       InStatement := True;
       // SELECT permite romper su lista de campos por ','
       AllowCommaBreak := (CurrentToken = tsqlSelect);
+    end;
+    if CurrentToken = tsqlInsert then
+      PendingInsertInto := True;
+    if (CurrentToken = tsqlInto) then
+    begin
+      if PendingInsertInto then
+        AfterInsertInto := True;
+      PendingInsertInto := False;
     end;
 
     // Tracking de la cláusula actual para AND/OR breaks y comma breaks
@@ -4787,7 +4848,17 @@ begin
       InWhereLike := True;
       AllowCommaBreak := False;
     end
-    else if SameText(Upper, 'SET') or SameText(Upper, 'VALUES') then
+    else if SameText(Upper, 'SET') then
+    begin
+      // SET sólo cuenta como cláusula si estamos dentro de un UPDATE.
+      // SET de asignación top-level (SET var = expr;) no debe romper.
+      if InStatement then
+      begin
+        InWhereLike := False;
+        AllowCommaBreak := True;
+      end;
+    end
+    else if SameText(Upper, 'VALUES') then
     begin
       InWhereLike := False;
       AllowCommaBreak := True;
@@ -4817,6 +4888,9 @@ begin
       InStatement := False;
       InWhereLike := False;
       AllowCommaBreak := False;
+      PendingInsertInto := False;
+      AfterInsertInto := False;
+      InColumnList := False;
     end;
 
     // Tras ',' en depth 0 dentro de SELECT/SET/VALUES: forzar salto
