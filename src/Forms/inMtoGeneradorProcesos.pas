@@ -642,17 +642,29 @@ begin
         sScriptCompleto := StringReplace(sScriptCompleto,
              'CREATE PROCEDURE', 'CREATE OR REPLACE PROCEDURE', [rfIgnoreCase]);
 
-        // Añadir punto y coma final si no lo tiene
-        if RightStr(Trim(sScriptCompleto), 1) <> ';' then
-          sScriptCompleto := Trim(sScriptCompleto) + ';';
-
         // --- MAGIA NUEVA: ENVOLVEMOS EN DELIMITERS SI ES PROCEDURE ---
         if bEsProcedimiento then
         begin
+          // Quitamos el ; final porque el delimitador pasa a ser $$
+          sScriptCompleto := Trim(sScriptCompleto);
+          while (sScriptCompleto <> '') and
+                (RightStr(sScriptCompleto, 1) = ';') do
+            sScriptCompleto := Trim(Copy(sScriptCompleto,
+                                         1,
+                                         Length(sScriptCompleto) - 1));
+
+          // El $$ debe quedar pegado al ultimo END con un espacio en medio,
+          // y un blanco antes del DELIMITER ; final, si no MySQL no graba.
           sScriptCompleto := 'DELIMITER $$' + sLineBreak +
-                             sScriptCompleto + sLineBreak +
-                             '$$' + sLineBreak +
+                             sScriptCompleto + ' $$' + sLineBreak +
+                             sLineBreak +
                              'DELIMITER ;';
+        end
+        else
+        begin
+          // Para no-procedimientos, garantizamos el ; final
+          if RightStr(Trim(sScriptCompleto), 1) <> ';' then
+            sScriptCompleto := Trim(sScriptCompleto) + ';';
         end;
         // -------------------------------------------------------------
 
@@ -715,17 +727,20 @@ begin
     try
       slScript.LoadFromFile(dlgAbrir.FileName);
 
-      pcPestana.ActivePage := tsSQL;
-      if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
-        dsTablaG.DataSet.Append;
+      with dmmGeneradorProcesos do
+      begin
+        pcPestana.ActivePage := tsSQL;
+        if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+          dsTablaG.DataSet.Append;
 
-      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
-        ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
-      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
-        slScript.Text;
+        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+          ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
+        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
+          slScript.Text;
 
-      if DBSynEdit1.CanFocus then
-        DBSynEdit1.SetFocus;
+        if DBSynEdit1.CanFocus then
+          DBSynEdit1.SetFocus;
+      end;
     finally
       slScript.Free;
     end;
