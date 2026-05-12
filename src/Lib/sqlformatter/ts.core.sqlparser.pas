@@ -4774,14 +4774,6 @@ begin
       ClauseIndent := 1;
     end;
 
-    // Coma en lista de columnas de INSERT: un campo por línea
-    if (CurrentToken = tsqlComma) and InColumnList and
-       (ParenDepth = ColumnListDepth) then
-    begin
-      ForceNewline := True;
-      ClauseIndent := 1;
-    end;
-
     // Saltos estructurales: END / ELSE / ELSEIF
     if (CurrentToken = tsqlEnd) or SameText(Upper, 'ELSE') or
        SameText(Upper, 'ELSEIF') then
@@ -4898,6 +4890,16 @@ begin
     // Tras ',' en depth 0 dentro de SELECT/SET/VALUES: forzar salto
     if (CurrentToken = tsqlComma) and (ParenDepth = 0) and
        InStatement and AllowCommaBreak then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 1;
+    end;
+
+    // Tras ',' en la lista de columnas de INSERT INTO t(...): un campo por línea
+    // (la ',' queda pegada al identificador anterior, el siguiente campo en
+    // nueva línea).
+    if (CurrentToken = tsqlComma) and InColumnList and
+       (ParenDepth = ColumnListDepth) then
     begin
       ForceNewline := True;
       ClauseIndent := 1;
