@@ -197,6 +197,10 @@ type
     sbMatriz                 : TScrollBox;
 
     pnlMatrizBotones         : TPanel;
+    pnlAlmacenSel            : TPanel;
+    lblAlmacenSel            : TcxLabel;
+    cbbAlmacenMatriz         : TcxLookupComboBox;
+    lblTotalesPorAlm         : TcxLabel;
     lblKitSel                : TcxLabel;
     cbbKitAplicar            : TcxDBLookupComboBox;
     btnAplicarKitFila        : TcxButton;
@@ -283,6 +287,7 @@ type
 
     procedure btnAplicarKitFilaClick(Sender: TObject);
     procedure btnAplicarKitTodasClick(Sender: TObject);
+    procedure cbbAlmacenMatrizPropertiesChange(Sender: TObject);
     procedure btnVistaPreviaMatrizClick(Sender: TObject);
 
     procedure btnValidarTodoClick(Sender: TObject);
@@ -352,10 +357,25 @@ begin
   tvKitsDet.DataController.DataSource        := dmComprasSesiones.dsSesionKitsDet;
   tvPreview.DataController.DataSource        := dmComprasSesiones.dsPreviewSkus;
 
+  // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
+  cbbAlmacenMatriz.Properties.ListSource     := dmComprasSesiones.dsAlmacenes;
+
   pcSesion.ActivePage := tsCabecera;
   FGestorMatriz := TGestorMatrizCompras.Create(sbMatriz,
                                                 dmComprasSesiones,
                                                 oUser);
+end;
+
+procedure TfrmMtoComprasSesiones.cbbAlmacenMatrizPropertiesChange(
+  Sender: TObject);
+var
+  sCodigoAlm: string;
+begin
+  inherited;
+  if FGestorMatriz = nil then Exit;
+  sCodigoAlm := VarToStr(cbbAlmacenMatriz.EditValue);
+  TGestorMatrizCompras(FGestorMatriz).AlmacenActual := sCodigoAlm;
+  ReconstruirMatrizActual;
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
@@ -691,8 +711,24 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.ReconstruirMatrizActual;
+var
+  sAlmCab : string;
 begin
   if dmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
+
+  // Si el combo de almacen est� vacio, inicializarlo con el almacen de
+  // cabecera para que la matriz arranque editando ese.
+  if (VarToStr(cbbAlmacenMatriz.EditValue) = '') and
+     (not dmComprasSesiones.unqryTablaG.IsEmpty) then
+  begin
+    sAlmCab := dmComprasSesiones.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+    if sAlmCab <> '' then
+    begin
+      cbbAlmacenMatriz.EditValue := sAlmCab;
+      TGestorMatrizCompras(FGestorMatriz).AlmacenActual := sAlmCab;
+    end;
+  end;
+
   TGestorMatrizCompras(FGestorMatriz).ReconstruirMatriz(
     dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger);
 end;
