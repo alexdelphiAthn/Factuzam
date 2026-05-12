@@ -50,9 +50,9 @@ type
     txtNOMBRE_AC: TcxDBTextEdit;
     chkESACTIVO_AC: TcxDBCheckBox;
     lblIdVar: TcxLabel;
-    txtID_VAR_AC: TcxDBTextEdit;
+    cbbID_VAR_AC: TcxDBLookupComboBox;
     lblIdVa: TcxLabel;
-    txtID_VA_AC: TcxDBTextEdit;
+    cbbID_VA_AC: TcxDBLookupComboBox;
     lblIdAc: TcxLabel;
     txtID_AC: TcxDBTextEdit;
     splSplitterFicha: TcxSplitter;
@@ -118,6 +118,14 @@ begin
                                       dmmAtributosConjuntos.dsArticulosConjunto;
   (tvValoresID_AV_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
                                           dmmAtributosConjuntos.dsValoresLookup;
+  cbbID_VAR_AC.Properties.ListSource :=
+                                     dmmAtributosConjuntos.dsVariacionesLookup;
+  cbbID_VA_AC.Properties.ListSource :=
+                                       dmmAtributosConjuntos.dsAtributosLookup;
+  (cxGrdDBTabPrinID_VAR_AC.Properties as TcxLookupComboBoxProperties).ListSource
+                                  := dmmAtributosConjuntos.dsVariacionesLookup;
+  (cxGrdDBTabPrinID_VA_AC.Properties as TcxLookupComboBoxProperties).ListSource
+                                    := dmmAtributosConjuntos.dsAtributosLookup;
   pkFieldName := 'ID_AC';
 end;
 
