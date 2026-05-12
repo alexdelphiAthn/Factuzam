@@ -33,6 +33,7 @@ uses
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Vcl.Controls, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Graphics, Vcl.Forms,
+  Vcl.Dialogs,
   cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxLookupEdit,
   DBAccess, Uni,
@@ -310,6 +311,11 @@ begin
         qA.Next;
       end;
       qA.Close;
+      // Modo texto libre (§12): si _filas_atr no devolvio valores, usamos
+      // la etiqueta tecleada por el usuario en ETIQUETA_TEXTO_SESFIL.
+      if (F.EtiquetaFila = '')
+         and (not qF.FieldByName('ETIQUETA_TEXTO_SESFIL').IsNull) then
+        F.EtiquetaFila := qF.FieldByName('ETIQUETA_TEXTO_SESFIL').AsString;
 
       F.Celdas := TList<TCeldaMatriz>.Create;
       DibujarFila(F, yTop);
@@ -516,11 +522,90 @@ begin
 end;
 
 procedure TGestorMatrizCompras.AddFila;
+var
+  q          : TUniQuery;
+  sSerie     : string;
+  sNumero    : string;
+  iIdAcFila  : Integer;
+  bModoTexto : Boolean;
+  sTexto     : string;
+  iNuevoId   : Integer;
+  iOrden     : Integer;
 begin
-  // Inserta una nueva fila en fza_compras_sesiones_lineas_filas con el
-  // siguiente ID_FILA disponible para la línea, y abre un picker para
-  // que el usuario elija el valor del eje fila (color) entre los que aún
-  // no estén en la matriz. Implementación detallada pendiente.
+  if FDM = nil then Exit;
+  if FDM.unqryTablaG.IsEmpty then Exit;
+  if FLineaActual <= 0 then Exit;
+
+  sSerie  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  // Modo texto libre (§12): ID_AC_FILA_SES vacio en cabecera => el usuario
+  // teclea el nombre de la fila libremente. Modo conjunto (TODO): habria
+  // que abrir un picker con los valores del conjunto aun no usados; queda
+  // pendiente.
+  if FDM.unqryTablaG.FieldByName('ID_AC_FILA_SES').IsNull then
+    iIdAcFila := 0
+  else
+    iIdAcFila := FDM.unqryTablaG.FieldByName('ID_AC_FILA_SES').AsInteger;
+  bModoTexto := (iIdAcFila = 0);
+
+  if not bModoTexto then
+  begin
+    // Modo conjunto: picker pendiente. Avisamos para no dejar al usuario
+    // confundido (sin esto pulsar el boton no hacia absolutamente nada).
+    MessageDlg(
+      'El selector de valores del conjunto fila aun no esta implementado.' +
+      sLineBreak + sLineBreak +
+      'Mientras tanto, en la cabecera deja vacio el campo "Conjunto fila" ' +
+      'para teclear los colores libremente.',
+      mtInformation, [mbOk], 0);
+    Exit;
+  end;
+
+  // Pedir el texto de la fila
+  sTexto := '';
+  if not InputQuery('Nueva fila', 'Nombre de la fila (color del proveedor):',
+                    sTexto) then Exit;
+  sTexto := Trim(sTexto);
+  if sTexto = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // Siguiente ID_FILA y ORDEN para la linea
+    q.SQL.Text :=
+      'SELECT COALESCE(MAX(ID_FILA_SESFIL), 0) + 1 AS NEXT_ID, ' +
+      '       COALESCE(MAX(ORDEN_SESFIL), 0)  + 1 AS NEXT_ORDEN ' +
+      '  FROM fza_compras_sesiones_lineas_filas ' +
+      ' WHERE SERIE_SES_SESFIL = :s AND NUMERO_SES_SESFIL = :n ' +
+      '   AND LINEA_SES_SESFIL = :l';
+    q.ParamByName('s').AsString  := sSerie;
+    q.ParamByName('n').AsString  := sNumero;
+    q.ParamByName('l').AsInteger := FLineaActual;
+    q.Open;
+    iNuevoId := q.FieldByName('NEXT_ID').AsInteger;
+    iOrden   := q.FieldByName('NEXT_ORDEN').AsInteger;
+    q.Close;
+
+    q.SQL.Text :=
+      'INSERT INTO fza_compras_sesiones_lineas_filas ' +
+      '  (SERIE_SES_SESFIL, NUMERO_SES_SESFIL, LINEA_SES_SESFIL, ' +
+      '   ID_FILA_SESFIL, ORDEN_SESFIL, ETIQUETA_TEXTO_SESFIL, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'VALUES (:s, :n, :l, :id, :o, :t, NOW(), :u)';
+    q.ParamByName('s').AsString  := sSerie;
+    q.ParamByName('n').AsString  := sNumero;
+    q.ParamByName('l').AsInteger := FLineaActual;
+    q.ParamByName('id').AsInteger := iNuevoId;
+    q.ParamByName('o').AsInteger  := iOrden;
+    q.ParamByName('t').AsString   := sTexto;
+    q.ParamByName('u').AsString   := FUsuario;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+
   ReconstruirMatriz(FLineaActual);
 end;
 
