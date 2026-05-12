@@ -1940,9 +1940,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         inherited rbGrid: TcxRadioButton
           Font.Name = 'Calibri'
         end
-        inherited btnBusq: TcxButton
-          TabOrder = 4
-        end
       end
     end
   end
