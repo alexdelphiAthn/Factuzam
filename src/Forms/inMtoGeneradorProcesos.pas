@@ -137,6 +137,7 @@ type
     TreeView1: TTreeView;
     Panel2: TPanel;
     btnBonito: TButton;
+    btnAbrirScript: TButton;
     ActionList1: TActionList;
     ActionSeleccionar: TAction;
     ActionEjecutar: TAction;
@@ -160,6 +161,7 @@ type
     procedure TreeView1DblClick(Sender: TObject);
 //    procedure TreeView1Click(Sender: TObject);
     procedure btnBonitoClick(Sender: TObject);
+    procedure btnAbrirScriptClick(Sender: TObject);
     procedure ActionSeleccionarExecute(Sender: TObject);
     procedure ActionSeleccionarUpdate(Sender: TObject);
     procedure ActionEjecutarExecute(Sender: TObject);
@@ -689,6 +691,47 @@ begin
   var sSQL := dbSynEdit1.Lines.Text;
   Formatter := GetSQLFormatter;
   dbSynEdit1.Lines.Text := Formatter.Format(sSQL);
+end;
+
+procedure TfrmMtoGeneradorProcesos.btnAbrirScriptClick(Sender: TObject);
+var
+  dlgAbrir: TOpenDialog;
+  slScript: TStringList;
+begin
+  inherited;
+  dlgAbrir := TOpenDialog.Create(Self);
+  try
+    dlgAbrir.Title      := 'Abrir Script SQL';
+    dlgAbrir.InitialDir := GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
+    dlgAbrir.Filter     := 'Scripts SQL (*.sql)|*.sql|' +
+                           'Archivos de texto (*.txt)|*.txt|' +
+                           'Todos los archivos (*.*)|*.*';
+    dlgAbrir.DefaultExt := 'sql';
+    dlgAbrir.Options    := dlgAbrir.Options + [ofFileMustExist];
+    if not dlgAbrir.Execute then
+      Exit;
+
+    slScript := TStringList.Create;
+    try
+      slScript.LoadFromFile(dlgAbrir.FileName);
+
+      pcPestana.ActivePage := tsSQL;
+      if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+        dsTablaG.DataSet.Append;
+
+      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+        ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
+      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
+        slScript.Text;
+
+      if DBSynEdit1.CanFocus then
+        DBSynEdit1.SetFocus;
+    finally
+      slScript.Free;
+    end;
+  finally
+    dlgAbrir.Free;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnEditarClick(Sender: TObject);

@@ -207,6 +207,15 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     TabOrder = 0
                     OnClick = btnBonitoClick
                   end
+                  object btnAbrirScript: TButton
+                    Left = 24
+                    Top = 47
+                    Width = 75
+                    Height = 25
+                    Caption = '&Abrir Script'
+                    TabOrder = 1
+                    OnClick = btnAbrirScriptClick
+                  end
                 end
                 object ScrollBar1: TScrollBar
                   Left = 712
