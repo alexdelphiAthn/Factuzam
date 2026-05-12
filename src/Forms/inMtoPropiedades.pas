@@ -166,7 +166,8 @@ begin
   if (dmmPropiedades = nil) or (dmmPropiedades.unqryArticulos = nil) then Exit;
   if not dmmPropiedades.unqryArticulos.Active then Exit;
   if dmmPropiedades.unqryArticulos.IsEmpty then Exit;
-  sCodArt := dmmPropiedades.unqryArticulos.FieldByName('CODIGO_ART_ART').AsString;
+  sCodArt :=
+    dmmPropiedades.unqryArticulos.FieldByName('CODIGO_ART_ART').AsString;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;

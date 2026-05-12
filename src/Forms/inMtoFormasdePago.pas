@@ -272,7 +272,8 @@ procedure TfrmMtoFormasdePago.btExportarExcelClick(Sender: TObject);
 begin
   inherited;
     ExportarExcel(cxgrdFacturas, 'Historico_Formas_de_pago' +
-                dsTablaG.Dataset.FieldByName('DESCRIPCION_FORMA_PAGO_FP').AsString);
+                dsTablaG.Dataset.FieldByName(
+                  'DESCRIPCION_FORMA_PAGO_FP').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.btnGrabarClick(Sender: TObject);

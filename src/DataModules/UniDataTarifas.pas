@@ -77,7 +77,8 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'TF';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString :=
+        ParamByName('pcont').AsString;
     end;
   end;
 end;

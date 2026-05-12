@@ -163,7 +163,9 @@ begin
   Result.idPedido := sId;
 
   // 2) Datos del cliente
-  DoRequest('/customers/?display=[firstname,lastname,email]&filter[id]=[' + sIdCli + ']');
+  DoRequest(
+    '/customers/?display=[firstname,lastname,email]&filter[id]=[' + sIdCli
+      + ']');
   XMLDoc.LoadFromXML(FResponse.Content);
   XMLDoc.Active := True;
   xmlNode := XMLDoc.DocumentElement;
@@ -177,7 +179,8 @@ begin
 
   // 3) Dirección de envío
   DoRequest('/addresses/?display=[id,firstname,lastname,address1,address2,' +
-            'postcode,city,phone,phone_mobile,dni,id_state,company,vat_number]' +
+            'postcode,city,phone,phone_mobile,dni,id_state,company,vat_number]'
+              +
             '&filter[id]=[' + sDirDe + ']');
   XMLDoc.LoadFromXML(FResponse.Content);
   XMLDoc.Active := True;
@@ -302,27 +305,35 @@ begin
   sPagadoReal         := xmlNodeOrder.ChildNodes['total_paid_real'].Text;
   sTotalProductosSIVA := xmlNodeOrder.ChildNodes['total_products'].Text;
   sTotalProductosCIVA := xmlNodeOrder.ChildNodes['total_products_wt'].Text;
-  sTotalPortesCIVA    := xmlNodeOrder.ChildNodes['total_shipping_tax_incl'].Text;
-  sTotalPortesSIVA    := xmlNodeOrder.ChildNodes['total_shipping_tax_excl'].Text;
+  sTotalPortesCIVA := xmlNodeOrder.ChildNodes['total_shipping_tax_incl'].Text;
+  sTotalPortesSIVA := xmlNodeOrder.ChildNodes['total_shipping_tax_excl'].Text;
   sReferenciaPedido   := xmlNodeOrder.ChildNodes['reference'].Text;
   with Result do
   begin
     FechaCreacion     := sFecha;
     FormaPago         := sFormaPago;
-    TotalPedCIVA      := StrToFloatDef(StringReplace(sTotalPedidoCIVA, '.', ',', []), 0);
-    TotalPedSIVA      := StrToFloatDef(StringReplace(sTotalPedidoSIVA, '.', ',', []), 0);
-    TotalPagadoReal   := StrToFloatDef(StringReplace(sPagadoReal, '.', ',', []), 0);
-    TotalProdSIVA     := StrToFloatDef(StringReplace(sTotalProductosSIVA, '.', ',', []), 0);
-    TotalProdCIVA     := StrToFloatDef(StringReplace(sTotalProductosCIVA, '.', ',', []), 0);
-    TotalPortesCIVA   := StrToFloatDef(StringReplace(sTotalPortesCIVA, '.', ',', []), 0);
-    TotalPortesSIVA   := StrToFloatDef(StringReplace(sTotalPortesSIVA, '.', ',', []), 0);
+    TotalPedCIVA      :=
+      StrToFloatDef(StringReplace(sTotalPedidoCIVA, '.', ',', []), 0);
+    TotalPedSIVA      :=
+      StrToFloatDef(StringReplace(sTotalPedidoSIVA, '.', ',', []), 0);
+    TotalPagadoReal   := StrToFloatDef(StringReplace(sPagadoReal, '.', ',', []),
+                                       0);
+    TotalProdSIVA     :=
+      StrToFloatDef(StringReplace(sTotalProductosSIVA, '.', ',', []), 0);
+    TotalProdCIVA     :=
+      StrToFloatDef(StringReplace(sTotalProductosCIVA, '.', ',', []), 0);
+    TotalPortesCIVA   :=
+      StrToFloatDef(StringReplace(sTotalPortesCIVA, '.', ',', []), 0);
+    TotalPortesSIVA   :=
+      StrToFloatDef(StringReplace(sTotalPortesSIVA, '.', ',', []), 0);
     ReferenciaCliente := sReferenciaPedido;
   end;
 
   // 6) Transportista
   if (sIdTransportista <> '') and (sIdTransportista <> '0') then
   begin
-    DoRequest('/carriers/?display=[name]&filter[id]=[' + sIdTransportista + ']');
+    DoRequest(
+      '/carriers/?display=[name]&filter[id]=[' + sIdTransportista + ']');
     XMLDoc.LoadFromXML(FResponse.Content);
     XMLDoc.Active := True;
     xmlNode := XMLDoc.DocumentElement;
@@ -335,7 +346,8 @@ begin
   // 7) Estado del pedido
   if (sIdEstadoPedido <> '') and (sIdEstadoPedido <> '0') then
   begin
-    DoRequest('/order_states/?display=[name]&filter[id]=[' + sIdEstadoPedido + ']');
+    DoRequest(
+      '/order_states/?display=[name]&filter[id]=[' + sIdEstadoPedido + ']');
     XMLDoc.LoadFromXML(FResponse.Content);
     XMLDoc.Active := True;
     xmlNode := XMLDoc.DocumentElement;
@@ -386,13 +398,17 @@ begin
     xmlNode := XMLDoc.DocumentElement;
     xmlNodeCustomerThreads := xmlNode.ChildNodes['customer_threads'];
     if Assigned(xmlNodeCustomerThreads) and
-       Assigned(xmlNodeCustomerThreads.ChildNodes.FindNode('customer_thread')) then
+       Assigned(xmlNodeCustomerThreads.ChildNodes.FindNode(
+         'customer_thread')) then
     begin
-      xmlNodeCustomerThread := xmlNodeCustomerThreads.ChildNodes['customer_thread'];
-      Result.MensajesPedido.Estado := xmlNodeCustomerThread.ChildNodes['status'].Text;
+      xmlNodeCustomerThread :=
+        xmlNodeCustomerThreads.ChildNodes['customer_thread'];
+      Result.MensajesPedido.Estado :=
+        xmlNodeCustomerThread.ChildNodes['status'].Text;
       Result.MensajesPedido.idCustomer_Threat :=
                                 xmlNodeCustomerThread.ChildNodes['id'].Text;
-      DoRequest('/customer_messages/?display=full&filter[id_customer_thread]=[' +
+      DoRequest(
+        '/customer_messages/?display=full&filter[id_customer_thread]=[' +
                 Result.MensajesPedido.idCustomer_Threat + ']');
       XMLDoc.LoadFromXML(FResponse.Content);
       XMLDoc.Active := True;
@@ -401,7 +417,8 @@ begin
       if Assigned(xmlNodeMessages) then
       begin
         xmlNodeMessage := xmlNodeMessages.ChildNodes['customer_message'];
-        while Assigned(xmlNodeMessage) and (xmlNodeMessage.NodeName = 'customer_message') do
+        while Assigned(xmlNodeMessage)
+           and (xmlNodeMessage.NodeName = 'customer_message') do
         begin
           var tm: TMensaje;
           tm.idMensaje   := xmlNodeMessage.ChildNodes['id'].Text;

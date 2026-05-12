@@ -451,7 +451,8 @@ type
     procedure
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
-    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(Sender: TObject);
+    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
+      Sender: TObject);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
     procedure sbRectificarClick(Sender: TObject);
@@ -975,7 +976,8 @@ begin
     if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
       Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := Datos.CodigoSku;
     if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := Datos.DescripcionSku;
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
+        Datos.DescripcionSku;
 
     Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat   := Precio.PrecioSalida;
     Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat  := Precio.PorcentajeDto;
@@ -986,24 +988,32 @@ begin
     sTipoIVA := Datos.TipoIVA;
     iPorcen  := 0;
     case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
-      0: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
-      1: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
-      2: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
-      3: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
+      0: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
+      1: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
+      2: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
+      3: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
     end;
     fPorcen := iPorcen / 100;
     if Precio.EsImpIncl then
     begin
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
       if (1 + fPorcen) <> 0 then
         Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal / (1 + fPorcen);
+                                                  Precio.PrecioFinal / (
+                                                    1 + fPorcen);
     end
     else
     begin
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal * (1 + fPorcen);
+                                                  Precio.PrecioFinal * (
+                                                    1 + fPorcen);
     end;
   finally
     Resolver.Free;
@@ -1102,7 +1112,8 @@ begin
       // Localizar la tarifa en el dataset
       if dmmFacturas.unqryTarifas.Locate('CODIGO_TAR_ARTTAR', sTarifa, []) then
       begin
-        dsTablaG.DataSet.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
+        dsTablaG.DataSet.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
           dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString;
         // Opcional: Mostrar mensaje de confirmación
         // ShowMessage('IVA incluido: ' +
@@ -1455,31 +1466,37 @@ begin
     else
       Precio := Datos.PrecioPedido;
 
-    Lin.FindField('CODIGO_ART_FACLIN').AsString          := Datos.CodigoArticulo;
+    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
     // CODIGO_UNIDAD_FACLIN y DESCRIPCION_VARIACION_FACLIN ya existen en la
     // tabla base, pero la vista vi_facturas_lineas sólo los expone tras la
     // migración 2026-05-10. Asignación defensiva por si aún no se aplicó.
     if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
       Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString   := Datos.CodigoSku;
     if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := Datos.DescripcionSku;
-    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString := Datos.DescripcionArticulo;
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
+        Datos.DescripcionSku;
+    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+      Datos.DescripcionArticulo;
     Lin.FindField('TIPO_ARTICULO_FACLIN').AsString       := Datos.TipoArticulo;
-    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString := Datos.TipoCantidad;
+    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
+      Datos.TipoCantidad;
     Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString   := Datos.TipoIVA;
     Lin.FindField('CODIGO_FAM_FACLIN').AsString          := Datos.CodigoFamilia;
-    Lin.FindField('NOMBRE_FAM_FACLIN').AsString          := Datos.DescripcionFamilia;
+    Lin.FindField('NOMBRE_FAM_FACLIN').AsString := Datos.DescripcionFamilia;
     Lin.FindField('CODIGO_TAR_FACLIN').AsString          := CodTarifa;
     Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString   :=
                                           IfThen(Precio.EsImpIncl, 'S', 'N');
-    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat       := Precio.PorcentajeDto;
+    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat := Precio.PorcentajeDto;
     Lin.FindField('PRECIO_DTO_FACLIN').AsFloat           := Precio.PrecioDto;
 
     if Datos.UltimoCoste.Encontrado then
     begin
       Lin.FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
-                          IfThen(Datos.UltimoCoste.EsProveedorPrincipal, 'S', 'N');
-      Lin.FindField('CODIGO_PRV_FACLIN').AsString    := Datos.UltimoCoste.CodigoProveedor;
+                          IfThen(Datos.UltimoCoste.EsProveedorPrincipal,
+                                 'S',
+                                 'N');
+      Lin.FindField('CODIGO_PRV_FACLIN').AsString    :=
+        Datos.UltimoCoste.CodigoProveedor;
       Lin.FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
                                               Datos.UltimoCoste.RazonSocialProveedor;
       Lin.FindField('PRECIO_ULT_COMPRA_FACLIN').AsFloat :=
@@ -1500,7 +1517,8 @@ begin
         procedure
         var Edit: TcxCustomEdit;
         begin
-          tvLineasFactura.Controller.FocusedColumn := ctbCODIGO_UNIDAD_FACTURA_LINEA;
+          tvLineasFactura.Controller.FocusedColumn :=
+            ctbCODIGO_UNIDAD_FACTURA_LINEA;
           tvLineasFactura.Controller.EditingController.ShowEdit;
           Edit := tvLineasFactura.Controller.EditingController.Edit;
           if Edit is TcxComboBox then
@@ -1515,24 +1533,32 @@ begin
     sTipoIVA := Datos.TipoIVA;
     iPorcen  := 0;
     case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
-      0: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
-      1: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
-      2: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
-      3: iPorcen := dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
+      0: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
+      1: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
+      2: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
+      3: iPorcen :=
+        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
     end;
     fPorcen := iPorcen / 100;
     if Precio.EsImpIncl then
     begin
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
       if (1 + fPorcen) <> 0 then
         Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal / (1 + fPorcen);
+                                                  Precio.PrecioFinal / (
+                                                    1 + fPorcen);
     end
     else
     begin
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal * (1 + fPorcen);
+                                                  Precio.PrecioFinal * (
+                                                    1 + fPorcen);
     end;
   finally
     Validador.Free;

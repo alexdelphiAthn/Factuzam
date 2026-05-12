@@ -117,7 +117,8 @@ begin
                                  'Error en la fecha.' + 'O se han establecido'+
                                  ' dos periodos activos en el mismo periodo' +
                                  ' para la zona %s',
-                                  [FindField('DESCRIPCION_IVA_IVAGRP').AsString]);
+                                  [FindField(
+                                    'DESCRIPCION_IVA_IVAGRP').AsString]);
           bError := True;
         end;
       end;

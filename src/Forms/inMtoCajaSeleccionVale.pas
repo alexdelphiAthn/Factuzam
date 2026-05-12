@@ -53,7 +53,8 @@ uses
   dxScrollbarAnnotations;
 
 type
-  // Record con los datos del vale seleccionado que se devuelve al formulario padre
+  // Record con los datos del vale seleccionado que se devuelve al formulario
+  // padre
   TValeSeleccionado = record
     CodigoVale:   string;
     PinSeguridad: string;
@@ -141,7 +142,8 @@ begin
     VK_F12:
       begin
         Key := 0; // Consumimos la tecla
-        // Solo ejecuta la acción si el botón aceptar está activo (hay un vale válido seleccionado)
+        // Solo ejecuta la acción si el botón aceptar está activo (hay un vale
+        // válido seleccionado)
         if btnAceptar.Enabled then
           btnAceptarClick(Self);
       end;
@@ -244,14 +246,21 @@ begin
       while not qry.Eof do
       begin
         FMemVales.Append;
-        FMemVales.FieldByName('CODIGO_VL').AsString            := qry.FieldByName('CODIGO_VL').AsString;
-        FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString     := qry.FieldByName('PIN_SEGURIDAD_VL').AsString;
-        FMemVales.FieldByName('ESTADO_VL').AsString            := qry.FieldByName('ESTADO_VL').AsString;
-        FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency := qry.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
-        FMemVales.FieldByName('FECHA_EMISION_VL').AsDateTime   := qry.FieldByName('FECHA_EMISION_VL').AsDateTime;
+        FMemVales.FieldByName('CODIGO_VL').AsString            :=
+          qry.FieldByName('CODIGO_VL').AsString;
+        FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString     :=
+          qry.FieldByName('PIN_SEGURIDAD_VL').AsString;
+        FMemVales.FieldByName('ESTADO_VL').AsString            :=
+          qry.FieldByName('ESTADO_VL').AsString;
+        FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency :=
+          qry.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
+        FMemVales.FieldByName('FECHA_EMISION_VL').AsDateTime   :=
+          qry.FieldByName('FECHA_EMISION_VL').AsDateTime;
         if not qry.FieldByName('FECHA_CADUCIDAD_VL').IsNull then
-          FMemVales.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime := qry.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime;
-        FMemVales.FieldByName('OBSERVACIONES_VL').AsString     := qry.FieldByName('OBSERVACIONES_VL').AsString;
+          FMemVales.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime :=
+            qry.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime;
+        FMemVales.FieldByName('OBSERVACIONES_VL').AsString     :=
+          qry.FieldByName('OBSERVACIONES_VL').AsString;
         FMemVales.Post;
         qry.Next;
       end;
@@ -327,7 +336,8 @@ begin
   begin
     if PinIntroducido = '' then
     begin
-      ShowMessage('Introduzca el PIN de seguridad del vale para poder canjearlo.');
+      ShowMessage(
+        'Introduzca el PIN de seguridad del vale para poder canjearlo.');
       edtPin.SetFocus;
       Exit;
     end;
@@ -343,7 +353,8 @@ begin
   // Rellenar el record de salida
   FValeSeleccionado.CodigoVale   := FMemVales.FieldByName('CODIGO_VL').AsString;
   FValeSeleccionado.PinSeguridad := PinReal;
-  FValeSeleccionado.Importe      := FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
+  FValeSeleccionado.Importe      :=
+    FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
   FValeSeleccionado.Descripcion  := FValeSeleccionado.CodigoVale;
   Result := True;
 end;

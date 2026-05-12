@@ -94,7 +94,7 @@ begin
   inherited;
   //copio la descripcion de Zona a la sig columna
   //dsTablaG.DataSet.FieldByName('DESCRIPCION_IVA_IVAGRP').AsString :=
-  //           dmmIVAS.unqryZonasIVA.FieldByName('DESCRIPCION_IVA_IVAGRP').AsString;
+  // dmmIVAS.unqryZonasIVA.FieldByName('DESCRIPCION_IVA_IVAGRP').AsString;
 end;
 
 procedure TfrmMtoIvas.dsTablaGStateChange(Sender: TObject);

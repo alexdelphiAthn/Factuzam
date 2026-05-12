@@ -202,9 +202,12 @@ type
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
     // CAMBIO 1: Variables de control para evitar re-entradas y bucles
-    FNumAtributosActual: Integer;   // Guarda el nº de atributos aunque el dataset haga Post
-    FProcesandoAtributo: Boolean;   // Evita re-entrada en el bloque del último atributo
-    FInicializandoCombo: Boolean;   // Evita que ForzarDespliegue dispare OnAtributoChanged
+    // Guarda el nº de atributos aunque el dataset haga Post
+    FNumAtributosActual: Integer;
+    // Evita re-entrada en el bloque del último atributo
+    FProcesandoAtributo: Boolean;
+    // Evita que ForzarDespliegue dispare OnAtributoChanged
+    FInicializandoCombo: Boolean;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
   private
@@ -294,7 +297,8 @@ begin
       cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
     end;
     // 2. Vaciar las líneas de la venta anterior
-//    if (DatosCaja.cdsLineas.Active) and (DatosCaja.cdsLineas.RecordCount > 0) then
+// if (DatosCaja.cdsLineas.Active) and (DatosCaja.cdsLineas.RecordCount > 0)
+// then
 //    begin
 //      DatosCaja.cdsLineas.EmptyDataSet;
 //    end;
@@ -324,7 +328,8 @@ begin
     // 4. Aplicar valores base
     DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
     AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMP_FAC').AsString := FCodigoEmpresa;
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMP_FAC').AsString :=
+      FCodigoEmpresa;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
     DatosCaja.cdsCabecera.FieldByName('TIPO_FAC').AsString := 'SIMPLIFICADA';
     // --- 5. EVALUACIÓN DE PARÁMETROS DE INICIO ---
@@ -344,7 +349,8 @@ begin
     end
     else if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
     begin
-      sCodEmpleadoDefecto := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+      sCodEmpleadoDefecto := oCajaParams.GetString('vgerCodEmpleadoDefecto',
+                                                   '');
       if sCodEmpleadoDefecto <> '' then
       begin
         btnCodigoEmpleado.Text := sCodEmpleadoDefecto;
@@ -449,10 +455,12 @@ begin
     // NUEVO: Bloqueo de borrado por atajo
     if not DatosCaja.cdsLineas.IsEmpty then
     begin
-      VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      VieneDeDep :=
+        DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
       if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
       begin
-        ShowMessage('No se puede cancelar o eliminar una línea vinculada a un depósito.');
+        ShowMessage(
+          'No se puede cancelar o eliminar una línea vinculada a un depósito.');
         Exit;
       end;
     end;
@@ -636,7 +644,11 @@ begin
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
-      GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas, DatosCaja.cdsCabecera, ActualizarLabelTotal);
+      GridRecalc(nil,
+                 cxGrid1DBTableView1,
+                 DatosCaja.cdsLineas,
+                 DatosCaja.cdsCabecera,
+                 ActualizarLabelTotal);
     end;
     if ConsolidarSiExiste(SkuDetectado) then
     begin
@@ -669,14 +681,17 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeCaja.tvDescuentoMenosPropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoOpeCaja.tvDescuentoMenosPropertiesEditValueChanged(
+  Sender: TObject);
 begin
   // Ponemos a 0 los precios finales para que CalcularLinea
   // respete el descuento y calcule el precio en base a él.
   if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
   begin
-    DatosCaja.cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-    DatosCaja.cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName(
+      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName(
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
   GridRecalc(Sender,
@@ -692,8 +707,10 @@ begin
   // respete el descuento y calcule el precio en base a él.
   if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
   begin
-    DatosCaja.cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-    DatosCaja.cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName(
+      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    DatosCaja.cdsLineas.FieldByName(
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
   GridRecalc(Sender,
@@ -826,7 +843,8 @@ begin
                                                 Resolucion.TipoArticulo;
       DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
                                                 Resolucion.CodigoArticulo;
-      DatosCaja.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger
+      DatosCaja.cdsLineas.FieldByName(
+        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger
                                                 := Resolucion.NumAtributosReq;
 
       if Resolucion.CodigoSku <> '' then
@@ -859,10 +877,13 @@ begin
           DatosCaja.cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString
                                                 := Datos.TipoIVA;
           DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString
-                                                := IfThen(Precio.EsImpIncl, 'S', 'N');
+                                                := IfThen(Precio.EsImpIncl,
+                                                          'S',
+                                                          'N');
           DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat
                                                 := Precio.PorcentajeDto;
-          DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
+          DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
+            0;
           DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
           DatosCaja.cdsLineas.FieldByName(
                             'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
@@ -927,7 +948,9 @@ begin
     if not Precio.TieneRegistro then Exit;
 
     DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-                                                IfThen(Precio.EsImpIncl, 'S', 'N');
+                                                IfThen(Precio.EsImpIncl,
+                                                       'S',
+                                                       'N');
     DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
                                                 Precio.PrecioSalida;
     DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsCurrency := 1;
@@ -967,7 +990,8 @@ begin
     begin
       i := V.Orden;
       if (i >= 1) and (i <= 5) then
-        DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString
+        DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
+          i) + '_VALOR').AsString
                                                                        := V.Valor;
     end;
   finally
@@ -1053,7 +1077,8 @@ begin
   end;
 end;
 
-// CAMBIO 2: OnAtributoChanged sale inmediatamente si estamos inicializando el combo
+// CAMBIO 2: OnAtributoChanged sale inmediatamente si estamos inicializando el
+// combo
 procedure TfrmMtoOpeCaja.OnAtributoChanged(Sender: TObject);
 var
   Edit: TcxCustomEdit;
@@ -1130,7 +1155,8 @@ begin
     end
     // Si la línea es el abono (anticipo de dinero, marcado con 'A' según tu
     //UniDataCaja)
-    else if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A' then
+    else if DatosCaja.cdsLineas.FieldByName(
+      'VIENE_DE_DEPOSITO').AsString = 'A' then
     begin
       // No permitimos tocar absolutamente nada de la línea del abono
       AAllow := False;
@@ -1234,7 +1260,8 @@ begin
        end
        else
        begin
-         // Comportamiento alternativo: Quedarse en la línea y pasar a Descripción
+         // Comportamiento alternativo: Quedarse en la línea y pasar a
+         // Descripción
          cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
        end;
        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -1603,11 +1630,16 @@ begin
            RellenarAtributosDesdeSku(SkuDetectado);
         end;
         cxGrid1.SetFocus;
-        // Comprobamos si es un SKU completo (el código de unidad es distinto al padre)
-        var EsSkuCompleto := (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo);
-        // Supongamos que lees tu parámetro global así (ajusta el nombre a tu variable real)
-        var AutoPasarLinea := oCajaParams.GetBool('vgerMoverLineaIdentif', False);
-        // Si necesita atributos Y NO ES un SKU ya cerrado, nos paramos en la columna de atributos
+        // Comprobamos si es un SKU completo (el código de unidad es distinto al
+        // padre)
+        var EsSkuCompleto := (Trim(SkuDetectado) <> '')
+           and (SkuDetectado <> CodArticulo);
+        // Supongamos que lees tu parámetro global así (ajusta el nombre a tu
+        // variable real)
+        var AutoPasarLinea := oCajaParams.GetBool('vgerMoverLineaIdentif',
+                                                  False);
+        // Si necesita atributos Y NO ES un SKU ya cerrado, nos paramos en la
+        // columna de atributos
         if (NumAtributos > 0) and not EsSkuCompleto then
         begin
           var PrimeraCol := ObtenerColumnaPorTag(1);
@@ -1623,7 +1655,8 @@ begin
           // El artículo ya está completo (sea simple o un SKU cerrado)
           if AutoPasarLinea then
           begin
-            // Forzamos el guardado de la línea actual (si está en edición) para evitar que se pierda
+            // Forzamos el guardado de la línea actual (si está en edición) para
+            // evitar que se pierda
             if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
               DatosCaja.cdsLineas.Post;
 
@@ -1634,8 +1667,10 @@ begin
           end
           else
           begin
-            // Si el parámetro está desactivado, el cajero decide. Lo normal es dejarle en CANTIDAD_ARTVIN.
-            // (Cambia 'tvCantidad' por el nombre real de tu columna de cantidad_artvin)
+            // Si el parámetro está desactivado, el cajero decide. Lo normal es
+            // dejarle en CANTIDAD_ARTVIN.
+            // (Cambia 'tvCantidad' por el nombre real de tu columna de
+            // cantidad_artvin)
             // cxGrid1DBTableView1.Controller.FocusedColumn := tvCantidad;
             // cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
           end;
@@ -1665,8 +1700,10 @@ begin
     VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
     if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
     begin
-      ShowMessage('No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
-                  'Cambie la cantidad_artvin a negativo si necesita revertirla.');
+      ShowMessage(
+        'No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
+                  'Cambie la cantidad_artvin a negativo si necesita ' +
+                  'revertirla.');
       Exit;
     end;
   end;
@@ -1761,11 +1798,13 @@ begin
       'WHERE SKU.CODIGO_ART_SKU = :ARTICULO '+
       'ORDER BY N.ORDEN_VISUAL_ATRIBUTO '+
       'LIMIT 5';
-      datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString := ArticuloPadre;
+      datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
+        ArticuloPadre;
       datosCaja.qryDefinicionArticulo.Open;
       while not datosCaja.qryDefinicionArticulo.Eof do
       begin
-        NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName('NOMBRE_ATRIBUTO').AsString);
+        NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName(
+          'NOMBRE_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
     end;
@@ -1773,8 +1812,10 @@ begin
     FNumAtributosActual := NombresAtributos.Count;
 
     // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
-    if DatosCaja.cdsLineas.Active and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-      DatosCaja.cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
+    if DatosCaja.cdsLineas.Active
+       and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+      DatosCaja.cdsLineas.FieldByName(
+        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
 
     cxGrid1DBTableView1.BeginUpdate;
     try
@@ -1788,8 +1829,10 @@ begin
             Col.Caption := NombresAtributos[i-1];
             Col.Visible := True;
             Col.Options.Editing := True;
-            if DatosCaja.cdsLineas.Active and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-              DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_NOMBRE').AsString := NombresAtributos[i-1];
+            if DatosCaja.cdsLineas.Active
+               and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+              DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
+                i) + '_NOMBRE').AsString := NombresAtributos[i-1];
           end
           else
           begin
@@ -1845,10 +1888,12 @@ begin
   // =======================================================================
   if DatosCaja.cdsLineas.Active then
   begin
-    // Si hay una línea a medio meter, la cancelamos para evitar Abort en BeforePost
+    // Si hay una línea a medio meter, la cancelamos para evitar Abort en
+    // BeforePost
     if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
     begin
-      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString) = '' then
+      if Trim(DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_ART_FACLIN').AsString) = '' then
         DatosCaja.cdsLineas.Cancel
       else
         DatosCaja.cdsLineas.Post;
@@ -1858,8 +1903,10 @@ begin
       DatosCaja.cdsLineas.First;
       while not DatosCaja.cdsLineas.Eof do
       begin
-        if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S') or
-           (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') then
+        if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S')
+           or
+           (DatosCaja.cdsLineas.FieldByName(
+             'VIENE_DE_DEPOSITO').AsString = 'A') then
         begin
           DatosCaja.cdsLineas.Delete;
         end
@@ -1882,9 +1929,12 @@ begin
     lblNombreCliente.Caption := 'VENTA CONTADO';
     DatosCaja.cdsCabecera.Edit;
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString := DatosCaja.GetTarifaDefault;
-    DatosCaja.cdsCabecera.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString := 'S';
-    lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
+      DatosCaja.GetTarifaDefault;
+    DatosCaja.cdsCabecera.FieldByName(
+      'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString := 'S';
+    lblTarifa.Caption :=
+      DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     Error := False;
   end
   else
@@ -1904,8 +1954,11 @@ begin
         DatosCaja.cdsCabecera.Edit;
         DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := sCodigo;
         sNomCliente := unqry.FieldByName('RAZON_SOCIAL_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString := unqry.FieldByName('TARIFA_ARTICULO_CLI').AsString;
-        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'TARIFA_ARTICULO_CLIENTE_FAC').AsString := unqry.FieldByName(
+            'TARIFA_ARTICULO_CLI').AsString;
+        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
+          'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
         // Si es un cliente con depósitos, los cargamos
         if SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLI').AsString, 'S') then
         begin
@@ -1945,8 +1998,10 @@ begin
     // 2º Ponemos el foco en la línea nueva
     AsegurarLineaNueva;
 
-    // 3º Como paso final absoluto, pisamos la etiqueta leyendo la memoria contable
-    Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+    // 3º Como paso final absoluto, pisamos la etiqueta leyendo la memoria
+    // contable
+    Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
+                                      DatosCaja.cdsLineas);
     try
       Totales.ProcesarFacturaCompleta;
       ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
@@ -1973,7 +2028,8 @@ begin
     begin
       // Solo añadimos si la línea actual tiene un código de artículo.
       // Así evitamos crear líneas en blanco repetidas si hacen varios clics.
-      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString) <> '' then
+      if Trim(DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_ART_FACLIN').AsString) <> '' then
       begin
         DatosCaja.cdsLineas.Append;
       end;
@@ -2049,7 +2105,9 @@ var
   qry: TUniQuery;
 begin
   sCodigo := VarToStr(DisplayValue);
-  if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS', sCodigo, sNomEmpleado) then
+  if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS',
+    sCodigo,
+    sNomEmpleado) then
   begin
     Error := False;
     lblNombreEmpleado.Caption := sNomEmpleado;
@@ -2068,7 +2126,9 @@ begin
                     '   AND CODIGO_EMPLEADO_USU IS NOT NULL ';
     if Trim(sCodigo) <> '' then
     begin
-      qry.SQL.Add('AND (CODIGO_EMPLEADO_USU LIKE :TOKEN OR DIMINUTIVO_TICKET_USU LIKE :TOKEN) ');
+      qry.SQL.Add(
+        'AND (CODIGO_EMPLEADO_USU LIKE :TOKEN OR DIMINUTIVO_TICKET_USU LIKE ' +
+        ':TOKEN) ');
       qry.ParamByName('TOKEN').AsString := '%' + sCodigo + '%';
     end;
     qry.SQL.Add('ORDER BY CODIGO_EMPLEADO_USU ASC LIMIT 1');
@@ -2080,7 +2140,8 @@ begin
       DisplayValue := sCodigo;
       lblNombreEmpleado.Caption := sNomEmpleado;
       DatosCaja.cdsCabecera.Edit;
-      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString := sCodigo;
+      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
+        sCodigo;
       Error := False;
       ErrorText := '';
     end
@@ -2096,7 +2157,8 @@ begin
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
 
-procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
+procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(
+  ImporteDescuentoGlobal: Currency);
 var
   TotalBrutoVenta: Currency;
   Proporcion: Double;
@@ -2132,21 +2194,25 @@ begin
     begin
       DatosCaja.cdsLineas.Edit;
 
-      CANTIDAD_ARTVIN := DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
+      CANTIDAD_ARTVIN :=
+        DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
       if CANTIDAD_ARTVIN = 0 then CANTIDAD_ARTVIN := 1; // Protección matemática
 
-      PrecioSalida := DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
+      PrecioSalida :=
+        DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
 
       // Calculamos el % de peso de esta línea sobre el total del ticket
       Proporcion := (CANTIDAD_ARTVIN * PrecioSalida) / TotalBrutoVenta;
 
       // Asignamos el descuento total que le toca a esta fila
-      // (Si es la última línea, le damos el resto para que cuadre exactamente al céntimo)
+      // (Si es la última línea, le damos el resto para que cuadre exactamente
+      // al céntimo)
       DatosCaja.cdsLineas.Next;
       if DatosCaja.cdsLineas.Eof then
         DescuentoAplicarLinea := ImporteDescuentoGlobal - DescuentoAcumulado
       else
-        DescuentoAplicarLinea := SimpleRoundTo(ImporteDescuentoGlobal * Proporcion, -2);
+        DescuentoAplicarLinea :=
+          SimpleRoundTo(ImporteDescuentoGlobal * Proporcion, -2);
 
       DatosCaja.cdsLineas.Prior; // Volvemos a la línea actual
 
@@ -2157,7 +2223,8 @@ begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency :=
         PrecioSalida - DescuentoUnitario;
 
-      // 2. Calcular y guardar el Porcentaje de descuento exacto (PORCENTAJE_DTO_FACLIN)
+      // 2. Calcular y guardar el Porcentaje de descuento exacto
+      // (PORCENTAJE_DTO_FACLIN)
       if PrecioSalida <> 0 then
         DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat :=
           SimpleRoundTo((DescuentoUnitario / PrecioSalida) * 100, -2)
@@ -2189,7 +2256,8 @@ begin
     DatosCaja.cdsLineas.First;
     while not DatosCaja.cdsLineas.Eof do
     begin
-      VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+      VieneDeDep :=
+        DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
       if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
       begin
         Result := True;
@@ -2217,7 +2285,8 @@ begin
   begin
     if DatosCaja.cdsLineas.State = dsInsert then
     begin
-      if Trim(DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString) = '' then
+      if Trim(DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_ART_FACLIN').AsString) = '' then
       begin
         DatosCaja.cdsLineas.Cancel;
       end
@@ -2282,8 +2351,10 @@ begin
          end;
          if CodigoValeGenerado <> '' then
          begin
-           // ImprimirTicketVale(CodigoValeGenerado, frmFaseCobro.DatosCobro.ImporteValeEmitido);
-           // ShowMessage('Entregue el vale generado al cliente: ' + CodigoValeGenerado);
+           // ImprimirTicketVale(CodigoValeGenerado,
+           // frmFaseCobro.DatosCobro.ImporteValeEmitido);
+           // ShowMessage('Entregue el vale generado al cliente: ' +
+           // CodigoValeGenerado);
          end;
          // 4. Limpiar la interfaz y los datasets para el siguiente cliente
          PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Now);
@@ -2301,14 +2372,16 @@ var
   sCodigoCliente: string;
   Totales: TFacturaTotales;
 begin
-  sCodigoCliente := DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
+  sCodigoCliente :=
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
   if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
   begin
     ShowMessage('Debe seleccionar un cliente para cargar sus depósitos.');
     Exit;
   end;
 
-  // 1. Matar la edición activa limpiamente (Evita el error de "Artículo no encontrado" en la línea en blanco)
+  // 1. Matar la edición activa limpiamente (Evita el error de
+  // Artículo no encontrado en la línea en blanco)
   if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
      cxGrid1DBTableView1.Controller.EditingController.IsEditing then
   begin
@@ -2340,9 +2413,11 @@ begin
     FActualizandoDepositos := False;
   end;
   cxGrid1DBTableView1.DataController.UpdateItems(False);
-  // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe la caché)
+  // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe
+  // la caché)
   AsegurarLineaNueva;
-  // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria interna
+  // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria
+  // interna
   Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
   try
     Totales.ProcesarFacturaCompleta;
@@ -2394,7 +2469,8 @@ begin
     TargetForm := TfrmMtoOpeCaja.Create(Application);
     TargetForm.PopupParent := Self.PopupParent;
     TargetForm.Tag := NextIndex;
-    TargetForm.Caption := Format('Operación %d - (Caja Real %s)', [NextIndex, Self.FCodigoCaja]);
+    TargetForm.Caption := Format('Operación %d - (Caja Real %s)',
+                                 [NextIndex, Self.FCodigoCaja]);
     TargetForm.PrepararValores(Self.FCodigoEmpresa,
                                Self.FCodigoAlmacen,
                                Self.FCodigoCaja,
@@ -2514,7 +2590,8 @@ begin
   ActualizarFoco;
 end;
 
-// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger OnAtributoChanged
+// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger
+// OnAtributoChanged
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
 var
   Combo: TcxComboBox;
@@ -2522,7 +2599,8 @@ begin
   if Sender is TcxComboBox then
   begin
     Combo := TcxComboBox(Sender);
-    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el precio
+    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el
+    // precio
     // con un SKU incompleto (todavía falta confirmar este atributo)
     FInicializandoCombo := True;
     try
@@ -2563,7 +2641,8 @@ begin
       Show;
       BringToFront;
     end;
-    if MessageDlg(Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
+    if MessageDlg(
+      Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
                          '¿Desea ELIMINARLA y cerrar?', [Self.Tag]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
@@ -2582,7 +2661,8 @@ begin
   end;
 end;
 
-function TfrmMtoOpeCaja.ObtenerColumnaPorTag(NumColumn: Integer): TcxGridDBColumn;
+function TfrmMtoOpeCaja.ObtenerColumnaPorTag(
+  NumColumn: Integer): TcxGridDBColumn;
 var
   i:Integer;
 begin

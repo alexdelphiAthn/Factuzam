@@ -21,7 +21,8 @@ uses
   Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
-  cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB, cxDBData,
+  cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
+  cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
@@ -311,7 +312,8 @@ begin
     end;
     if lst.Count = 0 then
     begin
-      ShowMessage('No hay líneas con cantidad entregada para crear el albarán.');
+      ShowMessage(
+        'No hay líneas con cantidad entregada para crear el albarán.');
       Exit;
     end;
     if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst) then

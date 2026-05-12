@@ -85,7 +85,8 @@ type
     FCodigoTarifaIni : string;
 
     // === Overrides ==========================================================
-    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean; override;
+    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
+    override;
     function  ColumnasSelectExtra: string; override;
     function  SubquerYaCargado: string; override;
     function  WhereExcluirYaCargados: string; override;
@@ -105,7 +106,8 @@ type
     function  AlcanceAjusteActual: TAjusteAlcance;
 
     function  AjustarPrecio(APrecio: Double): Double;
-    procedure CalcularPreciosFinales(APrecioOrigSalida, APrecioOrigFinal: Double;
+    procedure CalcularPreciosFinales(APrecioOrigSalida,
+                                     APrecioOrigFinal: Double;
                                      out APrecioSalida, APrecioFinal: Double;
                                      out APorcenDto: Double);
 
@@ -212,19 +214,22 @@ end;
 //   Eventos
 // ============================================================================
 
-procedure TfrmModalAddBlockTarifa.chkConFechaHastaPropertiesChange(Sender: TObject);
+procedure TfrmModalAddBlockTarifa.chkConFechaHastaPropertiesChange(
+  Sender: TObject);
 begin
   dtFechaHasta.Enabled := chkConFechaHasta.Checked;
 end;
 
-procedure TfrmModalAddBlockTarifa.chkAjustarPrecioPropertiesChange(Sender: TObject);
+procedure TfrmModalAddBlockTarifa.chkAjustarPrecioPropertiesChange(
+  Sender: TObject);
 begin
   spnMultiplo.Enabled     := chkAjustarPrecio.Checked;
   spnRestar.Enabled       := chkAjustarPrecio.Checked;
   rgAjusteAlcance.Enabled := chkAjustarPrecio.Checked;
 end;
 
-procedure TfrmModalAddBlockTarifa.chkCopiarDeTarifaPropertiesChange(Sender: TObject);
+procedure TfrmModalAddBlockTarifa.chkCopiarDeTarifaPropertiesChange(
+  Sender: TObject);
 begin
   cbxTarifaOrigen.Enabled := chkCopiarDeTarifa.Checked;
   if not chkCopiarDeTarifa.Checked then
@@ -343,7 +348,8 @@ begin
     end;
     if SameText(ObtenerCodigoTarifaOrigen, ObtenerCodigoTarifaActual) then
     begin
-      AMensaje := 'La tarifa origen no puede ser la misma que la tarifa destino.';
+      AMensaje :=
+        'La tarifa origen no puede ser la misma que la tarifa destino.';
       Exit;
     end;
   end;
@@ -422,9 +428,11 @@ begin
     AQry.ParamByName('P_TARIFA_ORIG_F').AsString := tarOrig;
 end;
 
-function TfrmModalAddBlockTarifa.TextoConfirmacion(ANumPendientes: Integer): string;
+function TfrmModalAddBlockTarifa.TextoConfirmacion(
+  ANumPendientes: Integer): string;
 begin
-  Result := Format('Se van a insertar %d articulos en la tarifa "%s". Continuar?',
+  Result :=
+    Format('Se van a insertar %d articulos en la tarifa "%s". Continuar?',
                    [ANumPendientes, ObtenerCodigoTarifaActual]);
 end;
 

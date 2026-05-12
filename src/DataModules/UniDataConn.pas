@@ -70,7 +70,8 @@ begin
   with Conuni do
   begin
     Pooling := True;
-    // IMPORTANTE: 0 significa que la conexión física vive indefinidamente en el pool.
+    // IMPORTANTE: 0 significa que la conexión física vive indefinidamente en el
+    // pool.
     //SpecificOptions.Values['ConnectionLifetime'] := '0';
     PoolingOptions.ConnectionLifetime := 0;
     PoolingOptions.Validate := True;
@@ -81,7 +82,8 @@ begin
     SpecificOptions.Values['ConnectionTimeout'] := '30';
     // 3. LA CLAVE: AUTO-RECONEXIÓN (LocalFailover)
     // Esto hace que si se cae la red o el servidor patea la conexión,
-    // UniDAC se reconecta sola y reintenta la consulta sin dar error al usuario.
+    // UniDAC se reconecta sola y reintenta la consulta sin dar error al
+    // usuario.
     Options.LocalFailover := True;
     Options.DisconnectedMode := True;
   end;
@@ -99,7 +101,8 @@ begin
     // Si falla (por permisos), no bloqueamos la app, pero queda registrado.
     on E: Exception do
       {$IFDEF DEBUG}
-      ShowMessage('No se pudo establecer el timeout del servidor: ' + E.Message);
+      ShowMessage(
+        'No se pudo establecer el timeout del servidor: ' + E.Message);
       {$ENDIF}
   end;
 end;
@@ -111,35 +114,47 @@ var
 begin
   bEsErrorGenerico := False;
   case E.ErrorCode of
-    1062: sMensaje := 'Ya existe un registro con ese valor (entrada duplicada).';
+    1062: sMensaje :=
+      'Ya existe un registro con ese valor (entrada duplicada).';
     1048,
     1364: sMensaje := 'Hay campos obligatorios sin rellenar.';
     1054: sMensaje := 'Campo desconocido en la consulta SQL: ' + E.Message;
-    1146: sMensaje := 'La tabla consultada no existe en la base de datos: ' + E.Message;
+    1146: sMensaje :=
+      'La tabla consultada no existe en la base de datos: ' + E.Message;
     1142,
-    1143: sMensaje := 'No tiene permisos suficientes para realizar esta acción en la base de datos.';
+    1143: sMensaje := 'No tiene permisos suficientes para realizar esta ' +
+                      'acción en la base de datos.';
     1216,
-    1452: sMensaje := 'El valor no existe en la tabla relacionada (clave foránea).';
+    1452: sMensaje :=
+      'El valor no existe en la tabla relacionada (clave foránea).';
     1217,
-    1451: sMensaje := 'No se puede eliminar: existen registros que dependen de este.';
+    1451: sMensaje :=
+      'No se puede eliminar: existen registros que dependen de este.';
     1406: sMensaje := 'El dato introducido es demasiado largo para el campo.';
     1045: sMensaje := 'Acceso denegado: usuario o contraseña incorrectos.';
-    2003: sMensaje := 'No se puede conectar al servidor MySQL. Comprueba la red y el puerto.';
+    2003: sMensaje :=
+      'No se puede conectar al servidor MySQL. Comprueba la red y el puerto.';
     2006: sMensaje := 'La conexión con el servidor MySQL se ha perdido.';
-    2013: sMensaje := 'Se perdió la conexión durante la ejecución de la consulta.';
-    1205: sMensaje := 'El servidor está ocupado (Tiempo de espera de bloqueo). Inténtalo de nuevo.';
-    1213: sMensaje := 'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
-    1050: sMensaje := 'La tabla o vista ya existe en la base de datos ' + E.Message;
+    2013: sMensaje :=
+      'Se perdió la conexión durante la ejecución de la consulta.';
+    1205: sMensaje := 'El servidor está ocupado (Tiempo de espera de ' +
+                      'bloqueo). Inténtalo de nuevo.';
+    1213: sMensaje :=
+      'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
+    1050: sMensaje :=
+      'La tabla o vista ya existe en la base de datos ' + E.Message;
     1304:
       begin
         // Opción rápida y sencilla: Adjuntamos el mensaje original de MySQL
         // que contiene el nombre del procedimiento.
-        sMensaje := 'El procedimiento o función ya existe en la base de datos.' + sLineBreak +
+        sMensaje := 'El procedimiento o función ya existe en la base de datos.'
+          + sLineBreak +
                     'Detalle del servidor: ' + E.Message;
       end;
   else
     // Errores no catalogados: mostrar mensaje original
-    sMensaje := Format('Error en base de datos [%d]:%s%s', [E.ErrorCode, sLineBreak, E.Message]);
+    sMensaje := Format('Error en base de datos [%d]:%s%s',
+                       [E.ErrorCode, sLineBreak, E.Message]);
     bEsErrorGenerico := True;
   end;
   {$IFDEF DEBUG}

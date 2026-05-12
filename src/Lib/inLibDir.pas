@@ -117,7 +117,8 @@ end;
 
 function GetUserFolderTickets:String;
 begin
-  ForceDirectories(GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\');
+  ForceDirectories(GetSpecialFolderPath(
+    CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\');
   Result := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\';
 end;
 

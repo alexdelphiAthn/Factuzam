@@ -117,7 +117,8 @@ type
 
   TArticuloSkuItem = record
     CodigoSku      : string;     // CODIGO_UNIDAD_SKU
-    DescripcionSku : string;     // GROUP_CONCAT de los AV del SKU (ej. "NEGRO / M")
+    // GROUP_CONCAT de los AV del SKU (ej. "NEGRO / M")
+    DescripcionSku : string;
     EsActivo       : Boolean;
   end;
 
@@ -311,7 +312,8 @@ begin
     while not q.Eof do
     begin
       Inc(Result);
-      if Result = 1 then AUnicoSku := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      if Result = 1 then AUnicoSku :=
+        q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
       q.Next;
     end;
     if Result > 1 then AUnicoSku := '';
@@ -380,11 +382,14 @@ begin
       '              AS ORIGEN_PRECIO, ' +
       '       t.PRECIO_SALIDA_ARTTAR, t.PRECIO_FINAL_ARTTAR, ' +
       '       t.PRECIO_DTO_ARTTAR, t.PORCENTAJE_DTO_ARTTAR, ' +
-      '       COALESCE(t.PORCENTAJE_MARGEN_ARTTAR,    tar.PORCENTAJE_MARGEN_TAR) ' +
+      '       COALESCE(t.PORCENTAJE_MARGEN_ARTTAR,    ' +
+      'tar.PORCENTAJE_MARGEN_TAR) ' +
       '              AS PORCENTAJE_MARGEN_EFECTIVO, ' +
-      '       COALESCE(t.VALOR_MULTIPLO_AJUSTE_ARTTAR, tar.VALOR_MULTIPLO_AJUSTE_TAR) ' +
+      '       COALESCE(t.VALOR_MULTIPLO_AJUSTE_ARTTAR, ' +
+      'tar.VALOR_MULTIPLO_AJUSTE_TAR) ' +
       '              AS VALOR_MULTIPLO_AJUSTE_EFECTIVO, ' +
-      '       COALESCE(t.VALOR_MENOS_AJUSTE_ARTTAR,    tar.VALOR_MENOS_AJUSTE_TAR) ' +
+      '       COALESCE(t.VALOR_MENOS_AJUSTE_ARTTAR,    ' +
+      'tar.VALOR_MENOS_AJUSTE_TAR) ' +
       '              AS VALOR_MENOS_AJUSTE_EFECTIVO, ' +
       '       tar.ESIMP_INCL_TAR, tar.ESDEFAULT_TAR, ' +
       '       t.FECHA_DESDE_ARTTAR, t.FECHA_HASTA_ARTTAR ' +
@@ -437,9 +442,11 @@ begin
       if not q.IsEmpty then
       begin
         if not q.FieldByName('PRECIO_ULT_COMPRA_SKUC').IsNull then
-          Result.PrecioUltCompra    := q.FieldByName('PRECIO_ULT_COMPRA_SKUC').AsFloat;
+          Result.PrecioUltCompra    :=
+            q.FieldByName('PRECIO_ULT_COMPRA_SKUC').AsFloat;
         if not q.FieldByName('FECHA_ULT_COMPRA_SKUC').IsNull then
-          Result.FechaValidezCompra := q.FieldByName('FECHA_ULT_COMPRA_SKUC').AsDateTime;
+          Result.FechaValidezCompra :=
+            q.FieldByName('FECHA_ULT_COMPRA_SKUC').AsDateTime;
         Result.Encontrado := True;
         Exit;
       end;
@@ -456,7 +463,8 @@ begin
         '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP, ' +
         '       ap.ESPROVEEDORPRINCIPAL_AP ' +
         '  FROM fza_articulos_proveedores ap ' +
-        '  LEFT JOIN fza_proveedores p ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
+        '  LEFT JOIN fza_proveedores p ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP '
+          +
         ' WHERE ap.CODIGO_ART_AP = :art AND ap.CODIGO_PRV_AP = :prv LIMIT 1';
       q.ParamByName('art').AsString := ACodigoArt;
       q.ParamByName('prv').AsString := ACodigoProveedor;
@@ -468,9 +476,11 @@ begin
         '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP, ' +
         '       ap.ESPROVEEDORPRINCIPAL_AP ' +
         '  FROM fza_articulos_proveedores ap ' +
-        '  LEFT JOIN fza_proveedores p ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
+        '  LEFT JOIN fza_proveedores p ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP '
+          +
         ' WHERE ap.CODIGO_ART_AP = :art ' +
-        ' ORDER BY CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ELSE 1 END, ' +
+        ' ORDER BY CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ELSE 1 ' +
+        'END, ' +
         '          ap.FECHA_VALIDEZ_AP DESC ' +
         ' LIMIT 1';
       q.ParamByName('art').AsString := ACodigoArt;
@@ -481,11 +491,12 @@ begin
     Result.RazonSocialProveedor := q.FieldByName('RAZON_SOCIAL_PRV').AsString;
     Result.RefProveedor         := q.FieldByName('REF_PROVEEDOR_AP').AsString;
     if not q.FieldByName('PRECIO_ULT_COMPRA_AP').IsNull then
-      Result.PrecioUltCompra    := q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat;
+      Result.PrecioUltCompra := q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat;
     if not q.FieldByName('FECHA_VALIDEZ_AP').IsNull then
       Result.FechaValidezCompra := q.FieldByName('FECHA_VALIDEZ_AP').AsDateTime;
     Result.EsProveedorPrincipal :=
-                          q.FieldByName('ESPROVEEDORPRINCIPAL_AP').AsString = 'S';
+                          q.FieldByName(
+                            'ESPROVEEDORPRINCIPAL_AP').AsString = 'S';
     Result.Encontrado := True;
   finally
     q.Free;
@@ -583,10 +594,12 @@ begin
       '       a.TIPO_VARIACION_ART, ' +
       '       fam.DESCRIPCION_FAM, ' +
       '       sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
-      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') ' +
+      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / ' +
+      ''') ' +
       '          FROM fza_atributos_sku sa ' +
       '          JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
-      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU) AS DESCRIPCION_SKU, ' +
+      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU) AS ' +
+      'DESCRIPCION_SKU, ' +
       '       (SELECT COUNT(DISTINCT va.ID_ATB_VA) ' +
       '          FROM fza_articulos_skus s2 ' +
       '          JOIN fza_variaciones_atributos va ' +
@@ -595,9 +608,12 @@ begin
       '       iv.CODIGO_ABREVIATURA_IVA_IVATIP ' +
       '  FROM fza_articulos a ' +
       '  LEFT JOIN fza_articulos_skus sk ' +
-      '    ON sk.CODIGO_UNIDAD_SKU = :sku AND sk.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
-      '  LEFT JOIN fza_articulos_familias fam ON fam.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
-      '  LEFT JOIN fza_ivas_tipos iv ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART ' +
+      '    ON sk.CODIGO_UNIDAD_SKU = :sku AND sk.CODIGO_ART_SKU = ' +
+      'a.CODIGO_ART_ART ' +
+      '  LEFT JOIN fza_articulos_familias fam ON fam.CODIGO_FAM_FAM = ' +
+      'a.CODIGO_FAM_ART ' +
+      '  LEFT JOIN fza_ivas_tipos iv ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = ' +
+      'a.TIPO_IVA_ART ' +
       ' WHERE a.CODIGO_ART_ART = :art LIMIT 1';
     q.ParamByName('art').AsString := ACodigoArt;
     q.ParamByName('sku').AsString := sSku;
@@ -615,8 +631,8 @@ begin
     Result.TipoCantidad        := q.FieldByName('TIPO_CANTIDAD_ART').AsString;
     Result.EsActivoArticulo    := q.FieldByName('ESACTIVO_ART').AsString = 'S';
     Result.EsActivoSku         := q.FieldByName('ESACTIVO_SKU').AsString = 'S';
-    Result.EsVariacion         := q.FieldByName('ESVARIACION_ART').AsString = 'S';
-    Result.EsTrazable          := q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
+    Result.EsVariacion := q.FieldByName('ESVARIACION_ART').AsString = 'S';
+    Result.EsTrazable := q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
     Result.NumAtributosReq     := q.FieldByName('NUM_ATR_REQ').AsInteger;
     Result.CodigoFamilia       := q.FieldByName('CODIGO_FAM_ART').AsString;
     Result.DescripcionFamilia  := q.FieldByName('DESCRIPCION_FAM').AsString;
@@ -682,10 +698,12 @@ begin
     q.Connection := FConexion;
     q.SQL.Text :=
       'SELECT sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
-      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / '') ' +
+      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV SEPARATOR '' / ' +
+      ''') ' +
       '          FROM fza_atributos_sku sa ' +
       '          JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
-      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU) AS DESCRIPCION_SKU ' +
+      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU) AS ' +
+      'DESCRIPCION_SKU ' +
       '  FROM fza_articulos_skus sk ' +
       ' WHERE sk.CODIGO_ART_SKU = :art ' +
       sFiltroAct +

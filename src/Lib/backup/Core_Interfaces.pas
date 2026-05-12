@@ -17,7 +17,8 @@ type
     function GetTriggers: TArray<TTriggerInfo>;
     function GetTriggerDefinition(const TriggerName: string): string;
     function GetViews:TStringList;
-    function GetData(const TableName: string; const Filter: string = ''): TDataSet;
+    function GetData(const TableName: string;
+                     const Filter: string = ''): TDataSet;
     function GetViewDefinition(const ViewName:string):string;
     function GetProcedures:TStringList;
     function GetProcedureDefinition(const ProcedureName:string):string;

@@ -74,7 +74,8 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'PV';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_PRV_PRV').AsString :=
+        ParamByName('pcont').AsString;
     end;
   end;
     if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
@@ -88,7 +89,8 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'PO';
       ExecProc;
-      unqryTablaG.FindField('ORDEN_PRV').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('ORDEN_PRV').AsString :=
+        ParamByName('pcont').AsString;
     end;
   end;
 end;

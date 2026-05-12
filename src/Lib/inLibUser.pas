@@ -65,7 +65,8 @@ procedure GetDictionaryKeySubKey( var oPerfilDic: TProfileDicc;
 procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
                            const sFormName, sUsuario, sGrupo: string); overload;
 
-//  procedure AbrirPerfiles(bTabVisible:Boolean; unqryPerfiles:TUniQuery; Sender:TComponent);
+// procedure AbrirPerfiles(bTabVisible:Boolean; unqryPerfiles:TUniQuery;
+// Sender:TComponent);
 
 implementation
 

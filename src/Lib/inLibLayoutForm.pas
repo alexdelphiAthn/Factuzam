@@ -134,11 +134,16 @@ var
   Estado: TWindowState;
 begin
   if not FDisponible then Exit;
-  AForm.Left   := StrToIntDef(GetPerfilValueDef(FPerfil, 'Left',   IntToStr(AForm.Left)),   AForm.Left);
-  AForm.Top    := StrToIntDef(GetPerfilValueDef(FPerfil, 'Top',    IntToStr(AForm.Top)),    AForm.Top);
-  AForm.Width  := StrToIntDef(GetPerfilValueDef(FPerfil, 'Width',  IntToStr(AForm.Width)),  AForm.Width);
-  AForm.Height := StrToIntDef(GetPerfilValueDef(FPerfil, 'Height', IntToStr(AForm.Height)), AForm.Height);
-  Estado := TWindowState(StrToIntDef(GetPerfilValueDef(FPerfil, 'WindowState', '0'), 0));
+  AForm.Left   := StrToIntDef(
+    GetPerfilValueDef(FPerfil, 'Left',   IntToStr(AForm.Left)),   AForm.Left);
+  AForm.Top    := StrToIntDef(
+    GetPerfilValueDef(FPerfil, 'Top',    IntToStr(AForm.Top)),    AForm.Top);
+  AForm.Width  := StrToIntDef(
+    GetPerfilValueDef(FPerfil, 'Width',  IntToStr(AForm.Width)),  AForm.Width);
+  AForm.Height := StrToIntDef(
+    GetPerfilValueDef(FPerfil, 'Height', IntToStr(AForm.Height)), AForm.Height);
+  Estado := TWindowState(StrToIntDef(
+    GetPerfilValueDef(FPerfil, 'WindowState', '0'), 0));
   if Estado = wsMinimized then Estado := wsNormal;
   AForm.WindowState := Estado;
 end;

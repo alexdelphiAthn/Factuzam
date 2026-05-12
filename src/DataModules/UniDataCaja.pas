@@ -177,7 +177,8 @@ type
                         const AAlmacen:  string;
                         const ACaja:     string;
                         ANumOperacion:   string;
-                        const ATipoOp:   string;   // 'VE','VL','AL','CB','EC','GC','TR','AT'
+                        // 'VE','VL','AL','CB','EC','GC','TR','AT'
+                        const ATipoOp:   string;
                         AImporte:        Currency; // negativo en VL y AT
                         const AEmpleado: string;
                         // — opcionales —
@@ -197,9 +198,11 @@ type
                         const AEmpresa:   string;
                         const AAlmacen:   string;
                         const ACaja:      string;
-                        const ASerie:     string;    // serie de la operación de caja
+                        // serie de la operación de caja
+                        const ASerie:     string;
                         ANumOperacion:    string;
-                        ANumLinea:        Integer;   // 1, 2, 3... por forma de pago
+                        // 1, 2, 3... por forma de pago
+                        ANumLinea:        Integer;
                         const AFormaP:    string;    // FK a fza_formas_pago
                         AImporteEntregado: Currency;
                         AImporteCambio:   Currency;  // 0 si no hay cambio
@@ -223,7 +226,8 @@ type
                         const ADescVariacion:string;
                         const AFamilia:      string;
                         const ANombreFamilia:string;
-                        const ATipoArticulo: string;   // 'ESTANDAR', 'SERVICIO', 'KIT'
+                        // 'ESTANDAR', 'SERVICIO', 'KIT'
+                        const ATipoArticulo: string;
                         const ATipoCantidad: string;   // 'Uds', 'Kg'...
                         ACantidad:           Double;
                         // — tarifa y precios —
@@ -245,7 +249,8 @@ type
                         const AAlmacen:      string;
                         const ACaja:         string;
                         ANumOperacion:       string;
-                        const ANumMovAlmacen:string;   // NUMERO_MOV de fza_movimientos_almacen
+                        // NUMERO_MOV de fza_movimientos_almacen
+                        const ANumMovAlmacen:string;
                         const AUsuario:      string);
     procedure ConfigurarEstructuraLineas;
     procedure ConfigurarEstructuraCabecera;
@@ -292,7 +297,8 @@ type
             const ASerie:    string;
             const ANro:      string;
             AFecha:          TDateTime;
-            const ATipo:     string;   // 'SIMPLIFICADA', 'NORMAL', 'RECTIFICATIVA'
+            // 'SIMPLIFICADA', 'NORMAL', 'RECTIFICATIVA'
+            const ATipo:     string;
             const AFase:     string;   // 'BORRADOR', 'ONLINE', etc.
             // — empresa emisora —
             const AEmpresa,
@@ -365,7 +371,10 @@ type
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
-    function GrabarFacturaSimplificada(const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
+    function GrabarFacturaSimplificada(const AEmpresa,
+                                       AAlmacen,
+                                       ACaja,
+                                       ASerieElegida: string;
                                      DatosCobro: TDatosFaseCobro;
                                      SerieGenerada: string;
                                      out NumeroGenerado: String;
@@ -417,7 +426,8 @@ begin
     Result.CodigoPaisEmp   := FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString;
     Result.NombrePaisEmp   := FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString;
     Result.EsRetencionesEmp:= FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString;
-    Result.GrupoZonaIvaEmp := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
+    Result.GrupoZonaIvaEmp :=
+      FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
     Result.RazonSocialCli  := FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString;
     Result.NifCli          := FieldByName('NIF_CLIENTE_FAC').AsString;
     Result.MovilCli        := FieldByName('MOVIL_CLIENTE_FAC').AsString;
@@ -430,10 +440,11 @@ begin
     Result.CodigoPaisCli   := FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString;
     Result.NombrePaisCli   := FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString;
     Result.CodigoIva       := FieldByName('CODIGO_IVA_FAC').AsString;
-    Result.Tarifa          := FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    Result.Tarifa := FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     Result.EsIvaRecargo    := FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString;
     Result.EsIvaExento     := FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString;
-    Result.EsImpInclTarifa := FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
+    Result.EsImpInclTarifa :=
+      FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
     Result.PorcIvaN        := FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
     Result.TotalIvaN       := FieldByName('TOTAL_IVAN_FAC').AsCurrency;
     Result.PorcReN         := FieldByName('PORCENTAJE_REN_FAC').AsCurrency;
@@ -457,7 +468,7 @@ begin
     Result.TotalBases      := FieldByName('TOTAL_BASES_FAC').AsCurrency;
     Result.TotalImpuestos  := FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
     Result.TotalRetencion  := FieldByName('TOTAL_RETENCION_FAC').AsCurrency;
-    Result.PorcRetencion   := FieldByName('PORCENTAJE_RETENCION_FAC').AsCurrency;
+    Result.PorcRetencion := FieldByName('PORCENTAJE_RETENCION_FAC').AsCurrency;
     Result.TotalLiquido    := FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
     Result.FormaPago       := FieldByName('FORMA_PAGO_FAC').AsString;
     Result.Comentarios     := FieldByName('COMENTARIOS_FAC').AsString;
@@ -471,23 +482,27 @@ begin
     Result.Linea               := FieldByName('LINEA_FACLIN').AsString;
     Result.Articulo            := FieldByName('CODIGO_ART_FACLIN').AsString;
     Result.Sku                 := FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
-    Result.Descripcion         := FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
-    // Result.DescripcionVariacion:= FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString;
+    Result.Descripcion := FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
+    // Result.DescripcionVariacion:=
+    // FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString;
     Result.Familia             := FieldByName('CODIGO_FAM_FACLIN').AsString;
     Result.NombreFamilia       := FieldByName('NOMBRE_FAM_FACLIN').AsString;
     Result.TipoArticulo        := FieldByName('TIPO_ARTICULO_FACLIN').AsString;
-    Result.TipoCantidad        := FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
+    Result.TipoCantidad        :=
+      FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
     Result.CANTIDAD_ARTVIN            := FieldByName('CANTIDAD_FACLIN').AsFloat;
     Result.Tarifa              := FieldByName('CODIGO_TAR_FACLIN').AsString;
-    Result.EsImpIncl           := FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString;
-    Result.PrecioSalida        := FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
+    Result.EsImpIncl := FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString;
+    Result.PrecioSalida := FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
     Result.PorcDto             := FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat;
     Result.PrecioDto           := FieldByName('PRECIO_DTO_FACLIN').AsCurrency;
-    Result.PrecioSIva          := FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency;
-    Result.PrecioCIva          := FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency;
-    Result.TipoIva             := FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString;
+    Result.PrecioSIva          :=
+      FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency;
+    Result.PrecioCIva          :=
+      FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency;
+    Result.TipoIva := FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString;
     Result.PorcIva             := FieldByName('PORCENTAJE_IVA_FACLIN').AsFloat;
-    Result.TotalSIva           := FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
+    Result.TotalSIva := FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
     Result.TotalCIva           := FieldByName('TOTAL_FACLIN').AsCurrency;
     Result.VieneDeDeposito     := FieldByName('VIENE_DE_DEPOSITO').AsString;
     Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
@@ -538,41 +553,50 @@ begin
         IdDeposito        := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
         Articulo          := QryDep.FieldByName('CODIGO_ART_DEP').AsString;
         Sku               := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-        CantidadPendiente := QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+        CantidadPendiente :=
+          QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
         PrecioOriginal    := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-        AnticipoDado      := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+        AnticipoDado := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
         TipoIVA           := QryDep.FieldByName('TIPO_IVA_DEP').AsString;
-        PorcIVA           := QryDep.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
+        PorcIVA := QryDep.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
         EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
         Descripcion       := QryDep.FieldByName('DESCRIPCION_ART').AsString;
         // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────
         // *** SIN FOnRellenarArticulo ni FOnRellenarAtributos ***
         // Todo viene del SELECT, cero queries adicionales por fila
         cdsLineas.Append;
-        cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString                    := IdDeposito;
+        cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString := IdDeposito;
         cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString      := Articulo;
         cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString        := Sku;
-        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString := Descripcion;
-        cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat               := CantidadPendiente;
-        cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString                  := 'S';
-        cdsLineas.FieldByName('ACCION_DEPOSITO').AsString                    := 'COBRAR';
-        cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString     := TipoIVA;
-        cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency         := PorcIVA;
-        cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString    := EsImpIncl;
-        cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency        := PrecioOriginal;
-        cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := PrecioOriginal;
+        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+          Descripcion;
+        cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := CantidadPendiente;
+        cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'S';
+        cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
+        cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
+        cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency := PorcIVA;
+        cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString := EsImpIncl;
+        cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency        :=
+          PrecioOriginal;
+        cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency :=
+          PrecioOriginal;
         if PorcIVA = 0 then
-          cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := PrecioOriginal
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := PrecioOriginal
         else
-          cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
             PrecioOriginal / (1 + (PorcIVA / 100));
         cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat            := 0;
         cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency         := 0;
-        cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency              := PrecioOriginal * CantidadPendiente;
+        cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency              :=
+          PrecioOriginal * CantidadPendiente;
         cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency          :=
-        cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency * CantidadPendiente;
-        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency              := PrecioOriginal;
-        cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency                  := AnticipoDado;
+        cdsLineas.FieldByName(
+          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency * CantidadPendiente;
+        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency              :=
+          PrecioOriginal;
+        cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency := AnticipoDado;
         cdsLineas.Post;
         // ── LÍNEA 2: ABONO DEL ANTICIPO (negativo) ───────────────────────
         if AnticipoDado > 0 then
@@ -583,21 +607,28 @@ begin
             AnticipoSinIVA := AnticipoDado / (1 + (PorcIVA / 100));
           cdsLineas.Append;
           cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString := IdDeposito;
-          cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString            := 'ACUENTA';
-          cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString              := 'ACUENTA';
-          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString       := 'Abono a cuenta ' + Sku;
-          cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString                        := 'A';
-          cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat                    := -1;
-          cdsLineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString              := 'SERVICIO';
-          cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString           := TipoIVA;
-          cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency               := PorcIVA;
-          cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString          := EsImpIncl;
-          cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency              := AnticipoDado;
-          cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := AnticipoDado;
-          cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := AnticipoSinIVA;
-          cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency                    := -AnticipoDado;
-          cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency                := -AnticipoSinIVA;
-          cdsLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString     := 'Uds';
+          cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString := 'ACUENTA';
+          cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := 'ACUENTA';
+          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString       :=
+            'Abono a cuenta ' + Sku;
+          cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'A';
+          cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := -1;
+          cdsLineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString := 'SERVICIO';
+          cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
+          cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency := PorcIVA;
+          cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString          :=
+            EsImpIncl;
+          cdsLineas.FieldByName(
+            'PRECIO_SALIDA_FACLIN').AsCurrency              := AnticipoDado;
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := AnticipoDado;
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := AnticipoSinIVA;
+          cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency := -AnticipoDado;
+          cdsLineas.FieldByName(
+            'TOTAL_FAC_SIVA_FACLIN').AsCurrency := -AnticipoSinIVA;
+          cdsLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString     :=
+            'Uds';
           cdsLineas.Post;
         end;
         QryDep.Next;
@@ -762,7 +793,8 @@ begin
       AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
       if (VieneDeDep = 'S') and (AccionDep = 'CANCELAR') then
       begin
-        AnticipoRecuperado := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
+        AnticipoRecuperado :=
+          cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
         if AnticipoRecuperado > 0 then
           DineroDisponible := DineroDisponible + AnticipoRecuperado;
       end;
@@ -807,8 +839,10 @@ begin
           cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency    :=
                         cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
           cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency   := 0;
-          cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-          cdsLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+          cdsLineas.FieldByName(
+            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
           cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency          := 0;
           cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency      := 0;
           cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat        := 0;
@@ -1384,7 +1418,8 @@ begin
               QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku,
               UsuarioCaja,
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
-              Lin.CANTIDAD_ARTVIN, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl, ACaja,
+              Lin.CANTIDAD_ARTVIN, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
+              ACaja,
               sOpeCaja, IdDepGenerado);
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
@@ -1428,7 +1463,8 @@ begin
           if Lin.TotalCIva > 0 then
             TotalVentasNormales := TotalVentasNormales + Lin.TotalCIva
           else
-            TotalDevolucionesNormales := TotalDevolucionesNormales + Abs(Lin.TotalCIva);
+            TotalDevolucionesNormales :=
+              TotalDevolucionesNormales + Abs(Lin.TotalCIva);
         end;
         if Lin.CANTIDAD_ARTVIN < 0 then
           TipoMov := 'E'
@@ -1439,7 +1475,8 @@ begin
           InsertarLineaFactura(
             QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
             Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
-            Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad, Lin.CANTIDAD_ARTVIN,
+            Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
+            Lin.CANTIDAD_ARTVIN,
             Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
             Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
             Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja, AEmpresa,
@@ -1483,14 +1520,18 @@ begin
     DatosCobro.MemTablePagos.First;
     while not DatosCobro.MemTablePagos.Eof do
     begin
-      var CodigoFP  := DatosCobro.MemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-      var ImporteFP := DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
+      var CodigoFP  :=
+        DatosCobro.MemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
+      var ImporteFP :=
+        DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
       if (Abs(ImporteFP) > 0.001) and (CodigoFP <> 'VALE') then
       begin
         Inc(NumLineaPago);
         InsertarPagoCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE, NumLineaPago,
-          CodigoFP, ImporteFP, DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency);
+          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
+          NumLineaPago,
+          CodigoFP, ImporteFP,
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency);
       end;
       DatosCobro.MemTablePagos.Next;
     end;
@@ -1504,7 +1545,8 @@ begin
       begin
         Inc(NumLineaPago);
         InsertarPagoCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE, NumLineaPago,
+          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
+          NumLineaPago,
           'VALE', DatosCobro.ValesRecogidos[i].ImporteAplicado, 0,
           '', '', 1, 0,
           DatosCobro.ValesRecogidos[i].CodigoVale);   // <-- referencia al vale
@@ -1590,9 +1632,12 @@ end;
 // ALTER TABLE fza_caja_operaciones
 //   MODIFY COLUMN `TIPO_OPERACION_OPCAJA` varchar(2)
 //     CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci NOT NULL
-//     COMMENT 'VE=Venta, DE=Nuevo depósito, CB=Cobro a cuenta, DV=Devolución anticipo, VL=Vale emitido, VR=Vale recogido, AL=Albarán, EC=Entrada efectivo, GC=Gasto efectivo, TR=Traspaso almacén, AT=Traspaso empresa';
+// COMMENT 'VE=Venta, DE=Nuevo depósito, CB=Cobro a cuenta, DV=Devolución
+// anticipo, VL=Vale emitido, VR=Vale recogido, AL=Albarán, EC=Entrada efectivo,
+// GC=Gasto efectivo, TR=Traspaso almacén, AT=Traspaso empresa';
 
-function TdmCajaOpe.CuadrarFacturaEnMemoria(dsCabecera, dsLineas: TDataSet): Boolean;
+function TdmCajaOpe.CuadrarFacturaEnMemoria(dsCabecera,
+                                            dsLineas: TDataSet): Boolean;
 var
   CalculadorFiscal: TFacturaTotales;
 begin
@@ -1600,10 +1645,12 @@ begin
   // Instanciamos tu clase pasándole los datasets de la caja
   CalculadorFiscal := TFacturaTotales.Create(dsCabecera, dsLineas);
   try
-    // ProcesarFacturaCompleta se encarga de leer configuración, recorrer líneas y sumarizar
+    // ProcesarFacturaCompleta se encarga de leer configuración, recorrer líneas
+    // y sumarizar
     Result := CalculadorFiscal.ProcesarFacturaCompleta;
     if not Result then
-      raise Exception.Create('Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
+      raise Exception.Create(
+        'Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
   finally
     CalculadorFiscal.Free;
   end;
@@ -1630,7 +1677,8 @@ begin
     qrySP.ParamByName('pAlmacen').AsString   := AAlmacen;
     qrySP.ParamByName('pCaja').AsString  := ACaja;
     qrySP.ParamByName('pNumOperacion').AsString   := ANumOperacion;
-    // Le pasamos el nombre del cajero. Si quieres puedes leerlo del cdsCabecera:
+    // Le pasamos el nombre del cajero. Si quieres puedes leerlo del
+    // cdsCabecera:
     // cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString
     qrySP.ParamByName('pUsuario').AsString   := oUser;
     // Parámetro de salida (OUT) para recoger el código generado (VARCHAR 100)
@@ -1673,9 +1721,11 @@ procedure TdmCajaOpe.InsertarPagoCaja(
                         const AEmpresa:   string;
                         const AAlmacen:   string;
                         const ACaja:      string;
-                        const ASerie:     string;    // serie de la operación de caja
+                        // serie de la operación de caja
+                        const ASerie:     string;
                         ANumOperacion:    string;
-                        ANumLinea:        Integer;   // 1, 2, 3... por forma de pago
+                        // 1, 2, 3... por forma de pago
+                        ANumLinea:        Integer;
                         const AFormaP:    string;    // FK a fza_formas_pago
                         AImporteEntregado: Currency;
                         AImporteCambio:   Currency;  // 0 si no hay cambio
@@ -1753,10 +1803,16 @@ begin
     SpTrx.Connection := oConn;
     SpTrx.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
     // 1. Creación y asignación explícita de parámetros IN
-    SpTrx.Params.CreateParam(ftString, 'pEmpresa', ptInput).AsString := AEmpresa;
-    SpTrx.Params.CreateParam(ftString, 'pAlmacen', ptInput).AsString := AAlmacen;
+    SpTrx.Params.CreateParam(ftString,
+                             'pEmpresa',
+                             ptInput).AsString := AEmpresa;
+    SpTrx.Params.CreateParam(ftString,
+                             'pAlmacen',
+                             ptInput).AsString := AAlmacen;
     SpTrx.Params.CreateParam(ftString, 'pCaja',    ptInput).AsString := ACaja;
-    SpTrx.Params.CreateParam(ftString, 'pUsuario', ptInput).AsString := AEmpleado;
+    SpTrx.Params.CreateParam(ftString,
+                             'pUsuario',
+                             ptInput).AsString := AEmpleado;
     // 2. Creación explícita de parámetros OUT
     SpTrx.Params.CreateParam(ftString, 'pSerie', ptOutput).Size := 12;
     SpTrx.Params.CreateParam(ftString, 'pcont',  ptOutput).Size := 20;
@@ -1764,7 +1820,8 @@ begin
     SpTrx.Prepare;
     // 4. Ejecutar
     SpTrx.Execute;
-    // SerieOperacion := SpTrx.ParamByName('pSerie').AsString;  // misma en todas las llamadas
+    // SerieOperacion := SpTrx.ParamByName('pSerie').AsString; // misma en todas
+    // las llamadas
     Result := SpTrx.ParamByName('pcont').AsString;
   finally
     // Al liberar el componente también se hace el UnPrepare automáticamente
@@ -1778,7 +1835,8 @@ procedure TdmCajaOpe.InsertarOperacionCaja(
                         const AAlmacen:  string;
                         const ACaja:     string;
                         ANumOperacion:   string;
-                        const ATipoOp:   string;   // 'VE','VL','AL','CB','EC','GC','TR','AT'
+                        // 'VE','VL','AL','CB','EC','GC','TR','AT'
+                        const ATipoOp:   string;
                         AImporte:        Currency; // negativo en VL y AT
                         const AEmpleado: string;
                         // — opcionales —
@@ -2019,7 +2077,8 @@ var
 begin
   if DataSet.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString = '' then
     Abort;
-  Requeridos := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+  Requeridos :=
+    DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
   if Requeridos = 0 then
     Exit;
   SkuActual := Trim(DataSet.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
@@ -2257,7 +2316,8 @@ begin
   if FilasAfectadas <> 1 then
     raise Exception.CreateFmt(
       'No se pudo redimir el vale "%s". Filas afectadas: %d. ' +
-      'Posibles causas: el vale no existe, ya fue redimido, esta caducado o anulado.',
+      'Posibles causas: el vale no existe, ya fue redimido, esta caducado o ' +
+      'anulado.',
       [ACodigoVale, FilasAfectadas]);
 end;
 
@@ -2332,20 +2392,26 @@ begin
     '  MOVIL_EMPRESA_FAC, EMAIL_EMPRESA_FAC,' +
     '  DIRECCION1_EMPRESA_FAC, DIRECCION2_EMPRESA_FAC,' +
     '  POBLACION_EMPRESA_FAC, PROVINCIA_EMPRESA_FAC,' +
-    '  CODIGO_POSTAL_EMPRESA_FAC, CODIGO_PAI_EMPRESA_FAC, NOMBRE_PAI_EMPRESA_FAC,' +
+    '  CODIGO_POSTAL_EMPRESA_FAC, CODIGO_PAI_EMPRESA_FAC, ' +
+    'NOMBRE_PAI_EMPRESA_FAC,' +
     '  ESRETENCIONES_EMPRESA_FAC, GRUPO_ZONA_IVA_EMPRESA_FAC,' +
     '  CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC,' +
     '  MOVIL_CLIENTE_FAC, EMAIL_CLIENTE_FAC,' +
     '  DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC,' +
     '  POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC,' +
-    '  CODIGO_POSTAL_CLIENTE_FAC, CODIGO_PAI_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC,' +
+    '  CODIGO_POSTAL_CLIENTE_FAC, CODIGO_PAI_CLIENTE_FAC, ' +
+    'NOMBRE_PAI_CLIENTE_FAC,' +
     '  CODIGO_IVA_FAC, TARIFA_ARTICULO_CLIENTE_FAC,' +
     '  ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC,' +
     '  ESIMP_INCL_TARIFA_CLIENTE_FAC,' +
-    '  PORCENTAJE_IVAN_FAC, TOTAL_IVAN_FAC, PORCENTAJE_REN_FAC, TOTAL_REN_FAC, TOTAL_BASEI_IVAN_FAC,' +
-    '  PORCENTAJE_IVAR_FAC, TOTAL_IVAR_FAC, PORCENTAJE_RER_FAC, TOTAL_RER_FAC, TOTAL_BASEI_IVAR_FAC,' +
-    '  PORCENTAJE_IVAS_FAC, TOTAL_IVAS_FAC, PORCENTAJE_RES_FAC, TOTAL_RES_FAC, TOTAL_BASEI_IVAS_FAC,' +
-    '  PORCENTAJE_IVAE_FAC, TOTAL_IVAE_FAC, PORCENTAJE_REE_FAC, TOTAL_REE_FAC, TOTAL_BASEI_IVAE_FAC,' +
+    '  PORCENTAJE_IVAN_FAC, TOTAL_IVAN_FAC, PORCENTAJE_REN_FAC, ' +
+    'TOTAL_REN_FAC, TOTAL_BASEI_IVAN_FAC,' +
+    '  PORCENTAJE_IVAR_FAC, TOTAL_IVAR_FAC, PORCENTAJE_RER_FAC, ' +
+    'TOTAL_RER_FAC, TOTAL_BASEI_IVAR_FAC,' +
+    '  PORCENTAJE_IVAS_FAC, TOTAL_IVAS_FAC, PORCENTAJE_RES_FAC, ' +
+    'TOTAL_RES_FAC, TOTAL_BASEI_IVAS_FAC,' +
+    '  PORCENTAJE_IVAE_FAC, TOTAL_IVAE_FAC, PORCENTAJE_REE_FAC, ' +
+    'TOTAL_REE_FAC, TOTAL_BASEI_IVAE_FAC,' +
     '  TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC,' +
     '  PORCENTAJE_RETENCION_FAC, TOTAL_RETENCION_FAC,' +
     '  TOTAL_LIQUIDO_FAC,' +
@@ -2364,7 +2430,8 @@ begin
     '  NULLIF(:POBLEMP,   ''''), NULLIF(:PROVEMP,  ''''),' +
     '  NULLIF(:CPEMP,     ''''), :PAISEMP, NULLIF(:NPAISEMP, ''''),' +
     '  :RETREMP, NULLIF(:GRUPOIVAEMP, ''''),' +
-    '  NULLIF(:CLI,       ''''), NULLIF(:RSCLI,    ''''), NULLIF(:NIFCLI,   ''''),' +
+    '  NULLIF(:CLI,       ''''), NULLIF(:RSCLI,    ''''), NULLIF(:NIFCLI,   ' +
+    '''''),' +
     '  NULLIF(:MOVILCLI,  ''''), NULLIF(:EMAILCLI, ''''),' +
     '  NULLIF(:DIR1CLI,   ''''), NULLIF(:DIR2CLI,  ''''),' +
     '  NULLIF(:POBLCLI,   ''''), NULLIF(:PROVCLI,  ''''),' +
@@ -2499,7 +2566,8 @@ procedure TdmCajaOpe.InsertarLineaFactura(
             const AAlmacen:      string;
             const ACaja:         string;
             ANumOperacion:       string;
-            const ANumMovAlmacen:string;   // NUMERO_MOV de fza_movimientos_almacen
+            // NUMERO_MOV de fza_movimientos_almacen
+            const ANumMovAlmacen:string;
             const AUsuario:      string);
 begin
   QryTrx.SQL.Text :=

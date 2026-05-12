@@ -114,7 +114,9 @@ type
     procedure SetIniValues;
 
     function ExisteUser(sNom: string; f: TUniConnection): Boolean;
-    function LoginCorrecto(sNom, sPassLogin: string; f: TUniConnection): Boolean;
+    function LoginCorrecto(sNom,
+                           sPassLogin: string;
+                           f: TUniConnection): Boolean;
     function GetGrupo(sUser: string; conn: TUniConnection;
       var EsGrupoAdmin: string): string;
     procedure AppException(Sender: TObject; E: Exception);
@@ -161,9 +163,11 @@ begin
     '¿Deseas ignorar el error y continuar con el script?',
     mtError, [mbYes, mbNo], 0);
   if Respuesta = mrYes then
-    Action := eaContinue  // Ignora la sentencia fallida y continúa con la número 3
+    // Ignora la sentencia fallida y continúa con la número 3
+    Action := eaContinue
   else
-    Action := eaFail;     // Detiene el script y pasa al bloque "except" principal
+    // Detiene el script y pasa al bloque "except" principal
+    Action := eaFail;
 end;
 
 procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
@@ -435,7 +439,12 @@ begin
       Helpers := TMySQLHelpers.Create;
       Writer := TScriptWriter.Create('');
       try
-        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers, Options, IncludeTables, ExcludeTables);
+        Engine := TDBBackupEngine.Create(Provider,
+                                         Writer,
+                                         Helpers,
+                                         Options,
+                                         IncludeTables,
+                                         ExcludeTables);
         try
           // 3. Ejecutar la generación del script
           Engine.GenerateBackup;
@@ -608,7 +617,7 @@ end;
 //  unqryTestBD.SQL.Text := 'SELECT VALUE_USUPER ' +
 //                          '  FROM fza_usuarios_perfiles ' +
 //                          ' WHERE SUBKEY_USUPER = ' +
-//                                                QuotedStr('DataBaseVersion')  +
+// QuotedStr('DataBaseVersion') +
 //                          '   AND VALUE_USUPER = :VerBBDD ' ;
 //  unqryTestBD.ParamByName('VerBBDD').AsString := inLibGlobalVar.oVersion;
 //  unqryTestBD.Open;

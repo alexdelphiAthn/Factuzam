@@ -69,7 +69,7 @@ procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
   inherited;
 //  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
-//                       DataSet.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
+// DataSet.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
   (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1StatusChange(nil, [scAll]);
 end;
 
@@ -97,7 +97,8 @@ begin
       ParamByName('pUSUARIO_MODIF').AsString := oUser;
       ParamByName('ptipodoc').AsString :=  'GP';
       ExecProc;
-      unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString := ParamByName('pcont').AsString;
+      unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString :=
+        ParamByName('pcont').AsString;
     end;
   end;
 end;

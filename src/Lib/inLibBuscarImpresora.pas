@@ -158,7 +158,7 @@ begin
 //      EscribirLog('No se especificaron patrones de búsqueda válidos');
       Exit;
 //      end;
-//    EscribirLog('Patrones de búsqueda (debe coincidir con TODOS): ' + Patrones);
+// EscribirLog('Patrones de búsqueda (debe coincidir con TODOS): ' + Patrones);
     for i := 0 to ListaSubcadenas.Count - 1 do
 //      EscribirLog('  - Patrón ' + IntToStr(i + 1) + ': "' +                                                      ListaSubcadenas[i] + '"');
     // Obtener lista de impresoras instaladas
@@ -225,7 +225,7 @@ const
         if NumPrinters > 0 then
         begin
           PrinterInfo := PPrinterInfo2(InfoArray);
-//          EscribirLog(Format('%s: %d impresoras', [Descripcion, NumPrinters]));
+// EscribirLog(Format('%s: %d impresoras', [Descripcion, NumPrinters]));
           for i := 0 to NumPrinters - 1 do
           begin
             // Evitar duplicados
@@ -277,7 +277,7 @@ const
 //          if GetLastError <> ERROR_FILE_NOT_FOUND then
 //            raise.Create('Fichero no encontrado');
             // No es error si no hay impresoras de este tipo
-//            EscribirLog(Format('Error en %s: %d', [Descripcion, GetLastError]));
+// EscribirLog(Format('Error en %s: %d', [Descripcion, GetLastError]));
       end;
     finally
       FreeMem(InfoArray);
@@ -454,7 +454,7 @@ begin
               if CacheValida then
               begin
 //                EscribirLog('Cache [Sesion' + SesionCache + ']: ' +
-//                                                                ImpresoraCache);
+// ImpresoraCache);
                 Result := ImpresoraCache;
               end;
             end;
@@ -485,14 +485,14 @@ begin
               if SameText(PatronBusqueda, 'DEBUG') then
               begin
                 Result := 'DEBUG';
-//                EscribirLog('Modo DEBUG: omitiendo enumeración de impresoras');
+// EscribirLog('Modo DEBUG: omitiendo enumeración de impresoras');
               end
               else
                 Result := BuscarImpresoraPorPatrones(PatronBusqueda);
               if (Result <> '') and (Result <> 'DEBUG') then
               begin
                 Sesion := ObtenerSesionImpresora(Result);
-//                EscribirLog('Cache guardada [Sesion' + Sesion + ']: ' + Result);
+// EscribirLog('Cache guardada [Sesion' + Sesion + ']: ' + Result);
                 AssignFile(FCache, ArchivoCache);
                 Rewrite(FCache);
                 try

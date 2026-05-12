@@ -203,7 +203,8 @@ begin
                   TdmBase(NewDM).unqryTablaG.Open;
              except
                on E: Exception do
-                 inLibLog.Log.LogError('Error al abrir tabla en ' + sDataUnit + ': ' + E.Message);
+                 inLibLog.Log.LogError(
+                   'Error al abrir tabla en ' + sDataUnit + ': ' + E.Message);
              end;
           end;
 //          if NewDM is TdmBase then

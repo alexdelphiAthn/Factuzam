@@ -185,7 +185,7 @@ begin
                            '  FROM vi_empresas_series ' +
                            ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
 //      if (sCodigoSerie <> '') then
-//        unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE_EMPSER <> ' +
+// unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE_EMPSER <> ' +
 //                                                                 sCodigoSerie;
       unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
                                  FindField('CODIGO_EMP_EMPSER').AsString;
