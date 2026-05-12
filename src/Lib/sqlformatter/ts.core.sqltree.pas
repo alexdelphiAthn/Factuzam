@@ -1525,6 +1525,7 @@ type
   private
     FParamName: TSQLIdentifierName;
     FParamType: TSQLTypeDefinition;
+    FDirection: string;
 
   public
     destructor Destroy; override;
@@ -1532,6 +1533,8 @@ type
       AIndent: Integer = 0): TSQLStringType; override;
     property ParamName: TSQLIdentifierName read FParamName write FParamName;
     property ParamType: TSQLTypeDefinition read FParamType write FParamType;
+    // SOPORTE MARIADB: 'IN' | 'OUT' | 'INOUT' (vacío para sintaxis Firebird)
+    property Direction: string read FDirection write FDirection;
   end;
 
   { TSQLStatementBlock }
@@ -1740,6 +1743,8 @@ type
   private
     FInputVariables: TSQLElementList;
     FOutputVariables: TSQLElementList;
+    FMariaDBBodyText: string;
+    FIsOrReplace: Boolean;
 
   public
     constructor Create(AParent: TSQLElement); override;
@@ -1750,6 +1755,10 @@ type
       read FInputVariables write FInputVariables;
     property OutputVariables: TSQLElementList
       read FOutputVariables write FOutputVariables;
+    // SOPORTE MARIADB: cuerpo BEGIN..END capturado como texto formateado;
+    // si está vacío se renderiza el AST Firebird (DECLARE+statements).
+    property MariaDBBodyText: string read FMariaDBBodyText write FMariaDBBodyText;
+    property IsOrReplace: Boolean read FIsOrReplace write FIsOrReplace;
   end;
 
   { TSQLCreateProcedureStatement }
@@ -3907,24 +3916,53 @@ function TSQLAlterCreateProcedureStatement.GetAsSQL(Options: TSQLFormatOptions;
 var
   S, Sep: TSQLStringType;
   I: Integer;
+  IsMariaDB: Boolean;
 begin
+  IsMariaDB := FMariaDBBodyText <> '';
   S := '';
   if Self is TSQLAlterProcedureStatement then
     Result := SQLKeyWord('ALTER ', Options)
   else
+  begin
     Result := SQLKeyWord('CREATE ', Options);
+    if FIsOrReplace then
+      Result := Result + SQLKeyWord('OR REPLACE ', Options);
+  end;
   Result := Result + SQLKeyWord('PROCEDURE ', Options);
   if (ObjectName <> nil) then
     Result := Result + ObjectName.GetAsSQL(Options, AIndent);
   Sep := SQLListSeparator(Options);
-  for I := 0 to InputVariables.Count - 1 do
+
+  // Parámetros de entrada
+  if IsMariaDB then
   begin
+    // MariaDB: cada parámetro en su propia línea, indentado 2 espacios.
+    for I := 0 to InputVariables.Count - 1 do
+    begin
+      if (S <> '') then
+        S := S + ',' + SlineBreak + '  '
+      else
+        S := '  ';
+      S := S + InputVariables[I].GetAsSQL(Options, AIndent);
+    end;
     if (S <> '') then
-      S := S + Sep;
-    S := S + InputVariables[I].GetAsSQL(Options, AIndent);
+      Result := Result + '(' + SlineBreak + S + ')'
+    else
+      Result := Result + '()';
+  end
+  else
+  begin
+    for I := 0 to InputVariables.Count - 1 do
+    begin
+      if (S <> '') then
+        S := S + Sep;
+      S := S + InputVariables[I].GetAsSQL(Options, AIndent);
+    end;
+    if (S <> '') then
+      Result := Result + ' (' + S + ')';
   end;
-  if (S <> '') then
-    Result := Result + ' (' + S + ')';
+
+  // Parámetros de salida (estilo Firebird)
   S := '';
   for I := 0 to OutputVariables.Count - 1 do
   begin
@@ -3934,8 +3972,18 @@ begin
   end;
   if (S <> '') then
     Result := Result + SlineBreak + 'RETURNS (' + S + ')';
-  Result := Result + SlineBreak + SQLKeyWord('AS', Options) + SlineBreak;
-  Result := Result + inherited GetAsSQL(Options, AIndent);
+
+  if IsMariaDB then
+  begin
+    // Cuerpo MariaDB capturado como texto: ya viene formateado.
+    Result := Result + SlineBreak + FMariaDBBodyText;
+  end
+  else
+  begin
+    // Estilo Firebird: AS DECLARE... BEGIN... END
+    Result := Result + SlineBreak + SQLKeyWord('AS', Options) + SlineBreak;
+    Result := Result + inherited GetAsSQL(Options, AIndent);
+  end;
 end;
 
 { TSQLProcedureParamDef }
@@ -3950,8 +3998,11 @@ end;
 function TSQLProcedureParamDef.GetAsSQL(Options: TSQLFormatOptions;
   AIndent: Integer): TSQLStringType;
 begin
+  Result := '';
+  if FDirection <> '' then
+    Result := SQLKeyWord(FDirection, Options) + ' ';
   if Assigned(FParamName) then
-    Result := ParamName.GetAsSQL(Options, AIndent);
+    Result := Result + ParamName.GetAsSQL(Options, AIndent);
   if Assigned(FParamType) then
     Result := Result + ' ' + ParamType.GetAsSQL(Options, AIndent);
 end;
