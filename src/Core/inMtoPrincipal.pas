@@ -70,7 +70,7 @@ type
     Albaranes1: TMenuItem;
     Facturas1: TMenuItem;
     Sesiones1: TMenuItem;
-    CrearArtculosyunpedidoounalbarn1: TMenuItem;
+    mnuCrearArtculosyunpedidoounalbarn: TMenuItem;
     Formasdepago2: TMenuItem;
     dxSkinController1: TdxSkinController;
     mnuAlmacen: TMenuItem;
@@ -143,7 +143,6 @@ type
     procedure mnuPedidosVentaClick(Sender: TObject);
     procedure mnuAlbaranesVentaClick(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);
-    procedure CrearArtculosyunpedidoounalbarn1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
     procedure mnuProveedoresClick(Sender: TObject);
@@ -967,15 +966,7 @@ end;
 procedure TfrmMtoPrincipal.Sesiones1Click(Sender: TObject);
 begin
   inherited;
-  if Sesiones1.Visible then
-    ShowMto(Self, 'ComprasSesiones');
-end;
-
-procedure TfrmMtoPrincipal.CrearArtculosyunpedidoounalbarn1Click(
-  Sender: TObject);
-begin
-  inherited;
-  if CrearArtculosyunpedidoounalbarn1.Visible then
+  if mnuCrearArtculosyunpedidoounalbarn.Visible then
     ShowMto(Self, 'ComprasSesiones');
 end;
 

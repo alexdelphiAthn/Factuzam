@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 12/05/2026 7:41:46
+-- Backup generado: 12/05/2026 16:29:10
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -7059,7 +7059,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-12 07:38:10', '2026-05-12 07:38:10', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-12 16:27:08', '2026-05-12 16:27:08', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -12384,7 +12384,7 @@ CREATE TABLE `fza_winforms` (
 
 -- Datos de fza_winforms
 INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`, `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`) VALUES
-  ('Albaranes', 'Albaranes', 'mnuAlbaranesVenta', 'inMtoAlbaranes.TfrmMtoAlbaranes', 'Ctrl+Alt+A', 'UniDataAlbaranes.TdmAlbaranes', 99),
+  ('Albaranes', 'Albaranes', 'mnuAlbaranesVenta', 'inMtoAlbaranes.TfrmMtoAlbaranes', 'Ctrl+Alt+A', 'UniDataAlbaranes.TdmAlbaranes', 1),
   ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes', 1),
   ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos', 1),
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 1),
@@ -12393,8 +12393,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('CajaPagosHist', 'Histórico de Pagos de Caja', 'mnuCajaPagosHist', 'inMtoCajaPagosHist.TfrmMtoCajaPagosHist', 'Ctrl+Alt+P', 'UniDataCajaPagosHist.TdmCajaPagosHist', 1),
   ('CajaValesHist', 'Histórico de Vales', 'mnuCajaValesHist', 'inMtoCajaValesHist.TfrmMtoCajaValesHist', 'Ctrl+Alt+L', 'UniDataCajaValesHist.TdmCajaValesHist', 1),
   ('Clientes', 'Clientes', 'mnuClientes', 'inMtoClientes.TfrmMtoClientes', 'Ctrl+K', 'UniDataClientes.TdmClientes', 1),
-  ('ComprasPlantillas', 'Plantillas de Compra', 'mnuComprasPlantillas', 'inMtoComprasPlantillas.TfrmMtoComprasPlantillas', '', 'UniDataComprasSesiones.TdmComprasSesiones', 1),
-  ('ComprasSesiones', 'Sesiones de Compra', 'Sesiones1', 'inMtoComprasSesiones.TfrmMtoComprasSesiones', 'Ctrl+S', 'UniDataComprasSesiones.TdmComprasSesiones', 99),
+  ('ComprasSesiones', 'Sesiones de Compra', 'mnuCrearArtculosyunpedidoounalbarn', 'inMtoComprasSesiones.TfrmMtoComprasSesiones', 'Ctrl+S', 'UniDataComprasSesiones.TdmComprasSesiones', 1),
   ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores', 1),
   ('DepositosCliente', 'Depósitos de Clientes', 'mnuDepositosCliente', 'inMtoDepositosCliente.TfrmMtoDepositosCliente', 'Ctrl+D', 'UniDataDepositosCliente.TdmDepositosCliente', 1),
   ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas', 1),
@@ -12409,7 +12408,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL, 1),
   ('MovimientosAlmacen', 'Movimientos de Almacén', 'Movimientosdealmacn1', 'inMtoMovimientosAlmacen.TfrmMtoMovimientosAlmacen', 'Ctrl+M', 'UniDataMovimientosAlmacen.TdmMovimientosAlmacen', 1),
   ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+L', 'UniDataPaises.TdmPaises', 1),
-  ('Pedidos', 'Pedidos', 'mnuPedidosVenta', 'inMtoPedidos.TfrmMtoPedidos', 'Ctrl+Alt+P', 'UniDataPedidos.TdmPedidos', 99),
+  ('Pedidos', 'Pedidos', 'mnuPedidosVenta', 'inMtoPedidos.TfrmMtoPedidos', 'Ctrl+Alt+P', 'UniDataPedidos.TdmPedidos', 1),
   ('Propiedades', 'Propiedades', 'mnuPropiedades', 'inMtoPropiedades.TfrmMtoPropiedades', 'Ctrl+Y', 'UniDataPropiedades.TdmPropiedades', 1),
   ('PropiedadesValores', 'Valores de Propiedades', 'mnuPropiedadesValores', 'inMtoPropiedadesValores.TfrmMtoPropiedadesValores', 'Ctrl+Alt+Y', 'UniDataPropiedadesValores.TdmPropiedadesValores', 1),
   ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 1),
@@ -12417,7 +12416,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 1),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 1);
--- 33 registros exportados
+-- 32 registros exportados
 
 
 -- ========================================
@@ -16603,4 +16602,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 12/05/2026 7:41:52
+-- Backup completado: 12/05/2026 16:29:15
