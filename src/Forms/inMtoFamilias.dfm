@@ -1,39 +1,40 @@
-﻿inherited frmMtoFamilias: TfrmMtoFamilias
+inherited frmMtoFamilias: TfrmMtoFamilias
   Left = 5
   Top = 4
   Caption = 'Familias'
-  ClientHeight = 592
+  ClientHeight = 628
   ClientWidth = 880
   StyleElements = [seFont, seClient, seBorder]
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 880
-  ExplicitHeight = 592
+  ExplicitHeight = 628
   TextHeight = 19
   inherited pButtonPage: TPanel
     Width = 740
-    Height = 592
+    Height = 628
     TabOrder = 0
     StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 740
     ExplicitHeight = 592
     inherited pcPantalla: TcxPageControl
       Width = 740
-      Height = 552
+      Height = 588
       TabOrder = 1
-      Properties.ActivePage = tsLista
       ExplicitWidth = 740
       ExplicitHeight = 552
-      ClientRectBottom = 548
-      ClientRectRight = 736
+      ClientRectBottom = 586
+      ClientRectRight = 738
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 732
-        ExplicitHeight = 518
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 736
+        ExplicitHeight = 521
         inherited cxGrdPrincipal: TcxGrid
-          Width = 732
-          Height = 518
-          ExplicitWidth = 732
-          ExplicitHeight = 518
+          Width = 736
+          Height = 557
+          ExplicitWidth = 736
+          ExplicitHeight = 521
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_FAMILIA: TcxGridDBColumn
               Caption = 'C'#243'digo Familia'
@@ -85,14 +86,14 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 732
-        ExplicitHeight = 518
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 736
+        ExplicitHeight = 521
         object pnl1: TPanel
           Left = 0
           Top = 0
-          Width = 732
+          Width = 736
           Height = 165
           Align = alTop
           BevelOuter = bvNone
@@ -125,7 +126,7 @@
           object pnlCabFich: TPanel
             Left = 0
             Top = 0
-            Width = 732
+            Width = 736
             Height = 165
             Align = alClient
             BevelOuter = bvNone
@@ -222,28 +223,32 @@
         end
         object pnlDetailFich: TPanel
           Left = 0
-          Top = 173
-          Width = 732
-          Height = 345
+          Top = 175
+          Width = 736
+          Height = 382
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitHeight = 346
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
-            Width = 732
-            Height = 345
+            Width = 736
+            Height = 382
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 341
-            ClientRectLeft = 4
-            ClientRectRight = 728
-            ClientRectTop = 30
+            ExplicitHeight = 346
+            ClientRectBottom = 380
+            ClientRectLeft = 2
+            ClientRectRight = 734
+            ClientRectTop = 29
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
+              ExplicitLeft = -70
+              ExplicitTop = -51
               object lblDescripcion: TcxLabel
                 Left = 33
                 Top = 19
@@ -265,22 +270,19 @@
                 Top = 152
                 Caption = ' Autogenerar c'#243'digo de art'#237'culo desde esta familia '
                 TabOrder = 2
-                Height = 110
-                Width = 540
+                Height = 137
+                Width = 659
                 object chkEsContadorArtFam: TcxDBCheckBox
                   Left = 16
                   Top = 24
-                  Caption = 'Activar contador (el c'#243'digo de familia tecleado en sesiones de'
-                  Properties.Caption.Strings = (
-                    'Activar contador'
-                    '(el c'#243'digo de familia tecleado en sesiones de compra se expande'
-                    'autom'#225'ticamente al siguiente n'#250'mero)')
+                  Caption = 
+                    'Activar contador (el c'#243'digo de familia tecleado en sesiones de c' +
+                    'ompras'
                   DataBinding.DataField = 'ESCONTADOR_ART_FAM'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
                   TabOrder = 0
-                  Width = 510
                 end
                 object lblContadorArt: TcxLabel
                   Left = 16
@@ -289,28 +291,28 @@
                   TabOrder = 3
                 end
                 object spnContadorArt: TcxDBSpinEdit
-                  Left = 140
-                  Top = 54
+                  Left = 164
+                  Top = 53
                   DataBinding.DataField = 'CONTADOR_ART_FAM'
                   DataBinding.DataSource = dsTablaG
-                  Properties.MinValue = 0
-                  Properties.MaxValue = 99999999
+                  Properties.AssignedValues.MinValue = True
+                  Properties.MaxValue = 99999999.000000000000000000
                   TabOrder = 1
                   Width = 90
                 end
                 object lblPadArt: TcxLabel
-                  Left = 260
+                  Left = 278
                   Top = 56
                   Caption = 'D'#237'gitos relleno'
                   TabOrder = 4
                 end
                 object spnPadArt: TcxDBSpinEdit
-                  Left = 380
-                  Top = 54
+                  Left = 414
+                  Top = 53
                   DataBinding.DataField = 'PAD_ART_FAM'
                   DataBinding.DataSource = dsTablaG
-                  Properties.MinValue = 1
-                  Properties.MaxValue = 12
+                  Properties.MaxValue = 12.000000000000000000
+                  Properties.MinValue = 1.000000000000000000
                   TabOrder = 2
                   Width = 60
                 end
@@ -319,7 +321,6 @@
                   Top = 84
                   Caption = 'Ej: contador 0, d'#237'gitos 5  '#8594'  pr'#243'ximo c'#243'digo = FAM00001'
                   Style.TextColor = clGrayText
-                  Style.IsFontAssigned = True
                   TabOrder = 5
                 end
               end
@@ -330,8 +331,8 @@
               object cxgrdArticulosFamilias: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 724
-                Height = 311
+                Width = 732
+                Height = 351
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -516,8 +517,8 @@
               object cxGrid1: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 724
-                Height = 311
+                Width = 732
+                Height = 351
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -528,7 +529,6 @@
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Visible = True
                   DataController.DataModeController.SmartRefresh = True
-                  DataController.DataSource = dmFamilias.dsFamiliasAtributos
                   DataController.Summary.DefaultGroupSummaryItems = <
                     item
                       Kind = skSum
@@ -587,7 +587,6 @@
                         FieldName = 'NOMBRE_PROP_PROP'
                       end>
                     Properties.ListOptions.ShowHeader = False
-                    Properties.ListSource = dmFamilias.dsPropiedades
                     Width = 130
                   end
                   object tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn
@@ -684,8 +683,8 @@
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
-                Top = 232
-                Width = 724
+                Top = 272
+                Width = 732
                 Height = 79
                 Align = alBottom
                 BevelOuter = bvNone
@@ -808,32 +807,35 @@
         object cxspltr1: TcxSplitter
           Left = 0
           Top = 165
-          Width = 732
-          Height = 8
+          Width = 736
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 732
-        ExplicitHeight = 518
+        ExplicitWidth = 736
+        ExplicitHeight = 557
         inherited pnlPerfilTop: TPanel
-          Width = 732
+          Width = 736
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 732
+          ExplicitWidth = 736
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 732
-          Height = 461
+          Width = 736
+          Height = 500
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 732
-          ExplicitHeight = 461
+          ExplicitWidth = 736
+          ExplicitHeight = 500
           inherited cxgrdPerfil: TcxGrid
-            Width = 732
-            Height = 461
-            ExplicitWidth = 732
-            ExplicitHeight = 461
+            Width = 736
+            Height = 500
+            ExplicitWidth = 736
+            ExplicitHeight = 500
           end
         end
       end
@@ -855,13 +857,13 @@
   end
   inherited pButtonRightBar: TPanel
     Left = 740
-    Height = 592
+    Height = 628
     TabOrder = 1
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 740
     ExplicitHeight = 592
     inherited pButtonGen: TPanel
-      Top = 394
+      Top = 430
       StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 394
       inherited btnGrabar: TcxButton
@@ -888,7 +890,6 @@
     end
   end
   inherited dsTablaG: TDataSource
-    DataSet = dmFamilias.unqryTablaG
     Left = 604
     Top = 399
   end
@@ -897,8 +898,8 @@
     Top = 344
   end
   object ActionListFamilias: TActionList
-    Left = 608
-    Top = 456
+    Left = 512
+    Top = 344
     object actArticulo: TAction
       Caption = 'Articulos'
       ShortCut = 16449

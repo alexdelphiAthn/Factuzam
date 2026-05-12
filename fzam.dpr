@@ -143,7 +143,7 @@ uses
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
-  UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TdmAtributosConjuntos},
+  UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
   inMtoVariaciones in 'src\Forms\inMtoVariaciones.pas' {frmMtoVariaciones},
   UniDataVariaciones in 'src\DataModules\UniDataVariaciones.pas' {dmVariaciones: TdmVariaciones},
   inMtoPropiedades in 'src\Forms\inMtoPropiedades.pas' {frmMtoPropiedades},
@@ -172,7 +172,6 @@ uses
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
-  inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
   inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
   inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
@@ -185,7 +184,8 @@ uses
   inLibPresta in 'src\Lib\inLibPresta.pas',
   inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
   inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
-  inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas';
+  inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
+  inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia};
 
 var
   frmLogon: TfrmLogon;
@@ -223,5 +223,6 @@ begin
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  Application.CreateForm(TfrmModalSelFamilia, frmModalSelFamilia);
   Application.Run;
 end.

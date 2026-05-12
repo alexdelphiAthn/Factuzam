@@ -8,7 +8,6 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'SELECT * FROM fza_compras_sesiones'
       'ORDER BY FECHA_SES DESC, NUMERO_SES DESC')
     AfterInsert = unqryTablaGAfterInsert
-    BeforePost = unqryTablaGBeforePost
   end
   inherited unqryPerfiles: TUniQuery
     SQL.Strings = (
@@ -23,7 +22,6 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE SERIE_SES_SESLIN = :SERIE_SES'
       '  AND NUMERO_SES_SESLIN = :NUMERO_SES'
       'ORDER BY LINEA_SESLIN')
-    MasterSource = dsTablaG
     MasterFields = 'SERIE_SES;NUMERO_SES'
     DetailFields = 'SERIE_SES_SESLIN;NUMERO_SES_SESLIN'
     AfterInsert = unqrySesionLinAfterInsert
@@ -32,6 +30,17 @@ inherited dmComprasSesiones: TdmComprasSesiones
     AfterDelete = unqrySesionLinAfterDelete
     Left = 56
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
   end
   object dsSesionLin: TDataSource
     DataSet = unqrySesionLin
@@ -50,6 +59,22 @@ inherited dmComprasSesiones: TdmComprasSesiones
     DetailFields = 'SERIE_SES_SESFIL;NUMERO_SES_SESFIL;LINEA_SES_SESFIL'
     Left = 152
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'LINEA_SESLIN'
+        Value = nil
+      end>
   end
   object dsSesionFil: TDataSource
     DataSet = unqrySesionFil
@@ -66,6 +91,27 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterSource = dsSesionFil
     Left = 248
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESFIL'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESFIL'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'LINEA_SES_SESFIL'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'ID_FILA_SESFIL'
+        Value = nil
+      end>
   end
   object dsSesionFilAtr: TDataSource
     DataSet = unqrySesionFilAtr
@@ -84,6 +130,22 @@ inherited dmComprasSesiones: TdmComprasSesiones
     AfterPost = unqrySesionCelAfterPost
     Left = 344
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'LINEA_SESLIN'
+        Value = nil
+      end>
   end
   object dsSesionCel: TDataSource
     DataSet = unqrySesionCel
@@ -99,9 +161,19 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE P.SERIE_SES_SESPROP = :SERIE_SES'
       '  AND P.NUMERO_SES_SESPROP = :NUMERO_SES'
       'ORDER BY P.ORDEN_SESPROP')
-    MasterSource = dsTablaG
     Left = 440
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
   end
   object dsSesionProps: TDataSource
     DataSet = unqrySesionProps
@@ -117,6 +189,22 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterSource = dsSesionLin
     Left = 536
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'LINEA_SESLIN'
+        Value = nil
+      end>
   end
   object dsSesionLinProps: TDataSource
     DataSet = unqrySesionLinProps
@@ -129,9 +217,19 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE SERIE_SES_SESKIT = :SERIE_SES'
       '  AND NUMERO_SES_SESKIT = :NUMERO_SES'
       'ORDER BY ORDEN_SESKIT')
-    MasterSource = dsTablaG
     Left = 56
     Top = 128
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
   end
   object dsSesionKits: TDataSource
     DataSet = unqrySesionKits
@@ -148,6 +246,22 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterSource = dsSesionKits
     Left = 152
     Top = 128
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESKIT'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESKIT'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_SESKIT'
+        Value = nil
+      end>
   end
   object dsSesionKitsDet: TDataSource
     DataSet = unqrySesionKitsDet
@@ -160,9 +274,19 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE SERIE = :SERIE_SES'
       '  AND NUMERO = :NUMERO_SES'
       'ORDER BY CODIGO_ALM, LINEA, ID_FILA, ID_AV_PIVOT')
-    MasterSource = dsTablaG
     Left = 248
     Top = 128
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
   end
   object dsPreviewSkus: TDataSource
     DataSet = unqryPreviewSkus
@@ -174,9 +298,11 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'SELECT C.ID_FILA_SES_SESCEL                      AS ID_FILA,'
       '       C.ID_AV_PIVOT_SESCEL                      AS ID_AV_PIVOT,'
       '       AVP.AV                                    AS VAL_PIVOT,'
-      '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'')'
+      '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR '#39'/'#39')'
       '          FROM fza_compras_sesiones_lineas_filas_atr FA'
-      '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = FA.ID_AV_SESFILAT'
+      
+        '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = FA.ID_AV' +
+        '_SESFILAT'
       '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL'
       '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL'
       '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL'
@@ -201,6 +327,22 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterSource = dsSesionLin
     Left = 632
     Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES_SESLIN'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'LINEA_SESLIN'
+        Value = nil
+      end>
   end
   object dsLineaSkusPrecios: TDataSource
     DataSet = unqryLineaSkusPrecios
@@ -217,9 +359,19 @@ inherited dmComprasSesiones: TdmComprasSesiones
       ' WHERE R.SERIE  = :SERIE_SES'
       '   AND R.NUMERO = :NUMERO_SES'
       ' ORDER BY R.CODIGO_ALM')
-    MasterSource = dsTablaG
     Left = 632
     Top = 128
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
   end
   object dsResumenAlmacen: TDataSource
     DataSet = unqryResumenAlmacen
@@ -241,7 +393,9 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryFamilias: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_FAM_FAM, NOMBRE_FAM_FAM FROM fza_articulos_familias'
+      
+        'SELECT CODIGO_FAM_FAM, NOMBRE_FAM_FAM FROM fza_articulos_familia' +
+        's'
       'WHERE ESACTIVO_FAM = '#39'S'#39
       'ORDER BY ORDEN_FAM, NOMBRE_FAM_FAM')
     Left = 440
@@ -266,13 +420,20 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryVariacionesAtributos: TUniQuery
     SQL.Strings = (
-      'SELECT VA.*, COALESCE(VA.NOMBRE_VISIBLE_VA, VA.NOMBRE_VA) AS LABEL_VA'
+      
+        'SELECT VA.*, COALESCE(VA.NOMBRE_VISIBLE_VA, VA.NOMBRE_VA) AS LAB' +
+        'EL_VA'
       '  FROM fza_variaciones_atributos VA'
       'WHERE VA.ID_VAR_VA = :CODIGO_VAR_SES'
       'ORDER BY VA.ORDEN_VA')
-    MasterSource = dsTablaG
     Left = 56
     Top = 240
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_VAR_SES'
+        Value = nil
+      end>
   end
   object dsVariacionesAtributos: TDataSource
     DataSet = unqryVariacionesAtributos
@@ -307,15 +468,24 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryPropiedades: TUniQuery
     SQL.Strings = (
-      'SELECT P.CODIGO_PROP_ARTPROP, P.NOMBRE_PROP_PROP, P.TIPO_VALOR_PROP,'
+      
+        'SELECT P.CODIGO_PROP_ARTPROP, P.NOMBRE_PROP_PROP, P.TIPO_VALOR_P' +
+        'ROP,'
       '       FA.ESREQUERIDO_FA, FA.ORDEN_MOSTRAR_FA'
       '  FROM fza_familias_atributos FA'
-      '  JOIN fza_propiedades P ON P.CODIGO_PROP_ARTPROP = FA.CODIGO_PROP_ARTPROP'
+      
+        '  JOIN fza_propiedades P ON P.CODIGO_PROP_ARTPROP = FA.CODIGO_PR' +
+        'OP_ARTPROP'
       'WHERE FA.CODIGO_FAM_FAM = :CODIGO_FAM_SES'
       'ORDER BY FA.ORDEN_MOSTRAR_FA')
-    MasterSource = dsTablaG
     Left = 344
     Top = 240
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_FAM_SES'
+        Value = nil
+      end>
   end
   object dsPropiedades: TDataSource
     DataSet = unqryPropiedades
@@ -390,6 +560,12 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE CODIGO_ART_ART = :p')
     Left = 344
     Top = 352
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'p'
+        Value = nil
+      end>
   end
   object unstrdprcGetContadorSesion: TUniStoredProc
     StoredProcName = 'PRC_GET_CONTADOR'
