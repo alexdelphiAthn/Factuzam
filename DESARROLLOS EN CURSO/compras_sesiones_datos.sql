@@ -10,22 +10,22 @@
 -- ---------------------------------------------------------------------------
 -- 1. Contadores de Sesiones de Compra
 -- ---------------------------------------------------------------------------
--- TIPO_DOC_CON = 'SC' (varchar(2)) — la app llama PRC_GET_CONTADOR con 'SC'.
+-- TIPO_DOC_CON = 'SE' (varchar(2)) — la app llama PRC_GET_CONTADOR con 'SE'.
 --
 -- Las series se crean en Mantenimiento > Empresas > pestaña "4_Series"
--- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER='SC'. Cada
+-- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER='SE'. Cada
 -- combinación (EMPRESA, SERIE) tiene su propio contador en fza_contadores.
 --
 -- El contador correspondiente se crea bajo demanda (la primera vez que se
 -- pide el siguiente número). Como referencia/seed se inserta una fila
--- global ('SC', '-', '-') que el SP puede usar de fallback si la
+-- global ('SE', '-', '-') que el SP puede usar de fallback si la
 -- (EMPRESA, SERIE) concreta aún no tiene entrada propia.
 INSERT INTO `fza_contadores`
   (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
    `ESACTIVO_CON`, `DEFAULT_CON`,
    `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
 VALUES
-  ('SC', '-', '-', 0, 6, 'S', 'S',
+  ('SE', '-', '-', 0, 6, 'S', 'S',
    NOW(), 'Administrador', 'Administrador')
 ON DUPLICATE KEY UPDATE
   `ESACTIVO_CON` = VALUES(`ESACTIVO_CON`),
@@ -77,25 +77,11 @@ UPDATE `fza_variaciones_atributos`
    AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '');
 
 -- ---------------------------------------------------------------------------
--- 4. Inicializar PAD_ART_FAM y CONTADOR_ART_FAM en familias ya existentes
+-- Nota: la inicializacion de PAD_ART_FAM/CONTADOR_ART_FAM/ESCONTADOR_ART_FAM
+-- en familias preexistentes vive en compras_sesiones.sql §0-bis, justo
+-- despues del ALTER que crea las columnas. Asi no peta nunca por orden de
+-- ejecucion (si la columna no existia, no hay UPDATE que pueda fallar).
 -- ---------------------------------------------------------------------------
--- Las columnas se anaden via ALTER en compras_sesiones.sql con DEFAULT 0/5,
--- pero MySQL no aplica el DEFAULT a filas existentes; quedan en NULL para
--- los registros que ya estaban en la tabla antes de la migracion. Eso hace
--- que el TcxDBSpinEdit muestre vacio y no permita editar bien.
--- Los inicializamos a 0 y 5 respectivamente.
-
-UPDATE `fza_articulos_familias`
-   SET `CONTADOR_ART_FAM` = 0
- WHERE `CONTADOR_ART_FAM` IS NULL;
-
-UPDATE `fza_articulos_familias`
-   SET `PAD_ART_FAM` = 5
- WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
-
-UPDATE `fza_articulos_familias`
-   SET `ESCONTADOR_ART_FAM` = 'N'
- WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '';
 
 -- ---------------------------------------------------------------------------
 -- Listo. Reabrir Factuzam para que cargue los nuevos winforms.
