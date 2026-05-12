@@ -10,22 +10,22 @@
 -- ---------------------------------------------------------------------------
 -- 1. Contadores de Sesiones de Compra
 -- ---------------------------------------------------------------------------
--- TIPO_DOC_CON = 'SC' (varchar(2)) — la app llama PRC_GET_CONTADOR con 'SC'.
+-- TIPO_DOC_CON = 'SE' (varchar(2)) — la app llama PRC_GET_CONTADOR con 'SE'.
 --
 -- Las series se crean en Mantenimiento > Empresas > pestaña "4_Series"
--- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER='SC'. Cada
+-- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER='SE'. Cada
 -- combinación (EMPRESA, SERIE) tiene su propio contador en fza_contadores.
 --
 -- El contador correspondiente se crea bajo demanda (la primera vez que se
 -- pide el siguiente número). Como referencia/seed se inserta una fila
--- global ('SC', '-', '-') que el SP puede usar de fallback si la
+-- global ('SE', '-', '-') que el SP puede usar de fallback si la
 -- (EMPRESA, SERIE) concreta aún no tiene entrada propia.
 INSERT INTO `fza_contadores`
   (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
    `ESACTIVO_CON`, `DEFAULT_CON`,
    `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
 VALUES
-  ('SC', '-', '-', 0, 6, 'S', 'S',
+  ('SE', '-', '-', 0, 6, 'S', 'S',
    NOW(), 'Administrador', 'Administrador')
 ON DUPLICATE KEY UPDATE
   `ESACTIVO_CON` = VALUES(`ESACTIVO_CON`),

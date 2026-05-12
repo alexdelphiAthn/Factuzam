@@ -649,7 +649,7 @@ En cualquier punto antes del paso 7 la sesión puede:
    toca stock.
 
 6. **Numeración**: las sesiones consumen un contador propio
-   (`fza_contadores` con `TIPO_DOC = SESCOMPRA`). El pedido/albarán
+   (`fza_contadores` con `TIPO_DOC_CON = 'SE'`, varchar(2)). El pedido/albarán
    resultantes consumen los suyos respectivos.
 
 ---
