@@ -711,6 +711,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Align = alClient
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
+                  OnEditKeyDown = tvLineasEditKeyDown
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
                   object dbcLinNumero: TcxGridDBColumn
                     Caption = 'L'#237'n'
