@@ -66,6 +66,13 @@ type
     txtCODIGO_FAMILIA: TcxDBTextEdit;
     txtNOMBRE_FAMILIA: TcxDBTextEdit;
     mDESCRIPCION_FAMILIA: TcxDBMemo;
+    gbContadorArt: TcxGroupBox;
+    chkEsContadorArtFam: TcxDBCheckBox;
+    lblContadorArt: TcxLabel;
+    spnContadorArt: TcxDBSpinEdit;
+    lblPadArt: TcxLabel;
+    spnPadArt: TcxDBSpinEdit;
+    lblEjemploContador: TcxLabel;
     cxgrdbclmnGrdDBTabPrinACTIVO_FAMILIA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinORDEN_FAMILIA: TcxGridDBColumn;
     tsArticulos: TcxTabSheet;
