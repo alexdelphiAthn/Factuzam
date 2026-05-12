@@ -419,9 +419,9 @@ inferior con pestañas de la sesión seleccionada.
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ [Nuevo] [Borrar] [Grabar] [Cerrar] [Anular] [Clonar] [Crear artículos…]  │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ Nº  Fecha   Proveedor    Familia  Estado    Líneas  Total compra        │
-│ 12  06/05   Acme S.L.    ROPA     BORRADOR     5    1.230,00 €          │
-│ 11  29/04   Béta Texti   CALZADO  CERRADA      3      890,00 €          │
+│ Nº  Fecha   Proveedor    Familia  Estado    Líneas  Total compra         │
+│ 12  06/05   Acme S.L.    ROPA     BORRADOR     5    1.230,00 €           │
+│ 11  29/04   Béta Texti   CALZADO  CERRADA      3      890,00 €           │
 │ ...                                                                      │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Pestañas: [Cabecera] [Plantilla] [Líneas] [Kits] [Materialización] [Log] │
@@ -433,23 +433,23 @@ inferior con pestañas de la sesión seleccionada.
 ```
 ┌── Datos generales ─────────────────────────────────────────────────────┐
 │ Serie: [SES ▼]  Nº: [auto] Fecha: [06/05/2026] Estado: BORRADOR        │
-│ Empresa: [01 — Mi Empresa S.L.        ▼]                                │
-│ Proveedor: [010 — Acme Textiles, S.A. ▼]  Ref. prov.: [PO-2026-04]      │
-│ Almacén destino albarán: [GEN ▼]   Moneda: [EUR ▼]                      │
+│ Empresa: [01 — Mi Empresa S.L.        ▼]                               │
+│ Proveedor: [010 — Acme Textiles, S.A. ▼]  Ref. prov.: [PO-2026-04]     │
+│ Almacén destino albarán: [GEN ▼]   Moneda: [EUR ▼]                     │
 │ Comentarios: [____________________________________________________]    │
 └────────────────────────────────────────────────────────────────────────┘
 ┌── Plantilla precios e impuestos ───────────────────────────────────────┐
 │ Tipo IVA defecto: [N — 21% ▼]                                          │
 │ Margen comercial defecto: [55 ] %    Tarifa salida: [PUBLICO ▼]        │
-│ ☑ Precios introducidos sin IVA      ☐ Aplicar redondeo a venta         │
+│ ☑ Precios introducidos sin IVA      ☐ Aplicar redondeo a venta       │
 │ Mult.redondeo: [0,50]   Ajuste final: [-0,01]                          │
-│ ☐ Permitir precio distinto por SKU (talla×color)                       │
+│ ☐ Permitir precio distinto por SKU (talla×color)                      │
 └────────────────────────────────────────────────────────────────────────┘
 ┌── Plantilla variaciones ───────────────────────────────────────────────┐
 │ Variación a usar: [TC — Talla y Color ▼]                               │
 │ Atributo PIVOT (columnas): TALLA (autodetectado por orden)             │
 │ Conjunto de TALLAS:  [42-46 Caballero ▼]                               │
-│ Atributo FILA: COLOR                                                    │
+│ Atributo FILA: COLOR                                                   │
 │ Conjunto de COLORES: [Colores Básicos Verano ▼]                        │
 │ [Vista previa matriz]                                                  │
 └────────────────────────────────────────────────────────────────────────┘
