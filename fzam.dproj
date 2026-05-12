@@ -468,6 +468,91 @@
             <FormType>dfm</FormType>
             <DesignClass>TdmAtributosConjuntos</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoVariaciones.pas">
+            <Form>frmMtoVariaciones</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataVariaciones.pas">
+            <Form>dmVariaciones</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmVariaciones</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedades.pas">
+            <Form>frmMtoPropiedades</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedades.pas">
+            <Form>dmPropiedades</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPropiedadesValores.pas">
+            <Form>frmMtoPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPropiedadesValores.pas">
+            <Form>dmPropiedadesValores</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoMovimientosAlmacen.pas">
+            <Form>frmMtoMovimientosAlmacen</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataMovimientosAlmacen.pas">
+            <Form>dmMovimientosAlmacen</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDepositosCliente.pas">
+            <Form>frmMtoDepositosCliente</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataDepositosCliente.pas">
+            <Form>dmDepositosCliente</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAlbaranes.pas">
+            <Form>frmMtoAlbaranes</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAlbaranes.pas">
+            <Form>dmAlbaranes</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmAlbaranes</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
+            <Form>frmModalFacturarAlbaranesFechas</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaOperacionesHist.pas">
+            <Form>frmMtoCajaOperacionesHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaOperacionesHist.pas">
+            <Form>dmCajaOperacionesHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaPagosHist.pas">
+            <Form>frmMtoCajaPagosHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaPagosHist.pas">
+            <Form>dmCajaPagosHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaValesHist.pas">
+            <Form>frmMtoCajaValesHist</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaValesHist.pas">
+            <Form>dmCajaValesHist</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalAddBlockBase.pas">
             <Form>frmModalAddBlockBase</Form>
             <FormType>dfm</FormType>
