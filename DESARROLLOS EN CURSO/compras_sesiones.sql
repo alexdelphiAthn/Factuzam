@@ -119,6 +119,28 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Migracion para soporte de eje fila como texto libre del proveedor (§12):
+-- anade ETIQUETA_TEXTO_SESFIL a fza_compras_sesiones_lineas_filas si no
+-- existe. En modo texto libre _filas_atr queda vacia y la etiqueta de la
+-- fila se lee de esta columna.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_compras_sesiones_lineas_filas'
+     AND COLUMN_NAME  = 'ETIQUETA_TEXTO_SESFIL'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_compras_sesiones_lineas_filas` '
+  'ADD COLUMN `ETIQUETA_TEXTO_SESFIL` varchar(100) DEFAULT NULL '
+  '  COMMENT ''Etiqueta libre tecleada por el usuario cuando la sesion '
+  'usa eje fila libre (ID_AC_FILA_SES IS NULL). Si esta NULL la etiqueta '
+  'viene de _filas_atr (modo conjunto).'' '
+  '  AFTER `ORDEN_SESFIL`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- ---------------------------------------------------------------------------
 -- 1. Cabecera de sesión
 -- ---------------------------------------------------------------------------
@@ -328,6 +350,8 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas` (
   `ID_FILA_SESFIL`              int(11)       NOT NULL
                                   COMMENT 'Numerador 1..N dentro de la línea',
   `ORDEN_SESFIL`                int(11)       NOT NULL DEFAULT 0,
+  `ETIQUETA_TEXTO_SESFIL`       varchar(100)  DEFAULT NULL
+                                  COMMENT 'Etiqueta libre tecleada por el usuario cuando la sesión usa eje fila libre (ID_AC_FILA_SES IS NULL). En modo conjunto la etiqueta viene de _filas_atr.',
 
   `INSTANTE_ALTA`               datetime      NOT NULL,
   `USUARIO_ALTA`                varchar(50)   NOT NULL,
