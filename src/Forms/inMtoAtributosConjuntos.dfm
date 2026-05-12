@@ -241,6 +241,32 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               TabOrder = 8
               Width = 100
             end
+            object lblIdVarDesc: TcxLabel
+              Left = 240
+              Top = 78
+              Caption = ''
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clGrayText
+              Style.Font.Height = -13
+              Style.Font.Name = 'Segoe UI'
+              Style.Font.Style = [fsItalic]
+              Style.IsFontAssigned = True
+              TabOrder = 9
+              Transparent = True
+            end
+            object lblIdVaDesc: TcxLabel
+              Left = 500
+              Top = 78
+              Caption = ''
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clGrayText
+              Style.Font.Height = -13
+              Style.Font.Name = 'Segoe UI'
+              Style.Font.Style = [fsItalic]
+              Style.IsFontAssigned = True
+              TabOrder = 10
+              Transparent = True
+            end
           end
         end
         object splSplitterFicha: TcxSplitter
@@ -521,6 +547,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
     end
   end
   inherited dsTablaG: TDataSource
+    OnDataChange = dsTablaGDataChange
     Left = 104
     Top = 424
   end
