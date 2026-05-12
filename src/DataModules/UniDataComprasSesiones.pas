@@ -195,6 +195,11 @@ begin
     FieldByName('TIPO_IVA_SES').AsString := 'N';
     FieldByName('ESPRECIOS_SIN_IVA_SES').AsString := 'S';
     FieldByName('ESREDONDEO_VENTA_SES').AsString  := 'N';
+    // NOT NULL en la tabla: hay que darles valor en cliente o Post falla con
+    // 'Field XXX must have a value' antes de llegar al DEFAULT del servidor.
+    FieldByName('MULTIPLO_REDONDEO_SES').AsFloat  := 0;
+    FieldByName('AJUSTE_FINAL_SES').AsFloat       := 0;
+    FieldByName('ESPRECIO_POR_SKU_SES').AsString  := 'N';
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
