@@ -377,6 +377,24 @@ begin
   if tdmDataModule = nil then Exit;
   dmComprasSesiones := tdmDataModule as TdmComprasSesiones;
   pkFieldName := 'SERIE_SES;NUMERO_SES';
+
+  // Wire de los lookups de cabecera contra los DataSource auxiliares del DM.
+  // Sin esto los combos quedan vacios al pulsar "+" porque el DFM no puede
+  // resolver dmComprasSesiones.dsXxx en tiempo de streaming (la global aun
+  // es nil); por eso lo asignamos aqui, igual que cbbAlmacenMatriz.
+  cbbEmpresa.Properties.ListSource       := dmComprasSesiones.dsEmpresas;
+  cbbProveedor.Properties.ListSource     := dmComprasSesiones.dsProveedores;
+  cbbAlmacen.Properties.ListSource       := dmComprasSesiones.dsAlmacenes;
+  cbbTipoIva.Properties.ListSource       := dmComprasSesiones.dsIvas;
+  cbbTarifa.Properties.ListSource        := dmComprasSesiones.dsTarifas;
+  cbbVariacion.Properties.ListSource     := dmComprasSesiones.dsVariaciones;
+  cbbConjuntoPivot.Properties.ListSource := dmComprasSesiones.dsAtributosConjuntos;
+  cbbConjuntoFila.Properties.ListSource  := dmComprasSesiones.dsAtributosConjuntos;
+
+  // El DataSource heredado de TfrmMtoGen solo trae OnStateChange wireado en
+  // su DFM. Enganchamos aqui el OnDataChange para que al cambiar CODIGO_EMP_SES
+  // se refresque el dropdown de cbbSerie (RellenarItemsSerie).
+  dsTablaG.OnDataChange := dsTablaGDataChange;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);

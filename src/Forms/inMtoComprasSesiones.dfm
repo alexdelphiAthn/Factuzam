@@ -186,7 +186,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 58
                 DataBinding.DataField = 'CODIGO_EMP_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_EMP'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    FieldName = 'RAZON_SOCIAL_EMP'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 Properties.OnEditValueChanged = cbbEmpresaPropertiesEditValueChanged
                 TabOrder = 4
                 Width = 275
@@ -202,7 +213,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 94
                 DataBinding.DataField = 'CODIGO_PRV_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_PRV_PRV'
+                  end
+                  item
+                    Caption = 'Proveedor'
+                    FieldName = 'RAZON_SOCIAL_PRV'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 5
                 Width = 276
               end
@@ -231,7 +253,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 130
                 DataBinding.DataField = 'CODIGO_ALM_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 7
                 Width = 175
               end
@@ -283,7 +316,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 22
                 DataBinding.DataField = 'TIPO_IVA_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'IVA_IVAGRP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 40
+                    FieldName = 'IVA_IVAGRP'
+                  end
+                  item
+                    Caption = 'Descripci'#243'n'
+                    FieldName = 'DESCRIPCION_IVA_IVAGRP'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 0
                 Width = 150
               end
@@ -312,7 +356,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 94
                 DataBinding.DataField = 'CODIGO_TAR_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Tarifa'
+                    FieldName = 'NOMBRE_TAR_TAR'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 2
                 Width = 200
               end
@@ -400,7 +450,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 22
                 DataBinding.DataField = 'CODIGO_VAR_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'CODIGO_VAR'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_VAR'
+                  end
+                  item
+                    Caption = 'Variaci'#243'n'
+                    FieldName = 'NOMBRE_VAR'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 0
                 Width = 200
               end
@@ -425,7 +486,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 58
                 DataBinding.DataField = 'ID_AC_PIVOT_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'ID_AC'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Conjunto'
+                    FieldName = 'NOMBRE_AC'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 2
                 Width = 280
               end
@@ -440,7 +507,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 94
                 DataBinding.DataField = 'ID_AC_FILA_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'ID_AC'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Conjunto'
+                    FieldName = 'NOMBRE_AC'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 3
                 Width = 280
               end
