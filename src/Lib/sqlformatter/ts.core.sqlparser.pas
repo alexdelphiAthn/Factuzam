@@ -4774,14 +4774,6 @@ begin
       ClauseIndent := 1;
     end;
 
-    // Coma en lista de columnas de INSERT: un campo por línea
-    if (CurrentToken = tsqlComma) and InColumnList and
-       (ParenDepth = ColumnListDepth) then
-    begin
-      ForceNewline := True;
-      ClauseIndent := 1;
-    end;
-
     // Saltos estructurales: END / ELSE / ELSEIF
     if (CurrentToken = tsqlEnd) or SameText(Upper, 'ELSE') or
        SameText(Upper, 'ELSEIF') then
@@ -4903,13 +4895,29 @@ begin
       ClauseIndent := 1;
     end;
 
+    // Tras ',' en la lista de columnas de INSERT INTO t(...): un campo por línea
+    // (la ',' queda pegada al identificador anterior, el siguiente campo en
+    // nueva línea).
+    if (CurrentToken = tsqlComma) and InColumnList and
+       (ParenDepth = ColumnListDepth) then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 1;
+    end;
+
     GetNextToken;
   end;
 
   // SOPORTE MARIADB: tras el END del bloque etiquetado puede venir el label
   // de cierre ("END PRC;"). Lo emitimos en la misma línea que END antes de
   // dejar el control al outer Parse (que espera ';' o EOF).
-  if CurrentToken = tsqlIdentifier then
+  // OJO: NO consumir si el identifier es un marcador '$$' del cliente MySQL
+  // ni la directiva DELIMITER siguiente; ambos los gestiona el outer Parse
+  // como "ruido" al inicio de la siguiente sentencia.
+  if (CurrentToken = tsqlIdentifier) and
+     (CurrentTokenString <> '') and
+     (CurrentTokenString[1] <> '$') and
+     not SameText(CurrentTokenString, 'DELIMITER') then
   begin
     AppendCurrent(FScanner.CurRow);
     GetNextToken;
@@ -4988,7 +4996,30 @@ begin
     tsqlCommit :
       Result := ParseCommitStatement(nil);
     tsqlExecute :
-      Result := ParseExecuteProcedureStatement(nil);
+      begin
+        // EXECUTE PROCEDURE name (Firebird) vs EXECUTE stmt (MariaDB
+        // prepared statement). Si tras EXECUTE viene PROCEDURE, llamada
+        // a stored procedure; en otro caso lo tratamos como sentencia
+        // cruda hasta el ';' (sintaxis de prepared statements MySQL).
+        if PeekNextToken = tsqlProcedure then
+          Result := ParseExecuteProcedureStatement(nil)
+        else
+        begin
+          Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
+          TSQLRawStatement(Result).RawText := CurrentTokenString;
+          GetNextToken;
+          while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+          begin
+            if CurrentToken = tsqlString then
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+            else
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+            GetNextToken;
+          end;
+        end;
+      end;
     tsqlConnect :
       Result := ParseConnectStatement(nil);
     tsqlDeclare :
