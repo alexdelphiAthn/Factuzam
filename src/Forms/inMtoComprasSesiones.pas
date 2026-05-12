@@ -40,7 +40,7 @@ uses
   System.Actions, Vcl.ActnList,
   inMtoGen,
   UniDataComprasSesiones,
-  dxSkinsCore, dxSkinBlue, dxSkinsForm,
+  dxSkinsCore, dxSkinBlue, dxSkinsForm, Uni,
   cxClasses, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxDBEdit, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, DB, cxDBData, cxGridLevel, cxGridCustomView,
@@ -50,7 +50,7 @@ uses
   cxDBNavigator, cxMemo, cxCheckBox, cxGroupBox, cxDBLabel, cxButtonEdit,
   cxRadioGroup, cxLocalization, cxBlobEdit, cxGraphics, cxImage,
   dxDateRanges, dxScrollbarAnnotations, dxBevel, dxShellDialogs,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab, cxSplitter;
 
 type
   TfrmMtoComprasSesiones = class(TfrmMtoGen)

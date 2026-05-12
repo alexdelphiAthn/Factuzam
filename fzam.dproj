@@ -613,6 +613,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalSelFamilia.pas">
+            <Form>frmModalSelFamilia</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

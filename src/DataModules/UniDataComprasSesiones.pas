@@ -1,4 +1,4 @@
-unit UniDataComprasSesiones;
+﻿unit UniDataComprasSesiones;
 
 {
   Unidad: UniDataComprasSesiones
@@ -242,19 +242,15 @@ begin
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'KIT'
   else
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'ESTANDAR';
-
-<<<<<<< HEAD
   // Detección de duplicado
   if unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
-=======
   sTecla := Trim(unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
 
   // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
   // codigo de una familia con contador activo, expandir al siguiente
   // numero de la serie e incrementar el contador.
   if sTecla <> '' then
->>>>>>> eba3096c82df2df2cb405753899fa8a9da87d995
   begin
     if inLibComprasSesiones.ResolverCodigoFamilia(
          inLibGlobalVar.oConn, sTecla, oUser, sNuevo) then

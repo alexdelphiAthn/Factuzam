@@ -34,7 +34,8 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnMan, JvComponentBase, JvEnterTab, cxDBLabel, dxShellDialogs;
+  Vcl.ActnMan, JvComponentBase, JvEnterTab, cxDBLabel, dxShellDialogs,
+  cxGroupBox;
 
 type
   TfrmMtoFamilias = class(TfrmMtoGen)
