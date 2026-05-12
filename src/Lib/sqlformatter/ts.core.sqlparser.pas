@@ -5076,8 +5076,17 @@ begin
   else
     UnexpectedToken;
   end;
+  // Aceptamos también como terminador válido los marcadores '$$' del cliente
+  // MySQL y la palabra DELIMITER: cuando un PROCEDURE acaba "END $$\nDELIMITER ;"
+  // el body parser deja CurrentToken en '$$', y la siguiente llamada a
+  // Parse() los gestionará como "ruido" inicial.
   if Not(CurrentToken in [tsqlEOF, tsqlSemicolon]) then
   begin
+    if (CurrentToken = tsqlIdentifier) and
+       ((CurrentTokenString <> '') and
+        ((CurrentTokenString[1] = '$') or
+         SameText(CurrentTokenString, 'DELIMITER'))) then
+      Exit;
     FreeAndNil(Result);
     if (CurrentToken = tsqlBraceClose) then
       Error(SerrUnmatchedBrace);
