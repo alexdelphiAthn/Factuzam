@@ -165,9 +165,7 @@ uses
   inLibPresta in 'src\Lib\inLibPresta.pas',
   inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
   inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
-  inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
-  inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
-  UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule};
+  inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas';
 
 var
   frmLogon: TfrmLogon;

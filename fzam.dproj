@@ -247,6 +247,9 @@
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEtiqArt.pas">
+            <Form>frmPrintEtiqArt</Form>
+        </DCCReference>
         <DCCReference Include="src\Core\inMtoSplash.pas">
             <Form>frmSplash</Form>
         </DCCReference>
@@ -466,7 +469,7 @@
         <DCCReference Include="src\DataModules\UniDataAtributosConjuntos.pas">
             <Form>dmAtributosConjuntos</Form>
             <FormType>dfm</FormType>
-            <DesignClass>TdmAtributosConjuntos</DesignClass>
+            <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalAddBlockBase.pas">
             <Form>frmModalAddBlockBase</Form>
@@ -525,15 +528,6 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibPrestaImporter.pas"/>
-        <DCCReference Include="src\Forms\inMtoAtributosConjuntos.pas">
-            <Form>frmMtoAtributosConjuntos</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataAtributosConjuntos.pas">
-            <Form>dmAtributosConjuntos</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
