@@ -37,7 +37,7 @@ type
   //                    IBAN + Entidad + Oficina + DC + Cuenta
   //                          [-------------CCC-ESP----------------]
   /////////////////////////////////////////////////////////////////////////////////
-  //    IBAN...: ES17 ("ES" = 2 digitos pais, "17" Digito verificador de toda la CCC)
+  // IBAN...: ES17 ("ES" = 2 digitos pais, 17 Digito verificador de toda la CCC)
   //    Entidad: 2085
   //    Oficina: 2066
   //    DC.....: 62

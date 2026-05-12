@@ -194,7 +194,8 @@ begin
     frmMtoPrincipal.WindowState := wsMaximized;
 end;
 
-procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject;
+                                         var CanClose: Boolean);
 var
   i: Integer;
   F: TForm;
@@ -217,7 +218,8 @@ end;
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 begin
   Self.Position := poScreenCenter;
-  JvMonthCalendar1.Date := Date;     // forzar mes actual (evita fecha cacheada en DFM)
+  // forzar mes actual (evita fecha cacheada en DFM)
+  JvMonthCalendar1.Date := Date;
 
   Application.ShowHint     := True;
   Application.HintPause    := 500;
@@ -226,7 +228,8 @@ begin
   JvMonthCalendar1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
 
-  // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del calendario
+  // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
+  // calendario
   FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
 
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
@@ -249,7 +252,8 @@ begin
     end;
   end;
 
-  // Forzar repintado para que el calendario marque el mes actual con los días con ventas
+  // Forzar repintado para que el calendario marque el mes actual con los días
+  // con ventas
   JvMonthCalendar1.Invalidate;
 
   FOriginalF5Color := lblF5.Style.TextColor;
@@ -402,7 +406,8 @@ begin
   FFechaCaja := JvMonthCalendar1.Date;
 end;
 
-procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject; var Key: Word;
+procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject;
+                                                  var Key: Word;
   Shift: TShiftState);
 begin
   // El calendario reclama las flechas y Enter al nivel de Win32, así que las
@@ -468,13 +473,38 @@ procedure TfrmMtoMenuCaja.InitMenuItems;
 
 begin
   SetLength(FMenuItems, 7);
-  AddItem(0, lblF5,  lblVentas,          FOriginalF5Color,  FOriginalVentasColor,          clBlue);
-  AddItem(1, lblF10, lblBuscarModificar, FOriginalF10Color, FOriginalBuscarModificarColor, clBlue);
-  AddItem(2, lblF6,  lblEntradaCambio,   FOriginalF6Color,  FOriginalEntradaCambioColor,   clWebOrange);
-  AddItem(3, lblF7,  lblGastosCaja,      FOriginalF7Color,  FOriginalGastosCajaColor,      clWebOrange);
-  AddItem(4, lblF11, lblArqueo,          FOriginalF11Color, FOriginalArqueoColor,          clWebOrange);
-  AddItem(5, lblF3,  lblTraspasos,       FOriginalF3Color,  FOriginalTraspasosColor,       clWebOrange);
-  AddItem(6, lblESC, lblSalir,           FOriginalESCColor, FOriginalSalirColor,           clBlue);
+  AddItem(0, lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor, clBlue);
+  AddItem(1,
+          lblF10,
+          lblBuscarModificar,
+          FOriginalF10Color,
+          FOriginalBuscarModificarColor,
+          clBlue);
+  AddItem(2,
+          lblF6,
+          lblEntradaCambio,
+          FOriginalF6Color,
+          FOriginalEntradaCambioColor,
+          clWebOrange);
+  AddItem(3,
+          lblF7,
+          lblGastosCaja,
+          FOriginalF7Color,
+          FOriginalGastosCajaColor,
+          clWebOrange);
+  AddItem(4,
+          lblF11,
+          lblArqueo,
+          FOriginalF11Color,
+          FOriginalArqueoColor,
+          clWebOrange);
+  AddItem(5,
+          lblF3,
+          lblTraspasos,
+          FOriginalF3Color,
+          FOriginalTraspasosColor,
+          clWebOrange);
+  AddItem(6, lblESC, lblSalir, FOriginalESCColor, FOriginalSalirColor, clBlue);
 end;
 
 procedure TfrmMtoMenuCaja.SetSelectedIndex(NewIndex: Integer);
@@ -522,7 +552,8 @@ begin
   try
     frmMtoOpeCaja.PopupParent := Self;
     frmMtoOpeCaja.Tag := 1;
-    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)', [Self.FCaja]);
+    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)',
+                                    [Self.FCaja]);
     frmMtoOpeCaja.PrepararValores(Self.FEmpresa, Self.FAlmacen, Self.FCaja,
                                   Self.FFechaCaja);
     frmMtoOpeCaja.Show;
@@ -538,7 +569,10 @@ end;
 
 procedure TfrmMtoMenuCaja.lblVentasMouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor);
+  RestoreMenuItemColors(lblF5,
+                        lblVentas,
+                        FOriginalF5Color,
+                        FOriginalVentasColor);
 end;
 
 procedure TfrmMtoMenuCaja.lblF5MouseEnter(Sender: TObject);
@@ -548,7 +582,10 @@ end;
 
 procedure TfrmMtoMenuCaja.lblF5MouseLeave(Sender: TObject);
 begin
-  RestoreMenuItemColors(lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor);
+  RestoreMenuItemColors(lblF5,
+                        lblVentas,
+                        FOriginalF5Color,
+                        FOriginalVentasColor);
 end;
 
 // F10 - Buscar/Modificar

@@ -208,7 +208,8 @@ begin
     // forzamos al artículo activo si está vacío.
     if Trim(DataSet.FieldByName('CODIGO_ART_SKU').AsString) = '' then
       DataSet.FieldByName('CODIGO_ART_SKU').AsString :=
-                              unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+                              unqryTablaG.FieldByName(
+                                'CODIGO_ART_ART').AsString;
   end;
   oDmConn.ActualizarUserTimeModif(DataSet);
 
@@ -337,7 +338,8 @@ begin
      tvArticulosStock.ClearItems;
      tvArticulosStock.DataController.CreateAllItems;
 
-    // 3. Aplicamos el BestFit a todas las columnas para que se ajusten al texto perfecto
+    // 3. Aplicamos el BestFit a todas las columnas para que se ajusten al texto
+    // perfecto
 //     (GetOwnerForm<TfrmMtoArticulos>).tvStock.ApplyBestFit;
      finally
       tvArticulosStock.EndUpdate;
@@ -350,7 +352,8 @@ begin
        end;
      end;
     //DataSet.AfterScroll := unqryStockArticulosAfterScroll;
-    // Opcional: Si además quieres que las columnas se estiren para ocupar todo el ancho
+    // Opcional: Si además quieres que las columnas se estiren para ocupar todo
+    // el ancho
     // visual del grid y no quede espacio en blanco a la derecha:
     // cxGrid1DBTableView1.OptionsView.ColumnAutoWidth := True;
   end;
@@ -429,7 +432,8 @@ begin
   unqrySkus.Connection := oConn;
   unqryStockArticulos.Connection := oConn;
   unqryMovimientosArticulos.Connection := oConn;
-//  unqryStockArticulos.MasterSource := (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+// unqryStockArticulos.MasterSource :=
+// (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryVariacionesArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqrySkus.MasterSource :=
@@ -461,9 +465,10 @@ const
   CamposEscribibles: array[0..14] of string = (
     'CODIGO_ART_ARTTAR',  'CODIGO_UNICO_ARTTAR',  'CODIGO_UNIDAD_ARTTAR',
     'CODIGO_TAR_ARTTAR',  'ESACTIVO_ARTTAR',
-    'PRECIO_SALIDA_ARTTAR','PRECIO_FINAL_ARTTAR','PRECIO_DTO_ARTTAR','PORCENTAJE_DTO_ARTTAR',
+    'PRECIO_SALIDA_ARTTAR','PRECIO_FINAL_ARTTAR','PRECIO_DTO_ARTTAR',
+    'PORCENTAJE_DTO_ARTTAR',
     'FECHA_DESDE_ARTTAR', 'FECHA_HASTA_ARTTAR',
-    'INSTANTE_MODIF',     'INSTANTE_ALTA',         'USUARIO_ALTA',  'USUARIO_MODIF'
+    'INSTANTE_MODIF', 'INSTANTE_ALTA', 'USUARIO_ALTA', 'USUARIO_MODIF'
   );
 
   function EsEscribible(const NombreCampo: string): Boolean;
@@ -576,7 +581,8 @@ begin
     if State = dsInsert then
     begin
       // En alta, si nace a 0 lo dejamos inactivo por defecto (sin preguntar).
-      // Las altas con precio>0 conservan el ESACTIVO que les haya puesto el alta masiva.
+      // Las altas con precio>0 conservan el ESACTIVO que les haya puesto el
+      // alta masiva.
       if newPrecio = 0 then
         FindField('ESACTIVO_ARTTAR').AsString := 'N';
     end
@@ -611,20 +617,24 @@ begin
     try
       unqrySol.Connection := oConn;
 
-      // 2. Añadimos: AND CODIGO_UNICO_ARTTAR <> :PK para que no se valide contra sí mismo
+      // 2. Añadimos: AND CODIGO_UNICO_ARTTAR <> :PK para que no se valide
+      // contra sí mismo
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_articulos_tarifas ' +
                            ' WHERE CODIGO_ART_ARTTAR = :CODIGO_ART_ART' +
                            '   AND CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR' +
-                           '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = :CODIGO_UNIDAD' +
+                           '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = ' +
+                           ':CODIGO_UNIDAD' +
                            '   AND CODIGO_UNICO_ARTTAR <> :PK';
 
       unqrySol.ParamByName('CODIGO_ART_ART').AsString :=
                               unqryTablaG.FindField('CODIGO_ART_ART').AsString;
       unqrySol.ParamByName('CODIGO_TAR_ARTTAR').AsString :=
-                                            FindField('CODIGO_TAR_ARTTAR').AsString;
+                                            FindField(
+                                              'CODIGO_TAR_ARTTAR').AsString;
       unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
-                                            FindField('CODIGO_UNIDAD_ARTTAR').AsString;
+                                            FindField(
+                                              'CODIGO_UNIDAD_ARTTAR').AsString;
       unqrySol.ParamByName('PK').AsInteger := PKValue;
 
       unqrySol.Open;
@@ -702,8 +712,10 @@ begin
       '   AND CODIGO_TAR_ARTTAR = :TAR '                                   +
       '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = '''' '                +
       '   AND ESACTIVO_ARTTAR = ''S'' '                                    +
-      '   AND (FECHA_DESDE_ARTTAR IS NULL OR FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
-      '   AND (FECHA_HASTA_ARTTAR IS NULL OR FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
+      '   AND (FECHA_DESDE_ARTTAR IS NULL OR FECHA_DESDE_ARTTAR <= ' +
+      'CURRENT_DATE) ' +
+      '   AND (FECHA_HASTA_ARTTAR IS NULL OR FECHA_HASTA_ARTTAR >= ' +
+      'CURRENT_DATE) ' +
       ' ORDER BY FECHA_DESDE_ARTTAR DESC '                                 +
       ' LIMIT 1';
     qry.ParamByName('ART').AsString := aCodArt;
@@ -858,7 +870,10 @@ begin
       sFiltroAlm := 'WHERE CODIGO_ALM_STK IN (' + sFiltroAlm + ')';
   end;
 
-  sSql := StringReplace(cSqlEtiq, '%ALMACEN_FILTER%', sFiltroAlm, [rfReplaceAll]);
+  sSql := StringReplace(cSqlEtiq,
+                        '%ALMACEN_FILTER%',
+                        sFiltroAlm,
+                        [rfReplaceAll]);
 
   unqryArtPrint.Close;
   unqryArtPrint.SQL.Text := sSql;

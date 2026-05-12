@@ -26,7 +26,8 @@ type
       MsgHeaderViews = '-- Vistas --';
       MsgRecreateView = 'Recrear vista: ';
       MsgCopyAllData = 'Copiar datos de: ';
-      MsgWarnNoPK = 'ADVERTENCIA: No hay Primary Key en la tabla %s. No se compararán datos.';
+      MsgWarnNoPK = 'ADVERTENCIA: No hay Primary Key en la tabla %s. No se ' +
+                    'compararán datos.';
       MsgSyncData = 'Sincronizar datos de: ';
       MsgWithIdentity = ' (Contiene Autoincremental)';
       MsgInsertNew = 'Insertar registro (PK: %s)';
@@ -67,7 +68,8 @@ type
     procedure CreateNewTable(const TableName: string);
     procedure CompareData(const TableName: string);
     procedure CopyAllData(const TableName: string);
-    function BuildWhereClause(const PKCols: TStringList; DataSet: TDataSet): string;
+    function BuildWhereClause(const PKCols: TStringList;
+                              DataSet: TDataSet): string;
   public
     constructor Create(Source, Target: IDBMetadataProvider;
                        Writer: IScriptWriter;
@@ -105,7 +107,8 @@ begin
     // Normalizamos para comparaciones (opcional, pero recomendado)
     SourceSeqs.CaseSensitive := False;
     TargetSeqs.CaseSensitive := False;
-    if (SourceSeqs.Count > 0) or ((TargetSeqs.Count > 0) and not FOptions.NoDelete) then
+    if (SourceSeqs.Count > 0)
+       or ((TargetSeqs.Count > 0) and not FOptions.NoDelete) then
       FWriter.AddComment(TRes.MsgHeaderSequences);
     // 1. CREAR: Existe en Origen, pero NO en Destino
     for i := 0 to SourceSeqs.Count - 1 do
@@ -116,9 +119,11 @@ begin
         FWriter.AddCommand(FHelpers.GenerateCreateSequence(SourceSeqs[i]));
       end;
       // NOTA: Si ya existe, NO la tocamos.
-      // Recrearla reiniciaría el contador a 1, lo cual es peligroso en producción.
+      // Recrearla reiniciaría el contador a 1, lo cual es peligroso en
+      // producción.
     end;
-    // 2. BORRAR: Existe en Destino, pero NO en Origen (si --nodelete no está activo)
+    // 2. BORRAR: Existe en Destino, pero NO en Origen (si --nodelete no está
+    // activo)
     if not FOptions.NoDelete then
     begin
       for i := 0 to TargetSeqs.Count - 1 do
@@ -171,7 +176,8 @@ begin
     end;
   finally
     Table.Free;
-    // Indexes es un array dinámico gestionado automáticamente por el compilador,
+    // Indexes es un array dinámico gestionado automáticamente por el
+    // compilador,
     // pero si TIndexInfo contuviera objetos habría que liberarlos.
     // Al ser Records, no es necesario liberar el array explícitamente.
   end;
@@ -259,7 +265,8 @@ begin
              else if FOptions.WithDataDiff then
                CompareData(SourceTables[i]);
            end;
-           // Las tablas nuevas ya se procesaron arriba, junto con CreateNewTable
+           // Las tablas nuevas ya se procesaron arriba, junto con
+           // CreateNewTable
          end;
        end;
     end;
@@ -368,7 +375,8 @@ begin
       // Buscar si el trigger de destino existe en el origen
       for j := Low(SourceTriggers) to High(SourceTriggers) do
       begin
-        if SameText(SourceTriggers[j].TriggerName, TargetTriggers[i].TriggerName) then
+        if SameText(SourceTriggers[j].TriggerName,
+                    TargetTriggers[i].TriggerName) then
         begin
           Found := True;
           Break;
@@ -377,7 +385,8 @@ begin
       if not Found then
       begin
         FWriter.AddComment(TRes.MsgTriggerDel + TargetTriggers[i].TriggerName);
-        FWriter.AddCommand(FHelpers.GenerateDropTrigger(TargetTriggers[i].TriggerName));
+        FWriter.AddCommand(FHelpers.GenerateDropTrigger(
+          TargetTriggers[i].TriggerName));
       end;
     end;
   end;
@@ -388,13 +397,16 @@ begin
     for j := Low(TargetTriggers) to High(TargetTriggers) do
     begin
       // Comparamos por nombre
-      if SameText(SourceTriggers[i].TriggerName, TargetTriggers[j].TriggerName) then
+      if SameText(SourceTriggers[i].TriggerName,
+                  TargetTriggers[j].TriggerName) then
       begin
         Found := True;
         // Si existen en ambos, comparamos su contenido usando el Helper
-        if not FHelpers.TriggersAreEqual(SourceTriggers[i], TargetTriggers[j]) then
+        if not FHelpers.TriggersAreEqual(SourceTriggers[i],
+                                         TargetTriggers[j]) then
         begin
-          FWriter.AddComment(TRes.MsgTriggerMod + SourceTriggers[i].TriggerName);
+          FWriter.AddComment(
+            TRes.MsgTriggerMod + SourceTriggers[i].TriggerName);
           // Para modificar un trigger, generalmente se borra y se crea de nuevo
           FWriter.AddCommand(FHelpers.GenerateDropTrigger(
                                                 SourceTriggers[i].TriggerName));
@@ -403,7 +415,8 @@ begin
                                                  SourceTriggers[i].TriggerName);
           // OJO: En algunos clientes MySQL se necesita 'DELIMITER $$',
           // pero UniDAC/ScriptWriter suelen manejar comandos individuales.
-          // Si vas a ejecutar esto en Workbench, podrías necesitar añadir delimitadores.
+          // Si vas a ejecutar esto en Workbench, podrías necesitar añadir
+          // delimitadores.
           FWriter.AddCommand(TriggerDef);
         end;
         Break;
@@ -454,7 +467,8 @@ begin
   Values := TStringList.Create;
   try
     // Preparamos lista de campos una vez (asumiendo coincidencia por nombre)
-    // Nota: En una versión robusta, verificaríamos que campos existen en destino
+    // Nota: En una versión robusta, verificaríamos que campos existen en
+    // destino
     // pero para CopyData asumimos estructura idéntica recién creada o validada.
     while not SourceData.Eof do
     begin
@@ -470,7 +484,8 @@ begin
       SourceData.Next;
     end;
   finally
-    SourceData.Free; // El provider nos dio el dataset, pero somos dueños de liberarlo
+    // El provider nos dio el dataset, pero somos dueños de liberarlo
+    SourceData.Free;
     Fields.Free;
     Values.Free;
   end;
@@ -498,7 +513,8 @@ begin
       // Detectar Primary Key
       if SameText(Col.ColumnKey, 'PRI') then
         PKCols.Add(Col.ColumnName);
-      // Detectar Identidad (SQL Server usa 'IDENTITY', MySQL usa 'auto_increment')
+      // Detectar Identidad (SQL Server usa 'IDENTITY', MySQL usa
+      // 'auto_increment')
       // Buscamos en 'Extra' que es donde suele venir esta info
       if (Pos('IDENTITY', UpperCase(Col.Extra)) > 0) or
          (Pos('AUTO_INCREMENT', UpperCase(Col.Extra)) > 0) then
@@ -534,13 +550,18 @@ begin
              Values.Clear;
              for i := 0 to SourceData.FieldCount - 1 do
              begin
-               Fields.Add(FHelpers.QuoteIdentifier(SourceData.Fields[i].FieldName));
+               Fields.Add(FHelpers.QuoteIdentifier(
+                 SourceData.Fields[i].FieldName));
                Values.Add(FHelpers.ValueToSQL(SourceData.Fields[i]));
              end;
              FWriter.AddComment(Format(TRes.MsgInsertNew,[WhereClause]));
-             // Pasamos 'HasIdentity' para que el Helper de SQL Server sepa si debe
+             // Pasamos 'HasIdentity' para que el Helper de SQL Server sepa si
+             // debe
              // envolver el INSERT con SET IDENTITY_INSERT ON/OFF
-             FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
+             FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName,
+                                                           Fields,
+                                                           Values,
+                                                           HasIdentity));
           end
           else
           begin
@@ -551,25 +572,33 @@ begin
               // Saltamos la PK (no se actualiza)
               if (PKCols.IndexOf(SourceData.Fields[i].FieldName) >= 0) then
                 Continue;
-              // Verificamos si el campo existe en destino y si el valor es diferente
-              if (TargetData.FindField(SourceData.Fields[i].FieldName) <> nil) then
+              // Verificamos si el campo existe en destino y si el valor es
+              // diferente
+              if (TargetData.FindField(
+                SourceData.Fields[i].FieldName) <> nil) then
               begin
-                 // Comparación simple de cadenas (ValueToSQL normaliza formatos)
+                 // Comparación simple de cadenas (ValueToSQL normaliza
+                 // formatos)
                  if FHelpers.ValueToSQL(SourceData.Fields[i]) <>
-                    FHelpers.ValueToSQL(TargetData.FieldByName(SourceData.Fields[i].FieldName)) then
+                    FHelpers.ValueToSQL(TargetData.FieldByName(
+                      SourceData.Fields[i].FieldName)) then
                  begin
                    if (SetClause <> '') then
                      SetClause := SetClause + ', ';
                    SetClause := SetClause +
-                                FHelpers.QuoteIdentifier(SourceData.Fields[i].FieldName) +
-                                ' = ' + FHelpers.ValueToSQL(SourceData.Fields[i]);
+                                FHelpers.QuoteIdentifier(
+                                  SourceData.Fields[i].FieldName) +
+                                ' = '
+                                  + FHelpers.ValueToSQL(SourceData.Fields[i]);
                  end;
               end;
             end;
             if SetClause <> '' then
             begin
               FWriter.AddComment(Format(TRes.MsgUpdateDiff, [WhereClause]));
-              FWriter.AddCommand(FHelpers.GenerateUpdateSQL(TableName, SetClause, WhereClause));
+              FWriter.AddCommand(FHelpers.GenerateUpdateSQL(TableName,
+                                                            SetClause,
+                                                            WhereClause));
             end;
           end;
         finally
@@ -583,7 +612,8 @@ begin
       Values.Free;
     end;
     // =========================================================================
-    // FASE B: Recorrer DESTINO -> Eliminar lo que sobre (Si --nodelete no está activo)
+    // FASE B: Recorrer DESTINO -> Eliminar lo que sobre (Si --nodelete no está
+    // activo)
     // =========================================================================
     if not FOptions.NoDelete then
     begin
@@ -600,7 +630,8 @@ begin
             begin
               // --- CASO 3: DELETE (Sobra en destino) ---
               FWriter.AddComment(Format(TRes.MsgDeleteObs, [WhereClause]));
-              FWriter.AddCommand(FHelpers.GenerateDeleteSQL(TableName, WhereClause));
+              FWriter.AddCommand(FHelpers.GenerateDeleteSQL(TableName,
+                                                            WhereClause));
             end;
           finally
             TempSource.Free;

@@ -26,7 +26,7 @@ uses
 
 //  function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
 //  function IsOpenMDI(sName: String; Owner : TComponent;
-//                                        var Found:TComponent):boolean; overload;
+// var Found:TComponent):boolean; overload;
 //  function FindMDIChildOpen(const AParentForm: TForm;
 //                            const AMDIChildClass: TFormClass;
 //                            const AMDICaption : string): TForm;
@@ -335,7 +335,8 @@ begin
     Result := (oSender as Tcomponent);
 end;
 
-function EncontrarObjeto(oControl:TComponent; sBusquedaTipo:String):TObject; overload;
+function EncontrarObjeto(oControl:TComponent;
+                         sBusquedaTipo:String):TObject; overload;
 var
   i:Integer;
 begin
@@ -358,13 +359,15 @@ begin
       odmPerfiles.GrabarPerfil(sUser, dmmModule.Name,
                                   (oControl.Components[i] as TUniQuery).Name,
                                   'SQL',
-                                  (oControl.Components[i] as TUniQuery).SQL.Text)
+                                  (
+                                    oControl.Components[i] as TUniQuery).SQL.Text)
     else
       if ( Pos('unstrdprc', oControl.Components[i].Name) > 0 )  then
         odmPerfiles.GrabarPerfil(sUser, dmmModule.Name,
                        (oControl.Components[i] as TUniStoredProc).Name,
                        'Procedure',
-                       (oControl.Components[i] as TUniStoredProc).StoredProcName);
+                       (
+                         oControl.Components[i] as TUniStoredProc).StoredProcName);
 end;
 
 procedure SetLabelForm(oControl:TComponent; var oPerfilDic : TProfileDicc);
@@ -650,7 +653,8 @@ end;
 // This example shows how you can encrypt strings
 // using special security string.
 // You can decode data only if you know security string.
-// I suppose, there is no chance to hack security string, using any analyse algorythms.
+// I suppose, there is no chance to hack security string, using any analyse
+// algorythms.
 // Every time you call this function, you will
 // have a new result even if all params are constant
 // NOTE: Don`t forget to call "Randomize" proc before using this functions.
@@ -660,7 +664,8 @@ const
 
   // you must use this function to generate special
   // security string, which is used in main encode/decode routines.
-  // NOTE: you must generate the security string only once and then use it in encode/decode functions.
+  // NOTE: you must generate the security string only once and then use it in
+  // encode/decode functions.
 
 function GeneratePWDSecurityString: string;
 var

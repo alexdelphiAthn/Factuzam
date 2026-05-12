@@ -21,12 +21,14 @@ uses
   System.SysUtils;
 
 type
-  // Enumerado para evitar errores de tipeo con strings ('ARTICULO' vs 'Articulo')
+  // Enumerado para evitar errores de tipeo con strings ('ARTICULO' vs
+  // 'Articulo')
   TEntidadSistema = (esArticulo, esCliente, esEmpresa, esFamilia);
 
   TLibDefaults = class
   public
-    // Este método configura TODO: el Grid (vista) y el Alta Rápida (tabla física)
+    // Este método configura TODO: el Grid (vista) y el Alta Rápida (tabla
+    // física)
     class procedure Configurar(AForm: TfrmMtoSearch; AEntidad: TEntidadSistema;
                                bConAltaRapida: Boolean = False );
   end;
@@ -50,18 +52,22 @@ begin
       begin
         // A. Configuración LECTURA (Lo que se ve en el Grid)
         // Usamos la vista para que el usuario vea datos completos (Stock, etc.)
-        // Asegúrate de que AForm tenga acceso a modificar su QueryPrincipal o unqryPerfiles
+        // Asegúrate de que AForm tenga acceso a modificar su QueryPrincipal o
+        // unqryPerfiles
 //        if Assigned(AForm.unqryPerfiles) then
 //        begin
 //          AForm.unqryPerfiles.Close;
-//          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_articulos ORDER BY DESCRIPCION_ART';
-//          // AForm.unqryPerfiles.Open; // Opcional, o dejar que el form lo abra al mostrarse
+// AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_articulos ORDER BY
+// DESCRIPCION_ART';
+// // AForm.unqryPerfiles.Open; // Opcional, o dejar que el form lo abra al
+// mostrarse
 //        end;
 
         if bConAltaRapida then
         begin
           AForm.FConfigAlta.TituloVentana := 'Alta Rápida de Artículo';
-          AForm.FConfigAlta.Tabla := 'fza_articulos';         // Tabla física escritura
+          // Tabla física escritura
+          AForm.FConfigAlta.Tabla := 'fza_articulos';
           AForm.FConfigAlta.CampoCodigo := 'CODIGO_ART_ART'; // Campo PK
           AForm.FConfigAlta.CampoDescripcion := 'DESCRIPCION_ART';
 
@@ -82,7 +88,8 @@ begin
 //        if Assigned(AForm.unqryPerfiles) then
 //        begin
 //          AForm.unqryPerfiles.Close;
-//          AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_clientes ORDER BY RAZON_SOCIAL';
+// AForm.unqryPerfiles.SQL.Text := 'SELECT * FROM vi_clientes ORDER BY
+// RAZON_SOCIAL';
 //        end;
 
         // B. ESCRITURA
@@ -90,7 +97,8 @@ begin
         AForm.FConfigAlta.CampoCodigo := 'CODIGO_CLI_CLI';
         AForm.FConfigAlta.CampoDescripcion := 'RAZON_SOCIAL';
 
-        // C. DEFAULTS (Busca en BD la config de 'fza_clientes' y el contador 'CL')
+        // C. DEFAULTS (Busca en BD la config de 'fza_clientes' y el contador
+        // 'CL')
         AForm.CargarDefaultsDesdeBD('fza_clientes');
       end;
 

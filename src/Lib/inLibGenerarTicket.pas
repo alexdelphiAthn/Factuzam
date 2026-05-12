@@ -50,7 +50,9 @@ var
   ComandosESC, RutaFicheroPDF: string;
   FormPreview: TFormVisualizador;
 
-  function LPAD(const AValue: string; ALength: Integer; const APadChar: Char = '0'): string;
+  function LPAD(const AValue: string;
+                ALength: Integer;
+                const APadChar: Char = '0'): string;
   var
     CurrentLength: Integer;
   begin

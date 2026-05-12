@@ -43,8 +43,11 @@ begin
     if not QryAlm.IsEmpty then
       Result := QryAlm.FieldByName('CODIGO_ALM_ALM').AsString
     else
-      // Lanzamos excepción para que la transacción de caja se detenga si hay un error de configuración
-      raise Exception.Create('No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
+      // Lanzamos excepción para que la transacción de caja se detenga si hay un
+      // error de configuración
+      raise Exception.Create(
+        'No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ' +
+        '''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
   finally
     QryAlm.Free;
   end;

@@ -740,7 +740,8 @@ begin
     Qry.SQL.Text := 'SELECT * FROM vi_ivas ' +
                     ' WHERE IVA_IVAGRP = :grupo ' +
                     '   AND FECHA_DESDE_IVA <= :fecha ' +
-                    '   AND (FECHA_HASTA_IVA >= :fecha OR FECHA_HASTA_IVA IS NULL)';
+                    '   AND (FECHA_HASTA_IVA >= :fecha OR FECHA_HASTA_IVA IS ' +
+                    'NULL)';
     Qry.ParamByName('grupo').AsString := sGrupoZona;
     Qry.ParamByName('fecha').AsDateTime := _fechaFactura;
     Qry.Open;
@@ -748,24 +749,40 @@ begin
     begin
       if _unqryFac.State = dsBrowse then _unqryFac.Edit;
       // Asignación al DataSet de la Factura (Persistencia)
-      _unqryFac.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_REN_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_RER_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_RES_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat := Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsFloat;
-      _unqryFac.FieldByName('PORCENTAJE_REE_FAC').AsFloat  := Qry.FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsFloat;
-      _unqryFac.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString := Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
-      _unqryFac.FieldByName('ESAPLICA_RE_ZONA_IVA_FAC').AsString     := Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
-      _unqryFac.FieldByName('CODIGO_IVA_FAC').AsString               := Qry.FieldByName('CODIGO_IVA').AsString;
-      _unqryFac.FieldByName('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString   := Qry.FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
-      // Actualizar también la estructura interna de trabajo (_configuracion y _porcentajes)
-      _configuracion.AplicaRecargo        := (Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString = 'S');
-      _configuracion.IRPFImpuestoIncluido := (Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString = 'S');
+      _unqryFac.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat :=
+        Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_REN_FAC').AsFloat  :=
+        Qry.FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat :=
+        Qry.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_RER_FAC').AsFloat  :=
+        Qry.FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat :=
+        Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_RES_FAC').AsFloat  :=
+        Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat :=
+        Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsFloat;
+      _unqryFac.FieldByName('PORCENTAJE_REE_FAC').AsFloat  :=
+        Qry.FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsFloat;
+      _unqryFac.FieldByName('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString :=
+        Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
+      _unqryFac.FieldByName('ESAPLICA_RE_ZONA_IVA_FAC').AsString     :=
+        Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
+      _unqryFac.FieldByName('CODIGO_IVA_FAC').AsString               :=
+        Qry.FieldByName('CODIGO_IVA').AsString;
+      _unqryFac.FieldByName('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString   :=
+        Qry.FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
+      // Actualizar también la estructura interna de trabajo (_configuracion y
+      // _porcentajes)
+      _configuracion.AplicaRecargo        :=
+        (Qry.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString = 'S');
+      _configuracion.IRPFImpuestoIncluido :=
+        (Qry.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString = 'S');
       _grupoZonaIVA                       := sGrupoZona;
-      _codigoIVA                          := Qry.FieldByName('CODIGO_IVA').AsString;
-      LeerPorcentajesDesdeFactura; // Sincroniza _porcentajes con los nuevos valores del DataSet
+      _codigoIVA := Qry.FieldByName('CODIGO_IVA').AsString;
+      // Sincroniza _porcentajes con los nuevos valores del DataSet
+      LeerPorcentajesDesdeFactura;
     end;
   finally
     Qry.Free;
@@ -845,7 +862,8 @@ begin
   sRazon := Trim(_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
   sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString);
   tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
-  // Si es Simplificada O no tiene datos mínimos O no aplica recargo por config: devolvemos 0
+  // Si es Simplificada O no tiene datos mínimos O no aplica recargo por config:
+  // devolvemos 0
   if _configuracion.EsFacturaSimplificada or
      (not tieneDatosMinimos) or
      not (_configuracion.AplicaRecargo and _configuracion.IVARecargo) then
@@ -899,13 +917,15 @@ var
   baseImponible, importeIVA, importeRE: Currency;
   totalLineaCIVA: Currency;
 begin
-  // 1. Calcular base imponible y total de la línea forzando el redondeo a 2 decimales
+  // 1. Calcular base imponible y total de la línea forzando el redondeo a 2
+  // decimales
   baseImponible := SimpleRoundTo(linea.TotSiva, -2);
   totalLineaCIVA := SimpleRoundTo(linea.TotCiva, -2);
   // Obtener porcentajes según el tipo de IVA
   porcentajeIVA := ObtenerPorcentajePorTipo(linea.TipoIva);
   porcentajeRE := ObtenerPorcentajeREPorTipo(linea.TipoIva);
-  // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA incluido
+  // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA
+  // incluido
   if SameText(linea.Impcl, 'S') then
   begin
     importeIVA := totalLineaCIVA - baseImponible;
@@ -925,7 +945,8 @@ begin
   case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
       begin
-        _totales.IVAN.BaseImponible := _totales.IVAN.BaseImponible + baseImponible;
+        _totales.IVAN.BaseImponible :=
+          _totales.IVAN.BaseImponible + baseImponible;
         _totales.IVAN.PorcentajeIVA := porcentajeIVA;
         _totales.IVAN.PorcentajeRE := porcentajeRE;
         _totales.IVAN.ImporteIVA := _totales.IVAN.ImporteIVA + importeIVA;
@@ -933,7 +954,8 @@ begin
       end;
     1: // IVA Reducido
       begin
-        _totales.IVAR.BaseImponible := _totales.IVAR.BaseImponible + baseImponible;
+        _totales.IVAR.BaseImponible :=
+          _totales.IVAR.BaseImponible + baseImponible;
         _totales.IVAR.PorcentajeIVA := porcentajeIVA;
         _totales.IVAR.PorcentajeRE := porcentajeRE;
         _totales.IVAR.ImporteIVA := _totales.IVAR.ImporteIVA + importeIVA;
@@ -941,7 +963,8 @@ begin
       end;
     2: // IVA SuperReducido
       begin
-        _totales.IVAS.BaseImponible := _totales.IVAS.BaseImponible + baseImponible;
+        _totales.IVAS.BaseImponible :=
+          _totales.IVAS.BaseImponible + baseImponible;
         _totales.IVAS.PorcentajeIVA := porcentajeIVA;
         _totales.IVAS.PorcentajeRE := porcentajeRE;
         _totales.IVAS.ImporteIVA := _totales.IVAS.ImporteIVA + importeIVA;
@@ -949,7 +972,8 @@ begin
       end;
     3: // IVA Exento
       begin
-        _totales.IVAE.BaseImponible := _totales.IVAE.BaseImponible + baseImponible;
+        _totales.IVAE.BaseImponible :=
+          _totales.IVAE.BaseImponible + baseImponible;
         _totales.IVAE.PorcentajeIVA := porcentajeIVA;
         _totales.IVAE.PorcentajeRE := porcentajeRE;
         _totales.IVAE.ImporteIVA := _totales.IVAE.ImporteIVA + importeIVA;
@@ -1210,7 +1234,8 @@ begin
     Qry.Connection := inLibGlobalVar.oConn;
     Qry.SQL.Text := 'SELECT IVA_IVAGRP, CODIGO_IVA, ' +
                     '       PORCENTAJE_NORMAL_IVA, PORCENTAJE_EXENTO_IVA, ' +
-                    '       PORCENTAJE_REDUCIDO_IVA, PORCENTAJE_SUPERREDUCIDO_IVA ' +
+                    '       PORCENTAJE_REDUCIDO_IVA, ' +
+                    'PORCENTAJE_SUPERREDUCIDO_IVA ' +
                     '  FROM vi_ivas_empresa ' +
                     ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ''S'' ' +
                     '   AND CODIGO_EMP_EMP = :EMP ' +
@@ -1224,12 +1249,16 @@ begin
     begin
       _GrupoZonaIVA := Qry.FieldByName('IVA_IVAGRP').AsString;
       _CodigoIVA    := Qry.FieldByName('CODIGO_IVA').AsString;
-      _porcentajes.IVANormal := Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsCurrency;
-      _porcentajes.IVAExento := Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsCurrency;
+      _porcentajes.IVANormal :=
+        Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsCurrency;
+      _porcentajes.IVAExento :=
+        Qry.FieldByName('PORCENTAJE_EXENTO_IVA').AsCurrency;
       _porcentajes.IVAReducido :=
-                               Qry.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsCurrency;
+                               Qry.FieldByName(
+                                 'PORCENTAJE_REDUCIDO_IVA').AsCurrency;
       _porcentajes.IVASuperReducido :=
-                          Qry.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsCurrency;
+                          Qry.FieldByName(
+                            'PORCENTAJE_SUPERREDUCIDO_IVA').AsCurrency;
       Result := True;
     end;
   finally
@@ -1280,7 +1309,8 @@ begin
       _unqryFac.FieldByName('PROVINCIA_CLIENTE_FAC').AsString   :=
                                   Qry.FieldByName('PROVINCIA_CLI').AsString;
       _unqryFac.FieldByName('CODIGO_POSTAL_CLIENTE_FAC').AsString     :=
-                                    Qry.FieldByName('CODIGO_POSTAL_CLI').AsString;
+                                    Qry.FieldByName(
+                                      'CODIGO_POSTAL_CLI').AsString;
       _unqryFac.FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString :=
                                 Qry.FieldByName('NOMBRE_PAI_CLI').AsString;
       _unqryFac.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString :=
@@ -1346,7 +1376,8 @@ begin
       _unqryFac.FieldByName('PROVINCIA_EMPRESA_FAC').AsString   :=
                                   Qry.FieldByName('PROVINCIA_EMP').AsString;
       _unqryFac.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString     :=
-                                    Qry.FieldByName('CODIGO_POSTAL_EMP').AsString;
+                                    Qry.FieldByName(
+                                      'CODIGO_POSTAL_EMP').AsString;
       _unqryFac.FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString :=
                                 Qry.FieldByName('NOMBRE_PAI_EMP').AsString;
       _unqryFac.FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString :=

@@ -23,7 +23,8 @@ type
   // Enumerado para definir el tipo de dato del parámetro
   TTipoParametro = (tpString, tpInteger, tpBoolean);
 
-  // Clase que contiene la definición, metadatos y valor actual de cada parámetro
+  // Clase que contiene la definición, metadatos y valor actual de cada
+  // parámetro
   TParamDef = class
   public
     Categoria: string;
@@ -33,7 +34,11 @@ type
     ValorPorDefecto: string;
     ValorActual: string;
 
-    constructor Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
+    constructor Create(const aCategoria,
+                       aNombre,
+                       aDesc: string;
+                       aTipo: TTipoParametro;
+                       const aDefecto: string);
   end;
 
   TCajaParams = class
@@ -45,16 +50,21 @@ type
     destructor Destroy; override;
 
     // --- INTERFAZ PARA REGISTRAR PARÁMETROS (Actualizada con Categoría) ---
-    procedure RegistrarParametro(const pCategoria, pNombre, pDesc: string; pTipo: TTipoParametro; const pDefecto: string);
+    procedure RegistrarParametro(const pCategoria,
+                                 pNombre,
+                                 pDesc: string;
+                                 pTipo: TTipoParametro;
+                                 const pDefecto: string);
     procedure RegistrarDefectos;
     procedure InicializarParametrosCaja(const pUsuario, pGrupo: string);
     procedure Inicializar(const pUsuario, pGrupo: string);
     procedure Recargar(const pUsuario, pGrupo: string);
 
     // Acceso tipado
-    function GetString (const Key: string; const Default: string  = ''   ): string;
-    function GetBool   (const Key: string; const Default: Boolean = False): Boolean;
-    function GetInt    (const Key: string; const Default: Integer = 0    ): Integer;
+    function GetString (const Key: string; const Default: string = '' ): string;
+    function GetBool   (const Key: string;
+                        const Default: Boolean = False): Boolean;
+    function GetInt (const Key: string; const Default: Integer = 0 ): Integer;
 
     property Params: TObjectDictionary<string, TParamDef> read FParams;
   end;
@@ -69,7 +79,11 @@ uses
 
 { TParamDef }
 
-constructor TParamDef.Create(const aCategoria, aNombre, aDesc: string; aTipo: TTipoParametro; const aDefecto: string);
+constructor TParamDef.Create(const aCategoria,
+                             aNombre,
+                             aDesc: string;
+                             aTipo: TTipoParametro;
+                             const aDefecto: string);
 begin
   Categoria := aCategoria;
   Nombre := aNombre;
@@ -93,9 +107,14 @@ begin
   inherited;
 end;
 
-procedure TCajaParams.RegistrarParametro(const pCategoria, pNombre, pDesc: string; pTipo: TTipoParametro; const pDefecto: string);
+procedure TCajaParams.RegistrarParametro(const pCategoria,
+                                         pNombre,
+                                         pDesc: string;
+                                         pTipo: TTipoParametro;
+                                         const pDefecto: string);
 begin
-  FParams.AddOrSetValue(pNombre, TParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));
+  FParams.AddOrSetValue(pNombre,
+    TParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));
 end;
 
 procedure TCajaParams.RegistrarDefectos;
@@ -117,7 +136,8 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text   := 'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
+    qry.SQL.Text   :=
+      'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
     qry.ParamByName('p_usuario').AsString    := pUsuario;
     qry.ParamByName('p_grupo').AsString      := pGrupo;
     qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
@@ -135,7 +155,11 @@ begin
       begin
         // Si hay un parámetro huérfano en la BD que no hemos registrado,
         // lo metemos en una categoría genérica para que siga viéndose.
-        RegistrarParametro('Otros (Heredados de BD)', KeyDB, 'Parámetro sin descripción', tpString, ValueDB);
+        RegistrarParametro('Otros (Heredados de BD)',
+                           KeyDB,
+                           'Parámetro sin descripción',
+                           tpString,
+                           ValueDB);
         FParams.Items[KeyDB].ValorActual := ValueDB;
       end;
       qry.Next;
@@ -153,45 +177,137 @@ end;
 procedure TCajaParams.InicializarParametrosCaja(const pUsuario, pGrupo: string);
 begin
   // --- Control de Artículos ---
-  RegistrarParametro('Control de Artículos', 'vgerChkExistOnly', 'Permitir sólo artículos que existan', tpBoolean, 'True');
-  RegistrarParametro('Control de Artículos', 'vgerChkStockOnly', 'Permitir vender sin stock', tpBoolean, 'False');
+  RegistrarParametro('Control de Artículos',
+                     'vgerChkExistOnly',
+                     'Permitir sólo artículos que existan',
+                     tpBoolean,
+                     'True');
+  RegistrarParametro('Control de Artículos',
+                     'vgerChkStockOnly',
+                     'Permitir vender sin stock',
+                     tpBoolean,
+                     'False');
 
   // --- Configuración de Caja ---
-  RegistrarParametro('Configuración de Caja', 'vgerShowCajaSelection', 'Presentar selección de caja', tpBoolean, 'False');
-  RegistrarParametro('Configuración de Caja', 'vgerFillEmpleadoDefecto', 'Rellenar empleado por defecto al abrir', tpBoolean, 'False');
-  RegistrarParametro('Configuración de Caja', 'vgerDefTarifa', 'Tarifa por defecto en caja', tpString, 'PVP');
-  RegistrarParametro('Configuración de Caja', 'vgerMaxOpPending', 'Número de operaciones pendientes', tpInteger, '5');
-  RegistrarParametro('Configuración de Caja', 'vgerAutoLoadDepositos', 'Cargar depósitos automáticamente al seleccionar cliente', tpBoolean, 'False');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerShowCajaSelection',
+                     'Presentar selección de caja',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerFillEmpleadoDefecto',
+                     'Rellenar empleado por defecto al abrir',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerDefTarifa',
+                     'Tarifa por defecto en caja',
+                     tpString,
+                     'PVP');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerMaxOpPending',
+                     'Número de operaciones pendientes',
+                     tpInteger,
+                     '5');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerAutoLoadDepositos',
+                     'Cargar depósitos automáticamente al seleccionar cliente',
+                     tpBoolean,
+                     'False');
 
   // --- Devoluciones y Vales ---
-  RegistrarParametro('Devoluciones y Vales', 'vgerReqRefDevolucion', 'Pedir referencia en devoluciones', tpBoolean, 'False');
-  RegistrarParametro('Devoluciones y Vales', 'vgerRecuperaValePIN', 'Recuperar Vale sólo con PIN', tpBoolean, 'False');
-  RegistrarParametro('Devoluciones y Vales', 'vgerCaducidadDefVale', 'Caducidad por defecto en vale', tpBoolean, 'False');
-  RegistrarParametro('Devoluciones y Vales', 'vgerDiasCaducidadVale', 'Días hasta caducidad en vale', tpInteger, '365');
+  RegistrarParametro('Devoluciones y Vales',
+                     'vgerReqRefDevolucion',
+                     'Pedir referencia en devoluciones',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Devoluciones y Vales',
+                     'vgerRecuperaValePIN',
+                     'Recuperar Vale sólo con PIN',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Devoluciones y Vales',
+                     'vgerCaducidadDefVale',
+                     'Caducidad por defecto en vale',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Devoluciones y Vales',
+                     'vgerDiasCaducidadVale',
+                     'Días hasta caducidad en vale',
+                     tpInteger,
+                     '365');
 
 
   // --- Avisos y Búsquedas ---
-  RegistrarParametro('Avisos y Búsquedas', 'vgerAvisoStockWarning', 'Aviso en artículos sin stock', tpString, 'Artículo sin stock. Compruebe stock en almacén.');
-  RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtStockOnly', 'Búsqueda de artículos sólo con stock', tpBoolean, 'False');
-  RegistrarParametro('Avisos y Búsquedas', 'vgerBusqArtTarifaOnly', 'Búsqueda de artículos sólo con tarifa', tpBoolean, 'False');
-  RegistrarParametro('Avisos y Búsquedas', 'vgerMoverLineaIdentif', 'Mover linea al identificar artículo', tpBoolean, 'False');
+  RegistrarParametro('Avisos y Búsquedas',
+                     'vgerAvisoStockWarning',
+                     'Aviso en artículos sin stock',
+                     tpString,
+                     'Artículo sin stock. Compruebe stock en almacén.');
+  RegistrarParametro('Avisos y Búsquedas',
+                     'vgerBusqArtStockOnly',
+                     'Búsqueda de artículos sólo con stock',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Avisos y Búsquedas',
+                     'vgerBusqArtTarifaOnly',
+                     'Búsqueda de artículos sólo con tarifa',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Avisos y Búsquedas',
+                     'vgerMoverLineaIdentif',
+                     'Mover linea al identificar artículo',
+                     tpBoolean,
+                     'False');
 
   // --- Impresión ---
-  RegistrarParametro('Impresión', 'vgerDefPrinter', 'Nombre impresora de tickets', tpString, '');
-  RegistrarParametro('Impresión', 'vgerTipoImpresion', 'Tipo de Impresión tickets', tpString, 'ESC POS');
-  RegistrarParametro('Impresión', 'vgerFormatoImpPredet', 'Formato de impresión predeterminado', tpString, '');
+  RegistrarParametro('Impresión',
+                     'vgerDefPrinter',
+                     'Nombre impresora de tickets',
+                     tpString,
+                     '');
+  RegistrarParametro('Impresión',
+                     'vgerTipoImpresion',
+                     'Tipo de Impresión tickets',
+                     tpString,
+                     'ESC POS');
+  RegistrarParametro('Impresión',
+                     'vgerFormatoImpPredet',
+                     'Formato de impresión predeterminado',
+                     tpString,
+                     '');
 
   // --- Empleado ---
-  RegistrarParametro('Empleado', 'vgerCodEmpleadoDefecto', 'Código de empleado por defecto', tpString, '');
-  RegistrarParametro('Empleado', 'vgerShowEmpleadoLinea', 'Mostrar empleado en linea de caja', tpBoolean, 'True');
+  RegistrarParametro('Empleado',
+                     'vgerCodEmpleadoDefecto',
+                     'Código de empleado por defecto',
+                     tpString,
+                     '');
+  RegistrarParametro('Empleado',
+                     'vgerShowEmpleadoLinea',
+                     'Mostrar empleado en linea de caja',
+                     tpBoolean,
+                     'True');
 
   // --- Permisos Extra ---
-  RegistrarParametro('Permisos Extra', 'vgerArqueoTarjetas', 'Permitir Arqueo de Tarjetas', tpBoolean, 'False');
-  RegistrarParametro('Permisos Extra', 'vgerVentasCredito', 'Permitir Ventas a Crédito', tpBoolean, 'True');
-  RegistrarParametro('Permisos Extra', 'vgerDescuentos', 'Permite descuentos en ventas', tpBoolean, 'True');
+  RegistrarParametro('Permisos Extra',
+                     'vgerArqueoTarjetas',
+                     'Permitir Arqueo de Tarjetas',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Permisos Extra',
+                     'vgerVentasCredito',
+                     'Permitir Ventas a Crédito',
+                     tpBoolean,
+                     'True');
+  RegistrarParametro('Permisos Extra',
+                     'vgerDescuentos',
+                     'Permite descuentos en ventas',
+                     tpBoolean,
+                     'True');
 
   // ----------------------------------------------------------------------------------
-  // Una vez registrada toda la "estructura" en memoria, le decimos a la librería
+  // Una vez registrada toda la estructura en memoria, le decimos a la librería
   // que se conecte a la base de datos y cargue los valores reales del usuario.
   // ----------------------------------------------------------------------------------
   Inicializar(pUsuario, pGrupo);
@@ -203,7 +319,8 @@ begin
 end;
 
 // --- Getters ---
-function TCajaParams.GetString(const Key: string; const Default: string): string;
+function TCajaParams.GetString(const Key: string;
+                               const Default: string): string;
 var
   ParamObj: TParamDef;
 begin
@@ -213,7 +330,8 @@ begin
     Result := Default;
 end;
 
-function TCajaParams.GetBool(const Key: string; const Default: Boolean): Boolean;
+function TCajaParams.GetBool(const Key: string;
+                             const Default: Boolean): Boolean;
 var
   ParamObj: TParamDef;
   sVal: string;

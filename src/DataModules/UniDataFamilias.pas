@@ -86,7 +86,8 @@ begin
   // 2. Si estamos editando, validamos SOLO si el usuario modificó el campo
   else if DataSet.State = dsEdit then
   begin
-    // VarToStr previene errores si el OldValue era Null (requiere 'uses Variants')
+    // VarToStr previene errores si el OldValue era Null (requiere 'uses
+    // Variants')
     if CampoPropiedad.AsString <> VarToStr(CampoPropiedad.OldValue) then
       DebeValidar := True;
   end;
@@ -95,7 +96,8 @@ begin
   if DebeValidar then
   begin
     if PropiedadExisteEnFamilia(CampoPropiedad.AsString,
-                                unqryTablaG.FindField('CODIGO_FAM_FAM').AsString) then
+                                unqryTablaG.FindField(
+                                  'CODIGO_FAM_FAM').AsString) then
     begin
       ShowMessage('Propiedad Duplicada');
       Abort;
@@ -169,7 +171,8 @@ begin
     unqryFamProp.sql.Text := 'SELECT CODIGO_PROP_ARTPROP '+
                              '  FROM fza_familias_atributos ' +
                              ' WHERE CODIGO_FAM_FAM = :CODIGO_FAM_FAM ' +
-                             '   AND CODIGO_PROP_ARTPROP = :CODIGO_PROP_ARTPROP';
+                             '   AND CODIGO_PROP_ARTPROP = ' +
+                             ':CODIGO_PROP_ARTPROP';
     unqryFamProp.ParamByName('CODIGO_FAM_FAM').AsString := sFamilia;
     unqryFamProp.ParamByName('CODIGO_PROP_ARTPROP').AsString := sPropiedad;
     unqryFamProp.Open;

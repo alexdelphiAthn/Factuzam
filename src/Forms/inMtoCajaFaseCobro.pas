@@ -441,7 +441,8 @@ begin
   FMemTablePagos := TVirtualTable.Create(Self);
 end;
 
-procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesEditValueChanged(
+  Sender: TObject);
 var
   ImporteActual: Double;
   v: Variant;
@@ -475,8 +476,10 @@ var
   EditProps: TcxCurrencyEditProperties;
   ActiveEdit: TcxCustomEdit;
 begin
-  EsCripto := (FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S');
-  EsDivisa := (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S');
+  EsCripto :=
+    (FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S');
+  EsDivisa :=
+    (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S');
   ActiveEdit := dbtvFormasPago.Controller.EditingController.Edit;
   if not Assigned(ActiveEdit) then Exit;
   if not (ActiveEdit is TcxCurrencyEdit) then Exit;
@@ -527,12 +530,16 @@ var
   dr: TDatosReferencia;
   EsDivisa, EsCripto: Boolean;
 begin
-  EsDivisa := FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
-  EsCripto  := FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
+  EsDivisa :=
+    FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
+  EsCripto  :=
+    FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
   fp.Codigo := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-  fp.Descripcion := FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
+  fp.Descripcion :=
+    FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
   fp.RequiereReferencia :=
-          FMemTablePagos.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S';
+          FMemTablePagos.FieldByName(
+            'ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S';
   dr.Init;
   dr.EsDivisa  := EsDivisa;
   dr.EsCripto  := EsCripto;
@@ -661,9 +668,12 @@ begin
   begin
     txtPendienteCobro.Value  := FDatosCobro.ImporteDevolucionPendiente;
     txtPendienteCuenta.Value := 0;
-    btnConTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
-    btnSinTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
-    btnSinPrecios.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01) or EsTotal0;
+    btnConTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
+       or EsTotal0;
+    btnSinTicket.Enabled  := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
+       or EsTotal0;
+    btnSinPrecios.Enabled := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
+       or EsTotal0;
     btnBuscarVale.Enabled := false;
   end
   else
@@ -673,7 +683,8 @@ begin
     btnConTicket.Enabled  := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
     btnSinTicket.Enabled  := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
     btnSinPrecios.Enabled := (FDatosCobro.ImportePendiente <= 0.01) or EsTotal0;
-    btnBuscarVale.Enabled := (FDatosCobro.ImportePendiente > 0.01) and not EsTotal0;
+    btnBuscarVale.Enabled := (FDatosCobro.ImportePendiente > 0.01)
+       and not EsTotal0;
   end;
   btnF6.Enabled := btnBuscarVale.Enabled;
   btnBuscarT.Enabled := (txtPendienteCobro.Value > 0.01) and not EsTotal0;
@@ -749,7 +760,8 @@ begin
     txtPorcenDtoGlobal.Enabled := False;
     txtPorcenDtoGlobal.Value   := 0;
     // Opcional: tooltip explicativo
-    txtPorcenDtoGlobal.Hint    := 'No se puede aplicar descuento global con líneas de depósito';
+    txtPorcenDtoGlobal.Hint    :=
+      'No se puede aplicar descuento global con líneas de depósito';
     txtPorcenDtoGlobal.ShowHint := True;
   end
   else
@@ -905,8 +917,10 @@ begin
       if not qryCli.IsEmpty then
       begin
         NomCliente := qryCli.FieldByName('RAZON_SOCIAL_CLI').AsString;
-        PermiteDeuda := (qryCli.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S');
-        LimiteCredito := qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLI').AsCurrency;
+        PermiteDeuda :=
+          (qryCli.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S');
+        LimiteCredito :=
+          qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLI').AsCurrency;
         DeudaActual := 0;
         FDatosCobro.EstablecerCliente(FCodigoCliente,
                                       NomCliente,

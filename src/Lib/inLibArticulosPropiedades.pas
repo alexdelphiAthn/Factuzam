@@ -231,7 +231,8 @@ begin
     while not q.Eof do
     begin
       // Excluir las ya asignadas
-      if FExcluirCodigos.IndexOf(q.FieldByName('CODIGO_PROP_ARTPROP').AsString) < 0 then
+      if FExcluirCodigos.IndexOf(q.FieldByName(
+        'CODIGO_PROP_ARTPROP').AsString) < 0 then
       begin
         FListBox.Items.AddObject(
           q.FieldByName('NOMBRE_PROP_PROP').AsString + '  [' +
@@ -371,7 +372,8 @@ begin
       '       COALESCE(fa.ESREQUERIDO_FA, ''N'') AS ESREQUERIDO_FA, ' +
       '       COALESCE(fa.ORDEN_MOSTRAR_FA, 999) AS ORDEN_MOSTRAR_FA ' +
       'FROM   fza_articulos_propiedades ap ' +
-      'JOIN   fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
+      'JOIN   fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ' +
+      'ap.CODIGO_PROP_ARTPROP ' +
       'LEFT JOIN fza_articulos art ON art.CODIGO_ART_ART = ap.CODIGO_ART_ART ' +
       'LEFT JOIN fza_familias_atributos fa ' +
       '       ON fa.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
@@ -386,7 +388,7 @@ begin
       FillChar(S, SizeOf(S), 0);
       S.CodigoPropiedad := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
       S.NombrePropiedad := q.FieldByName('NOMBRE_PROP_PROP').AsString;
-      S.TipoValor       := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
+      S.TipoValor := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
       S.EsRequerido     := q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
       S.IdValorPV       := q.FieldByName('ID_PV_ARTPROP').AsInteger;
       S.ValorLibre      := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
@@ -500,9 +502,11 @@ begin
     qProp.Connection := FConexion;
     qProp.SQL.Text   :=
       'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-                                                            'fa.ESREQUERIDO_FA ' +
+                                                            'fa.ESREQUERIDO_FA '
+                                                              +
       'FROM fza_familias_atributos fa ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = fa.CODIGO_PROP_ARTPROP ' +
+      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ' +
+      'fa.CODIGO_PROP_ARTPROP ' +
       'WHERE fa.CODIGO_FAM_FAM = :fam ' +
       '  AND p.ESACTIVO_PROP = ''S'' ' +
       'ORDER BY fa.ORDEN_MOSTRAR_FA, p.NOMBRE_PROP_PROP';
@@ -524,7 +528,8 @@ begin
         S.CodigoPropiedad := cod;
         S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
         S.TipoValor       :=
-                      TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR_PROP').AsString);
+                      TipoDesdeCadena(qProp.FieldByName(
+                        'TIPO_VALOR_PROP').AsString);
         S.EsRequerido     := qProp.FieldByName('ESREQUERIDO_FA').AsString = 'S';
         S.IdValorPV       := 0;
         S.ValorLibre      := '';
@@ -805,10 +810,12 @@ begin
           qProp.Open;
           if qProp.Eof then Continue;
           FillChar(S, SizeOf(S), 0);
-          S.CodigoPropiedad := qProp.FieldByName('CODIGO_PROP_ARTPROP').AsString;
+          S.CodigoPropiedad :=
+            qProp.FieldByName('CODIGO_PROP_ARTPROP').AsString;
           S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
           S.TipoValor       :=
-                      TipoDesdeCadena(qProp.FieldByName('TIPO_VALOR_PROP').AsString);
+                      TipoDesdeCadena(qProp.FieldByName(
+                        'TIPO_VALOR_PROP').AsString);
           S.EsRequerido     := False;
           S.IdValorPV       := 0;
           S.ValorLibre      := '';
@@ -948,7 +955,8 @@ begin
     q.Connection := FConexion;
     q.SQL.Text   :=
       'INSERT INTO fza_articulos_propiedades ' +
-      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP, ' +
+      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
+      'VALOR_LIBRE_ARTPROP, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA) ' +
       'VALUES ' +
       '  (:art, :prop, :idval, :libre, NOW(), :usr) ' +

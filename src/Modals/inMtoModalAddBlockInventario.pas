@@ -56,7 +56,8 @@ type
     FResultadoInv : TAddBlockInventarioResult;
     FEmpresa, FAlmacen, FSerie, FNro: string;
 
-    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean; override;
+    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
+    override;
     function  ColumnasSelectExtra: string; override;
     function  SubquerYaCargado: string; override;
     function  WhereExcluirYaCargados: string; override;
@@ -112,7 +113,8 @@ begin
     for i := 0 to frm.chkLstAlmacenes.Items.Count - 1 do
       if (frm.chkLstAlmacenes.Items[i].ItemObject is TStringList) and
          (TStringList(frm.chkLstAlmacenes.Items[i].ItemObject).Count > 0) and
-         (TStringList(frm.chkLstAlmacenes.Items[i].ItemObject)[0] = AAlmacen) then
+         (TStringList(
+           frm.chkLstAlmacenes.Items[i].ItemObject)[0] = AAlmacen) then
       begin
         frm.chkLstAlmacenes.Items[i].Checked := True;
         Break;
@@ -212,31 +214,46 @@ procedure TfrmModalAddBlockInventario.VincularParametrosExtra(AQry: TUniQuery);
   end;
 
 begin
-  if HasParam('P_INV_ALMACEN')     then AQry.ParamByName('P_INV_ALMACEN').AsString     := FAlmacen;
-  if HasParam('P_INV_ALMACEN_PMP') then AQry.ParamByName('P_INV_ALMACEN_PMP').AsString := FAlmacen;
+  if HasParam(
+    'P_INV_ALMACEN')     then AQry.ParamByName(
+      'P_INV_ALMACEN').AsString     := FAlmacen;
+  if HasParam(
+    'P_INV_ALMACEN_PMP') then AQry.ParamByName(
+      'P_INV_ALMACEN_PMP').AsString := FAlmacen;
 
-  if HasParam('P_INV_EMP_C') then AQry.ParamByName('P_INV_EMP_C').AsString := FEmpresa;
-  if HasParam('P_INV_ALM_C') then AQry.ParamByName('P_INV_ALM_C').AsString := FAlmacen;
-  if HasParam('P_INV_SER_C') then AQry.ParamByName('P_INV_SER_C').AsString := FSerie;
-  if HasParam('P_INV_NRO_C') then AQry.ParamByName('P_INV_NRO_C').AsString := FNro;
+  if HasParam('P_INV_EMP_C') then AQry.ParamByName('P_INV_EMP_C').AsString :=
+    FEmpresa;
+  if HasParam('P_INV_ALM_C') then AQry.ParamByName('P_INV_ALM_C').AsString :=
+    FAlmacen;
+  if HasParam('P_INV_SER_C') then AQry.ParamByName('P_INV_SER_C').AsString :=
+    FSerie;
+  if HasParam('P_INV_NRO_C') then AQry.ParamByName('P_INV_NRO_C').AsString :=
+    FNro;
 
-  if HasParam('P_INV_EMP_X') then AQry.ParamByName('P_INV_EMP_X').AsString := FEmpresa;
-  if HasParam('P_INV_ALM_X') then AQry.ParamByName('P_INV_ALM_X').AsString := FAlmacen;
-  if HasParam('P_INV_SER_X') then AQry.ParamByName('P_INV_SER_X').AsString := FSerie;
-  if HasParam('P_INV_NRO_X') then AQry.ParamByName('P_INV_NRO_X').AsString := FNro;
+  if HasParam('P_INV_EMP_X') then AQry.ParamByName('P_INV_EMP_X').AsString :=
+    FEmpresa;
+  if HasParam('P_INV_ALM_X') then AQry.ParamByName('P_INV_ALM_X').AsString :=
+    FAlmacen;
+  if HasParam('P_INV_SER_X') then AQry.ParamByName('P_INV_SER_X').AsString :=
+    FSerie;
+  if HasParam('P_INV_NRO_X') then AQry.ParamByName('P_INV_NRO_X').AsString :=
+    FNro;
 end;
 
-function TfrmModalAddBlockInventario.TextoConfirmacion(ANumPendientes: Integer): string;
+function TfrmModalAddBlockInventario.TextoConfirmacion(
+  ANumPendientes: Integer): string;
 begin
   Result := Format(
     'Se van a anadir %d articulos al inventario %s/%s/%s/%s.' + sLineBreak +
     'Cada articulo generara una linea por cada SKU con stock>0.' + sLineBreak +
-    'Las cantidades teoricas se calcularan despues con "Recalcular teorico/PMP".' + sLineBreak + sLineBreak +
+    'Las cantidades teoricas se calcularan despues con "Recalcular ' +
+    'teorico/PMP".' + sLineBreak + sLineBreak +
     'Continuar?',
     [ANumPendientes, FEmpresa, FAlmacen, FSerie, FNro]);
 end;
 
-function TfrmModalAddBlockInventario.TextoExito(ANumInsertados: Integer): string;
+function TfrmModalAddBlockInventario.TextoExito(
+  ANumInsertados: Integer): string;
 begin
   Result := Format(
     '%d lineas anadidas al inventario.' + sLineBreak +
@@ -314,7 +331,7 @@ begin
       sku         := qrySkus.FieldByName('SKU').AsString;
       descripcion := qrySkus.FieldByName('DESC_ART').AsString;
 
-      AIns.ParamByName('LINEA').AsString          := Format('%.4d', [ALineaActual]);
+      AIns.ParamByName('LINEA').AsString := Format('%.4d', [ALineaActual]);
       AIns.ParamByName('CODIGO_ART_ART').AsString := ACodigoArticulo;
       AIns.ParamByName('CODIGO_UNIDAD').AsString  := sku;
       AIns.ParamByName('DESCRIPCION').AsString    := descripcion;
@@ -396,7 +413,11 @@ begin
         end;
 
         cod := FSqlPreview.FieldByName('CODIGO_ART_ART').AsString;
-        InsertarSkusConStockDelArticulo(ins, cod, lineaActual, numLineas, usuario);
+        InsertarSkusConStockDelArticulo(ins,
+                                        cod,
+                                        lineaActual,
+                                        numLineas,
+                                        usuario);
         codigos.Add(cod);
         Inc(numArt);
 

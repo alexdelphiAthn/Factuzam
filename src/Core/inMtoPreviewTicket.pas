@@ -342,7 +342,10 @@ begin
   FCanvas := Image1.Picture.Bitmap.Canvas;
   // Fondo blanco (papel)
   FCanvas.Brush.Color := clWhite;
-  FCanvas.FillRect(Rect(0, 0, Image1.Picture.Bitmap.Width, Image1.Picture.Bitmap.Height));
+  FCanvas.FillRect(Rect(0,
+                        0,
+                        Image1.Picture.Bitmap.Width,
+                        Image1.Picture.Bitmap.Height));
   // DIBUJAR BORDE DEL PAPEL PARA DEBUG
   FCanvas.Pen.Color := clRed;
   FCanvas.Pen.Width := 1;

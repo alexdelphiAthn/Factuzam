@@ -60,9 +60,9 @@ begin
   Result[0].Token := '$(LOCALAPPDATA)';  Result[0].CSIDL := CSIDL_LOCAL_APPDATA;
   Result[1].Token := '$(APPDATA)';       Result[1].CSIDL := CSIDL_APPDATA;
   Result[2].Token := '$(DOCUMENTOS)';    Result[2].CSIDL := CSIDL_PERSONAL;
-  Result[3].Token := '$(PUBLICO)';       Result[3].CSIDL := CSIDL_COMMON_DOCUMENTS;
-  Result[4].Token := '$(PROGRAMDATA)';   Result[4].CSIDL := CSIDL_COMMON_APPDATA;
-  Result[5].Token := '$(DESKTOP)';       Result[5].CSIDL := CSIDL_DESKTOPDIRECTORY;
+  Result[3].Token := '$(PUBLICO)'; Result[3].CSIDL := CSIDL_COMMON_DOCUMENTS;
+  Result[4].Token := '$(PROGRAMDATA)'; Result[4].CSIDL := CSIDL_COMMON_APPDATA;
+  Result[5].Token := '$(DESKTOP)'; Result[5].CSIDL := CSIDL_DESKTOPDIRECTORY;
   Result[6].Token := '$(USERPROFILE)';   Result[6].CSIDL := CSIDL_PROFILE;
   Result[7].Token := '$(APPDIR)';        Result[7].CSIDL := -1;
   Result[7].Custom := GetAppDir;

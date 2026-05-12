@@ -16,7 +16,7 @@ unit inMtoComprasSesiones;
   Pestañas:
     tsLista         - lista de sesiones (heredada de TfrmMtoGen)
     tsFicha         - ficha con sub-PageControl pcSesion:
-        tsCabecera        - datos generales, plantilla precios, plantilla variación
+        tsCabecera - datos generales, plantilla precios, plantilla variación
         tsPlantilla       - propiedades fijas/variables + kits de cantidades
         tsLineas          - grid de líneas + detalle matriz pivotada
         tsMaterializacion - resumen y botón "Crear artículos y documentos"
@@ -354,7 +354,7 @@ begin
   tvLineas.DataController.DataSource         := dmComprasSesiones.dsSesionLin;
   tvProps.DataController.DataSource          := dmComprasSesiones.dsSesionProps;
   tvKits.DataController.DataSource           := dmComprasSesiones.dsSesionKits;
-  tvKitsDet.DataController.DataSource        := dmComprasSesiones.dsSesionKitsDet;
+  tvKitsDet.DataController.DataSource := dmComprasSesiones.dsSesionKitsDet;
   tvPreview.DataController.DataSource        := dmComprasSesiones.dsPreviewSkus;
 
   // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
@@ -397,9 +397,12 @@ begin
   begin
     if dmComprasSesiones.DetectarConflictoConcurrencia then
     begin
-      if MessageDlg('Otro usuario ha modificado esta sesión mientras la editabas.' +
-                    sLineBreak + '¿Deseas forzar la grabación (sobreescribir) o ' +
-                    'cancelar y recargar?', mtWarning, [mbYes, mbCancel], 0) <> mrYes then
+      if MessageDlg(
+        'Otro usuario ha modificado esta sesión mientras la editabas.' +
+                    sLineBreak
+                      + '¿Deseas forzar la grabación (sobreescribir) o ' +
+                    'cancelar y recargar?', mtWarning, [mbYes, mbCancel],
+                    0) <> mrYes then
       begin
         dsTablaG.DataSet.Cancel;
         dsTablaG.DataSet.Refresh;
@@ -436,9 +439,11 @@ begin
   frmConfirm := TfrmModalSesionMaterializar.Create(Self);
   try
     frmConfirm.ESGeneraPedido  := dmComprasSesiones.unqryTablaG
-                                    .FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
+                                    .FieldByName(
+                                      'ESGENERA_PEDIDO_SES').AsString = 'S';
     frmConfirm.ESGeneraAlbaran := dmComprasSesiones.unqryTablaG
-                                    .FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
+                                    .FieldByName(
+                                      'ESGENERA_ALBARAN_SES').AsString = 'S';
     if frmConfirm.ShowModal <> mrOk then Exit;
 
     bOk := inLibComprasSesionesMaterializar.MaterializarSesion(
@@ -451,8 +456,10 @@ begin
     if bOk then
     begin
       memoLog.Lines.Add('==> Materialización OK ' + DateTimeToStr(Now));
-      if sNumPed   <> '' then memoLog.Lines.Add('  Pedido generado : ' + sSeriePed + '-' + sNumPed);
-      if sNumAlb   <> '' then memoLog.Lines.Add('  Albarán generado: ' + sSerieAlb + '-' + sNumAlb);
+      if sNumPed   <> '' then memoLog.Lines.Add(
+        '  Pedido generado : ' + sSeriePed + '-' + sNumPed);
+      if sNumAlb   <> '' then memoLog.Lines.Add(
+        '  Albarán generado: ' + sSerieAlb + '-' + sNumAlb);
       dsTablaG.DataSet.Refresh;
       pcSesion.ActivePage := tsLog;
     end
@@ -481,7 +488,8 @@ end;
 procedure TfrmMtoComprasSesiones.btnClonarSesionClick(Sender: TObject);
 begin
   inherited;
-  // Clonar = INSERT en cabecera con datos copiados + INSERT de lineas/filas/celdas
+  // Clonar = INSERT en cabecera con datos copiados + INSERT de
+  // lineas/filas/celdas
   // bajo nuevo NUMERO_SES. Implementación detallada en inLibComprasSesiones.
   inLibComprasSesiones.ClonarSesion(dmComprasSesiones, oUser);
 end;
@@ -525,7 +533,8 @@ var
   frmDup : TfrmModalSesionDuplicado;
 begin
   inherited;
-  if dmComprasSesiones.unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString <> 'S' then
+  if dmComprasSesiones.unqrySesionLin.FieldByName(
+    'ESDUPLICADO_SESLIN').AsString <> 'S' then
     Exit;
   frmDup := TfrmModalSesionDuplicado.Create(Self);
   try
@@ -568,7 +577,10 @@ procedure TfrmMtoComprasSesiones.btnDelPropClick(Sender: TObject);
 begin
   inherited;
   if dmComprasSesiones.unqrySesionProps.IsEmpty then Exit;
-  if MessageDlg('¿Borrar la propiedad?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Borrar la propiedad?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     dmComprasSesiones.unqrySesionProps.Delete;
 end;
 
@@ -582,7 +594,10 @@ procedure TfrmMtoComprasSesiones.btnDelKitClick(Sender: TObject);
 begin
   inherited;
   if dmComprasSesiones.unqrySesionKits.IsEmpty then Exit;
-  if MessageDlg('¿Borrar el kit?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Borrar el kit?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     dmComprasSesiones.unqrySesionKits.Delete;
 end;
 
@@ -600,7 +615,8 @@ begin
   inherited;
   sKit := cbbKitAplicar.Text;
   if sKit = '' then Exit;
-  nLin := dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  nLin :=
+    dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
   nFil := TGestorMatrizCompras(FGestorMatriz).FilaSeleccionada;
   dmComprasSesiones.AplicarKitAFila(sKit, nLin, nFil);
   ReconstruirMatrizActual;
@@ -614,7 +630,8 @@ begin
   inherited;
   sKit := cbbKitAplicar.Text;
   if sKit = '' then Exit;
-  nLin := dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  nLin :=
+    dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
   dmComprasSesiones.AplicarKitATodasFilas(sKit, nLin);
   ReconstruirMatrizActual;
 end;
@@ -634,7 +651,10 @@ begin
   if inLibComprasSesiones.ValidarSesion(dmComprasSesiones, sError) then
     MessageDlg('Sesión validada correctamente.', mtInformation, [mbOk], 0)
   else
-    MessageDlg('Validación FALLIDA:' + sLineBreak + sError, mtWarning, [mbOk], 0);
+    MessageDlg('Validación FALLIDA:' + sLineBreak + sError,
+               mtWarning,
+               [mbOk],
+               0);
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGStateChange(Sender: TObject);
@@ -670,9 +690,10 @@ begin
   if (csDestroying in ComponentState) then Exit;
   bEditable := EsSesionEditable;
   HabilitarEdicion(bEditable);
-  if Assigned(btnCrearMaterializar) then btnCrearMaterializar.Enabled := bEditable;
-  if Assigned(btnAnularSesion)      then btnAnularSesion.Enabled      := bEditable;
-  if Assigned(btnCerrarManual)      then btnCerrarManual.Enabled      := bEditable;
+  if Assigned(btnCrearMaterializar) then btnCrearMaterializar.Enabled :=
+    bEditable;
+  if Assigned(btnAnularSesion) then btnAnularSesion.Enabled := bEditable;
+  if Assigned(btnCerrarManual) then btnCerrarManual.Enabled := bEditable;
   if Assigned(btnClonarSesion)      then btnClonarSesion.Enabled      := True;
 end;
 
@@ -742,11 +763,15 @@ begin
   iSkus  := inLibComprasSesiones.ContarSkusPotenciales(dmComprasSesiones);
   rTotal := inLibComprasSesiones.CalcularTotalCompra(dmComprasSesiones);
 
-  lblResNumArticulos.Caption := Format('► %d artículos nuevos en fza_articulos', [iArts]);
-  lblResNumSkus.Caption      := Format('► %d SKUs en fza_articulos_skus', [iSkus]);
-  lblResNumEan13.Caption     := Format('► %d EAN13 a generar en fza_codigos_barras', [iSkus]);
-  lblResNumPropiedades.Caption := '► Propiedades fijas heredadas a cada artículo';
-  lblResEnlacePrv.Caption    := '► 1 enlace artículo↔proveedor en fza_articulos_proveedores';
+  lblResNumArticulos.Caption := Format('► %d artículos nuevos en fza_articulos',
+                                       [iArts]);
+  lblResNumSkus.Caption := Format('► %d SKUs en fza_articulos_skus', [iSkus]);
+  lblResNumEan13.Caption     :=
+    Format('► %d EAN13 a generar en fza_codigos_barras', [iSkus]);
+  lblResNumPropiedades.Caption :=
+    '► Propiedades fijas heredadas a cada artículo';
+  lblResEnlacePrv.Caption    :=
+    '► 1 enlace artículo↔proveedor en fza_articulos_proveedores';
   lblResConflictos.Caption   := Format('► Total compra: %.2f €', [rTotal]);
 end;
 

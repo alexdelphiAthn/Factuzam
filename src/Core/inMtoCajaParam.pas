@@ -46,8 +46,11 @@ type
     actGuardar: TAction;
     actSalir: TAction;
 
-    procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
-    procedure edtBusquedaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
+                                                 AButtonIndex: Integer);
+    procedure edtBusquedaKeyDown(Sender: TObject;
+                                 var Key: Word;
+                                 Shift: TShiftState);
     procedure FormShow(Sender: TObject);
     procedure cmbGrupoUsuarioPropertiesChange(Sender: TObject);
     procedure btnGuardarClick(Sender: TObject);
@@ -66,15 +69,21 @@ type
     procedure CapturarValoresOriginales;
     procedure LimpiarMemoria;
     procedure ResetearADefectos;
-    function  ObtenerCategoria(const NombreCat: string): TJvInspectorCustomCategoryItem;
+    function  ObtenerCategoria(
+      const NombreCat: string): TJvInspectorCustomCategoryItem;
     function  QuitarTildes(const Texto: string): string;
-    function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
+    function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem;
+                                  const Nombre: string): TJvCustomInspectorItem;
 //    procedure GuardarNodos(ItemPadre: TJvCustomInspectorItem; qryS:TUniQuery);
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
-    procedure CargarParametros(Grid: TJvInspector; const pUsuario, pGrupo: string);
+    procedure CargarParametros(Grid: TJvInspector;
+                               const pUsuario,
+                               pGrupo: string);
     procedure ConstruirInspector;
-    procedure GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);
-    procedure GetImpresorasList(Sender: TJvCustomInspectorItem; Strings: TStrings);
+    procedure GetTipoImpresionList(Sender: TJvCustomInspectorItem;
+                                   Strings: TStrings);
+    procedure GetImpresorasList(Sender: TJvCustomInspectorItem;
+                                Strings: TStrings);
   end;
 
 var
@@ -129,7 +138,8 @@ begin
         begin
           case ParamItem.Data.TypeInfo.Kind of
             tkEnumeration:
-              if ParamItem.Data.AsOrdinal <> 0 then ValorExtraido := 'True' else ValorExtraido := 'False';
+              if ParamItem.Data.AsOrdinal <> 0 then ValorExtraido :=
+                'True' else ValorExtraido := 'False';
             tkInteger:
               ValorExtraido := IntToStr(ParamItem.Data.AsOrdinal);
             else
@@ -153,7 +163,8 @@ var
   pB: PBoolean; pI: PInteger; pS: PString;
 begin
   // Liberamos la memoria de los punteros que asignamos a JvInspector.
-  // Es vital tiparlos (Dispose) para que los strings decremente su contador de referencias.
+  // Es vital tiparlos (Dispose) para que los strings decremente su contador de
+  // referencias.
   for pB in FBools do Dispose(pB);
   FBools.Clear;
 
@@ -168,7 +179,8 @@ end;
 // CONSTRUCCIÓN DINÁMICA DE LA INTERFAZ
 // ----------------------------------------------------------------------
 
-function TfrmMtoCajaParam.ObtenerCategoria(const NombreCat: string): TJvInspectorCustomCategoryItem;
+function TfrmMtoCajaParam.ObtenerCategoria(
+  const NombreCat: string): TJvInspectorCustomCategoryItem;
 var
   i: Integer;
 begin
@@ -195,10 +207,12 @@ begin
   try
     JvInspector1.Root.Clear;
 
-    // Magia pura: Leemos la librería de parámetros y dibujamos según su tipo y categoría
+    // Magia pura: Leemos la librería de parámetros y dibujamos según su tipo y
+    // categoría
     for Param in oCajaParams.Params.Values do
     begin
-      // Nota: Asume que has añadido "Categoria: string" en TParamDef (inLibCajaParam)
+      // Nota: Asume que has añadido Categoria: string en TParamDef
+      // (inLibCajaParam)
       // Si no, puedes usar una categoría genérica: ObtenerCategoria('General');
       CatItem := ObtenerCategoria(Param.Categoria);
 
@@ -207,8 +221,12 @@ begin
           begin
             New(pBool);
             FBools.Add(pBool);
-            pBool^ := SameText(Param.ValorPorDefecto, 'True') or (Param.ValorPorDefecto = '1');
-            with TJvInspectorVarData.New(CatItem, Param.Nombre, TypeInfo(Boolean), pBool) do
+            pBool^ := SameText(Param.ValorPorDefecto,
+                               'True') or (Param.ValorPorDefecto = '1');
+            with TJvInspectorVarData.New(CatItem,
+                                         Param.Nombre,
+                                         TypeInfo(Boolean),
+                                         pBool) do
               DisplayName := Param.Descripcion;
           end;
         tpInteger:
@@ -216,7 +234,10 @@ begin
             New(pInt);
             FInts.Add(pInt);
             pInt^ := StrToIntDef(Param.ValorPorDefecto, 0);
-            with TJvInspectorVarData.New(CatItem, Param.Nombre, TypeInfo(Integer), pInt) do
+            with TJvInspectorVarData.New(CatItem,
+                                         Param.Nombre,
+                                         TypeInfo(Integer),
+                                         pInt) do
               DisplayName := Param.Descripcion;
           end;
         tpString:
@@ -257,7 +278,8 @@ var
   Param: TParamDef;
   ItemData: TJvCustomInspectorItem;
 begin
-  // Fuerza a los controles visuales a mostrar el valor por defecto antes de cargar de DB
+  // Fuerza a los controles visuales a mostrar el valor por defecto antes de
+  // cargar de DB
   for Param in oCajaParams.Params.Values do
   begin
     ItemData := BuscarItemPorNombre(JvInspector1.Root, Param.Nombre);
@@ -349,7 +371,8 @@ begin
           begin
             case ParamItem.Data.TypeInfo.Kind of
               tkEnumeration:
-                if ParamItem.Data.AsOrdinal <> 0 then ValorAGuardar := 'True' else ValorAGuardar := 'False';
+                if ParamItem.Data.AsOrdinal <> 0 then ValorAGuardar :=
+                  'True' else ValorAGuardar := 'False';
               tkInteger:
                 ValorAGuardar := IntToStr(ParamItem.Data.AsOrdinal);
               else
@@ -360,7 +383,8 @@ begin
             ValorAGuardar := '';
           if FValoresOriginales.ContainsKey(ParamItem.Name) then
           begin
-            // SameText protege contra posibles variaciones de mayúsculas/minúsculas
+            // SameText protege contra posibles variaciones de
+            // mayúsculas/minúsculas
             if SameText(FValoresOriginales[ParamItem.Name], ValorAGuardar) then
               Continue;
           end;
@@ -376,7 +400,8 @@ begin
     end;
     if GuardadosCount > 0 then
     begin
-      ShowMessage(Format('Se han guardado %d parámetros correctamente para: %s', [GuardadosCount, sUsuarioGrupo]));
+      ShowMessage(Format('Se han guardado %d parámetros correctamente para: %s',
+                         [GuardadosCount, sUsuarioGrupo]));
       if (sUsuarioGrupo = oUser) or
          (sUsuarioGrupo = oGroup) or
          (sUsuarioGrupo = oAll) then
@@ -418,7 +443,8 @@ begin
     Strings.Add(Printer.Printers[i]);
 end;
 
-procedure TfrmMtoCajaParam.GetTipoImpresionList(Sender: TJvCustomInspectorItem; Strings: TStrings);
+procedure TfrmMtoCajaParam.GetTipoImpresionList(Sender: TJvCustomInspectorItem;
+                                                Strings: TStrings);
 begin
   Strings.Clear;
   Strings.Add('ESC POS');
@@ -427,7 +453,9 @@ begin
   Strings.Add('DEBUG');
 end;
 
-function TfrmMtoCajaParam.BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem; const Nombre: string): TJvCustomInspectorItem;
+function TfrmMtoCajaParam.BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem;
+                                              const Nombre: string
+): TJvCustomInspectorItem;
 var
   i: Integer; Encontrado: TJvCustomInspectorItem;
 begin
@@ -467,7 +495,10 @@ end;
 procedure TfrmMtoCajaParam.actSalirExecute(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('¿Está seguro de que desea salir sin guardar?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Está seguro de que desea salir sin guardar?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     Close;
 end;
 
@@ -481,7 +512,9 @@ begin
   usuarios := TStringList.Create;
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT DISTINCT USUARIO_GRUPO_USUPER FROM fza_usuarios_perfiles WHERE KEY_USUPER = ''frmMtoCajaParam'' ORDER BY USUARIO_GRUPO_USUPER';
+    qry.SQL.Text := 'SELECT DISTINCT USUARIO_GRUPO_USUPER FROM ' +
+                    'fza_usuarios_perfiles WHERE KEY_USUPER = ' +
+                    '''frmMtoCajaParam'' ORDER BY USUARIO_GRUPO_USUPER';
     qry.Open;
     while not qry.Eof do
     begin
@@ -491,12 +524,15 @@ begin
 
     if usuarios.Count = 0 then
     begin
-      ShowMessage('No hay usuarios con parámetros guardados para este formulario.');
+      ShowMessage(
+        'No hay usuarios con parámetros guardados para este formulario.');
       Exit;
     end;
 
     sUsuario := usuarios[0];
-    if InputQuery('Cambiar usuario', 'Usuarios disponibles:' + sLineBreak + usuarios.CommaText + sLineBreak + sLineBreak + 'Introduce el nombre de usuario:', sUsuario) then
+    if InputQuery('Cambiar usuario',
+                  'Usuarios disponibles:' + sLineBreak + usuarios.CommaText + sLineBreak + sLineBreak + 'Introduce el nombre de usuario:',
+                  sUsuario) then
     begin
       if usuarios.IndexOf(sUsuario) < 0 then
         ShowMessage('Usuario no encontrado: ' + sUsuario)
@@ -505,7 +541,8 @@ begin
         CargarParametros(JvInspector1, sUsuario, '');
         if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
           cmbGrupoUsuario.Properties.Items.Add(sUsuario);
-        cmbGrupoUsuario.ItemIndex := cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+        cmbGrupoUsuario.ItemIndex :=
+          cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
       end;
     end;
   finally
@@ -533,19 +570,22 @@ begin
     end;
 end;
 
-procedure TfrmMtoCajaParam.FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
+procedure TfrmMtoCajaParam.FiltrarVerticalGrid(Grid: TJvInspector;
+                                               Texto: string);
 var
   TextoBusquedaLimpio: string;
   function ProcesarFila(Row: TJvCustomInspectorItem): Boolean;
   var Coincide, HijoVisible: Boolean; i: Integer;
   begin
-    Coincide := (Texto = '') or (AnsiContainsText(QuitarTildes(Row.DisplayName), TextoBusquedaLimpio));
+    Coincide := (Texto = '') or (AnsiContainsText(QuitarTildes(Row.DisplayName),
+                                                  TextoBusquedaLimpio));
     HijoVisible := False;
     if Row is TJvInspectorCustomCategoryItem then
       for i := 0 to Row.Count - 1 do
         if ProcesarFila(Row.Items[i]) then HijoVisible := True;
     Row.Visible := Coincide or HijoVisible;
-    if (Row is TJvInspectorCustomCategoryItem) and HijoVisible and (Texto <> '') then
+    if (Row is TJvInspectorCustomCategoryItem) and HijoVisible
+       and (Texto <> '') then
       Row.Expanded := True;
     Result := Row.Visible;
   end;
@@ -561,12 +601,15 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaParam.cxButtonEdit1PropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
+procedure TfrmMtoCajaParam.cxButtonEdit1PropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
 begin
   FiltrarVerticalGrid(JvInspector1, edtBusqueda.Text);
 end;
 
-procedure TfrmMtoCajaParam.edtBusquedaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TfrmMtoCajaParam.edtBusquedaKeyDown(Sender: TObject;
+                                              var Key: Word;
+                                              Shift: TShiftState);
 begin
   if Key = VK_RETURN then
   begin

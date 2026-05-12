@@ -77,7 +77,8 @@ uses
 
 const
   COINGECKO_BASE_URL  = 'https://api.coingecko.com/api/v3';
-  COINGECKO_TIMEOUT   = 15000; // ms (CoinGecko puede tardar más que Frankfurter)
+  // ms (CoinGecko puede tardar más que Frankfurter)
+  COINGECKO_TIMEOUT   = 15000;
 
 type
   // ──────────────────────────────────────────────────────────
@@ -285,7 +286,8 @@ begin
 
     if Response.StatusCode = 200 then
     begin
-      JSON := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      JSON :=
+        TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
       try
         if Assigned(JSON) then
         begin
@@ -309,13 +311,16 @@ begin
   Client := THTTPClient.Create;
   try
     // Probamos con un par que SIEMPRE existe
-    Resp := Client.Get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+    Resp :=
+      Client.Get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
 
     if Resp.StatusCode = 200 then
       System.Writeln('Éxito: ' + Resp.ContentAsString)
     else
-      // Esto te dirá el mensaje de error real de Binance (ej: {"code":-1121,"msg":"Invalid symbol."})
-      System.Writeln('Error ' + Resp.StatusCode.ToString + ': ' + Resp.ContentAsString);
+      // Esto te dirá el mensaje de error real de Binance (ej:
+      // {"code":-1121,"msg":"Invalid symbol."})
+      System.Writeln(
+        'Error ' + Resp.StatusCode.ToString + ': ' + Resp.ContentAsString);
   finally
     Client.Free;
   end;
@@ -372,7 +377,8 @@ begin
     Response := FHttpClient.Get(AURL);
     case Response.StatusCode of
       200: Result := Response.ContentAsString(TEncoding.UTF8);
-      429: raise ECoinGeckoError.Create('Rate limit alcanzado (429). Espera un momento.');
+      429: raise ECoinGeckoError.Create(
+        'Rate limit alcanzado (429). Espera un momento.');
       else raise ECoinGeckoError.CreateFmt(
              'HTTP %d: %s', [Response.StatusCode, Response.StatusText]);
     end;
@@ -406,7 +412,8 @@ begin
   end;
 end;
 
-function TCoinGeckoAPI.SafeDouble(AObj: TJSONObject; const AKey: string): Double;
+function TCoinGeckoAPI.SafeDouble(AObj: TJSONObject;
+                                  const AKey: string): Double;
 var
   V: TJSONValue;
 begin
@@ -502,7 +509,9 @@ begin
     Result := Prices[0].GetPrice(AVsCurrency);
 end;
 
-function IfThen(AValue: Boolean; const ATrue: string; AFalse: string = ''): string; overload;
+function IfThen(AValue: Boolean;
+                const ATrue: string;
+                AFalse: string = ''): string; overload;
 begin
   if AValue then
     Result := ATrue
@@ -635,7 +644,8 @@ begin
       Market.High24h           := SafeDouble(Obj, 'high_24h');
       Market.Low24h            := SafeDouble(Obj, 'low_24h');
       Market.PriceChange24h    := SafeDouble(Obj, 'price_change_24h');
-      Market.PriceChangePct24h := SafeDouble(Obj, 'price_change_percentage_24h');
+      Market.PriceChangePct24h := SafeDouble(Obj,
+                                             'price_change_percentage_24h');
       Market.CirculatingSupply := SafeDouble(Obj, 'circulating_supply');
       Market.TotalSupply       := SafeDouble(Obj, 'total_supply');
       Market.ATH               := SafeDouble(Obj, 'ath');
@@ -862,7 +872,8 @@ begin
   end;
 end;
 
-function TCoinGeckoAPI.SearchCoins(const AQuery: string): TArray<TCoinSearchResult>;
+function TCoinGeckoAPI.SearchCoins(
+  const AQuery: string): TArray<TCoinSearchResult>;
 var
   URL      : string;
   Raw      : string;

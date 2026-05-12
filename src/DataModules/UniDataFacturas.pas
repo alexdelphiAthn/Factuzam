@@ -302,17 +302,21 @@ begin
          unqryT.FindField('PORCENTAJE_IVAR_FAC').AsString :=
                               FieldByName('PORCENTAJE_REDUCIDO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_RER_FAC').AsString :=
-                              FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsString;
+                              FieldByName(
+                                'PORCENTAJE_REDUCIDO_RE_IVA').AsString;
          unqryT.FindField('PORCENTAJE_IVAS_FAC').AsString :=
-                              FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsString;
+                              FieldByName(
+                                'PORCENTAJE_SUPERREDUCIDO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_RES_FAC').AsString :=
-                             FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString;
+                             FieldByName(
+                               'PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString;
          unqryT.FindField('PORCENTAJE_IVAE_FAC').AsString :=
                               FieldByName('PORCENTAJE_EXENTO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_REE_FAC').AsString :=
                               FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsString;
          unqryT.FindField('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString :=
-                              FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
+                              FieldByName(
+                                'ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
          unqryT.FindField('ESAPLICA_RE_ZONA_IVA_FAC').AsString :=
                               FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
          unqryT.FindField('CODIGO_IVA_FAC').AsString :=
@@ -320,7 +324,8 @@ begin
          unqryT.FindField('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString :=
                               FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
          unqryT.FindField('PALABRA_REPORTS_ZONA_IVA_FAC').AsString :=
-                              FieldByName('PALABRA_REPORTS_IVA_IVAGRP').AsString;
+                              FieldByName(
+                                'PALABRA_REPORTS_IVA_IVAGRP').AsString;
          Close;
          FreeAndNil(unqrySol);
       end;
@@ -386,7 +391,8 @@ begin
         begin
           // Si hay error, mostrar mensaje
           if facTotales.MensajeError <> '' then
-            ShowMessage('Error al calcular factura: ' + facTotales.MensajeError);
+            ShowMessage(
+              'Error al calcular factura: ' + facTotales.MensajeError);
         end;
       finally
         facTotales.Free;
@@ -477,32 +483,42 @@ begin
      FindField('PRECIO_ULT_COMPRA_FACLIN').AsString :=
                                 DataSet.FindField('PRECIO_ULT_COMPRA').AsString;
      FindField('PRECIO_SALIDA_FACLIN').AsString :=
-                              DataSet.FindField('PRECIO_SALIDA_ARTTAR').AsString;
+                              DataSet.FindField(
+                                'PRECIO_SALIDA_ARTTAR').AsString;
      FindField('PORCENTAJE_DTO_FACLIN').AsString :=
-                                DataSet.FindField('PORCENTAJE_DTO_ARTTAR').AsString;
+                                DataSet.FindField(
+                                  'PORCENTAJE_DTO_ARTTAR').AsString;
      FindField('PRECIO_DTO_FACLIN').AsString :=
                                 DataSet.FindField('PRECIO_DTO_ARTTAR').AsString;
      if  DataSet.FindField('ESIMP_INCL_TAR').AsString = 'S' then
      begin
        FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsString :=
-                               DataSet.FindField('PRECIO_FINAL_ARTTAR').AsString;
+                               DataSet.FindField(
+                                 'PRECIO_FINAL_ARTTAR').AsString;
        FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-             (DataSet.FindField('PRECIO_FINAL_ARTTAR').AsFloat / (1+ (fPorcen)));
+             (DataSet.FindField(
+               'PRECIO_FINAL_ARTTAR').AsFloat / (1+ (fPorcen)));
      end
      else
      begin
        FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsString :=
-                               DataSet.FindField('PRECIO_FINAL_ARTTAR').AsString;
+                               DataSet.FindField(
+                                 'PRECIO_FINAL_ARTTAR').AsString;
        FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-              (DataSet.FindField('PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
+              (DataSet.FindField(
+                'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
   end;
-  oLinFac := TLinFac.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac,
-                            (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG);
+  oLinFac :=
+    TLinFac.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac,
+                            (
+                              GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG);
   oLinFac.Cant := 1;
   FreeAndNil(oLinFac);
-  facTotales := TFacturaTotales.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG,
-                                       (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac);
+  facTotales := TFacturaTotales.Create(
+    (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG,
+                                       (
+                                         GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac);
   facTotales.ProcesarFacturaCompleta;//(oLinFac);
   FreeAndNil(facTotales);
 end;
@@ -532,7 +548,8 @@ begin
     FindField('PROVINCIA_CLIENTE_FAC').AsString :=
                                 DataSet.FindField('PROVINCIA_CLI').AsString;
     FindField('CODIGO_POSTAL_CLIENTE_FAC').AsString :=
-                                  DataSet.FindField('CODIGO_POSTAL_CLI').AsString;
+                                  DataSet.FindField(
+                                    'CODIGO_POSTAL_CLI').AsString;
     FindField('NOMBRE_PAI_CLIENTE_FAC').AsString :=
                               DataSet.FindField('NOMBRE_PAI_CLI').AsString;
     FindField('CODIGO_PAI_CLIENTE_FAC').AsString :=
@@ -606,7 +623,8 @@ begin
       FindField('PROVINCIA_EMPRESA_FAC').AsString :=
                                 DataSet.FindField('PROVINCIA_EMP').AsString;
       FindField('CODIGO_POSTAL_EMPRESA_FAC').AsString :=
-                                  DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
+                                  DataSet.FindField(
+                                    'CODIGO_POSTAL_EMP').AsString;
       FindField('NOMBRE_PAI_EMPRESA_FAC').AsString :=
                               DataSet.FindField('NOMBRE_PAI_EMP').AsString;
       FindField('CODIGO_PAI_EMPRESA_FAC').AsString :=
@@ -651,7 +669,8 @@ begin
       ParamByName('pPROVINCIA_CLIENTE').AsString :=
                   unqryTablaG.FieldByName('PROVINCIA_CLIENTE_FAC').AsString;
       ParamByName('pCPOSTAL_CLIENTE').AsString :=
-                    unqryTablaG.FieldByName('CODIGO_POSTAL_CLIENTE_FAC').AsString;
+                    unqryTablaG.FieldByName(
+                      'CODIGO_POSTAL_CLIENTE_FAC').AsString;
       ParamByName('pPAIS_CLIENTE').AsString :=
                 unqryTablaG.FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString;
       ParamByName('pCOD_PAIS_CLIENTE').AsString :=
@@ -697,7 +716,8 @@ begin
       ParamByName('pPROVINCIA_EMPRESA').AsString :=
                   unqryTablaG.FieldByName('PROVINCIA_EMPRESA_FAC').AsString;
       ParamByName('pCPOSTAL_EMPRESA').AsString :=
-                    unqryTablaG.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString;
+                    unqryTablaG.FieldByName(
+                      'CODIGO_POSTAL_EMPRESA_FAC').AsString;
       ParamByName('pPAIS_EMPRESA').AsString :=
                 unqryTablaG.FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString;
       ParamByName('pCODPAIS_EMPRESA').AsString :=
@@ -1387,7 +1407,9 @@ begin
             Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+            Params.CreateParam(ftString,
+                               'p_CODIGO_ALMACEN_CONTRA_MOV',
+                               ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
             Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
             Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
@@ -1400,7 +1422,8 @@ begin
             Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
             Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
             ParamByName('p_NUMERO_MOV').AsString          :=
-                                                    ObtenerSiguienteContador('MV');
+                                                    ObtenerSiguienteContador(
+                                                      'MV');
             ParamByName('p_TIPO_DOC_MOV').AsString        := 'FC';
             ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieFac;
             ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroFac;

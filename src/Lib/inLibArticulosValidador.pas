@@ -160,7 +160,8 @@ begin
   FConexion := AConexion;
 end;
 
-function TArticulosValidador.ContarCoincidencias(const sEntrada: string): Integer;
+function TArticulosValidador.ContarCoincidencias(
+  const sEntrada: string): Integer;
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
@@ -177,7 +178,8 @@ begin
   end;
 end;
 
-procedure TArticulosValidador.RellenarDatosArticulo(var R: TArtResolucionEntrada);
+procedure TArticulosValidador.RellenarDatosArticulo(
+  var R: TArtResolucionEntrada);
 var
   q       : TUniQuery;
   iNumSkus: Integer;
@@ -225,7 +227,8 @@ begin
     while not q.Eof do
     begin
       Inc(iNumSkus);
-      if iNumSkus = 1 then sUnico := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      if iNumSkus = 1 then sUnico :=
+        q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
       q.Next;
     end;
   finally
@@ -289,7 +292,8 @@ begin
   end;
 end;
 
-function TArticulosValidador.Resolver(const AEntrada: string): TArtResolucionEntrada;
+function TArticulosValidador.Resolver(
+  const AEntrada: string): TArtResolucionEntrada;
 var
   q     : TUniQuery;
   sEnt  : string;

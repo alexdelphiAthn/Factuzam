@@ -115,12 +115,13 @@ begin
   begin
     tvPedidos.DataController.Values[i, colSel.Index]   := False;
     tvPedidos.DataController.Values[i, colId.Index]    := FResumen[i].IdPedido;
-    tvPedidos.DataController.Values[i, colRef.Index]   := FResumen[i].Referencia;
+    tvPedidos.DataController.Values[i, colRef.Index] := FResumen[i].Referencia;
     tvPedidos.DataController.Values[i, colFecha.Index] := FResumen[i].Fecha;
     tvPedidos.DataController.Values[i, colCliente.Index]:= FResumen[i].Cliente;
     tvPedidos.DataController.Values[i, colTotal.Index] := FResumen[i].Total;
     tvPedidos.DataController.Values[i, colEstado.Index]:= FResumen[i].Estado;
-    if (dmPedidos <> nil) and dmPedidos.ExistePedidoPrestaShop(FResumen[i].IdPedido) then
+    if (dmPedidos <> nil)
+       and dmPedidos.ExistePedidoPrestaShop(FResumen[i].IdPedido) then
       tvPedidos.DataController.Values[i, colImportado.Index] := 'S'
     else
       tvPedidos.DataController.Values[i, colImportado.Index] := 'N';

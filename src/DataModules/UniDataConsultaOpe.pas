@@ -16,7 +16,8 @@
 unit UniDataConsultaOpe;
 
 // =============================================================================
-//  Modulo de datos para la consulta de operaciones de caja (F10 Buscar/Modificar).
+// Modulo de datos para la consulta de operaciones de caja (F10
+// Buscar/Modificar).
 //
 //  Expone 8 queries (1 maestro + 7 para pestañas) que se refrescan al
 //  cambiar la fila del maestro. TODO ES SOLO LECTURA.
@@ -120,7 +121,8 @@ begin
     '       GROUP_CONCAT(DISTINCT o.TIPO_OPERACION_OPCAJA '               +
     '                    ORDER BY o.TIPO_OPERACION_OPCAJA '               +
     '                    SEPARATOR '','')            AS TIPOS_OP, '       +
-    '       GROUP_CONCAT(DISTINCT NULLIF(o.CONCEPTO_GASTO_INGRESO_OPCAJA,'''') ' +
+    '       GROUP_CONCAT(DISTINCT NULLIF(o.CONCEPTO_GASTO_INGRESO_OPCAJA,'''') '
+      +
     '                    SEPARATOR '' | '')          AS CONCEPTOS, '      +
     '       COALESCE(MAX(f.TOTAL_LIQUIDO_FAC), '                          +
     '                SUM(o.IMPORTE_TOTAL_OPCAJA))    AS IMPORTE_TOTAL, '  +
@@ -147,16 +149,21 @@ begin
     '         OR o.NUMERO_OPERACION_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
     '         OR f.NUMERO_FAC           LIKE CONCAT(''%'', :PTXT, ''%'') ' +
     '         OR cli.RAZON_SOCIAL_CLI LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '         OR o.CONCEPTO_GASTO_INGRESO_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
+    '         OR o.CONCEPTO_GASTO_INGRESO_OPCAJA LIKE CONCAT(''%'', :PTXT, ' +
+    '''%'') ' +
     '         OR EXISTS ( '                                                +
     '               SELECT 1 FROM fza_facturas_lineas l '                  +
     '                WHERE l.CODIGO_EMP_FACLIN   = o.CODIGO_EMP_OPCAJA ' +
     '                  AND l.CODIGO_ALM_FACLIN   = o.CODIGO_ALM_OPCAJA ' +
     '                  AND l.CODIGO_CAJA_FACLIN      = o.CODIGO_CAJA_OPCAJA ' +
-    '                  AND l.NUMERO_OPERACION_FACLIN = o.NUMERO_OPERACION_OPCAJA ' +
-    '                  AND ( l.DESCRIPCION_ARTICULO_FACLIN LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '                     OR l.CODIGO_ART_FACLIN      LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '                     OR l.CODIGO_UNIDAD_FACLIN        LIKE CONCAT(''%'', :PTXT, ''%'') ' +
+    '                  AND l.NUMERO_OPERACION_FACLIN = ' +
+    'o.NUMERO_OPERACION_OPCAJA ' +
+    '                  AND ( l.DESCRIPCION_ARTICULO_FACLIN LIKE ' +
+    'CONCAT(''%'', :PTXT, ''%'') ' +
+    '                     OR l.CODIGO_ART_FACLIN      LIKE CONCAT(''%'', ' +
+    ':PTXT, ''%'') ' +
+    '                     OR l.CODIGO_UNIDAD_FACLIN        LIKE ' +
+    'CONCAT(''%'', :PTXT, ''%'') ' +
     '                      ) '                                             +
     '                   ) '                                                +
     '       ) '                                                           +
@@ -322,7 +329,8 @@ begin
     '       MAX(d.EMPRESA_CANCEL_DEP)        AS EMPRESA_CANCEL_DEP, ' +
     '       MAX(d.ALMACEN_CANCEL_DEP)        AS ALMACEN_CANCEL_DEP, ' +
     '       MAX(d.CAJA_CANCEL_DEP)           AS CAJA_CANCEL_DEP, '    +
-    '       MAX(d.NUMERO_OPERACION_CANCEL_DEP) AS NUMERO_OPERACION_CANCEL_DEP, ' +
+    '       MAX(d.NUMERO_OPERACION_CANCEL_DEP) AS NUMERO_OPERACION_CANCEL_DEP, '
+      +
     '       GROUP_CONCAT(DISTINCT d.ROL_EN_OPERACION '                +
     '                    ORDER BY d.ROL_EN_OPERACION '                +
     '                    SEPARATOR '','')      AS ROL_EN_OPERACION '  +
@@ -458,7 +466,8 @@ begin
   qryFactura.ParamByName('PCAJA').AsString   := sCaja;
   qryFactura.ParamByName('PNUMOP').AsString  := sNumOp;
   AbrirSeguro(qryFactura, 'Facturas');
-  if (not qryFactura.IsEmpty) and (Trim(sSerie) <> '') and (Trim(sNroFac) <> '') then
+  if (not qryFactura.IsEmpty) and (Trim(sSerie) <> '')
+     and (Trim(sNroFac) <> '') then
   begin
     qryFacturaLin.ParamByName('PSERIE').AsString  := sSerie;
     qryFacturaLin.ParamByName('PNROFAC').AsString := sNroFac;
