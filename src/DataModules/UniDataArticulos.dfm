@@ -796,4 +796,64 @@ inherited dmArticulos: TdmArticulos
     Left = 1040
     Top = 264
   end
+  object unqryArtPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_articulos_skus_etiquetas')
+    Left = 888
+    Top = 360
+  end
+  object dtstprvEtiquetasArt: TDataSetProvider
+    DataSet = unqryArtPrint
+    Constraints = False
+    Options = []
+    Left = 888
+    Top = 408
+  end
+  object cdsEtiquetasArt: TClientDataSet
+    Aggregates = <>
+    AutoCalcFields = False
+    Params = <>
+    Left = 1040
+    Top = 360
+  end
+  object dsEtiquetasArt: TDataSource
+    DataSet = cdsEtiquetasArt
+    Left = 1040
+    Top = 408
+  end
+  object fxdsEtiquetasArt: TfrxDBDataset
+    Description = 'EtiquetasArt'
+    UserName = 'EtiquetasArt'
+    CloseDataSource = False
+    DataSet = cdsEtiquetasArt
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 1184
+    Top = 360
+  end
+  object unqryAlmacenesPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      ' ORDER BY COALESCE(ORDEN_ALM, 999999),'
+      '          NOMBRE_ALM_ALM,'
+      '          CODIGO_ALM_ALM')
+    Left = 1184
+    Top = 408
+  end
+  object unqryTarifasPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR, ESDEFAULT_TAR'
+      '  FROM fza_tarifas'
+      ' WHERE ESACTIVO_ARTTAR = '#39'S'#39
+      ' ORDER BY COALESCE(ORDEN_TAR, 999999),'
+      '          NOMBRE_TAR_TAR,'
+      '          CODIGO_TAR_ARTTAR')
+    Left = 1184
+    Top = 456
+  end
 end
