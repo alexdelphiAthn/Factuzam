@@ -273,7 +273,8 @@ type
     actBorrarLinea           : TAction;     // Ctrl+Del
     actDuplicarLinea         : TAction;     // Ctrl+D
     actAplicarKit            : TAction;     // F8
-    actValidar               : TAction;     // Ctrl+V
+    actValidar               : TAction;
+    Panel1: TPanel;     // Ctrl+V
 
     // ------------------------------------------------------------------
     // Eventos
