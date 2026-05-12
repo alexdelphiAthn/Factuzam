@@ -295,8 +295,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 53
                   DataBinding.DataField = 'CONTADOR_ART_FAM'
                   DataBinding.DataSource = dsTablaG
+                  Properties.ValueType = vtInt
                   Properties.AssignedValues.MinValue = True
-                  Properties.MaxValue = 99999999.000000000000000000
+                  Properties.MaxValue = 99999999
                   TabOrder = 1
                   Width = 90
                 end
@@ -311,8 +312,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 53
                   DataBinding.DataField = 'PAD_ART_FAM'
                   DataBinding.DataSource = dsTablaG
-                  Properties.MaxValue = 12.000000000000000000
-                  Properties.MinValue = 1.000000000000000000
+                  Properties.ValueType = vtInt
+                  Properties.MinValue = 0
+                  Properties.MaxValue = 12
                   TabOrder = 2
                   Width = 60
                 end
