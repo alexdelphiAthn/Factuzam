@@ -459,6 +459,15 @@
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAtributosConjuntos.pas">
+            <Form>frmMtoAtributosConjuntos</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAtributosConjuntos.pas">
+            <Form>dmAtributosConjuntos</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TdmAtributosConjuntos</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalAddBlockBase.pas">
             <Form>frmModalAddBlockBase</Form>
             <FormType>dfm</FormType>
