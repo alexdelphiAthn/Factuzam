@@ -120,6 +120,11 @@ type
     cbbTarifa                : TcxDBLookupComboBox;
     chkPreciosSinIva         : TcxDBCheckBox;
     chkRedondeoVenta         : TcxDBCheckBox;
+    lblMultiploRedondeo      : TcxLabel;
+    spnMultiploRedondeo      : TcxDBSpinEdit;
+    lblAjusteFinal           : TcxLabel;
+    spnAjusteFinal           : TcxDBSpinEdit;
+    chkPrecioPorSku          : TcxDBCheckBox;
 
     gbVariacion              : TcxGroupBox;
     lblVariacion             : TcxLabel;
@@ -187,10 +192,22 @@ type
     btnDupLinea              : TcxButton;
     btnDelLinea              : TcxButton;
     btnResolverDuplicado     : TcxButton;
+    btnCalcularVenta         : TcxButton;
 
     pnlLineasDetalle         : TPanel;
     lblLineaActiva           : TcxLabel;
     gbMatriz                 : TcxGroupBox;
+
+    // Sub-grid de precios por SKU (visible solo si ESPRECIO_POR_SKU_SES='S')
+    splPreciosSku            : TcxSplitter;
+    gbPreciosSku             : TcxGroupBox;
+    cxgrdPreciosSku          : TcxGrid;
+    tvPreciosSku             : TcxGridDBTableView;
+    glPreciosSku             : TcxGridLevel;
+    dbcPreciosSkuValFila     : TcxGridDBColumn;
+    dbcPreciosSkuValPivot    : TcxGridDBColumn;
+    dbcPreciosSkuPrecioCompra: TcxGridDBColumn;
+    dbcPreciosSkuPrecioVenta : TcxGridDBColumn;
 
     // Panel scroll que aloja la matriz dinámica (construida en runtime
     // por inLibComprasSesiones a partir del eje pivot y fila).
@@ -288,6 +305,12 @@ type
     procedure btnAplicarKitFilaClick(Sender: TObject);
     procedure btnAplicarKitTodasClick(Sender: TObject);
     procedure cbbAlmacenMatrizPropertiesChange(Sender: TObject);
+    procedure chkPrecioPorSkuPropertiesEditValueChanged(Sender: TObject);
+    procedure btnCalcularVentaClick(Sender: TObject);
+    procedure dbcPreciosSkuPrecioCompraPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure dbcPreciosSkuPrecioVentaPropertiesEditValueChanged(
+      Sender: TObject);
     procedure btnVistaPreviaMatrizClick(Sender: TObject);
 
     procedure btnValidarTodoClick(Sender: TObject);
@@ -313,6 +336,8 @@ type
     procedure ReconstruirResumenMaterializacion;
     procedure HabilitarEdicion(AHabilitar: Boolean);
     function  EsSesionEditable: Boolean;
+    procedure ActualizarVisibilidadPreciosSku;
+    procedure UpsertPrecioSku(AField: string; ANuevo: Double);
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -356,6 +381,7 @@ begin
   tvKits.DataController.DataSource           := dmComprasSesiones.dsSesionKits;
   tvKitsDet.DataController.DataSource := dmComprasSesiones.dsSesionKitsDet;
   tvPreview.DataController.DataSource        := dmComprasSesiones.dsPreviewSkus;
+  tvPreciosSku.DataController.DataSource     := dmComprasSesiones.dsLineaSkusPrecios;
 
   // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
   cbbAlmacenMatriz.Properties.ListSource     := dmComprasSesiones.dsAlmacenes;
@@ -555,6 +581,46 @@ begin
   end;
 end;
 
+procedure TfrmMtoComprasSesiones.btnCalcularVentaClick(Sender: TObject);
+var
+  iSel  : Integer;
+  aRecs : array of Integer;
+  i, iLin : Integer;
+begin
+  inherited;
+  if not EsSesionEditable then Exit;
+  if dmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
+
+  // Si hay multi-seleccion en el grid, aplicar a todas; si no, solo a la actual.
+  iSel := tvLineas.Controller.SelectedRecordCount;
+  if iSel > 1 then
+  begin
+    SetLength(aRecs, iSel);
+    for i := 0 to iSel - 1 do
+    begin
+      iLin := tvLineas.Controller.SelectedRecords[i]
+                .Values[dbcLinNumero.Index];
+      aRecs[i] := iLin;
+    end;
+    inLibComprasSesiones.CalcularPrecioVentaLineas(
+      dmComprasSesiones, oUser, aRecs);
+  end
+  else
+  begin
+    inLibComprasSesiones.CalcularPrecioVentaLinea(
+      dmComprasSesiones, oUser);
+    dmComprasSesiones.unqrySesionLin.Refresh;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.chkPrecioPorSkuPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  // Refresca visibilidad del sub-grid de precios SKU.
+  ActualizarVisibilidadPreciosSku;
+end;
+
 procedure TfrmMtoComprasSesiones.btnAddFilaClick(Sender: TObject);
 begin
   inherited;
@@ -668,6 +734,7 @@ procedure TfrmMtoComprasSesiones.dsTablaGDataChange(Sender: TObject;
 begin
   inherited;
   ActualizarEstadoUI;
+  ActualizarVisibilidadPreciosSku;
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
@@ -677,6 +744,11 @@ procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
 begin
   inherited;
   ReconstruirMatrizActual;
+  // Refrescar sub-grid de precios SKU para la nueva linea
+  if Assigned(dmComprasSesiones) and
+     Assigned(dmComprasSesiones.unqryLineaSkusPrecios) and
+     dmComprasSesiones.unqryLineaSkusPrecios.Active then
+    dmComprasSesiones.unqryLineaSkusPrecios.Refresh;
 end;
 
 procedure TfrmMtoComprasSesiones.ActualizarEstadoUI;
@@ -811,6 +883,98 @@ procedure TfrmMtoComprasSesiones.actValidarExecute(Sender: TObject);
 begin
   inherited;
   btnValidarTodoClick(Sender);
+end;
+
+// ---------------------------------------------------------------------------
+// Sub-grid de precios por SKU
+// ---------------------------------------------------------------------------
+
+procedure TfrmMtoComprasSesiones.ActualizarVisibilidadPreciosSku;
+var
+  bVisible : Boolean;
+begin
+  if (dmComprasSesiones = nil) or
+     (dmComprasSesiones.unqryTablaG = nil) or
+     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+
+  bVisible := (not dmComprasSesiones.unqryTablaG.IsEmpty) and
+              (dmComprasSesiones.unqryTablaG
+                 .FieldByName('ESPRECIO_POR_SKU_SES').AsString = 'S');
+
+  if Assigned(gbPreciosSku)   then gbPreciosSku.Visible   := bVisible;
+  if Assigned(splPreciosSku)  then splPreciosSku.Visible  := bVisible;
+
+  if bVisible and Assigned(dmComprasSesiones.unqryLineaSkusPrecios) then
+  begin
+    if not dmComprasSesiones.unqryLineaSkusPrecios.Active then
+      dmComprasSesiones.unqryLineaSkusPrecios.Open
+    else
+      dmComprasSesiones.unqryLineaSkusPrecios.Refresh;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.UpsertPrecioSku(AField: string; ANuevo: Double);
+var
+  q : TUniQuery;
+  qSrc : TUniQuery;
+begin
+  if dmComprasSesiones.unqryLineaSkusPrecios.IsEmpty then Exit;
+  qSrc := dmComprasSesiones.unqryLineaSkusPrecios;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_compras_sesiones_lineas_skus_precios ' +
+      '  (SERIE_SES_SESLINSKU, NUMERO_SES_SESLINSKU, LINEA_SES_SESLINSKU, ' +
+      '   ID_FILA_SES_SESLINSKU, ID_AV_PIVOT_SESLINSKU, ' +
+      '   ' + AField + ', INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:s, :n, :l, :f, :p, :v, NOW(), :u, NOW(), :u) ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  ' + AField + ' = :v, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+    q.ParamByName('s').AsString := dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString := dmComprasSesiones.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger := dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    q.ParamByName('f').AsInteger := qSrc.FieldByName('ID_FILA').AsInteger;
+    q.ParamByName('p').AsInteger := qSrc.FieldByName('ID_AV_PIVOT').AsInteger;
+    if ANuevo = 0 then
+      q.ParamByName('v').Clear
+    else
+      q.ParamByName('v').AsFloat := ANuevo;
+    q.ParamByName('u').AsString := oUser;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.dbcPreciosSkuPrecioCompraPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  edt : TcxCustomEdit;
+  v   : Double;
+begin
+  inherited;
+  edt := Sender as TcxCustomEdit;
+  edt.PostEditValue;
+  v := dmComprasSesiones.unqryLineaSkusPrecios
+         .FieldByName('PRECIO_COMPRA_SESLINSKU').AsFloat;
+  UpsertPrecioSku('PRECIO_COMPRA_SESLINSKU', v);
+end;
+
+procedure TfrmMtoComprasSesiones.dbcPreciosSkuPrecioVentaPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  edt : TcxCustomEdit;
+  v   : Double;
+begin
+  inherited;
+  edt := Sender as TcxCustomEdit;
+  edt.PostEditValue;
+  v := dmComprasSesiones.unqryLineaSkusPrecios
+         .FieldByName('PRECIO_VENTA_SESLINSKU').AsFloat;
+  UpsertPrecioSku('PRECIO_VENTA_SESLINSKU', v);
 end;
 
 initialization
