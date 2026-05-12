@@ -4715,15 +4715,49 @@ begin
 end;
 
 function TSQLParser.Parse: TSQLElement;
+
+  function IsDollarMarker(const S: string): Boolean;
+  // Devuelve True si la cadena está compuesta sólo por '$' (p. ej. '$$', '$$$').
+  // Esos marcadores son los delimitadores propios del cliente MySQL/MariaDB.
+  var
+    I : Integer;
+  begin
+    Result := S <> '';
+    for I := 1 to Length(S) do
+      if S[I] <> '$' then
+        Exit(False);
+  end;
+
 begin
   GetNextToken;
-  while CurrentToken = tsqlSemicolon do
-    GetNextToken;
-  while CurrentToken in [tsqlSemicolon,
-                         tsqlWhiteSpace,
-                         tsqlComment,
-                         tsqlUnknown] do
-    GetNextToken;
+  // --- Bucle de "ruido" inicial: saltamos ';', whitespace, comentarios,
+  // directivas DELIMITER y marcadores '$$'. Cualquiera de éstos no inicia
+  // una sentencia SQL real. ---
+  while True do
+  begin
+    if CurrentToken in [tsqlSemicolon, tsqlWhiteSpace, tsqlComment, tsqlUnknown] then
+    begin
+      GetNextToken;
+      Continue;
+    end;
+    // Marcador '$$' / '$$$' del cliente MySQL.
+    if (CurrentToken = tsqlIdentifier) and IsDollarMarker(CurrentTokenString) then
+    begin
+      GetNextToken;
+      Continue;
+    end;
+    // Directiva DELIMITER xxx (DELIMITER $$, DELIMITER ;): la engullimos.
+    // El procedure de dentro se parsea nativamente porque su BEGIN..END
+    // tiene un terminador propio (END;).
+    if (CurrentToken = tsqlIdentifier) and SameText(CurrentTokenString, 'DELIMITER') then
+    begin
+      GetNextToken;
+      if not (CurrentToken in [tsqlEOF]) then
+        GetNextToken; // consume el símbolo del delimitador (p. ej. $$ o ;)
+      Continue;
+    end;
+    Break;
+  end;
   if CurrentToken = tsqlEOF then
     Exit(nil);
   if SameText(CurrentTokenString, 'REPLACE') then
@@ -4802,14 +4836,6 @@ begin
               TSQLRawStatement(Result).RawText := TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
             GetNextToken;
           end;
-        end
-        else if SameText(CurrentTokenString, 'DELIMITER') then
-        begin
-          // --- SOPORTE MARIADB: directiva DELIMITER ---
-          // Captura el bloque DELIMITER..DELIMITER como TSQLRawStatement
-          // con saltos de línea originales e indentación BEGIN/END/IF/THEN/ELSE.
-          Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
-          ParseDelimiterBlock(Result);
         end
         else
           UnexpectedToken;
