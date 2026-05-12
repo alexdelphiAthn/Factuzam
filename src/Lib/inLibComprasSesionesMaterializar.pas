@@ -260,8 +260,12 @@ begin
     qIns.Connection := AConn;
     qBar.Connection := AConn;
 
+    // Una fila por SKU �nico (linea, fila, pivot) sumando cantidades
+    // de todos los almacenes. El SKU y su EAN13 son a nivel de art�culo,
+    // no de almac�n: 1 SKU por (color, talla), regardless of warehouse.
     qC.SQL.Text :=
-      'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, C.CANTIDAD_SESCEL, ' +
+      'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
+      '       SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
       '       AVP.AV AS VAL_PIVOT, ' +
       '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'') ' +
       '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
@@ -279,7 +283,9 @@ begin
       '  FROM fza_compras_sesiones_celdas C ' +
       '  JOIN fza_atributos_valores AVP ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL ' +
       ' WHERE C.SERIE_SES_SESCEL = :s AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.LINEA_SES_SESCEL = :l AND C.CANTIDAD_SESCEL > 0';
+      '   AND C.LINEA_SES_SESCEL = :l AND C.CANTIDAD_SESCEL > 0 ' +
+      ' GROUP BY C.SERIE_SES_SESCEL, C.NUMERO_SES_SESCEL, C.LINEA_SES_SESCEL, ' +
+      '          C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, AVP.AV';
     qC.ParamByName('s').AsString  := ASerieSes;
     qC.ParamByName('n').AsString  := ANumSes;
     qC.ParamByName('l').AsInteger := ALinea;
@@ -479,18 +485,52 @@ begin
       qLin.Free;
     end;
 
-    // Documentos resultantes
+    // Documentos resultantes — pendiente cuando existan las tablas
+    // fza_pedidos_compra / fza_albaranes_compra.
+    //
+    // Pedido de compra (uno solo, totalizado, sin mover stock):
+    //   Para cada SKU agregado, una línea con SUM(CANTIDAD_SESCEL) de
+    //   todos los almacenes:
+    //     INSERT INTO fza_pedidos_compra ...
+    //     INSERT INTO fza_pedidos_compra_lineas
+    //       SELECT ... SUM(CANTIDAD_SESCEL)
+    //         FROM fza_compras_sesiones_celdas
+    //        WHERE SERIE/NUMERO/(CANTIDAD>0)
+    //        GROUP BY SKU
+    //
+    // Albaranes de compra (uno por almacén con cantidad > 0):
+    //   Para cada CODIGO_ALM con cantidad > 0:
+    //     INSERT INTO fza_albaranes_compra (CODIGO_ALM=ese)
+    //     INSERT INTO fza_albaranes_compra_lineas (líneas de ese almacén)
+    //     INSERT INTO fza_movimientos_almacen
+    //       Una entrada por (SKU, almacén) con cantidad correspondiente
+    //   Se guarda el primer SERIE/NUMERO en SERIE_ALBC_SES/NUMERO_ALBC_SES;
+    //   los restantes se referencian en una nueva tabla
+    //   fza_compras_sesiones_albaranes si hay más de uno (no creada aún).
+
     if AESGeneraPedido then
     begin
-      // TODO: insertar cabecera y líneas en fza_pedidos_compra.
-      //   ASeriePed := 'PEC';
-      //   ANumPed   := ProximoContador('PEDCOMPRA');
+      // ASeriePed := 'PC'; ANumPed := ProximoContador('PC');
     end;
     if AESGeneraAlbaran then
     begin
-      // TODO: insertar cabecera, líneas y fza_movimientos_almacen.
-      //   ASerieAlb := 'ALC';
-      //   ANumAlb   := ProximoContador('ALBCOMPRA');
+      // Iterar por almacén:
+      //   qAlm.SQL.Text :=
+      //     'SELECT DISTINCT IF(CODIGO_ALM_SESCEL='''', ' +
+      //     '         (SELECT CODIGO_ALM_SES FROM fza_compras_sesiones ' +
+      //     '            WHERE SERIE_SES=:s AND NUMERO_SES=:n), ' +
+      //     '         CODIGO_ALM_SESCEL) AS ALM ' +
+      //     '  FROM fza_compras_sesiones_celdas ' +
+      //     ' WHERE SERIE_SES_SESCEL=:s AND NUMERO_SES_SESCEL=:n ' +
+      //     '   AND CANTIDAD_SESCEL > 0';
+      //   while not qAlm.Eof do begin
+      //      sAlm := qAlm.FieldByName('ALM').AsString;
+      //      // crear cabecera albarán con CODIGO_ALM_ALBC = sAlm
+      //      // insertar líneas filtrando por ese almacén
+      //      // movimientos de stock en sAlm
+      //      qAlm.Next;
+      //   end;
+      // ASerieAlb := primero; ANumAlb := primero;
     end;
 
     // Cerrar la sesión

@@ -271,8 +271,12 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas_atr` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ---------------------------------------------------------------------------
--- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot)
+-- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot, almacén)
 -- ---------------------------------------------------------------------------
+-- La dimensión de almacén permite que una misma sesión genere varios
+-- albaranes de compra (uno por almacén destino) sin perder la trazabilidad
+-- talla×color por almacén. El pedido de compra al proveedor sigue siendo
+-- único — agrega cantidades de todos los almacenes por SKU.
 CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
   `SERIE_SES_SESCEL`            varchar(12)   NOT NULL,
   `NUMERO_SES_SESCEL`           varchar(12)   NOT NULL,
@@ -280,15 +284,41 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
   `ID_FILA_SES_SESCEL`          int(11)       NOT NULL,
   `ID_AV_PIVOT_SESCEL`          int(11)       NOT NULL
                                   COMMENT 'FK fza_atributos_valores del eje pivot (TALLA)',
+  `CODIGO_ALM_SESCEL`           varchar(10)   NOT NULL DEFAULT ''
+                                  COMMENT 'Almacén destino (FK fza_almacenes). '''' = usa el de cabecera al materializar.',
   `CANTIDAD_SESCEL`             decimal(19,6) NOT NULL,
 
   `INSTANTE_MODIF`              datetime      DEFAULT NULL,
   `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
 
   PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`,
-               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, `ID_AV_PIVOT_SESCEL`),
-  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`)
+               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`,
+               `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`),
+  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`),
+  INDEX `IDX_SESCEL_ALM`      (`CODIGO_ALM_SESCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Migración idempotente: añadir CODIGO_ALM_SESCEL en bases que ya tienen
+-- la tabla creada con el PK antiguo. Si la columna ya existe, no toca nada.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_compras_sesiones_celdas'
+     AND COLUMN_NAME  = 'CODIGO_ALM_SESCEL'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_compras_sesiones_celdas` '
+  'ADD COLUMN `CODIGO_ALM_SESCEL` varchar(10) NOT NULL DEFAULT '''' '
+  '  AFTER `ID_AV_PIVOT_SESCEL`, '
+  'DROP PRIMARY KEY, '
+  'ADD PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`, '
+  '                 `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, '
+  '                 `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`), '
+  'ADD INDEX `IDX_SESCEL_ALM` (`CODIGO_ALM_SESCEL`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ---------------------------------------------------------------------------
 -- 7. Override de propiedades variables por línea
@@ -335,6 +365,7 @@ SELECT
 FROM `fza_compras_sesiones` S;
 
 -- Detalle "explotado" para previsualizar qué SKUs se materializarán.
+-- Incluye el almacén destino (resuelto a cabecera si la celda lo tiene vacío).
 CREATE OR REPLACE VIEW `VI_SES_PREVIEW_SKUS` AS
 SELECT
   L.`SERIE_SES_SESLIN`           AS SERIE,
@@ -345,10 +376,15 @@ SELECT
   C.`ID_FILA_SES_SESCEL`         AS ID_FILA,
   C.`ID_AV_PIVOT_SESCEL`         AS ID_AV_PIVOT,
   AVP.`AV`                       AS VALOR_PIVOT,
+  IF(C.`CODIGO_ALM_SESCEL` = '', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
+                                 AS CODIGO_ALM,
   C.`CANTIDAD_SESCEL`            AS CANTIDAD,
   L.`PRECIO_COMPRA_SESLIN`       AS PRECIO_COMPRA,
   L.`PRECIO_VENTA_SESLIN`        AS PRECIO_VENTA
 FROM `fza_compras_sesiones_lineas`   L
+JOIN `fza_compras_sesiones`          S
+  ON S.`SERIE_SES`         = L.`SERIE_SES_SESLIN`
+ AND S.`NUMERO_SES`        = L.`NUMERO_SES_SESLIN`
 JOIN `fza_compras_sesiones_celdas`   C
   ON C.`SERIE_SES_SESCEL`  = L.`SERIE_SES_SESLIN`
  AND C.`NUMERO_SES_SESCEL` = L.`NUMERO_SES_SESLIN`
@@ -356,6 +392,23 @@ JOIN `fza_compras_sesiones_celdas`   C
 JOIN `fza_atributos_valores`         AVP
   ON AVP.`ID_AV`           = C.`ID_AV_PIVOT_SESCEL`
 WHERE C.`CANTIDAD_SESCEL`  > 0;
+
+-- Resumen agregado por almacén para la pestaña Materialización.
+CREATE OR REPLACE VIEW `VI_SES_RESUMEN_ALMACEN` AS
+SELECT
+  C.`SERIE_SES_SESCEL`           AS SERIE,
+  C.`NUMERO_SES_SESCEL`          AS NUMERO,
+  IF(C.`CODIGO_ALM_SESCEL` = '', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
+                                 AS CODIGO_ALM,
+  COUNT(*)                       AS NUM_SKUS,
+  SUM(C.`CANTIDAD_SESCEL`)       AS UNIDADES_TOTAL
+FROM `fza_compras_sesiones_celdas` C
+JOIN `fza_compras_sesiones`        S
+  ON S.`SERIE_SES`         = C.`SERIE_SES_SESCEL`
+ AND S.`NUMERO_SES`        = C.`NUMERO_SES_SESCEL`
+WHERE C.`CANTIDAD_SESCEL`  > 0
+GROUP BY C.`SERIE_SES_SESCEL`, C.`NUMERO_SES_SESCEL`,
+         IF(C.`CODIGO_ALM_SESCEL` = '', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`);
 
 -- ---------------------------------------------------------------------------
 -- 8-bis. Plantillas globales de cabecera (reutilizables al crear sesión)

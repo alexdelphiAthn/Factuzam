@@ -74,6 +74,11 @@ type
     FFilas        : TList<TFilaMatriz>;
     FColumnas     : TList<TColumnaMatriz>;
     FFilaSeleccionada : Integer;
+    FAlmacenActual    : string;
+                        // C�digo del almac�n cuya capa de celdas se est�
+                        // editando ahora mismo. Cadena vac�a = usar el de
+                        // cabecera de sesi�n. Se cambia desde el form al
+                        // mover el cbbAlmacenMatriz.
 
     procedure LimpiarMatriz;
     procedure CargarColumnasDesdeConjuntoPivot(const AIdAcPivot: Integer);
@@ -87,6 +92,9 @@ type
     function  CrearSpin(AParent: TWinControl;
                         ALeft, ATop, AWidth: Integer): TcxSpinEdit;
     procedure OnCantidadChange(Sender: TObject);
+    function  AlmacenEfectivo: string;
+                        // Devuelve FAlmacenActual o, si est� vac�o, el
+                        // CODIGO_ALM_SES de la cabecera.
   public
     constructor Create(AContenedor: TScrollBox;
                        ADataModule: TdmComprasSesiones;
@@ -97,6 +105,7 @@ type
     procedure AddFila;
     procedure DelFilaSeleccionada;
     property  FilaSeleccionada: Integer read FFilaSeleccionada;
+    property  AlmacenActual: string read FAlmacenActual write FAlmacenActual;
   end;
 
 // Operaciones a nivel de sesión, no de matriz
@@ -290,14 +299,22 @@ begin
   qC := TUniQuery.Create(nil);
   try
     qC.Connection := inLibGlobalVar.oConn;
+    // Filtramos por almac�n: la matriz muestra una "capa" por almac�n.
+    // Para no perder celdas legacy (creadas antes de a�adir CODIGO_ALM_SESCEL),
+    // tambi�n traemos las que tienen el c�digo vac�o cuando ese caso aplica.
     qC.SQL.Text :=
       'SELECT ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL ' +
       '  FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l';
+      '   AND LINEA_SES_SESCEL = :l ' +
+      '   AND (CODIGO_ALM_SESCEL = :a ' +
+      '        OR (CODIGO_ALM_SESCEL = '''' AND :a = :acab))';
     qC.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
     qC.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     qC.ParamByName('l').AsInteger := ALinea;
+    qC.ParamByName('a').AsString  := AlmacenEfectivo;
+    qC.ParamByName('acab').AsString :=
+      FDM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
     qC.Open;
     while not qC.Eof do
     begin
@@ -377,16 +394,17 @@ var
   tag  : Integer;
   iFila, iPivot: Integer;
   q    : TUniQuery;
-  bExists: Boolean;
   rNew : Double;
+  sAlm : string;
 begin
   edt := Sender as TcxSpinEdit;
   tag := edt.Tag;
   iFila  := tag shr 16;
   iPivot := tag and $FFFF;
   rNew   := edt.Value;
+  sAlm   := AlmacenEfectivo;
 
-  // Upsert directo en fza_compras_sesiones_celdas
+  // Upsert directo en fza_compras_sesiones_celdas para (linea, fila, pivot, almacen)
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -396,7 +414,7 @@ begin
         'DELETE FROM fza_compras_sesiones_celdas ' +
         ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
         '   AND LINEA_SES_SESCEL = :l AND ID_FILA_SES_SESCEL = :f ' +
-        '   AND ID_AV_PIVOT_SESCEL = :p';
+        '   AND ID_AV_PIVOT_SESCEL = :p AND CODIGO_ALM_SESCEL = :a';
     end
     else
     begin
@@ -404,9 +422,9 @@ begin
       q.SQL.Text :=
         'INSERT INTO fza_compras_sesiones_celdas ' +
         '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
-        '   ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
-        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:s, :n, :l, :f, :p, :c, NOW(), :u) ' +
+        '   ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CODIGO_ALM_SESCEL, ' +
+        '   CANTIDAD_SESCEL, INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u) ' +
         'ON DUPLICATE KEY UPDATE ' +
         '  CANTIDAD_SESCEL = :c, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
       q.ParamByName('c').AsFloat  := rNew;
@@ -417,12 +435,20 @@ begin
     q.ParamByName('l').AsInteger := FLineaActual;
     q.ParamByName('f').AsInteger := iFila;
     q.ParamByName('p').AsInteger := iPivot;
+    q.ParamByName('a').AsString  := sAlm;
     q.ExecSQL;
   finally
     q.Free;
   end;
 
   FDM.unqrySesionCel.Refresh;
+end;
+
+function TGestorMatrizCompras.AlmacenEfectivo: string;
+begin
+  Result := FAlmacenActual;
+  if Result = '' then
+    Result := FDM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
 end;
 
 function TGestorMatrizCompras.CrearLabel(AParent: TWinControl;
