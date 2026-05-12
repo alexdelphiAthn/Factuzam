@@ -143,7 +143,7 @@ begin
 //      ParamByName('ptipodoc').AsString :=  'IG';
 //      ExecProc;
 //      unqryTablaG.FindField('IVA_IVAGRP').AsString :=
-//                                                  ParamByName('pcont').AsString;
+// ParamByName('pcont').AsString;
 //    end;
   end;
 end;

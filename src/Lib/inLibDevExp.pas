@@ -33,7 +33,8 @@ uses
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
 type
-  TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
+  TUpdateTotalEvent = procedure(Sender: TObject;
+                                NuevoTotal: Currency) of object;
   procedure BusqAllGrid(var dbTvGen: TcxGridDBTableView;
                         sDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
@@ -69,7 +70,8 @@ type
                        View: TcxGridDBTableView;
                        cdsLineas, cdsCabecera: TDataSet;
                        OnUpdateTotal: TUpdateTotalEvent = nil);
-  function GetDBDataController(AView: TcxCustomGridTableView): TcxGridDBDataController;
+  function GetDBDataController(
+    AView: TcxCustomGridTableView): TcxGridDBDataController;
 
 implementation
 
@@ -149,7 +151,8 @@ begin
     Result := TcxGridItemDBDataBinding(AItem.DataBinding).FieldName;
 end;
 
-function GetDBDataController(AView: TcxCustomGridTableView): TcxGridDBDataController;
+function GetDBDataController(
+  AView: TcxCustomGridTableView): TcxGridDBDataController;
 begin
   if (AView <> nil) and (AView.DataController is TcxGridDBDataController) then
     Result := TcxGridDBDataController(AView.DataController)
@@ -312,7 +315,8 @@ begin
     if sColumnName = '' then Continue;
     sPrefix := sVistaName + '_' + sColumnName + '_';
 
-    Add(sPrefix + 'Visible',  TGenUtils.IfThen<String>(oItem.Visible, 'True', 'False'));
+    Add(sPrefix + 'Visible',
+        TGenUtils.IfThen<String>(oItem.Visible, 'True', 'False'));
     Add(sPrefix + 'Index',    IntToStr(oItem.Index));
     Add(sPrefix + 'Width',    IntToStr(oItem.Width));
     Add(sPrefix + 'Caption',  oItem.Caption);
@@ -320,14 +324,18 @@ begin
     Add(sPrefix + 'SortIndex', IntToStr(oItem.SortIndex));
     if oItem is TcxGridDBBandedColumn then
     begin
-      Add(sPrefix + 'BandIndex', IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
-      Add(sPrefix + 'ColIndex',  IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
-      Add(sPrefix + 'RowIndex',  IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
+      Add(sPrefix + 'BandIndex',
+          IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
+      Add(sPrefix + 'ColIndex',
+          IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
+      Add(sPrefix + 'RowIndex',
+          IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
   end;
   if cxgrdtvVista.DataController.Filter.IsEmpty then
   begin
-    // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro previo en la BBDD
+    // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro
+    // previo en la BBDD
     odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_Filtro', '', '');
   end
   else
@@ -374,26 +382,44 @@ begin
 
     // 1. Guardar Visibilidad
     if (oItem.Visible) then sValue := 'True' else sValue := 'False';
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Visible', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_Visible',
+                             sValue);
 
     // 2. Guardar Orden (Mantenemos Index como lo tenías)
     sValue := IntToStr(oItem.Index);
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Index', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_Index',
+                             sValue);
 
     // 3. Guardar Ancho
     sValue := IntToStr(oItem.Width);
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Width', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_Width',
+                             sValue);
 
     // 4. Guardar Caption
     sValue := oItem.Caption;
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_Caption', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_Caption',
+                             sValue);
 
     // 5. Guardar Ordenación de datos (Sorting)
     sValue := IntToStr(Ord(oItem.SortOrder));
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_SortOrder', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_SortOrder',
+                             sValue);
 
     sValue := IntToStr(oItem.SortIndex);
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_' + sColumnName + '_SortIndex', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             sVistaName + '_' + sColumnName + '_SortIndex',
+                             sValue);
 
     // 6. Si es columna banded, guardar tambien la posicion en band
     if oItem is TcxGridDBBandedColumn then
@@ -417,18 +443,25 @@ begin
     cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
     LStream.Position := 0;
 
-    // Lo codificamos a Base64 para que sea un texto seguro (sin caracteres raros)
+    // Lo codificamos a Base64 para que sea un texto seguro (sin caracteres
+    // raros)
     TNetEncoding.Base64.Encode(LStream, BStream);
     sValue := BStream.DataString;
 
     // Lo guardamos en tu perfil con la clave terminada en "_Filtro"
-    odmPerfiles.GrabarPerfil(sProfile, sName, cxgrdtvVista.Name + '_Filtro', sValue);
+    odmPerfiles.GrabarPerfil(sProfile,
+                             sName,
+                             cxgrdtvVista.Name + '_Filtro',
+                             sValue);
 
     // Guardar el ancho general del componente TcxGrid contenedor
     if Assigned(cxgrdtvVista.Control) then
     begin
       sValue := IntToStr(cxgrdtvVista.Control.Width);
-      odmPerfiles.GrabarPerfil(sProfile, sName, cxgrdtvVista.Name + '_GridTotalWidth', sValue);
+      odmPerfiles.GrabarPerfil(sProfile,
+                               sName,
+                               cxgrdtvVista.Name + '_GridTotalWidth',
+                               sValue);
     end;
   finally
     LStream.Free;
@@ -458,14 +491,22 @@ begin
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
 
-      oItem.Visible := SameText(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'), 'True');
-      oItem.Caption := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', oItem.Caption);
-      oItem.Width   := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', ''), oItem.Width);
+      oItem.Visible := SameText(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'),
+        'True');
+      oItem.Caption := GetPerfilSubKeyValueDef(oPerfilDic,
+                                               sSubKey,
+                                               'Caption',
+                                               oItem.Caption);
+      oItem.Width   := StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', ''), oItem.Width);
 
       // Restaurar Ordenación (Sorting)
-      oItem.SortOrder := TcxDataSortOrder(StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
+      oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
       if Ord(oItem.SortOrder) <> 0 then
-        oItem.SortIndex := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
+        oItem.SortIndex := StrToIntDef(
+          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
     end;
 
     // 2. Restaurar la posición física de las columnas (Index)
@@ -475,10 +516,12 @@ begin
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
-      oItem.Index := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', ''), oItem.Index);
+      oItem.Index := StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', ''), oItem.Index);
     end;
 
-    // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex / RowIndex
+    // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex /
+    // RowIndex
     for i := 0 to cxgrdtvVista.ItemCount - 1 do
     begin
       oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
@@ -490,9 +533,15 @@ begin
       sSubKey := sName + '_' + sColumnName;
       with TcxGridDBBandedColumn(oItem).Position do
       begin
-        BandIndex := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'BandIndex', ''), BandIndex);
-        ColIndex  := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'ColIndex',  ''), ColIndex);
-        RowIndex  := StrToIntDef(GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'RowIndex',  ''), RowIndex);
+        BandIndex := StrToIntDef(
+          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'BandIndex', ''),
+          BandIndex);
+        ColIndex  := StrToIntDef(
+          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'ColIndex',  ''),
+          ColIndex);
+        RowIndex  := StrToIntDef(
+          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'RowIndex',  ''),
+          RowIndex);
       end;
     end;
 

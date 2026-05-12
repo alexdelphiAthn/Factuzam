@@ -231,7 +231,8 @@ begin
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'ESTANDAR';
 
   // Detección de duplicado
-  if unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
+  if unqrySesionLin.FieldByName(
+    'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
   begin
     ChequearDuplicado(
       unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
@@ -275,7 +276,8 @@ var
 begin
   // Recalcula TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN para la línea
   // actualmente en edición sumando las celdas activas.
-  // Implementación: SELECT SUM(CANTIDAD_SESCEL) FROM fza_compras_sesiones_celdas
+  // Implementación: SELECT SUM(CANTIDAD_SESCEL) FROM
+  // fza_compras_sesiones_celdas
   //                  WHERE pk de línea.
   rTotalUds := 0;
   // TODO: ejecutar consulta de agregación.
@@ -283,7 +285,8 @@ begin
   if not (unqrySesionLin.State in [dsInsert, dsEdit]) then
     unqrySesionLin.Edit;
   unqrySesionLin.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTotalUds;
-  unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    := rTotalUds * rPrecio;
+  unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    :=
+    rTotalUds * rPrecio;
 end;
 
 procedure TdmComprasSesiones.GetCodigoAutoSesion;
@@ -317,7 +320,8 @@ begin
     if not unqryArticuloExiste.IsEmpty then
     begin
       AExiste      := True;
-      ADescripcion := unqryArticuloExiste.FieldByName('DESCRIPCION_ART').AsString;
+      ADescripcion :=
+        unqryArticuloExiste.FieldByName('DESCRIPCION_ART').AsString;
     end;
   finally
     unqryArticuloExiste.Close;

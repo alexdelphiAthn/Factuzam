@@ -188,7 +188,8 @@ type
 
     // Validaciones extra antes de previsualizar.
     // Si devuelve False, el preview no se ejecuta.
-    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean; virtual;
+    function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
+    virtual;
 
     // Columnas SELECT extra a inyectar antes de YA_CARGADO.
     // Cada hijo puede devolver lo suyo (precio_origen, stock_kardex...).
@@ -234,7 +235,8 @@ type
     function  ConstruirSQLPreview: string;
     procedure AplicarParametros(AQry: TUniQuery);
 
-    // Recogida de selecciones (los hijos pueden usarlas en su EjecutarInsercion)
+    // Recogida de selecciones (los hijos pueden usarlas en su
+    // EjecutarInsercion)
     function  RecogerCodigosFamiliaSeleccionados: TArray<string>;
     function  RecogerCodigosProveedoresSeleccionados: TArray<string>;
     function  RecogerIdsValorPropiedadSeleccionados: TArray<Integer>;
@@ -335,9 +337,11 @@ begin
   // override en hijos
 end;
 
-function TfrmModalAddBlockBase.TextoConfirmacion(ANumPendientes: Integer): string;
+function TfrmModalAddBlockBase.TextoConfirmacion(
+  ANumPendientes: Integer): string;
 begin
-  Result := Format('Se van a insertar %d articulos. Continuar?', [ANumPendientes]);
+  Result := Format('Se van a insertar %d articulos. Continuar?',
+                   [ANumPendientes]);
 end;
 
 function TfrmModalAddBlockBase.TextoExito(ANumInsertados: Integer): string;
@@ -472,7 +476,8 @@ begin
 
     while not qry.Eof do
     begin
-      cbxPropiedad.Properties.Items.Add(qry.FieldByName('NOMBRE_PROP_PROP').AsString);
+      cbxPropiedad.Properties.Items.Add(qry.FieldByName(
+        'NOMBRE_PROP_PROP').AsString);
       FCodigosPropiedades.Add(qry.FieldByName('CODIGO_PROP_ARTPROP').AsString);
       qry.Next;
     end;
@@ -483,7 +488,8 @@ begin
   end;
 end;
 
-procedure TfrmModalAddBlockBase.CargarValoresPropiedad(const ACodigoPropiedad: string);
+procedure TfrmModalAddBlockBase.CargarValoresPropiedad(
+  const ACodigoPropiedad: string);
 begin
   FQryPropValores.Close;
   FQryPropValores.Connection := FConn;
@@ -523,7 +529,8 @@ begin
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, TIPO_USO_ALM ' +
       'FROM fza_almacenes ' +
       'WHERE ESACTIVO_ALM = ''S'' ' +
-      '  AND (TIPO_USO_ALM IN (''ESTANDAR'',''ESTANDARD'',''DEPOSITO'',''DEPOSITO'')' +
+      '  AND (TIPO_USO_ALM IN ' +
+      '(''ESTANDAR'',''ESTANDARD'',''DEPOSITO'',''DEPOSITO'')' +
       '       OR TIPO_USO_ALM IS NULL) ' +
       'ORDER BY ORDEN_ALM, NOMBRE_ALM_ALM';
     qry.Open;
@@ -535,7 +542,8 @@ begin
         ' - ' +
         qry.FieldByName('NOMBRE_ALM_ALM').AsString;
       it.ItemObject := TStringList.Create;
-      TStringList(it.ItemObject).Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
+      TStringList(
+        it.ItemObject).Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
       qry.Next;
     end;
   finally
@@ -666,7 +674,8 @@ begin
   CargarValoresPropiedad(cod);
 end;
 
-procedure TfrmModalAddBlockBase.edtFiltroProveedorPropertiesChange(Sender: TObject);
+procedure TfrmModalAddBlockBase.edtFiltroProveedorPropertiesChange(
+  Sender: TObject);
 var
   txt: string;
 begin
@@ -940,8 +949,12 @@ begin
     sql.Add('       COALESCE((SELECT SUM(s.CANTIDAD_STK)');
     sql.Add('                   FROM fza_articulos_stockactual s');
     sql.Add('                   LEFT JOIN fza_articulos_skus sk');
-    sql.Add('                          ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK');
-    sql.Add('                  WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)');
+    sql.Add(
+      '                          ON sk.CODIGO_UNIDAD_SKU = ' +
+      's.CODIGO_UNIDAD_STK');
+    sql.Add(
+      '                  WHERE COALESCE(sk.CODIGO_ART_SKU, ' +
+      's.CODIGO_UNIDAD_STK)');
     sql.Add('                        = a.CODIGO_ART_ART');
     if csvAlm <> '' then
       sql.Add('                    AND s.CODIGO_ALM_STK IN (' + csvAlm + ')');
@@ -978,21 +991,31 @@ begin
       case modoStock of
         scCualquiera:
           begin
-            sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
+            sql.Add(
+              '   AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
             sql.Add('                LEFT JOIN fza_articulos_skus sk2');
-            sql.Add('                       ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('                WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add(
+              '                       ON sk2.CODIGO_UNIDAD_SKU = ' +
+              's2.CODIGO_UNIDAD_STK');
+            sql.Add(
+              '                WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
+              's2.CODIGO_UNIDAD_STK)');
             sql.Add('                      = a.CODIGO_ART_ART');
             sql.Add('                  AND s2.CANTIDAD_STK > 0');
-            sql.Add('                  AND s2.CODIGO_ALM_STK IN (' + csvAlm + '))');
+            sql.Add(
+              '                  AND s2.CODIGO_ALM_STK IN (' + csvAlm + '))');
           end;
         scTodos:
           begin
             sql.Add('   AND (SELECT COUNT(DISTINCT s2.CODIGO_ALM_STK)');
             sql.Add('          FROM fza_articulos_stockactual s2');
             sql.Add('          LEFT JOIN fza_articulos_skus sk2');
-            sql.Add('                 ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('         WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add(
+              '                 ON sk2.CODIGO_UNIDAD_SKU = ' +
+              's2.CODIGO_UNIDAD_STK');
+            sql.Add(
+              '         WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
+              's2.CODIGO_UNIDAD_STK)');
             sql.Add('               = a.CODIGO_ART_ART');
             sql.Add('           AND s2.CANTIDAD_STK > 0');
             sql.Add('           AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
@@ -1003,10 +1026,15 @@ begin
             sql.Add('   AND COALESCE((SELECT SUM(s2.CANTIDAD_STK)');
             sql.Add('                   FROM fza_articulos_stockactual s2');
             sql.Add('                   LEFT JOIN fza_articulos_skus sk2');
-            sql.Add('                          ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            sql.Add('                  WHERE COALESCE(sk2.CODIGO_ART_SKU, s2.CODIGO_UNIDAD_STK)');
+            sql.Add(
+              '                          ON sk2.CODIGO_UNIDAD_SKU = ' +
+              's2.CODIGO_UNIDAD_STK');
+            sql.Add(
+              '                  WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
+              's2.CODIGO_UNIDAD_STK)');
             sql.Add('                        = a.CODIGO_ART_ART');
-            sql.Add('                    AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
+            sql.Add(
+              '                    AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
             sql.Add('                ), 0) > 0');
           end;
       end;
@@ -1025,7 +1053,9 @@ begin
         sql.Add('       UNION ALL');
         sql.Add('       SELECT h.CODIGO_FAM_FAM, h.CODIGO_SUBFAMILIA_FAM');
         sql.Add('         FROM fza_articulos_familias h');
-        sql.Add('         JOIN arbol a2 ON h.CODIGO_SUBFAMILIA_FAM = a2.CODIGO_FAM_FAM');
+        sql.Add(
+          '         JOIN arbol a2 ON h.CODIGO_SUBFAMILIA_FAM = ' +
+          'a2.CODIGO_FAM_FAM');
         sql.Add('     )');
         sql.Add('     SELECT CODIGO_FAM_FAM FROM arbol');
         sql.Add('   )');
@@ -1070,7 +1100,8 @@ begin
         sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
         sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
         sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        sql.Add('          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA');
+        sql.Add(
+          '          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA');
         sql.Add('       ) >= :P_NUM_MIN_VTAS');
       end
       else
@@ -1080,7 +1111,8 @@ begin
         sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
         sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
         sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        sql.Add('          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
+        sql.Add(
+          '          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
       end;
     end;
 
@@ -1194,7 +1226,8 @@ begin
 
   if pendientes = 0 then
   begin
-    ShowMessage('Todos los articulos del filtro ya estan cargados. Nada que insertar.');
+    ShowMessage(
+      'Todos los articulos del filtro ya estan cargados. Nada que insertar.');
     Exit;
   end;
 

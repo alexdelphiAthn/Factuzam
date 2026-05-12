@@ -69,7 +69,8 @@ type
 
     // Crear albarán a partir de las cantidades entregadas pendientes
     function CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
-                                     aLineas: TList<TPair<string, Currency>>): Boolean;
+                                     aLineas: TList<TPair<string,
+                                     Currency>>): Boolean;
 
     // Importación PrestaShop
     function ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
@@ -252,11 +253,13 @@ begin
     Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    ParamByName('pserie').AsString    := unqryTablaG.FieldByName('SERIE_PED').AsString;
+    ParamByName('pserie').AsString    :=
+      unqryTablaG.FieldByName('SERIE_PED').AsString;
     ParamByName('ptipodoc').AsString  := 'PE';
     ParamByName('pUSUARIOMODIF').AsString := oUser;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
-                                 unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString;
+                                 unqryTablaG.FieldByName(
+                                   'CODIGO_EMP_PED').AsString;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_PED').AsString :=
                                                   ParamByName('pcont').AsString;
@@ -292,9 +295,11 @@ begin
     unqryPedidosLineas.First;
     while not unqryPedidosLineas.Eof do
     begin
-      fPorIva := unqryPedidosLineas.FieldByName('PORCENTAJE_IVA_PEDLIN').AsFloat / 100;
+      fPorIva :=
+        unqryPedidosLineas.FieldByName('PORCENTAJE_IVA_PEDLIN').AsFloat / 100;
       fTotal := unqryPedidosLineas.FieldByName('CANTIDAD_PEDLIN').AsFloat *
-                unqryPedidosLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN').AsFloat;
+                unqryPedidosLineas.FieldByName(
+                  'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN').AsFloat;
       fBase := fBase + fTotal;
       fIva  := fIva + (fTotal * fPorIva);
       unqryPedidosLineas.Next;
@@ -321,22 +326,37 @@ begin
   begin
     if (State <> dsEdit) and (State <> dsInsert) then
       Edit;
-    FindField('CODIGO_EMP_PED').AsString             := DataSet.FindField('CODIGO_EMP_EMP').AsString;
-    FindField('RAZON_SOCIAL_EMPRESA_PED').AsString   := DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
-    FindField('NIF_EMPRESA_PED').AsString            := DataSet.FindField('NIF_EMP').AsString;
-    FindField('MOVIL_EMPRESA_PED').AsString          := DataSet.FindField('MOVIL_EMP').AsString;
-    FindField('EMAIL_EMPRESA_PED').AsString          := DataSet.FindField('EMAIL_EMP').AsString;
-    FindField('DIRECCION1_EMPRESA_PED').AsString     := DataSet.FindField('DIRECCION1_EMP').AsString;
-    FindField('DIRECCION2_EMPRESA_PED').AsString     := DataSet.FindField('DIRECCION2_EMP').AsString;
-    FindField('POBLACION_EMPRESA_PED').AsString      := DataSet.FindField('POBLACION_EMP').AsString;
-    FindField('PROVINCIA_EMPRESA_PED').AsString      := DataSet.FindField('PROVINCIA_EMP').AsString;
-    FindField('CODIGO_POSTAL_EMPRESA_PED').AsString  := DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
-    FindField('NOMBRE_PAI_EMPRESA_PED').AsString     := DataSet.FindField('NOMBRE_PAI_EMP').AsString;
-    FindField('CODIGO_PAI_EMPRESA_PED').AsString     := DataSet.FindField('CODIGO_PAI_EMP').AsString;
-    FindField('GRUPO_ZONA_IVA_EMPRESA_PED').AsString := DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
-    FindField('ESRETENCIONES_EMPRESA_PED').AsString  := DataSet.FindField('ESRETENCIONES_EMP').AsString;
+    FindField('CODIGO_EMP_PED').AsString             :=
+      DataSet.FindField('CODIGO_EMP_EMP').AsString;
+    FindField('RAZON_SOCIAL_EMPRESA_PED').AsString   :=
+      DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
+    FindField('NIF_EMPRESA_PED').AsString            :=
+      DataSet.FindField('NIF_EMP').AsString;
+    FindField('MOVIL_EMPRESA_PED').AsString          :=
+      DataSet.FindField('MOVIL_EMP').AsString;
+    FindField('EMAIL_EMPRESA_PED').AsString          :=
+      DataSet.FindField('EMAIL_EMP').AsString;
+    FindField('DIRECCION1_EMPRESA_PED').AsString     :=
+      DataSet.FindField('DIRECCION1_EMP').AsString;
+    FindField('DIRECCION2_EMPRESA_PED').AsString     :=
+      DataSet.FindField('DIRECCION2_EMP').AsString;
+    FindField('POBLACION_EMPRESA_PED').AsString      :=
+      DataSet.FindField('POBLACION_EMP').AsString;
+    FindField('PROVINCIA_EMPRESA_PED').AsString      :=
+      DataSet.FindField('PROVINCIA_EMP').AsString;
+    FindField('CODIGO_POSTAL_EMPRESA_PED').AsString  :=
+      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
+    FindField('NOMBRE_PAI_EMPRESA_PED').AsString     :=
+      DataSet.FindField('NOMBRE_PAI_EMP').AsString;
+    FindField('CODIGO_PAI_EMPRESA_PED').AsString     :=
+      DataSet.FindField('CODIGO_PAI_EMP').AsString;
+    FindField('GRUPO_ZONA_IVA_EMPRESA_PED').AsString :=
+      DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
+    FindField('ESRETENCIONES_EMPRESA_PED').AsString  :=
+      DataSet.FindField('ESRETENCIONES_EMP').AsString;
     FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_PED').AsString :=
-                            DataSet.FindField('ESREGIMENESPECIALAGRICOLA_EMP').AsString;
+                            DataSet.FindField(
+                              'ESREGIMENESPECIALAGRICOLA_EMP').AsString;
   end;
 end;
 
@@ -346,25 +366,43 @@ begin
   begin
     if (State <> dsEdit) and (State <> dsInsert) then
       Edit;
-    FindField('CODIGO_CLI_PED').AsString                  := DataSet.FindField('CODIGO_CLI_CLI').AsString;
-    FindField('RAZON_SOCIAL_CLIENTE_FISCAL_PED').AsString := DataSet.FindField('RAZON_SOCIAL_CLI').AsString;
-    FindField('NIF_CLIENTE_PED').AsString                 := DataSet.FindField('NIF_CLI').AsString;
-    FindField('MOVIL_CLIENTE_FISCAL_PED').AsString        := DataSet.FindField('MOVIL_CLI').AsString;
-    FindField('EMAIL_CLIENTE_PED').AsString               := DataSet.FindField('EMAIL_CLI').AsString;
-    FindField('DIRECCION1_CLIENTE_FISCAL_PED').AsString   := DataSet.FindField('DIRECCION1_CLI').AsString;
-    FindField('DIRECCION2_CLIENTE_FISCAL_PED').AsString   := DataSet.FindField('DIRECCION2_CLI').AsString;
-    FindField('POBLACION_CLIENTE_FISCAL_PED').AsString    := DataSet.FindField('POBLACION_CLI').AsString;
-    FindField('PROVINCIA_CLIENTE_FISCAL_PED').AsString    := DataSet.FindField('PROVINCIA_CLI').AsString;
-    FindField('CODIGO_POSTAL_CLIENTE_FISCAL_PED').AsString:= DataSet.FindField('CODIGO_POSTAL_CLI').AsString;
-    FindField('NOMBRE_PAI_CLIENTE_FISCAL_PED').AsString   := DataSet.FindField('NOMBRE_PAI_CLI').AsString;
-    FindField('CODIGO_PAI_CLIENTE_FISCAL_PED').AsString   := DataSet.FindField('CODIGO_PAI_CLI').AsString;
-    FindField('ESIVA_RECARGO_CLIENTE_PED').AsString       := DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
-    FindField('ESIVA_EXENTO_CLIENTE_PED').AsString        := DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
+    FindField('CODIGO_CLI_PED').AsString                  :=
+      DataSet.FindField('CODIGO_CLI_CLI').AsString;
+    FindField('RAZON_SOCIAL_CLIENTE_FISCAL_PED').AsString :=
+      DataSet.FindField('RAZON_SOCIAL_CLI').AsString;
+    FindField('NIF_CLIENTE_PED').AsString                 :=
+      DataSet.FindField('NIF_CLI').AsString;
+    FindField('MOVIL_CLIENTE_FISCAL_PED').AsString        :=
+      DataSet.FindField('MOVIL_CLI').AsString;
+    FindField('EMAIL_CLIENTE_PED').AsString               :=
+      DataSet.FindField('EMAIL_CLI').AsString;
+    FindField('DIRECCION1_CLIENTE_FISCAL_PED').AsString   :=
+      DataSet.FindField('DIRECCION1_CLI').AsString;
+    FindField('DIRECCION2_CLIENTE_FISCAL_PED').AsString   :=
+      DataSet.FindField('DIRECCION2_CLI').AsString;
+    FindField('POBLACION_CLIENTE_FISCAL_PED').AsString    :=
+      DataSet.FindField('POBLACION_CLI').AsString;
+    FindField('PROVINCIA_CLIENTE_FISCAL_PED').AsString    :=
+      DataSet.FindField('PROVINCIA_CLI').AsString;
+    FindField('CODIGO_POSTAL_CLIENTE_FISCAL_PED').AsString:=
+      DataSet.FindField('CODIGO_POSTAL_CLI').AsString;
+    FindField('NOMBRE_PAI_CLIENTE_FISCAL_PED').AsString   :=
+      DataSet.FindField('NOMBRE_PAI_CLI').AsString;
+    FindField('CODIGO_PAI_CLIENTE_FISCAL_PED').AsString   :=
+      DataSet.FindField('CODIGO_PAI_CLI').AsString;
+    FindField('ESIVA_RECARGO_CLIENTE_PED').AsString       :=
+      DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
+    FindField('ESIVA_EXENTO_CLIENTE_PED').AsString        :=
+      DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
     FindField('ESREGIMENESPECIALAGRICOLA_CLIENTE_PED').AsString :=
-                                       DataSet.FindField('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
-    FindField('ESRETENCIONES_CLIENTE_PED').AsString       := DataSet.FindField('ESRETENCIONES_CLI').AsString;
-    FindField('ESINTRACOMUNITARIO_CLIENTE_PED').AsString  := DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
-    FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString     := DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
+                                       DataSet.FindField(
+                                         'ESREGIMENESPECIALAGRICOLA_CLI').AsString;
+    FindField('ESRETENCIONES_CLIENTE_PED').AsString       :=
+      DataSet.FindField('ESRETENCIONES_CLI').AsString;
+    FindField('ESINTRACOMUNITARIO_CLIENTE_PED').AsString  :=
+      DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
+    FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString     :=
+      DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
   end;
 end;
 
@@ -398,7 +436,8 @@ begin
       '  DECLARE v_numero varchar(20); ' +
       '  SELECT SERIE_PED INTO v_serie FROM fza_pedidos ' +
       '   WHERE NUMERO_PED = p_NUMERO_PED AND SERIE_PED = p_SERIE_PED; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, ''0'') ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, ' +
+      '''0'') ' +
       '    INTO v_numero FROM fza_albaranes WHERE SERIE_ALB = v_serie; ' +
       '  INSERT INTO fza_albaranes ( ' +
       '    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB, ' +
@@ -430,7 +469,8 @@ begin
       '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       '  SELECT v_numero, v_serie, CURRENT_DATE(), ''ABIERTO'', ' +
       '         p_NUMERO_PED, p_SERIE_PED, ' +
-      '         P.CODIGO_EMP_PED, P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED, ' +
+      '         P.CODIGO_EMP_PED, P.RAZON_SOCIAL_EMPRESA_PED, ' +
+      'P.NIF_EMPRESA_PED, ' +
       '         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED, ' +
       '         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED, ' +
       '         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED, ' +
@@ -439,19 +479,26 @@ begin
       '         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED, ' +
       '         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED, ' +
       '         P.EMAIL_CLIENTE_PED, ' +
-      '         P.DIRECCION1_CLIENTE_FISCAL_PED, P.DIRECCION2_CLIENTE_FISCAL_PED, ' +
-      '         P.POBLACION_CLIENTE_FISCAL_PED, P.PROVINCIA_CLIENTE_FISCAL_PED, ' +
+      '         P.DIRECCION1_CLIENTE_FISCAL_PED, ' +
+      'P.DIRECCION2_CLIENTE_FISCAL_PED, ' +
+      '         P.POBLACION_CLIENTE_FISCAL_PED, ' +
+      'P.PROVINCIA_CLIENTE_FISCAL_PED, ' +
       '         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
-      '         P.CODIGO_PAI_CLIENTE_FISCAL_PED, P.NOMBRE_PAI_CLIENTE_FISCAL_PED, ' +
+      '         P.CODIGO_PAI_CLIENTE_FISCAL_PED, ' +
+      'P.NOMBRE_PAI_CLIENTE_FISCAL_PED, ' +
       '         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED, ' +
-      '         P.DIRECCION1_CLIENTE_ENVIO_PED, P.DIRECCION2_CLIENTE_ENVIO_PED, ' +
-      '         P.POBLACION_CLIENTE_ENVIO_PED, P.PROVINCIA_CLIENTE_ENVIO_PED, ' +
+      '         P.DIRECCION1_CLIENTE_ENVIO_PED, ' +
+      'P.DIRECCION2_CLIENTE_ENVIO_PED, ' +
+      '         P.POBLACION_CLIENTE_ENVIO_PED, P.PROVINCIA_CLIENTE_ENVIO_PED, '
+        +
       '         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED, ' +
-      '         P.CODIGO_PAI_CLIENTE_ENVIO_PED, P.NOMBRE_PAI_CLIENTE_ENVIO_PED, ' +
+      '         P.CODIGO_PAI_CLIENTE_ENVIO_PED, ' +
+      'P.NOMBRE_PAI_CLIENTE_ENVIO_PED, ' +
       '         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED, ' +
       '         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED, ' +
       '         P.ESINTRACOMUNITARIO_CLIENTE_PED, ' +
-      '         P.TARIFA_ARTICULO_CLIENTE_PED, P.ESIMP_INCL_TARIFA_CLIENTE_PED, ' +
+      '         P.TARIFA_ARTICULO_CLIENTE_PED, ' +
+      'P.ESIMP_INCL_TARIFA_CLIENTE_PED, ' +
       '         P.PORCENTAJE_IVAN_PED, P.PORCENTAJE_IVAR_PED, ' +
       '         P.PORCENTAJE_IVAS_PED, P.PORCENTAJE_IVAE_PED, ' +
       '         P.FORMA_PAGO_PED, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
@@ -489,7 +536,8 @@ begin
       '  ELSE ' +
       '    SET v_cantidad = p_CANTIDAD; ' +
       '  END IF; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_ALBLIN AS UNSIGNED)), 0) + 10, 4, ''0'') ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_ALBLIN AS UNSIGNED)), 0) + 10, 4, ' +
+      '''0'') ' +
       '    INTO v_linea FROM fza_albaranes_lineas ' +
       '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
       '     AND SERIE_ALB_ALBLIN  = p_SERIE_ALB; ' +
@@ -506,9 +554,12 @@ begin
       '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       '  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea, ' +
       '         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED, ' +
-      '         PL.CODIGO_ART_PEDLIN, PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN, ' +
-      '         PL.DESCRIPCION_ARTICULO_PEDLIN, PL.TIPO_CANTIDAD_ARTICULO_PEDLIN, ' +
-      '         v_cantidad, PL.CODIGO_TAR_PEDLIN, PL.ESIMP_INCL_TARIFA_PEDLIN, ' +
+      '         PL.CODIGO_ART_PEDLIN, PL.CODIGO_FAM_PEDLIN, ' +
+      'PL.NOMBRE_FAM_PEDLIN, ' +
+      '         PL.DESCRIPCION_ARTICULO_PEDLIN, ' +
+      'PL.TIPO_CANTIDAD_ARTICULO_PEDLIN, ' +
+      '         v_cantidad, PL.CODIGO_TAR_PEDLIN, PL.ESIMP_INCL_TARIFA_PEDLIN, '
+        +
       '         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN, ' +
       '         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
       '         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, ' +
@@ -520,9 +571,12 @@ begin
       '     AND PL.SERIE_PED_PEDLIN  = p_SERIE_PED ' +
       '     AND PL.LINEA_PEDLIN      = p_LINEA_PED; ' +
       '  UPDATE fza_pedidos_lineas ' +
-      '     SET CANTIDAD_ENTREGADA_PEDLIN = IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad, ' +
-      '         CANTIDAD_PENDIENTE_PEDLIN = CANTIDAD_PEDLIN - (IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad), ' +
-      '         ESENTREGADA_PEDLIN        = CASE WHEN CANTIDAD_PEDLIN <= IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad ' +
+      '     SET CANTIDAD_ENTREGADA_PEDLIN = ' +
+      'IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad, ' +
+      '         CANTIDAD_PENDIENTE_PEDLIN = CANTIDAD_PEDLIN - ' +
+      '(IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad), ' +
+      '         ESENTREGADA_PEDLIN        = CASE WHEN CANTIDAD_PEDLIN <= ' +
+      'IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad ' +
       '                                          THEN ''S'' ELSE ''N'' END, ' +
       '         INSTANTE_MODIF            = NOW(), ' +
       '         USUARIO_MODIF             = p_USUARIO ' +
@@ -544,8 +598,11 @@ begin
       '  DECLARE v_total_base decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_total_iva  decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_pendientes int DEFAULT 0; ' +
-      '  SELECT IFNULL(SUM(CANTIDAD_ALBLIN * PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0), ' +
-      '         IFNULL(SUM(CANTIDAD_ALBLIN * (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN - PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0) ' +
+      '  SELECT IFNULL(SUM(CANTIDAD_ALBLIN * ' +
+      'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0), ' +
+      '         IFNULL(SUM(CANTIDAD_ALBLIN * ' +
+      '(PRECIO_VENTA_CIVA_ARTICULO_ALBLIN - ' +
+      'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0) ' +
       '    INTO v_total_base, v_total_iva ' +
       '    FROM fza_albaranes_lineas ' +
       '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
@@ -580,7 +637,8 @@ begin
 end;
 
 function TdmPedidos.CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
-                                            aLineas: TList<TPair<string, Currency>>): Boolean;
+                                            aLineas: TList<TPair<string,
+                                            Currency>>): Boolean;
 var
   i: Integer;
   sNumeroPed, sSeriePed: string;
@@ -719,7 +777,8 @@ begin
   try
     qIns.Connection := inLibGlobalVar.oConn;
     qIns.SQL.Text :=
-      'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, ESTADO_PED, ' +
+      'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, ESTADO_PED, '
+        +
       ' IDPS_PED, FECHAPS_PED, REFERENCIAPS_PED, ' +
       ' FORMAPAGOPS_PED, TRANSPORTISTAPS_PED, ESTADOPEDIDOPS_PED, ' +
       ' EMAIL_CLIENTE_PED, NIF_CLIENTE_PED, ' +
@@ -755,7 +814,8 @@ begin
     qIns.ParamByName('ESTADOPS').AsString  := aOrder.EstadoPedido;
     qIns.ParamByName('EMAILCLI').AsString  := aOrder.custMail;
     qIns.ParamByName('NIFCLI').AsString    := aOrder.DniDel;
-    qIns.ParamByName('NOMENV').AsString    := aOrder.FirstnameDel + ' ' + aOrder.LastNameDel;
+    qIns.ParamByName('NOMENV').AsString    :=
+      aOrder.FirstnameDel + ' ' + aOrder.LastNameDel;
     qIns.ParamByName('MOVENV').AsString    := aOrder.PhoneDel;
     qIns.ParamByName('DIR1ENV').AsString   := aOrder.Address1Del;
     qIns.ParamByName('DIR2ENV').AsString   := aOrder.Address2Del;
@@ -777,11 +837,15 @@ begin
     // Líneas
     qLin.Connection := inLibGlobalVar.oConn;
     qLin.SQL.Text :=
-      'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, SERIE_PED_PEDLIN, LINEA_PEDLIN, ' +
-      ' IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, IDATRIBPRODPS_PEDLIN, ' +
+      'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, SERIE_PED_PEDLIN, ' +
+      'LINEA_PEDLIN, ' +
+      ' IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, ' +
+      'IDATRIBPRODPS_PEDLIN, ' +
       ' CODBAR_ART_PEDLIN, DESCRIPCION_ARTICULO_PEDLIN, ' +
-      ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
-      ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
+      ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
+      'CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+      ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
+      'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
       ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:NUMERO, :SERIE, :LIN, ' +
       '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
@@ -804,7 +868,8 @@ begin
       qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
       qLin.ParamByName('PSIVA').AsCurrency := lp.cPrecioSIVA;
       qLin.ParamByName('PCIVA').AsCurrency := lp.cPrecioCIVA;
-      qLin.ParamByName('TOT').AsCurrency   := lp.cPrecioCIVA * StrToFloatDef(lp.sCantidad, 1);
+      qLin.ParamByName('TOT').AsCurrency   :=
+        lp.cPrecioCIVA * StrToFloatDef(lp.sCantidad, 1);
       qLin.ParamByName('USU').AsString     := oUser;
       qLin.Execute;
     end;
@@ -812,13 +877,15 @@ begin
     // Mensajes (si hay)
     qMsg.Connection := inLibGlobalVar.oConn;
     qMsg.SQL.Text :=
-      'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, IDMENSAJEPS_PEDMSG, ' +
+      'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, ' +
+      'IDMENSAJEPS_PEDMSG, ' +
       ' IDEMPLEADOPS_PEDMSG, MENSAJEPS_PEDMSG, FECHAPS_PEDMSG, ' +
       ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES (:HILO, :IDM, :IDE, :MSG, :FECHA, NOW(), :USU, :USU)';
     for tm in aOrder.MensajesPedido.LMensajes do
     begin
-      qMsg.ParamByName('HILO').AsString  := aOrder.MensajesPedido.idCustomer_Threat;
+      qMsg.ParamByName('HILO').AsString  :=
+        aOrder.MensajesPedido.idCustomer_Threat;
       qMsg.ParamByName('IDM').AsString   := tm.idMensaje;
       qMsg.ParamByName('IDE').AsString   := tm.idEmpleado;
       qMsg.ParamByName('MSG').AsString   := tm.Texto;

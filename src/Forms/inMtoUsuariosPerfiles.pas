@@ -26,7 +26,8 @@ uses
   cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization, Vcl.StdCtrls,
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataUsuariosPerfiles, cxCheckBox,
+  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataUsuariosPerfiles,
+  cxCheckBox,
   cxSpinEdit, cxDBEdit, cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
 

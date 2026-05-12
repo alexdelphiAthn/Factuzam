@@ -21,8 +21,10 @@ unit inLibArticulosVariaciones;
                del formulario TfrmMtoArticulos de Factuzam.
 
   Modelo de datos:
-    fza_variaciones_atributos  → atributos del tipo de variación (CO=Color, TAL=Talla)
-    fza_atributos_conjuntos    → conjuntos disponibles (COLORES BÁSICOS, TALLAS 42-46…)
+    fza_variaciones_atributos  → atributos del tipo de variación (CO=Color,
+      TAL=Talla)
+    fza_atributos_conjuntos    → conjuntos disponibles (COLORES BÁSICOS,
+                                                          TALLAS 42-46…)
     fza_articulos_conjuntos_asign → qué conjunto cubre cada atributo del artículo
     fza_articulos_skus         → SKUs generados (activar/desactivar)
     vi_articulos_conjuntos_slots  → vista que lo une todo
@@ -340,12 +342,14 @@ begin
 //    q.Connection := FConexion;
 //    q.SQL.Text   :=
 //      'SELECT sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
-//      '       GROUP_CONCAT(av.AV ORDER BY va.ORDEN_VA SEPARATOR '' / '') AS DESCRIPCION_SKU ' +
+// ' GROUP_CONCAT(av.AV ORDER BY va.ORDEN_VA SEPARATOR '' / '') AS
+// DESCRIPCION_SKU ' +
 //      'FROM   fza_articulos_skus sk ' +
-//      'LEFT JOIN fza_atributos_sku asku ON asku.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+// 'LEFT JOIN fza_atributos_sku asku ON asku.CODIGO_UNIDAD_SKU_SA =
+// sk.CODIGO_UNIDAD_SKU ' +
 //      'LEFT JOIN fza_atributos_valores av ON av.ID_AV = asku.ID_AV_SA ' +
-//      'LEFT JOIN fza_variaciones_atributos va ON va.ID_ATB_VA = av.ID_VA_AV ' +
-//      '                                      AND va.ID_VAR_VA = sk.CODIGO_VAR_SKU ' +
+// 'LEFT JOIN fza_variaciones_atributos va ON va.ID_ATB_VA = av.ID_VA_AV ' +
+// ' AND va.ID_VAR_VA = sk.CODIGO_VAR_SKU ' +
 //      'WHERE  sk.CODIGO_ART_SKU = :art ' +
 //      'GROUP  BY sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU ' +
 //      'ORDER  BY sk.CODIGO_UNIDAD_SKU';
@@ -361,7 +365,7 @@ begin
 //      // Usar la descripción legible si la hay, si no el código
 //      if q.FieldByName('DESCRIPCION_SKU').AsString <> '' then
 //        SK.CodigoUnidad := q.FieldByName('DESCRIPCION_SKU').AsString +
-//                           '  (' + q.FieldByName('CODIGO_UNIDAD_SKU').AsString + ')'
+// ' (' + q.FieldByName('CODIGO_UNIDAD_SKU').AsString + ')'
 //      else
 //        SK.CodigoUnidad := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
 //      SK.Chk := nil;
@@ -453,8 +457,10 @@ begin
   cb.ItemIndex := 0;
   if S.IdConjunto > 0 then
     for Idx := 1 to cb.Properties.Items.Count - 1 do
-      // CORRECTO: Uso de NativeInt para compatibilidad con punteros a 32/64 bits
-      if Integer(NativeInt(cb.Properties.Items.Objects[Idx])) = S.IdConjunto then
+      // CORRECTO: Uso de NativeInt para compatibilidad con punteros a 32/64
+      // bits
+      if Integer(NativeInt(
+        cb.Properties.Items.Objects[Idx])) = S.IdConjunto then
       begin
         cb.ItemIndex := Idx;
         Break;

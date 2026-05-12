@@ -61,7 +61,8 @@ type
                                      write FNombreImpresora;
   end;
 
-  procedure EnviarComandoRAW(const NombreImpresora: string; const Datos: string);
+  procedure EnviarComandoRAW(const NombreImpresora: string;
+                             const Datos: string);
 
 implementation
 
@@ -145,7 +146,8 @@ begin
   Result := FComandos.ToString;
 end;
 
-function TTicketTermico.ObtenerComandoAlineacion(Alineacion: TAlineacion): string;
+function TTicketTermico.ObtenerComandoAlineacion(
+  Alineacion: TAlineacion): string;
 begin
   case Alineacion of
     alIzquierda: Result := CMD_IZQUIERDA;
@@ -224,7 +226,8 @@ begin
   EscribirLinea(Izq + StringOfChar(' ', Espacios) + Der);
 end;
 
-procedure TTicketTermico.ImprimirImagen(Bitmap: Vcl.Graphics.TBitmap; Escala: Integer = 3);
+procedure TTicketTermico.ImprimirImagen(Bitmap: Vcl.Graphics.TBitmap;
+                                        Escala: Integer = 3);
 var
   x, y: Integer;
   BitmapMono, BitmapEscalado: Vcl.Graphics.TBitmap;
@@ -266,7 +269,8 @@ begin
         if (Color and $FFFFFF) < $808080 then
         begin
           ByteIndex := y * BytesAncho + (x div 8);
-          DatosImagen[ByteIndex] := DatosImagen[ByteIndex] or (128 shr (x mod 8));
+          DatosImagen[ByteIndex] := DatosImagen[ByteIndex]
+             or (128 shr (x mod 8));
         end;
       end;
     end;

@@ -213,7 +213,8 @@ begin
 
   if dsTablaG.State in [dsInsert, dsEdit] then
   begin
-    if MessageDlg('La tarifa actual esta en edicion. Guardar antes de continuar?',
+    if MessageDlg(
+      'La tarifa actual esta en edicion. Guardar antes de continuar?',
                   mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
       dsTablaG.DataSet.Post
     else

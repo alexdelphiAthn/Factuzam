@@ -19,6 +19,13 @@ Win32/
 Win64/
 .git
 
+# Salida de Free Pascal (compilando utilfmt80/Ancho80 fuera de Delphi)
+*.o
+*.ppu
+link.res
+ppas.sh
+src/utilfmt80/Ancho80
+
 # Contraseña de la conexión es distinta en cada punto
 UniDataConn.dfm
 

@@ -339,7 +339,8 @@ begin
   sEmp     := FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
   sAlm     := FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
   sCaja    := FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
-  sNumOp   := FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+  sNumOp   :=
+    FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
   if FdmConsulta.TieneFactura then
     ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);

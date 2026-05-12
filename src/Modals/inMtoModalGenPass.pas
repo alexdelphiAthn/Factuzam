@@ -17,10 +17,12 @@ unit inMtoModalGenPass;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, dxSkinsForm, cxClasses,
   cxContainer, cxEdit, cxLookAndFeels, cxLocalization, cxGraphics, cxControls,
-  cxLookAndFeelPainters, cxLabel, cxTextEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
+  cxLookAndFeelPainters, cxLabel, cxTextEdit, Vcl.Menus, Vcl.StdCtrls,
+  cxButtons,
   dxCore, cxStyles, JvComponentBase, JvEnterTab;
 
 type

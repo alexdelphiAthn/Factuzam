@@ -23,7 +23,8 @@ unit inLibComprasSesionesMaterializar;
          a. INSERT en fza_articulos_skus (CODIGO_UNIDAD compuesto).
          b. INSERT en fza_atributos_sku con los ID_AV (uno por atributo:
             fila + pivot).
-         c. Generar EAN13 con GenerarEAN13Local (usa CalcularDigitoEAN13) e INSERT en
+         c. Generar EAN13 con GenerarEAN13Local (
+           usa CalcularDigitoEAN13) e INSERT en
             fza_codigos_barras.
     5. Para líneas ESCALAR (sin matriz): INSERT en fza_codigos_barras a
        nivel de artículo (CODIGO_UNIDAD_CB = CODIGO_ART_ART) con EAN13 nuevo.
@@ -94,7 +95,8 @@ begin
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT IFNULL(MAX(CAST(SUBSTRING(CODIGO_BARRAS_CB, :pl + 1, :lq) AS UNSIGNED)), 0) + 1 AS N ' +
+      'SELECT IFNULL(MAX(CAST(SUBSTRING(CODIGO_BARRAS_CB, :pl + 1, :lq) AS ' +
+      'UNSIGNED)), 0) + 1 AS N ' +
       '  FROM fza_codigos_barras ' +
       ' WHERE CODIGO_BARRAS_CB LIKE :pat ' +
       '   AND TIPO_CODIGO_CB = ''EAN13''';
@@ -132,12 +134,14 @@ begin
       '   CODIGO_FAM_ART, TIPO_IVA_ART, TIPO_CANTIDAD_ART, ESVARIACION_ART, ' +
       '   ESTRAZABLE_ART, TIPO_VARIACION_ART, INSTANTE_ALTA, USUARIO_ALTA, ' +
       '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT COALESCE(L.CODIGO_ART_REUSAR_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN), ' +
+      'SELECT COALESCE(L.CODIGO_ART_REUSAR_SESLIN, ' +
+      'L.CODIGO_ART_TENTATIVO_SESLIN), ' +
       '       ''S'', L.TIPO_ART_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '       COALESCE(L.CODIGO_FAM_SESLIN, S.CODIGO_FAM_SES), ' +
       '       COALESCE(L.TIPO_IVA_SESLIN, S.TIPO_IVA_SES), ' +
       '       L.TIPO_CANTIDAD_SESLIN, ' +
-      '       CASE WHEN L.TIPO_LINEA_SESLIN = ''MATRIZ'' THEN ''S'' ELSE ''N'' END, ' +
+      '       CASE WHEN L.TIPO_LINEA_SESLIN = ''MATRIZ'' THEN ''S'' ELSE ' +
+      '''N'' END, ' +
       '       L.ESTRAZABLE_SESLIN, ' +
       '       COALESCE(L.CODIGO_VAR_SESLIN, S.CODIGO_VAR_SES), ' +
       '       NOW(), :u, NOW(), :u ' +
@@ -265,17 +269,20 @@ begin
       '       AVP.AV AS VAL_PIVOT, ' +
       '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'') ' +
       '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
-      '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = FA.ID_AV_SESFILAT ' +
+      '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = ' +
+      'FA.ID_AV_SESFILAT ' +
       '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
       '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
       '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL ' +
-      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS VAL_FILA, ' +
+      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS ' +
+      'VAL_FILA, ' +
       '       (SELECT MIN(FA.ID_AV_SESFILAT) ' +
       '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
       '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
       '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
       '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL ' +
-      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS ID_AV_FILA ' +
+      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS ' +
+      'ID_AV_FILA ' +
       '  FROM fza_compras_sesiones_celdas C ' +
       '  JOIN fza_atributos_valores AVP ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL ' +
       ' WHERE C.SERIE_SES_SESCEL = :s AND C.NUMERO_SES_SESCEL = :n ' +
@@ -447,7 +454,8 @@ begin
           sCodigoArt := qLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
         else
         begin
-          sCodigoArt := qLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+          sCodigoArt :=
+            qLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
           InsertarArticulo(conn, ADM, AUsuario, sSerieSes, sNumSes, iLin);
         end;
 
@@ -466,7 +474,11 @@ begin
         end;
         // TIPO_LINEA = SERVICIO → ni SKU ni EAN13.
 
-        InsertarPropiedadesFijas(conn, sSerieSes, sNumSes, sCodigoArt, AUsuario);
+        InsertarPropiedadesFijas(conn,
+                                 sSerieSes,
+                                 sNumSes,
+                                 sCodigoArt,
+                                 AUsuario);
 
         if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString <> 'SERVICIO' then
           UpsertArticuloProveedor(conn, sCodigoArt, sCodigoPrv,

@@ -18,7 +18,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.DateUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  System.Classes, System.DateUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxStyles, cxClasses, cxCustomData, cxFilter, cxData,
@@ -132,18 +133,25 @@ begin
   while not qBuscar.Eof do
   begin
     tvAlbaranes.DataController.Values[i, colSel.Index]         := True;
-    tvAlbaranes.DataController.Values[i, colNumero.Index]      := qBuscar.FieldByName('NUMERO_ALB').AsString;
-    tvAlbaranes.DataController.Values[i, colSerie.Index]       := qBuscar.FieldByName('SERIE_ALB').AsString;
-    tvAlbaranes.DataController.Values[i, colFecha.Index]       := qBuscar.FieldByName('FECHA_ALB').AsDateTime;
-    tvAlbaranes.DataController.Values[i, colCliente.Index]     := qBuscar.FieldByName('CODIGO_CLI_ALB').AsString;
-    tvAlbaranes.DataController.Values[i, colRazonSocial.Index] := qBuscar.FieldByName('RAZON_SOCIAL_CLIENTE_ALB').AsString;
-    tvAlbaranes.DataController.Values[i, colTotal.Index]       := qBuscar.FieldByName('TOTAL_LIQUIDO_ALB').AsCurrency;
+    tvAlbaranes.DataController.Values[i, colNumero.Index]      :=
+      qBuscar.FieldByName('NUMERO_ALB').AsString;
+    tvAlbaranes.DataController.Values[i, colSerie.Index]       :=
+      qBuscar.FieldByName('SERIE_ALB').AsString;
+    tvAlbaranes.DataController.Values[i, colFecha.Index]       :=
+      qBuscar.FieldByName('FECHA_ALB').AsDateTime;
+    tvAlbaranes.DataController.Values[i, colCliente.Index]     :=
+      qBuscar.FieldByName('CODIGO_CLI_ALB').AsString;
+    tvAlbaranes.DataController.Values[i, colRazonSocial.Index] :=
+      qBuscar.FieldByName('RAZON_SOCIAL_CLIENTE_ALB').AsString;
+    tvAlbaranes.DataController.Values[i, colTotal.Index]       :=
+      qBuscar.FieldByName('TOTAL_LIQUIDO_ALB').AsCurrency;
     Inc(i);
     qBuscar.Next;
   end;
 end;
 
-procedure TfrmModalFacturarAlbaranesFechas.btnSeleccionarTodosClick(Sender: TObject);
+procedure TfrmModalFacturarAlbaranesFechas.btnSeleccionarTodosClick(
+  Sender: TObject);
 var
   i: Integer;
   bAlguno: Boolean;
@@ -176,7 +184,8 @@ begin
     begin
       if not Boolean(tvAlbaranes.DataController.Values[i, colSel.Index]) then
         Continue;
-      sNumAlb := VarToStr(tvAlbaranes.DataController.Values[i, colNumero.Index]);
+      sNumAlb :=
+        VarToStr(tvAlbaranes.DataController.Values[i, colNumero.Index]);
       sSerAlb := VarToStr(tvAlbaranes.DataController.Values[i, colSerie.Index]);
       lst.Add(sSerAlb + '|' + sNumAlb);
     end;
@@ -192,7 +201,8 @@ begin
       generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
                                                        chkAgruparPorCliente.Checked);
       lblEstado.Caption := Format('Generadas %d facturas', [generadas]);
-      ShowMessageFmt('Proceso finalizado. Facturas generadas: %d.', [generadas]);
+      ShowMessageFmt('Proceso finalizado. Facturas generadas: %d.',
+                     [generadas]);
       btnBuscarClick(nil);
     finally
       Screen.Cursor := crDefault;

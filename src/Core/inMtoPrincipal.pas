@@ -602,7 +602,8 @@ var
   CurrentShortCut: TShortCut;
   ShiftState: TShiftState;
 begin
-  if (Message.CharCode = VK_F4) and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
+  if (Message.CharCode = VK_F4)
+     and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
   begin
     Self.Close;
     Result := True;
@@ -807,13 +808,13 @@ begin
 //    if FDmConn.conUni.Connected then
 //    begin
 //      bIsConnected := True;
-//      dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
+// dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
 //    end
 //    else
 //      bIsConnected := False;
 //  if (FDmConn = nil) or (not bIsConnected) then
 //  begin
-//    dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
+// dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
 //    inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
 //  end;
 end;

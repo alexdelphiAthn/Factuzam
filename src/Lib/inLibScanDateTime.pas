@@ -11,8 +11,13 @@ const whitespace  = [' ',#13,#10];
       mssecfactor = 1/(24*60*60*1000);
 const AMPMformatting : array[0..2] of string =('am/pm','a/p','ampm');
 
-function scandatetimer(const pattern:string;const s:string;const fmt:TFormatSettings;startpos:integer=1) : tdatetime;
-function scandatetimernof(const pattern:string;const s:string;startpos:integer=1) : tdatetime;
+function scandatetimer(const pattern:string;
+                       const s:string;
+                       const fmt:TFormatSettings;
+                       startpos:integer=1) : tdatetime;
+function scandatetimernof(const pattern:string;
+                          const s:string;
+                          startpos:integer=1) : tdatetime;
 
 implementation
 
@@ -38,7 +43,8 @@ begin
   while (i<=high(mnts)) and (result=-1) do
     begin
       findlen := length(mnts[i]);
-      if (findlen > 0) and (findlen <= plen) then // protect against buffer over-read
+      // protect against buffer over-read
+      if (findlen > 0) and (findlen <= plen) then
         if AnsiStrLIComp(p,@(mnts[i][1]),findlen)=0 then
           result:=i;
       inc(i);
@@ -48,7 +54,9 @@ procedure arraymatcherror;
 begin
  // raise.exception(format(<SNoArrayMatch,[pind+1,ind]))
 end;
-function scanmatch(const mnts : array of string;p:pchar; patlen: integer):integer;
+function scanmatch(const mnts : array of string;
+                   p:pchar;
+                   patlen: integer):integer;
 begin
   result:=findimatch(mnts,p);
   if result=-1 then
@@ -153,7 +161,8 @@ begin
                          begin
                            pivot:=YearOf(now)-fmt.TwoDigitYearCenturyWindow;
                            inc(yy, pivot div 100 * 100);
-                           if (fmt.TwoDigitYearCenturyWindow > 0) and (yy < pivot) then
+                           if (fmt.TwoDigitYearCenturyWindow > 0)
+                              and (yy < pivot) then
                               inc(yy, 100);
                          end;
                       end;
@@ -205,7 +214,9 @@ begin
                                    inc(ind);
                                  end;
                                2: begin
-                                    i:=findimatch([fmt.timeamstring,fmt.timepmstring],@s[ind]);
+                                    i:=findimatch(
+                                      [fmt.timeamstring,fmt.timepmstring],
+                                      @s[ind]);
                                     case i of
                                      0: inc(ind,length(fmt.timeamstring));
                                      1: begin
@@ -231,8 +242,12 @@ begin
                            inc(pind);
                          end;
                'C' : begin
-                       intscandate(@fmt.shortdateformat[1],length(fmt.ShortDateFormat),pind+poffs);
-                       intscandate(@fmt.longtimeformat[1],length(fmt.longtimeformat),pind+poffs);
+                       intscandate(@fmt.shortdateformat[1],
+                                   length(fmt.ShortDateFormat),
+                                   pind+poffs);
+                       intscandate(@fmt.longtimeformat[1],
+                                   length(fmt.longtimeformat),
+                                   pind+poffs);
                        inc(pind);
                      end;
                '?' : begin
@@ -260,7 +275,8 @@ begin
                 matchchar(ptrn[pind]);
             end;
      end;
-//   if (pind<plen) and (plen>0) and not (ptrn[plen-1] in [#9, '"']) then  // allow omission of trailing whitespace
+// if (pind<plen) and (plen>0) and not (ptrn[plen-1] in [#9, '"']) then // allow
+// omission of trailing whitespace
 //     RaiseException(format(SFullpattern,[poffs+pind+1]));
 end;
 var plen:integer;

@@ -72,7 +72,8 @@ procedure TdmVariaciones.unqryAtributosVariacionAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   DataSet.FieldByName('ID_VAR_VA').AsString :=
-                                  unqryTablaG.FieldByName('CODIGO_VAR').AsString;
+                                  unqryTablaG.FieldByName(
+                                    'CODIGO_VAR').AsString;
 end;
 
 procedure TdmVariaciones.unqryAtributosVariacionBeforePost(DataSet: TDataSet);

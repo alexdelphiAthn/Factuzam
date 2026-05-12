@@ -25,7 +25,8 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas;
 
 type
-  TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of object;
+  TUpdateTotalEvent = procedure(Sender: TObject;
+                                NuevoTotal: Currency) of object;
   TStringArray = array of string;
   function EncriptAES(s:String):String;
   function EncriptAESPass(s:String; sPass:AnsiString):String;
@@ -100,7 +101,8 @@ type
 
 implementation
 
-// Convierte el valor (sea simple o un array de varios campos) a un texto para guardarlo
+// Convierte el valor (sea simple o un array de varios campos) a un texto para
+// guardarlo
 function KeyValuesToStr(const V: Variant): string;
 var
   i: Integer;
@@ -122,7 +124,8 @@ begin
     Result := VarToStr(V);
 end;
 
-// Convierte el texto guardado de vuelta al formato que necesita el Locate (Variante simple o Array)
+// Convierte el texto guardado de vuelta al formato que necesita el Locate
+// (Variante simple o Array)
 function StrToKeyValues(const S: string; const FieldNames: string): Variant;
 var
   slCampos, slValores: TStringList;
@@ -176,7 +179,8 @@ begin
   begin
     Result := TUniQuery(ADataSet).KeyFields;
 
-    // UniDAC suele separar las claves compuestas con punto y coma, igual que cxGrid.
+    // UniDAC suele separar las claves compuestas con punto y coma, igual que
+    // cxGrid.
     if Result <> '' then
       Exit;
   end;
@@ -185,7 +189,8 @@ begin
     // Si el campo está marcado como clave primaria en los metadatos
     if pfInKey in ADataSet.Fields[i].ProviderFlags then
     begin
-      // Si ya hay un campo (clave compuesta), añadimos el separador de DevExpress
+      // Si ya hay un campo (clave compuesta), añadimos el separador de
+      // DevExpress
       if Result <> '' then
         Result := Result + ';';
 
@@ -386,7 +391,8 @@ begin
     while not qryDefaults.Eof do
     begin
       var oField := unqryDestino.FindField(
-                        qryDefaults.FieldByName('CAMPO_OBJETIVO_DEF_VD').AsString);
+                        qryDefaults.FieldByName(
+                          'CAMPO_OBJETIVO_DEF_VD').AsString);
       if Assigned(oField) then
       begin
         var sValor := qryDefaults.FieldByName('VALOR_DEF_VD').AsString;
@@ -699,7 +705,8 @@ procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
                          sBusqueda: String;
                          var sSQLOrigMaster, sSQLOrigDetail: String;
                          const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
-                         const sCondicionJoin: String);     // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
+                         // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
+                         const sCondicionJoin: String);
 var
   vParserMaster, vParserDetail: ISQLParserSelect;
   sFiltroMaster, sFiltroDetail: String;
@@ -719,7 +726,8 @@ begin
     Exit;
   end;
   // 2. Obtener las cadenas de filtro (el texto LIKE ... OR ...)
-  //    Nota: Asegúrate que las queries estén abiertas o tengan FieldDefs actualizados
+  // Nota: Asegúrate que las queries estén abiertas o tengan FieldDefs
+  // actualizados
   if not qryMaster.Active then qryMaster.Open;
   if not qryDetail.Active then qryDetail.Open;
   sFiltroMaster := ObtenerCadenaFiltro(qryMaster, sBusqueda);
@@ -749,7 +757,8 @@ begin
   // Combinamos: (FiltroMaestro) OR (FiltroExists)
   sCondicionFinalMaster := '';
   if (sFiltroMaster <> '') and (sCondicionExists <> '') then
-    sCondicionFinalMaster := '(' + sFiltroMaster + ' OR ' + sCondicionExists + ')'
+    sCondicionFinalMaster :=
+      '(' + sFiltroMaster + ' OR ' + sCondicionExists + ')'
   else if sFiltroMaster <> '' then
     sCondicionFinalMaster := sFiltroMaster
   else if sCondicionExists <> '' then
@@ -763,7 +772,8 @@ begin
   // 4. Reabrir con los nuevos SQLs
   qryMaster.Open;
   qryDetail.Open;
-  // Liberar interfaces (aunque en Delphi moderno se liberan solas, es bueno ponerlas a nil)
+  // Liberar interfaces (aunque en Delphi moderno se liberan solas, es bueno
+  // ponerlas a nil)
   vParserMaster := nil;
   vParserDetail := nil;
 end;
@@ -825,7 +835,8 @@ var
    sIniFile:string;
 begin
   if (SameText(ParamStr(1), '')) then
-    sIniFile := ExtractFilePath(ParamStr(0)) + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
+    sIniFile := ExtractFilePath(ParamStr(0))
+      + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
     sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(1);
   with tinifile.create (sIniFile) do
@@ -1035,7 +1046,8 @@ begin
   if (sNIF <> '') then
     if ( (sNIF[1] >= '0') and (sNIF[1] <= '9') ) then
       if ( SoloLetraNIF( sNIF ) <> TomarLetra( sNIF ) ) then
-        Raise Exception.Create('Letra DNI Incorrecta. Correcta ' + TomarLetra(sNIF) );
+        Raise Exception.Create('Letra DNI Incorrecta. Correcta ' + TomarLetra(
+          sNIF) );
 end;
 
 function CheckIBAN(iban: string): Boolean;
@@ -1049,7 +1061,10 @@ function CheckIBAN(iban: string): Boolean;
         Result := input;
         for a := 'A' to 'Z' do
         begin
-          Result := StringReplace(Result, a, IntToStr(Ord(a) - 55), [rfReplaceAll]);
+          Result := StringReplace(Result,
+                                  a,
+                                  IntToStr(Ord(a) - 55),
+                                  [rfReplaceAll]);
         end;
       end;
     var

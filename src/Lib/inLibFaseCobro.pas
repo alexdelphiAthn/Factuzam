@@ -139,7 +139,7 @@ type
                                 APermiteDeuda: Boolean;
                                 ALimiteCredito, ADeudaActual: Currency);
     procedure QuitarCliente;
-//    procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
+// procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
     function ActualizarImportePago(ALineaPago: Integer; AImporte: Currency;
                                    ADatosRef: TDatosReferencia): Boolean;
     procedure AplicarDescuentoGlobal(APorcentaje: Currency); overload;
@@ -208,7 +208,7 @@ uses
 //      begin
 //        // Buscamos el vale por su código en el campo REFERENCIA
 //        if (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') and
-//           (FMemTablePagos.FieldByName('REFERENCIA').AsString = ACodigoVale) then
+// (FMemTablePagos.FieldByName('REFERENCIA').AsString = ACodigoVale) then
 //        begin
 //          FMemTablePagos.Delete;
 //          Encontrado := True;
@@ -261,14 +261,16 @@ begin
   Result.PermitirContinuar := True;
 end;
 
-class function TResultadoValidacion.Error(const AMensaje: string): TResultadoValidacion;
+class function TResultadoValidacion.Error(
+  const AMensaje: string): TResultadoValidacion;
 begin
   Result.Valido := False;
   Result.Mensaje := AMensaje;
   Result.PermitirContinuar := False;
 end;
 
-class function TResultadoValidacion.Advertencia(const AMensaje: string): TResultadoValidacion;
+class function TResultadoValidacion.Advertencia(
+  const AMensaje: string): TResultadoValidacion;
 begin
   Result.Valido := False;
   Result.Mensaje := AMensaje;
@@ -480,8 +482,10 @@ begin
   if not Assigned(FMemTablePagos) then Exit;
   FMemTablePagos.Append;
   FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString := 'VALE';
-  FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString := ACodigoVale;
-  FMemTablePagos.FieldByName('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString := 'N';
+  FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString :=
+    ACodigoVale;
+  FMemTablePagos.FieldByName('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString :=
+    'N';
   FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := AImporte;
   FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
   FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString := 'N';
@@ -582,7 +586,8 @@ begin
     // Cálculos básicos
     BaseImponible := FImporteBruto - FImporteDescuentoLineal;
     if Abs(FPorcentajeDescuentoGlobal) > 0.001 then
-      FImporteDescuentoGlobal := BaseImponible * (FPorcentajeDescuentoGlobal / 100)
+      FImporteDescuentoGlobal :=
+        BaseImponible * (FPorcentajeDescuentoGlobal / 100)
     else
       FImporteDescuentoGlobal := 0;
     FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
@@ -623,7 +628,8 @@ begin
           begin
             TotalEntregado := TotalEntregado + ImporteEntregado;
             if (Abs(ImporteEntregado) > 0.001) and
-               (ObtenerStringSafe('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP', 'N') = 'S') then
+               (ObtenerStringSafe('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP',
+                                  'N') = 'S') then
             begin
               HayFormaPagoQueDevuelveCambio := True;
               TotalEntregadoConCambio := TotalEntregadoConCambio +
@@ -713,7 +719,8 @@ begin
       end
       else
       begin
-        FImportePendiente := FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
+        FImportePendiente :=
+          FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
         if Abs(FImportePendiente) < 0.01 then FImportePendiente := 0;
         FImporteCambio := 0;
         FImporteValeEmitido := 0;
@@ -873,13 +880,20 @@ begin
           // Solo procesar líneas con importe > 0
           if FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency > 0 then
           begin
-            Item.CodigoFormaPago := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-            Item.DescripcionFormaPago := FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
-            Item.CodigoDivisa := FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
-            Item.FactorCambio := FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency;
-            Item.ImporteDivisa := FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency;
-            Item.ImporteEntregado := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-            Item.Referencia := FMemTablePagos.FieldByName('REFERENCIA').AsString;
+            Item.CodigoFormaPago :=
+              FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
+            Item.DescripcionFormaPago :=
+              FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
+            Item.CodigoDivisa :=
+              FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
+            Item.FactorCambio :=
+              FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency;
+            Item.ImporteDivisa :=
+              FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency;
+            Item.ImporteEntregado :=
+              FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
+            Item.Referencia :=
+              FMemTablePagos.FieldByName('REFERENCIA').AsString;
             Item.Observaciones := '';
             Item.ImporteCambio := 0;
             EsDevuelveCambio := FMemTablePagos.FieldByName(
@@ -926,15 +940,18 @@ begin
   begin
     Result.Codigo := ACodigo;
     Result.Descripcion :=
-                      FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
+                      FMemTablePagos.FieldByName(
+                        'DESCRIPCION_FORMA_PAGO_CFP').AsString;
     if FMemTablePagos.FindField('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP') <> nil then
        Result.DevuelveCambio :=
-        (FMemTablePagos.FieldByName('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString = 'S')
+        (FMemTablePagos.FieldByName(
+          'ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString = 'S')
     else
        Result.DevuelveCambio := True;
     if FMemTablePagos.FindField('ESREQ_REFERENCIA_FORMA_PAGO_CFP') <> nil then
        Result.RequiereReferencia :=
-         (FMemTablePagos.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S')
+         (FMemTablePagos.FieldByName(
+           'ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S')
     else
        Result.RequiereReferencia := False;
   end

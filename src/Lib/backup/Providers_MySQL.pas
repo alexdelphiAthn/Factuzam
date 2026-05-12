@@ -21,7 +21,11 @@ type
     FOwnsConnection: Boolean;
   public
     constructor Create(Conn: TUniConnection; const DBName: string); overload;
-    constructor Create(const Host: string; Port: Integer; const Database, User, Password: string); overload;
+    constructor Create(const Host: string;
+                       Port: Integer;
+                       const Database,
+                       User,
+                       Password: string); overload;
     destructor Destroy; override;
     // Métodos de conexión
     procedure Connect;
@@ -40,7 +44,8 @@ type
     function GetSequences:TSTringList;
     function GetProcedureDefinition(const ProcedureName:string):string;
     function GetFunctionDefinition(const FunctionName:string):string;
-    function GetData(const TableName: string; const Filter: string = ''): TDataSet;
+    function GetData(const TableName: string;
+                     const Filter: string = ''): TDataSet;
   private
     function StripDefiner(const SQL: string): string;
   end;
@@ -252,7 +257,8 @@ begin
       while not Query.Eof do
       begin
         // Nuevo índice detectado
-        if not SameText(Query.FieldByName('INDEX_NAME').AsString, LastIndexName) then
+        if not SameText(Query.FieldByName('INDEX_NAME').AsString,
+                        LastIndexName) then
         begin
           // Guardar el índice anterior si existe
           if not SameText(LastIndexName, '') then
@@ -265,7 +271,8 @@ begin
           LastIndexName := Query.FieldByName('INDEX_NAME').AsString;
           CurrentIndex.IndexName := LastIndexName;
           CurrentIndex.IsPrimary := SameText(LastIndexName, 'PRIMARY');
-          CurrentIndex.IsUnique := (Query.FieldByName('NON_UNIQUE').AsInteger = 0);
+          CurrentIndex.IsUnique :=
+            (Query.FieldByName('NON_UNIQUE').AsInteger = 0);
         end;
         // Agregar columna al índice actual
         IndexCol.ColumnName := Query.FieldByName('COLUMN_NAME').AsString;
@@ -312,7 +319,8 @@ begin
   end;
 end;
 
-function TMySQLMetadataProvider.GetTableStructure(const TableName: string): TTableInfo;
+function TMySQLMetadataProvider.GetTableStructure(
+  const TableName: string): TTableInfo;
 var
   Query: TUniQuery;
   Col: TColumnInfo;
@@ -349,24 +357,30 @@ begin
       // Lectura de campos básicos
       Col.ColumnName := Query.FieldByName('COLUMN_NAME').AsString;
       Col.DataType   := Query.FieldByName('COLUMN_TYPE').AsString;
-      Col.IsNullable := Query.FieldByName('IS_NULLABLE').AsString; // 'YES' o 'NO'
-      Col.ColumnKey  := Query.FieldByName('COLUMN_KEY').AsString;  // 'PRI', 'UNI', etc.
-      Col.Extra      := Query.FieldByName('EXTRA').AsString;       // 'auto_increment', etc.
+      // 'YES' o 'NO'
+      Col.IsNullable := Query.FieldByName('IS_NULLABLE').AsString;
+      // 'PRI', 'UNI', etc.
+      Col.ColumnKey  := Query.FieldByName('COLUMN_KEY').AsString;
+      // 'auto_increment', etc.
+      Col.Extra      := Query.FieldByName('EXTRA').AsString;
       // --- Lógica CRÍTICA para el Valor por Defecto (Solución Error 1067) ---
       if Query.FieldByName('COLUMN_DEFAULT').IsNull then
       begin
         // Si es nulo en la BD, usamos una marca especial interna.
-        // NOTA: Tu generador de SQL debe saber que '<NULL>' significa "sin default".
+        // NOTA: Tu generador de SQL debe saber que '<NULL>' significa
+        // sin default .
         Col.ColumnDefault := '<NULL>';
       end
       else
       begin
-        // Si tiene un valor real (incluso cadena vacía ''), lo tomamos tal cual.
+        // Si tiene un valor real (incluso cadena vacía ''), lo tomamos tal
+        // cual.
         Col.ColumnDefault := Query.FieldByName('COLUMN_DEFAULT').AsString;
       end;
       // Manejo de longitud máxima
       if not Query.FieldByName('CHARACTER_MAXIMUM_LENGTH').IsNull then
-        Col.CharMaxLength := Query.FieldByName('CHARACTER_MAXIMUM_LENGTH').AsString
+        Col.CharMaxLength :=
+          Query.FieldByName('CHARACTER_MAXIMUM_LENGTH').AsString
       else
         Col.CharMaxLength := '0';
       // Manejo de comentarios

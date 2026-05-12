@@ -49,9 +49,10 @@ type
     procedure Inicializar(const pUsuario, pGrupo: string);
     procedure Recargar(const pUsuario, pGrupo: string);
     function GetPath(const Nombre: string): string;
-    function GetString(const Key: string; const Default: string   = ''   ): string;
-    function GetBool  (const Key: string; const Default: Boolean  = False): Boolean;
-    function GetInt   (const Key: string; const Default: Integer  = 0    ): Integer;
+    function GetString(const Key: string; const Default: string = '' ): string;
+    function GetBool  (const Key: string;
+                       const Default: Boolean  = False): Boolean;
+    function GetInt (const Key: string; const Default: Integer = 0 ): Integer;
 
     property Params: TObjectDictionary<string, TAppParamDef> read FParams;
   end;
@@ -91,8 +92,11 @@ begin
   inherited;
 end;
 
-procedure TAppParams.RegistrarParametro(const pCategoria, pNombre, pDesc: string;
-                                        pTipo: TTipoParametro; const pDefecto: string);
+procedure TAppParams.RegistrarParametro(const pCategoria,
+                                        pNombre,
+                                        pDesc: string;
+                                        pTipo: TTipoParametro;
+                                        const pDefecto: string);
 begin
   FParams.AddOrSetValue(pNombre,
     TAppParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));

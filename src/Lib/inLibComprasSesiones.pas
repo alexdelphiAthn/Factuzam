@@ -103,7 +103,8 @@ type
 procedure DuplicarLineaActual(ADM: TdmComprasSesiones; const AUsuario: string);
 procedure BorrarLineaConCascada(ADM: TdmComprasSesiones);
 procedure ClonarSesion(ADM: TdmComprasSesiones; const AUsuario: string);
-procedure ImportarKitsDeProveedor(ADM: TdmComprasSesiones; const AUsuario: string);
+procedure ImportarKitsDeProveedor(ADM: TdmComprasSesiones;
+                                  const AUsuario: string);
 
 function  ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;
 function  ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
@@ -236,8 +237,10 @@ begin
       ' WHERE SERIE_SES_SESFIL = :s AND NUMERO_SES_SESFIL = :n ' +
       '   AND LINEA_SES_SESFIL = :l ' +
       ' ORDER BY ORDEN_SESFIL, ID_FILA_SESFIL';
-    qF.ParamByName('s').AsString := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    qF.ParamByName('n').AsString := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    qF.ParamByName('s').AsString :=
+      FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    qF.ParamByName('n').AsString :=
+      FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     qF.ParamByName('l').AsInteger := ALinea;
     qF.Open;
     while not qF.Eof do
@@ -250,8 +253,10 @@ begin
         '  JOIN fza_atributos_valores AV ON AV.ID_AV = FA.ID_AV_SESFILAT ' +
         ' WHERE FA.SERIE_SES_SESFILAT = :s AND FA.NUMERO_SES_SESFILAT = :n ' +
         '   AND FA.LINEA_SES_SESFILAT = :l AND FA.ID_FILA_SESFILAT = :f';
-      qA.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-      qA.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      qA.ParamByName('s').AsString  :=
+        FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+      qA.ParamByName('n').AsString  :=
+        FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
       qA.ParamByName('l').AsInteger := ALinea;
       qA.ParamByName('f').AsInteger := F.FilaID;
       qA.Open;
@@ -295,8 +300,10 @@ begin
       '  FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
       '   AND LINEA_SES_SESCEL = :l';
-    qC.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    qC.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    qC.ParamByName('s').AsString  :=
+      FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    qC.ParamByName('n').AsString  :=
+      FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     qC.ParamByName('l').AsInteger := ALinea;
     qC.Open;
     while not qC.Eof do
@@ -310,7 +317,8 @@ begin
           for j := 0 to fila.Celdas.Count - 1 do
           begin
             celda := fila.Celdas[j];
-            if celda.IdAvPivot = qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger then
+            if celda.IdAvPivot = qC.FieldByName(
+              'ID_AV_PIVOT_SESCEL').AsInteger then
             begin
               cant := qC.FieldByName('CANTIDAD_SESCEL').AsFloat;
               if Assigned(celda.Editor) then
@@ -353,7 +361,11 @@ var
   i, x: Integer;
   celda: TCeldaMatriz;
 begin
-  F.LblFila := CrearLabel(FContenedor, F.EtiquetaFila, PAD_X, ATop, COL_FILA_WIDTH);
+  F.LblFila := CrearLabel(FContenedor,
+                          F.EtiquetaFila,
+                          PAD_X,
+                          ATop,
+                          COL_FILA_WIDTH);
   x := PAD_X + COL_FILA_WIDTH;
   for i := 0 to FColumnas.Count - 1 do
   begin
@@ -412,8 +424,10 @@ begin
       q.ParamByName('c').AsFloat  := rNew;
       q.ParamByName('u').AsString := FUsuario;
     end;
-    q.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString  :=
+      FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString  :=
+      FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.ParamByName('l').AsInteger := FLineaActual;
     q.ParamByName('f').AsInteger := iFila;
     q.ParamByName('p').AsInteger := iPivot;
@@ -470,8 +484,10 @@ begin
       'DELETE FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
       '   AND LINEA_SES_SESCEL = :l AND ID_FILA_SES_SESCEL = :f';
-    q.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString  :=
+      FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString  :=
+      FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.ParamByName('l').AsInteger := FLineaActual;
     q.ParamByName('f').AsInteger := FFilaSeleccionada;
     q.ExecSQL;
@@ -527,7 +543,8 @@ begin
     q.ParamByName('l').AsInteger := l;
     q.ExecSQL;
     q.SQL.Text := 'DELETE FROM fza_compras_sesiones_lineas_filas_atr ' +
-                  ' WHERE SERIE_SES_SESFILAT = :s AND NUMERO_SES_SESFILAT = :n ' +
+                  ' WHERE SERIE_SES_SESFILAT = :s AND NUMERO_SES_SESFILAT = :n '
+                    +
                   '   AND LINEA_SES_SESFILAT = :l';
     q.ExecSQL;
     q.SQL.Text := 'DELETE FROM fza_compras_sesiones_lineas_filas ' +
@@ -535,7 +552,8 @@ begin
                   '   AND LINEA_SES_SESFIL = :l';
     q.ExecSQL;
     q.SQL.Text := 'DELETE FROM fza_compras_sesiones_lineas_props ' +
-                  ' WHERE SERIE_SES_SESLPROP = :s AND NUMERO_SES_SESLPROP = :n ' +
+                  ' WHERE SERIE_SES_SESLPROP = :s AND NUMERO_SES_SESLPROP = :n '
+                    +
                   '   AND LINEA_SES_SESLPROP = :l';
     q.ExecSQL;
   finally
@@ -574,9 +592,12 @@ begin
       'SELECT COUNT(*) AS N FROM fza_compras_sesiones_lineas ' +
       ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
       '   AND ESDUPLICADO_SESLIN = ''S'' ' +
-      '   AND (ACCION_DUPLICADO_SESLIN IS NULL OR ACCION_DUPLICADO_SESLIN = '''')';
-    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      '   AND (ACCION_DUPLICADO_SESLIN IS NULL OR ACCION_DUPLICADO_SESLIN = ' +
+      ''''')';
+    q.ParamByName('s').AsString :=
+      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.Open;
     if q.FieldByName('N').AsInteger > 0 then
     begin
@@ -596,12 +617,15 @@ begin
       '                      AND C.NUMERO_SES_SESCEL = L.NUMERO_SES_SESLIN ' +
       '                      AND C.LINEA_SES_SESCEL = L.LINEA_SESLIN ' +
       '                      AND C.CANTIDAD_SESCEL > 0)';
-    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString :=
+      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.Open;
     if not q.IsEmpty then
     begin
-      AError := Format('La línea %d (%s) es de tipo MATRIZ pero no tiene celdas con cantidad.',
+      AError := Format(
+        'La línea %d (%s) es de tipo MATRIZ pero no tiene celdas con cantidad.',
                        [q.FieldByName('LINEA_SESLIN').AsInteger,
                         q.FieldByName('DESCRIPCION_SESLIN').AsString]);
       Exit(False);
@@ -624,8 +648,10 @@ begin
       ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
       '   AND (ACCION_DUPLICADO_SESLIN <> ''REUSAR'' ' +
       '        OR ACCION_DUPLICADO_SESLIN IS NULL)';
-    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString :=
+      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.Open;
     Result := q.FieldByName('N').AsInteger;
   finally
@@ -645,8 +671,10 @@ begin
       'SELECT COUNT(*) AS N FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
       '   AND CANTIDAD_SESCEL > 0';
-    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString :=
+      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.Open;
     Result := q.FieldByName('N').AsInteger;
   finally
@@ -666,8 +694,10 @@ begin
       'SELECT IFNULL(SUM(TOTAL_LINEA_SESLIN), 0) AS T ' +
       '  FROM fza_compras_sesiones_lineas ' +
       ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
-    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('s').AsString :=
+      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.Open;
     Result := q.FieldByName('T').AsFloat;
   finally

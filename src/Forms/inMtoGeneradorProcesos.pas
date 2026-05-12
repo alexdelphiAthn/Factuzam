@@ -318,7 +318,8 @@ begin
     syndtEstructura.CommandProcessor(ecDeleteLine, #0, nil);
 end;
 
-procedure TfrmMtoGeneradorProcesos.AppEventsMessage(var Msg: TMsg; var Handled: Boolean);
+procedure TfrmMtoGeneradorProcesos.AppEventsMessage(var Msg: TMsg;
+                                                    var Handled: Boolean);
 begin
   // Si la tecla pulsada es ESCAPE
   if (Msg.message = WM_KEYDOWN) and (Msg.wParam = VK_ESCAPE) then
@@ -374,7 +375,9 @@ begin
   if frReplaceAll in Dialog.Options then Include(Opciones, ssoReplaceAll);
 
   // Reemplazamos en el editor que memorizamos
-  if FEditorActualBusqueda.SearchReplace(Dialog.FindText, Dialog.ReplaceText, Opciones) = 0 then
+  if FEditorActualBusqueda.SearchReplace(Dialog.FindText,
+                                         Dialog.ReplaceText,
+                                         Opciones) = 0 then
     MessageDlg('Texto no encontrado.', mtInformation, [mbOK], 0);
 end;
 
@@ -382,7 +385,9 @@ procedure TfrmMtoGeneradorProcesos.BuscarGlobal;
 var
   TextoBuscar: string;
 begin
-  if InputQuery('Búsqueda Global', 'Introduce el texto a buscar en todos los procesos:', TextoBuscar) then
+  if InputQuery('Búsqueda Global',
+                'Introduce el texto a buscar en todos los procesos:',
+                TextoBuscar) then
   begin
     if Trim(TextoBuscar) = '' then Exit;
 
@@ -395,13 +400,18 @@ begin
       try
         Filtered := False;
         // Filtramos por el contenido del proceso o por el nombre
-        Filter := 'PROCESO_GENERADOR_PROCESO_GP LIKE ' + QuotedStr('%' + TextoBuscar + '%') +
-                  ' OR NOMBRE_GENERADOR_PROCESO_GP LIKE ' + QuotedStr('%' + TextoBuscar + '%');
+        Filter := 'PROCESO_GENERADOR_PROCESO_GP LIKE '
+          + QuotedStr('%' + TextoBuscar + '%') +
+                  ' OR NOMBRE_GENERADOR_PROCESO_GP LIKE '
+                    + QuotedStr('%' + TextoBuscar + '%');
         Filtered := True;
 
         if RecordCount = 0 then
         begin
-          MessageDlg('No se encontraron procesos que contengan: ' + TextoBuscar, mtInformation, [mbOK], 0);
+          MessageDlg('No se encontraron procesos que contengan: ' + TextoBuscar,
+                     mtInformation,
+                     [mbOK],
+                     0);
           Filtered := False; // Quitamos el filtro si no hay resultados
         end;
       finally
@@ -483,7 +493,8 @@ procedure TfrmMtoGeneradorProcesos.ActivarEnterComoTab(Activo: Boolean);
           TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := Activo;
   end;
 begin
-  // Buscamos el componente problemático en los 3 niveles posibles y lo apagamos/encendemos
+  // Buscamos el componente problemático en los 3 niveles posibles y lo
+  // apagamos/encendemos
   CambiarEn(Self);
   CambiarEn(Self.Owner);
   CambiarEn(Application.MainForm);
@@ -499,7 +510,8 @@ begin
   ActivarEnterComoTab(True);
 end;
 
-procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject; SQL: string);
+procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject;
+                                                      SQL: string);
 begin
   // Detenemos el cronómetro lo antes posible
     cxmResul.Lines.Add(Format(' -- [OK] Filas afectadas: %d ',
@@ -603,17 +615,20 @@ begin
     begin
       with dmmGeneradorProcesos do
       begin
-        sNombreMetadato := unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+        sNombreMetadato :=
+          unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
 
         // Comprobamos si el metadato actual es un procedimiento (tipo 3)
-        bEsProcedimiento := (unqryMetadatos.FieldByName('PARENT_META').AsString = '3');
+        bEsProcedimiento :=
+          (unqryMetadatos.FieldByName('PARENT_META').AsString = '3');
 
         // Recogemos el script completo
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
 
         if sScriptCompleto = '' then
         begin
-          ShowMessage('No hay estructura o script disponible para este metadato.');
+          ShowMessage(
+            'No hay estructura o script disponible para este metadato.');
           Exit;
         end;
 
@@ -644,8 +659,10 @@ begin
           dsTablaG.DataSet.Append;
 
         // Volcamos todo al editor principal
-        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString := 'Modificar ' + sNombreMetadato;
-        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString := sScriptCompleto;
+        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+          'Modificar ' + sNombreMetadato;
+        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
+          sScriptCompleto;
 
         // Cambiamos de pestaña y damos foco
         pcPestana.ActivePage := tsSQL;
@@ -701,7 +718,9 @@ var
   uScript:TUniScript;
 begin
   inherited;
-  if ((dsTablaG.DataSet.State = dsInsert) or (dsTablaG.DataSet.State = dsEdit)) then
+  if ((
+    dsTablaG.DataSet.State = dsInsert) or (
+      dsTablaG.DataSet.State = dsEdit)) then
     dsTablaG.DataSet.Post;
 
   with dmmGeneradorProcesos do
@@ -743,7 +762,8 @@ begin
         startTime := Now;
         unqryVista.Open; // Intentamos abrir como Dataset
 
-        // Verificamos si realmente devolvió columnas (útil para CALLs que no devuelven nada)
+        // Verificamos si realmente devolvió columnas (útil para CALLs que no
+        // devuelven nada)
         if unqryVista.FieldCount > 0 then
         begin
           DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
@@ -761,13 +781,16 @@ begin
         begin
           // Si es un CALL que no devuelve filas, se comporta como comando
           iRowsAffected := unqryVista.RowsAffected;
-          cxmResul.Lines.Add('-- Comando('+FormatDateTime('hh:nn:ss.zzz', Now)+'): '
+          cxmResul.Lines.Add('-- Comando('+FormatDateTime('hh:nn:ss.zzz',
+                                                          Now)+'): '
                              +sLineBreak + sSQL + sLineBreak +
-           ' -- ejecutado con éxito. Filas afectadas: ' + IntToStr(iRowsAffected));
+           ' -- ejecutado con éxito. Filas afectadas: '
+             + IntToStr(iRowsAffected));
         end;
       except on E: Exception do
         begin
-          // Si falla el Open por no ser un SELECT/Resultset, reintentamos con ExecSQL
+          // Si falla el Open por no ser un SELECT/Resultset, reintentamos con
+          // ExecSQL
           try
             unqryVista.Execute;
             cxmResul.Lines.Add('-- Comando('+
@@ -776,7 +799,8 @@ begin
                          ' -- ejecutado correctamente (sin filas de retorno).');
           except on E2: Exception do
             begin
-              cxmResul.Lines.Add('-- Error('+FormatDateTime('hh:nn:ss.zzz', Now)+
+              cxmResul.Lines.Add('-- Error('+FormatDateTime('hh:nn:ss.zzz',
+                                                            Now)+
                                  '): ' + sLineBreak+ sSQL+ sLineBreak
                                  + '-- '+ E2.Message);
               ShowMessage('Error en ejecución: ' + E2.Message);
@@ -803,8 +827,10 @@ begin
           var sCommand := Copy(sSQL,1,20);
           if sSQL.Length > 20 then
             sCommand := sCommand + '...';
-          cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(iRowsAffected) +
-                             ' registros afectados en ' + sformatteddt + ' seg:ms');
+          cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(
+            iRowsAffected) +
+                             ' registros afectados en ' + sformatteddt
+                               + ' seg:ms');
         except on E: Exception do
           begin
             cxmResul.Lines.Add(E.Message);
@@ -887,7 +913,8 @@ var
 begin
   TreeView1.Items.BeginUpdate;
 
-  // Inicializamos el diccionario que actuará como caché de búsqueda ultra rápida
+  // Inicializamos el diccionario que actuará como caché de búsqueda ultra
+  // rápida
   DictNodos := TDictionary<Integer, TTreeNode>.Create;
   try
     TreeView1.Items.Clear;
@@ -897,11 +924,14 @@ begin
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
-      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
+      sParent :=
+        dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
       if sParent = '-1' then
       begin
-        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
-        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_META_META').AsString;
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+          'NOMBRE_META_META').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+          'CODIGO_META_META').AsString;
         iCodigo := StrToIntDef(sCodigo, 0);
 
         // Creamos el nodo raíz
@@ -918,11 +948,14 @@ begin
     dmmGeneradorProcesos.unqryMetadatos.First;
     while not dmmGeneradorProcesos.unqryMetadatos.Eof do
     begin
-      sParent := dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
+      sParent :=
+        dmmGeneradorProcesos.unqryMetadatos.FieldByName('PARENT_META').AsString;
       if sParent <> '-1' then
       begin
-        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
-        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName('CODIGO_META_META').AsString;
+        sNombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+          'NOMBRE_META_META').AsString;
+        sCodigo := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+          'CODIGO_META_META').AsString;
         iCodigo := StrToIntDef(sCodigo, 0);
         iParent := StrToIntDef(sParent, -1);
 
@@ -963,7 +996,8 @@ begin
   tvVista.DataController.DataSource := dmmGeneradorProcesos.dsVista;
   pcPestana.ActivePage := tsSQL;
   pkFieldName := 'CODIGO_GENERADOR_PROCESO_GP';
-  // Asegúrate de que las opciones predeterminadas estén configuradas correctamente
+  // Asegúrate de que las opciones predeterminadas estén configuradas
+  // correctamente
 //  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
   IsColumnMode := False;
   DBSynEdit1.EndUpdate;
@@ -973,7 +1007,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
   Sender: TObject);
 var
-  Formatter: ICodeFormatter; // <--- Sustituimos sExec por el interfaz del formateador
+  // <--- Sustituimos sExec por el interfaz del formateador
+  Formatter: ICodeFormatter;
 begin
   inherited;
   ScrollBar2.Position := 1;
@@ -983,7 +1018,8 @@ begin
     if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '1')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE TABLE ' +
-                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+                         unqryMetadatos.FieldByName(
+                           'NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       syndtEstructura.Lines.Text :=
                            unqryEstructura.FieldByName('Create Table').AsString;
@@ -992,7 +1028,8 @@ begin
     if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '2')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE VIEW ' +
-                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+                         unqryMetadatos.FieldByName(
+                           'NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       mmo1.Lines.Text :=
                       Trim(unqryEstructura.FieldByName('Create View').AsString);
@@ -1020,7 +1057,8 @@ begin
     if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '3')) then
     begin
       unqryEstructura.SQL.Text := 'SHOW CREATE PROCEDURE ' +
-                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+                         unqryMetadatos.FieldByName(
+                           'NOMBRE_META_META').AsString;
       unqryEstructura.Open;
       syndtEstructura.Lines.Text := StringReplace(unqryEstructura.FieldByName(
                                                  'Create Procedure').AsString,
@@ -1034,7 +1072,9 @@ begin
   end;
 end;
 
-procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject;
+                                               var Key: Word;
+                                               Shift: TShiftState);
 begin
   if (Key = VK_DIVIDE) then
   if (Shift = [ssCtrl]) then
@@ -1345,7 +1385,8 @@ begin
       tvMetadatostvVista.ClearItems;
       unqryContenido.Close;
       unqryContenido.SQL.Text := 'SELECT * FROM ' +
-                         unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+                         unqryMetadatos.FieldByName(
+                           'NOMBRE_META_META').AsString;
       unqryContenido.Open;
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
@@ -1355,7 +1396,8 @@ begin
     begin
       sProcName := unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
       sCallText := 'CALL ' + sProcName + '(';
-      // Creamos un TUniQuery temporal para leer los parámetros del procedimiento
+      // Creamos un TUniQuery temporal para leer los parámetros del
+      // procedimiento
       qryParams := TUniQuery.Create(nil);
       try
         // Usamos la misma conexión de tus metadatos
@@ -1386,11 +1428,14 @@ begin
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
         dsTablaG.DataSet.Append; // Usar Append o Insert según prefieras
       // Asignamos el nombre al proceso (opcional)
-      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString := 'Ejecutar ' + sProcName;
+      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+        'Ejecutar ' + sProcName;
       // Asignamos el comando SQL generado al campo memo del editor
-      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString := sCallText;
+      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
+        sCallText;
 //      DBsynEdit1.Text := sCallText;
-      // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor SynEdit
+      // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor
+      // SynEdit
       pcPestana.ActivePage := tsSQL;
       if DBsynEdit1.CanFocus then
         DBsynEdit1.SetFocus;
