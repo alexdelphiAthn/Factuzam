@@ -63,6 +63,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   Width = 160
                   FieldName = 'NOMBRE_VA'
                 end>
+              Properties.ListFieldIndex = 1
               Properties.ListOptions.CaseInsensitive = True
               Width = 180
             end
@@ -208,6 +209,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   Width = 160
                   FieldName = 'NOMBRE_VA'
                 end>
+              Properties.ListFieldIndex = 1
               Properties.ListOptions.CaseInsensitive = True
               Properties.ListOptions.ShowHeader = True
               TabOrder = 3
