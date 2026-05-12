@@ -132,6 +132,35 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     Left = 376
     Top = 96
   end
+  object unqryVariacionesLookup: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_VAR, NOMBRE_VAR'
+      '  FROM fza_variaciones'
+      ' WHERE ESACTIVO_VAR = '#39'S'#39
+      ' ORDER BY ORDEN_VAR, CODIGO_VAR')
+    Left = 376
+    Top = 176
+  end
+  object dsVariacionesLookup: TDataSource
+    DataSet = unqryVariacionesLookup
+    Left = 376
+    Top = 248
+  end
+  object unqryAtributosLookup: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA'
+      '  FROM fza_variaciones_atributos'
+      ' ORDER BY ID_VAR_VA, ORDEN_VA, ID_ATB_VA')
+    Left = 552
+    Top = 176
+  end
+  object dsAtributosLookup: TDataSource
+    DataSet = unqryAtributosLookup
+    Left = 552
+    Top = 248
+  end
   object unqryArticulosConjunto: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
