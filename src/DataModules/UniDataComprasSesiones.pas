@@ -210,6 +210,11 @@ begin
       FieldByName('CODIGO_EMP_SES').AsString := oEmpresa;
     if Trim(oAlmacen) <> '' then
       FieldByName('CODIGO_ALM_SES').AsString := oAlmacen;
+    // Si solo hay una variacion definida, preseleccionarla. Es el caso
+    // mayoritario (la mayoria de instalaciones solo tienen 'TC').
+    if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
+      FieldByName('CODIGO_VAR_SES').AsString :=
+        unqryVariaciones.FieldByName('CODIGO_VAR').AsString;
     // SERIE_SES la elige el usuario del lookup cbbSerie alimentado por
     // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SE' + empresa.
     FieldByName('USUARIO_ALTA').AsString := oUser;
