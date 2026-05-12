@@ -373,9 +373,6 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
-  // La base (TfrmMtoGen) ya cre� tdmDataModule v�a CrearDataModule
-  // y asign� dsTablaG.DataSet a su unqryTablaG. Aqu� s�lo casteamos
-  // a la variable global y fijamos la clave primaria del formulario.
   if tdmDataModule = nil then Exit;
   dmComprasSesiones := tdmDataModule as TdmComprasSesiones;
   pkFieldName := 'SERIE_SES;NUMERO_SES';

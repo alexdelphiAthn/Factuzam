@@ -16,12 +16,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
     inherited pcPantalla: TcxPageControl
       Width = 1040
       Height = 728
-      Properties.ActivePage = tsLista
       ExplicitWidth = 1040
       ExplicitHeight = 728
       ClientRectBottom = 726
       ClientRectRight = 1038
       inherited tsLista: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
         ExplicitWidth = 1036
         ExplicitHeight = 697
         inherited cxGrdPrincipal: TcxGrid
@@ -84,8 +85,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitWidth = 1032
-        ExplicitHeight = 694
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 1036
+        ExplicitHeight = 697
         object pcSesion: TcxPageControl
           Left = 0
           Top = 36
@@ -93,10 +96,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Height = 661
           Align = alClient
           TabOrder = 0
-          Properties.ActivePage = tsCabecera
+          Properties.ActivePage = tsMaterializacion
           Properties.CustomButtons.Buttons = <>
-          ExplicitWidth = 1032
-          ExplicitHeight = 658
           ClientRectBottom = 659
           ClientRectLeft = 2
           ClientRectRight = 1034
@@ -104,16 +105,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsCabecera: TcxTabSheet
             Caption = '&Cabecera'
             ImageIndex = 0
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object gbDatosGen: TcxGroupBox
               Left = 8
               Top = 8
               Caption = ' Datos generales '
               TabOrder = 0
-              Height = 200
+              Height = 225
               Width = 1004
               object lblSerie: TcxLabel
                 Left = 16
@@ -128,18 +125,17 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 DataBinding.DataSource = dsTablaG
                 Properties.CharCase = ecUpperCase
                 Properties.MaxLength = 12
-                Properties.Items.Strings = ()
                 TabOrder = 0
                 Width = 160
               end
               object lblNumero: TcxLabel
-                Left = 170
+                Left = 256
                 Top = 24
                 Caption = 'N'#250'mero'
                 TabOrder = 11
               end
               object txtNumero: TcxDBTextEdit
-                Left = 240
+                Left = 326
                 Top = 22
                 DataBinding.DataField = 'NUMERO_SES'
                 DataBinding.DataSource = dsTablaG
@@ -148,13 +144,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Width = 100
               end
               object lblFecha: TcxLabel
-                Left = 360
+                Left = 446
                 Top = 24
                 Caption = 'Fecha'
                 TabOrder = 12
               end
               object dteFecha: TcxDBDateEdit
-                Left = 420
+                Left = 506
                 Top = 22
                 DataBinding.DataField = 'FECHA_SES'
                 DataBinding.DataSource = dsTablaG
@@ -162,13 +158,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Width = 120
               end
               object lblEstado: TcxLabel
-                Left = 560
+                Left = 646
                 Top = 24
                 Caption = 'Estado'
                 TabOrder = 13
               end
               object txtEstado: TcxDBTextEdit
-                Left = 620
+                Left = 706
                 Top = 22
                 DataBinding.DataField = 'ESTADO_SES'
                 DataBinding.DataSource = dsTablaG
@@ -177,20 +173,20 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Width = 100
               end
               object lblEmpresa: TcxLabel
-                Left = 16
+                Left = 29
                 Top = 60
                 Caption = 'Empresa'
                 TabOrder = 14
               end
               object cbbEmpresa: TcxDBLookupComboBox
-                Left = 100
+                Left = 125
                 Top = 58
                 DataBinding.DataField = 'CODIGO_EMP_SES'
                 DataBinding.DataSource = dsTablaG
                 Properties.ListColumns = <>
                 Properties.OnEditValueChanged = cbbEmpresaPropertiesEditValueChanged
                 TabOrder = 4
-                Width = 300
+                Width = 275
               end
               object lblProveedor: TcxLabel
                 Left = 16
@@ -199,13 +195,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 15
               end
               object cbbProveedor: TcxDBLookupComboBox
-                Left = 100
+                Left = 124
                 Top = 94
                 DataBinding.DataField = 'CODIGO_PRV_SES'
                 DataBinding.DataSource = dsTablaG
                 Properties.ListColumns = <>
                 TabOrder = 5
-                Width = 300
+                Width = 276
               end
               object lblRefPrv: TcxLabel
                 Left = 420
@@ -214,7 +210,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 16
               end
               object txtRefPrv: TcxDBTextEdit
-                Left = 540
+                Left = 566
                 Top = 94
                 DataBinding.DataField = 'REF_PRV_SES'
                 DataBinding.DataSource = dsTablaG
@@ -228,13 +224,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 17
               end
               object cbbAlmacen: TcxDBLookupComboBox
-                Left = 140
+                Left = 165
                 Top = 130
                 DataBinding.DataField = 'CODIGO_ALM_SES'
                 DataBinding.DataSource = dsTablaG
                 Properties.ListColumns = <>
                 TabOrder = 7
-                Width = 200
+                Width = 175
               end
               object lblMoneda: TcxLabel
                 Left = 360
@@ -243,7 +239,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 18
               end
               object txtMoneda: TcxDBTextEdit
-                Left = 420
+                Left = 434
                 Top = 130
                 DataBinding.DataField = 'MONEDA_SES'
                 DataBinding.DataSource = dsTablaG
@@ -257,18 +253,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 19
               end
               object memoComentarios: TcxDBMemo
-                Left = 100
+                Left = 133
                 Top = 162
                 DataBinding.DataField = 'COMENTARIOS_SES'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 9
                 Height = 30
-                Width = 880
+                Width = 847
               end
             end
             object gbPrecios: TcxGroupBox
-              Left = 8
-              Top = 220
+              Left = 3
+              Top = 268
               Caption = ' Plantilla precios e impuestos '
               TabOrder = 1
               Height = 200
@@ -384,8 +380,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               end
             end
             object gbVariacion: TcxGroupBox
-              Left = 520
-              Top = 220
+              Left = 519
+              Top = 268
               Caption = ' Plantilla variaci'#243'n / sistema de tallas '
               TabOrder = 2
               Height = 160
@@ -459,10 +455,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsPlantilla: TcxTabSheet
             Caption = '&Plantilla'
             ImageIndex = 1
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object pcPlantilla: TcxPageControl
               Left = 0
               Top = 0
@@ -472,22 +464,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               TabOrder = 0
               Properties.ActivePage = tsPropiedades
               Properties.CustomButtons.Buttons = <>
-              ExplicitWidth = 1024
-              ExplicitHeight = 624
               ClientRectBottom = 628
               ClientRectLeft = 2
               ClientRectRight = 1030
               ClientRectTop = 29
               object tsPropiedades: TcxTabSheet
                 Caption = 'Propiedades comunes'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object pnlPropsTop: TPanel
                   Left = 0
                   Top = 0
-                  Width = 1012
+                  Width = 1028
                   Height = 36
                   Align = alTop
                   TabOrder = 0
@@ -513,8 +499,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 object cxgrdProps: TcxGrid
                   Left = 0
                   Top = 36
-                  Width = 1012
-                  Height = 550
+                  Width = 1028
+                  Height = 563
                   Align = alClient
                   TabOrder = 1
                   object tvProps: TcxGridDBTableView
@@ -546,14 +532,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               end
               object tsKits: TcxTabSheet
                 Caption = 'Kits de cantidades'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object pnlKitsTop: TPanel
                   Left = 0
                   Top = 0
-                  Width = 1012
+                  Width = 1028
                   Height = 36
                   Align = alTop
                   TabOrder = 0
@@ -589,7 +571,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Left = 0
                   Top = 36
                   Width = 400
-                  Height = 550
+                  Height = 563
                   Align = alLeft
                   TabOrder = 2
                   object tvKits: TcxGridDBTableView
@@ -613,8 +595,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 object cxgrdKitsDet: TcxGrid
                   Left = 400
                   Top = 36
-                  Width = 612
-                  Height = 550
+                  Width = 628
+                  Height = 563
                   Align = alClient
                   TabOrder = 1
                   object tvKitsDet: TcxGridDBTableView
@@ -644,7 +626,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Height = 280
               Align = alTop
               TabOrder = 0
-              ExplicitWidth = 1024
               object pnlLineasBotones: TPanel
                 Left = 1
                 Top = 1
@@ -652,28 +633,27 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Height = 36
                 Align = alTop
                 TabOrder = 0
-                ExplicitWidth = 1022
                 object btnAddLinea: TcxButton
                   Left = 8
-                  Top = 4
-                  Width = 110
+                  Top = 2
+                  Width = 133
                   Height = 28
                   Caption = '+ A'#241'adir l'#237'nea'
                   TabOrder = 0
                   OnClick = btnAddLineaClick
                 end
                 object btnDupLinea: TcxButton
-                  Left = 126
-                  Top = 4
-                  Width = 110
+                  Left = 160
+                  Top = 2
+                  Width = 100
                   Height = 28
                   Caption = 'Duplicar'
                   TabOrder = 1
                   OnClick = btnDupLineaClick
                 end
                 object btnDelLinea: TcxButton
-                  Left = 244
-                  Top = 4
+                  Left = 278
+                  Top = 2
                   Width = 110
                   Height = 28
                   Caption = '- Borrar'
@@ -681,8 +661,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   OnClick = btnDelLineaClick
                 end
                 object btnResolverDuplicado: TcxButton
-                  Left = 380
-                  Top = 4
+                  Left = 414
+                  Top = 2
                   Width = 220
                   Height = 28
                   Caption = 'Resolver duplicado...'
@@ -690,8 +670,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   OnClick = btnResolverDuplicadoClick
                 end
                 object btnCalcularVenta: TcxButton
-                  Left = 610
-                  Top = 4
+                  Left = 644
+                  Top = 2
                   Width = 170
                   Height = 28
                   Hint = 
@@ -707,13 +687,14 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               object cxgrdLineas: TcxGrid
                 Left = 1
                 Top = 37
-                Width = 1022
+                Width = 1030
                 Height = 242
                 Align = alClient
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
                   OnEditKeyDown = tvLineasEditKeyDown
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
+                  OptionsView.GroupByBox = False
                   object dbcLinNumero: TcxGridDBColumn
                     Caption = 'L'#237'n'
                     DataBinding.FieldName = 'LINEA_SESLIN'
@@ -812,7 +793,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 2
                 end
                 object cbbAlmacenMatriz: TcxLookupComboBox
-                  Left = 130
+                  Left = 168
                   Top = 6
                   Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
                   Properties.ListColumns = <
@@ -821,7 +802,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     end>
                   Properties.OnChange = cbbAlmacenMatrizPropertiesChange
                   TabOrder = 0
-                  Width = 260
+                  Width = 222
                 end
                 object lblTotalesPorAlm: TcxLabel
                   Left = 410
@@ -845,11 +826,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 5
                 end
                 object cbbKitAplicar: TcxDBLookupComboBox
-                  Left = 80
+                  Left = 117
                   Top = 6
                   Properties.ListColumns = <>
                   TabOrder = 0
-                  Width = 200
+                  Width = 163
                 end
                 object btnAplicarKitFila: TcxButton
                   Left = 290
@@ -894,8 +875,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Align = alClient
                 Caption = ' Matriz pivotada '
                 TabOrder = 1
-                ExplicitTop = 64
-                ExplicitHeight = 312
                 Height = 86
                 Width = 1030
                 object sbMatriz: TScrollBox
@@ -905,9 +884,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Height = 48
                   Align = alClient
                   TabOrder = 0
-                  ExplicitLeft = 2
-                  ExplicitWidth = 1018
-                  ExplicitHeight = 255
                 end
               end
               object splPreciosSku: TcxSplitter
@@ -918,7 +894,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 AlignSplitter = salBottom
                 Control = gbPreciosSku
                 Visible = False
-                ExplicitTop = 349
               end
               object gbPreciosSku: TcxGroupBox
                 Left = 1
@@ -927,7 +902,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Caption = ' Precios por SKU (override) '
                 TabOrder = 2
                 Visible = False
-                ExplicitTop = 357
                 Height = 180
                 Width = 1030
                 object cxgrdPreciosSku: TcxGrid
@@ -937,8 +911,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Height = 142
                   Align = alClient
                   TabOrder = 0
-                  ExplicitHeight = 154
                   object tvPreciosSku: TcxGridDBTableView
+                    OptionsView.GroupByBox = False
                     object dbcPreciosSkuValFila: TcxGridDBColumn
                       Caption = 'Color / Fila'
                       DataBinding.FieldName = 'VAL_FILA'
@@ -949,12 +923,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                       Caption = 'Talla / Pivot'
                       DataBinding.FieldName = 'VAL_PIVOT'
                       Options.Editing = False
-                      Width = 100
+                      Width = 126
                     end
                     object dbcPreciosSkuPrecioCompra: TcxGridDBColumn
                       Caption = 'Pr. compra'
                       DataBinding.FieldName = 'PRECIO_COMPRA_SESLINSKU'
-                      Width = 110
+                      Width = 134
                     end
                     object dbcPreciosSkuPrecioVenta: TcxGridDBColumn
                       Caption = 'Pr. venta'
@@ -1017,12 +991,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               end
             end
             object gbDocumento: TcxGroupBox
-              Left = 520
+              Left = 513
               Top = 8
               Caption = ' Documento a generar '
               TabOrder = 1
               Height = 200
-              Width = 492
+              Width = 499
               object chkGeneraPedido: TcxDBCheckBox
                 Left = 16
                 Top = 24
@@ -1050,8 +1024,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 TabOrder = 5
               end
               object txtPrefijoEan: TcxDBTextEdit
-                Left = 120
-                Top = 88
+                Left = 152
+                Top = 86
                 DataBinding.DataField = 'PREFIJO_EAN_SES'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 2
@@ -1069,7 +1043,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               object btnDoMaterializar: TcxButton
                 Left = 230
                 Top = 130
-                Width = 250
+                Width = 259
                 Height = 32
                 Caption = 'Crear art'#237'culos y documentos'
                 TabOrder = 4
@@ -1083,6 +1057,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Height = 396
               TabOrder = 2
               object tvPreview: TcxGridDBTableView
+                OptionsView.GroupByBox = False
                 object dbcPrevLinea: TcxGridDBColumn
                   Caption = 'L'#237'n'
                   DataBinding.FieldName = 'LINEA'
@@ -1101,17 +1076,17 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 object dbcPrevValorPivot: TcxGridDBColumn
                   Caption = 'Talla / Pivot'
                   DataBinding.FieldName = 'VALOR_PIVOT'
-                  Width = 100
+                  Width = 133
                 end
                 object dbcPrevCantidad: TcxGridDBColumn
                   Caption = 'Cantidad'
                   DataBinding.FieldName = 'CANTIDAD'
-                  Width = 80
+                  Width = 110
                 end
                 object dbcPrevPrecioCompra: TcxGridDBColumn
                   Caption = 'Pr. compra'
                   DataBinding.FieldName = 'PRECIO_COMPRA'
-                  Width = 90
+                  Width = 112
                 end
                 object dbcPrevPrecioVenta: TcxGridDBColumn
                   Caption = 'Pr. venta'
@@ -1164,18 +1139,17 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Height = 36
           Align = alTop
           TabOrder = 1
-          ExplicitWidth = 1032
           object btnCrearMaterializar: TcxButton
             Left = 8
             Top = 4
-            Width = 220
+            Width = 275
             Height = 28
             Caption = 'Crear art'#237'culos y documentos'
             TabOrder = 0
             OnClick = btnCrearMaterializarClick
           end
           object btnAnularSesion: TcxButton
-            Left = 240
+            Left = 299
             Top = 4
             Width = 100
             Height = 28
@@ -1184,7 +1158,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             OnClick = btnAnularSesionClick
           end
           object btnClonarSesion: TcxButton
-            Left = 350
+            Left = 409
             Top = 4
             Width = 100
             Height = 28
@@ -1193,9 +1167,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             OnClick = btnClonarSesionClick
           end
           object btnCerrarManual: TcxButton
-            Left = 460
+            Left = 519
             Top = 4
-            Width = 160
+            Width = 214
             Height = 28
             Caption = 'Cerrar (sin materializar)'
             TabOrder = 3
@@ -1210,6 +1184,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Width = 1036
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1036
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1036
@@ -1217,6 +1194,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1036
           ExplicitHeight = 640
+          inherited cxgrdPerfil: TcxGrid
+            Width = 1036
+            Height = 640
+            ExplicitWidth = 1036
+            ExplicitHeight = 640
+          end
         end
       end
     end
@@ -1228,6 +1211,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         Width = 1040
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1040
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end
