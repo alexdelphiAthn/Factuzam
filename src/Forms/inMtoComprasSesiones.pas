@@ -224,6 +224,7 @@ type
     btnAplicarKitTodas       : TcxButton;
     btnAddFila               : TcxButton;
     btnDelFila               : TcxButton;
+    btnAddColumna            : TcxButton;
 
     // ------------------------------------------------------------------
     // Pestaña Materialización
@@ -296,6 +297,7 @@ type
 
     procedure btnAddFilaClick(Sender: TObject);
     procedure btnDelFilaClick(Sender: TObject);
+    procedure btnAddColumnaClick(Sender: TObject);
 
     procedure btnAddPropClick(Sender: TObject);
     procedure btnDelPropClick(Sender: TObject);
@@ -770,6 +772,13 @@ begin
   TGestorMatrizCompras(FGestorMatriz).DelFilaSeleccionada;
 end;
 
+procedure TfrmMtoComprasSesiones.btnAddColumnaClick(Sender: TObject);
+begin
+  inherited;
+  if not EsSesionEditable then Exit;
+  TGestorMatrizCompras(FGestorMatriz).AddColumna;
+end;
+
 procedure TfrmMtoComprasSesiones.btnAddPropClick(Sender: TObject);
 begin
   inherited;
@@ -967,6 +976,7 @@ begin
   if Assigned(btnDupLinea)      then btnDupLinea.Enabled      := AHabilitar;
   if Assigned(btnAddFila)       then btnAddFila.Enabled       := AHabilitar;
   if Assigned(btnDelFila)       then btnDelFila.Enabled       := AHabilitar;
+  if Assigned(btnAddColumna)    then btnAddColumna.Enabled    := AHabilitar;
   if Assigned(btnAddProp)       then btnAddProp.Enabled       := AHabilitar;
   if Assigned(btnDelProp)       then btnDelProp.Enabled       := AHabilitar;
   if Assigned(btnAddKit)        then btnAddKit.Enabled        := AHabilitar;
