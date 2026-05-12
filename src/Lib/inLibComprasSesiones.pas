@@ -75,9 +75,9 @@ type
     FColumnas     : TList<TColumnaMatriz>;
     FFilaSeleccionada : Integer;
     FAlmacenActual    : string;
-                        // C�digo del almac�n cuya capa de celdas se est�
-                        // editando ahora mismo. Cadena vac�a = usar el de
-                        // cabecera de sesi�n. Se cambia desde el form al
+                        // Codigo del almacen cuya capa de celdas se esta
+                        // editando ahora mismo. Cadena vacia = usar el de
+                        // cabecera de sesion. Se cambia desde el form al
                         // mover el cbbAlmacenMatriz.
 
     procedure LimpiarMatriz;
@@ -93,7 +93,7 @@ type
                         ALeft, ATop, AWidth: Integer): TcxSpinEdit;
     procedure OnCantidadChange(Sender: TObject);
     function  AlmacenEfectivo: string;
-                        // Devuelve FAlmacenActual o, si est� vac�o, el
+                        // Devuelve FAlmacenActual o, si esta vacio, el
                         // CODIGO_ALM_SES de la cabecera.
   public
     constructor Create(AContenedor: TScrollBox;
@@ -304,9 +304,9 @@ begin
   qC := TUniQuery.Create(nil);
   try
     qC.Connection := inLibGlobalVar.oConn;
-    // Filtramos por almac�n: la matriz muestra una "capa" por almac�n.
-    // Para no perder celdas legacy (creadas antes de a�adir CODIGO_ALM_SESCEL),
-    // tambi�n traemos las que tienen el c�digo vac�o cuando ese caso aplica.
+    // Filtramos por almacen: la matriz muestra una "capa" por almacen.
+    // Para no perder celdas legacy (creadas antes de anadir CODIGO_ALM_SESCEL),
+    // tambien traemos las que tienen el codigo vacio cuando ese caso aplica.
     qC.SQL.Text :=
       'SELECT ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL ' +
       '  FROM fza_compras_sesiones_celdas ' +
