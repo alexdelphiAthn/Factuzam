@@ -111,6 +111,7 @@ type
     procedure CalcularTotalesLineaActual;
   public
     procedure GetCodigoAutoSesion;
+    procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
     procedure ChequearDuplicado(const ACodigoArt: string;
                                  out AExiste: Boolean;
                                  out ADescripcion: string);
@@ -131,6 +132,7 @@ implementation
 
 uses
   inLibGlobalVar,
+  inLibtb,
   inLibComprasSesiones;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -218,9 +220,15 @@ begin
     if sEmpresa = '' then
       raise Exception.Create('Selecciona una empresa antes de grabar la sesion.');
     if sSerie = '' then
-      raise Exception.Create('Selecciona una serie antes de grabar la sesion. ' +
-        'Crea las series en Mantenimiento > Empresas > pestana "4_Series" ' +
-        'con TIPO_DOC = SE.');
+      raise Exception.Create('Teclea una serie antes de grabar la sesion ' +
+        '(p.ej. ' + sEmpresa + '-SE-1).');
+
+    // Si el usuario teclea una serie que no existe en fza_empresas_series,
+    // la creamos al vuelo para que el SP PRC_GET_NEXT_CONT_FACT_SERIE
+    // pueda devolver el contador. Asi el usuario no tiene que ir antes
+    // a Mantenimiento > Empresas > 4_Series.
+    AsegurarSerieEnEmpresasSeries(sEmpresa, sSerie);
+
     GetCodigoAutoSesion;
     if unqryTablaG.FieldByName('NUMERO_SES').AsString = '' then
       raise Exception.Create('No se pudo obtener el siguiente numero. ' +
@@ -342,6 +350,54 @@ begin
   unqrySesionLin.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTotalUds;
   unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    :=
     rTotalUds * rPrecio;
+end;
+
+procedure TdmComprasSesiones.AsegurarSerieEnEmpresasSeries(
+  const AEmpresa, ASerie: string);
+var
+  q          : TUniQuery;
+  sCodigoSer : string;
+begin
+  // Si el usuario teclea una serie nueva (no existe en fza_empresas_series
+  // para esa empresa+TIPO_DOC='SE'), la creamos al vuelo. El campo
+  // CODIGO_SERIE_EMPSER es un contador propio que se genera con
+  // PRC_GET_NEXT_CONT('ES') -- mismo patron que UniDataEmpresas.
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM fza_empresas_series ' +
+      ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
+      '   AND CODIGO_EMP_EMPSER = :emp ' +
+      '   AND EMPSER = :ser';
+    q.ParamByName('emp').AsString := AEmpresa;
+    q.ParamByName('ser').AsString := ASerie;
+    q.Open;
+    if q.FieldByName('N').AsInteger > 0 then Exit;
+    q.Close;
+
+    // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
+    sCodigoSer := ObtenerSiguienteContador('ES');
+    if Trim(sCodigoSer) = '' then
+      raise Exception.Create('No se pudo obtener CODIGO_SERIE_EMPSER del ' +
+        'contador ES via PRC_GET_NEXT_CONT.');
+
+    q.SQL.Text :=
+      'INSERT INTO fza_empresas_series ' +
+      '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, EMPSER, TIPO_DOC_EMPSER, ' +
+      '   SUBTIPO_EMPSER, FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES ' +
+      '  (:cod, :emp, :ser, ''SE'', ' +
+      '   ''NORMAL'', CURDATE(), NULL, NOW(), :u, NOW(), :u)';
+    q.ParamByName('cod').AsString := sCodigoSer;
+    q.ParamByName('emp').AsString := AEmpresa;
+    q.ParamByName('ser').AsString := ASerie;
+    q.ParamByName('u').AsString   := oUser;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
 end;
 
 procedure TdmComprasSesiones.GetCodigoAutoSesion;
