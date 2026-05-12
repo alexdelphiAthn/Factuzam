@@ -26,9 +26,11 @@ pulsa **«Crear artículos y documentos»** se materializa:
 3. Altas de SKUs en `fza_articulos_skus` + `fza_atributos_sku` (valores).
 4. Altas de propiedades fijas en `fza_articulos_propiedades`.
 5. Generación de EAN13 (uno por SKU) en `fza_codigos_barras` vía `inLibEAN13`.
-6. Alta o actualización en `fza_articulos_proveedores` con precio último de compra
-   y referencia del proveedor.
-7. Generación del documento elegido:
+6. Alta o actualización en `fza_articulos_proveedores` con **precio de coste**
+   (último de compra) y referencia del proveedor.
+7. Altas en `fza_articulos_tarifas` con el **precio de venta** calculado para
+   la tarifa elegida en cabecera de sesión. Ver §2.5 para la fórmula.
+8. Generación del documento elegido:
    - **Pedido de compra** → `fza_pedidos_compra` + `fza_pedidos_compra_lineas`
      (sin mover stock).
    - **Albarán de compra** → `fza_albaranes_compra` + líneas + movimientos en
@@ -144,6 +146,51 @@ el formulario avisa con un indicador rojo en la línea y ofrece tres
 acciones: **reusar** (la sesión enlaza al artículo existente y no lo crea),
 **renombrar** o **cancelar la línea**.
 
+### 2.5 Precio de coste y precio de venta (tarifa)
+
+La sesión maneja **dos precios** por línea:
+
+- **Precio de coste** (`PRECIO_COMPRA_SESLIN`): lo que paga la empresa al
+  proveedor. Es el que se materializa en `fza_articulos_proveedores.
+  PRECIO_ULT_COMPRA_AP`.
+- **Precio de venta** (`PRECIO_VENTA_SESLIN`): lo que se cobrará al cliente,
+  bajo la tarifa elegida en cabecera (`CODIGO_TAR_SES`). Se materializa en
+  `fza_articulos_tarifas` para el `CODIGO_TAR` correspondiente.
+
+Por defecto ambos precios viven a **nivel de línea** (artículo). Si una
+sesión necesita distinguir precio por SKU (por ejemplo XXL vale más), se
+usa la tabla auxiliar `fza_compras_sesiones_lineas_skus_precios`
+(`SESLINSKU`) que guarda override por combinación pivot/fila — sólo se
+escribe cuando el usuario "rompe" el precio por línea para un SKU
+concreto.
+
+#### Fórmula de cálculo del precio de venta
+
+Durante la sesión hay un botón **«Calcular venta»** que aplica esta fórmula
+a las líneas seleccionadas:
+
+```
+precio_base   = precio_coste × (1 + PORCENTAJE_MARGEN_SES / 100)
+precio_redond = redondeo_arriba(precio_base, MULTIPLO_REDONDEO_SES)
+precio_venta  = precio_redond + AJUSTE_FINAL_SES
+```
+
+Parámetros (cabecera de sesión):
+
+| Campo                       | Significado                                          | Ejemplo |
+|-----------------------------|------------------------------------------------------|---------|
+| `PORCENTAJE_MARGEN_SES`     | Margen comercial sobre coste                          | 55.0    |
+| `MULTIPLO_REDONDEO_SES`     | Múltiplo al que sube el precio (`0` = sin redondeo) | 0.50    |
+| `AJUSTE_FINAL_SES`          | Suma/resta final (negativo para terminar en .99)     | -0.01   |
+| `ESPRECIOS_SIN_IVA_SES`     | Si los precios introducidos son sin IVA o con IVA    | 'S'     |
+
+Ejemplo: coste 4,80 € × 55 % = 7,44 → redondeo arriba a 0,50 = 7,50 →
+ajuste −0,01 = **7,49 €**.
+
+La fórmula se aplica al pulsar el botón, no automáticamente al teclear el
+coste — así el usuario puede ajustar manualmente sin perder el control. El
+`PRECIO_VENTA_SESLIN` queda libre de override una vez calculado.
+
 ---
 
 ## 3. Esquema de base de datos
@@ -160,6 +207,7 @@ acciones: **reusar** (la sesión enlaza al artículo existente y no lo crea),
 | `fza_compras_sesiones_lineas_filas`    | `SESFIL`    |
 | `fza_compras_sesiones_lineas_filas_atr`| `SESFILAT`  |
 | `fza_compras_sesiones_lineas_props`    | `SESLPROP`  |
+| `fza_compras_sesiones_lineas_skus_precios` | `SESLINSKU` |
 | `fza_compras_sesiones_celdas`          | `SESCEL`    |
 | `fza_compras_plantillas`               | `SESPL`     |
 | `fza_compras_plantillas_props`         | `SESPLPROP` |

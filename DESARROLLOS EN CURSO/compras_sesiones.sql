@@ -43,6 +43,26 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Migración idempotente para la cabecera: añadir parámetros de fórmula
+-- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
+-- sin ellos. La definición del CREATE TABLE más abajo los incluye.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_compras_sesiones'
+     AND COLUMN_NAME  = 'MULTIPLO_REDONDEO_SES'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_compras_sesiones` '
+  'ADD COLUMN `MULTIPLO_REDONDEO_SES` decimal(19,6) NOT NULL DEFAULT 0 '
+  '  AFTER `ESREDONDEO_VENTA_SES`, '
+  'ADD COLUMN `AJUSTE_FINAL_SES` decimal(19,6) NOT NULL DEFAULT 0 '
+  '  AFTER `MULTIPLO_REDONDEO_SES`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- ---------------------------------------------------------------------------
 -- 1. Cabecera de sesión
 -- ---------------------------------------------------------------------------
@@ -68,6 +88,10 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
                                   COMMENT 'Tarifa de salida sugerida',
   `ESPRECIOS_SIN_IVA_SES`       char(1)       NOT NULL DEFAULT 'S',
   `ESREDONDEO_VENTA_SES`        char(1)       NOT NULL DEFAULT 'N',
+  `MULTIPLO_REDONDEO_SES`       decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT 'Multiplo al que sube el precio venta calculado. 0 = sin redondeo.',
+  `AJUSTE_FINAL_SES`            decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT 'Sumando final tras el redondeo. Negativo para acabar en .99, .95, etc.',
 
   -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES='N'.
   `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
@@ -336,6 +360,33 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_props` (
 
   PRIMARY KEY (`SERIE_SES_SESLPROP`, `NUMERO_SES_SESLPROP`,
                `LINEA_SES_SESLPROP`, `CODIGO_PROP_SESLPROP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 7-bis. Override de precio por SKU (coste y venta)
+-- ---------------------------------------------------------------------------
+-- Cuando una linea necesita precio distinto en una talla/color concretos,
+-- aqui se sobreescribe. Si no hay fila para un SKU, se usan los precios
+-- de la linea (PRECIO_COMPRA_SESLIN / PRECIO_VENTA_SESLIN).
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_skus_precios` (
+  `SERIE_SES_SESLINSKU`         varchar(12)   NOT NULL,
+  `NUMERO_SES_SESLINSKU`        varchar(12)   NOT NULL,
+  `LINEA_SES_SESLINSKU`         int(11)       NOT NULL,
+  `ID_FILA_SES_SESLINSKU`       int(11)       NOT NULL,
+  `ID_AV_PIVOT_SESLINSKU`       int(11)       NOT NULL,
+  `PRECIO_COMPRA_SESLINSKU`     decimal(19,6) DEFAULT NULL
+                                  COMMENT 'Override del precio de coste para este SKU. NULL = hereda de la linea.',
+  `PRECIO_VENTA_SESLINSKU`      decimal(19,6) DEFAULT NULL
+                                  COMMENT 'Override del precio de venta para este SKU. NULL = hereda de la linea.',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESLINSKU`, `NUMERO_SES_SESLINSKU`,
+               `LINEA_SES_SESLINSKU`, `ID_FILA_SES_SESLINSKU`,
+               `ID_AV_PIVOT_SESLINSKU`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ---------------------------------------------------------------------------
