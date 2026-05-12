@@ -260,6 +260,69 @@
                 Height = 89
                 Width = 373
               end
+              object gbContadorArt: TcxGroupBox
+                Left = 33
+                Top = 152
+                Caption = ' Autogenerar c'#243'digo de art'#237'culo desde esta familia '
+                TabOrder = 2
+                Height = 110
+                Width = 540
+                object chkEsContadorArtFam: TcxDBCheckBox
+                  Left = 16
+                  Top = 24
+                  Caption = 'Activar contador (el c'#243'digo de familia tecleado en sesiones de'
+                  Properties.Caption.Strings = (
+                    'Activar contador'
+                    '(el c'#243'digo de familia tecleado en sesiones de compra se expande'
+                    'autom'#225'ticamente al siguiente n'#250'mero)')
+                  DataBinding.DataField = 'ESCONTADOR_ART_FAM'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  TabOrder = 0
+                  Width = 510
+                end
+                object lblContadorArt: TcxLabel
+                  Left = 16
+                  Top = 56
+                  Caption = #218'ltimo contador'
+                  TabOrder = 3
+                end
+                object spnContadorArt: TcxDBSpinEdit
+                  Left = 140
+                  Top = 54
+                  DataBinding.DataField = 'CONTADOR_ART_FAM'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.MinValue = 0
+                  Properties.MaxValue = 99999999
+                  TabOrder = 1
+                  Width = 90
+                end
+                object lblPadArt: TcxLabel
+                  Left = 260
+                  Top = 56
+                  Caption = 'D'#237'gitos relleno'
+                  TabOrder = 4
+                end
+                object spnPadArt: TcxDBSpinEdit
+                  Left = 380
+                  Top = 54
+                  DataBinding.DataField = 'PAD_ART_FAM'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.MinValue = 1
+                  Properties.MaxValue = 12
+                  TabOrder = 2
+                  Width = 60
+                end
+                object lblEjemploContador: TcxLabel
+                  Left = 16
+                  Top = 84
+                  Caption = 'Ej: contador 0, d'#237'gitos 5  '#8594'  pr'#243'ximo c'#243'digo = FAM00001'
+                  Style.TextColor = clGrayText
+                  Style.IsFontAssigned = True
+                  TabOrder = 5
+                end
+              end
             end
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'

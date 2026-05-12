@@ -43,6 +43,29 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- ---------------------------------------------------------------------------
+-- 0-bis. Numero de digitos de relleno por familia para autogenerar codigos
+-- ---------------------------------------------------------------------------
+-- Cuando el usuario teclea en la sesion el codigo de una familia (ej.
+-- "BOLSOS") con ESCONTADOR_ART_FAM='S' y CONTADOR_ART_FAM > 0, la sesion
+-- expande automaticamente al siguiente codigo:
+--   <CODIGO_FAM_FAM> + RIGHT('00000' + CAST(CONTADOR_ART_FAM AS CHAR), PAD)
+-- y se incrementa el contador.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_articulos_familias'
+     AND COLUMN_NAME  = 'PAD_ART_FAM'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_articulos_familias` '
+  'ADD COLUMN `PAD_ART_FAM` int(11) NOT NULL DEFAULT 5 '
+  'COMMENT ''Numero de digitos del relleno cuando se autogenera codigo articulo desde familia''',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- Migración idempotente para la cabecera: añadir parámetros de fórmula
 -- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
 -- sin ellos. La definición del CREATE TABLE más abajo los incluye.
