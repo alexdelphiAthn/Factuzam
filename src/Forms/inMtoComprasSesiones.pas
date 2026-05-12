@@ -412,7 +412,14 @@ end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
-  FGestorMatriz.Free;
+  if Assigned(FGestorMatriz) then FGestorMatriz.Free;
+  FGestorMatriz := nil;
+  // Anular la global ANTES de que el destructor heredado libere el DM.
+  // Si no la global queda dangling y al abrir Sesiones por segunda vez
+  // dsTablaGStateChange (que se dispara antes que CrearTablaPrincipal
+  // reasigne la global) leeria memoria liberada -> AV.
+  if dmComprasSesiones = tdmDataModule then
+    dmComprasSesiones := nil;
   inherited;
 end;
 
@@ -856,17 +863,20 @@ begin
 end;
 
 function TfrmMtoComprasSesiones.EsSesionEditable: Boolean;
+var
+  dm : TdmComprasSesiones;
 begin
-  // Defensivo: este metodo se llama durante dsTablaGStateChange que puede
-  // dispararse mientras la base abre unqryTablaG dentro de CrearDataModule,
-  // ANTES de que CrearTablaPrincipal haya asignado la global dmComprasSesiones.
+  // Usamos tdmDataModule (propiedad del form, vida ligada al form) en vez
+  // de la variable global dmComprasSesiones, que puede quedar dangling al
+  // cerrar y reabrir la pantalla y provocar AV en GetActive.
   Result := False;
-  if (dmComprasSesiones = nil) then Exit;
-  if (dmComprasSesiones.unqryTablaG = nil) then Exit;
-  if (not dmComprasSesiones.unqryTablaG.Active) then Exit;
-  if dmComprasSesiones.unqryTablaG.IsEmpty then Exit;
-  Result := dmComprasSesiones.unqryTablaG
-              .FieldByName('ESTADO_SES').AsString = 'BORRADOR';
+  if not Assigned(tdmDataModule) then Exit;
+  if not (tdmDataModule is TdmComprasSesiones) then Exit;
+  dm := TdmComprasSesiones(tdmDataModule);
+  if dm.unqryTablaG = nil then Exit;
+  if not dm.unqryTablaG.Active then Exit;
+  if dm.unqryTablaG.IsEmpty then Exit;
+  Result := dm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'BORRADOR';
 end;
 
 procedure TfrmMtoComprasSesiones.ReconstruirMatrizActual;
