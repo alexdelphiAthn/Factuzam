@@ -204,11 +204,30 @@ begin
 end;
 
 procedure TdmComprasSesiones.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  sSerie, sEmpresa, sNumero : string;
 begin
   inherited;
-  if (unqryTablaG.FieldByName('NUMERO_SES').AsString = '') or
-     (unqryTablaG.FieldByName('NUMERO_SES').AsString = '0') then
+  sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
+  sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
+
+  // Validacion: para obtener numero hace falta serie y empresa.
+  if (sNumero = '') or (sNumero = '0') then
+  begin
+    if sEmpresa = '' then
+      raise Exception.Create('Selecciona una empresa antes de grabar la sesion.');
+    if sSerie = '' then
+      raise Exception.Create('Selecciona una serie antes de grabar la sesion. ' +
+        'Crea las series en Mantenimiento > Empresas > pestana "4_Series" ' +
+        'con TIPO_DOC = SE.');
     GetCodigoAutoSesion;
+    if unqryTablaG.FieldByName('NUMERO_SES').AsString = '' then
+      raise Exception.Create('No se pudo obtener el siguiente numero. ' +
+        'Revisa que exista una fila en fza_contadores para (TIPO_DOC=SE, ' +
+        'EMPRESA=' + sEmpresa + ', SERIE=' + sSerie + ') o que el SP ' +
+        'PRC_GET_NEXT_CONT_FACT_SERIE este disponible.');
+  end;
 
   unqryTablaG.FieldByName('USUARIO_MODIF').AsString  := oUser;
   unqryTablaG.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
@@ -326,15 +345,31 @@ begin
 end;
 
 procedure TdmComprasSesiones.GetCodigoAutoSesion;
+var
+  sSerie, sEmpresa : string;
 begin
+  // Usa PRC_GET_NEXT_CONT_FACT_SERIE (el mismo que facturas/inventarios)
+  // para obtener el siguiente numero por (TIPO_DOC, EMPRESA, SERIE).
+  // La serie viene de la cabecera (combo alimentado por fza_empresas_series
+  // filtrado por TIPO_DOC_EMPSER='SE'). Si por lo que sea esta vacia,
+  // dejamos NUMERO_SES sin asignar y la grabacion fallara con un mensaje
+  // claro de "elige una serie primero".
+  sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
+  sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
+  if (sSerie = '') or (sEmpresa = '') then Exit;
+
   with unstrdprcGetContadorSesion do
   begin
     Params.Clear;
-    Params.CreateParam(ftString, 'ptipodoc', ptInput);
-    Params.CreateParam(ftString, 'pcont',    ptOutput);
-    Params.CreateParam(ftString, 'pUSUARIO', ptInput);
-    ParamByName('ptipodoc').AsString := 'SE';
-    ParamByName('pUSUARIO').AsString := oUser;
+    Params.CreateParam(ftString, 'pserie',           ptInput);
+    Params.CreateParam(ftString, 'pTipoDoc',         ptInput);
+    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR',ptInput);
+    Params.CreateParam(ftString, 'pUSUARIOMODIF',    ptInput);
+    Params.CreateParam(ftString, 'pcont',            ptOutput);
+    ParamByName('pserie').AsString            := sSerie;
+    ParamByName('pTipoDoc').AsString          := 'SE';
+    ParamByName('pEMPRESA_CONTADOR').AsString := sEmpresa;
+    ParamByName('pUSUARIOMODIF').AsString     := oUser;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_SES').AsString :=
       ParamByName('pcont').AsString;
