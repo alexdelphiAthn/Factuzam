@@ -322,6 +322,11 @@ type
                 Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
                 ANewItemRecordFocusingChanged: Boolean);
+    procedure tvLineasEditKeyDown(
+                Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                AEdit: TcxCustomEdit;
+                var Key: Word; Shift: TShiftState);
 
     procedure actMaterializarExecute(Sender: TObject);
     procedure actNuevaLineaExecute(Sender: TObject);
@@ -356,6 +361,7 @@ uses
   inLibComprasSesionesMaterializar,
   inMtoModalSesionMaterializar,
   inMtoModalSesionDuplicado,
+  inMtoModalSelFamilia,
   inLibGlobalVar;
 
 {$R *.dfm}
@@ -715,6 +721,48 @@ begin
   inherited;
   ActualizarEstadoUI;
   ActualizarVisibilidadPreciosSku;
+end;
+
+procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
+var
+  frmSel : TfrmModalSelFamilia;
+begin
+  inherited;
+  // F3 sobre la columna Codigo articulo abre el arbol selector de familias.
+  // Al aceptar, se pega el CODIGO_FAM_FAM al campo y el BeforePost del
+  // dataset llama a ResolverCodigoFamilia para expandir al siguiente codigo
+  // de la serie (ver §2.4-bis del manual de Sesiones).
+  if (Key <> VK_F3) or (Shift <> []) then Exit;
+  if not Assigned(AItem) then Exit;
+  if AItem <> dbcLinCodigoArt then Exit;
+  if not EsSesionEditable then Exit;
+
+  frmSel := TfrmModalSelFamilia.Create(Self);
+  try
+    if frmSel.ShowModal = mrOk then
+    begin
+      if not (dmComprasSesiones.unqrySesionLin.State in [dsEdit, dsInsert]) then
+        dmComprasSesiones.unqrySesionLin.Edit;
+      dmComprasSesiones.unqrySesionLin
+        .FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString
+          := frmSel.CodigoFamilia;
+      // Si la descripcion esta vacia, prerellenarla con el nombre de la
+      // familia para que la linea quede minimamente identificada hasta
+      // que el usuario teclee algo mas concreto.
+      if dmComprasSesiones.unqrySesionLin
+           .FieldByName('DESCRIPCION_SESLIN').AsString = '' then
+        dmComprasSesiones.unqrySesionLin
+          .FieldByName('DESCRIPCION_SESLIN').AsString
+            := frmSel.NombreFamilia;
+      // El Post real lo dispara el usuario al moverse de fila; cuando lo haga
+      // BeforePost del dataset expandira al codigo autogenerado.
+    end;
+  finally
+    frmSel.Free;
+  end;
+  Key := 0;
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(

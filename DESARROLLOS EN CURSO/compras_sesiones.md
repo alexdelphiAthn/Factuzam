@@ -182,6 +182,53 @@ queda quemado (hueco numérico). Es aceptable a cambio de poder mostrar
 el código tentativo desde el primer momento y poder etiquetar/escanear
 durante el flujo de pre-pedido.
 
+#### Configuración por familia (pantalla Familias)
+
+En la pestaña «Más Datos» del mantenimiento de Familias hay un GroupBox
+**«Autogenerar código de artículo desde esta familia»** con tres
+controles:
+
+| Control                  | Campo               | Significado                                          |
+|--------------------------|---------------------|------------------------------------------------------|
+| `chkEsContadorArtFam`    | `ESCONTADOR_ART_FAM`| Activa/desactiva el atajo en esta familia            |
+| `spnContadorArt`         | `CONTADOR_ART_FAM`  | Último número emitido (0 al arrancar)                |
+| `spnPadArt`              | `PAD_ART_FAM`       | Nº de dígitos del relleno (default 5, rango 1–12)    |
+
+Etiqueta de ejemplo bajo los controles: «contador 0, dígitos 5 →
+próximo código = FAM00001».
+
+Cambio en `UniDataFamilias.dfm`: el `unqryTablaG` ahora consulta
+directamente `fza_articulos_familias` (con LEFT JOIN para
+`NOMBRE_SUBFAMILIA`) en lugar de la vista `vi_articulos_familias` —
+evita modificar la vista para añadir los tres campos nuevos.
+
+#### Tecla F3 sobre la columna «Código artículo»
+
+Para no obligar al usuario a recordar de memoria el código de cada
+familia, en la columna `dbcLinCodigoArt` del grid de líneas la tecla
+**F3** abre un modal selector jerárquico:
+
+- `inMtoModalSelFamilia` — un `TcxDBTreeList` con todas las familias
+  activas, ordenadas por `ORDEN_FAM`, con jerarquía padre/hijo según
+  `CODIGO_SUBFAMILIA_FAM`.
+- Caja de búsqueda arriba: al teclear, la consulta cambia a búsqueda
+  plana por `CODIGO_FAM_FAM LIKE '%xxx%' OR NOMBRE_FAM_FAM LIKE …`.
+- Doble click o **Enter** acepta; **ESC** cancela.
+
+Al aceptar, el modal devuelve `CodigoFamilia` y `NombreFamilia`. El form
+de la sesión:
+
+1. Pone el dataset de líneas en `Edit` si no lo estaba.
+2. Asigna `CODIGO_ART_TENTATIVO_SESLIN := CodigoFamilia`.
+3. Si la descripción estaba vacía, la prerellena con `NombreFamilia`
+   para que la línea quede identificada hasta que el usuario teclee
+   algo más específico.
+
+El `Post` real se produce cuando el usuario se mueve de fila — y en ese
+momento el `BeforePost` invoca `ResolverCodigoFamilia` que expande al
+código numérico final (`BOLSOS00001`), incrementa el contador y
+sustituye el código tentativo.
+
 ### 2.5 Precio de coste y precio de venta (tarifa)
 
 La sesión maneja **dos precios** por línea:
@@ -554,6 +601,7 @@ En cualquier punto antes del paso 7 la sesión puede:
 | `src/DataModules/UniDataComprasSesiones.pas` + `.dfm`   | DataModule con UniQueries y triggers.    |
 | `src/Modals/inMtoModalSesionMaterializar.pas` + `.dfm`  | Diálogo de confirmación + opciones.      |
 | `src/Modals/inMtoModalSesionDuplicado.pas` + `.dfm`     | Resolver código duplicado por línea.     |
+| `src/Modals/inMtoModalSelFamilia.pas` + `.dfm`          | Selector jerárquico de familia (F3 sobre código artículo). |
 | `src/Lib/inLibComprasSesiones.pas`                      | Lógica matriz pivotada (similar a `inLibArticulosVariaciones`) + materialización. |
 | `src/Lib/inLibComprasSesionesMaterializar.pas`          | Transacción de materialización.          |
 | `DESARROLLOS EN CURSO/compras_sesiones.sql`             | DDL del esquema.                          |
