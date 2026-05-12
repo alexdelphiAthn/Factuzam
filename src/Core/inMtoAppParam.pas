@@ -611,7 +611,8 @@ begin
 
     if usuarios.Count = 0 then
     begin
-      ShowMessage('No hay usuarios con parámetros guardados para este formulario.');
+      ShowMessage(
+        'No hay usuarios con parámetros guardados para este formulario.');
       Exit;
     end;
 

@@ -303,7 +303,8 @@ type
     procedure btImprimirEtiquetasClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
-    procedure dbcTarifasMARGENButtonClick(Sender: TObject; AButtonIndex: Integer);
+    procedure dbcTarifasMARGENButtonClick(Sender: TObject;
+                                          AButtonIndex: Integer);
     procedure dbcTarifasMARGENGetDisplayText(
       Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord;
@@ -559,14 +560,19 @@ begin
     dmmArticulos.unqryTablaG.Post;
 
   // 2. Leemos los datos clave del dataset principal
-  CodArticulo   := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  TipoVariacion := dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString;
+  CodArticulo   :=
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  TipoVariacion :=
+    dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString;
 
   // 3. Validamos que haya un esquema de variación asignado
   if (CodArticulo = '') or (TipoVariacion = '') then
   begin
-    ShowMessage('El artículo debe tener asignado un "Tipo de variación" y estar guardado para poder generar SKUs.');
-    FCbbTipoVariacion.SetFocus; // Mandamos al usuario al combo para que lo elija
+    ShowMessage(
+      'El artículo debe tener asignado un "Tipo de variación" y estar ' +
+      'guardado para poder generar SKUs.');
+    // Mandamos al usuario al combo para que lo elija
+    FCbbTipoVariacion.SetFocus;
     Exit;
   end;
 
@@ -699,10 +705,12 @@ begin
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 
-  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  CodArticulo :=
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
 
   frmSel := TfrmMtoModalAddPreciosTar.Create(Self);
-  frmSel.OnClose := nil; // evitamos el caFree heredado para poder hacer Free manual
+  // evitamos el caFree heredado para poder hacer Free manual
+  frmSel.OnClose := nil;
   ListaSkus    := TStringList.Create;
   ListaTarifas := TStringList.Create;
   SkusSel      := TStringList.Create;
@@ -778,9 +786,12 @@ begin
         HaySolapamiento := Cond1 and Cond2;
         if HaySolapamiento then
         begin
-          LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString + '|' +
-                        dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-          TarifasActivas.Add(LlaveUnica); // Marcamos combinación como ocupada en estas fechas
+          LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName(
+            'CODIGO_UNIDAD_ARTTAR').AsString + '|' +
+                        dmmArticulos.unqryTarifasArticulos.FieldByName(
+                          'CODIGO_TAR_ARTTAR').AsString;
+          // Marcamos combinación como ocupada en estas fechas
+          TarifasActivas.Add(LlaveUnica);
         end;
         dmmArticulos.unqryTarifasArticulos.Next;
       end;
@@ -801,11 +812,14 @@ begin
 
           dmmArticulos.unqryTarifasArticulos.Append;
           if SkusSel[i] = 'ARTÍCULO' then
-            dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := ''
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'CODIGO_UNIDAD_ARTTAR').AsString := ''
           else
-            dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := SkusSel[i];
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'CODIGO_UNIDAD_ARTTAR').AsString := SkusSel[i];
 
-          dmmArticulos.unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString := TarifasSel[j];
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
+            'CODIGO_TAR_ARTTAR').AsString := TarifasSel[j];
 
           // Para filas de SKU heredamos el precio del padre (fila del
           // artículo en la misma tarifa) si existe; si no, queda a 0.
@@ -816,18 +830,25 @@ begin
                                                        codArticulo,
                                                        TarifasSel[j]);
 
-          dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
-          dmmArticulos.unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
+            'PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
+            'PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
           if PrecioPadre > 0 then
-            dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'S'
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'ESACTIVO_ARTTAR').AsString := 'S'
           else
-            dmmArticulos.unqryTarifasArticulos.FieldByName('ESACTIVO_ARTTAR').AsString := 'N';
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'ESACTIVO_ARTTAR').AsString := 'N';
 
-          dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
+            'FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
           if TieneUserHasta then
-            dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
           else
-            dmmArticulos.unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR').Clear;
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+              'FECHA_HASTA_ARTTAR').Clear;
 
           dmmArticulos.unqryTarifasArticulos.Post;
           TarifasActivas.Add(LlaveUnica);
@@ -1179,10 +1200,12 @@ begin
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 
-  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  CodArticulo :=
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
-    ShowMessage('Seleccione o guarde un artículo antes de generar códigos de barras.');
+    ShowMessage(
+      'Seleccione o guarde un artículo antes de generar códigos de barras.');
     Exit;
   end;
 
@@ -1326,10 +1349,10 @@ begin
     dmmArticulos.unqryVariacionesArticulos.Close;
     dmmArticulos.unqryVariacionesArticulos.Open;
     ActualizarVisibilidadVariaciones;
-    ShowMessage(Format('Generación finalizada.'                       + sLineBreak +
-                       '- EAN-13 internos creados: %d'                 + sLineBreak +
-                       '- Filas vacías de fabricante creadas: %d'      + sLineBreak +
-                       '- SKUs ya completos (saltados): %d'            + sLineBreak +
+    ShowMessage(Format('Generación finalizada.' + sLineBreak +
+                       '- EAN-13 internos creados: %d' + sLineBreak +
+                       '- Filas vacías de fabricante creadas: %d' + sLineBreak +
+                       '- SKUs ya completos (saltados): %d' + sLineBreak +
                        '- Placeholders _FAB_ obsoletos eliminados: %d',
                        [iGenerados, iVacios, iSaltados, iLimpiados]));
   finally
@@ -1349,7 +1372,8 @@ begin
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 
-  CodArticulo := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  CodArticulo :=
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
     ShowMessage('Seleccione o guarde un artículo antes de verificar.');
@@ -1512,9 +1536,11 @@ begin
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
-  if dmmArticulos.unqryTablaG.Active and (dmmArticulos.unqryTablaG.RecordCount > 0) then
+  if dmmArticulos.unqryTablaG.Active
+     and (dmmArticulos.unqryTablaG.RecordCount > 0) then
   begin
-    FArticuloCargado := dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    FArticuloCargado :=
+      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     FGestorProp.CargarPropiedades(FArticuloCargado);
   end else
     FArticuloCargado := ''; // Por si acaso arranca vacío
@@ -1597,7 +1623,8 @@ begin
   FCbbTipoVariacion.Properties.ListSource     := dmmArticulos.dsVariaciones;
   FCbbTipoVariacion.Properties.KeyFieldNames  := 'CODIGO_VAR';
   FCbbTipoVariacion.Properties.ListFieldNames := 'NOMBRE_VAR';
-  FCbbTipoVariacion.Properties.ReadOnly       := True;  // por defecto solo lectura
+  // por defecto solo lectura
+  FCbbTipoVariacion.Properties.ReadOnly       := True;
   FCbbTipoVariacion.Properties.ListOptions.ShowHeader := False;
   // ── Zona atributos (scroll) ──
   FScrollVarAtrib := TScrollBox.Create(Self);
@@ -1644,7 +1671,8 @@ var
   CodArticulo: string;
 begin
   if DataSet.ControlsDisabled then Exit;
-  // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez y salimos
+  // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez
+  // y salimos
   if DataSet.State = dsInsert then
   begin
     if FArticuloCargado <> '' then
@@ -1662,7 +1690,8 @@ begin
 
   CodArticulo := DataSet.FieldByName('CODIGO_ART_ART').AsString;
 
-  // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado, ¡no hagas nada!
+  // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado,
+  // ¡no hagas nada!
   if FArticuloCargado = CodArticulo then Exit;
 
   // Actualizamos nuestra memoria
@@ -1692,7 +1721,8 @@ begin
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
-procedure TfrmMtoArticulos.cxDBComboBox1PropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoArticulos.cxDBComboBox1PropertiesEditValueChanged(
+  Sender: TObject);
 begin
   inherited;
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
@@ -1705,7 +1735,8 @@ begin
   ActualizarVisibilidadVariaciones;
 end;
 
-procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
+  Sender: TObject);
 begin
   inherited;
   // 1. Comprobaciones básicas del estado del formulario
@@ -1724,7 +1755,8 @@ begin
   // 4. Validar el estado de edición y la interacción REAL del usuario
   if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
   begin
-    // El Focus garantiza que el evento lo ha disparado el usuario y no un refresco del dataset
+    // El Focus garantiza que el evento lo ha disparado el usuario y no un
+    // refresco del dataset
     if (Sender as TcxDBCheckBox).Focused then
     begin
       (Sender as TcxDBCheckBox).PostEditValue;
@@ -1757,9 +1789,11 @@ begin
         FindField('PORCENTAJE_DTO_ARTTAR').AsString := VarToStr(e.EditingValue);
         FindField('PRECIO_DTO_ARTTAR').AsFloat :=
                                (FindField('PRECIO_SALIDA_ARTTAR').AsFloat * (
-                                FindField('PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
+                                FindField(
+                                  'PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
         FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                    ( FindField(
+                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
                                       FindField('PRECIO_DTO_ARTTAR').AsFloat
                                     );
       end;
@@ -1783,7 +1817,8 @@ var
         begin
           FindField('PRECIO_DTO_ARTTAR').AsFloat :=
                                 (FindField('PRECIO_FINAL_ARTTAR').AsFloat * (
-                                 FindField('PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
+                                 FindField(
+                                   'PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
           FindField('PRECIO_SALIDA_ARTTAR').AsFloat :=
                                         FindField('PRECIO_FINAL_ARTTAR').AsFloat
                                        - FindField('PRECIO_DTO_ARTTAR').AsFloat;
@@ -1791,7 +1826,8 @@ var
         else
         begin
           FindField('PRECIO_SALIDA_ARTTAR').AsString :=
-                                       FindField('PRECIO_FINAL_ARTTAR').AsString;
+                                       FindField(
+                                         'PRECIO_FINAL_ARTTAR').AsString;
           FindField('PRECIO_DTO_ARTTAR').AsFloat := 0;
           FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
         end;
@@ -1813,7 +1849,8 @@ begin
         e := Sender as TcxCustomEdit;
         FindField('PRECIO_SALIDA_ARTTAR').AsString := VarToStr(e.EditingValue);
         FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                    ( FindField(
+                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
                                       FindField('PRECIO_DTO_ARTTAR').AsFloat
                                     );
       end;
@@ -1838,9 +1875,11 @@ begin
         begin
           FindField('PORCENTAJE_DTO_ARTTAR').AsFloat :=
                              ((FindField('PRECIO_DTO_ARTTAR').AsFloat /
-                               FindField('PRECIO_SALIDA_ARTTAR').AsFloat) * 100);
+                               FindField(
+                                 'PRECIO_SALIDA_ARTTAR').AsFloat) * 100);
           FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                                    ( FindField(
+                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
                                       FindField('PRECIO_DTO_ARTTAR').AsFloat);
         end;
       end;

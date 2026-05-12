@@ -170,7 +170,10 @@ procedure TfrmMtoComprasPlantillas.btnDelPropClick(Sender: TObject);
 begin
   inherited;
   if unqryPlantillaProps.IsEmpty then Exit;
-  if MessageDlg('¿Borrar la propiedad?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Borrar la propiedad?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     unqryPlantillaProps.Delete;
 end;
 
@@ -184,7 +187,10 @@ procedure TfrmMtoComprasPlantillas.btnDelKitClick(Sender: TObject);
 begin
   inherited;
   if unqryPlantillaKits.IsEmpty then Exit;
-  if MessageDlg('¿Borrar el kit?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('¿Borrar el kit?',
+                mtConfirmation,
+                [mbYes, mbNo],
+                0) = mrYes then
     unqryPlantillaKits.Delete;
 end;
 

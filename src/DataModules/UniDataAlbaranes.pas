@@ -61,11 +61,13 @@ type
     procedure InstalarProcedimientos;
 
     // Genera factura del albarán cargado en pantalla con las líneas indicadas.
-    // Si aLineas es nil, se facturan todas las líneas no facturadas del albarán.
+    // Si aLineas es nil, se facturan todas las líneas no facturadas del
+    // albarán.
     function CrearFacturaDesdeAlbaran(out sNumeroFac, sSerieFac: string;
                                       aLineas: TList<string>): Boolean;
 
-    // Procesa una lista de albaranes (formato 'SERIE|NUMERO') y genera factura(s).
+    // Procesa una lista de albaranes (formato 'SERIE|NUMERO') y genera
+    // factura(s).
     // Si bAgruparPorCliente es True, agrupa los albaranes del mismo cliente
     // en una única factura. Devuelve número de facturas generadas.
     function FacturarAlbaranesLista(aListaAlbaranes: TStrings;
@@ -177,7 +179,8 @@ begin
   with unqryAlbaranesLineas do
   begin
     FieldByName('NUMERO_ALB_ALBLIN').AsString :=
-                                  unqryTablaG.FieldByName('NUMERO_ALB').AsString;
+                                  unqryTablaG.FieldByName(
+                                    'NUMERO_ALB').AsString;
     FieldByName('SERIE_ALB_ALBLIN').AsString  :=
                                   unqryTablaG.FieldByName('SERIE_ALB').AsString;
     FieldByName('CANTIDAD_ALBLIN').AsFloat := 1;
@@ -214,7 +217,8 @@ begin
         unqrySkusAlb.Open;
         if not unqrySkusAlb.Eof then
           FieldByName('CODIGO_ART_ALBLIN').AsString :=
-                                  unqrySkusAlb.FieldByName('CODIGO_ART_SKU').AsString;
+                                  unqrySkusAlb.FieldByName(
+                                    'CODIGO_ART_SKU').AsString;
         unqrySkusAlb.Close;
       end;
     end;
@@ -237,11 +241,13 @@ begin
     Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    ParamByName('pserie').AsString    := unqryTablaG.FieldByName('SERIE_ALB').AsString;
+    ParamByName('pserie').AsString    :=
+      unqryTablaG.FieldByName('SERIE_ALB').AsString;
     ParamByName('ptipodoc').AsString  := 'AV';
     ParamByName('pUSUARIOMODIF').AsString := oUser;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
-                                  unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
+                                  unqryTablaG.FieldByName(
+                                    'CODIGO_EMP_ALB').AsString;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_ALB').AsString :=
                                                   ParamByName('pcont').AsString;
@@ -261,9 +267,11 @@ begin
     unqryAlbaranesLineas.First;
     while not unqryAlbaranesLineas.Eof do
     begin
-      fPorIva := unqryAlbaranesLineas.FieldByName('PORCENTAJE_IVA_ALBLIN').AsFloat / 100;
+      fPorIva :=
+        unqryAlbaranesLineas.FieldByName('PORCENTAJE_IVA_ALBLIN').AsFloat / 100;
       fTotal  := unqryAlbaranesLineas.FieldByName('CANTIDAD_ALBLIN').AsFloat *
-                 unqryAlbaranesLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN').AsFloat;
+                 unqryAlbaranesLineas.FieldByName(
+                   'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN').AsFloat;
       fBase := fBase + fTotal;
       fIva  := fIva  + (fTotal * fPorIva);
       unqryAlbaranesLineas.Next;
@@ -290,19 +298,32 @@ begin
   begin
     if (State <> dsEdit) and (State <> dsInsert) then
       Edit;
-    FindField('CODIGO_EMP_ALB').AsString             := DataSet.FindField('CODIGO_EMP_EMP').AsString;
-    FindField('RAZON_SOCIAL_EMPRESA_ALB').AsString   := DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
-    FindField('NIF_EMPRESA_ALB').AsString            := DataSet.FindField('NIF_EMP').AsString;
-    FindField('MOVIL_EMPRESA_ALB').AsString          := DataSet.FindField('MOVIL_EMP').AsString;
-    FindField('EMAIL_EMPRESA_ALB').AsString          := DataSet.FindField('EMAIL_EMP').AsString;
-    FindField('DIRECCION1_EMPRESA_ALB').AsString     := DataSet.FindField('DIRECCION1_EMP').AsString;
-    FindField('DIRECCION2_EMPRESA_ALB').AsString     := DataSet.FindField('DIRECCION2_EMP').AsString;
-    FindField('POBLACION_EMPRESA_ALB').AsString      := DataSet.FindField('POBLACION_EMP').AsString;
-    FindField('PROVINCIA_EMPRESA_ALB').AsString      := DataSet.FindField('PROVINCIA_EMP').AsString;
-    FindField('CODIGO_POSTAL_EMPRESA_ALB').AsString  := DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
-    FindField('NOMBRE_PAI_EMPRESA_ALB').AsString     := DataSet.FindField('NOMBRE_PAI_EMP').AsString;
-    FindField('CODIGO_PAI_EMPRESA_ALB').AsString     := DataSet.FindField('CODIGO_PAI_EMP').AsString;
-    FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString := DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
+    FindField('CODIGO_EMP_ALB').AsString             :=
+      DataSet.FindField('CODIGO_EMP_EMP').AsString;
+    FindField('RAZON_SOCIAL_EMPRESA_ALB').AsString   :=
+      DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
+    FindField('NIF_EMPRESA_ALB').AsString            :=
+      DataSet.FindField('NIF_EMP').AsString;
+    FindField('MOVIL_EMPRESA_ALB').AsString          :=
+      DataSet.FindField('MOVIL_EMP').AsString;
+    FindField('EMAIL_EMPRESA_ALB').AsString          :=
+      DataSet.FindField('EMAIL_EMP').AsString;
+    FindField('DIRECCION1_EMPRESA_ALB').AsString     :=
+      DataSet.FindField('DIRECCION1_EMP').AsString;
+    FindField('DIRECCION2_EMPRESA_ALB').AsString     :=
+      DataSet.FindField('DIRECCION2_EMP').AsString;
+    FindField('POBLACION_EMPRESA_ALB').AsString      :=
+      DataSet.FindField('POBLACION_EMP').AsString;
+    FindField('PROVINCIA_EMPRESA_ALB').AsString      :=
+      DataSet.FindField('PROVINCIA_EMP').AsString;
+    FindField('CODIGO_POSTAL_EMPRESA_ALB').AsString  :=
+      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
+    FindField('NOMBRE_PAI_EMPRESA_ALB').AsString     :=
+      DataSet.FindField('NOMBRE_PAI_EMP').AsString;
+    FindField('CODIGO_PAI_EMPRESA_ALB').AsString     :=
+      DataSet.FindField('CODIGO_PAI_EMP').AsString;
+    FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString :=
+      DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
   end;
 end;
 
@@ -312,22 +333,37 @@ begin
   begin
     if (State <> dsEdit) and (State <> dsInsert) then
       Edit;
-    FindField('CODIGO_CLI_ALB').AsString          := DataSet.FindField('CODIGO_CLI_CLI').AsString;
-    FindField('RAZON_SOCIAL_CLIENTE_ALB').AsString:= DataSet.FindField('RAZON_SOCIAL_CLI').AsString;
-    FindField('NIF_CLIENTE_ALB').AsString         := DataSet.FindField('NIF_CLI').AsString;
-    FindField('MOVIL_CLIENTE_ALB').AsString       := DataSet.FindField('MOVIL_CLI').AsString;
-    FindField('EMAIL_CLIENTE_ALB').AsString       := DataSet.FindField('EMAIL_CLI').AsString;
-    FindField('DIRECCION1_CLIENTE_ALB').AsString  := DataSet.FindField('DIRECCION1_CLI').AsString;
-    FindField('DIRECCION2_CLIENTE_ALB').AsString  := DataSet.FindField('DIRECCION2_CLI').AsString;
-    FindField('POBLACION_CLIENTE_ALB').AsString   := DataSet.FindField('POBLACION_CLI').AsString;
-    FindField('PROVINCIA_CLIENTE_ALB').AsString   := DataSet.FindField('PROVINCIA_CLI').AsString;
-    FindField('CODIGO_POSTAL_CLIENTE_ALB').AsString := DataSet.FindField('CODIGO_POSTAL_CLI').AsString;
-    FindField('NOMBRE_PAI_CLIENTE_ALB').AsString  := DataSet.FindField('NOMBRE_PAI_CLI').AsString;
-    FindField('CODIGO_PAI_CLIENTE_ALB').AsString  := DataSet.FindField('CODIGO_PAI_CLI').AsString;
-    FindField('ESIVA_RECARGO_CLIENTE_ALB').AsString:= DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
-    FindField('ESIVA_EXENTO_CLIENTE_ALB').AsString:= DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
+    FindField('CODIGO_CLI_ALB').AsString          :=
+      DataSet.FindField('CODIGO_CLI_CLI').AsString;
+    FindField('RAZON_SOCIAL_CLIENTE_ALB').AsString:=
+      DataSet.FindField('RAZON_SOCIAL_CLI').AsString;
+    FindField('NIF_CLIENTE_ALB').AsString         :=
+      DataSet.FindField('NIF_CLI').AsString;
+    FindField('MOVIL_CLIENTE_ALB').AsString       :=
+      DataSet.FindField('MOVIL_CLI').AsString;
+    FindField('EMAIL_CLIENTE_ALB').AsString       :=
+      DataSet.FindField('EMAIL_CLI').AsString;
+    FindField('DIRECCION1_CLIENTE_ALB').AsString  :=
+      DataSet.FindField('DIRECCION1_CLI').AsString;
+    FindField('DIRECCION2_CLIENTE_ALB').AsString  :=
+      DataSet.FindField('DIRECCION2_CLI').AsString;
+    FindField('POBLACION_CLIENTE_ALB').AsString   :=
+      DataSet.FindField('POBLACION_CLI').AsString;
+    FindField('PROVINCIA_CLIENTE_ALB').AsString   :=
+      DataSet.FindField('PROVINCIA_CLI').AsString;
+    FindField('CODIGO_POSTAL_CLIENTE_ALB').AsString :=
+      DataSet.FindField('CODIGO_POSTAL_CLI').AsString;
+    FindField('NOMBRE_PAI_CLIENTE_ALB').AsString  :=
+      DataSet.FindField('NOMBRE_PAI_CLI').AsString;
+    FindField('CODIGO_PAI_CLIENTE_ALB').AsString  :=
+      DataSet.FindField('CODIGO_PAI_CLI').AsString;
+    FindField('ESIVA_RECARGO_CLIENTE_ALB').AsString:=
+      DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
+    FindField('ESIVA_EXENTO_CLIENTE_ALB').AsString:=
+      DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
     FindField('ESINTRACOMUNITARIO_CLIENTE_ALB').AsString :=
-                            DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
+                            DataSet.FindField(
+                              'ESINTRACOMUNITARIO_CLI').AsString;
     FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString :=
                             DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
   end;
@@ -363,15 +399,18 @@ begin
     // fza_facturas_lineas, sólo cambia el sufijo); permiten propagar la
     // información hacia la factura.
     Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS CODIGO_UNIDAD_ALBLIN VARCHAR(50) DEFAULT NULL');
+        'ADD COLUMN IF NOT EXISTS CODIGO_UNIDAD_ALBLIN VARCHAR(50) DEFAULT ' +
+        'NULL');
     Run('ALTER TABLE fza_albaranes_lineas ' +
         'ADD COLUMN IF NOT EXISTS LOTE_ALBLIN VARCHAR(50) DEFAULT NULL');
     Run('ALTER TABLE fza_albaranes_lineas ' +
         'ADD COLUMN IF NOT EXISTS FECHA_CADUCIDAD_ALBLIN DATE DEFAULT NULL');
     Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS DESCRIPCION_VARIACION_ALBLIN VARCHAR(200) DEFAULT NULL');
+        'ADD COLUMN IF NOT EXISTS DESCRIPCION_VARIACION_ALBLIN VARCHAR(200) ' +
+        'DEFAULT NULL');
 
-    // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer albarán.
+    // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer
+    // albarán.
     Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_INICIO');
     Run(
       'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_INICIO(' +
@@ -385,7 +424,8 @@ begin
       '  DECLARE v_numero varchar(20); ' +
       '  SELECT SERIE_ALB INTO v_serie FROM fza_albaranes ' +
       '   WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ''0'') ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ' +
+      '''0'') ' +
       '    INTO v_numero FROM fza_facturas WHERE SERIE_FAC = v_serie; ' +
       '  INSERT INTO fza_facturas ( ' +
       '    NUMERO_FAC, SERIE_FAC, FECHA_FAC, FASE_FAC, TIPO_FAC, ' +
@@ -410,13 +450,15 @@ begin
       '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
       '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
-      '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, A.NIF_EMPRESA_ALB, ' +
+      '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, ' +
+      'A.NIF_EMPRESA_ALB, ' +
       '         A.MOVIL_EMPRESA_ALB, A.EMAIL_EMPRESA_ALB, ' +
       '         A.DIRECCION1_EMPRESA_ALB, A.DIRECCION2_EMPRESA_ALB, ' +
       '         A.POBLACION_EMPRESA_ALB, A.PROVINCIA_EMPRESA_ALB, ' +
       '         A.CODIGO_PAI_EMPRESA_ALB, A.NOMBRE_PAI_EMPRESA_ALB, ' +
       '         A.CODIGO_POSTAL_EMPRESA_ALB, A.GRUPO_ZONA_IVA_EMPRESA_ALB, ' +
-      '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, A.NIF_CLIENTE_ALB, ' +
+      '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, ' +
+      'A.NIF_CLIENTE_ALB, ' +
       '         A.MOVIL_CLIENTE_ALB, A.EMAIL_CLIENTE_ALB, ' +
       '         A.DIRECCION1_CLIENTE_ALB, A.DIRECCION2_CLIENTE_ALB, ' +
       '         A.POBLACION_CLIENTE_ALB, A.PROVINCIA_CLIENTE_ALB, ' +
@@ -425,7 +467,8 @@ begin
       '         A.CODIGO_IVA_ALB, ' +
       '         A.ESIVA_RECARGO_CLIENTE_ALB, A.ESIVA_EXENTO_CLIENTE_ALB, ' +
       '         A.ESINTRACOMUNITARIO_CLIENTE_ALB, ' +
-      '         A.TARIFA_ARTICULO_CLIENTE_ALB, A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
+      '         A.TARIFA_ARTICULO_CLIENTE_ALB, ' +
+      'A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
       '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
       '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
       '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
@@ -456,7 +499,8 @@ begin
       '  IF v_facturada = ''S'' THEN ' +
       '    LEAVE PRC; ' +
       '  END IF; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)), 0) + 10, 4, ''0'') ' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)), 0) + 10, 4, ' +
+      '''0'') ' +
       '    INTO v_linea_fac FROM fza_facturas_lineas ' +
       '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
       '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
@@ -477,9 +521,11 @@ begin
       '         AL.CODIGO_ART_ALBLIN, AL.CODIGO_UNIDAD_ALBLIN, ' +
       '         AL.LOTE_ALBLIN, AL.FECHA_CADUCIDAD_ALBLIN, ' +
       '         AL.CODIGO_FAM_ALBLIN, AL.NOMBRE_FAM_ALBLIN, ' +
-      '         AL.DESCRIPCION_ARTICULO_ALBLIN, AL.DESCRIPCION_VARIACION_ALBLIN, ' +
+      '         AL.DESCRIPCION_ARTICULO_ALBLIN, ' +
+      'AL.DESCRIPCION_VARIACION_ALBLIN, ' +
       '         AL.TIPO_CANTIDAD_ARTICULO_ALBLIN, ' +
-      '         AL.CANTIDAD_ALBLIN, AL.CODIGO_TAR_ALBLIN, AL.ESIMP_INCL_TARIFA_ALBLIN, ' +
+      '         AL.CANTIDAD_ALBLIN, AL.CODIGO_TAR_ALBLIN, ' +
+      'AL.ESIMP_INCL_TARIFA_ALBLIN, ' +
       '         AL.TIPO_IVA_ARTICULO_ALBLIN, AL.PORCENTAJE_IVA_ALBLIN, ' +
       '         AL.PRECIO_VENTA_SIVA_ARTICULO_ALBLIN, ' +
       '         AL.PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, ' +
@@ -501,7 +547,8 @@ begin
       '     AND LINEA_ALBLIN      = p_LINEA_ALB; ' +
       'END');
 
-    // PRC_ALB_CREAR_FACTURA_FIN: recalcula totales y marca albarán como facturado
+    // PRC_ALB_CREAR_FACTURA_FIN: recalcula totales y marca albarán como
+    // facturado
     // si todas sus líneas se han facturado.
     Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_FIN');
     Run(
@@ -515,8 +562,11 @@ begin
       '  DECLARE v_total_base decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_total_iva  decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_pendientes int DEFAULT 0; ' +
-      '  SELECT IFNULL(SUM(CANTIDAD_FACLIN * PRECIO_VENTA_SIVA_ARTICULO_FACLIN), 0), ' +
-      '         IFNULL(SUM(CANTIDAD_FACLIN * (PRECIO_VENTA_CIVA_ARTICULO_FACLIN - PRECIO_VENTA_SIVA_ARTICULO_FACLIN)), 0) ' +
+      '  SELECT IFNULL(SUM(CANTIDAD_FACLIN * ' +
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN), 0), ' +
+      '         IFNULL(SUM(CANTIDAD_FACLIN * ' +
+      '(PRECIO_VENTA_CIVA_ARTICULO_FACLIN - ' +
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN)), 0) ' +
       '    INTO v_total_base, v_total_iva ' +
       '    FROM fza_facturas_lineas ' +
       '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
@@ -558,7 +608,8 @@ begin
   end;
 end;
 
-function TdmAlbaranes.CrearFacturaDesdeAlbaran(out sNumeroFac, sSerieFac: string;
+function TdmAlbaranes.CrearFacturaDesdeAlbaran(out sNumeroFac,
+                                               sSerieFac: string;
                                                aLineas: TList<string>): Boolean;
 var
   i: Integer;
@@ -617,7 +668,8 @@ begin
             ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
             ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
             ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-            ParamByName('p_LINEA_ALB').AsString  := ds.FieldByName('LINEA_ALBLIN').AsString;
+            ParamByName('p_LINEA_ALB').AsString  :=
+              ds.FieldByName('LINEA_ALBLIN').AsString;
             ParamByName('p_USUARIO').AsString    := oUser;
             ExecProc;
           end;
@@ -786,7 +838,8 @@ begin
           ParamByName('p_SERIE_FAC').AsString  := sSerFac;
           ParamByName('p_NUMERO_ALB').AsString := sNum;
           ParamByName('p_SERIE_ALB').AsString  := sSer;
-          ParamByName('p_LINEA_ALB').AsString  := qLin.FieldByName('LINEA_ALBLIN').AsString;
+          ParamByName('p_LINEA_ALB').AsString  :=
+            qLin.FieldByName('LINEA_ALBLIN').AsString;
           ParamByName('p_USUARIO').AsString    := oUser;
           ExecProc;
         end;
@@ -794,7 +847,8 @@ begin
       end;
       qLin.Close;
 
-      // Cerrar el albarán: marcar como facturado si no quedan líneas pendientes.
+      // Cerrar el albarán: marcar como facturado si no quedan líneas
+      // pendientes.
       with unstrdprcCrearFacturaFin do
       begin
         Params.Clear;
@@ -899,7 +953,9 @@ begin
             Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+            Params.CreateParam(ftString,
+                               'p_CODIGO_ALMACEN_CONTRA_MOV',
+                               ptInput);
             Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
             Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
             Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
@@ -912,7 +968,8 @@ begin
             Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
             Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
             ParamByName('p_NUMERO_MOV').AsString          :=
-                                            inLibtb.ObtenerSiguienteContador('MV');
+                                            inLibtb.ObtenerSiguienteContador(
+                                              'MV');
             ParamByName('p_TIPO_DOC_MOV').AsString        := 'AV';
             ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieAlb;
             ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroAlb;

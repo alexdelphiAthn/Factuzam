@@ -27,7 +27,8 @@ uses
   dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset, cxTextEdit, dxBevel,
+  cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
+  cxTextEdit, dxBevel,
   inLibDevExp, cxGridExportLink, inLibUser, System.UITypes, UniDataPerfiles,
   Uni, inLibDir, inLibtb, Data.DBCommon, inLibWin, UniDataConn, cxBlobEdit,
   dxCore, dxScrollbarAnnotations, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
@@ -232,7 +233,8 @@ begin
       for cxGrid in oGrids do
       begin
         if SameText(Trim(GetPerfilValueDef(oPerfilDic,
-                          cxGrid.Name + '__oCreateItems', 'False')), 'True') then
+                          cxGrid.Name
+                            + '__oCreateItems', 'False')), 'True') then
         begin
           oDBCtrl := GetDBDataController(cxGrid);
           if oDBCtrl <> nil then
@@ -265,7 +267,8 @@ begin
     oGrids.Free;
   end;
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
-  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')), 'True') then
+  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
+              'True') then
     SetLabelForm(Self, oPerfilDic);
 
 //  tsPerfil.TabVisible := false;
@@ -408,12 +411,17 @@ begin
     item.UserGroup := sPermisos;
     item.KeyPerfil := Self.Name;
     for var par in [
-      TPair<string,string>.Create('oRenameComponents', GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
-      TPair<string,string>.Create('oCreateItems',      GetPerfilValueDef(oPerfilDic, 'oCreateItems',      'False')),
-      TPair<string,string>.Create('oBusqGlobal',       GetPerfilValueDef(oPerfilDic, 'oBusqGlobal',       'Grid')),
+      TPair<string,string>.Create('oRenameComponents',
+        GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
+      TPair<string,string>.Create('oCreateItems',
+        GetPerfilValueDef(oPerfilDic, 'oCreateItems',      'False')),
+      TPair<string,string>.Create('oBusqGlobal',
+        GetPerfilValueDef(oPerfilDic, 'oBusqGlobal',       'Grid')),
       TPair<string,string>.Create('oApplyWidth',       'True'),
-      TPair<string,string>.Create('oMostrarPerfil',    GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil',    'False')),
-      TPair<string,string>.Create('oGetSQLFromDB',     GetPerfilValueDef(oPerfilDic, 'oGetSQLFromDB',     'False'))
+      TPair<string,string>.Create('oMostrarPerfil',
+        GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil',    'False')),
+      TPair<string,string>.Create('oGetSQLFromDB',
+        GetPerfilValueDef(oPerfilDic, 'oGetSQLFromDB',     'False'))
     ] do
     begin
       item.SubKey := par.Key;
@@ -436,7 +444,8 @@ begin
 
         item.SubKey := cxGrid.Name + '__oCreateItems';
         item.Value  := GetPerfilValueDef(oPerfilDic,
-                                         cxGrid.Name + '__oCreateItems', 'False');
+                                         cxGrid.Name + '__oCreateItems',
+                                         'False');
         oList.Add(item);
 
         CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
@@ -685,7 +694,8 @@ begin
     if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and not
        dsTablaG.DataSet.IsEmpty and (dsTablaG.State = dsBrowse) then
     begin
-      if Application.MessageBox('¿Estás seguro de que deseas eliminar este registro?',
+      if Application.MessageBox(
+        '¿Estás seguro de que deseas eliminar este registro?',
                                 'Confirmar eliminación',
                                 MB_YESNO + MB_ICONWARNING) = ID_YES then
       begin

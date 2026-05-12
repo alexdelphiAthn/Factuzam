@@ -187,7 +187,8 @@ begin
         '          o.IMPORTE_TOTAL_OPCAJA, ' +
         '          a.DESCRIPCION_ART ' +
         '     FROM fza_caja_operaciones o ' +
-        'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA ' +
+        'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = ' +
+        'o.ID_DEPOSITO_OPCAJA ' +
         'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
         '    WHERE o.CODIGO_EMP_OPCAJA = :EMP ' +
         '      AND o.CODIGO_ALM_OPCAJA = :ALM ' +
@@ -752,11 +753,13 @@ begin
           Ticket.Negrita(True);
           Ticket.EscribirLinea('EMPRESA:');
           Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s', [CodEmp, Copy(RazonEmp, 1, 36)]));
+          Ticket.EscribirLinea(Format('%-4s %s',
+                                      [CodEmp, Copy(RazonEmp, 1, 36)]));
           Ticket.Negrita(True);
           Ticket.EscribirLinea('CLIENTE:');
           Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s', [CodCli, Copy(RazonCli, 1, 36)]));
+          Ticket.EscribirLinea(Format('%-4s %s',
+                                      [CodCli, Copy(RazonCli, 1, 36)]));
           Ticket.LineaSeparadora('-');
           Ticket.EscribirLinea(Format('%-14s %13s %13s',
                                       ['Fecha/Hora', 'Total', 'Pendiente']));
@@ -766,13 +769,16 @@ begin
           begin
             var IdDep    := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
             var FechaHora := FormatDateTime('dd/mm/yy HH:nn',
-                             QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+                             QryDep.FieldByName(
+                               'FECHA_CREACION_DEP').AsDateTime);
             var SkuDep   := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
             var Precio   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-            var CANTIDAD_ARTVIN := QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+            var CANTIDAD_ARTVIN :=
+              QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
             if CANTIDAD_ARTVIN = 0 then CANTIDAD_ARTVIN := 1;
             var TotalDep  := Precio * CANTIDAD_ARTVIN;
-            var Anticipo  := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+            var Anticipo  :=
+              QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
             var Pendiente := TotalDep - Anticipo;
             TotalPendienteCliente := TotalPendienteCliente + Pendiente;
             var EmpDep := QryDep.FieldByName('CODIGO_EMP_DEP').AsString;
@@ -797,12 +803,18 @@ begin
             QryAnticipo.Open;
             while not QryAnticipo.Eof do
             begin
-              var TipoOp   := QryAnticipo.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-              var Importe  := QryAnticipo.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-              var FechaOpe := QryAnticipo.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
-              var EmpOpe   := QryAnticipo.FieldByName('CODIGO_EMP_OPCAJA').AsString;
-              var AlmOpe   := QryAnticipo.FieldByName('CODIGO_ALM_OPCAJA').AsString;
-              var CajOpe   := QryAnticipo.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+              var TipoOp   :=
+                QryAnticipo.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+              var Importe  :=
+                QryAnticipo.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+              var FechaOpe :=
+                QryAnticipo.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+              var EmpOpe   :=
+                QryAnticipo.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+              var AlmOpe   :=
+                QryAnticipo.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+              var CajOpe   :=
+                QryAnticipo.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
               var Concepto := '';
               if TipoOp = 'DE' then
                 Concepto := '  > Entrega inicial'
@@ -816,7 +828,9 @@ begin
                      FormatDateTime('dd/mm/yy HH:nn', FechaOpe));
               Ticket.EscribirLinea(Format('   %-10s %13s',
                      ['(' + Origen + ')',
-                      '-' + FormatFloat('#,##0.00', Importe) + ' €']));              Ticket.Alinear(alDerecha);
+                      '-' + FormatFloat('#,##0.00',
+                                        Importe
+                      ) + ' €']));              Ticket.Alinear(alDerecha);
               QryAnticipo.Next;
             end;
             Ticket.SaltarLineas(1);

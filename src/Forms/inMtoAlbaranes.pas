@@ -21,7 +21,8 @@ uses
   Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
-  cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB, cxDBData,
+  cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
+  cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
@@ -248,7 +249,8 @@ begin
     if tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBLIN') <> nil then
       iLineaCol := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBLIN').Index;
     if tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN') <> nil then
-      iFactCol := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN').Index;
+      iFactCol :=
+        tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN').Index;
     if iLineaCol < 0 then Exit;
 
     for i := 0 to tvLineasAlbaran.Controller.SelectedRowCount - 1 do

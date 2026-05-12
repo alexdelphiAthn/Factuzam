@@ -240,7 +240,8 @@ begin
   if edtMargen.Value <= 0 then Exit;
 
   // precio = coste * margen / 100
-  // margen 100 -> coste tal cual; 120 -> coste*1.20; 250 -> coste*2.50; 400 -> coste*4
+  // margen 100 -> coste tal cual; 120 -> coste*1.20; 250 -> coste*2.50; 400 ->
+  // coste*4
   bruto := edtCoste.Value * edtMargen.Value / 100;
 
   ajuste := edtAjuste.Value;
@@ -260,7 +261,8 @@ end;
 //   Persistencia
 // ============================================================================
 
-function TfrmModalCalcularMargen.PersistirCambios(out AMensaje: string): Boolean;
+function TfrmModalCalcularMargen.PersistirCambios(
+  out AMensaje: string): Boolean;
 var
   qry: TUniQuery;
   filasCoste: Integer;
@@ -312,8 +314,10 @@ begin
         if filasCoste = 0 then
         begin
           FConn.Rollback;
-          AMensaje := 'El artículo no tiene un proveedor marcado como principal. ' +
-                      'Asigna uno en la pestaña Proveedores antes de guardar el coste.';
+          AMensaje :=
+            'El artículo no tiene un proveedor marcado como principal. ' +
+                      'Asigna uno en la pestaña Proveedores antes de guardar ' +
+                      'el coste.';
           Exit;
         end;
       end;
@@ -327,10 +331,12 @@ begin
       qry.SQL.Text :=
         'UPDATE fza_articulos_tarifas SET ' +
         '  PRECIO_SALIDA_ARTTAR  = :p_salida, ' +
-        '  PRECIO_FINAL_ARTTAR   = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), ' +
+        '  PRECIO_FINAL_ARTTAR   = :p_salida - COALESCE(PRECIO_DTO_ARTTAR, 0), '
+          +
         '  PORCENTAJE_DTO_ARTTAR = CASE ' +
         '                            WHEN :p_salida > 0 ' +
-        '                              THEN (COALESCE(PRECIO_DTO_ARTTAR, 0) / :p_salida) * 100 ' +
+        '                              THEN (COALESCE(PRECIO_DTO_ARTTAR, 0) ' +
+        '/ :p_salida) * 100 ' +
         '                            ELSE 0 ' +
         '                          END, ' +
         '  USUARIO_MODIF         = :p_usuario, ' +

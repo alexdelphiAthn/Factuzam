@@ -17,7 +17,8 @@ unit inMtoModalCliEti;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoModalGenImp, cxGraphics,
   cxLookAndFeels, cxLookAndFeelPainters, Vcl.Menus, frxDesgn, Data.DB, MemDS,
   DBAccess, Uni, frxExportXLSX, frxClass, frxExportBaseDialog, frxExportPDF,

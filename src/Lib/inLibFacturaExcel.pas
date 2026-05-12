@@ -107,7 +107,10 @@ begin
   W(Sheet, 7, COL_DESC, QMaster.FieldByName(
                                         'DIRECCION1_EMPRESA_FAC').AsString);
   Merge(Sheet, 7, COL_DESC, 3, 1);
-  W(Sheet, 8, COL_DESC, QMaster.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString
+  W(Sheet,
+    8,
+    COL_DESC,
+    QMaster.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString
             +  ' ' + QMaster.FieldByName('POBLACION_EMPRESA_FAC').AsString);
   Merge(Sheet, 8, COL_DESC, 3, 1);
   W(Sheet, 4, COL_PIVA, 'RECEPTOR', True); // Negrita

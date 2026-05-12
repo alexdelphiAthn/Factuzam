@@ -11,16 +11,19 @@ type
     function GenerateIndexDefinition(const TableName: string;
                                      const Idx: TIndexInfo): string; override;
     function NormalizeType(const AType: string): string; override;
-    function TriggersAreEqual(const Trg1, Trg2: TTriggerInfo): Boolean; override;
+    function TriggersAreEqual(const Trg1, Trg2: TTriggerInfo): Boolean;
+    override;
     function GenerateCreateTableSQL(const Table: TTableInfo;
                                     const Indexes: TArray<TIndexInfo>): string; override;
     function GenerateAddColumnSQL(const TableName:string;
                                   const ColumnInfo:TColumnInfo): string; override;
-    function GenerateDropColumnSQL(const TableName, ColumnName:string): string; override;
+    function GenerateDropColumnSQL(const TableName, ColumnName:string): string;
+    override;
     function GenerateModifyColumnSQL(const TableName:string;
                                      const ColumnInfo:TColumnInfo): string; override;
     function GenerateUpdateSQL(const TableName: string;
-                                  const SetClause, WhereClause: string): string; override;
+                                  const SetClause,
+                                  WhereClause: string): string; override;
     function GenerateDropIndexSQL(const TableName,
                                         IndexName:string): string; override;
     function GenerateDropTableSQL(const TableName:String): string; override;
@@ -33,7 +36,8 @@ type
     function GenerateCreateFunctionSQL(const Body: string): string; override;
     function GenerateCreateViewSQL(const Body: string): string; override;
     function GenerateCreateTriggerSQL(const Body: string): string; override;
-    function GenerateDeleteSQL(const TableName, WhereClause: string): string; override;
+    function GenerateDeleteSQL(const TableName, WhereClause: string): string;
+    override;
     function GenerateInsertSQL(const TableName: string;
                            Fields, Values: TStringList;
                            const HasIdentity: Boolean = False): string; override;
@@ -72,7 +76,8 @@ begin
         Result := QuotedStr(SafeStr);
       end;
     ftDate, ftTime, ftDateTime, ftTimeStamp:
-      Result := QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss', Field.AsDateTime));
+      Result := QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss',
+                                         Field.AsDateTime));
 
     ftBoolean:
       Result := IntToStr(Ord(Field.AsBoolean));
@@ -248,7 +253,8 @@ var
   ColDef: string;
   IsLastColumn: Boolean;
 begin
-  Result := 'CREATE TABLE ' + QuoteIdentifier(Table.TableName) + ' (' + sLineBreak;
+  Result :=
+    'CREATE TABLE ' + QuoteIdentifier(Table.TableName) + ' (' + sLineBreak;
   PKList := TStringList.Create;
   try
     // 1. Recorremos todas las columnas
@@ -271,7 +277,8 @@ begin
     end;
     // 2. Agregar PK inline (Ahora la sintaxis será correcta)
     if PKList.Count > 0 then
-      Result := Result + '  PRIMARY KEY (' + PKList.CommaText + ')' + sLineBreak;
+      Result :=
+        Result + '  PRIMARY KEY (' + PKList.CommaText + ')' + sLineBreak;
     Result := Result + ');';
   finally
     PKList.Free;
@@ -312,13 +319,16 @@ begin
   Result := 'DROP VIEW IF EXISTS ' + QuoteIdentifier(View) + ';';
 end;
 
-function TMySQLHelpers.GenerateDropIndexSQL(const TableName, IndexName: string): string;
+function TMySQLHelpers.GenerateDropIndexSQL(const TableName,
+                                            IndexName: string): string;
 begin
   if SameText(IndexName, 'PRIMARY') then
   begin
     Result :=
-      'SET @pk_exists := (SELECT COUNT(*) FROM information_schema.table_constraints ' +
-      'WHERE table_schema = DATABASE() AND table_name = ' + QuotedStr(TableName) +
+      'SET @pk_exists := (SELECT COUNT(*) FROM ' +
+      'information_schema.table_constraints ' +
+      'WHERE table_schema = DATABASE() AND table_name = ' + QuotedStr(TableName)
+        +
       ' AND constraint_type = ''PRIMARY KEY'');' + sLineBreak +
       'SET @sql_drop := IF(@pk_exists > 0, ' +
       '''ALTER TABLE ' + QuoteIdentifier(TableName) + ' DROP PRIMARY KEY'', ' +
@@ -357,7 +367,8 @@ begin
   if Idx.IsPrimary then
   begin
     Result :=
-      '-- Descomenta para limpieza de duplicados previa a la creación de PK' + sLineBreak +
+      '-- Descomenta para limpieza de duplicados previa a la creación de PK'
+        + sLineBreak +
       '-- DELETE FROM ' + QuoteIdentifier(TableName) + ' WHERE ' +
       '-- (' + ColNames + ') IN (' +
         '-- SELECT ' + ColNames + ' FROM (' +

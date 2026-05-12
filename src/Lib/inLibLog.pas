@@ -171,7 +171,9 @@ var
   FileHandle: THandle;
 begin
   FileHandle := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE,
-    FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_ALWAYS,
+    FILE_ATTRIBUTE_NORMAL,
+    0);
   Result := FileHandle <> INVALID_HANDLE_VALUE;
   if Result then
     CloseHandle(FileHandle);

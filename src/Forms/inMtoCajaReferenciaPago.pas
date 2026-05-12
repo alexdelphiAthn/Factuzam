@@ -240,13 +240,15 @@ begin
   cbbRedBlockchain.ItemIndex := 0;
 end;
 
-procedure TfrmCajaReferenciaPago.edtFactorCambioPropertiesChange(Sender: TObject);
+procedure TfrmCajaReferenciaPago.edtFactorCambioPropertiesChange(
+  Sender: TObject);
 begin
 //  if FActualizandoCotizacion then Exit;
     ActualizarCalculosDivisa;
 end;
 
-procedure TfrmCajaReferenciaPago.edtImporteDivisaPropertiesChange(Sender: TObject);
+procedure TfrmCajaReferenciaPago.edtImporteDivisaPropertiesChange(
+  Sender: TObject);
 begin
   // Si cambia el importe en divisa, recalcular el factor
 //  if (edtImporteDivisa.Value > 0) and (FImporteOriginal > 0) then
@@ -382,7 +384,8 @@ begin
   edtImporteEuros.Value := edtImporteDivisa.Value * (1/FactorCalculado);
   var sDivisa := Copy(txtDivisa.Text, 1, 3);
   lblEquivale.Caption  := Format('1 EUR = %.9n %s', [FactorCalculado, sDivisa]);
-  lblEquivale2.Caption := Format('1 %s = %.2n EUR', [sDivisa, 1 / FactorCalculado]);
+  lblEquivale2.Caption := Format('1 %s = %.2n EUR',
+                                 [sDivisa, 1 / FactorCalculado]);
   FDatosResultado.FactorCambio  := FactorCalculado;
   FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
   FDatosResultado.ImporteEuros  := FPendienteEuros;

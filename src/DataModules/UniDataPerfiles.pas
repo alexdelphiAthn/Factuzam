@@ -51,10 +51,15 @@ type
     { Private declarations }
   public
     // Métodos existentes mejorados
-    procedure GrabarPerfil(psuser, pskey, pssubkey, psvalue: string; psValueText: WideString = '');
+    procedure GrabarPerfil(psuser,
+                           pskey,
+                           pssubkey,
+                           psvalue: string;
+                           psValueText: WideString = '');
     procedure GrabarPerfilesBatch(const AItems: TPerfilList);
     procedure Assign_Profile_Dict(pskey: string; var oDict: TProfileUserDicc);
-    procedure AddRecordToDict(fpProfile: TFieldsProfile; var oDict: TProfileUserDicc);
+    procedure AddRecordToDict(fpProfile: TFieldsProfile;
+                              var oDict: TProfileUserDicc);
     function GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
 
     // NUEVOS MÉTODOS para centralizar lógica y evitar SQL en los formularios
@@ -152,7 +157,9 @@ begin
   //
 end;
 
-procedure TdmPerfiles.DeleteProfile(sUserGroup, sKey: string; sSubKey: string = '');
+procedure TdmPerfiles.DeleteProfile(sUserGroup,
+                                    sKey: string;
+                                    sSubKey: string = '');
 var
   unqryDelete: TUniQuery;
 begin
@@ -178,13 +185,16 @@ begin
   end;
 end;
 
-function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
+function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey,
+                                               sSubKey,
+                                               sDef: string): string;
 begin
   Result := sDef;
   with unqryPerfiles do
   begin
     Close;
-    // Delegamos la jerarquía al motor SQL. El que quede primero será el de mayor prioridad.
+    // Delegamos la jerarquía al motor SQL. El que quede primero será el de
+    // mayor prioridad.
     SQL.Text := '  SELECT VALUE_USUPER ' +
                 '    FROM fza_usuarios_perfiles ' +
                 '   WHERE KEY_USUPER = :key ' +
@@ -203,7 +213,8 @@ begin
     ParamByName('subkey').AsString := sSubKey;
     Open;
 
-    // Como está ordenado por prioridad, si hay registros, el primero es el correcto
+    // Como está ordenado por prioridad, si hay registros, el primero es el
+    // correcto
     if not IsEmpty then
       Result := FieldByName('VALUE_USUPER').AsString;
 

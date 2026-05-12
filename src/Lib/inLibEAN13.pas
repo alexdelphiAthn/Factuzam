@@ -39,7 +39,8 @@ var
 begin
   // Validamos que al menos tenga 7 caracteres
   if Length(Codigo7) < 7 then
-    raise Exception.Create('El código debe tener al menos 7 dígitos para calcular el control.');
+    raise Exception.Create(
+      'El código debe tener al menos 7 dígitos para calcular el control.');
 
   SumaImpares := 0;
   SumaPares := 0;
@@ -48,7 +49,8 @@ begin
   begin
     // Validación de seguridad para asegurar que son solo números
     if not (Codigo7[i] in ['0'..'9']) then
-      raise Exception.Create('El código de barras contiene caracteres no numéricos.');
+      raise Exception.Create(
+        'El código de barras contiene caracteres no numéricos.');
 
     // OJO a la diferencia con EAN-13:
     // En EAN-8, las posiciones IMPARES se multiplican por 3
@@ -92,7 +94,8 @@ var
 begin
   // Validamos que al menos tenga 12 caracteres para evitar Access Violations
   if Length(Codigo12) < 12 then
-    raise Exception.Create('El código debe tener al menos 12 dígitos para calcular el control.');
+    raise Exception.Create(
+      'El código debe tener al menos 12 dígitos para calcular el control.');
 
   SumaImpares := 0;
   SumaPares := 0;
@@ -102,13 +105,16 @@ begin
   begin
     // Validación de seguridad por si el string trae letras o basura
     if not (Codigo12[i] in ['0'..'9']) then
-      raise Exception.Create('El código de barras contiene caracteres no numéricos.');
+      raise Exception.Create(
+        'El código de barras contiene caracteres no numéricos.');
 
     // Convertimos el char a entero restando el valor ASCII del '0'
     if (i mod 2) <> 0 then
-      SumaImpares := SumaImpares + (Ord(Codigo12[i]) - Ord('0')) // Posiciones impares (1, 3, 5...)
+      // Posiciones impares (1, 3, 5...)
+      SumaImpares := SumaImpares + (Ord(Codigo12[i]) - Ord('0'))
     else
-      SumaPares := SumaPares + (Ord(Codigo12[i]) - Ord('0'));    // Posiciones pares (2, 4, 6...)
+      // Posiciones pares (2, 4, 6...)
+      SumaPares := SumaPares + (Ord(Codigo12[i]) - Ord('0'));
   end;
 
   // La regla EAN-13 dice que las posiciones pares se multiplican por 3
