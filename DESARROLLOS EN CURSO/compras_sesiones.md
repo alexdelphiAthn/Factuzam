@@ -175,14 +175,15 @@ precio_redond = redondeo_arriba(precio_base, MULTIPLO_REDONDEO_SES)
 precio_venta  = precio_redond + AJUSTE_FINAL_SES
 ```
 
-Parámetros (cabecera de sesión):
+Parámetros (cabecera de sesión, todos persistentes):
 
 | Campo                       | Significado                                          | Ejemplo |
 |-----------------------------|------------------------------------------------------|---------|
-| `PORCENTAJE_MARGEN_SES`     | Margen comercial sobre coste                          | 55.0    |
+| `PORCENTAJE_MARGEN_SES`     | Margen comercial sobre coste (default; override por línea) | 55.0    |
 | `MULTIPLO_REDONDEO_SES`     | Múltiplo al que sube el precio (`0` = sin redondeo) | 0.50    |
 | `AJUSTE_FINAL_SES`          | Suma/resta final (negativo para terminar en .99)     | -0.01   |
 | `ESPRECIOS_SIN_IVA_SES`     | Si los precios introducidos son sin IVA o con IVA    | 'S'     |
+| `ESPRECIO_POR_SKU_SES`      | Activa el sub-grid de overrides por SKU              | 'N'     |
 
 Ejemplo: coste 4,80 € × 55 % = 7,44 → redondeo arriba a 0,50 = 7,50 →
 ajuste −0,01 = **7,49 €**.
@@ -190,6 +191,9 @@ ajuste −0,01 = **7,49 €**.
 La fórmula se aplica al pulsar el botón, no automáticamente al teclear el
 coste — así el usuario puede ajustar manualmente sin perder el control. El
 `PRECIO_VENTA_SESLIN` queda libre de override una vez calculado.
+
+Si `PORCENTAJE_MARGEN_SESLIN` está informado en la línea, tiene precedencia
+sobre `PORCENTAJE_MARGEN_SES` de cabecera.
 
 ---
 
@@ -240,6 +244,15 @@ moneda, IVA por defecto, margen por defecto, estado (`BORRADOR`,
 `CERRADA`, `ANULADA`), referencias a los documentos generados al
 materializar.
 
+Parámetros de fórmula de precio venta (ver §2.5 y §11.1):
+
+- `MULTIPLO_REDONDEO_SES decimal(19,6)` — múltiplo al que sube el precio
+  venta calculado; `0` = sin redondeo.
+- `AJUSTE_FINAL_SES decimal(19,6)` — sumando final tras el redondeo,
+  típicamente negativo (−0.01 para acabar en .99).
+- `ESPRECIO_POR_SKU_SES char(1)` — `'S'` activa el sub-grid de precios
+  por SKU (`fza_compras_sesiones_lineas_skus_precios`).
+
 #### `fza_compras_sesiones_props` — Propiedades de cabecera
 
 Una fila por cada propiedad de la familia que aparece en la sesión.
@@ -289,6 +302,22 @@ Cuando una propiedad de cabecera es variable, esta tabla guarda el valor
 concreto de esa línea. Si está vacía, se usa el `VALOR_DEFECTO_SESPROP`
 de cabecera.
 
+#### `fza_compras_sesiones_lineas_skus_precios` — Override de precio por SKU
+
+Sufijo `SESLINSKU`. Una fila por SKU concreto al que el usuario haya
+puesto un precio distinto al de la línea. PK:
+`(SERIE, NUMERO, LINEA, ID_FILA, ID_AV_PIVOT)`. Sólo aparece en el
+sub-grid de precios SKU cuando `ESPRECIO_POR_SKU_SES = 'S'` en cabecera.
+
+- `PRECIO_COMPRA_SESLINSKU` (decimal(19,6) NULL) — override del coste para
+  este SKU; `NULL` = hereda de `PRECIO_COMPRA_SESLIN`.
+- `PRECIO_VENTA_SESLINSKU` (decimal(19,6) NULL) — override del precio
+  venta; `NULL` = hereda de `PRECIO_VENTA_SESLIN`.
+
+La materialización debe usar `COALESCE(override, linea)` para resolver el
+precio efectivo al insertar en `fza_articulos_proveedores` y
+`fza_articulos_tarifas`. Ver §11.5.
+
 ---
 
 ## 4. Layout de formularios
@@ -329,6 +358,8 @@ inferior con pestañas de la sesión seleccionada.
 │ Tipo IVA defecto: [N — 21% ▼]                                          │
 │ Margen comercial defecto: [55 ] %    Tarifa salida: [PUBLICO ▼]        │
 │ ☑ Precios introducidos sin IVA      ☐ Aplicar redondeo a venta         │
+│ Mult.redondeo: [0,50]   Ajuste final: [-0,01]                          │
+│ ☐ Permitir precio distinto por SKU (talla×color)                       │
 └────────────────────────────────────────────────────────────────────────┘
 ┌── Plantilla variaciones ───────────────────────────────────────────────┐
 │ Variación a usar: [TC — Talla y Color ▼]                               │
@@ -367,7 +398,7 @@ Cabecera de líneas (grid):
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ [+ Añadir línea] [Duplicar] [Borrar línea]                              │
+│ [+ Añadir] [Duplicar] [Borrar] [Resolver duplicado…] [Calcular venta]   │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Lin  CodigoArt        Descripción         Familia  Ref.Prov  PrCompra   │
 │  1   CAMI-AC-26      Camiseta Acme '26    ROPA    AC-T-001    4,80 €    │
@@ -375,6 +406,8 @@ Cabecera de líneas (grid):
 │  3   SUDA-AC-26      Sudadera Acme '26    ROPA    AC-S-001   11,30 €    │
 └──────────────────────────────────────────────────────────────────────────┘
    ⚠ = código duplicado, ofrece acción
+   [Calcular venta] aplica la fórmula §2.5 a la línea actual, o a todas
+     las líneas seleccionadas si el grid tiene multi-selección.
 ```
 
 Detalle de la línea seleccionada (matriz):
@@ -383,7 +416,9 @@ Detalle de la línea seleccionada (matriz):
 ┌── Línea 1: CAMI-AC-26 — Camiseta Acme '26 ─────────────────────────────┐
 │ Material: [Algodón ▼] (variable)                                        │
 │ Tipo IVA: [N — 21% ▼] (heredado)                                        │
-│ Pr.compra: [4,80] €  Margen: [55] %  Pr.venta: [16,55] € (IVA incl.)   │
+│ Pr.compra: [4,80] €  Margen: [55] %  Pr.venta: [7,49] € (IVA incl.)    │
+│ Almacén editando: [GEN — Almacén Central ▼] (las celdas vacías usan el │
+│                                              almacén de cabecera)       │
 │ Kit a aplicar: [CURVA-STD ▼] [Aplicar a fila] [Aplicar a todas]         │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ Color\Talla      42    43    44    45    46    Total      Kit          │
@@ -392,12 +427,24 @@ Detalle de la línea seleccionada (matriz):
 │ AZUL              1     2     3     2     1      9       [▼][Aplicar]  │
 │ [+ Añadir color]                                                        │
 │ TOTAL líneas:    2     5     8     5     2     22                       │
+├─── Precios por SKU (override; sólo si está activo en cabecera) ────────┤
+│ Color    Talla  Pr.compra  Pr.venta                                    │
+│ NEGRO    42        4,80      7,49                                       │
+│ NEGRO    46        5,20      8,49   ← override sólo para 46             │
+│ BLANCO   42        4,80      7,49                                       │
+│ ...                                                                     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 Los `+ Añadir color` abren un dropdown con los valores del conjunto de
 colores que aún no estén en filas. Los `+ Añadir línea` abren la edición
 de cabecera de línea con código tentativo.
+
+El sub-grid **Precios por SKU** aparece sólo si `ESPRECIO_POR_SKU_SES = 'S'`
+en cabecera. Lista todas las combinaciones (fila, pivot) existentes en la
+matriz; precios vacíos = hereda de la línea; tecleando `0` vuelve a
+heredar. Edición directa con persistencia automática en
+`fza_compras_sesiones_lineas_skus_precios`.
 
 ### 4.5 Pestaña «Materialización»
 
@@ -564,10 +611,12 @@ En cualquier punto antes del paso 7 la sesión puede:
    Sin pedido/albarán (eso es manual después).
 2. **Hito 2** — Kits de cantidades + plantilla de propiedades fijas/variables.
 3. **Hito 3** — Multi-almacén en la matriz (✅ implementado).
-4. **Hito 4** — Generación automática de pedido de compra (uno por sesión).
-5. **Hito 5** — Generación automática de N albaranes + movimientos de stock,
+4. **Hito 4** — Fórmula precio venta + override por SKU (✅ implementado;
+   §11). Pendiente sólo drenar el override al materializar (§11.5).
+5. **Hito 5** — Generación automática de pedido de compra (uno por sesión).
+6. **Hito 6** — Generación automática de N albaranes + movimientos de stock,
    uno por almacén con cantidad > 0.
-6. **Hito 6** — Importación CSV proveedor + plantillas guardadas.
+7. **Hito 7** — Importación CSV proveedor + plantillas guardadas.
 
 ---
 
@@ -614,3 +663,119 @@ ordena por almacén → línea → fila → pivot.
 - El kit "aplicar a fila" / "aplicar a todas" sólo afecta a la capa de almacén
   actualmente visible. Si quieres replicar el kit a todos los almacenes habría
   que añadir un botón «Aplicar a todos los almacenes».
+
+---
+
+## 11. Cálculo de precio venta + override por SKU
+
+### 11.1 Parámetros de cabecera (persistentes)
+
+| Campo                       | Tipo SQL          | Default | UI                                |
+|-----------------------------|-------------------|---------|-----------------------------------|
+| `MULTIPLO_REDONDEO_SES`     | `decimal(19,6)`   | `0`     | `spnMultiploRedondeo` (incremento 0,05) |
+| `AJUSTE_FINAL_SES`          | `decimal(19,6)`   | `0`     | `spnAjusteFinal` (acepta negativos) |
+| `ESPRECIO_POR_SKU_SES`      | `char(1)` (S/N)   | `'N'`   | `chkPrecioPorSku` en gbPrecios     |
+
+Migración idempotente para BBDDs ya creadas: bloques `INFORMATION_SCHEMA`
+en `compras_sesiones.sql` que añaden las columnas sólo si no existen.
+
+### 11.2 Fórmula
+
+Implementada en `inLibComprasSesiones.CalcularPrecioVenta`:
+
+```pascal
+function CalcularPrecioVenta(ACoste, AMargenPct,
+                             AMultiplo, AAjuste: Double): Double;
+begin
+  rBase := ACoste * (1 + AMargenPct / 100);
+  if AMultiplo > 0 then
+    Result := Ceil(rBase / AMultiplo) * AMultiplo
+  else
+    Result := rBase;
+  Result := Result + AAjuste;
+  if Result < 0 then Result := 0;
+end;
+```
+
+- Margen efectivo: si `PORCENTAJE_MARGEN_SESLIN` está informado, tiene
+  precedencia sobre `PORCENTAJE_MARGEN_SES` de cabecera.
+- Si `MULTIPLO_REDONDEO_SES = 0`, no se aplica redondeo (sólo el ajuste).
+- Si el resultado sale negativo, se clava a 0.
+
+### 11.3 Botón «Calcular venta» en la pestaña Líneas
+
+Vive en `pnlLineasBotones`, junto a los botones de línea. Comportamiento:
+
+| `tvLineas.Controller.SelectedRecordCount` | Acción                                                   |
+|-------------------------------------------|----------------------------------------------------------|
+| `0` o `1`                                 | Aplica la fórmula a la línea con foco (`unqrySesionLin`) |
+| `> 1`                                     | Itera por todas las líneas seleccionadas en el grid       |
+
+Implementación:
+- `inLibComprasSesiones.CalcularPrecioVentaLinea(ADM, AUsuario, ALinea)` →
+  UPDATE de `PRECIO_VENTA_SESLIN` para una línea.
+- `inLibComprasSesiones.CalcularPrecioVentaLineas(ADM, AUsuario, ALineas)` →
+  loop sobre el array + refresh final.
+
+El usuario puede después seguir editando `PRECIO_VENTA_SESLIN` manualmente
+en el grid; la fórmula no se vuelve a aplicar hasta que pulse el botón.
+
+### 11.4 Sub-grid de precios por SKU
+
+Aparece debajo de la matriz cuando `chkPrecioPorSku` está marcado, separado
+de la matriz por un `TcxSplitter` para que el usuario regule espacio.
+
+**Tabla**: `fza_compras_sesiones_lineas_skus_precios` (sufijo `SESLINSKU`).
+PK: `(SERIE, NUMERO, LINEA, ID_FILA, ID_AV_PIVOT)`. Sólo se escribe cuando
+el usuario rompe el precio para un SKU concreto.
+
+**Query del sub-grid** (`unqryLineaSkusPrecios`):
+
+```sql
+SELECT C.ID_FILA_SES_SESCEL  AS ID_FILA,
+       C.ID_AV_PIVOT_SESCEL  AS ID_AV_PIVOT,
+       AVP.AV                AS VAL_PIVOT,
+       (...GROUP_CONCAT de valores fila...) AS VAL_FILA,
+       P.PRECIO_COMPRA_SESLINSKU,
+       P.PRECIO_VENTA_SESLINSKU
+  FROM fza_compras_sesiones_celdas C
+  JOIN fza_atributos_valores AVP ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL
+  LEFT JOIN fza_compras_sesiones_lineas_skus_precios P ON ...
+ WHERE C.SERIE/NUMERO/LINEA = sesión + línea actual
+ GROUP BY C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL
+```
+
+El JOIN trae todas las combinaciones existentes en la matriz; los precios
+que no tienen override aparecen `NULL`.
+
+**Edición**: las dos columnas de precio tienen
+`Properties.OnEditValueChanged = dbcPreciosSkuPrecioXxx...EditValueChanged`.
+El handler hace un upsert manual (no usa el dataset directamente porque la
+query es un JOIN):
+
+```pascal
+INSERT INTO fza_compras_sesiones_lineas_skus_precios
+  (..., PRECIO_*_SESLINSKU, INSTANTE_ALTA, USUARIO_ALTA, ...)
+VALUES (..., :v, NOW(), :u, ...)
+ON DUPLICATE KEY UPDATE
+  PRECIO_*_SESLINSKU = :v, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u
+```
+
+- Si el usuario teclea `0`, el upsert pone `NULL` (vuelve a heredar el
+  precio de la línea).
+- Si el sub-grid no tiene fila para un SKU, esa combinación hereda al 100%.
+
+### 11.5 Materialización (pendiente)
+
+Cuando se conecte la generación real de documentos, `InsertarSkusYBarras`
+debe hacer `LEFT JOIN` a `fza_compras_sesiones_lineas_skus_precios` y usar:
+
+```sql
+COALESCE(P.PRECIO_COMPRA_SESLINSKU, L.PRECIO_COMPRA_SESLIN) AS COSTE,
+COALESCE(P.PRECIO_VENTA_SESLINSKU,  L.PRECIO_VENTA_SESLIN)  AS VENTA
+```
+
+para escribir en `fza_articulos_proveedores.PRECIO_ULT_COMPRA_AP` y
+`fza_articulos_tarifas.PRECIO_FINAL_ARTTAR` por SKU. Por ahora el modelo de
+datos guarda toda la información; el paso de "drenar" el override al
+materializar queda como TODO.
