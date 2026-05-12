@@ -1668,6 +1668,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 926
                 Top = 0
@@ -1910,10 +1914,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -2044,10 +2044,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrlbx1: TScrollBox
                 Left = 0
                 Top = 0
@@ -2440,10 +2436,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Align = alClient
                 TabOrder = 0
                 object tvMovimientosFac: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsData.Editing = False
                   object cxgrdcMovFacNum: TcxGridDBColumn
                     Caption = 'N'#250'mero Mov.'
@@ -2825,10 +2817,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
