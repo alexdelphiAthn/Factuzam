@@ -75,6 +75,7 @@ type
     procedure UpsertCosteSku(const aSku: string;
                              aPrecioField, aFechaField: TField);
     procedure EliminarCosteSku(const aSku: string);
+    procedure ExpandirEtiquetasPorStock(const aFldStock: string);
   public
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
@@ -872,7 +873,61 @@ begin
   cdsEtiquetasArt.Data := dtstprvEtiquetasArt.Data;
   cdsEtiquetasArt.ReadOnly := False;
   cdsEtiquetasArt.Active := True;
+
+  // Cuando el usuario marca almacenes, una etiqueta por unidad de stock:
+  // se elimina cualquier SKU sin existencia en los almacenes elegidos y se
+  // replica cada fila restante tantas veces como unidades tenga. Sin
+  // almacenes marcados conservamos una sola etiqueta por SKU (el campo
+  // STOCK_FILTRADO entonces refleja la suma global, que no es lo que el
+  // usuario quiere para etiquetar).
+  if Trim(aAlmacenesCsv) <> '' then
+    ExpandirEtiquetasPorStock('STOCK_FILTRADO');
+
   cdsEtiquetasArt.First;
+end;
+
+procedure TdmArticulos.ExpandirEtiquetasPorStock(const aFldStock: string);
+var
+  i, j, k, iStock, iStockIdx, iOriginales: Integer;
+  Filas: array of array of Variant;
+begin
+  if (not cdsEtiquetasArt.Active) or cdsEtiquetasArt.IsEmpty then Exit;
+  if cdsEtiquetasArt.FindField(aFldStock) = nil then Exit;
+  iStockIdx := cdsEtiquetasArt.FieldByName(aFldStock).Index;
+
+  cdsEtiquetasArt.DisableControls;
+  try
+    // Volcamos los originales a memoria, vaciamos el cds y lo
+    // reconstruimos replicando cada fila por su stock.
+    iOriginales := cdsEtiquetasArt.RecordCount;
+    SetLength(Filas, iOriginales);
+    cdsEtiquetasArt.First;
+    for i := 0 to iOriginales - 1 do
+    begin
+      SetLength(Filas[i], cdsEtiquetasArt.FieldCount);
+      for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+        Filas[i][j] := cdsEtiquetasArt.Fields[j].Value;
+      cdsEtiquetasArt.Next;
+    end;
+
+    cdsEtiquetasArt.EmptyDataSet;
+
+    for i := 0 to iOriginales - 1 do
+    begin
+      if VarIsNull(Filas[i][iStockIdx]) then Continue;
+      iStock := Trunc(Double(Filas[i][iStockIdx]));
+      if iStock <= 0 then Continue;
+      for k := 1 to iStock do
+      begin
+        cdsEtiquetasArt.Append;
+        for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+          cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
+        cdsEtiquetasArt.Post;
+      end;
+    end;
+  finally
+    cdsEtiquetasArt.EnableControls;
+  end;
 end;
 
 initialization
