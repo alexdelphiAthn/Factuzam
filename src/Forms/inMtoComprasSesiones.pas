@@ -305,6 +305,7 @@ type
     procedure btnAplicarKitFilaClick(Sender: TObject);
     procedure btnAplicarKitTodasClick(Sender: TObject);
     procedure cbbAlmacenMatrizPropertiesChange(Sender: TObject);
+    procedure cbbEmpresaPropertiesEditValueChanged(Sender: TObject);
     procedure chkPrecioPorSkuPropertiesEditValueChanged(Sender: TObject);
     procedure btnCalcularVentaClick(Sender: TObject);
     procedure dbcPreciosSkuPrecioCompraPropertiesEditValueChanged(
@@ -409,6 +410,46 @@ begin
   sCodigoAlm := VarToStr(cbbAlmacenMatriz.EditValue);
   TGestorMatrizCompras(FGestorMatriz).AlmacenActual := sCodigoAlm;
   ReconstruirMatrizActual;
+end;
+
+procedure TfrmMtoComprasSesiones.cbbEmpresaPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  q       : TUniQuery;
+  sEmp    : string;
+  qLineas : TUniQuery;
+begin
+  inherited;
+  // Auto-primera: cuando el usuario elige empresa y SERIE_SES esta vacia,
+  // pegar la primera serie disponible (EMPSER) de fza_empresas_series
+  // filtrada por TIPO_DOC_EMPSER='SE' + empresa elegida.
+  // No sobreescribimos si SERIE_SES ya tiene valor (sesion en edicion).
+  if (dmComprasSesiones = nil) or
+     (dmComprasSesiones.unqryTablaG = nil) or
+     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+  if not (dmComprasSesiones.unqryTablaG.State in [dsEdit, dsInsert]) then Exit;
+  if dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString <> '' then Exit;
+
+  sEmp := VarToStr(cbbEmpresa.EditValue);
+  if Trim(sEmp) = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT EMPSER FROM fza_empresas_series ' +
+      ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
+      '   AND CODIGO_EMP_EMPSER = :emp ' +
+      '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+      ' ORDER BY EMPSER LIMIT 1';
+    q.ParamByName('emp').AsString := sEmp;
+    q.Open;
+    if not q.IsEmpty then
+      dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString :=
+        q.FieldByName('EMPSER').AsString;
+  finally
+    q.Free;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);

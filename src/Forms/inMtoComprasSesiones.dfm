@@ -193,6 +193,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 DataBinding.DataField = 'CODIGO_EMP_SES'
                 DataBinding.DataSource = dsTablaG
                 Properties.ListColumns = <>
+                Properties.OnEditValueChanged = cbbEmpresaPropertiesEditValueChanged
                 TabOrder = 4
                 Width = 300
               end
