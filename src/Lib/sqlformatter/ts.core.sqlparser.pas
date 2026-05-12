@@ -302,11 +302,24 @@ type
     function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
   end;
 
+  TSQLMariaDBTableFieldDef = class(TSQLTableFieldDef)
+  public
+    RawModifiers: string;
+    function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
 function TSQLStartTransactionStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
 begin
   Result := 'START TRANSACTION';
   if Modifiers <> '' then
     Result := Result + ' ' + Modifiers;
+end;
+
+function TSQLMariaDBTableFieldDef.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
+begin
+  Result := inherited GetAsSQL(Options, AIndent);
+  if RawModifiers <> '' then
+    Result := Result + ' ' + Trim(RawModifiers);
 end;
 
 Resourcestring
@@ -1036,10 +1049,16 @@ begin
 end;
 
 function TSQLParser.ParseTableFieldDef(AParent : TSQLElement): TSQLTableFieldDef;
+var
+  MDBField: TSQLMariaDBTableFieldDef;
+  PCount: Integer;
 begin
-  Result := TSQLTableFieldDef(CreateElement(TSQLTableFieldDef, AParent));
+  MDBField := TSQLMariaDBTableFieldDef(CreateElement(TSQLMariaDBTableFieldDef, AParent));
+  Result := MDBField;
   try
     Result.FieldName := CreateIdentifier(Result, CurrentTokenString);
+    GetNextToken;
+
     if PeekNextToken = tsqlComputed then
     begin
       GetNextToken;
@@ -1053,13 +1072,44 @@ begin
     begin
       Result.FieldType := ParseTypeDefinition(Result,
         [ptfAllowDomainName, ptfAllowConstraint, ptfTableFieldDef]);
-      if (CurrentToken = tsqlIdentifier) and
-         SameText(CurrentTokenString, 'COMMENT') then
+
+      // --- INICIO SOPORTE MARIADB ---
+      // Consumimos modificadores (DEFAULT, NOT NULL, AUTO_INCREMENT, COMMENT...)
+      // y todo lo demás hasta chocar con la coma o paréntesis final
+      PCount := 0;
+      while not (CurrentToken in [tsqlEOF]) do
       begin
-        GetNextToken; // Pasamos COMMENT
+        if CurrentToken = tsqlBraceOpen then
+          Inc(PCount)
+        else if CurrentToken = tsqlBraceClose then
+        begin
+          if PCount = 0 then Break; // Es el ')' que cierra el CREATE TABLE
+          Dec(PCount);
+        end
+        else if (CurrentToken = tsqlComma) and (PCount = 0) then
+          Break; // Es la ',' que separa el siguiente campo
+
+        // Acomodar espacios de forma inteligente
+        if MDBField.RawModifiers <> '' then
+        begin
+          if not (PreviousToken in [tsqlDot, tsqlBraceOpen]) and
+             not (CurrentToken in [tsqlBraceClose, tsqlComma, tsqlDot, tsqlSemicolon]) then
+          begin
+            // Evitar meter un espacio extra antes del '(' en funciones como current_timestamp()
+            if not ((CurrentToken = tsqlBraceOpen) and (PreviousToken = tsqlIdentifier)) then
+              MDBField.RawModifiers := MDBField.RawModifiers + ' ';
+          end;
+        end;
+
+        // Reconstruir literales o cadenas
         if CurrentToken = tsqlString then
-          GetNextToken; // Pasamos el literal del comentario
+          MDBField.RawModifiers := MDBField.RawModifiers + '''' + CurrentTokenString + ''''
+        else
+          MDBField.RawModifiers := MDBField.RawModifiers + CurrentTokenString;
+
+        GetNextToken;
       end;
+      // --- FIN SOPORTE MARIADB ---
     end;
   except
     FreeAndNil(Result);
@@ -1229,33 +1279,17 @@ begin
   Result := nil;
   try
     Tk := GetNextToken;
+
+    // SOPORTE MARIADB: Bypass opcional "COLUMN"
     if Tk = tsqlColumn then
       Tk := GetNextToken;
+
     case Tk of
       tsqlIdentifier :
         begin
           Result := TSQLAlterTableAddElementOperation
             (CreateElement(TSQLAlterTableAddFieldOPeration, AParent));
           Result.Element := ParseTableFieldDef(Result);
-          if (CurrentToken = tsqlIdentifier) and
-             SameText(CurrentTokenString, 'COMMENT') then
-          begin
-            GetNextToken;
-            if CurrentToken = tsqlString then
-              GetNextToken;
-          end;
-          if (CurrentToken = tsqlIdentifier) and
-             SameText(CurrentTokenString, 'AFTER') then
-          begin
-            GetNextToken;
-            if CurrentToken = tsqlIdentifier then
-              GetNextToken;
-          end
-          else if (CurrentToken = tsqlIdentifier) and
-                  SameText(CurrentTokenString, 'FIRST') then
-          begin
-            GetNextToken;
-          end;
         end;
       tsqlCheck,
         tsqlConstraint,
@@ -1264,12 +1298,12 @@ begin
         tsqlUnique:
         begin
           Result := TSQLAlterTableAddElementOperation
-                 (CreateElement(TSQLAlterTableAddConstraintOperation, AParent));
+            (CreateElement(TSQLAlterTableAddConstraintOperation, AParent));
           Result.Element := ParseTableConstraint(Result);
         end
     else
       UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint, tsqlForeign,
-                       tsqlPrimary, tsqlUnique]);
+        tsqlPrimary, tsqlUnique]);
     end;
   except
     FreeAndNil(Result);
@@ -2279,19 +2313,27 @@ begin
   end
   else
     AD := 0;
-  // Collation is here in domain (needs checking ?)
-  if (CurrentToken = tsqlCollate) then
+
+  // --- INICIO MODIFICACION MARIADB: Bypass estricto para tablas ---
+  if not (ptfTableFieldDef in Flags) then
   begin
-    if not(DT in [sdtChar, sdtVarChar, sdtNchar, sdtNVARCHAR, sdtBlob]) then
-      Error(SErrInvalidUseOfCollate);
-    GetNextToken;
-    Expect(tsqlIdentifier);
-    Coll := TSQLCollation(CreateElement(TSQLCollation, AParent));
-    Coll.Name := CurrentTokenString;
-    GetNextToken;
+    if (CurrentToken = tsqlCollate) then
+    begin
+      if not(DT in [sdtChar, sdtVarChar, sdtNchar, sdtNVARCHAR, sdtBlob]) then
+        Error(SErrInvalidUseOfCollate);
+      GetNextToken;
+      Expect(tsqlIdentifier);
+      Coll := TSQLCollation(CreateElement(TSQLCollation, AParent));
+      Coll.Name := CurrentTokenString;
+      GetNextToken;
+    end
+    else
+      Coll := nil;
   end
   else
     Coll := nil;
+  // --- FIN MODIFICACION MARIADB ---
+
   C := nil;
   D := TSQLTypeDefinition(CreateElement(TSQLTypeDefinition, AParent));
   try
@@ -2304,17 +2346,22 @@ begin
     D.Charset := cs;
     D.Collation := Coll;
     D.Constraint := C;
-if (not(ptfAlterDomain in Flags)) then
+
+    // --- INICIO MODIFICACION MARIADB ---
+    // Si NO es un campo de tabla, seguimos parseando normalmente
+    if (not(ptfAlterDomain in Flags)) and (not(ptfTableFieldDef in Flags)) then
     begin
-      if CurrentToken = tsqlNull then GetNextToken;
+      if CurrentToken = tsqlNull then GetNextToken; // Tolerancia a "NULL DEFAULT..."
+
       if (CurrentToken = tsqlDefault) then
       begin
         GetNextToken;
         D.DefaultValue := CreateLiteral(D);
         GetNextToken;
       end;
-      if CurrentToken = tsqlNull then
-        GetNextToken;
+
+      if CurrentToken = tsqlNull then GetNextToken;
+
       if (CurrentToken = tsqlNot) then
       begin
         GetNextToken;
@@ -2326,11 +2373,9 @@ if (not(ptfAlterDomain in Flags)) then
       begin
         D.Check := ParseCheckConstraint(D, False);
       end;
-      if CurrentToken in [tsqlConstraint, tsqlCheck, tsqlUnique, tsqlPrimary,
-        tsqlReferences] then
+      if CurrentToken in [tsqlConstraint, tsqlCheck, tsqlUnique, tsqlPrimary, tsqlReferences] then
       begin
-        if Not(ptfAllowConstraint in Flags) then
-          UnexpectedToken;
+        if Not(ptfAllowConstraint in Flags) then UnexpectedToken;
         D.Constraint := ParseFieldConstraint(AParent);
       end;
       if (CurrentToken = tsqlCheck) and (ptfTableFieldDef in Flags) then
@@ -2356,6 +2401,8 @@ if (not(ptfAlterDomain in Flags)) then
         D.ByValue := True;
       end;
     end;
+    // --- FIN MODIFICACION MARIADB ---
+
     Result := D;
   except
     FreeAndNil(D);
