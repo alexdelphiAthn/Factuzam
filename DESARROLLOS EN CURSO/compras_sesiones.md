@@ -126,7 +126,7 @@ Así una sesión puede mezclar artículos con dimensiones distintas:
 
 `TIPO_LINEA_SESLIN` admite:
 
-- **MATRIZ** — Línea con matriz pivotada (caso típico ropa). Genera N SKUs.
+- **MATRIZ** — Línea con matriz pivotada (caso típico ropa o calzado). Genera N SKUs.
 - **ESCALAR** — Artículo ESTANDAR sin variación. Cantidad única. Genera 1
   artículo + 1 código de barras sin pasar por SKU.
 - **SERVICIO** — `TIPO_ART = SERVICIO`, sin atributos, sin SKU, sin stock.
