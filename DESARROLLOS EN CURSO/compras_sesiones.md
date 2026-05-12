@@ -136,7 +136,7 @@ Así una sesión puede mezclar artículos con dimensiones distintas:
 
 | Concepto              | Origen                                                 |
 |-----------------------|--------------------------------------------------------|
-| `CODIGO_ART`          | Tecleado por el usuario. Validación de duplicados en vivo. |
+| `CODIGO_ART`          | Tecleado por el usuario o **autogenerado a partir de familia** (ver §2.4-bis). Validación de duplicados en vivo. |
 | `CODIGO_UNIDAD_SKU`   | Auto, patrón `{CODIGO_ART}/{VALOR_FILA}/{VALOR_PIVOT}` reutilizando convención existente (ver `fza_articulos_skus`). |
 | `CODIGO_BARRAS_CB`    | Auto al materializar, usando `inLibEAN13`. Configurable por sesión: prefijo de empresa + secuencial. |
 | `REF_PROVEEDOR_AP`    | Tecleado por el usuario (texto libre) en cabecera o por línea. |
@@ -145,6 +145,42 @@ Si el usuario introduce un `CODIGO_ART` que ya existe en `fza_articulos`,
 el formulario avisa con un indicador rojo en la línea y ofrece tres
 acciones: **reusar** (la sesión enlaza al artículo existente y no lo crea),
 **renombrar** o **cancelar la línea**.
+
+### 2.4-bis Atajo familia → código autogenerado
+
+Para los clientes que prefieren generar los códigos de artículo desde un
+contador por familia, la casilla de código tiene un atajo:
+
+- Si el usuario teclea **exactamente** el `CODIGO_FAM_FAM` de una familia
+  activa (`ESACTIVO_FAM = 'S'`) que además tenga el contador habilitado
+  (`ESCONTADOR_ART_FAM = 'S'`), al grabar la línea (`BeforePost`) la
+  sesión:
+  1. Lee `CONTADOR_ART_FAM` y `PAD_ART_FAM` de esa familia.
+  2. Calcula `nuevo = CONTADOR_ART_FAM + 1`.
+  3. Compone el código: `CODIGO_FAM_FAM + LPAD(nuevo, PAD_ART_FAM, '0')`.
+  4. Persiste el nuevo contador en la familia.
+  5. Sustituye `CODIGO_ART_TENTATIVO_SESLIN` por el código generado y
+     fija `CODIGO_FAM_SESLIN = CODIGO_FAM_FAM` si la línea no la traía.
+
+Ejemplo: tecleando `BOLSOS` con la familia BOLSOS configurada como
+`CONTADOR_ART_FAM = 0`, `PAD_ART_FAM = 5`, `ESCONTADOR_ART_FAM = 'S'` →
+se genera `BOLSOS00001` y la familia queda en `CONTADOR_ART_FAM = 1`.
+
+Implementación en `inLibComprasSesiones.ResolverCodigoFamilia`. Usa
+`SELECT ... FOR UPDATE` sobre la fila de familia para evitar colisiones
+si dos usuarios crean líneas a la vez en sesiones distintas.
+
+Si la familia existe pero `ESCONTADOR_ART_FAM <> 'S'`, no se expande y se
+deja lo tecleado como código tentativo (probablemente choque con la
+familia y el chequeo de duplicados marcará la línea para resolver). La
+sesión también funciona si el cliente prefiere teclear códigos manuales
+en familias sin contador.
+
+**Coste de cancelar**: el contador se incrementa al grabar la línea, no
+al materializar. Si la sesión se anula o la línea se borra, ese código
+queda quemado (hueco numérico). Es aceptable a cambio de poder mostrar
+el código tentativo desde el primer momento y poder etiquetar/escanear
+durante el flujo de pre-pedido.
 
 ### 2.5 Precio de coste y precio de venta (tarifa)
 
