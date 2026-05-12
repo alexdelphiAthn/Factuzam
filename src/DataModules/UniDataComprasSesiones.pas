@@ -52,6 +52,10 @@ type
     unqryPreviewSkus: TUniQuery;
     dsPreviewSkus: TDataSource;
 
+    // Sub-grid de precios por SKU (solo activo si ESPRECIO_POR_SKU_SES='S')
+    unqryLineaSkusPrecios: TUniQuery;
+    dsLineaSkusPrecios: TDataSource;
+
     // Resumen agregado por almacén para la pestaña Materialización
     unqryResumenAlmacen: TUniQuery;
     dsResumenAlmacen: TDataSource;
@@ -142,6 +146,7 @@ begin
   unqrySesionKitsDet.Connection     := inLibGlobalVar.oConn;
   unqryPreviewSkus.Connection       := inLibGlobalVar.oConn;
   unqryResumenAlmacen.Connection    := inLibGlobalVar.oConn;
+  unqryLineaSkusPrecios.Connection  := inLibGlobalVar.oConn;
   unqryProveedores.Connection       := inLibGlobalVar.oConn;
   unqryFamilias.Connection          := inLibGlobalVar.oConn;
   unqryVariaciones.Connection       := inLibGlobalVar.oConn;

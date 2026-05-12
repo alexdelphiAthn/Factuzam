@@ -119,9 +119,28 @@ function  ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
 function  ContarSkusPotenciales(ADM: TdmComprasSesiones): Integer;
 function  CalcularTotalCompra(ADM: TdmComprasSesiones): Double;
 
+// Formula:
+//   base   = coste * (1 + margen/100)
+//   redond = ceil(base, multiplo)   // 0 = sin redondeo, devuelve base
+//   venta  = redond + ajuste        // ajuste suele ser negativo (-0.01)
+function CalcularPrecioVenta(ACoste, AMargenPct,
+                             AMultiplo, AAjuste: Double): Double;
+
+// Aplica la formula a una linea concreta. Lee parametros de la cabecera
+// y persiste PRECIO_VENTA_SESLIN. Si ALinea=-1 usa la linea en curso.
+procedure CalcularPrecioVentaLinea(ADM: TdmComprasSesiones;
+                                    const AUsuario: string;
+                                    ALinea: Integer = -1);
+
+// Variante para grid con multi-seleccion: itera las lineas indicadas.
+procedure CalcularPrecioVentaLineas(ADM: TdmComprasSesiones;
+                                     const AUsuario: string;
+                                     const ALineas: array of Integer);
+
 implementation
 
 uses
+  System.Math,
   inLibGlobalVar;
 
 const
@@ -699,6 +718,104 @@ begin
   finally
     q.Free;
   end;
+end;
+
+// ---------------------------------------------------------------------------
+// Calculo de precio de venta
+// ---------------------------------------------------------------------------
+
+function CalcularPrecioVenta(ACoste, AMargenPct,
+                             AMultiplo, AAjuste: Double): Double;
+var
+  rBase : Double;
+begin
+  rBase := ACoste * (1 + AMargenPct / 100);
+  if AMultiplo > 0 then
+    Result := Ceil(rBase / AMultiplo) * AMultiplo
+  else
+    Result := rBase;
+  Result := Result + AAjuste;
+  if Result < 0 then Result := 0;
+end;
+
+procedure CalcularPrecioVentaLinea(ADM: TdmComprasSesiones;
+                                    const AUsuario: string;
+                                    ALinea: Integer);
+var
+  q          : TUniQuery;
+  rCoste, rMargenLin, rMargenCab, rMargen,
+  rMultiplo, rAjuste, rVenta : Double;
+  iLinea     : Integer;
+begin
+  if ADM.unqrySesionLin.IsEmpty then Exit;
+
+  if ALinea = -1 then
+    iLinea := ADM.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger
+  else
+    iLinea := ALinea;
+
+  // Parametros de cabecera
+  rMargenCab := ADM.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat;
+  rMultiplo  := ADM.unqryTablaG.FieldByName('MULTIPLO_REDONDEO_SES').AsFloat;
+  rAjuste    := ADM.unqryTablaG.FieldByName('AJUSTE_FINAL_SES').AsFloat;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT PRECIO_COMPRA_SESLIN, PORCENTAJE_MARGEN_SESLIN ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN = :l';
+    q.ParamByName('s').AsString  := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString  := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger := iLinea;
+    q.Open;
+    if q.IsEmpty then Exit;
+
+    rCoste := q.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+    // Margen: si la linea tiene override usa ese, si no el de cabecera
+    if q.FieldByName('PORCENTAJE_MARGEN_SESLIN').IsNull or
+       (q.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat = 0) then
+      rMargen := rMargenCab
+    else
+      rMargen := q.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
+  finally
+    q.Free;
+  end;
+
+  rVenta := CalcularPrecioVenta(rCoste, rMargen, rMultiplo, rAjuste);
+
+  // Persistir
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'UPDATE fza_compras_sesiones_lineas SET ' +
+      '  PRECIO_VENTA_SESLIN = :v, ' +
+      '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN = :l';
+    q.ParamByName('v').AsFloat  := rVenta;
+    q.ParamByName('u').AsString := AUsuario;
+    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger := iLinea;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+end;
+
+procedure CalcularPrecioVentaLineas(ADM: TdmComprasSesiones;
+                                     const AUsuario: string;
+                                     const ALineas: array of Integer);
+var
+  i: Integer;
+begin
+  for i := Low(ALineas) to High(ALineas) do
+    CalcularPrecioVentaLinea(ADM, AUsuario, ALineas[i]);
+  ADM.unqrySesionLin.Refresh;
 end;
 
 end.

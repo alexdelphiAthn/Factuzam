@@ -169,6 +169,44 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 248
     Top = 184
   end
+  object unqryLineaSkusPrecios: TUniQuery
+    SQL.Strings = (
+      'SELECT C.ID_FILA_SES_SESCEL                      AS ID_FILA,'
+      '       C.ID_AV_PIVOT_SESCEL                      AS ID_AV_PIVOT,'
+      '       AVP.AV                                    AS VAL_PIVOT,'
+      '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'')'
+      '          FROM fza_compras_sesiones_lineas_filas_atr FA'
+      '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = FA.ID_AV_SESFILAT'
+      '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL'
+      '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL'
+      '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL'
+      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL'
+      '       )                                         AS VAL_FILA,'
+      '       P.PRECIO_COMPRA_SESLINSKU,'
+      '       P.PRECIO_VENTA_SESLINSKU'
+      '  FROM fza_compras_sesiones_celdas C'
+      '  JOIN fza_atributos_valores AVP'
+      '    ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL'
+      '  LEFT JOIN fza_compras_sesiones_lineas_skus_precios P'
+      '    ON P.SERIE_SES_SESLINSKU    = C.SERIE_SES_SESCEL'
+      '   AND P.NUMERO_SES_SESLINSKU   = C.NUMERO_SES_SESCEL'
+      '   AND P.LINEA_SES_SESLINSKU    = C.LINEA_SES_SESCEL'
+      '   AND P.ID_FILA_SES_SESLINSKU  = C.ID_FILA_SES_SESCEL'
+      '   AND P.ID_AV_PIVOT_SESLINSKU  = C.ID_AV_PIVOT_SESCEL'
+      ' WHERE C.SERIE_SES_SESCEL  = :SERIE_SES_SESLIN'
+      '   AND C.NUMERO_SES_SESCEL = :NUMERO_SES_SESLIN'
+      '   AND C.LINEA_SES_SESCEL  = :LINEA_SESLIN'
+      ' GROUP BY C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL'
+      ' ORDER BY C.ID_FILA_SES_SESCEL, AVP.AV')
+    MasterSource = dsSesionLin
+    Left = 632
+    Top = 16
+  end
+  object dsLineaSkusPrecios: TDataSource
+    DataSet = unqryLineaSkusPrecios
+    Left = 632
+    Top = 72
+  end
   object unqryResumenAlmacen: TUniQuery
     SQL.Strings = (
       'SELECT R.CODIGO_ALM, A.NOMBRE_ALM_ALM,'

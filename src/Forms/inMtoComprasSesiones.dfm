@@ -268,7 +268,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Top = 220
               Caption = ' Plantilla precios e impuestos '
               TabOrder = 1
-              Height = 120
+              Height = 200
               Width = 500
               object lblTipoIva: TcxLabel
                 Left = 16
@@ -333,6 +333,52 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 4
+              end
+              object lblMultiploRedondeo: TcxLabel
+                Left = 16
+                Top = 132
+                Caption = 'Mult.redondeo'
+                TabOrder = 8
+              end
+              object spnMultiploRedondeo: TcxDBSpinEdit
+                Left = 130
+                Top = 130
+                DataBinding.DataField = 'MULTIPLO_REDONDEO_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueType = vtFloat
+                Properties.Increment = 0.050000000000000000
+                TabOrder = 5
+                Width = 80
+              end
+              object lblAjusteFinal: TcxLabel
+                Left = 230
+                Top = 132
+                Caption = 'Ajuste final'
+                TabOrder = 9
+              end
+              object spnAjusteFinal: TcxDBSpinEdit
+                Left = 320
+                Top = 130
+                DataBinding.DataField = 'AJUSTE_FINAL_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueType = vtFloat
+                Properties.Increment = 0.010000000000000000
+                Properties.MinValue = -10.000000000000000000
+                Properties.MaxValue = 10.000000000000000000
+                TabOrder = 6
+                Width = 80
+              end
+              object chkPrecioPorSku: TcxDBCheckBox
+                Left = 16
+                Top = 166
+                Caption = 'Permitir precio distinto por SKU (talla'#215'color)'
+                DataBinding.DataField = 'ESPRECIO_POR_SKU_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                Properties.OnEditValueChanged = chkPrecioPorSkuPropertiesEditValueChanged
+                TabOrder = 7
+                Width = 400
               end
             end
             object gbVariacion: TcxGroupBox
@@ -645,6 +691,17 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 3
                   OnClick = btnResolverDuplicadoClick
                 end
+                object btnCalcularVenta: TcxButton
+                  Left = 610
+                  Top = 4
+                  Width = 170
+                  Height = 28
+                  Caption = 'Calcular venta'
+                  Hint = 'Aplica formula coste->venta a la linea actual o a las seleccionadas'
+                  ShowHint = True
+                  TabOrder = 4
+                  OnClick = btnCalcularVentaClick
+                end
               end
               object cxgrdLineas: TcxGrid
                 Left = 1
@@ -855,6 +912,64 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   ExplicitLeft = 2
                   ExplicitWidth = 1018
                   ExplicitHeight = 255
+                end
+              end
+              object splPreciosSku: TcxSplitter
+                Left = 1
+                Top = 349
+                Width = 1030
+                Height = 8
+                AlignSplitter = salBottom
+                Control = gbPreciosSku
+                Visible = False
+              end
+              object gbPreciosSku: TcxGroupBox
+                Left = 1
+                Top = 357
+                Align = alBottom
+                Caption = ' Precios por SKU (override) '
+                TabOrder = 2
+                Height = 180
+                Width = 1030
+                Visible = False
+                object cxgrdPreciosSku: TcxGrid
+                  Left = 4
+                  Top = 22
+                  Width = 1022
+                  Height = 154
+                  Align = alClient
+                  TabOrder = 0
+                  object tvPreciosSku: TcxGridDBTableView
+                    Navigator.Buttons.CustomButtons = <>
+                    DataController.DataSource = nil
+                    object dbcPreciosSkuValFila: TcxGridDBColumn
+                      Caption = 'Color / Fila'
+                      DataBinding.FieldName = 'VAL_FILA'
+                      Options.Editing = False
+                      Width = 160
+                    end
+                    object dbcPreciosSkuValPivot: TcxGridDBColumn
+                      Caption = 'Talla / Pivot'
+                      DataBinding.FieldName = 'VAL_PIVOT'
+                      Options.Editing = False
+                      Width = 100
+                    end
+                    object dbcPreciosSkuPrecioCompra: TcxGridDBColumn
+                      Caption = 'Pr. compra'
+                      DataBinding.FieldName = 'PRECIO_COMPRA_SESLINSKU'
+                      Properties.OnEditValueChanged = dbcPreciosSkuPrecioCompraPropertiesEditValueChanged
+                      Width = 110
+                    end
+                    object dbcPreciosSkuPrecioVenta: TcxGridDBColumn
+                      Caption = 'Pr. venta'
+                      DataBinding.FieldName = 'PRECIO_VENTA_SESLINSKU'
+                      Properties.OnEditValueChanged = dbcPreciosSkuPrecioVentaPropertiesEditValueChanged
+                      Width = 110
+                    end
+                  end
+                  object glPreciosSku: TcxGridLevel
+                    GridView = tvPreciosSku
+                  end
                 end
               end
             end
