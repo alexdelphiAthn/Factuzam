@@ -62,6 +62,11 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   Caption = 'Nombre'
                   Width = 160
                   FieldName = 'NOMBRE_VA'
+                end
+                item
+                  Caption = 'Orden'
+                  Width = 60
+                  FieldName = 'ORDEN_VA'
                 end>
               Properties.ListFieldIndex = 1
               Properties.ListOptions.CaseInsensitive = True
@@ -208,6 +213,11 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   Caption = 'Nombre'
                   Width = 160
                   FieldName = 'NOMBRE_VA'
+                end
+                item
+                  Caption = 'Orden'
+                  Width = 60
+                  FieldName = 'ORDEN_VA'
                 end>
               Properties.ListFieldIndex = 1
               Properties.ListOptions.CaseInsensitive = True
