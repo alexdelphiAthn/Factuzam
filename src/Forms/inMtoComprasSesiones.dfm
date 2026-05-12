@@ -126,9 +126,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Top = 22
                 DataBinding.DataField = 'SERIE_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.ListColumns = <>
+                Properties.KeyFieldNames = 'EMPSER'
+                Properties.ListColumns = <
+                  item
+                    FieldName = 'EMPSER'
+                  end
+                  item
+                    FieldName = 'SUBTIPO_EMPSER'
+                  end>
                 TabOrder = 0
-                Width = 80
+                Width = 140
               end
               object lblNumero: TcxLabel
                 Left = 170
