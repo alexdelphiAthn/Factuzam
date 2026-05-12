@@ -3975,8 +3975,15 @@ begin
 
   if IsMariaDB then
   begin
-    // Cuerpo MariaDB capturado como texto: ya viene formateado.
-    Result := Result + SlineBreak + FMariaDBBodyText;
+    // Cuerpo MariaDB capturado como texto: ya viene formateado, terminado en
+    // END. Envolvemos la sentencia en DELIMITER $$ ... $$ DELIMITER ;
+    // para que MariaDB/MySQL acepten los ';' internos del cuerpo al
+    // ejecutar el script (sin esto, la CLI corta en el primer ';').
+    // El formateador externo añade ';' al final, que completa "DELIMITER ;".
+    Result :=
+      SQLKeyWord('DELIMITER $$', Options) + SlineBreak + SlineBreak +
+      Result + SlineBreak + FMariaDBBodyText + '$$' + SlineBreak + SlineBreak +
+      SQLKeyWord('DELIMITER', Options);
   end
   else
   begin
