@@ -1041,7 +1041,8 @@ function TSQLScanner.DoIdentifier : TSQLToken;
           end;
           'a' .. 'z',
           'A' .. 'Z',
-          '@':
+          '@',
+          '$':  // SOPORTE MARIADB: '$$' como marcador de DELIMITER
           Result := DoIdentifier;
       else
         if Ord(TokenStr[0]) > 127 then
