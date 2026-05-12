@@ -77,5 +77,26 @@ UPDATE `fza_variaciones_atributos`
    AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '');
 
 -- ---------------------------------------------------------------------------
+-- 4. Inicializar PAD_ART_FAM y CONTADOR_ART_FAM en familias ya existentes
+-- ---------------------------------------------------------------------------
+-- Las columnas se anaden via ALTER en compras_sesiones.sql con DEFAULT 0/5,
+-- pero MySQL no aplica el DEFAULT a filas existentes; quedan en NULL para
+-- los registros que ya estaban en la tabla antes de la migracion. Eso hace
+-- que el TcxDBSpinEdit muestre vacio y no permita editar bien.
+-- Los inicializamos a 0 y 5 respectivamente.
+
+UPDATE `fza_articulos_familias`
+   SET `CONTADOR_ART_FAM` = 0
+ WHERE `CONTADOR_ART_FAM` IS NULL;
+
+UPDATE `fza_articulos_familias`
+   SET `PAD_ART_FAM` = 5
+ WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
+
+UPDATE `fza_articulos_familias`
+   SET `ESCONTADOR_ART_FAM` = 'N'
+ WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '';
+
+-- ---------------------------------------------------------------------------
 -- Listo. Reabrir Factuzam para que cargue los nuevos winforms.
 -- ---------------------------------------------------------------------------
