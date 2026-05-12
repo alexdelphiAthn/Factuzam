@@ -4542,6 +4542,50 @@ begin
             GetNextToken;
           end;
         end
+        else if SameText(CurrentTokenString, 'DELIMITER') then
+        begin
+          // --- SOPORTE MARIADB: directiva DELIMITER ---
+          // Captura como bloque crudo todo desde "DELIMITER xxx" hasta el
+          // siguiente "DELIMITER yyy" (o EOF). Permite preservar PROCEDURE
+          // /FUNCTION/TRIGGER con sintaxis MariaDB sin tener que parsearlos.
+          Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
+          TSQLRawStatement(Result).RawText := CurrentTokenString;
+          GetNextToken; // símbolo del delimitador (p.ej. $$)
+          if not (CurrentToken in [tsqlEOF]) then
+          begin
+            TSQLRawStatement(Result).RawText :=
+              TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+            GetNextToken;
+          end;
+          while not (CurrentToken = tsqlEOF) do
+          begin
+            // Detectar el DELIMITER de cierre
+            if (CurrentToken = tsqlIdentifier) and
+               SameText(CurrentTokenString, 'DELIMITER') then
+            begin
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+              GetNextToken;
+              if not (CurrentToken in [tsqlEOF]) then
+              begin
+                TSQLRawStatement(Result).RawText :=
+                  TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+                // Si el símbolo es ';', lo dejamos sin consumir para que el
+                // chequeo final de Parse() lo trate como fin de sentencia.
+                if CurrentToken <> tsqlSemicolon then
+                  GetNextToken;
+              end;
+              Break;
+            end;
+            if CurrentToken = tsqlString then
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+            else
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+            GetNextToken;
+          end;
+        end
         else
           UnexpectedToken;
       end;
