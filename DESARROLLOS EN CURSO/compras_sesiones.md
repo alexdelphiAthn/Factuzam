@@ -16,6 +16,7 @@ Una sesión es **puramente borrador**. Mientras el usuario edita:
 - **NO** se generan SKUs en `fza_articulos_skus`.
 - **NO** se crean códigos de barras en `fza_codigos_barras`.
 - **NO** se enlaza al proveedor en `fza_articulos_proveedores`.
+- **NO** se crean ni modifican tarifas en `fza_articulos_tarifas`.
 - **NO** se mueve stock ni se crean líneas de pedido/albarán de compra.
 
 Todo vive en las tablas de la sesión (`fza_compras_*`). Sólo cuando el usuario
