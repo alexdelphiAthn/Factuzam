@@ -997,7 +997,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuAtributosConjuntos: TMenuItem
           Caption = 'Colecciones de Atributos'
-          ShortCut = 16467
+          ShortCut = 49235
           OnClick = mnuAtributosConjuntosClick
         end
       end
@@ -1141,10 +1141,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Caption = 'Compras'
       object Sesiones1: TMenuItem
         Caption = 'Sesiones'
-        OnClick = Sesiones1Click
-        object CrearArtculosyunpedidoounalbarn1: TMenuItem
+        object mnuCrearArtculosyunpedidoounalbarn: TMenuItem
           Caption = 'Crear art'#237'culos y un pedido o un albar'#225'n'
-          OnClick = CrearArtculosyunpedidoounalbarn1Click
+          ShortCut = 16467
+          OnClick = Sesiones1Click
         end
       end
       object Pedidos1: TMenuItem
