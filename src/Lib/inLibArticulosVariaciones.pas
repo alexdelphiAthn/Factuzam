@@ -406,7 +406,7 @@ begin
   lbl.Caption := 'Tipo de variación: ' + FTipoVariacion + ' — ' +
                                                                FNombreVariacion;
   lbl.Style.Font.Style := [fsBold];
-  lbl.AutoSize := True;
+  //lbl.AutoSize := True;
 
   Top := MARGEN_V + ALTO_FILA + MARGEN_V;
 
@@ -434,7 +434,7 @@ begin
   lbl.Top      := ATop + 4;
   lbl.Width    := ANCHO_LABEL;
   lbl.Height   := ALTO_FILA;
-  lbl.AutoSize := False;
+//  lbl.AutoSize := False;
   lbl.Caption  := S.NombreAtributo;
   cb := TcxComboBox.Create(FPanelAtributos);
   cb.Parent  := FPanelAtributos;
