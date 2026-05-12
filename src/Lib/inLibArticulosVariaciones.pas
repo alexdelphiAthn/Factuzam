@@ -433,6 +433,7 @@ begin
   lbl.Left     := MARGEN_H;
   lbl.Top      := ATop + 4;
   lbl.Width    := ANCHO_LABEL;
+  lbl.Height   := ALTO_FILA;
   lbl.AutoSize := False;
   lbl.Caption  := S.NombreAtributo;
   cb := TcxComboBox.Create(FPanelAtributos);
