@@ -57,7 +57,25 @@ SET @ddl := IF(@col_exists = 0,
   'ADD COLUMN `MULTIPLO_REDONDEO_SES` decimal(19,6) NOT NULL DEFAULT 0 '
   '  AFTER `ESREDONDEO_VENTA_SES`, '
   'ADD COLUMN `AJUSTE_FINAL_SES` decimal(19,6) NOT NULL DEFAULT 0 '
-  '  AFTER `MULTIPLO_REDONDEO_SES`',
+  '  AFTER `MULTIPLO_REDONDEO_SES`, '
+  'ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''N'' '
+  '  AFTER `AJUSTE_FINAL_SES`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Migracion auxiliar: si la tabla ya tenia MULTIPLO/AJUSTE pero no
+-- ESPRECIO_POR_SKU_SES (caso intermedio), anadirla suelta.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_compras_sesiones'
+     AND COLUMN_NAME  = 'ESPRECIO_POR_SKU_SES'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_compras_sesiones` '
+  'ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''N''',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
@@ -92,6 +110,8 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
                                   COMMENT 'Multiplo al que sube el precio venta calculado. 0 = sin redondeo.',
   `AJUSTE_FINAL_SES`            decimal(19,6) NOT NULL DEFAULT 0
                                   COMMENT 'Sumando final tras el redondeo. Negativo para acabar en .99, .95, etc.',
+  `ESPRECIO_POR_SKU_SES`        char(1)       NOT NULL DEFAULT 'N'
+                                  COMMENT 'S=permite override de precio compra/venta por cada SKU (fza_compras_sesiones_lineas_skus_precios).',
 
   -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES='N'.
   `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
