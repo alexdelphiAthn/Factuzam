@@ -33,6 +33,7 @@ uses
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Vcl.Controls, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Graphics, Vcl.Forms,
+  Vcl.Dialogs,
   cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxLookupEdit,
   DBAccess, Uni,
@@ -103,6 +104,7 @@ type
 
     procedure ReconstruirMatriz(const ALinea: Integer);
     procedure AddFila;
+    procedure AddColumna;
     procedure DelFilaSeleccionada;
     property  FilaSeleccionada: Integer read FFilaSeleccionada;
     property  AlmacenActual: string read FAlmacenActual write FAlmacenActual;
@@ -310,6 +312,11 @@ begin
         qA.Next;
       end;
       qA.Close;
+      // Modo texto libre (§12): si _filas_atr no devolvio valores, usamos
+      // la etiqueta tecleada por el usuario en ETIQUETA_TEXTO_SESFIL.
+      if (F.EtiquetaFila = '')
+         and (not qF.FieldByName('ETIQUETA_TEXTO_SESFIL').IsNull) then
+        F.EtiquetaFila := qF.FieldByName('ETIQUETA_TEXTO_SESFIL').AsString;
 
       F.Celdas := TList<TCeldaMatriz>.Create;
       DibujarFila(F, yTop);
@@ -516,11 +523,214 @@ begin
 end;
 
 procedure TGestorMatrizCompras.AddFila;
+var
+  q          : TUniQuery;
+  sSerie     : string;
+  sNumero    : string;
+  iIdAcFila  : Integer;
+  bModoTexto : Boolean;
+  sTexto     : string;
+  iNuevoId   : Integer;
+  iOrden     : Integer;
 begin
-  // Inserta una nueva fila en fza_compras_sesiones_lineas_filas con el
-  // siguiente ID_FILA disponible para la línea, y abre un picker para
-  // que el usuario elija el valor del eje fila (color) entre los que aún
-  // no estén en la matriz. Implementación detallada pendiente.
+  if FDM = nil then Exit;
+  if FDM.unqryTablaG.IsEmpty then Exit;
+  if FLineaActual <= 0 then Exit;
+
+  sSerie  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  // Modo texto libre (§12): ID_AC_FILA_SES vacio en cabecera => el usuario
+  // teclea el nombre de la fila libremente. Modo conjunto (TODO): habria
+  // que abrir un picker con los valores del conjunto aun no usados; queda
+  // pendiente.
+  if FDM.unqryTablaG.FieldByName('ID_AC_FILA_SES').IsNull then
+    iIdAcFila := 0
+  else
+    iIdAcFila := FDM.unqryTablaG.FieldByName('ID_AC_FILA_SES').AsInteger;
+  bModoTexto := (iIdAcFila = 0);
+
+  if not bModoTexto then
+  begin
+    // Modo conjunto: picker pendiente. Avisamos para no dejar al usuario
+    // confundido (sin esto pulsar el boton no hacia absolutamente nada).
+    MessageDlg(
+      'El selector de valores del conjunto fila aun no esta implementado.' +
+      sLineBreak + sLineBreak +
+      'Mientras tanto, en la cabecera deja vacio el campo "Conjunto fila" ' +
+      'para teclear los colores libremente.',
+      mtInformation, [mbOk], 0);
+    Exit;
+  end;
+
+  // Pedir el texto de la fila
+  sTexto := '';
+  if not InputQuery('Nueva fila', 'Nombre de la fila (color del proveedor):',
+                    sTexto) then Exit;
+  sTexto := Trim(sTexto);
+  if sTexto = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // Siguiente ID_FILA y ORDEN para la linea. Para el orden usamos pasos
+    // de 10 (10, 20, 30...) para que el SKU se ordene correctamente y deje
+    // huecos por si el usuario quiere reordenar despues.
+    q.SQL.Text :=
+      'SELECT COALESCE(MAX(ID_FILA_SESFIL), 0)  + 1  AS NEXT_ID, ' +
+      '       COALESCE(MAX(ORDEN_SESFIL), 0)   + 10 AS NEXT_ORDEN ' +
+      '  FROM fza_compras_sesiones_lineas_filas ' +
+      ' WHERE SERIE_SES_SESFIL = :s AND NUMERO_SES_SESFIL = :n ' +
+      '   AND LINEA_SES_SESFIL = :l';
+    q.ParamByName('s').AsString  := sSerie;
+    q.ParamByName('n').AsString  := sNumero;
+    q.ParamByName('l').AsInteger := FLineaActual;
+    q.Open;
+    iNuevoId := q.FieldByName('NEXT_ID').AsInteger;
+    iOrden   := q.FieldByName('NEXT_ORDEN').AsInteger;
+    q.Close;
+
+    q.SQL.Text :=
+      'INSERT INTO fza_compras_sesiones_lineas_filas ' +
+      '  (SERIE_SES_SESFIL, NUMERO_SES_SESFIL, LINEA_SES_SESFIL, ' +
+      '   ID_FILA_SESFIL, ORDEN_SESFIL, ETIQUETA_TEXTO_SESFIL, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'VALUES (:s, :n, :l, :id, :o, :t, NOW(), :u)';
+    q.ParamByName('s').AsString  := sSerie;
+    q.ParamByName('n').AsString  := sNumero;
+    q.ParamByName('l').AsInteger := FLineaActual;
+    q.ParamByName('id').AsInteger := iNuevoId;
+    q.ParamByName('o').AsInteger  := iOrden;
+    q.ParamByName('t').AsString   := sTexto;
+    q.ParamByName('u').AsString   := FUsuario;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+
+  ReconstruirMatriz(FLineaActual);
+end;
+
+procedure TGestorMatrizCompras.AddColumna;
+var
+  q             : TUniQuery;
+  iIdAcPivot    : Integer;
+  sIdAtb        : string;
+  sNombreNueva  : string;
+  sOrdenStr     : string;
+  iOrdenSugerido: Integer;
+  iOrden        : Integer;
+  iIdAv         : Integer;
+begin
+  // Anade una talla (o valor pivot) al conjunto seleccionado. Replica el
+  // patron de inMtoModalGenerarSKUs.btnAddValueClick: el valor entra en
+  // fza_atributos_valores (si no estaba) y se engancha al conjunto pivot
+  // de la sesion mediante fza_atributos_conjuntos_det para que aparezca
+  // como columna nueva de la matriz y quede disponible en futuras sesiones.
+  if FDM = nil then Exit;
+  if FDM.unqryTablaG.IsEmpty then Exit;
+
+  if FDM.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').IsNull then
+  begin
+    MessageDlg(
+      'Selecciona primero un "Conjunto pivot" en la cabecera de la sesion ' +
+      'para poder anadirle un valor (talla).',
+      mtWarning, [mbOk], 0);
+    Exit;
+  end;
+  iIdAcPivot := FDM.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // Atributo del conjunto pivot (CO, TAL, ...) — necesario para crear el
+    // AV bajo ese atributo.
+    q.SQL.Text :=
+      'SELECT ID_VA_AC, NOMBRE_AC FROM fza_atributos_conjuntos ' +
+      ' WHERE ID_AC = :ac';
+    q.ParamByName('ac').AsInteger := iIdAcPivot;
+    q.Open;
+    if q.IsEmpty then
+    begin
+      q.Close;
+      MessageDlg('El conjunto pivot no existe en la BBDD.',
+                 mtError, [mbOk], 0);
+      Exit;
+    end;
+    sIdAtb := q.FieldByName('ID_VA_AC').AsString;
+    q.Close;
+
+    // Orden sugerido = ultimo orden en el conjunto + 10. Para que el SKU
+    // ordene correctamente (38, 40, 42, 44...) y quede hueco para inserts.
+    q.SQL.Text :=
+      'SELECT COALESCE(MAX(ORDEN_ACD), 0) + 10 AS NEXT_ORDEN ' +
+      '  FROM fza_atributos_conjuntos_det ' +
+      ' WHERE ID_AC_ACD = :ac';
+    q.ParamByName('ac').AsInteger := iIdAcPivot;
+    q.Open;
+    iOrdenSugerido := q.FieldByName('NEXT_ORDEN').AsInteger;
+    q.Close;
+
+    // Inputs del usuario: nombre del valor y orden.
+    sNombreNueva := '';
+    if not InputQuery('Anadir talla / valor pivot',
+                      'Nombre del valor (ej: XXL, 47):', sNombreNueva) then
+      Exit;
+    sNombreNueva := Trim(sNombreNueva);
+    if sNombreNueva = '' then Exit;
+
+    sOrdenStr := IntToStr(iOrdenSugerido);
+    if not InputQuery('Anadir talla / valor pivot',
+        'Orden (los SKUs se ordenan por este numero; usa pasos de 10).',
+        sOrdenStr) then Exit;
+    iOrden := StrToIntDef(Trim(sOrdenStr), iOrdenSugerido);
+
+    // 1. AV en fza_atributos_valores (si no existe).
+    q.SQL.Text :=
+      'SELECT ID_AV FROM fza_atributos_valores ' +
+      ' WHERE ID_VA_AV = :va AND TRIM(UPPER(AV)) = UPPER(:v)';
+    q.ParamByName('va').AsString := sIdAtb;
+    q.ParamByName('v').AsString  := sNombreNueva;
+    q.Open;
+    if not q.IsEmpty then
+      iIdAv := q.FieldByName('ID_AV').AsInteger
+    else
+    begin
+      q.Close;
+      q.SQL.Text :=
+        'INSERT INTO fza_atributos_valores ' +
+        '  (ID_VA_AV, AV, ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, ' +
+        '   USUARIO_MODIF) ' +
+        'VALUES (:va, :v, :o, NOW(), :u, :u)';
+      q.ParamByName('va').AsString := sIdAtb;
+      q.ParamByName('v').AsString  := sNombreNueva;
+      q.ParamByName('o').AsInteger := iOrden;
+      q.ParamByName('u').AsString  := FUsuario;
+      q.ExecSQL;
+      q.Close;
+      q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
+      q.Open;
+      iIdAv := q.FieldByName('ID').AsInteger;
+    end;
+    q.Close;
+
+    // 2. Engancharlo al conjunto pivot (idempotente).
+    q.SQL.Text :=
+      'INSERT IGNORE INTO fza_atributos_conjuntos_det ' +
+      '  (ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   USUARIO_MODIF) ' +
+      'VALUES (:ac, :av, :o, NOW(), :u, :u)';
+    q.ParamByName('ac').AsInteger := iIdAcPivot;
+    q.ParamByName('av').AsInteger := iIdAv;
+    q.ParamByName('o').AsInteger  := iOrden;
+    q.ParamByName('u').AsString   := FUsuario;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+
   ReconstruirMatriz(FLineaActual);
 end;
 
