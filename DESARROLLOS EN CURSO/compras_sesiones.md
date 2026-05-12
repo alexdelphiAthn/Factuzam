@@ -515,6 +515,54 @@ En cualquier punto antes del paso 7 la sesión puede:
 1. **MVP** — Sesión + matriz pivotada + materialización a artículos/SKUs/EAN13.
    Sin pedido/albarán (eso es manual después).
 2. **Hito 2** — Kits de cantidades + plantilla de propiedades fijas/variables.
-3. **Hito 3** — Generación automática de pedido de compra.
-4. **Hito 4** — Generación automática de albarán + movimiento de stock.
-5. **Hito 5** — Importación CSV proveedor + plantillas guardadas.
+3. **Hito 3** — Multi-almacén en la matriz (✅ implementado).
+4. **Hito 4** — Generación automática de pedido de compra (uno por sesión).
+5. **Hito 5** — Generación automática de N albaranes + movimientos de stock,
+   uno por almacén con cantidad > 0.
+6. **Hito 6** — Importación CSV proveedor + plantillas guardadas.
+
+---
+
+## 10. Multi-almacén en la matriz
+
+### 10.1 Modelo
+
+Cada **celda** de la matriz lleva ahora una cuarta dimensión: `CODIGO_ALM_SESCEL`.
+La clave primaria de `fza_compras_sesiones_celdas` pasa a ser
+`(SERIE, NUMERO, LINEA, ID_FILA, ID_AV_PIVOT, CODIGO_ALM)`. Una misma combinación
+talla×color puede tener cantidades distintas en almacenes distintos.
+
+`CODIGO_ALM_SES` de la cabecera sigue siendo el **almacén por defecto**: si una
+celda se guarda con `CODIGO_ALM_SESCEL = ''` se interpreta como "el de cabecera"
+en consultas y materialización.
+
+### 10.2 UI
+
+Encima de la matriz aparece un nuevo selector **«Almacén editando»** (`cbbAlmacenMatriz`):
+- Al cargar la línea por primera vez se inicializa con `CODIGO_ALM_SES` de cabecera.
+- Cambiar la selección redibuja la matriz mostrando solo las cantidades de ese almacén.
+- Al introducir una cantidad, se persiste con `CODIGO_ALM_SESCEL = <almacén actual>`.
+
+Para ver simultáneamente todas las capas: la pestaña Materialización tiene un
+resumen agregado por almacén (vista `VI_SES_RESUMEN_ALMACEN`) y el grid de preview
+ordena por almacén → línea → fila → pivot.
+
+### 10.3 Materialización
+
+- **SKUs y EAN13** siguen siendo a nivel de **artículo** (no por almacén). El query
+  hace `GROUP BY (linea, fila, pivot)` para no duplicar SKUs ni quemar EAN13s.
+- **Pedido de compra** (cuando `ESGENERA_PEDIDO_SES = 'S'`): uno único, con líneas
+  totalizadas (SUM por SKU sobre todos los almacenes).
+- **Albaranes de compra** (cuando `ESGENERA_ALBARAN_SES = 'S'`): N albaranes, uno
+  por cada `CODIGO_ALM` con cantidad > 0. Cada albarán mueve solo su stock al
+  almacén correspondiente.
+
+### 10.4 Limitaciones
+
+- La cabecera de sesión guarda únicamente la **referencia al primer** albarán
+  generado (`SERIE_ALBC_SES`/`NUMERO_ALBC_SES`). Si se generan varios albaranes
+  necesitaríamos una tabla `fza_compras_sesiones_albaranes` que enumere todos
+  los albaranes resultantes. Pendiente cuando se conecte la generación real.
+- El kit "aplicar a fila" / "aplicar a todas" sólo afecta a la capa de almacén
+  actualmente visible. Si quieres replicar el kit a todos los almacenes habría
+  que añadir un botón «Aplicar a todos los almacenes».

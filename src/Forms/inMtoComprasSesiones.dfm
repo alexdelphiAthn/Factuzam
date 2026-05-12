@@ -739,15 +739,50 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Left = 8
                 Top = 4
                 Caption = 'L'#237'nea seleccionada: -'
-                TabOrder = 2
+                TabOrder = 3
               end
-              object pnlMatrizBotones: TPanel
+              object pnlAlmacenSel: TPanel
                 Left = 1
                 Top = 1
                 Width = 1030
                 Height = 36
                 Align = alTop
                 TabOrder = 0
+                ExplicitWidth = 1022
+                object lblAlmacenSel: TcxLabel
+                  Left = 8
+                  Top = 8
+                  Caption = 'Almac'#233'n editando'
+                  TabOrder = 2
+                end
+                object cbbAlmacenMatriz: TcxLookupComboBox
+                  Left = 130
+                  Top = 6
+                  Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                  Properties.ListColumns = <
+                    item
+                      FieldName = 'NOMBRE_ALM_ALM'
+                    end>
+                  Properties.OnChange = cbbAlmacenMatrizPropertiesChange
+                  TabOrder = 0
+                  Width = 260
+                end
+                object lblTotalesPorAlm: TcxLabel
+                  Left = 410
+                  Top = 8
+                  Caption = '(las celdas vac'#237'as usan el almac'#233'n de cabecera)'
+                  Style.TextColor = clGrayText
+                  Style.IsFontAssigned = True
+                  TabOrder = 1
+                end
+              end
+              object pnlMatrizBotones: TPanel
+                Left = 1
+                Top = 37
+                Width = 1030
+                Height = 36
+                Align = alTop
+                TabOrder = 1
                 ExplicitWidth = 1022
                 object lblKitSel: TcxLabel
                   Left = 8
