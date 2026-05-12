@@ -128,7 +128,7 @@ Vienen de `UniDataCaja`:
   - `CODIGO_ART_FACLIN`, `CODIGO_UNIDAD_FACLIN` (SKU).
   - `ATTR1_VALOR..ATTR5_VALOR` y `ATTR1_NOMBRE..ATTR5_NOMBRE` (columnas
     dinámicas de atributos).
-  - `VIENE_DE_DEPOSITO` (`S` = prenda apartada, `A` = abono, `''` = venta).
+  - `VIENE_DE_DEPOSITO` (`S` = prenda en depósito, `A` = abono, `''` = venta).
   - `ACCION_DEPOSITO` (`COBRAR`, `CANCELAR`, `NUEVO_DEP`, `AUMENTAR_DEP`).
 - `DatosCaja.qryStock` y `DatosCaja.qryDefinicionArticulo` para los lookups.
 
@@ -152,7 +152,7 @@ Se llama:
 
 #### 4.3.1 Búsqueda / scanner
 
-- `txtEntradaArticuloKeyPress:408` detecta tramas de scanner (STX/ETX) y
+- `txtEntradaArticuloKeyPress:408` detecta tramas de scanner de código de barras (STX/ETX) y
   vuelca el código directamente en la celda `tvArticulo`.
 - `tvArticuloPropertiesChange:559` lanza el temporizador `tmrBusq` (debounce).
 - `tmrBusqTimer:481` rellena `qryBusq` con `INPUT_BUSQUEDA LIKE %token%` y
