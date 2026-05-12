@@ -1927,9 +1927,11 @@ begin
       Expect(tsqlBegin);
       ParseStatementBlock(Result, P.Statements);
     end
-    else if CurrentToken = tsqlBegin then
+    else if (CurrentToken = tsqlBegin) or
+            // SOPORTE MARIADB: bloque etiquetado "label: BEGIN ... END label;"
+            ((CurrentToken = tsqlIdentifier) and (PeekNextToken = tsqlColon)) then
     begin
-      // Estilo MariaDB: captura BEGIN..END como texto formateado
+      // Estilo MariaDB: captura el cuerpo (con etiqueta opcional) como texto
       P.MariaDBBodyText := ParseProcedureBodyAsRaw;
     end
     else
@@ -4688,7 +4690,7 @@ var
     end
     else if NeedSpace then
     begin
-      if not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot,
+      if not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot, tsqlColon,
                                tsqlBraceClose, tsqlSquareBraceClose]) then
       begin
         // Sin espacio antes de '(' si previo es identifier-like (función)
@@ -4901,6 +4903,15 @@ begin
       ClauseIndent := 1;
     end;
 
+    GetNextToken;
+  end;
+
+  // SOPORTE MARIADB: tras el END del bloque etiquetado puede venir el label
+  // de cierre ("END PRC;"). Lo emitimos en la misma línea que END antes de
+  // dejar el control al outer Parse (que espera ';' o EOF).
+  if CurrentToken = tsqlIdentifier then
+  begin
+    AppendCurrent(FScanner.CurRow);
     GetNextToken;
   end;
 end;
