@@ -1,10 +1,16 @@
 inherited dmAtributosConjuntos: TdmAtributosConjuntos
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_atributos_conjuntos`'
-      '  (`NOMBRE_AC`, `ID_VAR_AC`, `ID_VA_AC`, `ESACTIVO_AC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+      
+        '  (`NOMBRE_AC`, `ID_VAR_AC`, `ID_VA_AC`, `ESACTIVO_AC`, `INSTANT' +
+        'E_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
-      '  (:`NOMBRE_AC`, :`ID_VAR_AC`, :`ID_VA_AC`, :`ESACTIVO_AC`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+      
+        '  (:`NOMBRE_AC`, :`ID_VAR_AC`, :`ID_VA_AC`, :`ESACTIVO_AC`, :`IN' +
+        'STANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODI' +
+        'F`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_atributos_conjuntos`'
       'WHERE'
@@ -12,7 +18,12 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     SQLUpdate.Strings = (
       'UPDATE `fza_atributos_conjuntos`'
       'SET'
-      '  `NOMBRE_AC` = :`NOMBRE_AC`, `ID_VAR_AC` = :`ID_VAR_AC`, `ID_VA_AC` = :`ID_VA_AC`, `ESACTIVO_AC` = :`ESACTIVO_AC`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      
+        '  `NOMBRE_AC` = :`NOMBRE_AC`, `ID_VAR_AC` = :`ID_VAR_AC`, `ID_VA' +
+        '_AC` = :`ID_VA_AC`, `ESACTIVO_AC` = :`ESACTIVO_AC`, `INSTANTE_MO' +
+        'DIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `U' +
+        'SUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODI' +
+        'F`'
       'WHERE'
       '  `ID_AC` = :`Old_ID_AC`')
     SQLLock.Strings = (
@@ -42,7 +53,9 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       '  (:ID_AC_ACD, :ID_AV_ACD, :ORDEN_ACD,'
-      '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
+      
+        '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODI' +
+        'F)')
     SQLDelete.Strings = (
       'DELETE FROM fza_atributos_conjuntos_det'
       'WHERE'
@@ -60,14 +73,18 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '  AND ID_AV_ACD = :Old_ID_AV_ACD')
     SQLLock.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
+      
+        '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
+        'F'
       '  FROM fza_atributos_conjuntos_det'
       ' WHERE ID_AC_ACD = :Old_ID_AC_ACD'
       '   AND ID_AV_ACD = :Old_ID_AV_ACD'
       ' FOR UPDATE')
     SQLRefresh.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
+      
+        '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
+        'F'
       '  FROM fza_atributos_conjuntos_det'
       ' WHERE ID_AC_ACD = :ID_AC_ACD'
       '   AND ID_AV_ACD = :ID_AV_ACD')
@@ -76,12 +93,13 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF'
+      
+        '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
+        'F'
       '  FROM fza_atributos_conjuntos_det'
       ' ORDER BY ORDEN_ACD, ID_AV_ACD')
     MasterFields = 'ID_AC'
     DetailFields = 'ID_AC_ACD'
-    Active = False
     AfterInsert = unqryConjuntoDetalleAfterInsert
     BeforePost = unqryConjuntoDetalleBeforePost
     Left = 200
@@ -91,6 +109,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
         DataType = ftInteger
         Name = 'ID_AC'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object dsConjuntoDetalle: TDataSource
@@ -103,9 +122,8 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     SQL.Strings = (
       'SELECT ID_AV, ID_VA_AV, AV, DESCRIPCION_AV, ORDEN_AV'
       '  FROM fza_atributos_valores'
-      ' WHERE ESACTIVO_AV = ''S'''
+      ' WHERE ESACTIVO_AV = '#39'S'#39
       ' ORDER BY ID_VA_AV, ORDEN_AV, AV')
-    Active = False
     Left = 376
     Top = 24
   end
@@ -121,12 +139,15 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '       a.CODIGO_FAM_ART, f.NOMBRE_FAM_FAM,'
       '       asg.ID_AC_ACA'
       '  FROM fza_articulos_conjuntos_asign asg'
-      '  INNER JOIN fza_articulos a ON a.CODIGO_ART_ART = asg.CODIGO_ART_ACA'
-      '  LEFT JOIN fza_articulos_familias f ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART'
+      
+        '  INNER JOIN fza_articulos a ON a.CODIGO_ART_ART = asg.CODIGO_AR' +
+        'T_ACA'
+      
+        '  LEFT JOIN fza_articulos_familias f ON f.CODIGO_FAM_FAM = a.COD' +
+        'IGO_FAM_ART'
       ' ORDER BY a.CODIGO_ART_ART')
     MasterFields = 'ID_AC'
     DetailFields = 'ID_AC_ACA'
-    Active = False
     Left = 552
     Top = 24
     ParamData = <
@@ -134,6 +155,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
         DataType = ftInteger
         Name = 'ID_AC'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object dsArticulosConjunto: TDataSource

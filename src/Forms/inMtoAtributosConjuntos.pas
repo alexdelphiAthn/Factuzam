@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAtributosConjuntos                                       }
 {    Tipo:       Formulario (Mto)                                              }
@@ -112,10 +112,12 @@ procedure TfrmMtoAtributosConjuntos.CrearTablaPrincipal;
 begin
   inherited;
   dmmAtributosConjuntos := tdmDataModule as TdmAtributosConjuntos;
-  tvValores.DataController.DataSource   := dmmAtributosConjuntos.dsConjuntoDetalle;
-  tvArticulos.DataController.DataSource := dmmAtributosConjuntos.dsArticulosConjunto;
+  tvValores.DataController.DataSource   :=
+                                        dmmAtributosConjuntos.dsConjuntoDetalle;
+  tvArticulos.DataController.DataSource :=
+                                      dmmAtributosConjuntos.dsArticulosConjunto;
   (tvValoresID_AV_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
-                                            dmmAtributosConjuntos.dsValoresLookup;
+                                          dmmAtributosConjuntos.dsValoresLookup;
   pkFieldName := 'ID_AC';
 end;
 

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAtributosConjuntos                                     }
 {    Tipo:       Data Module                                                   }
@@ -68,14 +68,16 @@ begin
   unqryArticulosConjunto.Open;
 end;
 
-procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(DataSet: TDataSet);
+procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(
+                                                             DataSet: TDataSet);
 begin
   inherited;
   DataSet.FieldByName('ID_AC_ACD').AsInteger :=
-                                    unqryTablaG.FieldByName('ID_AC').AsInteger;
+                                     unqryTablaG.FieldByName('ID_AC').AsInteger;
 end;
 
-procedure TdmAtributosConjuntos.unqryConjuntoDetalleBeforePost(DataSet: TDataSet);
+procedure TdmAtributosConjuntos.unqryConjuntoDetalleBeforePost(
+                                                             DataSet: TDataSet);
 begin
   inherited;
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
