@@ -4911,7 +4911,13 @@ begin
   // SOPORTE MARIADB: tras el END del bloque etiquetado puede venir el label
   // de cierre ("END PRC;"). Lo emitimos en la misma línea que END antes de
   // dejar el control al outer Parse (que espera ';' o EOF).
-  if CurrentToken = tsqlIdentifier then
+  // OJO: NO consumir si el identifier es un marcador '$$' del cliente MySQL
+  // ni la directiva DELIMITER siguiente; ambos los gestiona el outer Parse
+  // como "ruido" al inicio de la siguiente sentencia.
+  if (CurrentToken = tsqlIdentifier) and
+     (CurrentTokenString <> '') and
+     (CurrentTokenString[1] <> '$') and
+     not SameText(CurrentTokenString, 'DELIMITER') then
   begin
     AppendCurrent(FScanner.CurRow);
     GetNextToken;
