@@ -91,7 +91,7 @@ type
     // ------------------------------------------------------------------
     gbDatosGen               : TcxGroupBox;
     lblSerie                 : TcxLabel;
-    cbbSerie                 : TcxDBLookupComboBox;
+    cbbSerie                 : TcxDBComboBox;
     lblNumero                : TcxLabel;
     txtNumero                : TcxDBTextEdit;
     lblFecha                 : TcxLabel;
@@ -305,6 +305,7 @@ type
     procedure btnAplicarKitFilaClick(Sender: TObject);
     procedure btnAplicarKitTodasClick(Sender: TObject);
     procedure cbbAlmacenMatrizPropertiesChange(Sender: TObject);
+    procedure cbbEmpresaPropertiesEditValueChanged(Sender: TObject);
     procedure chkPrecioPorSkuPropertiesEditValueChanged(Sender: TObject);
     procedure btnCalcularVentaClick(Sender: TObject);
     procedure dbcPreciosSkuPrecioCompraPropertiesEditValueChanged(
@@ -343,6 +344,7 @@ type
     function  EsSesionEditable: Boolean;
     procedure ActualizarVisibilidadPreciosSku;
     procedure UpsertPrecioSku(AField: string; ANuevo: Double);
+    procedure RellenarItemsSerie;
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -391,7 +393,10 @@ begin
 
   // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
   cbbAlmacenMatriz.Properties.ListSource     := dmComprasSesiones.dsAlmacenes;
-  cbbSerie.Properties.ListSource             := dmComprasSesiones.dsEmpresaSeries;
+  // cbbSerie es ahora TcxDBTextEdit (texto libre). El usuario puede
+  // teclear cualquier serie; al grabar, BeforePost asegura que esa
+  // serie exista en fza_empresas_series (la crea si no existe) y luego
+  // pide el contador.
 
   pcSesion.ActivePage := tsCabecera;
   FGestorMatriz := TGestorMatrizCompras.Create(sbMatriz,
@@ -409,6 +414,68 @@ begin
   sCodigoAlm := VarToStr(cbbAlmacenMatriz.EditValue);
   TGestorMatrizCompras(FGestorMatriz).AlmacenActual := sCodigoAlm;
   ReconstruirMatrizActual;
+end;
+
+procedure TfrmMtoComprasSesiones.cbbEmpresaPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  if (dmComprasSesiones = nil) or
+     (dmComprasSesiones.unqryTablaG = nil) or
+     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+
+  // Refresca el dropdown del combo Serie con las series de la nueva empresa
+  RellenarItemsSerie;
+
+  // Auto-primera: si la sesion esta en alta o edicion y SERIE_SES esta vacia,
+  // asigna la primera serie disponible. El usuario sigue pudiendo cambiarla
+  // tecleando o desplegando el combo.
+  if not (dmComprasSesiones.unqryTablaG.State in [dsEdit, dsInsert]) then Exit;
+  if dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString <> '' then Exit;
+  if cbbSerie.Properties.Items.Count > 0 then
+    dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString :=
+      cbbSerie.Properties.Items[0];
+end;
+
+procedure TfrmMtoComprasSesiones.RellenarItemsSerie;
+var
+  q    : TUniQuery;
+  sEmp : string;
+begin
+  // Vuelca en cbbSerie.Properties.Items la lista de series de la empresa
+  // actual con TIPO_DOC_EMPSER='SE' vigentes. Si el usuario teclea una
+  // serie nueva que no este en la lista, el BeforePost la crea al vuelo
+  // en fza_empresas_series.
+  if not Assigned(cbbSerie) then Exit;
+  cbbSerie.Properties.Items.Clear;
+  if (dmComprasSesiones = nil) or
+     (dmComprasSesiones.unqryTablaG = nil) or
+     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+  if dmComprasSesiones.unqryTablaG.IsEmpty and
+     (dmComprasSesiones.unqryTablaG.State = dsBrowse) then Exit;
+
+  sEmp := dmComprasSesiones.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  if Trim(sEmp) = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT EMPSER FROM fza_empresas_series ' +
+      ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
+      '   AND CODIGO_EMP_EMPSER = :emp ' +
+      '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+      ' ORDER BY EMPSER';
+    q.ParamByName('emp').AsString := sEmp;
+    q.Open;
+    while not q.Eof do
+    begin
+      cbbSerie.Properties.Items.Add(q.FieldByName('EMPSER').AsString);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
@@ -767,6 +834,11 @@ begin
   inherited;
   ActualizarEstadoUI;
   ActualizarVisibilidadPreciosSku;
+  // Si el cambio es porque navegamos a otra sesion (Field = nil) o porque
+  // cambia CODIGO_EMP_SES, refrescar el dropdown del combo de serie.
+  if (Field = nil) or
+     ((Field <> nil) and (UpperCase(Field.FieldName) = 'CODIGO_EMP_SES')) then
+    RellenarItemsSerie;
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
@@ -876,6 +948,10 @@ begin
   dm := TdmComprasSesiones(tdmDataModule);
   if dm.unqryTablaG = nil then Exit;
   if not dm.unqryTablaG.Active then Exit;
+  // En insercion siempre editable: el state change se dispara antes de
+  // que AfterInsert ponga ESTADO_SES='BORRADOR', por lo que sin esta
+  // guarda los controles quedarian disabled durante el alta.
+  if dm.unqryTablaG.State = dsInsert then Exit(True);
   if dm.unqryTablaG.IsEmpty then Exit;
   Result := dm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'BORRADOR';
 end;

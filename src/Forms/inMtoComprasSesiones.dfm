@@ -121,21 +121,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Caption = 'Serie'
                 TabOrder = 10
               end
-              object cbbSerie: TcxDBLookupComboBox
+              object cbbSerie: TcxDBComboBox
                 Left = 80
                 Top = 22
                 DataBinding.DataField = 'SERIE_SES'
                 DataBinding.DataSource = dsTablaG
-                Properties.KeyFieldNames = 'EMPSER'
-                Properties.ListColumns = <
-                  item
-                    FieldName = 'EMPSER'
-                  end
-                  item
-                    FieldName = 'SUBTIPO_EMPSER'
-                  end>
+                Properties.CharCase = ecUpperCase
+                Properties.MaxLength = 12
+                Properties.Items.Strings = ()
                 TabOrder = 0
-                Width = 140
+                Width = 160
               end
               object lblNumero: TcxLabel
                 Left = 170
@@ -193,6 +188,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 DataBinding.DataField = 'CODIGO_EMP_SES'
                 DataBinding.DataSource = dsTablaG
                 Properties.ListColumns = <>
+                Properties.OnEditValueChanged = cbbEmpresaPropertiesEditValueChanged
                 TabOrder = 4
                 Width = 300
               end
