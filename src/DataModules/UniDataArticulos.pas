@@ -896,6 +896,15 @@ begin
   iStockIdx := cdsEtiquetasArt.FieldByName(aFldStock).Index;
 
   cdsEtiquetasArt.DisableControls;
+  cdsEtiquetasArt.DisableConstraints;
+  // Los TField vienen marcados como ReadOnly desde el DataSetProvider; sin
+  // esto, el Fields[j].Value := ... peta con
+  // 'Field xxx cannot be modified'.
+  for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+  begin
+    cdsEtiquetasArt.Fields[j].ReadOnly := False;
+    cdsEtiquetasArt.Fields[j].Required := False;
+  end;
   try
     // Volcamos los originales a memoria, vaciamos el cds y lo
     // reconstruimos replicando cada fila por su stock.
