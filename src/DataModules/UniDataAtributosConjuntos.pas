@@ -38,6 +38,9 @@ type
     { Public declarations }
   end;
 
+var
+  dmAtributosConjuntos: TdmAtributosConjuntos;
+
 implementation
 
 uses
