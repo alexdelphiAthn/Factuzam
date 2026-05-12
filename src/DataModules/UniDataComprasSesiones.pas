@@ -198,6 +198,13 @@ begin
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
+    // Prerelleno empresa/almacen del usuario logueado (igual que inventarios).
+    // Sin esto el combo de serie queda vacio porque depende de CODIGO_EMP_SES,
+    // y el usuario veria los combos en blanco al pulsar "+".
+    if Trim(oEmpresa) <> '' then
+      FieldByName('CODIGO_EMP_SES').AsString := oEmpresa;
+    if Trim(oAlmacen) <> '' then
+      FieldByName('CODIGO_ALM_SES').AsString := oAlmacen;
     // SERIE_SES la elige el usuario del lookup cbbSerie alimentado por
     // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SE' + empresa.
     FieldByName('USUARIO_ALTA').AsString := oUser;
