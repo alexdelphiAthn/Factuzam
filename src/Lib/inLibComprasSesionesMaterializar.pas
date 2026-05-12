@@ -500,25 +500,32 @@ begin
     // Documentos resultantes — pendiente cuando existan las tablas
     // fza_pedidos_compra / fza_albaranes_compra.
     //
-    // Pedido de compra (uno solo, totalizado, sin mover stock):
-    //   Para cada SKU agregado, una línea con SUM(CANTIDAD_SESCEL) de
-    //   todos los almacenes:
-    //     INSERT INTO fza_pedidos_compra ...
-    //     INSERT INTO fza_pedidos_compra_lineas
-    //       SELECT ... SUM(CANTIDAD_SESCEL)
-    //         FROM fza_compras_sesiones_celdas
-    //        WHERE SERIE/NUMERO/(CANTIDAD>0)
-    //        GROUP BY SKU
+    // MODELO: N PEDIDOS + N ALBARANES, uno de cada por almacén con
+    // cantidad > 0. No hay almacén fijo: cada celda lleva su almacén
+    // (CODIGO_ALM_SESCEL) y si está vacío se usa el de cabecera como
+    // fallback.
     //
-    // Albaranes de compra (uno por almacén con cantidad > 0):
+    // Pedidos de compra (cuando AESGeneraPedido):
     //   Para cada CODIGO_ALM con cantidad > 0:
-    //     INSERT INTO fza_albaranes_compra (CODIGO_ALM=ese)
-    //     INSERT INTO fza_albaranes_compra_lineas (líneas de ese almacén)
-    //     INSERT INTO fza_movimientos_almacen
-    //       Una entrada por (SKU, almacén) con cantidad correspondiente
-    //   Se guarda el primer SERIE/NUMERO en SERIE_ALBC_SES/NUMERO_ALBC_SES;
-    //   los restantes se referencian en una nueva tabla
-    //   fza_compras_sesiones_albaranes si hay más de uno (no creada aún).
+    //     INSERT INTO fza_pedidos_compra (CODIGO_ALM_PEDC = ese, ...)
+    //     INSERT INTO fza_pedidos_compra_lineas (una por SKU con
+    //                 SUM(CANTIDAD) filtrado por ese almacén)
+    //     INSERT INTO fza_compras_sesiones_documentos
+    //       (TIPO_DOC='PEDC', CODIGO_ALM=ese, SERIE+NUMERO=ese)
+    //   No mueve stock (los pedidos son compromiso).
+    //
+    // Albaranes de compra (cuando AESGeneraAlbaran):
+    //   Para cada CODIGO_ALM con cantidad > 0:
+    //     INSERT INTO fza_albaranes_compra (CODIGO_ALM_ALBC = ese, ...)
+    //     INSERT INTO fza_albaranes_compra_lineas (líneas filtradas)
+    //     INSERT INTO fza_movimientos_almacen (entrada por SKU)
+    //     INSERT INTO fza_compras_sesiones_documentos
+    //       (TIPO_DOC='ALBC', CODIGO_ALM=ese, SERIE+NUMERO=ese)
+    //
+    // La cabecera de sesión mantiene SERIE_PEDC_SES/NUMERO_PEDC_SES y
+    // SERIE_ALBC_SES/NUMERO_ALBC_SES con el PRIMER documento de cada
+    // tipo, para listados rápidos. La lista completa vive en
+    // fza_compras_sesiones_documentos.
 
     if AESGeneraPedido then
     begin
