@@ -132,6 +132,7 @@ implementation
 
 uses
   inLibGlobalVar,
+  inLibtb,
   inLibComprasSesiones;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -354,11 +355,13 @@ end;
 procedure TdmComprasSesiones.AsegurarSerieEnEmpresasSeries(
   const AEmpresa, ASerie: string);
 var
-  q : TUniQuery;
+  q          : TUniQuery;
+  sCodigoSer : string;
 begin
   // Si el usuario teclea una serie nueva (no existe en fza_empresas_series
-  // para esa empresa+TIPO_DOC='SE'), la creamos al vuelo con
-  // CODIGO_SERIE_EMPSER autogenerado y fechas abiertas (vigencia inmediata).
+  // para esa empresa+TIPO_DOC='SE'), la creamos al vuelo. El campo
+  // CODIGO_SERIE_EMPSER es un contador propio que se genera con
+  // PRC_GET_NEXT_CONT('ES') -- mismo patron que UniDataEmpresas.
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -373,14 +376,21 @@ begin
     if q.FieldByName('N').AsInteger > 0 then Exit;
     q.Close;
 
+    // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
+    sCodigoSer := ObtenerSiguienteContador('ES');
+    if Trim(sCodigoSer) = '' then
+      raise Exception.Create('No se pudo obtener CODIGO_SERIE_EMPSER del ' +
+        'contador ES via PRC_GET_NEXT_CONT.');
+
     q.SQL.Text :=
       'INSERT INTO fza_empresas_series ' +
       '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, EMPSER, TIPO_DOC_EMPSER, ' +
       '   SUBTIPO_EMPSER, FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       'VALUES ' +
-      '  (CONCAT(:emp, ''-SE-'', :ser), :emp, :ser, ''SE'', ' +
+      '  (:cod, :emp, :ser, ''SE'', ' +
       '   ''NORMAL'', CURDATE(), NULL, NOW(), :u, NOW(), :u)';
+    q.ParamByName('cod').AsString := sCodigoSer;
     q.ParamByName('emp').AsString := AEmpresa;
     q.ParamByName('ser').AsString := ASerie;
     q.ParamByName('u').AsString   := oUser;
