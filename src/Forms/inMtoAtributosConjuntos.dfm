@@ -26,12 +26,45 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object cxGrdDBTabPrinID_VAR_AC: TcxGridDBColumn
               Caption = 'Variaci'#243'n'
               DataBinding.FieldName = 'ID_VAR_AC'
-              Width = 130
+              PropertiesClassName = 'TcxLookupComboBoxProperties'
+              Properties.KeyFieldNames = 'CODIGO_VAR'
+              Properties.ListColumns = <
+                item
+                  Caption = 'C'#243'digo'
+                  Width = 60
+                  FieldName = 'CODIGO_VAR'
+                end
+                item
+                  Caption = 'Nombre'
+                  Width = 180
+                  FieldName = 'NOMBRE_VAR'
+                end>
+              Properties.ListOptions.CaseInsensitive = True
+              Width = 160
             end
             object cxGrdDBTabPrinID_VA_AC: TcxGridDBColumn
               Caption = 'Atributo'
               DataBinding.FieldName = 'ID_VA_AC'
-              Width = 130
+              PropertiesClassName = 'TcxLookupComboBoxProperties'
+              Properties.KeyFieldNames = 'ID_ATB_VA'
+              Properties.ListColumns = <
+                item
+                  Caption = 'Variaci'#243'n'
+                  Width = 70
+                  FieldName = 'ID_VAR_VA'
+                end
+                item
+                  Caption = 'C'#243'digo'
+                  Width = 60
+                  FieldName = 'ID_ATB_VA'
+                end
+                item
+                  Caption = 'Nombre'
+                  Width = 160
+                  FieldName = 'NOMBRE_VA'
+                end>
+              Properties.ListOptions.CaseInsensitive = True
+              Width = 180
             end
             object cxGrdDBTabPrinESACTIVO_AC: TcxGridDBColumn
               Caption = 'Activo'
@@ -124,28 +157,61 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               TabOrder = 5
               Transparent = True
             end
-            object txtID_VAR_AC: TcxDBTextEdit
+            object cbbID_VAR_AC: TcxDBLookupComboBox
               Left = 127
               Top = 45
               DataBinding.DataField = 'ID_VAR_AC'
               DataBinding.DataSource = dsTablaG
+              Properties.KeyFieldNames = 'CODIGO_VAR'
+              Properties.ListColumns = <
+                item
+                  Caption = 'C'#243'digo'
+                  Width = 60
+                  FieldName = 'CODIGO_VAR'
+                end
+                item
+                  Caption = 'Nombre'
+                  Width = 180
+                  FieldName = 'NOMBRE_VAR'
+                end>
+              Properties.ListOptions.CaseInsensitive = True
+              Properties.ListOptions.ShowHeader = True
               TabOrder = 2
-              Width = 140
+              Width = 220
             end
             object lblIdVa: TcxLabel
-              Left = 280
+              Left = 360
               Top = 48
               Caption = 'Atributo'
               TabOrder = 6
               Transparent = True
             end
-            object txtID_VA_AC: TcxDBTextEdit
-              Left = 360
+            object cbbID_VA_AC: TcxDBLookupComboBox
+              Left = 440
               Top = 45
               DataBinding.DataField = 'ID_VA_AC'
               DataBinding.DataSource = dsTablaG
+              Properties.KeyFieldNames = 'ID_ATB_VA'
+              Properties.ListColumns = <
+                item
+                  Caption = 'Variaci'#243'n'
+                  Width = 70
+                  FieldName = 'ID_VAR_VA'
+                end
+                item
+                  Caption = 'C'#243'digo'
+                  Width = 60
+                  FieldName = 'ID_ATB_VA'
+                end
+                item
+                  Caption = 'Nombre'
+                  Width = 160
+                  FieldName = 'NOMBRE_VA'
+                end>
+              Properties.ListOptions.CaseInsensitive = True
+              Properties.ListOptions.ShowHeader = True
               TabOrder = 3
-              Width = 120
+              Width = 260
             end
             object lblIdAc: TcxLabel
               Left = 16
