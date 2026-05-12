@@ -209,6 +209,7 @@ type
     Panel2: TPanel;
     btStockExportarExcel: TcxButton;
     btReconstruirStock: TcxButton;
+    btImprimirEtiquetas: TcxButton;
     cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
     cxGridLevel5: TcxGridLevel;
@@ -299,6 +300,7 @@ type
     procedure cxButton11Click(Sender: TObject);
     procedure btStockExportarExcelClick(Sender: TObject);
     procedure btReconstruirStockClick(Sender: TObject);
+    procedure btImprimirEtiquetasClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
     procedure dbcTarifasMARGENButtonClick(Sender: TObject; AButtonIndex: Integer);
@@ -355,6 +357,7 @@ uses
   inMtoModalGenerarSKUs,
   inMtoModalAddPreciosTar,
   inMtoModalCalcularMargen,
+  inMtoModalEtiqArt,
   inLibEAN13,
   inLibtb;
 
@@ -1137,6 +1140,26 @@ begin
   if sMensaje = '' then
     sMensaje := 'Stock reconstruido.';
   ShowMessage(sMensaje);
+end;
+
+procedure TfrmMtoArticulos.btImprimirEtiquetasClick(Sender: TObject);
+var
+  formulario: TfrmPrintEtiqArt;
+begin
+  inherited;
+  if (not dsTablaG.Dataset.Active) or dsTablaG.Dataset.IsEmpty then
+  begin
+    ShowMessage('Seleccione primero un artículo para imprimir sus etiquetas.');
+    Exit;
+  end;
+  formulario := TfrmPrintEtiqArt.Create(Application);
+  try
+    formulario.edtCodArt.Text :=
+                        dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString;
+    formulario.ShowModal;
+  finally
+    FreeAndNil(formulario);
+  end;
 end;
 
 procedure TfrmMtoArticulos.btnGenerarCBClick(Sender: TObject);

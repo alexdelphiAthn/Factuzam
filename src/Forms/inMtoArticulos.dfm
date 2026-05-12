@@ -1477,6 +1477,15 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 0
                   OnClick = btReconstruirStockClick
                 end
+                object btImprimirEtiquetas: TcxButton
+                  Left = 7
+                  Top = 101
+                  Width = 162
+                  Height = 34
+                  Caption = 'Imprimir &Etiquetas'
+                  TabOrder = 2
+                  OnClick = btImprimirEtiquetasClick
+                end
               end
             end
             object tsMovimientos: TcxTabSheet
