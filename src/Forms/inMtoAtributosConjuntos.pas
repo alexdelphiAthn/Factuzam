@@ -55,6 +55,8 @@ type
     cbbID_VA_AC: TcxDBLookupComboBox;
     lblIdAc: TcxLabel;
     txtID_AC: TcxDBTextEdit;
+    lblIdVarDesc: TcxLabel;
+    lblIdVaDesc: TcxLabel;
     splSplitterFicha: TcxSplitter;
     pnlButtonFicha: TPanel;
     pcDetail: TcxPageControl;
@@ -88,8 +90,10 @@ type
     txtINSTANTEMODIF: TcxDBTextEdit;
     procedure dsTablaGStateChange(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
+    procedure dsTablaGDataChange(Sender: TObject; Field: TField);
   private
     dmmAtributosConjuntos: TdmAtributosConjuntos;
+    procedure ActualizarDescripciones;
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -127,6 +131,66 @@ begin
   (cxGrdDBTabPrinID_VA_AC.Properties as TcxLookupComboBoxProperties).ListSource
                                     := dmmAtributosConjuntos.dsAtributosLookup;
   pkFieldName := 'ID_AC';
+  ActualizarDescripciones;
+end;
+
+procedure TfrmMtoAtributosConjuntos.dsTablaGDataChange(Sender: TObject;
+                                                                 Field: TField);
+begin
+  if (Field = nil) or
+     (Field.FieldName = 'ID_VAR_AC') or
+     (Field.FieldName = 'ID_VA_AC') then
+    ActualizarDescripciones;
+end;
+
+procedure TfrmMtoAtributosConjuntos.ActualizarDescripciones;
+var
+  LIdVar, LIdVa: string;
+  LValor, LNombre, LOrden: Variant;
+begin
+  if (dmmAtributosConjuntos = nil) or (dsTablaG = nil) or
+     (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) then
+    Exit;
+
+  LIdVar := dsTablaG.DataSet.FieldByName('ID_VAR_AC').AsString;
+  if LIdVar = '' then
+    lblIdVarDesc.Caption := ''
+  else
+  begin
+    LValor := dmmAtributosConjuntos.unqryVariacionesLookup.Lookup(
+                                       'CODIGO_VAR', LIdVar, 'NOMBRE_VAR');
+    if VarIsNull(LValor) then
+      lblIdVarDesc.Caption := ''
+    else
+      lblIdVarDesc.Caption := VarToStr(LValor);
+  end;
+
+  LIdVa := dsTablaG.DataSet.FieldByName('ID_VA_AC').AsString;
+  if (LIdVar = '') or (LIdVa = '') then
+  begin
+    lblIdVaDesc.Caption := '';
+    Exit;
+  end;
+
+  LValor := dmmAtributosConjuntos.unqryAtributosLookup.Lookup(
+                                          'ID_VAR_VA;ID_ATB_VA',
+                                          VarArrayOf([LIdVar, LIdVa]),
+                                          'NOMBRE_VA;ORDEN_VA');
+  if not VarIsArray(LValor) then
+  begin
+    lblIdVaDesc.Caption := '';
+    Exit;
+  end;
+
+  LNombre := LValor[0];
+  LOrden  := LValor[1];
+  if VarIsNull(LNombre) then
+    LNombre := '';
+  if VarIsNull(LOrden) then
+    lblIdVaDesc.Caption := VarToStr(LNombre)
+  else
+    lblIdVaDesc.Caption :=
+                  Format('%s, orden %s', [VarToStr(LNombre), VarToStr(LOrden)]);
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGStateChange(Sender: TObject);
