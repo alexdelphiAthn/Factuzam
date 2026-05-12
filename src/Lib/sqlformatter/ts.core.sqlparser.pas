@@ -4598,42 +4598,91 @@ function TSQLParser.ParseProcedureBodyAsRaw: string;
 // queda en el token posterior al END exterior (típicamente ';').
 //
 // Reglas de formato:
-//  - Saltos de línea: forzados en puntos estructurales (antes de END / ELSE /
-//    ELSEIF, después de BEGIN / THEN / ELSE / ';'). También se respetan los
-//    saltos originales del fuente (FScanner.CurRow).
-//  - Indentación 2 espacios por nivel:
-//      * Inc tras BEGIN / THEN / ELSE / LOOP / REPEAT / DO.
-//      * Dec ANTES de END / ELSE / ELSEIF.
+//  - Indentación estructural (2 espacios por nivel):
+//      Inc tras BEGIN/THEN/ELSE/LOOP/REPEAT/DO; Dec antes de END/ELSE/ELSEIF.
+//  - Saltos de línea estructurales: antes de END/ELSE/ELSEIF, tras
+//    BEGIN/THEN/ELSE/';'.
+//  - Saltos de línea por cláusulas SQL: antes de FROM/WHERE/INTO/SET/VALUES/
+//    GROUP/ORDER/HAVING/LIMIT/JOIN/INNER/LEFT/RIGHT/ON/UNION (en depth 0),
+//    a indent de cláusula (+1 del bloque).
+//  - Saltos antes de AND/OR sólo dentro de WHERE/HAVING/ON.
+//  - Saltos tras ',' (depth 0) sólo dentro de SELECT-fields / SET / VALUES.
 //  - Espaciado "tight" alrededor de paréntesis, puntos, comas y ';'.
+//  - Sin espacio antes de '(' si el token anterior es identificador,
+//    keyword de función agregada o keyword de tipo (call style: IFNULL(,
+//    SUM(, decimal(, NOW(...)
 //
 // Seguimiento de profundidad: cuenta BEGIN/END pero ignora END seguido de
 // IF/WHILE/CASE/LOOP/REPEAT (cierres de sub-bloques, no del BEGIN exterior).
+const
+  // Tokens tras los que '(' no lleva espacio (estilo llamada a función)
+  FunctionCallPrev : TSQLTokens = [
+    tsqlIdentifier, tsqlSum, tsqlCount, tsqlAvg, tsqlMax, tsqlMin,
+    tsqlCast, tsqlExtract, tsqlUpper,
+    tsqlChar, tsqlVarchar, tsqlNChar, tsqlCharacter,
+    tsqlInt, tsqlInteger, tsqlSmallInt, tsqlDecimal, tsqlNumeric,
+    tsqlFloat, tsqlDate, tsqlTime, tsqlTimeStamp, tsqlBlob,
+    tsqlBraceClose, tsqlSquareBraceClose
+  ];
 var
   Depth        : Integer;
+  ParenDepth   : Integer;
   Indent       : Integer;
+  ClauseIndent : Integer;
   PrevRow      : Integer;
   CurRow       : Integer;
   NeedSpace    : Boolean;
   ForceNewline : Boolean;
   Done         : Boolean;
+  InStatement  : Boolean;
+  InWhereLike  : Boolean;
+  AllowCommaBreak : Boolean;
   Upper        : string;
   PeekTok      : TSQLToken;
   PeekStr      : string;
-  IsStructural : Boolean;
+
+  function IsClauseKeyword: Boolean;
+  begin
+    Result := (ParenDepth = 0) and
+      (SameText(Upper, 'FROM') or SameText(Upper, 'WHERE') or
+       SameText(Upper, 'INTO') or SameText(Upper, 'SET') or
+       SameText(Upper, 'VALUES') or SameText(Upper, 'ORDER') or
+       SameText(Upper, 'GROUP') or SameText(Upper, 'HAVING') or
+       SameText(Upper, 'LIMIT') or SameText(Upper, 'JOIN') or
+       SameText(Upper, 'INNER') or SameText(Upper, 'LEFT') or
+       SameText(Upper, 'RIGHT') or SameText(Upper, 'CROSS') or
+       SameText(Upper, 'ON') or SameText(Upper, 'UNION'));
+  end;
+
+  function IsAndOrInWhere: Boolean;
+  begin
+    Result := (ParenDepth = 0) and InWhereLike and
+      (SameText(Upper, 'AND') or SameText(Upper, 'OR'));
+  end;
 
   procedure AppendCurrent(ARow: Integer);
+  var
+    EffIndent : Integer;
   begin
     if (Result <> '') and ((ARow > PrevRow) or ForceNewline) then
     begin
       Result := Result + sLineBreak;
-      if Indent > 0 then
-        Result := Result + StringOfChar(' ', Indent * 2);
+      EffIndent := Indent + ClauseIndent;
+      if EffIndent > 0 then
+        Result := Result + StringOfChar(' ', EffIndent * 2);
       NeedSpace := False;
     end
-    else if NeedSpace and
-       not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot,
-                             tsqlBraceClose, tsqlSquareBraceClose]) then
-      Result := Result + ' ';
+    else if NeedSpace then
+    begin
+      if not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot,
+                               tsqlBraceClose, tsqlSquareBraceClose]) then
+      begin
+        // Sin espacio antes de '(' si previo es identifier-like (función)
+        if not ((CurrentToken = tsqlBraceOpen) and
+                (PreviousToken in FunctionCallPrev)) then
+          Result := Result + ' ';
+      end;
+    end;
 
     if CurrentToken = tsqlString then
       Result := Result + '''' + CurrentTokenString + ''''
@@ -4648,11 +4697,16 @@ var
 begin
   Result := '';
   Depth := 0;
+  ParenDepth := 0;
   Indent := 0;
+  ClauseIndent := 0;
   PrevRow := FScanner.CurRow;
   NeedSpace := False;
   ForceNewline := False;
   Done := False;
+  InStatement := False;
+  InWhereLike := False;
+  AllowCommaBreak := False;
 
   while (not Done) and (CurrentToken <> tsqlEOF) do
   begin
@@ -4669,8 +4723,6 @@ begin
     begin
       PeekTok := PeekNextToken;
       PeekStr := UpperCase(FPeekTokenString);
-      // END IF / END WHILE / END CASE / END LOOP / END REPEAT son cierres
-      // de sub-bloques: no afectan la profundidad del BEGIN exterior.
       if not ((PeekTok = tsqlIf) or
               (PeekTok = tsqlWhile) or
               (PeekTok = tsqlCase) or
@@ -4683,32 +4735,97 @@ begin
       end;
     end;
 
-    // Detecta tokens estructurales que deben aparecer al principio de una
-    // línea, dedentándose un nivel antes de su emisión.
-    IsStructural := (CurrentToken = tsqlEnd) or
-                    SameText(Upper, 'ELSE') or
-                    SameText(Upper, 'ELSEIF');
+    // ParenDepth: increment ANTES de emitir '('
+    if CurrentToken = tsqlBraceOpen then
+      Inc(ParenDepth);
 
-    if IsStructural then
+    // Saltos por cláusula SQL / AND-OR en WHERE-like
+    if IsClauseKeyword or IsAndOrInWhere then
     begin
       ForceNewline := True;
+      ClauseIndent := 1;
+    end;
+
+    // Saltos estructurales: END / ELSE / ELSEIF
+    if (CurrentToken = tsqlEnd) or SameText(Upper, 'ELSE') or
+       SameText(Upper, 'ELSEIF') then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 0;
+      InStatement := False;
+      InWhereLike := False;
+      AllowCommaBreak := False;
       if Indent > 0 then
         Dec(Indent);
     end;
 
     AppendCurrent(CurRow);
 
-    // Indent DESPUÉS de emitir BEGIN / THEN / ELSE / LOOP / REPEAT / DO
+    // ParenDepth: decrement DESPUÉS de emitir ')'
+    if CurrentToken = tsqlBraceClose then
+      if ParenDepth > 0 then
+        Dec(ParenDepth);
+
+    // Inc Indent tras BEGIN / THEN / ELSE / LOOP / REPEAT / DO
     if (CurrentToken = tsqlBegin) or SameText(Upper, 'THEN') or
        SameText(Upper, 'ELSE') or SameText(Upper, 'LOOP') or
        SameText(Upper, 'REPEAT') or (CurrentToken = tsqlDo) then
       Inc(Indent);
 
-    // Después de BEGIN / THEN / ELSE / ';' fuerza salto de línea (sirve
-    // tanto si la entrada está en una sola línea como si no).
+    // Detección de inicio de sentencia SQL
+    if (CurrentToken = tsqlSelect) or (CurrentToken = tsqlUpdate) or
+       (CurrentToken = tsqlInsert) or (CurrentToken = tsqlDelete) then
+    begin
+      InStatement := True;
+      // SELECT permite romper su lista de campos por ','
+      AllowCommaBreak := (CurrentToken = tsqlSelect);
+    end;
+
+    // Tracking de la cláusula actual para AND/OR breaks y comma breaks
+    if SameText(Upper, 'WHERE') or SameText(Upper, 'HAVING') or SameText(Upper, 'ON') then
+    begin
+      InWhereLike := True;
+      AllowCommaBreak := False;
+    end
+    else if SameText(Upper, 'SET') or SameText(Upper, 'VALUES') then
+    begin
+      InWhereLike := False;
+      AllowCommaBreak := True;
+    end
+    else if SameText(Upper, 'FROM') or SameText(Upper, 'INTO') or
+            SameText(Upper, 'ORDER') or SameText(Upper, 'GROUP') or
+            SameText(Upper, 'LIMIT') or SameText(Upper, 'JOIN') or
+            SameText(Upper, 'UNION') then
+    begin
+      InWhereLike := False;
+      AllowCommaBreak := False;
+    end;
+
+    // Estructurales: salto tras BEGIN/THEN/ELSE devuelve al nivel de bloque
     if (CurrentToken = tsqlBegin) or SameText(Upper, 'THEN') or
-       SameText(Upper, 'ELSE') or (CurrentToken = tsqlSemicolon) then
+       SameText(Upper, 'ELSE') then
+    begin
       ForceNewline := True;
+      ClauseIndent := 0;
+    end;
+
+    // Tras ';' reseteamos estado de sentencia SQL
+    if CurrentToken = tsqlSemicolon then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 0;
+      InStatement := False;
+      InWhereLike := False;
+      AllowCommaBreak := False;
+    end;
+
+    // Tras ',' en depth 0 dentro de SELECT/SET/VALUES: forzar salto
+    if (CurrentToken = tsqlComma) and (ParenDepth = 0) and
+       InStatement and AllowCommaBreak then
+    begin
+      ForceNewline := True;
+      ClauseIndent := 1;
+    end;
 
     GetNextToken;
   end;
