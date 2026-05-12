@@ -448,6 +448,34 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_skus_precios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ---------------------------------------------------------------------------
+-- 7-ter. Documentos materializados por la sesion (N pedidos + N albaranes)
+-- ---------------------------------------------------------------------------
+-- La sesion puede generar varios documentos al materializarse, uno por
+-- almacen con cantidad > 0 (tanto pedidos como albaranes). La cabecera
+-- guarda SERIE_PEDC_SES/NUMERO_PEDC_SES y SERIE_ALBC_SES/NUMERO_ALBC_SES
+-- como referencia al primero de cada tipo (util para listados rapidos).
+-- Esta tabla guarda la lista completa.
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_documentos` (
+  `SERIE_SES_SESDOC`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESDOC`           varchar(12)   NOT NULL,
+  `TIPO_DOC_SESDOC`             varchar(4)    NOT NULL
+                                  COMMENT 'PEDC = pedido de compra, ALBC = albaran de compra',
+  `CODIGO_ALM_SESDOC`           varchar(10)   NOT NULL
+                                  COMMENT 'Almacen al que aplica este documento',
+  `SERIE_SESDOC`                varchar(12)   NOT NULL
+                                  COMMENT 'Serie del documento generado (fza_pedidos_compra / _albaranes)',
+  `NUMERO_SESDOC`               varchar(12)   NOT NULL
+                                  COMMENT 'Numero del documento generado',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESDOC`, `NUMERO_SES_SESDOC`,
+               `TIPO_DOC_SESDOC`, `CODIGO_ALM_SESDOC`),
+  INDEX `IDX_SESDOC_DOC` (`TIPO_DOC_SESDOC`, `SERIE_SESDOC`, `NUMERO_SESDOC`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
 -- 8. Vistas auxiliares para el formulario
 -- ---------------------------------------------------------------------------
 

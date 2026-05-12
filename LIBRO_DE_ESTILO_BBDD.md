@@ -58,6 +58,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_compras_sesiones_lineas_filas_atr`| `SESFILAT`|
 | `fza_compras_sesiones_lineas_props`  | `SESLPROP`|
 | `fza_compras_sesiones_lineas_skus_precios` | `SESLINSKU`|
+| `fza_compras_sesiones_documentos`    | `SESDOC`  |
 | `fza_compras_sesiones_props`         | `SESPROP` |
 | `fza_config_campos`                  | `CC`      |
 | `fza_contadores`                     | `CON`     |

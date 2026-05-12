@@ -296,6 +296,7 @@ sobre `PORCENTAJE_MARGEN_SES` de cabecera.
 | `fza_compras_sesiones_lineas_filas_atr`| `SESFILAT`  |
 | `fza_compras_sesiones_lineas_props`    | `SESLPROP`  |
 | `fza_compras_sesiones_lineas_skus_precios` | `SESLINSKU` |
+| `fza_compras_sesiones_documentos`      | `SESDOC`    |
 | `fza_compras_sesiones_celdas`          | `SESCEL`    |
 | `fza_compras_plantillas`               | `SESPL`     |
 | `fza_compras_plantillas_props`         | `SESPLPROP` |
@@ -733,18 +734,25 @@ ordena por almacén → línea → fila → pivot.
 
 - **SKUs y EAN13** siguen siendo a nivel de **artículo** (no por almacén). El query
   hace `GROUP BY (linea, fila, pivot)` para no duplicar SKUs ni quemar EAN13s.
-- **Pedido de compra** (cuando `ESGENERA_PEDIDO_SES = 'S'`): uno único, con líneas
-  totalizadas (SUM por SKU sobre todos los almacenes).
-- **Albaranes de compra** (cuando `ESGENERA_ALBARAN_SES = 'S'`): N albaranes, uno
-  por cada `CODIGO_ALM` con cantidad > 0. Cada albarán mueve solo su stock al
-  almacén correspondiente.
+- **`CODIGO_ALM_SES` en cabecera es opcional** — sólo sirve como almacén por
+  defecto sugerido al rellenar nuevas celdas y como fallback para celdas con
+  `CODIGO_ALM_SESCEL` vacío. La sesión funciona sin él si todas las celdas
+  llevan su propio almacén.
+- **Pedidos de compra** (cuando `ESGENERA_PEDIDO_SES = 'S'`): **N pedidos**,
+  uno por cada `CODIGO_ALM` con cantidad > 0. Cada pedido lleva las líneas
+  con la cantidad de ese almacén concreto y se enlaza al proveedor común.
+- **Albaranes de compra** (cuando `ESGENERA_ALBARAN_SES = 'S'`): **N albaranes**,
+  uno por cada `CODIGO_ALM` con cantidad > 0. Cada albarán mueve solo su stock
+  al almacén correspondiente.
+- **Tabla nueva `fza_compras_sesiones_documentos`** (sufijo `SESDOC`): enumera
+  todos los documentos materializados por la sesión, con `TIPO_DOC_SESDOC ∈
+  {'PEDC','ALBC'}`, `CODIGO_ALM_SESDOC`, `SERIE_SESDOC` y `NUMERO_SESDOC`. La
+  cabecera mantiene `SERIE_PEDC_SES`/`NUMERO_PEDC_SES` y `SERIE_ALBC_SES`/
+  `NUMERO_ALBC_SES` como referencia al **primero** de cada tipo para listados
+  rápidos; la lista completa vive en esa tabla.
 
 ### 10.4 Limitaciones
 
-- La cabecera de sesión guarda únicamente la **referencia al primer** albarán
-  generado (`SERIE_ALBC_SES`/`NUMERO_ALBC_SES`). Si se generan varios albaranes
-  necesitaríamos una tabla `fza_compras_sesiones_albaranes` que enumere todos
-  los albaranes resultantes. Pendiente cuando se conecte la generación real.
 - El kit "aplicar a fila" / "aplicar a todas" sólo afecta a la capa de almacén
   actualmente visible. Si quieres replicar el kit a todos los almacenes habría
   que añadir un botón «Aplicar a todos los almacenes».
