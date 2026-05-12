@@ -224,6 +224,7 @@ type
     btnAplicarKitTodas       : TcxButton;
     btnAddFila               : TcxButton;
     btnDelFila               : TcxButton;
+    btnAddColumna            : TcxButton;
 
     // ------------------------------------------------------------------
     // Pestaña Materialización
@@ -296,6 +297,7 @@ type
 
     procedure btnAddFilaClick(Sender: TObject);
     procedure btnDelFilaClick(Sender: TObject);
+    procedure btnAddColumnaClick(Sender: TObject);
 
     procedure btnAddPropClick(Sender: TObject);
     procedure btnDelPropClick(Sender: TObject);
@@ -395,6 +397,28 @@ begin
   // su DFM. Enganchamos aqui el OnDataChange para que al cambiar CODIGO_EMP_SES
   // se refresque el dropdown de cbbSerie (RellenarItemsSerie).
   dsTablaG.OnDataChange := dsTablaGDataChange;
+
+  // Master-detail: dsTablaG vive en el form, no en el DM, asi que el DFM del
+  // DM no puede declararlo. Sin esto unqrySesionLin queda cerrado y
+  // btnAddLinea lanza 'Cannot perform this operation on a closed dataset'.
+  with dmComprasSesiones do
+  begin
+    unqrySesionLin.MasterFields   := 'SERIE_SES;NUMERO_SES';
+    unqrySesionLin.MasterSource   := dsTablaG;
+    unqrySesionProps.MasterFields := 'SERIE_SES;NUMERO_SES';
+    unqrySesionProps.MasterSource := dsTablaG;
+    unqrySesionKits.MasterFields  := 'SERIE_SES;NUMERO_SES';
+    unqrySesionKits.MasterSource  := dsTablaG;
+
+    // Abrimos toda la cadena: lineas -> filas/celdas/props_linea, kits -> det.
+    if not unqrySesionLin.Active      then unqrySesionLin.Open;
+    if not unqrySesionFil.Active      then unqrySesionFil.Open;
+    if not unqrySesionCel.Active      then unqrySesionCel.Open;
+    if not unqrySesionProps.Active    then unqrySesionProps.Open;
+    if not unqrySesionLinProps.Active then unqrySesionLinProps.Open;
+    if not unqrySesionKits.Active     then unqrySesionKits.Open;
+    if not unqrySesionKitsDet.Active  then unqrySesionKitsDet.Open;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
@@ -748,6 +772,13 @@ begin
   TGestorMatrizCompras(FGestorMatriz).DelFilaSeleccionada;
 end;
 
+procedure TfrmMtoComprasSesiones.btnAddColumnaClick(Sender: TObject);
+begin
+  inherited;
+  if not EsSesionEditable then Exit;
+  TGestorMatrizCompras(FGestorMatriz).AddColumna;
+end;
+
 procedure TfrmMtoComprasSesiones.btnAddPropClick(Sender: TObject);
 begin
   inherited;
@@ -945,6 +976,7 @@ begin
   if Assigned(btnDupLinea)      then btnDupLinea.Enabled      := AHabilitar;
   if Assigned(btnAddFila)       then btnAddFila.Enabled       := AHabilitar;
   if Assigned(btnDelFila)       then btnDelFila.Enabled       := AHabilitar;
+  if Assigned(btnAddColumna)    then btnAddColumna.Enabled    := AHabilitar;
   if Assigned(btnAddProp)       then btnAddProp.Enabled       := AHabilitar;
   if Assigned(btnDelProp)       then btnDelProp.Enabled       := AHabilitar;
   if Assigned(btnAddKit)        then btnAddKit.Enabled        := AHabilitar;

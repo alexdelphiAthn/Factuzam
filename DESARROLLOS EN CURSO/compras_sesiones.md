@@ -872,3 +872,112 @@ para escribir en `fza_articulos_proveedores.PRECIO_ULT_COMPRA_AP` y
 `fza_articulos_tarifas.PRECIO_FINAL_ARTTAR` por SKU. Por ahora el modelo de
 datos guarda toda la información; el paso de "drenar" el override al
 materializar queda como TODO.
+
+---
+
+## 12. Eje fila como texto libre del proveedor
+
+### 12.1 Motivación
+
+Las paletas de colores de un proveedor pueden ser muy grandes (100+ tonos)
+y cambian por colección/temporada. Obligar al usuario a definir antes un
+`fza_atributos_conjuntos` con todos esos colores es engorroso y a menudo
+contraproducente: muchas veces el cliente no quiere catalogarlos a futuro,
+solo quiere etiquetar la compra con los nombres que viene en la factura
+del proveedor («Verde Pino», «Rojo Carmín 87», etc.).
+
+La sesión permite por eso un **modo texto libre** para el eje fila: el
+usuario no elige conjunto y va tecleando los nombres de fila uno a uno.
+
+### 12.2 Activación
+
+- **Modo conjunto** (clásico): `ID_AC_FILA_SES` lleva valor (FK a
+  `fza_atributos_conjuntos`). El picker «+ Añadir color» ofrece los
+  valores del conjunto aún no usados.
+- **Modo texto libre**: `ID_AC_FILA_SES` está `NULL` en cabecera. El picker
+  «+ Añadir color» abre un `InputQuery` donde el usuario teclea el nombre.
+
+La detección se hace en `TGestorMatrizCompras.AddFila` leyendo
+`unqryTablaG.ID_AC_FILA_SES`. Más adelante puede refinarse para que cada
+línea decida (vía `ID_AC_FILA_SESLIN`), pero el MVP usa solo la cabecera.
+
+### 12.3 Modelo
+
+Se añade una columna al detalle de filas:
+
+| Tabla                                  | Columna                       | Tipo            | Cuándo se rellena                     |
+|----------------------------------------|-------------------------------|-----------------|---------------------------------------|
+| `fza_compras_sesiones_lineas_filas`    | `ETIQUETA_TEXTO_SESFIL`       | `varchar(100)`  | Solo en modo texto libre              |
+
+- En **modo conjunto**: `ETIQUETA_TEXTO_SESFIL` queda `NULL` y los valores
+  de fila viven en `fza_compras_sesiones_lineas_filas_atr` (`ID_AV_SESFILAT`).
+- En **modo texto libre**: `ETIQUETA_TEXTO_SESFIL` lleva el texto tecleado
+  y `_filas_atr` queda vacía para esa fila.
+
+Migración idempotente en `compras_sesiones.sql` para añadir la columna en
+BBDDs ya creadas.
+
+### 12.4 UI
+
+- **Cabecera**: el `lblConjFila` ya documenta «(vacío = texto libre)». No
+  hay checkbox extra: dejar el combo vacío activa el modo.
+- **Matriz** — botón **«+ Fila»**:
+  - Modo conjunto → picker de valores del conjunto pivot/fila (TODO,
+    actualmente muestra un `MessageDlg` explicativo).
+  - Modo texto libre → `InputQuery('Nombre de la fila',...)`. El usuario
+    no introduce orden; el sistema asigna `ORDEN_SESFIL = max + 10`
+    (10, 20, 30…) para que el SKU se ordene correctamente y queden huecos
+    si después se quiere reordenar.
+
+### 12.4-bis Añadir valor pivot (talla) sobre el conjunto
+
+A diferencia del eje fila, el pivot **debe** estar respaldado por un
+conjunto (`ID_AC_PIVOT_SES`) porque los SKUs catalogados se ordenan por
+`fza_atributos_valores.ORDEN_AV` y el comparador debe ser global. Para
+permitir que el usuario añada en caliente una talla que no estaba en la
+paleta del proveedor, hay un botón **«+ Talla / valor pivot»** en la
+matriz que abre el flujo:
+
+1. `InputQuery` pide el nombre del valor (ej: «XXL», «47»).
+2. `InputQuery` pide el orden (sugerido: `max(ORDEN_ACD)+10` del conjunto
+   activo).
+3. Si el valor no existe en `fza_atributos_valores` para el atributo del
+   conjunto pivot, se inserta con su `ORDEN_AV`.
+4. Se inserta (con `INSERT IGNORE`) la fila en
+   `fza_atributos_conjuntos_det` para enlazar el AV al conjunto activo
+   con el orden indicado.
+5. Se reconstruye la matriz: la talla aparece como nueva columna.
+
+El patrón replica `inMtoModalGenerarSKUs.btnAddValueClick` (pantalla de
+generación de SKUs que ya usa la misma lógica «si no existe, lo creo, y
+lo engancho al conjunto»). El valor queda disponible en futuras sesiones
+porque vive en el conjunto global, no solo en esta sesión.
+
+Implementación en `TGestorMatrizCompras.AddColumna` (`inLibComprasSesiones`).
+
+### 12.5 Carga de etiqueta
+
+`TGestorMatrizCompras.CargarFilasDesdeBBDD` ya hace `SELECT *` sobre
+`_filas`, así que el campo nuevo llega solo. Cuando el join contra
+`_filas_atr` no devuelve ningún valor, se usa `ETIQUETA_TEXTO_SESFIL`
+como etiqueta de la fila.
+
+### 12.6 Materialización (pendiente)
+
+Cuando se conecte la generación real de SKUs, cada fila con
+`ETIQUETA_TEXTO_SESFIL` no-nula deberá:
+
+1. Localizar la variación efectiva de la línea (cabecera o
+   `ID_AC_FILA_SESLIN` si la línea la sobreescribe) y su atributo fila
+   (típicamente `CO`).
+2. Buscar en `fza_atributos_valores` un AV con ese texto bajo el atributo;
+   si no existe, **crearlo** (incrementando contador `AV`).
+3. Usar ese `ID_AV` para componer el SKU como en modo conjunto.
+4. Opcionalmente, crear/actualizar un `fza_atributos_conjuntos` con sufijo
+   del proveedor (ej: «Colores Acme PV-26») que agrupe esos valores nuevos
+   para reusarlos en sesiones futuras del mismo proveedor.
+
+Por simplicidad, el MVP de materialización puede no crear el conjunto y
+limitarse a registrar los `fza_atributos_valores`. El usuario podrá
+construir el conjunto manualmente en el mantenimiento de atributos si lo
+desea.

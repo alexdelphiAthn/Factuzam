@@ -953,6 +953,15 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 4
                   OnClick = btnDelFilaClick
                 end
+                object btnAddColumna: TcxButton
+                  Left = 832
+                  Top = 4
+                  Width = 140
+                  Height = 28
+                  Caption = '+ Talla / valor pivot'
+                  TabOrder = 5
+                  OnClick = btnAddColumnaClick
+                end
               end
               object gbMatriz: TcxGroupBox
                 Left = 1
