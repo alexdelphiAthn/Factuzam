@@ -85,14 +85,14 @@ type
     dsTarifas: TDataSource;
     unqryEmpresas: TUniQuery;
     dsEmpresas: TDataSource;
-    // Lookup de series de la empresa actual para TIPO_DOC='SC'
+    // Lookup de series de la empresa actual para TIPO_DOC='SE'
     unqryEmpresaSeries: TUniQuery;
     dsEmpresaSeries: TDataSource;
 
     // Detección de duplicados al teclear código de artículo
     unqryArticuloExiste: TUniQuery;
 
-    // Contador propio: TIPO_DOC_CON = 'SC' (Sesion de Compra; varchar(2))
+    // Contador propio: TIPO_DOC_CON = 'SE' (SEsion de compra; varchar(2))
     unstrdprcGetContadorSesion: TUniStoredProc;
 
     // Stored procs auxiliares (validación, etc.)
@@ -197,7 +197,7 @@ begin
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
     // SERIE_SES la elige el usuario del lookup cbbSerie alimentado por
-    // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SC' + empresa.
+    // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SE' + empresa.
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
@@ -333,7 +333,7 @@ begin
     Params.CreateParam(ftString, 'ptipodoc', ptInput);
     Params.CreateParam(ftString, 'pcont',    ptOutput);
     Params.CreateParam(ftString, 'pUSUARIO', ptInput);
-    ParamByName('ptipodoc').AsString := 'SC';
+    ParamByName('ptipodoc').AsString := 'SE';
     ParamByName('pUSUARIO').AsString := oUser;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_SES').AsString :=

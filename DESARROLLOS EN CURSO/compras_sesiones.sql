@@ -66,6 +66,21 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Inicializar valores en familias ya existentes (las columnas son NULLABLE
+-- en bases antiguas; el DEFAULT solo aplica a filas nuevas). Los TcxDBSpinEdit
+-- no permiten editar campos NULL con MinValue>0, asi que ponemos defaults.
+UPDATE `fza_articulos_familias`
+   SET `CONTADOR_ART_FAM` = 0
+ WHERE `CONTADOR_ART_FAM` IS NULL;
+
+UPDATE `fza_articulos_familias`
+   SET `PAD_ART_FAM` = 5
+ WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
+
+UPDATE `fza_articulos_familias`
+   SET `ESCONTADOR_ART_FAM` = 'N'
+ WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '';
+
 -- Migración idempotente para la cabecera: añadir parámetros de fórmula
 -- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
 -- sin ellos. La definición del CREATE TABLE más abajo los incluye.
