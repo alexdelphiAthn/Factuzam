@@ -29,6 +29,10 @@ type
     dsValoresLookup: TDataSource;
     unqryArticulosConjunto: TUniQuery;
     dsArticulosConjunto: TDataSource;
+    unqryVariacionesLookup: TUniQuery;
+    dsVariacionesLookup: TDataSource;
+    unqryAtributosLookup: TUniQuery;
+    dsAtributosLookup: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryConjuntoDetalleAfterInsert(DataSet: TDataSet);
     procedure unqryConjuntoDetalleBeforePost(DataSet: TDataSet);
@@ -61,6 +65,12 @@ begin
 
   unqryValoresLookup.Connection := oConn;
   unqryValoresLookup.Open;
+
+  unqryVariacionesLookup.Connection := oConn;
+  unqryVariacionesLookup.Open;
+
+  unqryAtributosLookup.Connection := oConn;
+  unqryAtributosLookup.Open;
 
   unqryConjuntoDetalle.Connection := oConn;
   unqryConjuntoDetalle.MasterSource := LDsTablaG;
