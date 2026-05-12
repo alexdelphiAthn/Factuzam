@@ -142,6 +142,8 @@ uses
   inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas',
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
+  inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
+  UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TdmAtributosConjuntos},
   inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
