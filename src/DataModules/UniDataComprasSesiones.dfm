@@ -586,7 +586,9 @@ inherited dmComprasSesiones: TdmComprasSesiones
       end>
   end
   object unstrdprcGetContadorSesion: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR'
+    StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
+    SQL.Strings = (
+      'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMPRESA_CONTADOR, :pUSUARIOMODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
     Left = 440
     Top = 352
   end
