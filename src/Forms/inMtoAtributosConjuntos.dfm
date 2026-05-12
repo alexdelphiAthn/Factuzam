@@ -1,17 +1,17 @@
 inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
   Caption = 'Colecciones de Atributos'
+  StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19
   inherited pButtonPage: TPanel
+    StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
-      Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 947
+        ExplicitHeight = 487
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            OptionsData.Editing = False
             object cxGrdDBTabPrinID_AC: TcxGridDBColumn
               Caption = 'ID Conjunto'
               DataBinding.FieldName = 'ID_AC'
@@ -50,8 +50,8 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object cxGrdDBTabPrinINSTANTE_MODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
               DataBinding.FieldName = 'INSTANTE_MODIF'
-              Options.Editing = False
               Visible = False
+              Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn
@@ -63,22 +63,22 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object cxGrdDBTabPrinUSUARIO_MODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
               DataBinding.FieldName = 'USUARIO_MODIF'
-              Options.Editing = False
               Visible = False
+              Options.Editing = False
               Width = 130
             end
           end
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 947
+        ExplicitHeight = 487
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 943
+          Width = 947
           Height = 105
           Align = alTop
           BevelOuter = bvNone
@@ -86,20 +86,20 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
           object pnlBodyFicha: TPanel
             Left = 0
             Top = 0
-            Width = 943
+            Width = 947
             Height = 105
             Align = alClient
             BevelOuter = bvNone
             TabOrder = 0
             object lblNombre: TcxLabel
-              Left = 16
+              Left = 52
               Top = 16
               Caption = 'Nombre'
               TabOrder = 4
               Transparent = True
             end
             object txtNOMBRE_AC: TcxDBTextEdit
-              Left = 120
+              Left = 127
               Top = 13
               DataBinding.DataField = 'NOMBRE_AC'
               DataBinding.DataSource = dsTablaG
@@ -118,14 +118,14 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               Transparent = True
             end
             object lblIdVar: TcxLabel
-              Left = 16
+              Left = 40
               Top = 48
               Caption = 'Variaci'#243'n'
               TabOrder = 5
               Transparent = True
             end
             object txtID_VAR_AC: TcxDBTextEdit
-              Left = 120
+              Left = 127
               Top = 45
               DataBinding.DataField = 'ID_VAR_AC'
               DataBinding.DataSource = dsTablaG
@@ -155,7 +155,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               Transparent = True
             end
             object txtID_AC: TcxDBTextEdit
-              Left = 120
+              Left = 127
               Top = 75
               DataBinding.DataField = 'ID_AC'
               DataBinding.DataSource = dsTablaG
@@ -168,41 +168,41 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
         object splSplitterFicha: TcxSplitter
           Left = 0
           Top = 105
-          Width = 943
-          Height = 8
+          Width = 947
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
         end
         object pnlButtonFicha: TPanel
           Left = 0
-          Top = 113
-          Width = 943
-          Height = 371
+          Top = 115
+          Width = 947
+          Height = 372
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
-            Width = 943
-            Height = 371
+            Width = 947
+            Height = 372
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsValores
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 367
-            ClientRectLeft = 4
-            ClientRectRight = 939
-            ClientRectTop = 30
+            ClientRectBottom = 370
+            ClientRectLeft = 2
+            ClientRectRight = 945
+            ClientRectTop = 29
             object tsValores: TcxTabSheet
               Caption = '&1_Valores'
               ImageIndex = 0
               object cxgrdValores: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 935
-                Height = 337
+                Width = 943
+                Height = 341
                 Align = alClient
                 TabOrder = 0
                 object tvValores: TcxGridDBTableView
@@ -216,14 +216,14 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsCustomize.ColumnGrouping = False
                   OptionsData.Appending = True
+                  OptionsView.NoDataToDisplayInfoText = '<No hay valores en este conjunto>'
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
-                  OptionsView.NoDataToDisplayInfoText = '<No hay valores en este conjunto>'
                   object tvValoresID_AC_ACD: TcxGridDBColumn
                     Caption = 'ID Conjunto'
                     DataBinding.FieldName = 'ID_AC_ACD'
-                    Options.Editing = False
                     Visible = False
+                    Options.Editing = False
                     Width = 110
                   end
                   object tvValoresID_AV_ACD: TcxGridDBColumn
@@ -278,8 +278,8 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               object cxgrdArticulos: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 935
-                Height = 337
+                Width = 943
+                Height = 341
                 Align = alClient
                 TabOrder = 0
                 object tvArticulos: TcxGridDBTableView
@@ -289,8 +289,8 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
                   OptionsData.Inserting = False
-                  OptionsView.GroupByBox = False
                   OptionsView.NoDataToDisplayInfoText = '<Ning'#250'n art'#237'culo usa esta colecci'#243'n>'
+                  OptionsView.GroupByBox = False
                   object tvArticulosCODIGO_ART_ART: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_ART'
@@ -331,8 +331,8 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               object pnlAuditoria: TPanel
                 Left = 0
                 Top = 0
-                Width = 935
-                Height = 337
+                Width = 943
+                Height = 341
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -407,31 +407,48 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
       end
       inherited tsPerfil: TcxTabSheet
         inherited pnlPerfilTop: TPanel
+          StyleElements = [seFont, seClient, seBorder]
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
+        inherited pnlPerfilDetail: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+        end
       end
     end
     inherited pnlTopPage: TPanel
+      StyleElements = [seFont, seClient, seBorder]
       inherited pnlTopGrid: TPanel
+        StyleElements = [seFont, seClient, seBorder]
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
         end
-        inherited nvNavegador: TcxDBNavigator
-          Width = 240
-          ExplicitWidth = 240
-        end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    StyleElements = [seFont, seClient, seBorder]
+    inherited pButtonGen: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end
   inherited dsTablaG: TDataSource
-    DataSet = dmAtributosConjuntos.unqryTablaG
-    OnStateChange = dsTablaGStateChange
+    Left = 104
+    Top = 424
   end
   object ActionListConjuntos: TActionList
-    Left = 80
-    Top = 440
+    Left = 216
+    Top = 312
     object actArticulo: TAction
       Caption = 'Articulo'
       ShortCut = 16449
