@@ -563,25 +563,43 @@ end;
 procedure TfrmMtoComprasSesiones.btnResolverDuplicadoClick(Sender: TObject);
 var
   frmDup : TfrmModalSesionDuplicado;
+  qL     : TUniQuery;
 begin
   inherited;
-  if dmComprasSesiones.unqrySesionLin.FieldByName(
-    'ESDUPLICADO_SESLIN').AsString <> 'S' then
-    Exit;
+  if not EsSesionEditable then Exit;
+  qL := dmComprasSesiones.unqrySesionLin;
+  if qL.IsEmpty then Exit;
+  if qL.FieldByName('ESDUPLICADO_SESLIN').AsString <> 'S' then Exit;
+
   frmDup := TfrmModalSesionDuplicado.Create(Self);
   try
-    frmDup.CodigoArt := dmComprasSesiones.unqrySesionLin
-                          .FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    if frmDup.ShowModal = mrOk then
+    frmDup.CodigoArt := qL.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+    if frmDup.ShowModal <> mrOk then Exit;
+    if frmDup.Accion = '' then Exit;     // por si acaso se cerro con Esc
+
+    if not (qL.State in [dsEdit, dsInsert]) then
+      qL.Edit;
+
+    qL.FieldByName('ACCION_DUPLICADO_SESLIN').AsString := frmDup.Accion;
+
+    if frmDup.Accion = 'REUSAR' then
     begin
-      dmComprasSesiones.unqrySesionLin.Edit;
-      dmComprasSesiones.unqrySesionLin
-        .FieldByName('ACCION_DUPLICADO_SESLIN').AsString := frmDup.Accion;
-      if frmDup.Accion = 'REUSAR' then
-        dmComprasSesiones.unqrySesionLin
-          .FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString := frmDup.CodigoArt;
-      dmComprasSesiones.unqrySesionLin.Post;
+      // El codigo a reutilizar es el que el usuario tenia tecleado:
+      // mantenemos el TENTATIVO y guardamos el REUSAR para que la
+      // materializacion enlace al articulo existente en vez de crear uno.
+      qL.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString := frmDup.CodigoArt;
+    end
+    else if frmDup.Accion = 'RENOMBRAR' then
+    begin
+      // El usuario tecleo un codigo nuevo: pegarlo al tentativo y limpiar
+      // cualquier 'reusar' anterior. El BeforePost del dataset volvera a
+      // chequear duplicados con el nuevo codigo y reseteara
+      // ESDUPLICADO_SESLIN si ya no hay choque.
+      qL.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := frmDup.CodigoArt;
+      qL.FieldByName('CODIGO_ART_REUSAR_SESLIN').Clear;
     end;
+
+    qL.Post;
   finally
     frmDup.Free;
   end;
