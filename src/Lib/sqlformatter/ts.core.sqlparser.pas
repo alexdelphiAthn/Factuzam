@@ -210,6 +210,8 @@ type
       Statements: TSQLelementList);
     function ParseWhenStatement(AParent: TSQLElement): TSQLWhenStatement;
     function ParseWhileStatement(AParent: TSQLElement): TSQLWhileStatement;
+    // SOPORTE MARIADB: parsea y formatea un bloque DELIMITER...DELIMITER ;
+    procedure ParseDelimiterBlock(AElement: TSQLElement);
 
   public
     constructor Create(AInput: TStream); overload;
@@ -4453,6 +4455,101 @@ begin
   end;
 end;
 
+procedure TSQLParser.ParseDelimiterBlock(AElement: TSQLElement);
+// Captura como texto crudo todo desde "DELIMITER xxx" hasta el siguiente
+// "DELIMITER yyy" o EOF, aplicando:
+//  - Saltos de línea originales (basados en la fila del scanner).
+//  - Indentación estructural por BEGIN/END y IF/THEN/ELSE/END IF.
+//  - Espaciado "tight" alrededor de paréntesis, puntos, comas y ;.
+// Al salir, CurrentToken queda en ';' o EOF para que el tail de Parse() funcione.
+// NO incluye el ';' final del DELIMITER de cierre en el RawText, para que el
+// formateador externo (que añade ';' al final de cada sentencia) no duplique.
+var
+  R         : TSQLRawStatement;
+  Indent    : Integer;
+  PrevRow   : Integer;
+  NeedSpace : Boolean;
+  Upper     : string;
+
+  procedure AppendCurrentToken;
+  var
+    NewRow : Integer;
+  begin
+    NewRow := FScanner.CurRow;
+    if (R.RawText <> '') and (NewRow > PrevRow) then
+    begin
+      R.RawText := R.RawText + sLineBreak;
+      if Indent > 0 then
+        R.RawText := R.RawText + StringOfChar(' ', Indent * 2);
+      NeedSpace := False;
+    end
+    else if NeedSpace and
+       not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot,
+                             tsqlBraceClose, tsqlSquareBraceClose]) then
+      R.RawText := R.RawText + ' ';
+
+    if CurrentToken = tsqlString then
+      R.RawText := R.RawText + '''' + CurrentTokenString + ''''
+    else
+      R.RawText := R.RawText + CurrentTokenString;
+
+    NeedSpace := not (CurrentToken in [tsqlBraceOpen, tsqlSquareBraceOpen, tsqlDot]);
+    PrevRow := NewRow;
+  end;
+
+begin
+  R := AElement as TSQLRawStatement;
+  R.RawText := '';
+  Indent := 0;
+  PrevRow := FScanner.CurRow;
+  NeedSpace := False;
+
+  // "DELIMITER"
+  AppendCurrentToken;
+  GetNextToken;
+  // Símbolo del nuevo delimitador (p. ej. $$). Tras éste forzamos newline.
+  if CurrentToken <> tsqlEOF then
+  begin
+    AppendCurrentToken;
+    GetNextToken;
+  end;
+
+  while CurrentToken <> tsqlEOF do
+  begin
+    Upper := UpperCase(CurrentTokenString);
+
+    // Dedent ANTES de emitir END / ELSE / ELSEIF
+    if ((CurrentToken = tsqlEnd) or SameText(Upper, 'END') or
+        SameText(Upper, 'ELSE') or SameText(Upper, 'ELSEIF')) and (Indent > 0) then
+      Dec(Indent);
+
+    // DELIMITER de cierre — emite el token, después su símbolo si no es ';'
+    if (CurrentToken = tsqlIdentifier) and SameText(Upper, 'DELIMITER') then
+    begin
+      AppendCurrentToken;
+      GetNextToken;
+      if (CurrentToken <> tsqlEOF) and (CurrentToken <> tsqlSemicolon) then
+      begin
+        AppendCurrentToken;
+        GetNextToken;
+      end;
+      // Si el símbolo de cierre es ';' lo dejamos sin consumir y sin añadir
+      // al RawText. El formateador externo añadirá su ';' final.
+      Break;
+    end;
+
+    AppendCurrentToken;
+
+    // Indent DESPUÉS de emitir BEGIN / THEN / ELSE / LOOP / REPEAT
+    if (CurrentToken = tsqlBegin) or SameText(Upper, 'BEGIN') or
+       SameText(Upper, 'THEN') or SameText(Upper, 'ELSE') or
+       SameText(Upper, 'LOOP') or SameText(Upper, 'REPEAT') then
+      Inc(Indent);
+
+    GetNextToken;
+  end;
+end;
+
 function TSQLParser.Parse: TSQLElement;
 begin
   GetNextToken;
@@ -4545,46 +4642,10 @@ begin
         else if SameText(CurrentTokenString, 'DELIMITER') then
         begin
           // --- SOPORTE MARIADB: directiva DELIMITER ---
-          // Captura como bloque crudo todo desde "DELIMITER xxx" hasta el
-          // siguiente "DELIMITER yyy" (o EOF). Permite preservar PROCEDURE
-          // /FUNCTION/TRIGGER con sintaxis MariaDB sin tener que parsearlos.
+          // Captura el bloque DELIMITER..DELIMITER como TSQLRawStatement
+          // con saltos de línea originales e indentación BEGIN/END/IF/THEN/ELSE.
           Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
-          TSQLRawStatement(Result).RawText := CurrentTokenString;
-          GetNextToken; // símbolo del delimitador (p.ej. $$)
-          if not (CurrentToken in [tsqlEOF]) then
-          begin
-            TSQLRawStatement(Result).RawText :=
-              TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
-            GetNextToken;
-          end;
-          while not (CurrentToken = tsqlEOF) do
-          begin
-            // Detectar el DELIMITER de cierre
-            if (CurrentToken = tsqlIdentifier) and
-               SameText(CurrentTokenString, 'DELIMITER') then
-            begin
-              TSQLRawStatement(Result).RawText :=
-                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
-              GetNextToken;
-              if not (CurrentToken in [tsqlEOF]) then
-              begin
-                TSQLRawStatement(Result).RawText :=
-                  TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
-                // Si el símbolo es ';', lo dejamos sin consumir para que el
-                // chequeo final de Parse() lo trate como fin de sentencia.
-                if CurrentToken <> tsqlSemicolon then
-                  GetNextToken;
-              end;
-              Break;
-            end;
-            if CurrentToken = tsqlString then
-              TSQLRawStatement(Result).RawText :=
-                TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
-            else
-              TSQLRawStatement(Result).RawText :=
-                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
-            GetNextToken;
-          end;
+          ParseDelimiterBlock(Result);
         end
         else
           UnexpectedToken;
