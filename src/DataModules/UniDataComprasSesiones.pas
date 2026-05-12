@@ -52,6 +52,10 @@ type
     unqryPreviewSkus: TUniQuery;
     dsPreviewSkus: TDataSource;
 
+    // Resumen agregado por almacén para la pestaña Materialización
+    unqryResumenAlmacen: TUniQuery;
+    dsResumenAlmacen: TDataSource;
+
     // Auxiliares (lookups)
     unqryProveedores: TUniQuery;
     dsProveedores: TDataSource;
@@ -137,6 +141,7 @@ begin
   unqrySesionKits.Connection        := inLibGlobalVar.oConn;
   unqrySesionKitsDet.Connection     := inLibGlobalVar.oConn;
   unqryPreviewSkus.Connection       := inLibGlobalVar.oConn;
+  unqryResumenAlmacen.Connection    := inLibGlobalVar.oConn;
   unqryProveedores.Connection       := inLibGlobalVar.oConn;
   unqryFamilias.Connection          := inLibGlobalVar.oConn;
   unqryVariaciones.Connection       := inLibGlobalVar.oConn;
