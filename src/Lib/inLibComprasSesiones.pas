@@ -1,4 +1,4 @@
-unit inLibComprasSesiones;
+﻿unit inLibComprasSesiones;
 
 {
   Unidad: inLibComprasSesiones
@@ -311,19 +311,11 @@ begin
       'SELECT ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL ' +
       '  FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-<<<<<<< HEAD
       '   AND LINEA_SES_SESCEL = :l ' +
       '   AND (CODIGO_ALM_SESCEL = :a ' +
       '        OR (CODIGO_ALM_SESCEL = '''' AND :a = :acab))';
     qC.ParamByName('s').AsString  := FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
     qC.ParamByName('n').AsString  := FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-=======
-      '   AND LINEA_SES_SESCEL = :l';
-    qC.ParamByName('s').AsString  :=
-      FDM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    qC.ParamByName('n').AsString  :=
-      FDM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
->>>>>>> f2fe601b3e27d0547ba17b49c552eaeafba77abb
     qC.ParamByName('l').AsInteger := ALinea;
     qC.ParamByName('a').AsString  := AlmacenEfectivo;
     qC.ParamByName('acab').AsString :=
