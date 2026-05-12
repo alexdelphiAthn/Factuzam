@@ -4996,7 +4996,30 @@ begin
     tsqlCommit :
       Result := ParseCommitStatement(nil);
     tsqlExecute :
-      Result := ParseExecuteProcedureStatement(nil);
+      begin
+        // EXECUTE PROCEDURE name (Firebird) vs EXECUTE stmt (MariaDB
+        // prepared statement). Si tras EXECUTE viene PROCEDURE, llamada
+        // a stored procedure; en otro caso lo tratamos como sentencia
+        // cruda hasta el ';' (sintaxis de prepared statements MySQL).
+        if PeekNextToken = tsqlProcedure then
+          Result := ParseExecuteProcedureStatement(nil)
+        else
+        begin
+          Result := TSQLRawStatement(CreateElement(TSQLRawStatement, nil));
+          TSQLRawStatement(Result).RawText := CurrentTokenString;
+          GetNextToken;
+          while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
+          begin
+            if CurrentToken = tsqlString then
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+            else
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
+            GetNextToken;
+          end;
+        end;
+      end;
     tsqlConnect :
       Result := ParseConnectStatement(nil);
     tsqlDeclare :
