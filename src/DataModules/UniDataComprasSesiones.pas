@@ -85,6 +85,9 @@ type
     dsTarifas: TDataSource;
     unqryEmpresas: TUniQuery;
     dsEmpresas: TDataSource;
+    // Lookup de series de la empresa actual para TIPO_DOC='SC'
+    unqryEmpresaSeries: TUniQuery;
+    dsEmpresaSeries: TDataSource;
 
     // Detección de duplicados al teclear código de artículo
     unqryArticuloExiste: TUniQuery;
@@ -160,6 +163,7 @@ begin
   unqryAlmacenes.Connection         := inLibGlobalVar.oConn;
   unqryTarifas.Connection           := inLibGlobalVar.oConn;
   unqryEmpresas.Connection          := inLibGlobalVar.oConn;
+  unqryEmpresaSeries.Connection     := inLibGlobalVar.oConn;
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
   unstrdprcGetContadorSesion.Connection := inLibGlobalVar.oConn;
   unstrdprcValidarSesion.Connection := inLibGlobalVar.oConn;
@@ -192,7 +196,8 @@ begin
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
-    FieldByName('SERIE_SES').AsString  := 'SES';
+    // SERIE_SES la elige el usuario del lookup cbbSerie alimentado por
+    // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SC' + empresa.
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;

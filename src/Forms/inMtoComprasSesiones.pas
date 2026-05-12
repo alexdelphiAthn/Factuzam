@@ -391,6 +391,7 @@ begin
 
   // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
   cbbAlmacenMatriz.Properties.ListSource     := dmComprasSesiones.dsAlmacenes;
+  cbbSerie.Properties.ListSource             := dmComprasSesiones.dsEmpresaSeries;
 
   pcSesion.ActivePage := tsCabecera;
   FGestorMatriz := TGestorMatrizCompras.Create(sbMatriz,

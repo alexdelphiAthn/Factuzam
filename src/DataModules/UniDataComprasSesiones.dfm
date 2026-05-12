@@ -554,6 +554,24 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 248
     Top = 408
   end
+  object unqryEmpresaSeries: TUniQuery
+    SQL.Strings = (
+      'SELECT EMPSER, SUBTIPO_EMPSER, CODIGO_ALM_EMPSER'
+      '  FROM fza_empresas_series'
+      ' WHERE TIPO_DOC_EMPSER = '#39'SC'#39
+      '   AND CODIGO_EMP_EMPSER = :CODIGO_EMP_SES'
+      '   AND (FECHA_HASTA_EMPSER IS NULL'
+      '        OR FECHA_HASTA_EMPSER >= CURDATE())'
+      ' ORDER BY EMPSER')
+    MasterSource = dsTablaG
+    Left = 712
+    Top = 352
+  end
+  object dsEmpresaSeries: TDataSource
+    DataSet = unqryEmpresaSeries
+    Left = 712
+    Top = 408
+  end
   object unqryArticuloExiste: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_ART_ART, DESCRIPCION_ART FROM fza_articulos'
