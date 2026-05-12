@@ -1045,6 +1045,15 @@ function TSQLScanner.DoIdentifier : TSQLToken;
       ((Result = tsqlComment) and (soReturnComments in Options)) or
       ((Result = tsqlWhiteSpace) and (soReturnWhiteSpace in Options));
     FCurToken := Result;
+
+    // --- INICIO CORRECCIÓN ---
+    // Si el token es un símbolo u operador (paréntesis, punto, coma, math) y
+    // la cadena de texto está vacía, la rellenamos con su texto real.
+    // Esto evita que las extracciones de texto bruto "se coman" los símbolos.
+    if (FCurTokenString = '') and (Result >= tsqlBraceOpen) and (Result <= tsqlNE) then
+      FCurTokenString := TokenInfos[Result];
+    // --- FIN CORRECCIÓN ---
+
   end;
 
   function TSQLScanner.IsEndOfLine: Boolean;
