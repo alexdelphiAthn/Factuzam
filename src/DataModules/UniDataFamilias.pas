@@ -121,11 +121,14 @@ begin
   unstrdprcContador.Connection := oConn;
   unqryArticulosFamilias.Connection := oConn;
   unqrySubFamilias.Connection := oConn;
+  unqryFamiliasAtributos.Connection := oConn;
   unqryArticulosFamilias.MasterSource :=
                                        (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
-  unqryPropiedades.MasterSource := (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
+  unqryFamiliasAtributos.MasterSource :=
+                                       (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
   unqryArticulosFamilias.Open;
   unqrySubFamilias.Open;
+  unqryFamiliasAtributos.Open;
   unqryPropiedades.Open;
 end;
 
