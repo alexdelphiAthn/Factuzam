@@ -254,7 +254,9 @@ begin
   dmmFamilias := tdmDataModule as tdmFamilias;
   tvArticulos.DataController.DataSource := dmmFamilias.dsArticulosFamilias;
   cbbFamilia.Properties.ListSource := dmmFamilias.dsSubfamilias;
-  tvAtributos.DataController.DataSource := dmmFamilias.dsPropiedades;
+  TcxLookupComboBoxProperties(tvAtributosCODIGO_PROPIEDAD.Properties).ListSource
+                                                   := dmmFamilias.dsPropiedades;
+  tvAtributos.DataController.DataSource := dmmFamilias.dsFamiliasAtributos;
   ResetForm;
   pkFieldName := 'CODIGO_FAM_FAM';
 end;

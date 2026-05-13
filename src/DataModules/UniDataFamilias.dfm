@@ -291,30 +291,19 @@ inherited dmFamilias: TdmFamilias
     SQL.Strings = (
       'SELECT '
       '  P.CODIGO_PROP_ARTPROP, '
-      '  P.NOMBRE_PROP_PROP,'
-      '  FA.CODIGO_FAM_FAM'
-      'FROM fza_familias_atributos FA'
-      'LEFT JOIN fza_propiedades  P'
-      'ON FA.CODIGO_PROP_ARTPROP = P.CODIGO_PROP_ARTPROP'
+      '  P.NOMBRE_PROP_PROP'
+      'FROM fza_propiedades  P'
       
         'WHERE P.ESACTIVO_PROP = '#39'S'#39' -- Solo mostramos las que est'#233'n acti' +
         'vas'
       
-        'ORDER BY P.NOMBRE_PROP_PROP ASC; -- Ordenado alfab'#233'ticamente par' +
-        'a el combo')
-    MasterSource = frmMtoFamilias.dsTablaG
-    MasterFields = 'CODIGO_FAM_FAM'
+        'ORDER BY P.CODIGO_PROP_ARTPROP ASC; -- Ordenado alfab'#233'ticamente ' +
+        'para el combo')
     DetailFields = 'CODIGO_FAM_FAM'
     BeforeInsert = unqryTablaGBeforeInsert
     BeforePost = unqryTablaGBeforePost
     Left = 792
     Top = 32
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'CODIGO_FAM_FAM'
-        Value = nil
-      end>
   end
   object dsPropiedades: TDataSource
     DataSet = unqryPropiedades
