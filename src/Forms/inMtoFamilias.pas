@@ -146,13 +146,16 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+  private
+    dmmFamilias : TdmFamilias;
   end;
+
 const
   pkFieldName = 'CODIGO_FAM_FAM';
 
 var
   frmMtoFamilias: TfrmMtoFamilias;
-  dmmFamilias : TdmFamilias;
+
 
 implementation
 
@@ -174,8 +177,7 @@ begin
   inherited;
   //Control + A --Artículos
   with dmmFamilias.dsArticulosFamilias.DataSet do
-  if (
-      (pcDetail.ActivePage = tsArticulos) and
+  if ((pcDetail.ActivePage = tsArticulos) and
       (not(FieldByName('CODIGO_ART_ART').isNull))) then
     ShowMto(Self.Owner,
             'Articulos',
@@ -252,6 +254,7 @@ begin
   dmmFamilias := tdmDataModule as tdmFamilias;
   tvArticulos.DataController.DataSource := dmmFamilias.dsArticulosFamilias;
   cbbFamilia.Properties.ListSource := dmmFamilias.dsSubfamilias;
+  tvAtributos.DataController.DataSource := dmmFamilias.dsPropiedades;
   ResetForm;
   pkFieldName := 'CODIGO_FAM_FAM';
 end;

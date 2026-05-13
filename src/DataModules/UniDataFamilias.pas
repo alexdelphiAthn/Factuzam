@@ -123,6 +123,7 @@ begin
   unqrySubFamilias.Connection := oConn;
   unqryArticulosFamilias.MasterSource :=
                                        (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
+  unqryPropiedades.MasterSource := (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
   unqryArticulosFamilias.Open;
   unqrySubFamilias.Open;
   unqryPropiedades.Open;

@@ -169,7 +169,6 @@ begin
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
   unstrdprcGetContadorSesion.Connection := inLibGlobalVar.oConn;
   unstrdprcValidarSesion.Connection := inLibGlobalVar.oConn;
-
   unqryProveedores.Open;
   unqryFamilias.Open;
   unqryVariaciones.Open;
@@ -230,7 +229,6 @@ begin
   sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
-
   // Validacion: para obtener numero hace falta serie y empresa.
   if (sNumero = '') or (sNumero = '0') then
   begin
@@ -239,13 +237,11 @@ begin
     if sSerie = '' then
       raise Exception.Create('Teclea una serie antes de grabar la sesion ' +
         '(p.ej. ' + sEmpresa + '-SE-1).');
-
     // Si el usuario teclea una serie que no existe en fza_empresas_series,
     // la creamos al vuelo para que el SP PRC_GET_NEXT_CONT_FACT_SERIE
     // pueda devolver el contador. Asi el usuario no tiene que ir antes
     // a Mantenimiento > Empresas > 4_Series.
     AsegurarSerieEnEmpresasSeries(sEmpresa, sSerie);
-
     GetCodigoAutoSesion;
     if unqryTablaG.FieldByName('NUMERO_SES').AsString = '' then
       raise Exception.Create('No se pudo obtener el siguiente numero. ' +
@@ -253,7 +249,6 @@ begin
         'EMPRESA=' + sEmpresa + ', SERIE=' + sSerie + ') o que el SP ' +
         'PRC_GET_NEXT_CONT_FACT_SERIE este disponible.');
   end;
-
   unqryTablaG.FieldByName('USUARIO_MODIF').AsString  := oUser;
   unqryTablaG.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
@@ -294,8 +289,8 @@ begin
   // Detección de duplicado
   if unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
-  sTecla := Trim(unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
-
+  sTecla :=
+       Trim(unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
   // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
   // codigo de una familia con contador activo, expandir al siguiente
   // numero de la serie e incrementar el contador.
@@ -304,7 +299,8 @@ begin
     if inLibComprasSesiones.ResolverCodigoFamilia(
          inLibGlobalVar.oConn, sTecla, oUser, sNuevo) then
     begin
-      unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sNuevo;
+      unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
+                                                                         sNuevo;
       // Si la familia no esta seteada en la linea, ponerla a la tecleada
       if unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').IsNull or
          (unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString = '') then
@@ -312,7 +308,6 @@ begin
       sTecla := sNuevo;
     end;
   end;
-
   // Detección de duplicado
   if sTecla <> '' then
   begin
@@ -322,9 +317,7 @@ begin
     else
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
   end;
-
   CalcularTotalesLineaActual;
-
   unqrySesionLin.FieldByName('USUARIO_MODIF').AsString := oUser;
   unqrySesionLin.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
@@ -356,8 +349,8 @@ var
 begin
   // Recalcula TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN para la línea
   // actualmente en edición sumando las celdas activas.
-  // Implementación: SELECT SUM(CANTIDAD_SESCEL) FROM
-  // fza_compras_sesiones_celdas
+  // Implementación: SELECT SUM(CANTIDAD_SESCEL)
+  //                   FROM fza_compras_sesiones_celdas
   //                  WHERE pk de línea.
   rTotalUds := 0;
   // TODO: ejecutar consulta de agregación.
@@ -366,7 +359,7 @@ begin
     unqrySesionLin.Edit;
   unqrySesionLin.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTotalUds;
   unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    :=
-    rTotalUds * rPrecio;
+                                                            rTotalUds * rPrecio;
 end;
 
 procedure TdmComprasSesiones.AsegurarSerieEnEmpresasSeries(
@@ -429,8 +422,8 @@ begin
   // claro de "elige una serie primero".
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
-  if (sSerie = '') or (sEmpresa = '') then Exit;
-
+  if (sSerie = '') or (sEmpresa = '') then
+    Exit;
   with unstrdprcGetContadorSesion do
   begin
     Params.Clear;
@@ -445,7 +438,7 @@ begin
     ParamByName('pUSUARIOMODIF').AsString     := oUser;
     ExecProc;
     unqryTablaG.FieldByName('NUMERO_SES').AsString :=
-      ParamByName('pcont').AsString;
+                                                  ParamByName('pcont').AsString;
   end;
 end;
 
@@ -456,8 +449,9 @@ begin
   ADescripcion := '';
   unqryArticuloExiste.Close;
   unqryArticuloExiste.SQL.Text :=
-    'SELECT CODIGO_ART_ART, DESCRIPCION_ART FROM fza_articulos ' +
-    'WHERE CODIGO_ART_ART = :p';
+    'SELECT CODIGO_ART_ART, DESCRIPCION_ART ' +
+    '  FROM fza_articulos ' +
+    ' WHERE CODIGO_ART_ART = :p';
   unqryArticuloExiste.ParamByName('p').AsString := ACodigoArt;
   unqryArticuloExiste.Open;
   try
@@ -508,7 +502,8 @@ begin
 end;
 
 procedure TdmComprasSesiones.AplicarKitAFila(const AIdKit: string;
-  const ALineaID: Integer; const AIdFila: Integer);
+                                             const ALineaID: Integer;
+                                             const AIdFila: Integer);
 begin
   // Lee fza_compras_sesiones_kits_det del kit indicado y vuelca cantidades
   // sobre la fila ALineaID/AIdFila buscando la columna del eje pivot que
@@ -517,7 +512,7 @@ begin
 end;
 
 procedure TdmComprasSesiones.AplicarKitATodasFilas(const AIdKit: string;
-  const ALineaID: Integer);
+                                                   const ALineaID: Integer);
 begin
   // Itera todas las filas de la línea y llama AplicarKitAFila.
 end;

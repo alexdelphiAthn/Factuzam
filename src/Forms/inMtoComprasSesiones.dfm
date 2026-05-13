@@ -105,6 +105,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsCabecera: TcxTabSheet
             Caption = '&1. Cabecera '
             ImageIndex = 0
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object gbDatosGen: TcxGroupBox
               Left = 8
               Top = 8
@@ -528,6 +532,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsPlantilla: TcxTabSheet
             Caption = '&2. Datos Fijos en Documento '
             ImageIndex = 1
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object pcPlantilla: TcxPageControl
               Left = 0
               Top = 0
@@ -543,6 +551,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               ClientRectTop = 29
               object tsPropiedades: TcxTabSheet
                 Caption = 'Propiedades comunes'
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object pnlPropsTop: TPanel
                   Left = 0
                   Top = 0
@@ -611,6 +623,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               end
               object tsKits: TcxTabSheet
                 Caption = 'Kits de cantidades'
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object pnlKitsTop: TPanel
                   Left = 0
                   Top = 0
