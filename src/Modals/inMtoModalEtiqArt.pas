@@ -28,7 +28,9 @@ uses
   cxEdit, cxTextEdit, cxMaskEdit, cxSpinEdit, cxLabel, cxGroupBox,
   cxRadioGroup, cxDropDownEdit, cxDateUtils, cxCalendar, cxListView,
   cxCheckBox, ComCtrls, UniDataArticulos, inMtoArticulos, inLibLayoutForm,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab, frxSmartMemo, frLocalization, frLanguageSpanish,
+  dxCore, System.Actions, Vcl.ActnList, frxExportBaseImageSettingsDialog,
+  frCoreClasses;
 
 type
   TfrmPrintEtiqArt = class(TfrmPrint)
@@ -71,17 +73,14 @@ begin
   inherited;
   FCodigosTarifa := TStringList.Create;
   FLayout        := TLayoutLoader.Create(Self.Name);
-
   // Carga tarifas en cbbTarifa y deja seleccionada la marcada por defecto.
   Idx := -1;
   dmmArticulos.CargarTarifasEtiquetas(cbbTarifa.Properties.Items,
                                       FCodigosTarifa, Idx);
   if Idx >= 0 then
     cbbTarifa.ItemIndex := Idx;
-
   // Carga almacenes activos en la lista multi-seleccion.
   dmmArticulos.CargarAlmacenesEtiquetas(lvAlmacenes);
-
   dtFechaAplicacion.Date := Date;
 end;
 
@@ -157,13 +156,11 @@ begin
     ShowMessage('Seleccione una tarifa antes de imprimir.');
     Abort;
   end;
-
   // chkSoloEsteArt limita a un unico articulo. Si esta sin marcar la consulta
   // ataca a todos los articulos activos del catalogo.
   sCodArt := '';
   if chkSoloEsteArt.Checked then
     sCodArt := Trim(edtCodArt.Text);
-
   dmmArticulos.CrearDataSetEtiquetasArt(sCodArt,
                                         ObtenerCodigoTarifa,
                                         ObtenerAlmacenesCsv,

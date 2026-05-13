@@ -25,8 +25,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       ClientRectBottom = 669
       ClientRectRight = 1075
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
         inherited cxGrdPrincipal: TcxGrid
@@ -86,8 +84,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
         object pnlTopFicha: TPanel
@@ -220,7 +216,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsTarifas
+            Properties.ActivePage = tsSKUs
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 454
             ClientRectLeft = 2
@@ -1210,15 +1206,19 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
-                  object cxgrdbclmnLinFacNRO_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Nro Factura'
-                    DataBinding.FieldName = 'NUMERO_FAC_FACLIN'
-                    Width = 119
+                  object tvLinFacFECHA_FAC: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHA_FAC'
                   end
                   object cxgrdbclmnLinFacSERIE_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Serie Factura'
+                    Caption = 'Serie'
                     DataBinding.FieldName = 'SERIE_FAC_FACLIN'
                     Width = 141
+                  end
+                  object cxgrdbclmnLinFacNRO_FACTURA_LINEA: TcxGridDBColumn
+                    Caption = 'Nro'
+                    DataBinding.FieldName = 'NUMERO_FAC_FACLIN'
+                    Width = 119
                   end
                   object cxgrdbclmnLinFacLINEA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nro Linea'
@@ -1238,7 +1238,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object cxgrdbclmnLinFacDESCRIPCION_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Descripci'#243'n Linea'
                     DataBinding.FieldName = 'DESCRIPCION_ARTICULO_FACLIN'
-                    Width = 155
+                    Width = 276
                   end
                   object cxgrdbclmnLinFacNOMBRE_TARIFA: TcxGridDBColumn
                     Caption = 'Tarifa Aplicada'
@@ -1307,6 +1307,306 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxDateEditProperties'
                     Width = 136
                   end
+                  object tvLinFacNOMBRE_TIPO_IVA_IVATIP: TcxGridDBColumn
+                    DataBinding.FieldName = 'NOMBRE_TIPO_IVA_IVATIP'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_TAR_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_TAR_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacPRECIO_SALIDA_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'PRECIO_SALIDA_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_DTO_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_DTO_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacPRECIO_DTO_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'PRECIO_DTO_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_FAC_SIVA_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_FAC_SIVA_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_CLIENTE_FACTURA_LINEA: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_CLIENTE_FACTURA_LINEA'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_EMP_FACLIN: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_EMP_FACLIN'
+                    Visible = False
+                  end
+                  object tvLinFacNUMERO_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'NUMERO_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacSERIE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'SERIE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_LIQUIDO_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_LIQUIDO_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_RETENCION_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_RETENCION_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_RETENCION_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_RETENCION_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_IMPUESTOS_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_IMPUESTOS_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_BASES_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_BASES_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacFORMA_PAGO_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'FORMA_PAGO_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacDESCRIPCION_FORMA_PAGO_FP: TcxGridDBColumn
+                    DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_EMP_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_EMP_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacRAZON_SOCIAL_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'RAZON_SOCIAL_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacNIF_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'NIF_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacMOVIL_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'MOVIL_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacEMAIL_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'EMAIL_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacDIRECCION1_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'DIRECCION1_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacDIRECCION2_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'DIRECCION2_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPOBLACION_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'POBLACION_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPROVINCIA_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PROVINCIA_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacNOMBRE_PAI_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'NOMBRE_PAI_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_POSTAL_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_POSTAL_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESRETENCIONES_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESRETENCIONES_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacGRUPO_ZONA_IVA_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'GRUPO_ZONA_IVA_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESREGIMENESPECIALAGRICOLA_EMPRESA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_CLI_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_CLI_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacRAZON_SOCIAL_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'RAZON_SOCIAL_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacNIF_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'NIF_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacMOVIL_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'MOVIL_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacEMAIL_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'EMAIL_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacDIRECCION1_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'DIRECCION1_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacDIRECCION2_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'DIRECCION2_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPOBLACION_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'POBLACION_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPROVINCIA_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PROVINCIA_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_POSTAL_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_POSTAL_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacNOMBRE_PAI_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'NOMBRE_PAI_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESIVA_RECARGO_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESIVA_RECARGO_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESIVA_EXENTO_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESIVA_EXENTO_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESREGIMENESPECIALAGRICOLA_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESRETENCIONES_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESRETENCIONES_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTARIFA_ARTICULO_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TARIFA_ARTICULO_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESIMP_INCL_TARIFA_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESIMP_INCL_TARIFA_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESINTRACOMUNITARIO_CLIENTE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESINTRACOMUNITARIO_CLIENTE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESIRPF_IMP_INCL_ZONA_IVA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESIRPF_IMP_INCL_ZONA_IVA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESAPLICA_RE_ZONA_IVA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESAPLICA_RE_ZONA_IVA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESIVAAGRICOLA_ZONA_IVA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESIVAAGRICOLA_ZONA_IVA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPALABRA_REPORTS_ZONA_IVA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PALABRA_REPORTS_ZONA_IVA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacCODIGO_IVA_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_IVA_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacESVENTA_ACTIVO_FIJO_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESVENTA_ACTIVO_FIJO_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_IVAN_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_IVAN_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_IVAN_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_IVAN_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_REN_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_REN_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_REN_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_REN_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_BASEI_IVAN_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_BASEI_IVAN_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_IVAR_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_IVAR_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_IVAR_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_IVAR_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_RER_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_RER_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_RER_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_RER_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_BASEI_IVAR_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_BASEI_IVAR_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_IVAS_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_IVAS_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_IVAS_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_IVAS_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_RES_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_RES_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_RES_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_RES_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_BASEI_IVAS_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_BASEI_IVAS_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_IVAE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_IVAE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_IVAE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_IVAE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacPORCENTAJE_REE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_REE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_REE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_REE_FAC'
+                    Visible = False
+                  end
+                  object tvLinFacTOTAL_BASEI_IVAE_FAC: TcxGridDBColumn
+                    DataBinding.FieldName = 'TOTAL_BASEI_IVAE_FAC'
+                    Visible = False
+                  end
                 end
                 object cxgrdlvlLinFac: TcxGridLevel
                   GridView = tvLinFac
@@ -1322,25 +1622,25 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object btnIraFactura: TcxButton
                   Left = 6
                   Top = 16
-                  Width = 104
+                  Width = 100
                   Height = 34
-                  Caption = 'Ir a F&actura'
+                  Caption = 'Ir a F&'
                   TabOrder = 0
                   OnClick = btnIraFacturaClick
                 end
                 object btnIraEmpresa: TcxButton
                   Left = 7
                   Top = 56
-                  Width = 104
+                  Width = 99
                   Height = 34
-                  Caption = 'Ir a &Empresa'
+                  Caption = 'Ir a &Empr.'
                   TabOrder = 1
                   OnClick = btnIraEmpresaClick
                 end
                 object btnExportarLineas: TcxButton
                   Left = 6
                   Top = 138
-                  Width = 104
+                  Width = 100
                   Height = 34
                   Caption = '&Exp Excel'
                   TabOrder = 3
@@ -1348,7 +1648,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object btnIraCliente: TcxButton
                   Left = 7
                   Top = 96
-                  Width = 104
+                  Width = 99
                   Height = 34
                   Caption = 'Ir a C&liente'
                   TabOrder = 2
@@ -1894,9 +2194,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Width = 1073
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1073
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1073
@@ -1923,8 +2220,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
-          TabOrder = 1
-          ExplicitHeight = 27
+          TabOrder = 4
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324

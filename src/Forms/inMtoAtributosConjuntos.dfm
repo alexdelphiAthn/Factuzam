@@ -16,7 +16,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
               Caption = 'ID Conjunto'
               DataBinding.FieldName = 'ID_AC'
               Options.Editing = False
-              Width = 100
+              Width = 128
             end
             object cxGrdDBTabPrinNOMBRE_AC: TcxGridDBColumn
               Caption = 'Nombre'
@@ -83,6 +83,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
               DataBinding.FieldName = 'INSTANTE_ALTA'
+              Visible = False
               Options.Editing = False
               Width = 150
             end
@@ -96,6 +97,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn
               Caption = 'Usuario Alta'
               DataBinding.FieldName = 'USUARIO_ALTA'
+              Visible = False
               Options.Editing = False
               Width = 130
             end
@@ -181,7 +183,6 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                   FieldName = 'NOMBRE_VAR'
                 end>
               Properties.ListOptions.CaseInsensitive = True
-              Properties.ListOptions.ShowHeader = True
               TabOrder = 2
               Width = 220
             end
@@ -221,7 +222,6 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                 end>
               Properties.ListFieldIndex = 1
               Properties.ListOptions.CaseInsensitive = True
-              Properties.ListOptions.ShowHeader = True
               TabOrder = 3
               Width = 260
             end
@@ -244,26 +244,12 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
             object lblIdVarDesc: TcxLabel
               Left = 240
               Top = 78
-              Caption = ''
-              Style.Font.Charset = DEFAULT_CHARSET
-              Style.Font.Color = clGrayText
-              Style.Font.Height = -13
-              Style.Font.Name = 'Segoe UI'
-              Style.Font.Style = [fsItalic]
-              Style.IsFontAssigned = True
               TabOrder = 9
               Transparent = True
             end
             object lblIdVaDesc: TcxLabel
               Left = 500
               Top = 78
-              Caption = ''
-              Style.Font.Charset = DEFAULT_CHARSET
-              Style.Font.Color = clGrayText
-              Style.Font.Height = -13
-              Style.Font.Name = 'Segoe UI'
-              Style.Font.Style = [fsItalic]
-              Style.IsFontAssigned = True
               TabOrder = 10
               Transparent = True
             end
