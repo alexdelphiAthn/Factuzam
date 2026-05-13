@@ -5,7 +5,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
   inherited pButtonPage: TPanel
     StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
-      Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 29
@@ -66,10 +65,10 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 947
+        ExplicitHeight = 487
         object pnl1: TPanel
           Left = 0
           Top = 0
@@ -123,8 +122,8 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Transparent = True
             end
             object cmbTIPO: TcxDBComboBox
-              Left = 110
-              Top = 75
+              Left = 144
+              Top = 77
               DataBinding.DataField = 'TIPO_VALOR_PROP'
               DataBinding.DataSource = dsTablaG
               Properties.DropDownListStyle = lsFixedList
@@ -137,7 +136,7 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Width = 180
             end
             object chkACTIVO: TcxDBCheckBox
-              Left = 320
+              Left = 453
               Top = 78
               Caption = 'Activo'
               DataBinding.DataField = 'ESACTIVO_PROP'
@@ -157,7 +156,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnl1
-          ExplicitWidth = 10
         end
         object pnl2: TPanel
           Left = 0
@@ -166,8 +164,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
           Height = 364
           Align = alClient
           TabOrder = 1
-          ExplicitWidth = 943
-          ExplicitHeight = 361
           object pcPestana: TcxPageControl
             Left = 1
             Top = 1
@@ -177,8 +173,6 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             TabOrder = 0
             Properties.ActivePage = tsValores
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 941
-            ExplicitHeight = 359
             ClientRectBottom = 360
             ClientRectLeft = 2
             ClientRectRight = 943
@@ -186,15 +180,11 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             object tsValores: TcxTabSheet
               Caption = '&1_Valores Disponibles'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdValores: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 937
-                Height = 328
+                Width = 941
+                Height = 331
                 Align = alClient
                 TabOrder = 0
                 object tvValores: TcxGridDBTableView
@@ -241,15 +231,11 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             object tsArticulos: TcxTabSheet
               Caption = '&2_Art'#237'culos'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdArticulos: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 937
-                Height = 328
+                Width = 941
+                Height = 331
                 Align = alClient
                 TabOrder = 0
                 object tvArticulos: TcxGridDBTableView

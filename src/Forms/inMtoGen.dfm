@@ -44,10 +44,6 @@ inherited frmMtoGen: TfrmMtoGen
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object cxGrdPrincipal: TcxGrid
           Left = 0
           Top = 0
@@ -472,18 +468,18 @@ inherited frmMtoGen: TfrmMtoGen
         object nvNavegador: TcxDBNavigator
           Left = 456
           Top = 6
-          Width = 240
-          Height = 23
+          Width = 310
+          Height = 28
           Buttons.Filter.Visible = False
           DataSource = dsTablaG
           LookAndFeel.NativeStyle = False
-          TabOrder = 2
+          TabOrder = 1
         end
         object lblTextoaBuscar: TcxLabel
           Left = 8
           Top = 9
           Caption = 'Texto a buscar'
-          TabOrder = 3
+          TabOrder = 2
           Transparent = True
         end
         object rbBBDD: TcxRadioButton
@@ -519,7 +515,7 @@ inherited frmMtoGen: TfrmMtoGen
           Font.Style = []
           Font.Quality = fqClearType
           ParentFont = False
-          TabOrder = 5
+          TabOrder = 3
           Visible = False
           OnClick = rbGridClick
           Transparent = True
