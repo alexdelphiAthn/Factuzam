@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 14/05/2026 18:40:21
+-- Backup generado: 14/05/2026 19:34:52
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -967,23 +967,59 @@ INSERT INTO `fza_articulos_vinculos` (`ID_ARTVIN`, `CODIGO_ART_PADRE_ARTVIN`, `C
 DROP TABLE IF EXISTS `fza_atributos_basicos`;
 CREATE TABLE `fza_atributos_basicos` (
   `ID_ATB` int(11) NOT NULL AUTO_INCREMENT,
-  `ID_VA_ATB` varchar(20) NOT NULL COMMENT 'Atributo de la variación (CO, TAL…) → FK fza_variaciones_atributos',
-  `CODIGO_ATB` varchar(30) NOT NULL COMMENT 'Código corto del atributo básico estándar (XL, AZUL_CIELO, EU42)',
-  `NOMBRE_ATB` varchar(100) NOT NULL COMMENT 'Nombre legible: AZUL CIELO, TALLA XL, Calzado 42',
-  `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL COMMENT 'Descripción larga del atributo básico',
-  `HEX_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Color paleta #RRGGBB (sólo para atributos de color)',
-  `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL COMMENT 'Valor numérico equivalente (47 cm de pecho XL, 25 cm de calzado 40…)',
+  `ID_VA_ATB` varchar(20) NOT NULL,
+  `CODIGO_ATB` varchar(30) NOT NULL,
+  `NOMBRE_ATB` varchar(100) NOT NULL,
+  `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL COMMENT 'Descripción larga: AZUL CIELO, Talla XL Hombre, etc.',
+  `HEX_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Color paleta en formato #RRGGBB (sólo para atributos de color)',
+  `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL COMMENT 'Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)',
   `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL COMMENT 'Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…',
-  `EXTRA_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Legacy: usar HEX_ATB para color',
+  `EXTRA_ATB` varchar(7) NULL DEFAULT NULL,
   `ORDEN_ATB` int(11) NULL DEFAULT '0',
   `ESACTIVO_ATB` char(1) NULL DEFAULT 'S',
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
   `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
   PRIMARY KEY (`ID_ATB`)
 );
 ALTER TABLE `fza_atributos_basicos` ADD UNIQUE INDEX `ID_VA_ATB` (`ID_VA_ATB`, `CODIGO_ATB`);
+
+-- Datos de fza_atributos_basicos
+/*!40000 ALTER TABLE `fza_atributos_basicos` DISABLE KEYS */;
+INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`, `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `EXTRA_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  (1, 'CO', 'NEGRO', 'NEGRO', 'Color negro', '#000000', NULL, NULL, NULL, 10, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (2, 'CO', 'BLANCO', 'BLANCO', 'Color blanco', '#FFFFFF', NULL, NULL, NULL, 20, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (3, 'CO', 'ROJO', 'ROJO', 'Color rojo', '#FF0000', NULL, NULL, NULL, 30, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (4, 'CO', 'AZUL', 'AZUL', 'Color azul', '#0066CC', NULL, NULL, NULL, 40, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (5, 'CO', 'AZUL_CIELO', 'AZUL CIELO', 'Color azul cielo', '#87CEEB', NULL, NULL, NULL, 41, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (6, 'CO', 'AZUL_MARINO', 'AZUL MARINO', 'Color azul marino', '#1B2A49', NULL, NULL, NULL, 42, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (7, 'CO', 'VERDE', 'VERDE', 'Color verde', '#1D8B3A', NULL, NULL, NULL, 50, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (8, 'CO', 'AMARILLO', 'AMARILLO', 'Color amarillo', '#FFD400', NULL, NULL, NULL, 60, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (9, 'CO', 'MARRON', 'MARRÓN', 'Color marrón', '#7B4B2A', NULL, NULL, NULL, 70, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (10, 'CO', 'GRIS', 'GRIS', 'Color gris', '#808080', NULL, NULL, NULL, 80, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (11, 'CO', 'BEIGE', 'BEIGE', 'Color beige', '#E8D8B5', NULL, NULL, NULL, 90, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (12, 'CO', 'ROSA', 'ROSA', 'Color rosa', '#F4A6C0', NULL, NULL, NULL, 100, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (13, 'CO', 'CAMEL', 'CAMEL', 'Color camel / tostado', '#C19A6B', NULL, NULL, NULL, 110, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (14, 'CO', 'FUCSIA', 'FUCSIA', 'Color fucsia', '#FF00FF', NULL, NULL, NULL, 120, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (15, 'CO', 'BURDEOS', 'BURDEOS', 'Color burdeos', '#7A1F2B', NULL, NULL, NULL, 130, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (16, 'CO', 'VAQUERO', 'VAQUERO', 'Acabado vaquero / denim', '#3F6BAA', NULL, NULL, NULL, 140, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (17, 'TAL', 'S', 'TALLA S', 'Talla S (small)', NULL, 44, 'cm', NULL, 10, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (18, 'TAL', 'M', 'TALLA M', 'Talla M (medium)', NULL, 46, 'cm', NULL, 20, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (19, 'TAL', 'L', 'TALLA L', 'Talla L (large)', NULL, 48, 'cm', NULL, 30, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (20, 'TAL', 'XL', 'TALLA XL', 'Talla XL (extra large)', NULL, 50, 'cm', NULL, 40, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (21, 'TAL', 'XXL', 'TALLA XXL', 'Talla XXL', NULL, 52, 'cm', NULL, 50, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (22, 'TAL', 'XXXL', 'TALLA XXXL', 'Talla XXXL', NULL, 54, 'cm', NULL, 60, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (23, 'TAL', 'EU37', 'EU 37', 'Calzado europeo nº 37', NULL, 23.5, 'cm', NULL, 70, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (24, 'TAL', 'EU38', 'EU 38', 'Calzado europeo nº 38', NULL, 24, 'cm', NULL, 80, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (25, 'TAL', 'EU39', 'EU 39', 'Calzado europeo nº 39', NULL, 24.5, 'cm', NULL, 90, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (26, 'TAL', 'EU40', 'EU 40', 'Calzado europeo nº 40', NULL, 25, 'cm', NULL, 100, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (27, 'TAL', 'EU41', 'EU 41', 'Calzado europeo nº 41', NULL, 26, 'cm', NULL, 110, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (28, 'TAL', 'EU42', 'EU 42', 'Calzado europeo nº 42', NULL, 26.5, 'cm', NULL, 120, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (29, 'TAL', 'EU43', 'EU 43', 'Calzado europeo nº 43', NULL, 27, 'cm', NULL, 130, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (30, 'TAL', 'EU44', 'EU 44', 'Calzado europeo nº 44', NULL, 28, 'cm', NULL, 140, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA');
+/*!40000 ALTER TABLE `fza_atributos_basicos` ENABLE KEYS */;
+-- 30 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos
@@ -1319,64 +1355,64 @@ CREATE TABLE `fza_atributos_valores` (
   `FACTOR_CONVERSION_AV` decimal(19,6) NULL DEFAULT '1.000000' COMMENT 'Multiplicador respecto a la unidad base',
   `UNIDAD_MEDIDA_AV` varchar(10) NULL DEFAULT NULL COMMENT 'L, Kg, m, m2, ud',
   `CODIGO_ART_EXTRA_AV` varchar(20) NULL DEFAULT NULL COMMENT 'Si se rellena, al elegir este valor se genera una linea aparte con un incremento por ejemplo',
-  `ID_ATB_AV` int(11) NULL DEFAULT NULL COMMENT 'FK lógica → fza_atributos_basicos.ID_ATB. Asocia este valor concreto (p. ej. "001" del proveedor) con su atributo básico estándar (AZUL CIELO)',
+  `ID_ATB_AV` int(11) NULL DEFAULT NULL COMMENT 'FK lógica → fza_atributos_basicos.ID_ATB. Asocia este valor concreto (p. ej. "001" del proveedor) con su atributo básico estándar ("AZUL CIELO").',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL,
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`ID_AV`)
 );
-ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
 ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_AV_ATB` (`ID_ATB_AV`);
+ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
 
 -- Datos de fza_atributos_valores
 /*!40000 ALTER TABLE `fza_atributos_valores` DISABLE KEYS */;
-INSERT INTO `fza_atributos_valores` (`ID_AV`, `ID_VA_AV`, `AV`, `ORDEN_AV`, `DESCRIPCION_AV`, `ESACTIVO_AV`, `FACTOR_CONVERSION_AV`, `UNIDAD_MEDIDA_AV`, `CODIGO_ART_EXTRA_AV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  (1, 'CO', 'ROJO', 10, 'Color ROJO', 'S', 1, NULL, NULL, '2026-03-30 07:35:21', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
-  (3, 'TAL', 'M', 20, 'Talla M', 'S', 1, NULL, NULL, '2026-03-28 17:33:52', '2026-01-04 12:11:37', 'Sistema', 'Sistema'),
-  (4, 'TAL', 'L', 30, 'Talla L (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:33:54', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (100, 'CO', 'NEGRO', 0, 'Color Negro (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:34', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (101, 'CO', 'BLANCO', 0, 'Color Blanco (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:35', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (102, 'CO', 'VERDE', 0, 'Color Verde (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:36', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (103, 'CO', 'MARRON', 0, 'Color Marron (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:37', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (105, 'CO', 'VAQUERO', 0, 'Color/Acabado Vaquero (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:38', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (110, 'TAL', 'S', 10, 'Talla S (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:33:49', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (111, 'TAL', 'XL', 40, 'Talla XL (Deducido)', 'S', 1, NULL, NULL, '2026-03-28 17:34:00', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (121, 'TAL', '37', 0, 'Talla 37 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (122, 'TAL', '38', 0, 'Talla 38 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:43', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (126, 'TAL', '42', 0, 'Talla 42 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:44', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (127, 'TAL', '43', 0, 'Talla 43 (Deducido)', 'S', 1, NULL, NULL, '2026-01-06 19:35:46', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
-  (206, 'TAL', 'S', 10, 'Small - Pequeña', 'S', 1, NULL, NULL, '2026-03-28 17:34:04', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (207, 'TAL', 'M', 20, 'Medium - Mediana', 'S', 1, NULL, NULL, '2026-03-28 17:34:06', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (208, 'TAL', 'L', 30, 'Large - Grande', 'S', 1, NULL, NULL, '2026-03-28 17:34:07', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (209, 'TAL', 'XL', 40, 'Extra Large - Extra G.', 'S', 1, NULL, NULL, '2026-03-28 17:34:09', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
-  (218, 'CO', 'AZUL', 0, 'Color Azul', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (219, 'CO', 'GRIS', 0, 'Color Gris', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (220, 'CO', 'BEIGE', 0, 'Color Beige', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (221, 'CO', 'ROSA', 0, 'Color Rosa', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (222, 'CO', 'CAMEL', 0, 'Color Camel', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (223, 'CO', 'ROJO', 0, 'Color Rojo (alias)', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (224, 'TAL', '41', 0, 'Talla 41', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (225, 'TAL', '40', 0, 'Talla 40', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (226, 'TAL', '44', 0, 'Talla 44', 'S', 1, NULL, NULL, '2026-02-17 06:27:34', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
-  (227, 'TAL', '39', 0, 'Talla 39', 'S', 1, NULL, NULL, '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
-  (9101, 'TAL', 'S', 10, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:10', '2026-05-05 07:47:47', '', ''),
-  (9102, 'TAL', 'M', 20, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:05', '2026-05-05 07:47:47', '', ''),
-  (9103, 'TAL', 'L', 30, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:57:03', '2026-05-05 07:47:47', '', ''),
-  (9104, 'TAL', 'XL', 40, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:59', '2026-05-05 07:47:47', '', ''),
-  (9201, 'CO', 'BLANCO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:53', '2026-05-05 07:47:47', '', ''),
-  (9202, 'CO', 'NEGRO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:47', '2026-05-05 07:47:47', '', ''),
-  (9203, 'CO', 'AZUL MARINO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-29 04:56:41', '2026-05-05 07:47:47', '', ''),
-  (9204, 'CO', 'AMARILLO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:10', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
-  (9205, 'CO', 'CACAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
-  (9206, 'CO', 'COLORAO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
-  (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA'),
-  (9208, 'CO', 'FUCSIA', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:01:00', '2026-03-28 18:01:00', 'SISTEMA', 'SISTEMA'),
-  (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, '2026-03-28 18:04:43', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA'),
-  (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, '2026-03-28 19:22:26', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA'),
-  (9211, 'CO', 'PEPINO', 20, NULL, 'S', 1, NULL, NULL, '2026-03-29 07:37:23', '2026-03-29 07:37:23', 'SISTEMA', 'SISTEMA'),
-  (9212, 'TAL', 'XXXL', 60, NULL, 'S', 1, NULL, NULL, '2026-04-28 17:28:02', '2026-04-28 17:28:02', 'SISTEMA', 'SISTEMA'),
-  (9213, 'TAL', '3XL', 60, NULL, 'S', 1, NULL, NULL, '2026-05-11 19:19:29', '2026-05-11 19:19:29', 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_valores` (`ID_AV`, `ID_VA_AV`, `AV`, `ORDEN_AV`, `DESCRIPCION_AV`, `ESACTIVO_AV`, `FACTOR_CONVERSION_AV`, `UNIDAD_MEDIDA_AV`, `CODIGO_ART_EXTRA_AV`, `ID_ATB_AV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  (1, 'CO', 'ROJO', 10, 'Color ROJO', 'S', 1, NULL, NULL, 3, '2026-05-14 19:34:42', '2026-01-04 12:06:34', 'Sistema', 'Sistema'),
+  (3, 'TAL', 'M', 20, 'Talla M', 'S', 1, NULL, NULL, 18, '2026-05-14 19:34:42', '2026-01-04 12:11:37', 'Sistema', 'Sistema'),
+  (4, 'TAL', 'L', 30, 'Talla L (Deducido)', 'S', 1, NULL, NULL, 19, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (100, 'CO', 'NEGRO', 0, 'Color Negro (Deducido)', 'S', 1, NULL, NULL, 1, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (101, 'CO', 'BLANCO', 0, 'Color Blanco (Deducido)', 'S', 1, NULL, NULL, 2, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (102, 'CO', 'VERDE', 0, 'Color Verde (Deducido)', 'S', 1, NULL, NULL, 7, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (103, 'CO', 'MARRON', 0, 'Color Marron (Deducido)', 'S', 1, NULL, NULL, 9, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (105, 'CO', 'VAQUERO', 0, 'Color/Acabado Vaquero (Deducido)', 'S', 1, NULL, NULL, 16, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (110, 'TAL', 'S', 10, 'Talla S (Deducido)', 'S', 1, NULL, NULL, 17, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (111, 'TAL', 'XL', 40, 'Talla XL (Deducido)', 'S', 1, NULL, NULL, 20, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (121, 'TAL', '37', 0, 'Talla 37 (Deducido)', 'S', 1, NULL, NULL, 23, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (122, 'TAL', '38', 0, 'Talla 38 (Deducido)', 'S', 1, NULL, NULL, 24, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (126, 'TAL', '42', 0, 'Talla 42 (Deducido)', 'S', 1, NULL, NULL, 28, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (127, 'TAL', '43', 0, 'Talla 43 (Deducido)', 'S', 1, NULL, NULL, 29, '2026-05-14 19:34:42', '2026-03-11 22:27:52', 'ScriptReparacion', 'ScriptReparacion'),
+  (206, 'TAL', 'S', 10, 'Small - Pequeña', 'S', 1, NULL, NULL, 17, '2026-05-14 19:34:42', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (207, 'TAL', 'M', 20, 'Medium - Mediana', 'S', 1, NULL, NULL, 18, '2026-05-14 19:34:42', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (208, 'TAL', 'L', 30, 'Large - Grande', 'S', 1, NULL, NULL, 19, '2026-05-14 19:34:42', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (209, 'TAL', 'XL', 40, 'Extra Large - Extra G.', 'S', 1, NULL, NULL, 20, '2026-05-14 19:34:42', '2026-01-28 07:43:41', 'SISTEMA', 'SISTEMA'),
+  (218, 'CO', 'AZUL', 0, 'Color Azul', 'S', 1, NULL, NULL, 4, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (219, 'CO', 'GRIS', 0, 'Color Gris', 'S', 1, NULL, NULL, 10, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (220, 'CO', 'BEIGE', 0, 'Color Beige', 'S', 1, NULL, NULL, 11, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (221, 'CO', 'ROSA', 0, 'Color Rosa', 'S', 1, NULL, NULL, 12, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (222, 'CO', 'CAMEL', 0, 'Color Camel', 'S', 1, NULL, NULL, 13, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (223, 'CO', 'ROJO', 0, 'Color Rojo (alias)', 'S', 1, NULL, NULL, 3, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (224, 'TAL', '41', 0, 'Talla 41', 'S', 1, NULL, NULL, 27, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (225, 'TAL', '40', 0, 'Talla 40', 'S', 1, NULL, NULL, 26, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (226, 'TAL', '44', 0, 'Talla 44', 'S', 1, NULL, NULL, 30, '2026-05-14 19:34:42', '2026-02-17 06:27:34', 'DEMO', 'DEMO'),
+  (227, 'TAL', '39', 0, 'Talla 39', 'S', 1, NULL, NULL, 25, '2026-05-14 19:34:42', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  (9101, 'TAL', 'S', 10, NULL, 'S', 1, NULL, NULL, 17, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9102, 'TAL', 'M', 20, NULL, 'S', 1, NULL, NULL, 18, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9103, 'TAL', 'L', 30, NULL, 'S', 1, NULL, NULL, 19, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9104, 'TAL', 'XL', 40, NULL, 'S', 1, NULL, NULL, 20, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9201, 'CO', 'BLANCO', 0, NULL, 'S', 1, NULL, NULL, 2, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9202, 'CO', 'NEGRO', 0, NULL, 'S', 1, NULL, NULL, 1, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9203, 'CO', 'AZUL MARINO', 0, NULL, 'S', 1, NULL, NULL, 6, '2026-05-14 19:34:42', '2026-05-05 07:47:47', '', ''),
+  (9204, 'CO', 'AMARILLO', 0, NULL, 'S', 1, NULL, NULL, 8, '2026-05-14 19:34:42', '2026-03-27 07:30:10', 'SISTEMA', 'SISTEMA'),
+  (9205, 'CO', 'CACAO', 0, NULL, 'S', 1, NULL, NULL, NULL, '2026-03-27 07:30:32', '2026-03-27 07:30:32', 'SISTEMA', 'SISTEMA'),
+  (9206, 'CO', 'COLORAO', 0, NULL, 'S', 1, NULL, NULL, NULL, '2026-03-27 07:32:27', '2026-03-27 07:32:27', 'SISTEMA', 'SISTEMA'),
+  (9207, 'CO', 'BONIATO', 0, NULL, 'S', 1, NULL, NULL, NULL, '2026-03-27 07:35:12', '2026-03-27 07:35:12', 'SISTEMA', 'SISTEMA'),
+  (9208, 'CO', 'FUCSIA', 100, NULL, 'S', 1, NULL, NULL, 14, '2026-05-14 19:34:42', '2026-03-28 18:01:00', 'SISTEMA', 'SISTEMA'),
+  (9209, 'CO', 'BURDEOS', 100, NULL, 'S', 1, NULL, NULL, 15, '2026-05-14 19:34:42', '2026-03-28 18:04:43', 'SISTEMA', 'SISTEMA'),
+  (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, 21, '2026-05-14 19:34:42', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA'),
+  (9211, 'CO', 'PEPINO', 20, NULL, 'S', 1, NULL, NULL, NULL, '2026-03-29 07:37:23', '2026-03-29 07:37:23', 'SISTEMA', 'SISTEMA'),
+  (9212, 'TAL', 'XXXL', 60, NULL, 'S', 1, NULL, NULL, 22, '2026-05-14 19:34:42', '2026-04-28 17:28:02', 'SISTEMA', 'SISTEMA'),
+  (9213, 'TAL', '3XL', 60, NULL, 'S', 1, NULL, NULL, NULL, '2026-05-11 19:19:29', '2026-05-11 19:19:29', 'SISTEMA', 'SISTEMA');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
 -- 45 registros exportados
 
@@ -2003,6 +2039,7 @@ CREATE TABLE `fza_compras_sesiones` (
   `SERIE_ALBC_SES` varchar(12) NULL DEFAULT NULL COMMENT 'FK al albarán de compra generado',
   `NUMERO_ALBC_SES` varchar(12) NULL DEFAULT NULL,
   `MENSAJE_ERROR_SES` varchar(2000) NULL DEFAULT NULL,
+  `CONTADOR_LINEAS_SES` int(11) NOT NULL DEFAULT '0',
   `COMENTARIOS_SES` varchar(1000) NULL DEFAULT NULL,
   `INSTANTE_ALTA` datetime NOT NULL,
   `USUARIO_ALTA` varchar(50) NOT NULL,
@@ -2016,8 +2053,8 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_FAM` (`CODIGO_FAM_SES`);
 ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SES`, `FECHA_SES`);
 
 -- Datos de fza_compras_sesiones
-INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', 'N', 230, 'PVP', 'S', 'S', 1, 0, 'TC', NULL, 2, NULL, 4, 'N', NULL, NULL, NULL, 'N', 'N', NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-12 19:56:12', 'Administrador', 'N');
+INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`) VALUES
+  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 230, 'PVP', 'S', 'S', 1, 0, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'N', NULL, NULL, NULL, NULL, NULL, 0, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-14 19:13:48', 'Administrador', 'N');
 -- 1 registros exportados
 
 
@@ -2285,7 +2322,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 191, 3, 'S', 'S', '2026-05-12 20:09:34', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 193, 3, 'S', 'S', '2026-05-14 19:34:41', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 18, 2, 'S', 'S', '2026-05-11 19:06:32', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -3758,8 +3795,899 @@ CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
 --
 -- Cualquier fallo → ROLLBACK. La sesión sigue en BORRADOR con
 -- MENSAJE_ERROR_SES poblado.
-', '2026-05-12 20:09:34', '2026-05-12 20:09:34', 'Administrador', 'Administrador');
--- 1 registros exportados
+', '2026-05-12 20:09:34', '2026-05-12 20:09:34', 'Administrador', 'Administrador'),
+  ('191', 'compras_sesiones', '-- ============================================================================
+-- Módulo Compras — Sesiones (pre-pedidos / pre-albaranes)
+-- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
+--
+-- Principio: nada de lo que vive en estas tablas se materializa en las tablas
+-- maestras (fza_articulos, fza_articulos_skus, fza_codigos_barras,
+-- fza_articulos_proveedores) hasta que el usuario pulsa explícitamente
+-- "Crear artículos y documentos". Toda materialización es código Delphi
+-- explícito, en una sola transacción.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- IDEMPOTENCIA
+-- ---------------------------------------------------------------------------
+-- Este script se puede ejecutar tantas veces como haga falta:
+--   - CREATE TABLE … IF NOT EXISTS para todas las tablas.
+--   - CREATE OR REPLACE VIEW para las vistas.
+--   - El ALTER TABLE de la sección 0 se envuelve en un bloque dinámico
+--     que comprueba INFORMATION_SCHEMA antes de añadir la columna.
+--
+-- Los datos de configuración (contadores, fza_winforms, etiquetas
+-- NOMBRE_VISIBLE_VA) viven en compras_sesiones_datos.sql.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- 0. Cambio a tabla existente: nombre visible del atributo de variación
+-- ---------------------------------------------------------------------------
+-- Permite que la UI etiquete el eje pivot con un nombre parametrizable
+-- (ej. "Sistema de tallas", "Paleta", "Duración"...) en lugar de un literal
+-- hardcoded. Aplica a toda la app, no sólo a las sesiones de compra.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_variaciones_atributos''
+     AND COLUMN_NAME  = ''NOMBRE_VISIBLE_VA''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_variaciones_atributos` ''
+  ''ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL ''
+  ''COMMENT ''''Etiqueta a mostrar en formularios cuando este atributo pivota'''''',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 0-bis. Numero de digitos de relleno por familia para autogenerar codigos
+-- ---------------------------------------------------------------------------
+-- Cuando el usuario teclea en la sesion el codigo de una familia (ej.
+-- "BOLSOS") con ESCONTADOR_ART_FAM=''S'' y CONTADOR_ART_FAM > 0, la sesion
+-- expande automaticamente al siguiente codigo:
+--   <CODIGO_FAM_FAM> + RIGHT(''00000'' + CAST(CONTADOR_ART_FAM AS CHAR), PAD)
+-- y se incrementa el contador.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_familias''
+     AND COLUMN_NAME  = ''PAD_ART_FAM''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_articulos_familias` ''
+  ''ADD COLUMN `PAD_ART_FAM` int(11) NOT NULL DEFAULT 5 ''
+  ''COMMENT ''''Numero de digitos del relleno cuando se autogenera codigo articulo desde familia'''''',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Inicializar valores en familias ya existentes (las columnas son NULLABLE
+-- en bases antiguas; el DEFAULT solo aplica a filas nuevas). Los TcxDBSpinEdit
+-- no permiten editar campos NULL con MinValue>0, asi que ponemos defaults.
+UPDATE `fza_articulos_familias`
+   SET `CONTADOR_ART_FAM` = 0
+ WHERE `CONTADOR_ART_FAM` IS NULL;
+
+UPDATE `fza_articulos_familias`
+   SET `PAD_ART_FAM` = 5
+ WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
+
+UPDATE `fza_articulos_familias`
+   SET `ESCONTADOR_ART_FAM` = ''N''
+ WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '''';
+
+-- Migración idempotente para la cabecera: añadir parámetros de fórmula
+-- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
+-- sin ellos. La definición del CREATE TABLE más abajo los incluye.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones''
+     AND COLUMN_NAME  = ''MULTIPLO_REDONDEO_SES''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones` ''
+  ''ADD COLUMN `MULTIPLO_REDONDEO_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
+  ''  AFTER `ESREDONDEO_VENTA_SES`, ''
+  ''ADD COLUMN `AJUSTE_FINAL_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
+  ''  AFTER `MULTIPLO_REDONDEO_SES`, ''
+  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''' ''
+  ''  AFTER `AJUSTE_FINAL_SES`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Migracion auxiliar: si la tabla ya tenia MULTIPLO/AJUSTE pero no
+-- ESPRECIO_POR_SKU_SES (caso intermedio), anadirla suelta.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones''
+     AND COLUMN_NAME  = ''ESPRECIO_POR_SKU_SES''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones` ''
+  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''''',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Migracion CONTADOR_LINEAS_SES: cabecera lleva contador de lineas que cada
+-- nueva linea consume +10 (pasos de 10 para permitir intercalar). Mismo
+-- patron que CONTADOR_LINEAS_FAC/PED/ALB en facturas/pedidos/albaranes.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones''
+     AND COLUMN_NAME  = ''CONTADOR_LINEAS_SES''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones` ''
+  ''ADD COLUMN `CONTADOR_LINEAS_SES` int(11) NOT NULL DEFAULT 0 ''
+  ''  AFTER `MENSAJE_ERROR_SES`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Migracion para soporte de eje fila como texto libre del proveedor (§12):
+-- anade ETIQUETA_TEXTO_SESFIL a fza_compras_sesiones_lineas_filas si no
+-- existe. En modo texto libre _filas_atr queda vacia y la etiqueta de la
+-- fila se lee de esta columna.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones_lineas_filas''
+     AND COLUMN_NAME  = ''ETIQUETA_TEXTO_SESFIL''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones_lineas_filas` ''
+  ''ADD COLUMN `ETIQUETA_TEXTO_SESFIL` varchar(100) DEFAULT NULL ''
+  ''  COMMENT ''''Etiqueta libre tecleada por el usuario cuando la sesion ''
+  ''usa eje fila libre (ID_AC_FILA_SES IS NULL). Si esta NULL la etiqueta ''
+  ''viene de _filas_atr (modo conjunto).'''' ''
+  ''  AFTER `ORDEN_SESFIL`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 1. Cabecera de sesión
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
+  `SERIE_SES`                   varchar(12)   NOT NULL,
+  `NUMERO_SES`                  varchar(12)   NOT NULL,
+  `FECHA_SES`                   date          NOT NULL,
+  `ESTADO_SES`                  varchar(10)   NOT NULL DEFAULT ''BORRADOR''
+                                  COMMENT ''BORRADOR | CERRADA | ANULADA'',
+  `CODIGO_EMP_SES`              varchar(20)   NOT NULL,
+  `CODIGO_PRV_SES`              varchar(20)   NOT NULL,
+  `REF_PRV_SES`                 varchar(100)  DEFAULT NULL
+                                  COMMENT ''Referencia del proveedor (PO ext.)'',
+  `CODIGO_FAM_SES`              varchar(20)   DEFAULT NULL
+                                  COMMENT ''Familia objetivo de los artículos a crear'',
+  `CODIGO_ALM_SES`              varchar(10)   DEFAULT NULL
+                                  COMMENT ''Almacén destino si se materializa albarán'',
+  `MONEDA_SES`                  varchar(5)    NOT NULL DEFAULT ''EUR'',
+  `TIPO_IVA_SES`                varchar(2)    NOT NULL DEFAULT ''N'',
+  `PORCENTAJE_MARGEN_SES`       decimal(7,4)  DEFAULT NULL
+                                  COMMENT ''% margen comercial por defecto'',
+  `CODIGO_TAR_SES`              varchar(20)   DEFAULT NULL
+                                  COMMENT ''Tarifa de salida sugerida'',
+  `ESPRECIOS_SIN_IVA_SES`       char(1)       NOT NULL DEFAULT ''S'',
+  `ESREDONDEO_VENTA_SES`        char(1)       NOT NULL DEFAULT ''N'',
+  `MULTIPLO_REDONDEO_SES`       decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT ''Multiplo al que sube el precio venta calculado. 0 = sin redondeo.'',
+  `AJUSTE_FINAL_SES`            decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT ''Sumando final tras el redondeo. Negativo para acabar en .99, .95, etc.'',
+  `ESPRECIO_POR_SKU_SES`        char(1)       NOT NULL DEFAULT ''N''
+                                  COMMENT ''S=permite override de precio compra/venta por cada SKU (fza_compras_sesiones_lineas_skus_precios).'',
+
+  -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES=''N''.
+  `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
+                                  COMMENT ''FK fza_variaciones — TC, TEMP, etc. (defecto)'',
+  `ID_VA_PIVOT_SES`             varchar(20)   DEFAULT NULL
+                                  COMMENT ''Atributo cuyos valores pivotan a columnas (defecto)'',
+  `ID_AC_PIVOT_SES`             int(11)       DEFAULT NULL
+                                  COMMENT ''FK fza_atributos_conjuntos para el eje pivot (defecto)'',
+  `ID_VA_FILA_SES`              varchar(20)   DEFAULT NULL
+                                  COMMENT ''Atributo cuyos valores generan filas (defecto)'',
+  `ID_AC_FILA_SES`              int(11)       DEFAULT NULL
+                                  COMMENT ''FK fza_atributos_conjuntos para el eje fila (defecto)'',
+  `ESVAR_FIJA_SES`              char(1)       NOT NULL DEFAULT ''N''
+                                  COMMENT ''S=todas las líneas obligadas a usar la var por defecto. N=cada línea decide.'',
+
+  -- Prefijo y contador para EAN13 al materializar
+  `PREFIJO_EAN_SES`             varchar(7)    DEFAULT NULL
+                                  COMMENT ''Prefijo EAN13 (ej 841xxxx) — null = usa global'',
+
+  -- Materialización
+  `INSTANTE_MATERIALIZA_SES`    datetime      DEFAULT NULL,
+  `USUARIO_MATERIALIZA_SES`     varchar(50)   DEFAULT NULL,
+  `ESGENERA_PEDIDO_SES`         char(1)       NOT NULL DEFAULT ''N'',
+  `ESGENERA_ALBARAN_SES`        char(1)       NOT NULL DEFAULT ''N'',
+  `SERIE_PEDC_SES`              varchar(12)   DEFAULT NULL
+                                  COMMENT ''FK al pedido de compra generado'',
+  `NUMERO_PEDC_SES`             varchar(12)   DEFAULT NULL,
+  `SERIE_ALBC_SES`              varchar(12)   DEFAULT NULL
+                                  COMMENT ''FK al albarán de compra generado'',
+  `NUMERO_ALBC_SES`             varchar(12)   DEFAULT NULL,
+  `MENSAJE_ERROR_SES`           varchar(2000) DEFAULT NULL,
+
+  -- Contador de lineas (mismo patron que CONTADOR_LINEAS_FAC/PED/ALB):
+  -- el AfterInsert de cada linea hace CONTADOR + 10 -> LINEA_SESLIN.
+  -- Pasos de 10 dejan hueco para intercalar lineas nuevas (15 entre 10 y 20).
+  `CONTADOR_LINEAS_SES`         int(11)       NOT NULL DEFAULT 0,
+
+  `COMENTARIOS_SES`             varchar(1000) DEFAULT NULL,
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES`, `NUMERO_SES`),
+  INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SES`, `FECHA_SES`),
+  INDEX `IDX_SES_ESTADO`    (`ESTADO_SES`),
+  INDEX `IDX_SES_FAM`       (`CODIGO_FAM_SES`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 2. Propiedades de cabecera (fijas / variables)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_props` (
+  `SERIE_SES_SESPROP`           varchar(12)   NOT NULL,
+  `NUMERO_SES_SESPROP`          varchar(12)   NOT NULL,
+  `CODIGO_PROP_SESPROP`         varchar(20)   NOT NULL
+                                  COMMENT ''FK fza_propiedades'',
+  `ESFIJO_SESPROP`              char(1)       NOT NULL DEFAULT ''N''
+                                  COMMENT ''S=todas las líneas heredan obligatoriamente'',
+  `ID_PV_DEFECTO_SESPROP`       int(11)       DEFAULT NULL
+                                  COMMENT ''Si tipo LISTA, FK fza_propiedades_valores'',
+  `VALOR_DEFECTO_SESPROP`       varchar(255)  DEFAULT NULL
+                                  COMMENT ''Si tipo TEXTO/NUMERO/BOOL'',
+  `ORDEN_SESPROP`               int(11)       NOT NULL DEFAULT 0,
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESPROP`, `NUMERO_SES_SESPROP`, `CODIGO_PROP_SESPROP`),
+  INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 3. Kits de cantidades (cabecera + detalle)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits` (
+  `SERIE_SES_SESKIT`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESKIT`           varchar(12)   NOT NULL,
+  `CODIGO_SESKIT`               varchar(20)   NOT NULL
+                                  COMMENT ''CURVA-STD, MUESTRA, etc.'',
+  `NOMBRE_SESKIT`               varchar(100)  NOT NULL,
+  `DESCRIPCION_SESKIT`          varchar(255)  DEFAULT NULL,
+  `ID_VA_DESTINO_SESKIT`        varchar(20)   NOT NULL
+                                  COMMENT ''Atributo destino del kit, normalmente el pivot (TAL)'',
+  `CODIGO_PRV_SESKIT`           varchar(20)   DEFAULT NULL
+                                  COMMENT ''Si el kit nace de plantilla del proveedor'',
+  `ORDEN_SESKIT`                int(11)       NOT NULL DEFAULT 0,
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESKIT`, `NUMERO_SES_SESKIT`, `CODIGO_SESKIT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits_det` (
+  `SERIE_SES_SESKITD`           varchar(12)   NOT NULL,
+  `NUMERO_SES_SESKITD`          varchar(12)   NOT NULL,
+  `CODIGO_SESKIT_SESKITD`       varchar(20)   NOT NULL,
+  `VALOR_DESTINO_SESKITD`       varchar(50)   NOT NULL
+                                  COMMENT ''Valor del atributo destino: "38", "M", etc.'',
+  `CANTIDAD_SESKITD`            decimal(19,6) NOT NULL DEFAULT 0,
+  `ORDEN_SESKITD`               int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`SERIE_SES_SESKITD`, `NUMERO_SES_SESKITD`,
+               `CODIGO_SESKIT_SESKITD`, `VALOR_DESTINO_SESKITD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 4. Líneas (un artículo tentativo cada una)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas` (
+  `SERIE_SES_SESLIN`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESLIN`           varchar(12)   NOT NULL,
+  `LINEA_SESLIN`                int(11)       NOT NULL,
+
+  -- Artículo tentativo
+  `CODIGO_ART_TENTATIVO_SESLIN` varchar(20)   NOT NULL
+                                  COMMENT ''Lo que el usuario teclea; se valida contra fza_articulos'',
+  `DESCRIPCION_SESLIN`          varchar(1000) NOT NULL,
+  `CODIGO_FAM_SESLIN`           varchar(20)   DEFAULT NULL
+                                  COMMENT ''Override sobre la familia de cabecera; null = hereda'',
+  `TIPO_LINEA_SESLIN`           varchar(10)   NOT NULL DEFAULT ''MATRIZ''
+                                  COMMENT ''MATRIZ | ESCALAR | SERVICIO | KIT'',
+  `TIPO_ART_SESLIN`             varchar(10)   NOT NULL DEFAULT ''ESTANDAR''
+                                  COMMENT ''Derivado de TIPO_LINEA: SERVICIO=>SERVICIO, KIT=>KIT, resto=>ESTANDAR'',
+  `TIPO_IVA_SESLIN`             varchar(2)    DEFAULT NULL
+                                  COMMENT ''Override sobre cabecera'',
+  `TIPO_CANTIDAD_SESLIN`        varchar(20)   NOT NULL DEFAULT ''Uds'',
+  `ESTRAZABLE_SESLIN`           char(1)       NOT NULL DEFAULT ''N'',
+
+  -- Override de variación por línea (sólo aplica si ESVAR_FIJA_SES=''N'' en cabecera)
+  `CODIGO_VAR_SESLIN`           varchar(20)   DEFAULT NULL
+                                  COMMENT ''Override sobre cabecera, null = hereda'',
+  `ID_VA_PIVOT_SESLIN`          varchar(20)   DEFAULT NULL,
+  `ID_AC_PIVOT_SESLIN`          int(11)       DEFAULT NULL,
+  `ID_VA_FILA_SESLIN`           varchar(20)   DEFAULT NULL,
+  `ID_AC_FILA_SESLIN`           int(11)       DEFAULT NULL,
+
+  -- Cantidad escalar (sólo para TIPO_LINEA = ESCALAR o SERVICIO)
+  `CANTIDAD_ESCALAR_SESLIN`     decimal(19,6) DEFAULT NULL,
+
+  -- Conflicto con artículo existente
+  `ESDUPLICADO_SESLIN`          char(1)       NOT NULL DEFAULT ''N'',
+  `ACCION_DUPLICADO_SESLIN`     varchar(10)   DEFAULT NULL
+                                  COMMENT ''REUSAR | RENOMBRAR | NULL'',
+  `CODIGO_ART_REUSAR_SESLIN`    varchar(20)   DEFAULT NULL
+                                  COMMENT ''Si ACCION=REUSAR, código del artículo a reutilizar'',
+
+  -- Precios
+  `PRECIO_COMPRA_SESLIN`        decimal(19,6) NOT NULL DEFAULT 0,
+  `PORCENTAJE_MARGEN_SESLIN`    decimal(7,4)  DEFAULT NULL,
+  `PRECIO_VENTA_SESLIN`         decimal(19,6) DEFAULT NULL
+                                  COMMENT ''Calculado pero override-able'',
+  `REF_PRV_SESLIN`              varchar(100)  DEFAULT NULL,
+
+  -- Calculado
+  `TOTAL_UNIDADES_SESLIN`       decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT ''Suma de celdas (read-only, lo refresca el form)'',
+  `TOTAL_LINEA_SESLIN`          decimal(19,6) NOT NULL DEFAULT 0
+                                  COMMENT ''TOTAL_UNIDADES * PRECIO_COMPRA'',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`),
+  INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 5. Filas de la matriz por línea (combinación de atributos no-pivot)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas` (
+  `SERIE_SES_SESFIL`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESFIL`           varchar(12)   NOT NULL,
+  `LINEA_SES_SESFIL`            int(11)       NOT NULL,
+  `ID_FILA_SESFIL`              int(11)       NOT NULL
+                                  COMMENT ''Numerador 1..N dentro de la línea'',
+  `ORDEN_SESFIL`                int(11)       NOT NULL DEFAULT 0,
+  `ETIQUETA_TEXTO_SESFIL`       varchar(100)  DEFAULT NULL
+                                  COMMENT ''Etiqueta libre tecleada por el usuario cuando la sesión usa eje fila libre (ID_AC_FILA_SES IS NULL). En modo conjunto la etiqueta viene de _filas_atr.'',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESFIL`, `NUMERO_SES_SESFIL`,
+               `LINEA_SES_SESFIL`, `ID_FILA_SESFIL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Valores de atributo que distinguen cada fila (uno o varios).
+-- Caso típico: una sola entrada por fila: ID_VA = ''CO'', VALOR = ''NEGRO''.
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas_atr` (
+  `SERIE_SES_SESFILAT`          varchar(12)   NOT NULL,
+  `NUMERO_SES_SESFILAT`         varchar(12)   NOT NULL,
+  `LINEA_SES_SESFILAT`          int(11)       NOT NULL,
+  `ID_FILA_SESFILAT`            int(11)       NOT NULL,
+  `ID_VA_SESFILAT`              varchar(20)   NOT NULL
+                                  COMMENT ''Atributo: CO, MAT, TEMP...'',
+  `ID_AV_SESFILAT`              int(11)       NOT NULL
+                                  COMMENT ''FK fza_atributos_valores'',
+
+  PRIMARY KEY (`SERIE_SES_SESFILAT`, `NUMERO_SES_SESFILAT`,
+               `LINEA_SES_SESFILAT`, `ID_FILA_SESFILAT`, `ID_VA_SESFILAT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot, almacén)
+-- ---------------------------------------------------------------------------
+-- La dimensión de almacén permite que una misma sesión genere varios
+-- albaranes de compra (uno por almacén destino) sin perder la trazabilidad
+-- talla×color por almacén. El pedido de compra al proveedor sigue siendo
+-- único — agrega cantidades de todos los almacenes por SKU.
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
+  `SERIE_SES_SESCEL`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESCEL`           varchar(12)   NOT NULL,
+  `LINEA_SES_SESCEL`            int(11)       NOT NULL,
+  `ID_FILA_SES_SESCEL`          int(11)       NOT NULL,
+  `ID_AV_PIVOT_SESCEL`          int(11)       NOT NULL
+                                  COMMENT ''FK fza_atributos_valores del eje pivot (TALLA)'',
+  `CODIGO_ALM_SESCEL`           varchar(10)   NOT NULL DEFAULT ''''
+                                  COMMENT ''Almacén destino (FK fza_almacenes). '''''''' = usa el de cabecera al materializar.'',
+  `CANTIDAD_SESCEL`             decimal(19,6) NOT NULL,
+
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`,
+               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`,
+               `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`),
+  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`),
+  INDEX `IDX_SESCEL_ALM`      (`CODIGO_ALM_SESCEL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Migración idempotente: añadir CODIGO_ALM_SESCEL en bases que ya tienen
+-- la tabla creada con el PK antiguo. Si la columna ya existe, no toca nada.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones_celdas''
+     AND COLUMN_NAME  = ''CODIGO_ALM_SESCEL''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones_celdas` ''
+  ''ADD COLUMN `CODIGO_ALM_SESCEL` varchar(10) NOT NULL DEFAULT '''''''' ''
+  ''  AFTER `ID_AV_PIVOT_SESCEL`, ''
+  ''DROP PRIMARY KEY, ''
+  ''ADD PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`, ''
+  ''                 `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, ''
+  ''                 `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`), ''
+  ''ADD INDEX `IDX_SESCEL_ALM` (`CODIGO_ALM_SESCEL`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 7. Override de propiedades variables por línea
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_props` (
+  `SERIE_SES_SESLPROP`          varchar(12)   NOT NULL,
+  `NUMERO_SES_SESLPROP`         varchar(12)   NOT NULL,
+  `LINEA_SES_SESLPROP`          int(11)       NOT NULL,
+  `CODIGO_PROP_SESLPROP`        varchar(20)   NOT NULL,
+  `ID_PV_SESLPROP`              int(11)       DEFAULT NULL,
+  `VALOR_LIBRE_SESLPROP`        varchar(255)  DEFAULT NULL,
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESLPROP`, `NUMERO_SES_SESLPROP`,
+               `LINEA_SES_SESLPROP`, `CODIGO_PROP_SESLPROP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 7-bis. Override de precio por SKU (coste y venta)
+-- ---------------------------------------------------------------------------
+-- Cuando una linea necesita precio distinto en una talla/color concretos,
+-- aqui se sobreescribe. Si no hay fila para un SKU, se usan los precios
+-- de la linea (PRECIO_COMPRA_SESLIN / PRECIO_VENTA_SESLIN).
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_skus_precios` (
+  `SERIE_SES_SESLINSKU`         varchar(12)   NOT NULL,
+  `NUMERO_SES_SESLINSKU`        varchar(12)   NOT NULL,
+  `LINEA_SES_SESLINSKU`         int(11)       NOT NULL,
+  `ID_FILA_SES_SESLINSKU`       int(11)       NOT NULL,
+  `ID_AV_PIVOT_SESLINSKU`       int(11)       NOT NULL,
+  `PRECIO_COMPRA_SESLINSKU`     decimal(19,6) DEFAULT NULL
+                                  COMMENT ''Override del precio de coste para este SKU. NULL = hereda de la linea.'',
+  `PRECIO_VENTA_SESLINSKU`      decimal(19,6) DEFAULT NULL
+                                  COMMENT ''Override del precio de venta para este SKU. NULL = hereda de la linea.'',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESLINSKU`, `NUMERO_SES_SESLINSKU`,
+               `LINEA_SES_SESLINSKU`, `ID_FILA_SES_SESLINSKU`,
+               `ID_AV_PIVOT_SESLINSKU`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 7-ter. Documentos materializados por la sesion (N pedidos + N albaranes)
+-- ---------------------------------------------------------------------------
+-- La sesion puede generar varios documentos al materializarse, uno por
+-- almacen con cantidad > 0 (tanto pedidos como albaranes). La cabecera
+-- guarda SERIE_PEDC_SES/NUMERO_PEDC_SES y SERIE_ALBC_SES/NUMERO_ALBC_SES
+-- como referencia al primero de cada tipo (util para listados rapidos).
+-- Esta tabla guarda la lista completa.
+CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_documentos` (
+  `SERIE_SES_SESDOC`            varchar(12)   NOT NULL,
+  `NUMERO_SES_SESDOC`           varchar(12)   NOT NULL,
+  `TIPO_DOC_SESDOC`             varchar(4)    NOT NULL
+                                  COMMENT ''PEDC = pedido de compra, ALBC = albaran de compra'',
+  `CODIGO_ALM_SESDOC`           varchar(10)   NOT NULL
+                                  COMMENT ''Almacen al que aplica este documento'',
+  `SERIE_SESDOC`                varchar(12)   NOT NULL
+                                  COMMENT ''Serie del documento generado (fza_pedidos_compra / _albaranes)'',
+  `NUMERO_SESDOC`               varchar(12)   NOT NULL
+                                  COMMENT ''Numero del documento generado'',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+
+  PRIMARY KEY (`SERIE_SES_SESDOC`, `NUMERO_SES_SESDOC`,
+               `TIPO_DOC_SESDOC`, `CODIGO_ALM_SESDOC`),
+  INDEX `IDX_SESDOC_DOC` (`TIPO_DOC_SESDOC`, `SERIE_SESDOC`, `NUMERO_SESDOC`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 8. Vistas auxiliares para el formulario
+-- ---------------------------------------------------------------------------
+
+-- Resumen de cada sesión: nº de líneas, nº de SKUs potenciales, total.
+CREATE OR REPLACE VIEW `VI_SES_RESUMEN` AS
+SELECT
+  S.`SERIE_SES`,
+  S.`NUMERO_SES`,
+  S.`FECHA_SES`,
+  S.`CODIGO_PRV_SES`,
+  S.`CODIGO_FAM_SES`,
+  S.`ESTADO_SES`,
+  (SELECT COUNT(*) FROM `fza_compras_sesiones_lineas` L
+    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
+      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS NUM_LINEAS,
+  (SELECT COUNT(*) FROM `fza_compras_sesiones_celdas` C
+    WHERE C.`SERIE_SES_SESCEL`  = S.`SERIE_SES`
+      AND C.`NUMERO_SES_SESCEL` = S.`NUMERO_SES`
+      AND C.`CANTIDAD_SESCEL`   > 0) AS NUM_SKUS_POTENCIALES,
+  (SELECT IFNULL(SUM(L.`TOTAL_LINEA_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` L
+    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
+      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS TOTAL_COMPRA
+FROM `fza_compras_sesiones` S;
+
+-- Detalle "explotado" para previsualizar qué SKUs se materializarán.
+-- Incluye el almacén destino (resuelto a cabecera si la celda lo tiene vacío).
+CREATE OR REPLACE VIEW `VI_SES_PREVIEW_SKUS` AS
+SELECT
+  L.`SERIE_SES_SESLIN`           AS SERIE,
+  L.`NUMERO_SES_SESLIN`          AS NUMERO,
+  L.`LINEA_SESLIN`               AS LINEA,
+  L.`CODIGO_ART_TENTATIVO_SESLIN` AS CODIGO_ART,
+  L.`DESCRIPCION_SESLIN`         AS DESCRIPCION,
+  C.`ID_FILA_SES_SESCEL`         AS ID_FILA,
+  C.`ID_AV_PIVOT_SESCEL`         AS ID_AV_PIVOT,
+  AVP.`AV`                       AS VALOR_PIVOT,
+  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
+                                 AS CODIGO_ALM,
+  C.`CANTIDAD_SESCEL`            AS CANTIDAD,
+  L.`PRECIO_COMPRA_SESLIN`       AS PRECIO_COMPRA,
+  L.`PRECIO_VENTA_SESLIN`        AS PRECIO_VENTA
+FROM `fza_compras_sesiones_lineas`   L
+JOIN `fza_compras_sesiones`          S
+  ON S.`SERIE_SES`         = L.`SERIE_SES_SESLIN`
+ AND S.`NUMERO_SES`        = L.`NUMERO_SES_SESLIN`
+JOIN `fza_compras_sesiones_celdas`   C
+  ON C.`SERIE_SES_SESCEL`  = L.`SERIE_SES_SESLIN`
+ AND C.`NUMERO_SES_SESCEL` = L.`NUMERO_SES_SESLIN`
+ AND C.`LINEA_SES_SESCEL`  = L.`LINEA_SESLIN`
+JOIN `fza_atributos_valores`         AVP
+  ON AVP.`ID_AV`           = C.`ID_AV_PIVOT_SESCEL`
+WHERE C.`CANTIDAD_SESCEL`  > 0;
+
+-- Resumen agregado por almacén para la pestaña Materialización.
+CREATE OR REPLACE VIEW `VI_SES_RESUMEN_ALMACEN` AS
+SELECT
+  C.`SERIE_SES_SESCEL`           AS SERIE,
+  C.`NUMERO_SES_SESCEL`          AS NUMERO,
+  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
+                                 AS CODIGO_ALM,
+  COUNT(*)                       AS NUM_SKUS,
+  SUM(C.`CANTIDAD_SESCEL`)       AS UNIDADES_TOTAL
+FROM `fza_compras_sesiones_celdas` C
+JOIN `fza_compras_sesiones`        S
+  ON S.`SERIE_SES`         = C.`SERIE_SES_SESCEL`
+ AND S.`NUMERO_SES`        = C.`NUMERO_SES_SESCEL`
+WHERE C.`CANTIDAD_SESCEL`  > 0
+GROUP BY C.`SERIE_SES_SESCEL`, C.`NUMERO_SES_SESCEL`,
+         IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`);
+
+-- ---------------------------------------------------------------------------
+-- 8-bis. Plantillas globales de cabecera (reutilizables al crear sesión)
+-- ---------------------------------------------------------------------------
+-- Permite guardar una configuración de cabecera + propiedades + kits con un
+-- nombre y reutilizarla al crear sesiones nuevas. Sufijos: SESPL / SESPLPROP /
+-- SESPLKIT / SESPLKITD.
+
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas` (
+  `CODIGO_SESPL`                varchar(20)   NOT NULL,
+  `NOMBRE_SESPL`                varchar(100)  NOT NULL,
+  `DESCRIPCION_SESPL`           varchar(255)  DEFAULT NULL,
+  `CODIGO_PRV_SESPL`            varchar(20)   DEFAULT NULL
+                                  COMMENT ''Plantilla específica de proveedor; null = global'',
+  `CODIGO_FAM_SESPL`            varchar(20)   DEFAULT NULL,
+  `TIPO_IVA_SESPL`              varchar(2)    DEFAULT NULL,
+  `PORCENTAJE_MARGEN_SESPL`     decimal(7,4)  DEFAULT NULL,
+  `CODIGO_TAR_SESPL`            varchar(20)   DEFAULT NULL,
+  `CODIGO_VAR_SESPL`            varchar(20)   DEFAULT NULL,
+  `ID_VA_PIVOT_SESPL`           varchar(20)   DEFAULT NULL,
+  `ID_AC_PIVOT_SESPL`           int(11)       DEFAULT NULL,
+  `ID_VA_FILA_SESPL`            varchar(20)   DEFAULT NULL,
+  `ID_AC_FILA_SESPL`            int(11)       DEFAULT NULL,
+  `ESVAR_FIJA_SESPL`            char(1)       NOT NULL DEFAULT ''N'',
+  `ESACTIVA_SESPL`              char(1)       NOT NULL DEFAULT ''S'',
+
+  `INSTANTE_ALTA`               datetime      NOT NULL,
+  `USUARIO_ALTA`                varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
+  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
+
+  PRIMARY KEY (`CODIGO_SESPL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_props` (
+  `CODIGO_SESPL_SESPLPROP`      varchar(20)   NOT NULL,
+  `CODIGO_PROP_SESPLPROP`       varchar(20)   NOT NULL,
+  `ESFIJO_SESPLPROP`            char(1)       NOT NULL DEFAULT ''N'',
+  `ID_PV_DEFECTO_SESPLPROP`     int(11)       DEFAULT NULL,
+  `VALOR_DEFECTO_SESPLPROP`     varchar(255)  DEFAULT NULL,
+  `ORDEN_SESPLPROP`             int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`, `CODIGO_PROP_SESPLPROP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits` (
+  `CODIGO_SESPL_SESPLKIT`       varchar(20)   NOT NULL,
+  `CODIGO_SESPLKIT`             varchar(20)   NOT NULL,
+  `NOMBRE_SESPLKIT`             varchar(100)  NOT NULL,
+  `ID_VA_DESTINO_SESPLKIT`      varchar(20)   NOT NULL,
+  `ORDEN_SESPLKIT`              int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`, `CODIGO_SESPLKIT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
+  `CODIGO_SESPL_SESPLKITD`      varchar(20)   NOT NULL,
+  `CODIGO_SESPLKIT_SESPLKITD`   varchar(20)   NOT NULL,
+  `VALOR_DESTINO_SESPLKITD`     varchar(50)   NOT NULL,
+  `CANTIDAD_SESPLKITD`          decimal(19,6) NOT NULL DEFAULT 0,
+  `ORDEN_SESPLKITD`             int(11)       NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (`CODIGO_SESPL_SESPLKITD`,
+               `CODIGO_SESPLKIT_SESPLKITD`,
+               `VALOR_DESTINO_SESPLKITD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------------
+-- 9. Contador propio
+-- ---------------------------------------------------------------------------
+-- Inserción esperada en fza_contadores para numerar sesiones:
+--
+-- INSERT INTO fza_contadores (CODIGO_CON, TIPO_DOC_CON, ULTIMO_CON, ...)
+-- VALUES (''SESCOMPRA'', ''SESCOMPRA'', 0, ...);
+--
+-- Y otro para el prefijo EAN13 si la sesión no define uno propio.
+
+-- ---------------------------------------------------------------------------
+-- 10. NOTAS sobre la materialización
+-- ---------------------------------------------------------------------------
+-- Estas tablas NO tienen triggers que toquen fza_articulos*, fza_codigos_barras
+-- ni fza_articulos_proveedores. La materialización es un procedimiento Delphi
+-- ubicado en `src/Lib/inLibComprasSesionesMaterializar.pas` que dentro de una
+-- única TUniTransaction:
+--
+--   1. Verifica conflictos contra fza_articulos.
+--   2. Para cada línea no marcada como REUSAR:
+--        INSERT INTO fza_articulos (...)
+--        INSERT INTO fza_articulos_conjuntos_asign (...)   (pivot + fila)
+--        Para cada propiedad fija de cabecera y variable de línea:
+--           INSERT INTO fza_articulos_propiedades (...)
+--   3. Para cada celda con CANTIDAD > 0:
+--        INSERT INTO fza_articulos_skus (...)
+--        INSERT INTO fza_atributos_sku (...)   (uno por atributo de fila + pivot)
+--        INSERT INTO fza_codigos_barras (CODIGO_BARRAS_CB generado por inLibEAN13)
+--   4. Upsert en fza_articulos_proveedores con precio último y ref.
+--   5. Si ESGENERA_PEDIDO_SES = ''S'':
+--        INSERT en fza_pedidos_compra + lineas (uno por SKU * cantidad agregada).
+--   6. Si ESGENERA_ALBARAN_SES = ''S'':
+--        INSERT en fza_albaranes_compra + lineas + fza_movimientos_almacen.
+--   7. UPDATE fza_compras_sesiones SET ESTADO_SES=''CERRADA'',
+--          referencia_pedido, referencia_albaran, instante/usuario_materializa.
+--
+-- Cualquier fallo → ROLLBACK. La sesión sigue en BORRADOR con
+-- MENSAJE_ERROR_SES poblado.
+', '2026-05-14 19:31:46', '2026-05-14 19:31:46', 'Administrador', 'Administrador'),
+  ('192', 'atributos_basicos', '-- ============================================================================
+--  Atributos básicos para los SKUs de artículos
+-- ----------------------------------------------------------------------------
+--  Concepto:
+--    Cada valor de atributo (fza_atributos_valores) puede tener un atributo
+--    básico asociado, que actúa como helper / equivalente "estándar" que
+--    ayuda a entender el valor real.
+--
+--  Ejemplos:
+--    TALLA "XL"            → atributo básico "XL = 47 cm"     (medida real)
+--    COLOR "001" proveedor → atributo básico "AZUL CIELO + #87CEEB"
+--    COLOR "REF-AB12"      → atributo básico "ROJO + #FF0000"
+--
+--  Tablas implicadas:
+--    fza_atributos_basicos          Catálogo de atributos básicos / estándar.
+--    fza_atributos_valores          Recibe nueva FK ID_ATB_AV → ATB.
+--    fza_atributos_sku              Sin cambios (ya enlaza SKU↔valor).
+--    fza_articulos_skus             Sin cambios (cabecera del SKU).
+--
+--  Idempotente: las ALTER usan IF NOT EXISTS (MariaDB 10.4+/MySQL 8) o se
+--  envuelven en bloques PREPARE; ejecutables varias veces sin error.
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ---------------------------------------------------------------------------
+-- 1. Ampliación de fza_atributos_basicos
+-- ---------------------------------------------------------------------------
+--   Estructura previa: ID_ATB, ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, EXTRA_ATB,
+--   ORDEN_ATB, ESACTIVO_ATB.
+--
+--   EXTRA_ATB se queda como legacy. Las nuevas columnas son explícitas para
+--   poder representar bien el color (HEX) y la medida básica (47 cm, 50 mm…).
+ALTER TABLE `fza_atributos_basicos`
+  ADD COLUMN IF NOT EXISTS `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL
+        COMMENT ''Descripción larga: AZUL CIELO, Talla XL Hombre, etc.''
+        AFTER `NOMBRE_ATB`,
+  ADD COLUMN IF NOT EXISTS `HEX_ATB` varchar(7) NULL DEFAULT NULL
+        COMMENT ''Color paleta en formato #RRGGBB (sólo para atributos de color)''
+        AFTER `DESCRIPCION_ATB`,
+  ADD COLUMN IF NOT EXISTS `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL
+        COMMENT ''Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)''
+        AFTER `HEX_ATB`,
+  ADD COLUMN IF NOT EXISTS `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL
+        COMMENT ''Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…''
+        AFTER `VALOR_NUM_ATB`,
+  ADD COLUMN IF NOT EXISTS `INSTANTE_MODIF` timestamp NOT NULL
+        DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  ADD COLUMN IF NOT EXISTS `INSTANTE_ALTA` timestamp NOT NULL
+        DEFAULT ''0000-00-00 00:00:00'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 2. FK lógica desde fza_atributos_valores hacia fza_atributos_basicos
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_valores`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_AV` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica → fza_atributos_basicos.ID_ATB. Asocia este valor concreto (p. ej. "001" del proveedor) con su atributo básico estándar ("AZUL CIELO").''
+        AFTER `CODIGO_ART_EXTRA_AV`;
+
+ALTER TABLE `fza_atributos_valores`
+  ADD INDEX IF NOT EXISTS `IDX_AV_ATB` (`ID_ATB_AV`);
+
+-- ---------------------------------------------------------------------------
+-- 3. Catálogo demo de atributos básicos
+-- ---------------------------------------------------------------------------
+--   Los CODIGO_ATB se eligen de modo que sean estables y reusables. Si la
+--   fila ya existe (mismo ID_VA_ATB + CODIGO_ATB) se actualiza el resto.
+
+INSERT INTO `fza_atributos_basicos`
+  (`ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`,
+   `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  -- Colores básicos con HEX de paleta
+  (''CO'',  ''NEGRO'',       ''NEGRO'',       ''Color negro'',              ''#000000'', NULL, NULL,  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BLANCO'',      ''BLANCO'',      ''Color blanco'',             ''#FFFFFF'', NULL, NULL,  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROJO'',        ''ROJO'',        ''Color rojo'',               ''#FF0000'', NULL, NULL,  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL'',        ''AZUL'',        ''Color azul'',               ''#0066CC'', NULL, NULL,  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_CIELO'',  ''AZUL CIELO'',  ''Color azul cielo'',         ''#87CEEB'', NULL, NULL,  41, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_MARINO'', ''AZUL MARINO'', ''Color azul marino'',        ''#1B2A49'', NULL, NULL,  42, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VERDE'',       ''VERDE'',       ''Color verde'',              ''#1D8B3A'', NULL, NULL,  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AMARILLO'',    ''AMARILLO'',    ''Color amarillo'',           ''#FFD400'', NULL, NULL,  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''MARRON'',      ''MARRÓN'',      ''Color marrón'',             ''#7B4B2A'', NULL, NULL,  70, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''GRIS'',        ''GRIS'',        ''Color gris'',               ''#808080'', NULL, NULL,  80, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BEIGE'',       ''BEIGE'',       ''Color beige'',              ''#E8D8B5'', NULL, NULL,  90, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROSA'',        ''ROSA'',        ''Color rosa'',               ''#F4A6C0'', NULL, NULL, 100, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''CAMEL'',       ''CAMEL'',       ''Color camel / tostado'',    ''#C19A6B'', NULL, NULL, 110, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''FUCSIA'',      ''FUCSIA'',      ''Color fucsia'',             ''#FF00FF'', NULL, NULL, 120, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BURDEOS'',     ''BURDEOS'',     ''Color burdeos'',            ''#7A1F2B'', NULL, NULL, 130, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VAQUERO'',     ''VAQUERO'',     ''Acabado vaquero / denim'',  ''#3F6BAA'', NULL, NULL, 140, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallas básicas de ropa con medida pecho aproximada en cm
+  (''TAL'', ''S'',           ''TALLA S'',     ''Talla S (small)'',          NULL,  44.0, ''cm'',  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''M'',           ''TALLA M'',     ''Talla M (medium)'',         NULL,  46.0, ''cm'',  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''L'',           ''TALLA L'',     ''Talla L (large)'',          NULL,  48.0, ''cm'',  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''XL'',          ''TALLA XL'',    ''Talla XL (extra large)'',   NULL,  50.0, ''cm'',  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''XXL'',         ''TALLA XXL'',   ''Talla XXL'',                NULL,  52.0, ''cm'',  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''XXXL'',        ''TALLA XXXL'',  ''Talla XXXL'',               NULL,  54.0, ''cm'',  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallas básicas de calzado europeo
+  (''TAL'', ''EU37'',        ''EU 37'',       ''Calzado europeo nº 37'',    NULL,  23.5, ''cm'',  70, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU38'',        ''EU 38'',       ''Calzado europeo nº 38'',    NULL,  24.0, ''cm'',  80, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU39'',        ''EU 39'',       ''Calzado europeo nº 39'',    NULL,  24.5, ''cm'',  90, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU40'',        ''EU 40'',       ''Calzado europeo nº 40'',    NULL,  25.0, ''cm'', 100, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU41'',        ''EU 41'',       ''Calzado europeo nº 41'',    NULL,  26.0, ''cm'', 110, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU42'',        ''EU 42'',       ''Calzado europeo nº 42'',    NULL,  26.5, ''cm'', 120, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU43'',        ''EU 43'',       ''Calzado europeo nº 43'',    NULL,  27.0, ''cm'', 130, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU44'',        ''EU 44'',       ''Calzado europeo nº 44'',    NULL,  28.0, ''cm'', 140, ''S'', NOW(), ''SISTEMA'', ''SISTEMA'')
+ON DUPLICATE KEY UPDATE
+  `NOMBRE_ATB`      = VALUES(`NOMBRE_ATB`),
+  `DESCRIPCION_ATB` = VALUES(`DESCRIPCION_ATB`),
+  `HEX_ATB`         = VALUES(`HEX_ATB`),
+  `VALOR_NUM_ATB`   = VALUES(`VALOR_NUM_ATB`),
+  `UNIDAD_ATB`      = VALUES(`UNIDAD_ATB`),
+  `ORDEN_ATB`       = VALUES(`ORDEN_ATB`),
+  `ESACTIVO_ATB`    = VALUES(`ESACTIVO_ATB`),
+  `USUARIO_MODIF`   = ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 4. Enlace inicial de valores existentes con su atributo básico
+-- ---------------------------------------------------------------------------
+--   Heurística: si el nombre del valor coincide (mayúsculas sin espacios)
+--   con el CODIGO_ATB o NOMBRE_ATB de un atributo básico del mismo
+--   ID_VA_AV, se enlaza. Para "AZUL MARINO" en valor → "AZUL_MARINO" en
+--   código básico (espacios → guion bajo).
+UPDATE `fza_atributos_valores` av
+  JOIN `fza_atributos_basicos` atb
+    ON atb.ID_VA_ATB = av.ID_VA_AV
+   AND (
+        UPPER(REPLACE(av.AV, '' '', ''_'')) = UPPER(atb.CODIGO_ATB)
+     OR UPPER(av.AV)                    = UPPER(atb.NOMBRE_ATB)
+       )
+   SET av.ID_ATB_AV = atb.ID_ATB
+ WHERE av.ID_ATB_AV IS NULL;
+
+-- Las tallas de calzado existentes (121=37, 122=38, …) referencian los
+-- atributos básicos EU37..EU44 generados arriba.
+UPDATE `fza_atributos_valores` av
+  JOIN `fza_atributos_basicos` atb
+    ON atb.ID_VA_ATB = av.ID_VA_AV
+   AND atb.CODIGO_ATB = CONCAT(''EU'', av.AV)
+   SET av.ID_ATB_AV = atb.ID_ATB
+ WHERE av.ID_VA_AV  = ''TAL''
+   AND av.ID_ATB_AV IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- 5. Vista de apoyo: SKU × atributo × valor × atributo básico
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+CREATE VIEW `vi_atributos_sku_basico` AS
+SELECT
+    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
+    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
+    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
+    val.ID_AV                                     AS ID_AV,
+    val.ID_VA_AV                                  AS ID_VA_AV,
+    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
+    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
+    val.AV                                        AS VALOR_AV,
+    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
+    val.ID_ATB_AV                                 AS ID_ATB_AV,
+    atb.CODIGO_ATB                                AS CODIGO_ATB,
+    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
+    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
+    atb.HEX_ATB                                   AS HEX_ATB,
+    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
+    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
+    CASE
+      WHEN atb.VALOR_NUM_ATB IS NOT NULL
+        THEN CONCAT(
+               TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
+               COALESCE(CONCAT('' '', atb.UNIDAD_ATB), ''''))
+      WHEN atb.HEX_ATB IS NOT NULL
+        THEN CONCAT(atb.NOMBRE_ATB, '' '', atb.HEX_ATB)
+      ELSE atb.NOMBRE_ATB
+    END                                           AS ETIQUETA_BASICO
+  FROM fza_articulos_skus      sku
+  JOIN fza_atributos_sku       sa  ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores   val ON val.ID_AV               = sa.ID_AV_SA
+  LEFT JOIN fza_variaciones_atributos va
+                                  ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
+                                 AND va.ID_ATB_VA = val.ID_VA_AV
+  LEFT JOIN fza_atributos_basicos atb
+                                  ON atb.ID_ATB    = val.ID_ATB_AV;
+
+COMMIT;
+', '2026-05-14 19:34:41', '2026-05-14 19:34:41', 'Administrador', 'Administrador');
+-- 3 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -5414,7 +6342,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-14 18:40:14', '2026-05-14 18:40:14', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-14 19:31:15', '2026-05-14 19:31:15', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -11250,45 +12178,8 @@ DROP VIEW IF EXISTS `vi_atributos_nombres`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select distinct `ask`.`CODIGO_ART_SKU` AS `CODIGO_ART_PADRE_ARTVIN`,`vat`.`ID_ATB_VA` AS `ID_ATRIBUTO`,`vat`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`vat`.`ORDEN_VA` AS `ORDEN_VISUAL_ATRIBUTO` from (`fza_articulos_skus` `ask` join `fza_variaciones_atributos` `vat` on(`vat`.`ID_VAR_VA` = `ask`.`CODIGO_VAR_SKU`)) order by `ask`.`CODIGO_ART_SKU`,`vat`.`ORDEN_VA`;
 
 -- Vista: vi_atributos_sku_basico
---   Une cada SKU con sus atributos (talla, color…) y el atributo básico
---   helper (HEX de paleta, medida estándar en cm, etiqueta equivalente).
 DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
-CREATE ALGORITHM=UNDEFINED VIEW `vi_atributos_sku_basico` AS
-SELECT
-    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
-    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
-    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
-    val.ID_AV                                     AS ID_AV,
-    val.ID_VA_AV                                  AS ID_VA_AV,
-    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
-    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
-    val.AV                                        AS VALOR_AV,
-    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
-    val.ID_ATB_AV                                 AS ID_ATB_AV,
-    atb.CODIGO_ATB                                AS CODIGO_ATB,
-    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
-    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
-    atb.HEX_ATB                                   AS HEX_ATB,
-    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
-    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
-    CASE
-      WHEN atb.VALOR_NUM_ATB IS NOT NULL
-        THEN CONCAT(
-               TRIM(TRAILING '0' FROM TRIM(TRAILING '.' FROM
-                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
-               COALESCE(CONCAT(' ', atb.UNIDAD_ATB), ''))
-      WHEN atb.HEX_ATB IS NOT NULL
-        THEN CONCAT(atb.NOMBRE_ATB, ' ', atb.HEX_ATB)
-      ELSE atb.NOMBRE_ATB
-    END                                           AS ETIQUETA_BASICO
-  FROM fza_articulos_skus      sku
-  JOIN fza_atributos_sku       sa  ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
-  JOIN fza_atributos_valores   val ON val.ID_AV               = sa.ID_AV_SA
-  LEFT JOIN fza_variaciones_atributos va
-                                  ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
-                                 AND va.ID_ATB_VA = val.ID_VA_AV
-  LEFT JOIN fza_atributos_basicos atb
-                                  ON atb.ID_ATB    = val.ID_ATB_AV;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`val`.`ID_ATB_AV` AS `ID_ATB_AV`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO` from ((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = `val`.`ID_ATB_AV`));
 
 -- Vista: vi_cajasdef
 DROP VIEW IF EXISTS `vi_cajasdef`;
@@ -15584,4 +16475,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 14/05/2026 18:40:22
+-- Backup completado: 14/05/2026 19:34:57
