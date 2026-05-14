@@ -254,14 +254,42 @@ begin
 end;
 
 procedure TdmComprasSesiones.unqrySesionLinAfterInsert(DataSet: TDataSet);
+var
+  q       : TUniQuery;
+  sSerie  : string;
+  sNumero : string;
+  iSig    : Integer;
 begin
   inherited;
+  sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  // LINEA_SESLIN es NOT NULL en BBDD y forma parte de la PK
+  // (SERIE, NUMERO, LINEA). Lo calculamos como max+1 sobre las lineas ya
+  // grabadas de esta sesion. RecordCount+1 sobre el dataset no sirve si la
+  // sesion lleva borrados (deja huecos => colision con PK). Vamos a BBDD.
+  iSig := 1;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COALESCE(MAX(LINEA_SESLIN), 0) + 1 AS SIG ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+    q.Open;
+    if not q.IsEmpty then
+      iSig := q.FieldByName('SIG').AsInteger;
+  finally
+    q.Free;
+  end;
+
   with unqrySesionLin do
   begin
-    FieldByName('SERIE_SES_SESLIN').AsString :=
-      unqryTablaG.FieldByName('SERIE_SES').AsString;
-    FieldByName('NUMERO_SES_SESLIN').AsString :=
-      unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    FieldByName('SERIE_SES_SESLIN').AsString  := sSerie;
+    FieldByName('NUMERO_SES_SESLIN').AsString := sNumero;
+    FieldByName('LINEA_SESLIN').AsInteger     := iSig;
     FieldByName('TIPO_LINEA_SESLIN').AsString := 'MATRIZ';
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
