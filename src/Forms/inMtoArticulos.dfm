@@ -428,6 +428,24 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 0
                   object tvSkuAtributosBasicos: TcxGridDBTableView
                     OnDblClick = tvSkuAtributosBasicosDblClick
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Buttons.First.Visible = True
+                    Navigator.Buttons.PriorPage.Visible = False
+                    Navigator.Buttons.Prior.Visible = True
+                    Navigator.Buttons.Next.Visible = True
+                    Navigator.Buttons.NextPage.Visible = False
+                    Navigator.Buttons.Last.Visible = True
+                    Navigator.Buttons.Insert.Visible = False
+                    Navigator.Buttons.Append.Visible = False
+                    Navigator.Buttons.Delete.Visible = False
+                    Navigator.Buttons.Edit.Visible = False
+                    Navigator.Buttons.Post.Visible = False
+                    Navigator.Buttons.Cancel.Visible = True
+                    Navigator.Buttons.Refresh.Visible = True
+                    Navigator.Buttons.SaveBookmark.Visible = False
+                    Navigator.Buttons.GotoBookmark.Visible = False
+                    Navigator.Buttons.Filter.Visible = True
+                    Navigator.Visible = True
                     DataController.DataSource = dmArticulos.dsDetallesAtributos
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                     DataController.Summary.FooterSummaryItems = <>
