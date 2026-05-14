@@ -2,7 +2,7 @@
 
 Diseño del módulo de **Sesiones de Compra**: documentos borrador donde el usuario
 prepara artículos, atributos, precios y cantidades antes de materializarlos en
-las tablas maestras (`fza_articulos`, `fza_articulos_skus`,
+las tablas maestras (`fza_articulos`, `fza_articulos_skus`, `fza_articulos_tarifas`,
 `fza_codigos_barras`, `fza_articulos_proveedores`) y generar el documento
 posterior (pedido y/o albarán de compra).
 
@@ -33,10 +33,10 @@ pulsa **«Crear artículos y documentos»** se materializa:
    la tarifa elegida en cabecera de sesión. Ver §2.5 para la fórmula.
 8. Generación del documento elegido:
    - **Pedido de compra** → `fza_pedidos_compra` + `fza_pedidos_compra_lineas`
-     (sin mover stock).
+     (sin mover stock, anota cantidades pendientes de recibir en la tabla de stock).
    - **Albarán de compra** → `fza_albaranes_compra` + líneas + movimientos en
      `fza_movimientos_almacen` con entrada por SKU (cantidad pivotada).
-   - O **ambos** secuencialmente.
+   - O **ambos** secuencialmente a través del procedimiento `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`.
 
 La sesión queda **cerrada** con referencia a los documentos generados; no se
 puede volver a materializar. Sí se puede **clonar** para arrancar otra sesión.
