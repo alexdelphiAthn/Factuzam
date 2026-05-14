@@ -74,7 +74,7 @@ El artículo asigna su conjunto en `fza_articulos_conjuntos_asign`.
 ```
 CODIGO_ART_AAB  varchar(20)   -- FK artículo
 ID_AV_AAB       int           -- FK valor
-ID_ATB_AAB      int           -- FK básico
+ID_ATB_AAB      int NULL      -- FK básico; NULL = bloqueo
 + auditoría
 PRIMARY KEY (CODIGO_ART_AAB, ID_AV_AAB)
 ```
@@ -83,6 +83,16 @@ Sirve para los casos en que dos artículos comparten conjunto pero
 necesitan interpretación distinta de un valor concreto: por ejemplo,
 proveedor A llama "7" al blanco y proveedor B al negro, los dos en el
 mismo conjunto de colores. Cada artículo crea su override.
+
+**Semántica de `ID_ATB_AAB`:**
+
+| Estado de la fila              | Significado                                     |
+|--------------------------------|-------------------------------------------------|
+| No existe                       | "Heredar" — la vista resuelve por conjunto o global |
+| `ID_ATB_AAB IS NOT NULL`        | Override real con ese básico                    |
+| `ID_ATB_AAB IS NULL`            | **Bloqueo**: este artículo declara explícitamente "no quiero básico aquí" aunque el conjunto/global lo tengan |
+
+La vista usa `CASE WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB ...` en vez de `COALESCE` para que la simple existencia de la fila gane (incluso con valor NULL = bloqueo).
 
 ### Vista `vi_atributos_sku_basico`
 
@@ -155,9 +165,15 @@ enlazado al catálogo. Aquí se define, por ejemplo, que en el conjunto
 
   - `OnInitPopup` filtra el lookup por `ID_VA_ATB` (un atributo CO sólo
     ve básicos de color, TAL sólo tallas).
-  - `OnEditValueChanged` **escribe en `fza_articulos_atributos_basicos`**:
-    UPSERT del override por artículo si se elige un básico, DELETE de
-    la fila si se vacía (vuelve a caer al conjunto o al global).
+  - `OnEditValueChanged` **siempre hace UPSERT en
+    `fza_articulos_atributos_basicos`**: con `ID_ATB_AAB = X` cuando se
+    elige un básico, con `ID_ATB_AAB = NULL` cuando se vacía la celda
+    (bloqueo explícito: la fila existe pero declara "sin básico para
+    este artículo"). Para volver a heredar del conjunto/global hay que
+    borrar la fila a mano (futura acción dedicada).
+  - **Nombre básico, Valor básico y Unidad** también son editables y
+    persisten en `fza_atributos_basicos` (afecta a todos los usos del
+    mismo básico).
   - La columna "Paleta" pinta el color real con `OnCustomDrawCell` y su
     botón `[...]` (o doble-clic) abre `TColorDialog` para editar
     `HEX_ATB` directamente en `fza_atributos_basicos`.
