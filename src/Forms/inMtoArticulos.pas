@@ -185,11 +185,10 @@ type
     gbSkuAtributosBasicos: TcxGroupBox;
     cxgrdSkuAtributosBasicos: TcxGrid;
     tvSkuAtributosBasicos: TcxGridDBTableView;
-    tvSkuAtributosBasicosCODIGO_UNIDAD_SKU: TcxGridDBColumn;
     tvSkuAtributosBasicosID_VA_AV: TcxGridDBColumn;
     tvSkuAtributosBasicosNOMBRE_ATRIBUTO: TcxGridDBColumn;
     tvSkuAtributosBasicosVALOR_AV: TcxGridDBColumn;
-    tvSkuAtributosBasicosCODIGO_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosID_ATB_AV: TcxGridDBColumn;
     tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn;
@@ -405,6 +404,13 @@ type
       ACanvas: TcxCanvas;
       AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
+    procedure tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
+      Sender: TObject);
+    procedure tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
+      Sender: TObject; AButtonIndex: Integer);
+    procedure tvSkuAtributosBasicosDblClick(Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -498,11 +504,18 @@ procedure TfrmMtoArticulos.ActualizarVisibilidadColumnaSku;
 // (es decir, todos los precios son a nivel de artículo padre), oculta la
 // columna SKU. En cuanto se añade un precio para un SKU concreto vuelve a
 // mostrarse.
+//
+// Además ocultamos las columnas "Precio Últ Compra" y "Fecha Últ Compra"
+// del grid de SKUs cuando ningún SKU tiene precio asignado: dan ruido
+// visual cuando todos los costes viven a nivel de artículo padre.
 var
   ds  : TDataSet;
   fld : TField;
   bm  : TBookmark;
   hay : Boolean;
+  fldPrecio: TField;
+  hayPrecioSku: Boolean;
+  dsSkus: TDataSet;
 begin
   if not Assigned(dmmArticulos) then Exit;
   ds := dmmArticulos.unqryTarifasArticulos;
@@ -535,6 +548,37 @@ begin
   end;
 
   tvTarifasCODIGO_UNIDAD_TARIFA.Visible := hay;
+
+  // Columnas de precio/fecha de última compra del grid de SKUs
+  dsSkus := dmmArticulos.unqrySkus;
+  hayPrecioSku := False;
+  if (dsSkus <> nil) and dsSkus.Active then
+  begin
+    fldPrecio := dsSkus.FindField('PRECIO_ULT_COMPRA_SKUC');
+    if fldPrecio <> nil then
+    begin
+      dsSkus.DisableControls;
+      bm := dsSkus.GetBookmark;
+      try
+        dsSkus.First;
+        while not dsSkus.Eof do
+        begin
+          if (not fldPrecio.IsNull) and (fldPrecio.AsFloat <> 0) then
+          begin
+            hayPrecioSku := True;
+            Break;
+          end;
+          dsSkus.Next;
+        end;
+      finally
+        if dsSkus.BookmarkValid(bm) then dsSkus.GotoBookmark(bm);
+        dsSkus.FreeBookmark(bm);
+        dsSkus.EnableControls;
+      end;
+    end;
+  end;
+  tvSkuMtoPRECIO_ULT_COMPRA_SKUC.Visible := hayPrecioSku;
+  tvSkuMtoFECHA_ULT_COMPRA_SKUC.Visible  := hayPrecioSku;
 end;
 
 procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
@@ -2009,6 +2053,156 @@ procedure TfrmMtoArticulos.FormShow(Sender: TObject);
 begin
   inherited;
   ResetForm;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
+  Sender: TObject);
+// Antes de mostrar el desplegable, filtramos el lookup por ID_VA_ATB para
+// que un atributo CO sólo vea atributos básicos de color, un atributo TAL
+// vea sólo tallas, etc.
+var
+  ds : TDataSet;
+  IdVa: string;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  IdVa := ds.FieldByName('ID_VA_AV').AsString;
+  with dmmArticulos.unqryAtributosBasicosLookup do
+  begin
+    if IdVa = '' then
+    begin
+      Filter   := '';
+      Filtered := False;
+    end
+    else
+    begin
+      Filter   := 'ID_VA_ATB = ' + QuotedStr(IdVa);
+      Filtered := True;
+    end;
+  end;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
+  Sender: TObject);
+// Guarda el nuevo ID_ATB_AV en fza_atributos_valores cuando el usuario
+// elige otro atributo básico del lookup. Se ejecuta inmediatamente porque
+// la rejilla está enlazada a una vista de sólo lectura: la edición
+// estándar (Post) no llegaría a la BBDD.
+var
+  qry: TUniQuery;
+  ds : TDataSet;
+  IdAv: Integer;
+  vNew: Variant;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+
+  ds   := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+  IdAv := ds.FieldByName('ID_AV').AsInteger;
+  vNew := (Sender as TcxCustomEdit).EditingValue;
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_atributos_valores '   +
+      '   SET ID_ATB_AV    = :ATB, '    +
+      '       USUARIO_MODIF = :USR '    +
+      ' WHERE ID_AV = :AV';
+    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
+      qry.ParamByName('ATB').Clear
+    else
+      qry.ParamByName('ATB').AsInteger := Integer(vNew);
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('AV').AsInteger  := IdAv;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+  // Refrescamos la vista para que se carguen los nuevos campos derivados
+  // (NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB, ETIQUETA_BASICO).
+  ds.Refresh;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  tvSkuAtributosBasicosDblClick(Sender);
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosDblClick(Sender: TObject);
+// Abre el selector de color sobre el atributo básico de la fila activa.
+// Si la fila no tiene atributo básico asignado todavía, primero hay que
+// elegirlo en la columna 'Básico'.
+var
+  ds : TDataSet;
+  IdAtb: Integer;
+  Dlg: TColorDialog;
+  LHex: string;
+  qry: TUniQuery;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+  if ds.FieldByName('ID_ATB_AV').IsNull then
+  begin
+    ShowMessage('Asigna primero un atributo básico en la columna "Básico" ' +
+                'para poder definir su color de paleta.');
+    Exit;
+  end;
+  IdAtb := ds.FieldByName('ID_ATB_AV').AsInteger;
+
+  Dlg := TColorDialog.Create(Self);
+  try
+    Dlg.Options := [cdFullOpen, cdAnyColor];
+    LHex := Trim(ds.FieldByName('HEX_ATB').AsString);
+    if (Length(LHex) = 7) and (LHex[1] = '#') then
+    try
+      Dlg.Color := RGB(
+        StrToInt('$' + Copy(LHex, 2, 2)),
+        StrToInt('$' + Copy(LHex, 4, 2)),
+        StrToInt('$' + Copy(LHex, 6, 2)));
+    except
+      Dlg.Color := clWhite;
+    end
+    else
+      Dlg.Color := clWhite;
+
+    if not Dlg.Execute then Exit;
+
+    LHex := Format('#%.2X%.2X%.2X',
+                   [GetRValue(Dlg.Color),
+                    GetGValue(Dlg.Color),
+                    GetBValue(Dlg.Color)]);
+
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'UPDATE fza_atributos_basicos '   +
+        '   SET HEX_ATB       = :HEX, '   +
+        '       USUARIO_MODIF = :USR '    +
+        ' WHERE ID_ATB = :ID';
+      qry.ParamByName('HEX').AsString  := LHex;
+      qry.ParamByName('USR').AsString  := oUser;
+      qry.ParamByName('ID').AsInteger  := IdAtb;
+      qry.Execute;
+    finally
+      qry.Free;
+    end;
+    ds.Refresh;
+    // El lookup tiene cacheado el HEX viejo: refrescamos también.
+    if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+      dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+  finally
+    Dlg.Free;
+  end;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBCustomDrawCell(
