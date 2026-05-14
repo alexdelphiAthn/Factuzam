@@ -499,7 +499,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn
                       Caption = 'Nombre b'#225'sico'
                       DataBinding.FieldName = 'NOMBRE_ATB'
-                      Options.Editing = False
+                      Properties.OnEditValueChanged = tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged
                       Width = 130
                     end
                     object tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn
@@ -518,13 +518,15 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn
                       Caption = 'Valor b'#225'sico'
                       DataBinding.FieldName = 'VALOR_NUM_ATB'
-                      Options.Editing = False
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DisplayFormat = '#,##0.##;-#,##0.##; '
+                      Properties.OnEditValueChanged = tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged
                       Width = 90
                     end
                     object tvSkuAtributosBasicosUNIDAD_ATB: TcxGridDBColumn
                       Caption = 'Unidad'
                       DataBinding.FieldName = 'UNIDAD_ATB'
-                      Options.Editing = False
+                      Properties.OnEditValueChanged = tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged
                       Width = 60
                     end
                     object tvSkuAtributosBasicosETIQUETA_BASICO: TcxGridDBColumn
