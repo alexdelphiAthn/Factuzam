@@ -344,8 +344,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Left = 0
                 Top = 0
                 Width = 948
-                Height = 425
-                Align = alClient
+                Height = 200
+                Align = alTop
                 TabOrder = 1
                 object tvSkuMto: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
@@ -401,6 +401,112 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
                 object cxgrdSkuMtoLevel: TcxGridLevel
                   GridView = tvSkuMto
+                end
+              end
+              object splSkuAtributosBasicos: TcxSplitter
+                Left = 0
+                Top = 200
+                Width = 948
+                Height = 8
+                AlignSplitter = salTop
+                Control = cxgrdSkuMto
+              end
+              object gbSkuAtributosBasicos: TcxGroupBox
+                Left = 0
+                Top = 208
+                Align = alClient
+                Caption = ' Atributos del SKU + Atributo b'#225'sico (helper) '
+                TabOrder = 2
+                Height = 217
+                Width = 948
+                object cxgrdSkuAtributosBasicos: TcxGrid
+                  Left = 2
+                  Top = 18
+                  Width = 944
+                  Height = 197
+                  Align = alClient
+                  TabOrder = 0
+                  object tvSkuAtributosBasicos: TcxGridDBTableView
+                    DataController.DataSource = dmArticulos.dsDetallesAtributos
+                    DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                    DataController.Summary.FooterSummaryItems = <>
+                    DataController.Summary.SummaryGroups = <>
+                    OptionsBehavior.IncSearch = True
+                    OptionsCustomize.ColumnHiding = True
+                    OptionsData.CancelOnExit = True
+                    OptionsData.Deleting = False
+                    OptionsData.DeletingConfirmation = False
+                    OptionsData.Editing = False
+                    OptionsData.Inserting = False
+                    OptionsView.GroupByBox = False
+                    OptionsView.Indicator = True
+                    object tvSkuAtributosBasicosCODIGO_UNIDAD_SKU: TcxGridDBColumn
+                      Caption = 'SKU'
+                      DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                      Options.Editing = False
+                      GroupIndex = 0
+                      SortOrder = soAscending
+                      Width = 200
+                    end
+                    object tvSkuAtributosBasicosID_VA_AV: TcxGridDBColumn
+                      Caption = 'Atributo'
+                      DataBinding.FieldName = 'ID_VA_AV'
+                      Options.Editing = False
+                      Width = 60
+                    end
+                    object tvSkuAtributosBasicosNOMBRE_ATRIBUTO: TcxGridDBColumn
+                      Caption = 'Nombre atributo'
+                      DataBinding.FieldName = 'NOMBRE_ATRIBUTO'
+                      Options.Editing = False
+                      Width = 110
+                    end
+                    object tvSkuAtributosBasicosVALOR_AV: TcxGridDBColumn
+                      Caption = 'Valor'
+                      DataBinding.FieldName = 'VALOR_AV'
+                      Options.Editing = False
+                      Width = 100
+                    end
+                    object tvSkuAtributosBasicosCODIGO_ATB: TcxGridDBColumn
+                      Caption = 'B'#225'sico'
+                      DataBinding.FieldName = 'CODIGO_ATB'
+                      Options.Editing = False
+                      Width = 100
+                    end
+                    object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn
+                      Caption = 'Nombre b'#225'sico'
+                      DataBinding.FieldName = 'NOMBRE_ATB'
+                      Options.Editing = False
+                      Width = 130
+                    end
+                    object tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn
+                      Caption = 'Paleta'
+                      DataBinding.FieldName = 'HEX_ATB'
+                      Options.Editing = False
+                      OnCustomDrawCell = tvSkuAtributosBasicosHEX_ATBCustomDrawCell
+                      Width = 80
+                    end
+                    object tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn
+                      Caption = 'Valor b'#225'sico'
+                      DataBinding.FieldName = 'VALOR_NUM_ATB'
+                      Options.Editing = False
+                      Width = 90
+                    end
+                    object tvSkuAtributosBasicosUNIDAD_ATB: TcxGridDBColumn
+                      Caption = 'Unidad'
+                      DataBinding.FieldName = 'UNIDAD_ATB'
+                      Options.Editing = False
+                      Width = 60
+                    end
+                    object tvSkuAtributosBasicosETIQUETA_BASICO: TcxGridDBColumn
+                      Caption = 'Equivalencia'
+                      DataBinding.FieldName = 'ETIQUETA_BASICO'
+                      Options.Editing = False
+                      Width = 160
+                    end
+                  end
+                  object cxgrdSkuAtributosBasicosLevel: TcxGridLevel
+                    GridView = tvSkuAtributosBasicos
+                  end
                 end
               end
             end

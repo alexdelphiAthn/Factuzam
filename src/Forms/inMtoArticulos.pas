@@ -181,6 +181,21 @@ type
     tvSkuMtoPRECIO_ULT_COMPRA_SKUC: TcxGridDBColumn;
     tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn;
     cxgrdSkuMtoLevel: TcxGridLevel;
+    splSkuAtributosBasicos: TcxSplitter;
+    gbSkuAtributosBasicos: TcxGroupBox;
+    cxgrdSkuAtributosBasicos: TcxGrid;
+    tvSkuAtributosBasicos: TcxGridDBTableView;
+    tvSkuAtributosBasicosCODIGO_UNIDAD_SKU: TcxGridDBColumn;
+    tvSkuAtributosBasicosID_VA_AV: TcxGridDBColumn;
+    tvSkuAtributosBasicosNOMBRE_ATRIBUTO: TcxGridDBColumn;
+    tvSkuAtributosBasicosVALOR_AV: TcxGridDBColumn;
+    tvSkuAtributosBasicosCODIGO_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosUNIDAD_ATB: TcxGridDBColumn;
+    tvSkuAtributosBasicosETIQUETA_BASICO: TcxGridDBColumn;
+    cxgrdSkuAtributosBasicosLevel: TcxGridLevel;
     tsSKUs: TcxTabSheet;
     Panel1: TPanel;
     cxButton2: TcxButton;
@@ -385,6 +400,11 @@ type
       Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord;
       var AText: string);
+    procedure tvSkuAtributosBasicosHEX_ATBCustomDrawCell(
+      Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas;
+      AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -1989,6 +2009,52 @@ procedure TfrmMtoArticulos.FormShow(Sender: TObject);
 begin
   inherited;
   ResetForm;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  LHex: string;
+  LColor: TColor;
+  LRect: TRect;
+  LR, LG, LB: Integer;
+  LBrillo: Double;
+begin
+  ADone := False;
+  if AViewInfo = nil then Exit;
+  LHex := Trim(AViewInfo.GridRecord.DisplayTexts[AViewInfo.Item.Index]);
+  if (Length(LHex) <> 7) or (LHex[1] <> '#') then Exit;
+
+  try
+    LR := StrToInt('$' + Copy(LHex, 2, 2));
+    LG := StrToInt('$' + Copy(LHex, 4, 2));
+    LB := StrToInt('$' + Copy(LHex, 6, 2));
+    LColor := RGB(LR, LG, LB);
+  except
+    Exit;
+  end;
+
+  // Fondo de celda (mantiene la selección/zebra del grid).
+  ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
+
+  // Cuadrado de paleta con el color real.
+  LRect := AViewInfo.Bounds;
+  InflateRect(LRect, -3, -3);
+  ACanvas.Brush.Color := LColor;
+  ACanvas.Pen.Color   := clBlack;
+  ACanvas.Rectangle(LRect);
+
+  // Etiqueta del HEX encima, con texto blanco o negro según luminancia.
+  LBrillo := (LR * 0.299 + LG * 0.587 + LB * 0.114);
+  ACanvas.Brush.Style := bsClear;
+  if LBrillo < 128 then
+    ACanvas.Font.Color := clWhite
+  else
+    ACanvas.Font.Color := clBlack;
+  ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
+
+  ADone := True;
 end;
 
 initialization
