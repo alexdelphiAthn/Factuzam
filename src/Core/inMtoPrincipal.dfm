@@ -1000,6 +1000,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           ShortCut = 49235
           OnClick = mnuAtributosConjuntosClick
         end
+        object mnuAtributosBasicos: TMenuItem
+          Caption = 'Atributos b'#225'sicos'
+          ShortCut = 49218
+          OnClick = mnuAtributosBasicosClick
+        end
       end
       object Salir1: TMenuItem
         Bitmap.Data = {

@@ -79,6 +79,7 @@ type
     mnuPropiedades: TMenuItem;
     mnuVariaciones: TMenuItem;
     mnuAtributosConjuntos: TMenuItem;
+    mnuAtributosBasicos: TMenuItem;
     mnuCajaPagosHist: TMenuItem;
     mnuCajaValesHist: TMenuItem;
     mnuCajaOperacionesHist: TMenuItem;
@@ -94,6 +95,7 @@ type
 //    procedure mnuPropiedadesValoresClick(Sender: TObject);
     procedure mnuVariacionesClick(Sender: TObject);
     procedure mnuAtributosConjuntosClick(Sender: TObject);
+    procedure mnuAtributosBasicosClick(Sender: TObject);
     procedure mnuCajaPagosHistClick(Sender: TObject);
     procedure mnuCajaValesHistClick(Sender: TObject);
     procedure mnuCajaOperacionesHistClick(Sender: TObject);
@@ -1069,6 +1071,12 @@ procedure TfrmMtoPrincipal.mnuAtributosConjuntosClick(Sender: TObject);
 begin
   if (mnuAtributosConjuntos.Visible) then
     ShowMto(Self, 'AtributosConjuntos');
+end;
+
+procedure TfrmMtoPrincipal.mnuAtributosBasicosClick(Sender: TObject);
+begin
+  if (mnuAtributosBasicos.Visible) then
+    ShowMto(Self, 'AtributosBasicos');
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaPagosHistClick(Sender: TObject);
