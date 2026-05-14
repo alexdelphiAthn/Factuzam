@@ -14,6 +14,8 @@ ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_DEPRECATED);
 header('Content-Type: application/json');
 
+require __DIR__ . '/indices_helper.php';
+
 // ---------- 1. Validación de API key ----------
 $apiKeyEsperada = 'k7Hq9mZ2pXvR4nL8'; // CAMBIAR en producción
 if (($_SERVER['HTTP_X_API_KEY'] ?? '') !== $apiKeyEsperada) {
@@ -36,6 +38,10 @@ $indiceRaw         = $_POST['indice']          ?? '1';
 $nombreRaw         = $_POST['nombre']          ?? '';
 $carpetaClienteRaw = $_POST['carpeta_cliente'] ?? '';
 $osha1Raw          = $_POST['osha1']           ?? '';   // SHA1 del archivo local original
+$nombreOriginalRaw = $_POST['nombre_original'] ?? '';   // nombre real del archivo subido
+$carpetaBaseRaw    = $_POST['carpeta_base']    ?? '';   // prefijo configurado en el cliente
+$subcarpetaRaw     = $_POST['subcarpeta']      ?? '';   // subcarpetas entre prefijo y fichero
+$rutaCompletaRaw   = $_POST['ruta_completa']   ?? '';   // ruta absoluta del archivo en el cliente
 $file              = $_FILES['imagen']         ?? null;
 
 // Sanitizar osha1 (debe ser hex de 40 caracteres o vacío)
@@ -43,6 +49,18 @@ $osha1 = '';
 if ($osha1Raw !== '' && preg_match('/^[0-9a-fA-F]{40}$/', $osha1Raw)) {
     $osha1 = strtolower($osha1Raw);
 }
+
+// Sanear los campos de origen: quitar tabs / saltos de línea.
+// No tocamos rutas, separadores ni caracteres "raros" porque son
+// metadatos: no se usan para abrir nada en el servidor.
+$nombreOriginal = '';
+if ($nombreOriginalRaw !== '') {
+    $bn = basename($nombreOriginalRaw);
+    $nombreOriginal = strtr($bn, ["\t" => ' ', "\r" => ' ', "\n" => ' ']);
+}
+$carpetaBase  = strtr($carpetaBaseRaw,  ["\t" => ' ', "\r" => ' ', "\n" => ' ']);
+$subcarpeta   = strtr($subcarpetaRaw,   ["\t" => ' ', "\r" => ' ', "\n" => ' ']);
+$rutaCompleta = strtr($rutaCompletaRaw, ["\t" => ' ', "\r" => ' ', "\n" => ' ']);
 
 // Sanitizar carpeta_cliente
 $carpetaCliente = preg_replace('/[^A-Za-z0-9_-]/', '_', $carpetaClienteRaw);
@@ -176,13 +194,30 @@ function procesarImagen(string $sourcePath, string $uploadDir,
 // ---------- 7. Generar las tres versiones ----------
 $errores = [];
 
-if (!procesarImagen($file['tmp_name'], $uploadDir, $nombre, 'real', null)) {
+if (procesarImagen($file['tmp_name'], $uploadDir, $nombre, 'real', null)) {
+    $h = @sha1_file($uploadDir . $nombre . '_real.png');
+    if ($h !== false) {
+        indice_actualizar($uploadDir, 'sha1_real', $nombre, $h);
+    }
+} else {
     $errores[] = 'real';
 }
-if (!procesarImagen($file['tmp_name'], $uploadDir, $nombre, '300', 300)) {
+
+if (procesarImagen($file['tmp_name'], $uploadDir, $nombre, '300', 300)) {
+    $h = @sha1_file($uploadDir . $nombre . '_300.png');
+    if ($h !== false) {
+        indice_actualizar($uploadDir, 'sha1_300', $nombre, $h);
+    }
+} else {
     $errores[] = '300';
 }
-if (!procesarImagen($file['tmp_name'], $uploadDir, $nombre, '150', 150)) {
+
+if (procesarImagen($file['tmp_name'], $uploadDir, $nombre, '150', 150)) {
+    $h = @sha1_file($uploadDir . $nombre . '_150.png');
+    if ($h !== false) {
+        indice_actualizar($uploadDir, 'sha1_150', $nombre, $h);
+    }
+} else {
     $errores[] = '150';
 }
 
@@ -190,8 +225,29 @@ if (!procesarImagen($file['tmp_name'], $uploadDir, $nombre, '150', 150)) {
 $sha1Real = @sha1_file($uploadDir . $nombre . '_real.png');
 
 // Guardar el SHA1 del original (si nos lo mandaron) en _real.osha1
+// El fichero individual contiene "hash<TAB>nombre_original" para no
+// perder la trazabilidad si los índices se reconstruyen alguna vez.
 if ($osha1 !== '' && count($errores) === 0) {
-    @file_put_contents($uploadDir . $nombre . '_real.osha1', $osha1);
+    $contenidoOsha1 = $osha1;
+    if ($nombreOriginal !== '') {
+        $contenidoOsha1 .= "\t" . $nombreOriginal;
+    }
+    @file_put_contents($uploadDir . $nombre . '_real.osha1', $contenidoOsha1);
+    indice_actualizar($uploadDir, 'osha1_real', $nombre, $osha1, $nombreOriginal);
+}
+
+// Guardar línea en origenes.txt si el cliente nos dio info de origen.
+// Solo se escribe si la subida fue OK y hay al menos uno de los datos.
+if (count($errores) === 0 &&
+    ($carpetaBase !== '' || $subcarpeta !== '' ||
+     $nombreOriginal !== '' || $rutaCompleta !== '')) {
+    indice_actualizar(
+        $uploadDir,
+        'origenes',
+        $nombre,
+        $osha1,
+        [$carpetaBase, $subcarpeta, $nombreOriginal, $rutaCompleta]
+    );
 }
 
 if (count($errores) === 0) {
@@ -203,6 +259,10 @@ if (count($errores) === 0) {
         'color'           => $color,
         'indice'          => $indice,
         'nombre'          => $nombre,
+        'nombre_original' => $nombreOriginal ?: null,
+        'carpeta_base'    => $carpetaBase    ?: null,
+        'subcarpeta'      => $subcarpeta     ?: null,
+        'ruta_completa'   => $rutaCompleta   ?: null,
         'sha1'            => $sha1Real ?: null,
         'osha1'           => $osha1 ?: null,
     ]);

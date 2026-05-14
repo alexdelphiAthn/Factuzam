@@ -19,7 +19,7 @@ object Form1: TForm1
     Top = 0
     Width = 880
     Height = 640
-    ActivePage = tsSubir
+    ActivePage = tsBatch
     Align = alClient
     TabOrder = 0
     ExplicitWidth = 878
@@ -35,7 +35,7 @@ object Form1: TForm1
         EditLabel.Height = 15
         EditLabel.Caption = 'URL'
         TabOrder = 0
-        Text = 'https://localhost/upload_foto.php'
+        Text = 'https://webservice.veryverifactu.com/upload_foto.php'
       end
       object edKey: TLabeledEdit
         Left = 16
@@ -51,7 +51,7 @@ object Form1: TForm1
       object edCarpetaCliente: TLabeledEdit
         Left = 16
         Top = 128
-        Width = 414
+        Width = 264
         Height = 23
         EditLabel.Width = 79
         EditLabel.Height = 15
@@ -59,16 +59,38 @@ object Form1: TForm1
         TabOrder = 2
         Text = 'cliente_demo'
       end
-      object edNombre: TLabeledEdit
-        Left = 444
+      object edArticulo: TLabeledEdit
+        Left = 296
         Top = 128
-        Width = 412
+        Width = 200
         Height = 23
-        EditLabel.Width = 44
+        EditLabel.Width = 42
         EditLabel.Height = 15
-        EditLabel.Caption = 'Nombre'
+        EditLabel.Caption = 'Art'#237'culo'
         TabOrder = 3
-        Text = 'producto_001'
+        Text = 'A1234'
+      end
+      object edColor: TLabeledEdit
+        Left = 512
+        Top = 128
+        Width = 200
+        Height = 23
+        EditLabel.Width = 29
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Color'
+        TabOrder = 4
+        Text = 'ROJO'
+      end
+      object edIndice: TLabeledEdit
+        Left = 728
+        Top = 128
+        Width = 128
+        Height = 23
+        EditLabel.Width = 32
+        EditLabel.Height = 15
+        EditLabel.Caption = #205'ndice'
+        TabOrder = 5
+        Text = '1'
       end
       object edArchivo: TLabeledEdit
         Left = 16
@@ -78,7 +100,7 @@ object Form1: TForm1
         EditLabel.Width = 41
         EditLabel.Height = 15
         EditLabel.Caption = 'Archivo'
-        TabOrder = 4
+        TabOrder = 6
         Text = ''
       end
       object btnSel: TButton
@@ -87,7 +109,7 @@ object Form1: TForm1
         Width = 78
         Height = 23
         Caption = 'Examinar...'
-        TabOrder = 5
+        TabOrder = 7
         OnClick = btnSelClick
       end
       object btnSubir: TButton
@@ -96,7 +118,7 @@ object Form1: TForm1
         Width = 840
         Height = 32
         Caption = 'Subir foto'
-        TabOrder = 6
+        TabOrder = 8
         OnClick = btnSubirClick
       end
       object mLogs: TMemo
@@ -112,7 +134,7 @@ object Form1: TForm1
         ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
-        TabOrder = 7
+        TabOrder = 9
         WordWrap = False
       end
     end
@@ -120,17 +142,17 @@ object Form1: TForm1
       Caption = 'Ver foto'
       ImageIndex = 1
       object lblResolucion: TLabel
-        Left = 384
-        Top = 128
+        Left = 16
+        Top = 184
         Width = 58
         Height = 15
         Caption = 'Resoluci'#243'n'
       end
       object imgFoto: TImage
         Left = 16
-        Top = 184
+        Top = 240
         Width = 560
-        Height = 409
+        Height = 353
         Center = True
         Proportional = True
         Stretch = True
@@ -144,7 +166,7 @@ object Form1: TForm1
         EditLabel.Height = 15
         EditLabel.Caption = 'URL'
         TabOrder = 0
-        Text = 'https://localhost/ver_foto.php'
+        Text = 'https://webservice.veryverifactu.com/ver_foto.php'
       end
       object edKeyVer: TLabeledEdit
         Left = 16
@@ -160,7 +182,7 @@ object Form1: TForm1
       object edCarpetaClienteVer: TLabeledEdit
         Left = 16
         Top = 144
-        Width = 184
+        Width = 200
         Height = 23
         EditLabel.Width = 79
         EditLabel.Height = 15
@@ -168,25 +190,47 @@ object Form1: TForm1
         TabOrder = 2
         Text = 'cliente_demo'
       end
-      object edNombreVer: TLabeledEdit
-        Left = 216
+      object edArticuloVer: TLabeledEdit
+        Left = 232
         Top = 144
-        Width = 152
+        Width = 168
         Height = 23
-        EditLabel.Width = 44
+        EditLabel.Width = 42
         EditLabel.Height = 15
-        EditLabel.Caption = 'Nombre'
+        EditLabel.Caption = 'Art'#237'culo'
         TabOrder = 3
-        Text = 'producto_001'
+        Text = 'A1234'
+      end
+      object edColorVer: TLabeledEdit
+        Left = 416
+        Top = 144
+        Width = 168
+        Height = 23
+        EditLabel.Width = 29
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Color'
+        TabOrder = 4
+        Text = 'ROJO'
+      end
+      object edIndiceVer: TLabeledEdit
+        Left = 600
+        Top = 144
+        Width = 80
+        Height = 23
+        EditLabel.Width = 32
+        EditLabel.Height = 15
+        EditLabel.Caption = #205'ndice'
+        TabOrder = 5
+        Text = '1'
       end
       object cbResolucion: TComboBox
-        Left = 384
-        Top = 144
+        Left = 80
+        Top = 200
         Width = 121
         Height = 23
         Style = csDropDownList
         ItemIndex = 0
-        TabOrder = 4
+        TabOrder = 6
         Text = '150'
         Items.Strings = (
           '150'
@@ -194,19 +238,19 @@ object Form1: TForm1
           'real')
       end
       object btnVer: TButton
-        Left = 528
-        Top = 144
-        Width = 328
-        Height = 24
+        Left = 224
+        Top = 198
+        Width = 632
+        Height = 26
         Caption = 'Ver foto'
-        TabOrder = 5
+        TabOrder = 7
         OnClick = btnVerClick
       end
       object mLogsVer: TMemo
         Left = 592
-        Top = 184
+        Top = 240
         Width = 264
-        Height = 409
+        Height = 353
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -215,7 +259,7 @@ object Form1: TForm1
         ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
-        TabOrder = 6
+        TabOrder = 8
         WordWrap = False
       end
     end
@@ -245,7 +289,7 @@ object Form1: TForm1
         EditLabel.Height = 15
         EditLabel.Caption = 'URL upload_foto'
         TabOrder = 0
-        Text = 'https://localhost/upload_foto.php'
+        Text = 'https://webservice.veryverifactu.com/upload_foto.php'
       end
       object edUrlListBatch: TLabeledEdit
         Left = 448
@@ -256,7 +300,7 @@ object Form1: TForm1
         EditLabel.Height = 15
         EditLabel.Caption = 'URL listar_fotos'
         TabOrder = 1
-        Text = 'https://localhost/listar_fotos.php'
+        Text = 'https://webservice.veryverifactu.com/listar_fotos.php'
       end
       object edKeyBatch: TLabeledEdit
         Left = 16
@@ -278,7 +322,7 @@ object Form1: TForm1
         EditLabel.Height = 15
         EditLabel.Caption = 'Carpeta cliente'
         TabOrder = 3
-        Text = 'cliente_demo'
+        Text = 'lochicos'
       end
       object edPrefijoLocal: TLabeledEdit
         Left = 664
@@ -337,11 +381,13 @@ object Form1: TForm1
         Text = ''
       end
       object chkSqlWindowsAuth: TCheckBox
-        Left = 16
-        Top = 184
+        Left = 528
+        Top = 173
         Width = 240
         Height = 17
         Caption = 'Usar autenticaci'#243'n Windows'
+        Checked = True
+        State = cbChecked
         TabOrder = 9
       end
       object cbConcurrencia: TComboBox
@@ -370,6 +416,35 @@ object Form1: TForm1
         TabOrder = 12
         OnClick = btnCancelarClick
       end
+      object edDemoCarpeta: TLabeledEdit
+        Left = 16
+        Top = 200
+        Width = 600
+        Height = 23
+        EditLabel.Width = 249
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Carpeta de DEMO (cualquier carpeta con fotos)'
+        TabOrder = 18
+        Text = ''
+      end
+      object btnDemoSel: TButton
+        Left = 624
+        Top = 200
+        Width = 90
+        Height = 23
+        Caption = 'Examinar...'
+        TabOrder = 16
+        OnClick = btnDemoSelClick
+      end
+      object btnDemoLanzar: TButton
+        Left = 724
+        Top = 196
+        Width = 132
+        Height = 28
+        Caption = 'DEMO: subir fotos'
+        TabOrder = 17
+        OnClick = btnDemoLanzarClick
+      end
       object pbBatch: TProgressBar
         Left = 16
         Top = 288
@@ -377,11 +452,22 @@ object Form1: TForm1
         Height = 24
         TabOrder = 13
       end
+      object sbSlots: TScrollBox
+        Left = 16
+        Top = 320
+        Width = 840
+        Height = 130
+        HorzScrollBar.Visible = False
+        VertScrollBar.Tracking = True
+        Color = clWindow
+        ParentColor = False
+        TabOrder = 15
+      end
       object mLogsBatch: TMemo
         Left = 16
-        Top = 344
+        Top = 458
         Width = 840
-        Height = 249
+        Height = 135
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -12
@@ -394,5 +480,110 @@ object Form1: TForm1
         WordWrap = False
       end
     end
+    object tsBackup: TTabSheet
+      Caption = 'Backup'
+      ImageIndex = 3
+      object lblBackupStatus: TLabel
+        Left = 16
+        Top = 248
+        Width = 64
+        Height = 15
+        Caption = 'Esperando...'
+      end
+      object edUrlGenBackup: TLabeledEdit
+        Left = 16
+        Top = 32
+        Width = 416
+        Height = 23
+        EditLabel.Width = 108
+        EditLabel.Height = 15
+        EditLabel.Caption = 'URL generar_backup'
+        TabOrder = 0
+        Text = 'https://localhost/generar_backup.php'
+      end
+      object edUrlEstadoBackup: TLabeledEdit
+        Left = 448
+        Top = 32
+        Width = 408
+        Height = 23
+        EditLabel.Width = 103
+        EditLabel.Height = 15
+        EditLabel.Caption = 'URL estado_backup'
+        TabOrder = 1
+        Text = 'https://localhost/estado_backup.php'
+      end
+      object edKeyBackup: TLabeledEdit
+        Left = 16
+        Top = 80
+        Width = 416
+        Height = 23
+        EditLabel.Width = 40
+        EditLabel.Height = 15
+        EditLabel.Caption = 'API Key'
+        TabOrder = 2
+        Text = 'k7Hq9mZ2pXvR4nL8'
+      end
+      object edCarpetaClienteBackup: TLabeledEdit
+        Left = 448
+        Top = 80
+        Width = 200
+        Height = 23
+        EditLabel.Width = 79
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Carpeta cliente'
+        TabOrder = 3
+        Text = 'cliente_demo'
+      end
+      object edPasswordBackup: TLabeledEdit
+        Left = 664
+        Top = 80
+        Width = 192
+        Height = 23
+        EditLabel.Width = 80
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Contrase'#241'a ZIP'
+        PasswordChar = '*'
+        TabOrder = 4
+        Text = ''
+      end
+      object btnGenerarBackup: TButton
+        Left = 16
+        Top = 144
+        Width = 840
+        Height = 40
+        Caption = 'Generar backup'
+        TabOrder = 5
+        OnClick = btnGenerarBackupClick
+      end
+      object pbBackup: TProgressBar
+        Left = 16
+        Top = 208
+        Width = 840
+        Height = 24
+        TabOrder = 6
+      end
+      object mLogsBackup: TMemo
+        Left = 16
+        Top = 280
+        Width = 840
+        Height = 313
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Consolas'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 7
+        WordWrap = False
+      end
+    end
+  end
+  object tmrBackup: TTimer
+    Enabled = False
+    OnTimer = tmrBackupTimer
+    Left = 800
+    Top = 8
   end
 end

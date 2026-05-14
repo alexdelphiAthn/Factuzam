@@ -6,13 +6,15 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.NetEncoding, System.Hash, System.SyncObjs,
   System.Generics.Collections, System.JSON,
+  System.IOUtils, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Mask, Vcl.ComCtrls, Vcl.Imaging.pngimage,
+  Vcl.FileCtrl,
   System.Net.HttpClient, System.Net.URLClient, System.Net.Mime,
   // UniDAC
   Uni, UniProvider, SQLServerUniProvider, DBAccess,
   // OmniThreadLibrary
-  OtlCommon, OtlTask, OtlTaskControl, OtlParallel, OtlSync,
+  OtlCommon, OtlTask, OtlTaskControl, OtlParallel, OtlSync, OtlCollections,
   // Worker
   UFotoUploader;
 
@@ -37,7 +39,9 @@ type
     edUrl: TLabeledEdit;
     edKey: TLabeledEdit;
     edCarpetaCliente: TLabeledEdit;
-    edNombre: TLabeledEdit;
+    edArticulo: TLabeledEdit;
+    edColor: TLabeledEdit;
+    edIndice: TLabeledEdit;
     edArchivo: TLabeledEdit;
     btnSel: TButton;
     btnSubir: TButton;
@@ -47,7 +51,9 @@ type
     edUrlVer: TLabeledEdit;
     edKeyVer: TLabeledEdit;
     edCarpetaClienteVer: TLabeledEdit;
-    edNombreVer: TLabeledEdit;
+    edArticuloVer: TLabeledEdit;
+    edColorVer: TLabeledEdit;
+    edIndiceVer: TLabeledEdit;
     cbResolucion: TComboBox;
     lblResolucion: TLabel;
     btnVer: TButton;
@@ -70,14 +76,35 @@ type
     btnLanzar: TButton;
     btnCancelar: TButton;
     pbBatch: TProgressBar;
+    sbSlots: TScrollBox;
     lblBatchStatus: TLabel;
     mLogsBatch: TMemo;
+    edDemoCarpeta: TLabeledEdit;
+    btnDemoSel: TButton;
+    btnDemoLanzar: TButton;
+
+    // --- Pestaña Backup ---
+    tsBackup: TTabSheet;
+    edUrlGenBackup: TLabeledEdit;
+    edUrlEstadoBackup: TLabeledEdit;
+    edKeyBackup: TLabeledEdit;
+    edCarpetaClienteBackup: TLabeledEdit;
+    edPasswordBackup: TLabeledEdit;
+    btnGenerarBackup: TButton;
+    pbBackup: TProgressBar;
+    lblBackupStatus: TLabel;
+    mLogsBackup: TMemo;
+    tmrBackup: TTimer;
 
     procedure btnSelClick(Sender: TObject);
     procedure btnSubirClick(Sender: TObject);
     procedure btnVerClick(Sender: TObject);
     procedure btnLanzarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
+    procedure btnDemoSelClick(Sender: TObject);
+    procedure btnDemoLanzarClick(Sender: TObject);
+    procedure btnGenerarBackupClick(Sender: TObject);
+    procedure tmrBackupTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure HTTPValidateServerCertificate(const Sender: TObject;
@@ -91,10 +118,24 @@ type
     FBatchSkipped : Integer;        // contadas en pre-filtrado
     FBatchError   : Integer;
     FBatchRunning : Boolean;
+    // --- Visualización por hilo ---
+    FSlotLabels   : array of TLabel;
+    FSlotBars     : array of TProgressBar;
+    FSlotFiles    : array of TLabel;
+    FSlotsBox     : TScrollBox;
+    // Backup
+    FBackupJobId  : string;
+    procedure LogBackup(const S: string);
     procedure LogBatch(const S: string);
     procedure ActualizarProgreso;
     procedure ProcesarResultado(const R: TFotoUploadResult);
     procedure BatchTerminado;
+    procedure ConfigurarSlots(N: Integer);
+    procedure LimpiarSlots;
+    procedure ActualizarSlot(Slot: Integer; const Archivo: string;
+                             BytesSent, BytesTotal: Int64; const Fase: string);
+    procedure LanzarPoolFotos(const Cfg: TFotoUploadConfig; N: Integer;
+                              OnEnd: TProc);
     function ObtenerInventarioServidor(const Url, ApiKey, Carpeta: string;
                                        Inv: TDictionary<string,string>;
                                        out ErrorMsg: string): Boolean;
@@ -126,6 +167,11 @@ begin
   cbConcurrencia.ItemIndex := 0;
 
   btnCancelar.Enabled := False;
+
+  FSlotsBox := sbSlots;
+
+  tmrBackup.Enabled  := False;
+  tmrBackup.Interval := 1000;
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -179,6 +225,7 @@ var
   Form: TMultipartFormData;
   Res: IHTTPResponse;
   Response: TStringStream;
+  Articulo, Color, Indice, OSha1: string;
 begin
   if not FileExists(edArchivo.Text) then
   begin
@@ -190,10 +237,28 @@ begin
     mLogs.Lines.Add('Falta la carpeta_cliente.');
     Exit;
   end;
-  if Trim(edNombre.Text) = '' then
+
+  Articulo := Trim(edArticulo.Text);
+  Color    := Trim(edColor.Text);
+  Indice   := Trim(edIndice.Text);
+  if Indice = '' then Indice := '1';
+
+  if (Articulo = '') or (Color = '') then
   begin
-    mLogs.Lines.Add('Falta el nombre.');
+    mLogs.Lines.Add('Falta artículo o color.');
     Exit;
+  end;
+
+  // SHA1 del archivo local (lo enviamos como osha1 para que el servidor
+  // lo guarde y futuras subidas masivas puedan saltarse este registro)
+  try
+    OSha1 := CalcularSHA1Archivo(edArchivo.Text);
+  except
+    on E: Exception do
+    begin
+      mLogs.Lines.Add('Error SHA1 local: ' + E.Message);
+      OSha1 := '';
+    end;
   end;
 
   HTTP := THTTPClient.Create;
@@ -203,11 +268,20 @@ begin
     HTTP.OnValidateServerCertificate := HTTPValidateServerCertificate;
     HTTP.CustomHeaders['X-API-Key'] := edKey.Text;
 
-    Form.AddField('nombre',          edNombre.Text);
+    Form.AddField('articulo',        Articulo);
+    Form.AddField('color',           Color);
+    Form.AddField('indice',          Indice);
     Form.AddField('carpeta_cliente', edCarpetaCliente.Text);
-    Form.AddFile ('imagen',          edArchivo.Text);
+    if OSha1 <> '' then
+      Form.AddField('osha1', OSha1);
+    Form.AddField('nombre_original', ExtractFileName(edArchivo.Text));
+    Form.AddField('carpeta_base',    ExtractFileDir(edArchivo.Text));
+    Form.AddField('subcarpeta',      '');  // no aplica en subida individual
+    Form.AddField('ruta_completa',   edArchivo.Text);
+    Form.AddFile ('imagen', edArchivo.Text);
 
-    mLogs.Lines.Add('POST ' + edUrl.Text);
+    mLogs.Lines.Add(Format('POST %s  ->  %s_%s_%s',
+                    [edUrl.Text, Articulo, Color, Indice]));
     Res := HTTP.Post(edUrl.Text, Form, Response);
 
     mLogs.Lines.Add(Format('HTTP %d %s', [Res.StatusCode, Res.StatusText]));
@@ -251,21 +325,26 @@ var
   Stream: TMemoryStream;
   ErrStream: TStringStream;
   PNG: TPngImage;
-  Url, Nombre, Resolucion, Carpeta: string;
+  Url, Articulo, Color, Indice, Resolucion, Carpeta: string;
   HashLocal, HashServer: string;
 begin
-  Nombre     := Trim(edNombreVer.Text);
+  Articulo   := Trim(edArticuloVer.Text);
+  Color      := Trim(edColorVer.Text);
+  Indice     := Trim(edIndiceVer.Text);
+  if Indice = '' then Indice := '1';
   Resolucion := Trim(cbResolucion.Text);
   Carpeta    := Trim(edCarpetaClienteVer.Text);
 
-  if (Nombre = '') or (Resolucion = '') or (Carpeta = '') then
+  if (Articulo = '') or (Color = '') or (Resolucion = '') or (Carpeta = '') then
   begin
-    mLogsVer.Lines.Add('Falta nombre, resolución o carpeta_cliente.');
+    mLogsVer.Lines.Add('Falta artículo, color, resolución o carpeta_cliente.');
     Exit;
   end;
 
   Url := edUrlVer.Text +
-         '?nombre='          + TNetEncoding.URL.Encode(Nombre) +
+         '?articulo='        + TNetEncoding.URL.Encode(Articulo) +
+         '&color='           + TNetEncoding.URL.Encode(Color) +
+         '&indice='          + TNetEncoding.URL.Encode(Indice) +
          '&resolucion='      + TNetEncoding.URL.Encode(Resolucion) +
          '&carpeta_cliente=' + TNetEncoding.URL.Encode(Carpeta);
 
@@ -373,6 +452,219 @@ begin
   FBatchRunning       := False;
   FBatchCancel        := nil;
   FreeAndNil(FBatchJobs);
+end;
+
+// ----------------------------------------------------------------------
+// Pool de subida: N tareas independientes consumiendo de una cola.
+// Este patrón sí paraleliza de verdad con OmniThreadLibrary, a
+// diferencia de Parallel.ForEach sobre rango de enteros que puede
+// asignar todos los items al primer worker si los demás aún no han
+// arrancado.
+//
+// Crea N IOmniTaskControl. Cada tarea bucle:
+//   - Toma un índice de la cola.
+//   - Sube la foto FBatchJobs[index] llamando a SubirFoto del worker.
+//   - Reenvía progreso y resultado al hilo principal con TThread.Queue.
+// Cuando todas las tareas terminan, llama a OnEnd en el hilo principal.
+// ----------------------------------------------------------------------
+procedure TForm1.LanzarPoolFotos(const Cfg: TFotoUploadConfig; N: Integer;
+                                 OnEnd: TProc);
+var
+  Cola : IOmniBlockingCollection;
+  i    : Integer;
+  Finalizadas: IOmniCounter;
+begin
+  // 1) Crear la cola y meter todos los índices
+  Cola := TOmniBlockingCollection.Create;
+  for i := 0 to FBatchJobs.Count - 1 do
+    Cola.Add(i);
+  Cola.CompleteAdding;  // así los consumidores saben cuándo parar
+
+  // 2) Contador atómico de tareas finalizadas
+  Finalizadas := CreateCounter(0);
+
+  // 3) Lanzar N tareas trabajadoras
+  for i := 0 to N - 1 do
+  begin
+    CreateTask(
+      procedure (const task: IOmniTask)
+      var
+        Item   : TOmniValue;
+        MySlot : Integer;
+        Idx    : Integer;
+        LocalJob: TFotoJob;
+        R      : TFotoUploadResult;
+        Restantes: Integer;
+      begin
+        // Slot = (id de tarea), estable durante toda su vida
+        MySlot := task.Param['Slot'].AsInteger;
+
+        while (not task.CancellationToken.IsSignalled) and
+              Cola.Take(Item) do
+        begin
+          Idx := Item.AsInteger;
+          if (Idx < 0) or (Idx >= FBatchJobs.Count) then
+            Continue;
+
+          LocalJob := FBatchJobs[Idx];
+
+          try
+            R := SubirFoto(
+              Cfg,
+              LocalJob.Articulo,
+              LocalJob.Color,
+              LocalJob.Indice,
+              LocalJob.Archivo,
+              LocalJob.SHA1,
+              MySlot,
+              procedure(Slot: Integer; const Archivo: string;
+                        BytesSent, BytesTotal: Int64; const Fase: string)
+              begin
+                TThread.Queue(nil,
+                  procedure
+                  begin
+                    ActualizarSlot(Slot, Archivo, BytesSent, BytesTotal, Fase);
+                  end);
+              end);
+          except
+            on E: Exception do
+            begin
+              R := Default(TFotoUploadResult);
+              R.Articulo := LocalJob.Articulo;
+              R.Color    := LocalJob.Color;
+              R.Indice   := LocalJob.Indice;
+              R.Archivo  := LocalJob.Archivo;
+              R.Status   := fusError;
+              R.Mensaje  := 'Excepción: ' + E.Message;
+            end;
+          end;
+
+          TThread.Queue(nil,
+            procedure
+            begin
+              ProcesarResultado(R);
+            end);
+        end;
+
+        // Esta tarea ha terminado. ¿Soy la última? -> disparar OnEnd
+        Restantes := Finalizadas.Increment;
+        if Restantes >= task.Param['Total'].AsInteger then
+          TThread.Queue(nil,
+            procedure
+            begin
+              if Assigned(OnEnd) then OnEnd();
+            end);
+      end)
+      .SetParameter('Slot',  i)
+      .SetParameter('Total', N)
+      .CancelWith(FBatchCancel)
+      .Unobserved
+      .Run;
+  end;
+end;
+
+// ----------------------------------------------------------------------
+// Slots de visualización por hilo
+// ----------------------------------------------------------------------
+
+procedure TForm1.LimpiarSlots;
+var
+  i: Integer;
+begin
+  for i := 0 to High(FSlotLabels) do FSlotLabels[i].Free;
+  for i := 0 to High(FSlotBars)   do FSlotBars[i].Free;
+  for i := 0 to High(FSlotFiles)  do FSlotFiles[i].Free;
+  SetLength(FSlotLabels, 0);
+  SetLength(FSlotBars,   0);
+  SetLength(FSlotFiles,  0);
+end;
+
+procedure TForm1.ConfigurarSlots(N: Integer);
+const
+  ROW_H = 22;
+  PAD   = 2;
+var
+  i, y : Integer;
+begin
+  LimpiarSlots;
+  if FSlotsBox = nil then Exit;
+
+  SetLength(FSlotLabels, N);
+  SetLength(FSlotBars,   N);
+  SetLength(FSlotFiles,  N);
+
+  for i := 0 to N - 1 do
+  begin
+    y := i * (ROW_H + PAD) + 2;
+
+    FSlotLabels[i] := TLabel.Create(Self);
+    FSlotLabels[i].Parent     := FSlotsBox;
+    FSlotLabels[i].Left       := 4;
+    FSlotLabels[i].Top        := y + 4;
+    FSlotLabels[i].Width      := 60;
+    FSlotLabels[i].AutoSize   := False;
+    FSlotLabels[i].Caption    := Format('Hilo %d', [i + 1]);
+
+    FSlotBars[i] := TProgressBar.Create(Self);
+    FSlotBars[i].Parent   := FSlotsBox;
+    FSlotBars[i].Left     := 68;
+    FSlotBars[i].Top      := y;
+    FSlotBars[i].Width    := 280;
+    FSlotBars[i].Height   := ROW_H;
+    FSlotBars[i].Min      := 0;
+    FSlotBars[i].Max      := 1000;
+    FSlotBars[i].Position := 0;
+    FSlotBars[i].Smooth   := True;
+
+    FSlotFiles[i] := TLabel.Create(Self);
+    FSlotFiles[i].Parent     := FSlotsBox;
+    FSlotFiles[i].Left       := 356;
+    FSlotFiles[i].Top        := y + 4;
+    FSlotFiles[i].Width      := FSlotsBox.ClientWidth - 360;
+    FSlotFiles[i].AutoSize   := False;
+    FSlotFiles[i].EllipsisPosition := epPathEllipsis;
+    FSlotFiles[i].Caption    := '(esperando)';
+  end;
+
+  FSlotsBox.VertScrollBar.Range := N * (ROW_H + PAD) + 8;
+end;
+
+procedure TForm1.ActualizarSlot(Slot: Integer; const Archivo: string;
+                                BytesSent, BytesTotal: Int64;
+                                const Fase: string);
+var
+  Pos: Integer;
+begin
+  if (Slot < 0) or (Slot > High(FSlotBars)) then Exit;
+
+  if Fase = 'start' then
+  begin
+    FSlotFiles[Slot].Caption  := Archivo;
+    FSlotBars[Slot].Position := 0;
+    Exit;
+  end;
+
+  if Fase = 'done' then
+  begin
+    FSlotBars[Slot].Position := FSlotBars[Slot].Max;
+    Exit;
+  end;
+
+  if Fase = 'error' then
+  begin
+    FSlotFiles[Slot].Caption := Archivo + '  (error)';
+    FSlotBars[Slot].Position := 0;
+    Exit;
+  end;
+
+  // 'sending'
+  if BytesTotal > 0 then
+  begin
+    Pos := Round(BytesSent * FSlotBars[Slot].Max / BytesTotal);
+    if Pos < 0 then Pos := 0;
+    if Pos > FSlotBars[Slot].Max then Pos := FSlotBars[Slot].Max;
+    FSlotBars[Slot].Position := Pos;
+  end;
 end;
 
 // ----------------------------------------------------------------------
@@ -686,59 +978,17 @@ begin
   FBatchRunning       := True;
   FBatchCancel        := CreateOmniCancellationToken;
 
+  // Resetear las barras
+  ConfigurarSlots(N);
+
   // ----------------------------------------------------------
   // PASO 4: lanzar pool OTL solo con lo que toca subir
   // ----------------------------------------------------------
-  Parallel.ForEach(0, Total - 1)
-    .NumTasks(N)
-    .CancelWith(FBatchCancel)
-    .NoWait
-    .OnStop(
-      procedure (const task: IOmniTask)
-      begin
-        TThread.Queue(nil,
-          procedure
-          begin
-            BatchTerminado;
-          end);
-      end)
-    .Execute(
-      procedure (const index: Integer)
-      var
-        LocalJob: TFotoJob;
-        R: TFotoUploadResult;
-      begin
-        if FBatchCancel.IsSignalled then
-          Exit;
-
-        LocalJob := FBatchJobs[index];
-
-        try
-          R := SubirFoto(Cfg,
-                         LocalJob.Articulo,
-                         LocalJob.Color,
-                         LocalJob.Indice,
-                         LocalJob.Archivo,
-                         LocalJob.SHA1);
-        except
-          on E: Exception do
-          begin
-            R := Default(TFotoUploadResult);
-            R.Articulo := LocalJob.Articulo;
-            R.Color    := LocalJob.Color;
-            R.Indice   := LocalJob.Indice;
-            R.Archivo  := LocalJob.Archivo;
-            R.Status   := fusError;
-            R.Mensaje  := 'Excepción: ' + E.Message;
-          end;
-        end;
-
-        TThread.Queue(nil,
-          procedure
-          begin
-            ProcesarResultado(R);
-          end);
-      end);
+  LanzarPoolFotos(Cfg, N,
+    procedure
+    begin
+      BatchTerminado;
+    end);
 end;
 
 procedure TForm1.btnCancelarClick(Sender: TObject);
@@ -748,6 +998,421 @@ begin
     FBatchCancel.Signal;
     LogBatch('Cancelación solicitada...');
     btnCancelar.Enabled := False;
+  end;
+end;
+
+// ----------------------------------------------------------------------
+// DEMO: subir los PNGs (y demás imágenes) que haya en una carpeta,
+// sin SQL Server. Útil para probar el multihilo.
+// ----------------------------------------------------------------------
+
+procedure TForm1.btnDemoSelClick(Sender: TObject);
+var
+  S: string;
+begin
+  S := edDemoCarpeta.Text;
+  if SelectDirectory('Carpeta con fotos para la demo', '', S, [sdNewUI]) then
+    edDemoCarpeta.Text := S;
+end;
+
+procedure TForm1.btnDemoLanzarClick(Sender: TObject);
+const
+  EXTS_OK: array[0..4] of string = ('.png', '.jpg', '.jpeg', '.webp', '.gif');
+var
+  CarpetaDemo : string;
+  Ficheros    : TStringDynArray;
+  Ext         : string;
+  Job         : TFotoJob;
+  Cfg         : TFotoUploadConfig;
+  Inventario  : TDictionary<string,string>;
+  ErrorMsg    : string;
+  Nombre      : string;
+  OSha1Srv    : string;
+  SHA1Local   : string;
+  Total       : Integer;
+  Saltadas    : Integer;
+  Faltantes   : Integer;
+  ContadorArt : Integer;
+  N           : Integer;
+  i           : Integer;
+  FicherosFlt : TList<string>;
+  EsImagen    : Boolean;
+  j           : Integer;
+begin
+  if FBatchRunning then
+  begin
+    LogBatch('Ya hay una subida en curso.');
+    Exit;
+  end;
+
+  CarpetaDemo := Trim(edDemoCarpeta.Text);
+  if (CarpetaDemo = '') or not DirectoryExists(CarpetaDemo) then
+  begin
+    LogBatch('Carpeta de demo inválida.');
+    Exit;
+  end;
+
+  // Reusar los parámetros del batch normal
+  Cfg.UrlUpload      := Trim(edUrlBatch.Text);
+  Cfg.ApiKey         := Trim(edKeyBatch.Text);
+  Cfg.CarpetaCliente := Trim(edCarpetaClienteBatch.Text);
+  // En la demo el "prefijo local" es la propia carpeta de demo
+  Cfg.PrefijoLocal   := CarpetaDemo;
+
+  if (Cfg.UrlUpload = '') or (Trim(edUrlListBatch.Text) = '') or
+     (Cfg.CarpetaCliente = '') then
+  begin
+    LogBatch('Faltan parámetros (URL, carpeta_cliente).');
+    Exit;
+  end;
+
+  N := StrToIntDef(cbConcurrencia.Text, 5);
+  if N < 1 then N := 1;
+  if N > 50 then N := 50;
+
+  mLogsBatch.Clear;
+  FBatchOK      := 0;
+  FBatchSkipped := 0;
+  FBatchError   := 0;
+  FBatchTotal   := 0;
+
+  // ---- Listar ficheros (recursivo) ----
+  LogBatch('Escaneando ' + CarpetaDemo + ' ...');
+  try
+    Ficheros := TDirectory.GetFiles(CarpetaDemo, '*.*',
+                                    TSearchOption.soAllDirectories);
+  except
+    on E: Exception do
+    begin
+      LogBatch('Error escaneando carpeta: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  // Filtrar por extensión soportada
+  FicherosFlt := TList<string>.Create;
+  try
+    for i := 0 to High(Ficheros) do
+    begin
+      Ext := LowerCase(ExtractFileExt(Ficheros[i]));
+      EsImagen := False;
+      for j := Low(EXTS_OK) to High(EXTS_OK) do
+        if Ext = EXTS_OK[j] then
+        begin
+          EsImagen := True;
+          Break;
+        end;
+      if EsImagen then
+        FicherosFlt.Add(Ficheros[i]);
+    end;
+
+    LogBatch(Format('Encontradas %d imágenes.', [FicherosFlt.Count]));
+    if FicherosFlt.Count = 0 then
+    begin
+      LogBatch('No hay imágenes que subir.');
+      Exit;
+    end;
+
+    // ---- Inventario del servidor ----
+    LogBatch('Pidiendo inventario al servidor...');
+    Inventario := TDictionary<string,string>.Create;
+    try
+      if not ObtenerInventarioServidor(Trim(edUrlListBatch.Text),
+                                       Cfg.ApiKey,
+                                       Cfg.CarpetaCliente,
+                                       Inventario,
+                                       ErrorMsg) then
+      begin
+        LogBatch('No se pudo obtener inventario: ' + ErrorMsg);
+        LogBatch('Abortando para no resubir lo que pueda ya existir.');
+        Exit;
+      end;
+      LogBatch(Format('Inventario: %d fotos en servidor.', [Inventario.Count]));
+
+      // ---- Montar jobs con DEMO1, DEMO2... ----
+      FreeAndNil(FBatchJobs);
+      FBatchJobs  := TJobList.Create;
+      ContadorArt := 0;
+      Saltadas    := 0;
+      Faltantes   := 0;
+
+      for i := 0 to FicherosFlt.Count - 1 do
+      begin
+        Inc(ContadorArt);
+        Job.Articulo := 'DEMO' + IntToStr(ContadorArt);
+        Job.Color    := 'SINCOLOR';
+        Job.Indice   := 1;
+
+        // Archivo se pasa al worker como "ruta sin prefijo"; ya que
+        // PrefijoLocal = CarpetaDemo, le pasamos solo la parte relativa.
+        Job.Archivo := Copy(FicherosFlt[i],
+                            Length(CarpetaDemo) + 1,
+                            MaxInt);
+        if (Length(Job.Archivo) > 0) and (Job.Archivo[1] = PathDelim) then
+          Delete(Job.Archivo, 1, 1);
+
+        // SHA1 local
+        try
+          SHA1Local := CalcularSHA1Archivo(FicherosFlt[i]);
+        except
+          on E: Exception do
+          begin
+            LogBatch('[!] SHA1 falló: ' + FicherosFlt[i] + ' -> ' + E.Message);
+            Inc(FBatchError);
+            Continue;
+          end;
+        end;
+
+        Nombre := Job.Articulo + '_' + Job.Color + '_' + IntToStr(Job.Indice);
+
+        // ¿Ya está y coincide?
+        if Inventario.TryGetValue(Nombre, OSha1Srv) and
+           (OSha1Srv <> '') and (OSha1Srv = SHA1Local) then
+        begin
+          Inc(Saltadas);
+          Continue;
+        end;
+
+        Job.SHA1 := SHA1Local;
+        FBatchJobs.Add(Job);
+        Inc(Faltantes);
+      end;
+    finally
+      Inventario.Free;
+    end;
+  finally
+    FicherosFlt.Free;
+  end;
+
+  FBatchSkipped := Saltadas;
+  LogBatch(Format(
+    'DEMO: %d imágenes  |  Saltadas: %d  |  A subir: %d  |  Concurrencia: %d',
+    [FBatchSkipped + Faltantes, Saltadas, Faltantes, N]));
+
+  Total := FBatchJobs.Count;
+  if Total = 0 then
+  begin
+    LogBatch('No hay nada que subir.');
+    ActualizarProgreso;
+    FreeAndNil(FBatchJobs);
+    Exit;
+  end;
+
+  FBatchTotal      := Total;
+  pbBatch.Min      := 0;
+  pbBatch.Max      := Total;
+  pbBatch.Position := 0;
+  ActualizarProgreso;
+
+  btnLanzar.Enabled     := False;
+  btnDemoLanzar.Enabled := False;
+  btnCancelar.Enabled   := True;
+  FBatchRunning         := True;
+  FBatchCancel          := CreateOmniCancellationToken;
+
+  // Resetear las barras
+  ConfigurarSlots(N);
+
+  // ---- Pool OTL ----
+  LanzarPoolFotos(Cfg, N,
+    procedure
+    begin
+      BatchTerminado;
+      btnDemoLanzar.Enabled := True;
+    end);
+end;
+
+// ----------------------------------------------------------------------
+// Pestaña BACKUP
+// ----------------------------------------------------------------------
+
+procedure TForm1.LogBackup(const S: string);
+begin
+  mLogsBackup.Lines.Add(FormatDateTime('hh:nn:ss', Now) + '  ' + S);
+end;
+
+procedure TForm1.btnGenerarBackupClick(Sender: TObject);
+var
+  HTTP    : THTTPClient;
+  Form    : TMultipartFormData;
+  Res     : IHTTPResponse;
+  Response: TStringStream;
+  J       : TJSONObject;
+  V       : TJSONValue;
+  Carpeta, Pwd: string;
+begin
+  Carpeta := Trim(edCarpetaClienteBackup.Text);
+  Pwd     := edPasswordBackup.Text;
+
+  if (Carpeta = '') or (Pwd = '') then
+  begin
+    LogBackup('Falta carpeta_cliente o password.');
+    Exit;
+  end;
+
+  if Trim(edUrlGenBackup.Text) = '' then
+  begin
+    LogBackup('Falta URL de generar_backup.');
+    Exit;
+  end;
+
+  mLogsBackup.Clear;
+  pbBackup.Position := 0;
+  lblBackupStatus.Caption := 'Lanzando...';
+  btnGenerarBackup.Enabled := False;
+
+  HTTP     := THTTPClient.Create;
+  Form     := TMultipartFormData.Create;
+  Response := TStringStream.Create('', TEncoding.UTF8);
+  try
+    HTTP.OnValidateServerCertificate := HTTPValidateServerCertificate;
+    HTTP.CustomHeaders['X-API-Key']  := edKeyBackup.Text;
+    HTTP.ConnectionTimeout := 30000;
+    HTTP.ResponseTimeout   := 60000;
+
+    Form.AddField('carpeta_cliente', Carpeta);
+    Form.AddField('password',        Pwd);
+
+    LogBackup('POST ' + edUrlGenBackup.Text);
+    try
+      Res := HTTP.Post(edUrlGenBackup.Text, Form, Response);
+    except
+      on E: Exception do
+      begin
+        LogBackup('Error: ' + E.Message);
+        btnGenerarBackup.Enabled := True;
+        Exit;
+      end;
+    end;
+
+    if Res.StatusCode <> 200 then
+    begin
+      LogBackup(Format('HTTP %d: %s',
+                [Res.StatusCode, Copy(Response.DataString, 1, 300)]));
+      btnGenerarBackup.Enabled := True;
+      Exit;
+    end;
+
+    J := TJSONObject.ParseJSONValue(Response.DataString) as TJSONObject;
+    if J = nil then
+    begin
+      LogBackup('Respuesta no es JSON: ' + Response.DataString);
+      btnGenerarBackup.Enabled := True;
+      Exit;
+    end;
+    try
+      V := J.GetValue('job_id');
+      if V = nil then
+      begin
+        LogBackup('No hay job_id en la respuesta.');
+        btnGenerarBackup.Enabled := True;
+        Exit;
+      end;
+      FBackupJobId := V.Value;
+      LogBackup('Job lanzado: ' + FBackupJobId);
+
+      V := J.GetValue('archivo');
+      if V <> nil then
+        LogBackup('Archivo destino: ' + V.Value);
+    finally
+      J.Free;
+    end;
+  finally
+    Response.Free;
+    Form.Free;
+    HTTP.Free;
+  end;
+
+  // Arrancar polling cada segundo
+  tmrBackup.Enabled := True;
+end;
+
+procedure TForm1.tmrBackupTimer(Sender: TObject);
+var
+  HTTP    : THTTPClient;
+  Res     : IHTTPResponse;
+  Response: TStringStream;
+  Url     : string;
+  J       : TJSONObject;
+  V       : TJSONValue;
+  Status, Mensaje, Archivo, ErrorMsg: string;
+  Progress, Total: Integer;
+begin
+  if FBackupJobId = '' then
+  begin
+    tmrBackup.Enabled := False;
+    Exit;
+  end;
+
+  Url := Trim(edUrlEstadoBackup.Text) +
+         '?job_id=' + TNetEncoding.URL.Encode(FBackupJobId);
+
+  HTTP     := THTTPClient.Create;
+  Response := TStringStream.Create('', TEncoding.UTF8);
+  try
+    HTTP.OnValidateServerCertificate := HTTPValidateServerCertificate;
+    HTTP.CustomHeaders['X-API-Key']  := edKeyBackup.Text;
+    HTTP.ConnectionTimeout := 10000;
+    HTTP.ResponseTimeout   := 15000;
+
+    try
+      Res := HTTP.Get(Url, Response);
+    except
+      on E: Exception do
+      begin
+        LogBackup('Polling error: ' + E.Message);
+        Exit;
+      end;
+    end;
+
+    if Res.StatusCode <> 200 then
+    begin
+      LogBackup(Format('Polling HTTP %d', [Res.StatusCode]));
+      Exit;
+    end;
+
+    J := TJSONObject.ParseJSONValue(Response.DataString) as TJSONObject;
+    if J = nil then Exit;
+    try
+      Status   := ''; Mensaje := ''; Archivo := ''; ErrorMsg := '';
+      Progress := 0;  Total := 0;
+
+      V := J.GetValue('status');   if V <> nil then Status   := V.Value;
+      V := J.GetValue('mensaje');  if V <> nil then Mensaje  := V.Value;
+      V := J.GetValue('archivo');  if V <> nil then Archivo  := V.Value;
+      V := J.GetValue('error');    if (V <> nil) and not (V is TJSONNull) then ErrorMsg := V.Value;
+      V := J.GetValue('progress'); if (V <> nil) and (V is TJSONNumber) then Progress := TJSONNumber(V).AsInt;
+      V := J.GetValue('total');    if (V <> nil) and (V is TJSONNumber) then Total    := TJSONNumber(V).AsInt;
+
+      if (Total > 0) then
+      begin
+        pbBackup.Max := Total;
+        pbBackup.Position := Progress;
+      end;
+
+      lblBackupStatus.Caption := Format('[%s] %s  (%d/%d)',
+                                        [Status, Mensaje, Progress, Total]);
+
+      if Status = 'done' then
+      begin
+        tmrBackup.Enabled := False;
+        btnGenerarBackup.Enabled := True;
+        LogBackup('TERMINADO. Archivo: ' + Archivo);
+        FBackupJobId := '';
+      end
+      else if Status = 'error' then
+      begin
+        tmrBackup.Enabled := False;
+        btnGenerarBackup.Enabled := True;
+        LogBackup('ERROR: ' + ErrorMsg);
+        FBackupJobId := '';
+      end;
+    finally
+      J.Free;
+    end;
+  finally
+    Response.Free;
+    HTTP.Free;
   end;
 end;
 
