@@ -93,31 +93,63 @@ Se abre en `DataModuleCreate` junto a los demás.
 La pestaña se parte en dos:
 
 - Arriba (200 px): la cuadrícula original de SKUs (alta/baja, precio
-  última compra, fecha…).
+  última compra, fecha…). Las columnas *Precio Últ Compra* y *Fecha Últ
+  Compra* se ocultan automáticamente cuando ningún SKU tiene un coste
+  asignado, evitando ruido visual cuando los costes viven sólo a nivel
+  del artículo padre (`ActualizarVisibilidadColumnaSku`).
 - `TcxSplitter` para redimensionar.
-- Abajo (alClient): nueva cuadrícula
-  `cxgrdSkuAtributosBasicos` con la información helper de cada atributo
-  del SKU:
+- Abajo (alClient): nueva cuadrícula `cxgrdSkuAtributosBasicos` con la
+  información helper. **Solo muestra los atributos del SKU activo**: el
+  master-source de `unqryDetallesAtributos` es `dsSkus` con
+  `MasterFields = DetailFields = CODIGO_UNIDAD_SKU`, así que al cambiar
+  de SKU en la rejilla superior, el detalle se refiltra solo.
 
-  | Columna       | Origen                       |
-  |---------------|------------------------------|
-  | SKU           | `CODIGO_UNIDAD_SKU` (group)  |
-  | Atributo      | `ID_VA_AV`                   |
-  | Nombre atrib. | `NOMBRE_ATRIBUTO`            |
-  | Valor         | `VALOR_AV`                   |
-  | Básico        | `CODIGO_ATB`                 |
-  | Nombre básico | `NOMBRE_ATB`                 |
-  | Paleta        | `HEX_ATB` (pintada en color) |
-  | Valor básico  | `VALOR_NUM_ATB`              |
-  | Unidad        | `UNIDAD_ATB`                 |
-  | Equivalencia  | `ETIQUETA_BASICO`            |
+  | Columna       | Origen                                  |
+  |---------------|-----------------------------------------|
+  | Atributo      | `ID_VA_AV`                              |
+  | Nombre atrib. | `NOMBRE_ATRIBUTO`                       |
+  | Valor         | `VALOR_AV`                              |
+  | **Básico**    | `ID_ATB_AV` (editable, lookup combo)    |
+  | Nombre básico | `NOMBRE_ATB`                            |
+  | **Paleta**    | `HEX_ATB` (button-edit + color picker)  |
+  | Valor básico  | `VALOR_NUM_ATB`                         |
+  | Unidad        | `UNIDAD_ATB`                            |
+  | Equivalencia  | `ETIQUETA_BASICO`                       |
 
-La columna **Paleta** se pinta con `OnCustomDrawCell`: dibuja un cuadrado
-relleno con el color real del HEX y superpone el código en blanco o
-negro según la luminancia para asegurar contraste.
+#### Edición del atributo básico
 
-La cuadrícula es solo lectura: se edita la asociación desde el
-mantenimiento de valores de atributo (`fza_atributos_valores.ID_ATB_AV`).
+La columna **Básico** es un `TcxLookupComboBox` enlazado a
+`unqryAtributosBasicosLookup` (catálogo completo de
+`fza_atributos_basicos`). Antes de abrir el desplegable,
+`OnInitPopup` aplica `Filter = "ID_VA_ATB = '<atributo de la fila>'"` para
+que un atributo CO sólo vea atributos básicos de color, un atributo TAL
+sólo tallas, etc.
+
+`OnEditValueChanged` lanza inmediatamente un
+`UPDATE fza_atributos_valores SET ID_ATB_AV = :ATB WHERE ID_AV = :AV` y
+hace `Refresh` de la vista para repintar HEX, valor numérico y
+equivalencia. La vista subyacente (`vi_atributos_sku_basico`) sería
+read-only para el framework: se evita el error abortando el Post estándar
+desde `unqryDetallesAtributosBeforePost`.
+
+#### Selector de paleta
+
+La columna **Paleta** es un button-edit con `[...]`. Al pulsar el botón
+(o hacer doble-clic en la celda) se abre un `TColorDialog` precargado
+con el HEX actual. Si la fila aún no tiene atributo básico asignado se
+avisa al usuario. Al aceptar:
+
+```sql
+UPDATE fza_atributos_basicos
+   SET HEX_ATB = '#RRGGBB', USUARIO_MODIF = :USR
+ WHERE ID_ATB = :ID
+```
+
+y se refresca tanto la vista del detalle como el lookup (para que la
+nueva paleta aparezca al elegir el mismo básico desde otra fila).
+
+La columna sigue dibujándose con `OnCustomDrawCell`: cuadrado relleno
+con el color real, HEX rotulado en blanco o negro según luminancia.
 
 ## Script de actualización
 
