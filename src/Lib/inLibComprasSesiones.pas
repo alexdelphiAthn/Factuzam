@@ -204,23 +204,17 @@ end;
 procedure TGestorMatrizCompras.ReconstruirMatriz(const ALinea: Integer);
 var
   iIdAcPivot : Integer;
-  sTipoLinea : string;
 begin
   FLineaActual := ALinea;
   LimpiarMatriz;
 
   if FDM.unqrySesionLin.IsEmpty then Exit;
 
-  // Lineas ESCALAR/SERVICIO no usan matriz (§2.3-bis): cantidad escalar en
-  // CANTIDAD_ESCALAR_SESLIN o linea sin stock para servicio.
-  sTipoLinea := FDM.unqrySesionLin.FieldByName('TIPO_LINEA_SESLIN').AsString;
-  if (sTipoLinea = 'ESCALAR') or (sTipoLinea = 'SERVICIO') then Exit;
-
-  // §2.3-bis: una sesion tiene un unico tallaje. El conjunto pivot vive
-  // siempre en cabecera; los campos *_SESLIN existen en el esquema pero
-  // estan reservados para una futura reintroduccion de multi-variacion.
-  iIdAcPivot := FDM.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger;
-  if iIdAcPivot = 0 then Exit;  // Cabecera aun no tiene tallaje elegido
+  // 1. Determinar conjunto pivot efectivo (override de línea o de cabecera)
+  iIdAcPivot := FDM.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  if iIdAcPivot = 0 then
+    iIdAcPivot := FDM.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger;
+  if iIdAcPivot = 0 then Exit;  // No hay variación; línea ESCALAR/SERVICIO
 
   // 2. Cargar columnas (valores del conjunto pivot)
   CargarColumnasDesdeConjuntoPivot(iIdAcPivot);
