@@ -673,10 +673,9 @@ end;
 //   original con que se subió, vacío si no se registró).
 // Solo nos interesa el osha1 para decidir si saltar o no.
 // ----------------------------------------------------------------------
-function TForm1.ObtenerInventarioServidor(
-  const Url, ApiKey, Carpeta: string;
-  Inv: TDictionary<string,string>;
-  out ErrorMsg: string): Boolean;
+function TForm1.ObtenerInventarioServidor(const Url, ApiKey, Carpeta: string;
+                                          Inv: TDictionary<string,string>;
+                                          out ErrorMsg: string): Boolean;
 var
   HTTP    : THTTPClient;
   Res     : IHTTPResponse;
@@ -692,9 +691,7 @@ var
 begin
   Result   := False;
   ErrorMsg := '';
-
   FullUrl := Url + '?carpeta_cliente=' + TNetEncoding.URL.Encode(Carpeta);
-
   HTTP   := THTTPClient.Create;
   Stream := TStringStream.Create('', TEncoding.UTF8);
   try
@@ -702,7 +699,6 @@ begin
     HTTP.CustomHeaders['X-API-Key']  := ApiKey;
     HTTP.ConnectionTimeout := 15000;
     HTTP.ResponseTimeout   := 60000;
-
     try
       Res := HTTP.Get(FullUrl, Stream);
     except
@@ -1260,7 +1256,6 @@ begin
   pbBackup.Position := 0;
   lblBackupStatus.Caption := 'Lanzando...';
   btnGenerarBackup.Enabled := False;
-
   HTTP     := THTTPClient.Create;
   Form     := TMultipartFormData.Create;
   Response := TStringStream.Create('', TEncoding.UTF8);
@@ -1272,7 +1267,6 @@ begin
 
     Form.AddField('carpeta_cliente', Carpeta);
     Form.AddField('password',        Pwd);
-
     LogBackup('POST ' + edUrlGenBackup.Text);
     try
       Res := HTTP.Post(edUrlGenBackup.Text, Form, Response);
@@ -1284,7 +1278,6 @@ begin
         Exit;
       end;
     end;
-
     if Res.StatusCode <> 200 then
     begin
       LogBackup(Format('HTTP %d: %s',
@@ -1292,7 +1285,6 @@ begin
       btnGenerarBackup.Enabled := True;
       Exit;
     end;
-
     J := TJSONObject.ParseJSONValue(Response.DataString) as TJSONObject;
     if J = nil then
     begin
@@ -1310,7 +1302,6 @@ begin
       end;
       FBackupJobId := V.Value;
       LogBackup('Job lanzado: ' + FBackupJobId);
-
       V := J.GetValue('archivo');
       if V <> nil then
         LogBackup('Archivo destino: ' + V.Value);
@@ -1322,7 +1313,6 @@ begin
     Form.Free;
     HTTP.Free;
   end;
-
   // Arrancar polling cada segundo
   tmrBackup.Enabled := True;
 end;
@@ -1343,10 +1333,8 @@ begin
     tmrBackup.Enabled := False;
     Exit;
   end;
-
   Url := Trim(edUrlEstadoBackup.Text) +
          '?job_id=' + TNetEncoding.URL.Encode(FBackupJobId);
-
   HTTP     := THTTPClient.Create;
   Response := TStringStream.Create('', TEncoding.UTF8);
   try
@@ -1354,7 +1342,6 @@ begin
     HTTP.CustomHeaders['X-API-Key']  := edKeyBackup.Text;
     HTTP.ConnectionTimeout := 10000;
     HTTP.ResponseTimeout   := 15000;
-
     try
       Res := HTTP.Get(Url, Response);
     except
@@ -1364,35 +1351,41 @@ begin
         Exit;
       end;
     end;
-
     if Res.StatusCode <> 200 then
     begin
       LogBackup(Format('Polling HTTP %d', [Res.StatusCode]));
       Exit;
     end;
-
     J := TJSONObject.ParseJSONValue(Response.DataString) as TJSONObject;
     if J = nil then Exit;
     try
       Status   := ''; Mensaje := ''; Archivo := ''; ErrorMsg := '';
       Progress := 0;  Total := 0;
-
-      V := J.GetValue('status');   if V <> nil then Status   := V.Value;
-      V := J.GetValue('mensaje');  if V <> nil then Mensaje  := V.Value;
-      V := J.GetValue('archivo');  if V <> nil then Archivo  := V.Value;
-      V := J.GetValue('error');    if (V <> nil) and not (V is TJSONNull) then ErrorMsg := V.Value;
-      V := J.GetValue('progress'); if (V <> nil) and (V is TJSONNumber) then Progress := TJSONNumber(V).AsInt;
-      V := J.GetValue('total');    if (V <> nil) and (V is TJSONNumber) then Total    := TJSONNumber(V).AsInt;
-
+      V := J.GetValue('status');
+      if V <> nil then
+        Status   := V.Value;
+      V := J.GetValue('mensaje');
+      if V <> nil then
+        Mensaje  := V.Value;
+      V := J.GetValue('archivo');
+      if V <> nil then
+        Archivo  := V.Value;
+      V := J.GetValue('error');
+      if (V <> nil) and not (V is TJSONNull) then
+        ErrorMsg := V.Value;
+      V := J.GetValue('progress');
+      if (V <> nil) and (V is TJSONNumber) then
+        Progress := TJSONNumber(V).AsInt;
+      V := J.GetValue('total');
+      if (V <> nil) and (V is TJSONNumber) then
+        Total    := TJSONNumber(V).AsInt;
       if (Total > 0) then
       begin
         pbBackup.Max := Total;
         pbBackup.Position := Progress;
       end;
-
       lblBackupStatus.Caption := Format('[%s] %s  (%d/%d)',
                                         [Status, Mensaje, Progress, Total]);
-
       if Status = 'done' then
       begin
         tmrBackup.Enabled := False;
