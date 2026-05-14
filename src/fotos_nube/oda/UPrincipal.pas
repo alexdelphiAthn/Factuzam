@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.NetEncoding, System.Hash, System.SyncObjs,
   System.Generics.Collections, System.JSON,
-  System.IOUtils, System.Types,
+  System.IOUtils, System.Types, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Mask, Vcl.ComCtrls, Vcl.Imaging.pngimage,
   Vcl.FileCtrl,
@@ -1046,7 +1046,7 @@ begin
   end;
 
   CarpetaDemo := Trim(edDemoCarpeta.Text);
-  if (CarpetaDemo = '') or not DirectoryExists(CarpetaDemo) then
+  if (CarpetaDemo = '') or not System.SysUtils.DirectoryExists(CarpetaDemo) then
   begin
     LogBatch('Carpeta de demo inválida.');
     Exit;
