@@ -326,6 +326,15 @@ begin
         oDmConn.conUni.Commit;
       ShowMessage('Datos guardados correctamente');
     except
+      on E: EAbort do
+      begin
+        // EAbort es la excepción silenciosa estándar (BeforePost que
+        // llama a Abort cuando el dataset no debe persistirse por la
+        // vía estándar, p. ej. vistas en JOIN que se actualizan a mano).
+        // Cerramos la transacción y salimos sin mensaje.
+        if oDmConn.conUni.InTransaction then
+          oDmConn.conUni.Rollback;
+      end;
       on E: Exception do
       begin
         if oDmConn.conUni.InTransaction then
