@@ -1,30 +1,30 @@
 inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   Caption = 'Impresi'#243'n de Etiquetas de Art'#237'culo'
-  ClientHeight = 460
-  ClientWidth = 540
-  ExplicitWidth = 556
-  ExplicitHeight = 499
-  KeyPreview = True
-  OnCreate = FormCreate
-  OnShow = FormShow
+  ClientHeight = 452
+  ClientWidth = 538
+  StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnShow = FormShow
+  ExplicitWidth = 556
+  ExplicitHeight = 499
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 396
-    Height = 460
-    ExplicitLeft = 396
-    ExplicitHeight = 460
+    Left = 394
+    Height = 452
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 394
+    ExplicitHeight = 452
     inherited btnSalir: TcxButton
-      Top = 435
-      ExplicitTop = 435
+      Top = 434
+      ExplicitTop = 426
     end
   end
   object pnlOpciones: TPanel [1]
     Left = 0
     Top = 0
-    Width = 396
-    Height = 460
+    Width = 394
+    Height = 452
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -32,33 +32,33 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Left = 12
       Top = 12
       Caption = 'C'#243'digo de Art'#237'culo:'
+      TabOrder = 5
     end
     object edtCodArt: TcxTextEdit
       Left = 156
       Top = 8
+      Properties.ReadOnly = True
       TabOrder = 0
       Width = 220
-      Properties.ReadOnly = True
     end
     object chkSoloEsteArt: TcxCheckBox
       Left = 12
       Top = 40
       Caption = 'Imprimir s'#243'lo este art'#237'culo'
       Properties.NullStyle = nssUnchecked
-      TabOrder = 1
       State = cbsChecked
-      Width = 364
+      TabOrder = 1
     end
     object cxlblTarifa: TcxLabel
       Left = 12
       Top = 76
       Caption = 'Tarifa:'
+      TabOrder = 6
     end
     object cbbTarifa: TcxComboBox
       Left = 156
       Top = 72
       Properties.DropDownListStyle = lsFixedList
-      Properties.Items.Strings = ()
       TabOrder = 2
       Width = 220
     end
@@ -66,6 +66,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Left = 12
       Top = 108
       Caption = 'Fecha de aplicaci'#243'n:'
+      TabOrder = 7
     end
     object dtFechaAplicacion: TcxDateEdit
       Left = 156
@@ -77,6 +78,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Left = 12
       Top = 140
       Caption = 'Almacenes (marque uno o varios):'
+      TabOrder = 8
     end
     object lvAlmacenes: TcxListView
       Left = 12
@@ -116,7 +118,6 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   end
   inherited unqryPerfiles: TUniQuery
     Left = 168
-    Top = 8
   end
   inherited dsPerfiles: TDataSource
     Left = 224
@@ -138,8 +139,6 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Variables = <>
     Style = <>
     inherited Page1: TfrxReportPage
-      LeftMargin = 5.000000000000000000
-      RightMargin = 5.000000000000000000
       TopMargin = 10.000000000000000000
       BottomMargin = 10.000000000000000000
       Columns = 2

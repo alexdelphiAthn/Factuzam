@@ -184,7 +184,7 @@ begin
                      'True');
   RegistrarParametro('Control de Artículos',
                      'vgerChkStockOnly',
-                     'Permitir vender sin stock',
+                     'Permitir sólo artículos con stock',
                      tpBoolean,
                      'False');
 

@@ -44,10 +44,6 @@ inherited frmMtoGen: TfrmMtoGen
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object cxGrdPrincipal: TcxGrid
           Left = 0
           Top = 0
@@ -465,24 +461,25 @@ inherited frmMtoGen: TfrmMtoGen
         object edtBusqGlobal: TcxTextEdit
           Left = 136
           Top = 6
+          Properties.OnChange = edtBusqGlobalPropertiesChange
           TabOrder = 0
-          Width = 161
+          Width = 199
         end
         object nvNavegador: TcxDBNavigator
           Left = 456
           Top = 6
-          Width = 240
-          Height = 23
+          Width = 310
+          Height = 28
           Buttons.Filter.Visible = False
           DataSource = dsTablaG
           LookAndFeel.NativeStyle = False
-          TabOrder = 2
+          TabOrder = 1
         end
         object lblTextoaBuscar: TcxLabel
           Left = 8
           Top = 9
           Caption = 'Texto a buscar'
-          TabOrder = 3
+          TabOrder = 2
           Transparent = True
         end
         object rbBBDD: TcxRadioButton
@@ -518,29 +515,10 @@ inherited frmMtoGen: TfrmMtoGen
           Font.Style = []
           Font.Quality = fqClearType
           ParentFont = False
-          TabOrder = 5
+          TabOrder = 3
           Visible = False
           OnClick = rbGridClick
           Transparent = True
-        end
-        object btnBusq: TcxButton
-          Left = 302
-          Top = 9
-          Width = 33
-          Height = 20
-          OptionsImage.Glyph.SourceDPI = 96
-          OptionsImage.Glyph.Data = {
-            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
-            610000001974455874536F6674776172650041646F626520496D616765526561
-            647971C9653C0000000B744558745469746C65005A6F6F6D3BCF09FEBC000000
-            A449444154785EA5D2C10984301484616F426A7AF73461115BC1C2369093772B
-            1272F36A031690537690811D1E44B244F879A0E62368A65AEB50376066ECBE12
-            CAA87026647CFE082CE840D5C7FBCB1360B278431105CE4D106B014916CF4877
-            360B925A402610D1A4008B04720B2804827F81502050867730FA0D7641FFFB0B
-            EC12A0FB1CF8DE04BA4FE28E2E8F28D0CAE31F87ACDD00A747CE2E8088B6A213
-            BD7EC0405F9BEBFFA1F53765600000000049454E44AE426082}
-          TabOrder = 1
-          OnClick = btnBusqClick
         end
       end
     end
@@ -677,5 +655,12 @@ inherited frmMtoGen: TfrmMtoGen
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 424
     Top = 448
+  end
+  object tmrBusqGlobal: TTimer
+    Enabled = False
+    Interval = 700
+    OnTimer = tmrBusqGlobalTimer
+    Left = 120
+    Top = 440
   end
 end
