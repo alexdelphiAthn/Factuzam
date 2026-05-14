@@ -289,6 +289,16 @@ begin
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
     FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
+    // NOT NULL con DEFAULT en BBDD: hay que darles valor en cliente o Post
+    // falla con 'Field XXX must have a value' antes de llegar al DEFAULT.
+    FieldByName('ESTRAZABLE_SESLIN').AsString    := 'N';
+    FieldByName('PRECIO_COMPRA_SESLIN').AsFloat  := 0;
+    FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := 0;
+    FieldByName('TOTAL_LINEA_SESLIN').AsFloat    := 0;
+    // NOT NULL sin DEFAULT (debe rellenarlos el usuario): default a '' para
+    // que Required pase y el usuario los rellene desde el grid.
+    FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := '';
+    FieldByName('DESCRIPCION_SESLIN').AsString          := '';
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
