@@ -51,6 +51,8 @@ type
     dsMovimientosArticulos: TDataSource;
     unqryDetallesAtributos: TUniQuery;
     dsDetallesAtributos: TDataSource;
+    unqryAtributosBasicosLookup: TUniQuery;
+    dsAtributosBasicosLookup: TDataSource;
     unqryArtPrint: TUniQuery;
     dtstprvEtiquetasArt: TDataSetProvider;
     cdsEtiquetasArt: TClientDataSet;
@@ -69,6 +71,7 @@ type
     procedure unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
     procedure unqrySkusBeforePost(DataSet: TDataSet);
     procedure unqrySkusBeforeDelete(DataSet: TDataSet);
+    procedure unqryDetallesAtributosBeforePost(DataSet: TDataSet);
   private
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -230,6 +233,17 @@ begin
   // la limpiamos antes de que el framework dispare el DELETE sobre
   // fza_articulos_skus.
   EliminarCosteSku(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString);
+end;
+
+procedure TdmArticulos.unqryDetallesAtributosBeforePost(DataSet: TDataSet);
+begin
+  // La rejilla del detalle de atributos se nutre de una vista de sólo
+  // lectura. Las ediciones reales (cambio de atributo básico, HEX nuevo)
+  // se persisten desde el formulario con UPDATE directos sobre las tablas
+  // implicadas: aquí abortamos el Post estándar del framework para evitar
+  // el error "Cannot insert into JOIN".
+  inherited;
+  Abort;
 end;
 
 procedure TdmArticulos.UpsertCosteSku(const aSku: string;
@@ -447,8 +461,10 @@ begin
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryMovimientosArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryDetallesAtributos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  // El detalle de atributos sigue al SKU activo (master) para mostrar sólo
+  // las filas del SKU posicionado en la rejilla superior.
+  unqryDetallesAtributos.MasterSource := dsSkus;
+  unqryAtributosBasicosLookup.Connection := oConn;
   unqryTiposIVA.Open;
   unqryFamiliaArticulos.Open;
   unqryTarifasArticulos.Open;
@@ -460,6 +476,7 @@ begin
   unqryStockArticulos.Open;
   unqryMovimientosArticulos.Open;
   unqryDetallesAtributos.Open;
+  unqryAtributosBasicosLookup.Open;
   QuitarEscribiblesVista;
 end;
 

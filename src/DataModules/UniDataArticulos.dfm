@@ -729,20 +729,35 @@ inherited dmArticulos: TdmArticulos
       '    UNIDAD_ATB,'
       '    ETIQUETA_BASICO'
       '  FROM vi_atributos_sku_basico'
-      ' ORDER BY CODIGO_UNIDAD_SKU, ORDEN_ATRIBUTO, ID_VA_AV')
-    MasterSource = frmMtoArticulos.dsTablaG
-    MasterFields = 'CODIGO_ART_ART'
-    DetailFields = 'CODIGO_ART_SKU'
-    ReadOnly = True
+      ' ORDER BY ORDEN_ATRIBUTO, ID_VA_AV')
+    MasterFields = 'CODIGO_UNIDAD_SKU'
+    DetailFields = 'CODIGO_UNIDAD_SKU'
+    BeforePost = unqryDetallesAtributosBeforePost
     Left = 1040
     Top = 184
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'CODIGO_ART_ART'
+        Name = 'CODIGO_UNIDAD_SKU'
         ParamType = ptInput
-        Value = 'ZAP-OXFORD'
+        Value = ''
       end>
+  end
+  object unqryAtributosBasicosLookup: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_ATB, ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB,'
+      '       DESCRIPCION_ATB, HEX_ATB, VALOR_NUM_ATB, UNIDAD_ATB'
+      '  FROM fza_atributos_basicos'
+      ' WHERE ESACTIVO_ATB = '#39'S'#39
+      ' ORDER BY ID_VA_ATB, ORDEN_ATB, NOMBRE_ATB')
+    Left = 1160
+    Top = 184
+  end
+  object dsAtributosBasicosLookup: TDataSource
+    DataSet = unqryAtributosBasicosLookup
+    Left = 1160
+    Top = 264
   end
   object dsDetallesAtributos: TDataSource
     DataSet = unqryDetallesAtributos

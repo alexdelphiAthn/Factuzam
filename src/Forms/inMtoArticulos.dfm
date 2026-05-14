@@ -427,6 +427,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Align = alClient
                   TabOrder = 0
                   object tvSkuAtributosBasicos: TcxGridDBTableView
+                    OnDblClick = tvSkuAtributosBasicosDblClick
                     DataController.DataSource = dmArticulos.dsDetallesAtributos
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                     DataController.Summary.FooterSummaryItems = <>
@@ -436,18 +437,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     OptionsData.CancelOnExit = True
                     OptionsData.Deleting = False
                     OptionsData.DeletingConfirmation = False
-                    OptionsData.Editing = False
+                    OptionsData.Editing = True
                     OptionsData.Inserting = False
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
-                    object tvSkuAtributosBasicosCODIGO_UNIDAD_SKU: TcxGridDBColumn
-                      Caption = 'SKU'
-                      DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
-                      Options.Editing = False
-                      GroupIndex = 0
-                      SortOrder = soAscending
-                      Width = 200
-                    end
                     object tvSkuAtributosBasicosID_VA_AV: TcxGridDBColumn
                       Caption = 'Atributo'
                       DataBinding.FieldName = 'ID_VA_AV'
@@ -466,11 +459,42 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Options.Editing = False
                       Width = 100
                     end
-                    object tvSkuAtributosBasicosCODIGO_ATB: TcxGridDBColumn
+                    object tvSkuAtributosBasicosID_ATB_AV: TcxGridDBColumn
                       Caption = 'B'#225'sico'
-                      DataBinding.FieldName = 'CODIGO_ATB'
-                      Options.Editing = False
-                      Width = 100
+                      DataBinding.FieldName = 'ID_ATB_AV'
+                      PropertiesClassName = 'TcxLookupComboBoxProperties'
+                      Properties.KeyFieldNames = 'ID_ATB'
+                      Properties.ListColumns = <
+                        item
+                          Caption = 'C'#243'digo'
+                          FieldName = 'CODIGO_ATB'
+                          Width = 80
+                        end
+                        item
+                          Caption = 'Nombre'
+                          FieldName = 'NOMBRE_ATB'
+                          Width = 140
+                        end
+                        item
+                          Caption = 'Paleta'
+                          FieldName = 'HEX_ATB'
+                          Width = 70
+                        end
+                        item
+                          Caption = 'Medida'
+                          FieldName = 'VALOR_NUM_ATB'
+                          Width = 60
+                        end
+                        item
+                          Caption = 'Ud'
+                          FieldName = 'UNIDAD_ATB'
+                          Width = 40
+                        end>
+                      Properties.ListOptions.ShowHeader = True
+                      Properties.ListSource = dmArticulos.dsAtributosBasicosLookup
+                      Properties.OnEditValueChanged = tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged
+                      Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
+                      Width = 190
                     end
                     object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn
                       Caption = 'Nombre b'#225'sico'
@@ -481,9 +505,15 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn
                       Caption = 'Paleta'
                       DataBinding.FieldName = 'HEX_ATB'
-                      Options.Editing = False
+                      PropertiesClassName = 'TcxButtonEditProperties'
+                      Properties.Buttons = <
+                        item
+                          Default = True
+                          Kind = bkEllipsis
+                        end>
+                      Properties.OnButtonClick = tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick
                       OnCustomDrawCell = tvSkuAtributosBasicosHEX_ATBCustomDrawCell
-                      Width = 80
+                      Width = 100
                     end
                     object tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn
                       Caption = 'Valor b'#225'sico'
