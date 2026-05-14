@@ -2104,6 +2104,7 @@ begin
   finally
     qry.Free;
   end;
+  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
   if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
     dmmArticulos.unqryAtributosBasicosLookup.Refresh;
@@ -2139,6 +2140,7 @@ begin
   finally
     qry.Free;
   end;
+  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
   if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
     dmmArticulos.unqryAtributosBasicosLookup.Refresh;
@@ -2171,6 +2173,7 @@ begin
   finally
     qry.Free;
   end;
+  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
   if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
     dmmArticulos.unqryAtributosBasicosLookup.Refresh;
@@ -2269,6 +2272,7 @@ begin
   end;
   // Refrescamos la vista para repintar NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB,
   // FUENTE_ATB (pasa a 'A') y ETIQUETA_BASICO.
+  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
 end;
 
@@ -2340,6 +2344,7 @@ begin
     finally
       qry.Free;
     end;
+    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
     ds.Refresh;
     // El lookup tiene cacheado el HEX viejo: refrescamos también.
     if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
