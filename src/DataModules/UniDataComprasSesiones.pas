@@ -200,9 +200,7 @@ begin
     FieldByName('MULTIPLO_REDONDEO_SES').AsFloat  := 0;
     FieldByName('AJUSTE_FINAL_SES').AsFloat       := 0;
     FieldByName('ESPRECIO_POR_SKU_SES').AsString  := 'N';
-    // Decision MVP (§2.3-bis): una sesion = un tallaje. Sin override por
-    // linea, asi que la variacion siempre esta fija desde cabecera.
-    FieldByName('ESVAR_FIJA_SES').AsString        := 'S';
+    FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
     // Prerelleno empresa/almacen del usuario logueado (igual que inventarios).
