@@ -499,6 +499,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn
                       Caption = 'Nombre b'#225'sico'
                       DataBinding.FieldName = 'NOMBRE_ATB'
+                      PropertiesClassName = 'TcxTextEditProperties'
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged
                       Width = 130
                     end
@@ -526,6 +527,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosUNIDAD_ATB: TcxGridDBColumn
                       Caption = 'Unidad'
                       DataBinding.FieldName = 'UNIDAD_ATB'
+                      PropertiesClassName = 'TcxTextEditProperties'
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged
                       Width = 60
                     end
