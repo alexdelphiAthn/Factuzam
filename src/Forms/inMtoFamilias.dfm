@@ -5,8 +5,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
   ClientHeight = 628
   ClientWidth = 880
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 880
   ExplicitHeight = 628
   TextHeight = 19
@@ -16,13 +14,13 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     TabOrder = 0
     StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 740
-    ExplicitHeight = 592
+    ExplicitHeight = 628
     inherited pcPantalla: TcxPageControl
       Width = 740
       Height = 588
       TabOrder = 1
       ExplicitWidth = 740
-      ExplicitHeight = 552
+      ExplicitHeight = 588
       ClientRectBottom = 586
       ClientRectRight = 738
       inherited tsLista: TcxTabSheet
@@ -89,7 +87,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         ExplicitLeft = 2
         ExplicitTop = 29
         ExplicitWidth = 736
-        ExplicitHeight = 521
+        ExplicitHeight = 557
         object pnl1: TPanel
           Left = 0
           Top = 0
@@ -229,7 +227,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitHeight = 346
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
@@ -237,9 +234,8 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             Height = 382
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsMasDatos
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 346
             ClientRectBottom = 380
             ClientRectLeft = 2
             ClientRectRight = 734
@@ -247,8 +243,6 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
-              ExplicitLeft = -70
-              ExplicitTop = -51
               object lblDescripcion: TcxLabel
                 Left = 33
                 Top = 19
@@ -295,9 +289,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 53
                   DataBinding.DataField = 'CONTADOR_ART_FAM'
                   DataBinding.DataSource = dsTablaG
-                  Properties.ValueType = vtInt
                   Properties.AssignedValues.MinValue = True
-                  Properties.MaxValue = 99999999
+                  Properties.MaxValue = 99999999.000000000000000000
+                  Properties.ValueType = vtInt
                   TabOrder = 1
                   Width = 90
                 end
@@ -312,9 +306,9 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 53
                   DataBinding.DataField = 'PAD_ART_FAM'
                   DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.MaxValue = 12.000000000000000000
                   Properties.ValueType = vtInt
-                  Properties.MinValue = 0
-                  Properties.MaxValue = 12
                   TabOrder = 2
                   Width = 60
                 end
@@ -330,6 +324,10 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsArticulos: TcxTabSheet
               Caption = '&2_Articulos'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdArticulosFamilias: TcxGrid
                 Left = 0
                 Top = 0
@@ -589,7 +587,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                         FieldName = 'NOMBRE_PROP_PROP'
                       end>
                     Properties.ListOptions.ShowHeader = False
-                    Width = 130
+                    Width = 142
                   end
                   object tvAtributosNOMBRE_PROPIEDAD: TcxGridDBColumn
                     Caption = 'Nombre Propiedad'
@@ -863,11 +861,11 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     TabOrder = 1
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 740
-    ExplicitHeight = 592
+    ExplicitHeight = 628
     inherited pButtonGen: TPanel
       Top = 430
       StyleElements = [seFont, seClient, seBorder]
-      ExplicitTop = 394
+      ExplicitTop = 430
       inherited btnGrabar: TcxButton
         ParentFont = False
       end
@@ -892,6 +890,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     end
   end
   inherited dsTablaG: TDataSource
+    DataSet = dmFamilias.unqryTablaG
     Left = 604
     Top = 399
   end

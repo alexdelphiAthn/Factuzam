@@ -378,7 +378,7 @@ Salidas:
 - `BuscarYMostrarNombre:1922`: lookup genérico (Empleados, Clientes,…).
 - `GetTarifaDefault:1984`: tarifa por defecto vigente.
 - `TransformarLineasParaCobroParcial:676`: si el cliente entrega menos del
-  total, reparte el cobro parcial entre líneas y deja el resto como anticipo.
+  total, asigna desde el primer artículo el dinero y si se completa (el dinero es más que el precio de la prenda, lo vende, dejando el resto como anticipo del que no llegue al precio de la linea.
 - `CuadrarFacturaEnMemoria:1639`: recalcula bases/IVAs antes de grabar.
 
 ---

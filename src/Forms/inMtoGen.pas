@@ -98,8 +98,8 @@ type
     sbResetGrid: TSpeedButton;
     pnlDataSetName: TPanel;
     lblTablaOrigen: TcxLabel;
-    btnBusq: TcxButton;
     saveDialog: TdxSaveFileDialog;
+    tmrBusqGlobal: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -117,7 +117,8 @@ type
                                      var AllowChange: Boolean);
     procedure sbResetGridClick(Sender: TObject);
     procedure sbGrabarGridClick(Sender: TObject);
-    procedure btnBusqClick(Sender: TObject);
+    procedure edtBusqGlobalPropertiesChange(Sender: TObject);
+    procedure tmrBusqGlobalTimer(Sender: TObject);
     procedure tsFichaShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
@@ -815,9 +816,17 @@ begin
 //    edtBusqGlobal.SetFocus;
 end;
 
-procedure TfrmMtoGen.btnBusqClick(Sender: TObject);
+procedure TfrmMtoGen.edtBusqGlobalPropertiesChange(Sender: TObject);
 begin
   inherited;
+  tmrBusqGlobal.Enabled := False;
+  tmrBusqGlobal.Enabled := True;
+end;
+
+procedure TfrmMtoGen.tmrBusqGlobalTimer(Sender: TObject);
+begin
+  inherited;
+  tmrBusqGlobal.Enabled := False;
   BusqAllGrid(cxGrdDBTabPrin,
               edtBusqGlobal.Text);
   if ((pcPantalla.ActivePage <> tsLista) and (tsLista.TabVisible = true)) then

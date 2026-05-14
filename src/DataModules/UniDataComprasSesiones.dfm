@@ -563,9 +563,14 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '   AND (FECHA_HASTA_EMPSER IS NULL'
       '        OR FECHA_HASTA_EMPSER >= CURDATE())'
       ' ORDER BY EMPSER')
-    MasterSource = dsTablaG
     Left = 712
     Top = 352
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_EMP_SES'
+        Value = nil
+      end>
   end
   object dsEmpresaSeries: TDataSource
     DataSet = unqryEmpresaSeries
@@ -588,9 +593,32 @@ inherited dmComprasSesiones: TdmComprasSesiones
   object unstrdprcGetContadorSesion: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     SQL.Strings = (
-      'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMPRESA_CONTADOR, :pUSUARIOMODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
+      
+        'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMPRESA_' +
+        'CONTADOR, :pUSUARIOMODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
     Left = 440
     Top = 352
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'pserie'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'pTipoDoc'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'pEMPRESA_CONTADOR'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'pUSUARIOMODIF'
+        Value = nil
+      end>
   end
   object unstrdprcValidarSesion: TUniStoredProc
     StoredProcName = 'PRC_SES_VALIDAR'

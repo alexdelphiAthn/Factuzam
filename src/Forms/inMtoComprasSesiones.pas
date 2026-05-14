@@ -1010,7 +1010,7 @@ var
 begin
   if dmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
 
-  // Si el combo de almacen est� vacio, inicializarlo con el almacen de
+  // Si el combo de almacen está vacio, inicializarlo con el almacen de
   // cabecera para que la matriz arranque editando ese.
   if (VarToStr(cbbAlmacenMatriz.EditValue) = '') and
      (not dmComprasSesiones.unqryTablaG.IsEmpty) then
@@ -1022,7 +1022,6 @@ begin
       TGestorMatrizCompras(FGestorMatriz).AlmacenActual := sAlmCab;
     end;
   end;
-
   TGestorMatrizCompras(FGestorMatriz).ReconstruirMatriz(
     dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger);
 end;
@@ -1035,9 +1034,8 @@ begin
   iArts  := inLibComprasSesiones.ContarArticulosNuevos(dmComprasSesiones);
   iSkus  := inLibComprasSesiones.ContarSkusPotenciales(dmComprasSesiones);
   rTotal := inLibComprasSesiones.CalcularTotalCompra(dmComprasSesiones);
-
   lblResNumArticulos.Caption := Format('► %d artículos nuevos en fza_articulos',
-                                       [iArts]);
+                                                                       [iArts]);
   lblResNumSkus.Caption := Format('► %d SKUs en fza_articulos_skus', [iSkus]);
   lblResNumEan13.Caption     :=
     Format('► %d EAN13 a generar en fza_codigos_barras', [iSkus]);
@@ -1097,14 +1095,13 @@ begin
   if (dmComprasSesiones = nil) or
      (dmComprasSesiones.unqryTablaG = nil) or
      (not dmComprasSesiones.unqryTablaG.Active) then Exit;
-
   bVisible := (not dmComprasSesiones.unqryTablaG.IsEmpty) and
-              (dmComprasSesiones.unqryTablaG
-                 .FieldByName('ESPRECIO_POR_SKU_SES').AsString = 'S');
-
-  if Assigned(gbPreciosSku)   then gbPreciosSku.Visible   := bVisible;
-  if Assigned(splPreciosSku)  then splPreciosSku.Visible  := bVisible;
-
+              (dmComprasSesiones.unqryTablaG.FieldByName(
+                                        'ESPRECIO_POR_SKU_SES').AsString = 'S');
+  if Assigned(gbPreciosSku)   then
+    gbPreciosSku.Visible   := bVisible;
+  if Assigned(splPreciosSku)  then
+    splPreciosSku.Visible  := bVisible;
   if bVisible and Assigned(dmComprasSesiones.unqryLineaSkusPrecios) then
   begin
     if not dmComprasSesiones.unqryLineaSkusPrecios.Active then
@@ -1114,7 +1111,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoComprasSesiones.UpsertPrecioSku(AField: string; ANuevo: Double);
+procedure TfrmMtoComprasSesiones.UpsertPrecioSku(AField: string;
+                                                 ANuevo: Double);
 var
   q : TUniQuery;
   qSrc : TUniQuery;
@@ -1134,9 +1132,12 @@ begin
       'VALUES (:s, :n, :l, :f, :p, :v, NOW(), :u, NOW(), :u) ' +
       'ON DUPLICATE KEY UPDATE ' +
       '  ' + AField + ' = :v, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-    q.ParamByName('s').AsString := dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString := dmComprasSesiones.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    q.ParamByName('s').AsString :=
+                dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+               dmComprasSesiones.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger :=
+         dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     q.ParamByName('f').AsInteger := qSrc.FieldByName('ID_FILA').AsInteger;
     q.ParamByName('p').AsInteger := qSrc.FieldByName('ID_AV_PIVOT').AsInteger;
     if ANuevo = 0 then
@@ -1164,8 +1165,8 @@ begin
   UpsertPrecioSku('PRECIO_COMPRA_SESLINSKU', v);
 end;
 
-procedure TfrmMtoComprasSesiones.dbcPreciosSkuPrecioVentaPropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmMtoComprasSesiones.
+            dbcPreciosSkuPrecioVentaPropertiesEditValueChanged(Sender: TObject);
 var
   edt : TcxCustomEdit;
   v   : Double;

@@ -167,12 +167,16 @@ inherited dmArticulos: TdmArticulos
     SQLInsert.Strings = (
       'INSERT INTO fza_articulos_proveedores'
       '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP,'
-      '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP,'
+      
+        '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_' +
+        'AP,'
       '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       '  (:CODIGO_PRV_PRV, :CODIGO_ART_ART, :REF_PROVEEDOR,'
       '   :PRECIO_ULT_COMPRA, :FECHA_VALIDEZ, :ESPROVEEDORPRINCIPAL,'
-      '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
+      
+        '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODI' +
+        'F)')
     SQLDelete.Strings = (
       'DELETE FROM fza_articulos_proveedores'
       'WHERE CODIGO_PRV_AP = :Old_CODIGO_PRV_PRV'
@@ -218,7 +222,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'SRV-ENVIO'
+        Value = 'DEMO-CAMISA'
       end>
   end
   object dsProveedoresArticulos: TDataSource
@@ -290,7 +294,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'SRV-ENVIO'
+        Value = 'DEMO-CAMISA'
       end>
   end
   object dsLinFacturasArticulos: TDataSource
@@ -595,7 +599,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'SRV-ENVIO'
+        Value = 'DEMO-CAMISA'
       end>
   end
   object dsVariacionesArticulos: TDataSource
@@ -648,7 +652,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'SRV-ENVIO'
+        Value = 'DEMO-CAMISA'
       end>
   end
   object dsSkus: TDataSource
@@ -695,7 +699,7 @@ inherited dmArticulos: TdmArticulos
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
-        Value = 'SRV-ENVIO'
+        Value = 'DEMO-CAMISA'
       end>
   end
   object dsMovimientosArticulos: TDataSource

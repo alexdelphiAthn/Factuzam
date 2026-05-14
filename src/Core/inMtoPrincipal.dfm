@@ -11,7 +11,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
   ExplicitWidth = 1140
-  ExplicitHeight = 617
+  ExplicitHeight = 613
   TextHeight = 19
   object Panel1: TPanel [0]
     Left = 0
