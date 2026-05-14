@@ -2239,34 +2239,29 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
+    // UPSERT del override per-artículo. Si vNew es NULL/'' guardamos
+    // un BLOQUEO: la fila existe con ID_ATB_AAB = NULL para indicar que
+    // este artículo no quiere básico para este valor (la vista da
+    // preferencia a la existencia de la fila override sobre el conjunto
+    // o el global; sin esto, vaciar la celda volvería a heredar y el
+    // básico reaparecería). Para volver a heredar hay que eliminar la
+    // fila a mano vía SQL u otra acción dedicada.
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_atributos_basicos ' +
+      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '  +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) ' +
+      'ON DUPLICATE KEY UPDATE '                     +
+      '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '      +
+      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('ART').AsString  := CodArt;
+    qry.ParamByName('AV').AsInteger  := IdAv;
     if VarIsNull(vNew) or (VarToStr(vNew) = '') then
-    begin
-      // Limpiar override → el básico vuelve al conjunto o al global
-      qry.SQL.Text :=
-        'DELETE FROM fza_articulos_atributos_basicos ' +
-        ' WHERE CODIGO_ART_AAB = :ART '                +
-        '   AND ID_AV_AAB      = :AV';
-      qry.ParamByName('ART').AsString  := CodArt;
-      qry.ParamByName('AV').AsInteger  := IdAv;
-      qry.Execute;
-    end
+      qry.ParamByName('ATB').Clear
     else
-    begin
-      // UPSERT del override per-artículo
-      qry.SQL.Text :=
-        'INSERT INTO fza_articulos_atributos_basicos ' +
-        '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '  +
-        '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) ' +
-        'ON DUPLICATE KEY UPDATE '                     +
-        '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '      +
-        '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-      qry.ParamByName('ART').AsString  := CodArt;
-      qry.ParamByName('AV').AsInteger  := IdAv;
       qry.ParamByName('ATB').AsInteger := Integer(vNew);
-      qry.ParamByName('USR').AsString  := oUser;
-      qry.Execute;
-    end;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
   finally
     qry.Free;
   end;
