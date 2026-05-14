@@ -99,28 +99,39 @@ Si la variación tiene un solo atributo, la matriz se degenera a una fila
 única. Si no hay variación (artículo simple), la línea expone únicamente
 una cantidad escalar.
 
-### 2.3-bis Multidimensionalidad — variación por línea
+### 2.3-bis Una sola variación por sesión + coexistencia con líneas sin SKU
 
-Cada **línea** decide su propia variación. La cabecera define un valor por
-defecto (típicamente «sistema de tallas» activo de la empresa) y un flag
-**ESFIJO** que decide si las líneas pueden cambiarlo:
+Decisión cerrada (revisión posterior al diseño inicial): **una sesión tiene
+un único tallaje / variación** definido en cabecera. Todas las líneas
+MATRIZ comparten ese mismo eje pivot y conjunto.
 
-- Si la variación está **fija** en cabecera, todas las líneas la heredan y
-  no se puede cambiar.
-- Si está **variable**, en el grid de líneas aparece una columna adicional
-  cuyo encabezado se lee del nuevo campo `NOMBRE_VISIBLE_VA` en
-  `fza_variaciones_atributos` (ej: «Sistema de tallas», «Paleta»,
-  «Duración»…). Cada línea elige conjunto y se redibuja su matriz.
+Lo que **sí** puede coexistir dentro de la misma sesión:
 
-Así una sesión puede mezclar artículos con dimensiones distintas:
+| Línea | Tipo      | Usa tallaje cabecera | Genera SKU | Ejemplo                  |
+|-------|-----------|----------------------|------------|--------------------------|
+| 1     | MATRIZ    | sí                   | sí (N)     | Camiseta tallas 38-46    |
+| 2     | MATRIZ    | sí                   | sí (N)     | Polo tallas 38-46        |
+| 3     | ESCALAR   | no                   | no         | Bolso único              |
+| 4     | SERVICIO  | no                   | no         | Portes proveedor         |
 
-| Línea | Tipo      | Eje fila    | Eje pivot           | Comentario               |
-|-------|-----------|-------------|---------------------|--------------------------|
-| 1     | MATRIZ    | COLOR       | TALLA caballero     | Camiseta                 |
-| 2     | MATRIZ    | COLOR       | TALLA niño          | Camiseta infantil        |
-| 3     | MATRIZ    | —           | NUMERO calzado      | Botín (sólo un eje)      |
-| 4     | ESCALAR   | —           | —                   | Bolso único              |
-| 5     | SERVICIO  | —           | —                   | Portes proveedor         |
+Lo que **no** se mezcla en una misma sesión: artículos con tallajes
+distintos (ropa caballero 38-46 + ropa niño 4-12 en la misma sesión).
+Para eso → dos sesiones, una por tallaje.
+
+Implicaciones en esquema y código:
+
+- Los campos `CODIGO_VAR_SESLIN`, `ID_VA_PIVOT_SESLIN`,
+  `ID_AC_PIVOT_SESLIN`, `ID_VA_FILA_SESLIN`, `ID_AC_FILA_SESLIN` en
+  `fza_compras_sesiones_lineas` existen en la tabla pero **no se usan** en
+  el MVP (se quedan reservados por si en el futuro se reintroduce
+  multi-variación). El form los ignora.
+- `ESVAR_FIJA_SES` de cabecera se fuerza siempre a `'S'` desde
+  `AfterInsert`. El checkbox `chkVarFija` se mantiene en la UI por
+  histórico pero deshabilitado.
+- `TGestorMatrizCompras.ReconstruirMatriz` lee siempre el conjunto pivot
+  de cabecera (`ID_AC_PIVOT_SES`), no del override de línea.
+- Si una línea es ESCALAR o SERVICIO, la matriz no se construye para
+  esa línea (sólo se edita su cantidad escalar o se anota como servicio).
 
 ### 2.3-ter Tipos de línea
 
