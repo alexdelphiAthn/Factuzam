@@ -432,6 +432,7 @@ begin
   unqrySkus.Connection := oConn;
   unqryStockArticulos.Connection := oConn;
   unqryMovimientosArticulos.Connection := oConn;
+  unqryDetallesAtributos.Connection := oConn;
 // unqryStockArticulos.MasterSource :=
 // (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryVariacionesArticulos.MasterSource :=
@@ -446,6 +447,8 @@ begin
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryMovimientosArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  unqryDetallesAtributos.MasterSource :=
+                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryTiposIVA.Open;
   unqryFamiliaArticulos.Open;
   unqryTarifasArticulos.Open;
@@ -456,6 +459,7 @@ begin
   unqrySkus.Open;
   unqryStockArticulos.Open;
   unqryMovimientosArticulos.Open;
+  unqryDetallesAtributos.Open;
   QuitarEscribiblesVista;
 end;
 
