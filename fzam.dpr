@@ -144,6 +144,8 @@ uses
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
   UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
+  inMtoAtributosBasicos in 'src\Forms\inMtoAtributosBasicos.pas' {frmMtoAtributosBasicos},
+  UniDataAtributosBasicos in 'src\DataModules\UniDataAtributosBasicos.pas' {dmAtributosBasicos: TDataModule},
   inMtoVariaciones in 'src\Forms\inMtoVariaciones.pas' {frmMtoVariaciones},
   UniDataVariaciones in 'src\DataModules\UniDataVariaciones.pas' {dmVariaciones: TdmVariaciones},
   inMtoPropiedades in 'src\Forms\inMtoPropiedades.pas' {frmMtoPropiedades},
