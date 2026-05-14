@@ -17,13 +17,19 @@
 //     ...
 //   ]
 // }
-// "osha1" puede ser cadena vacía si la foto se subió antes de existir
-// esa funcionalidad.
+//
+// Estrategia:
+//   1) Si existen los ficheros índice (sha1_real.txt / osha1_real.txt)
+//      se leen directamente: rápido y sin tocar el filesystem.
+//   2) Si no existen (carpeta antigua, primera vez), se escanea con
+//      glob() como respaldo.
 // ----------------------------------------------------------------------
 
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_DEPRECATED);
 header('Content-Type: application/json');
+
+require __DIR__ . '/indices_helper.php';
 
 // ---------- 1. API key ----------
 $apiKeyEsperada = 'k7Hq9mZ2pXvR4nL8';
@@ -80,51 +86,65 @@ if (!is_dir($baseDir)) {
     exit;
 }
 
-// ---------- 5. Escaneo ----------
-// Buscamos solo los "_real.png" como representantes de cada foto.
+// ---------- 5. Leer índices ----------
+[$pathIdxSha1]  = indice_ruta($baseDir, 'sha1_real');
+[$pathIdxOSha1] = indice_ruta($baseDir, 'osha1_real');
+
+$usarIndices = is_file($pathIdxSha1);  // sha1_real es el mínimo necesario
+
 $fotos = [];
-$pattern = $baseDir . '*_real.png';
-$files = glob($pattern);
-if ($files === false) {
-    $files = [];
-}
 
-foreach ($files as $imgPath) {
-    $base = basename($imgPath); // p.ej. A1234_ROJO_1_real.png
+if ($usarIndices) {
+    $sha1Map  = indice_leer_todo($baseDir, 'sha1_real');
+    $osha1Map = is_file($pathIdxOSha1) ? indice_leer_todo($baseDir, 'osha1_real')
+                                        : [];
 
-    // Quitar sufijo "_real.png"
-    if (substr($base, -9) !== '_real.png') {
-        continue;
+    foreach ($sha1Map as $nombre => $sha1) {
+        $fotos[] = [
+            'nombre'   => $nombre,
+            'sha1_png' => $sha1,
+            'osha1'    => $osha1Map[$nombre] ?? '',
+        ];
     }
-    $nombre = substr($base, 0, -9);  // A1234_ROJO_1
-
-    // SHA1 del PNG: si hay .sha1 cacheado lo usamos, si no lo calculamos
-    $sha1Path = $baseDir . $nombre . '_real.sha1';
-    $sha1Png  = '';
-    if (is_file($sha1Path)) {
-        $sha1Png = trim((string) file_get_contents($sha1Path));
+} else {
+    // ---- Fallback: escaneo de filesystem ----
+    $files = glob($baseDir . '*_real.png');
+    if ($files === false) {
+        $files = [];
     }
-    if ($sha1Png === '') {
-        $sha1Png = sha1_file($imgPath);
-        if ($sha1Png === false) {
-            $sha1Png = '';
-        } else {
-            @file_put_contents($sha1Path, $sha1Png);
+    foreach ($files as $imgPath) {
+        $base = basename($imgPath);
+        if (substr($base, -9) !== '_real.png') {
+            continue;
         }
-    }
+        $nombre = substr($base, 0, -9);
 
-    // SHA1 del archivo local original (si fue registrado)
-    $osha1Path = $baseDir . $nombre . '_real.osha1';
-    $osha1     = '';
-    if (is_file($osha1Path)) {
-        $osha1 = trim((string) file_get_contents($osha1Path));
-    }
+        $sha1Path = $baseDir . $nombre . '_real.sha1';
+        $sha1Png  = '';
+        if (is_file($sha1Path)) {
+            $sha1Png = trim((string) file_get_contents($sha1Path));
+        }
+        if ($sha1Png === '') {
+            $sha1Png = sha1_file($imgPath);
+            if ($sha1Png === false) {
+                $sha1Png = '';
+            } else {
+                @file_put_contents($sha1Path, $sha1Png);
+            }
+        }
 
-    $fotos[] = [
-        'nombre'   => $nombre,
-        'sha1_png' => strtolower($sha1Png),
-        'osha1'    => strtolower($osha1),
-    ];
+        $osha1Path = $baseDir . $nombre . '_real.osha1';
+        $osha1     = '';
+        if (is_file($osha1Path)) {
+            $osha1 = trim((string) file_get_contents($osha1Path));
+        }
+
+        $fotos[] = [
+            'nombre'   => $nombre,
+            'sha1_png' => strtolower($sha1Png),
+            'osha1'    => strtolower($osha1),
+        ];
+    }
 }
 
 echo json_encode([
@@ -132,4 +152,5 @@ echo json_encode([
     'carpeta_cliente' => $carpeta,
     'count'           => count($fotos),
     'fotos'           => $fotos,
+    'origen'          => $usarIndices ? 'indices' : 'filesystem',
 ]);

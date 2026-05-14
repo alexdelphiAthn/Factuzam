@@ -1,4 +1,4 @@
-unit UFotoUploader;
+﻿unit UFotoUploader;
 
 // ----------------------------------------------------------------------
 // UFotoUploader
@@ -38,15 +38,61 @@ type
     PrefijoLocal   : string;
   end;
 
+  // Callback de progreso por hilo. Lo invoca el worker desde su hilo;
+  // el receptor (UI) debe re-encolar al hilo principal si lo necesita.
+  // - Slot:        identificador estable del hilo (0..N-1)
+  // - Archivo:     ruta o nombre del fichero que está subiendo
+  // - BytesSent:   bytes ya enviados
+  // - BytesTotal:  bytes totales (0 si desconocido)
+  // - Fase:        'start' | 'sending' | 'done' | 'error'
+  TFotoUploadProgress = reference to procedure(
+    Slot: Integer;
+    const Archivo: string;
+    BytesSent, BytesTotal: Int64;
+    const Fase: string);
+
 function CalcularSHA1Archivo(const FileName: string): string;
+
+function CalcularSubcarpeta(const RutaCompleta, CarpetaBase: string): string;
 
 function SubirFoto(const Cfg: TFotoUploadConfig;
                    const Articulo, Color: string;
                    Indice: Integer;
                    const NombreArchivoSinPrefijo: string;
-                   const SHA1LocalYaCalculado: string = ''): TFotoUploadResult;
+                   const SHA1LocalYaCalculado: string = '';
+                   Slot: Integer = -1;
+                   OnProgress: TFotoUploadProgress = nil): TFotoUploadResult;
 
 implementation
+
+// ----------------------------------------------------------------------
+// Helper para aceptar certificados autofirmados y canalizar el progreso
+// del HTTPClient hacia el callback del usuario.
+// ----------------------------------------------------------------------
+type
+  TCertHelper = class
+    Slot       : Integer;
+    Archivo    : string;
+    OnProgress : TFotoUploadProgress;
+    procedure Accept(const Sender: TObject; const ARequest: TURLRequest;
+      const Certificate: TCertificate; var Accepted: Boolean);
+    procedure SendData(const Sender: TObject; AContentLength: Int64;
+      AWriteCount: Int64; var AAbort: Boolean);
+  end;
+
+procedure TCertHelper.Accept(const Sender: TObject;
+  const ARequest: TURLRequest; const Certificate: TCertificate;
+  var Accepted: Boolean);
+begin
+  Accepted := True;
+end;
+
+procedure TCertHelper.SendData(const Sender: TObject;
+  AContentLength: Int64; AWriteCount: Int64; var AAbort: Boolean);
+begin
+  if Assigned(OnProgress) then
+    OnProgress(Slot, Archivo, AWriteCount, AContentLength, 'sending');
+end;
 
 // ----------------------------------------------------------------------
 function CalcularSHA1Archivo(const FileName: string): string;
@@ -74,17 +120,36 @@ begin
 end;
 
 // ----------------------------------------------------------------------
-type
-  TCertHelper = class
-    procedure Accept(const Sender: TObject; const ARequest: TURLRequest;
-      const Certificate: TCertificate; var Accepted: Boolean);
-  end;
-
-procedure TCertHelper.Accept(const Sender: TObject;
-  const ARequest: TURLRequest; const Certificate: TCertificate;
-  var Accepted: Boolean);
+// Devuelve la subcarpeta entre la carpeta base y el fichero.
+//   RutaCompleta = 'C:\FOTOS\temporada121\proveedor12\art.jpg'
+//   CarpetaBase  = 'C:\FOTOS'   (con o sin barra final)
+//   Resultado    = 'temporada121\proveedor12'
+// Si no hay subcarpeta intermedia, devuelve ''.
+// Si CarpetaBase no es prefijo de RutaCompleta, devuelve '' también
+// (caso raro: protege contra inconsistencias).
+// ----------------------------------------------------------------------
+function CalcularSubcarpeta(const RutaCompleta, CarpetaBase: string): string;
+var
+  Base, Resto, Dir: string;
 begin
-  Accepted := True;
+  Result := '';
+  if (RutaCompleta = '') or (CarpetaBase = '') then
+    Exit;
+
+  Base := CarpetaBase;
+  if (Length(Base) > 0) and (Base[Length(Base)] <> PathDelim) then
+    Base := Base + PathDelim;
+
+  // ¿Es CarpetaBase prefijo de RutaCompleta? (case-insensitive en Windows)
+  if AnsiCompareText(Copy(RutaCompleta, 1, Length(Base)), Base) <> 0 then
+    Exit;
+
+  Resto := Copy(RutaCompleta, Length(Base) + 1, MaxInt);
+  Dir   := ExtractFilePath(Resto);
+  // Dir viene con barra final; la quitamos
+  if (Length(Dir) > 0) and (Dir[Length(Dir)] = PathDelim) then
+    SetLength(Dir, Length(Dir) - 1);
+  Result := Dir;
 end;
 
 // ----------------------------------------------------------------------
@@ -92,7 +157,9 @@ function SubirFoto(const Cfg: TFotoUploadConfig;
                    const Articulo, Color: string;
                    Indice: Integer;
                    const NombreArchivoSinPrefijo: string;
-                   const SHA1LocalYaCalculado: string): TFotoUploadResult;
+                   const SHA1LocalYaCalculado: string;
+                   Slot: Integer;
+                   OnProgress: TFotoUploadProgress): TFotoUploadResult;
 var
   FileName: string;
   HTTP    : THTTPClient;
@@ -145,7 +212,12 @@ begin
   Form     := TMultipartFormData.Create;
   Response := TStringStream.Create('', TEncoding.UTF8);
   try
+    Helper.Slot       := Slot;
+    Helper.Archivo    := ExtractFileName(FileName);
+    Helper.OnProgress := OnProgress;
+
     HTTP.OnValidateServerCertificate := Helper.Accept;
+    HTTP.OnSendData                  := Helper.SendData;
     HTTP.CustomHeaders['X-API-Key']  := Cfg.ApiKey;
     HTTP.ConnectionTimeout := 30000;
     HTTP.ResponseTimeout   := 120000;
@@ -155,7 +227,15 @@ begin
     Form.AddField('indice',          IntToStr(Indice));
     Form.AddField('carpeta_cliente', Cfg.CarpetaCliente);
     Form.AddField('osha1',           Result.SHA1Local);
+    Form.AddField('nombre_original', ExtractFileName(FileName));
+    Form.AddField('carpeta_base',    Cfg.PrefijoLocal);
+    Form.AddField('subcarpeta',      CalcularSubcarpeta(FileName, Cfg.PrefijoLocal));
+    Form.AddField('ruta_completa',   FileName);
     Form.AddFile ('imagen',          FileName);
+
+    // Notificar al UI que este slot acaba de empezar este archivo
+    if Assigned(OnProgress) then
+      OnProgress(Slot, Helper.Archivo, 0, 0, 'start');
 
     try
       Res := HTTP.Post(Cfg.UrlUpload, Form, Response);
@@ -163,6 +243,8 @@ begin
       on E: Exception do
       begin
         Result.Mensaje := 'Upload error: ' + E.Message;
+        if Assigned(OnProgress) then
+          OnProgress(Slot, Helper.Archivo, 0, 0, 'error');
         Exit;
       end;
     end;
@@ -171,6 +253,8 @@ begin
     begin
       Result.Mensaje := Format('Upload HTTP %d: %s',
                        [Res.StatusCode, Copy(Response.DataString, 1, 500)]);
+      if Assigned(OnProgress) then
+        OnProgress(Slot, Helper.Archivo, 0, 0, 'error');
       Exit;
     end;
 
@@ -212,6 +296,8 @@ begin
 
   Result.Status  := fusOK;
   Result.Mensaje := 'Subida OK';
+  if Assigned(OnProgress) then
+    OnProgress(Slot, ExtractFileName(FileName), 1, 1, 'done');
 end;
 
 end.
