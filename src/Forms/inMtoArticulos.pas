@@ -416,6 +416,12 @@ type
       Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord;
       var AText: string);
+    procedure tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
+      Sender: TObject);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -2069,6 +2075,105 @@ begin
   else if AText = 'C' then AText := 'Conjunto'
   else if AText = 'G' then AText := 'Global'
   else AText := '';
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  qry: TUniQuery;
+  ds : TDataSet;
+  vNew: Variant;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  vNew := (Sender as TcxCustomEdit).EditingValue;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_atributos_basicos '   +
+      '   SET NOMBRE_ATB    = :VAL, '   +
+      '       USUARIO_MODIF = :USR '    +
+      ' WHERE ID_ATB = :ID';
+    qry.ParamByName('VAL').AsString  := VarToStr(vNew);
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+  ds.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  qry: TUniQuery;
+  ds : TDataSet;
+  vNew: Variant;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  vNew := (Sender as TcxCustomEdit).EditingValue;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_atributos_basicos '   +
+      '   SET VALOR_NUM_ATB = :VAL, '   +
+      '       USUARIO_MODIF = :USR '    +
+      ' WHERE ID_ATB = :ID';
+    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
+      qry.ParamByName('VAL').Clear
+    else
+      qry.ParamByName('VAL').AsFloat := Double(vNew);
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+  ds.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  qry: TUniQuery;
+  ds : TDataSet;
+  vNew: Variant;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  vNew := (Sender as TcxCustomEdit).EditingValue;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_atributos_basicos '   +
+      '   SET UNIDAD_ATB    = :VAL, '   +
+      '       USUARIO_MODIF = :USR '    +
+      ' WHERE ID_ATB = :ID';
+    qry.ParamByName('VAL').AsString  := VarToStr(vNew);
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+  ds.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
