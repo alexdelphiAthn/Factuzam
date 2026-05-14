@@ -119,6 +119,24 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Migracion CONTADOR_LINEAS_SES: cabecera lleva contador de lineas que cada
+-- nueva linea consume +10 (pasos de 10 para permitir intercalar). Mismo
+-- patron que CONTADOR_LINEAS_FAC/PED/ALB en facturas/pedidos/albaranes.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_compras_sesiones'
+     AND COLUMN_NAME  = 'CONTADOR_LINEAS_SES'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_compras_sesiones` '
+  'ADD COLUMN `CONTADOR_LINEAS_SES` int(11) NOT NULL DEFAULT 0 '
+  '  AFTER `MENSAJE_ERROR_SES`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- Migracion para soporte de eje fila como texto libre del proveedor (§12):
 -- anade ETIQUETA_TEXTO_SESFIL a fza_compras_sesiones_lineas_filas si no
 -- existe. En modo texto libre _filas_atr queda vacia y la etiqueta de la
@@ -203,6 +221,11 @@ CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
                                   COMMENT 'FK al albarán de compra generado',
   `NUMERO_ALBC_SES`             varchar(12)   DEFAULT NULL,
   `MENSAJE_ERROR_SES`           varchar(2000) DEFAULT NULL,
+
+  -- Contador de lineas (mismo patron que CONTADOR_LINEAS_FAC/PED/ALB):
+  -- el AfterInsert de cada linea hace CONTADOR + 10 -> LINEA_SESLIN.
+  -- Pasos de 10 dejan hueco para intercalar lineas nuevas (15 entre 10 y 20).
+  `CONTADOR_LINEAS_SES`         int(11)       NOT NULL DEFAULT 0,
 
   `COMENTARIOS_SES`             varchar(1000) DEFAULT NULL,
 
