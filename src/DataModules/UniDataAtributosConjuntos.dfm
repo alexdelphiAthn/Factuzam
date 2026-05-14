@@ -49,11 +49,11 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
   object unqryConjuntoDetalle: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_atributos_conjuntos_det'
-      '  (ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
+      '  (ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
       '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
-      '  (:ID_AC_ACD, :ID_AV_ACD, :ORDEN_ACD,'
-      
+      '  (:ID_AC_ACD, :ID_AV_ACD, :ORDEN_ACD, :ID_ATB_ACD,'
+
         '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODI' +
         'F)')
     SQLDelete.Strings = (
@@ -65,15 +65,15 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       'UPDATE fza_atributos_conjuntos_det'
       'SET'
       '  ID_AC_ACD = :ID_AC_ACD, ID_AV_ACD = :ID_AV_ACD,'
-      '  ORDEN_ACD = :ORDEN_ACD,'
+      '  ORDEN_ACD = :ORDEN_ACD, ID_ATB_ACD = :ID_ATB_ACD,'
       '  INSTANTE_MODIF = :INSTANTE_MODIF,'
       '  USUARIO_MODIF = :USUARIO_MODIF'
       'WHERE'
       '  ID_AC_ACD = :Old_ID_AC_ACD'
       '  AND ID_AV_ACD = :Old_ID_AV_ACD')
     SQLLock.Strings = (
-      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
+
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
@@ -81,8 +81,8 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '   AND ID_AV_ACD = :Old_ID_AV_ACD'
       ' FOR UPDATE')
     SQLRefresh.Strings = (
-      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
+
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
@@ -92,8 +92,8 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       'SELECT COUNT(*) FROM fza_atributos_conjuntos_det')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD,'
-      
+      'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
+
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
@@ -111,6 +111,22 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
         ParamType = ptInput
         Value = nil
       end>
+  end
+  object unqryAtributosBasicosLookup: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_ATB, ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB,'
+      '       DESCRIPCION_ATB, HEX_ATB, VALOR_NUM_ATB, UNIDAD_ATB'
+      '  FROM fza_atributos_basicos'
+      ' WHERE ESACTIVO_ATB = '#39'S'#39
+      ' ORDER BY ID_VA_ATB, ORDEN_ATB, NOMBRE_ATB')
+    Left = 712
+    Top = 24
+  end
+  object dsAtributosBasicosLookup: TDataSource
+    DataSet = unqryAtributosBasicosLookup
+    Left = 712
+    Top = 96
   end
   object dsConjuntoDetalle: TDataSource
     DataSet = unqryConjuntoDetalle

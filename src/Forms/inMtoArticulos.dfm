@@ -533,6 +533,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Options.Editing = False
                       Width = 160
                     end
+                    object tvSkuAtributosBasicosFUENTE_ATB: TcxGridDBColumn
+                      Caption = 'Fuente'
+                      DataBinding.FieldName = 'FUENTE_ATB'
+                      Options.Editing = False
+                      OnGetDisplayText = tvSkuAtributosBasicosFUENTE_ATBGetDisplayText
+                      Width = 80
+                    end
                   end
                   object cxgrdSkuAtributosBasicosLevel: TcxGridLevel
                     GridView = tvSkuAtributosBasicos

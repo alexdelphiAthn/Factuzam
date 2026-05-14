@@ -67,6 +67,7 @@ type
     tvValoresID_AC_ACD: TcxGridDBColumn;
     tvValoresID_AV_ACD: TcxGridDBColumn;
     tvValoresORDEN_ACD: TcxGridDBColumn;
+    tvValoresID_ATB_ACD: TcxGridDBColumn;
     tsArticulos: TcxTabSheet;
     cxgrdArticulos: TcxGrid;
     tvArticulos: TcxGridDBTableView;
@@ -122,6 +123,8 @@ begin
                                       dmmAtributosConjuntos.dsArticulosConjunto;
   (tvValoresID_AV_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
                                           dmmAtributosConjuntos.dsValoresLookup;
+  (tvValoresID_ATB_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
+                                   dmmAtributosConjuntos.dsAtributosBasicosLookup;
   cbbID_VAR_AC.Properties.ListSource :=
                                      dmmAtributosConjuntos.dsVariacionesLookup;
   cbbID_VA_AC.Properties.ListSource :=

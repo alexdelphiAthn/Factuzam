@@ -194,6 +194,7 @@ type
     tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosUNIDAD_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosETIQUETA_BASICO: TcxGridDBColumn;
+    tvSkuAtributosBasicosFUENTE_ATB: TcxGridDBColumn;
     cxgrdSkuAtributosBasicosLevel: TcxGridLevel;
     tsSKUs: TcxTabSheet;
     Panel1: TPanel;
@@ -411,6 +412,10 @@ type
     procedure tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
     procedure tvSkuAtributosBasicosDblClick(Sender: TObject);
+    procedure tvSkuAtributosBasicosFUENTE_ATBGetDisplayText(
+      Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord;
+      var AText: string);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -2055,6 +2060,17 @@ begin
   ResetForm;
 end;
 
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosFUENTE_ATBGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+begin
+  // 'A' = override por artículo, 'C' = conjunto del artículo, 'G' = global
+  if AText = 'A' then AText := 'Artículo'
+  else if AText = 'C' then AText := 'Conjunto'
+  else if AText = 'G' then AText := 'Global'
+  else AText := '';
+end;
+
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
   Sender: TObject);
 // Antes de mostrar el desplegable, filtramos el lookup por ID_VA_ATB para
@@ -2086,15 +2102,20 @@ end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
   Sender: TObject);
-// Guarda el nuevo ID_ATB_AV en fza_atributos_valores cuando el usuario
-// elige otro atributo básico del lookup. Se ejecuta inmediatamente porque
-// la rejilla está enlazada a una vista de sólo lectura: la edición
-// estándar (Post) no llegaría a la BBDD.
+// Cuando el usuario elige otro atributo básico desde el SKU del artículo
+// estamos en el contexto de ESTE artículo concreto. Persistimos un
+// override per-artículo en fza_articulos_atributos_basicos: ID_ATB_AAB.
+// La vista resuelve mediante COALESCE(override, conjunto, global) y la
+// elección aquí no contamina ni el conjunto ni el default global.
+//
+// Si el usuario limpia el lookup, BORRAMOS la fila de override (la
+// resolución cae al conjunto del artículo o, en su defecto, al global).
 var
-  qry: TUniQuery;
-  ds : TDataSet;
-  IdAv: Integer;
-  vNew: Variant;
+  qry   : TUniQuery;
+  ds    : TDataSet;
+  IdAv  : Integer;
+  vNew  : Variant;
+  CodArt: string;
 begin
   if (not Assigned(dmmArticulos)) or
      (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
@@ -2102,29 +2123,47 @@ begin
 
   ds   := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
-  IdAv := ds.FieldByName('ID_AV').AsInteger;
-  vNew := (Sender as TcxCustomEdit).EditingValue;
+  IdAv   := ds.FieldByName('ID_AV').AsInteger;
+  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  if (CodArt = '') or (IdAv = 0) then Exit;
+  vNew   := (Sender as TcxCustomEdit).EditingValue;
 
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text :=
-      'UPDATE fza_atributos_valores '   +
-      '   SET ID_ATB_AV    = :ATB, '    +
-      '       USUARIO_MODIF = :USR '    +
-      ' WHERE ID_AV = :AV';
     if VarIsNull(vNew) or (VarToStr(vNew) = '') then
-      qry.ParamByName('ATB').Clear
+    begin
+      // Limpiar override → el básico vuelve al conjunto o al global
+      qry.SQL.Text :=
+        'DELETE FROM fza_articulos_atributos_basicos ' +
+        ' WHERE CODIGO_ART_AAB = :ART '                +
+        '   AND ID_AV_AAB      = :AV';
+      qry.ParamByName('ART').AsString  := CodArt;
+      qry.ParamByName('AV').AsInteger  := IdAv;
+      qry.Execute;
+    end
     else
+    begin
+      // UPSERT del override per-artículo
+      qry.SQL.Text :=
+        'INSERT INTO fza_articulos_atributos_basicos ' +
+        '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '  +
+        '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) ' +
+        'ON DUPLICATE KEY UPDATE '                     +
+        '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '      +
+        '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+      qry.ParamByName('ART').AsString  := CodArt;
+      qry.ParamByName('AV').AsInteger  := IdAv;
       qry.ParamByName('ATB').AsInteger := Integer(vNew);
-    qry.ParamByName('USR').AsString  := oUser;
-    qry.ParamByName('AV').AsInteger  := IdAv;
-    qry.Execute;
+      qry.ParamByName('USR').AsString  := oUser;
+      qry.Execute;
+    end;
   finally
     qry.Free;
   end;
-  // Refrescamos la vista para que se carguen los nuevos campos derivados
-  // (NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB, ETIQUETA_BASICO).
+  // Refrescamos la vista para repintar NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB,
+  // FUENTE_ATB (pasa a 'A') y ETIQUETA_BASICO.
   ds.Refresh;
 end;
 
