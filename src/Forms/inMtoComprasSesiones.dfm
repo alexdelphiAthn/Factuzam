@@ -471,9 +471,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Caption = 'Variaci'#243'n fija por l'#237'nea'
                 DataBinding.DataField = 'ESVAR_FIJA_SES'
                 DataBinding.DataSource = dsTablaG
+                Enabled = False
+                Hint = 'MVP: una sesi'#243'n = un tallaje (fijo por cabecera).'
+                ShowHint = True
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 1
+                Visible = False
               end
               object lblConjPivot: TcxLabel
                 Left = 16
@@ -787,6 +791,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   object dbcLinTipo: TcxGridDBColumn
                     Caption = 'Tipo'
                     DataBinding.FieldName = 'TIPO_LINEA_SESLIN'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.DropDownListStyle = lsFixedList
+                    Properties.Items.Strings = (
+                      'MATRIZ'
+                      'ESCALAR'
+                      'SERVICIO')
                     Width = 80
                   end
                   object dbcLinCodigoArt: TcxGridDBColumn
