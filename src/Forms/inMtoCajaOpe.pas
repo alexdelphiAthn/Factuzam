@@ -186,6 +186,8 @@ type
     procedure RecalcularPrecioDesdeSku(sSKU:string);
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure ConsultarStock(const CodigoInput: string);
+    function  ValidarSkuParaVenta(const SkuFinal: string): Boolean;
+    procedure EliminarLineaPorValidacion;
     procedure BuscarEmpleados;
     procedure BuscarClientes;
     function HayLineasConDeposito: Boolean;
@@ -403,6 +405,108 @@ begin
       end;
     end;
   end;
+end;
+
+function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
+var
+  qry: TUniQuery;
+  Cantidad: Double;
+  MensajeStock: string;
+  SkuLimpio: string;
+begin
+  Result := True;
+  SkuLimpio := Trim(SkuFinal);
+  if SkuLimpio = '' then Exit;
+
+  if oCajaParams.GetBool('vgerChkExistOnly', True) then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT ESACTIVO_SKU FROM fza_articulos_skus ' +
+        ' WHERE CODIGO_UNIDAD_SKU = :sku';
+      qry.ParamByName('sku').AsString := SkuLimpio;
+      qry.Open;
+      if qry.IsEmpty then
+      begin
+        ShowMessage('El SKU "' + SkuLimpio + '" no existe en ' +
+                    'fza_articulos_skus. No se puede vender.');
+        Result := False;
+        Exit;
+      end;
+      if qry.FieldByName('ESACTIVO_SKU').AsString <> 'S' then
+      begin
+        ShowMessage('El SKU "' + SkuLimpio + '" no está activo. ' +
+                    'No se puede vender.');
+        Result := False;
+        Exit;
+      end;
+    finally
+      qry.Free;
+    end;
+  end;
+
+  if oCajaParams.GetBool('vgerChkStockOnly', False) then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      if Trim(FCodigoAlmacen) <> '' then
+      begin
+        qry.SQL.Text :=
+          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
+          '  FROM fza_articulos_stockactual ' +
+          ' WHERE CODIGO_UNIDAD_STK = :sku ' +
+          '   AND CODIGO_ALM_STK    = :alm';
+        qry.ParamByName('sku').AsString := SkuLimpio;
+        qry.ParamByName('alm').AsString := FCodigoAlmacen;
+      end
+      else
+      begin
+        qry.SQL.Text :=
+          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
+          '  FROM fza_articulos_stockactual ' +
+          ' WHERE CODIGO_UNIDAD_STK = :sku';
+        qry.ParamByName('sku').AsString := SkuLimpio;
+      end;
+      qry.Open;
+      Cantidad := qry.FieldByName('QTY').AsFloat;
+      if Cantidad <= 0 then
+      begin
+        MensajeStock := oCajaParams.GetString('vgerAvisoStockWarning',
+          'Artículo sin stock. Compruebe stock en almacén.');
+        ShowMessage(MensajeStock);
+        Result := False;
+        Exit;
+      end;
+    finally
+      qry.Free;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.EliminarLineaPorValidacion;
+begin
+  if not Assigned(DatosCaja) then Exit;
+  if not DatosCaja.cdsLineas.Active then Exit;
+
+  if DatosCaja.cdsLineas.State = dsInsert then
+    DatosCaja.cdsLineas.Cancel
+  else if DatosCaja.cdsLineas.State = dsEdit then
+  begin
+    DatosCaja.cdsLineas.Cancel;
+    if not DatosCaja.cdsLineas.IsEmpty then
+      DatosCaja.cdsLineas.Delete;
+  end;
+
+  dbtvStock.ClearItems;
+  GridRecalc(nil,
+             cxGrid1DBTableView1,
+             DatosCaja.cdsLineas,
+             DatosCaja.cdsCabecera,
+             ActualizarLabelTotal);
+  AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeCaja.txtEntradaArticuloKeyPress(Sender: TObject;
@@ -641,6 +745,17 @@ begin
                                         'CODIGO_UNIDAD_FACLIN').AsString;
     NumAtributos := DatosCaja.cdsLineas.FieldByName(
                                    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    // Validación parametrizada: SKU debe existir en fza_articulos_skus y, si
+    // procede, tener stock. Se ejecuta sólo cuando el SKU ya está definido
+    // (no es el padre a la espera de talla/color).
+    if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodigoPadre) and
+       not ValidarSkuParaVenta(SkuDetectado) then
+    begin
+      EliminarLineaPorValidacion;
+      DisplayValue := null;
+      Error := False;
+      Abort;
+    end;
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
@@ -1230,6 +1345,15 @@ begin
     NumAtributos := FNumAtributosActual;
     var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
                                         'CODIGO_UNIDAD_FACLIN').AsString;
+    // Validación parametrizada del SKU resuelto (también protege la rama de
+    // BuscarArticulo, que no pasa por tvArticuloPropertiesValidate).
+    if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) and
+       not ValidarSkuParaVenta(SkuDetectado) then
+    begin
+      EliminarLineaPorValidacion;
+      Key := 0;
+      Exit;
+    end;
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) then
     begin
        RellenarAtributosDesdeSku(SkuDetectado);
@@ -1336,6 +1460,26 @@ begin
                        'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo then
               DatosCaja.cdsLineas.Delete;
           DatosCaja.cdsLineas.EnableControls;  // Antes del Append
+          DatosCaja.cdsLineas.Append;
+          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          Key := 0;
+          Exit;
+        end;
+
+        // Validación parametrizada del SKU compuesto por talla/color. Si el
+        // SKU no existe en fza_articulos_skus o no tiene stock (según
+        // parámetros), descartamos la línea y dejamos una nueva preparada.
+        if not ValidarSkuParaVenta(SkuNuevo) then
+        begin
+          if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+            DatosCaja.cdsLineas.Cancel;
+          if not DatosCaja.cdsLineas.IsEmpty
+             and (DatosCaja.cdsLineas.FieldByName(
+                          'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
+            DatosCaja.cdsLineas.Delete;
+          DatosCaja.cdsLineas.EnableControls;
+          dbtvStock.ClearItems;
           DatosCaja.cdsLineas.Append;
           cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
           cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
@@ -1623,6 +1767,14 @@ begin
                                       'CODIGO_ART_FACLIN').AsString;
         var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
                'CODIGO_UNIDAD_FACLIN').AsString; // <-- Rescatamos el SKU
+        // Validación parametrizada del SKU resuelto en la búsqueda. Si el SKU
+        // no existe o no tiene stock (según parámetros), descartamos la línea.
+        if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
+           not ValidarSkuParaVenta(SkuDetectado) then
+        begin
+          EliminarLineaPorValidacion;
+          Exit;
+        end;
         ActualizarColumnasDinamicas(CodArticulo);
         var NumAtributos := FNumAtributosActual;
         if (Trim(SkuDetectado) <> '') and (NumAtributos > 0) then
