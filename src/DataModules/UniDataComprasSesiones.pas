@@ -202,6 +202,10 @@ begin
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
+    // Contador de lineas: cada nueva linea hace +10 sobre este valor
+    // (mismo patron que facturas/pedidos/albaranes). Arrancar en 0 => la
+    // primera linea sera 10, la segunda 20, etc.
+    FieldByName('CONTADOR_LINEAS_SES').AsInteger  := 0;
     // Prerelleno empresa/almacen del usuario logueado (igual que inventarios).
     // Sin esto el combo de serie queda vacio porque depende de CODIGO_EMP_SES,
     // y el usuario veria los combos en blanco al pulsar "+".
@@ -255,41 +259,32 @@ end;
 
 procedure TdmComprasSesiones.unqrySesionLinAfterInsert(DataSet: TDataSet);
 var
-  q       : TUniQuery;
-  sSerie  : string;
-  sNumero : string;
-  iSig    : Integer;
+  iNuevaLinea : Integer;
 begin
   inherited;
-  sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  // Contador de lineas en cabecera (mismo patron que cdsCabecera.
+  // CONTADOR_LINEAS_FAC en caja/facturas/pedidos/albaranes): cada linea
+  // suma 10 al contador y se queda con ese numero. Pasos de 10 para que
+  // el usuario pueda intercalar lineas mas adelante (ej: poner una en el
+  // 15 entre 10 y 20).
+  iNuevaLinea := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger + 10;
 
-  // LINEA_SESLIN es NOT NULL en BBDD y forma parte de la PK
-  // (SERIE, NUMERO, LINEA). Lo calculamos como max+1 sobre las lineas ya
-  // grabadas de esta sesion. RecordCount+1 sobre el dataset no sirve si la
-  // sesion lleva borrados (deja huecos => colision con PK). Vamos a BBDD.
-  iSig := 1;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT COALESCE(MAX(LINEA_SESLIN), 0) + 1 AS SIG ' +
-      '  FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
-    q.ParamByName('s').AsString := sSerie;
-    q.ParamByName('n').AsString := sNumero;
-    q.Open;
-    if not q.IsEmpty then
-      iSig := q.FieldByName('SIG').AsInteger;
-  finally
-    q.Free;
-  end;
+  // Solo actualizamos el contador en memoria; la grabacion del cabecera
+  // la hace el usuario con el boton Grabar normal (mismo patron que en
+  // caja/facturas: cdsCabecera queda en Edit, no se hace Post implicito
+  // desde AfterInsert de la linea para no comprometer al usuario con un
+  // commit prematuro del documento).
+  if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+    unqryTablaG.Edit;
+  unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger := iNuevaLinea;
 
   with unqrySesionLin do
   begin
-    FieldByName('SERIE_SES_SESLIN').AsString  := sSerie;
-    FieldByName('NUMERO_SES_SESLIN').AsString := sNumero;
-    FieldByName('LINEA_SESLIN').AsInteger     := iSig;
+    FieldByName('SERIE_SES_SESLIN').AsString  :=
+      unqryTablaG.FieldByName('SERIE_SES').AsString;
+    FieldByName('NUMERO_SES_SESLIN').AsString :=
+      unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    FieldByName('LINEA_SESLIN').AsInteger     := iNuevaLinea;
     FieldByName('TIPO_LINEA_SESLIN').AsString := 'MATRIZ';
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
