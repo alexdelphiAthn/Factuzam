@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 13/05/2026 8:07:44
+-- Backup generado: 14/05/2026 18:40:21
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -528,6 +528,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('15', 'PANT-CHIN', NULL, 5.23, NULL, 'S', '2026-05-11 19:18:00', '2026-05-11 19:16:53', 'Administrador', 'Administrador'),
   ('16', 'ZAP-OXFORD', NULL, NULL, NULL, 'S', '2026-05-08 20:10:28', '2026-05-08 20:10:28', 'Administrador', 'Administrador'),
   ('17', 'ALFALFA', NULL, 0.17, '2023-05-25 00:00:00', 'N', '2023-03-03 14:30:45', '2023-03-03 14:30:45', 'Administrador', 'Administrador'),
+  ('17', 'CHAQ-CUERO', NULL, NULL, NULL, 'S', '2026-05-13 17:33:13', '2026-05-13 17:33:13', 'Administrador', 'Administrador'),
   ('17', 'DEMO-PRO', NULL, 2, '2026-05-08 00:00:00', 'S', '2026-05-08 19:56:20', '2026-05-08 19:56:20', 'Administrador', 'Administrador'),
   ('20', 'ABRIGO-PAÑO', 'PELLIZA', 10, '2026-02-01 00:00:00', 'S', '2026-05-10 16:55:54', '2026-05-10 16:55:54', 'Administrador', 'Administrador'),
   ('20', 'ALFALFA', NULL, 0.1, '2023-03-02 00:00:00', 'N', '2023-03-04 18:14:28', '2023-03-03 14:02:47', 'Administrador', 'Administrador'),
@@ -538,7 +539,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('FER', '016', NULL, 25, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
   ('LAIBENSE', 'PATITORICO', NULL, 1.5, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador'),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
--- 28 registros exportados
+-- 29 registros exportados
 
 
 -- Tabla: fza_articulos_skus
@@ -766,77 +767,77 @@ CREATE TABLE `fza_articulos_stockactual` (
 
 -- Datos de fza_articulos_stockactual
 INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, `CANTIDAD_STK`, `INSTANTE_MODIF`, `VALOR_TOTAL_STK`, `PRECIO_MEDIO_STK`, `CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, `CANTIDAD_PTE_TRASPASAR_STK`, `CANTIDAD_PTE_RECTRASPASAR_STK`) VALUES
-  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-11 19:03:05', 50, 10, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-11 18:54:38', 0, 0, 0, 0, 0, 0);
+  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0);
 -- 71 registros exportados
 
 
@@ -1878,9 +1879,14 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (79, '2100000000647', 'BLUS-SEDA/BLANCO/S', 'EAN13', 'S', '2026-05-10 23:08:41', '2026-05-10 23:08:41', 'Administrador', 'Administrador'),
   (80, '2100000000654', 'BLUS-SEDA/NEGRO/M', 'EAN13', 'S', '2026-05-10 23:08:41', '2026-05-10 23:08:41', 'Administrador', 'Administrador'),
   (81, '2100000000661', 'BLUS-SEDA/NEGRO/S', 'EAN13', 'S', '2026-05-10 23:08:41', '2026-05-10 23:08:41', 'Administrador', 'Administrador'),
-  (82, '2100000000678', 'BLUS-SEDA/ROSA/M', 'EAN13', 'S', '2026-05-10 23:08:41', '2026-05-10 23:08:41', 'Administrador', 'Administrador');
+  (82, '2100000000678', 'BLUS-SEDA/ROSA/M', 'EAN13', 'S', '2026-05-10 23:08:41', '2026-05-10 23:08:41', 'Administrador', 'Administrador'),
+  (83, '2100000000685', 'CHAQ-CUERO/MARRON/L', 'EAN13', 'S', '2026-05-13 17:32:31', '2026-05-13 17:32:31', 'Administrador', 'Administrador'),
+  (84, '2100000000692', 'CHAQ-CUERO/MARRON/XL', 'EAN13', 'S', '2026-05-13 17:32:31', '2026-05-13 17:32:31', 'Administrador', 'Administrador'),
+  (85, '2100000000708', 'CHAQ-CUERO/NEGRO/L', 'EAN13', 'S', '2026-05-13 17:32:31', '2026-05-13 17:32:31', 'Administrador', 'Administrador'),
+  (86, '2100000000715', 'CHAQ-CUERO/NEGRO/M', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador'),
+  (87, '2100000000722', 'CHAQ-CUERO/NEGRO/XL', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
--- 81 registros exportados
+-- 86 registros exportados
 
 
 -- Tabla: fza_compras_plantillas
@@ -2245,7 +2251,7 @@ CREATE TABLE `fza_contadores` (
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
-  ('BA', '-', '-', 68, 10, 'S', 'S', '2026-05-10 23:08:41', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BA', '-', '-', 73, 10, 'S', 'S', '2026-05-13 17:32:32', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
@@ -2279,11 +2285,9 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador'),
-  ('SC', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:34:25', '2026-05-12 18:34:25', 'Administrador', 'Administrador'),
-  ('SC', '-', 'SES', 0, 6, 'S', 'S', '2026-05-11 21:05:17', '2026-05-11 21:05:17', 'Administrador', 'Administrador'),
   ('SE', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:38:25', '2026-05-12 18:38:25', 'Administrador', 'Administrador'),
   ('SE', '012', 'A1', 3, 6, 'S', 'N', '2026-05-12 19:56:12', '2026-05-12 19:52:18', 'Administrador', 'Administrador');
--- 40 registros exportados
+-- 38 registros exportados
 
 
 -- Tabla: fza_depositos_cliente
@@ -3067,1677 +3071,6 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('183', 'Modificar PRC_CREAR_ACTUALIZAR_EMPRESA', '/* ERROR DEL PARSER: Error: line 93, pos 6: Unexpected token: $$ */
-DELIMITER $$
-CREATE OR REPLACE PROCEDURE `PRC_CREAR_ACTUALIZAR_EMPRESA`(IN `pCODIGO_EMPRESA`                varchar(10), 
-																																					 IN `pRAZONSOCIAL_EMPRESA`           varchar(200),
-																																					 IN `pNIF_EMPRESA`                   varchar(50),
-																																					 IN `pMOVIL_EMPRESA`                 varchar(40),
-																																					 IN `pEMAIL_EMPRESA`                 varchar(200),
-																																					 IN `pDIRECCION1_EMPRESA`            varchar(200),
-																																					 IN `pDIRECCION2_EMPRESA`            varchar(200),
-																																					 IN `pPOBLACION_EMPRESA`             varchar(200),
-																																					 IN `pPROVINCIA_EMPRESA`             varchar(200),
-																																					 IN `pCPOSTAL_EMPRESA`               varchar(15),
-																																					 IN `pPAIS_EMPRESA`                  varchar(150),
-																																					 IN `pCODPAIS_EMPRESA`               varchar(150),
-																																					 IN `pRETENCIONES_EMPRESA`           varchar(1),
-																																					 IN `pIVA_RECARGO_EMPRESA`           varchar(1),
-																																					 IN `pREGIMENESPECIALAGRICOLA_EMPRESA` varchar(1),
-																																					 IN `pGRUPO_ZONA_IVA_EMPRESA`        varchar(10),
-																																					 IN `pUSUARIO`                       varchar(100))
-BEGIN
-
-    /* Manejo de errores para asegurar la consistencia */
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    kk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END kk;
-START TRANSACTION;
- IF( EXISTS(
-             SELECT *
-             FROM fza_empresas
-             WHERE `CODIGO_EMP_EMP` =  pCODIGO_EMPRESA) ) THEN
-  UPDATE fza_EMPRESAs
-    SET  RAZON_SOCIAL_EMP               = pRAZONSOCIAL_EMPRESA            ,
-         NIF_EMP                       = pNIF_EMPRESA                    ,
-         MOVIL_EMP                     = pMOVIL_EMPRESA                  ,
-         EMAIL_EMP                     = pEMAIL_EMPRESA                  ,
-         DIRECCION1_EMP                = pDIRECCION1_EMPRESA             ,
-         DIRECCION2_EMP                = pDIRECCION2_EMPRESA             ,
-         POBLACION_EMP                 = pPOBLACION_EMPRESA              ,
-         PROVINCIA_EMP                 = pPROVINCIA_EMPRESA              ,
-         CODIGO_POSTAL_EMP                   = pCPOSTAL_EMPRESA                ,
-         NOMBRE_PAI_EMP                      = pPAIS_EMPRESA            ,
-				 CODIGO_PAI_EMP							 = pCODPAIS_EMPRESA                ,
-         ESRETENCIONES_EMP             = pRETENCIONES_EMPRESA            ,
-         ESREGIMENESPECIALAGRICOLA_EMP = pREGIMENESPECIALAGRICOLA_EMPRESA,
-         GRUPO_ZONA_IVA_EMP            = pGRUPO_ZONA_IVA_EMPRESA,
-         USUARIO_MODIF                      = pUSUARIO,
-			   INSTANTE_MODIF                     = CURRENT_TIMESTAMP			
-  WHERE CODIGO_EMP_EMP = pCODIGO_EMPRESA;
-  ELSE
-  INSERT INTO fza_EMPRESAs (CODIGO_EMP_EMP                    ,
-                            RAZON_SOCIAL_EMP               ,
-                            NIF_EMP                       ,
-                            MOVIL_EMP                     ,
-                            EMAIL_EMP                     ,
-                            DIRECCION1_EMP                ,
-                            DIRECCION2_EMP                ,
-                            POBLACION_EMP                 ,
-                            PROVINCIA_EMP                 ,
-                            CODIGO_POSTAL_EMP                   ,
-                            NOMBRE_PAI_EMP               ,
-														CODIGO_PAI_EMP               ,
-                            ESRETENCIONES_EMP             ,
-                            ESREGIMENESPECIALAGRICOLA_EMP ,
-                            GRUPO_ZONA_IVA_EMP            ,
-                            USUARIO_MODIF                      ,
-                            USUARIO_ALTA                       ,
-                            INSTANTE_ALTA                      ,
-													  INSTANTE_MODIF		
-                    ) VALUES
-                           (pCODIGO_EMPRESA      ,
-                            pRAZONSOCIAL_EMPRESA ,
-                            pNIF_EMPRESA         ,
-                            pMOVIL_EMPRESA       ,
-                            pEMAIL_EMPRESA       ,
-                            pDIRECCION1_EMPRESA  ,
-                            pDIRECCION2_EMPRESA  ,
-                            pPOBLACION_EMPRESA   ,
-                            pPROVINCIA_EMPRESA   ,
-                            pCPOSTAL_EMPRESA     ,
-                            pPAIS_EMPRESA        ,
-														pCODPAIS_EMPRESA     ,
-                            pRETENCIONES_EMPRESA ,
-                            pREGIMENESPECIALAGRICOLA_EMPRESA,
-                            pGRUPO_ZONA_IVA_EMPRESA,
-                            pUSUARIO             ,
-                            pUSUARIO             ,
-                            CURRENT_TIMESTAMP,
-											      CURRENT_TIMESTAMP						
-                            );
-  END IF;
-  COMMIT;
-END $$
-
-DELIMITER ;', '2026-05-12 17:22:48', '2026-05-12 17:22:48', 'Administrador', 'Administrador'),
-  ('184', 'Modificar PRC_FNC_GET_PRECIO_ARTICULO_FECHA', 'delimiter $$
-
-create or replace procedure PRC_FNC_GET_PRECIO_ARTICULO_FECHA(
-  in pCODIGO_ARTICULO varchar(20),
-  in pFECHA date,
-  inout pPRECIOSALIDA_TARIFA decimal(19,6),
-  inout pPRECIOFINAL_TARIFA decimal(19,6),
-  inout pPORCEN_DTO_TARIFA decimal(19,6),
-  inout pPRECIO_DTO_TARIFA decimal(19,6))
-BEGIN
-  SELECT PRECIO_SALIDA_ARTTAR,
-    PRECIO_FINAL_ARTTAR,
-    PORCENTAJE_DTO_ARTTAR,
-    PRECIO_DTO_ARTTAR
-    INTO
-    pPRECIOSALIDA_TARIFA,
-    pPRECIOFINAL_TARIFA,
-    pPORCEN_DTO_TARIFA,
-    pPRECIO_DTO_TARIFA
-    FROM fza_articulos_tarifas
-    WHERE CODIGO_ART_ARTTAR = pCODIGO_ARTICULO
-    AND FECHA_DESDE_ARTTAR <= pFECHA
-    AND (FECHA_HASTA_ARTTAR IS NULL OR
-    FECHA_HASTA_ARTTAR >= pFECHA);
-END $$
-
-delimiter;', '2026-05-12 17:24:02', '2026-05-12 17:24:02', 'Administrador', 'Administrador'),
-  ('185', 'Modificar SP_RECALCULAR_PMP_SKU_ALMACEN', 'delimiter $$
-
-create or replace procedure SP_RECALCULAR_PMP_SKU_ALMACEN(
-  in p_CodigoEmpresa varchar(20),
-  in p_CodigoSKU varchar(50),
-  in p_CodigoAlmacen varchar(10))
-BEGIN
-  DECLARE done INT DEFAULT FALSE;
-  DECLARE vIdTipo, vIdSerie, vIdNro, vIdLinea VARCHAR(20);
-  DECLARE vTipoMov VARCHAR(1);
-  DECLARE vCantidad, vPrecioCoste DECIMAL(19, 6);
-  DECLARE vStockAcumulado DECIMAL(19, 6) DEFAULT 0;
-  DECLARE vPMP_Actual DECIMAL(19, 6) DEFAULT 0;
-  DECLARE curMovimientos CURSOR FOR
-  SELECT TIPO_DOC_MOV,
-    SERIE_DOC_MOV,
-    NUMERO_DOC_MOV,
-    LINEA_MOV,
-    TIPO_MOV,
-    CANTIDAD_MOV,
-    PRECIO_COSTE_UNITARIO_MOV
-    FROM fza_movimientos_almacen
-    WHERE CODIGO_UNIDAD_MOV = p_CodigoSKU
-    AND CODIGO_ALM_MOV = p_CodigoAlmacen
-    ORDER BY FECHA_MOV ASC, INSTANTE_ALTA ASC
-    FOR
-  UPDATE;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-  OPEN curMovimientos;
-  read_loop: LOOP
-    FETCH curMovimientos INTO vIdTipo, vIdSerie, vIdNro, vIdLinea, vTipoMov, vCantidad, vPrecioCoste;
-    IF done THEN
-      LEAVE read_loop;
-    END IF;
-    IF vTipoMov = ''E'' THEN
-      IF vStockAcumulado <= 0 THEN
-        SET vPMP_Actual = vPrecioCoste;
-      ELSE
-        SET vPMP_Actual = (
-        (vStockAcumulado * vPMP_Actual) + (vCantidad * vPrecioCoste)
-        ) / (vStockAcumulado + vCantidad);
-      END IF;
-      SET vStockAcumulado = vStockAcumulado + vCantidad;
-    ELSE
-      SET vStockAcumulado = vStockAcumulado - vCantidad;
-    END IF;
-    UPDATE fza_movimientos_almacen
-      SET PRECIO_MEDIO_MOV = vPMP_Actual,
-      TOTAL_COSTE_MOV = IF (vTipoMov = ''E'', vCantidad * vPrecioCoste, vCantidad * vPMP_Actual)
-      WHERE TIPO_DOC_MOV = vIdTipo
-      AND SERIE_DOC_MOV = vIdSerie
-      AND NUMERO_DOC_MOV = vIdNro
-      AND LINEA_MOV = vIdLinea;
-  END LOOP;
-    CLOSE curMovimientos;
-    INSERT INTO fza_articulos_stockactual
-    (CODIGO_ALM_STK,
-      CODIGO_UNIDAD_STK,
-      CANTIDAD_STK,
-      VALOR_TOTAL_STK,
-      PRECIO_MEDIO_STK,
-      INSTANTE_MODIF)
-      VALUES (p_CodigoAlmacen, p_CodigoSKU,
-      vStockAcumulado,
-      IF (vStockAcumulado > 0, vStockAcumulado * vPMP_Actual, 0),
-      IF (vStockAcumulado > 0, vPMP_Actual, 0),
-      NOW())
-      ON DUPLICATE KEY
-    UPDATE
-    CANTIDAD_STK = vStockAcumulado,
-    VALOR_TOTAL_STK = IF (vStockAcumulado > 0, vStockAcumulado * vPMP_Actual, 0),
-    PRECIO_MEDIO_STK = IF (vStockAcumulado > 0, vPMP_Actual, 0),
-    INSTANTE_MODIF = NOW();
-  END $$
-
-delimiter;', '2026-05-12 17:25:00', '2026-05-12 17:25:00', 'Administrador', 'Administrador'),
-  ('186', 'compras_sesiones_datos', '-- ============================================================================
--- Módulo Compras → Sesiones — datos de configuración (post-DDL)
---
--- Idempotente: se puede ejecutar tantas veces como haga falta sin destruir
--- nada ni duplicar filas.
---
--- Aplicar DESPUÉS de compras_sesiones.sql (el DDL del esquema).
--- ============================================================================
-
--- ---------------------------------------------------------------------------
--- 1. Contadores de Sesiones de Compra
--- ---------------------------------------------------------------------------
--- TIPO_DOC_CON = ''SC'' (varchar(2)) — la app llama PRC_GET_CONTADOR con ''SC''.
---
--- Las series se crean en Mantenimiento > Empresas > pestaña "4_Series"
--- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER=''SC''. Cada
--- combinación (EMPRESA, SERIE) tiene su propio contador en fza_contadores.
---
--- El contador correspondiente se crea bajo demanda (la primera vez que se
--- pide el siguiente número). Como referencia/seed se inserta una fila
--- global (''SC'', ''-'', ''-'') que el SP puede usar de fallback si la
--- (EMPRESA, SERIE) concreta aún no tiene entrada propia.
-INSERT INTO `fza_contadores`
-  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
-   `ESACTIVO_CON`, `DEFAULT_CON`,
-   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
-VALUES
-  (''SC'', ''-'', ''-'', 0, 6, ''S'', ''S'',
-   NOW(), ''Administrador'', ''Administrador'')
-ON DUPLICATE KEY UPDATE
-  `ESACTIVO_CON` = VALUES(`ESACTIVO_CON`),
-  `INSTANTE_MODIF` = NOW(),
-  `USUARIO_MODIF` = ''Administrador'';
-
--- ---------------------------------------------------------------------------
--- 2. Registro de ventanas en fza_winforms
--- ---------------------------------------------------------------------------
-INSERT INTO `fza_winforms`
-  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
-   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
-VALUES
-  (''ComprasSesiones'', ''Sesiones de Compra'', ''Sesiones1'',
-   ''inMtoComprasSesiones.TfrmMtoComprasSesiones'', ''Ctrl+S'',
-   ''UniDataComprasSesiones.TdmComprasSesiones'', 99),
-  (''ComprasPlantillas'', ''Plantillas de Compra'', ''mnuComprasPlantillas'',
-   ''inMtoComprasPlantillas.TfrmMtoComprasPlantillas'', '''',
-   ''UniDataComprasSesiones.TdmComprasSesiones'', 1)
-ON DUPLICATE KEY UPDATE
-  `CAPTION_WINF`      = VALUES(`CAPTION_WINF`),
-  `MENUITEM_WINF`     = VALUES(`MENUITEM_WINF`),
-  `UNITF_WINF`        = VALUES(`UNITF_WINF`),
-  `SHORTCUT_WINF`     = VALUES(`SHORTCUT_WINF`),
-  `DATAMODULE_WINF`   = VALUES(`DATAMODULE_WINF`),
-  `NUM_VENTANAS_WINF` = VALUES(`NUM_VENTANAS_WINF`);
-
--- Reasignar el atajo Ctrl+S de AtributosConjuntos a Ctrl+Alt+S para que
--- Sesiones de Compra pueda usar Ctrl+S sin colisión.
-UPDATE `fza_winforms`
-   SET `SHORTCUT_WINF` = ''Ctrl+Alt+S''
- WHERE `CALL_WINF` = ''AtributosConjuntos''
-   AND `SHORTCUT_WINF` = ''Ctrl+S'';
-
--- ---------------------------------------------------------------------------
--- 3. Etiquetas visibles del eje pivot (parametrizable por dominio)
--- ---------------------------------------------------------------------------
--- El campo NOMBRE_VISIBLE_VA se añade en compras_sesiones.sql; aquí solo
--- cargamos los valores por defecto. Si la app ya está en producción y
--- estos valores tienen otro significado, ajústalos a mano.
-UPDATE `fza_variaciones_atributos`
-   SET `NOMBRE_VISIBLE_VA` = ''Sistema de tallas''
- WHERE `ID_ATB_VA` = ''TAL''
-   AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '''');
-
-UPDATE `fza_variaciones_atributos`
-   SET `NOMBRE_VISIBLE_VA` = ''Paleta''
- WHERE `ID_ATB_VA` = ''CO''
-   AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '''');
-
--- ---------------------------------------------------------------------------
--- 4. Inicializar PAD_ART_FAM y CONTADOR_ART_FAM en familias ya existentes
--- ---------------------------------------------------------------------------
--- Las columnas se anaden via ALTER en compras_sesiones.sql con DEFAULT 0/5,
--- pero MySQL no aplica el DEFAULT a filas existentes; quedan en NULL para
--- los registros que ya estaban en la tabla antes de la migracion. Eso hace
--- que el TcxDBSpinEdit muestre vacio y no permita editar bien.
--- Los inicializamos a 0 y 5 respectivamente.
-
-UPDATE `fza_articulos_familias`
-   SET `CONTADOR_ART_FAM` = 0
- WHERE `CONTADOR_ART_FAM` IS NULL;
-
-UPDATE `fza_articulos_familias`
-   SET `PAD_ART_FAM` = 5
- WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
-
-UPDATE `fza_articulos_familias`
-   SET `ESCONTADOR_ART_FAM` = ''N''
- WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '''';
-
--- ---------------------------------------------------------------------------
--- Listo. Reabrir Factuzam para que cargue los nuevos winforms.
--- ---------------------------------------------------------------------------
-', '2026-05-12 18:34:23', '2026-05-12 18:34:23', 'Administrador', 'Administrador'),
-  ('187', 'compras_sesiones', '-- ============================================================================
--- Módulo Compras — Sesiones (pre-pedidos / pre-albaranes)
--- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
---
--- Principio: nada de lo que vive en estas tablas se materializa en las tablas
--- maestras (fza_articulos, fza_articulos_skus, fza_codigos_barras,
--- fza_articulos_proveedores) hasta que el usuario pulsa explícitamente
--- "Crear artículos y documentos". Toda materialización es código Delphi
--- explícito, en una sola transacción.
--- ============================================================================
-
--- ---------------------------------------------------------------------------
--- IDEMPOTENCIA
--- ---------------------------------------------------------------------------
--- Este script se puede ejecutar tantas veces como haga falta:
---   - CREATE TABLE … IF NOT EXISTS para todas las tablas.
---   - CREATE OR REPLACE VIEW para las vistas.
---   - El ALTER TABLE de la sección 0 se envuelve en un bloque dinámico
---     que comprueba INFORMATION_SCHEMA antes de añadir la columna.
---
--- Los datos de configuración (contadores, fza_winforms, etiquetas
--- NOMBRE_VISIBLE_VA) viven en compras_sesiones_datos.sql.
--- ---------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------
--- 0. Cambio a tabla existente: nombre visible del atributo de variación
--- ---------------------------------------------------------------------------
--- Permite que la UI etiquete el eje pivot con un nombre parametrizable
--- (ej. "Sistema de tallas", "Paleta", "Duración"...) en lugar de un literal
--- hardcoded. Aplica a toda la app, no sólo a las sesiones de compra.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_variaciones_atributos''
-     AND COLUMN_NAME  = ''NOMBRE_VISIBLE_VA''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_variaciones_atributos` ''
-  ''ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL ''
-  ''COMMENT ''''Etiqueta a mostrar en formularios cuando este atributo pivota'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 0-bis. Numero de digitos de relleno por familia para autogenerar codigos
--- ---------------------------------------------------------------------------
--- Cuando el usuario teclea en la sesion el codigo de una familia (ej.
--- "BOLSOS") con ESCONTADOR_ART_FAM=''S'' y CONTADOR_ART_FAM > 0, la sesion
--- expande automaticamente al siguiente codigo:
---   <CODIGO_FAM_FAM> + RIGHT(''00000'' + CAST(CONTADOR_ART_FAM AS CHAR), PAD)
--- y se incrementa el contador.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_articulos_familias''
-     AND COLUMN_NAME  = ''PAD_ART_FAM''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_articulos_familias` ''
-  ''ADD COLUMN `PAD_ART_FAM` int(11) NOT NULL DEFAULT 5 ''
-  ''COMMENT ''''Numero de digitos del relleno cuando se autogenera codigo articulo desde familia'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Inicializar valores en familias ya existentes (las columnas son NULLABLE
--- en bases antiguas; el DEFAULT solo aplica a filas nuevas). Los TcxDBSpinEdit
--- no permiten editar campos NULL con MinValue>0, asi que ponemos defaults.
-UPDATE `fza_articulos_familias`
-   SET `CONTADOR_ART_FAM` = 0
- WHERE `CONTADOR_ART_FAM` IS NULL;
-
-UPDATE `fza_articulos_familias`
-   SET `PAD_ART_FAM` = 5
- WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
-
-UPDATE `fza_articulos_familias`
-   SET `ESCONTADOR_ART_FAM` = ''N''
- WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '''';
-
--- Migración idempotente para la cabecera: añadir parámetros de fórmula
--- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
--- sin ellos. La definición del CREATE TABLE más abajo los incluye.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones''
-     AND COLUMN_NAME  = ''MULTIPLO_REDONDEO_SES''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones` ''
-  ''ADD COLUMN `MULTIPLO_REDONDEO_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
-  ''  AFTER `ESREDONDEO_VENTA_SES`, ''
-  ''ADD COLUMN `AJUSTE_FINAL_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
-  ''  AFTER `MULTIPLO_REDONDEO_SES`, ''
-  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''' ''
-  ''  AFTER `AJUSTE_FINAL_SES`'',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Migracion auxiliar: si la tabla ya tenia MULTIPLO/AJUSTE pero no
--- ESPRECIO_POR_SKU_SES (caso intermedio), anadirla suelta.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones''
-     AND COLUMN_NAME  = ''ESPRECIO_POR_SKU_SES''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones` ''
-  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 1. Cabecera de sesión
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
-  `SERIE_SES`                   varchar(12)   NOT NULL,
-  `NUMERO_SES`                  varchar(12)   NOT NULL,
-  `FECHA_SES`                   date          NOT NULL,
-  `ESTADO_SES`                  varchar(10)   NOT NULL DEFAULT ''BORRADOR''
-                                  COMMENT ''BORRADOR | CERRADA | ANULADA'',
-  `CODIGO_EMP_SES`              varchar(20)   NOT NULL,
-  `CODIGO_PRV_SES`              varchar(20)   NOT NULL,
-  `REF_PRV_SES`                 varchar(100)  DEFAULT NULL
-                                  COMMENT ''Referencia del proveedor (PO ext.)'',
-  `CODIGO_FAM_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Familia objetivo de los artículos a crear'',
-  `CODIGO_ALM_SES`              varchar(10)   DEFAULT NULL
-                                  COMMENT ''Almacén destino si se materializa albarán'',
-  `MONEDA_SES`                  varchar(5)    NOT NULL DEFAULT ''EUR'',
-  `TIPO_IVA_SES`                varchar(2)    NOT NULL DEFAULT ''N'',
-  `PORCENTAJE_MARGEN_SES`       decimal(7,4)  DEFAULT NULL
-                                  COMMENT ''% margen comercial por defecto'',
-  `CODIGO_TAR_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Tarifa de salida sugerida'',
-  `ESPRECIOS_SIN_IVA_SES`       char(1)       NOT NULL DEFAULT ''S'',
-  `ESREDONDEO_VENTA_SES`        char(1)       NOT NULL DEFAULT ''N'',
-  `MULTIPLO_REDONDEO_SES`       decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Multiplo al que sube el precio venta calculado. 0 = sin redondeo.'',
-  `AJUSTE_FINAL_SES`            decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Sumando final tras el redondeo. Negativo para acabar en .99, .95, etc.'',
-  `ESPRECIO_POR_SKU_SES`        char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=permite override de precio compra/venta por cada SKU (fza_compras_sesiones_lineas_skus_precios).'',
-
-  -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES=''N''.
-  `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''FK fza_variaciones — TC, TEMP, etc. (defecto)'',
-  `ID_VA_PIVOT_SES`             varchar(20)   DEFAULT NULL
-                                  COMMENT ''Atributo cuyos valores pivotan a columnas (defecto)'',
-  `ID_AC_PIVOT_SES`             int(11)       DEFAULT NULL
-                                  COMMENT ''FK fza_atributos_conjuntos para el eje pivot (defecto)'',
-  `ID_VA_FILA_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Atributo cuyos valores generan filas (defecto)'',
-  `ID_AC_FILA_SES`              int(11)       DEFAULT NULL
-                                  COMMENT ''FK fza_atributos_conjuntos para el eje fila (defecto)'',
-  `ESVAR_FIJA_SES`              char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=todas las líneas obligadas a usar la var por defecto. N=cada línea decide.'',
-
-  -- Prefijo y contador para EAN13 al materializar
-  `PREFIJO_EAN_SES`             varchar(7)    DEFAULT NULL
-                                  COMMENT ''Prefijo EAN13 (ej 841xxxx) — null = usa global'',
-
-  -- Materialización
-  `INSTANTE_MATERIALIZA_SES`    datetime      DEFAULT NULL,
-  `USUARIO_MATERIALIZA_SES`     varchar(50)   DEFAULT NULL,
-  `ESGENERA_PEDIDO_SES`         char(1)       NOT NULL DEFAULT ''N'',
-  `ESGENERA_ALBARAN_SES`        char(1)       NOT NULL DEFAULT ''N'',
-  `SERIE_PEDC_SES`              varchar(12)   DEFAULT NULL
-                                  COMMENT ''FK al pedido de compra generado'',
-  `NUMERO_PEDC_SES`             varchar(12)   DEFAULT NULL,
-  `SERIE_ALBC_SES`              varchar(12)   DEFAULT NULL
-                                  COMMENT ''FK al albarán de compra generado'',
-  `NUMERO_ALBC_SES`             varchar(12)   DEFAULT NULL,
-  `MENSAJE_ERROR_SES`           varchar(2000) DEFAULT NULL,
-
-  `COMENTARIOS_SES`             varchar(1000) DEFAULT NULL,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES`, `NUMERO_SES`),
-  INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SES`, `FECHA_SES`),
-  INDEX `IDX_SES_ESTADO`    (`ESTADO_SES`),
-  INDEX `IDX_SES_FAM`       (`CODIGO_FAM_SES`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 2. Propiedades de cabecera (fijas / variables)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_props` (
-  `SERIE_SES_SESPROP`           varchar(12)   NOT NULL,
-  `NUMERO_SES_SESPROP`          varchar(12)   NOT NULL,
-  `CODIGO_PROP_SESPROP`         varchar(20)   NOT NULL
-                                  COMMENT ''FK fza_propiedades'',
-  `ESFIJO_SESPROP`              char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=todas las líneas heredan obligatoriamente'',
-  `ID_PV_DEFECTO_SESPROP`       int(11)       DEFAULT NULL
-                                  COMMENT ''Si tipo LISTA, FK fza_propiedades_valores'',
-  `VALOR_DEFECTO_SESPROP`       varchar(255)  DEFAULT NULL
-                                  COMMENT ''Si tipo TEXTO/NUMERO/BOOL'',
-  `ORDEN_SESPROP`               int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESPROP`, `NUMERO_SES_SESPROP`, `CODIGO_PROP_SESPROP`),
-  INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 3. Kits de cantidades (cabecera + detalle)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits` (
-  `SERIE_SES_SESKIT`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESKIT`           varchar(12)   NOT NULL,
-  `CODIGO_SESKIT`               varchar(20)   NOT NULL
-                                  COMMENT ''CURVA-STD, MUESTRA, etc.'',
-  `NOMBRE_SESKIT`               varchar(100)  NOT NULL,
-  `DESCRIPCION_SESKIT`          varchar(255)  DEFAULT NULL,
-  `ID_VA_DESTINO_SESKIT`        varchar(20)   NOT NULL
-                                  COMMENT ''Atributo destino del kit, normalmente el pivot (TAL)'',
-  `CODIGO_PRV_SESKIT`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Si el kit nace de plantilla del proveedor'',
-  `ORDEN_SESKIT`                int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESKIT`, `NUMERO_SES_SESKIT`, `CODIGO_SESKIT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits_det` (
-  `SERIE_SES_SESKITD`           varchar(12)   NOT NULL,
-  `NUMERO_SES_SESKITD`          varchar(12)   NOT NULL,
-  `CODIGO_SESKIT_SESKITD`       varchar(20)   NOT NULL,
-  `VALOR_DESTINO_SESKITD`       varchar(50)   NOT NULL
-                                  COMMENT ''Valor del atributo destino: "38", "M", etc.'',
-  `CANTIDAD_SESKITD`            decimal(19,6) NOT NULL DEFAULT 0,
-  `ORDEN_SESKITD`               int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`SERIE_SES_SESKITD`, `NUMERO_SES_SESKITD`,
-               `CODIGO_SESKIT_SESKITD`, `VALOR_DESTINO_SESKITD`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 4. Líneas (un artículo tentativo cada una)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas` (
-  `SERIE_SES_SESLIN`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLIN`           varchar(12)   NOT NULL,
-  `LINEA_SESLIN`                int(11)       NOT NULL,
-
-  -- Artículo tentativo
-  `CODIGO_ART_TENTATIVO_SESLIN` varchar(20)   NOT NULL
-                                  COMMENT ''Lo que el usuario teclea; se valida contra fza_articulos'',
-  `DESCRIPCION_SESLIN`          varchar(1000) NOT NULL,
-  `CODIGO_FAM_SESLIN`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Override sobre la familia de cabecera; null = hereda'',
-  `TIPO_LINEA_SESLIN`           varchar(10)   NOT NULL DEFAULT ''MATRIZ''
-                                  COMMENT ''MATRIZ | ESCALAR | SERVICIO | KIT'',
-  `TIPO_ART_SESLIN`             varchar(10)   NOT NULL DEFAULT ''ESTANDAR''
-                                  COMMENT ''Derivado de TIPO_LINEA: SERVICIO=>SERVICIO, KIT=>KIT, resto=>ESTANDAR'',
-  `TIPO_IVA_SESLIN`             varchar(2)    DEFAULT NULL
-                                  COMMENT ''Override sobre cabecera'',
-  `TIPO_CANTIDAD_SESLIN`        varchar(20)   NOT NULL DEFAULT ''Uds'',
-  `ESTRAZABLE_SESLIN`           char(1)       NOT NULL DEFAULT ''N'',
-
-  -- Override de variación por línea (sólo aplica si ESVAR_FIJA_SES=''N'' en cabecera)
-  `CODIGO_VAR_SESLIN`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Override sobre cabecera, null = hereda'',
-  `ID_VA_PIVOT_SESLIN`          varchar(20)   DEFAULT NULL,
-  `ID_AC_PIVOT_SESLIN`          int(11)       DEFAULT NULL,
-  `ID_VA_FILA_SESLIN`           varchar(20)   DEFAULT NULL,
-  `ID_AC_FILA_SESLIN`           int(11)       DEFAULT NULL,
-
-  -- Cantidad escalar (sólo para TIPO_LINEA = ESCALAR o SERVICIO)
-  `CANTIDAD_ESCALAR_SESLIN`     decimal(19,6) DEFAULT NULL,
-
-  -- Conflicto con artículo existente
-  `ESDUPLICADO_SESLIN`          char(1)       NOT NULL DEFAULT ''N'',
-  `ACCION_DUPLICADO_SESLIN`     varchar(10)   DEFAULT NULL
-                                  COMMENT ''REUSAR | RENOMBRAR | NULL'',
-  `CODIGO_ART_REUSAR_SESLIN`    varchar(20)   DEFAULT NULL
-                                  COMMENT ''Si ACCION=REUSAR, código del artículo a reutilizar'',
-
-  -- Precios
-  `PRECIO_COMPRA_SESLIN`        decimal(19,6) NOT NULL DEFAULT 0,
-  `PORCENTAJE_MARGEN_SESLIN`    decimal(7,4)  DEFAULT NULL,
-  `PRECIO_VENTA_SESLIN`         decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Calculado pero override-able'',
-  `REF_PRV_SESLIN`              varchar(100)  DEFAULT NULL,
-
-  -- Calculado
-  `TOTAL_UNIDADES_SESLIN`       decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Suma de celdas (read-only, lo refresca el form)'',
-  `TOTAL_LINEA_SESLIN`          decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''TOTAL_UNIDADES * PRECIO_COMPRA'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`),
-  INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 5. Filas de la matriz por línea (combinación de atributos no-pivot)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas` (
-  `SERIE_SES_SESFIL`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESFIL`           varchar(12)   NOT NULL,
-  `LINEA_SES_SESFIL`            int(11)       NOT NULL,
-  `ID_FILA_SESFIL`              int(11)       NOT NULL
-                                  COMMENT ''Numerador 1..N dentro de la línea'',
-  `ORDEN_SESFIL`                int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESFIL`, `NUMERO_SES_SESFIL`,
-               `LINEA_SES_SESFIL`, `ID_FILA_SESFIL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- Valores de atributo que distinguen cada fila (uno o varios).
--- Caso típico: una sola entrada por fila: ID_VA = ''CO'', VALOR = ''NEGRO''.
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas_atr` (
-  `SERIE_SES_SESFILAT`          varchar(12)   NOT NULL,
-  `NUMERO_SES_SESFILAT`         varchar(12)   NOT NULL,
-  `LINEA_SES_SESFILAT`          int(11)       NOT NULL,
-  `ID_FILA_SESFILAT`            int(11)       NOT NULL,
-  `ID_VA_SESFILAT`              varchar(20)   NOT NULL
-                                  COMMENT ''Atributo: CO, MAT, TEMP...'',
-  `ID_AV_SESFILAT`              int(11)       NOT NULL
-                                  COMMENT ''FK fza_atributos_valores'',
-
-  PRIMARY KEY (`SERIE_SES_SESFILAT`, `NUMERO_SES_SESFILAT`,
-               `LINEA_SES_SESFILAT`, `ID_FILA_SESFILAT`, `ID_VA_SESFILAT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot, almacén)
--- ---------------------------------------------------------------------------
--- La dimensión de almacén permite que una misma sesión genere varios
--- albaranes de compra (uno por almacén destino) sin perder la trazabilidad
--- talla×color por almacén. El pedido de compra al proveedor sigue siendo
--- único — agrega cantidades de todos los almacenes por SKU.
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
-  `SERIE_SES_SESCEL`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESCEL`           varchar(12)   NOT NULL,
-  `LINEA_SES_SESCEL`            int(11)       NOT NULL,
-  `ID_FILA_SES_SESCEL`          int(11)       NOT NULL,
-  `ID_AV_PIVOT_SESCEL`          int(11)       NOT NULL
-                                  COMMENT ''FK fza_atributos_valores del eje pivot (TALLA)'',
-  `CODIGO_ALM_SESCEL`           varchar(10)   NOT NULL DEFAULT ''''
-                                  COMMENT ''Almacén destino (FK fza_almacenes). '''''''' = usa el de cabecera al materializar.'',
-  `CANTIDAD_SESCEL`             decimal(19,6) NOT NULL,
-
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`,
-               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`,
-               `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`),
-  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`),
-  INDEX `IDX_SESCEL_ALM`      (`CODIGO_ALM_SESCEL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- Migración idempotente: añadir CODIGO_ALM_SESCEL en bases que ya tienen
--- la tabla creada con el PK antiguo. Si la columna ya existe, no toca nada.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones_celdas''
-     AND COLUMN_NAME  = ''CODIGO_ALM_SESCEL''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones_celdas` ''
-  ''ADD COLUMN `CODIGO_ALM_SESCEL` varchar(10) NOT NULL DEFAULT '''''''' ''
-  ''  AFTER `ID_AV_PIVOT_SESCEL`, ''
-  ''DROP PRIMARY KEY, ''
-  ''ADD PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`, ''
-  ''                 `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, ''
-  ''                 `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`), ''
-  ''ADD INDEX `IDX_SESCEL_ALM` (`CODIGO_ALM_SESCEL`)'',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 7. Override de propiedades variables por línea
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_props` (
-  `SERIE_SES_SESLPROP`          varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLPROP`         varchar(12)   NOT NULL,
-  `LINEA_SES_SESLPROP`          int(11)       NOT NULL,
-  `CODIGO_PROP_SESLPROP`        varchar(20)   NOT NULL,
-  `ID_PV_SESLPROP`              int(11)       DEFAULT NULL,
-  `VALOR_LIBRE_SESLPROP`        varchar(255)  DEFAULT NULL,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLPROP`, `NUMERO_SES_SESLPROP`,
-               `LINEA_SES_SESLPROP`, `CODIGO_PROP_SESLPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 7-bis. Override de precio por SKU (coste y venta)
--- ---------------------------------------------------------------------------
--- Cuando una linea necesita precio distinto en una talla/color concretos,
--- aqui se sobreescribe. Si no hay fila para un SKU, se usan los precios
--- de la linea (PRECIO_COMPRA_SESLIN / PRECIO_VENTA_SESLIN).
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_skus_precios` (
-  `SERIE_SES_SESLINSKU`         varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLINSKU`        varchar(12)   NOT NULL,
-  `LINEA_SES_SESLINSKU`         int(11)       NOT NULL,
-  `ID_FILA_SES_SESLINSKU`       int(11)       NOT NULL,
-  `ID_AV_PIVOT_SESLINSKU`       int(11)       NOT NULL,
-  `PRECIO_COMPRA_SESLINSKU`     decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Override del precio de coste para este SKU. NULL = hereda de la linea.'',
-  `PRECIO_VENTA_SESLINSKU`      decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Override del precio de venta para este SKU. NULL = hereda de la linea.'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLINSKU`, `NUMERO_SES_SESLINSKU`,
-               `LINEA_SES_SESLINSKU`, `ID_FILA_SES_SESLINSKU`,
-               `ID_AV_PIVOT_SESLINSKU`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 8. Vistas auxiliares para el formulario
--- ---------------------------------------------------------------------------
-
--- Resumen de cada sesión: nº de líneas, nº de SKUs potenciales, total.
-CREATE OR REPLACE VIEW `VI_SES_RESUMEN` AS
-SELECT
-  S.`SERIE_SES`,
-  S.`NUMERO_SES`,
-  S.`FECHA_SES`,
-  S.`CODIGO_PRV_SES`,
-  S.`CODIGO_FAM_SES`,
-  S.`ESTADO_SES`,
-  (SELECT COUNT(*) FROM `fza_compras_sesiones_lineas` L
-    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
-      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS NUM_LINEAS,
-  (SELECT COUNT(*) FROM `fza_compras_sesiones_celdas` C
-    WHERE C.`SERIE_SES_SESCEL`  = S.`SERIE_SES`
-      AND C.`NUMERO_SES_SESCEL` = S.`NUMERO_SES`
-      AND C.`CANTIDAD_SESCEL`   > 0) AS NUM_SKUS_POTENCIALES,
-  (SELECT IFNULL(SUM(L.`TOTAL_LINEA_SESLIN`), 0)
-     FROM `fza_compras_sesiones_lineas` L
-    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
-      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS TOTAL_COMPRA
-FROM `fza_compras_sesiones` S;
-
--- Detalle "explotado" para previsualizar qué SKUs se materializarán.
--- Incluye el almacén destino (resuelto a cabecera si la celda lo tiene vacío).
-CREATE OR REPLACE VIEW `VI_SES_PREVIEW_SKUS` AS
-SELECT
-  L.`SERIE_SES_SESLIN`           AS SERIE,
-  L.`NUMERO_SES_SESLIN`          AS NUMERO,
-  L.`LINEA_SESLIN`               AS LINEA,
-  L.`CODIGO_ART_TENTATIVO_SESLIN` AS CODIGO_ART,
-  L.`DESCRIPCION_SESLIN`         AS DESCRIPCION,
-  C.`ID_FILA_SES_SESCEL`         AS ID_FILA,
-  C.`ID_AV_PIVOT_SESCEL`         AS ID_AV_PIVOT,
-  AVP.`AV`                       AS VALOR_PIVOT,
-  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
-                                 AS CODIGO_ALM,
-  C.`CANTIDAD_SESCEL`            AS CANTIDAD,
-  L.`PRECIO_COMPRA_SESLIN`       AS PRECIO_COMPRA,
-  L.`PRECIO_VENTA_SESLIN`        AS PRECIO_VENTA
-FROM `fza_compras_sesiones_lineas`   L
-JOIN `fza_compras_sesiones`          S
-  ON S.`SERIE_SES`         = L.`SERIE_SES_SESLIN`
- AND S.`NUMERO_SES`        = L.`NUMERO_SES_SESLIN`
-JOIN `fza_compras_sesiones_celdas`   C
-  ON C.`SERIE_SES_SESCEL`  = L.`SERIE_SES_SESLIN`
- AND C.`NUMERO_SES_SESCEL` = L.`NUMERO_SES_SESLIN`
- AND C.`LINEA_SES_SESCEL`  = L.`LINEA_SESLIN`
-JOIN `fza_atributos_valores`         AVP
-  ON AVP.`ID_AV`           = C.`ID_AV_PIVOT_SESCEL`
-WHERE C.`CANTIDAD_SESCEL`  > 0;
-
--- Resumen agregado por almacén para la pestaña Materialización.
-CREATE OR REPLACE VIEW `VI_SES_RESUMEN_ALMACEN` AS
-SELECT
-  C.`SERIE_SES_SESCEL`           AS SERIE,
-  C.`NUMERO_SES_SESCEL`          AS NUMERO,
-  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
-                                 AS CODIGO_ALM,
-  COUNT(*)                       AS NUM_SKUS,
-  SUM(C.`CANTIDAD_SESCEL`)       AS UNIDADES_TOTAL
-FROM `fza_compras_sesiones_celdas` C
-JOIN `fza_compras_sesiones`        S
-  ON S.`SERIE_SES`         = C.`SERIE_SES_SESCEL`
- AND S.`NUMERO_SES`        = C.`NUMERO_SES_SESCEL`
-WHERE C.`CANTIDAD_SESCEL`  > 0
-GROUP BY C.`SERIE_SES_SESCEL`, C.`NUMERO_SES_SESCEL`,
-         IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`);
-
--- ---------------------------------------------------------------------------
--- 8-bis. Plantillas globales de cabecera (reutilizables al crear sesión)
--- ---------------------------------------------------------------------------
--- Permite guardar una configuración de cabecera + propiedades + kits con un
--- nombre y reutilizarla al crear sesiones nuevas. Sufijos: SESPL / SESPLPROP /
--- SESPLKIT / SESPLKITD.
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas` (
-  `CODIGO_SESPL`                varchar(20)   NOT NULL,
-  `NOMBRE_SESPL`                varchar(100)  NOT NULL,
-  `DESCRIPCION_SESPL`           varchar(255)  DEFAULT NULL,
-  `CODIGO_PRV_SESPL`            varchar(20)   DEFAULT NULL
-                                  COMMENT ''Plantilla específica de proveedor; null = global'',
-  `CODIGO_FAM_SESPL`            varchar(20)   DEFAULT NULL,
-  `TIPO_IVA_SESPL`              varchar(2)    DEFAULT NULL,
-  `PORCENTAJE_MARGEN_SESPL`     decimal(7,4)  DEFAULT NULL,
-  `CODIGO_TAR_SESPL`            varchar(20)   DEFAULT NULL,
-  `CODIGO_VAR_SESPL`            varchar(20)   DEFAULT NULL,
-  `ID_VA_PIVOT_SESPL`           varchar(20)   DEFAULT NULL,
-  `ID_AC_PIVOT_SESPL`           int(11)       DEFAULT NULL,
-  `ID_VA_FILA_SESPL`            varchar(20)   DEFAULT NULL,
-  `ID_AC_FILA_SESPL`            int(11)       DEFAULT NULL,
-  `ESVAR_FIJA_SESPL`            char(1)       NOT NULL DEFAULT ''N'',
-  `ESACTIVA_SESPL`              char(1)       NOT NULL DEFAULT ''S'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`CODIGO_SESPL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_props` (
-  `CODIGO_SESPL_SESPLPROP`      varchar(20)   NOT NULL,
-  `CODIGO_PROP_SESPLPROP`       varchar(20)   NOT NULL,
-  `ESFIJO_SESPLPROP`            char(1)       NOT NULL DEFAULT ''N'',
-  `ID_PV_DEFECTO_SESPLPROP`     int(11)       DEFAULT NULL,
-  `VALOR_DEFECTO_SESPLPROP`     varchar(255)  DEFAULT NULL,
-  `ORDEN_SESPLPROP`             int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`, `CODIGO_PROP_SESPLPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits` (
-  `CODIGO_SESPL_SESPLKIT`       varchar(20)   NOT NULL,
-  `CODIGO_SESPLKIT`             varchar(20)   NOT NULL,
-  `NOMBRE_SESPLKIT`             varchar(100)  NOT NULL,
-  `ID_VA_DESTINO_SESPLKIT`      varchar(20)   NOT NULL,
-  `ORDEN_SESPLKIT`              int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`, `CODIGO_SESPLKIT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
-  `CODIGO_SESPL_SESPLKITD`      varchar(20)   NOT NULL,
-  `CODIGO_SESPLKIT_SESPLKITD`   varchar(20)   NOT NULL,
-  `VALOR_DESTINO_SESPLKITD`     varchar(50)   NOT NULL,
-  `CANTIDAD_SESPLKITD`          decimal(19,6) NOT NULL DEFAULT 0,
-  `ORDEN_SESPLKITD`             int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLKITD`,
-               `CODIGO_SESPLKIT_SESPLKITD`,
-               `VALOR_DESTINO_SESPLKITD`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 9. Contador propio
--- ---------------------------------------------------------------------------
--- Inserción esperada en fza_contadores para numerar sesiones:
---
--- INSERT INTO fza_contadores (CODIGO_CON, TIPO_DOC_CON, ULTIMO_CON, ...)
--- VALUES (''SESCOMPRA'', ''SESCOMPRA'', 0, ...);
---
--- Y otro para el prefijo EAN13 si la sesión no define uno propio.
-
--- ---------------------------------------------------------------------------
--- 10. NOTAS sobre la materialización
--- ---------------------------------------------------------------------------
--- Estas tablas NO tienen triggers que toquen fza_articulos*, fza_codigos_barras
--- ni fza_articulos_proveedores. La materialización es un procedimiento Delphi
--- ubicado en `src/Lib/inLibComprasSesionesMaterializar.pas` que dentro de una
--- única TUniTransaction:
---
---   1. Verifica conflictos contra fza_articulos.
---   2. Para cada línea no marcada como REUSAR:
---        INSERT INTO fza_articulos (...)
---        INSERT INTO fza_articulos_conjuntos_asign (...)   (pivot + fila)
---        Para cada propiedad fija de cabecera y variable de línea:
---           INSERT INTO fza_articulos_propiedades (...)
---   3. Para cada celda con CANTIDAD > 0:
---        INSERT INTO fza_articulos_skus (...)
---        INSERT INTO fza_atributos_sku (...)   (uno por atributo de fila + pivot)
---        INSERT INTO fza_codigos_barras (CODIGO_BARRAS_CB generado por inLibEAN13)
---   4. Upsert en fza_articulos_proveedores con precio último y ref.
---   5. Si ESGENERA_PEDIDO_SES = ''S'':
---        INSERT en fza_pedidos_compra + lineas (uno por SKU * cantidad agregada).
---   6. Si ESGENERA_ALBARAN_SES = ''S'':
---        INSERT en fza_albaranes_compra + lineas + fza_movimientos_almacen.
---   7. UPDATE fza_compras_sesiones SET ESTADO_SES=''CERRADA'',
---          referencia_pedido, referencia_albaran, instante/usuario_materializa.
---
--- Cualquier fallo → ROLLBACK. La sesión sigue en BORRADOR con
--- MENSAJE_ERROR_SES poblado.
-', '2026-05-12 18:38:00', '2026-05-12 18:38:00', 'Administrador', 'Administrador'),
-  ('188', 'compras_sesiones_datos', '-- ============================================================================
--- Módulo Compras → Sesiones — datos de configuración (post-DDL)
---
--- Idempotente: se puede ejecutar tantas veces como haga falta sin destruir
--- nada ni duplicar filas.
---
--- Aplicar DESPUÉS de compras_sesiones.sql (el DDL del esquema).
--- ============================================================================
-
--- ---------------------------------------------------------------------------
--- 1. Contadores de Sesiones de Compra
--- ---------------------------------------------------------------------------
--- TIPO_DOC_CON = ''SE'' (varchar(2)) — la app llama PRC_GET_CONTADOR con ''SE''.
---
--- Las series se crean en Mantenimiento > Empresas > pestaña "4_Series"
--- añadiendo filas en fza_empresas_series con TIPO_DOC_EMPSER=''SE''. Cada
--- combinación (EMPRESA, SERIE) tiene su propio contador en fza_contadores.
---
--- El contador correspondiente se crea bajo demanda (la primera vez que se
--- pide el siguiente número). Como referencia/seed se inserta una fila
--- global (''SE'', ''-'', ''-'') que el SP puede usar de fallback si la
--- (EMPRESA, SERIE) concreta aún no tiene entrada propia.
-INSERT INTO `fza_contadores`
-  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
-   `ESACTIVO_CON`, `DEFAULT_CON`,
-   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
-VALUES
-  (''SE'', ''-'', ''-'', 0, 6, ''S'', ''S'',
-   NOW(), ''Administrador'', ''Administrador'')
-ON DUPLICATE KEY UPDATE
-  `ESACTIVO_CON` = VALUES(`ESACTIVO_CON`),
-  `INSTANTE_MODIF` = NOW(),
-  `USUARIO_MODIF` = ''Administrador'';
-
--- ---------------------------------------------------------------------------
--- 2. Registro de ventanas en fza_winforms
--- ---------------------------------------------------------------------------
-INSERT INTO `fza_winforms`
-  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
-   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
-VALUES
-  (''ComprasSesiones'', ''Sesiones de Compra'', ''Sesiones1'',
-   ''inMtoComprasSesiones.TfrmMtoComprasSesiones'', ''Ctrl+S'',
-   ''UniDataComprasSesiones.TdmComprasSesiones'', 99),
-  (''ComprasPlantillas'', ''Plantillas de Compra'', ''mnuComprasPlantillas'',
-   ''inMtoComprasPlantillas.TfrmMtoComprasPlantillas'', '''',
-   ''UniDataComprasSesiones.TdmComprasSesiones'', 1)
-ON DUPLICATE KEY UPDATE
-  `CAPTION_WINF`      = VALUES(`CAPTION_WINF`),
-  `MENUITEM_WINF`     = VALUES(`MENUITEM_WINF`),
-  `UNITF_WINF`        = VALUES(`UNITF_WINF`),
-  `SHORTCUT_WINF`     = VALUES(`SHORTCUT_WINF`),
-  `DATAMODULE_WINF`   = VALUES(`DATAMODULE_WINF`),
-  `NUM_VENTANAS_WINF` = VALUES(`NUM_VENTANAS_WINF`);
-
--- Reasignar el atajo Ctrl+S de AtributosConjuntos a Ctrl+Alt+S para que
--- Sesiones de Compra pueda usar Ctrl+S sin colisión.
-UPDATE `fza_winforms`
-   SET `SHORTCUT_WINF` = ''Ctrl+Alt+S''
- WHERE `CALL_WINF` = ''AtributosConjuntos''
-   AND `SHORTCUT_WINF` = ''Ctrl+S'';
-
--- ---------------------------------------------------------------------------
--- 3. Etiquetas visibles del eje pivot (parametrizable por dominio)
--- ---------------------------------------------------------------------------
--- El campo NOMBRE_VISIBLE_VA se añade en compras_sesiones.sql; aquí solo
--- cargamos los valores por defecto. Si la app ya está en producción y
--- estos valores tienen otro significado, ajústalos a mano.
-UPDATE `fza_variaciones_atributos`
-   SET `NOMBRE_VISIBLE_VA` = ''Sistema de tallas''
- WHERE `ID_ATB_VA` = ''TAL''
-   AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '''');
-
-UPDATE `fza_variaciones_atributos`
-   SET `NOMBRE_VISIBLE_VA` = ''Paleta''
- WHERE `ID_ATB_VA` = ''CO''
-   AND (`NOMBRE_VISIBLE_VA` IS NULL OR `NOMBRE_VISIBLE_VA` = '''');
-
--- ---------------------------------------------------------------------------
--- Nota: la inicializacion de PAD_ART_FAM/CONTADOR_ART_FAM/ESCONTADOR_ART_FAM
--- en familias preexistentes vive en compras_sesiones.sql §0-bis, justo
--- despues del ALTER que crea las columnas. Asi no peta nunca por orden de
--- ejecucion (si la columna no existia, no hay UPDATE que pueda fallar).
--- ---------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------
--- Listo. Reabrir Factuzam para que cargue los nuevos winforms.
--- ---------------------------------------------------------------------------
-', '2026-05-12 18:38:23', '2026-05-12 18:38:23', 'Administrador', 'Administrador'),
-  ('189', 'compras_sesiones', '-- ============================================================================
--- Módulo Compras — Sesiones (pre-pedidos / pre-albaranes)
--- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
---
--- Principio: nada de lo que vive en estas tablas se materializa en las tablas
--- maestras (fza_articulos, fza_articulos_skus, fza_codigos_barras,
--- fza_articulos_proveedores) hasta que el usuario pulsa explícitamente
--- "Crear artículos y documentos". Toda materialización es código Delphi
--- explícito, en una sola transacción.
--- ============================================================================
-
--- ---------------------------------------------------------------------------
--- IDEMPOTENCIA
--- ---------------------------------------------------------------------------
--- Este script se puede ejecutar tantas veces como haga falta:
---   - CREATE TABLE … IF NOT EXISTS para todas las tablas.
---   - CREATE OR REPLACE VIEW para las vistas.
---   - El ALTER TABLE de la sección 0 se envuelve en un bloque dinámico
---     que comprueba INFORMATION_SCHEMA antes de añadir la columna.
---
--- Los datos de configuración (contadores, fza_winforms, etiquetas
--- NOMBRE_VISIBLE_VA) viven en compras_sesiones_datos.sql.
--- ---------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------
--- 0. Cambio a tabla existente: nombre visible del atributo de variación
--- ---------------------------------------------------------------------------
--- Permite que la UI etiquete el eje pivot con un nombre parametrizable
--- (ej. "Sistema de tallas", "Paleta", "Duración"...) en lugar de un literal
--- hardcoded. Aplica a toda la app, no sólo a las sesiones de compra.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_variaciones_atributos''
-     AND COLUMN_NAME  = ''NOMBRE_VISIBLE_VA''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_variaciones_atributos` ''
-  ''ADD COLUMN `NOMBRE_VISIBLE_VA` varchar(50) DEFAULT NULL ''
-  ''COMMENT ''''Etiqueta a mostrar en formularios cuando este atributo pivota'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 0-bis. Numero de digitos de relleno por familia para autogenerar codigos
--- ---------------------------------------------------------------------------
--- Cuando el usuario teclea en la sesion el codigo de una familia (ej.
--- "BOLSOS") con ESCONTADOR_ART_FAM=''S'' y CONTADOR_ART_FAM > 0, la sesion
--- expande automaticamente al siguiente codigo:
---   <CODIGO_FAM_FAM> + RIGHT(''00000'' + CAST(CONTADOR_ART_FAM AS CHAR), PAD)
--- y se incrementa el contador.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_articulos_familias''
-     AND COLUMN_NAME  = ''PAD_ART_FAM''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_articulos_familias` ''
-  ''ADD COLUMN `PAD_ART_FAM` int(11) NOT NULL DEFAULT 5 ''
-  ''COMMENT ''''Numero de digitos del relleno cuando se autogenera codigo articulo desde familia'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Inicializar valores en familias ya existentes (las columnas son NULLABLE
--- en bases antiguas; el DEFAULT solo aplica a filas nuevas). Los TcxDBSpinEdit
--- no permiten editar campos NULL con MinValue>0, asi que ponemos defaults.
-UPDATE `fza_articulos_familias`
-   SET `CONTADOR_ART_FAM` = 0
- WHERE `CONTADOR_ART_FAM` IS NULL;
-
-UPDATE `fza_articulos_familias`
-   SET `PAD_ART_FAM` = 5
- WHERE `PAD_ART_FAM` IS NULL OR `PAD_ART_FAM` = 0;
-
-UPDATE `fza_articulos_familias`
-   SET `ESCONTADOR_ART_FAM` = ''N''
- WHERE `ESCONTADOR_ART_FAM` IS NULL OR `ESCONTADOR_ART_FAM` = '''';
-
--- Migración idempotente para la cabecera: añadir parámetros de fórmula
--- de precio venta (MULTIPLO_REDONDEO, AJUSTE_FINAL) si la tabla ya existe
--- sin ellos. La definición del CREATE TABLE más abajo los incluye.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones''
-     AND COLUMN_NAME  = ''MULTIPLO_REDONDEO_SES''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones` ''
-  ''ADD COLUMN `MULTIPLO_REDONDEO_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
-  ''  AFTER `ESREDONDEO_VENTA_SES`, ''
-  ''ADD COLUMN `AJUSTE_FINAL_SES` decimal(19,6) NOT NULL DEFAULT 0 ''
-  ''  AFTER `MULTIPLO_REDONDEO_SES`, ''
-  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''' ''
-  ''  AFTER `AJUSTE_FINAL_SES`'',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Migracion auxiliar: si la tabla ya tenia MULTIPLO/AJUSTE pero no
--- ESPRECIO_POR_SKU_SES (caso intermedio), anadirla suelta.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones''
-     AND COLUMN_NAME  = ''ESPRECIO_POR_SKU_SES''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones` ''
-  ''ADD COLUMN `ESPRECIO_POR_SKU_SES` char(1) NOT NULL DEFAULT ''''N'''''',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 1. Cabecera de sesión
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones` (
-  `SERIE_SES`                   varchar(12)   NOT NULL,
-  `NUMERO_SES`                  varchar(12)   NOT NULL,
-  `FECHA_SES`                   date          NOT NULL,
-  `ESTADO_SES`                  varchar(10)   NOT NULL DEFAULT ''BORRADOR''
-                                  COMMENT ''BORRADOR | CERRADA | ANULADA'',
-  `CODIGO_EMP_SES`              varchar(20)   NOT NULL,
-  `CODIGO_PRV_SES`              varchar(20)   NOT NULL,
-  `REF_PRV_SES`                 varchar(100)  DEFAULT NULL
-                                  COMMENT ''Referencia del proveedor (PO ext.)'',
-  `CODIGO_FAM_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Familia objetivo de los artículos a crear'',
-  `CODIGO_ALM_SES`              varchar(10)   DEFAULT NULL
-                                  COMMENT ''Almacén destino si se materializa albarán'',
-  `MONEDA_SES`                  varchar(5)    NOT NULL DEFAULT ''EUR'',
-  `TIPO_IVA_SES`                varchar(2)    NOT NULL DEFAULT ''N'',
-  `PORCENTAJE_MARGEN_SES`       decimal(7,4)  DEFAULT NULL
-                                  COMMENT ''% margen comercial por defecto'',
-  `CODIGO_TAR_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Tarifa de salida sugerida'',
-  `ESPRECIOS_SIN_IVA_SES`       char(1)       NOT NULL DEFAULT ''S'',
-  `ESREDONDEO_VENTA_SES`        char(1)       NOT NULL DEFAULT ''N'',
-  `MULTIPLO_REDONDEO_SES`       decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Multiplo al que sube el precio venta calculado. 0 = sin redondeo.'',
-  `AJUSTE_FINAL_SES`            decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Sumando final tras el redondeo. Negativo para acabar en .99, .95, etc.'',
-  `ESPRECIO_POR_SKU_SES`        char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=permite override de precio compra/venta por cada SKU (fza_compras_sesiones_lineas_skus_precios).'',
-
-  -- Variación POR DEFECTO. Cada línea puede sobreescribirla si ESVAR_FIJA_SES=''N''.
-  `CODIGO_VAR_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''FK fza_variaciones — TC, TEMP, etc. (defecto)'',
-  `ID_VA_PIVOT_SES`             varchar(20)   DEFAULT NULL
-                                  COMMENT ''Atributo cuyos valores pivotan a columnas (defecto)'',
-  `ID_AC_PIVOT_SES`             int(11)       DEFAULT NULL
-                                  COMMENT ''FK fza_atributos_conjuntos para el eje pivot (defecto)'',
-  `ID_VA_FILA_SES`              varchar(20)   DEFAULT NULL
-                                  COMMENT ''Atributo cuyos valores generan filas (defecto)'',
-  `ID_AC_FILA_SES`              int(11)       DEFAULT NULL
-                                  COMMENT ''FK fza_atributos_conjuntos para el eje fila (defecto)'',
-  `ESVAR_FIJA_SES`              char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=todas las líneas obligadas a usar la var por defecto. N=cada línea decide.'',
-
-  -- Prefijo y contador para EAN13 al materializar
-  `PREFIJO_EAN_SES`             varchar(7)    DEFAULT NULL
-                                  COMMENT ''Prefijo EAN13 (ej 841xxxx) — null = usa global'',
-
-  -- Materialización
-  `INSTANTE_MATERIALIZA_SES`    datetime      DEFAULT NULL,
-  `USUARIO_MATERIALIZA_SES`     varchar(50)   DEFAULT NULL,
-  `ESGENERA_PEDIDO_SES`         char(1)       NOT NULL DEFAULT ''N'',
-  `ESGENERA_ALBARAN_SES`        char(1)       NOT NULL DEFAULT ''N'',
-  `SERIE_PEDC_SES`              varchar(12)   DEFAULT NULL
-                                  COMMENT ''FK al pedido de compra generado'',
-  `NUMERO_PEDC_SES`             varchar(12)   DEFAULT NULL,
-  `SERIE_ALBC_SES`              varchar(12)   DEFAULT NULL
-                                  COMMENT ''FK al albarán de compra generado'',
-  `NUMERO_ALBC_SES`             varchar(12)   DEFAULT NULL,
-  `MENSAJE_ERROR_SES`           varchar(2000) DEFAULT NULL,
-
-  `COMENTARIOS_SES`             varchar(1000) DEFAULT NULL,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES`, `NUMERO_SES`),
-  INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SES`, `FECHA_SES`),
-  INDEX `IDX_SES_ESTADO`    (`ESTADO_SES`),
-  INDEX `IDX_SES_FAM`       (`CODIGO_FAM_SES`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 2. Propiedades de cabecera (fijas / variables)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_props` (
-  `SERIE_SES_SESPROP`           varchar(12)   NOT NULL,
-  `NUMERO_SES_SESPROP`          varchar(12)   NOT NULL,
-  `CODIGO_PROP_SESPROP`         varchar(20)   NOT NULL
-                                  COMMENT ''FK fza_propiedades'',
-  `ESFIJO_SESPROP`              char(1)       NOT NULL DEFAULT ''N''
-                                  COMMENT ''S=todas las líneas heredan obligatoriamente'',
-  `ID_PV_DEFECTO_SESPROP`       int(11)       DEFAULT NULL
-                                  COMMENT ''Si tipo LISTA, FK fza_propiedades_valores'',
-  `VALOR_DEFECTO_SESPROP`       varchar(255)  DEFAULT NULL
-                                  COMMENT ''Si tipo TEXTO/NUMERO/BOOL'',
-  `ORDEN_SESPROP`               int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESPROP`, `NUMERO_SES_SESPROP`, `CODIGO_PROP_SESPROP`),
-  INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 3. Kits de cantidades (cabecera + detalle)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits` (
-  `SERIE_SES_SESKIT`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESKIT`           varchar(12)   NOT NULL,
-  `CODIGO_SESKIT`               varchar(20)   NOT NULL
-                                  COMMENT ''CURVA-STD, MUESTRA, etc.'',
-  `NOMBRE_SESKIT`               varchar(100)  NOT NULL,
-  `DESCRIPCION_SESKIT`          varchar(255)  DEFAULT NULL,
-  `ID_VA_DESTINO_SESKIT`        varchar(20)   NOT NULL
-                                  COMMENT ''Atributo destino del kit, normalmente el pivot (TAL)'',
-  `CODIGO_PRV_SESKIT`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Si el kit nace de plantilla del proveedor'',
-  `ORDEN_SESKIT`                int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESKIT`, `NUMERO_SES_SESKIT`, `CODIGO_SESKIT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_kits_det` (
-  `SERIE_SES_SESKITD`           varchar(12)   NOT NULL,
-  `NUMERO_SES_SESKITD`          varchar(12)   NOT NULL,
-  `CODIGO_SESKIT_SESKITD`       varchar(20)   NOT NULL,
-  `VALOR_DESTINO_SESKITD`       varchar(50)   NOT NULL
-                                  COMMENT ''Valor del atributo destino: "38", "M", etc.'',
-  `CANTIDAD_SESKITD`            decimal(19,6) NOT NULL DEFAULT 0,
-  `ORDEN_SESKITD`               int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`SERIE_SES_SESKITD`, `NUMERO_SES_SESKITD`,
-               `CODIGO_SESKIT_SESKITD`, `VALOR_DESTINO_SESKITD`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 4. Líneas (un artículo tentativo cada una)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas` (
-  `SERIE_SES_SESLIN`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLIN`           varchar(12)   NOT NULL,
-  `LINEA_SESLIN`                int(11)       NOT NULL,
-
-  -- Artículo tentativo
-  `CODIGO_ART_TENTATIVO_SESLIN` varchar(20)   NOT NULL
-                                  COMMENT ''Lo que el usuario teclea; se valida contra fza_articulos'',
-  `DESCRIPCION_SESLIN`          varchar(1000) NOT NULL,
-  `CODIGO_FAM_SESLIN`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Override sobre la familia de cabecera; null = hereda'',
-  `TIPO_LINEA_SESLIN`           varchar(10)   NOT NULL DEFAULT ''MATRIZ''
-                                  COMMENT ''MATRIZ | ESCALAR | SERVICIO | KIT'',
-  `TIPO_ART_SESLIN`             varchar(10)   NOT NULL DEFAULT ''ESTANDAR''
-                                  COMMENT ''Derivado de TIPO_LINEA: SERVICIO=>SERVICIO, KIT=>KIT, resto=>ESTANDAR'',
-  `TIPO_IVA_SESLIN`             varchar(2)    DEFAULT NULL
-                                  COMMENT ''Override sobre cabecera'',
-  `TIPO_CANTIDAD_SESLIN`        varchar(20)   NOT NULL DEFAULT ''Uds'',
-  `ESTRAZABLE_SESLIN`           char(1)       NOT NULL DEFAULT ''N'',
-
-  -- Override de variación por línea (sólo aplica si ESVAR_FIJA_SES=''N'' en cabecera)
-  `CODIGO_VAR_SESLIN`           varchar(20)   DEFAULT NULL
-                                  COMMENT ''Override sobre cabecera, null = hereda'',
-  `ID_VA_PIVOT_SESLIN`          varchar(20)   DEFAULT NULL,
-  `ID_AC_PIVOT_SESLIN`          int(11)       DEFAULT NULL,
-  `ID_VA_FILA_SESLIN`           varchar(20)   DEFAULT NULL,
-  `ID_AC_FILA_SESLIN`           int(11)       DEFAULT NULL,
-
-  -- Cantidad escalar (sólo para TIPO_LINEA = ESCALAR o SERVICIO)
-  `CANTIDAD_ESCALAR_SESLIN`     decimal(19,6) DEFAULT NULL,
-
-  -- Conflicto con artículo existente
-  `ESDUPLICADO_SESLIN`          char(1)       NOT NULL DEFAULT ''N'',
-  `ACCION_DUPLICADO_SESLIN`     varchar(10)   DEFAULT NULL
-                                  COMMENT ''REUSAR | RENOMBRAR | NULL'',
-  `CODIGO_ART_REUSAR_SESLIN`    varchar(20)   DEFAULT NULL
-                                  COMMENT ''Si ACCION=REUSAR, código del artículo a reutilizar'',
-
-  -- Precios
-  `PRECIO_COMPRA_SESLIN`        decimal(19,6) NOT NULL DEFAULT 0,
-  `PORCENTAJE_MARGEN_SESLIN`    decimal(7,4)  DEFAULT NULL,
-  `PRECIO_VENTA_SESLIN`         decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Calculado pero override-able'',
-  `REF_PRV_SESLIN`              varchar(100)  DEFAULT NULL,
-
-  -- Calculado
-  `TOTAL_UNIDADES_SESLIN`       decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''Suma de celdas (read-only, lo refresca el form)'',
-  `TOTAL_LINEA_SESLIN`          decimal(19,6) NOT NULL DEFAULT 0
-                                  COMMENT ''TOTAL_UNIDADES * PRECIO_COMPRA'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`),
-  INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 5. Filas de la matriz por línea (combinación de atributos no-pivot)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas` (
-  `SERIE_SES_SESFIL`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESFIL`           varchar(12)   NOT NULL,
-  `LINEA_SES_SESFIL`            int(11)       NOT NULL,
-  `ID_FILA_SESFIL`              int(11)       NOT NULL
-                                  COMMENT ''Numerador 1..N dentro de la línea'',
-  `ORDEN_SESFIL`                int(11)       NOT NULL DEFAULT 0,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESFIL`, `NUMERO_SES_SESFIL`,
-               `LINEA_SES_SESFIL`, `ID_FILA_SESFIL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- Valores de atributo que distinguen cada fila (uno o varios).
--- Caso típico: una sola entrada por fila: ID_VA = ''CO'', VALOR = ''NEGRO''.
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_filas_atr` (
-  `SERIE_SES_SESFILAT`          varchar(12)   NOT NULL,
-  `NUMERO_SES_SESFILAT`         varchar(12)   NOT NULL,
-  `LINEA_SES_SESFILAT`          int(11)       NOT NULL,
-  `ID_FILA_SESFILAT`            int(11)       NOT NULL,
-  `ID_VA_SESFILAT`              varchar(20)   NOT NULL
-                                  COMMENT ''Atributo: CO, MAT, TEMP...'',
-  `ID_AV_SESFILAT`              int(11)       NOT NULL
-                                  COMMENT ''FK fza_atributos_valores'',
-
-  PRIMARY KEY (`SERIE_SES_SESFILAT`, `NUMERO_SES_SESFILAT`,
-               `LINEA_SES_SESFILAT`, `ID_FILA_SESFILAT`, `ID_VA_SESFILAT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 6. Celdas de la matriz: cantidad por (línea, fila, valor pivot, almacén)
--- ---------------------------------------------------------------------------
--- La dimensión de almacén permite que una misma sesión genere varios
--- albaranes de compra (uno por almacén destino) sin perder la trazabilidad
--- talla×color por almacén. El pedido de compra al proveedor sigue siendo
--- único — agrega cantidades de todos los almacenes por SKU.
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_celdas` (
-  `SERIE_SES_SESCEL`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESCEL`           varchar(12)   NOT NULL,
-  `LINEA_SES_SESCEL`            int(11)       NOT NULL,
-  `ID_FILA_SES_SESCEL`          int(11)       NOT NULL,
-  `ID_AV_PIVOT_SESCEL`          int(11)       NOT NULL
-                                  COMMENT ''FK fza_atributos_valores del eje pivot (TALLA)'',
-  `CODIGO_ALM_SESCEL`           varchar(10)   NOT NULL DEFAULT ''''
-                                  COMMENT ''Almacén destino (FK fza_almacenes). '''''''' = usa el de cabecera al materializar.'',
-  `CANTIDAD_SESCEL`             decimal(19,6) NOT NULL,
-
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`,
-               `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`,
-               `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`),
-  INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`),
-  INDEX `IDX_SESCEL_ALM`      (`CODIGO_ALM_SESCEL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- Migración idempotente: añadir CODIGO_ALM_SESCEL en bases que ya tienen
--- la tabla creada con el PK antiguo. Si la columna ya existe, no toca nada.
-SET @col_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = ''fza_compras_sesiones_celdas''
-     AND COLUMN_NAME  = ''CODIGO_ALM_SESCEL''
-);
-SET @ddl := IF(@col_exists = 0,
-  ''ALTER TABLE `fza_compras_sesiones_celdas` ''
-  ''ADD COLUMN `CODIGO_ALM_SESCEL` varchar(10) NOT NULL DEFAULT '''''''' ''
-  ''  AFTER `ID_AV_PIVOT_SESCEL`, ''
-  ''DROP PRIMARY KEY, ''
-  ''ADD PRIMARY KEY (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`, ''
-  ''                 `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, ''
-  ''                 `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`), ''
-  ''ADD INDEX `IDX_SESCEL_ALM` (`CODIGO_ALM_SESCEL`)'',
-  ''SELECT 1'');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ---------------------------------------------------------------------------
--- 7. Override de propiedades variables por línea
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_props` (
-  `SERIE_SES_SESLPROP`          varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLPROP`         varchar(12)   NOT NULL,
-  `LINEA_SES_SESLPROP`          int(11)       NOT NULL,
-  `CODIGO_PROP_SESLPROP`        varchar(20)   NOT NULL,
-  `ID_PV_SESLPROP`              int(11)       DEFAULT NULL,
-  `VALOR_LIBRE_SESLPROP`        varchar(255)  DEFAULT NULL,
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLPROP`, `NUMERO_SES_SESLPROP`,
-               `LINEA_SES_SESLPROP`, `CODIGO_PROP_SESLPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 7-bis. Override de precio por SKU (coste y venta)
--- ---------------------------------------------------------------------------
--- Cuando una linea necesita precio distinto en una talla/color concretos,
--- aqui se sobreescribe. Si no hay fila para un SKU, se usan los precios
--- de la linea (PRECIO_COMPRA_SESLIN / PRECIO_VENTA_SESLIN).
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_lineas_skus_precios` (
-  `SERIE_SES_SESLINSKU`         varchar(12)   NOT NULL,
-  `NUMERO_SES_SESLINSKU`        varchar(12)   NOT NULL,
-  `LINEA_SES_SESLINSKU`         int(11)       NOT NULL,
-  `ID_FILA_SES_SESLINSKU`       int(11)       NOT NULL,
-  `ID_AV_PIVOT_SESLINSKU`       int(11)       NOT NULL,
-  `PRECIO_COMPRA_SESLINSKU`     decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Override del precio de coste para este SKU. NULL = hereda de la linea.'',
-  `PRECIO_VENTA_SESLINSKU`      decimal(19,6) DEFAULT NULL
-                                  COMMENT ''Override del precio de venta para este SKU. NULL = hereda de la linea.'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESLINSKU`, `NUMERO_SES_SESLINSKU`,
-               `LINEA_SES_SESLINSKU`, `ID_FILA_SES_SESLINSKU`,
-               `ID_AV_PIVOT_SESLINSKU`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 7-ter. Documentos materializados por la sesion (N pedidos + N albaranes)
--- ---------------------------------------------------------------------------
--- La sesion puede generar varios documentos al materializarse, uno por
--- almacen con cantidad > 0 (tanto pedidos como albaranes). La cabecera
--- guarda SERIE_PEDC_SES/NUMERO_PEDC_SES y SERIE_ALBC_SES/NUMERO_ALBC_SES
--- como referencia al primero de cada tipo (util para listados rapidos).
--- Esta tabla guarda la lista completa.
-CREATE TABLE IF NOT EXISTS `fza_compras_sesiones_documentos` (
-  `SERIE_SES_SESDOC`            varchar(12)   NOT NULL,
-  `NUMERO_SES_SESDOC`           varchar(12)   NOT NULL,
-  `TIPO_DOC_SESDOC`             varchar(4)    NOT NULL
-                                  COMMENT ''PEDC = pedido de compra, ALBC = albaran de compra'',
-  `CODIGO_ALM_SESDOC`           varchar(10)   NOT NULL
-                                  COMMENT ''Almacen al que aplica este documento'',
-  `SERIE_SESDOC`                varchar(12)   NOT NULL
-                                  COMMENT ''Serie del documento generado (fza_pedidos_compra / _albaranes)'',
-  `NUMERO_SESDOC`               varchar(12)   NOT NULL
-                                  COMMENT ''Numero del documento generado'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-
-  PRIMARY KEY (`SERIE_SES_SESDOC`, `NUMERO_SES_SESDOC`,
-               `TIPO_DOC_SESDOC`, `CODIGO_ALM_SESDOC`),
-  INDEX `IDX_SESDOC_DOC` (`TIPO_DOC_SESDOC`, `SERIE_SESDOC`, `NUMERO_SESDOC`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 8. Vistas auxiliares para el formulario
--- ---------------------------------------------------------------------------
-
--- Resumen de cada sesión: nº de líneas, nº de SKUs potenciales, total.
-CREATE OR REPLACE VIEW `VI_SES_RESUMEN` AS
-SELECT
-  S.`SERIE_SES`,
-  S.`NUMERO_SES`,
-  S.`FECHA_SES`,
-  S.`CODIGO_PRV_SES`,
-  S.`CODIGO_FAM_SES`,
-  S.`ESTADO_SES`,
-  (SELECT COUNT(*) FROM `fza_compras_sesiones_lineas` L
-    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
-      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS NUM_LINEAS,
-  (SELECT COUNT(*) FROM `fza_compras_sesiones_celdas` C
-    WHERE C.`SERIE_SES_SESCEL`  = S.`SERIE_SES`
-      AND C.`NUMERO_SES_SESCEL` = S.`NUMERO_SES`
-      AND C.`CANTIDAD_SESCEL`   > 0) AS NUM_SKUS_POTENCIALES,
-  (SELECT IFNULL(SUM(L.`TOTAL_LINEA_SESLIN`), 0)
-     FROM `fza_compras_sesiones_lineas` L
-    WHERE L.`SERIE_SES_SESLIN`  = S.`SERIE_SES`
-      AND L.`NUMERO_SES_SESLIN` = S.`NUMERO_SES`) AS TOTAL_COMPRA
-FROM `fza_compras_sesiones` S;
-
--- Detalle "explotado" para previsualizar qué SKUs se materializarán.
--- Incluye el almacén destino (resuelto a cabecera si la celda lo tiene vacío).
-CREATE OR REPLACE VIEW `VI_SES_PREVIEW_SKUS` AS
-SELECT
-  L.`SERIE_SES_SESLIN`           AS SERIE,
-  L.`NUMERO_SES_SESLIN`          AS NUMERO,
-  L.`LINEA_SESLIN`               AS LINEA,
-  L.`CODIGO_ART_TENTATIVO_SESLIN` AS CODIGO_ART,
-  L.`DESCRIPCION_SESLIN`         AS DESCRIPCION,
-  C.`ID_FILA_SES_SESCEL`         AS ID_FILA,
-  C.`ID_AV_PIVOT_SESCEL`         AS ID_AV_PIVOT,
-  AVP.`AV`                       AS VALOR_PIVOT,
-  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
-                                 AS CODIGO_ALM,
-  C.`CANTIDAD_SESCEL`            AS CANTIDAD,
-  L.`PRECIO_COMPRA_SESLIN`       AS PRECIO_COMPRA,
-  L.`PRECIO_VENTA_SESLIN`        AS PRECIO_VENTA
-FROM `fza_compras_sesiones_lineas`   L
-JOIN `fza_compras_sesiones`          S
-  ON S.`SERIE_SES`         = L.`SERIE_SES_SESLIN`
- AND S.`NUMERO_SES`        = L.`NUMERO_SES_SESLIN`
-JOIN `fza_compras_sesiones_celdas`   C
-  ON C.`SERIE_SES_SESCEL`  = L.`SERIE_SES_SESLIN`
- AND C.`NUMERO_SES_SESCEL` = L.`NUMERO_SES_SESLIN`
- AND C.`LINEA_SES_SESCEL`  = L.`LINEA_SESLIN`
-JOIN `fza_atributos_valores`         AVP
-  ON AVP.`ID_AV`           = C.`ID_AV_PIVOT_SESCEL`
-WHERE C.`CANTIDAD_SESCEL`  > 0;
-
--- Resumen agregado por almacén para la pestaña Materialización.
-CREATE OR REPLACE VIEW `VI_SES_RESUMEN_ALMACEN` AS
-SELECT
-  C.`SERIE_SES_SESCEL`           AS SERIE,
-  C.`NUMERO_SES_SESCEL`          AS NUMERO,
-  IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`)
-                                 AS CODIGO_ALM,
-  COUNT(*)                       AS NUM_SKUS,
-  SUM(C.`CANTIDAD_SESCEL`)       AS UNIDADES_TOTAL
-FROM `fza_compras_sesiones_celdas` C
-JOIN `fza_compras_sesiones`        S
-  ON S.`SERIE_SES`         = C.`SERIE_SES_SESCEL`
- AND S.`NUMERO_SES`        = C.`NUMERO_SES_SESCEL`
-WHERE C.`CANTIDAD_SESCEL`  > 0
-GROUP BY C.`SERIE_SES_SESCEL`, C.`NUMERO_SES_SESCEL`,
-         IF(C.`CODIGO_ALM_SESCEL` = '''', S.`CODIGO_ALM_SES`, C.`CODIGO_ALM_SESCEL`);
-
--- ---------------------------------------------------------------------------
--- 8-bis. Plantillas globales de cabecera (reutilizables al crear sesión)
--- ---------------------------------------------------------------------------
--- Permite guardar una configuración de cabecera + propiedades + kits con un
--- nombre y reutilizarla al crear sesiones nuevas. Sufijos: SESPL / SESPLPROP /
--- SESPLKIT / SESPLKITD.
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas` (
-  `CODIGO_SESPL`                varchar(20)   NOT NULL,
-  `NOMBRE_SESPL`                varchar(100)  NOT NULL,
-  `DESCRIPCION_SESPL`           varchar(255)  DEFAULT NULL,
-  `CODIGO_PRV_SESPL`            varchar(20)   DEFAULT NULL
-                                  COMMENT ''Plantilla específica de proveedor; null = global'',
-  `CODIGO_FAM_SESPL`            varchar(20)   DEFAULT NULL,
-  `TIPO_IVA_SESPL`              varchar(2)    DEFAULT NULL,
-  `PORCENTAJE_MARGEN_SESPL`     decimal(7,4)  DEFAULT NULL,
-  `CODIGO_TAR_SESPL`            varchar(20)   DEFAULT NULL,
-  `CODIGO_VAR_SESPL`            varchar(20)   DEFAULT NULL,
-  `ID_VA_PIVOT_SESPL`           varchar(20)   DEFAULT NULL,
-  `ID_AC_PIVOT_SESPL`           int(11)       DEFAULT NULL,
-  `ID_VA_FILA_SESPL`            varchar(20)   DEFAULT NULL,
-  `ID_AC_FILA_SESPL`            int(11)       DEFAULT NULL,
-  `ESVAR_FIJA_SESPL`            char(1)       NOT NULL DEFAULT ''N'',
-  `ESACTIVA_SESPL`              char(1)       NOT NULL DEFAULT ''S'',
-
-  `INSTANTE_ALTA`               datetime      NOT NULL,
-  `USUARIO_ALTA`                varchar(50)   NOT NULL,
-  `INSTANTE_MODIF`              datetime      DEFAULT NULL,
-  `USUARIO_MODIF`               varchar(50)   DEFAULT NULL,
-
-  PRIMARY KEY (`CODIGO_SESPL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_props` (
-  `CODIGO_SESPL_SESPLPROP`      varchar(20)   NOT NULL,
-  `CODIGO_PROP_SESPLPROP`       varchar(20)   NOT NULL,
-  `ESFIJO_SESPLPROP`            char(1)       NOT NULL DEFAULT ''N'',
-  `ID_PV_DEFECTO_SESPLPROP`     int(11)       DEFAULT NULL,
-  `VALOR_DEFECTO_SESPLPROP`     varchar(255)  DEFAULT NULL,
-  `ORDEN_SESPLPROP`             int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`, `CODIGO_PROP_SESPLPROP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits` (
-  `CODIGO_SESPL_SESPLKIT`       varchar(20)   NOT NULL,
-  `CODIGO_SESPLKIT`             varchar(20)   NOT NULL,
-  `NOMBRE_SESPLKIT`             varchar(100)  NOT NULL,
-  `ID_VA_DESTINO_SESPLKIT`      varchar(20)   NOT NULL,
-  `ORDEN_SESPLKIT`              int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`, `CODIGO_SESPLKIT`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
-  `CODIGO_SESPL_SESPLKITD`      varchar(20)   NOT NULL,
-  `CODIGO_SESPLKIT_SESPLKITD`   varchar(20)   NOT NULL,
-  `VALOR_DESTINO_SESPLKITD`     varchar(50)   NOT NULL,
-  `CANTIDAD_SESPLKITD`          decimal(19,6) NOT NULL DEFAULT 0,
-  `ORDEN_SESPLKITD`             int(11)       NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`CODIGO_SESPL_SESPLKITD`,
-               `CODIGO_SESPLKIT_SESPLKITD`,
-               `VALOR_DESTINO_SESPLKITD`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
--- ---------------------------------------------------------------------------
--- 9. Contador propio
--- ---------------------------------------------------------------------------
--- Inserción esperada en fza_contadores para numerar sesiones:
---
--- INSERT INTO fza_contadores (CODIGO_CON, TIPO_DOC_CON, ULTIMO_CON, ...)
--- VALUES (''SESCOMPRA'', ''SESCOMPRA'', 0, ...);
---
--- Y otro para el prefijo EAN13 si la sesión no define uno propio.
-
--- ---------------------------------------------------------------------------
--- 10. NOTAS sobre la materialización
--- ---------------------------------------------------------------------------
--- Estas tablas NO tienen triggers que toquen fza_articulos*, fza_codigos_barras
--- ni fza_articulos_proveedores. La materialización es un procedimiento Delphi
--- ubicado en `src/Lib/inLibComprasSesionesMaterializar.pas` que dentro de una
--- única TUniTransaction:
---
---   1. Verifica conflictos contra fza_articulos.
---   2. Para cada línea no marcada como REUSAR:
---        INSERT INTO fza_articulos (...)
---        INSERT INTO fza_articulos_conjuntos_asign (...)   (pivot + fila)
---        Para cada propiedad fija de cabecera y variable de línea:
---           INSERT INTO fza_articulos_propiedades (...)
---   3. Para cada celda con CANTIDAD > 0:
---        INSERT INTO fza_articulos_skus (...)
---        INSERT INTO fza_atributos_sku (...)   (uno por atributo de fila + pivot)
---        INSERT INTO fza_codigos_barras (CODIGO_BARRAS_CB generado por inLibEAN13)
---   4. Upsert en fza_articulos_proveedores con precio último y ref.
---   5. Si ESGENERA_PEDIDO_SES = ''S'':
---        INSERT en fza_pedidos_compra + lineas (uno por SKU * cantidad agregada).
---   6. Si ESGENERA_ALBARAN_SES = ''S'':
---        INSERT en fza_albaranes_compra + lineas + fza_movimientos_almacen.
---   7. UPDATE fza_compras_sesiones SET ESTADO_SES=''CERRADA'',
---          referencia_pedido, referencia_albaran, instante/usuario_materializa.
---
--- Cualquier fallo → ROLLBACK. La sesión sigue en BORRADOR con
--- MENSAJE_ERROR_SES poblado.
-', '2026-05-12 18:53:08', '2026-05-12 18:53:08', 'Administrador', 'Administrador'),
   ('190', 'compras_sesiones', '-- ============================================================================
 -- Módulo Compras — Sesiones (pre-pedidos / pre-albaranes)
 -- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
@@ -5416,7 +3749,7 @@ CREATE TABLE IF NOT EXISTS `fza_compras_plantillas_kits_det` (
 -- Cualquier fallo → ROLLBACK. La sesión sigue en BORRADOR con
 -- MENSAJE_ERROR_SES poblado.
 ', '2026-05-12 20:09:34', '2026-05-12 20:09:34', 'Administrador', 'Administrador');
--- 8 registros exportados
+-- 1 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -6351,7 +4684,7 @@ INSERT INTO `fza_paises` (`CODIGO_PAI_PAI`, `COD_ALPHA3_PAI`, `COD_ALPHA2_PAI`, 
   ('270', 'GMB', 'GM', 'Gambia', 'Gambia', 'N', 999),
   ('276', 'DEU', 'DE', 'Alemania', 'Germany', 'S', 999),
   ('288', 'GHA', 'GH', 'Ghana', 'Ghana', 'N', 999),
-  ('292', 'GIB', 'GI', 'Gibraltar', 'Gibraltar', 'N', 999),
+  ('292', 'GIB', 'GI', 'Gibraltar', 'Gibraltar', 'N', 3),
   ('296', 'KIR', 'KI', 'Kiribati', 'Kiribati', 'N', 999),
   ('300', 'GRC', 'GR', 'Grecia', 'Greece', 'S', 999),
   ('304', 'GRL', 'GL', 'Groenlandia', 'Greenland', 'N', 999),
@@ -7035,15 +5368,17 @@ INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIP
   ('IG', 'ZONAS IVA', 'fza_iva_grupos'),
   ('IN', 'INVENTARIOS', 'fza_inventarios'),
   ('IV', 'IVAS', 'fza_ivas'),
+  ('MV', 'MOVIMIENTOS DE ALMACÉN', 'fza_movimientos_almacen'),
   ('PC', 'PEDIDO DE COMPRAS', 'fza_pedidos_compras'),
   ('PE', 'PEDIDO DE VENTA MAYOR', 'fza_pedidos'),
   ('PG', 'FORMAS DE PAGO', 'fza_formas_pago'),
   ('PO', 'ORDEN PROVEEDORES', 'fza_proveedores'),
   ('PV', 'PROVEEDORES', 'fza_proveedores'),
   ('RT', 'RETENCIONES POR EMPRESA', 'fza_empresas_retenciones'),
+  ('SE', 'SESIÓN DE COMPRAS', 'fza_compras_sesiones'),
   ('TR', 'TRASPASOS ALMACÉN', 'fza_caja_operaciones'),
   ('VE', 'VENTAS CONTADO', 'fza_caja_operaciones');
--- 33 registros exportados
+-- 35 registros exportados
 
 
 -- Tabla: fza_usuarios
@@ -7069,7 +5404,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-13 08:07:36', '2026-05-13 08:07:36', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-14 18:40:14', '2026-05-14 18:40:14', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -7954,6 +6289,95 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoComprasSesiones', 'tvProps_VALOR_DEFECTO_SESPROP_SortOrder', '0', NULL, NULL, NULL, '2026-05-12 20:12:11', '2026-05-12 20:12:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoComprasSesiones', 'tvProps_VALOR_DEFECTO_SESPROP_Visible', 'True', NULL, NULL, NULL, '2026-05-12 20:12:11', '2026-05-12 20:12:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoComprasSesiones', 'tvProps_VALOR_DEFECTO_SESPROP_Width', '2809', NULL, NULL, NULL, '2026-05-12 20:12:11', '2026-05-12 20:12:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_Caption', 'Contador', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_Index', '5', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_CON_Width', '88', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_Caption', 'Es contador por defecto', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_Index', '8', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DEFAULT_CON_Width', '177', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_Caption', 'Documento', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_Index', '1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_DESCRIPCION_TIPO_DOCUMENTO_TD_Width', '335', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_Caption', 'Empresa', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_Index', '3', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_EMPRESA_CON_Width', '88', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_Caption', 'EsActivo', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_Index', '7', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_ESACTIVO_CON_Width', '70', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_Caption', 'INSTANTE_ALTA', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_Index', '10', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_ALTA_Width', '202', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_Caption', 'INSTANTE_MODIF', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_Index', '9', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_INSTANTE_MODIF_Width', '202', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_Caption', 'Digitos Contador', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_Index', '6', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_NUM_DIGITOS_CON_Width', '161', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_Caption', 'Serie', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_Index', '4', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_SERIE_CON_Width', '114', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_Caption', 'Tabla de origen', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_Index', '2', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TABLA_ORIGEN_TIPO_DOCUMENTO_TD_Width', '188', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_Caption', 'Tipo de Documento', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_Index', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_Visible', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_TIPO_DOC_CON_Width', '71', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_Index', '11', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_ALTA_Width', '1104', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_Index', '12', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'cxGrdDBTabPrin_USUARIO_MODIF_Width', '1104', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoContadores', 'tvPerfil__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-13 13:19:39', '2026-05-13 13:19:39', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_CANTIDAD_PENDIENTE_DEP_Caption', 'Cant. Pendiente', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
@@ -8084,7 +6508,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Index', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CODIGO_EMPRESA_Width', '79', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Caption', 'Código Postal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_CPOSTAL_EMPRESA_Index', '11', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -8173,8 +6598,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_PAIS_EMPRESA_Width', '64', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Caption', 'Población', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Index', '9', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_POBLACION_EMPRESA_Width', '132', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -8585,7 +7009,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Caption', 'IVA Exento', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Index', '50', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAE_FACTURA_Width', '108', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_IVAN_FACTURA_Caption', 'IVA Normal', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -8674,8 +7099,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_LINEA_FACTURA_LINEA_Width', '28', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Caption', 'NOMBRE_TIPO_IVA_IVATIP', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Caption', 'NOMBRE_TIPO_IVA_IVATIP', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_Index', '7', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvLineasFacturacion_NOMBRE_TIPO_IVA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -9091,7 +7515,8 @@ AAAA8AVAAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTE_MODIF_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTE_MODIF_Width', '202', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTECONSO_FAC_Caption', 'Instante Consolidación
-', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
+', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTECONSO_FAC_Index', '87', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTECONSO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_INSTANTECONSO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
@@ -9180,8 +7605,7 @@ AAAA8AVAAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Width', '198', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Width', '198', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Caption', '% RE Exento', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Index', '45', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
@@ -9592,7 +8016,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_Index', '6', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_DESCRIPCION_ARTICULO_MOV_Width', '200', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_FECHA_MOV_Caption', 'Fecha', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvMovimientosFac_FECHA_MOV_Index', '1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
@@ -9681,8 +8106,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_Index', '10', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_Visible', 'True', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_PAGO_RECIBO_REC_Width', '160', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_VENCIMIENTO_RECIBO_REC_Caption', 'Fecha Vencimiento', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas', 'tvRecibos_FECHA_VENCIMIENTO_RECIBO_REC_Index', '8', NULL, NULL, NULL, '2026-05-13 08:05:45', '2026-05-13 08:05:45', 'Administrador', 'Administrador'),
@@ -10113,7 +8537,8 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-07 0
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_Index', '37', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RER_FAC_Width', '145', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RES_FAC_Caption', '% RE SuperReducido', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_PORCENTAJE_RES_FAC_Index', '42', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -10202,8 +8627,7 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-07 0
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_Caption', 'Total BI SuperReducido', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_Index', '44', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASEI_IVAS_FAC_Width', '242', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_BASES_FAC_Caption', 'Total Bases Imponibles', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -10614,7 +9038,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_Caption', 'Código Postal Empresa', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_Index', '27', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_POSTAL_EMPRESA_FAC_Width', '197', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_CODIGO_ZONA_IVA_CLIENTE_Caption', 'Código IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -10703,8 +9128,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_Width', '142', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Caption', 'Tiene Descripciones Ampliadas', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Index', '82', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Width', '297', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -11123,7 +9547,8 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_Caption', 'Evento', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_Index', '1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_DESCRIPCION_LOG_Width', '308', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGridDBTableView1_Filtro', '', '', NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -11212,8 +9637,7 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Index', '3', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Width', '245', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Caption', '% Dto', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Index', '12', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -11624,7 +10048,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIO_GRUPO_PERFILES_SortOrder', '0', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Visible', 'True', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIO_GRUPO_PERFILES_Width', '167', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIOALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIOALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIOALTA_Index', '16', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIOALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'tvPerfil_USUARIOALTA_SortOrder', '0', NULL, NULL, NULL, '2026-04-23 09:16:33', '2026-04-23 09:16:33', 'Administrador', 'Administrador'),
@@ -11713,8 +10138,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_TOTAL_UNIDADES_DIFERENCIA_INV_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_TOTAL_UNIDADES_DIFERENCIA_INV_Visible', 'True', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_TOTAL_UNIDADES_DIFERENCIA_INV_Width', '110', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoInventarios', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoInventarios', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
@@ -12125,7 +10549,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Caption', 'Familia', '', NULL, NULL, '2023-01-25 13:22:11', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Index', '6', '', NULL, NULL, '2023-01-25 13:27:23', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Visible', 'True', '', NULL, NULL, '2022-10-26 19:35:45', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Width', '438', '', NULL, NULL, '2023-01-25 13:19:18', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_DESCRIPCION_FAMILIA_Width', '438', '', NULL, NULL, '2023-01-25 13:19:18', '2022-10-26 19:35:45', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_IMP_INCL_TARIFA_Caption', 'Incluye IVA', '', NULL, NULL, '2023-01-25 13:24:27', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_IMP_INCL_TARIFA_Index', '9', '', NULL, NULL, '2022-10-26 19:35:45', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtFacSearch', 'cxGrdDBTabPrin_IMP_INCL_TARIFA_Visible', 'True', '', NULL, NULL, '2023-01-25 13:19:18', '2022-10-26 19:35:45', 'Administrador', 'Administrador'),
@@ -12214,8 +10639,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEALTA_Index', '19', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEALTA_Visible', 'False', '', NULL, NULL, '2023-05-25 13:02:30', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEALTA_Width', '193', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Caption', 'INSTANTE_MODIF', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Caption', 'INSTANTE_MODIF', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Index', '18', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Visible', 'False', '', NULL, NULL, '2023-05-25 13:02:33', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_INSTANTEMODIF_Width', '193', '', NULL, NULL, '2023-05-25 13:00:05', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
@@ -12556,7 +10980,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoEmpFacSearch', 'tsPerfil_Caption', 'Perfil', '', NULL, NULL, '2022-10-26 16:29:05', '2022-10-26 16:29:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'tvPerfil__oApplyWidth', 'False', '', NULL, NULL, '2023-12-14 17:32:07', '2023-12-14 17:32:07', 'Administrador', 'Administrador'),
   ('Todos', 'inLibtb', 'oSimbolosProhibidos', ',"''+-€%*', NULL, NULL, NULL, '2023-04-26 11:50:56', '2023-04-26 11:50:48', 'Administrador', 'Administrador');
--- 5340 registros exportados
+-- 5429 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -17109,4 +15533,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 13/05/2026 8:07:47
+-- Backup completado: 14/05/2026 18:40:22
