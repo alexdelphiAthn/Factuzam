@@ -356,6 +356,45 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
                     HeaderAlignmentHorz = taRightJustify
                     Width = 100
                   end
+                  object tvValoresID_ATB_ACD: TcxGridDBColumn
+                    Caption = 'Atributo b'#225'sico'
+                    DataBinding.FieldName = 'ID_ATB_ACD'
+                    PropertiesClassName = 'TcxLookupComboBoxProperties'
+                    Properties.DropDownAutoSize = True
+                    Properties.DropDownSizeable = True
+                    Properties.ImmediatePost = True
+                    Properties.KeyFieldNames = 'ID_ATB'
+                    Properties.ListColumns = <
+                      item
+                        Caption = 'C'#243'digo'
+                        Width = 90
+                        FieldName = 'CODIGO_ATB'
+                      end
+                      item
+                        Caption = 'Nombre'
+                        Width = 140
+                        FieldName = 'NOMBRE_ATB'
+                      end
+                      item
+                        Caption = 'Paleta'
+                        Width = 70
+                        FieldName = 'HEX_ATB'
+                      end
+                      item
+                        Caption = 'Valor'
+                        Width = 60
+                        FieldName = 'VALOR_NUM_ATB'
+                      end
+                      item
+                        Caption = 'Ud'
+                        Width = 40
+                        FieldName = 'UNIDAD_ATB'
+                      end>
+                    Properties.ListFieldIndex = 1
+                    Properties.ListOptions.CaseInsensitive = True
+                    Properties.ListOptions.ShowHeader = True
+                    Width = 220
+                  end
                 end
                 object cxgrdlvlValores: TcxGridLevel
                   GridView = tvValores

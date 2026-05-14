@@ -967,20 +967,12 @@ INSERT INTO `fza_articulos_vinculos` (`ID_ARTVIN`, `CODIGO_ART_PADRE_ARTVIN`, `C
 DROP TABLE IF EXISTS `fza_atributos_basicos`;
 CREATE TABLE `fza_atributos_basicos` (
   `ID_ATB` int(11) NOT NULL AUTO_INCREMENT,
-  `ID_VA_ATB` varchar(20) NOT NULL COMMENT 'Atributo de la variación (CO, TAL…) → FK fza_variaciones_atributos',
-  `CODIGO_ATB` varchar(30) NOT NULL COMMENT 'Código corto del atributo básico estándar (XL, AZUL_CIELO, EU42)',
-  `NOMBRE_ATB` varchar(100) NOT NULL COMMENT 'Nombre legible: AZUL CIELO, TALLA XL, Calzado 42',
-  `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL COMMENT 'Descripción larga del atributo básico',
-  `HEX_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Color paleta #RRGGBB (sólo para atributos de color)',
-  `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL COMMENT 'Valor numérico equivalente (47 cm de pecho XL, 25 cm de calzado 40…)',
-  `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL COMMENT 'Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…',
-  `EXTRA_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Legacy: usar HEX_ATB para color',
+  `ID_VA_ATB` varchar(20) NOT NULL,
+  `CODIGO_ATB` varchar(30) NOT NULL,
+  `NOMBRE_ATB` varchar(100) NOT NULL,
+  `EXTRA_ATB` varchar(7) NULL DEFAULT NULL,
   `ORDEN_ATB` int(11) NULL DEFAULT '0',
   `ESACTIVO_ATB` char(1) NULL DEFAULT 'S',
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
-  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
   PRIMARY KEY (`ID_ATB`)
 );
 ALTER TABLE `fza_atributos_basicos` ADD UNIQUE INDEX `ID_VA_ATB` (`ID_VA_ATB`, `CODIGO_ATB`);
@@ -1319,7 +1311,6 @@ CREATE TABLE `fza_atributos_valores` (
   `FACTOR_CONVERSION_AV` decimal(19,6) NULL DEFAULT '1.000000' COMMENT 'Multiplicador respecto a la unidad base',
   `UNIDAD_MEDIDA_AV` varchar(10) NULL DEFAULT NULL COMMENT 'L, Kg, m, m2, ud',
   `CODIGO_ART_EXTRA_AV` varchar(20) NULL DEFAULT NULL COMMENT 'Si se rellena, al elegir este valor se genera una linea aparte con un incremento por ejemplo',
-  `ID_ATB_AV` int(11) NULL DEFAULT NULL COMMENT 'FK lógica → fza_atributos_basicos.ID_ATB. Asocia este valor concreto (p. ej. "001" del proveedor) con su atributo básico estándar (AZUL CIELO)',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL,
@@ -1327,7 +1318,6 @@ CREATE TABLE `fza_atributos_valores` (
   PRIMARY KEY (`ID_AV`)
 );
 ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
-ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_AV_ATB` (`ID_ATB_AV`);
 
 -- Datos de fza_atributos_valores
 /*!40000 ALTER TABLE `fza_atributos_valores` DISABLE KEYS */;
@@ -11248,47 +11238,6 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_art_busquedas` AS select `fza_articulos`.`C
 -- Vista: vi_atributos_nombres
 DROP VIEW IF EXISTS `vi_atributos_nombres`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select distinct `ask`.`CODIGO_ART_SKU` AS `CODIGO_ART_PADRE_ARTVIN`,`vat`.`ID_ATB_VA` AS `ID_ATRIBUTO`,`vat`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`vat`.`ORDEN_VA` AS `ORDEN_VISUAL_ATRIBUTO` from (`fza_articulos_skus` `ask` join `fza_variaciones_atributos` `vat` on(`vat`.`ID_VAR_VA` = `ask`.`CODIGO_VAR_SKU`)) order by `ask`.`CODIGO_ART_SKU`,`vat`.`ORDEN_VA`;
-
--- Vista: vi_atributos_sku_basico
---   Une cada SKU con sus atributos (talla, color…) y el atributo básico
---   helper (HEX de paleta, medida estándar en cm, etiqueta equivalente).
-DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
-CREATE ALGORITHM=UNDEFINED VIEW `vi_atributos_sku_basico` AS
-SELECT
-    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
-    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
-    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
-    val.ID_AV                                     AS ID_AV,
-    val.ID_VA_AV                                  AS ID_VA_AV,
-    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
-    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
-    val.AV                                        AS VALOR_AV,
-    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
-    val.ID_ATB_AV                                 AS ID_ATB_AV,
-    atb.CODIGO_ATB                                AS CODIGO_ATB,
-    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
-    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
-    atb.HEX_ATB                                   AS HEX_ATB,
-    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
-    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
-    CASE
-      WHEN atb.VALOR_NUM_ATB IS NOT NULL
-        THEN CONCAT(
-               TRIM(TRAILING '0' FROM TRIM(TRAILING '.' FROM
-                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
-               COALESCE(CONCAT(' ', atb.UNIDAD_ATB), ''))
-      WHEN atb.HEX_ATB IS NOT NULL
-        THEN CONCAT(atb.NOMBRE_ATB, ' ', atb.HEX_ATB)
-      ELSE atb.NOMBRE_ATB
-    END                                           AS ETIQUETA_BASICO
-  FROM fza_articulos_skus      sku
-  JOIN fza_atributos_sku       sa  ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
-  JOIN fza_atributos_valores   val ON val.ID_AV               = sa.ID_AV_SA
-  LEFT JOIN fza_variaciones_atributos va
-                                  ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
-                                 AND va.ID_ATB_VA = val.ID_VA_AV
-  LEFT JOIN fza_atributos_basicos atb
-                                  ON atb.ID_ATB    = val.ID_ATB_AV;
 
 -- Vista: vi_cajasdef
 DROP VIEW IF EXISTS `vi_cajasdef`;
