@@ -471,6 +471,13 @@
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAtributosBasicos.pas">
+            <Form>frmMtoAtributosBasicos</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAtributosBasicos.pas">
+            <Form>dmAtributosBasicos</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoVariaciones.pas">
             <Form>frmMtoVariaciones</Form>
             <FormType>dfm</FormType>

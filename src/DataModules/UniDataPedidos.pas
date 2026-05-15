@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataPedidos                                                }
 {    Tipo:       Data Module                                                   }
@@ -22,7 +22,7 @@ uses
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser, inMtoPrincipal,
   frxClass, frxDBSet,
-  inLibPresta;
+  inLibPresta, frCoreClasses;
 
 type
   TdmPedidos = class(TdmBase)
@@ -421,7 +421,7 @@ begin
   q := TUniSQL.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
-
+{
     // PRC_PED_CREAR_ALBARAN_INICIO
     Run('DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO');
     Run(
@@ -629,7 +629,7 @@ begin
       '     WHERE NUMERO_PED = p_NUMERO_PED AND SERIE_PED = p_SERIE_PED; ' +
       '  END IF; ' +
       'END');
-
+}
     FProcsInstalados := True;
   finally
     q.Free;

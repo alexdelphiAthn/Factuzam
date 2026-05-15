@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 14/05/2026 19:34:52
+-- Backup generado: 15/05/2026 18:21:13
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -254,6 +254,29 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
 -- 27 registros exportados
 
 
+-- Tabla: fza_articulos_atributos_basicos
+
+DROP TABLE IF EXISTS `fza_articulos_atributos_basicos`;
+CREATE TABLE `fza_articulos_atributos_basicos` (
+  `CODIGO_ART_AAB` varchar(20) NOT NULL COMMENT 'FK lógica fza_articulos.CODIGO_ART_ART',
+  `ID_AV_AAB` int(11) NOT NULL COMMENT 'FK lógica fza_atributos_valores.ID_AV',
+  `ID_ATB_AAB` int(11) NULL DEFAULT NULL COMMENT 'FK lógica fza_atributos_basicos.ID_ATB. NULL = bloqueo (sin básico).',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  PRIMARY KEY (`CODIGO_ART_AAB`,`ID_AV_AAB`)
+);
+ALTER TABLE `fza_articulos_atributos_basicos` ADD INDEX `IDX_AAB_ATB` (`ID_ATB_AAB`);
+ALTER TABLE `fza_articulos_atributos_basicos` ADD INDEX `IDX_AAB_VAL` (`ID_AV_AAB`);
+
+-- Datos de fza_articulos_atributos_basicos
+INSERT INTO `fza_articulos_atributos_basicos` (`CODIGO_ART_AAB`, `ID_AV_AAB`, `ID_ATB_AAB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('DEMO-CAMISA', 9213, 109, '2026-05-15 17:58:47', '2026-05-14 20:49:22', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9104, 149, '2026-05-15 18:06:11', '2026-05-15 18:06:03', 'Administrador', 'Administrador');
+-- 2 registros exportados
+
+
 -- Tabla: fza_articulos_conjuntos_asign
 
 DROP TABLE IF EXISTS `fza_articulos_conjuntos_asign`;
@@ -332,7 +355,7 @@ CREATE TABLE `fza_articulos_familias` (
 
 -- Datos de fza_articulos_familias
 INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
-  ('BOLSOS', 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 0, 'S', '2026-05-12 18:34:25', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
+  ('BOLSOS', 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 1, 'S', '2026-05-14 19:43:32', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
   ('CALZADO', 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 0, 'S', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
   ('COMPLEMENTOS', 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
   ('DEPORTIVO', 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 0, 'N', '2026-05-12 18:34:25', '2026-01-01 08:00:00', 'DEMO', 'DEMO', 5),
@@ -594,8 +617,9 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('CHAQ-CUERO/NEGRO/L', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:51', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/M', 'CHAQ-CUERO', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('CHAQ-CUERO/NEGRO/XXXL', 'CHAQ-CUERO', 'TC', 'S', '2026-05-15 17:54:40', '2026-05-15 17:54:40', 'SISTEMA', 'SISTEMA'),
   ('CINTURON-PIEL', 'CINTURON-PIEL', '-', 'S', '2026-05-12 07:06:08', '2026-05-12 07:06:08', 'Administrador', 'Administrador'),
-  ('DEMO-CAMISA/AMARILLO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-11 19:19:56', '2026-05-11 19:19:56', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/AMARILLO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:39', '2026-05-11 19:19:56', 'SISTEMA', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:36:52', '2026-03-27 07:36:52', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/AZULMARINO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-10 22:54:46', '2026-03-27 06:55:47', 'SISTEMA', 'Administrador'),
@@ -603,12 +627,12 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('DEMO-CAMISA/BLANCO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-26 19:36:46', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/COLORAO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:32:34', '2026-03-27 07:32:34', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/COLORAO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:37:49', '2026-03-27 07:37:49', 'SISTEMA', 'SISTEMA'),
-  ('DEMO-CAMISA/NEGRO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-11 19:19:56', '2026-05-11 19:19:56', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/NEGRO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:45', '2026-05-11 19:19:56', 'SISTEMA', 'Administrador'),
   ('DEMO-CAMISA/NEGRO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/S', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
-  ('DEMO-CAMISA/XXL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-11 19:09:37', '2026-05-11 19:09:37', 'SISTEMA', 'SISTEMA'),
+  ('DEMO-CAMISA/XXL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:49', '2026-05-11 19:09:37', 'SISTEMA', 'Administrador'),
   ('DEMO-PRO', 'DEMO-PRO', '-', 'S', '2026-05-10 07:20:51', '2026-05-10 07:20:51', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
@@ -676,7 +700,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 117 registros exportados
+-- 118 registros exportados
 
 
 -- Tabla: fza_articulos_skus_costes
@@ -709,6 +733,7 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('CAMI-POLO/AZUL/M', 2.23, '2026-05-04 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('CAMI-POLO/BLANCO/M', 2.23, '2026-05-04 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('CAMI-POLO/BLANCO/S', 2.23, '2026-05-04 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
+  ('DEMO-CAMISA/AMARILLO/3XL', 9, NULL, '2026-05-14 19:57:39', '2026-05-14 19:57:39', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/AMARILLO/XL', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/AZULMARINO/L', 10, '2025-12-25 00:00:00', '2026-05-10 22:54:46', '2026-05-10 19:34:55', 'MIGRACION', 'Administrador'),
@@ -716,10 +741,12 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('DEMO-CAMISA/BLANCO/M', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/COLORAO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/COLORAO/XL', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
+  ('DEMO-CAMISA/NEGRO/3XL', 9, NULL, '2026-05-14 19:57:45', '2026-05-14 19:57:45', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/NEGRO/L', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/NEGRO/M', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/NEGRO/S', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/NEGRO/XL', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
+  ('DEMO-CAMISA/XXL', 9, NULL, '2026-05-14 19:57:49', '2026-05-14 19:57:49', 'Administrador', 'Administrador'),
   ('DEMO-PRO', 2, '2026-05-08 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('JERSEY-LANA/BEIGE/M', 5, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('JERSEY-LANA/GRIS/L', 5, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
@@ -743,7 +770,7 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('VEST-FLOR/ROJO/XL', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/VERDE/M', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/VERDE/S', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION');
--- 47 registros exportados
+-- 50 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -767,77 +794,77 @@ CREATE TABLE `fza_articulos_stockactual` (
 
 -- Datos de fza_articulos_stockactual
 INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, `CANTIDAD_STK`, `INSTANTE_MODIF`, `VALOR_TOTAL_STK`, `PRECIO_MEDIO_STK`, `CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, `CANTIDAD_PTE_TRASPASAR_STK`, `CANTIDAD_PTE_RECTRASPASAR_STK`) VALUES
-  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-13 17:36:40', 0, 0, 0, 0, 0, 0);
+  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0);
 -- 71 registros exportados
 
 
@@ -934,7 +961,7 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('FALD-JEAN', 65, 'FALD-JEAN/VAQUERO/L', '3', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 66, 'FALD-JEAN/VAQUERO/L', 'PVP', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
-  ('DEMO-CAMISA', 68, 'DEMO-CAMISA/AZULMARINO/L', 'PVP', 'S', 28.95, 28.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 22:56:57', '2026-05-10 22:56:31', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 68, 'DEMO-CAMISA/AZULMARINO/L', 'PVP', 'S', 29.95, 29.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 22:56:57', '2026-05-10 22:56:31', 'Administrador', 'Administrador'),
   ('BLUS-SEDA', 69, 'BLUS-SEDA/BLANCO/L', 'PVP', 'S', 20.95, 20.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 23:12:00', '2026-05-10 23:08:56', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
 -- 66 registros exportados
@@ -968,7 +995,7 @@ DROP TABLE IF EXISTS `fza_atributos_basicos`;
 CREATE TABLE `fza_atributos_basicos` (
   `ID_ATB` int(11) NOT NULL AUTO_INCREMENT,
   `ID_VA_ATB` varchar(20) NOT NULL,
-  `CODIGO_ATB` varchar(30) NOT NULL,
+  `CODIGO_ATB` varchar(100) NOT NULL COMMENT 'Código corto del atributo básico (XL, AZUL_CIELO, EU42, AD_DEMO-CAMISA_3XL).',
   `NOMBRE_ATB` varchar(100) NOT NULL,
   `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL COMMENT 'Descripción larga: AZUL CIELO, Talla XL Hombre, etc.',
   `HEX_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Color paleta en formato #RRGGBB (sólo para atributos de color)',
@@ -995,7 +1022,7 @@ INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBR
   (5, 'CO', 'AZUL_CIELO', 'AZUL CIELO', 'Color azul cielo', '#87CEEB', NULL, NULL, NULL, 41, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (6, 'CO', 'AZUL_MARINO', 'AZUL MARINO', 'Color azul marino', '#1B2A49', NULL, NULL, NULL, 42, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (7, 'CO', 'VERDE', 'VERDE', 'Color verde', '#1D8B3A', NULL, NULL, NULL, 50, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (8, 'CO', 'AMARILLO', 'AMARILLO', 'Color amarillo', '#FFD400', NULL, NULL, NULL, 60, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (8, 'CO', 'AMARILLO', 'AMARILLO', 'Color amarillo', '#FFD400', NULL, NULL, NULL, 60, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (9, 'CO', 'MARRON', 'MARRÓN', 'Color marrón', '#7B4B2A', NULL, NULL, NULL, 70, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (10, 'CO', 'GRIS', 'GRIS', 'Color gris', '#808080', NULL, NULL, NULL, 80, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (11, 'CO', 'BEIGE', 'BEIGE', 'Color beige', '#E8D8B5', NULL, NULL, NULL, 90, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
@@ -1005,21 +1032,38 @@ INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBR
   (15, 'CO', 'BURDEOS', 'BURDEOS', 'Color burdeos', '#7A1F2B', NULL, NULL, NULL, 130, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (16, 'CO', 'VAQUERO', 'VAQUERO', 'Acabado vaquero / denim', '#3F6BAA', NULL, NULL, NULL, 140, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (17, 'TAL', 'S', 'TALLA S', 'Talla S (small)', NULL, 44, 'cm', NULL, 10, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (18, 'TAL', 'M', 'TALLA M', 'Talla M (medium)', NULL, 46, 'cm', NULL, 20, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (18, 'TAL', 'M', '', 'Talla M (medium)', NULL, 41, 'cm', NULL, 20, 'S', '2026-05-14 20:51:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
   (19, 'TAL', 'L', 'TALLA L', 'Talla L (large)', NULL, 48, 'cm', NULL, 30, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (20, 'TAL', 'XL', 'TALLA XL', 'Talla XL (extra large)', NULL, 50, 'cm', NULL, 40, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (21, 'TAL', 'XXL', 'TALLA XXL', 'Talla XXL', NULL, 52, 'cm', NULL, 50, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (22, 'TAL', 'XXXL', 'TALLA XXXL', 'Talla XXXL', NULL, 54, 'cm', NULL, 60, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (23, 'TAL', 'EU37', 'EU 37', 'Calzado europeo nº 37', NULL, 23.5, 'cm', NULL, 70, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (24, 'TAL', 'EU38', 'EU 38', 'Calzado europeo nº 38', NULL, 24, 'cm', NULL, 80, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (25, 'TAL', 'EU39', 'EU 39', 'Calzado europeo nº 39', NULL, 24.5, 'cm', NULL, 90, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (26, 'TAL', 'EU40', 'EU 40', 'Calzado europeo nº 40', NULL, 25, 'cm', NULL, 100, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (27, 'TAL', 'EU41', 'EU 41', 'Calzado europeo nº 41', NULL, 26, 'cm', NULL, 110, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (28, 'TAL', 'EU42', 'EU 42', 'Calzado europeo nº 42', NULL, 26.5, 'cm', NULL, 120, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (29, 'TAL', 'EU43', 'EU 43', 'Calzado europeo nº 43', NULL, 27, 'cm', NULL, 130, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (30, 'TAL', 'EU44', 'EU 44', 'Calzado europeo nº 44', NULL, 28, 'cm', NULL, 140, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA');
+  (20, 'TAL', 'XL', 'TALLA XL', 'Talla XL (extra large)', NULL, 43, 'cm', NULL, 40, 'S', '2026-05-14 20:49:48', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (21, 'TAL', 'XXL', 'TALLA XXL', 'Talla XXL', NULL, 67, 'cm', NULL, 50, 'S', '2026-05-14 20:49:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (22, 'TAL', 'XXXL', 'TALLA XXXL', 'Talla XXXL', NULL, 78, 'cm', NULL, 60, 'S', '2026-05-15 17:53:35', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (23, 'TAL', 'EU37', 'EU 37', 'Calzado europeo nº 37', NULL, 23.5, 'cm', NULL, 410, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (24, 'TAL', 'EU38', 'EU 38', 'Calzado europeo nº 38', NULL, 24, 'cm', NULL, 420, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (25, 'TAL', 'EU39', 'EU 39', 'Calzado europeo nº 39', NULL, 24.5, 'cm', NULL, 430, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (26, 'TAL', 'EU40', 'EU 40', 'Calzado europeo nº 40', NULL, 25, 'cm', NULL, 440, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (27, 'TAL', 'EU41', 'EU 41', 'Calzado europeo nº 41', NULL, 26, 'cm', NULL, 450, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (28, 'TAL', 'EU42', 'EU 42', 'Calzado europeo nº 42', NULL, 26.5, 'cm', NULL, 460, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (29, 'TAL', 'EU43', 'EU 43', 'Calzado europeo nº 43', NULL, 27, 'cm', NULL, 470, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (30, 'TAL', 'EU44', 'EU 44', 'Calzado europeo nº 44', NULL, 28, 'cm', NULL, 480, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (31, 'TAL', 'ROPA_S', 'ROPA S', 'Ropa standard S (44 cm pecho)', NULL, 44, 'cm', NULL, 10, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (32, 'TAL', 'ROPA_M', 'ROPA M', 'Ropa standard M (46 cm pecho)', NULL, 46, 'cm', NULL, 20, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (33, 'TAL', 'ROPA_L', 'ROPA L', 'Ropa standard L (48 cm pecho)', NULL, 48, 'cm', NULL, 30, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (34, 'TAL', 'ROPA_XL', 'ROPA XL', 'Ropa standard XL (50 cm pecho)', NULL, 50, 'cm', NULL, 40, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (35, 'TAL', 'ROPA_XXL', 'ROPA XXL', 'Ropa standard XXL (52 cm)', NULL, 52, 'cm', NULL, 50, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (36, 'TAL', 'ROPA_XXXL', 'ROPA XXXL', 'Ropa standard XXXL (54 cm)', NULL, 54, 'cm', NULL, 60, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (37, 'TAL', 'BANIO_S', 'BAÑADOR S', 'Bañador S (70 cm cintura)', NULL, 70, 'cm', NULL, 200, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (38, 'TAL', 'BANIO_M', 'BAÑADOR M', 'Bañador M (74 cm cintura)', NULL, 74, 'cm', NULL, 210, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (39, 'TAL', 'BANIO_L', 'BAÑADOR L', 'Bañador L (78 cm cintura)', NULL, 78, 'cm', NULL, 220, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (40, 'TAL', 'BANIO_XL', 'BAÑADOR XL', 'Bañador XL (56 cm)', NULL, 56, 'cm', NULL, 230, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (41, 'TAL', 'BANIO_XXL', 'BAÑADOR XXL', 'Bañador XXL (60 cm)', NULL, 60, 'cm', NULL, 240, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (42, 'TAL', 'CAMI_S', 'CAMISA S', 'Camisa hombre S (36 cm cuello)', NULL, 36, 'cm', NULL, 300, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (43, 'TAL', 'CAMI_M', 'CAMISA M', 'Camisa hombre M (38 cm cuello)', NULL, 38, 'cm', NULL, 310, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (44, 'TAL', 'CAMI_L', 'CAMISA L', 'Camisa hombre L (40 cm cuello)', NULL, 40, 'cm', NULL, 320, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (45, 'TAL', 'CAMI_XL', 'CAMISA XL', 'Camisa hombre XL (34 cm cuello)', NULL, 34, 'cm', NULL, 330, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (109, 'TAL', 'AD_DEMO-CAMISA_9213', '3XL', NULL, NULL, 56, 'cm', NULL, 0, 'S', '2026-05-15 17:58:57', '2026-05-15 17:58:47', 'Administrador', 'Administrador'),
+  (149, 'TAL', 'AD_VEST-FLOR_XL', 'XL', NULL, NULL, 52, 'cm', NULL, 0, 'S', '2026-05-15 18:06:14', '2026-05-15 18:06:11', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_basicos` ENABLE KEYS */;
--- 30 registros exportados
+-- 47 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos
@@ -1058,49 +1102,51 @@ CREATE TABLE `fza_atributos_conjuntos_det` (
   `ID_AC_ACD` int(11) NOT NULL COMMENT 'FK a la cabecera del conjunto',
   `ID_AV_ACD` int(11) NOT NULL COMMENT 'FK al valor individual (fza_atributos_valores)',
   `ORDEN_ACD` int(11) NOT NULL DEFAULT '0' COMMENT 'Orden de visualización dentro de este conjunto específico',
+  `ID_ATB_ACD` int(11) NULL DEFAULT NULL COMMENT 'FK → fza_atributos_basicos. Significado del valor dentro de ESTE conjunto (XL=56cm en bañador, XL=34cm en camisa).',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL,
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`ID_AC_ACD`,`ID_AV_ACD`)
 );
+ALTER TABLE `fza_atributos_conjuntos_det` ADD INDEX `IDX_ACD_ATB` (`ID_ATB_ACD`);
 ALTER TABLE `fza_atributos_conjuntos_det` ADD INDEX `IDX_VALOR_ACD` (`ID_AV_ACD`);
 
 -- Datos de fza_atributos_conjuntos_det
-INSERT INTO `fza_atributos_conjuntos_det` (`ID_AC_ACD`, `ID_AV_ACD`, `ORDEN_ACD`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  (1, 9101, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (1, 9102, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (1, 9103, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (1, 9104, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (1, 9210, 50, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (1, 9212, 60, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (2, 9201, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (2, 9202, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (2, 9203, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (2, 9204, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (2, 9207, 50, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (3, 9101, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (3, 9102, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (3, 9103, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (3, 9104, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 126, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 127, 50, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 224, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 225, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 226, 60, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (4, 227, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 121, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 122, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 126, 60, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 224, 50, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 225, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (5, 227, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 218, 40, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 221, 50, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 222, 60, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 9208, 10, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 9209, 20, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 9211, 30, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
+INSERT INTO `fza_atributos_conjuntos_det` (`ID_AC_ACD`, `ID_AV_ACD`, `ORDEN_ACD`, `ID_ATB_ACD`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  (1, 9101, 10, 17, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (1, 9102, 20, 18, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (1, 9103, 30, 19, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (1, 9104, 40, 20, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (1, 9210, 50, 21, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (1, 9212, 60, 22, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (2, 9201, 10, 2, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (2, 9202, 20, 1, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (2, 9203, 30, 6, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (2, 9204, 40, 8, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (2, 9207, 50, NULL, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (3, 9101, 10, 17, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (3, 9102, 20, 18, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (3, 9103, 30, 19, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (3, 9104, 40, 20, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 126, 40, 28, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 127, 50, 29, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 224, 30, 27, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 225, 20, 26, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 226, 60, 30, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (4, 227, 10, 25, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 121, 10, 23, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 122, 20, 24, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 126, 60, 28, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 224, 50, 27, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 225, 40, 26, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (5, 227, 30, 25, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 218, 40, 4, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 221, 50, 12, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 222, 60, 13, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 9208, 10, 14, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 9209, 20, 15, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (6, 9211, 30, NULL, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
 -- 33 registros exportados
 
 
@@ -1186,6 +1232,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('CHAQ-CUERO/NEGRO/M', 100, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('CHAQ-CUERO/NEGRO/XL', 100, '2026-01-08 18:55:08', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
+  ('CHAQ-CUERO/NEGRO/XXXL', 9202, '2026-05-15 17:54:40', NULL, '', ''),
+  ('CHAQ-CUERO/NEGRO/XXXL', 9212, '2026-05-15 17:54:40', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/3XL', 9204, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/3XL', 9213, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/L', 4, '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
@@ -1339,7 +1387,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 219 registros exportados
+-- 221 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -2322,7 +2370,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 193, 3, 'S', 'S', '2026-05-14 19:34:41', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 196, 3, 'S', 'S', '2026-05-15 18:04:20', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 18, 2, 'S', 'S', '2026-05-11 19:06:32', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -4686,8 +4734,845 @@ SELECT
                                   ON atb.ID_ATB    = val.ID_ATB_AV;
 
 COMMIT;
-', '2026-05-14 19:34:41', '2026-05-14 19:34:41', 'Administrador', 'Administrador');
--- 3 registros exportados
+', '2026-05-14 19:34:41', '2026-05-14 19:34:41', 'Administrador', 'Administrador'),
+  ('193', 'atributos_basicos', '-- ============================================================================
+--  Atributos básicos para los SKUs de artículos (v2 — granularidad 3 niveles)
+-- ----------------------------------------------------------------------------
+--  Concepto:
+--    Cada valor de atributo (XL, "001" del proveedor, REF-AB12…) tiene un
+--    atributo básico asociado que actúa de helper / equivalente estándar.
+--    PERO: el significado físico de un valor depende del contexto. Una XL
+--    de bañador puede ser 56 cm y una XL de camisa 34 cm.
+--
+--  Resolución en 3 niveles (de mayor a menor prioridad):
+--    1. Override por artículo  → fza_articulos_atributos_basicos.ID_ATB_AAB
+--    2. Por conjunto           → fza_atributos_conjuntos_det.ID_ATB_ACD
+--    3. Fallback global        → fza_atributos_valores.ID_ATB_AV
+--
+--  Ejemplos:
+--    Conjunto "Tallas Bañador"   → XL → básico "BAÑO_XL = 56 cm"
+--    Conjunto "Tallas Camisa H"  → XL → básico "CAMI_XL = 34 cm"
+--    Override artículo BAÑO-XYZ  → XL → básico "BAÑO_XL_TALLAJE_USA"
+--
+--  Idempotente. Migra los ID_ATB_AV globales preexistentes a las filas del
+--  detalle de los conjuntos que ya usan ese valor.
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ---------------------------------------------------------------------------
+-- 1. Ampliación de fza_atributos_basicos
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_basicos`
+  ADD COLUMN IF NOT EXISTS `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL
+        COMMENT ''Descripción larga: AZUL CIELO, Talla XL Hombre, etc.''
+        AFTER `NOMBRE_ATB`,
+  ADD COLUMN IF NOT EXISTS `HEX_ATB` varchar(7) NULL DEFAULT NULL
+        COMMENT ''Color paleta en formato #RRGGBB (sólo para atributos de color)''
+        AFTER `DESCRIPCION_ATB`,
+  ADD COLUMN IF NOT EXISTS `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL
+        COMMENT ''Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)''
+        AFTER `HEX_ATB`,
+  ADD COLUMN IF NOT EXISTS `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL
+        COMMENT ''Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…''
+        AFTER `VALOR_NUM_ATB`,
+  ADD COLUMN IF NOT EXISTS `INSTANTE_MODIF` timestamp NOT NULL
+        DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  ADD COLUMN IF NOT EXISTS `INSTANTE_ALTA` timestamp NOT NULL
+        DEFAULT ''0000-00-00 00:00:00'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 2. FK lógica desde fza_atributos_valores hacia fza_atributos_basicos
+--    (nivel 3 / fallback global). Se conserva por compatibilidad.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_valores`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_AV` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica → fza_atributos_basicos.ID_ATB. Default global del valor cuando no hay conjunto ni override por artículo.''
+        AFTER `CODIGO_ART_EXTRA_AV`;
+
+ALTER TABLE `fza_atributos_valores`
+  ADD INDEX IF NOT EXISTS `IDX_AV_ATB` (`ID_ATB_AV`);
+
+-- ---------------------------------------------------------------------------
+-- 3. FK lógica desde fza_atributos_conjuntos_det hacia fza_atributos_basicos
+--    (nivel 2 / por conjunto). Aquí vive el caso XL bañador vs XL camisa.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_ACD` int(11) NULL DEFAULT NULL
+        COMMENT ''FK → fza_atributos_basicos. Significado del valor dentro de ESTE conjunto (XL=56cm en bañador, XL=34cm en camisa).''
+        AFTER `ORDEN_ACD`;
+
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD INDEX IF NOT EXISTS `IDX_ACD_ATB` (`ID_ATB_ACD`);
+
+-- ---------------------------------------------------------------------------
+-- 4. Tabla nueva: override por artículo (nivel 1)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_articulos_atributos_basicos` (
+  `CODIGO_ART_AAB` varchar(20) NOT NULL COMMENT ''FK lógica fza_articulos.CODIGO_ART_ART'',
+  `ID_AV_AAB`      int(11)     NOT NULL COMMENT ''FK lógica fza_atributos_valores.ID_AV'',
+  `ID_ATB_AAB`     int(11)     NOT NULL COMMENT ''FK lógica fza_atributos_basicos.ID_ATB. Override específico de este artículo.'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
+                                       ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA`  timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`   varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF`  varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`CODIGO_ART_AAB`, `ID_AV_AAB`)
+);
+ALTER TABLE `fza_articulos_atributos_basicos`
+  ADD INDEX IF NOT EXISTS `IDX_AAB_VAL` (`ID_AV_AAB`),
+  ADD INDEX IF NOT EXISTS `IDX_AAB_ATB` (`ID_ATB_AAB`);
+
+-- ---------------------------------------------------------------------------
+-- 5. Catálogo demo de atributos básicos
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_atributos_basicos`
+  (`ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`,
+   `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  -- Colores básicos con HEX de paleta (independiente del artículo)
+  (''CO'',  ''NEGRO'',       ''NEGRO'',       ''Color negro'',              ''#000000'', NULL, NULL,  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BLANCO'',      ''BLANCO'',      ''Color blanco'',             ''#FFFFFF'', NULL, NULL,  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROJO'',        ''ROJO'',        ''Color rojo'',               ''#FF0000'', NULL, NULL,  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL'',        ''AZUL'',        ''Color azul'',               ''#0066CC'', NULL, NULL,  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_CIELO'',  ''AZUL CIELO'',  ''Color azul cielo'',         ''#87CEEB'', NULL, NULL,  41, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_MARINO'', ''AZUL MARINO'', ''Color azul marino'',        ''#1B2A49'', NULL, NULL,  42, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VERDE'',       ''VERDE'',       ''Color verde'',              ''#1D8B3A'', NULL, NULL,  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AMARILLO'',    ''AMARILLO'',    ''Color amarillo'',           ''#FFD400'', NULL, NULL,  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''MARRON'',      ''MARRÓN'',      ''Color marrón'',             ''#7B4B2A'', NULL, NULL,  70, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''GRIS'',        ''GRIS'',        ''Color gris'',               ''#808080'', NULL, NULL,  80, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BEIGE'',       ''BEIGE'',       ''Color beige'',              ''#E8D8B5'', NULL, NULL,  90, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROSA'',        ''ROSA'',        ''Color rosa'',               ''#F4A6C0'', NULL, NULL, 100, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''CAMEL'',       ''CAMEL'',       ''Color camel / tostado'',    ''#C19A6B'', NULL, NULL, 110, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''FUCSIA'',      ''FUCSIA'',      ''Color fucsia'',             ''#FF00FF'', NULL, NULL, 120, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BURDEOS'',     ''BURDEOS'',     ''Color burdeos'',            ''#7A1F2B'', NULL, NULL, 130, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VAQUERO'',     ''VAQUERO'',     ''Acabado vaquero / denim'',  ''#3F6BAA'', NULL, NULL, 140, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Ropa Standard" — medida pecho aproximada en cm
+  (''TAL'', ''ROPA_S'',   ''ROPA S'',   ''Ropa standard S (44 cm pecho)'',  NULL, 44.0, ''cm'',  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_M'',   ''ROPA M'',   ''Ropa standard M (46 cm pecho)'',  NULL, 46.0, ''cm'',  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_L'',   ''ROPA L'',   ''Ropa standard L (48 cm pecho)'',  NULL, 48.0, ''cm'',  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XL'',  ''ROPA XL'',  ''Ropa standard XL (50 cm pecho)'', NULL, 50.0, ''cm'',  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXL'', ''ROPA XXL'', ''Ropa standard XXL (52 cm)'',      NULL, 52.0, ''cm'',  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXXL'',''ROPA XXXL'',''Ropa standard XXXL (54 cm)'',     NULL, 54.0, ''cm'',  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Bañador" — medida cintura cm
+  (''TAL'', ''BANIO_S'',  ''BAÑADOR S'',  ''Bañador S (70 cm cintura)'',    NULL, 70.0, ''cm'', 200, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_M'',  ''BAÑADOR M'',  ''Bañador M (74 cm cintura)'',    NULL, 74.0, ''cm'', 210, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_L'',  ''BAÑADOR L'',  ''Bañador L (78 cm cintura)'',    NULL, 78.0, ''cm'', 220, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XL'', ''BAÑADOR XL'', ''Bañador XL (56 cm)'',           NULL, 56.0, ''cm'', 230, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XXL'',''BAÑADOR XXL'',''Bañador XXL (60 cm)'',          NULL, 60.0, ''cm'', 240, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Camisa Hombre" — medida cuello cm
+  (''TAL'', ''CAMI_S'',   ''CAMISA S'',   ''Camisa hombre S (36 cm cuello)'',  NULL, 36.0, ''cm'', 300, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_M'',   ''CAMISA M'',   ''Camisa hombre M (38 cm cuello)'',  NULL, 38.0, ''cm'', 310, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_L'',   ''CAMISA L'',   ''Camisa hombre L (40 cm cuello)'',  NULL, 40.0, ''cm'', 320, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_XL'',  ''CAMISA XL'',  ''Camisa hombre XL (34 cm cuello)'', NULL, 34.0, ''cm'', 330, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes calzado EU
+  (''TAL'', ''EU37'',     ''EU 37'',      ''Calzado europeo nº 37'',           NULL, 23.5, ''cm'', 410, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU38'',     ''EU 38'',      ''Calzado europeo nº 38'',           NULL, 24.0, ''cm'', 420, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU39'',     ''EU 39'',      ''Calzado europeo nº 39'',           NULL, 24.5, ''cm'', 430, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU40'',     ''EU 40'',      ''Calzado europeo nº 40'',           NULL, 25.0, ''cm'', 440, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU41'',     ''EU 41'',      ''Calzado europeo nº 41'',           NULL, 26.0, ''cm'', 450, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU42'',     ''EU 42'',      ''Calzado europeo nº 42'',           NULL, 26.5, ''cm'', 460, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU43'',     ''EU 43'',      ''Calzado europeo nº 43'',           NULL, 27.0, ''cm'', 470, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU44'',     ''EU 44'',      ''Calzado europeo nº 44'',           NULL, 28.0, ''cm'', 480, ''S'', NOW(), ''SISTEMA'', ''SISTEMA'')
+ON DUPLICATE KEY UPDATE
+  `NOMBRE_ATB`      = VALUES(`NOMBRE_ATB`),
+  `DESCRIPCION_ATB` = VALUES(`DESCRIPCION_ATB`),
+  `HEX_ATB`         = VALUES(`HEX_ATB`),
+  `VALOR_NUM_ATB`   = VALUES(`VALOR_NUM_ATB`),
+  `UNIDAD_ATB`      = VALUES(`UNIDAD_ATB`),
+  `ORDEN_ATB`       = VALUES(`ORDEN_ATB`),
+  `ESACTIVO_ATB`    = VALUES(`ESACTIVO_ATB`),
+  `USUARIO_MODIF`   = ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 6. Enlace inicial del fallback global por nombre del valor (sólo colores)
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_valores` av
+  JOIN `fza_atributos_basicos` atb
+    ON atb.ID_VA_ATB = av.ID_VA_AV
+   AND atb.HEX_ATB IS NOT NULL
+   AND (
+        UPPER(REPLACE(av.AV, '' '', ''_'')) = UPPER(atb.CODIGO_ATB)
+     OR UPPER(av.AV)                    = UPPER(atb.NOMBRE_ATB)
+       )
+   SET av.ID_ATB_AV = atb.ID_ATB
+ WHERE av.ID_VA_AV  = ''CO''
+   AND av.ID_ATB_AV IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- 7. Migración: el ID_ATB_AV global existente se copia a cada conjunto-det
+--    que use el valor (siempre que ese conjunto-det aún no tenga un básico
+--    propio). El conjunto puede sobreescribirlo luego.
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_conjuntos_det` acd
+  JOIN `fza_atributos_valores` av ON av.ID_AV = acd.ID_AV_ACD
+   SET acd.ID_ATB_ACD = av.ID_ATB_AV
+ WHERE acd.ID_ATB_ACD IS NULL
+   AND av.ID_ATB_AV IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- 8. Vista de apoyo: SKU × atributo × valor × atributo básico EFECTIVO
+--    Resolución: override artículo > conjunto > global.
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+CREATE VIEW `vi_atributos_sku_basico` AS
+SELECT
+    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
+    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
+    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
+    val.ID_AV                                     AS ID_AV,
+    val.ID_VA_AV                                  AS ID_VA_AV,
+    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
+    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
+    val.AV                                        AS VALOR_AV,
+    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
+    aca.ID_AC_ACA                                 AS ID_AC,
+    aab.ID_ATB_AAB                                AS ID_ATB_OVERRIDE,
+    acd.ID_ATB_ACD                                AS ID_ATB_CONJUNTO,
+    val.ID_ATB_AV                                 AS ID_ATB_GLOBAL,
+    COALESCE(aab.ID_ATB_AAB, acd.ID_ATB_ACD, val.ID_ATB_AV) AS ID_ATB_AV,
+    CASE
+      WHEN aab.ID_ATB_AAB IS NOT NULL THEN ''A''
+      WHEN acd.ID_ATB_ACD IS NOT NULL THEN ''C''
+      WHEN val.ID_ATB_AV  IS NOT NULL THEN ''G''
+      ELSE NULL
+    END                                           AS FUENTE_ATB,
+    atb.CODIGO_ATB                                AS CODIGO_ATB,
+    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
+    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
+    atb.HEX_ATB                                   AS HEX_ATB,
+    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
+    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
+    CASE
+      WHEN atb.VALOR_NUM_ATB IS NOT NULL
+        THEN CONCAT(
+               TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
+               COALESCE(CONCAT('' '', atb.UNIDAD_ATB), ''''))
+      WHEN atb.HEX_ATB IS NOT NULL
+        THEN CONCAT(atb.NOMBRE_ATB, '' '', atb.HEX_ATB)
+      ELSE atb.NOMBRE_ATB
+    END                                           AS ETIQUETA_BASICO
+  FROM fza_articulos_skus       sku
+  JOIN fza_atributos_sku        sa   ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores    val  ON val.ID_AV               = sa.ID_AV_SA
+  LEFT JOIN fza_variaciones_atributos va
+                                     ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
+                                    AND va.ID_ATB_VA = val.ID_VA_AV
+  -- Override por artículo (nivel 1)
+  LEFT JOIN fza_articulos_atributos_basicos aab
+                                     ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU
+                                    AND aab.ID_AV_AAB      = val.ID_AV
+  -- Conjunto asignado al artículo para este atributo (nivel 2)
+  LEFT JOIN fza_articulos_conjuntos_asign aca
+                                     ON aca.CODIGO_ART_ACA = sku.CODIGO_ART_SKU
+                                    AND aca.ID_VA_ACA      = val.ID_VA_AV
+  LEFT JOIN fza_atributos_conjuntos_det acd
+                                     ON acd.ID_AC_ACD = aca.ID_AC_ACA
+                                    AND acd.ID_AV_ACD = val.ID_AV
+  -- Básico efectivo según prioridad
+  LEFT JOIN fza_atributos_basicos atb
+                                     ON atb.ID_ATB = COALESCE(
+                                          aab.ID_ATB_AAB,
+                                          acd.ID_ATB_ACD,
+                                          val.ID_ATB_AV);
+
+-- ---------------------------------------------------------------------------
+-- 9. Registro del nuevo formulario en fza_winforms
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''AtributosBasicos'', ''Atributos básicos'', ''mnuAtributosBasicos'',
+   ''inMtoAtributosBasicos.TfrmMtoAtributosBasicos'',
+   ''Ctrl+Alt+B'',
+   ''UniDataAtributosBasicos.TdmAtributosBasicos'', 1)
+ON DUPLICATE KEY UPDATE
+  `CAPTION_WINF` = VALUES(`CAPTION_WINF`),
+  `UNITF_WINF`   = VALUES(`UNITF_WINF`),
+  `DATAMODULE_WINF` = VALUES(`DATAMODULE_WINF`);
+
+COMMIT;
+', '2026-05-14 20:29:36', '2026-05-14 20:29:36', 'Administrador', 'Administrador'),
+  ('194', 'atributos_basicos', '-- ============================================================================
+--  Atributos básicos para los SKUs de artículos (v2 — granularidad 3 niveles)
+-- ----------------------------------------------------------------------------
+--  Concepto:
+--    Cada valor de atributo (XL, "001" del proveedor, REF-AB12…) tiene un
+--    atributo básico asociado que actúa de helper / equivalente estándar.
+--    PERO: el significado físico de un valor depende del contexto. Una XL
+--    de bañador puede ser 56 cm y una XL de camisa 34 cm.
+--
+--  Resolución en 3 niveles (de mayor a menor prioridad):
+--    1. Override por artículo  → fza_articulos_atributos_basicos.ID_ATB_AAB
+--    2. Por conjunto           → fza_atributos_conjuntos_det.ID_ATB_ACD
+--    3. Fallback global        → fza_atributos_valores.ID_ATB_AV
+--
+--  Ejemplos:
+--    Conjunto "Tallas Bañador"   → XL → básico "BAÑO_XL = 56 cm"
+--    Conjunto "Tallas Camisa H"  → XL → básico "CAMI_XL = 34 cm"
+--    Override artículo BAÑO-XYZ  → XL → básico "BAÑO_XL_TALLAJE_USA"
+--
+--  Idempotente. Migra los ID_ATB_AV globales preexistentes a las filas del
+--  detalle de los conjuntos que ya usan ese valor.
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ---------------------------------------------------------------------------
+-- 1. Ampliación de fza_atributos_basicos
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_basicos`
+  ADD COLUMN IF NOT EXISTS `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL
+        COMMENT ''Descripción larga: AZUL CIELO, Talla XL Hombre, etc.''
+        AFTER `NOMBRE_ATB`,
+  ADD COLUMN IF NOT EXISTS `HEX_ATB` varchar(7) NULL DEFAULT NULL
+        COMMENT ''Color paleta en formato #RRGGBB (sólo para atributos de color)''
+        AFTER `DESCRIPCION_ATB`,
+  ADD COLUMN IF NOT EXISTS `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL
+        COMMENT ''Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)''
+        AFTER `HEX_ATB`,
+  ADD COLUMN IF NOT EXISTS `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL
+        COMMENT ''Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…''
+        AFTER `VALOR_NUM_ATB`,
+  ADD COLUMN IF NOT EXISTS `INSTANTE_MODIF` timestamp NOT NULL
+        DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  ADD COLUMN IF NOT EXISTS `INSTANTE_ALTA` timestamp NOT NULL
+        DEFAULT ''0000-00-00 00:00:00'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 2. FK lógica desde fza_atributos_valores hacia fza_atributos_basicos
+--    (nivel 3 / fallback global). Se conserva por compatibilidad.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_valores`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_AV` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica → fza_atributos_basicos.ID_ATB. Default global del valor cuando no hay conjunto ni override por artículo.''
+        AFTER `CODIGO_ART_EXTRA_AV`;
+
+ALTER TABLE `fza_atributos_valores`
+  ADD INDEX IF NOT EXISTS `IDX_AV_ATB` (`ID_ATB_AV`);
+
+-- ---------------------------------------------------------------------------
+-- 3. FK lógica desde fza_atributos_conjuntos_det hacia fza_atributos_basicos
+--    (nivel 2 / por conjunto). Aquí vive el caso XL bañador vs XL camisa.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_ACD` int(11) NULL DEFAULT NULL
+        COMMENT ''FK → fza_atributos_basicos. Significado del valor dentro de ESTE conjunto (XL=56cm en bañador, XL=34cm en camisa).''
+        AFTER `ORDEN_ACD`;
+
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD INDEX IF NOT EXISTS `IDX_ACD_ATB` (`ID_ATB_ACD`);
+
+-- ---------------------------------------------------------------------------
+-- 4. Tabla nueva: override por artículo (nivel 1)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_articulos_atributos_basicos` (
+  `CODIGO_ART_AAB` varchar(20) NOT NULL COMMENT ''FK lógica fza_articulos.CODIGO_ART_ART'',
+  `ID_AV_AAB`      int(11)     NOT NULL COMMENT ''FK lógica fza_atributos_valores.ID_AV'',
+  `ID_ATB_AAB`     int(11)     NULL DEFAULT NULL
+                  COMMENT ''FK lógica fza_atributos_basicos.ID_ATB. Override específico del artículo. NULL = bloqueo explícito: este artículo no quiere básico para este valor aunque el conjunto o el global lo tengan.'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
+                                       ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA`  timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`   varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF`  varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`CODIGO_ART_AAB`, `ID_AV_AAB`)
+);
+-- Hacemos el ID_ATB_AAB nullable si la tabla ya existía con NOT NULL.
+ALTER TABLE `fza_articulos_atributos_basicos`
+  MODIFY COLUMN `ID_ATB_AAB` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica fza_atributos_basicos.ID_ATB. NULL = bloqueo (sin básico).'';
+ALTER TABLE `fza_articulos_atributos_basicos`
+  ADD INDEX IF NOT EXISTS `IDX_AAB_VAL` (`ID_AV_AAB`),
+  ADD INDEX IF NOT EXISTS `IDX_AAB_ATB` (`ID_ATB_AAB`);
+
+-- ---------------------------------------------------------------------------
+-- 5. Catálogo demo de atributos básicos
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_atributos_basicos`
+  (`ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`,
+   `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  -- Colores básicos con HEX de paleta (independiente del artículo)
+  (''CO'',  ''NEGRO'',       ''NEGRO'',       ''Color negro'',              ''#000000'', NULL, NULL,  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BLANCO'',      ''BLANCO'',      ''Color blanco'',             ''#FFFFFF'', NULL, NULL,  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROJO'',        ''ROJO'',        ''Color rojo'',               ''#FF0000'', NULL, NULL,  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL'',        ''AZUL'',        ''Color azul'',               ''#0066CC'', NULL, NULL,  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_CIELO'',  ''AZUL CIELO'',  ''Color azul cielo'',         ''#87CEEB'', NULL, NULL,  41, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_MARINO'', ''AZUL MARINO'', ''Color azul marino'',        ''#1B2A49'', NULL, NULL,  42, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VERDE'',       ''VERDE'',       ''Color verde'',              ''#1D8B3A'', NULL, NULL,  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AMARILLO'',    ''AMARILLO'',    ''Color amarillo'',           ''#FFD400'', NULL, NULL,  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''MARRON'',      ''MARRÓN'',      ''Color marrón'',             ''#7B4B2A'', NULL, NULL,  70, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''GRIS'',        ''GRIS'',        ''Color gris'',               ''#808080'', NULL, NULL,  80, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BEIGE'',       ''BEIGE'',       ''Color beige'',              ''#E8D8B5'', NULL, NULL,  90, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROSA'',        ''ROSA'',        ''Color rosa'',               ''#F4A6C0'', NULL, NULL, 100, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''CAMEL'',       ''CAMEL'',       ''Color camel / tostado'',    ''#C19A6B'', NULL, NULL, 110, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''FUCSIA'',      ''FUCSIA'',      ''Color fucsia'',             ''#FF00FF'', NULL, NULL, 120, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BURDEOS'',     ''BURDEOS'',     ''Color burdeos'',            ''#7A1F2B'', NULL, NULL, 130, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VAQUERO'',     ''VAQUERO'',     ''Acabado vaquero / denim'',  ''#3F6BAA'', NULL, NULL, 140, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Ropa Standard" — medida pecho aproximada en cm
+  (''TAL'', ''ROPA_S'',   ''ROPA S'',   ''Ropa standard S (44 cm pecho)'',  NULL, 44.0, ''cm'',  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_M'',   ''ROPA M'',   ''Ropa standard M (46 cm pecho)'',  NULL, 46.0, ''cm'',  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_L'',   ''ROPA L'',   ''Ropa standard L (48 cm pecho)'',  NULL, 48.0, ''cm'',  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XL'',  ''ROPA XL'',  ''Ropa standard XL (50 cm pecho)'', NULL, 50.0, ''cm'',  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXL'', ''ROPA XXL'', ''Ropa standard XXL (52 cm)'',      NULL, 52.0, ''cm'',  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXXL'',''ROPA XXXL'',''Ropa standard XXXL (54 cm)'',     NULL, 54.0, ''cm'',  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Bañador" — medida cintura cm
+  (''TAL'', ''BANIO_S'',  ''BAÑADOR S'',  ''Bañador S (70 cm cintura)'',    NULL, 70.0, ''cm'', 200, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_M'',  ''BAÑADOR M'',  ''Bañador M (74 cm cintura)'',    NULL, 74.0, ''cm'', 210, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_L'',  ''BAÑADOR L'',  ''Bañador L (78 cm cintura)'',    NULL, 78.0, ''cm'', 220, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XL'', ''BAÑADOR XL'', ''Bañador XL (56 cm)'',           NULL, 56.0, ''cm'', 230, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XXL'',''BAÑADOR XXL'',''Bañador XXL (60 cm)'',          NULL, 60.0, ''cm'', 240, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Camisa Hombre" — medida cuello cm
+  (''TAL'', ''CAMI_S'',   ''CAMISA S'',   ''Camisa hombre S (36 cm cuello)'',  NULL, 36.0, ''cm'', 300, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_M'',   ''CAMISA M'',   ''Camisa hombre M (38 cm cuello)'',  NULL, 38.0, ''cm'', 310, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_L'',   ''CAMISA L'',   ''Camisa hombre L (40 cm cuello)'',  NULL, 40.0, ''cm'', 320, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_XL'',  ''CAMISA XL'',  ''Camisa hombre XL (34 cm cuello)'', NULL, 34.0, ''cm'', 330, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes calzado EU
+  (''TAL'', ''EU37'',     ''EU 37'',      ''Calzado europeo nº 37'',           NULL, 23.5, ''cm'', 410, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU38'',     ''EU 38'',      ''Calzado europeo nº 38'',           NULL, 24.0, ''cm'', 420, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU39'',     ''EU 39'',      ''Calzado europeo nº 39'',           NULL, 24.5, ''cm'', 430, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU40'',     ''EU 40'',      ''Calzado europeo nº 40'',           NULL, 25.0, ''cm'', 440, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU41'',     ''EU 41'',      ''Calzado europeo nº 41'',           NULL, 26.0, ''cm'', 450, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU42'',     ''EU 42'',      ''Calzado europeo nº 42'',           NULL, 26.5, ''cm'', 460, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU43'',     ''EU 43'',      ''Calzado europeo nº 43'',           NULL, 27.0, ''cm'', 470, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU44'',     ''EU 44'',      ''Calzado europeo nº 44'',           NULL, 28.0, ''cm'', 480, ''S'', NOW(), ''SISTEMA'', ''SISTEMA'')
+ON DUPLICATE KEY UPDATE
+  `NOMBRE_ATB`      = VALUES(`NOMBRE_ATB`),
+  `DESCRIPCION_ATB` = VALUES(`DESCRIPCION_ATB`),
+  `HEX_ATB`         = VALUES(`HEX_ATB`),
+  `VALOR_NUM_ATB`   = VALUES(`VALOR_NUM_ATB`),
+  `UNIDAD_ATB`      = VALUES(`UNIDAD_ATB`),
+  `ORDEN_ATB`       = VALUES(`ORDEN_ATB`),
+  `ESACTIVO_ATB`    = VALUES(`ESACTIVO_ATB`),
+  `USUARIO_MODIF`   = ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 6. Enlace inicial del fallback global por nombre del valor (sólo colores)
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_valores` av
+  JOIN `fza_atributos_basicos` atb
+    ON atb.ID_VA_ATB = av.ID_VA_AV
+   AND atb.HEX_ATB IS NOT NULL
+   AND (
+        UPPER(REPLACE(av.AV, '' '', ''_'')) = UPPER(atb.CODIGO_ATB)
+     OR UPPER(av.AV)                    = UPPER(atb.NOMBRE_ATB)
+       )
+   SET av.ID_ATB_AV = atb.ID_ATB
+ WHERE av.ID_VA_AV  = ''CO''
+   AND av.ID_ATB_AV IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- 7. Migración: el ID_ATB_AV global existente se copia a cada conjunto-det
+--    que use el valor (siempre que ese conjunto-det aún no tenga un básico
+--    propio). El conjunto puede sobreescribirlo luego.
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_conjuntos_det` acd
+  JOIN `fza_atributos_valores` av ON av.ID_AV = acd.ID_AV_ACD
+   SET acd.ID_ATB_ACD = av.ID_ATB_AV
+ WHERE acd.ID_ATB_ACD IS NULL
+   AND av.ID_ATB_AV IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- 8. Vista de apoyo: SKU × atributo × valor × atributo básico EFECTIVO
+--    Resolución: override artículo > conjunto > global.
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+CREATE VIEW `vi_atributos_sku_basico` AS
+SELECT
+    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
+    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
+    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
+    val.ID_AV                                     AS ID_AV,
+    val.ID_VA_AV                                  AS ID_VA_AV,
+    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
+    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
+    val.AV                                        AS VALOR_AV,
+    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
+    aca.ID_AC_ACA                                 AS ID_AC,
+    aab.ID_ATB_AAB                                AS ID_ATB_OVERRIDE,
+    acd.ID_ATB_ACD                                AS ID_ATB_CONJUNTO,
+    val.ID_ATB_AV                                 AS ID_ATB_GLOBAL,
+    -- Si EXISTE fila de override (aunque su ID_ATB_AAB sea NULL) gana
+    -- siempre: el artículo está expresando "yo decido aquí". NULL en el
+    -- override significa bloqueo (sin básico).
+    CASE
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+      ELSE                                       val.ID_ATB_AV
+    END                                           AS ID_ATB_AV,
+    CASE
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN ''A''
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN ''C''
+      WHEN val.ID_ATB_AV      IS NOT NULL THEN ''G''
+      ELSE NULL
+    END                                           AS FUENTE_ATB,
+    atb.CODIGO_ATB                                AS CODIGO_ATB,
+    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
+    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
+    atb.HEX_ATB                                   AS HEX_ATB,
+    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
+    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
+    CASE
+      WHEN atb.VALOR_NUM_ATB IS NOT NULL
+        THEN CONCAT(
+               TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
+               COALESCE(CONCAT('' '', atb.UNIDAD_ATB), ''''))
+      WHEN atb.HEX_ATB IS NOT NULL
+        THEN CONCAT(atb.NOMBRE_ATB, '' '', atb.HEX_ATB)
+      ELSE atb.NOMBRE_ATB
+    END                                           AS ETIQUETA_BASICO
+  FROM fza_articulos_skus       sku
+  JOIN fza_atributos_sku        sa   ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores    val  ON val.ID_AV               = sa.ID_AV_SA
+  LEFT JOIN fza_variaciones_atributos va
+                                     ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
+                                    AND va.ID_ATB_VA = val.ID_VA_AV
+  -- Override por artículo (nivel 1)
+  LEFT JOIN fza_articulos_atributos_basicos aab
+                                     ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU
+                                    AND aab.ID_AV_AAB      = val.ID_AV
+  -- Conjunto asignado al artículo para este atributo (nivel 2)
+  LEFT JOIN fza_articulos_conjuntos_asign aca
+                                     ON aca.CODIGO_ART_ACA = sku.CODIGO_ART_SKU
+                                    AND aca.ID_VA_ACA      = val.ID_VA_AV
+  LEFT JOIN fza_atributos_conjuntos_det acd
+                                     ON acd.ID_AC_ACD = aca.ID_AC_ACA
+                                    AND acd.ID_AV_ACD = val.ID_AV
+  -- Básico efectivo según prioridad. Misma lógica que ID_ATB_AV arriba:
+  -- la sola existencia de la fila override (CODIGO_ART_AAB no NULL) gana,
+  -- y si su valor es NULL no se hace JOIN (sin básico = sin metadatos).
+  LEFT JOIN fza_atributos_basicos atb
+                                     ON atb.ID_ATB = (
+                                          CASE
+                                            WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+                                            WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+                                            ELSE                                       val.ID_ATB_AV
+                                          END);
+
+-- ---------------------------------------------------------------------------
+-- 9. Registro del nuevo formulario en fza_winforms
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''AtributosBasicos'', ''Atributos básicos'', ''mnuAtributosBasicos'',
+   ''inMtoAtributosBasicos.TfrmMtoAtributosBasicos'',
+   ''Ctrl+Alt+B'',
+   ''UniDataAtributosBasicos.TdmAtributosBasicos'', 1)
+ON DUPLICATE KEY UPDATE
+  `CAPTION_WINF` = VALUES(`CAPTION_WINF`),
+  `UNITF_WINF`   = VALUES(`UNITF_WINF`),
+  `DATAMODULE_WINF` = VALUES(`DATAMODULE_WINF`);
+
+COMMIT;
+', '2026-05-15 17:47:49', '2026-05-15 17:47:49', 'Administrador', 'Administrador'),
+  ('195', 'atributos_basicos', '-- ============================================================================
+--  Atributos básicos para los SKUs de artículos (v2 — granularidad 3 niveles)
+-- ----------------------------------------------------------------------------
+--  Concepto:
+--    Cada valor de atributo (XL, "001" del proveedor, REF-AB12…) tiene un
+--    atributo básico asociado que actúa de helper / equivalente estándar.
+--    PERO: el significado físico de un valor depende del contexto. Una XL
+--    de bañador puede ser 56 cm y una XL de camisa 34 cm.
+--
+--  Resolución en 3 niveles (de mayor a menor prioridad):
+--    1. Override por artículo  → fza_articulos_atributos_basicos.ID_ATB_AAB
+--    2. Por conjunto           → fza_atributos_conjuntos_det.ID_ATB_ACD
+--    3. Fallback global        → fza_atributos_valores.ID_ATB_AV
+--
+--  Ejemplos:
+--    Conjunto "Tallas Bañador"   → XL → básico "BAÑO_XL = 56 cm"
+--    Conjunto "Tallas Camisa H"  → XL → básico "CAMI_XL = 34 cm"
+--    Override artículo BAÑO-XYZ  → XL → básico "BAÑO_XL_TALLAJE_USA"
+--
+--  Idempotente. Migra los ID_ATB_AV globales preexistentes a las filas del
+--  detalle de los conjuntos que ya usan ese valor.
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ---------------------------------------------------------------------------
+-- 1. Ampliación de fza_atributos_basicos
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_basicos`
+  MODIFY COLUMN `CODIGO_ATB` varchar(100) NOT NULL
+        COMMENT ''Código corto del atributo básico (XL, AZUL_CIELO, EU42, AD_DEMO-CAMISA_3XL).'';
+
+ALTER TABLE `fza_atributos_basicos`
+  ADD COLUMN IF NOT EXISTS `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL
+        COMMENT ''Descripción larga: AZUL CIELO, Talla XL Hombre, etc.''
+        AFTER `NOMBRE_ATB`,
+  ADD COLUMN IF NOT EXISTS `HEX_ATB` varchar(7) NULL DEFAULT NULL
+        COMMENT ''Color paleta en formato #RRGGBB (sólo para atributos de color)''
+        AFTER `DESCRIPCION_ATB`,
+  ADD COLUMN IF NOT EXISTS `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL
+        COMMENT ''Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)''
+        AFTER `HEX_ATB`,
+  ADD COLUMN IF NOT EXISTS `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL
+        COMMENT ''Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…''
+        AFTER `VALOR_NUM_ATB`,
+  ADD COLUMN IF NOT EXISTS `INSTANTE_MODIF` timestamp NOT NULL
+        DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  ADD COLUMN IF NOT EXISTS `INSTANTE_ALTA` timestamp NOT NULL
+        DEFAULT ''0000-00-00 00:00:00'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  ADD COLUMN IF NOT EXISTS `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 2. FK lógica desde fza_atributos_valores hacia fza_atributos_basicos
+--    (nivel 3 / fallback global). Se conserva por compatibilidad.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_valores`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_AV` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica → fza_atributos_basicos.ID_ATB. Default global del valor cuando no hay conjunto ni override por artículo.''
+        AFTER `CODIGO_ART_EXTRA_AV`;
+
+ALTER TABLE `fza_atributos_valores`
+  ADD INDEX IF NOT EXISTS `IDX_AV_ATB` (`ID_ATB_AV`);
+
+-- ---------------------------------------------------------------------------
+-- 3. FK lógica desde fza_atributos_conjuntos_det hacia fza_atributos_basicos
+--    (nivel 2 / por conjunto). Aquí vive el caso XL bañador vs XL camisa.
+-- ---------------------------------------------------------------------------
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD COLUMN IF NOT EXISTS `ID_ATB_ACD` int(11) NULL DEFAULT NULL
+        COMMENT ''FK → fza_atributos_basicos. Significado del valor dentro de ESTE conjunto (XL=56cm en bañador, XL=34cm en camisa).''
+        AFTER `ORDEN_ACD`;
+
+ALTER TABLE `fza_atributos_conjuntos_det`
+  ADD INDEX IF NOT EXISTS `IDX_ACD_ATB` (`ID_ATB_ACD`);
+
+-- ---------------------------------------------------------------------------
+-- 4. Tabla nueva: override por artículo (nivel 1)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_articulos_atributos_basicos` (
+  `CODIGO_ART_AAB` varchar(20) NOT NULL COMMENT ''FK lógica fza_articulos.CODIGO_ART_ART'',
+  `ID_AV_AAB`      int(11)     NOT NULL COMMENT ''FK lógica fza_atributos_valores.ID_AV'',
+  `ID_ATB_AAB`     int(11)     NULL DEFAULT NULL
+                  COMMENT ''FK lógica fza_atributos_basicos.ID_ATB. Override específico del artículo. NULL = bloqueo explícito: este artículo no quiere básico para este valor aunque el conjunto o el global lo tengan.'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
+                                       ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA`  timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`   varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF`  varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`CODIGO_ART_AAB`, `ID_AV_AAB`)
+);
+-- Hacemos el ID_ATB_AAB nullable si la tabla ya existía con NOT NULL.
+ALTER TABLE `fza_articulos_atributos_basicos`
+  MODIFY COLUMN `ID_ATB_AAB` int(11) NULL DEFAULT NULL
+        COMMENT ''FK lógica fza_atributos_basicos.ID_ATB. NULL = bloqueo (sin básico).'';
+ALTER TABLE `fza_articulos_atributos_basicos`
+  ADD INDEX IF NOT EXISTS `IDX_AAB_VAL` (`ID_AV_AAB`),
+  ADD INDEX IF NOT EXISTS `IDX_AAB_ATB` (`ID_ATB_AAB`);
+
+-- ---------------------------------------------------------------------------
+-- 5. Catálogo demo de atributos básicos
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_atributos_basicos`
+  (`ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`,
+   `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  -- Colores básicos con HEX de paleta (independiente del artículo)
+  (''CO'',  ''NEGRO'',       ''NEGRO'',       ''Color negro'',              ''#000000'', NULL, NULL,  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BLANCO'',      ''BLANCO'',      ''Color blanco'',             ''#FFFFFF'', NULL, NULL,  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROJO'',        ''ROJO'',        ''Color rojo'',               ''#FF0000'', NULL, NULL,  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL'',        ''AZUL'',        ''Color azul'',               ''#0066CC'', NULL, NULL,  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_CIELO'',  ''AZUL CIELO'',  ''Color azul cielo'',         ''#87CEEB'', NULL, NULL,  41, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AZUL_MARINO'', ''AZUL MARINO'', ''Color azul marino'',        ''#1B2A49'', NULL, NULL,  42, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VERDE'',       ''VERDE'',       ''Color verde'',              ''#1D8B3A'', NULL, NULL,  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''AMARILLO'',    ''AMARILLO'',    ''Color amarillo'',           ''#FFD400'', NULL, NULL,  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''MARRON'',      ''MARRÓN'',      ''Color marrón'',             ''#7B4B2A'', NULL, NULL,  70, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''GRIS'',        ''GRIS'',        ''Color gris'',               ''#808080'', NULL, NULL,  80, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BEIGE'',       ''BEIGE'',       ''Color beige'',              ''#E8D8B5'', NULL, NULL,  90, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''ROSA'',        ''ROSA'',        ''Color rosa'',               ''#F4A6C0'', NULL, NULL, 100, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''CAMEL'',       ''CAMEL'',       ''Color camel / tostado'',    ''#C19A6B'', NULL, NULL, 110, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''FUCSIA'',      ''FUCSIA'',      ''Color fucsia'',             ''#FF00FF'', NULL, NULL, 120, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''BURDEOS'',     ''BURDEOS'',     ''Color burdeos'',            ''#7A1F2B'', NULL, NULL, 130, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''CO'',  ''VAQUERO'',     ''VAQUERO'',     ''Acabado vaquero / denim'',  ''#3F6BAA'', NULL, NULL, 140, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Ropa Standard" — medida pecho aproximada en cm
+  (''TAL'', ''ROPA_S'',   ''ROPA S'',   ''Ropa standard S (44 cm pecho)'',  NULL, 44.0, ''cm'',  10, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_M'',   ''ROPA M'',   ''Ropa standard M (46 cm pecho)'',  NULL, 46.0, ''cm'',  20, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_L'',   ''ROPA L'',   ''Ropa standard L (48 cm pecho)'',  NULL, 48.0, ''cm'',  30, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XL'',  ''ROPA XL'',  ''Ropa standard XL (50 cm pecho)'', NULL, 50.0, ''cm'',  40, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXL'', ''ROPA XXL'', ''Ropa standard XXL (52 cm)'',      NULL, 52.0, ''cm'',  50, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''ROPA_XXXL'',''ROPA XXXL'',''Ropa standard XXXL (54 cm)'',     NULL, 54.0, ''cm'',  60, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Bañador" — medida cintura cm
+  (''TAL'', ''BANIO_S'',  ''BAÑADOR S'',  ''Bañador S (70 cm cintura)'',    NULL, 70.0, ''cm'', 200, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_M'',  ''BAÑADOR M'',  ''Bañador M (74 cm cintura)'',    NULL, 74.0, ''cm'', 210, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_L'',  ''BAÑADOR L'',  ''Bañador L (78 cm cintura)'',    NULL, 78.0, ''cm'', 220, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XL'', ''BAÑADOR XL'', ''Bañador XL (56 cm)'',           NULL, 56.0, ''cm'', 230, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''BANIO_XXL'',''BAÑADOR XXL'',''Bañador XXL (60 cm)'',          NULL, 60.0, ''cm'', 240, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes "Camisa Hombre" — medida cuello cm
+  (''TAL'', ''CAMI_S'',   ''CAMISA S'',   ''Camisa hombre S (36 cm cuello)'',  NULL, 36.0, ''cm'', 300, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_M'',   ''CAMISA M'',   ''Camisa hombre M (38 cm cuello)'',  NULL, 38.0, ''cm'', 310, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_L'',   ''CAMISA L'',   ''Camisa hombre L (40 cm cuello)'',  NULL, 40.0, ''cm'', 320, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''CAMI_XL'',  ''CAMISA XL'',  ''Camisa hombre XL (34 cm cuello)'', NULL, 34.0, ''cm'', 330, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+
+  -- Tallajes calzado EU
+  (''TAL'', ''EU37'',     ''EU 37'',      ''Calzado europeo nº 37'',           NULL, 23.5, ''cm'', 410, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU38'',     ''EU 38'',      ''Calzado europeo nº 38'',           NULL, 24.0, ''cm'', 420, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU39'',     ''EU 39'',      ''Calzado europeo nº 39'',           NULL, 24.5, ''cm'', 430, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU40'',     ''EU 40'',      ''Calzado europeo nº 40'',           NULL, 25.0, ''cm'', 440, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU41'',     ''EU 41'',      ''Calzado europeo nº 41'',           NULL, 26.0, ''cm'', 450, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU42'',     ''EU 42'',      ''Calzado europeo nº 42'',           NULL, 26.5, ''cm'', 460, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU43'',     ''EU 43'',      ''Calzado europeo nº 43'',           NULL, 27.0, ''cm'', 470, ''S'', NOW(), ''SISTEMA'', ''SISTEMA''),
+  (''TAL'', ''EU44'',     ''EU 44'',      ''Calzado europeo nº 44'',           NULL, 28.0, ''cm'', 480, ''S'', NOW(), ''SISTEMA'', ''SISTEMA'')
+ON DUPLICATE KEY UPDATE
+  `NOMBRE_ATB`      = VALUES(`NOMBRE_ATB`),
+  `DESCRIPCION_ATB` = VALUES(`DESCRIPCION_ATB`),
+  `HEX_ATB`         = VALUES(`HEX_ATB`),
+  `VALOR_NUM_ATB`   = VALUES(`VALOR_NUM_ATB`),
+  `UNIDAD_ATB`      = VALUES(`UNIDAD_ATB`),
+  `ORDEN_ATB`       = VALUES(`ORDEN_ATB`),
+  `ESACTIVO_ATB`    = VALUES(`ESACTIVO_ATB`),
+  `USUARIO_MODIF`   = ''SISTEMA'';
+
+-- ---------------------------------------------------------------------------
+-- 6. Enlace inicial del fallback global por nombre del valor (sólo colores)
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_valores` av
+  JOIN `fza_atributos_basicos` atb
+    ON atb.ID_VA_ATB = av.ID_VA_AV
+   AND atb.HEX_ATB IS NOT NULL
+   AND (
+        UPPER(REPLACE(av.AV, '' '', ''_'')) = UPPER(atb.CODIGO_ATB)
+     OR UPPER(av.AV)                    = UPPER(atb.NOMBRE_ATB)
+       )
+   SET av.ID_ATB_AV = atb.ID_ATB
+ WHERE av.ID_VA_AV  = ''CO''
+   AND av.ID_ATB_AV IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- 7. Migración: el ID_ATB_AV global existente se copia a cada conjunto-det
+--    que use el valor (siempre que ese conjunto-det aún no tenga un básico
+--    propio). El conjunto puede sobreescribirlo luego.
+-- ---------------------------------------------------------------------------
+UPDATE `fza_atributos_conjuntos_det` acd
+  JOIN `fza_atributos_valores` av ON av.ID_AV = acd.ID_AV_ACD
+   SET acd.ID_ATB_ACD = av.ID_ATB_AV
+ WHERE acd.ID_ATB_ACD IS NULL
+   AND av.ID_ATB_AV IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- 8. Vista de apoyo: SKU × atributo × valor × atributo básico EFECTIVO
+--    Resolución: override artículo > conjunto > global.
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+CREATE VIEW `vi_atributos_sku_basico` AS
+SELECT
+    sku.CODIGO_ART_SKU                            AS CODIGO_ART_SKU,
+    sku.CODIGO_UNIDAD_SKU                         AS CODIGO_UNIDAD_SKU,
+    sku.CODIGO_VAR_SKU                            AS CODIGO_VAR_SKU,
+    val.ID_AV                                     AS ID_AV,
+    val.ID_VA_AV                                  AS ID_VA_AV,
+    va.NOMBRE_VA                                  AS NOMBRE_ATRIBUTO,
+    va.ORDEN_VA                                   AS ORDEN_ATRIBUTO,
+    val.AV                                        AS VALOR_AV,
+    val.DESCRIPCION_AV                            AS DESCRIPCION_AV,
+    aca.ID_AC_ACA                                 AS ID_AC,
+    aab.ID_ATB_AAB                                AS ID_ATB_OVERRIDE,
+    acd.ID_ATB_ACD                                AS ID_ATB_CONJUNTO,
+    val.ID_ATB_AV                                 AS ID_ATB_GLOBAL,
+    -- Si EXISTE fila de override (aunque su ID_ATB_AAB sea NULL) gana
+    -- siempre: el artículo está expresando "yo decido aquí". NULL en el
+    -- override significa bloqueo (sin básico).
+    CASE
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+      ELSE                                       val.ID_ATB_AV
+    END                                           AS ID_ATB_AV,
+    CASE
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN ''A''
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN ''C''
+      WHEN val.ID_ATB_AV      IS NOT NULL THEN ''G''
+      ELSE NULL
+    END                                           AS FUENTE_ATB,
+    atb.CODIGO_ATB                                AS CODIGO_ATB,
+    atb.NOMBRE_ATB                                AS NOMBRE_ATB,
+    atb.DESCRIPCION_ATB                           AS DESCRIPCION_ATB,
+    atb.HEX_ATB                                   AS HEX_ATB,
+    atb.VALOR_NUM_ATB                             AS VALOR_NUM_ATB,
+    atb.UNIDAD_ATB                                AS UNIDAD_ATB,
+    CASE
+      WHEN atb.VALOR_NUM_ATB IS NOT NULL
+        THEN CONCAT(
+               TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+                    CAST(atb.VALOR_NUM_ATB AS CHAR))),
+               COALESCE(CONCAT('' '', atb.UNIDAD_ATB), ''''))
+      WHEN atb.HEX_ATB IS NOT NULL
+        THEN CONCAT(atb.NOMBRE_ATB, '' '', atb.HEX_ATB)
+      ELSE atb.NOMBRE_ATB
+    END                                           AS ETIQUETA_BASICO
+  FROM fza_articulos_skus       sku
+  JOIN fza_atributos_sku        sa   ON sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores    val  ON val.ID_AV               = sa.ID_AV_SA
+  LEFT JOIN fza_variaciones_atributos va
+                                     ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
+                                    AND va.ID_ATB_VA = val.ID_VA_AV
+  -- Override por artículo (nivel 1)
+  LEFT JOIN fza_articulos_atributos_basicos aab
+                                     ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU
+                                    AND aab.ID_AV_AAB      = val.ID_AV
+  -- Conjunto asignado al artículo para este atributo (nivel 2)
+  LEFT JOIN fza_articulos_conjuntos_asign aca
+                                     ON aca.CODIGO_ART_ACA = sku.CODIGO_ART_SKU
+                                    AND aca.ID_VA_ACA      = val.ID_VA_AV
+  LEFT JOIN fza_atributos_conjuntos_det acd
+                                     ON acd.ID_AC_ACD = aca.ID_AC_ACA
+                                    AND acd.ID_AV_ACD = val.ID_AV
+  -- Básico efectivo según prioridad. Misma lógica que ID_ATB_AV arriba:
+  -- la sola existencia de la fila override (CODIGO_ART_AAB no NULL) gana,
+  -- y si su valor es NULL no se hace JOIN (sin básico = sin metadatos).
+  LEFT JOIN fza_atributos_basicos atb
+                                     ON atb.ID_ATB = (
+                                          CASE
+                                            WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+                                            WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+                                            ELSE                                       val.ID_ATB_AV
+                                          END);
+
+-- ---------------------------------------------------------------------------
+-- 9. Registro del nuevo formulario en fza_winforms
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''AtributosBasicos'', ''Atributos básicos'', ''mnuAtributosBasicos'',
+   ''inMtoAtributosBasicos.TfrmMtoAtributosBasicos'',
+   ''Ctrl+Alt+B'',
+   ''UniDataAtributosBasicos.TdmAtributosBasicos'', 1)
+ON DUPLICATE KEY UPDATE
+  `CAPTION_WINF` = VALUES(`CAPTION_WINF`),
+  `UNITF_WINF`   = VALUES(`UNITF_WINF`),
+  `DATAMODULE_WINF` = VALUES(`DATAMODULE_WINF`);
+
+COMMIT;
+', '2026-05-15 18:04:20', '2026-05-15 18:04:20', 'Administrador', 'Administrador');
+-- 6 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -6342,7 +7227,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-14 19:31:15', '2026-05-14 19:31:15', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-15 18:12:58', '2026-05-15 18:12:58', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -12073,6 +12958,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes', 1),
   ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos', 1),
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 1),
+  ('AtributosBasicos', 'Atributos básicos', 'mnuAtributosBasicos', 'inMtoAtributosBasicos.TfrmMtoAtributosBasicos', 'Ctrl+Alt+B', 'UniDataAtributosBasicos.TdmAtributosBasicos', 1),
   ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+Alt+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 1),
   ('CajaOperacionesHist', 'Histórico de Operaciones de Caja', 'mnuCajaOperacionesHist', 'inMtoCajaOperacionesHist.TfrmMtoCajaOperacionesHist', 'Ctrl+Alt+O', 'UniDataCajaOperacionesHist.TdmCajaOperacionesHist', 1),
   ('CajaPagosHist', 'Histórico de Pagos de Caja', 'mnuCajaPagosHist', 'inMtoCajaPagosHist.TfrmMtoCajaPagosHist', 'Ctrl+Alt+P', 'UniDataCajaPagosHist.TdmCajaPagosHist', 1),
@@ -12102,7 +12988,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 1),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 1),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 1);
--- 33 registros exportados
+-- 34 registros exportados
 
 
 -- ========================================
@@ -12179,7 +13065,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select distinct `ask`
 
 -- Vista: vi_atributos_sku_basico
 DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`val`.`ID_ATB_AV` AS `ID_ATB_AV`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO` from ((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = `val`.`ID_ATB_AV`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`aca`.`ID_AC_ACA` AS `ID_AC`,`aab`.`ID_ATB_AAB` AS `ID_ATB_OVERRIDE`,`acd`.`ID_ATB_ACD` AS `ID_ATB_CONJUNTO`,`val`.`ID_ATB_AV` AS `ID_ATB_GLOBAL`,case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end AS `ID_ATB_AV`,case when `aab`.`CODIGO_ART_AAB` is not null then 'A' when `acd`.`ID_ATB_ACD` is not null then 'C' when `val`.`ID_ATB_AV` is not null then 'G' else NULL end AS `FUENTE_ATB`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO` from (((((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_articulos_atributos_basicos` `aab` on(`aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU` and `aab`.`ID_AV_AAB` = `val`.`ID_AV`)) left join `fza_articulos_conjuntos_asign` `aca` on(`aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU` and `aca`.`ID_VA_ACA` = `val`.`ID_VA_AV`)) left join `fza_atributos_conjuntos_det` `acd` on(`acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA` and `acd`.`ID_AV_ACD` = `val`.`ID_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end));
 
 -- Vista: vi_cajasdef
 DROP VIEW IF EXISTS `vi_cajasdef`;
@@ -16475,4 +17361,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 14/05/2026 19:34:57
+-- Backup completado: 15/05/2026 18:21:21
