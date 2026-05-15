@@ -27,6 +27,10 @@ START TRANSACTION;
 -- 1. Ampliación de fza_atributos_basicos
 -- ---------------------------------------------------------------------------
 ALTER TABLE `fza_atributos_basicos`
+  MODIFY COLUMN `CODIGO_ATB` varchar(100) NOT NULL
+        COMMENT 'Código corto del atributo básico (XL, AZUL_CIELO, EU42, AD_DEMO-CAMISA_3XL).';
+
+ALTER TABLE `fza_atributos_basicos`
   ADD COLUMN IF NOT EXISTS `DESCRIPCION_ATB` varchar(255) NULL DEFAULT NULL
         COMMENT 'Descripción larga: AZUL CIELO, Talla XL Hombre, etc.'
         AFTER `NOMBRE_ATB`,
