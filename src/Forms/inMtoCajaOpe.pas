@@ -1327,15 +1327,25 @@ begin
   begin
     Combo := TcxImageComboBox(AEdit);
     // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
-    // para que el usuario pueda elegir. ForzarDespliegue via OnEnter no
-    // engancha de forma fiable en TcxImageComboBox, asi que lo forzamos aqui.
+    // para que el usuario pueda elegir. Probamos primero DroppedDown := True
+    // y, si la version de DevExpress no engancha por timing, posteamos F4
+    // (atajo estandar Windows para abrir un combo) como fallback.
     if (Key = VK_RETURN)
        and not Combo.DroppedDown
        and (Combo.Properties.Items.Count > 0)
        and (Combo.ItemIndex = -1)
        and (Trim(VarToStr(Combo.EditValue)) = '') then
     begin
-      Combo.DroppedDown := True;
+      try
+        Combo.DroppedDown := True;
+      except
+        // ignorar; F4 lo va a cubrir
+      end;
+      if not Combo.DroppedDown then
+      begin
+        PostMessage(Combo.Handle, WM_KEYDOWN, VK_F4, 0);
+        PostMessage(Combo.Handle, WM_KEYUP,   VK_F4, 0);
+      end;
       Key := 0;
       Exit;
     end;
