@@ -1479,40 +1479,90 @@ var
   Combo: TcxImageComboBox;
   Col: TcxGridDBColumn;
   ColProps: TcxImageComboBoxProperties;
-  CodArt: string;
-  ColItems: Integer;
+  Item: TcxImageComboBoxItem;
+  ArticuloPadre, IdVa, Av: string;
+  Avs: TList<string>;
+  Idx: Integer;
 begin
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) and (AItem is TcxGridDBColumn) then
   begin
     Combo := TcxImageComboBox(AEdit);
     Combo.Tag := AItem.Tag;
     Combo.OnEnter := nil;
-    // Acceder a Properties via la columna (no via el editor). En esta version
-    // de DevExpress, el editor recien creado puede no resolver Combo.Properties
-    // sin AV. La columna ya tiene Properties asignadas desde
-    // ConstruirColumnasDinamicas.
     Col := TcxGridDBColumn(AItem);
     if not (Col.Properties is TcxImageComboBoxProperties) then Exit;
     ColProps := TcxImageComboBoxProperties(Col.Properties);
     ColProps.OnEditValueChanged := OnAtributoChanged;
 
-    // Repoblamos Items SIEMPRE al entrar a la celda. La optimizacion previa
-    // (solo si Items.Count = 0) dependia de leer Combo.Properties que AV-ea,
-    // dejando Items vacios. Coste: 1 query al cambiar de celda; aceptable.
     if DatosCaja.cdsLineas.Active then
-      CodArt := DatosCaja.cdsLineas.FieldByName(
+      ArticuloPadre := DatosCaja.cdsLineas.FieldByName(
                                        'CODIGO_ART_FACLIN').AsString
     else
-      CodArt := '';
-    if CodArt <> '' then
-      PoblarItemsAtributoCol(AItem.Tag, CodArt);
-    ColItems := ColProps.Items.Count;
+      ArticuloPadre := '';
+    IdVa := FIdVariacionPorTag[AItem.Tag];
+
+    // SQL inline (no via PoblarItemsAtributoCol). Asi tenemos una sola
+    // TUniQuery activa por hilo: UniDAC/MySQL en streaming no soporta
+    // resultsets concurrentes y antes la query de PoblarItemsAtributoCol
+    // chocaba con qryDefinicionArticulo, devolviendo 0 filas.
+    Avs := TList<string>.Create;
+    try
+      if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
+      begin
+        with TUniQuery.Create(nil) do
+        try
+          Connection := oConn;
+          SQL.Text :=
+            '  SELECT DISTINCT V.AV                                         '+
+            '    FROM fza_atributos_valores V                               '+
+            '   INNER JOIN vi_atributos_nombres N                           '+
+            '      ON V.ID_VA_AV = N.ID_ATRIBUTO                            '+
+            '   INNER JOIN fza_atributos_sku REL                            '+
+            '      ON V.ID_AV = REL.ID_AV_SA                                '+
+            '   INNER JOIN fza_articulos_skus S                             '+
+            '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU        '+
+            '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN          '+
+            '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE                    '+
+            '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN                    '+
+            '   ORDER BY V.AV                                               ';
+          ParamByName('PADRE').AsString := ArticuloPadre;
+          ParamByName('ORDEN').AsInteger := AItem.Tag;
+          Open;
+          while not Eof do
+          begin
+            Avs.Add(FieldByName('AV').AsString);
+            Next;
+          end;
+        finally
+          Free;
+        end;
+      end;
+      RellenarImageListPaleta(FImagesPorTag[AItem.Tag], IdVa,
+                              Avs.ToArray, FAvToIndexPorTag[AItem.Tag]);
+      ColProps.Items.BeginUpdate;
+      try
+        ColProps.Items.Clear;
+        for Av in Avs do
+        begin
+          Item := TcxImageComboBoxItem(ColProps.Items.Add);
+          Item.Description := Av;
+          Item.Value       := Av;
+          if FAvToIndexPorTag[AItem.Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
+            Item.ImageIndex := Idx
+          else
+            Item.ImageIndex := -1;
+        end;
+      finally
+        ColProps.Items.EndUpdate;
+      end;
+    finally
+      Avs.Free;
+    end;
 
     // Nada de auto-seleccion (ItemIndex := 0 disparaba OnAtributoChanged sin
-    // proteccion y bloqueaba el form). Si la celda esta vacia, cableamos
-    // OnEnter por si la version dispara el evento al recibir foco; ademas,
-    // EditKeyDown abrira el dropdown si el usuario pulsa Enter.
-    if ColItems > 0 then
+    // proteccion y bloqueaba el form). EditKeyDown abrira el dropdown si el
+    // usuario pulsa Enter.
+    if ColProps.Items.Count > 0 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
       if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
@@ -1864,9 +1914,9 @@ begin
           'ID_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
-      // IMPORTANTE: cerrar antes de llamar a PoblarItemsAtributoCol, que abre
-      // otra TUniQuery sobre la misma conexion. MySQL/UniDAC en streaming no
-      // soporta dos resultsets simultaneos -> la segunda devuelve 0 filas.
+      // Cerrar libera la conexion. UniDAC/MySQL en streaming no admite dos
+      // resultsets concurrentes, asi que dejar esta abierta puede romper
+      // queries posteriores en el mismo flujo.
       datosCaja.qryDefinicionArticulo.Close;
     end;
 
@@ -1895,12 +1945,9 @@ begin
                and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
               DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
                 i) + '_NOMBRE').AsString := NombresAtributos[i-1];
-            // Items + swatches deben estar listos AHORA: el cell display de
-            // TcxImageComboBox necesita que Items contenga el valor del campo
-            // para encontrar su Description y pintarlo. Si solo los rellenamos
-            // en OnInitEdit, al salir del editor el combo no encuentra el item
-            // y la celda se queda en blanco.
-            PoblarItemsAtributoCol(i, ArticuloPadre);
+            // Items se rellenan en OnInitEdit (cuando el usuario entra a la
+            // celda). Aqui no se hace porque qryDefinicionArticulo sigue
+            // abierta y UniDAC/MySQL no soporta dos resultsets concurrentes.
           end
           else
           begin
@@ -1908,7 +1955,6 @@ begin
             Col.Options.Editing := False;
             Col.Caption := '-';
             FIdVariacionPorTag[i] := '';
-            PoblarItemsAtributoCol(i, '');
           end;
         end;
       end;
