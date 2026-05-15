@@ -10,8 +10,9 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Lookup de la paleta de atributos básicos (fza_atributos_basicos).         }
-{    Cachea por (ID_VA_ATB, CODIGO_ATB) -> EXTRA_ATB (#HEX) + NOMBRE_ATB.      }
-{    Expone helpers para pintar grids cxGrid (cuadrado de color y texto).      }
+{    Cachea por (ID_VA_ATB, CODIGO_ATB) -> HEX_ATB + NOMBRE_ATB.               }
+{    Si HEX_ATB esta vacio se cae a EXTRA_ATB (compatibilidad con paleta       }
+{    legacy). Expone helpers para pintar grids cxGrid (cuadrado / texto).      }
 {******************************************************************************}
 unit inLibAtributosPaleta;
 
@@ -136,17 +137,20 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
+    // HEX_ATB es el campo "real" de paleta. EXTRA_ATB queda como fallback
+    // para filas viejas en las que aun no se haya rellenado HEX_ATB.
     q.SQL.Text :=
-      'SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, EXTRA_ATB '   +
+      'SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '            +
+      '       COALESCE(NULLIF(HEX_ATB, ''''), EXTRA_ATB) AS HEX_FINAL ' +
       '  FROM fza_atributos_basicos '                          +
       ' WHERE ESACTIVO_ATB = ''S'' '                           +
-      '   AND EXTRA_ATB IS NOT NULL '                          +
-      '   AND EXTRA_ATB <> '''' ';
+      '   AND COALESCE(NULLIF(HEX_ATB, ''''), EXTRA_ATB) IS NOT NULL ' +
+      '   AND COALESCE(NULLIF(HEX_ATB, ''''), EXTRA_ATB) <> '''' ';
     q.Open;
     while not q.Eof do
     begin
       Info := Default(TInfoBasico);
-      Info.HexColor := q.FieldByName('EXTRA_ATB').AsString;
+      Info.HexColor := q.FieldByName('HEX_FINAL').AsString;
       Info.Color    := HexToColor(Info.HexColor);
       Info.Nombre   := q.FieldByName('NOMBRE_ATB').AsString;
       Info.EsValido := Info.Color <> clNone;
