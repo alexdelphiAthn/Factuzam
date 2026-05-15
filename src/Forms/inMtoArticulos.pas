@@ -170,6 +170,7 @@ type
     tvProveedoresColumn1: TcxGridDBColumn;
     cxDBCheckBox1: TcxDBCheckBox;
     tsSkuMto: TcxTabSheet;
+    pnlTopSkus: TPanel;
     pnlSkuMto: TPanel;
     addSkuAll: TcxButton;
     cxgrdSkuMto: TcxGrid;
