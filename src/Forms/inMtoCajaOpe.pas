@@ -1456,23 +1456,42 @@ begin
 //            ' ItemIndex=' + IntToStr(Combo.ItemIndex) +
 //            ' DroppedDown=' + BoolToStr(Combo.DroppedDown, True));
     Combo := TcxImageComboBox(AEdit);
+    // CONSULTAR Items via la columna, no via Combo.Properties: en esta version
+    // de DevExpress, acceder a Combo.Properties recien instanciado puede
+    // producir AV (Self nil al descender la cadena de inherited).
+    var ColItems: Integer := 0;
+    if AItem is TcxGridDBColumn then
+    begin
+      var ColProps := TcxGridDBColumn(AItem).Properties;
+      if ColProps is TcxImageComboBoxProperties then
+        ColItems := TcxImageComboBoxProperties(ColProps).Items.Count;
+    end;
     // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
-    // para que el usuario pueda elegir. ForzarDespliegue via OnEnter no
-    // engancha de forma fiable en TcxImageComboBox, asi que lo forzamos aqui.
+    // via F4 (atajo Windows). Lo intentamos tambien con DroppedDown := True
+    // por compatibilidad, ignorando excepciones.
     if (Key = VK_RETURN)
        and not Combo.DroppedDown
-       and (Combo.Properties.Items.Count > 0)
+       and (ColItems > 0)
        and (Combo.ItemIndex = -1)
        and (Trim(VarToStr(Combo.EditValue)) = '') then
     begin
-      Combo.DroppedDown := True;
+      try
+        Combo.DroppedDown := True;
+      except
+        // F4 abajo cubre el caso
+      end;
+      if not Combo.DroppedDown then
+      begin
+        PostMessage(Combo.Handle, WM_KEYDOWN, VK_F4, 0);
+        PostMessage(Combo.Handle, WM_KEYUP,   VK_F4, 0);
+      end;
       Key := 0;
       Exit;
     end;
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-//      if Combo.Properties.Items.Count > 0 then
-//        Combo.ItemIndex := 0;
+      if ColItems > 0 then
+        Combo.ItemIndex := 0;
     end;
     // Si estaba desplegado, solo cerrarlo y salir
     // El usuario tendrá que pulsar Enter de nuevo para confirmar
@@ -1608,32 +1627,42 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   AEdit: TcxCustomEdit);
 var
   Combo: TcxImageComboBox;
+  Col: TcxGridDBColumn;
+  ColProps: TcxImageComboBoxProperties;
   CodArt: string;
+  ColItems: Integer;
 begin
-  if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
+  if (AItem.Tag >= 1) and (AItem.Tag <= 5) and (AItem is TcxGridDBColumn) then
   begin
     Combo := TcxImageComboBox(AEdit);
     Combo.Tag := AItem.Tag;
-    Combo.Properties.OnEditValueChanged := OnAtributoChanged;
     Combo.OnEnter := nil;
-    // Safety net: Items deberian estar poblados por ActualizarColumnasDinamicas,
-    // pero si por timing aun no lo estan (p.ej. la primera entrada en la celda
-    // antes de haber pasado por tvArticulo), los poblamos aqui sobre la marcha.
-    if Combo.Properties.Items.Count = 0 then
-    begin
-      if DatosCaja.cdsLineas.Active then
-        CodArt := DatosCaja.cdsLineas.FieldByName(
+    // Acceder a Properties via la columna (no via el editor). En esta version
+    // de DevExpress, el editor recien creado puede no resolver Combo.Properties
+    // sin AV. La columna ya tiene Properties asignadas desde
+    // ConstruirColumnasDinamicas.
+    Col := TcxGridDBColumn(AItem);
+    if not (Col.Properties is TcxImageComboBoxProperties) then Exit;
+    ColProps := TcxImageComboBoxProperties(Col.Properties);
+    ColProps.OnEditValueChanged := OnAtributoChanged;
+
+    // Repoblamos Items SIEMPRE al entrar a la celda. La optimizacion previa
+    // (solo si Items.Count = 0) dependia de leer Combo.Properties que AV-ea,
+    // dejando Items vacios. Coste: 1 query al cambiar de celda; aceptable.
+    if DatosCaja.cdsLineas.Active then
+      CodArt := DatosCaja.cdsLineas.FieldByName(
                                        'CODIGO_ART_FACLIN').AsString
-      else
-        CodArt := '';
-      if CodArt <> '' then
-        PoblarItemsAtributoCol(AItem.Tag, CodArt);
-    end;
+    else
+      CodArt := '';
+    if CodArt <> '' then
+      PoblarItemsAtributoCol(AItem.Tag, CodArt);
+    ColItems := ColProps.Items.Count;
+
     // Nada de auto-seleccion (ItemIndex := 0 disparaba OnAtributoChanged sin
     // proteccion y bloqueaba el form). Si la celda esta vacia, cableamos
     // OnEnter por si la version dispara el evento al recibir foco; ademas,
     // EditKeyDown abrira el dropdown si el usuario pulsa Enter.
-    if Combo.Properties.Items.Count > 0 then
+    if ColItems > 0 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
       if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
