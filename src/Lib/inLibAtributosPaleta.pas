@@ -19,7 +19,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes,
-  System.Generics.Collections, Vcl.Graphics,
+  System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView;
 
@@ -72,6 +72,15 @@ procedure CargarMapaAtributosArticulo(const ACodArt: string;
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
+
+// Limpia AImages y la rellena con un swatch (cuadrado) por cada AV de
+// `AAvs` (CODIGO_ATB esperado). El swatch se genera SOLO si existe en la
+// paleta basica para (AIdVa, AV). El dict AAvToImageIndex queda con
+// uppercase(AV) -> ImageIndex; los AV sin color en paleta no aparecen.
+procedure RellenarImageListPaleta(AImages: TCustomImageList;
+                                  const AIdVa: string;
+                                  const AAvs: array of string;
+                                  AAvToImageIndex: TDictionary<string, Integer>);
 
 implementation
 
@@ -302,6 +311,58 @@ begin
       for IdVa in ADict.Values do
         if ObtenerInfoBasico(IdVa, Sufijo, AInfo) then
           Exit(True);
+  end;
+end;
+
+procedure RellenarImageListPaleta(AImages: TCustomImageList;
+                                  const AIdVa: string;
+                                  const AAvs: array of string;
+                                  AAvToImageIndex: TDictionary<string, Integer>);
+const
+  LADO = 14;
+var
+  i, Idx : Integer;
+  Av, Clave : string;
+  Info : TInfoBasico;
+  Bmp : TBitmap;
+begin
+  if AImages = nil then Exit;
+  AImages.Clear;
+  if AAvToImageIndex <> nil then
+    AAvToImageIndex.Clear;
+  if (Trim(AIdVa) = '') or (Length(AAvs) = 0) then Exit;
+
+  // El tamano de los iconos del ImageList tiene que coincidir con el lado del
+  // swatch para que DevExpress los pinte sin escalar.
+  AImages.Width  := LADO;
+  AImages.Height := LADO;
+
+  Bmp := TBitmap.Create;
+  try
+    Bmp.PixelFormat := pf24bit;
+    Bmp.SetSize(LADO, LADO);
+    for i := 0 to High(AAvs) do
+    begin
+      Av := AAvs[i];
+      if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
+
+      Bmp.Canvas.Brush.Style := bsSolid;
+      Bmp.Canvas.Brush.Color := Info.Color;
+      Bmp.Canvas.FillRect(Rect(0, 0, LADO, LADO));
+      Bmp.Canvas.Brush.Style := bsClear;
+      Bmp.Canvas.Pen.Color   := clBlack;
+      Bmp.Canvas.Pen.Width   := 1;
+      Bmp.Canvas.Rectangle(0, 0, LADO, LADO);
+
+      Idx := AImages.Add(Bmp, nil);
+      if (Idx >= 0) and (AAvToImageIndex <> nil) then
+      begin
+        Clave := UpperCase(Trim(Av));
+        AAvToImageIndex.AddOrSetValue(Clave, Idx);
+      end;
+    end;
+  finally
+    Bmp.Free;
   end;
 end;
 
