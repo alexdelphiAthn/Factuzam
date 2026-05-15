@@ -1673,7 +1673,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object tvStock: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   OnCustomDrawCell = tvStockCustomDrawCell
-                  OnGetCellHint = tvStockGetCellHint
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
