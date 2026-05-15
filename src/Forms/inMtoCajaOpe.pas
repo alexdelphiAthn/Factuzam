@@ -18,8 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections, Vcl.Graphics, inMtoGenSearch,
-  system.Math,
+  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -30,7 +29,7 @@ uses
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
-  System.Actions, Vcl.ActnList, Vcl.ImgList, cxImageComboBox;
+  System.Actions, Vcl.ActnList;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -169,21 +168,6 @@ type
       AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure actGuardarLayoutExecute(Sender: TObject);
-    procedure cxGrid1DBTableView1CustomDrawCell(Sender: TcxCustomGridTableView;
-      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
-      var ADone: Boolean);
-    procedure cxGrid1DBTableView1GetCellHint(Sender: TcxCustomGridTableView;
-      ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
-      var AHintText: TCaption; var AIsHintMultiLine: Boolean;
-      var AHintTextRect: TRect);
-    procedure dbtvStockCustomDrawCell(Sender: TcxCustomGridTableView;
-      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
-      var ADone: Boolean);
-    procedure dbtvStockGetCellHint(Sender: TcxCustomGridTableView;
-      ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
-      var AHintText: TCaption; var AIsHintMultiLine: Boolean;
-      var AHintTextRect: TRect);
-    procedure FormDestroy(Sender: TObject);
   private
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
@@ -197,8 +181,6 @@ type
     procedure ConstruirColumnasDinamicas;
     procedure RellenarAtributosDesdeSku(Sku: string);
     procedure ActualizarColumnasDinamicas(ArticuloPadre: string);
-    procedure PoblarItemsAtributoCol(Tag: Integer;
-                                     const ArticuloPadre: string);
     function ObtenerColumnaPorTag(NumColumn:Integer):TcxGridDBColumn;
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
     procedure RecalcularPrecioDesdeSku(sSKU:string);
@@ -228,19 +210,6 @@ type
     FInicializandoCombo: Boolean;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
-    // ID_VA (variacion: 'CO', 'TAL'...) por cada columna dinamica (tag 1..5).
-    // Se rellena en ActualizarColumnasDinamicas y se consulta al pintar el
-    // cuadrado de color en OnCustomDrawCell.
-    FIdVariacionPorTag: array[1..5] of string;
-    // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo cuyo stock
-    // estamos visualizando en dbtvStock. Se rellena en ConsultarStock.
-    FAtributosStock: TDictionary<string, string>;
-    // Un TImageList por columna dinamica con los swatches de color de los
-    // valores que el desplegable va a mostrar. Asociado en OnInitEdit.
-    FImagesPorTag    : array[1..5] of TImageList;
-    // Diccionario uppercase(AV) -> ImageIndex por columna, para asignar el
-    // icono correcto a cada item del desplegable.
-    FAvToIndexPorTag : array[1..5] of TDictionary<string, Integer>;
   private
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
@@ -268,7 +237,6 @@ uses
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
-  inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
   System.StrUtils;
 
@@ -434,12 +402,7 @@ begin
       except
       end;
     end;
-    // Cargamos el mapa NOMBRE_ATRIBUTO -> ID_VA del articulo para que el
-    // OnCustomDrawCell sepa con que ID_VA buscar en la paleta de basicos.
-    CargarMapaAtributosArticulo(CodigoInput, FAtributosStock);
-  end
-  else
-    FAtributosStock.Clear;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.txtEntradaArticuloKeyPress(Sender: TObject;
@@ -1101,13 +1064,10 @@ begin
       Col.Caption := '-';
       Col.Visible := False;
       Col.Width := 80;
-      // TcxImageComboBoxProperties para que el desplegable pinte un swatch
-      // delante del texto (imagen del ImageList de su columna).
-      Col.PropertiesClass := TcxImageComboBoxProperties;
-      with TcxImageComboBoxProperties(Col.Properties) do
+      Col.PropertiesClass := TcxComboBoxProperties;
+      with TcxComboBoxProperties(Col.Properties) do
       begin
         DropDownListStyle := lsFixedList;
-        Images := FImagesPorTag[i];
         OnEditValueChanged := OnAtributoChanged;
       end;
       Col.Index := IndiceBase + i;
@@ -1208,7 +1168,7 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1EditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  Combo: TcxImageComboBox;
+  Combo: TcxComboBox;
   NumAtributos: Integer;
   PrimeraColAtributo: TcxGridDBColumn;
   SkuNuevo, ValorActual: string;
@@ -1323,44 +1283,12 @@ begin
        end;
     end;
   end;
-  if (AItem.Tag > 0) and (AEdit is TcxImageComboBox) then
+  if (AItem.Tag > 0) and (AEdit is TcxComboBox) then
   begin
-    Combo := TcxImageComboBox(AEdit);
-    // CONSULTAR Items via la columna, no via Combo.Properties: en esta version
-    // de DevExpress, acceder a Combo.Properties recien instanciado puede
-    // producir AV (Self nil al descender la cadena de inherited).
-    var ColItems: Integer := 0;
-    if AItem is TcxGridDBColumn then
-    begin
-      var ColProps := TcxGridDBColumn(AItem).Properties;
-      if ColProps is TcxImageComboBoxProperties then
-        ColItems := TcxImageComboBoxProperties(ColProps).Items.Count;
-    end;
-    // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
-    // via F4 (atajo Windows). Lo intentamos tambien con DroppedDown := True
-    // por compatibilidad, ignorando excepciones.
-    if (Key = VK_RETURN)
-       and not Combo.DroppedDown
-       and (ColItems > 0)
-       and (Combo.ItemIndex = -1)
-       and (Trim(VarToStr(Combo.EditValue)) = '') then
-    begin
-      try
-        Combo.DroppedDown := True;
-      except
-        // F4 abajo cubre el caso
-      end;
-      if not Combo.DroppedDown then
-      begin
-        PostMessage(Combo.Handle, WM_KEYDOWN, VK_F4, 0);
-        PostMessage(Combo.Handle, WM_KEYUP,   VK_F4, 0);
-      end;
-      Key := 0;
-      Exit;
-    end;
+    Combo := TcxComboBox(AEdit);
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-      if ColItems > 0 then
+      if Combo.Properties.Items.Count > 0 then
         Combo.ItemIndex := 0;
     end;
     // Si estaba desplegado, solo cerrarlo y salir
@@ -1476,99 +1404,69 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
 var
-  Combo: TcxImageComboBox;
-  Col: TcxGridDBColumn;
-  ColProps: TcxImageComboBoxProperties;
-  Item: TcxImageComboBoxItem;
-  ArticuloPadre, IdVa, Av: string;
-  Avs: TList<string>;
-  Idx: Integer;
+  Combo: TcxComboBox;
+  OrdenColumna: Integer;
+  ArticuloPadre: string;
 begin
-  if (AItem.Tag >= 1) and (AItem.Tag <= 5) and (AItem is TcxGridDBColumn) then
+  if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
-    Combo := TcxImageComboBox(AEdit);
+    Combo := TcxComboBox(AEdit);
     Combo.Tag := AItem.Tag;
+    Combo.Properties.OnEditValueChanged := OnAtributoChanged;
     Combo.OnEnter := nil;
-    Col := TcxGridDBColumn(AItem);
-    if not (Col.Properties is TcxImageComboBoxProperties) then Exit;
-    ColProps := TcxImageComboBoxProperties(Col.Properties);
-    ColProps.OnEditValueChanged := OnAtributoChanged;
-
+    OrdenColumna := AItem.Tag;
     if DatosCaja.cdsLineas.Active then
       ArticuloPadre := DatosCaja.cdsLineas.FieldByName(
                                        'CODIGO_ART_FACLIN').AsString
     else
       ArticuloPadre := '';
-    IdVa := FIdVariacionPorTag[AItem.Tag];
-
-    // SQL inline (no via PoblarItemsAtributoCol). Asi tenemos una sola
-    // TUniQuery activa por hilo: UniDAC/MySQL en streaming no soporta
-    // resultsets concurrentes y antes la query de PoblarItemsAtributoCol
-    // chocaba con qryDefinicionArticulo, devolviendo 0 filas.
-    Avs := TList<string>.Create;
+    with TUniQuery.Create(nil) do
     try
-      if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
-      begin
-        with TUniQuery.Create(nil) do
-        try
-          Connection := oConn;
-          SQL.Text :=
-            '  SELECT DISTINCT V.AV                                         '+
-            '    FROM fza_atributos_valores V                               '+
-            '   INNER JOIN vi_atributos_nombres N                           '+
-            '      ON V.ID_VA_AV = N.ID_ATRIBUTO                            '+
-            '   INNER JOIN fza_atributos_sku REL                            '+
-            '      ON V.ID_AV = REL.ID_AV_SA                                '+
-            '   INNER JOIN fza_articulos_skus S                             '+
-            '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU        '+
-            '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN          '+
-            '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE                    '+
-            '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN                    '+
-            '   ORDER BY V.AV                                               ';
-          ParamByName('PADRE').AsString := ArticuloPadre;
-          ParamByName('ORDEN').AsInteger := AItem.Tag;
-          Open;
-          while not Eof do
-          begin
-            Avs.Add(FieldByName('AV').AsString);
-            Next;
-          end;
-        finally
-          Free;
-        end;
-      end;
-      RellenarImageListPaleta(FImagesPorTag[AItem.Tag], IdVa,
-                              Avs.ToArray, FAvToIndexPorTag[AItem.Tag]);
-      ColProps.Items.BeginUpdate;
+      Connection := oConn;
+      SQL.Text :=
+          '  SELECT DISTINCT V.AV                         '+
+          '    FROM fza_atributos_valores V                          '+
+          '   INNER JOIN vi_atributos_nombres N                     '+
+          '      ON V.ID_VA_AV = N.ID_ATRIBUTO                      '+
+          '   INNER JOIN fza_atributos_sku REL                      '+
+          '      ON V.ID_AV = REL.ID_AV_SA                 '+
+          '   INNER JOIN fza_articulos_skus S                       '+
+          '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU      '+
+          '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN '+
+          '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE               '+
+          '     AND N.ORDEN_VISUAL_ATRIBUTO = :ORDEN       '+
+          '   ORDER BY V.AV                                   ';
+      ParamByName('PADRE').AsString := ArticuloPadre;
+      ParamByName('ORDEN').AsInteger := OrdenColumna;
+      Open;
+      Combo.Properties.Items.BeginUpdate;
       try
-        ColProps.Items.Clear;
-        for Av in Avs do
+        Combo.Properties.Items.Clear;
+        while not Eof do
         begin
-          Item := TcxImageComboBoxItem(ColProps.Items.Add);
-          Item.Description := Av;
-          Item.Value       := Av;
-          if FAvToIndexPorTag[AItem.Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
-            Item.ImageIndex := Idx
-          else
-            Item.ImageIndex := -1;
+          Combo.Properties.Items.Add(FieldByName('AV').AsString);
+          Next;
         end;
       finally
-        ColProps.Items.EndUpdate;
+        Combo.Properties.Items.EndUpdate;
       end;
     finally
-      Avs.Free;
+      Free;
     end;
-
-    // Nada de auto-seleccion (ItemIndex := 0 disparaba OnAtributoChanged sin
-    // proteccion y bloqueaba el form). EditKeyDown abrira el dropdown si el
-    // usuario pulsa Enter.
-    if ColProps.Items.Count > 0 then
+    if Combo.Properties.Items.Count > 1 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
       if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
-        Combo.OnEnter := ForzarDespliegue
+      begin
+        // CAMBIO 8: ForzarDespliegue usa FInicializandoCombo para no disparar
+        // OnAtributoChanged al asignar ItemIndex := 0
+        Combo.OnEnter := ForzarDespliegue;
+        Combo.ItemIndex := 0;
+      end
       else
+      begin
         Combo.OnEnter := nil;
+      end;
     end;
   end;
   if AItem = tvArticulo then
@@ -1664,7 +1562,7 @@ var
   CodigoBuscado: string;
   CurrentItem: TcxCustomGridTableItem;
   CurrentEdit: TcxCustomEdit;
-  Combo: TcxImageComboBox;
+  Combo: TcxComboBox;
 begin
   if cxGrid1DBTableView1.Controller.FocusedItem <> nil then
   if (cxGrid1DBTableView1.Controller.FocusedItem.Tag > 0) then
@@ -1679,9 +1577,9 @@ begin
     if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
      begin
        CurrentEdit := cxGrid1DBTableView1.Controller.EditingController.Edit;
-       if (CurrentEdit is TcxImageComboBox) then
+       if (CurrentEdit is TcxComboBox) then
        begin
-         Combo := TcxImageComboBox(CurrentEdit);
+         Combo := TcxComboBox(CurrentEdit);
          if Combo.Properties.Items.Count > 1 then
          begin
            if not Combo.DroppedDown then
@@ -1874,14 +1772,12 @@ var
   i: Integer;
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
-  IdsVariaciones: TStringList;
 begin
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
   FUltimoArticuloPadre := ArticuloPadre;
 
   NombresAtributos := TStringList.Create;
-  IdsVariaciones  := TStringList.Create;
   try
     // Solo atacamos la base de datos si hay un artículo real
     if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
@@ -1890,7 +1786,6 @@ begin
       datosCaja.qryDefinicionArticulo.Close;
       datosCaja.qryDefinicionArticulo.SQL.Text :=
       'SELECT DISTINCT  '        +
-      '      N.ID_ATRIBUTO, '+
       '      N.NOMBRE_ATRIBUTO, '+
       '      N.ORDEN_VISUAL_ATRIBUTO      '+
       ' FROM fza_articulos_skus SKU '+
@@ -1910,14 +1805,8 @@ begin
       begin
         NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName(
           'NOMBRE_ATRIBUTO').AsString);
-        IdsVariaciones.Add(datosCaja.qryDefinicionArticulo.FieldByName(
-          'ID_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
-      // Cerrar libera la conexion. UniDAC/MySQL en streaming no admite dos
-      // resultsets concurrentes, asi que dejar esta abierta puede romper
-      // queries posteriores en el mismo flujo.
-      datosCaja.qryDefinicionArticulo.Close;
     end;
 
     FNumAtributosActual := NombresAtributos.Count;
@@ -1940,21 +1829,16 @@ begin
             Col.Caption := NombresAtributos[i-1];
             Col.Visible := True;
             Col.Options.Editing := True;
-            FIdVariacionPorTag[i] := IdsVariaciones[i-1];
             if DatosCaja.cdsLineas.Active
                and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
               DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
                 i) + '_NOMBRE').AsString := NombresAtributos[i-1];
-            // Items se rellenan en OnInitEdit (cuando el usuario entra a la
-            // celda). Aqui no se hace porque qryDefinicionArticulo sigue
-            // abierta y UniDAC/MySQL no soporta dos resultsets concurrentes.
           end
           else
           begin
             Col.Visible := False;
             Col.Options.Editing := False;
             Col.Caption := '-';
-            FIdVariacionPorTag[i] := '';
           end;
         end;
       end;
@@ -1963,80 +1847,8 @@ begin
     end;
   finally
     NombresAtributos.Free;
-    IdsVariaciones.Free;
   end;
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
-end;
-
-procedure TfrmMtoOpeCaja.PoblarItemsAtributoCol(Tag: Integer;
-                                                const ArticuloPadre: string);
-var
-  Col  : TcxGridDBColumn;
-  Avs  : TList<string>;
-  Av, IdVa : string;
-  Item : TcxImageComboBoxItem;
-  Idx  : Integer;
-begin
-  Col := ObtenerColumnaPorTag(Tag);
-  if (Col = nil)
-     or not (Col.Properties is TcxImageComboBoxProperties) then Exit;
-  IdVa := FIdVariacionPorTag[Tag];
-  Avs := TList<string>.Create;
-  try
-    if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
-    begin
-      with TUniQuery.Create(nil) do
-      try
-        Connection := oConn;
-        SQL.Text :=
-          '  SELECT DISTINCT V.AV                                         '+
-          '    FROM fza_atributos_valores V                               '+
-          '   INNER JOIN vi_atributos_nombres N                           '+
-          '      ON V.ID_VA_AV = N.ID_ATRIBUTO                            '+
-          '   INNER JOIN fza_atributos_sku REL                            '+
-          '      ON V.ID_AV = REL.ID_AV_SA                                '+
-          '   INNER JOIN fza_articulos_skus S                             '+
-          '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU        '+
-          '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN          '+
-          '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE                    '+
-          '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN                    '+
-          '   ORDER BY V.AV                                               ';
-        ParamByName('PADRE').AsString := ArticuloPadre;
-        ParamByName('ORDEN').AsInteger := Tag;
-        Open;
-        while not Eof do
-        begin
-          Avs.Add(FieldByName('AV').AsString);
-          Next;
-        end;
-      finally
-        Free;
-      end;
-    end;
-    RellenarImageListPaleta(FImagesPorTag[Tag], IdVa,
-                            Avs.ToArray, FAvToIndexPorTag[Tag]);
-    with TcxImageComboBoxProperties(Col.Properties) do
-    begin
-      Items.BeginUpdate;
-      try
-        Items.Clear;
-        for Av in Avs do
-        begin
-          Item := TcxImageComboBoxItem(Items.Add);
-          Item.Description := Av;
-          Item.Value       := Av;
-          if FAvToIndexPorTag[Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
-            Item.ImageIndex := Idx
-          else
-            Item.ImageIndex := -1;
-        end;
-      finally
-        Items.EndUpdate;
-      end;
-    end;
-  finally
-    Avs.Free;
-  end;
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
@@ -2712,29 +2524,9 @@ begin
   Action := caFree;
 end;
 
-procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
-var
-  i: Integer;
-begin
-  FAtributosStock.Free;
-  for i := 1 to 5 do
-  begin
-    FAvToIndexPorTag[i].Free;
-    // FImagesPorTag[i] tiene Owner=Self, lo libera la VCL al destruir el form.
-  end;
-end;
-
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
-var
-  i: Integer;
 begin
   DatosCaja := TdmCajaOpe.Create(Self);
-  FAtributosStock := TDictionary<string, string>.Create;
-  for i := 1 to 5 do
-  begin
-    FImagesPorTag[i]    := TImageList.Create(Self);
-    FAvToIndexPorTag[i] := TDictionary<string, Integer>.Create;
-  end;
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
@@ -2798,16 +2590,25 @@ begin
   ActualizarFoco;
 end;
 
-// Solo abre el desplegable; nunca tocar ItemIndex aqui (eso disparaba
-// OnAtributoChanged sin contexto y bloqueaba el form).
+// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger
+// OnAtributoChanged
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
 var
-  Combo: TcxImageComboBox;
+  Combo: TcxComboBox;
 begin
-  if Sender is TcxImageComboBox then
+  if Sender is TcxComboBox then
   begin
-    Combo := TcxImageComboBox(Sender);
-    if (Combo.Properties.Items.Count > 0) and not Combo.DroppedDown then
+    Combo := TcxComboBox(Sender);
+    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el
+    // precio
+    // con un SKU incompleto (todavía falta confirmar este atributo)
+    FInicializandoCombo := True;
+    try
+      Combo.ItemIndex := 0;
+    finally
+      FInicializandoCombo := False;
+    end;
+    if not Combo.DroppedDown then
       Combo.DroppedDown := True;
     Combo.OnEnter := nil;
   end;
@@ -2877,78 +2678,6 @@ end;
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);
 begin
   lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', Now);
-end;
-
-procedure TfrmMtoOpeCaja.cxGrid1DBTableView1CustomDrawCell(
-  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
-  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  IdVa, Texto : string;
-  Info        : TInfoBasico;
-  Val : Variant;
-begin
-  if (AViewInfo = nil) or (AViewInfo.Item = nil) then Exit;
-  // Solo las columnas dinamicas de atributos (Tag 1..5) llevan cuadrado.
-  if (AViewInfo.Item.Tag < 1) or (AViewInfo.Item.Tag > 5) then Exit;
-  IdVa := FIdVariacionPorTag[AViewInfo.Item.Tag];
-  if IdVa = '' then Exit;
-  // Leemos el valor crudo del registro, no AViewInfo.Text: TcxImageComboBox
-  // calcula Text matcheando Items, y si por timing aun no estan poblados Text
-  // sale vacio y nos perdemos el repintado.
-  if AViewInfo.GridRecord = nil then Exit;
-  Val := AViewInfo.GridRecord.Values[AViewInfo.Item.Index];
-  if VarIsNull(Val) then Exit;
-  Texto := Trim(VarToStr(Val));
-  if Texto = '' then Exit;
-  if ObtenerInfoBasico(IdVa, Texto, Info) then
-    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, Texto) then
-      ADone := True;
-end;
-
-procedure TfrmMtoOpeCaja.cxGrid1DBTableView1GetCellHint(
-  Sender: TcxCustomGridTableView;
-  ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
-  var AHintText: TCaption; var AIsHintMultiLine: Boolean;
-  var AHintTextRect: TRect);
-var
-  IdVa, Texto : string;
-  Info        : TInfoBasico;
-begin
-  if (ACellViewInfo = nil) or (ACellViewInfo.Item = nil) then Exit;
-  if (ACellViewInfo.Item.Tag < 1) or (ACellViewInfo.Item.Tag > 5) then Exit;
-  IdVa := FIdVariacionPorTag[ACellViewInfo.Item.Tag];
-  if IdVa = '' then Exit;
-  Texto := Trim(ACellViewInfo.Text);
-  if Texto = '' then Exit;
-  if ObtenerInfoBasico(IdVa, Texto, Info) then
-    AHintText := Info.Nombre;
-end;
-
-procedure TfrmMtoOpeCaja.dbtvStockCustomDrawCell(
-  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
-  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  Info : TInfoBasico;
-begin
-  if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
-  if FAtributosStock.Count = 0 then Exit;
-  if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
-    if PintarCeldaConTextoColor(ACanvas, AViewInfo, Info) then
-      ADone := True;
-end;
-
-procedure TfrmMtoOpeCaja.dbtvStockGetCellHint(
-  Sender: TcxCustomGridTableView;
-  ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
-  var AHintText: TCaption; var AIsHintMultiLine: Boolean;
-  var AHintTextRect: TRect);
-var
-  Info : TInfoBasico;
-begin
-  if (ACellViewInfo = nil) or (FAtributosStock = nil) then Exit;
-  if FAtributosStock.Count = 0 then Exit;
-  if BuscarInfoBasicoEnArticulo(ACellViewInfo.Text, FAtributosStock, Info) then
-    AHintText := Info.Nombre;
 end;
 
 end.
