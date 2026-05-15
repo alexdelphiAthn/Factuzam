@@ -323,30 +323,38 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
-              object pnlSkuMto: TPanel
-                Left = 948
-                Top = 0
-                Width = 121
-                Height = 425
-                Align = alRight
-                TabOrder = 0
-                object addSkuAll: TcxButton
-                  Left = 0
-                  Top = 21
-                  Width = 116
-                  Height = 34
-                  Caption = '&A'#241'adir SKU'
-                  TabOrder = 0
-                  OnClick = addSkuAllClick
-                end
-              end
-              object cxgrdSkuMto: TcxGrid
+              object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
-                Width = 948
+                Width = 1069
                 Height = 200
                 Align = alTop
-                TabOrder = 1
+                BevelOuter = bvNone
+                TabOrder = 0
+                object pnlSkuMto: TPanel
+                  Left = 948
+                  Top = 0
+                  Width = 121
+                  Height = 200
+                  Align = alRight
+                  TabOrder = 0
+                  object addSkuAll: TcxButton
+                    Left = 0
+                    Top = 21
+                    Width = 116
+                    Height = 34
+                    Caption = '&A'#241'adir SKU'
+                    TabOrder = 0
+                    OnClick = addSkuAllClick
+                  end
+                end
+                object cxgrdSkuMto: TcxGrid
+                  Left = 0
+                  Top = 0
+                  Width = 948
+                  Height = 200
+                  Align = alClient
+                  TabOrder = 1
                 object tvSkuMto: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.Insert.Visible = True
@@ -403,13 +411,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   GridView = tvSkuMto
                 end
               end
+              end
               object splSkuAtributosBasicos: TcxSplitter
                 Left = 0
                 Top = 200
                 Width = 948
                 Height = 8
                 AlignSplitter = salTop
-                Control = cxgrdSkuMto
+                Control = pnlTopSkus
               end
               object gbSkuAtributosBasicos: TcxGroupBox
                 Left = 0
