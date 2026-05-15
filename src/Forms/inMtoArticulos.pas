@@ -1709,8 +1709,8 @@ begin
       dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     FGestorProp.CargarPropiedades(FArticuloCargado);
   end else
-    FArticuloCargado := ''; // Por si acaso arranca vacío
-  FGestorVar.CargarVariaciones(                // [AÑADIR]
+    FArticuloCargado := '';
+  FGestorVar.CargarVariaciones(
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
   ActualizarVisibilidadVariaciones;
   ActualizarVisibilidadColumnaSku;
@@ -1719,6 +1719,8 @@ begin
   // hasta que el usuario navegaba a otro registro.
   if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
     CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
+  if (FArticuloCargado <> '') and Assigned(dmmArticulos) then
+    dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
