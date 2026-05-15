@@ -443,10 +443,10 @@ type
     FPnlTopVariaciones:TPanel;
     FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
-    function AsegurarBasicoFilaActual: Integer;
     // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo actual. Lo usa
     // tvStock para colorear el nombre del atributo segun la paleta basica.
     FAtributosStock : TDictionary<string, string>;
+    function AsegurarBasicoFilaActual: Integer;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -2537,6 +2537,8 @@ begin
   ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
 
   ADone := True;
+end;
+
 procedure TfrmMtoArticulos.tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
   ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);

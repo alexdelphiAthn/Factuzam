@@ -323,6 +323,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
@@ -355,68 +359,68 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Height = 200
                   Align = alClient
                   TabOrder = 1
-                object tvSkuMto: TcxGridDBTableView
-                  Navigator.Buttons.ConfirmDelete = True
-                  Navigator.Buttons.Insert.Visible = True
-                  Navigator.Buttons.Delete.Visible = True
-                  Navigator.Buttons.Edit.Visible = False
-                  Navigator.Buttons.Post.Visible = True
-                  Navigator.Buttons.Cancel.Visible = True
-                  Navigator.Visible = True
-                  DataController.DataSource = dmArticulos.dsSkus
-                  DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  OptionsBehavior.AlwaysShowEditor = True
-                  OptionsBehavior.GoToNextCellOnEnter = True
-                  OptionsBehavior.IncSearch = True
-                  OptionsCustomize.ColumnHiding = True
-                  OptionsData.Appending = True
-                  OptionsView.GroupByBox = False
-                  OptionsView.Indicator = True
-                  object tvSkuMtoCODIGO_UNIDAD_SKU: TcxGridDBColumn
-                    Caption = 'C'#243'digo SKU'
-                    DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
-                    Width = 350
+                  object tvSkuMto: TcxGridDBTableView
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Buttons.Insert.Visible = True
+                    Navigator.Buttons.Delete.Visible = True
+                    Navigator.Buttons.Edit.Visible = False
+                    Navigator.Buttons.Post.Visible = True
+                    Navigator.Buttons.Cancel.Visible = True
+                    Navigator.Visible = True
+                    DataController.DataSource = dmArticulos.dsSkus
+                    DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                    OptionsBehavior.AlwaysShowEditor = True
+                    OptionsBehavior.GoToNextCellOnEnter = True
+                    OptionsBehavior.IncSearch = True
+                    OptionsCustomize.ColumnHiding = True
+                    OptionsData.Appending = True
+                    OptionsView.GroupByBox = False
+                    OptionsView.Indicator = True
+                    object tvSkuMtoCODIGO_UNIDAD_SKU: TcxGridDBColumn
+                      Caption = 'C'#243'digo SKU'
+                      DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                      Width = 350
+                    end
+                    object tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn
+                      Caption = 'Variaci'#243'n'
+                      DataBinding.FieldName = 'CODIGO_VAR_SKU'
+                      Width = 80
+                    end
+                    object tvSkuMtoESACTIVO_SKU: TcxGridDBColumn
+                      Caption = 'Activo'
+                      DataBinding.FieldName = 'ESACTIVO_SKU'
+                      PropertiesClassName = 'TcxCheckBoxProperties'
+                      Properties.ValueChecked = 'S'
+                      Properties.ValueUnchecked = 'N'
+                      Width = 70
+                    end
+                    object tvSkuMtoPRECIO_ULT_COMPRA_SKUC: TcxGridDBColumn
+                      Caption = 'Precio '#218'lt Compra'
+                      DataBinding.FieldName = 'PRECIO_ULT_COMPRA_SKUC'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Width = 165
+                    end
+                    object tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn
+                      Caption = 'Fecha '#218'lt Compra'
+                      DataBinding.FieldName = 'FECHA_ULT_COMPRA_SKUC'
+                      PropertiesClassName = 'TcxDateEditProperties'
+                      Width = 145
+                    end
+                    object tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn
+                      DataBinding.FieldName = 'CODIGO_ART_SKU'
+                      Visible = False
+                    end
                   end
-                  object tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn
-                    Caption = 'Variaci'#243'n'
-                    DataBinding.FieldName = 'CODIGO_VAR_SKU'
-                    Width = 80
-                  end
-                  object tvSkuMtoESACTIVO_SKU: TcxGridDBColumn
-                    Caption = 'Activo'
-                    DataBinding.FieldName = 'ESACTIVO_SKU'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Width = 70
-                  end
-                  object tvSkuMtoPRECIO_ULT_COMPRA_SKUC: TcxGridDBColumn
-                    Caption = 'Precio '#218'lt Compra'
-                    DataBinding.FieldName = 'PRECIO_ULT_COMPRA_SKUC'
-                    PropertiesClassName = 'TcxCurrencyEditProperties'
-                    Width = 165
-                  end
-                  object tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn
-                    Caption = 'Fecha '#218'lt Compra'
-                    DataBinding.FieldName = 'FECHA_ULT_COMPRA_SKUC'
-                    PropertiesClassName = 'TcxDateEditProperties'
-                    Width = 145
-                  end
-                  object tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn
-                    DataBinding.FieldName = 'CODIGO_ART_SKU'
-                    Visible = False
+                  object cxgrdSkuMtoLevel: TcxGridLevel
+                    GridView = tvSkuMto
                   end
                 end
-                object cxgrdSkuMtoLevel: TcxGridLevel
-                  GridView = tvSkuMto
-                end
-              end
               end
               object splSkuAtributosBasicos: TcxSplitter
                 Left = 0
                 Top = 200
                 Width = 948
-                Height = 8
+                Height = 10
                 AlignSplitter = salTop
                 Control = pnlTopSkus
               end
@@ -426,15 +430,19 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Align = alClient
                 Caption = ' Atributos del SKU + Atributo b'#225'sico (helper) '
                 TabOrder = 2
-                Height = 217
-                Width = 948
+                Height = 215
+                Width = 1069
                 object cxgrdSkuAtributosBasicos: TcxGrid
-                  Left = 2
-                  Top = 18
-                  Width = 944
-                  Height = 197
+                  Left = 4
+                  Top = 22
+                  Width = 1061
+                  Height = 177
                   Align = alClient
                   TabOrder = 0
+                  ExplicitLeft = 2
+                  ExplicitTop = 18
+                  ExplicitWidth = 944
+                  ExplicitHeight = 197
                   object tvSkuAtributosBasicos: TcxGridDBTableView
                     OnDblClick = tvSkuAtributosBasicosDblClick
                     Navigator.Buttons.ConfirmDelete = True
@@ -457,14 +465,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Navigator.Visible = True
                     DataController.DataSource = dmArticulos.dsDetallesAtributos
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                    DataController.Summary.FooterSummaryItems = <>
-                    DataController.Summary.SummaryGroups = <>
                     OptionsBehavior.IncSearch = True
                     OptionsCustomize.ColumnHiding = True
-                    OptionsData.CancelOnExit = True
                     OptionsData.Deleting = False
                     OptionsData.DeletingConfirmation = False
-                    OptionsData.Editing = True
                     OptionsData.Inserting = False
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
@@ -494,30 +498,29 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Properties.ListColumns = <
                         item
                           Caption = 'C'#243'digo'
-                          FieldName = 'CODIGO_ATB'
                           Width = 80
+                          FieldName = 'CODIGO_ATB'
                         end
                         item
                           Caption = 'Nombre'
-                          FieldName = 'NOMBRE_ATB'
                           Width = 140
+                          FieldName = 'NOMBRE_ATB'
                         end
                         item
                           Caption = 'Paleta'
-                          FieldName = 'HEX_ATB'
                           Width = 70
+                          FieldName = 'HEX_ATB'
                         end
                         item
                           Caption = 'Medida'
-                          FieldName = 'VALOR_NUM_ATB'
                           Width = 60
+                          FieldName = 'VALOR_NUM_ATB'
                         end
                         item
                           Caption = 'Ud'
-                          FieldName = 'UNIDAD_ATB'
                           Width = 40
+                          FieldName = 'UNIDAD_ATB'
                         end>
-                      Properties.ListOptions.ShowHeader = True
                       Properties.ListSource = dmArticulos.dsAtributosBasicosLookup
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged
                       Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
@@ -567,8 +570,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     object tvSkuAtributosBasicosFUENTE_ATB: TcxGridDBColumn
                       Caption = 'Fuente'
                       DataBinding.FieldName = 'FUENTE_ATB'
-                      Options.Editing = False
                       OnGetDisplayText = tvSkuAtributosBasicosFUENTE_ATBGetDisplayText
+                      Options.Editing = False
                       Width = 80
                     end
                   end
@@ -581,10 +584,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 948
                 Top = 0
@@ -755,6 +766,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsTarifas: TcxTabSheet
               Caption = '&5_Tarifas'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -1140,6 +1155,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1309,6 +1328,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1833,6 +1856,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdStock: TcxGrid
                 Left = 0
                 Top = 0
@@ -1846,7 +1873,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 TabOrder = 0
                 object tvStock: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
-                  OnCustomDrawCell = tvStockCustomDrawCell
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
@@ -1880,6 +1906,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Navigator.Buttons.GotoBookmark.Visible = False
                   Navigator.Buttons.Filter.Hint = 'Filtro personalizado'
                   Navigator.Visible = True
+                  OnCustomDrawCell = tvStockCustomDrawCell
                   DataController.DataSource = dmArticulos.dsStockArticulos
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   DataController.Summary.FooterSummaryItems = <
@@ -1966,6 +1993,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
@@ -2360,6 +2391,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
