@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 15/05/2026 19:24:16
+-- Backup generado: 15/05/2026 21:26:27
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1005,7 +1005,6 @@ CREATE TABLE `fza_atributos_basicos` (
   `HEX_ATB` varchar(7) NULL DEFAULT NULL COMMENT 'Color paleta en formato #RRGGBB (sólo para atributos de color)',
   `VALOR_NUM_ATB` decimal(12,4) NULL DEFAULT NULL COMMENT 'Valor numérico básico (47 cm de talla XL, 50 mm de diámetro…)',
   `UNIDAD_ATB` varchar(10) NULL DEFAULT NULL COMMENT 'Unidad de VALOR_NUM_ATB: cm, mm, kg, ml…',
-  `EXTRA_ATB` varchar(7) NULL DEFAULT NULL,
   `ORDEN_ATB` int(11) NULL DEFAULT '0',
   `ESACTIVO_ATB` char(1) NULL DEFAULT 'S',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
@@ -1018,61 +1017,56 @@ ALTER TABLE `fza_atributos_basicos` ADD UNIQUE INDEX `ID_VA_ATB` (`ID_VA_ATB`, `
 
 -- Datos de fza_atributos_basicos
 /*!40000 ALTER TABLE `fza_atributos_basicos` DISABLE KEYS */;
-INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`, `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `EXTRA_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  (1, 'CO', 'NEGRO', 'Negro', 'Color negro', '#000000', NULL, NULL, '#000000', 20, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (2, 'CO', 'BLANCO', 'Blanco roto', 'Color blanco', '#FFFFFF', NULL, NULL, '#FAFAFA', 30, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (3, 'CO', 'ROJO', 'Rojo bandera', 'Color rojo', '#FF0000', NULL, NULL, '#D32F2F', 10, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (4, 'CO', 'AZUL', 'Azul', 'Color azul', '#0066CC', NULL, NULL, '#1976D2', 60, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (5, 'CO', 'AZUL_CIELO', 'AZUL CIELO', 'Color azul cielo', '#87CEEB', NULL, NULL, NULL, 41, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (6, 'CO', 'AZUL_MARINO', 'AZUL MARINO', 'Color azul marino', '#1B2A49', NULL, NULL, NULL, 42, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (7, 'CO', 'VERDE', 'Verde botella', 'Color verde', '#1D8B3A', NULL, NULL, '#2E7D32', 40, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (8, 'CO', 'AMARILLO', 'Amarillo', 'Color amarillo', '#FFD400', NULL, NULL, '#FBC02D', 120, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (9, 'CO', 'MARRON', 'Marrón chocolate', 'Color marrón', '#7B4B2A', NULL, NULL, '#5D4037', 50, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (10, 'CO', 'GRIS', 'Gris medio', 'Color gris', '#808080', NULL, NULL, '#9E9E9E', 80, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (11, 'CO', 'BEIGE', 'Beige', 'Color beige', '#E8D8B5', NULL, NULL, '#D7C7A8', 90, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (12, 'CO', 'ROSA', 'Rosa', 'Color rosa', '#F4A6C0', NULL, NULL, '#F48FB1', 100, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (13, 'CO', 'CAMEL', 'Camel', 'Color camel / tostado', '#C19A6B', NULL, NULL, '#C19A6B', 110, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (14, 'CO', 'FUCSIA', 'Fucsia', 'Color fucsia', '#FF00FF', NULL, NULL, '#C2185B', 150, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (15, 'CO', 'BURDEOS', 'Burdeos', 'Color burdeos', '#7A1F2B', NULL, NULL, '#7B1D26', 160, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (16, 'CO', 'VAQUERO', 'Vaquero', 'Acabado vaquero / denim', '#3F6BAA', NULL, NULL, '#3B5998', 180, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (17, 'TAL', 'S', 'TALLA S', 'Talla S (small)', NULL, 44, 'cm', NULL, 10, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (18, 'TAL', 'M', '', 'Talla M (medium)', NULL, 41, 'cm', NULL, 20, 'S', '2026-05-14 20:51:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
-  (19, 'TAL', 'L', 'TALLA L', 'Talla L (large)', NULL, 48, 'cm', NULL, 30, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (20, 'TAL', 'XL', 'TALLA XL', 'Talla XL (extra large)', NULL, 43, 'cm', NULL, 40, 'S', '2026-05-14 20:49:48', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
-  (21, 'TAL', 'XXL', 'TALLA XXL', 'Talla XXL', NULL, 67, 'cm', NULL, 50, 'S', '2026-05-14 20:49:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
-  (22, 'TAL', 'XXXL', 'TALLA XXXL', 'Talla XXXL', NULL, 78, 'cm', NULL, 60, 'S', '2026-05-15 17:53:35', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
-  (23, 'TAL', 'EU37', 'EU 37', 'Calzado europeo nº 37', NULL, 23.5, 'cm', NULL, 410, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (24, 'TAL', 'EU38', 'EU 38', 'Calzado europeo nº 38', NULL, 24, 'cm', NULL, 420, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (25, 'TAL', 'EU39', 'EU 39', 'Calzado europeo nº 39', NULL, 24.5, 'cm', NULL, 430, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (26, 'TAL', 'EU40', 'EU 40', 'Calzado europeo nº 40', NULL, 25, 'cm', NULL, 440, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (27, 'TAL', 'EU41', 'EU 41', 'Calzado europeo nº 41', NULL, 26, 'cm', NULL, 450, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (28, 'TAL', 'EU42', 'EU 42', 'Calzado europeo nº 42', NULL, 26.5, 'cm', NULL, 460, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (29, 'TAL', 'EU43', 'EU 43', 'Calzado europeo nº 43', NULL, 27, 'cm', NULL, 470, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (30, 'TAL', 'EU44', 'EU 44', 'Calzado europeo nº 44', NULL, 28, 'cm', NULL, 480, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (31, 'TAL', 'ROPA_S', 'ROPA S', 'Ropa standard S (44 cm pecho)', NULL, 44, 'cm', NULL, 10, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (32, 'TAL', 'ROPA_M', 'ROPA M', 'Ropa standard M (46 cm pecho)', NULL, 46, 'cm', NULL, 20, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (33, 'TAL', 'ROPA_L', 'ROPA L', 'Ropa standard L (48 cm pecho)', NULL, 48, 'cm', NULL, 30, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (34, 'TAL', 'ROPA_XL', 'ROPA XL', 'Ropa standard XL (50 cm pecho)', NULL, 50, 'cm', NULL, 40, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (35, 'TAL', 'ROPA_XXL', 'ROPA XXL', 'Ropa standard XXL (52 cm)', NULL, 52, 'cm', NULL, 50, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (36, 'TAL', 'ROPA_XXXL', 'ROPA XXXL', 'Ropa standard XXXL (54 cm)', NULL, 54, 'cm', NULL, 60, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (37, 'TAL', 'BANIO_S', 'BAÑADOR S', 'Bañador S (70 cm cintura)', NULL, 70, 'cm', NULL, 200, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (38, 'TAL', 'BANIO_M', 'BAÑADOR M', 'Bañador M (74 cm cintura)', NULL, 74, 'cm', NULL, 210, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (39, 'TAL', 'BANIO_L', 'BAÑADOR L', 'Bañador L (78 cm cintura)', NULL, 78, 'cm', NULL, 220, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (40, 'TAL', 'BANIO_XL', 'BAÑADOR XL', 'Bañador XL (56 cm)', NULL, 56, 'cm', NULL, 230, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (41, 'TAL', 'BANIO_XXL', 'BAÑADOR XXL', 'Bañador XXL (60 cm)', NULL, 60, 'cm', NULL, 240, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (42, 'TAL', 'CAMI_S', 'CAMISA S', 'Camisa hombre S (36 cm cuello)', NULL, 36, 'cm', NULL, 300, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (43, 'TAL', 'CAMI_M', 'CAMISA M', 'Camisa hombre M (38 cm cuello)', NULL, 38, 'cm', NULL, 310, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (44, 'TAL', 'CAMI_L', 'CAMISA L', 'Camisa hombre L (40 cm cuello)', NULL, 40, 'cm', NULL, 320, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (45, 'TAL', 'CAMI_XL', 'CAMISA XL', 'Camisa hombre XL (34 cm cuello)', NULL, 34, 'cm', NULL, 330, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
-  (109, 'TAL', 'AD_DEMO-CAMISA_9213', '3XL', NULL, NULL, 56, 'cm', NULL, 0, 'S', '2026-05-15 17:58:57', '2026-05-15 17:58:47', 'Administrador', 'Administrador'),
-  (149, 'TAL', 'AD_VEST-FLOR_XL', 'XL', NULL, NULL, 52, 'cm', NULL, 0, 'S', '2026-05-15 18:06:14', '2026-05-15 18:06:11', 'Administrador', 'Administrador'),
-  (150, 'CO', 'AZUL MARINO', 'Azul marino', NULL, NULL, NULL, NULL, '#0D1B45', 70, 'S', '2026-05-15 19:13:51', NULL, 'SISTEMA', 'SISTEMA'),
-  (151, 'CO', 'CACAO', 'Cacao', NULL, NULL, NULL, NULL, '#6F4E37', 130, 'S', '2026-05-15 19:13:51', NULL, 'SISTEMA', 'SISTEMA'),
-  (152, 'CO', 'BONIATO', 'Boniato', NULL, NULL, NULL, NULL, '#E27D60', 140, 'S', '2026-05-15 19:13:51', NULL, 'SISTEMA', 'SISTEMA'),
-  (153, 'CO', 'PEPINO', 'Pepino', NULL, NULL, NULL, NULL, '#7CB342', 170, 'S', '2026-05-15 19:13:51', NULL, 'SISTEMA', 'SISTEMA'),
-  (154, 'CO', 'COLORAO', 'Colorao', NULL, NULL, NULL, NULL, '#E64A19', 190, 'S', '2026-05-15 19:13:51', NULL, 'SISTEMA', 'SISTEMA');
+INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`, `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  (1, 'CO', 'NEGRO', 'Negro', 'Color negro', '#000000', NULL, NULL, 20, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (2, 'CO', 'BLANCO', 'Blanco roto', 'Color blanco', '#FFFFFF', NULL, NULL, 30, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (3, 'CO', 'ROJO', 'Rojo bandera', 'Color rojo', '#FF0000', NULL, NULL, 10, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (4, 'CO', 'AZUL', 'Azul', 'Color azul', '#0066CC', NULL, NULL, 60, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (5, 'CO', 'AZUL_CIELO', 'AZUL CIELO', 'Color azul cielo', '#87CEEB', NULL, NULL, 41, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (6, 'CO', 'AZUL_MARINO', 'AZUL MARINO', 'Color azul marino', '#1B2A49', NULL, NULL, 42, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (7, 'CO', 'VERDE', 'Verde botella', 'Color verde', '#1D8B3A', NULL, NULL, 40, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (8, 'CO', 'AMARILLO', 'Amarillo', 'Color amarillo', '#FFD400', NULL, NULL, 120, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (9, 'CO', 'MARRON', 'Marrón chocolate', 'Color marrón', '#7B4B2A', NULL, NULL, 50, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (10, 'CO', 'GRIS', 'Gris medio', 'Color gris', '#808080', NULL, NULL, 80, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (11, 'CO', 'BEIGE', 'Beige', 'Color beige', '#E8D8B5', NULL, NULL, 90, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (12, 'CO', 'ROSA', 'Rosa', 'Color rosa', '#F4A6C0', NULL, NULL, 100, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (13, 'CO', 'CAMEL', 'Camel', 'Color camel / tostado', '#C19A6B', NULL, NULL, 110, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (14, 'CO', 'FUCSIA', 'Fucsia', 'Color fucsia', '#FF00FF', NULL, NULL, 150, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (15, 'CO', 'BURDEOS', 'Burdeos', 'Color burdeos', '#7A1F2B', NULL, NULL, 160, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (16, 'CO', 'VAQUERO', 'Vaquero', 'Acabado vaquero / denim', '#3F6BAA', NULL, NULL, 180, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (17, 'TAL', 'S', 'TALLA S', 'Talla S (small)', NULL, 44, 'cm', 10, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (18, 'TAL', 'M', '', 'Talla M (medium)', NULL, 41, 'cm', 20, 'S', '2026-05-14 20:51:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (19, 'TAL', 'L', 'TALLA L', 'Talla L (large)', NULL, 48, 'cm', 30, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (20, 'TAL', 'XL', 'TALLA XL', 'Talla XL (extra large)', NULL, 43, 'cm', 40, 'S', '2026-05-14 20:49:48', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (21, 'TAL', 'XXL', 'TALLA XXL', 'Talla XXL', NULL, 67, 'cm', 50, 'S', '2026-05-14 20:49:27', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (22, 'TAL', 'XXXL', 'TALLA XXXL', 'Talla XXXL', NULL, 78, 'cm', 60, 'S', '2026-05-15 17:53:35', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
+  (23, 'TAL', 'EU37', 'EU 37', 'Calzado europeo nº 37', NULL, 23.5, 'cm', 410, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (24, 'TAL', 'EU38', 'EU 38', 'Calzado europeo nº 38', NULL, 24, 'cm', 420, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (25, 'TAL', 'EU39', 'EU 39', 'Calzado europeo nº 39', NULL, 24.5, 'cm', 430, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (26, 'TAL', 'EU40', 'EU 40', 'Calzado europeo nº 40', NULL, 25, 'cm', 440, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (27, 'TAL', 'EU41', 'EU 41', 'Calzado europeo nº 41', NULL, 26, 'cm', 450, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (28, 'TAL', 'EU42', 'EU 42', 'Calzado europeo nº 42', NULL, 26.5, 'cm', 460, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (29, 'TAL', 'EU43', 'EU 43', 'Calzado europeo nº 43', NULL, 27, 'cm', 470, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (30, 'TAL', 'EU44', 'EU 44', 'Calzado europeo nº 44', NULL, 28, 'cm', 480, 'S', '2026-05-14 20:29:38', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (31, 'TAL', 'ROPA_S', 'ROPA S', 'Ropa standard S (44 cm pecho)', NULL, 44, 'cm', 10, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (32, 'TAL', 'ROPA_M', 'ROPA M', 'Ropa standard M (46 cm pecho)', NULL, 46, 'cm', 20, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (33, 'TAL', 'ROPA_L', 'ROPA L', 'Ropa standard L (48 cm pecho)', NULL, 48, 'cm', 30, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (34, 'TAL', 'ROPA_XL', 'ROPA XL', 'Ropa standard XL (50 cm pecho)', NULL, 50, 'cm', 40, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (35, 'TAL', 'ROPA_XXL', 'ROPA XXL', 'Ropa standard XXL (52 cm)', NULL, 52, 'cm', 50, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (36, 'TAL', 'ROPA_XXXL', 'ROPA XXXL', 'Ropa standard XXXL (54 cm)', NULL, 54, 'cm', 60, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (37, 'TAL', 'BANIO_S', 'BAÑADOR S', 'Bañador S (70 cm cintura)', NULL, 70, 'cm', 200, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (38, 'TAL', 'BANIO_M', 'BAÑADOR M', 'Bañador M (74 cm cintura)', NULL, 74, 'cm', 210, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (39, 'TAL', 'BANIO_L', 'BAÑADOR L', 'Bañador L (78 cm cintura)', NULL, 78, 'cm', 220, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (40, 'TAL', 'BANIO_XL', 'BAÑADOR XL', 'Bañador XL (56 cm)', NULL, 56, 'cm', 230, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (41, 'TAL', 'BANIO_XXL', 'BAÑADOR XXL', 'Bañador XXL (60 cm)', NULL, 60, 'cm', 240, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (42, 'TAL', 'CAMI_S', 'CAMISA S', 'Camisa hombre S (36 cm cuello)', NULL, 36, 'cm', 300, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (43, 'TAL', 'CAMI_M', 'CAMISA M', 'Camisa hombre M (38 cm cuello)', NULL, 38, 'cm', 310, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (44, 'TAL', 'CAMI_L', 'CAMISA L', 'Camisa hombre L (40 cm cuello)', NULL, 40, 'cm', 320, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (45, 'TAL', 'CAMI_XL', 'CAMISA XL', 'Camisa hombre XL (34 cm cuello)', NULL, 34, 'cm', 330, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
+  (109, 'TAL', 'AD_DEMO-CAMISA_9213', '3XL', NULL, NULL, 56, 'cm', 0, 'S', '2026-05-15 17:58:57', '2026-05-15 17:58:47', 'Administrador', 'Administrador'),
+  (149, 'TAL', 'AD_VEST-FLOR_XL', 'XL', NULL, NULL, 52, 'cm', 0, 'S', '2026-05-15 18:06:14', '2026-05-15 18:06:11', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_basicos` ENABLE KEYS */;
--- 52 registros exportados
+-- 47 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos
@@ -2379,7 +2373,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 197, 3, 'S', 'S', '2026-05-15 19:13:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 201, 3, 'S', 'S', '2026-05-15 21:25:46', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 18, 2, 'S', 'S', '2026-05-11 19:06:32', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -5630,8 +5624,74 @@ ON DUPLICATE KEY UPDATE
   ESACTIVO_ATB = VALUES(ESACTIVO_ATB);
 
 COMMIT;
-', '2026-05-15 19:13:49', '2026-05-15 19:13:49', 'Administrador', 'Administrador');
--- 7 registros exportados
+', '2026-05-15 19:13:49', '2026-05-15 19:13:49', 'Administrador', 'Administrador'),
+  ('197', NULL, 'SELECT N.ID_ATRIBUTO, N.ORDEN_VISUAL_ATRIBUTO, V.AV
+  FROM vi_atributos_nombres N
+  JOIN fza_articulos_skus S
+    ON S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN
+  JOIN fza_atributos_sku REL
+    ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores V
+    ON V.ID_AV = REL.ID_AV_SA AND V.ID_VA_AV = N.ID_ATRIBUTO
+ WHERE N.CODIGO_ART_PADRE_ARTVIN = ''BOTIN-ANIT''
+ ORDER BY N.ORDEN_VISUAL_ATRIBUTO, V.AV;', '2026-05-15 19:46:19', '2026-05-15 19:46:19', 'Administrador', 'Administrador'),
+  ('198', NULL, 'SELECT DISTINCT V.AV
+  FROM fza_atributos_valores V
+  INNER JOIN vi_atributos_nombres N ON V.ID_VA_AV = N.ID_ATRIBUTO
+  INNER JOIN fza_atributos_sku REL ON V.ID_AV = REL.ID_AV_SA
+  INNER JOIN fza_articulos_skus S
+    ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU
+   AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN
+ WHERE N.CODIGO_ART_PADRE_ARTVIN = ''CHAQ-CUERO''
+   AND N.ORDEN_VISUAL_ATRIBUTO = 1
+ ORDER BY V.AV;                               ', '2026-05-15 20:27:14', '2026-05-15 20:26:36', 'Administrador', 'Administrador'),
+  ('199', NULL, ' SELECT DISTINCT V.AV AS AV                            
+   FROM fza_atributos_valores V                        
+  INNER JOIN vi_atributos_nombres N                    
+     ON V.ID_VA_AV = N.ID_ATRIBUTO                     
+  INNER JOIN fza_atributos_sku REL                     
+     ON V.ID_AV = REL.ID_AV_SA                         
+  INNER JOIN fza_articulos_skus S                      
+     ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU 
+    AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN   
+  WHERE N.CODIGO_ART_PADRE_ARTVIN = ''CHAQ-CUERO''            
+    AND N.ORDEN_VISUAL_ATRIBUTO   = 1             
+  ORDER BY V.AV                                        
+', '2026-05-15 20:34:45', '2026-05-15 20:34:45', 'Administrador', 'Administrador'),
+  ('200', 'drop_extra_atb', '-- ============================================================================
+--  Drop EXTRA_ATB de fza_atributos_basicos
+-- ----------------------------------------------------------------------------
+--  La tabla tenia dos campos hex (HEX_ATB y EXTRA_ATB) con valores distintos.
+--  HEX_ATB es el bueno (lo rellena el mantenimiento de basicos). EXTRA_ATB
+--  era legacy de versiones anteriores y solo daba confusion.
+--
+--  Antes de borrar, hacemos un sanity-check: si hay filas con EXTRA_ATB
+--  rellenado y HEX_ATB vacio, copiamos EXTRA_ATB -> HEX_ATB para no perder
+--  el dato.
+--
+--  Idempotente.
+-- ============================================================================
+
+START TRANSACTION;
+
+-- 1. Backstop: rellenar HEX_ATB con EXTRA_ATB si HEX_ATB esta vacio
+UPDATE fza_atributos_basicos
+   SET HEX_ATB = EXTRA_ATB
+ WHERE (HEX_ATB IS NULL OR HEX_ATB = '''')
+   AND  EXTRA_ATB IS NOT NULL
+   AND  EXTRA_ATB <> '''';
+
+-- 2. Dropear la columna
+ALTER TABLE fza_atributos_basicos DROP COLUMN EXTRA_ATB;
+
+COMMIT;
+
+-- Verificacion (opcional, ejecutar despues):
+-- DESCRIBE fza_atributos_basicos;
+-- SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, HEX_ATB
+--   FROM fza_atributos_basicos ORDER BY ID_VA_ATB, ORDEN_ATB;
+', '2026-05-15 21:25:46', '2026-05-15 21:25:46', 'Administrador', 'Administrador');
+-- 11 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -7289,7 +7349,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-15 19:13:34', '2026-05-15 19:13:34', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-15 21:26:21', '2026-05-15 21:26:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -17241,4 +17301,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 15/05/2026 19:24:21
+-- Backup completado: 15/05/2026 21:26:32
