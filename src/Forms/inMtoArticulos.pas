@@ -2117,9 +2117,21 @@ begin
   if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
 
   // CODIGO_ATB único en su variación (UQ ID_VA_ATB+CODIGO_ATB).
-  // Lo prefijamos con AD_ + código de artículo para que sea legible
-  // pero único entre artículos: AD_DEMO-CAMISA_42
-  Codigo := Format('AD_%s_%d', [CodArt, IdAv]);
+  // Lo prefijamos con AD_ + código de artículo + valor visible para que
+  // sea legible y único entre artículos: AD_DEMO-CAMISA_3XL,
+  // AD_DEMO-CAMISA_AZUL_MARINO. Si el valor estuviera vacío caemos al
+  // ID interno como fallback para evitar colisiones.
+  if Trim(ValorAv) = '' then
+    Codigo := Format('AD_%s_%d', [CodArt, IdAv])
+  else
+    Codigo := Format('AD_%s_%s',
+                     [CodArt,
+                      StringReplace(Trim(ValorAv), ' ', '_',
+                                    [rfReplaceAll])]);
+  // CODIGO_ATB es varchar(100): truncamos por si el artículo + valor
+  // se nos van de largo.
+  if Length(Codigo) > 100 then
+    Codigo := Copy(Codigo, 1, 100);
 
   qry := TUniQuery.Create(nil);
   try
