@@ -76,7 +76,8 @@ ALTER TABLE `fza_atributos_conjuntos_det`
 CREATE TABLE IF NOT EXISTS `fza_articulos_atributos_basicos` (
   `CODIGO_ART_AAB` varchar(20) NOT NULL COMMENT 'FK lógica fza_articulos.CODIGO_ART_ART',
   `ID_AV_AAB`      int(11)     NOT NULL COMMENT 'FK lógica fza_atributos_valores.ID_AV',
-  `ID_ATB_AAB`     int(11)     NOT NULL COMMENT 'FK lógica fza_atributos_basicos.ID_ATB. Override específico de este artículo.',
+  `ID_ATB_AAB`     int(11)     NULL DEFAULT NULL
+                  COMMENT 'FK lógica fza_atributos_basicos.ID_ATB. Override específico del artículo. NULL = bloqueo explícito: este artículo no quiere básico para este valor aunque el conjunto o el global lo tengan.',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
                                        ON UPDATE current_timestamp(),
   `INSTANTE_ALTA`  timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -84,6 +85,10 @@ CREATE TABLE IF NOT EXISTS `fza_articulos_atributos_basicos` (
   `USUARIO_MODIF`  varchar(100) NOT NULL DEFAULT 'SISTEMA',
   PRIMARY KEY (`CODIGO_ART_AAB`, `ID_AV_AAB`)
 );
+-- Hacemos el ID_ATB_AAB nullable si la tabla ya existía con NOT NULL.
+ALTER TABLE `fza_articulos_atributos_basicos`
+  MODIFY COLUMN `ID_ATB_AAB` int(11) NULL DEFAULT NULL
+        COMMENT 'FK lógica fza_atributos_basicos.ID_ATB. NULL = bloqueo (sin básico).';
 ALTER TABLE `fza_articulos_atributos_basicos`
   ADD INDEX IF NOT EXISTS `IDX_AAB_VAL` (`ID_AV_AAB`),
   ADD INDEX IF NOT EXISTS `IDX_AAB_ATB` (`ID_ATB_AAB`);
@@ -200,11 +205,18 @@ SELECT
     aab.ID_ATB_AAB                                AS ID_ATB_OVERRIDE,
     acd.ID_ATB_ACD                                AS ID_ATB_CONJUNTO,
     val.ID_ATB_AV                                 AS ID_ATB_GLOBAL,
-    COALESCE(aab.ID_ATB_AAB, acd.ID_ATB_ACD, val.ID_ATB_AV) AS ID_ATB_AV,
+    -- Si EXISTE fila de override (aunque su ID_ATB_AAB sea NULL) gana
+    -- siempre: el artículo está expresando "yo decido aquí". NULL en el
+    -- override significa bloqueo (sin básico).
     CASE
-      WHEN aab.ID_ATB_AAB IS NOT NULL THEN 'A'
-      WHEN acd.ID_ATB_ACD IS NOT NULL THEN 'C'
-      WHEN val.ID_ATB_AV  IS NOT NULL THEN 'G'
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+      ELSE                                       val.ID_ATB_AV
+    END                                           AS ID_ATB_AV,
+    CASE
+      WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN 'A'
+      WHEN acd.ID_ATB_ACD     IS NOT NULL THEN 'C'
+      WHEN val.ID_ATB_AV      IS NOT NULL THEN 'G'
       ELSE NULL
     END                                           AS FUENTE_ATB,
     atb.CODIGO_ATB                                AS CODIGO_ATB,
@@ -240,12 +252,16 @@ SELECT
   LEFT JOIN fza_atributos_conjuntos_det acd
                                      ON acd.ID_AC_ACD = aca.ID_AC_ACA
                                     AND acd.ID_AV_ACD = val.ID_AV
-  -- Básico efectivo según prioridad
+  -- Básico efectivo según prioridad. Misma lógica que ID_ATB_AV arriba:
+  -- la sola existencia de la fila override (CODIGO_ART_AAB no NULL) gana,
+  -- y si su valor es NULL no se hace JOIN (sin básico = sin metadatos).
   LEFT JOIN fza_atributos_basicos atb
-                                     ON atb.ID_ATB = COALESCE(
-                                          aab.ID_ATB_AAB,
-                                          acd.ID_ATB_ACD,
-                                          val.ID_ATB_AV);
+                                     ON atb.ID_ATB = (
+                                          CASE
+                                            WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB
+                                            WHEN acd.ID_ATB_ACD     IS NOT NULL THEN acd.ID_ATB_ACD
+                                            ELSE                                       val.ID_ATB_AV
+                                          END);
 
 -- ---------------------------------------------------------------------------
 -- 9. Registro del nuevo formulario en fza_winforms
