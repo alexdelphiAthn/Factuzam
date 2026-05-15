@@ -383,9 +383,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
+          OnCustomDrawCell = cxGrid1DBTableView1CustomDrawCell
           OnEditing = cxGrid1DBTableView1Editing
           OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
           OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
+          OnGetCellHint = cxGrid1DBTableView1GetCellHint
           OnInitEdit = cxGrid1DBTableView1InitEdit
           DataController.DataSource = dsLineas
           OptionsBehavior.GoToNextCellOnEnter = True

@@ -168,6 +168,13 @@ type
       AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure actGuardarLayoutExecute(Sender: TObject);
+    procedure cxGrid1DBTableView1CustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
+    procedure cxGrid1DBTableView1GetCellHint(Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+      var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+      var AHintTextRect: TRect);
   private
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
@@ -210,6 +217,10 @@ type
     FInicializandoCombo: Boolean;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
+    // ID_VA (variacion: 'CO', 'TAL'...) por cada columna dinamica (tag 1..5).
+    // Se rellena en ActualizarColumnasDinamicas y se consulta al pintar el
+    // cuadrado de color en OnCustomDrawCell.
+    FIdVariacionPorTag: array[1..5] of string;
   private
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
@@ -237,6 +248,7 @@ uses
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
+  inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
   System.StrUtils;
 
@@ -1772,12 +1784,14 @@ var
   i: Integer;
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
+  IdsVariaciones: TStringList;
 begin
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
   FUltimoArticuloPadre := ArticuloPadre;
 
   NombresAtributos := TStringList.Create;
+  IdsVariaciones  := TStringList.Create;
   try
     // Solo atacamos la base de datos si hay un artículo real
     if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
@@ -1786,6 +1800,7 @@ begin
       datosCaja.qryDefinicionArticulo.Close;
       datosCaja.qryDefinicionArticulo.SQL.Text :=
       'SELECT DISTINCT  '        +
+      '      N.ID_ATRIBUTO, '+
       '      N.NOMBRE_ATRIBUTO, '+
       '      N.ORDEN_VISUAL_ATRIBUTO      '+
       ' FROM fza_articulos_skus SKU '+
@@ -1805,6 +1820,8 @@ begin
       begin
         NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName(
           'NOMBRE_ATRIBUTO').AsString);
+        IdsVariaciones.Add(datosCaja.qryDefinicionArticulo.FieldByName(
+          'ID_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
     end;
@@ -1829,6 +1846,7 @@ begin
             Col.Caption := NombresAtributos[i-1];
             Col.Visible := True;
             Col.Options.Editing := True;
+            FIdVariacionPorTag[i] := IdsVariaciones[i-1];
             if DatosCaja.cdsLineas.Active
                and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
               DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
@@ -1839,6 +1857,7 @@ begin
             Col.Visible := False;
             Col.Options.Editing := False;
             Col.Caption := '-';
+            FIdVariacionPorTag[i] := '';
           end;
         end;
       end;
@@ -1847,6 +1866,7 @@ begin
     end;
   finally
     NombresAtributos.Free;
+    IdsVariaciones.Free;
   end;
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
@@ -2678,6 +2698,44 @@ end;
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);
 begin
   lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', Now);
+end;
+
+procedure TfrmMtoOpeCaja.cxGrid1DBTableView1CustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  IdVa, Texto : string;
+  Info        : TInfoBasico;
+begin
+  if (AViewInfo = nil) or (AViewInfo.Item = nil) then Exit;
+  // Solo las columnas dinamicas de atributos (Tag 1..5) llevan cuadrado.
+  if (AViewInfo.Item.Tag < 1) or (AViewInfo.Item.Tag > 5) then Exit;
+  IdVa := FIdVariacionPorTag[AViewInfo.Item.Tag];
+  if IdVa = '' then Exit;
+  Texto := Trim(AViewInfo.Text);
+  if Texto = '' then Exit;
+  if ObtenerInfoBasico(IdVa, Texto, Info) then
+    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
+      ADone := True;
+end;
+
+procedure TfrmMtoOpeCaja.cxGrid1DBTableView1GetCellHint(
+  Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+  var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+  var AHintTextRect: TRect);
+var
+  IdVa, Texto : string;
+  Info        : TInfoBasico;
+begin
+  if (ACellViewInfo = nil) or (ACellViewInfo.Item = nil) then Exit;
+  if (ACellViewInfo.Item.Tag < 1) or (ACellViewInfo.Item.Tag > 5) then Exit;
+  IdVa := FIdVariacionPorTag[ACellViewInfo.Item.Tag];
+  if IdVa = '' then Exit;
+  Texto := Trim(ACellViewInfo.Text);
+  if Texto = '' then Exit;
+  if ObtenerInfoBasico(IdVa, Texto, Info) then
+    AHintText := Info.Nombre;
 end;
 
 end.

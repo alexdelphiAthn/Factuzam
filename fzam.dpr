@@ -180,6 +180,7 @@ uses
   inMtoModalAddPreciosTar in 'src\Modals\inMtoModalAddPreciosTar.pas' {frmMtoModalAddPreciosTar},
   inMtoModalCalcularMargen in 'src\Modals\inMtoModalCalcularMargen.pas' {frmModalCalcularMargen},
   inLibArticulosAtributosLookup in 'src\Lib\inLibArticulosAtributosLookup.pas',
+  inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
   inMtoModalScriptLog in 'src\Modals\inMtoModalScriptLog.pas' {frmMtoModalScriptLog},
   inLibPresta in 'src\Lib\inLibPresta.pas',
   inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
