@@ -1864,6 +1864,10 @@ begin
           'ID_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
+      // IMPORTANTE: cerrar antes de llamar a PoblarItemsAtributoCol, que abre
+      // otra TUniQuery sobre la misma conexion. MySQL/UniDAC en streaming no
+      // soporta dos resultsets simultaneos -> la segunda devuelve 0 filas.
+      datosCaja.qryDefinicionArticulo.Close;
     end;
 
     FNumAtributosActual := NombresAtributos.Count;
