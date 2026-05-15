@@ -385,6 +385,13 @@ type
       Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord;
       var AText: string);
+    procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
+    procedure tvStockGetCellHint(Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+      var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+      var AHintTextRect: TRect);
   private
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
@@ -398,6 +405,9 @@ type
     FPnlTopVariaciones:TPanel;
     FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
+    // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo actual. Lo usa
+    // tvStock para colorear el nombre del atributo segun la paleta basica.
+    FAtributosStock : TDictionary<string, string>;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -436,6 +446,7 @@ uses
   inMtoModalCalcularMargen,
   inMtoModalEtiqArt,
   inLibEAN13,
+  inLibAtributosPaleta,
   inLibtb;
 
 {$R *.dfm}
@@ -1600,6 +1611,8 @@ end;
 procedure TfrmMtoArticulos.CrearTablaPrincipal;
 begin
   inherited;
+  if FAtributosStock = nil then
+    FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
   tvTarifas.DataController.DataSource := dmmArticulos.dsTarifasArticulos;
@@ -1787,6 +1800,10 @@ begin
   dmmArticulos.unqrySkus.Refresh;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+  // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA usado por tvStock para
+  // colorear las celdas con el color de la paleta basica.
+  if FAtributosStock <> nil then
+    CargarMapaAtributosArticulo(CodArticulo, FAtributosStock);
   ActualizarVisibilidadColumnaSku;
 end;
 
@@ -1982,6 +1999,7 @@ begin
     FreeAndNil(FGestorProp);
   if Assigned(FGestorVar) then
     FreeAndNil(FGestorVar);
+  FreeAndNil(FAtributosStock);
   dmmArticulos := nil;
 end;
 
@@ -1989,6 +2007,32 @@ procedure TfrmMtoArticulos.FormShow(Sender: TObject);
 begin
   inherited;
   ResetForm;
+end;
+
+procedure TfrmMtoArticulos.tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  var ADone: Boolean);
+var
+  Info : TInfoBasico;
+begin
+  if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
+  if FAtributosStock.Count = 0 then Exit;
+  if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
+    if PintarCeldaConTextoColor(ACanvas, AViewInfo, Info) then
+      ADone := True;
+end;
+
+procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+  var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+  var AHintTextRect: TRect);
+var
+  Info : TInfoBasico;
+begin
+  if (ACellViewInfo = nil) or (FAtributosStock = nil) then Exit;
+  if FAtributosStock.Count = 0 then Exit;
+  if BuscarInfoBasicoEnArticulo(ACellViewInfo.Text, FAtributosStock, Info) then
+    AHintText := Info.Nombre;
 end;
 
 initialization

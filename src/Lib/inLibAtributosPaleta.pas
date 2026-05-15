@@ -60,6 +60,19 @@ function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
                                   AViewInfo: TcxGridTableDataCellViewInfo;
                                   const AInfo: TInfoBasico): Boolean;
 
+// Rellena ADict con NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO para todos los
+// atributos del articulo padre. Pensado para grids de stock que no conocen
+// a priori el ID_VA de cada columna.
+procedure CargarMapaAtributosArticulo(const ACodArt: string;
+                                      ADict: TDictionary<string, string>);
+
+// Busca un basico para `ATexto` probando cada ID_VA presente en `ADict`. Si
+// el texto contiene '/', tambien prueba con el ultimo segmento tras la barra.
+// Devuelve True en el primer match valido.
+function BuscarInfoBasicoEnArticulo(const ATexto: string;
+                                    ADict: TDictionary<string, string>;
+                                    out AInfo: TInfoBasico): Boolean;
+
 implementation
 
 uses
@@ -233,6 +246,63 @@ begin
   ACanvas.Brush.Style := bsSolid;
 
   Result := True;
+end;
+
+procedure CargarMapaAtributosArticulo(const ACodArt: string;
+                                      ADict: TDictionary<string, string>);
+var
+  q : TUniQuery;
+begin
+  if ADict = nil then Exit;
+  ADict.Clear;
+  if (Trim(ACodArt) = '') or (oConn = nil) then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'SELECT DISTINCT ID_ATRIBUTO, NOMBRE_ATRIBUTO '          +
+      '  FROM vi_atributos_nombres '                           +
+      ' WHERE CODIGO_ART_PADRE_ARTVIN = :ART ';
+    q.ParamByName('ART').AsString := ACodArt;
+    q.Open;
+    while not q.Eof do
+    begin
+      ADict.AddOrSetValue(
+        UpperCase(Trim(q.FieldByName('NOMBRE_ATRIBUTO').AsString)),
+        q.FieldByName('ID_ATRIBUTO').AsString);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+function BuscarInfoBasicoEnArticulo(const ATexto: string;
+                                    ADict: TDictionary<string, string>;
+                                    out AInfo: TInfoBasico): Boolean;
+var
+  Texto, Sufijo, IdVa : string;
+  PosBarra : Integer;
+begin
+  AInfo  := Default(TInfoBasico);
+  Result := False;
+  if ADict = nil then Exit;
+  Texto := Trim(ATexto);
+  if Texto = '' then Exit;
+  // 1) Probamos con el texto entero
+  for IdVa in ADict.Values do
+    if ObtenerInfoBasico(IdVa, Texto, AInfo) then
+      Exit(True);
+  // 2) Si hay '/' probamos con el ultimo segmento (caja: "CODART/COLOR")
+  PosBarra := LastDelimiter('/', Texto);
+  if PosBarra > 0 then
+  begin
+    Sufijo := Trim(Copy(Texto, PosBarra + 1, MaxInt));
+    if (Sufijo <> '') and (Sufijo <> Texto) then
+      for IdVa in ADict.Values do
+        if ObtenerInfoBasico(IdVa, Sufijo, AInfo) then
+          Exit(True);
+  end;
 end;
 
 initialization
