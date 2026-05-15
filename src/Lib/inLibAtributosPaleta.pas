@@ -18,7 +18,7 @@ unit inLibAtributosPaleta;
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView;
@@ -48,9 +48,15 @@ function HexToColor(const AHex: string): TColor;
 //   if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, AInfo) then
 //     ADone := True;
 // El cuadrado se dibuja a la izquierda y el texto desplazado a la derecha.
+// Si AViewInfo.Text esta vacio (caso TcxImageComboBox sin match en Items),
+// se cae al valor crudo del campo via GridRecord.
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
                                      AViewInfo: TcxGridTableDataCellViewInfo;
-                                     const AInfo: TInfoBasico): Boolean;
+                                     const AInfo: TInfoBasico): Boolean; overload;
+function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
+                                     AViewInfo: TcxGridTableDataCellViewInfo;
+                                     const AInfo: TInfoBasico;
+                                     const ATexto: string): Boolean; overload;
 
 // Pinta una celda cxGrid coloreando el texto con el color de la paleta.
 // Usar dentro de OnCustomDrawCell:
@@ -180,6 +186,14 @@ end;
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
                                      AViewInfo: TcxGridTableDataCellViewInfo;
                                      const AInfo: TInfoBasico): Boolean;
+begin
+  Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, AInfo, '');
+end;
+
+function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
+                                     AViewInfo: TcxGridTableDataCellViewInfo;
+                                     const AInfo: TInfoBasico;
+                                     const ATexto: string): Boolean;
 const
   LADO_CUADRADO = 10;
   MARGEN_IZQ    = 4;
@@ -193,7 +207,12 @@ begin
   if (ACanvas = nil) or (AViewInfo = nil) or not AInfo.EsValido then Exit;
 
   Bounds := AViewInfo.Bounds;
-  Texto  := AViewInfo.Text;
+  if ATexto <> '' then
+    Texto := ATexto
+  else
+    Texto := AViewInfo.Text;
+  if (Texto = '') and (AViewInfo.GridRecord <> nil) then
+    Texto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
 
   // Fondo de la celda con el color "natural" (selección/foco respetado por Params)
   ACanvas.Brush.Color := AViewInfo.Params.Color;
