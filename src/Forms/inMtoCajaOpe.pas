@@ -197,6 +197,8 @@ type
     procedure ConstruirColumnasDinamicas;
     procedure RellenarAtributosDesdeSku(Sku: string);
     procedure ActualizarColumnasDinamicas(ArticuloPadre: string);
+    procedure PoblarItemsAtributoCol(Tag: Integer;
+                                     const ArticuloPadre: string);
     function ObtenerColumnaPorTag(NumColumn:Integer):TcxGridDBColumn;
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
     procedure RecalcularPrecioDesdeSku(sSKU:string);
@@ -1443,11 +1445,6 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   AEdit: TcxCustomEdit);
 var
   Combo: TcxImageComboBox;
-  Item: TcxImageComboBoxItem;
-  OrdenColumna: Integer;
-  ArticuloPadre, IdVa, Av: string;
-  Avs: TList<string>;
-  Idx: Integer;
 begin
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
@@ -1455,65 +1452,9 @@ begin
     Combo.Tag := AItem.Tag;
     Combo.Properties.OnEditValueChanged := OnAtributoChanged;
     Combo.OnEnter := nil;
-    OrdenColumna := AItem.Tag;
-    if DatosCaja.cdsLineas.Active then
-      ArticuloPadre := DatosCaja.cdsLineas.FieldByName(
-                                       'CODIGO_ART_FACLIN').AsString
-    else
-      ArticuloPadre := '';
-    IdVa := FIdVariacionPorTag[AItem.Tag];
-    Avs := TList<string>.Create;
-    try
-      with TUniQuery.Create(nil) do
-      try
-        Connection := oConn;
-        SQL.Text :=
-            '  SELECT DISTINCT V.AV                         '+
-            '    FROM fza_atributos_valores V                          '+
-            '   INNER JOIN vi_atributos_nombres N                     '+
-            '      ON V.ID_VA_AV = N.ID_ATRIBUTO                      '+
-            '   INNER JOIN fza_atributos_sku REL                      '+
-            '      ON V.ID_AV = REL.ID_AV_SA                 '+
-            '   INNER JOIN fza_articulos_skus S                       '+
-            '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU      '+
-            '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN '+
-            '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE               '+
-            '     AND N.ORDEN_VISUAL_ATRIBUTO = :ORDEN       '+
-            '   ORDER BY V.AV                                   ';
-        ParamByName('PADRE').AsString := ArticuloPadre;
-        ParamByName('ORDEN').AsInteger := OrdenColumna;
-        Open;
-        while not Eof do
-        begin
-          Avs.Add(FieldByName('AV').AsString);
-          Next;
-        end;
-      finally
-        Free;
-      end;
-      // Regenera el ImageList con un swatch por cada AV que tenga color en
-      // la paleta basica. Los AV sin color no llevan icono (ImageIndex=-1).
-      RellenarImageListPaleta(FImagesPorTag[AItem.Tag], IdVa,
-                              Avs.ToArray, FAvToIndexPorTag[AItem.Tag]);
-      Combo.Properties.Items.BeginUpdate;
-      try
-        Combo.Properties.Items.Clear;
-        for Av in Avs do
-        begin
-          Item := TcxImageComboBoxItem(Combo.Properties.Items.Add);
-          Item.Description := Av;
-          Item.Value := Av;
-          if FAvToIndexPorTag[AItem.Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
-            Item.ImageIndex := Idx
-          else
-            Item.ImageIndex := -1;
-        end;
-      finally
-        Combo.Properties.Items.EndUpdate;
-      end;
-    finally
-      Avs.Free;
-    end;
+    // Items + swatches estan ya cargados por PoblarItemsAtributoCol (llamado
+    // desde ActualizarColumnasDinamicas cuando cambia el articulo). Aqui solo
+    // decidimos el comportamiento del foco/auto-seleccion.
     if Combo.Properties.Items.Count > 1 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
@@ -1900,6 +1841,12 @@ begin
                and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
               DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
                 i) + '_NOMBRE').AsString := NombresAtributos[i-1];
+            // Items + swatches deben estar listos AHORA: el cell display de
+            // TcxImageComboBox necesita que Items contenga el valor del campo
+            // para encontrar su Description y pintarlo. Si solo los rellenamos
+            // en OnInitEdit, al salir del editor el combo no encuentra el item
+            // y la celda se queda en blanco.
+            PoblarItemsAtributoCol(i, ArticuloPadre);
           end
           else
           begin
@@ -1907,6 +1854,7 @@ begin
             Col.Options.Editing := False;
             Col.Caption := '-';
             FIdVariacionPorTag[i] := '';
+            PoblarItemsAtributoCol(i, '');
           end;
         end;
       end;
@@ -1918,6 +1866,77 @@ begin
     IdsVariaciones.Free;
   end;
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+end;
+
+procedure TfrmMtoOpeCaja.PoblarItemsAtributoCol(Tag: Integer;
+                                                const ArticuloPadre: string);
+var
+  Col  : TcxGridDBColumn;
+  Avs  : TList<string>;
+  Av, IdVa : string;
+  Item : TcxImageComboBoxItem;
+  Idx  : Integer;
+begin
+  Col := ObtenerColumnaPorTag(Tag);
+  if (Col = nil)
+     or not (Col.Properties is TcxImageComboBoxProperties) then Exit;
+  IdVa := FIdVariacionPorTag[Tag];
+  Avs := TList<string>.Create;
+  try
+    if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
+    begin
+      with TUniQuery.Create(nil) do
+      try
+        Connection := oConn;
+        SQL.Text :=
+          '  SELECT DISTINCT V.AV                                         '+
+          '    FROM fza_atributos_valores V                               '+
+          '   INNER JOIN vi_atributos_nombres N                           '+
+          '      ON V.ID_VA_AV = N.ID_ATRIBUTO                            '+
+          '   INNER JOIN fza_atributos_sku REL                            '+
+          '      ON V.ID_AV = REL.ID_AV_SA                                '+
+          '   INNER JOIN fza_articulos_skus S                             '+
+          '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU        '+
+          '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN          '+
+          '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE                    '+
+          '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN                    '+
+          '   ORDER BY V.AV                                               ';
+        ParamByName('PADRE').AsString := ArticuloPadre;
+        ParamByName('ORDEN').AsInteger := Tag;
+        Open;
+        while not Eof do
+        begin
+          Avs.Add(FieldByName('AV').AsString);
+          Next;
+        end;
+      finally
+        Free;
+      end;
+    end;
+    RellenarImageListPaleta(FImagesPorTag[Tag], IdVa,
+                            Avs.ToArray, FAvToIndexPorTag[Tag]);
+    with TcxImageComboBoxProperties(Col.Properties) do
+    begin
+      Items.BeginUpdate;
+      try
+        Items.Clear;
+        for Av in Avs do
+        begin
+          Item := TcxImageComboBoxItem(Items.Add);
+          Item.Description := Av;
+          Item.Value       := Av;
+          if FAvToIndexPorTag[Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
+            Item.ImageIndex := Idx
+          else
+            Item.ImageIndex := -1;
+        end;
+      finally
+        Items.EndUpdate;
+      end;
+    end;
+  finally
+    Avs.Free;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
@@ -2775,16 +2794,23 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1CustomDrawCell(
 var
   IdVa, Texto : string;
   Info        : TInfoBasico;
+  Val : Variant;
 begin
   if (AViewInfo = nil) or (AViewInfo.Item = nil) then Exit;
   // Solo las columnas dinamicas de atributos (Tag 1..5) llevan cuadrado.
   if (AViewInfo.Item.Tag < 1) or (AViewInfo.Item.Tag > 5) then Exit;
   IdVa := FIdVariacionPorTag[AViewInfo.Item.Tag];
   if IdVa = '' then Exit;
-  Texto := Trim(AViewInfo.Text);
+  // Leemos el valor crudo del registro, no AViewInfo.Text: TcxImageComboBox
+  // calcula Text matcheando Items, y si por timing aun no estan poblados Text
+  // sale vacio y nos perdemos el repintado.
+  if AViewInfo.GridRecord = nil then Exit;
+  Val := AViewInfo.GridRecord.Values[AViewInfo.Item.Index];
+  if VarIsNull(Val) then Exit;
+  Texto := Trim(VarToStr(Val));
   if Texto = '' then Exit;
   if ObtenerInfoBasico(IdVa, Texto, Info) then
-    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
+    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, Texto) then
       ADone := True;
 end;
 
