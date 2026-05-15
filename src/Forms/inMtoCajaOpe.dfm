@@ -388,7 +388,6 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           OnEditing = cxGrid1DBTableView1Editing
           OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
           OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
-          OnGetCellHint = cxGrid1DBTableView1GetCellHint
           OnInitEdit = cxGrid1DBTableView1InitEdit
           DataController.DataSource = dsLineas
           OptionsBehavior.GoToNextCellOnEnter = True
@@ -495,7 +494,6 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnCustomDrawCell = dbtvStockCustomDrawCell
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
-            OnGetCellHint = dbtvStockGetCellHint
             OnInitEdit = cxGrid1DBTableView1InitEdit
             DataController.DataSource = dsStock
             OptionsBehavior.GoToNextCellOnEnter = True
