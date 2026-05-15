@@ -435,6 +435,7 @@ type
     FPnlTopVariaciones:TPanel;
     FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
+    function AsegurarBasicoFilaActual: Integer;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -2077,17 +2078,120 @@ begin
   else AText := '';
 end;
 
+function TfrmMtoArticulos.AsegurarBasicoFilaActual: Integer;
+// Devuelve el ID_ATB del básico aplicable a la fila activa del detalle
+// de SKUs. Si la fila no tiene básico (override blocked o nada heredado)
+// crea uno ad-hoc en fza_atributos_basicos con el VALOR_AV como nombre,
+// y persiste el override per-artículo apuntando a él. Así, cuando el
+// usuario edita Nombre/Valor/Unidad sin haber elegido básico, tenemos
+// un registro donde grabarlo.
+//
+// Devuelve 0 si la fila no es válida (sin SKU activo, etc.).
+var
+  ds      : TDataSet;
+  qry     : TUniQuery;
+  CodArt  : string;
+  IdAv    : Integer;
+  IdVaAv  : string;
+  ValorAv : string;
+  Codigo  : string;
+begin
+  Result := 0;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+
+  if not ds.FieldByName('ID_ATB_AV').IsNull then
+  begin
+    Result := ds.FieldByName('ID_ATB_AV').AsInteger;
+    Exit;
+  end;
+
+  CodArt  := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  IdAv    := ds.FieldByName('ID_AV').AsInteger;
+  IdVaAv  := ds.FieldByName('ID_VA_AV').AsString;
+  ValorAv := ds.FieldByName('VALOR_AV').AsString;
+  if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
+
+  // CODIGO_ATB único en su variación (UQ ID_VA_ATB+CODIGO_ATB).
+  // Lo prefijamos con AD_ + código de artículo para que sea legible
+  // pero único entre artículos: AD_DEMO-CAMISA_42
+  Codigo := Format('AD_%s_%d', [CodArt, IdAv]);
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    // 1) Insertar (o reutilizar) básico ad-hoc.
+    qry.SQL.Text :=
+      'INSERT INTO fza_atributos_basicos '              +
+      '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
+      '    ESACTIVO_ATB, '                              +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
+      'VALUES (:IDVA, :COD, :NOM, ''S'', '              +
+      '        NOW(), :USR, :USR) '                     +
+      'ON DUPLICATE KEY UPDATE '                        +
+      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('COD').AsString  := Codigo;
+    qry.ParamByName('NOM').AsString  := ValorAv;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
+
+    // 2) Leer el ID resultante (sea recién creado o ya existente).
+    qry.SQL.Text :=
+      'SELECT ID_ATB FROM fza_atributos_basicos '       +
+      ' WHERE ID_VA_ATB  = :IDVA '                      +
+      '   AND CODIGO_ATB = :COD';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('COD').AsString  := Codigo;
+    qry.Open;
+    if not qry.IsEmpty then
+      Result := qry.FieldByName('ID_ATB').AsInteger;
+    qry.Close;
+    if Result = 0 then Exit;
+
+    // 3) Override per-artículo apuntando al nuevo básico.
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_atributos_basicos '   +
+      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '    +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
+      'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) '   +
+      'ON DUPLICATE KEY UPDATE '                       +
+      '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '        +
+      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('ART').AsString  := CodArt;
+    qry.ParamByName('AV').AsInteger  := IdAv;
+    qry.ParamByName('ATB').AsInteger := Result;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+end;
+
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry: TUniQuery;
-  ds : TDataSet;
-  vNew: Variant;
+  qry  : TUniQuery;
+  ds   : TDataSet;
+  vNew : Variant;
+  IdAtb: Integer;
 begin
   if (not Assigned(dmmArticulos)) or
      (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
   ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  if ds.IsEmpty then Exit;
+  // Si la fila no tiene básico aún (bloqueado o heredado=NULL), creamos
+  // uno ad-hoc para que la edición tenga un destino.
+  IdAtb := AsegurarBasicoFilaActual;
+  if IdAtb = 0 then
+  begin
+    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
+    Exit;
+  end;
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
@@ -2099,7 +2203,7 @@ begin
       ' WHERE ID_ATB = :ID';
     qry.ParamByName('VAL').AsString  := VarToStr(vNew);
     qry.ParamByName('USR').AsString  := oUser;
-    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
     qry.Free;
@@ -2113,14 +2217,21 @@ end;
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry: TUniQuery;
-  ds : TDataSet;
-  vNew: Variant;
+  qry  : TUniQuery;
+  ds   : TDataSet;
+  vNew : Variant;
+  IdAtb: Integer;
 begin
   if (not Assigned(dmmArticulos)) or
      (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
   ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  if ds.IsEmpty then Exit;
+  IdAtb := AsegurarBasicoFilaActual;
+  if IdAtb = 0 then
+  begin
+    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
+    Exit;
+  end;
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
@@ -2135,7 +2246,7 @@ begin
     else
       qry.ParamByName('VAL').AsFloat := Double(vNew);
     qry.ParamByName('USR').AsString  := oUser;
-    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
     qry.Free;
@@ -2149,14 +2260,21 @@ end;
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry: TUniQuery;
-  ds : TDataSet;
-  vNew: Variant;
+  qry  : TUniQuery;
+  ds   : TDataSet;
+  vNew : Variant;
+  IdAtb: Integer;
 begin
   if (not Assigned(dmmArticulos)) or
      (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
   ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty or ds.FieldByName('ID_ATB_AV').IsNull then Exit;
+  if ds.IsEmpty then Exit;
+  IdAtb := AsegurarBasicoFilaActual;
+  if IdAtb = 0 then
+  begin
+    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
+    Exit;
+  end;
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
@@ -2168,7 +2286,7 @@ begin
       ' WHERE ID_ATB = :ID';
     qry.ParamByName('VAL').AsString  := VarToStr(vNew);
     qry.ParamByName('USR').AsString  := oUser;
-    qry.ParamByName('ID').AsInteger  := ds.FieldByName('ID_ATB_AV').AsInteger;
+    qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
     qry.Free;
@@ -2279,8 +2397,8 @@ end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosDblClick(Sender: TObject);
 // Abre el selector de color sobre el atributo básico de la fila activa.
-// Si la fila no tiene atributo básico asignado todavía, primero hay que
-// elegirlo en la columna 'Básico'.
+// Si la fila no tiene atributo básico aún, lo creamos al vuelo (ad-hoc
+// per-artículo) para que el usuario pueda asignarle un HEX directamente.
 var
   ds : TDataSet;
   IdAtb: Integer;
@@ -2293,13 +2411,8 @@ begin
      (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
   ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
-  if ds.FieldByName('ID_ATB_AV').IsNull then
-  begin
-    ShowMessage('Asigna primero un atributo básico en la columna "Básico" ' +
-                'para poder definir su color de paleta.');
-    Exit;
-  end;
-  IdAtb := ds.FieldByName('ID_ATB_AV').AsInteger;
+  IdAtb := AsegurarBasicoFilaActual;
+  if IdAtb = 0 then Exit;
 
   Dlg := TColorDialog.Create(Self);
   try
