@@ -1623,20 +1623,17 @@ begin
       if CodArt <> '' then
         PoblarItemsAtributoCol(AItem.Tag, CodArt);
     end;
-    if Combo.Properties.Items.Count > 1 then
+    // Nada de auto-seleccion (ItemIndex := 0 disparaba OnAtributoChanged sin
+    // proteccion y bloqueaba el form). Si la celda esta vacia, cableamos
+    // OnEnter por si la version dispara el evento al recibir foco; ademas,
+    // EditKeyDown abrira el dropdown si el usuario pulsa Enter.
+    if Combo.Properties.Items.Count > 0 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
       if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
-      begin
-        // CAMBIO 8: ForzarDespliegue usa FInicializandoCombo para no disparar
-        // OnAtributoChanged al asignar ItemIndex := 0
-        Combo.OnEnter := ForzarDespliegue;
-        Combo.ItemIndex := 0;
-      end
+        Combo.OnEnter := ForzarDespliegue
       else
-      begin
         Combo.OnEnter := nil;
-      end;
     end;
   end;
   if AItem = tvArticulo then
@@ -2874,8 +2871,8 @@ begin
   ActualizarFoco;
 end;
 
-// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger
-// OnAtributoChanged
+// Solo abre el desplegable; nunca tocar ItemIndex aqui (eso disparaba
+// OnAtributoChanged sin contexto y bloqueaba el form).
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
 var
   Combo: TcxImageComboBox;
@@ -2883,16 +2880,7 @@ begin
   if Sender is TcxImageComboBox then
   begin
     Combo := TcxImageComboBox(Sender);
-    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el
-    // precio
-    // con un SKU incompleto (todavía falta confirmar este atributo)
-    FInicializandoCombo := True;
-    try
-      Combo.ItemIndex := 0;
-    finally
-      FInicializandoCombo := False;
-    end;
-    if not Combo.DroppedDown then
+    if (Combo.Properties.Items.Count > 0) and not Combo.DroppedDown then
       Combo.DroppedDown := True;
     Combo.OnEnter := nil;
   end;
