@@ -592,10 +592,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object Panel1: TPanel
                 Left = 948
                 Top = 0
@@ -2391,7 +2387,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet

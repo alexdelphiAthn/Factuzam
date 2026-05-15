@@ -1714,6 +1714,11 @@ begin
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
   ActualizarVisibilidadVariaciones;
   ActualizarVisibilidadColumnaSku;
+  // Carga el mapa de atributos para el articulo inicial -- OnAfterScrollArticulos
+  // no se dispara en el primer focused record y el grid de stock no coloreaba
+  // hasta que el usuario navegaba a otro registro.
+  if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
+    CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
