@@ -1,14 +1,12 @@
 inherited dmAlbaranes: TdmAlbaranes
-  OnCreate = DataModuleCreate
-  OnDestroy = DataModuleDestroy
-  ClientHeight = 480
-  ClientWidth = 632
+  Height = 529
+  Width = 626
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM vi_albaranes')
     AfterInsert = unqryTablaGAfterInsert
-    BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost
     Left = 48
     Top = 24
@@ -22,8 +20,8 @@ inherited dmAlbaranes: TdmAlbaranes
     AfterInsert = unqryAlbaranesLineasAfterInsert
     BeforePost = unqryAlbaranesLineasBeforePost
     AfterPost = unqryAlbaranesLineasAfterPost
-    Left = 48
-    Top = 80
+    Left = 520
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -38,8 +36,8 @@ inherited dmAlbaranes: TdmAlbaranes
   end
   object dsAlbaranesLineas: TDataSource
     DataSet = unqryAlbaranesLineas
-    Left = 128
-    Top = 80
+    Left = 520
+    Top = 72
   end
   object unqryEmpDataAlb: TUniQuery
     Connection = dmConn.conUni
@@ -75,6 +73,7 @@ inherited dmAlbaranes: TdmAlbaranes
         DataType = ftString
         Name = 'pSKU'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object unqryFacturas: TUniQuery
@@ -128,7 +127,7 @@ inherited dmAlbaranes: TdmAlbaranes
       '       TIPO_MOV, CANTIDAD_MOV, '
       '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
       '  FROM vi_movimientos '
-      ' WHERE TIPO_DOC_REF_MOV   = ''AV'' '
+      ' WHERE TIPO_DOC_REF_MOV   = '#39'AV'#39' '
       '   AND SERIE_DOC_REF_MOV  = :SERIE_ALB '
       '   AND NUMERO_DOC_REF_MOV = :NUMERO_ALB '
       ' ORDER BY LINEA_MOV')
