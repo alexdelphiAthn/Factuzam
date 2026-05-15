@@ -1326,20 +1326,29 @@ begin
   if (AItem.Tag > 0) and (AEdit is TcxImageComboBox) then
   begin
     Combo := TcxImageComboBox(AEdit);
+    // CONSULTAR Items via la columna, no via Combo.Properties: en esta version
+    // de DevExpress, acceder a Combo.Properties recien instanciado puede
+    // producir AV (Self nil al descender la cadena de inherited).
+    var ColItems: Integer := 0;
+    if AItem is TcxGridDBColumn then
+    begin
+      var ColProps := TcxGridDBColumn(AItem).Properties;
+      if ColProps is TcxImageComboBoxProperties then
+        ColItems := TcxImageComboBoxProperties(ColProps).Items.Count;
+    end;
     // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
-    // para que el usuario pueda elegir. Probamos primero DroppedDown := True
-    // y, si la version de DevExpress no engancha por timing, posteamos F4
-    // (atajo estandar Windows para abrir un combo) como fallback.
+    // via F4 (atajo Windows). Lo intentamos tambien con DroppedDown := True
+    // por compatibilidad, ignorando excepciones.
     if (Key = VK_RETURN)
        and not Combo.DroppedDown
-       and (Combo.Properties.Items.Count > 0)
+       and (ColItems > 0)
        and (Combo.ItemIndex = -1)
        and (Trim(VarToStr(Combo.EditValue)) = '') then
     begin
       try
         Combo.DroppedDown := True;
       except
-        // ignorar; F4 lo va a cubrir
+        // F4 abajo cubre el caso
       end;
       if not Combo.DroppedDown then
       begin
@@ -1351,7 +1360,7 @@ begin
     end;
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-      if Combo.Properties.Items.Count > 0 then
+      if ColItems > 0 then
         Combo.ItemIndex := 0;
     end;
     // Si estaba desplegado, solo cerrarlo y salir
