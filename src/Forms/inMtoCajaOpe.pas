@@ -1456,42 +1456,23 @@ begin
 //            ' ItemIndex=' + IntToStr(Combo.ItemIndex) +
 //            ' DroppedDown=' + BoolToStr(Combo.DroppedDown, True));
     Combo := TcxImageComboBox(AEdit);
-    // CONSULTAR Items via la columna, no via Combo.Properties: en esta version
-    // de DevExpress, acceder a Combo.Properties recien instanciado puede
-    // producir AV (Self nil al descender la cadena de inherited).
-    var ColItems: Integer := 0;
-    if AItem is TcxGridDBColumn then
-    begin
-      var ColProps := TcxGridDBColumn(AItem).Properties;
-      if ColProps is TcxImageComboBoxProperties then
-        ColItems := TcxImageComboBoxProperties(ColProps).Items.Count;
-    end;
     // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
-    // via F4 (atajo Windows). Lo intentamos tambien con DroppedDown := True
-    // por compatibilidad, ignorando excepciones.
+    // para que el usuario pueda elegir. ForzarDespliegue via OnEnter no
+    // engancha de forma fiable en TcxImageComboBox, asi que lo forzamos aqui.
     if (Key = VK_RETURN)
        and not Combo.DroppedDown
-       and (ColItems > 0)
+       and (Combo.Properties.Items.Count > 0)
        and (Combo.ItemIndex = -1)
        and (Trim(VarToStr(Combo.EditValue)) = '') then
     begin
-      try
-        Combo.DroppedDown := True;
-      except
-        // F4 abajo cubre el caso
-      end;
-      if not Combo.DroppedDown then
-      begin
-        PostMessage(Combo.Handle, WM_KEYDOWN, VK_F4, 0);
-        PostMessage(Combo.Handle, WM_KEYUP,   VK_F4, 0);
-      end;
+      Combo.DroppedDown := True;
       Key := 0;
       Exit;
     end;
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-      if ColItems > 0 then
-        Combo.ItemIndex := 0;
+//      if Combo.Properties.Items.Count > 0 then
+//        Combo.ItemIndex := 0;
     end;
     // Si estaba desplegado, solo cerrarlo y salir
     // El usuario tendrá que pulsar Enter de nuevo para confirmar
@@ -1627,92 +1608,32 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   AEdit: TcxCustomEdit);
 var
   Combo: TcxImageComboBox;
-  Col: TcxGridDBColumn;
-  ColProps: TcxImageComboBoxProperties;
-  Item: TcxImageComboBoxItem;
-  ArticuloPadre, IdVa, Av: string;
-  Avs: TList<string>;
-  Idx: Integer;
+  CodArt: string;
 begin
-  if (AItem.Tag >= 1) and (AItem.Tag <= 5) and (AItem is TcxGridDBColumn) then
+  if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
     Combo := TcxImageComboBox(AEdit);
     Combo.Tag := AItem.Tag;
+    Combo.Properties.OnEditValueChanged := OnAtributoChanged;
     Combo.OnEnter := nil;
-    Col := TcxGridDBColumn(AItem);
-    if not (Col.Properties is TcxImageComboBoxProperties) then Exit;
-    ColProps := TcxImageComboBoxProperties(Col.Properties);
-    ColProps.OnEditValueChanged := OnAtributoChanged;
-
-    if DatosCaja.cdsLineas.Active then
-      ArticuloPadre := DatosCaja.cdsLineas.FieldByName(
+    // Safety net: Items deberian estar poblados por ActualizarColumnasDinamicas,
+    // pero si por timing aun no lo estan (p.ej. la primera entrada en la celda
+    // antes de haber pasado por tvArticulo), los poblamos aqui sobre la marcha.
+    if Combo.Properties.Items.Count = 0 then
+    begin
+      if DatosCaja.cdsLineas.Active then
+        CodArt := DatosCaja.cdsLineas.FieldByName(
                                        'CODIGO_ART_FACLIN').AsString
-    else
-      ArticuloPadre := '';
-    IdVa := FIdVariacionPorTag[AItem.Tag];
-
-    // SQL inline (no via PoblarItemsAtributoCol). Asi tenemos una sola
-    // TUniQuery activa por hilo: UniDAC/MySQL en streaming no soporta
-    // resultsets concurrentes y antes la query de PoblarItemsAtributoCol
-    // chocaba con qryDefinicionArticulo, devolviendo 0 filas.
-    Avs := TList<string>.Create;
-    try
-      if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
-      begin
-        with TUniQuery.Create(nil) do
-        try
-          Connection := oConn;
-          SQL.Text :=
-            '  SELECT DISTINCT V.AV                                         '+
-            '    FROM fza_atributos_valores V                               '+
-            '   INNER JOIN vi_atributos_nombres N                           '+
-            '      ON V.ID_VA_AV = N.ID_ATRIBUTO                            '+
-            '   INNER JOIN fza_atributos_sku REL                            '+
-            '      ON V.ID_AV = REL.ID_AV_SA                                '+
-            '   INNER JOIN fza_articulos_skus S                             '+
-            '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU        '+
-            '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN          '+
-            '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE                    '+
-            '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN                    '+
-            '   ORDER BY V.AV                                               ';
-          ParamByName('PADRE').AsString := ArticuloPadre;
-          ParamByName('ORDEN').AsInteger := AItem.Tag;
-          Open;
-          while not Eof do
-          begin
-            Avs.Add(FieldByName('AV').AsString);
-            Next;
-          end;
-        finally
-          Free;
-        end;
-      end;
-      RellenarImageListPaleta(FImagesPorTag[AItem.Tag], IdVa,
-                              Avs.ToArray, FAvToIndexPorTag[AItem.Tag]);
-      ColProps.Items.BeginUpdate;
-      try
-        ColProps.Items.Clear;
-        for Av in Avs do
-        begin
-          Item := TcxImageComboBoxItem(ColProps.Items.Add);
-          Item.Description := Av;
-          Item.Value       := Av;
-          if FAvToIndexPorTag[AItem.Tag].TryGetValue(UpperCase(Trim(Av)), Idx) then
-            Item.ImageIndex := Idx
-          else
-            Item.ImageIndex := -1;
-        end;
-      finally
-        ColProps.Items.EndUpdate;
-      end;
-    finally
-      Avs.Free;
+      else
+        CodArt := '';
+      if CodArt <> '' then
+        PoblarItemsAtributoCol(AItem.Tag, CodArt);
     end;
-
     // Nada de auto-seleccion (ItemIndex := 0 disparaba OnAtributoChanged sin
-    // proteccion y bloqueaba el form). EditKeyDown abrira el dropdown si el
-    // usuario pulsa Enter.
-    if ColProps.Items.Count > 0 then
+    // proteccion y bloqueaba el form). Si la celda esta vacia, cableamos
+    // OnEnter por si la version dispara el evento al recibir foco; ademas,
+    // EditKeyDown abrira el dropdown si el usuario pulsa Enter.
+    if Combo.Properties.Items.Count > 0 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
       if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
@@ -2072,10 +1993,6 @@ begin
           'ID_ATRIBUTO').AsString);
         datosCaja.qryDefinicionArticulo.Next;
       end;
-      // Cerrar libera la conexion. UniDAC/MySQL en streaming no admite dos
-      // resultsets concurrentes, asi que dejar esta abierta puede romper
-      // queries posteriores en el mismo flujo.
-      datosCaja.qryDefinicionArticulo.Close;
     end;
 
     FNumAtributosActual := NombresAtributos.Count;
@@ -2103,9 +2020,12 @@ begin
                and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
               DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
                 i) + '_NOMBRE').AsString := NombresAtributos[i-1];
-            // Items se rellenan en OnInitEdit (cuando el usuario entra a la
-            // celda). Aqui no se hace porque qryDefinicionArticulo sigue
-            // abierta y UniDAC/MySQL no soporta dos resultsets concurrentes.
+            // Items + swatches deben estar listos AHORA: el cell display de
+            // TcxImageComboBox necesita que Items contenga el valor del campo
+            // para encontrar su Description y pintarlo. Si solo los rellenamos
+            // en OnInitEdit, al salir del editor el combo no encuentra el item
+            // y la celda se queda en blanco.
+            PoblarItemsAtributoCol(i, ArticuloPadre);
           end
           else
           begin
@@ -2113,6 +2033,7 @@ begin
             Col.Options.Editing := False;
             Col.Caption := '-';
             FIdVariacionPorTag[i] := '';
+            PoblarItemsAtributoCol(i, '');
           end;
         end;
       end;
