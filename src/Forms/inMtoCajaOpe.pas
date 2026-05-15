@@ -1451,10 +1451,10 @@ begin
   begin
     // Dentro de cxGrid1DBTableView1EditKeyDown, justo despues del begin
     // del if (AItem.Tag > 0) and (AEdit is TcxImageComboBox) then ...
-    ShowMessage('EditKeyDown llamado. Key=' + IntToStr(Key) +
-            ' Items=' + IntToStr(Combo.Properties.Items.Count) +
-            ' ItemIndex=' + IntToStr(Combo.ItemIndex) +
-            ' DroppedDown=' + BoolToStr(Combo.DroppedDown, True));
+//    ShowMessage('EditKeyDown llamado. Key=' + IntToStr(Key) +
+//            ' Items=' + IntToStr(Combo.Properties.Items.Count) +
+//            ' ItemIndex=' + IntToStr(Combo.ItemIndex) +
+//            ' DroppedDown=' + BoolToStr(Combo.DroppedDown, True));
     Combo := TcxImageComboBox(AEdit);
     // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
     // para que el usuario pueda elegir. ForzarDespliegue via OnEnter no
