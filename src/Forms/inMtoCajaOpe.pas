@@ -18,7 +18,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math,
+  System.Classes, System.Generics.Collections, Vcl.Graphics, inMtoGenSearch,
+  system.Math,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -168,6 +169,10 @@ type
       AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure actGuardarLayoutExecute(Sender: TObject);
+    procedure dbtvStockCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
+    procedure FormDestroy(Sender: TObject);
   private
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
@@ -210,6 +215,10 @@ type
     FInicializandoCombo: Boolean;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
+    // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo cuyo stock
+    // estamos mostrando en dbtvStock. Lo rellena ConsultarStock y lo consume
+    // dbtvStockCustomDrawCell para colorear el texto via paleta basica.
+    FAtributosStock: TDictionary<string, string>;
   private
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
@@ -237,6 +246,7 @@ uses
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
+  inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
   System.StrUtils;
 
@@ -402,7 +412,13 @@ begin
       except
       end;
     end;
-  end;
+    // Carga el mapa NOMBRE_ATRIBUTO -> ID_VA del articulo para que
+    // dbtvStockCustomDrawCell pueda colorear el nombre del color/talla con
+    // el hex de la paleta basica.
+    CargarMapaAtributosArticulo(CodigoInput, FAtributosStock);
+  end
+  else if FAtributosStock <> nil then
+    FAtributosStock.Clear;
 end;
 
 procedure TfrmMtoOpeCaja.txtEntradaArticuloKeyPress(Sender: TObject;
@@ -2524,9 +2540,28 @@ begin
   Action := caFree;
 end;
 
+procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FAtributosStock);
+end;
+
+procedure TfrmMtoOpeCaja.dbtvStockCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  Info : TInfoBasico;
+begin
+  if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
+  if FAtributosStock.Count = 0 then Exit;
+  if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
+    if PintarCeldaConTextoColor(ACanvas, AViewInfo, Info) then
+      ADone := True;
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   DatosCaja := TdmCajaOpe.Create(Self);
+  FAtributosStock := TDictionary<string, string>.Create;
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   ConstruirColumnasDinamicas;
