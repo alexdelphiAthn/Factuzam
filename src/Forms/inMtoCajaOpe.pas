@@ -1326,6 +1326,19 @@ begin
   if (AItem.Tag > 0) and (AEdit is TcxImageComboBox) then
   begin
     Combo := TcxImageComboBox(AEdit);
+    // Enter sobre celda vacia (y dropdown cerrado): abrimos el desplegable
+    // para que el usuario pueda elegir. ForzarDespliegue via OnEnter no
+    // engancha de forma fiable en TcxImageComboBox, asi que lo forzamos aqui.
+    if (Key = VK_RETURN)
+       and not Combo.DroppedDown
+       and (Combo.Properties.Items.Count > 0)
+       and (Combo.ItemIndex = -1)
+       and (Trim(VarToStr(Combo.EditValue)) = '') then
+    begin
+      Combo.DroppedDown := True;
+      Key := 0;
+      Exit;
+    end;
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
       if Combo.Properties.Items.Count > 0 then
@@ -1445,6 +1458,7 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   AEdit: TcxCustomEdit);
 var
   Combo: TcxImageComboBox;
+  CodArt: string;
 begin
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
@@ -1452,9 +1466,19 @@ begin
     Combo.Tag := AItem.Tag;
     Combo.Properties.OnEditValueChanged := OnAtributoChanged;
     Combo.OnEnter := nil;
-    // Items + swatches estan ya cargados por PoblarItemsAtributoCol (llamado
-    // desde ActualizarColumnasDinamicas cuando cambia el articulo). Aqui solo
-    // decidimos el comportamiento del foco/auto-seleccion.
+    // Safety net: Items deberian estar poblados por ActualizarColumnasDinamicas,
+    // pero si por timing aun no lo estan (p.ej. la primera entrada en la celda
+    // antes de haber pasado por tvArticulo), los poblamos aqui sobre la marcha.
+    if Combo.Properties.Items.Count = 0 then
+    begin
+      if DatosCaja.cdsLineas.Active then
+        CodArt := DatosCaja.cdsLineas.FieldByName(
+                                       'CODIGO_ART_FACLIN').AsString
+      else
+        CodArt := '';
+      if CodArt <> '' then
+        PoblarItemsAtributoCol(AItem.Tag, CodArt);
+    end;
     if Combo.Properties.Items.Count > 1 then
     begin
       var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
