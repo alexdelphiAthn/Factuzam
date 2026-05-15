@@ -1465,8 +1465,8 @@ begin
     end;
     if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
     begin
-      if Combo.Properties.Items.Count > 0 then
-        Combo.ItemIndex := 0;
+//      if Combo.Properties.Items.Count > 0 then
+//        Combo.ItemIndex := 0;
     end;
     // Si estaba desplegado, solo cerrarlo y salir
     // El usuario tendrá que pulsar Enter de nuevo para confirmar
