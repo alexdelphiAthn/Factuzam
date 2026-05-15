@@ -13,6 +13,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 22
@@ -383,9 +384,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
+          OnCustomDrawCell = cxGrid1DBTableView1CustomDrawCell
           OnEditing = cxGrid1DBTableView1Editing
           OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
           OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
+          OnGetCellHint = cxGrid1DBTableView1GetCellHint
           OnInitEdit = cxGrid1DBTableView1InitEdit
           DataController.DataSource = dsLineas
           OptionsBehavior.GoToNextCellOnEnter = True
@@ -490,7 +493,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           OnExit = cxGrid1Exit
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
+            OnCustomDrawCell = dbtvStockCustomDrawCell
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
+            OnGetCellHint = dbtvStockGetCellHint
             OnInitEdit = cxGrid1DBTableView1InitEdit
             DataController.DataSource = dsStock
             OptionsBehavior.GoToNextCellOnEnter = True
