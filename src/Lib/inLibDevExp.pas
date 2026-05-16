@@ -95,8 +95,16 @@ begin
   if (Sender is TcxCustomEdit) then
   begin
     Edit := TcxCustomEdit(Sender);
-    Edit.PostEditValue;
-    ValoEditado := Edit.EditValue;
+    // El editor in-place del grid puede llegar aqui sin Parent asignado
+    // (transicion de celda, cierre de edicion...). PostEditValue invoca
+    // HandleNeeded internamente y lanza EInvalidOperation 'no tiene
+    // ventana principal' cuando Parent = nil. Si no esta parentado, dejamos
+    // ValoEditado en null y el fallback de mas abajo lee del dataset.
+    if Assigned(Edit.Parent) then
+    begin
+      Edit.PostEditValue;
+      ValoEditado := Edit.EditValue;
+    end;
   end;
   if (View.Controller.FocusedColumn <> nil) and
      (View.Controller.FocusedColumn is TcxGridDBColumn) then
