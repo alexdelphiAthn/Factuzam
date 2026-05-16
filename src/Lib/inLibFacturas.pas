@@ -210,14 +210,14 @@ type
     Property Impcl: String read GetImpcl write SetImpcl;
     Property MensajeError: String read _sMensajeError;
   public
-    constructor Create(unqryLin: TDataset); overload;
-    constructor Create(unqryLin, unqryFac: TDataset;
+    constructor Create(AUnqryLin: TDataset); overload;
+    constructor Create(AUnqryLin, AUnqryFac: TDataset;
                        bCalcularFactura:boolean = false); overload;
     procedure CopyToDataSetLin;
     procedure CopyToDataSetFac;
     procedure CopyToObjectLin;
     procedure CopyToObjectFac;
-    procedure SetInit(unqryLin: TDataset);
+    procedure SetInit(AUnqryLin: TDataset);
     procedure CalcularLinea;
     function ValidarDatos: Boolean;
     function EsDevolucion: Boolean;
@@ -243,7 +243,7 @@ type
     procedure LeerPorcentajesDesdeFactura;
     procedure AplicarReglas;
     procedure RecorrerYCalcularLineasConClientDataSet;
-    procedure AcumularTotalesPorTipoIVA(linea: TLinFac);
+    procedure AcumularTotalesPorTipoIVA(ALinea: TLinFac);
     procedure CalcularTotalesGenerales;
     procedure CalcularRetenciones;
     procedure ValidarConfiguracion;
@@ -256,7 +256,7 @@ type
     function BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
   public
     FTieneLineasNegativas:Boolean;
-    constructor Create(unqryFac: TDataset;
+    constructor Create(AUnqryFac: TDataset;
                        unqryLineas: TDataset;
                        LineaEnEdicion:TLinFac = nil);
     function ProcesarFacturaCompleta: Boolean;
@@ -290,19 +290,19 @@ end;
 
 { TLinFac - Implementación completa }
 
-constructor TLinFac.Create(unqryLin: TDataset);
+constructor TLinFac.Create(AUnqryLin: TDataset);
 begin
   inherited Create;
-  _unqryLin := unqryLin;
+  _unqryLin := AUnqryLin;
   Self.CopyToObjectLin;
 end;
 
-constructor TLinFac.Create(unqryLin, unqryFac: TDataset;
+constructor TLinFac.Create(AUnqryLin, AUnqryFac: TDataset;
                            bCalcularFactura:boolean = false);
 begin
   inherited Create;
-  _unqryLin := unqryLin;
-  _unqryFac := unqryFac;
+  _unqryLin := AUnqryLin;
+  _unqryFac := AUnqryFac;
   _sMensajeError := '';
   Self.CopyToObjectLin;
   Self.CopyToObjectFac;
@@ -439,9 +439,9 @@ begin
   end;
 end;
 
-procedure TLinFac.SetInit(unqryLin: TDataset);
+procedure TLinFac.SetInit(AUnqryLin: TDataset);
 begin
-  _unqryLin := unqryLin;
+  _unqryLin := AUnqryLin;
 end;
 
 // Getters y Setters
@@ -635,12 +635,12 @@ end;
 
 { TFacturaTotales - Implementación completa }
 
-constructor TFacturaTotales.Create(unqryFac: TDataset;
+constructor TFacturaTotales.Create(AUnqryFac: TDataset;
                                    unqryLineas: TDataset;
                                    LineaEnEdicion:TLinFac = nil);
 begin
   inherited Create;
-  _unqryFac := unqryFac;
+  _unqryFac := AUnqryFac;
   _unqryLineas := unqryLineas;
   _LineaEnEdicion := LineaEnEdicion;
   //_unqryLineasTemp := nil;
@@ -911,7 +911,7 @@ begin
   end;
 end;
 
-procedure TFacturaTotales.AcumularTotalesPorTipoIVA(linea: TLinFac);
+procedure TFacturaTotales.AcumularTotalesPorTipoIVA(ALinea: TLinFac);
 var
   porcentajeIVA, porcentajeRE: Currency;
   baseImponible, importeIVA, importeRE: Currency;
@@ -919,14 +919,14 @@ var
 begin
   // 1. Calcular base imponible y total de la línea forzando el redondeo a 2
   // decimales
-  baseImponible := SimpleRoundTo(linea.TotSiva, -2);
-  totalLineaCIVA := SimpleRoundTo(linea.TotCiva, -2);
+  baseImponible := SimpleRoundTo(ALinea.TotSiva, -2);
+  totalLineaCIVA := SimpleRoundTo(ALinea.TotCiva, -2);
   // Obtener porcentajes según el tipo de IVA
-  porcentajeIVA := ObtenerPorcentajePorTipo(linea.TipoIva);
-  porcentajeRE := ObtenerPorcentajeREPorTipo(linea.TipoIva);
+  porcentajeIVA := ObtenerPorcentajePorTipo(ALinea.TipoIva);
+  porcentajeRE := ObtenerPorcentajeREPorTipo(ALinea.TipoIva);
   // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA
   // incluido
-  if SameText(linea.Impcl, 'S') then
+  if SameText(ALinea.Impcl, 'S') then
   begin
     importeIVA := totalLineaCIVA - baseImponible;
     importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
@@ -936,13 +936,13 @@ begin
     importeIVA := SimpleRoundTo(baseImponible * (porcentajeIVA / 100), -2);
     importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
   end;
-  if linea._dCant < 0 then
+  if ALinea._dCant < 0 then
     Self.FTieneLineasNegativas := True;
-  _totales.TotalCantidades := _totales.TotalCantidades + linea.Cant;
-  _totales.TotalBruto := _totales.TotalBruto + (linea.PrecioSal * linea.Cant);
+  _totales.TotalCantidades := _totales.TotalCantidades + ALinea.Cant;
+  _totales.TotalBruto := _totales.TotalBruto + (ALinea.PrecioSal * ALinea.Cant);
   _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
-                                    (linea.Dto * linea.Cant);
-  case IndexStr(linea.TipoIva, ['N', 'R', 'S', 'E']) of
+                                    (ALinea.Dto * ALinea.Cant);
+  case IndexStr(ALinea.TipoIva, ['N', 'R', 'S', 'E']) of
     0: // IVA Normal
       begin
         _totales.IVAN.BaseImponible :=
