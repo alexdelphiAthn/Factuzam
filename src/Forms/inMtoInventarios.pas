@@ -1296,7 +1296,6 @@ begin
   if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
     dmmInventarios.cdsLineas.Post;
 
-  Insertados := 0;
   Screen.Cursor := crHourGlass;
   try
     try

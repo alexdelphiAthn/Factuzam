@@ -903,7 +903,6 @@ function ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
 var
   q: TUniQuery;
 begin
-  Result := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -927,7 +926,6 @@ function ContarSkusPotenciales(ADM: TdmComprasSesiones): Integer;
 var
   q: TUniQuery;
 begin
-  Result := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -950,7 +948,6 @@ function CalcularTotalCompra(ADM: TdmComprasSesiones): Double;
 var
   q: TUniQuery;
 begin
-  Result := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;

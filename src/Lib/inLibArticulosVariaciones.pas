@@ -408,7 +408,6 @@ var
   S      : TSlotVariacion;
   NuevoId: Integer;
 begin
-  Result := False;
   for i := 0 to FSlotsVar.Count - 1 do
   begin
     S := FSlotsVar[i];

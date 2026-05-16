@@ -1412,7 +1412,6 @@ begin
        Key := 0;
        Exit;
     end;
-    NumAtributos := FNumAtributosActual;
     // HideEdit SOLO aquí, cuando el combo ya está cerrado y tiene valor
     tvLineasOpe.Controller.EditingController.HideEdit(True);
     // CAMBIO 5: Usar FNumAtributosActual en lugar de leer del dataset
@@ -1688,14 +1687,12 @@ procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
 var
   LCtrl: TWinControl;
   CodigoBuscado: string;
-  CurrentItem: TcxCustomGridTableItem;
   CurrentEdit: TcxCustomEdit;
   Combo: TcxComboBox;
 begin
   if tvLineasOpe.Controller.FocusedItem <> nil then
   if (tvLineasOpe.Controller.FocusedItem.Tag > 0) then
   begin
-    CurrentItem := tvLineasOpe.Controller.FocusedItem;
     if dsLineas.DataSet.State = dsBrowse then
       dsLineas.DataSet.Edit;
     if not tvLineasOpe.Controller.EditingController.IsEditing then
