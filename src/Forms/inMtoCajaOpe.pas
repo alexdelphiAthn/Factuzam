@@ -299,11 +299,6 @@ begin
       tvLineasOpe.Controller.EditingController.HideEdit(True);
     end;
     // 2. Vaciar las líneas de la venta anterior
-// if (DatosCaja.cdsLineas.Active) and (DatosCaja.cdsLineas.RecordCount > 0)
-// then
-//    begin
-//      DatosCaja.cdsLineas.EmptyDataSet;
-//    end;
     if DatosCaja.cdsLineas.Active then
     begin
       DatosCaja.cdsLineas.DisableControls;
@@ -1815,10 +1810,6 @@ begin
           begin
             // Si el parámetro está desactivado, el cajero decide. Lo normal es
             // dejarle en CANTIDAD_ARTVIN.
-            // (Cambia 'tvCantidad' por el nombre real de tu columna de
-            // cantidad_artvin)
-            // tvLineasOpe.Controller.FocusedColumn := tvCantidad;
-            // tvLineasOpe.Controller.EditingController.ShowEdit;
           end;
         end;
       end;
@@ -2446,11 +2437,6 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
-//  if DatosCaja.cdsLineas.IsEmpty then
-//  begin
-//    ShowMessage('No hay líneas en la venta para cobrar.');
-//    Exit;
-//  end;
   frmFaseCobro := nil;
   try
     ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
