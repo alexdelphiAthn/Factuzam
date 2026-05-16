@@ -39,7 +39,7 @@ uses
   cxButtons, cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupComboBox,
   cxCheckBox, cxGroupBox, cxNavigator, cxDBNavigator,
   dxDateRanges, dxScrollbarAnnotations, dxBevel,
-  Uni, MemDS, DBAccess;
+  Uni, MemDS, DBAccess, System.UITypes;
 
 type
   TfrmMtoComprasPlantillas = class(TfrmMtoGen)

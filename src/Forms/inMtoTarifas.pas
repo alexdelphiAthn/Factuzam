@@ -34,7 +34,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan,
-  cxSplitter, JvComponentBase, JvEnterTab, dxShellDialogs;
+  cxSplitter, JvComponentBase, JvEnterTab, dxShellDialogs, System.UITypes;
 
 type
   TfrmMtoTarifas = class(TfrmMtoGen)

@@ -37,7 +37,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxLookupEdit,
   DBAccess, Uni,
-  UniDataComprasSesiones;
+  UniDataComprasSesiones, System.UITypes, Data.DB;
 
 type
   TCeldaMatriz = record

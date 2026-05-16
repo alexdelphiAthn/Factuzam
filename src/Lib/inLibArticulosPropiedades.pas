@@ -40,7 +40,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxSpinEdit,
   cxCheckBox, cxLabel, cxDropDownEdit, cxButtons,
   cxPC, cxLookAndFeels, cxLookAndFeelPainters,
-  DBAccess, Uni;
+  DBAccess, Uni, System.UITypes;
 
 type
   TTipoValorProp = (tvpLista, tvpTextoLibre, tvpNumero, tvpBooleano);

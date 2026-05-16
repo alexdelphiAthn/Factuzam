@@ -26,7 +26,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, UniDataConn, cxCustomData, cxFilter, cxData,
   cxDataStorage, cxEdit, cxNavigator, dxDateRanges, dxScrollbarAnnotations,
-  system.Generics.Collections, cxCheckBox;
+  system.Generics.Collections, cxCheckBox, System.UITypes;
 
 type
   TValorAtributo = record

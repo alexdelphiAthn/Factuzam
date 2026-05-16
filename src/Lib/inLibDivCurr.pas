@@ -62,7 +62,7 @@ uses
   System.Net.URLClient,
   System.JSON,
   System.Generics.Collections,
-  System.DateUtils;
+  System.DateUtils, System.NetConsts;
 
 const
   FRANKFURTER_BASE_URL = 'https://api.frankfurter.app';

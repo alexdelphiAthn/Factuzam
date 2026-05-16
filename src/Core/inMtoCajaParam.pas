@@ -25,7 +25,7 @@ uses
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, Vcl.Printers;
+  Vcl.ActnList, Vcl.Printers, System.UITypes;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector

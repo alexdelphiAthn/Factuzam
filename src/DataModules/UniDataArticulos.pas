@@ -21,7 +21,7 @@ uses
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
-  frxClass, frxDBSet, frCoreClasses;
+  frxClass, frxDBSet, frCoreClasses, System.UITypes;
 
 type
   TdmArticulos = class(TdmBase)

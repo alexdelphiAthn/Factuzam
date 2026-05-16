@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
   Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
-  UniDataGen, vcl.Controls;
+  UniDataGen, vcl.Controls, System.UITypes;
 
 type
   // Cabecera (heredado de TdmBase)

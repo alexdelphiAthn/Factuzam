@@ -26,7 +26,7 @@ uses
   cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls, inMtoFrmBase, Uni,
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
   JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, dxSkinsCore;   // dxSkinsCore para TdxSkinController
+  Vcl.ActnList, dxSkinsCore, System.UITypes;   // dxSkinsCore para TdxSkinController
 
 type
   PBoolean = ^Boolean;

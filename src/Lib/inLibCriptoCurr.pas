@@ -73,7 +73,7 @@ uses
   System.JSON,
   System.Generics.Collections,
   System.DateUtils,
-  System.Math;
+  System.Math, System.NetConsts;
 
 const
   COINGECKO_BASE_URL  = 'https://api.coingecko.com/api/v3';
