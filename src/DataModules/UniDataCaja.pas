@@ -955,16 +955,19 @@ var
 begin
   if ANuevoAbono <= 0 then Exit;
   SpTrx := TUniStoredProc.Create(nil);
-  SpTrx.Connection := QryTrx.Connection;
-  SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-  SpTrx.PrepareSQL;
-  SpTrx.ParamByName('SKU').AsString           := ASku;
-  SpTrx.ParamByName('CLI').AsString           := ACliente;
-  SpTrx.ParamByName('ESTADO').Clear;
-  SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
-  SpTrx.ParamByName('USUARIO').AsString       := AUsuario;
-  SpTrx.Execute;
-  SpTrx.Free;
+  try
+    SpTrx.Connection := QryTrx.Connection;
+    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
+    SpTrx.PrepareSQL;
+    SpTrx.ParamByName('SKU').AsString            := ASku;
+    SpTrx.ParamByName('CLI').AsString            := ACliente;
+    SpTrx.ParamByName('ESTADO').Clear;
+    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
+    SpTrx.ParamByName('USUARIO').AsString        := AUsuario;
+    SpTrx.Execute;
+  finally
+    FreeAndNil(SpTrx);
+  end;
 end;
 
 procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;

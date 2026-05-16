@@ -1054,7 +1054,6 @@ begin
     begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
-      Abort;
     end;
     if (FindField(fnrolin).AsString  = '0') then
     begin
@@ -1316,7 +1315,6 @@ begin
     if IsError then
     begin
       raise Exception.Create('No se ha grabado la cabecera de la factura');
-      Abort;
     end
     else
       if ((State = dsEdit) or (State = dsInsert)) then

@@ -52,7 +52,7 @@ function ObtenerImpresoraPorPatronCached(const PatronBusqueda,
                                                ArchivoCache: string): string;
 var
   FCache: TextFile;
-  Linea, Sesion, SesionCache, ImpresoraCache, ModoCache: string;
+  Linea, SesionCache, ImpresoraCache, ModoCache: string;
   Partes: TStringList;
   CacheValida: Boolean;
 begin
@@ -97,21 +97,8 @@ begin
       Result := 'DEBUG'
     else
       Result := BuscarImpresoraPorPatrones(PatronBusqueda);
-    if Result <> '' then
-    begin
-      if Result = 'DEBUG' then
-        Sesion := '0'
-      else
-        Sesion := ObtenerSesionImpresora(Result);
-      AssignFile(FCache, ArchivoCache);
-      Rewrite(FCache);
-      try
-      finally
-        CloseFile(FCache);
-      end;
-    end;
   finally
-    Partes.Free;
+    FreeAndNil(Partes);
   end;
 end;
 
@@ -154,20 +141,11 @@ begin
     // Separar los patrones de búsqueda
     ListaSubcadenas := SepararSubcadenas(Patrones);
     if ListaSubcadenas.Count = 0 then
-//    begin
-//      EscribirLog('No se especificaron patrones de búsqueda válidos');
       Exit;
-//      end;
-// EscribirLog('Patrones de búsqueda (debe coincidir con TODOS): ' + Patrones);
-    for i := 0 to ListaSubcadenas.Count - 1 do
-//      EscribirLog('  - Patrón ' + IntToStr(i + 1) + ': "' +                                                      ListaSubcadenas[i] + '"');
     // Obtener lista de impresoras instaladas
     ListaImpresoras := ObtenerListaImpresoras;
     if ListaImpresoras.Count = 0 then
-    begin
-//      EscribirLog('No hay impresoras disponibles para buscar');
       Exit;
-    end;
     for i := 0 to ListaImpresoras.Count - 1 do
     begin
       NombreImpresora := ListaImpresoras[i];
@@ -192,14 +170,11 @@ begin
       begin
         Result := NombreImpresora;
         Exit;
-      end
-      else
+      end;
     end;
   finally
-    if Assigned(ListaSubcadenas) then
-      ListaSubcadenas.Free;
-    if Assigned(ListaImpresoras) then
-      ListaImpresoras.Free;
+    FreeAndNil(ListaSubcadenas);
+    FreeAndNil(ListaImpresoras);
   end;
 end;
 

@@ -80,7 +80,7 @@ end;
 procedure TdmEmpresas.unqryRetencionesBeforeInsert(DataSet: TDataSet);
 begin
   inherited;
-    if ( (unqryTablaG.State = dsInsert) and
+    if ( (unqryTablaG.State = dsInsert) or
          (unqryTablaG.State = dsEdit)
        ) then
       unqryTablaG.Post;
@@ -92,7 +92,7 @@ var
   bSinErrores:Boolean;
 begin
   inherited;
-  if ( (unqryTablaG.State = dsInsert) and
+  if ( (unqryTablaG.State = dsInsert) or
        (unqryTablaG.State = dsEdit)
    ) then
     unqryTablaG.Post;
@@ -157,7 +157,7 @@ var
 //  sCodigoSerie:String;
 begin
   inherited;
-  if ( (unqryTablaG.State = dsInsert) and
+  if ( (unqryTablaG.State = dsInsert) or
        (unqryTablaG.State = dsEdit)
    ) then
     unqryTablaG.Post;
@@ -317,14 +317,12 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                         'para el campo Razón Social de Empresa',
                                                                 [sRazonSocial]);
-      bError := True;
     end;
     if ((sCodigoEmpresa = '') or (SimbolosProhibidos(sCodigoEmpresa))) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                               'para el campo Código de Empresa',
                                                               [sCodigoEmpresa]);
-      bError := True;
     end;
     if bError then
       Abort

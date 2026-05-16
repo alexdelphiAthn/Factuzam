@@ -36,28 +36,36 @@ var
 begin
   HttpReq := TIdHTTP.Create;
   SSLio := TIdSSLIOHandlerSocketOpenSSL.Create;
-  HttpReq.IOHandler := SSLio;
-  SSLio.SSLOptions.SSLVersions := [sslvTLSv1_1, sslvTLSv1_2];
-  HttpReq.Request.CharSet := 'utf-8';
-  sOS := 'Windows NT '+IntToStr(Win32MajorVersion)+'.'+
-                       IntToStr(Win32MinorVersion);
-  sUserAgent := 'HeidiSQL' + '/' + '12.3.0.6589' +
-                ' ('+ sOS +'; '+ 'heidisql.exe'+');';
-  HttpReq.Request.UserAgent := sUserAgent;
-  // Parameter documentation: https://sqlformat.org/api/
   Parameters := TStringList.Create;
-  Parameters.AddPair('sql', sSQL);
-  Parameters.AddPair('reindent', '1');
-  Parameters.AddPair('indent_width', '2');
-  Parameters.AddPair('keyword_case', 'upper');
-  JsonResponseStr := HttpReq.Post('https://sqlformat.org/api/v1/format',
-                                   Parameters);
-  if JsonResponseStr.IsEmpty then
-    raise Exception.Create('Empty result from online reformatter');
-  JsonTmp := TJSONObject.ParseJSONValue(JsonResponseStr);
-  Result := JsonTmp.FindValue('result').Value;
-  JsonTmp.Free;
-  HttpReq.Free;
+  JsonTmp := nil;
+  try
+    HttpReq.IOHandler := SSLio;
+    SSLio.SSLOptions.SSLVersions := [sslvTLSv1_1, sslvTLSv1_2];
+    HttpReq.Request.CharSet := 'utf-8';
+    sOS := 'Windows NT ' + IntToStr(Win32MajorVersion) + '.' +
+                          IntToStr(Win32MinorVersion);
+    sUserAgent := 'HeidiSQL' + '/' + '12.3.0.6589' +
+                  ' (' + sOS + '; ' + 'heidisql.exe' + ');';
+    HttpReq.Request.UserAgent := sUserAgent;
+    // Documentación de parámetros: https://sqlformat.org/api/
+    Parameters.AddPair('sql', sSQL);
+    Parameters.AddPair('reindent', '1');
+    Parameters.AddPair('indent_width', '2');
+    Parameters.AddPair('keyword_case', 'upper');
+    JsonResponseStr := HttpReq.Post('https://sqlformat.org/api/v1/format',
+                                    Parameters);
+    if JsonResponseStr.IsEmpty then
+      raise Exception.Create('Respuesta vacía del servicio de formateo SQL');
+    JsonTmp := TJSONObject.ParseJSONValue(JsonResponseStr);
+    if (JsonTmp = nil) or (JsonTmp.FindValue('result') = nil) then
+      raise Exception.Create('Respuesta JSON inesperada del formateador SQL');
+    Result := JsonTmp.FindValue('result').Value;
+  finally
+    FreeAndNil(JsonTmp);
+    FreeAndNil(Parameters);
+    FreeAndNil(SSLio);
+    FreeAndNil(HttpReq);
+  end;
 end;
 
 end.
