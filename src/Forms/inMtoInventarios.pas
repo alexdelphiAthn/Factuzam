@@ -132,10 +132,10 @@ type
     lblInstanteModif: TcxLabel;
     txtINSTANTEMODIF: TcxDBTextEdit;
     splSplitterFicha: TcxSplitter;
-    cxDBCurrencyEdit1: TcxDBCurrencyEdit;
+    curTOTAL_EUROS_DIFERENCIA_INV: TcxDBCurrencyEdit;
     btnIraArticulo: TcxButton;
-    Panel3: TPanel;
-    cxButton11: TcxButton;
+    pnlBotonesAccion: TPanel;
+    btnExportarExcel: TcxButton;
     btnIraArticuloMov: TcxButton;
     ActionList1: TActionList;
     actIraArticulo: TAction;

@@ -614,7 +614,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   GridView = tvMovs
                 end
               end
-              object Panel3: TPanel
+              object pnlBotonesAccion: TPanel
                 Left = 1009
                 Top = 50
                 Width = 121
@@ -624,7 +624,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 ExplicitLeft = 948
                 ExplicitTop = 0
                 ExplicitHeight = 425
-                object cxButton11: TcxButton
+                object btnExportarExcel: TcxButton
                   Left = 3
                   Top = 11
                   Width = 116
@@ -701,7 +701,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Caption = 'Variaci'#243'n econ'#243'mica ('#8364')'
                     TabOrder = 2
                   end
-                  object cxDBCurrencyEdit1: TcxDBCurrencyEdit
+                  object curTOTAL_EUROS_DIFERENCIA_INV: TcxDBCurrencyEdit
                     Left = 265
                     Top = 72
                     DataBinding.DataField = 'TOTAL_EUROS_DIFERENCIA_INV'
