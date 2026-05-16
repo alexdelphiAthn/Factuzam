@@ -31,7 +31,7 @@ type
                            Operation: TOperation); override;
   public
 
-    constructor Create(APageControl: TcxPageControl);
+    constructor Create(APageControl: TcxPageControl); reintroduce;
     destructor Destroy; override;
     procedure EmbedForm(AForm: TForm;
                         const ATitle: string;

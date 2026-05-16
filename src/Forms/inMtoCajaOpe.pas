@@ -583,6 +583,7 @@ var
   TextoBusqueda: string;
 begin
   tmrBusq.Enabled := False;
+  EditActivo := nil;
   dbtvBusq.BeginUpdate;
   try
     dbtvBusq.DataController.DataSource := nil;
@@ -2414,7 +2415,6 @@ procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   ObjTotales: TFacturaTotales;
-  SerieGenerada: string;
   NumeroGenerado: string;
   CodigoValeGenerado: string;
 begin

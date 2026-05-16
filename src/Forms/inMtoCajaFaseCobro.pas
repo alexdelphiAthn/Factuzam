@@ -186,7 +186,6 @@ uses inMtoCajaSeleccionVale, inLibCajaParam;
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
   qry: TUniQuery;
-  SerieDefecto: string;
 begin
   qry := TUniQuery.Create(nil);
   try
@@ -632,7 +631,6 @@ end;
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura:
                                                        TFacturaTotales);
 var
-  PorcentajeMedio: Double;
 begin
 if TotalesFactura = nil then Exit;
   FDatosCobro.CargarDatosFactura(TotalesFactura);

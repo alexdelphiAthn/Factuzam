@@ -104,7 +104,6 @@ end;
 procedure TfrmModalImportarPedidosPS.CargarGridDesdeResumen;
 var
   i: Integer;
-  rec: TcxCustomGridRecord;
 begin
   tvPedidos.DataController.RecordCount := 0;
   tvPedidos.DataController.RecordCount := FResumen.Count;

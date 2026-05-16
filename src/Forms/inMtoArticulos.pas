@@ -880,6 +880,8 @@ var
   PrecioPadre: Double;
 begin
   inherited;
+  UserHasta := 0;
+  DbHasta := 0;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 

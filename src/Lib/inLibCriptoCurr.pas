@@ -774,7 +774,6 @@ var
   MarketData : TJSONObject;
   PriceObj   : TJSONObject;
   DateStr    : string;
-  PriceArr   : TJSONArray;
 begin
   Result  := 0;
   // CoinGecko espera la fecha en formato DD-MM-YYYY

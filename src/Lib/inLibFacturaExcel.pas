@@ -43,7 +43,6 @@ const
 var
   Sheet: TdxSpreadSheetTableView;
   iRow: Integer;
-  NombreSugerido: string;
   PorcenREN, PorcenRER, PorcenRESR, PorcenREE: Double;
   TieneRE : Boolean;
 
