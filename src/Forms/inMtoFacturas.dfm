@@ -1723,7 +1723,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 4
                   OnClick = btnExportarRecibosClick
                 end
-                object btnGenerarRecibos: TcxButton
+                object btnGenerarRecibos2: TcxButton
                   Left = 3
                   Top = 190
                   Width = 152
@@ -2332,7 +2332,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               ExplicitTop = 0
               ExplicitWidth = 0
               ExplicitHeight = 0
-              object cxgrdLineasFactura: TcxGrid
+              object cxgrdLogVerifactu: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 1079
@@ -2343,7 +2343,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                object tvLineasFactura: TcxGridDBTableView
+                object tvLogVerifactu: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
@@ -2393,31 +2393,31 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
-                  object cxGridDBTableView1TIMESTAMP_LOG: TcxGridDBColumn
+                  object tvLogVerifactuTIMESTAMP_LOG: TcxGridDBColumn
                     Caption = 'Fecha Hora'
                     DataBinding.FieldName = 'TIMESTAMP_LOG'
                   end
-                  object cxGridDBTableView1DESCRIPCION_LOG: TcxGridDBColumn
+                  object tvLogVerifactuDESCRIPCION_LOG: TcxGridDBColumn
                     Caption = 'Evento'
                     DataBinding.FieldName = 'DESCRIPCION_LOG'
                     Width = 308
                   end
-                  object cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn
+                  object tvLogVerifactuDATOS_ADICIONALES_LOG: TcxGridDBColumn
                     Caption = 'Datos adicionales'
                     DataBinding.FieldName = 'DATOS_ADICIONALES_LOG'
                     Width = 628
                   end
-                  object cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn
+                  object tvLogVerifactuNRO_FACTURA_LOG: TcxGridDBColumn
                     DataBinding.FieldName = 'NUMERO_FAC_LOG'
                     Visible = False
                   end
-                  object cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn
+                  object tvLogVerifactuSERIE_FACTURA_LOG: TcxGridDBColumn
                     DataBinding.FieldName = 'SERIE_FAC_LOG'
                     Visible = False
                   end
                 end
-                object cxgrdlvlLineasFactura: TcxGridLevel
-                  GridView = tvLineasFactura
+                object cxgrdlvlLogVerifactu: TcxGridLevel
+                  GridView = tvLogVerifactu
                 end
               end
             end
