@@ -3,6 +3,14 @@
 // licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynPdf;
 
+// Codigo third-party - suprimir warnings sin modificar fuentes externas.
+{$WARN WIDECHAR_REDUCED OFF}
+{$WARN IMPLICIT_STRING_CAST OFF}
+{$WARN IMPLICIT_STRING_CAST_LOSS OFF}
+{$WARN EXPLICIT_STRING_CAST OFF}
+{$WARN EXPLICIT_STRING_CAST_LOSS OFF}
+{$HINTS OFF}
+
 {
     This file is part of Synopse framework.
 

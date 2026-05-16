@@ -5,6 +5,9 @@
 // licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynCrypto;
 
+// Codigo third-party - suprimir warnings/hints sin modificar fuentes externas.
+{$HINTS OFF}
+
 (*
     This file is part of Synopse framework.
 
