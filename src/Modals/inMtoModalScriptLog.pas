@@ -32,9 +32,6 @@ type
     procedure ScrollToEnd;
   end;
 
-var
-  frmMtoModalScriptLog: TfrmMtoModalScriptLog;
-
 implementation
 
 {$R *.dfm}

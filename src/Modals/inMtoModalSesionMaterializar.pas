@@ -51,9 +51,6 @@ type
     property ESGeneraAlbaran : Boolean read FESGeneraAlbaran write FESGeneraAlbaran;
   end;
 
-var
-  frmModalSesionMaterializar: TfrmModalSesionMaterializar;
-
 implementation
 
 {$R *.dfm}

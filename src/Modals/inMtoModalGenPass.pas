@@ -46,9 +46,6 @@ type
     sFicha:string;
   end;
 
-var
-  frmModalGenPass: TfrmModalGenPass;
-
 implementation
 
 {$R *.dfm}

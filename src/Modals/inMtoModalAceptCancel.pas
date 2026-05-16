@@ -46,9 +46,6 @@ type
     { Public declarations }
   end;
 
-var
-  frmModalAceptCancel: TfrmModalAceptCancel;
-
 implementation
 
 {$R *.dfm}
