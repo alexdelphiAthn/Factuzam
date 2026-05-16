@@ -50,15 +50,15 @@ type
     txtDtoGlobal: TcxCurrencyEdit;
     lblNumDoc: TcxLabel;
     edtNumeroDoc: TcxTextEdit;
-    cbbSerie1: TcxComboBox;
+    cbbSERIE_FAC: TcxComboBox;
     pnlCuenta: TPanel;
-    lblDescuento3: TcxLabel;
-    lblSuma1: TcxLabel;
+    lblPendienteCobro: TcxLabel;
+    lblImporteACuenta: TcxLabel;
     txtDejarCuenta: TcxCurrencyEdit;
     txtPendienteCuenta: TcxCurrencyEdit;
     pnlCambioVales: TPanel;
-    lblDescuento31: TcxLabel;
-    lblSuma11: TcxLabel;
+    lblValeEmitido: TcxLabel;
+    lblValeRecogido: TcxLabel;
     txtValeRecogido: TcxCurrencyEdit;
     txtValeEmitido: TcxCurrencyEdit;
     txtCambio: TcxCurrencyEdit;
@@ -83,13 +83,13 @@ type
     btnF3: TcxButton;
     btnAtras: TcxButton;
     btnESC: TcxButton;
-    ActionList1: TActionList;
+    alFaseCobro: TActionList;
     actSalir: TAction;
     pnlLogoLeft: TPanel;
     pnlContenedor: TPanel;
     pnlTotales: TPanel;
-    lblDescuento1: TcxLabel;
-    lblDescuento2: TcxLabel;
+    lblImporteDtoLineal: TcxLabel;
+    lblImporteTotalAPagar: TcxLabel;
     lblDescuento: TcxLabel;
     lblSuma: TcxLabel;
     // Edits de Importes
@@ -98,14 +98,14 @@ type
     cxgrdbclmnCodigo: TcxGridDBColumn;
     dbmDescripcion: TcxGridDBColumn;
     // Panel Inferior (Totales finales)
-    lblDescuento4: TcxLabel;
-    cxLabel2: TcxLabel;
-    cxLabel1: TcxLabel;
-    cxStyleRepository1: TcxStyleRepository;
-    cxStyle1: TcxStyle;
-    dbtvFormasPagoColumn1: TcxGridDBColumn;
-    dbtvFormasPagoColumn2: TcxGridDBColumn;
-    dbtvFormasPagoColumn3: TcxGridDBColumn;
+    lblPendienteCobroAlt: TcxLabel;
+    lblTituloFzam: TcxLabel;
+    lblDevolucionCambio: TcxLabel;
+    styRepoCobro: TcxStyleRepository;
+    styCobroLine: TcxStyle;
+    dbtvFormasPagoESDIVISA_FORMA_PAGO_CFP: TcxGridDBColumn;
+    dbtvFormasPagoESCRIPTO_FORMA_PAGO_CFP: TcxGridDBColumn;
+    dbtvFormasPagoESIMPORTE_DIVISA: TcxGridDBColumn;
     actRellenar: TAction;
     actBuscarVale: TAction;
     actSinTicket: TAction;
@@ -206,23 +206,23 @@ begin
     qry.ParamByName('CAJA').AsString := FCodigoCaja;
     qry.ParamByName('FECHA').AsDateTime := FFecha;
     qry.Open;
-    cbbSerie1.Properties.Items.BeginUpdate;
+    cbbSERIE_FAC.Properties.Items.BeginUpdate;
     try
-      cbbSerie1.Properties.Items.Clear;
+      cbbSERIE_FAC.Properties.Items.Clear;
       while not qry.Eof do
       begin
-        cbbSerie1.Properties.Items.Add(qry.FieldByName('SERIE_CON').AsString);
+        cbbSERIE_FAC.Properties.Items.Add(qry.FieldByName('SERIE_CON').AsString);
         qry.Next;
       end;
     finally
-      cbbSerie1.Properties.Items.EndUpdate;
+      cbbSERIE_FAC.Properties.Items.EndUpdate;
     end;
-    if cbbSerie1.Properties.Items.Count > 0 then
+    if cbbSERIE_FAC.Properties.Items.Count > 0 then
     begin
 //      SerieDefecto := oCajaParams.GetString('vgerDefSerieCaja', 'T');
-//      cbbSerie1.ItemIndex := cbbSerie1.Properties.Items.IndexOf(SerieDefecto);
-      if cbbSerie1.ItemIndex = -1 then
-        cbbSerie1.ItemIndex := 0;
+//      cbbSERIE_FAC.ItemIndex := cbbSERIE_FAC.Properties.Items.IndexOf(SerieDefecto);
+      if cbbSERIE_FAC.ItemIndex = -1 then
+        cbbSERIE_FAC.ItemIndex := 0;
     end;
   finally
     FreeAndNil(qry);
@@ -749,7 +749,7 @@ begin
   txtPorcenDtoGlobal.Enabled := False;
   txtValeEmitido.Properties.ReadOnly := False;
   txtValeEmitido.Style.Color := clWindow;
-  lblDescuento4.Caption := 'Pendiente de devolver';
+  lblPendienteCobroAlt.Caption := 'Pendiente de devolver';
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
@@ -769,7 +769,7 @@ begin
 
   txtValeEmitido.Properties.ReadOnly := True;
   txtValeEmitido.Style.Color := clWhite;
-  lblDescuento4.Caption := 'Pendiente de cobro';
+  lblPendienteCobroAlt.Caption := 'Pendiente de cobro';
 end;
 
 procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(
