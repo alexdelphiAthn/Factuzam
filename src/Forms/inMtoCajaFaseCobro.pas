@@ -785,18 +785,6 @@ begin
   end;
 end;
 
-//procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
-//var
-//  Res: TResultadoValidacion;
-//begin
-//  Res := FDatosCobro.ValidarParaCobro;
-//  if not Res.Valido then
-//  begin
-//    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
-//    Exit;
-//  end;
-//  ModalResult := mrOk;
-//end;
 
 procedure TfrmMtoCajaFaseCobro.btnESCClick(Sender: TObject);
 begin

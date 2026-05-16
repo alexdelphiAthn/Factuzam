@@ -572,17 +572,6 @@ begin
 
     SB.Position := APosition;
 
-//  except on E: Exception do
-//    ShowMessage(
-//      'ScrollBar: ' + SB.Name         + sLineBreak +
-//      'AMax='      + IntToStr(AMax)   + sLineBreak +
-//      'APageSize=' + IntToStr(APageSize) + sLineBreak +
-//      'APosition=' + IntToStr(APosition) + sLineBreak +
-//      'SB.Max='    + IntToStr(SB.Max) + sLineBreak +
-//      'SB.Min='    + IntToStr(SB.Min) + sLineBreak +
-//      'Error: '    + E.Message
-//    );
-//  end;
 end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -1215,13 +1204,6 @@ procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
   // [Ctrl + X] Cortar
-//  with TAction.Create(Self) do
-//  begin
-//    ActionList := ActionList1;
-//    ShortCut := scCtrl + Ord('/');
-//    OnExecute := ActionComentarExecute;
-//    OnUpdate  := ActionEditoresUpdate;
-//  end;
   with TAction.Create(Self) do
   begin
     ActionList := ActionList1;
@@ -1404,22 +1386,6 @@ begin
   // Llama a tu lógica existente para actualizar la interfaz/datos
   cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
 end;
-//end;
-//
-//procedure TfrmMtoGeneradorProcesos.TreeView1Click(Sender: TObject);
-//var
-//  nodo: TTreeNode;
-//  iCodigo: Integer;
-//begin
-//  nodo := TreeView1.Selected;
-//  if nodo = nil then Exit;
-//  iCodigo := NativeInt(nodo.Data);
-//  // Posicionar el dataset en el registro correspondiente
-//  dmmGeneradorProcesos.unqryMetadatos.Locate(
-//    'CODIGO_META_META', iCodigo, []);
-//  // Ahora llama a tu lógica existente
-//  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
-//end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
 var

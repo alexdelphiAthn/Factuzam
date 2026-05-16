@@ -272,14 +272,6 @@ begin
               'True') then
     SetLabelForm(Self, oPerfilDic);
 
-//  tsPerfil.TabVisible := false;
-//
-//  {$IFDEF DEBUG}
-//    tsPerfil.TabVisible := False;
-//  {$ENDIF }
-//
-//  if (tsPerfil.TabVisible = true) then
-//    AbrirPerfiles(tsPerfil.TabVisible);
 end;
 
 procedure TfrmMtoGen.btnCargarCaptionsClick(Sender: TObject);
