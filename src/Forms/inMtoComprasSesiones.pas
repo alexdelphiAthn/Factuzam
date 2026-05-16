@@ -410,7 +410,6 @@ begin
     unqrySesionProps.MasterSource := dsTablaG;
     unqrySesionKits.MasterFields  := 'SERIE_SES;NUMERO_SES';
     unqrySesionKits.MasterSource  := dsTablaG;
-
     // Abrimos toda la cadena: lineas -> filas/celdas/props_linea, kits -> det.
     if not unqrySesionLin.Active      then unqrySesionLin.Open;
     if not unqrySesionFil.Active      then unqrySesionFil.Open;
