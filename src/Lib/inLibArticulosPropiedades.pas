@@ -158,29 +158,7 @@ begin
 //  pnlBtn.Font.name := 'Lucida Sans';
 //  pnlBtn.Font.Height := -13;
 
-//  FBtnAceptar := TcxButton.Create(Self);
-//  FBtnAceptar.Parent  := pnlBtn;
-//  FBtnAceptar.Caption := '&Aceptar';
-//  FBtnAceptar.Width   := 90;
-//  FBtnAceptar.Height  := 28;
-//  FBtnAceptar.Left    := pnlBtn.Width - 200;
-//  FBtnAceptar.Top     := 6;
-//  FBtnAceptar.Anchors := [akRight, akTop];
-//  FBtnAceptar.ModalResult := mrNone;
-//  FbtnAceptar.ParentFont := True;
-//  FBtnAceptar.OnClick := BtnAceptarClick;
 
-//  FBtnCancelar := TcxButton.Create(Self);
-//  FBtnCancelar.Parent  := pnlBtn;
-//  FBtnCancelar.Caption := '&Cancelar';
-//  FBtnCancelar.Width   := 90;
-//  FBtnCancelar.Height  := 28;
-//  FBtnCancelar.Left    := pnlBtn.Width - 100;
-//  FBtnCancelar.Top     := 6;
-//  FBtnCancelar.ParentFont := True;
-//  FBtnCancelar.Anchors := [akRight, akTop];
-//  FBtnCancelar.ModalResult := mrNone;
-//  FBtnCancelar.OnClick := BtnCancelarClick;
 
   CargarLista;
 end;

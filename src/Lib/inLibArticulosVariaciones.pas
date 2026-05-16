@@ -337,44 +337,6 @@ var
   q  : TUniQuery;
   SK : TSlotSku;
 begin
-//  q := TUniQuery.Create(nil);
-//  try
-//    q.Connection := FConexion;
-//    q.SQL.Text   :=
-//      'SELECT sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU, ' +
-// ' GROUP_CONCAT(av.AV ORDER BY va.ORDEN_VA SEPARATOR '' / '') AS
-// DESCRIPCION_SKU ' +
-//      'FROM   fza_articulos_skus sk ' +
-// 'LEFT JOIN fza_atributos_sku asku ON asku.CODIGO_UNIDAD_SKU_SA =
-// sk.CODIGO_UNIDAD_SKU ' +
-//      'LEFT JOIN fza_atributos_valores av ON av.ID_AV = asku.ID_AV_SA ' +
-// 'LEFT JOIN fza_variaciones_atributos va ON va.ID_ATB_VA = av.ID_VA_AV ' +
-// ' AND va.ID_VAR_VA = sk.CODIGO_VAR_SKU ' +
-//      'WHERE  sk.CODIGO_ART_SKU = :art ' +
-//      'GROUP  BY sk.CODIGO_UNIDAD_SKU, sk.ESACTIVO_SKU ' +
-//      'ORDER  BY sk.CODIGO_UNIDAD_SKU';
-//    q.ParamByName('art').AsString := FCodigoArticulo;
-//    q.Open;
-//
-//    while not q.Eof do
-//    begin
-//      FillChar(SK, SizeOf(SK), 0);
-//      SK.CodigoUnidad  := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-//      SK.Activo        := q.FieldByName('ESACTIVO_SKU').AsString = 'S';
-//      SK.ActiveOriginal:= SK.Activo;
-//      // Usar la descripción legible si la hay, si no el código
-//      if q.FieldByName('DESCRIPCION_SKU').AsString <> '' then
-//        SK.CodigoUnidad := q.FieldByName('DESCRIPCION_SKU').AsString +
-// ' (' + q.FieldByName('CODIGO_UNIDAD_SKU').AsString + ')'
-//      else
-//        SK.CodigoUnidad := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-//      SK.Chk := nil;
-//      FSlotsSkus.Add(SK);
-//      q.Next;
-//    end;
-//  finally
-//    q.Free;
-//  end;
 end;
 
 { ══════════════════════════════════════════════════════════════════════════ }
@@ -480,63 +442,6 @@ var
   lbl : TcxLabel;
   chk : TcxCheckBox;
 begin
-//  FPanelSkus.DisableAlign;
-//  try
-//    while FPanelSkus.ControlCount > 0 do
-//      FPanelSkus.Controls[0].Free;
-//    for i := 0 to FSlotsSkus.Count - 1 do
-//    begin
-//      SK := FSlotsSkus[i];
-//      SK.Chk := nil;
-//      FSlotsSkus[i] := SK;
-//    end;
-//  finally
-//    FPanelSkus.EnableAlign;
-//  end;
-//
-//  if FSlotsSkus.Count = 0 then
-//  begin
-//    lbl := TcxLabel.Create(FPanelSkus);
-//    lbl.Parent  := FPanelSkus;
-//    lbl.Left    := MARGEN_H;
-//    lbl.Top     := MARGEN_V;
-//    lbl.Caption := 'No hay SKUs generados para este artículo.';
-//    Exit;
-//  end;
-//
-//  // Cabecera
-//  lbl := TcxLabel.Create(FPanelSkus);
-//  lbl.Parent  := FPanelSkus;
-//  lbl.Left    := MARGEN_H;
-//  lbl.Top     := MARGEN_V;
-//  lbl.Caption := 'SKUs  (' + IntToStr(FSlotsSkus.Count) + ' combinaciones)';
-//  lbl.Style.Font.Style := [fsBold];
-//  lbl.AutoSize := True;
-//
-//  Top := MARGEN_V + ALTO_FILA + MARGEN_V;
-//
-//  for i := 0 to FSlotsSkus.Count - 1 do
-//  begin
-//    SK := FSlotsSkus[i];
-//
-//    chk := TcxCheckBox.Create(FPanelSkus);
-//    chk.Parent   := FPanelSkus;
-//    chk.Left     := MARGEN_H;
-//    chk.Top      := Top;
-//    chk.Width    := FPanelSkus.ClientWidth - MARGEN_H * 2;
-//    chk.Height   := ALTO_FILA;
-//    chk.Caption  := SK.CodigoUnidad;
-//    chk.Checked  := SK.Activo;
-//    chk.Tag      := i;
-//
-//    // Colorear los desactivados en gris
-//    if not SK.Activo then
-//      chk.Style.TextColor := clGray;
-//
-//    SK.Chk := chk;
-//    FSlotsSkus[i] := SK;
-//    Inc(Top, ALTO_FILA + 2);
-//  end;
 end;
 
 function TGestorVariaciones.Validar: string;
@@ -627,21 +532,6 @@ procedure TGestorVariaciones.ActualizarSku(const CodigoUnidad: string;
 var
   q: TUniQuery;
 begin
-//  q := TUniQuery.Create(nil);
-//  try
-//    q.Connection := FConexion;
-//    q.SQL.Text   :=
-//      'UPDATE fza_articulos_skus ' +
-//      'SET    ESACTIVO_SKU  = :act, ' +
-//      '       USUARIO_MODIF  = :usr ' +
-//      'WHERE  CODIGO_UNIDAD_SKU = :cod';
-//    q.ParamByName('act').AsString := IfThen(Activo, 'S', 'N');
-//    q.ParamByName('usr').AsString := FUsuario;
-//    q.ParamByName('cod').AsString := CodigoUnidad;
-//    q.Execute;
-//  finally
-//    q.Free;
-//  end;
 end;
 
 end.
