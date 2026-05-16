@@ -638,7 +638,7 @@ begin
     end;
     // GridRecalc UNA SOLA VEZ al final, fuera del bucle
     GridRecalc(nil,
-               (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+               (Owner as TfrmMtoOpeCaja).tvLineasOpe,
                cdsLineas,
                cdsCabecera,
                OnUpdateTotal);
@@ -2010,7 +2010,7 @@ begin
   if not DataSet.ControlsDisabled then
   begin
     GridRecalc(nil,
-             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+             (Owner as TfrmMtoOpeCaja).tvLineasOpe,
              cdsLineas,
              cdsCabecera,
              OnUpdateTotal);
@@ -2064,7 +2064,7 @@ end;
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);
 begin
 //         GridRecalc(nil,
-//             (Owner as TfrmMtoOpeCaja).cxGrid1DBTableView1,
+//             (Owner as TfrmMtoOpeCaja).tvLineasOpe,
 //             cdsLineas,
 //             cdsCabecera,
 //             OnUpdateTotal);
