@@ -680,15 +680,6 @@ Estas son convenciones que ya están en el código y que conviene
    de BBDD: `txtRAZONSOCIAL_CLIENTE` (no `txtRAZON_SOCIAL_CLIENTE`).
 9. **`FreeAndNil` sobre `Free`** — siempre.
 10. **`initialization` con `ForceReferenceToClass`** al final de cada Mto.
-11. **Color de paleta en grids, valor HEX en hint** (objetivo). Cuando
-    una columna de grid muestre `HEX_ATB` (o un color asociado a un
-    atributo / SKU / básico), la celda pintará sólo el cuadrado del
-    color con `OnCustomDrawCell` y el valor `#RRGGBB` (y opcionalmente
-    `NOMBRE_ATB`, ej. `BONIATO #808040`) irá en el hint. La versión
-    de cxGrid instalada **no expone `OnGetCellHint`** todavía, así
-    que de momento se dibuja también el HEX dentro del cuadrado
-    (texto blanco/negro según luminancia). Cuando esté disponible se
-    quita el `DrawText` del custom draw.
 
 ---
 
