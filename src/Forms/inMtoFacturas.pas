@@ -395,14 +395,14 @@ type
     cxdbmPETICION_COMPLETA_FACCON: TcxDBMemo;
     dteFECHA_PROCESAMIENTO: TcxDBDateEdit;
     txtESTADO: TcxDBTextEdit;
-    cxgrdLineasFactura: TcxGrid;
-    tvLineasFactura: TcxGridDBTableView;
-    cxgrdlvlLineasFactura: TcxGridLevel;
-    cxGridDBTableView1TIMESTAMP_LOG: TcxGridDBColumn;
-    cxGridDBTableView1DESCRIPCION_LOG: TcxGridDBColumn;
-    cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn;
-    cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn;
-    cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn;
+    cxgrdLogVerifactu: TcxGrid;
+    tvLogVerifactu: TcxGridDBTableView;
+    cxgrdlvlLogVerifactu: TcxGridLevel;
+    tvLogVerifactuTIMESTAMP_LOG: TcxGridDBColumn;
+    tvLogVerifactuDESCRIPCION_LOG: TcxGridDBColumn;
+    tvLogVerifactuDATOS_ADICIONALES_LOG: TcxGridDBColumn;
+    tvLogVerifactuNRO_FACTURA_LOG: TcxGridDBColumn;
+    tvLogVerifactuSERIE_FACTURA_LOG: TcxGridDBColumn;
     lblTipoFactura: TcxLabel;
     txtTIPO_FAC: TcxDBTextEdit;
     lblVendedorFactura: TcxLabel;
@@ -411,7 +411,7 @@ type
     lblFaseFactura: TcxLabel;
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
-    btnGenerarRecibos: TcxButton;
+    btnGenerarRecibos2: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -734,7 +734,7 @@ end;
 procedure TfrmMtoFacturas.btnCalculatorClick(Sender: TObject);
 begin
   inherited;
-  jvCalculator1.Execute;
+  jvcalcAux.Execute;
 end;
 
 procedure TfrmMtoFacturas.btnCODIGO_CLIENTEKeyUp(Sender: TObject; var Key: Word;
