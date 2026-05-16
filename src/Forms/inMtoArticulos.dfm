@@ -179,7 +179,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Transparent = True
               AnchorX = 90
             end
-            object cxDBLabel1: TcxDBLabel
+            object dbcDESCRIPCION_FAM: TcxDBLabel
               Left = 298
               Top = 128
               DataBinding.DataField = 'DESCRIPCION_FAM'
@@ -189,7 +189,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Height = 21
               Width = 538
             end
-            object cxDBLabel2: TcxDBLabel
+            object dbcNOMBRE_FAM_FAM: TcxDBLabel
               Left = 18
               Top = 128
               DataBinding.DataField = 'NOMBRE_FAM_FAM'
@@ -274,14 +274,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 1
                   Width = 130
                 end
-                object cxLabel2: TcxLabel
+                object lblTipoArticulo: TcxLabel
                   Left = 32
                   Top = 37
                   Caption = 'Tipo de Art'#237'culo'
                   TabOrder = 2
                   Transparent = True
                 end
-                object cxDBComboBox1: TcxDBComboBox
+                object cbbTIPO_ART: TcxDBComboBox
                   Left = 180
                   Top = 33
                   DataBinding.DataField = 'TIPO_ART'
@@ -294,7 +294,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Width = 167
                 end
               end
-              object cxDBCheckBox1: TcxDBCheckBox
+              object chkESVARIACION_ART: TcxDBCheckBox
                 Left = 23
                 Top = 147
                 Caption = 'Tiene Variaciones/SKU m'#250'ltiple'
@@ -306,7 +306,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Style.TransparentBorder = False
                 TabOrder = 2
               end
-              object cxDBCheckBox2: TcxDBCheckBox
+              object chkESTRAZABLE_ART: TcxDBCheckBox
                 Left = 23
                 Top = 184
                 Caption = 
@@ -592,14 +592,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
-              object Panel1: TPanel
+              object pnlBotonesCB: TPanel
                 Left = 948
                 Top = 0
                 Width = 121
                 Height = 425
                 Align = alRight
                 TabOrder = 0
-                object cxButton2: TcxButton
+                object btnExportarExcelCB: TcxButton
                   Left = 0
                   Top = 141
                   Width = 116
@@ -608,7 +608,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 0
                   OnClick = btnExportarProveedorClick
                 end
-                object cxButton1: TcxButton
+                object btnGenerarCB: TcxButton
                   Left = 0
                   Top = 61
                   Width = 116
@@ -617,7 +617,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 2
                   OnClick = btnGenerarCBClick
                 end
-                object cxButton5: TcxButton
+                object btnVerificarCB: TcxButton
                   Left = 0
                   Top = 101
                   Width = 116
@@ -627,7 +627,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OnClick = btnVerificarCBClick
                 end
               end
-              object cxGrid2: TcxGrid
+              object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 948
@@ -754,7 +754,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Width = 134
                   end
                 end
-                object cxGridLevel1: TcxGridLevel
+                object cxgrdlvlTarifas: TcxGridLevel
                   GridView = tvSkus
                 end
               end
@@ -1220,7 +1220,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.ValueUnchecked = 'N'
                     Width = 89
                   end
-                  object tvProveedoresColumn1: TcxGridDBColumn
+                  object tvProveedoresREF_PROVEEDOR: TcxGridDBColumn
                     Caption = 'Modelo Proveedor'
                     DataBinding.FieldName = 'REF_PROVEEDOR'
                     Width = 181
@@ -1946,11 +1946,11 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'Total'
                   end
                 end
-                object cxGridLevel4: TcxGridLevel
+                object cxgrdlvlStock: TcxGridLevel
                   GridView = tvStock
                 end
               end
-              object Panel2: TPanel
+              object pnlBotonesTarifas: TPanel
                 Left = 888
                 Top = 0
                 Width = 181
@@ -2217,18 +2217,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Width = 231
                   end
                 end
-                object cxGridLevel5: TcxGridLevel
+                object cxgrdlvlStockAlt: TcxGridLevel
                   GridView = tvMovimientos
                 end
               end
-              object Panel3: TPanel
+              object pnlBotonesStock: TPanel
                 Left = 948
                 Top = 0
                 Width = 121
                 Height = 425
                 Align = alRight
                 TabOrder = 1
-                object cxButton11: TcxButton
+                object btnExportarExcelStock: TcxButton
                   Left = 3
                   Top = 13
                   Width = 116
