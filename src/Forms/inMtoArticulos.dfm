@@ -1957,32 +1957,32 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Height = 425
                 Align = alRight
                 TabOrder = 1
-                object btStockExportarExcel: TcxButton
+                object btnStockExportarExcel: TcxButton
                   Left = 7
                   Top = 61
                   Width = 162
                   Height = 34
                   Caption = '&Exp Excel'
                   TabOrder = 1
-                  OnClick = btStockExportarExcelClick
+                  OnClick = btnStockExportarExcelClick
                 end
-                object btReconstruirStock: TcxButton
+                object btnReconstruirStock: TcxButton
                   Left = 5
                   Top = 21
                   Width = 164
                   Height = 34
                   Caption = '&Reconstruir Stock'
                   TabOrder = 0
-                  OnClick = btReconstruirStockClick
+                  OnClick = btnReconstruirStockClick
                 end
-                object btImprimirEtiquetas: TcxButton
+                object btnImprimirEtiquetas: TcxButton
                   Left = 7
                   Top = 101
                   Width = 162
                   Height = 34
                   Caption = 'Imprimir &Etiquetas'
                   TabOrder = 2
-                  OnClick = btImprimirEtiquetasClick
+                  OnClick = btnImprimirEtiquetasClick
                 end
               end
             end

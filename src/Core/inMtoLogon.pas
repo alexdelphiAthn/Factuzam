@@ -71,7 +71,7 @@ type
     edtNomBD: TcxTextEdit;
     edtUserBD: TcxTextEdit;
     edtPassBD: TcxTextEdit;
-    btChangePassRoot: TcxButton;
+    btnChangePassRoot: TcxButton;
     btnTest: TcxButton;
     btnSubirScript: TcxButton;
     btnCopiaSeguridad: TcxButton;
@@ -95,7 +95,7 @@ type
     procedure btnRecoverClick(Sender: TObject);
     procedure ucConexionError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure edtPassBDExit(Sender: TObject);
-    procedure btChangePassRootClick(Sender: TObject);
+    procedure btnChangePassRootClick(Sender: TObject);
     procedure edtPortBDPropertiesChange(Sender: TObject);
     procedure leerini;
     procedure GetIniValues;
@@ -651,7 +651,7 @@ begin
   inliblog.Log.LogError('Error general: ' + E.ClassName +': '+ E.Message) ;
 end;
 
-procedure TfrmLogon.btChangePassRootClick(Sender: TObject);
+procedure TfrmLogon.btnChangePassRootClick(Sender: TObject);
 var
   bAllowChange:Boolean;
   sOldPass:String;

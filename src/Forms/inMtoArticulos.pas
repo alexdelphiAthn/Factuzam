@@ -223,9 +223,9 @@ type
     tvStock: TcxGridDBTableView;
     cxGridLevel4: TcxGridLevel;
     Panel2: TPanel;
-    btStockExportarExcel: TcxButton;
-    btReconstruirStock: TcxButton;
-    btImprimirEtiquetas: TcxButton;
+    btnStockExportarExcel: TcxButton;
+    btnReconstruirStock: TcxButton;
+    btnImprimirEtiquetas: TcxButton;
     cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
     cxGridLevel5: TcxGridLevel;
@@ -390,9 +390,9 @@ type
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
     procedure cxButton11Click(Sender: TObject);
-    procedure btStockExportarExcelClick(Sender: TObject);
-    procedure btReconstruirStockClick(Sender: TObject);
-    procedure btImprimirEtiquetasClick(Sender: TObject);
+    procedure btnStockExportarExcelClick(Sender: TObject);
+    procedure btnReconstruirStockClick(Sender: TObject);
+    procedure btnImprimirEtiquetasClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
     procedure dbcTarifasMARGENButtonClick(Sender: TObject;
@@ -1284,14 +1284,14 @@ begin
   txtDESCRIPCION_ARTICULO.SetFocus;
 end;
 
-procedure TfrmMtoArticulos.btStockExportarExcelClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnStockExportarExcelClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
-procedure TfrmMtoArticulos.btReconstruirStockClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnReconstruirStockClick(Sender: TObject);
 var
   sMensaje: string;
 begin
@@ -1327,7 +1327,7 @@ begin
   ShowMessage(sMensaje);
 end;
 
-procedure TfrmMtoArticulos.btImprimirEtiquetasClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnImprimirEtiquetasClick(Sender: TObject);
 var
   formulario: TfrmPrintEtiqArt;
 begin

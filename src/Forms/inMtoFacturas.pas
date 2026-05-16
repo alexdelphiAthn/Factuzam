@@ -470,7 +470,7 @@ type
     procedure chkFechaEntregaPropertiesChange(Sender: TObject);
     procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
-    procedure btNExportarLineasClick(Sender: TObject);
+    procedure btnExportarLineasClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
@@ -569,8 +569,8 @@ begin
       unqrySol.Connection := oConn;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_empresas ' +
-                           ' WHERE CODIGO_EMP_EMP = :empresa';
-      unqrySol.ParamByName('empresa').AsString := VarToStr(e.EditingValue);
+                           ' WHERE CODIGO_EMP_EMP = :EMPRESA';
+      unqrySol.ParamByName('EMPRESA').AsString := VarToStr(e.EditingValue);
       unqrySol.Open;
       if unqrySol.RecordCount = 0 then
         Sleep(0)
@@ -722,7 +722,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btNExportarLineasClick(Sender: TObject);
+procedure TfrmMtoFacturas.btnExportarLineasClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxGrdLineasFactura, 'Lineas_Factura_' +

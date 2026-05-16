@@ -164,7 +164,7 @@ type
     pnlFacturaOpts: TPanel;
     btnIraFactura: TcxButton;
     btnIraCliente: TcxButton;
-    btExportarExcel: TcxButton;
+    btnExportarExcel: TcxButton;
     cxGrdDBTabPrinPORCEN_ANTICIPO_FORMAPAGO: TcxGridDBColumn;
     ActionListFormasdePAgo: TActionList;
     actClientes: TAction;
@@ -194,7 +194,7 @@ type
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnIraClienteClick(Sender: TObject);
     procedure actClientesExecute(Sender: TObject);
-    procedure btExportarExcelClick(Sender: TObject);
+    procedure btnExportarExcelClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
   end;
@@ -268,7 +268,7 @@ begin
               'Facturas');
 end;
 
-procedure TfrmMtoFormasdePago.btExportarExcelClick(Sender: TObject);
+procedure TfrmMtoFormasdePago.btnExportarExcelClick(Sender: TObject);
 begin
   inherited;
     ExportarExcel(cxgrdFacturas, 'Historico_Formas_de_pago' +

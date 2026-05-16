@@ -73,7 +73,7 @@ type
     cxdbchckbxACTIVO_TARIFA: TcxDBCheckBox;
     pnl6: TPanel;
     btnIraArticulo: TcxButton;
-    btAddBlock: TcxButton;
+    btnAddBlock: TcxButton;
     cxspltr1: TcxSplitter;
     pnlArticulos: TPanel;
     cxgrdArticulosTarifas: TcxGrid;
@@ -137,7 +137,7 @@ type
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actFamiliasExecute(Sender: TObject);
     procedure actProveedoresExecute(Sender: TObject);
-    procedure btAddBlockClick(Sender: TObject);
+    procedure btnAddBlockClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
@@ -198,7 +198,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoTarifas.btAddBlockClick(Sender: TObject);
+procedure TfrmMtoTarifas.btnAddBlockClick(Sender: TObject);
 var
   res        : TAddBlockTarifaResult;
   codigoTar  : string;
