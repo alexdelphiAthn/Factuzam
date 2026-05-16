@@ -66,7 +66,7 @@ procedure TfrmMtoPropiedadesValores.CrearTablaPrincipal;
 begin
   inherited;
   dmmPropiedadesValores := tdmDataModule as TdmPropiedadesValores;
-  pkFieldName := '`ID_PV_ARTPROP';
+  pkFieldName := 'ID_PV_ARTPROP';
 end;
 
 initialization

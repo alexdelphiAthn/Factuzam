@@ -108,7 +108,7 @@ procedure TfrmMtoPropiedades.CrearTablaPrincipal;
 begin
   inherited;
   dmmPropiedades := tdmDataModule as TdmPropiedades;
-  pkFieldName := '`CODIGO_PROP_ARTPROP';
+  pkFieldName := 'CODIGO_PROP_ARTPROP';
 
   dmmPropiedades.unqryArticulos.Connection := oConn;
   dmmPropiedades.unqryValores.Connection   := oConn;
