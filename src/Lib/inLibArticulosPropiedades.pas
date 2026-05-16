@@ -40,7 +40,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxSpinEdit,
   cxCheckBox, cxLabel, cxDropDownEdit, cxButtons,
   cxPC, cxLookAndFeels, cxLookAndFeelPainters,
-  DBAccess, Uni;
+  DBAccess, Uni, System.UITypes;
 
 type
   TTipoValorProp = (tvpLista, tvpTextoLibre, tvpNumero, tvpBooleano);
@@ -66,7 +66,6 @@ type
     FListBox        : TListBox;
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   public
     CodigosSeleccionados : TStringList;
     constructor Create(AOwner: TComponent; AConexion: TUniConnection;
@@ -126,7 +125,6 @@ const
 constructor TfrmSelPropiedades.Create(AOwner: TComponent;
   AConexion: TUniConnection; AExcluir: TStringList);
 var
-  pnlBtn: TPanel;
 begin
   inherited Create(AOwner);
   FConexion       := AConexion;
@@ -150,16 +148,6 @@ begin
     btnAceptar.OnClick := BtnAceptarClick;
   if Assigned(btnCancelar) then
     btnCancelar.OnClick := BtnCancelarClick;
-//  pnlBtn := TPanel.Create(Self);
-//  pnlBtn.Parent := Self;
-//  pnlBtn.Align  := alBottom;
-//  pnlBtn.Height := 40;
-//  pnlBtn.BevelOuter := bvNone;
-//  pnlBtn.Font.name := 'Lucida Sans';
-//  pnlBtn.Font.Height := -13;
-
-
-
   CargarLista;
 end;
 
@@ -167,12 +155,6 @@ destructor TfrmSelPropiedades.Destroy;
 begin
   FreeAndNil(CodigosSeleccionados);
   inherited;
-end;
-
-procedure TfrmSelPropiedades.FormClose(Sender: TObject;
-  var Action: TCloseAction);
-begin
-  Action := caHide;
 end;
 
 function TfrmSelPropiedades.IsShortCut(var Message: TWMKey): Boolean;

@@ -31,7 +31,7 @@ uses
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
-  inMtoCajaReferenciaPago;
+  inMtoCajaReferenciaPago, System.UITypes;
 
 type
   TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo);
@@ -186,7 +186,6 @@ uses inMtoCajaSeleccionVale, inLibCajaParam;
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
   qry: TUniQuery;
-  SerieDefecto: string;
 begin
   qry := TUniQuery.Create(nil);
   try
@@ -632,7 +631,6 @@ end;
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura:
                                                        TFacturaTotales);
 var
-  PorcentajeMedio: Double;
 begin
 if TotalesFactura = nil then Exit;
   FDatosCobro.CargarDatosFactura(TotalesFactura);
@@ -692,19 +690,6 @@ begin
   btnF12.Enabled := btnConTicket.Enabled;
   btnF11.Enabled := btnSinTicket.Enabled;
   btnF10.Enabled := btnSinPrecios.Enabled;
-end;
-
-function TfrmMtoCajaFaseCobro.ValidarIntegridad: Boolean;
-var
-  EsTotal0: Boolean;
-begin
-  EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
-  if EsTotal0 then
-    Result := True
-  else if FDatosCobro.EsDevolucionEconomica then
-    Result := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
-  else
-    Result := (txtPendienteCobro.Value <= 0.01);
 end;
 
 procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;

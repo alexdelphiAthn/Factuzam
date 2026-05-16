@@ -35,7 +35,7 @@ uses
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
   UniDataGeneradorProcesos, cxCurrencyEdit, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
+  dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList, System.UITypes;
 
 const
   ecSelColumnMode = 2577;
@@ -1030,10 +1030,6 @@ begin
 end;
 
 procedure TfrmMtoGeneradorProcesos.CrearTablaPrincipal;
-var
-  qry: TUniQuery;
-  nodeParent, nodeChild: TTreeNode;
-  i: Integer;
 begin
   DBSynEdit1.BeginUpdate;
   syndtEstructura.BeginUpdate;

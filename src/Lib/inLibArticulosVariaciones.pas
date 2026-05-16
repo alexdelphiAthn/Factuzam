@@ -85,28 +85,21 @@ type
   private
     FConexion        : TUniConnection;
     FPanelAtributos  : TScrollBox;   // zona superior — combos de conjuntos
-    FPanelSkus       : TScrollBox;   // zona inferior — checkboxes de SKUs
     FCodigoArticulo  : string;
     FTipoVariacion   : string;       // TC, TEMP…
     FNombreVariacion : string;
     FUsuario         : string;
     FSlotsVar        : TList<TSlotVariacion>;
-    FSlotsSkus       : TList<TSlotSku>;
-    FLblTipoVar      : TcxLabel;
     FModificado      : Boolean;
 
     procedure LimpiarTodo;
     procedure LimpiarAtributos;
-    procedure LimpiarSkus;
     procedure CargarAtributos;
-    procedure CargarSkus;
     procedure ReconstruirAtributos;
-    procedure ReconstruirSkus;
     procedure CrearFilaAtributo(var S: TSlotVariacion; ATop: Integer);
 
     procedure UpsertConjunto(const S: TSlotVariacion);
     procedure BorrarConjunto(const IdAtributo: string);
-    procedure ActualizarSku(const CodigoUnidad: string; Activo: Boolean);
   public
     constructor Create(APanelAtributos: TScrollBox;
                        AConexion: TUniConnection;
@@ -142,24 +135,19 @@ constructor TGestorVariaciones.Create(APanelAtributos: TScrollBox;
 begin
   inherited Create;
   FPanelAtributos := APanelAtributos;
-//  FPanelSkus      := APanelSkus;
   FConexion       := AConexion;
   FUsuario        := AUsuario;
   FSlotsVar       := TList<TSlotVariacion>.Create;
-//  FSlotsSkus      := TList<TSlotSku>.Create;
   FModificado     := False;
 
   FPanelAtributos.AutoScroll := True;
   FPanelAtributos.Color      := clWindow;
-//  FPanelSkus.AutoScroll      := True;
-//  FPanelSkus.Color           := clWindow;
 end;
 
 destructor TGestorVariaciones.Destroy;
 begin
   LimpiarTodo;
   FreeAndNil(FSlotsVar);
-//  FSlotsSkus.Free;
   inherited;
 end;
 
@@ -178,17 +166,9 @@ begin
     FreeAndNil(FPanelAtributos.Controls[0]);
 end;
 
-procedure TGestorVariaciones.LimpiarSkus;
-begin
-//  FSlotsSkus.Clear;
-//  while FPanelSkus.ControlCount > 0 do
-//    FPanelSkus.Controls[0].Free;
-end;
-
 procedure TGestorVariaciones.LimpiarTodo;
 begin
   LimpiarAtributos;
-//  LimpiarSkus;
 end;
 
 { ══════════════════════════════════════════════════════════════════════════ }
@@ -242,9 +222,7 @@ begin
   end;
 
   CargarAtributos;
-//  CargarSkus;
   ReconstruirAtributos;
-//  ReconstruirSkus;
 end;
 
 { ══════════════════════════════════════════════════════════════════════════ }
@@ -326,17 +304,6 @@ begin
   finally
     FreeAndNil(qOpc);
   end;
-end;
-
-{ ══════════════════════════════════════════════════════════════════════════ }
-{ Carga SKUs                                                                 }
-{ ══════════════════════════════════════════════════════════════════════════ }
-
-procedure TGestorVariaciones.CargarSkus;
-var
-  q  : TUniQuery;
-  SK : TSlotSku;
-begin
 end;
 
 { ══════════════════════════════════════════════════════════════════════════ }
@@ -430,20 +397,6 @@ begin
   S.Ctrl := cb;
 end;
 
-{ ══════════════════════════════════════════════════════════════════════════ }
-{ Construcción visual — zona SKUs                                            }
-{ ══════════════════════════════════════════════════════════════════════════ }
-
-procedure TGestorVariaciones.ReconstruirSkus;
-var
-  i   : Integer;
-  Top : Integer;
-  SK  : TSlotSku;
-  lbl : TcxLabel;
-  chk : TcxCheckBox;
-begin
-end;
-
 function TGestorVariaciones.Validar: string;
 begin
   Result := '';
@@ -525,13 +478,6 @@ begin
   finally
     FreeAndNil(q);
   end;
-end;
-
-procedure TGestorVariaciones.ActualizarSku(const CodigoUnidad: string;
-  Activo: Boolean);
-var
-  q: TUniQuery;
-begin
 end;
 
 end.

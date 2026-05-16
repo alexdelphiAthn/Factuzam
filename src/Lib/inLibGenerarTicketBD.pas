@@ -80,6 +80,7 @@ var
   TotalPagadoCaja: Currency;
   FechaOperacion: TDateTime;
 begin
+  FechaOperacion := 0;
   if Trim(AOperacion) = '' then
     Exit;
   QrySec := TUniQuery.Create(nil);

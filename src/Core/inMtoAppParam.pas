@@ -26,7 +26,7 @@ uses
   cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls, inMtoFrmBase, Uni,
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
   JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, dxSkinsCore;   // dxSkinsCore para TdxSkinController
+  Vcl.ActnList, dxSkinsCore, System.UITypes;   // dxSkinsCore para TdxSkinController
 
 type
   PBoolean = ^Boolean;
@@ -85,7 +85,6 @@ type
                                         Strings: TStrings);
     procedure GetTemasList(Sender: TJvCustomInspectorItem;
                            Strings: TStrings);
-    procedure DirEditButtonClick(Sender: TJvCustomInspectorItem);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -225,7 +224,6 @@ begin
             else if StartsText('appDir', Param.Nombre) then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
-//              ItemCombo.OnEditButton := DirEditButtonClick;
             end;
             // Los directorios (appDirPDF, appDirExcel) quedan como
             // tpString normal: el usuario escribe la ruta directamente
@@ -711,17 +709,6 @@ procedure TfrmMtoAppParam.cxButtonEdit1PropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
   FiltrarVerticalGrid(JvInspector1, edtBusqueda.Text);
-end;
-
-procedure TfrmMtoAppParam.DirEditButtonClick(Sender: TJvCustomInspectorItem);
-var
-  Dir: string;
-begin
-  if Sender = nil then Exit;
-  Dir := Sender.DisplayValue;
-  if SelectDirectory('Seleccione una carpeta', '', Dir,
-                     [sdNewUI, sdNewFolder]) then
-    Sender.DisplayValue := Dir;
 end;
 
 procedure TfrmMtoAppParam.edtBusquedaKeyDown(Sender: TObject;

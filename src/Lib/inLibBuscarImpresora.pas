@@ -40,7 +40,6 @@ function GetImpresoraCaja:string;
 var
   sPatronNombreImpresora: string;
   sArchivoCache: string;
-  sImpresoraFinal: string;
 begin
   sPatronNombreImpresora := oCajaParams.GetString('vgerDefPrinter', 'DEBUG');
   sArchivoCache := Format('Caja_%s.cache', [oUser]);

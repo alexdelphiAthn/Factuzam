@@ -16,7 +16,7 @@ unit inLibData;
 
 interface
 uses
-  Uni,inLibGlobalVar, System.SysUtils;
+  Uni,inLibGlobalVar, System.SysUtils, Data.DB;
 
 function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
 

@@ -133,7 +133,6 @@ var
   xmlNodeAssociations, xmlNodeRows,
   xmlNodeCarriers, xmlNodeCarrier,
   xmlNodeCustomerThreads, xmlNodeCustomerThread,
-  xmlNodeCustomerThreadAssoc,
   xmlNodeMessages, xmlNodeMessage: IXMLNode;
   sId, sIdCli, sDirIn, sDirDe, sNom, sApell, sEmail,
   sidAdress, sFecha, sIdTransportista, sIdEstadoPedido,

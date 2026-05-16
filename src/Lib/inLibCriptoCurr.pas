@@ -73,7 +73,7 @@ uses
   System.JSON,
   System.Generics.Collections,
   System.DateUtils,
-  System.Math;
+  System.Math, System.NetConsts;
 
 const
   COINGECKO_BASE_URL  = 'https://api.coingecko.com/api/v3';
@@ -182,7 +182,6 @@ type
     function  DoGet(const AURL: string): string;
     function  BuildURL(const APath: string;
                        const AParams: array of string): string;
-    function  JSONArrayToDoubleList(AArr: TJSONArray): TArray<Double>;
     function  SafeDouble(AObj: TJSONObject; const AKey: string): Double;
     function  SafeInt(AObj: TJSONObject; const AKey: string): Integer;
     function  SafeStr(AObj: TJSONObject; const AKey: string): string;
@@ -465,16 +464,6 @@ begin
   except
     Result := 0;
   end;
-end;
-
-function TCoinGeckoAPI.JSONArrayToDoubleList(AArr: TJSONArray): TArray<Double>;
-var
-  i: Integer;
-begin
-  if not Assigned(AArr) then Exit(nil);
-  SetLength(Result, AArr.Count);
-  for i := 0 to AArr.Count - 1 do
-    try Result[i] := AArr.Items[i].AsType<Double> except Result[i] := 0; end;
 end;
 
 // ── Métodos públicos ───────────────────────────────────────
@@ -774,7 +763,6 @@ var
   MarketData : TJSONObject;
   PriceObj   : TJSONObject;
   DateStr    : string;
-  PriceArr   : TJSONArray;
 begin
   Result  := 0;
   // CoinGecko espera la fecha en formato DD-MM-YYYY
