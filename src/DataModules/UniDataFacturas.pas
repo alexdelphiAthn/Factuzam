@@ -88,7 +88,6 @@ type
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryLinFacAfterDelete(DataSet: TDataSet);
     procedure dsLinFacStateChange(Sender: TObject);
-    procedure unqryTablaGBeforeEdit(DataSet: TDataSet);
     procedure unqryLinFacBeforeEdit(DataSet: TDataSet);
 public
     procedure GetCodigoAutoFactura;
@@ -1012,8 +1011,8 @@ end;
 
 procedure TdmFacturas.unqryLinFacBeforePost(DataSet: TDataSet);
 var
-  qryMax: TUniQuery;
   sNuevoNroLinea: string;
+  iContadorBD: Integer;
 begin
   inherited;
   with unqryLinFac do
@@ -1023,42 +1022,29 @@ begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
     end;
-    if (FindField(fnrolin).AsString = '0') or
-       (FindField(fnrolin).AsString = '') then
+    var sNumLin := FindField(fnrolin).AsString;
+    if (sNumLin = '0') or
+       (sNumLin = '') then
     begin
-      // Calculamos el siguiente LINEA_FACLIN directamente desde
-      // fza_facturas_lineas para evitar depender de
-      // fza_facturas.CONTADOR_LINEAS_FAC: ese contador puede estar
-      // desincronizado con las lineas reales (factura antigua, Post de
-      // la cabecera que sobrescribe el valor del SP con el viejo del
-      // dataset, etc.), lo que provocaba duplicados de PK.
-      qryMax := TUniQuery.Create(nil);
-      try
-        qryMax.Connection := inLibGlobalVar.oConn;
-        qryMax.SQL.Text :=
-          'SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)),0)+10,3,' +
-          '''0'') AS NUEVA_LINEA' +
-          '  FROM fza_facturas_lineas' +
-          ' WHERE NUMERO_FAC_FACLIN = :pnumfac' +
-          '   AND SERIE_FAC_FACLIN  = :pserie';
-        qryMax.ParamByName('pnumfac').AsString :=
-                              unqryTablaG.FieldByName(fnrofac).AsString;
-        qryMax.ParamByName('pserie').AsString :=
-                              unqryTablaG.FieldByName(fseriefac).AsString;
-        qryMax.Open;
-        sNuevoNroLinea := qryMax.FieldByName('NUEVA_LINEA').AsString;
-      finally
-        FreeAndNil(qryMax);
-      end;
+      unstdGetContadorLinea.ParamByName('pnumfac').AsString :=
+                            unqryTablaG.FieldByName(fnrofac).AsString;
+      unstdGetContadorLinea.ParamByName('pserie').AsString :=
+                          unqryTablaG.FieldByName(fseriefac).AsString;
+      unstdGetContadorLinea.ExecProc;
+      sNuevoNroLinea :=
+                       unstdGetContadorLinea.ParamByName('presul').AsString;
       FindField(fnrolin).AsString := sNuevoNroLinea;
-      // Mantenemos sincronizado fza_facturas.CONTADOR_LINEAS_FAC con la
-      // nueva linea para que otros caminos (caja, albaranes) que aun lo
-      // consultan vean el valor correcto despues del Post.
+      // El SP ha actualizado fza_facturas.CONTADOR_LINEAS_FAC en BD a
+      // (presul + 10). Si no sincronizamos el dataset de la cabecera, el
+      // proximo Post de la cabecera (disparado por unqryLinFacBeforeInsert
+      // al anadir la siguiente linea) escribiria el valor antiguo encima,
+      // y el SP volveria a devolver '010', generando un Duplicate entry.
       if unqryTablaG.FindField('CONTADOR_LINEAS_FAC') <> nil then
       begin
+        iContadorBD := StrToIntDef(sNuevoNroLinea, 0) + 10;
         if unqryTablaG.State = dsBrowse then unqryTablaG.Edit;
         unqryTablaG.FieldByName('CONTADOR_LINEAS_FAC').AsString :=
-                                                            sNuevoNroLinea;
+                                                Format('%.3d', [iContadorBD]);
       end;
     end;
   end;
@@ -1106,11 +1092,6 @@ begin
     ExecSQL;
     Free;
   end;
-end;
-
-procedure TdmFacturas.unqryTablaGBeforeEdit(DataSet: TDataSet);
-begin
-  inherited;
 end;
 
 procedure TdmFacturas.unqryTablaGAfterInsert(DataSet: TDataSet);
