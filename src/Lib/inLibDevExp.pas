@@ -35,41 +35,41 @@ uses
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
-  procedure BusqAllGrid(var dbTvGen: TcxGridDBTableView;
-                        sDatoBusq: String);
+  procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView;
+                        AsDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
   function CheckOpenGrids(frmMto: TComponent):Boolean;
-  procedure CancelarGrids(oPrincipal:TComponent);
+  procedure CancelarGrids(AoPrincipal:TComponent);
   procedure SetCaseTcxTextProperty(oControl: TComponent;
-                                   sCase: TEditCharCase);
+                                   AsCase: TEditCharCase);
 //  procedure SaveColumnsStateActiveWindow;
 //  procedure RecoverColumnsStateActiveWindow;
 //  procedure ResetColumnsStateActiveWindow;
-  procedure RestaurarFocoGrid(cxgrdtvVista: TcxCustomGridTableView;
+  procedure RestaurarFocoGrid(AcxgrdtvVista: TcxCustomGridTableView;
                               var oPerfilDic: TProfileDicc);
-  procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxCustomGridTableView;
+  procedure CollectSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
-                                        const sProfile: string;
+                                        const AsProfile: string;
                                         AList: TPerfilList);
 
-  procedure GetSettingsColumn(cxgrdtvVista: TcxCustomGridTableView;
+  procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                               sName: String;
                               Sender: TComponent;
                               sUserGroup:String = 'Todos');
-  procedure GetSettingsColumnProfile( cxgrdtvVista: TcxCustomGridTableView;
+  procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                       sName: String;
                                       Sender: TComponent;
-                                      sProfile: String);
-  procedure PonerAnchosTitulos( cxgrdtvVista: TcxCustomGridTableView;
-                                sDes: string;
+                                      AsProfile: String);
+  procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
+                                AsDes: string;
                                 var oPerfilDic: TProfileDicc);
-  procedure ExportarExcel(cxGrd: TcxGrid;
-                          sNomFile: string);
-  procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
+  procedure ExportarExcel(AcxGrd: TcxGrid;
+                          AsNomFile: string);
+  procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
   procedure GridRecalc(Sender: TObject;
                        View: TcxGridDBTableView;
-                       cdsLineas, cdsCabecera: TDataSet;
-                       OnUpdateTotal: TUpdateTotalEvent = nil);
+                       AcdsLineas, AcdsCabecera: TDataSet;
+                       AOnUpdateTotal: TUpdateTotalEvent = nil);
   function GetDBDataController(
     AView: TcxCustomGridTableView): TcxGridDBDataController;
 
@@ -83,8 +83,8 @@ implementation
 
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
-                     cdsLineas, cdsCabecera: TDataSet;
-                     OnUpdateTotal: TUpdateTotalEvent = nil);
+                     AcdsLineas, AcdsCabecera: TDataSet;
+                     AOnUpdateTotal: TUpdateTotalEvent = nil);
 var
   Edit: TcxCustomEdit;
   Column: TcxGridDBColumn;
@@ -106,20 +106,20 @@ begin
     if VarIsNull(ValoEditado) or (not VarIsNumeric(ValoEditado)) then
     begin
       FieldName := 'PRECIO_SALIDA_FACLIN';
-      if cdsLineas.FindField(FieldName) <> nil then
-        ValoEditado := cdsLineas.FieldByName(FieldName).Value
+      if AcdsLineas.FindField(FieldName) <> nil then
+        ValoEditado := AcdsLineas.FieldByName(FieldName).Value
       else
         ValoEditado := 0;
     end;
-    ActualizarLineaFacturaGen(cdsLineas,
-                              cdsCabecera,
+    ActualizarLineaFacturaGen(AcdsLineas,
+                              AcdsCabecera,
                               FieldName,
                               ValoEditado,
-                              OnUpdateTotal);
+                              AOnUpdateTotal);
   end;
 end;
 
-procedure ExportarExcel(cxGrd: TcxGrid; sNomFile: string);
+procedure ExportarExcel(AcxGrd: TcxGrid; AsNomFile: string);
 var
   saveDialog: TFileSaveDialog;
 begin
@@ -132,11 +132,11 @@ begin
     FileMask := '*.xlsx';
   end;
 //  saveDialog.FilterIndex := 1;
-  saveDialog.FileName := sNomFile;
+  saveDialog.FileName := AsNomFile;
   //saveDialog.Options.ofOverwritePrompt := True;
   if (saveDialog.Execute)
   then
-    ExportGridToXLSX(saveDialog.FileName, cxGrd);
+    ExportGridToXLSX(saveDialog.FileName, AcxGrd);
   FreeAndNil(saveDialog);
 end;
 
@@ -160,7 +160,7 @@ begin
     Result := nil;
 end;
 
-procedure GetSettingsColumn(cxgrdtvVista: TcxCustomGridTableView;
+procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                             sName: String;
                             Sender: TComponent;
                             sUserGroup:String = 'Todos');
@@ -169,10 +169,10 @@ var
   oItem: TcxGridColumn ;
   sVistaName, sColumnName, sValue: string;
 begin
-  sVistaName := cxgrdtvVista.Name;
-  for i := 0 to cxgrdtvVista.ItemCount - 1 do
+  sVistaName := AcxgrdtvVista.Name;
+  for i := 0 to AcxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+    oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
     if (oItem.Visible) then
@@ -213,7 +213,7 @@ begin
   end;
 end;
 
-procedure RestaurarFocoGrid(cxgrdtvVista: TcxCustomGridTableView;
+procedure RestaurarFocoGrid(AcxgrdtvVista: TcxCustomGridTableView;
                             var oPerfilDic: TProfileDicc);
 var
   sFocusedIDString: string;
@@ -221,7 +221,7 @@ var
   vLocateValues: Variant;
   oDBDataCtrl: TcxGridDBDataController;
 begin
-  oDBDataCtrl := GetDBDataController(cxgrdtvVista);
+  oDBDataCtrl := GetDBDataController(AcxgrdtvVista);
   if (oDBDataCtrl = nil) or
      not Assigned(oDBDataCtrl.DataSet) or
      not oDBDataCtrl.DataSet.Active then
@@ -239,7 +239,7 @@ begin
 
   // 1. Buscamos el string guardado (ej. "1|1500" o "45")
   sFocusedIDString := GetPerfilValueDef(oPerfilDic,
-                                        cxgrdtvVista.Name + '_FocusedID', '');
+                                        AcxgrdtvVista.Name + '_FocusedID', '');
 
   if sFocusedIDString <> '' then
   begin
@@ -255,9 +255,9 @@ begin
   end;
 end;
 
-procedure CollectSettingsColumnProfile(cxgrdtvVista: TcxCustomGridTableView;
+procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
-                                        const sProfile: string;
+                                        const AsProfile: string;
                                         AList: TPerfilList);
 var
   i: Integer;
@@ -270,7 +270,7 @@ var
   procedure Add(const aSub, aVal: string);
   var item: TPerfilItem;
   begin
-    item.UserGroup := sProfile;
+    item.UserGroup := AsProfile;
     item.KeyPerfil := sName;
     item.SubKey    := aSub;
     item.Value     := aVal;
@@ -279,10 +279,10 @@ var
   end;
 
 begin
-  sVistaName := cxgrdtvVista.Name;
+  sVistaName := AcxgrdtvVista.Name;
   var sCamposClave: string;
   var vValoresClave: Variant;
-  oDBDataCtrl := GetDBDataController(cxgrdtvVista);
+  oDBDataCtrl := GetDBDataController(AcxgrdtvVista);
   if (oDBDataCtrl = nil) or
      not Assigned(oDBDataCtrl.DataSet) or
      not oDBDataCtrl.DataSet.Active then
@@ -304,13 +304,13 @@ begin
     if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
     begin
       // USAMOS LA NUEVA FUNCIÓN AQUÍ:
-      Add(cxgrdtvVista.Name + '_FocusedID', KeyValuesToStr(vValoresClave));
+      Add(AcxgrdtvVista.Name + '_FocusedID', KeyValuesToStr(vValoresClave));
     end;
   end;
   // 1. Recolección de propiedades de columnas (Para el Batch)
-  for i := 0 to cxgrdtvVista.ItemCount - 1 do
+  for i := 0 to AcxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+    oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
     sPrefix := sVistaName + '_' + sColumnName + '_';
@@ -332,11 +332,11 @@ begin
           IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
   end;
-  if cxgrdtvVista.DataController.Filter.IsEmpty then
+  if AcxgrdtvVista.DataController.Filter.IsEmpty then
   begin
     // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro
     // previo en la BBDD
-    odmPerfiles.GrabarPerfil(sProfile, sName, sVistaName + '_Filtro', '', '');
+    odmPerfiles.GrabarPerfil(AsProfile, sName, sVistaName + '_Filtro', '', '');
   end
   else
   begin
@@ -344,13 +344,13 @@ begin
     LStream := TMemoryStream.Create;
     BStream := TStringStream.Create('');
     try
-      cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+      AcxgrdtvVista.DataController.Filter.SaveToStream(LStream);
       LStream.Position := 0;
       TNetEncoding.Base64.Encode(LStream, BStream);
 
       // Grabamos directamente usando tu función del DataModule
       // psValue lo pasamos vacío (''), el Base64 va a psValueText
-      odmPerfiles.GrabarPerfil(sProfile,
+      odmPerfiles.GrabarPerfil(AsProfile,
                                sName,
                                sVistaName + '_Filtro',
                                '',
@@ -362,10 +362,10 @@ begin
   end;
 end;
 
-procedure GetSettingsColumnProfile( cxgrdtvVista: TcxCustomGridTableView;
+procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                     sName: String;
                                     Sender: TComponent;
-                                    sProfile: String);
+                                    AsProfile: String);
 var
   i: Integer;
   oItem: TcxGridColumn;
@@ -373,50 +373,50 @@ var
   LStream: TMemoryStream;
   BStream: TStringStream;
 begin
-  sVistaName := cxgrdtvVista.Name;
-  for i := 0 to cxgrdtvVista.ItemCount - 1 do
+  sVistaName := AcxgrdtvVista.Name;
+  for i := 0 to AcxgrdtvVista.ItemCount - 1 do
   begin
-    oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+    oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
     if sColumnName = '' then Continue;
 
     // 1. Guardar Visibilidad
     if (oItem.Visible) then sValue := 'True' else sValue := 'False';
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Visible',
                              sValue);
 
     // 2. Guardar Orden (Mantenemos Index como lo tenías)
     sValue := IntToStr(oItem.Index);
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Index',
                              sValue);
 
     // 3. Guardar Ancho
     sValue := IntToStr(oItem.Width);
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Width',
                              sValue);
 
     // 4. Guardar Caption
     sValue := oItem.Caption;
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Caption',
                              sValue);
 
     // 5. Guardar Ordenación de datos (Sorting)
     sValue := IntToStr(Ord(oItem.SortOrder));
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_SortOrder',
                              sValue);
 
     sValue := IntToStr(oItem.SortIndex);
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_SortIndex',
                              sValue);
@@ -424,13 +424,13 @@ begin
     // 6. Si es columna banded, guardar tambien la posicion en band
     if oItem is TcxGridDBBandedColumn then
     begin
-      odmPerfiles.GrabarPerfil(sProfile, sName,
+      odmPerfiles.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_BandIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
-      odmPerfiles.GrabarPerfil(sProfile, sName,
+      odmPerfiles.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_ColIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
-      odmPerfiles.GrabarPerfil(sProfile, sName,
+      odmPerfiles.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_RowIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
@@ -440,7 +440,7 @@ begin
   BStream := TStringStream.Create('');
   try
     // Extraemos el filtro del grid al stream de memoria
-    cxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+    AcxgrdtvVista.DataController.Filter.SaveToStream(LStream);
     LStream.Position := 0;
 
     // Lo codificamos a Base64 para que sea un texto seguro (sin caracteres
@@ -449,18 +449,18 @@ begin
     sValue := BStream.DataString;
 
     // Lo guardamos en tu perfil con la clave terminada en "_Filtro"
-    odmPerfiles.GrabarPerfil(sProfile,
+    odmPerfiles.GrabarPerfil(AsProfile,
                              sName,
-                             cxgrdtvVista.Name + '_Filtro',
+                             AcxgrdtvVista.Name + '_Filtro',
                              sValue);
 
     // Guardar el ancho general del componente TcxGrid contenedor
-    if Assigned(cxgrdtvVista.Control) then
+    if Assigned(AcxgrdtvVista.Control) then
     begin
-      sValue := IntToStr(cxgrdtvVista.Control.Width);
-      odmPerfiles.GrabarPerfil(sProfile,
+      sValue := IntToStr(AcxgrdtvVista.Control.Width);
+      odmPerfiles.GrabarPerfil(AsProfile,
                                sName,
-                               cxgrdtvVista.Name + '_GridTotalWidth',
+                               AcxgrdtvVista.Name + '_GridTotalWidth',
                                sValue);
     end;
   finally
@@ -469,8 +469,8 @@ begin
   end;
 end;
 
-procedure PonerAnchosTitulos(cxgrdtvVista: TcxCustomGridTableView;
-                             sDes: string;
+procedure PonerAnchosTitulos(AcxgrdtvVista: TcxCustomGridTableView;
+                             AsDes: string;
                              var oPerfilDic: TProfileDicc);
 var
   oItem: TcxGridColumn;
@@ -479,14 +479,14 @@ var
   LStream: TMemoryStream;
   BStream: TStringStream;
 begin
-  cxgrdtvVista.BeginUpdate;
+  AcxgrdtvVista.BeginUpdate;
   try
-    sName := cxgrdtvVista.Name;
+    sName := AcxgrdtvVista.Name;
 
     // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
-    for i := 0 to cxgrdtvVista.ItemCount - 1 do
+    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
@@ -510,9 +510,9 @@ begin
     end;
 
     // 2. Restaurar la posición física de las columnas (Index)
-    for i := 0 to cxgrdtvVista.ItemCount - 1 do
+    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then Continue;
       sSubKey := sName + '_' + sColumnName;
@@ -522,9 +522,9 @@ begin
 
     // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex /
     // RowIndex
-    for i := 0 to cxgrdtvVista.ItemCount - 1 do
+    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
-      oItem := cxgrdtvVista.Items[i] as TcxGridColumn;
+      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
       if sColumnName = '' then
         Continue;
@@ -557,7 +557,7 @@ begin
         BStream.Position := 0;
         System.NetEncoding.TNetEncoding.Base64.Decode(BStream, LStream);
         LStream.Position := 0;
-        cxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
+        AcxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
       finally
         FreeAndNil(BStream);
         FreeAndNil(LStream);
@@ -565,36 +565,36 @@ begin
     end;
 
     // Restaurar el ancho general del componente TcxGrid contenedor
-    if Assigned(cxgrdtvVista.Control) then
+    if Assigned(AcxgrdtvVista.Control) then
     begin
-      sSubKey := cxgrdtvVista.Name + '_GridTotalWidth';
-      cxgrdtvVista.Control.Width :=
+      sSubKey := AcxgrdtvVista.Name + '_GridTotalWidth';
+      AcxgrdtvVista.Control.Width :=
                          StrToIntDef(GetPerfilValueDef(oPerfilDic, sSubKey, ''),
-                                     cxgrdtvVista.Control.Width);
+                                     AcxgrdtvVista.Control.Width);
     end;
   finally
-    cxgrdtvVista.EndUpdate;
+    AcxgrdtvVista.EndUpdate;
   end;
 end;
 
-procedure BusqAllGrid(var dbTvGen: TcxGridDBTableView; sDatoBusq: String);
+procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView; AsDatoBusq: String);
 var
   i: Integer;
 begin
-  if sDatoBusq <> ''
+  if AsDatoBusq <> ''
   then
   begin
-    with dbTvGen.DataController.Filter do
+    with AdbTvGen.DataController.Filter do
     begin
       BeginUpdate;
       Options := Options + [fcoCaseInsensitive];
       try
         Root.Clear;
         Root.BoolOperatorKind := fboOr;
-        for i := 0 to dbTvGen.ColumnCount - 1 do
+        for i := 0 to AdbTvGen.ColumnCount - 1 do
         begin
-          if dbTvGen.Columns[i].DataBinding.Field <> nil then
-            if dbTvGen.Columns[i].DataBinding.Field.DataType in [ftSmallint,
+          if AdbTvGen.Columns[i].DataBinding.Field <> nil then
+            if AdbTvGen.Columns[i].DataBinding.Field.DataType in [ftSmallint,
                                                                  ftInteger,
                                                                  ftWord,
                                                                  ftCurrency,
@@ -610,10 +610,10 @@ begin
                                                                  ftWideMemo]
           then
           begin
-            Root.AddItem((dbTvGen.Columns[i] as TObject),
+            Root.AddItem((AdbTvGen.Columns[i] as TObject),
               foLike,
-              '%' + sDatoBusq + '%',
-              '%' + sDatoBusq + '%');
+              '%' + AsDatoBusq + '%',
+              '%' + AsDatoBusq + '%');
           end;
         end;
       finally
@@ -623,10 +623,10 @@ begin
     end;
   end
   else
-    dbTvGen.DataController.Filter.Root.Clear;
+    AdbTvGen.DataController.Filter.Root.Clear;
 end;
 
-procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
+procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
   procedure AplicarFiltroAVista(AView: TcxGridDBTableView);
   var
     i: Integer;
@@ -634,7 +634,7 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
     sTextoBuscar: String;
     FieldType: TFieldType;
   begin
-    if sDatoBusq = '' then
+    if AsDatoBusq = '' then
     begin
       AView.DataController.Filter.Root.Clear;
       AView.DataController.Filter.Active := False;
@@ -642,24 +642,24 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; sDatoBusq: String);
     end;
     // --- LÓGICA DE DETECCIÓN INTELIGENTE ---
     bModoTemporal := False;
-    sTextoBuscar := sDatoBusq;
+    sTextoBuscar := AsDatoBusq;
     // 1. Comodines de limpieza ("//" para fecha, "::" para hora)
-    if Pos('//', sDatoBusq) > 0 then
+    if Pos('//', AsDatoBusq) > 0 then
     begin
       bModoTemporal := True;
-      sTextoBuscar := StringReplace(sDatoBusq, '//', '', [rfReplaceAll]);
+      sTextoBuscar := StringReplace(AsDatoBusq, '//', '', [rfReplaceAll]);
     end
-    else if Pos('::', sDatoBusq) > 0 then
+    else if Pos('::', AsDatoBusq) > 0 then
     begin
       bModoTemporal := True;
-      sTextoBuscar := StringReplace(sDatoBusq, '::', '', [rfReplaceAll]);
+      sTextoBuscar := StringReplace(AsDatoBusq, '::', '', [rfReplaceAll]);
     end
     // 2. Separadores estándar ("/" para fecha, ":" para hora)
-    else if (Pos('/', sDatoBusq) > 0) or (Pos(':', sDatoBusq) > 0) then
+    else if (Pos('/', AsDatoBusq) > 0) or (Pos(':', AsDatoBusq) > 0) then
     begin
       bModoTemporal := True;
       // Aquí NO borramos nada. Buscamos "23:00" o "12/05" tal cual.
-      sTextoBuscar := sDatoBusq;
+      sTextoBuscar := AsDatoBusq;
     end;
     // Si entramos en modo temporal pero no hay texto a buscar, salimos
     if bModoTemporal and (Trim(sTextoBuscar) = '') then Exit;
@@ -730,7 +730,7 @@ begin
   end;
 end;
 
-procedure CancelarGrids(oPrincipal:TComponent);
+procedure CancelarGrids(AoPrincipal:TComponent);
 var
   i: Integer;
   iPrincipal:Integer;
@@ -738,7 +738,7 @@ var
   frmMtoPrin2:TfrmMtoPrincipal;
   tsNew: TcxTabSheet;
 begin
-  frmMtoPrin2 := (oPrincipal as TfrmMtoPrincipal);
+  frmMtoPrin2 := (AoPrincipal as TfrmMtoPrincipal);
   iPrincipal := frmMtoPrin2.pcPrincipal.ActivePageIndex;
   tsNew := frmMtoPrin2.pcPrincipal.Pages[iPrincipal];
   frmMto := (tsNew.Controls[0] as TfrmMtoGen);
@@ -817,7 +817,7 @@ begin
   Result:=bResul;
 end;
 
-procedure SetCaseTcxTextProperty(oControl: TComponent; sCase: TEditCharCase);
+procedure SetCaseTcxTextProperty(oControl: TComponent; AsCase: TEditCharCase);
 var
   i: Integer;
 begin
@@ -826,18 +826,18 @@ begin
     if oControl.Components[i].ClassNameis('TcxDBTextEdit')
     then
       (oControl.Components[i] as TcxDBTextEdit).Properties.CharCase
-        := sCase;
+        := AsCase;
     if oControl.Components[i].ClassNameis('TcxTextEdit')
     then
-      (oControl.Components[i] as TcxTextEdit).Properties.CharCase := sCase;
+      (oControl.Components[i] as TcxTextEdit).Properties.CharCase := AsCase;
 
     if oControl.Components[i].ClassNameis('TcxDBMaskEdit')
     then
       (oControl.Components[i] as TcxDBMaskEdit).Properties.CharCase
-        := sCase;
+        := AsCase;
     if oControl.Components[i].ClassNameis('TcxDBMemo')
     then
-      (oControl.Components[i] as TcxDBMemo).Properties.CharCase := sCase;
+      (oControl.Components[i] as TcxDBMemo).Properties.CharCase := AsCase;
     if oControl.Components[i].ClassNameis('TcxGridDBColumn')
     then
       if (oControl.Components[i] as TcxGridDBColumn).PropertiesClassName =
@@ -845,7 +845,7 @@ begin
       then
       begin
         ((oControl.Components[i] as TcxGridDBColumn).Properties as
-            TcxTextEditProperties).CharCase := sCase;
+            TcxTextEditProperties).CharCase := AsCase;
       end
       else
       begin
