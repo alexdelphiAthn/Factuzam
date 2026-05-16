@@ -510,7 +510,6 @@ var
   TotalEntregado, TotalEntregadoConCambio: Currency;
   TotalValesRecogidos: Currency;
   bookmark: TBookmark;
-  HayFormaPagoQueDevuelveCambio: Boolean;
   CambioCalculado: Currency;
   CodigoForma: string;
   ImporteEntregado: Currency;
@@ -537,7 +536,6 @@ begin
     TotalEntregado := 0;
     TotalValesRecogidos := 0;
     TotalEntregadoConCambio := 0;
-    HayFormaPagoQueDevuelveCambio := False;
     if FMemTablePagos.IsEmpty then
     begin
       FImporteValeRecogido := 0;
@@ -574,7 +572,6 @@ begin
                (ObtenerStringSafe('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP',
                                   'N') = 'S') then
             begin
-              HayFormaPagoQueDevuelveCambio := True;
               TotalEntregadoConCambio := TotalEntregadoConCambio +
                                                                ImporteEntregado;
             end;
@@ -589,7 +586,6 @@ begin
         begin
           TotalEntregado := 0;
           TotalEntregadoConCambio := 0;
-          HayFormaPagoQueDevuelveCambio := False;
           FMemTablePagos.First;
           while not FMemTablePagos.Eof do
           begin
