@@ -13,7 +13,7 @@
   ExplicitWidth = 1216
   ExplicitHeight = 759
   TextHeight = 18
-  object splitter: TSplitter [0]
+  object splPrincipal: TSplitter [0]
     Left = 0
     Top = 316
     Width = 1200
@@ -960,7 +960,7 @@
       TabOrder = 1
       OnClick = btnCerrarClick
     end
-    object Button1: TButton
+    object btnDevolverAbonar: TButton
       Left = 220
       Top = 6
       Width = 226
@@ -968,7 +968,7 @@
       Caption = 'Devolver Abonar Operaci'#243'n'
       TabOrder = 2
     end
-    object Button2: TButton
+    object btnAnularVerifactu: TButton
       Left = 476
       Top = 6
       Width = 213

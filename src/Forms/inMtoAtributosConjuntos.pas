@@ -77,7 +77,7 @@ type
     tvArticulosESACTIVO_ART: TcxGridDBColumn;
     tvArticulosCODIGO_FAM_ART: TcxGridDBColumn;
     tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn;
-    ActionListConjuntos: TActionList;
+    alConjuntos: TActionList;
     actArticulo: TAction;
     tsAuditoria: TcxTabSheet;
     pnlAuditoria: TPanel;
