@@ -218,7 +218,7 @@ end;
 
 function TAppParams.GetPath(const ANombre: string): string;
 begin
-  Result := ExpandPathTokens(GetString(Nombre));
+  Result := ExpandPathTokens(GetString(ANombre));
 end;
 
 initialization
