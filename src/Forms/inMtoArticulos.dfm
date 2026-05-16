@@ -524,6 +524,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Properties.ListSource = dmArticulos.dsAtributosBasicosLookup
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged
                       Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
+                      Properties.OnValidate = tvSkuAtributosBasicosID_ATB_AVPropertiesValidate
                       Width = 190
                     end
                     object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn

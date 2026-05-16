@@ -415,6 +415,9 @@ type
       Sender: TObject);
     procedure tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
       Sender: TObject);
+    procedure tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
+      Sender: TObject; var DisplayValue: Variant;
+      var ErrorText: TCaption; var Error: Boolean);
     procedure tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
     procedure tvSkuAtributosBasicosDblClick(Sender: TObject);
@@ -2487,6 +2490,131 @@ begin
       Filtered := True;
     end;
   end;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant;
+  var ErrorText: TCaption; var Error: Boolean);
+// El combo "Basico" es un TcxLookupComboBox de seleccion estricta. Si el
+// usuario teclea un texto y pulsa Enter/Tab sin elegir nada del desple-
+// gable, ese texto cae aqui en DisplayValue. Aprovechamos para:
+//   1) Buscar match exacto (CODIGO_ATB o NOMBRE_ATB) entre los basicos
+//      de la misma variacion. Si lo hay, devolvemos el CODIGO_ATB y el
+//      combo lo resuelve a su ID via OnEditValueChanged.
+//   2) Si no hay match, preguntamos al usuario Global/Ad-hoc/Cancelar
+//      (PreguntarAmbitoBasico), creamos el basico nuevo en
+//      fza_atributos_basicos y refrescamos el lookup. Luego ponemos
+//      DisplayValue := CODIGO_ATB nuevo para que el combo lo seleccione
+//      y dispare el override automaticamente.
+//   3) Si cancela, marcamos Error para que el combo no asuma el texto
+//      tecleado como un ID huerfano.
+var
+  Texto, IdVaAv, CodArt: string;
+  ds                  : TDataSet;
+  qry                 : TUniQuery;
+  IdAtbExistente      : Integer;
+  CodigoExistente     : string;
+  Ambito              : TAmbitoBasico;
+  CodigoNuevo, NombreNuevo: string;
+begin
+  Error := False;
+  Texto := Trim(VarToStr(DisplayValue));
+  if Texto = '' then Exit;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+
+  IdVaAv := ds.FieldByName('ID_VA_AV').AsString;
+  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  if (IdVaAv = '') or (CodArt = '') then Exit;
+
+  // 1) Buscar match exacto en fza_atributos_basicos para este tipo de
+  //    atributo. Damos prioridad a CODIGO_ATB exacto sobre NOMBRE_ATB.
+  IdAtbExistente  := 0;
+  CodigoExistente := '';
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT ID_ATB, CODIGO_ATB FROM fza_atributos_basicos '          +
+      ' WHERE ID_VA_ATB = :IDVA '                                      +
+      '   AND ESACTIVO_ATB = ''S'' '                                   +
+      '   AND (CODIGO_ATB = :T OR NOMBRE_ATB = :T) '                   +
+      ' ORDER BY (CODIGO_ATB = :T) DESC '                              +
+      ' LIMIT 1';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('T').AsString    := Texto;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      IdAtbExistente  := qry.FieldByName('ID_ATB').AsInteger;
+      CodigoExistente := qry.FieldByName('CODIGO_ATB').AsString;
+    end;
+    qry.Close;
+  finally
+    qry.Free;
+  end;
+
+  if IdAtbExistente > 0 then
+  begin
+    // Ya existe: devolvemos el CODIGO_ATB para que el combo resuelva
+    // a su ID_ATB via su mecanismo interno de lookup.
+    DisplayValue := CodigoExistente;
+    Exit;
+  end;
+
+  // 2) No existe — preguntar al usuario qué quiere crear.
+  Ambito := PreguntarAmbitoBasico(CodArt, Texto);
+  if Ambito = abCancelar then
+  begin
+    Error     := True;
+    ErrorText := 'Sin asignar.';
+    Exit;
+  end;
+
+  // 3) Crear el basico nuevo con el codigo que toque segun el ambito.
+  NombreNuevo := Texto;
+  case Ambito of
+    abGlobal: CodigoNuevo := StringReplace(NombreNuevo, ' ', '_',
+                                           [rfReplaceAll]);
+    abAdHoc : CodigoNuevo := Format('AD_%s_%s',
+                                    [CodArt,
+                                     StringReplace(NombreNuevo, ' ', '_',
+                                                   [rfReplaceAll])]);
+  end;
+  if Length(CodigoNuevo) > 100 then
+    CodigoNuevo := Copy(CodigoNuevo, 1, 100);
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'INSERT INTO fza_atributos_basicos '              +
+      '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
+      '    ESACTIVO_ATB, '                              +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
+      'VALUES (:IDVA, :COD, :NOM, ''S'', '              +
+      '        NOW(), :USR, :USR) '                     +
+      'ON DUPLICATE KEY UPDATE '                        +
+      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('COD').AsString  := CodigoNuevo;
+    qry.ParamByName('NOM').AsString  := NombreNuevo;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+
+  // 4) Refrescar lookup para que el combo lo encuentre al resolver.
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+
+  // 5) Devolver el CODIGO_ATB nuevo para que el combo lo seleccione.
+  //    Esto disparara OnEditValueChanged y se grabara el override.
+  DisplayValue := CodigoNuevo;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
