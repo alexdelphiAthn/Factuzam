@@ -614,7 +614,6 @@ var
   ds: TDataSet;
   bUsarTodas: Boolean;
 begin
-  Result     := False;
   sNumeroFac := '';
   sSerieFac  := '';
   InstalarProcedimientos;

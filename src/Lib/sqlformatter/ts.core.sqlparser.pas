@@ -13,6 +13,10 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 }
+// Codigo third-party - suprimir warnings/hints sin modificar fuentes externas.
+{$WARN NO_RETVAL OFF}
+{$WARN USE_BEFORE_DEF OFF}
+{$HINTS OFF}
 unit ts.Core.SQLParser;
 
 //{$MODE DELPHI}
