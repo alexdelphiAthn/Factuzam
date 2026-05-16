@@ -439,7 +439,7 @@ begin
     q.ParamByName('u').AsString   := oUser;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -530,7 +530,7 @@ begin
       Result := (dt > FInstanteCargaSesion);
     end;
   finally
-    uxTmp.Free;
+    FreeAndNil(uxTmp);
   end;
 end;
 

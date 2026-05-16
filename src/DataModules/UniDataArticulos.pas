@@ -671,7 +671,7 @@ begin
       end;
     finally
       // Liberamos memoria de forma segura
-      unqrySol.Free;
+      FreeAndNil(unqrySol);
     end;
 
     // ----------------------------------------------------------------
@@ -884,7 +884,7 @@ begin
         sFiltroAlm := sFiltroAlm + QuotedStr(Trim(lstCod[i]));
       end;
     finally
-      lstCod.Free;
+      FreeAndNil(lstCod);
     end;
     if sFiltroAlm <> '' then
       sFiltroAlm := 'WHERE CODIGO_ALM_STK IN (' + sFiltroAlm + ')';

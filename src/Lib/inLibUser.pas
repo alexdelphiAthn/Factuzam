@@ -101,7 +101,7 @@ begin
       qPerfil.Next;
     end;
   finally
-    qPerfil.Free;
+    FreeAndNil(qPerfil);
   end;
 end;
 
@@ -168,7 +168,7 @@ begin
       end;
     end;
   end;
-  oPerfilUserDicCopy.Free;
+  FreeAndNil(oPerfilUserDicCopy);
   //Elapsed := Stopwatch.Elapsed;
   //ShowMessage(Elapsed.TotalMilliseconds.ToString);
 end;

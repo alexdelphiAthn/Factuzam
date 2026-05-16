@@ -643,7 +643,7 @@ begin
                cdsCabecera,
                OnUpdateTotal);
   finally
-    QryDep.Free;
+    FreeAndNil(QryDep);
   end;
 end;
 
@@ -668,7 +668,7 @@ begin
     SpTrx.Execute;
     AIdDeposito := SpTrx.ParamByName('P_ID_DEPOSITO').AsString;
   finally
-    SpTrx.Free;
+    FreeAndNil(SpTrx);
   end;
 
 end;
@@ -941,7 +941,7 @@ begin
     uspMov.ParamByName('p_CODARTICULO').AsString               := ACodArticulo;
     uspMov.Execute;
   finally
-    uspMov.Free;
+    FreeAndNil(uspMov);
   end;
 end;
 
@@ -1143,7 +1143,7 @@ begin
     uspDep.ParamByName('p_USUARIO').AsString    := AUsuario;
     uspDep.Execute;
   finally
-    uspDep.Free;
+    FreeAndNil(uspDep);
   end;
 end;
 
@@ -1334,7 +1334,7 @@ begin
         // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
         // =======================================================================
       finally
-        uspQryTrx.Free;
+        FreeAndNil(uspQryTrx);
       end;
       InsertarCabeceraFactura(
         QryTrx, SerieGenerada, NumFactura, Cab.Fecha, 'SIMPLIFICADA',
@@ -1623,7 +1623,7 @@ begin
     end;
   end;
   finally
-    QryTrx.Free;
+    FreeAndNil(QryTrx);
   end;
 end;
 
@@ -1655,7 +1655,7 @@ begin
       raise Exception.Create(
         'Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
   finally
-    CalculadorFiscal.Free;
+    FreeAndNil(CalculadorFiscal);
   end;
 end;
 
@@ -1714,8 +1714,8 @@ begin
     qry.ParamByName('INSTANTE').AsDateTime  := Now;
     qry.Execute;
   finally
-    qry.Free;
-    qrySP.Free;
+    FreeAndNil(qry);
+    FreeAndNil(qrySP);
   end;
 end;
 
@@ -1828,7 +1828,7 @@ begin
     Result := SpTrx.ParamByName('pcont').AsString;
   finally
     // Al liberar el componente también se hace el UnPrepare automáticamente
-    SpTrx.Free;
+    FreeAndNil(SpTrx);
   end;
 end;
 
@@ -1961,7 +1961,7 @@ begin
       Result := True;
     end;
   finally
-    unqry.Free;
+    FreeAndNil(unqry);
   end;
 end;
 

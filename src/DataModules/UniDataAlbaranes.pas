@@ -604,7 +604,7 @@ begin
 
     FProcsInstalados := True;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -866,8 +866,8 @@ begin
       end;
     end;
   finally
-    qCli.Free;
-    qLin.Free;
+    FreeAndNil(qCli);
+    FreeAndNil(qLin);
   end;
 
   // Refrescar la pantalla del albarán activo.
@@ -997,8 +997,8 @@ begin
       qLineas.Next;
     end;
   finally
-    qLineas.Free;
-    qExiste.Free;
+    FreeAndNil(qLineas);
+    FreeAndNil(qExiste);
   end;
 
   // Refrescar el grid de movimientos si está abierto.

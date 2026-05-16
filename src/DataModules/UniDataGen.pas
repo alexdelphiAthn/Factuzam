@@ -117,7 +117,7 @@ begin
   unqrysol.ParamByName('user').AsString := sPermisos;
   unqrysol.ParamByName('form').AsString := sForm;
   unqrySol.Execute;
-  unqrySol.Free;
+  FreeAndNil(unqrySol);
 end;
 
 procedure TdmBase.unqryPerfilesBeforePost(DataSet: TDataSet);

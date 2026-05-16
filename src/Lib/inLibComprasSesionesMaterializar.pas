@@ -106,7 +106,7 @@ begin
     q.Open;
     iNext := q.FieldByName('N').AsLargeInt;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   sBase  := sPref + Format('%.*d', [iLenSeq, iNext]);
@@ -158,7 +158,7 @@ begin
     q.ParamByName('u').AsString  := AUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -213,7 +213,7 @@ begin
     q.ParamByName('u').AsString  := AUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -241,7 +241,7 @@ begin
     q.ParamByName('u').AsString  := AUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -363,9 +363,9 @@ begin
       qC.Next;
     end;
   finally
-    qC.Free;
-    qIns.Free;
-    qBar.Free;
+    FreeAndNil(qC);
+    FreeAndNil(qIns);
+    FreeAndNil(qBar);
   end;
 end;
 
@@ -395,7 +395,7 @@ begin
     q.ParamByName('u').AsString   := AUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -494,7 +494,7 @@ begin
         qLin.Next;
       end;
     finally
-      qLin.Free;
+      FreeAndNil(qLin);
     end;
 
     // Documentos resultantes — pendiente cuando existan las tablas
@@ -574,7 +574,7 @@ begin
       qLin.ParamByName('na').AsString := ANumAlb;
       qLin.ExecSQL;
     finally
-      qLin.Free;
+      FreeAndNil(qLin);
     end;
 
     if bTxOwned and conn.InTransaction then conn.Commit;
@@ -599,7 +599,7 @@ begin
           qLin.ParamByName('n').AsString := sNumSes;
           qLin.ExecSQL;
         finally
-          qLin.Free;
+          FreeAndNil(qLin);
         end;
       except
         // tragado: si esto también falla, no hay nada que hacer

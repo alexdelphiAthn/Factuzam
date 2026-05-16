@@ -182,7 +182,7 @@ begin
     unqryFamProp.Open;
     Result := (unqryFamProp.RecordCount > 0);
   finally
-    unqryFamProp.Free;
+    FreeAndNil(unqryFamProp);
   end;
 end;
 

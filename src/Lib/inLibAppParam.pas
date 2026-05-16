@@ -88,7 +88,7 @@ end;
 
 destructor TAppParams.Destroy;
 begin
-  FParams.Free;
+  FreeAndNil(FParams);
   inherited;
 end;
 
@@ -143,7 +143,7 @@ begin
       qry.Next;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
