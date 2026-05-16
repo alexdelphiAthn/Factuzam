@@ -941,7 +941,7 @@ begin
       unstrdprcRefresh.ParamByName('pDATABASENAME').AsString :=
                                                     oConn.Database;
       unstrdprcRefresh.ExecProc;
-      if unqryMetadatos.Active = False then
+      if not unqryMetadatos.Active then
         unqryMetadatos.Open
       else
         unqryMetadatos.Refresh;

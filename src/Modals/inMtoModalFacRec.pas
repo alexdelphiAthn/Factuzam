@@ -97,7 +97,7 @@ begin
   VAR ParentForm := TfrmMtoFacturas(Owner);
   with ParentForm.tdmDataModule as TdmFacturas do
   begin
-    if ((chkAbonar.Checked = True) and (IsError = False)) then
+    if chkAbonar.Checked and not IsError then
     begin
       SavedCursor := Screen.Cursor;
       try
@@ -129,7 +129,7 @@ begin
           Screen.Cursor := SavedCursor;
       end;
     end;
-    if ((chkDuplicar.Checked = True) and (IsError = False)) then
+    if chkDuplicar.Checked and not IsError then
     begin
       SavedCursor := Screen.Cursor;
       try
@@ -174,7 +174,7 @@ begin
     VAR ParentForm := TfrmMtoFacturas(Owner);
     with ParentForm.tdmDataModule as TdmFacturas do
     begin
-      if unqrySeries.Active = False then
+      if not unqrySeries.Active then
         unqrySeries.Open;
       cmbSerieFactura.Properties.ListSource := dsSeries;
       cmbSerieFactura.Text :=
