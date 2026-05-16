@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, inMtoPrincipal, UniDataFamilias,
+  dxBevel, cxDBNavigator, UniDataFamilias,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
@@ -166,7 +166,7 @@ uses
   inMtoArticulos,
   inLibShowMto,
   inMtoProveedores,
-  inMtoTarifas;
+  inMtoTarifas, inMtoPrincipal;
 
 {$R *.dfm}
 

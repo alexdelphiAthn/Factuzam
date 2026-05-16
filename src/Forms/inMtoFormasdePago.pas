@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, inMtoPrincipal, UniDataFormasdePago,
+  dxBevel, cxDBNavigator, UniDataFormasdePago,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
@@ -207,7 +207,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibDevExp, inLibShowMto;
+  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inMtoPrincipal;
 
 {$R *.dfm}
 

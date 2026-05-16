@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoPrincipal,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -73,7 +73,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoModalGenPass;
+  inLibWin, inMtoModalGenPass, inMtoPrincipal;
 
 {$R *.dfm}
 

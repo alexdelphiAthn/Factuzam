@@ -24,7 +24,7 @@ uses
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxNavigator, cxDBNavigator, Vcl.StdCtrls, Vcl.Buttons,
   cxContainer, cxEdit, cxLabel, Vcl.Menus, cxButtons,
-  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
+  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
@@ -162,7 +162,7 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     UniDataGen, uGenericIfThen;
+     UniDataGen, uGenericIfThen, inMtoPrincipal;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
