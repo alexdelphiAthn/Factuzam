@@ -41,6 +41,11 @@ uses
   cxCustomListBox, cxCheckListBox;
 
 type
+  // Ambito que elige el usuario cuando hay que crear un atributo basico
+  // nuevo desde el helper del SKU. Global = compartido entre articulos;
+  // ad-hoc = exclusivo de este articulo (CODIGO_ATB con prefijo AD_).
+  TAmbitoBasico = (abCancelar, abGlobal, abAdHoc);
+
   TfrmMtoArticulos = class(TfrmMtoGen)
     pnlTopFicha: TPanel;
     pnlButtonFicha: TPanel;
@@ -449,6 +454,8 @@ type
     function AsegurarBasicoFilaActual: Integer;
     function AsegurarFilaSA(const ACodSKU, AIdVaAv,
                             AValorAv: string): Integer;
+    function PreguntarAmbitoBasico(const ACodArt,
+                                   AValorAv: string): TAmbitoBasico;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -2106,6 +2113,48 @@ begin
   else AText := '';
 end;
 
+function TfrmMtoArticulos.PreguntarAmbitoBasico(
+  const ACodArt, AValorAv: string): TAmbitoBasico;
+// Cuando el helper del SKU tiene que CREAR un atributo basico nuevo
+// (porque la fila aun no tiene ninguno) preguntamos al usuario que
+// tipo quiere: global (compartido entre articulos) o ad-hoc (exclusivo
+// con prefijo AD_<articulo>_). Si elige cancelar, no se crea nada y
+// la edicion se descarta.
+//
+// MB_YESNOCANCEL nos da 3 botones de serie:
+//   Si       -> Global (Recommended por defecto)
+//   No       -> Ad-hoc (compatibilidad con comportamiento previo)
+//   Cancelar -> abCancelar
+var
+  CodGlobal, CodAdHoc, Texto: string;
+begin
+  Result    := abCancelar;
+  CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
+  if CodGlobal = '' then CodGlobal := '(sin valor)';
+  CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);
+
+  Texto :=
+    'Este SKU todavia no tiene un atributo basico asignado para ' +
+    'este valor.' + #13#10#13#10 +
+    'Si       -> Crear basico GLOBAL "' + CodGlobal + '"' + #13#10 +
+    '            (compartido con otros articulos que usen ese valor)' +
+    #13#10#13#10 +
+    'No       -> Crear basico AD-HOC "' + CodAdHoc + '"' + #13#10 +
+    '            (exclusivo de este articulo)' +
+    #13#10#13#10 +
+    'Cancelar -> No crear nada por ahora.';
+
+  case Application.MessageBox(
+         PChar(Texto),
+         'Como crear el atributo basico',
+         MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
+    ID_YES : Result := abGlobal;
+    ID_NO  : Result := abAdHoc;
+  else
+    Result := abCancelar;
+  end;
+end;
+
 function TfrmMtoArticulos.AsegurarFilaSA(
   const ACodSKU, AIdVaAv, AValorAv: string): Integer;
 // Materializa una fila virtual del UNION de vi_atributos_sku_basico:
@@ -2217,19 +2266,27 @@ begin
     IdAv := ds.FieldByName('ID_AV').AsInteger;
   if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
 
-  // CODIGO_ATB único en su variación (UQ ID_VA_ATB+CODIGO_ATB).
-  // Lo prefijamos con AD_ + código de artículo + valor visible para que
-  // sea legible y único entre artículos: AD_DEMO-CAMISA_3XL,
-  // AD_DEMO-CAMISA_AZUL_MARINO. Si el valor estuviera vacío caemos al
-  // ID interno como fallback para evitar colisiones.
+  // CODIGO_ATB unico en su variacion (UQ ID_VA_ATB+CODIGO_ATB).
+  // Si el valor esta vacio caemos al ID interno como fallback para
+  // evitar colisiones. Si hay valor, preguntamos al usuario si quiere
+  // un basico GLOBAL (compartido, CODIGO_ATB = valor) o AD-HOC (con
+  // prefijo AD_<articulo>_, exclusivo del articulo). De esta forma
+  // dejamos de imponer el prefijo AD_ sin preguntar.
   if Trim(ValorAv) = '' then
     Codigo := Format('AD_%s_%d', [CodArt, IdAv])
   else
-    Codigo := Format('AD_%s_%s',
-                     [CodArt,
-                      StringReplace(Trim(ValorAv), ' ', '_',
-                                    [rfReplaceAll])]);
-  // CODIGO_ATB es varchar(100): truncamos por si el artículo + valor
+  begin
+    case PreguntarAmbitoBasico(CodArt, ValorAv) of
+      abCancelar: Exit;
+      abGlobal  : Codigo := StringReplace(Trim(ValorAv), ' ', '_',
+                                          [rfReplaceAll]);
+      abAdHoc   : Codigo := Format('AD_%s_%s',
+                                   [CodArt,
+                                    StringReplace(Trim(ValorAv), ' ', '_',
+                                                  [rfReplaceAll])]);
+    end;
+  end;
+  // CODIGO_ATB es varchar(100): truncamos por si el articulo + valor
   // se nos van de largo.
   if Length(Codigo) > 100 then
     Codigo := Copy(Codigo, 1, 100);
