@@ -18,8 +18,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       Height = 728
       ExplicitWidth = 1040
       ExplicitHeight = 728
-      ClientRectBottom = 726
-      ClientRectRight = 1038
+      ClientRectBottom = 724
+      ClientRectRight = 1036
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 29
@@ -92,16 +92,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object pcSesion: TcxPageControl
           Left = 0
           Top = 72
-          Width = 1036
-          Height = 625
+          Width = 1032
+          Height = 622
           Align = alClient
           TabOrder = 0
           Properties.ActivePage = tsLog
           Properties.CustomButtons.Buttons = <>
-          ClientRectBottom = 623
-          ClientRectLeft = 2
-          ClientRectRight = 1034
-          ClientRectTop = 29
+          ExplicitWidth = 1036
+          ExplicitHeight = 625
+          ClientRectBottom = 618
+          ClientRectLeft = 4
+          ClientRectRight = 1028
+          ClientRectTop = 30
           object tsCabecera: TcxTabSheet
             Caption = '&1. Cabecera '
             ImageIndex = 0
@@ -539,16 +541,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object pcPlantilla: TcxPageControl
               Left = 0
               Top = 0
-              Width = 1032
-              Height = 594
+              Width = 1024
+              Height = 588
               Align = alClient
               TabOrder = 0
               Properties.ActivePage = tsPropiedades
               Properties.CustomButtons.Buttons = <>
-              ClientRectBottom = 592
-              ClientRectLeft = 2
-              ClientRectRight = 1030
-              ClientRectTop = 29
+              ExplicitWidth = 1032
+              ExplicitHeight = 594
+              ClientRectBottom = 584
+              ClientRectLeft = 4
+              ClientRectRight = 1020
+              ClientRectTop = 30
               object tsPropiedades: TcxTabSheet
                 Caption = 'Propiedades comunes'
                 ExplicitLeft = 0
@@ -721,13 +725,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsLineas: TcxTabSheet
             Caption = '&2. L'#237'neas '
             ImageIndex = 2
+            ExplicitLeft = 2
+            ExplicitTop = 29
+            ExplicitWidth = 1032
+            ExplicitHeight = 594
             object pnlLineasTop: TPanel
               Left = 0
               Top = 0
-              Width = 1032
+              Width = 1024
               Height = 280
               Align = alTop
               TabOrder = 0
+              ExplicitWidth = 1032
               object pnlLineasBotones: TPanel
                 Left = 1
                 Top = 1
@@ -871,10 +880,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object pnlLineasDetalle: TPanel
               Left = 0
               Top = 280
-              Width = 1032
-              Height = 314
+              Width = 1024
+              Height = 308
               Align = alClient
               TabOrder = 1
+              ExplicitWidth = 1032
+              ExplicitHeight = 314
               object lblLineaActiva: TcxLabel
                 Left = 8
                 Top = 4
@@ -884,10 +895,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               object pnlAlmacenSel: TPanel
                 Left = 1
                 Top = 1
-                Width = 1030
+                Width = 1022
                 Height = 36
                 Align = alTop
                 TabOrder = 0
+                ExplicitWidth = 1030
                 object lblAlmacenSel: TcxLabel
                   Left = 8
                   Top = 8
@@ -917,10 +929,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               object pnlMatrizBotones: TPanel
                 Left = 1
                 Top = 37
-                Width = 1030
+                Width = 1022
                 Height = 36
                 Align = alTop
                 TabOrder = 4
+                ExplicitWidth = 1030
                 object lblKitSel: TcxLabel
                   Left = 8
                   Top = 8
@@ -986,42 +999,56 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Align = alClient
                 Caption = ' Matriz pivotada '
                 TabOrder = 1
-                Height = 50
-                Width = 1030
+                ExplicitWidth = 1030
+                ExplicitHeight = 50
+                Height = 44
+                Width = 1022
                 object sbMatriz: TScrollBox
-                  Left = 4
-                  Top = 22
-                  Width = 1022
-                  Height = 12
+                  Left = 2
+                  Top = 24
+                  Width = 1018
+                  Height = 18
                   Align = alClient
                   TabOrder = 0
+                  ExplicitLeft = 4
+                  ExplicitTop = 22
+                  ExplicitWidth = 1022
+                  ExplicitHeight = 12
                 end
               end
               object splPreciosSku: TcxSplitter
                 Left = 1
-                Top = 123
-                Width = 1030
+                Top = 117
+                Width = 1022
                 Height = 10
                 AlignSplitter = salBottom
                 Control = gbPreciosSku
                 Visible = False
+                ExplicitTop = 123
+                ExplicitWidth = 1030
               end
               object gbPreciosSku: TcxGroupBox
                 Left = 1
-                Top = 133
+                Top = 127
                 Align = alBottom
                 Caption = ' Precios por SKU (override) '
                 TabOrder = 2
                 Visible = False
+                ExplicitTop = 133
+                ExplicitWidth = 1030
                 Height = 180
-                Width = 1030
+                Width = 1022
                 object cxgrdPreciosSku: TcxGrid
-                  Left = 4
-                  Top = 22
-                  Width = 1022
-                  Height = 142
+                  Left = 2
+                  Top = 24
+                  Width = 1018
+                  Height = 154
                   Align = alClient
                   TabOrder = 0
+                  ExplicitLeft = 4
+                  ExplicitTop = 22
+                  ExplicitWidth = 1022
+                  ExplicitHeight = 142
                   object tvPreciosSku: TcxGridDBTableView
                     OptionsView.GroupByBox = False
                     object dbcPreciosSkuValFila: TcxGridDBColumn
@@ -1057,6 +1084,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsMaterializacion: TcxTabSheet
             Caption = '&3.Materializaci'#243'n '
             ImageIndex = 3
+            ExplicitLeft = 2
+            ExplicitTop = 29
+            ExplicitWidth = 1032
+            ExplicitHeight = 594
             object gbResumen: TcxGroupBox
               Left = 8
               Top = 8
@@ -1213,6 +1244,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object tsLog: TcxTabSheet
             Caption = '&4. Log '
             ImageIndex = 4
+            ExplicitLeft = 2
+            ExplicitTop = 29
+            ExplicitWidth = 1032
+            ExplicitHeight = 594
             object lblPedidoGenerado: TcxLabel
               Left = 8
               Top = 8
@@ -1246,10 +1281,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 1036
+          Width = 1032
           Height = 36
           Align = alTop
           TabOrder = 1
+          ExplicitWidth = 1036
           object btnCrearMaterializar: TcxButton
             Left = 8
             Top = 4
@@ -1290,26 +1326,29 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object Panel1: TPanel
           Left = 0
           Top = 36
-          Width = 1036
+          Width = 1032
           Height = 36
           Align = alTop
           TabOrder = 2
+          ExplicitWidth = 1036
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1036
-        ExplicitHeight = 697
+        ExplicitLeft = 4
+        ExplicitTop = 30
+        ExplicitWidth = 1034
+        ExplicitHeight = 696
         inherited pnlPerfilTop: TPanel
-          Width = 1036
+          Width = 1032
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1036
+          ExplicitWidth = 1034
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1036
-          Height = 640
+          Width = 1032
+          Height = 637
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1036
           ExplicitHeight = 640
