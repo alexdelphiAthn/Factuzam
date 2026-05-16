@@ -851,7 +851,6 @@ var
   S  : TSlotProp;
   sE : string;
 begin
-  Result := False;
   sE := Validar;
   if sE <> '' then
     raise Exception.Create(sE);

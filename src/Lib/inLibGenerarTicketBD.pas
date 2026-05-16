@@ -543,11 +543,6 @@ begin
         // === TOTALES ===
         Ticket.Alinear(alIzquierda);
         Ticket.Negrita(True);
-        // Descuentos globales (Calculado matemáticamente por
-        //diferencia si es necesario o desde campo)
-        var TotalBases := QryCab.FieldByName('TOTAL_BASES_FAC').AsCurrency;
-        var TotalImp   := QryCab.FieldByName(
-                                          'TOTAL_IMPUESTOS_FAC').AsCurrency;
         var Liquido    := QryCab.FieldByName(
                                             'TOTAL_LIQUIDO_FAC').AsCurrency;
         Ticket.TextoColumnas('A PAGAR',
@@ -668,7 +663,6 @@ var
 begin
   if Trim(CodigoCliente) = '' then
     Exit;
-  HayDatos := False;
   Ticket := TTicketTermico.Create(NombreImpresora);
   try
     Ticket.Inicializar;

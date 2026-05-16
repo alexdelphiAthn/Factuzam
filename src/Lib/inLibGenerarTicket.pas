@@ -45,7 +45,6 @@ var
   Cab: TDatosCabeceraFactura;
   dLin: TDataSet;
   ModoQR, QRTexto: string;
-  CantidadTotal: Double;
   ComandosESC, RutaFicheroPDF: string;
   FormPreview: TFormVisualizador;
 
@@ -115,7 +114,6 @@ begin
     Ticket.LineaSeparadora('-');
     Ticket.EscribirLinea('Artículo/Sku                Uds    Total');
     Ticket.LineaSeparadora('-');
-    CantidadTotal := 0;
     dLin.DisableControls;
     try
       dLin.First;

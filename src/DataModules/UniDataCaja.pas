@@ -1172,11 +1172,9 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
   end;
 
 begin
-  Result         := False;
   SerieGenerada  := ASerieElegida;
   NumFactura  := '0';
   ValeGenerado   := '';
-  NumLineaPago   := 0;
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
   // Generamos el número global de caja que agrupará toda la operación
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
@@ -1606,7 +1604,6 @@ function TdmCajaOpe.CuadrarFacturaEnMemoria(dsCabecera,
 var
   CalculadorFiscal: TFacturaTotales;
 begin
-  Result := False;
   // Instanciamos tu clase pasándole los datasets de la caja
   CalculadorFiscal := TFacturaTotales.Create(dsCabecera, dsLineas);
   try

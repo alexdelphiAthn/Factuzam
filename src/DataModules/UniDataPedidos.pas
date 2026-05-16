@@ -513,7 +513,6 @@ function TdmPedidos.ExistePedidoPrestaShop(const sIdPS: string): Boolean;
 var
   q: TUniQuery;
 begin
-  Result := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;

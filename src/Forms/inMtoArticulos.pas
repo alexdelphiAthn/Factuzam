@@ -2127,7 +2127,6 @@ function TfrmMtoArticulos.PreguntarAmbitoBasico(
 var
   CodGlobal, CodAdHoc, Texto: string;
 begin
-  Result    := abCancelar;
   CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
   if CodGlobal = '' then CodGlobal := '(sin valor)';
   CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);

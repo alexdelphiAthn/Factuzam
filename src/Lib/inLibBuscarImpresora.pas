@@ -56,7 +56,6 @@ var
   CacheValida: Boolean;
 begin
   Result := '';
-  CacheValida := False;
   Partes := TStringList.Create;
   Partes.Delimiter := ',';
   Partes.StrictDelimiter := True;
@@ -131,7 +130,6 @@ var
   i, j: Integer;
   NombreImpresora, Subcadena: string;
   CoincideConTodos: Boolean;
-  PatronesCoincidentes: Integer;
 begin
   Result := '';
   ListaSubcadenas := nil;
@@ -149,20 +147,13 @@ begin
     begin
       NombreImpresora := ListaImpresoras[i];
       CoincideConTodos := True;
-      PatronesCoincidentes := 0;
-
-
-
       for j := 0 to ListaSubcadenas.Count - 1 do
       begin
         Subcadena := ListaSubcadenas[j];
-        if ContainsText(NombreImpresora, Subcadena) then
-        begin
-          Inc(PatronesCoincidentes);
-        end
-        else
+        if not ContainsText(NombreImpresora, Subcadena) then
         begin
           CoincideConTodos := False;
+          Break;
         end;
       end;
       if CoincideConTodos then
