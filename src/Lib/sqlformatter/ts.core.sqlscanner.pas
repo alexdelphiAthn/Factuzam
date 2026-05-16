@@ -13,6 +13,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 }
+// Codigo third-party - suprimir warnings/hints sin modificar fuentes externas.
+{$WARN WIDECHAR_REDUCED OFF}
+{$WARN IMPLICIT_STRING_CAST OFF}
+{$WARN COMBINING_SIGNED_UNSIGNED OFF}
+{$WARN SYMBOL_DEPRECATED OFF}
+{$HINTS OFF}
 unit ts.Core.SQLScanner;
 
 interface

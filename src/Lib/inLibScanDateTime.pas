@@ -1,5 +1,10 @@
 unit inLibScanDateTime;
 
+// Codigo third-party - suprimir warnings/hints sin modificar fuentes externas.
+{$WARN WIDECHAR_REDUCED OFF}
+{$WARN SYMBOL_DEPRECATED OFF}
+{$WARN SYMBOL_PLATFORM OFF}
+{$HINTS OFF}
 
 interface
 uses Windows, DateUtils, SysUtils, Math;
