@@ -66,7 +66,6 @@ type
     FListBox        : TListBox;
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   public
     CodigosSeleccionados : TStringList;
     constructor Create(AOwner: TComponent; AConexion: TUniConnection;
@@ -156,12 +155,6 @@ destructor TfrmSelPropiedades.Destroy;
 begin
   FreeAndNil(CodigosSeleccionados);
   inherited;
-end;
-
-procedure TfrmSelPropiedades.FormClose(Sender: TObject;
-  var Action: TCloseAction);
-begin
-  Action := caHide;
 end;
 
 function TfrmSelPropiedades.IsShortCut(var Message: TWMKey): Boolean;

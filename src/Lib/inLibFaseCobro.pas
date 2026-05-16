@@ -128,8 +128,6 @@ type
                                  const ADefault: Currency = 0): Currency;
     function ObtenerStringSafe(const ANombreCampo: string;
                                const ADefault: string = ''): string;
-    function ObtenerIntegerSafe(const ANombreCampo: string;
-                                const ADefault: Integer = 0): Integer;
   public
     FRequiereFactura:Boolean;
     constructor Create(AMemTable: TVirtualTable);
@@ -502,21 +500,6 @@ begin
   Field := FMemTablePagos.FindField(ANombreCampo);
   if Assigned(Field) and not Field.IsNull then
     Result := Field.AsString
-  else
-    Result := ADefault;
-end;
-
-function TDatosFaseCobro.ObtenerIntegerSafe(const ANombreCampo: string;
-  const ADefault: Integer = 0): Integer;
-var
-  Field: TField;
-begin
-  Result := ADefault;
-  if not Assigned(FMemTablePagos) then Exit;
-  if not FMemTablePagos.Active then Exit;
-  Field := FMemTablePagos.FindField(ANombreCampo);
-  if Assigned(Field) and not Field.IsNull then
-    Result := Field.AsInteger
   else
     Result := ADefault;
 end;
