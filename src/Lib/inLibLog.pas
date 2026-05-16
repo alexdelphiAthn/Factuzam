@@ -74,7 +74,7 @@ begin
     ltError: Result := 'ERROR';
     ltSQL: Result := 'SQL';
   else
-    Result := 'UNKNOWN';
+    Result := 'DESCONOCIDO';
   end;
 end;
 
@@ -119,7 +119,7 @@ begin
   IsNewFile := (FileGetSize(FLogFileName) = 0);
   if IsNewFile then
     WriteInitialInfo;
-  WriteToLog('Logging session started.', ltInfo);
+  WriteToLog('Inicio de sesión de log.', ltInfo);
   RotateLogs;
 end;
 
@@ -135,7 +135,7 @@ end;
 
 destructor TLog.Destroy;
 begin
-  WriteToLog('Logging session ended.', ltInfo);
+  WriteToLog('Fin de sesión de log.', ltInfo);
   if FMutexHandle <> 0 then
     CloseHandle(FMutexHandle);
   inherited;
@@ -181,13 +181,13 @@ end;
 
 procedure TLog.WriteInitialInfo;
 begin
-  WriteToLogInternal('-------- New Log File --------');
+  WriteToLogInternal('-------- Nuevo fichero de log --------');
   WriteToLogInternal('Fecha: ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
-  WriteToLogInternal('Computer Name: ' + GetComputerName);
-  WriteToLogInternal('Windows User: ' + GetWindowsUserName);
-  WriteToLogInternal('Windows Version: ' + GetWindowsVersion);
-  WriteToLogInternal('Program Path: ' + GetProgramPath);
-  WriteToLogInternal('Log Folder: ' + GetLogFolder);
+  WriteToLogInternal('Nombre del equipo: ' + GetComputerName);
+  WriteToLogInternal('Usuario de Windows: ' + GetWindowsUserName);
+  WriteToLogInternal('Versión de Windows: ' + GetWindowsVersion);
+  WriteToLogInternal('Ruta del programa: ' + GetProgramPath);
+  WriteToLogInternal('Carpeta de log: ' + GetLogFolder);
   //WriteToLogInternal('Versión de fzam: '+ inlibGlobalVar.oVersion);
   WriteToLogInternal('-------------------------------');
 end;

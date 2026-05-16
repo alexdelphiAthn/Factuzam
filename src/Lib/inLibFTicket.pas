@@ -243,7 +243,7 @@ begin
     // Escalar el bitmap original
     BitmapEscalado.Width := Bitmap.Width * Escala;
     BitmapEscalado.Height := Bitmap.Height * Escala;
-    // Escalar p�xel por p�xel para mantener nitidez
+    // Escalar píxel por píxel para mantener nitidez
     for y := 0 to BitmapEscalado.Height - 1 do
     begin
       ySrc := y div Escala;
@@ -369,7 +369,7 @@ begin
     end;
     Exit;
   end;
-  // === IMPRESI�N REAL ===
+  // === IMPRESIÓN REAL ===
   if not OpenPrinter(PChar(NombreImpresora), hPrinter, nil) then
     raise Exception.CreateFmt('No se pudo abrir la impresora: %s',
                               [NombreImpresora]);
@@ -399,7 +399,7 @@ begin
               begin
                 // Los siguientes 2 bytes son pL y pH
                 // Restaurarlos del string original
-                //(�ndice i+1 porque Datos empieza en 1)
+                //(índice i+1 porque Datos empieza en 1)
                 if i+4 < Length(Datos) then
                 begin
                   DatosRaw[i+3] := Ord(Datos[i+4]); // pL

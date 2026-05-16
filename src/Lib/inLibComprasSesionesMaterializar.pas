@@ -264,9 +264,9 @@ begin
     qIns.Connection := AConn;
     qBar.Connection := AConn;
 
-    // Una fila por SKU �nico (linea, fila, pivot) sumando cantidades
-    // de todos los almacenes. El SKU y su EAN13 son a nivel de art�culo,
-    // no de almac�n: 1 SKU por (color, talla), regardless of warehouse.
+    // Una fila por SKU único (linea, fila, pivot) sumando cantidades
+    // de todos los almacenes. El SKU y su EAN13 son a nivel de artículo,
+    // no de almacén: 1 SKU por (color, talla), regardless of warehouse.
     qC.SQL.Text :=
       'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
       '       SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +

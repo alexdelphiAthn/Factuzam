@@ -177,13 +177,13 @@ type
     LineasPedido:TList<TLineaPed>;
     MensajesPedido:TMensajesPedido;
     procedure PutAdressDelinbil;
-    //Datos b�sicos del pedido
+    //Datos básicos del pedido
     Property idPedido:String read GetIdPedido write SetIdPedido;
-    //Datos b�sicos del cliente
+    //Datos básicos del cliente
     Property custName:String read GetcustName write SetcustName;
     Property custMail:String read GetcustMail write SetcustMail;
     Property SameAddress:Boolean read GetSameAddress write SetSameAddress;
-    //Direcci�n de env�o
+    //Dirección de envío
     Property idAddressDel:String read GetidAddressDel write SetidAddressDel;
     Property FirstnameDel:String read GetFirstNameDel write SetGetFirstNameDel;
     Property LastNameDel:String read GetLastNameDel write SetLasNameDel;
@@ -197,7 +197,7 @@ type
     Property CompanyDel:String read GetCompanyDel write SetCompanyDel;
     Property Vat_numberDel:String read GetVat_numberDel write SetVat_numberDel;
     Property NameStateDel:String read GetNameStateDel write SetNameStateDel;
-    //Direcci�n de Facturaci�n
+    //Dirección de Facturación
     Property idAddressBil:String read GetidAddressBil write SetidAddressBil;
     Property FirstnameBil:String read GetFirstNameBil write SetGetFirstNameBil;
     Property LastNameBil:String read GetLastNameBil write SetLasNameBil;
@@ -702,7 +702,7 @@ begin
        '-------Datos generales del pedido--------------' + sLineBreak +
        'Nombre Cliente: ' + Self._custName + sLineBreak +
        'Email Cliente: ' + Self._custMail + sLineBreak +
-       'Fecha de creaci�n: ' + FormatDateTime('dd/mm/yyyy hh:nn:ss',
+       'Fecha de creación: ' + FormatDateTime('dd/mm/yyyy hh:nn:ss',
                                               Self._dFechaCreacion) + sLineBreak +
        'Forma de pago: ' + Self._FormaPago + sLineBreak +
        'Total Pagado Real: ' + CurrToStrF(Self._TotalPagadoReal,
@@ -729,37 +729,37 @@ begin
        'Transportista: ' + Self._Transportista + sLineBreak +
        'Estado del pedido: ' + Self.EstadoPedido + sLineBreak;
   sDireccionDel :=
-    '-------Direcci�n Env�o------------------------- ' + sLineBreak +
-       'Id Direcci�n PS + ' + Self._custAddDel.idAddress + sLineBreak +
+    '-------Dirección Envío------------------------- ' + sLineBreak +
+       'Id Dirección PS + ' + Self._custAddDel.idAddress + sLineBreak +
        'Nombre : ' + Self._custAddDel.Firstname  + sLineBreak +
        'Apellidos: ' + Self._custAddDel.Lastname + sLineBreak +
-       'Direcci�n 1: ' + Self._custAddDel.Address1 + sLineBreak +
-       'Direcci�n 2: ' + Self._custAddDel.Address2 + sLineBreak +
-       'C�digo Postal: ' + Self._custAddDel.Postcode + sLineBreak +
+       'Dirección 1: ' + Self._custAddDel.Address1 + sLineBreak +
+       'Dirección 2: ' + Self._custAddDel.Address2 + sLineBreak +
+       'Código Postal: ' + Self._custAddDel.Postcode + sLineBreak +
        'Ciudad: ' + Self._custAddDel.City + sLineBreak +
        'Provincia: ' + Self._custAddDel.NameState + sLineBreak +
-       'Tel�fono1: ' + Self._custAddDel.Phone + sLineBreak +
-       'Tel�fono2: ' + Self._custAddDel.Phone_mo + sLineBreak +
+       'Teléfono1: ' + Self._custAddDel.Phone + sLineBreak +
+       'Teléfono2: ' + Self._custAddDel.Phone_mo + sLineBreak +
        'Dni: '  + Self._custAddDel.Dni +  sLineBreak +
        'Empresa: '+ Self._custAddDel.Company + sLineBreak +
        'CIF Empresa: ' + Self._custAddDel.Vat_number + sLineBreak;
        if Self._bSameAddress then
-       sDireccionBil := '------Direcci�n de Facturaci�n igual a la de ' +
-                        'env�o-----------' + sLineBreak
+       sDireccionBil := '------Dirección de Facturación igual a la de ' +
+                        'envío-----------' + sLineBreak
        else
        begin
          sDireccionBil :=
-           '-------Direcci�n Facturaci�n------------------- '+ sLineBreak +
-         'Id Direcci�n PS + ' + Self._custAddDel.idAddress + sLineBreak +
+           '-------Dirección Facturación------------------- '+ sLineBreak +
+         'Id Dirección PS + ' + Self._custAddDel.idAddress + sLineBreak +
          'Nombre : ' + Self._custAddBil.Firstname  + sLineBreak +
          'Apellidos: ' + Self._custAddBil.Lastname + sLineBreak +
-         'Direcci�n 1: ' + Self._custAddBil.Address1 + sLineBreak +
-         'Direcci�n 2: ' + Self._custAddBil.Address2 + sLineBreak +
-         'C�digo Postal: ' + Self._custAddBil.Postcode + sLineBreak +
+         'Dirección 1: ' + Self._custAddBil.Address1 + sLineBreak +
+         'Dirección 2: ' + Self._custAddBil.Address2 + sLineBreak +
+         'Código Postal: ' + Self._custAddBil.Postcode + sLineBreak +
          'Ciudad: ' + Self._custAddBil.City + sLineBreak +
          'Provincia: ' + Self._custAddBil.NameState + sLineBreak +
-         'Tel�fono1: ' + Self._custAddBil.Phone + sLineBreak +
-         'Tel�fono2: ' + Self._custAddBil.Phone_mo + sLineBreak +
+         'Teléfono1: ' + Self._custAddBil.Phone + sLineBreak +
+         'Teléfono2: ' + Self._custAddBil.Phone_mo + sLineBreak +
          'Dni: '  + Self._custAddBil.Dni +  sLineBreak +
          'Empresa: '+ Self._custAddBil.Company + sLineBreak +
          'CIF Empresa: ' + Self._custAddBil.Vat_number + sLineBreak;
@@ -774,10 +774,10 @@ begin
          s:= s +sLineBreak + 'Id Linea Pedido: ' + lp.idLinea + sLineBreak;
          s := s + 'Id Producto Interna PS: ' + lp.idProducto + sLineBreak;
          s := s + 'CANTIDAD_ARTVIN Pedida: ' + lp.sCantidad + sLineBreak;
-         s := s + 'Descripci�n Producto: ' + lp.sDescripcion + sLineBreak;
-         s := s + 'C�digo Producto: '+ lp.sRefProd + sLineBreak;
+         s := s + 'Descripción Producto: ' + lp.sDescripcion + sLineBreak;
+         s := s + 'Código Producto: '+ lp.sRefProd + sLineBreak;
          s := s + 'Referencia Atributos: ' + lp.sRefAtrib + sLineBreak;
-         s := s + 'C�digo de barras EAN13: ' + lp.sCodEAN13 + sLineBreak;
+         s := s + 'Código de barras EAN13: ' + lp.sCodEAN13 + sLineBreak;
          s := s + 'Precio de Venta Sin IVA: ' + CurrToStrF(lp.cPrecioSIVA,
                                                            ffCurrency,
                                                            2) + sLineBreak;
@@ -801,7 +801,7 @@ begin
          s:= s +sLineBreak + 'Id Mensaje: ' + tm.idMensaje + sLineBreak;
          s:= s +sLineBreak + 'Id Empleado: ' + tm.idEmpleado + sLineBreak;
          s:= s +sLineBreak + 'Mensaje: ' + tm.Texto + sLineBreak;
-         s:= s +sLineBreak + 'Fecha/Hora Env�o : ' + FormatDateTime(
+         s:= s +sLineBreak + 'Fecha/Hora Envío : ' + FormatDateTime(
                                 'dd/mm/yyyy hh:nn:ss',
                                 tm.InstanteMsg) + sLineBreak;
          s := s + '_______________________________________________________'
