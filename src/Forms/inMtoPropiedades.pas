@@ -43,17 +43,17 @@ type
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
 
-    pnl1: TPanel;
-    Panel1: TPanel;
+    pnlTopFicha: TPanel;
+    pnlBodyFicha: TPanel;
     lblCodigo: TcxLabel;
     txtCODIGO: TcxDBTextEdit;
     lblNombre: TcxLabel;
     txtNOMBRE: TcxDBTextEdit;
     lblTipo: TcxLabel;
-    cmbTIPO: TcxDBComboBox;
+    cbbTIPO: TcxDBComboBox;
     chkACTIVO: TcxDBCheckBox;
-    cxspltr1: TcxSplitter;
-    pnl2: TPanel;
+    splFicha: TcxSplitter;
+    pnlBottomFicha: TPanel;
     pcPestana: TcxPageControl;
 
     tsValores: TcxTabSheet;

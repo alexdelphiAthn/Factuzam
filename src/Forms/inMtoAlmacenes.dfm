@@ -485,7 +485,7 @@
             object tsAuditoria: TcxTabSheet
               Caption = '&3_Otros'
               ImageIndex = 0
-              object pnl3: TPanel
+              object pnlAuditoria: TPanel
                 Left = 0
                 Top = 0
                 Width = 935

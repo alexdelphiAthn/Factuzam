@@ -29,21 +29,21 @@
         ExplicitTop = 30
         ExplicitWidth = 943
         ExplicitHeight = 484
-        object Panel1: TPanel
+        object pnlBodyFicha: TPanel
           Left = 0
           Top = 0
           Width = 943
           Height = 129
           Align = alTop
           TabOrder = 0
-          object cxLabel1: TcxLabel
+          object lblNombreGrupo: TcxLabel
             Left = 88
             Top = 39
             Caption = 'Nombre grupo'
             TabOrder = 0
             Transparent = True
           end
-          object cxLabel2: TcxLabel
+          object lblEsGrupoAdmin: TcxLabel
             Left = 24
             Top = 75
             Caption = 'Es grupo administradores'
@@ -58,7 +58,7 @@
             TabOrder = 2
             Width = 197
           end
-          object cxDBCheckBox1: TcxDBCheckBox
+          object chkESGRUPOADMINISTRADOR_USUGRP: TcxDBCheckBox
             Left = 254
             Top = 77
             DataBinding.DataField = 'ESGRUPOADMINISTRADOR_USUGRP'

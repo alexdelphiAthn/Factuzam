@@ -210,7 +210,7 @@ type
     tvSeries: TcxGridDBTableView;
     lvSeries: TcxGridLevel;
     dbcLineasFacturacionNOMBRE_TIPO_IVA: TcxGridDBColumn;
-    cxgrpbx1: TcxGroupBox;
+    cxgrpbxIdentificacion: TcxGroupBox;
     lblMovil: TcxLabel;
     txtMOVIL_EMPRESA: TcxDBTextEdit;
     lblEmail: TcxLabel;
@@ -223,7 +223,7 @@ type
     lblProvincia: TcxLabel;
     txtPROVINCIA_EMPRESA: TcxDBTextEdit;
     chkRegimenEspecial: TcxDBCheckBox;
-    cxgrpbx2: TcxGroupBox;
+    cxgrpbxFiscalidad: TcxGroupBox;
     lblCodigo: TcxLabel;
     txtCODIGO_EMPRESA: TcxDBTextEdit;
     lblNif: TcxLabel;
@@ -242,9 +242,9 @@ type
     tvFacturacionGRUPO_ZONA_IVA_EMPRESA_FACTURA: TcxGridDBColumn;
     tvFacturacionTARIFA_ARTICULO_CLIENTE_FACTURA: TcxGridDBColumn;
     tvFacturacionCODIGO_IVA_FACTURA: TcxGridDBColumn;
-    cxDBTextEdit1: TcxDBTextEdit;
-    cxLabel1: TcxLabel;
-    cxLabel2: TcxLabel;
+    txtCODIGO_POSTAL_EMP: TcxDBTextEdit;
+    lblCodPostal: TcxLabel;
+    lblIBAN: TcxLabel;
     txtIBAN_EMPRESA: TcxDBMaskEdit;
     btnValidar: TcxButton;
     lblProvincia1: TcxLabel;
