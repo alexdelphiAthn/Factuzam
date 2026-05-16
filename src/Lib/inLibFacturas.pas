@@ -785,7 +785,7 @@ begin
       LeerPorcentajesDesdeFactura;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -1182,7 +1182,7 @@ begin
       lineaActual.CalcularLinea;
       AcumularTotalesPorTipoIVA(lineaActual);
       lineaActual.CopyToDataSetLin;
-      lineaActual.Free;
+      FreeAndNil(lineaActual);
       _unqryLineas.Next;
     end;
     if _unqryLineas.BookmarkValid(bookmark) then
@@ -1220,7 +1220,7 @@ begin
     if not Qry.IsEmpty then
       Result := Qry.Fields[0].AsCurrency;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -1262,7 +1262,7 @@ begin
       Result := True;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -1335,7 +1335,7 @@ begin
                                     Qry.FindField('ESIMP_INCL_TAR').AsString;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -1396,7 +1396,7 @@ begin
       CargarConfiguracionIVA(sGrupo);
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 end.

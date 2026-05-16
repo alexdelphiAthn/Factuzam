@@ -134,7 +134,7 @@ begin
     Result := not qry.IsEmpty;
     qry.Close;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -175,7 +175,7 @@ begin
       end;
       qrySchema.Close;
     finally
-      qrySchema.Free;
+      FreeAndNil(qrySchema);
     end;
 
     // 2) ¿Están los objetos mínimos?
@@ -195,7 +195,7 @@ begin
         Result.MissingObjects := Missing.ToStringArray;
       end;
     finally
-      Missing.Free;
+      FreeAndNil(Missing);
     end;
   except
     on E: Exception do

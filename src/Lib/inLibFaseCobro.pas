@@ -302,7 +302,7 @@ end;
 
 destructor TDatosFaseCobro.Destroy;
 begin
-  FValesRecogidos.Free;
+  FreeAndNil(FValesRecogidos);
   inherited;
 end;
 
@@ -817,7 +817,7 @@ begin
       FMemTablePagos.GotoBookmark(Bookmark);
     FMemTablePagos.FreeBookmark(Bookmark);
     FMemTablePagos.EnableControls;
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -928,7 +928,7 @@ begin
     end;
     Result := Lista.ToArray;
   finally
-    Lista.Free;
+    FreeAndNil(Lista);
   end;
 end;
 

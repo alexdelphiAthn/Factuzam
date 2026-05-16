@@ -124,9 +124,6 @@ public
     // (TIPO_DOC_REF_MOV='FC').
     function GenerarMovimientosSalidaFactura: Integer;
   end;
-var
-  dmFacturas: TdmFacturas;
-
 implementation
 
 uses
@@ -395,7 +392,7 @@ begin
               'Error al calcular factura: ' + facTotales.MensajeError);
         end;
       finally
-        facTotales.Free;
+        FreeAndNil(facTotales);
       end;
     except
       on E: Exception do
@@ -1449,8 +1446,8 @@ begin
       qLineas.Next;
     end;
   finally
-    qLineas.Free;
-    qExiste.Free;
+    FreeAndNil(qLineas);
+    FreeAndNil(qExiste);
   end;
 
   if unqryMovimientosFac.Active then

@@ -291,7 +291,7 @@ begin
     if not q.IsEmpty then
       Result := q.FieldByName('CODIGO_TAR_ARTTAR').AsString;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -318,7 +318,7 @@ begin
     end;
     if Result > 1 then AUnicoSku := '';
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -414,7 +414,7 @@ begin
     if not q.IsEmpty then
       RellenarPrecioDesdeQry(q, Result, AFecha);
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -499,7 +499,7 @@ begin
                             'ESPROVEEDORPRINCIPAL_AP').AsString = 'S';
     Result.Encontrado := True;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -547,7 +547,7 @@ begin
       Result.PrecioMedio := Result.ValorTotal / Result.CantidadTotal;
     Result.Encontrado := Result.NumAlmacenes > 0;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -640,7 +640,7 @@ begin
     Result.TipoVariacion       := q.FieldByName('TIPO_VARIACION_ART').AsString;
     Result.TieneSku            := iNumSkus > 0;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   Result.Encontrado := Result.CodigoArticulo <> '';
@@ -721,8 +721,8 @@ begin
     end;
     Result := Lst.ToArray;
   finally
-    q.Free;
-    Lst.Free;
+    FreeAndNil(q);
+    FreeAndNil(Lst);
   end;
 end;
 

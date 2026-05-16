@@ -120,7 +120,7 @@ end;
 
 destructor TTicketTermico.Destroy;
 begin
-  FComandos.Free;
+  FreeAndNil(FComandos);
   inherited;
 end;
 
@@ -243,7 +243,7 @@ begin
     // Escalar el bitmap original
     BitmapEscalado.Width := Bitmap.Width * Escala;
     BitmapEscalado.Height := Bitmap.Height * Escala;
-    // Escalar p�xel por p�xel para mantener nitidez
+    // Escalar píxel por píxel para mantener nitidez
     for y := 0 to BitmapEscalado.Height - 1 do
     begin
       ySrc := y div Escala;
@@ -282,8 +282,8 @@ begin
       FComandos.Append(Chr(DatosImagen[ByteIndex]));
     FComandos.Append(#13#10);
   finally
-    BitmapMono.Free;
-    BitmapEscalado.Free;
+    FreeAndNil(BitmapMono);
+    FreeAndNil(BitmapEscalado);
   end;
   Alinear(alIzquierda);
 end;
@@ -369,7 +369,7 @@ begin
     end;
     Exit;
   end;
-  // === IMPRESI�N REAL ===
+  // === IMPRESIÓN REAL ===
   if not OpenPrinter(PChar(NombreImpresora), hPrinter, nil) then
     raise Exception.CreateFmt('No se pudo abrir la impresora: %s',
                               [NombreImpresora]);
@@ -399,7 +399,7 @@ begin
               begin
                 // Los siguientes 2 bytes son pL y pH
                 // Restaurarlos del string original
-                //(�ndice i+1 porque Datos empieza en 1)
+                //(índice i+1 porque Datos empieza en 1)
                 if i+4 < Length(Datos) then
                 begin
                   DatosRaw[i+3] := Ord(Datos[i+4]); // pL
@@ -412,7 +412,7 @@ begin
                 Inc(i);
             end;
           finally
-            CP858.Free;
+            FreeAndNil(CP858);
           end;
           if not WritePrinter(hPrinter,
                               @DatosRaw[0],

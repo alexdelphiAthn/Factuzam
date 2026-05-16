@@ -101,7 +101,7 @@ begin
       qPerfil.Next;
     end;
   finally
-    qPerfil.Free;
+    FreeAndNil(qPerfil);
   end;
 end;
 
@@ -151,12 +151,12 @@ begin
     begin
       oDictUKeyCopy.oProperty := User;
       if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
-        //si no hay user con el mismo key, lo a�ado
+        //si no hay user con el mismo key, lo añado
         oPerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
-      //a�ado al perfil por defecto para el grupo
+      //añado al perfil por defecto para el grupo
     end
     else if (oDictUKey.oProperty = All) then
-      //si hay todos, y no hay user o grupo, a�ado
+      //si hay todos, y no hay user o grupo, añado
     begin
       oDictUKeyCopy.oProperty := User;
       if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
@@ -164,11 +164,11 @@ begin
         oDictUKeyCopy.oProperty := Group;
         if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
           oPerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
-            //a�ado al perfil por defecto
+            //añado al perfil por defecto
       end;
     end;
   end;
-  oPerfilUserDicCopy.Free;
+  FreeAndNil(oPerfilUserDicCopy);
   //Elapsed := Stopwatch.Elapsed;
   //ShowMessage(Elapsed.TotalMilliseconds.ToString);
 end;

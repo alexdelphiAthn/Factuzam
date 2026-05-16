@@ -495,7 +495,7 @@ begin
 //          EscribirLog('No existe configuración para ' + ClaveCaja);
       end;
     finally
-      Partes.Free;
+      FreeAndNil(Partes);
     end;
   end;
 end;

@@ -187,7 +187,7 @@ end;
 
 destructor TfrmSelPropiedades.Destroy;
 begin
-  CodigosSeleccionados.Free;
+  FreeAndNil(CodigosSeleccionados);
   inherited;
 end;
 
@@ -246,7 +246,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   // CodigosSeleccionados servirá como mapa índice→código
   // lo reutilizamos; los seleccionados reales se calculan en BtnAceptarClick
@@ -265,7 +265,7 @@ begin
     CodigosSeleccionados.Clear;
     CodigosSeleccionados.AddStrings(seleccionados);
   finally
-    seleccionados.Free;
+    FreeAndNil(seleccionados);
   end;
   ModalResult := mrOk;
 end;
@@ -297,7 +297,7 @@ end;
 destructor TGestorPropiedades.Destroy;
 begin
   LimpiarControles;
-  FSlots.Free;
+  FreeAndNil(FSlots);
   inherited;
 end;
 
@@ -332,14 +332,14 @@ begin
   // Liberar diccionarios de opciones
   for i := 0 to FSlots.Count - 1 do
     if Assigned(FSlots[i].Opciones) then
-      FSlots[i].Opciones.Free;
+      FreeAndNil(FSlots[i].Opciones);
   FSlots.Clear;
 
   // Destruir controles del scroll
   FScrollBox.DisableAlign;
   try
     while FScrollBox.ControlCount > 0 do
-      FScrollBox.Controls[0].Free;
+      FreeAndNil(FScrollBox.Controls[0]);
   finally
     FScrollBox.EnableAlign;
   end;
@@ -401,7 +401,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   // ── 2. Opciones para slots tipo LISTA ─────────────────────────────────
   qOpc := TUniQuery.Create(nil);
@@ -433,7 +433,7 @@ begin
       end;
     end;
   finally
-    qOpc.Free;
+    FreeAndNil(qOpc);
   end;
   ReconstruirVista;
 end;
@@ -564,8 +564,8 @@ begin
     end;
     ReconstruirVista;
   finally
-    qProp.Free;
-    qOpc.Free;
+    FreeAndNil(qProp);
+    FreeAndNil(qOpc);
   end;
 end;
 
@@ -578,7 +578,7 @@ begin
   FScrollBox.DisableAlign;
   try
     while FScrollBox.ControlCount > 0 do
-      FScrollBox.Controls[0].Free;
+      FreeAndNil(FScrollBox.Controls[0]);
     for i := 0 to FSlots.Count - 1 do
     begin
       S := FSlots[i];
@@ -842,15 +842,15 @@ begin
           FModificado := True;
         end;
       finally
-        qProp.Free;
-        qOpc.Free;
+        FreeAndNil(qProp);
+        FreeAndNil(qOpc);
       end;
       ReconstruirVista;
     finally
-      dlg.Free;
+      FreeAndNil(dlg);
     end;
   finally
-    Excluidos.Free;
+    FreeAndNil(Excluidos);
   end;
 end;
 
@@ -976,7 +976,7 @@ begin
     q.ParamByName('usr').AsString := FUsuario;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -996,7 +996,7 @@ begin
     q.ParamByName('prop').AsString := CodigoPropiedad;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 

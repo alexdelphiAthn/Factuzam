@@ -137,7 +137,7 @@ begin
   if (saveDialog.Execute)
   then
     ExportGridToXLSX(saveDialog.FileName, cxGrd);
-  saveDialog.Free;
+  FreeAndNil(saveDialog);
 end;
 
 // Helpers para soportar tanto TcxGridDBTableView como TcxGridDBBandedTableView
@@ -356,8 +356,8 @@ begin
                                '',
                                BStream.DataString);
     finally
-      LStream.Free;
-      BStream.Free;
+      FreeAndNil(LStream);
+      FreeAndNil(BStream);
     end;
   end;
 end;
@@ -464,8 +464,8 @@ begin
                                sValue);
     end;
   finally
-    LStream.Free;
-    BStream.Free;
+    FreeAndNil(LStream);
+    FreeAndNil(BStream);
   end;
 end;
 
@@ -559,8 +559,8 @@ begin
         LStream.Position := 0;
         cxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
       finally
-        BStream.Free;
-        LStream.Free;
+        FreeAndNil(BStream);
+        FreeAndNil(LStream);
       end;
     end;
 

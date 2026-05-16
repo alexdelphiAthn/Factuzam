@@ -196,7 +196,7 @@ end;
 
 destructor TLayoutSaver.Destroy;
 begin
-  FClaves.Free;
+  FreeAndNil(FClaves);
   inherited;
 end;
 
@@ -259,7 +259,7 @@ begin
     if formulario.sFicha <> 'S' then Exit;
     sPermisos := formulario.cbbPermisos.Text;
   finally
-    formulario.Free;
+    FreeAndNil(formulario);
   end;
   Lote := TPerfilList.Create;
   try
@@ -273,7 +273,7 @@ begin
     end;
     odmPerfiles.GrabarPerfilesBatch(Lote);
   finally
-    Lote.Free;
+    FreeAndNil(Lote);
   end;
   Result := True;
 end;

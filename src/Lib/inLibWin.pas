@@ -123,7 +123,7 @@ begin
       end;
     end;
   finally
-    List.Free;
+    FreeAndNil(List);
   end;
 end;
 
@@ -174,7 +174,7 @@ begin
     else
       Result := 'Unknown';
   finally
-    Reg.Free;
+    FreeAndNil(Reg);
   end;
 end;
 
@@ -206,7 +206,7 @@ begin
         Reg.CloseKey;
       end;
   finally
-    Reg.Free;
+    FreeAndNil(Reg);
   end;
 {$ENDIF}
 end;
@@ -241,7 +241,7 @@ begin
   try
     Result := idmd5.HashStringAsHex(String(UTF8Encode(texto)));
   finally
-    idmd5.Free;
+    FreeAndNil(idmd5);
   end;
 end;
 
@@ -381,7 +381,7 @@ begin
     oCon := oControl.Components[i];
     sCompName := oCon.Name;
     if StartsText('lbl', sCompName)  then
-    begin                       //son los �nicos label que no se deben renombrar
+    begin                       //son los únicos label que no se deben renombrar
       if (oCon is TcxLabel) and
          not SameText((oCon as TcxLabel).Caption, 'lblTablaOrigen') and
          not SameText((oCon as TcxLabel).Caption, 'lblEditMode')
@@ -571,7 +571,7 @@ procedure CargarCaptions(oControl:TComponent;
                   end;
 
                 finally
-                  SetList.Free;
+                  FreeAndNil(SetList);
                 end;
               end else
                 Result := System.Variants.VarToStr(GetPropValue(Component,
@@ -646,7 +646,7 @@ begin
   finally
     //memStream.Free;
     //jpegimg.Free;
-    idhttp1.Free;
+    FreeAndNil(idhttp1);
   end;
 end;
 

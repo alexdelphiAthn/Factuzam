@@ -81,9 +81,6 @@ type
     FProcsInstalados: Boolean;
   end;
 
-var
-  dmPedidos: TdmPedidos;
-
 implementation
 
 uses
@@ -632,7 +629,7 @@ begin
 }
     FProcsInstalados := True;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -735,7 +732,7 @@ begin
     Result := q.RecordCount > 0;
     q.Close;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -899,9 +896,9 @@ begin
     end;
     Result := True;
   finally
-    qIns.Free;
-    qLin.Free;
-    qMsg.Free;
+    FreeAndNil(qIns);
+    FreeAndNil(qLin);
+    FreeAndNil(qMsg);
   end;
 end;
 

@@ -39,7 +39,7 @@ unit inLibCriptoCurr;
         Precio := API.GetPrice('bitcoin', 'eur');
         ShowMessage('BTC = ' + FormatFloat('0.00', Precio) + ' EUR');
       finally
-        API.Free;
+        FreeAndNil(API);
       end;
     end;
 
@@ -295,11 +295,11 @@ begin
           Result := StrToFloatDef(PriceStr, 0.0, TFormatSettings.Invariant);
         end;
       finally
-        JSON.Free;
+        FreeAndNil(JSON);
       end;
     end;
   finally
-    Client.Free;
+    FreeAndNil(Client);
   end;
 end;
 
@@ -322,7 +322,7 @@ begin
       System.Writeln(
         'Error ' + Resp.StatusCode.ToString + ': ' + Resp.ContentAsString);
   finally
-    Client.Free;
+    FreeAndNil(Client);
   end;
 end;
 
@@ -361,7 +361,7 @@ end;
 
 destructor TCoinGeckoAPI.Destroy;
 begin
-  FHttpClient.Free;
+  FreeAndNil(FHttpClient);
   inherited;
 end;
 
@@ -492,7 +492,7 @@ begin
     try
       Result := JSON.GetValue('gecko_says') <> nil;
     finally
-      JSON.Free;
+      FreeAndNil(JSON);
     end;
   except
     Result := False;
@@ -590,8 +590,8 @@ begin
     end;
     Result := CoinList.ToArray;
   finally
-    CoinList.Free;
-    JSON.Free;
+    FreeAndNil(CoinList);
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -661,8 +661,8 @@ begin
     end;
     Result := List.ToArray;
   finally
-    List.Free;
-    JSONArr.Free;
+    FreeAndNil(List);
+    FreeAndNil(JSONArr);
   end;
 end;
 
@@ -760,7 +760,7 @@ begin
           except end;
     end;
   finally
-    JSON.Free;
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -798,7 +798,7 @@ begin
         Result := SafeDouble(PriceObj, LowerCase(AVsCurrency));
     end;
   finally
-    JSON.Free;
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -867,8 +867,8 @@ begin
       end;
     Result := List.ToArray;
   finally
-    List.Free;
-    JSON.Free;
+    FreeAndNil(List);
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -906,8 +906,8 @@ begin
       end;
     Result := List.ToArray;
   finally
-    List.Free;
-    JSON.Free;
+    FreeAndNil(List);
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -931,8 +931,8 @@ begin
       List.Add(Item.Value);
     Result := List.ToArray;
   finally
-    List.Free;
-    JSONArr.Free;
+    FreeAndNil(List);
+    FreeAndNil(JSONArr);
   end;
 end;
 
@@ -946,7 +946,7 @@ begin
   try
     Result := API.GetPrice('bitcoin', ACurrency);
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 
@@ -958,7 +958,7 @@ begin
   try
     Result := API.GetPrice(ACoinID, ACurrency);
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 

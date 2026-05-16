@@ -45,9 +45,6 @@ type
     //procedure GetCodigoAutoRetencion;
   end;
 
-//var
-//  dmFamilias: TdmFamilias;
-
 implementation
 
 uses
@@ -182,7 +179,7 @@ begin
     unqryFamProp.Open;
     Result := (unqryFamProp.RecordCount > 0);
   finally
-    unqryFamProp.Free;
+    FreeAndNil(unqryFamProp);
   end;
 end;
 
