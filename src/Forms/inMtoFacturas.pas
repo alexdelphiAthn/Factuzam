@@ -679,7 +679,7 @@ begin
                 dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
     form.ShowModal;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 
@@ -880,7 +880,7 @@ begin
     form.dmFac := dmmFacturas;
     form.ShowModal;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 
@@ -929,7 +929,7 @@ begin
       for Item in Skus do
         Combo.Properties.Items.Add(Item.CodigoSku);
     finally
-      Resolver.Free;
+      FreeAndNil(Resolver);
     end;
   finally
     Combo.Properties.Items.EndUpdate;
@@ -1016,7 +1016,7 @@ begin
                                                     1 + fPorcen);
     end;
   finally
-    Resolver.Free;
+    FreeAndNil(Resolver);
   end;
 end;
 
@@ -1030,7 +1030,7 @@ begin
      form.dmFac := dmmFacturas;
      form.ShowModal;
    finally
-     form.Free;
+     FreeAndNil(form);
    end;
 end;
 
@@ -1561,8 +1561,8 @@ begin
                                                     1 + fPorcen);
     end;
   finally
-    Validador.Free;
-    Resolver.Free;
+    FreeAndNil(Validador);
+    FreeAndNil(Resolver);
   end;
 end;
 

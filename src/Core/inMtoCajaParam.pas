@@ -112,10 +112,10 @@ end;
 procedure TfrmMtoCajaParam.FormDestroy(Sender: TObject);
 begin
   LimpiarMemoria;
-  FBools.Free;
-  FInts.Free;
-  FStrs.Free;
-  FValoresOriginales.Free;
+  FreeAndNil(FBools);
+  FreeAndNil(FInts);
+  FreeAndNil(FStrs);
+  FreeAndNil(FValoresOriginales);
   inherited;
 end;
 
@@ -334,7 +334,7 @@ begin
     end;
     CapturarValoresOriginales;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -412,7 +412,7 @@ begin
       ShowMessage('No se han detectado cambios para guardar.');
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -546,8 +546,8 @@ begin
       end;
     end;
   finally
-    usuarios.Free;
-    qry.Free;
+    FreeAndNil(usuarios);
+    FreeAndNil(qry);
   end;
 end;
 

@@ -251,7 +251,7 @@ begin
     TempList.Text := SQL;
     FLogMemo.Lines.AddStrings(TempList);
   finally
-    TempList.Free;
+    FreeAndNil(TempList);
   end;
   FLogMemo.SelStart := Length(FLogMemo.Text);
   SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
@@ -497,7 +497,7 @@ begin
           ShowMessage('La copia se guardó exitosamente.');
           Result := True;
         finally
-          Engine.Free;
+          FreeAndNil(Engine);
         end;
       except
         on E: Exception do
@@ -510,8 +510,8 @@ begin
         end;
       end;
     finally
-      IncludeTables.Free;
-      ExcludeTables.Free;
+      FreeAndNil(IncludeTables);
+      FreeAndNil(ExcludeTables);
     end;
   end;
 end;
@@ -778,7 +778,7 @@ begin
           end;
       end;
     finally
-      SqlScript.Free;
+      FreeAndNil(SqlScript);
     end;
   end;
 end;
@@ -843,7 +843,7 @@ begin
   end
   else
   begin
-    TabACerrar.Free;
+    FreeAndNil(TabACerrar);
   end;
 end;
 

@@ -137,7 +137,7 @@ begin
       Result := True;
     end;
   finally
-    Frm.Free;
+    FreeAndNil(Frm);
   end;
 end;
 
@@ -404,7 +404,7 @@ begin
     edtFactorCambio.Value := Tasa;
 //    ShowMessage('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 

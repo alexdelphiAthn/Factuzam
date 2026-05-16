@@ -131,7 +131,7 @@ begin
       Result := True;
     end;
   finally
-    Frm.Free;
+    FreeAndNil(Frm);
   end;
 end;
 
@@ -269,7 +269,7 @@ begin
     end;
     FMemVales.First;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   ActualizarBotonAceptar;
   if (sPin <> '') and (FMemVales.RecordCount = 1) then

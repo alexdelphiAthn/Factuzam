@@ -265,7 +265,7 @@ begin
       end;
     end;
   finally
-    oGrids.Free;
+    FreeAndNil(oGrids);
   end;
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
   if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
@@ -471,7 +471,7 @@ begin
       raise;
     end;
   finally
-    oList.Free;
+    FreeAndNil(oList);
     Screen.Cursor := crDefault;
   end;
 end;
