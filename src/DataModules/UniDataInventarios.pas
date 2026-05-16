@@ -213,7 +213,6 @@ begin
   unqryLineas.ParamByName('SERIE').AsString   := FSerie;
   unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
   unqryLineas.Open;
-  var iCount := unqryLineas.RecordCount;
   if cdsLineas.Active then cdsLineas.Close;
   cdsLineas.Open;
 

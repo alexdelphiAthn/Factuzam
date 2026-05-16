@@ -49,7 +49,6 @@ type
     procedure ImprimirImagenRaster(const Datos: string; Ancho, Alto: Integer);
     procedure NuevaLinea;
     procedure AjustarFuente;
-    function ObtenerAnchoCaracter: Integer;
     function ObtenerAltoLinea: Integer;
     procedure DibujarQRCode;
 
@@ -685,18 +684,6 @@ begin
   FCanvas.Font.Handle := CreateFontIndirect(LogFont);
   FCanvas.Font.Color := clBlack;
   FCanvas.Brush.Style := bsClear;
-end;
-
-function TFormVisualizador.ObtenerAnchoCaracter: Integer;
-begin
-  case FFuenteActual of
-    0: Result := 12; // Fuente A (Estándar: 12 px ancho)
-    1: Result := 9;  // Fuente B (Estándar: 9 px ancho)
-    2: Result := 7;  // Fuente C
-  else
-    Result := 9;
-  end;
-  Result := Result * FTamanoAncho;
 end;
 
 function TFormVisualizador.ObtenerAltoLinea: Integer;

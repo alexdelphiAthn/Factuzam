@@ -263,7 +263,6 @@ var
   sCodigoFinal: string;
   i: Integer;
 begin
-  Result := False;
   sCodigoFinal := sCod;
   Qry := TUniQuery.Create(nil);
   try

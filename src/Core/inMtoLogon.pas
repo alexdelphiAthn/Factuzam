@@ -101,7 +101,6 @@ type
     procedure GetIniValues;
   private
     procedure CambiarPass(f:TUniConnection);
-    function CrearBD(sDatabaseN:string):string;
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
     procedure escribirini;
@@ -595,29 +594,6 @@ begin
       FreeAndNil(qryCommand);
     end;
   end;
-end;
-
-
-function TfrmLogon.CrearBD(sDatabaseN: string):String;
-var
-  MyText: TSTringList;
-  sFile : String;
-begin
-  MyText := TStringList.Create;
-  Result := '';
-  sFile := DirApp + '\factuzam_original.sql';
-  if (Not(FileExists(sFile))) then
-  begin
-    ShowMessage(SFailLoadScriptBBDD);
-    Log.LogError(SFailLoadScriptBBDD);
-  end
-  else
-  begin
-    MyText.LoadFromFile(sFile);
-    Result := StringReplace(MyText.Text, 'factuzam', sDatabaseN, [rfReplaceAll,
-                                                                rfIgnoreCase]);
-  end;
-  FreeAndNil(MyText);
 end;
 
 

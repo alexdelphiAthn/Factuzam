@@ -426,7 +426,6 @@ var
   JSON : TJSONObject;
   Res  : TFrankfurterResult;
 begin
-  Result := 0;
   Res.Rates := nil;
   // La API acepta ?amount=X directamente
   URL := Format('%s/latest?amount=%s&from=%s&to=%s',
