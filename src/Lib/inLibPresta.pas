@@ -144,7 +144,6 @@ type
     procedure SetidAddressBil(const Value: String);
     function GetSameAddress: Boolean;
     procedure SetSameAddress(const Value: Boolean);
-    function GetdFechaCreacion: TDateTime;
     function GetFechaCreacion: String;
     function GetFormaPago: String;
     function GetReferenciaCliente: String;
@@ -155,7 +154,6 @@ type
     function GetTotalPortesSIVA: Currency;
     function GetTotalProdCIVA: Currency;
     function GetTotalProdSIVA: Currency;
-    procedure SetdFechaCreacion(const Value: TDateTime);
     procedure SetFechaCreacion(const Value: String);
     procedure SetFormaPago(const Value: String);
     procedure SetReferenciaCliente(const Value: String);
@@ -225,9 +223,7 @@ type
     Property EstadoPedido:String read GetEstadoPedido  write SetEstadoPedido;
     { public declarations }
     Function ToString():String; override;
-    published
-        constructor Create;
-    { published declarations }
+    constructor Create;
   end;
 
 
@@ -289,11 +285,6 @@ end;
 function TOrder.GetcustName: String;
 begin
   Result := Self._custName;
-end;
-
-function TOrder.GetdFechaCreacion: TDateTime;
-begin
-  Result := Self._dFechaCreacion;
 end;
 
 function TOrder.GetDniBil: String;
@@ -524,11 +515,6 @@ end;
 procedure TOrder.SetcustName(const Value: String);
 begin
   Self._custName := Value;
-end;
-
-procedure TOrder.SetdFechaCreacion(const Value: TDateTime);
-begin
-  _dFechaCreacion := Value;
 end;
 
 procedure TOrder.SetDniBil(const Value: String);
