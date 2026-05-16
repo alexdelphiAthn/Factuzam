@@ -49,7 +49,7 @@ begin
         'No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ' +
         '''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
   finally
-    QryAlm.Free;
+    FreeAndNil(QryAlm);
   end;
 end;
 

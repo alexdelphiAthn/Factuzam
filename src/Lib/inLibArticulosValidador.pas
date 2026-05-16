@@ -52,7 +52,7 @@ unit inLibArticulosValidador;
           // r.CodigoArticulo, r.CodigoSku, r.TipoCoincidencia
         end;
       finally
-        val.Free;
+        FreeAndNil(val);
       end;
 }
 
@@ -174,7 +174,7 @@ begin
     q.Open;
     Result := q.FieldByName('N').AsInteger;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -208,7 +208,7 @@ begin
     R.EsVariacion      := q.FieldByName('ESVARIACION_ART').AsString = 'S';
     R.NumAtributosReq  := q.FieldByName('NUM_ATR_REQ').AsInteger;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   // Contamos SKUs activos del artículo. Si hay sólo uno (caso típico de
@@ -232,7 +232,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   R.TieneSku := iNumSkus > 0;
   if (iNumSkus = 1) and (R.CodigoSku = '') then
@@ -260,7 +260,7 @@ begin
       else
         R.SkuActivo := q.FieldByName('ESACTIVO_SKU').AsString = 'S';
     finally
-      q.Free;
+      FreeAndNil(q);
     end;
   end;
 
@@ -288,7 +288,7 @@ begin
     if not q.IsEmpty then
       R.CodigoProveedorMatch := q.FieldByName('CODIGO_PRV_AP').AsString;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -340,7 +340,7 @@ begin
     Result.TipoArticulo        := q.FieldByName('TIPO_ART').AsString;
     sTipo                      := q.FieldByName('TIPO_COINCIDENCIA').AsString;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   if      sTipo = 'CODIGO'      then Result.Tipo := atcCodigoArt

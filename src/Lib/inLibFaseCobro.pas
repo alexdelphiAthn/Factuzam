@@ -190,44 +190,6 @@ uses
 
 { TDatosCliente }
 
-//procedure TDatosFaseCobro.EliminarValeRecogido(const ACodigoVale: string);
-//var
-//  BookMark: TBookmark;
-//  Encontrado: Boolean;
-//begin
-//  if not Assigned(FMemTablePagos) then Exit;
-//  if not FMemTablePagos.Active then Exit;
-//
-//  Encontrado := False;
-//  FMemTablePagos.DisableControls;
-//  try
-//    BookMark := FMemTablePagos.GetBookmark;
-//    try
-//      FMemTablePagos.First;
-//      while not FMemTablePagos.Eof do
-//      begin
-//        // Buscamos el vale por su código en el campo REFERENCIA
-//        if (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') and
-// (FMemTablePagos.FieldByName('REFERENCIA').AsString = ACodigoVale) then
-//        begin
-//          FMemTablePagos.Delete;
-//          Encontrado := True;
-//          Break;
-//        end;
-//        FMemTablePagos.Next;
-//      end;
-//    finally
-//      if not Encontrado and FMemTablePagos.BookmarkValid(BookMark) then
-//        FMemTablePagos.GotoBookmark(BookMark);
-//      FMemTablePagos.FreeBookmark(BookMark);
-//    end;
-//  finally
-//    FMemTablePagos.EnableControls;
-//  end;
-//
-//  if Encontrado then
-//    Recalcular;
-//end;
 
 procedure TDatosCliente.Clear;
 begin
@@ -302,7 +264,7 @@ end;
 
 destructor TDatosFaseCobro.Destroy;
 begin
-  FValesRecogidos.Free;
+  FreeAndNil(FValesRecogidos);
   inherited;
 end;
 
@@ -817,7 +779,7 @@ begin
       FMemTablePagos.GotoBookmark(Bookmark);
     FMemTablePagos.FreeBookmark(Bookmark);
     FMemTablePagos.EnableControls;
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -928,7 +890,7 @@ begin
     end;
     Result := Lista.ToArray;
   finally
-    Lista.Free;
+    FreeAndNil(Lista);
   end;
 end;
 

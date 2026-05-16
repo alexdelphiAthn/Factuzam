@@ -193,7 +193,6 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                         'para el campo Razón Social de Cliente',
                [FindField('RAZON_SOCIAL_CLI').AsString]);
-        Abort;
     end
     else
       GetCodigoAutoCliente;

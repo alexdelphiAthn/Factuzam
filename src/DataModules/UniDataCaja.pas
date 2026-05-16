@@ -643,7 +643,7 @@ begin
                cdsCabecera,
                OnUpdateTotal);
   finally
-    QryDep.Free;
+    FreeAndNil(QryDep);
   end;
 end;
 
@@ -668,7 +668,7 @@ begin
     SpTrx.Execute;
     AIdDeposito := SpTrx.ParamByName('P_ID_DEPOSITO').AsString;
   finally
-    SpTrx.Free;
+    FreeAndNil(SpTrx);
   end;
 
 end;
@@ -859,33 +859,6 @@ begin
   end;
 end;
 
-// =============================================================================
-// ARCHIVO: UniDataCaja_GrabarFactura_v2.pas
-//
-// Contiene los métodos nuevos/modificados de TdmCajaOpe:
-//   - InsertarMovimientoAlmacen  (nuevo — auxiliar centralizado)
-//   - AnularDepositoCliente      (firma ampliada con AEmpresa + AArticulo)
-//   - CrearNuevoDepositoCliente  (usa InsertarMovimientoAlmacen)
-//   - GrabarFacturaSimplificada  (usa InsertarMovimientoAlmacen en todos los
-//                                 casos)
-//
-// Cambios respecto a la versión anterior:
-//   1. Los INSERTs en fza_movimientos_almacen ahora incluyen todos los campos
-//      obligatorios: NUMERO_MOV, TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV,
-//      LINEA_MOV, CODIGO_EMP_MOV, CODIGO_ART_MOV,
-//      DESCRIPCION_ARTICULO_MOV, CODIGO_ALM_CONTRA_MOV,
-//      CODIGO_CLI_MOV, USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA.
-//   2. NUMERO_MOV se genera mediante ObtenerSiguienteContador('MV') de inLibtb.
-//      El procedure PRC_GET_NEXT_CONT crea el contador 'MV' automáticamente
-//      en fza_contadores si no existe todavía.
-//   3. PRECIO_COSTE_UNITARIO_MOV se envía a 0 en salidas y traspasos internos.
-//      El trigger TRG_MOVIMIENTOS_BI (v2) lo resuelve tomando el PMP vigente.
-//   4. AnularDepositoCliente recibe AEmpresa y AArticulo para poder completar
-//      los movimientos de traspaso con todos los campos.
-// =============================================================================
-// -----------------------------------------------------------------------------
-// NUEVO MÉTODO AUXILIAR — añadir a la sección private de TdmCajaOpe
-// -----------------------------------------------------------------------------
 
 procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
@@ -941,7 +914,7 @@ begin
     uspMov.ParamByName('p_CODARTICULO').AsString               := ACodArticulo;
     uspMov.Execute;
   finally
-    uspMov.Free;
+    FreeAndNil(uspMov);
   end;
 end;
 
@@ -955,16 +928,19 @@ var
 begin
   if ANuevoAbono <= 0 then Exit;
   SpTrx := TUniStoredProc.Create(nil);
-  SpTrx.Connection := QryTrx.Connection;
-  SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-  SpTrx.PrepareSQL;
-  SpTrx.ParamByName('SKU').AsString           := ASku;
-  SpTrx.ParamByName('CLI').AsString           := ACliente;
-  SpTrx.ParamByName('ESTADO').Clear;
-  SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
-  SpTrx.ParamByName('USUARIO').AsString       := AUsuario;
-  SpTrx.Execute;
-  SpTrx.Free;
+  try
+    SpTrx.Connection := QryTrx.Connection;
+    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
+    SpTrx.PrepareSQL;
+    SpTrx.ParamByName('SKU').AsString            := ASku;
+    SpTrx.ParamByName('CLI').AsString            := ACliente;
+    SpTrx.ParamByName('ESTADO').Clear;
+    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
+    SpTrx.ParamByName('USUARIO').AsString        := AUsuario;
+    SpTrx.Execute;
+  finally
+    FreeAndNil(SpTrx);
+  end;
 end;
 
 procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
@@ -1140,21 +1116,10 @@ begin
     uspDep.ParamByName('p_USUARIO').AsString    := AUsuario;
     uspDep.Execute;
   finally
-    uspDep.Free;
+    FreeAndNil(uspDep);
   end;
 end;
 
-// =============================================================================
-// ARCHIVO: UniDataCaja_GrabarFactura_v5.pas  — VERSIÓN FINAL
-//
-// GrabarFacturaSimplificada integra todos los procedimientos auxiliares:
-//
-//   InsertarCabeceraFactura    fza_facturas
-//   InsertarLineaFactura       fza_facturas_lineas
-//   InsertarOperacionCaja      fza_caja_operaciones
-//   InsertarPagoCaja           fza_caja_pagos
-//   InsertarMovimientoAlmacen  fza_movimientos_almacen
-//
 function TdmCajaOpe.GrabarFacturaSimplificada(
                           const AEmpresa,
                                 AAlmacen,
@@ -1331,7 +1296,7 @@ begin
         // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
         // =======================================================================
       finally
-        uspQryTrx.Free;
+        FreeAndNil(uspQryTrx);
       end;
       InsertarCabeceraFactura(
         QryTrx, SerieGenerada, NumFactura, Cab.Fecha, 'SIMPLIFICADA',
@@ -1620,7 +1585,7 @@ begin
     end;
   end;
   finally
-    QryTrx.Free;
+    FreeAndNil(QryTrx);
   end;
 end;
 
@@ -1652,7 +1617,7 @@ begin
       raise Exception.Create(
         'Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
   finally
-    CalculadorFiscal.Free;
+    FreeAndNil(CalculadorFiscal);
   end;
 end;
 
@@ -1711,8 +1676,8 @@ begin
     qry.ParamByName('INSTANTE').AsDateTime  := Now;
     qry.Execute;
   finally
-    qry.Free;
-    qrySP.Free;
+    FreeAndNil(qry);
+    FreeAndNil(qrySP);
   end;
 end;
 
@@ -1825,7 +1790,7 @@ begin
     Result := SpTrx.ParamByName('pcont').AsString;
   finally
     // Al liberar el componente también se hace el UnPrepare automáticamente
-    SpTrx.Free;
+    FreeAndNil(SpTrx);
   end;
 end;
 
@@ -1958,7 +1923,7 @@ begin
       Result := True;
     end;
   finally
-    unqry.Free;
+    FreeAndNil(unqry);
   end;
 end;
 

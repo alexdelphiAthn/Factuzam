@@ -38,9 +38,6 @@ type
     //procedure GetCodigoAutoRetencion;
   end;
 
-//var
-//  dmFormasdePago: TdmFormasdePago;
-
 implementation
 
 uses
@@ -113,14 +110,10 @@ begin
     with unqryTablaG do
   begin
     if Trim(FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
-    begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                   'para el campo Descripción de Formas de Pago',
                [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
-      Abort;
-    end
-    else
-      GetCodigoAutoFormasdePago;
+    GetCodigoAutoFormasdePago;
   end;
 end;
 

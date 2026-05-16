@@ -119,17 +119,17 @@ type
                           psz: LPSTR;
                           csz: DWORD): DWORD;
                           stdcall; external CRYPT32;
-  procedure LoadCerts(lvCertificates:TcxListView);
+  procedure LoadCerts(ALvCertificates: TcxListView);
   function GetCertName(pName: PCERT_NAME_BLOB): string;
-  function FileTimeToDateTime(const FileTime: TFileTime): TDateTime;
+  function FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
   function GetCertificateName(pName: PCERT_NAME_BLOB): string;
-  function IsCertificateValid(CertContext: PCCERT_CONTEXT): Boolean;
-  function IsEFacturaCertificate(CertContext: PCCERT_CONTEXT): Boolean;
-  function GetCertificateType(const Issuer: string): string;
-  function ExtractCertificateName(const Description: string): string;
-  procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
-                           SerialNumber: string;
-                           ValidFrom, ValidTo: TDateTime);
+  function IsCertificateValid(ACertContext: PCCERT_CONTEXT): Boolean;
+  function IsEFacturaCertificate(ACertContext: PCCERT_CONTEXT): Boolean;
+  function GetCertificateType(const AIssuer: string): string;
+  function ExtractCertificateName(const ADescription: string): string;
+  procedure AddCertificate(ALvCertificates: TcxListView;
+                           const ASubject, AIssuer, ASerialNumber: string;
+                           AValidFrom, AValidTo: TDateTime);
   function CertGetEnhancedKeyUsage(
                                     pCertContext: PCCERT_CONTEXT;
                                     dwFlags: DWORD;
@@ -153,15 +153,15 @@ type
                          csz: DWORD): DWORD;
                          stdcall; external 'crypt32.dll';
 implementation
-function ExtractCertificateName(const Description: string): string;
+function ExtractCertificateName(const ADescription: string): string;
 var
   Parts: TArray<string>;
   I: Integer;
 begin
   Result := '';
-  if ContainsText(Description, 'O=') then
+  if ContainsText(ADescription, 'O=') then
   begin
-    Parts := Description.Split([',']);
+    Parts := ADescription.Split([',']);
     for I := 0 to Length(Parts) - 1 do
     begin
       if Parts[I].Contains('O=') then
@@ -171,9 +171,9 @@ begin
       end;
     end;
   end
-  else if ContainsText(Description, 'CN=') then
+  else if ContainsText(ADescription, 'CN=') then
   begin
-    Parts := Description.Split([',']);
+    Parts := ADescription.Split([',']);
     for I := 0 to Length(Parts) - 1 do
     begin
       if Parts[I].Contains('CN=') then
@@ -184,23 +184,23 @@ begin
     end;
   end;
 end;
-function GetCertificateType(const Issuer: string): string;
+function GetCertificateType(const AIssuer: string): string;
 begin
-  if ContainsText(Issuer, 'AC Representación') then
+  if ContainsText(AIssuer, 'AC Representación') then
     Result := 'Representación FNMT'
-  else if ContainsText(Issuer, 'AC FNMT Usuarios') then
+  else if ContainsText(AIssuer, 'AC FNMT Usuarios') then
     Result := 'Nominal FNMT'
   else
     Result := 'Otro';
 end;
-function IsCertificateValid(CertContext: PCCERT_CONTEXT): Boolean;
+function IsCertificateValid(ACertContext: PCCERT_CONTEXT): Boolean;
 var
   CurrentTime, NotBefore, NotAfter: TFileTime;
 begin
   //Result := False;
   GetSystemTimeAsFileTime(CurrentTime);
-  NotBefore := CertContext^.pCertInfo^.NotBefore;
-  NotAfter := CertContext^.pCertInfo^.NotAfter;
+  NotBefore := ACertContext^.pCertInfo^.NotBefore;
+  NotAfter := ACertContext^.pCertInfo^.NotAfter;
   Result := (CompareFileTime(CurrentTime, NotBefore) >= 0) and
             (CompareFileTime(CurrentTime, NotAfter) <= 0);
 end;
@@ -258,23 +258,23 @@ begin
     end;
   end;
 end;
-function FileTimeToDateTime(const FileTime: TFileTime): TDateTime;
+function FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
 var
   SystemTime: TSystemTime;
 begin
-  FileTimeToSystemTime(FileTime, SystemTime);
+  FileTimeToSystemTime(AFileTime, SystemTime);
   Result := SystemTimeToDateTime(SystemTime);
 end;
-function IsEFacturaCertificate(CertContext: PCCERT_CONTEXT): Boolean;
+function IsEFacturaCertificate(ACertContext: PCCERT_CONTEXT): Boolean;
 var
   Issuer: string;
 begin
   //Result := False;
-  Issuer := GetCertificateName(@CertContext^.pCertInfo^.Issuer);
+  Issuer := GetCertificateName(@ACertContext^.pCertInfo^.Issuer);
   Result := (ContainsText(Issuer, 'AC Representación') or
             (ContainsText(Issuer, 'AC FNMT Usuarios')));
 end;
-procedure LoadCerts(lvCertificates:TcxListView);
+procedure LoadCerts(ALvCertificates: TcxListView);
 var
   Store: HCERTSTORE;
   CertContext: PCCERT_CONTEXT;
@@ -283,7 +283,7 @@ var
   SerialNumber: string;
   I: Integer;
 begin
-  lvCertificates.Items.Clear;
+  ALvCertificates.Items.Clear;
   Store := CertOpenSystemStoreA(0, PAnsiChar('MY'));
   {$IF CompilerVersion < 34.0}
   if Store <> 0 then  // Delphi 10.3
@@ -306,7 +306,7 @@ begin
         for I := 0 to CertContext^.pCertInfo^.SerialNumber.cbData - 1 do
           SerialNumber := SerialNumber +
             IntToHex(PByte(CertContext^.pCertInfo^.SerialNumber.pbData)[I], 2);
-        AddCertificate(lvCertificates, Subject, Issuer, SerialNumber,
+        AddCertificate(ALvCertificates, Subject, Issuer, SerialNumber,
                        ValidFrom, ValidTo);
       end;
     until CertContext = nil;
@@ -314,21 +314,22 @@ begin
     CertCloseStore(Store, 0);
   end;
 end;
-procedure AddCertificate(lvCertificates:TcxListView;const Subject, Issuer,
-  SerialNumber: string; ValidFrom, ValidTo: TDateTime);
+procedure AddCertificate(ALvCertificates: TcxListView;
+  const ASubject, AIssuer, ASerialNumber: string;
+  AValidFrom, AValidTo: TDateTime);
 var
   Item: TListItem;
-  CertType:string;
-  NameCer:string;
+  CertType: string;
+  NameCer: string;
 begin
-  Item := lvCertificates.Items.Add;
-  CertType := GetCertificateType(Issuer);
+  Item := ALvCertificates.Items.Add;
+  CertType := GetCertificateType(AIssuer);
   Item.Caption := CertType;
-  NameCer := ExtractCertificateName(Subject);
+  NameCer := ExtractCertificateName(ASubject);
   Item.SubItems.Add(NameCer);
-  Item.SubItems.Add(Subject);
-  Item.SubItems.Add(Issuer);
-  Item.SubItems.Add(DateTimeToStr(ValidTo));
-  Item.SubItems.Add(SerialNumber);
+  Item.SubItems.Add(ASubject);
+  Item.SubItems.Add(AIssuer);
+  Item.SubItems.Add(DateTimeToStr(AValidTo));
+  Item.SubItems.Add(ASerialNumber);
 end;
 end.

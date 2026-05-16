@@ -29,9 +29,6 @@ type
     { Public declarations }
   end;
 
-//var
-//  dmContadores: TdmContadores;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

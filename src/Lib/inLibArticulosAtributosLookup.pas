@@ -185,8 +185,8 @@ begin
     end;
     AValores := Lst.ToArray;
   finally
-    q.Free;
-    Lst.Free;
+    FreeAndNil(q);
+    FreeAndNil(Lst);
   end;
 end;
 
@@ -221,8 +221,8 @@ begin
     end;
     AValores := Lst.ToArray;
   finally
-    q.Free;
-    Lst.Free;
+    FreeAndNil(q);
+    FreeAndNil(Lst);
   end;
 end;
 
@@ -272,7 +272,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   for i := 0 to Lst.Count - 1 do
@@ -282,7 +282,7 @@ begin
     Lst[i] := A;
   end;
   Result := Lst.ToArray;
-  Lst.Free;
+  FreeAndNil(Lst);
 end;
 
 function TArticulosAtributosLookup.ObtenerPropiedades(
@@ -336,7 +336,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   for i := 0 to Lst.Count - 1 do
@@ -347,7 +347,7 @@ begin
     Lst[i] := P;
   end;
   Result := Lst.ToArray;
-  Lst.Free;
+  FreeAndNil(Lst);
 end;
 
 function TArticulosAtributosLookup.ObtenerAtributosDeSku(
@@ -395,8 +395,8 @@ begin
     end;
     Result := Lst.ToArray;
   finally
-    q.Free;
-    Lst.Free;
+    FreeAndNil(q);
+    FreeAndNil(Lst);
   end;
 end;
 

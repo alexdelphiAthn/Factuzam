@@ -35,24 +35,24 @@ type
   function EncryptData(Data: string; AKey:AnsiString; AIv: AnsiString): string;
   function DecryptData(Data: string; AKey: AnsiString; AIv: AnsiString): string;
   function SoloNumeros(S:String):String;
-  function LetraNIF(DNI: String): Char;
+  function LetraNIF(ADNI: String): Char;
   function CalculaDC(Banco, Cuenta: string):integer;
-  function DevDC(sNcuenta:String):String;
+  function DevDC(AsNcuenta:String):String;
   function TomarLetra(S: String):String;
   function SonNumeros(S:String):boolean;
   function NomEjecutable:String;
   function AnsiOccurs(const str: string; const substr: string): integer;
   function AnsiSplit(const str: string; const separator: string): TStringArray;
   function SoloLetraNIF(S:String):Char;
-  procedure ComprobarNIF(sNIF:String);
+  procedure ComprobarNIF(AsNIF:String);
   function leCadINI (clave, cadena : string; defecto : string) : string;
   function leCadINIDir (clave, cadena : string;
                         defecto : string; sDir:string) : string;
-  function FileSinExtension(sFile: string):string;
+  function FileSinExtension(AsFile: string):string;
   procedure esCadINI (clave, cadena, valor : string);
   procedure esCadINIDir (clave, cadena, valor, sDir : string);
-  function CheckIBAN(iban: string): Boolean;
-  procedure SetFilterSQL(var qryConsulta: TUniSQL);
+  function CheckIBAN(Aiban: string): Boolean;
+  procedure SetFilterSQL(var AqryConsulta: TUniSQL);
   procedure ConstruirConexion(conUni:TUniConnection; sUser,
                                                 sPassword,
                                                 sHostName,
@@ -67,7 +67,7 @@ type
   procedure BusqDataBase(sqlConsulta: TUniQuery;
                         sBusqueda:String;
                         var ConsultaO:string);
-  procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
+  procedure BusqDataBaseMD(AqryMaster, AqryDetail: TUniQuery;
                          sBusqueda: String;
                          var sSQLOrigMaster, sSQLOrigDetail: String;
                          const sNombreTablaDetalle: String;
@@ -78,9 +78,9 @@ type
                                fFechaFin:TField
                                ): boolean;
   function HayCoincidencia(str1, str2: string): string;
-  procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
+  procedure AplicarValoresPorDefecto(AunqryDestino: TDataSet;
                                    const NombreTabla: string);
-  function ObtenerSiguienteContador(const aTipoDoc: string): string;
+  function ObtenerSiguienteContador(const ATipoDoc: string): string;
   function GetDefaultValue(const ATable,
                                  AField,
                                  AConditionField: string): string;
@@ -161,8 +161,8 @@ begin
         Result[i] := Null; // Por seguridad, si falta algún valor
     end;
   finally
-    slCampos.Free;
-    slValores.Free;
+    FreeAndNil(slCampos);
+    FreeAndNil(slValores);
   end;
 end;
 
@@ -313,7 +313,7 @@ begin
       Calculador.Dto := Diferencia;
     end;
   finally
-    Calculador.Free; // Vuelca cambios al dataset de líneas
+    FreeAndNil(Calculador); // Vuelca cambios al dataset de líneas
   end;
   Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
   try
@@ -321,7 +321,7 @@ begin
     if Assigned(EventoUpdateTotal) then
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
-    Totales.Free;
+    FreeAndNil(Totales);
   end;
 end;
 
@@ -339,11 +339,11 @@ begin
     if not unqry.Eof then
       Result := unqry.Fields[0].AsString;
   finally
-    unqry.Free;
+    FreeAndNil(unqry);
   end;
 end;
 
-function ObtenerSiguienteContador(const aTipoDoc: string): string;
+function ObtenerSiguienteContador(const ATipoDoc: string): string;
 var
   SP: TUniStoredProc;
 begin
@@ -353,7 +353,7 @@ begin
     SP.Connection := inLibGlobalVar.oConn; // Tu conexión global
     SP.StoredProcName := 'PRC_GET_NEXT_CONT';
     SP.Params.Clear;
-    SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := aTipoDoc;
+    SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := ATipoDoc;
     SP.Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput).AsString  :=
                                                            inLibGlobalVar.oUser;
     SP.Params.CreateParam(ftString, 'pcont', ptOutput);
@@ -365,18 +365,18 @@ begin
         ShowMessage('Error al generar contador automático: ' + E.Message);
     end;
   finally
-    SP.Free;
+    FreeAndNil(SP);
   end;
 end;
 
-procedure AplicarValoresPorDefecto(unqryDestino: TDataSet;
+procedure AplicarValoresPorDefecto(AunqryDestino: TDataSet;
                                    const NombreTabla: string);
 var
   qryDefaults: TUniQuery; // O TFDQuery, según uses
 begin
-  if ((unqryDestino.State <> dsInsert) and
-      (unqryDestino.State <> dsEdit)) then
-    unqryDestino.Edit;
+  if ((AunqryDestino.State <> dsInsert) and
+      (AunqryDestino.State <> dsEdit)) then
+    AunqryDestino.Edit;
   qryDefaults := TUniQuery.Create(nil);
   try
     qryDefaults.Connection := inLibGlobalVar.oConn;
@@ -390,7 +390,7 @@ begin
     qryDefaults.Open;
     while not qryDefaults.Eof do
     begin
-      var oField := unqryDestino.FindField(
+      var oField := AunqryDestino.FindField(
                         qryDefaults.FieldByName(
                           'CAMPO_OBJETIVO_DEF_VD').AsString);
       if Assigned(oField) then
@@ -407,7 +407,7 @@ begin
       qryDefaults.Next;
     end;
   finally
-    qryDefaults.Free;
+    FreeAndNil(qryDefaults);
   end;
 end;
 
@@ -607,7 +607,7 @@ begin
     b64 := Base64EncodeBytes(dest);
     result := TEncoding.Default.GetString(b64);
   finally
-    cipher.Free;
+    FreeAndNil(cipher);
   end;
 end;
 
@@ -655,11 +655,11 @@ begin
   Result := (Adata);
 end;
 
-procedure SetFilterSQL(var qryConsulta: TUniSQL);
+procedure SetFilterSQL(var AqryConsulta: TUniSQL);
 var
  sSQL:string;
 begin
-  sSQL := qryConsulta.SQL.Text;
+  sSQL := AqryConsulta.SQL.Text;
 end;
 
 function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
@@ -701,7 +701,7 @@ begin
   end;
 end;
 
-procedure BusqDataBaseMD(qryMaster, qryDetail: TUniQuery;
+procedure BusqDataBaseMD(AqryMaster, AqryDetail: TUniQuery;
                          sBusqueda: String;
                          var sSQLOrigMaster, sSQLOrigDetail: String;
                          const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
@@ -714,27 +714,27 @@ var
   sCondicionExists: String;
 begin
   // 1. Guardar/Restaurar SQL Original
-  if sSQLOrigMaster = '' then sSQLOrigMaster := qryMaster.SQL.Text;
-  if sSQLOrigDetail = '' then sSQLOrigDetail := qryDetail.SQL.Text;
+  if sSQLOrigMaster = '' then sSQLOrigMaster := AqryMaster.SQL.Text;
+  if sSQLOrigDetail = '' then sSQLOrigDetail := AqryDetail.SQL.Text;
   // Restauramos siempre antes de procesar para no acumular filtros
-  qryMaster.SQL.Text := sSQLOrigMaster;
-  qryDetail.SQL.Text := sSQLOrigDetail;
+  AqryMaster.SQL.Text := sSQLOrigMaster;
+  AqryDetail.SQL.Text := sSQLOrigDetail;
   if sBusqueda = '' then
   begin
-    qryMaster.Open;
-    qryDetail.Open;
+    AqryMaster.Open;
+    AqryDetail.Open;
     Exit;
   end;
   // 2. Obtener las cadenas de filtro (el texto LIKE ... OR ...)
   // Nota: Asegúrate que las queries estén abiertas o tengan FieldDefs
   // actualizados
-  if not qryMaster.Active then qryMaster.Open;
-  if not qryDetail.Active then qryDetail.Open;
-  sFiltroMaster := ObtenerCadenaFiltro(qryMaster, sBusqueda);
-  sFiltroDetail := ObtenerCadenaFiltro(qryDetail, sBusqueda);
+  if not AqryMaster.Active then AqryMaster.Open;
+  if not AqryDetail.Active then AqryDetail.Open;
+  sFiltroMaster := ObtenerCadenaFiltro(AqryMaster, sBusqueda);
+  sFiltroDetail := ObtenerCadenaFiltro(AqryDetail, sBusqueda);
   // 3. Configurar Parsers
-  vParserMaster := TGaSQLParserFactory.Select(qryMaster.SQL.Text);
-  vParserDetail := TGaSQLParserFactory.Select(qryDetail.SQL.Text);
+  vParserMaster := TGaSQLParserFactory.Select(AqryMaster.SQL.Text);
+  vParserDetail := TGaSQLParserFactory.Select(AqryDetail.SQL.Text);
   // ---------------------------------------------------------
   // A. APLICAR AL DETALLE (Solo sus campos)
   // ---------------------------------------------------------
@@ -742,7 +742,7 @@ begin
   begin
     // Añadimos con AND al resto de condiciones que tenga el detalle
     vParserDetail.AddWhere(sFiltroDetail, pcAnd);
-    qryDetail.SQL.Text := vParserDetail.ToString;
+    AqryDetail.SQL.Text := vParserDetail.ToString;
   end;
   // ---------------------------------------------------------
   // B. APLICAR AL MAESTRO (Sus campos OR Exists Detalle)
@@ -767,11 +767,11 @@ begin
   begin
     // Inyectamos al parser del maestro. El parser se encarga de WHERE/ORDER BY
     vParserMaster.AddWhere(sCondicionFinalMaster, pcAnd);
-    qryMaster.SQL.Text := vParserMaster.ToString;
+    AqryMaster.SQL.Text := vParserMaster.ToString;
   end;
   // 4. Reabrir con los nuevos SQLs
-  qryMaster.Open;
-  qryDetail.Open;
+  AqryMaster.Open;
+  AqryDetail.Open;
   // Liberar interfaces (aunque en Delphi moderno se liberan solas, es bueno
   // ponerlas a nil)
   vParserMaster := nil;
@@ -792,7 +792,7 @@ begin
     ConsultaO := sConsulta;
   if ( ConsultaO <> sConsulta ) then
   begin
-    sConsulta := ConsultaO; //reseteo la consulta porque ha habido otras b�sq.
+    sConsulta := ConsultaO; //reseteo la consulta porque ha habido otras búsq.
     sqlConsulta.SQL.text := ConsultaO;
   end;
   if sBusqueda <> '' then
@@ -863,10 +863,10 @@ begin
   end;
 end;
 
-function FileSinExtension(sFile: string):string;
+function FileSinExtension(AsFile: string):string;
 begin
-  Result := ExtractFilePath(sFile) + copy(ExtractFileName(sFile), 1,
-                        pos(ExtractFileExt(sFile), ExtractFileName(sFile)) - 1);
+  Result := ExtractFilePath(AsFile) + copy(ExtractFileName(AsFile), 1,
+                        pos(ExtractFileExt(AsFile), ExtractFileName(AsFile)) - 1);
 end;
 
 function leCadINI (clave, cadena : string; defecto : string) : string;
@@ -927,9 +927,9 @@ begin
   end;
 end;
 
-function LetraNIF(DNI: String): Char;
+function LetraNIF(ADNI: String): Char;
 begin
-  Result := Copy('TRWAGMYFPDXBNJZSQVHLCKET', StrToInt(DNI) mod 23 + 1, 1)[1];
+  Result := Copy('TRWAGMYFPDXBNJZSQVHLCKET', StrToInt(ADNI) mod 23 + 1, 1)[1];
 end;
 
 //Banco es numero de banco + sucursal 8 digitos y cuenta son 10
@@ -953,14 +953,14 @@ begin
   Result:=Result*10+iTemp;
 end;
 
-function DevDC(sNcuenta:String):String;
+function DevDC(AsNcuenta:String):String;
 var
   sBanco, sNumero:String;
 begin
-  if ((SonNumeros(sNcuenta)) and (Length(sNcuenta) = 20)) then
+  if ((SonNumeros(AsNcuenta)) and (Length(AsNcuenta) = 20)) then
   begin
-    sBanco:=Copy(sNcuenta, 1, 8);
-    sNumero := Copy(sNcuenta, 11, 20);
+    sBanco:=Copy(AsNcuenta, 1, 8);
+    sNumero := Copy(AsNcuenta, 11, 20);
     Result  := IntToStr(CalculaDC(sBanco, sNumero));
   end
   else
@@ -984,7 +984,7 @@ begin
   if (sResul <> '?') then
     Result := LetraNIF(sResul)
   else
-    Result := ' NIF No V�lido';
+    Result := ' NIF No Válido';
 end;
 
 function SoloLetraNIF(S:String):Char;
@@ -1040,19 +1040,19 @@ begin
   Result := b;
 end;
 
-procedure ComprobarNIF(sNIF:String);
+procedure ComprobarNIF(AsNIF:String);
 begin
-  //si el primer digito no es un n�mero, es un CIF
-  if (sNIF <> '') then
-    if ( (sNIF[1] >= '0') and (sNIF[1] <= '9') ) then
-      if ( SoloLetraNIF( sNIF ) <> TomarLetra( sNIF ) ) then
+  //si el primer digito no es un número, es un CIF
+  if (AsNIF <> '') then
+    if ( (AsNIF[1] >= '0') and (AsNIF[1] <= '9') ) then
+      if ( SoloLetraNIF( AsNIF ) <> TomarLetra( AsNIF ) ) then
         Raise Exception.Create('Letra DNI Incorrecta. Correcta ' + TomarLetra(
-          sNIF) );
+          AsNIF) );
 end;
 
-function CheckIBAN(iban: string): Boolean;
+function CheckIBAN(Aiban: string): Boolean;
 
-    function CalculateDigits(iban: string): Integer;
+    function CalculateDigits(Aiban: string): Integer;
       function ChangeAlpha(input: string): string;
         // A -> 10, B -> 11, C -> 12 ...
       var
@@ -1073,22 +1073,22 @@ function CheckIBAN(iban: string): Boolean;
       number: Longint;
       rest: Integer;
     begin
-      iban := UpperCase(iban);
-      if Pos('IBAN', iban) > 0 then
-        Delete(iban, Pos('IBAN', iban), 4);
-      iban := iban + Copy(iban, 1, 4);
-      Delete(iban, 1, 4);
-      iban := ChangeAlpha(iban);
+      Aiban := UpperCase(Aiban);
+      if Pos('IBAN', Aiban) > 0 then
+        Delete(Aiban, Pos('IBAN', Aiban), 4);
+      Aiban := Aiban + Copy(Aiban, 1, 4);
+      Delete(Aiban, 1, 4);
+      Aiban := ChangeAlpha(Aiban);
       v := 1;
       l := 9;
       rest := 0;
       alpha := '';
       try
-        while v <= Length(iban) do
+        while v <= Length(Aiban) do
         begin
-          if l > Length(iban) then
-            l := Length(iban);
-          alpha := alpha + Copy(iban, v, l);
+          if l > Length(Aiban) then
+            l := Length(Aiban);
+          alpha := alpha + Copy(Aiban, v, l);
           number := StrToInt(alpha);
           rest := number mod 97;
           v := v + l;
@@ -1101,8 +1101,8 @@ function CheckIBAN(iban: string): Boolean;
       Result := rest;
     end;
 begin
-  iban := StringReplace(iban, ' ', '', [rfReplaceAll]);
-  if CalculateDigits(iban) = 1 then
+  Aiban := StringReplace(Aiban, ' ', '', [rfReplaceAll]);
+  if CalculateDigits(Aiban) = 1 then
     Result := True
   else
     Result := False;
@@ -1117,7 +1117,7 @@ function AnsiSplit(const str: string;
                  const separator: string): TStringArray;
 // Devuelve un arreglo con las partes de "str" separadas por
 // "separator"
-// Versi�n ANSI
+// Versión ANSI
 var
  i, n: integer;
  p, q, s: PChar;

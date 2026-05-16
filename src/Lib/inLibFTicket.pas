@@ -29,40 +29,40 @@ type
   private
     FComandos: TStringBuilder;
     FNombreImpresora: string;
-    function ObtenerComandoFuente(Fuente: TFuenteTermica): string;
-    function ObtenerComandoAlineacion(Alineacion: TAlineacion): string;
+    function ObtenerComandoFuente(AFuente: TFuenteTermica): string;
+    function ObtenerComandoAlineacion(AAlineacion: TAlineacion): string;
   public
-    constructor Create(const NombreImpresora: string);
+    constructor Create(const ANombreImpresora: string);
     destructor Destroy; override;
     procedure Inicializar;
     procedure ConfigurarEspanol;
     function ObtenerComandos: string;
-    procedure SeleccionarFuente(Fuente: TFuenteTermica);
-    procedure Alinear(Alineacion: TAlineacion);
-    procedure Negrita(Activar: Boolean);
-    procedure Subrayado(Activar: Boolean);
-    procedure TamanoDoble(Ancho, Alto: Boolean);
-    procedure EscribirLinea(const Texto: string);
-    procedure EscribirTexto(const Texto: string);
-    procedure SaltarLineas(CANTIDAD_ARTVIN: Integer);
-    procedure LineaSeparadora(Caracter: Char = '-');
-    procedure ImprimirImagen(Bitmap: Vcl.Graphics.TBitmap;
-                             Escala: Integer = 3);
-    procedure CortarPapel(Parcial: Boolean = False);
+    procedure SeleccionarFuente(AFuente: TFuenteTermica);
+    procedure Alinear(AAlineacion: TAlineacion);
+    procedure Negrita(AActivar: Boolean);
+    procedure Subrayado(AActivar: Boolean);
+    procedure TamanoDoble(AAncho, AAlto: Boolean);
+    procedure EscribirLinea(const ATexto: string);
+    procedure EscribirTexto(const ATexto: string);
+    procedure SaltarLineas(ACantidad: Integer);
+    procedure LineaSeparadora(ACaracter: Char = '-');
+    procedure ImprimirImagen(ABitmap: Vcl.Graphics.TBitmap;
+                             AEscala: Integer = 3);
+    procedure CortarPapel(AParcial: Boolean = False);
     procedure AbrirCajon;
 
-    procedure TextoColumnas(const Izq, Der: string; Ancho: Integer=N_CHAR_LIN);
+    procedure TextoColumnas(const AIzq, ADer: string; AAncho: Integer=N_CHAR_LIN);
     procedure Imprimir;
     procedure Limpiar;
-    procedure ImprimirQRNativo(const Texto: string;
-                               TamanoModulo: Integer = 8;
-                               NivelError: Integer = 48);
+    procedure ImprimirQRNativo(const ATexto: string;
+                               ATamanoModulo: Integer = 8;
+                               ANivelError: Integer = 48);
     property NombreImpresora: string read FNombreImpresora
                                      write FNombreImpresora;
   end;
 
-  procedure EnviarComandoRAW(const NombreImpresora: string;
-                             const Datos: string);
+  procedure EnviarComandoRAW(const ANombreImpresora: string;
+                             const ADatos: string);
 
 implementation
 
@@ -90,37 +90,37 @@ const
   CMD_CORTE_PARCIAL = ESC + 'm';
   CMD_ABRIR_CAJON = ESC + 'p' + #0 + #50 + #250;
 
-procedure TTicketTermico.ImprimirQRNativo(const Texto: string;
-                                          TamanoModulo: Integer = 8;
-                                          NivelError: Integer = 48);
+procedure TTicketTermico.ImprimirQRNativo(const ATexto: string;
+                                          ATamanoModulo: Integer = 8;
+                                          ANivelError: Integer = 48);
 var
   pL, pH: Byte;
   DataLength: Integer;
 begin
-  DataLength := Length(Texto) + 3;
+  DataLength := Length(ATexto) + 3;
   pL := DataLength mod 256;
   pH := DataLength div 256;
   Alinear(alCentro);
   // Usar #XX en lugar de GS + '(k' + Chr()...
   FComandos.Append(#29#40#107#4#0#49#65#50#0);
-  FComandos.Append(#29#40#107#3#0#49#67 + Chr(TamanoModulo));
-  FComandos.Append(#29#40#107#3#0#49#69 + Chr(NivelError));
-  FComandos.Append(#29#40#107 + Chr(pL) + Chr(pH) + #49#80#48 + Texto);
+  FComandos.Append(#29#40#107#3#0#49#67 + Chr(ATamanoModulo));
+  FComandos.Append(#29#40#107#3#0#49#69 + Chr(ANivelError));
+  FComandos.Append(#29#40#107 + Chr(pL) + Chr(pH) + #49#80#48 + ATexto);
   FComandos.Append(#29#40#107#3#0#49#81#48);
   FComandos.Append(#13#10);
   Alinear(alIzquierda);
 end;
 
-constructor TTicketTermico.Create(const NombreImpresora: string);
+constructor TTicketTermico.Create(const ANombreImpresora: string);
 begin
   inherited Create;
-  FNombreImpresora := NombreImpresora;
+  FNombreImpresora := ANombreImpresora;
   FComandos := TStringBuilder.Create;
 end;
 
 destructor TTicketTermico.Destroy;
 begin
-  FComandos.Free;
+  FreeAndNil(FComandos);
   inherited;
 end;
 
@@ -130,9 +130,9 @@ begin
   ConfigurarEspanol;
 end;
 
-function TTicketTermico.ObtenerComandoFuente(Fuente: TFuenteTermica): string;
+function TTicketTermico.ObtenerComandoFuente(AFuente: TFuenteTermica): string;
 begin
-  case Fuente of
+  case AFuente of
     ftRasterA: Result := CMD_FUENTE_A;
     ftRasterB: Result := CMD_FUENTE_B;
     ftRasterC: Result := CMD_FUENTE_C;
@@ -147,9 +147,9 @@ begin
 end;
 
 function TTicketTermico.ObtenerComandoAlineacion(
-  Alineacion: TAlineacion): string;
+  AAlineacion: TAlineacion): string;
 begin
-  case Alineacion of
+  case AAlineacion of
     alIzquierda: Result := CMD_IZQUIERDA;
     alCentro: Result := CMD_CENTRO;
     alDerecha: Result := CMD_DERECHA;
@@ -157,77 +157,77 @@ begin
     Result := CMD_IZQUIERDA;
   end;
 end;
-procedure TTicketTermico.SeleccionarFuente(Fuente: TFuenteTermica);
+procedure TTicketTermico.SeleccionarFuente(AFuente: TFuenteTermica);
 begin
-  FComandos.Append(ObtenerComandoFuente(Fuente));
+  FComandos.Append(ObtenerComandoFuente(AFuente));
 end;
 
-procedure TTicketTermico.Alinear(Alineacion: TAlineacion);
+procedure TTicketTermico.Alinear(AAlineacion: TAlineacion);
 begin
-  FComandos.Append(ObtenerComandoAlineacion(Alineacion));
+  FComandos.Append(ObtenerComandoAlineacion(AAlineacion));
 end;
 
-procedure TTicketTermico.Negrita(Activar: Boolean);
+procedure TTicketTermico.Negrita(AActivar: Boolean);
 begin
-  if Activar then
+  if AActivar then
     FComandos.Append(CMD_NEGRITA_ON)
   else
     FComandos.Append(CMD_NEGRITA_OFF);
 end;
 
-procedure TTicketTermico.Subrayado(Activar: Boolean);
+procedure TTicketTermico.Subrayado(AActivar: Boolean);
 begin
-  if Activar then
+  if AActivar then
     FComandos.Append(CMD_SUBRAYADO_ON)
   else
     FComandos.Append(CMD_SUBRAYADO_OFF);
 end;
-procedure TTicketTermico.TamanoDoble(Ancho, Alto: Boolean);
+procedure TTicketTermico.TamanoDoble(AAncho, AAlto: Boolean);
 var
   Valor: Byte;
 begin
   Valor := 0;
-  if Ancho then
+  if AAncho then
     Valor := Valor or $20;
-  if Alto then
+  if AAlto then
     Valor := Valor or $10;
   FComandos.Append(GS + '!' + Chr(Valor));
 end;
 
-procedure TTicketTermico.EscribirLinea(const Texto: string);
+procedure TTicketTermico.EscribirLinea(const ATexto: string);
 begin
-  FComandos.Append(Texto + #13#10);
+  FComandos.Append(ATexto + #13#10);
 end;
 
-procedure TTicketTermico.EscribirTexto(const Texto: string);
+procedure TTicketTermico.EscribirTexto(const ATexto: string);
 begin
-  FComandos.Append(Texto);
+  FComandos.Append(ATexto);
 end;
 
-procedure TTicketTermico.SaltarLineas(CANTIDAD_ARTVIN: Integer);
+procedure TTicketTermico.SaltarLineas(ACantidad: Integer);
 begin
-  FComandos.Append(ESC + 'd' + Chr(CANTIDAD_ARTVIN));
+  FComandos.Append(ESC + 'd' + Chr(ACantidad));
 end;
 
-procedure TTicketTermico.LineaSeparadora(Caracter: Char);
+procedure TTicketTermico.LineaSeparadora(ACaracter: Char);
 begin
-  EscribirLinea(StringOfChar(Caracter, N_CHAR_LIN));
+  EscribirLinea(StringOfChar(ACaracter, N_CHAR_LIN));
 end;
 
-procedure TTicketTermico.TextoColumnas(const Izq,
-                                       Der: string;
-                                       Ancho: Integer = N_CHAR_LIN);
+procedure TTicketTermico.TextoColumnas(const AIzq,
+                                       ADer: string;
+                                       AAncho: Integer = N_CHAR_LIN);
 var
   Espacios: Integer;
 begin
-  Espacios := Ancho - Length(Izq) - Length(Der);
+  Espacios := AAncho - Length(AIzq) - Length(ADer);
   if Espacios < 1 then
     Espacios := 1;
-  EscribirLinea(Izq + StringOfChar(' ', Espacios) + Der);
+  EscribirLinea(AIzq + StringOfChar(' ', Espacios) + ADer);
 end;
 
-procedure TTicketTermico.ImprimirImagen(Bitmap: Vcl.Graphics.TBitmap;
-                                        Escala: Integer = 3);
+procedure TTicketTermico.ImprimirImagen(ABitmap: Vcl.Graphics.TBitmap;
+                                        AEscala: Integer = 3);
 var
   x, y: Integer;
   BitmapMono, BitmapEscalado: Vcl.Graphics.TBitmap;
@@ -241,16 +241,16 @@ begin
   BitmapMono := Vcl.Graphics.TBitmap.Create;
   try
     // Escalar el bitmap original
-    BitmapEscalado.Width := Bitmap.Width * Escala;
-    BitmapEscalado.Height := Bitmap.Height * Escala;
-    // Escalar p�xel por p�xel para mantener nitidez
+    BitmapEscalado.Width := ABitmap.Width * AEscala;
+    BitmapEscalado.Height := ABitmap.Height * AEscala;
+    // Escalar píxel por píxel para mantener nitidez
     for y := 0 to BitmapEscalado.Height - 1 do
     begin
-      ySrc := y div Escala;
+      ySrc := y div AEscala;
       for x := 0 to BitmapEscalado.Width - 1 do
       begin
-        xSrc := x div Escala;
-        BitmapEscalado.Canvas.Pixels[x, y] := Bitmap.Canvas.Pixels[xSrc, ySrc];
+        xSrc := x div AEscala;
+        BitmapEscalado.Canvas.Pixels[x, y] := ABitmap.Canvas.Pixels[xSrc, ySrc];
       end;
     end;
     // Convertir a monocromo
@@ -282,8 +282,8 @@ begin
       FComandos.Append(Chr(DatosImagen[ByteIndex]));
     FComandos.Append(#13#10);
   finally
-    BitmapMono.Free;
-    BitmapEscalado.Free;
+    FreeAndNil(BitmapMono);
+    FreeAndNil(BitmapEscalado);
   end;
   Alinear(alIzquierda);
 end;
@@ -293,9 +293,9 @@ begin
   FComandos.Append(CMD_CODEPAGE_858);
 end;
 
-procedure TTicketTermico.CortarPapel(Parcial: Boolean);
+procedure TTicketTermico.CortarPapel(AParcial: Boolean);
 begin
-  if Parcial then
+  if AParcial then
     FComandos.Append(CMD_CORTE_PARCIAL)
   else
     FComandos.Append(CMD_CORTE_TOTAL);
@@ -316,7 +316,7 @@ begin
   FComandos.Clear;
 end;
 
-procedure EnviarComandoRAW(const NombreImpresora: string; const Datos: string);
+procedure EnviarComandoRAW(const ANombreImpresora: string; const ADatos: string);
 var
   hPrinter: THandle;
   DocInfo: TDocInfo1;
@@ -330,37 +330,36 @@ var
 //  BytesChar: TBytes;
 begin
   // === MODO DEBUG ===
-  if (NombreImpresora = 'DEBUG') or (NombreImpresora = '') then
+  if (ANombreImpresora = 'DEBUG') or (ANombreImpresora = '') then
   begin
     DebugFile := ExtractFilePath(ParamStr(0)) + 'ticket_escpos_debug_' +
                     ParamStr(1) + '_' + ParamStr(2) + '_' + ParamStr(3) +'.txt';
     AssignFile(F, DebugFile);
-    FileMode := fmOpenRead or fmShareDenyNone;
     Rewrite(F);
     try
       WriteLn(F, '=== COMANDOS ESC/POS - DEBUG ===');
-      WriteLn(F, 'Longitud total: ' + IntToStr(Length(Datos)) + ' bytes');
+      WriteLn(F, 'Longitud total: ' + IntToStr(Length(ADatos)) + ' bytes');
       WriteLn(F, '');
       WriteLn(F, '=== DUMP HEXADECIMAL ===');
-      for i := 1 to Length(Datos) do
+      for i := 1 to Length(ADatos) do
       begin
-        Write(F, IntToHex(Ord(Datos[i]), 2) + ' ');
+        Write(F, IntToHex(Ord(ADatos[i]), 2) + ' ');
         if i mod 16 = 0 then WriteLn(F);
       end;
       WriteLn(F, '');
       WriteLn(F, '');
       WriteLn(F, '=== CONTENIDO LEGIBLE ===');
-      for i := 1 to Length(Datos) do
+      for i := 1 to Length(ADatos) do
       begin
-        case Datos[i] of
+        case ADatos[i] of
           #27: Write(F, '<ESC>');
           #29: Write(F, '<GS>');
           #10: WriteLn(F, '<LF>');
           #13: Write(F, '<CR>');
           #0..#8, #11..#12, #14..#26, #28, #30..#31:
-            Write(F, '<' + IntToHex(Ord(Datos[i]), 2) + '>');
+            Write(F, '<' + IntToHex(Ord(ADatos[i]), 2) + '>');
         else
-          Write(F, Datos[i]);
+          Write(F, ADatos[i]);
         end;
       end;
       WriteLn(F, '');
@@ -370,10 +369,10 @@ begin
     end;
     Exit;
   end;
-  // === IMPRESI�N REAL ===
-  if not OpenPrinter(PChar(NombreImpresora), hPrinter, nil) then
+  // === IMPRESIÓN REAL ===
+  if not OpenPrinter(PChar(ANombreImpresora), hPrinter, nil) then
     raise Exception.CreateFmt('No se pudo abrir la impresora: %s',
-                              [NombreImpresora]);
+                              [ANombreImpresora]);
   try
     DocInfo.pDocName := 'Ticket Fzam';
     DocInfo.pOutputFile := nil;
@@ -387,7 +386,7 @@ begin
           CP858 := TEncoding.GetEncoding(858);
           try
             // Convertir el string completo a CP858 primero
-            DatosRaw := CP858.GetBytes(Datos);
+            DatosRaw := CP858.GetBytes(ADatos);
             // Ahora CORREGIR los bytes de comandos QR que CP858 pudo alterar
             // Recorrer buscando comandos GS ( k
             i := 0;
@@ -400,11 +399,11 @@ begin
               begin
                 // Los siguientes 2 bytes son pL y pH
                 // Restaurarlos del string original
-                //(�ndice i+1 porque Datos empieza en 1)
-                if i+4 < Length(Datos) then
+                //(índice i+1 porque ADatos empieza en 1)
+                if i+4 < Length(ADatos) then
                 begin
-                  DatosRaw[i+3] := Ord(Datos[i+4]); // pL
-                  DatosRaw[i+4] := Ord(Datos[i+5]); // pH
+                  DatosRaw[i+3] := Ord(ADatos[i+4]); // pL
+                  DatosRaw[i+4] := Ord(ADatos[i+5]); // pH
                 end;
                 // Saltar estos bytes procesados
                 Inc(i, 5);
@@ -413,7 +412,7 @@ begin
                 Inc(i);
             end;
           finally
-            CP858.Free;
+            FreeAndNil(CP858);
           end;
           if not WritePrinter(hPrinter,
                               @DatosRaw[0],

@@ -34,37 +34,37 @@ type
     ValorPorDefecto: string;
     ValorActual: string;
 
-    constructor Create(const aCategoria,
-                       aNombre,
-                       aDesc: string;
-                       aTipo: TTipoParametro;
-                       const aDefecto: string);
+    constructor Create(const ACategoria,
+                       ANombre,
+                       ADesc: string;
+                       ATipo: TTipoParametro;
+                       const ADefecto: string);
   end;
 
   TCajaParams = class
   private
     FParams: TObjectDictionary<string, TParamDef>;
-    procedure CargarDesdeDB(const pUsuario, pGrupo: string);
+    procedure CargarDesdeDB(const AUsuario, AGrupo: string);
   public
     constructor Create;
     destructor Destroy; override;
 
     // --- INTERFAZ PARA REGISTRAR PARÁMETROS (Actualizada con Categoría) ---
-    procedure RegistrarParametro(const pCategoria,
-                                 pNombre,
-                                 pDesc: string;
-                                 pTipo: TTipoParametro;
-                                 const pDefecto: string);
+    procedure RegistrarParametro(const ACategoria,
+                                 ANombre,
+                                 ADesc: string;
+                                 ATipo: TTipoParametro;
+                                 const ADefecto: string);
     procedure RegistrarDefectos;
-    procedure InicializarParametrosCaja(const pUsuario, pGrupo: string);
-    procedure Inicializar(const pUsuario, pGrupo: string);
-    procedure Recargar(const pUsuario, pGrupo: string);
+    procedure InicializarParametrosCaja(const AUsuario, AGrupo: string);
+    procedure Inicializar(const AUsuario, AGrupo: string);
+    procedure Recargar(const AUsuario, AGrupo: string);
 
     // Acceso tipado
-    function GetString (const Key: string; const Default: string = '' ): string;
-    function GetBool   (const Key: string;
-                        const Default: Boolean = False): Boolean;
-    function GetInt (const Key: string; const Default: Integer = 0 ): Integer;
+    function GetString (const AKey: string; const ADefault: string = '' ): string;
+    function GetBool   (const AKey: string;
+                        const ADefault: Boolean = False): Boolean;
+    function GetInt (const AKey: string; const ADefault: Integer = 0 ): Integer;
 
     property Params: TObjectDictionary<string, TParamDef> read FParams;
   end;
@@ -79,18 +79,18 @@ uses
 
 { TParamDef }
 
-constructor TParamDef.Create(const aCategoria,
-                             aNombre,
-                             aDesc: string;
-                             aTipo: TTipoParametro;
-                             const aDefecto: string);
+constructor TParamDef.Create(const ACategoria,
+                             ANombre,
+                             ADesc: string;
+                             ATipo: TTipoParametro;
+                             const ADefecto: string);
 begin
-  Categoria := aCategoria;
-  Nombre := aNombre;
-  Descripcion := aDesc;
-  Tipo := aTipo;
-  ValorPorDefecto := aDefecto;
-  ValorActual := aDefecto;
+  Categoria := ACategoria;
+  Nombre := ANombre;
+  Descripcion := ADesc;
+  Tipo := ATipo;
+  ValorPorDefecto := ADefecto;
+  ValorActual := ADefecto;
 end;
 
 { TCajaParams }
@@ -103,18 +103,18 @@ end;
 
 destructor TCajaParams.Destroy;
 begin
-  FParams.Free;
+  FreeAndNil(FParams);
   inherited;
 end;
 
-procedure TCajaParams.RegistrarParametro(const pCategoria,
-                                         pNombre,
-                                         pDesc: string;
-                                         pTipo: TTipoParametro;
-                                         const pDefecto: string);
+procedure TCajaParams.RegistrarParametro(const ACategoria,
+                                         ANombre,
+                                         ADesc: string;
+                                         ATipo: TTipoParametro;
+                                         const ADefecto: string);
 begin
-  FParams.AddOrSetValue(pNombre,
-    TParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));
+  FParams.AddOrSetValue(ANombre,
+    TParamDef.Create(ACategoria, ANombre, ADesc, ATipo, ADefecto));
 end;
 
 procedure TCajaParams.RegistrarDefectos;
@@ -125,7 +125,7 @@ begin
     Param.ValorActual := Param.ValorPorDefecto;
 end;
 
-procedure TCajaParams.CargarDesdeDB(const pUsuario, pGrupo: string);
+procedure TCajaParams.CargarDesdeDB(const AUsuario, AGrupo: string);
 var
   qry: TUniQuery;
   KeyDB, ValueDB: string;
@@ -138,8 +138,8 @@ begin
     qry.Connection := oConn;
     qry.SQL.Text   :=
       'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := pUsuario;
-    qry.ParamByName('p_grupo').AsString      := pGrupo;
+    qry.ParamByName('p_usuario').AsString    := AUsuario;
+    qry.ParamByName('p_grupo').AsString      := AGrupo;
     qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
     qry.Open;
     // 2. Sobrescribimos los valores por defecto con los que tenga el usuario
@@ -165,16 +165,16 @@ begin
       qry.Next;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
-procedure TCajaParams.Inicializar(const pUsuario, pGrupo: string);
+procedure TCajaParams.Inicializar(const AUsuario, AGrupo: string);
 begin
-  CargarDesdeDB(pUsuario, pGrupo);
+  CargarDesdeDB(AUsuario, AGrupo);
 end;
 
-procedure TCajaParams.InicializarParametrosCaja(const pUsuario, pGrupo: string);
+procedure TCajaParams.InicializarParametrosCaja(const AUsuario, AGrupo: string);
 begin
   // --- Control de Artículos ---
   RegistrarParametro('Control de Artículos',
@@ -310,52 +310,52 @@ begin
   // Una vez registrada toda la estructura en memoria, le decimos a la librería
   // que se conecte a la base de datos y cargue los valores reales del usuario.
   // ----------------------------------------------------------------------------------
-  Inicializar(pUsuario, pGrupo);
+  Inicializar(AUsuario, AGrupo);
 end;
 
-procedure TCajaParams.Recargar(const pUsuario, pGrupo: string);
+procedure TCajaParams.Recargar(const AUsuario, AGrupo: string);
 begin
-  CargarDesdeDB(pUsuario, pGrupo);
+  CargarDesdeDB(AUsuario, AGrupo);
 end;
 
 // --- Getters ---
-function TCajaParams.GetString(const Key: string;
-                               const Default: string): string;
+function TCajaParams.GetString(const AKey: string;
+                               const ADefault: string): string;
 var
   ParamObj: TParamDef;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
     Result := ParamObj.ValorActual
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
-function TCajaParams.GetBool(const Key: string;
-                             const Default: Boolean): Boolean;
+function TCajaParams.GetBool(const AKey: string;
+                             const ADefault: Boolean): Boolean;
 var
   ParamObj: TParamDef;
   sVal: string;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
   begin
     sVal := ParamObj.ValorActual;
     Result := SameText(sVal, 'True') or (sVal = '1');
   end
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
-function TCajaParams.GetInt(const Key: string; const Default: Integer): Integer;
+function TCajaParams.GetInt(const AKey: string; const ADefault: Integer): Integer;
 var
   ParamObj: TParamDef;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
   begin
     if not TryStrToInt(ParamObj.ValorActual, Result) then
-      Result := Default;
+      Result := ADefault;
   end
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
 initialization

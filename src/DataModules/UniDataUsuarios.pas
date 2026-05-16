@@ -35,9 +35,6 @@ type
     { Public declarations }
   end;
 
-//var
-//  dmUsuarios: TdmUsuarios;
-
 implementation
 
 uses
@@ -97,13 +94,14 @@ begin
     sUsuario := Trim(FindField('USUARIO_USU').AsString);
     if ((sUsuario = '') or (SimbolosProhibidos(sUsuario))) then
     begin
-      ShowMessageFmt('%s no es un valor de registro v�lido ' +
-                     'para el campo usuario',[sUsuario]);
+      ShowMessageFmt('%s no es un valor de registro válido ' +
+                     'para el campo usuario', [sUsuario]);
       bError := True;
     end;
     if (UsuarioEsGrupo(sUsuario)) then
     begin
-      ShowMessageFmt('El usuario %s es coincidente con el grupo %s',[sUsuario]);
+      ShowMessageFmt('El usuario %s coincide con un grupo del sistema',
+                     [sUsuario]);
       bError := True;
     end;
     if bError then

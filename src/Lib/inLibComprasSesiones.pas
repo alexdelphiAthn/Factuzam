@@ -182,8 +182,8 @@ end;
 destructor TGestorMatrizCompras.Destroy;
 begin
   LimpiarMatriz;
-  FFilas.Free;
-  FColumnas.Free;
+  FreeAndNil(FFilas);
+  FreeAndNil(FColumnas);
   inherited;
 end;
 
@@ -192,13 +192,13 @@ var
   i, j: Integer;
 begin
   for i := 0 to FFilas.Count - 1 do
-    FFilas[i].Celdas.Free;
+    FreeAndNil(FFilas[i].Celdas);
   FFilas.Clear;
   FColumnas.Clear;
 
   // Liberar todos los hijos del contenedor
   for i := FContenedor.ControlCount - 1 downto 0 do
-    FContenedor.Controls[i].Free;
+    FreeAndNil(FContenedor.Controls[i]);
 end;
 
 procedure TGestorMatrizCompras.ReconstruirMatriz(const ALinea: Integer);
@@ -257,7 +257,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -325,8 +325,8 @@ begin
       qF.Next;
     end;
   finally
-    qF.Free;
-    qA.Free;
+    FreeAndNil(qF);
+    FreeAndNil(qA);
   end;
 end;
 
@@ -384,7 +384,7 @@ begin
       qC.Next;
     end;
   finally
-    qC.Free;
+    FreeAndNil(qC);
   end;
 end;
 
@@ -487,7 +487,7 @@ begin
     q.ParamByName('a').AsString  := sAlm;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   FDM.unqrySesionCel.Refresh;
@@ -606,7 +606,7 @@ begin
     q.ParamByName('u').AsString   := FUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   ReconstruirMatriz(FLineaActual);
@@ -728,7 +728,7 @@ begin
     q.ParamByName('u').AsString   := FUsuario;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   ReconstruirMatriz(FLineaActual);
@@ -768,7 +768,7 @@ begin
       '   AND LINEA_SES_SESFIL = :l AND ID_FILA_SESFIL = :f';
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   ReconstruirMatriz(FLineaActual);
@@ -821,7 +821,7 @@ begin
                   '   AND LINEA_SES_SESLPROP = :l';
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   ADM.unqrySesionLin.Delete;
 end;
@@ -895,7 +895,7 @@ begin
       Exit(False);
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -919,7 +919,7 @@ begin
     q.Open;
     Result := q.FieldByName('N').AsInteger;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -942,7 +942,7 @@ begin
     q.Open;
     Result := q.FieldByName('N').AsInteger;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -965,7 +965,7 @@ begin
     q.Open;
     Result := q.FieldByName('T').AsFloat;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -1030,7 +1030,7 @@ begin
     else
       rMargen := q.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   rVenta := CalcularPrecioVenta(rCoste, rMargen, rMultiplo, rAjuste);
@@ -1052,7 +1052,7 @@ begin
     q.ParamByName('l').AsInteger := iLinea;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -1128,7 +1128,7 @@ begin
 
     Result := True;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 

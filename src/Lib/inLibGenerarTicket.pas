@@ -43,8 +43,7 @@ procedure ImprimirT(const ACodigoEmpresa,
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
-  Lin: TDatosLineaFactura;
-  dLin:TDataSet;
+  dLin: TDataSet;
   ModoQR, QRTexto: string;
   CantidadTotal: Double;
   ComandosESC, RutaFicheroPDF: string;
@@ -126,7 +125,8 @@ begin
                               'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
         var sUds := Format('%4s',
              [FloatToStr(dLin.FieldByName('CANTIDAD_FACLIN').AsFloat)]);
-        var Des := Format('%-38s', [Copy(Lin.Descripcion, 1, 38)]);
+        var Des := Format('%-38s', [Copy(dLin.FieldByName(
+                            'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 38)]);
         var sPre := FormatFloat('#,##0.00',
                     dLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
         Ticket.TextoColumnas(sArt + sUds, sPre);
@@ -236,10 +236,10 @@ begin
         Ticket.Imprimir;
       end;
     finally
-      FormPreview.Free;
+      FreeAndNil(FormPreview);
     end;
   finally
-    Ticket.Free;
+    FreeAndNil(Ticket);
   end;
 end;
 

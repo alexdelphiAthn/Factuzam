@@ -35,9 +35,6 @@ type
     procedure GetCodigoAutoIva;
   end;
 
-//var
-//  dmIvas: TdmIvas;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -119,7 +116,6 @@ begin
                                  ' para la zona %s',
                                   [FindField(
                                     'DESCRIPCION_IVA_IVAGRP').AsString]);
-          bError := True;
         end;
       end;
       if (assigned(unqrySol)) then

@@ -156,8 +156,8 @@ end;
 
 destructor TVentasCalendarioCache.Destroy;
 begin
-  FDias.Free;
-  FMesesCargados.Free;
+  FreeAndNil(FDias);
+  FreeAndNil(FMesesCargados);
   inherited;
 end;
 
@@ -266,7 +266,7 @@ begin
     end;
     FMesesCargados.Add(IdMes);
   finally
-    Query.Free;
+    FreeAndNil(Query);
   end;
 end;
 

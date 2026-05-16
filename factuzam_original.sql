@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 15/05/2026 21:26:27
+-- Backup generado: 16/05/2026 17:06:01
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -237,7 +237,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '2026-03-11 22:27:51', 'DEMO', 'DEMO', NULL),
   ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
-  ('DEMO-BASICO', 'S', 'ESTANDAR', 'Camiseta Algodón Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:57', '2026-03-26 17:34:00', 'Admin', '', 'TC'),
+  ('DEMO-BASICO', 'S', 'ESTANDAR', 'Camiseta Algodón Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:57', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
   ('DEMO-CAMISA', 'S', 'ESTANDAR', 'Camisa Lino Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:58', '2026-03-26 19:15:56', '', 'Administrador', 'TC'),
   ('DEMO-PRO', 'S', 'ESTANDAR', 'Cinturón Piel Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:59', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
   ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:54', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
@@ -276,9 +276,15 @@ ALTER TABLE `fza_articulos_atributos_basicos` ADD INDEX `IDX_AAB_VAL` (`ID_AV_AA
 
 -- Datos de fza_articulos_atributos_basicos
 INSERT INTO `fza_articulos_atributos_basicos` (`CODIGO_ART_AAB`, `ID_AV_AAB`, `ID_ATB_AAB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('DEMO-CAMISA', 9213, 109, '2026-05-15 17:58:47', '2026-05-14 20:49:22', 'Administrador', 'Administrador'),
-  ('VEST-FLOR', 9104, 149, '2026-05-15 18:06:11', '2026-05-15 18:06:03', 'Administrador', 'Administrador');
--- 2 registros exportados
+  ('DEMO-CAMISA', 3, 18, '2026-05-16 14:23:49', '2026-05-16 14:23:49', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 101, 2, '2026-05-16 14:23:37', '2026-05-16 14:23:37', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 9204, 170, '2026-05-16 17:01:40', '2026-05-16 17:01:40', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 9206, 3, '2026-05-16 16:48:04', '2026-05-16 16:44:56', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA', 9213, 109, '2026-05-16 17:01:57', '2026-05-14 20:49:22', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 218, 5, '2026-05-16 14:31:15', '2026-05-16 14:31:15', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9104, 149, '2026-05-15 18:06:11', '2026-05-15 18:06:03', 'Administrador', 'Administrador'),
+  ('VEST-FLOR', 9207, 169, '2026-05-16 14:31:55', '2026-05-16 14:31:46', 'Administrador', 'Administrador');
+-- 8 registros exportados
 
 
 -- Tabla: fza_articulos_conjuntos_asign
@@ -636,7 +642,6 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('DEMO-CAMISA/NEGRO/M', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/S', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
-  ('DEMO-CAMISA/XXL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:49', '2026-05-11 19:09:37', 'SISTEMA', 'Administrador'),
   ('DEMO-PRO', 'DEMO-PRO', '-', 'S', '2026-05-10 07:20:51', '2026-05-10 07:20:51', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
@@ -704,7 +709,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 118 registros exportados
+-- 117 registros exportados
 
 
 -- Tabla: fza_articulos_skus_costes
@@ -750,7 +755,6 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('DEMO-CAMISA/NEGRO/M', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/NEGRO/S', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('DEMO-CAMISA/NEGRO/XL', 9, '2025-12-25 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
-  ('DEMO-CAMISA/XXL', 9, NULL, '2026-05-14 19:57:49', '2026-05-14 19:57:49', 'Administrador', 'Administrador'),
   ('DEMO-PRO', 2, '2026-05-08 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('JERSEY-LANA/BEIGE/M', 5, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('JERSEY-LANA/GRIS/L', 5, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
@@ -774,7 +778,7 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('VEST-FLOR/ROJO/XL', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/VERDE/M', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/VERDE/S', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION');
--- 50 registros exportados
+-- 49 registros exportados
 
 
 -- Tabla: fza_articulos_stockactual
@@ -798,77 +802,77 @@ CREATE TABLE `fza_articulos_stockactual` (
 
 -- Datos de fza_articulos_stockactual
 INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, `CANTIDAD_STK`, `INSTANTE_MODIF`, `VALOR_TOTAL_STK`, `PRECIO_MEDIO_STK`, `CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, `CANTIDAD_PTE_TRASPASAR_STK`, `CANTIDAD_PTE_RECTRASPASAR_STK`) VALUES
-  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0),
-  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-15 18:16:04', 0, 0, 0, 0, 0, 0);
+  ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 2, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CARTERA-PIEL', '', NULL, 2, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'CINTURON-PIEL', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'DEMO-BASICO', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 12, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/L', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/BLANCO/M', '', NULL, 25, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/NEGRO/M', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 20, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 18, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 10, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-BASICO', '', NULL, -1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/L', '', NULL, -1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/BEIGE/M', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'JERSEY-LANA/GRIS/M', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/M', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/MARRON/43', '', NULL, 4, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/41', '', NULL, 3, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-16 16:41:26', 0, 0, 0, 0, 0, 0);
 -- 71 registros exportados
 
 
@@ -1020,7 +1024,7 @@ ALTER TABLE `fza_atributos_basicos` ADD UNIQUE INDEX `ID_VA_ATB` (`ID_VA_ATB`, `
 INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBRE_ATB`, `DESCRIPCION_ATB`, `HEX_ATB`, `VALOR_NUM_ATB`, `UNIDAD_ATB`, `ORDEN_ATB`, `ESACTIVO_ATB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   (1, 'CO', 'NEGRO', 'Negro', 'Color negro', '#000000', NULL, NULL, 20, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (2, 'CO', 'BLANCO', 'Blanco roto', 'Color blanco', '#FFFFFF', NULL, NULL, 30, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
-  (3, 'CO', 'ROJO', 'Rojo bandera', 'Color rojo', '#FF0000', NULL, NULL, 10, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
+  (3, 'CO', 'ROJO', 'COLORAO', 'Color rojo', '#C60000', NULL, NULL, 10, 'S', '2026-05-16 16:47:13', '2026-05-14 19:34:42', 'SISTEMA', 'Administrador'),
   (4, 'CO', 'AZUL', 'Azul', 'Color azul', '#0066CC', NULL, NULL, 60, 'S', '2026-05-15 19:13:51', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (5, 'CO', 'AZUL_CIELO', 'AZUL CIELO', 'Color azul cielo', '#87CEEB', NULL, NULL, 41, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
   (6, 'CO', 'AZUL_MARINO', 'AZUL MARINO', 'Color azul marino', '#1B2A49', NULL, NULL, 42, 'S', '2026-05-14 19:34:42', '2026-05-14 19:34:42', 'SISTEMA', 'SISTEMA'),
@@ -1064,9 +1068,11 @@ INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBR
   (44, 'TAL', 'CAMI_L', 'CAMISA L', 'Camisa hombre L (40 cm cuello)', NULL, 40, 'cm', 320, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
   (45, 'TAL', 'CAMI_XL', 'CAMISA XL', 'Camisa hombre XL (34 cm cuello)', NULL, 34, 'cm', 330, 'S', '2026-05-14 20:29:38', '2026-05-14 20:29:38', 'SISTEMA', 'SISTEMA'),
   (109, 'TAL', 'AD_DEMO-CAMISA_9213', '3XL', NULL, NULL, 56, 'cm', 0, 'S', '2026-05-15 17:58:57', '2026-05-15 17:58:47', 'Administrador', 'Administrador'),
-  (149, 'TAL', 'AD_VEST-FLOR_XL', 'XL', NULL, NULL, 52, 'cm', 0, 'S', '2026-05-15 18:06:14', '2026-05-15 18:06:11', 'Administrador', 'Administrador');
+  (149, 'TAL', 'AD_VEST-FLOR_XL', 'XL', NULL, NULL, 52, 'cm', 0, 'S', '2026-05-15 18:06:14', '2026-05-15 18:06:11', 'Administrador', 'Administrador'),
+  (169, 'CO', 'AD_VEST-FLOR_BONIATO', 'BONIATO', NULL, '#808040', NULL, NULL, 0, 'S', '2026-05-16 14:32:00', '2026-05-16 14:31:55', 'Administrador', 'Administrador'),
+  (170, 'CO', 'AMARILLOCHILLON', 'AMARILLOCHILLON', NULL, '#FFFF00', NULL, NULL, 0, 'S', '2026-05-16 17:01:48', '2026-05-16 17:01:40', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_basicos` ENABLE KEYS */;
--- 47 registros exportados
+-- 49 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos
@@ -1247,6 +1253,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('DEMO-CAMISA/AZULMARINO/L', 9203, '2026-03-28 19:35:03', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/BLANCO/L', 9103, '2026-03-27 07:25:37', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/BLANCO/L', 9201, '2026-03-27 07:25:37', '2026-05-05 07:47:47', '', ''),
+  ('DEMO-CAMISA/BLANCO/M', 3, '2026-05-16 14:23:49', '2026-05-16 14:23:49', 'Administrador', 'Administrador'),
+  ('DEMO-CAMISA/BLANCO/M', 101, '2026-05-16 14:23:37', '2026-05-16 14:23:37', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/COLORAO/L', 9103, '2026-03-27 07:32:34', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/COLORAO/L', 9206, '2026-03-27 07:32:34', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/COLORAO/XL', 9104, '2026-03-27 07:37:49', '2026-05-05 07:47:47', '', ''),
@@ -1390,7 +1398,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 221 registros exportados
+-- 223 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -2373,7 +2381,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 201, 3, 'S', 'S', '2026-05-15 21:25:46', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 207, 3, 'S', 'S', '2026-05-16 16:44:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 18, 2, 'S', 'S', '2026-05-11 19:06:32', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -5690,8 +5698,353 @@ COMMIT;
 -- DESCRIBE fza_atributos_basicos;
 -- SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, HEX_ATB
 --   FROM fza_atributos_basicos ORDER BY ID_VA_ATB, ORDEN_ATB;
-', '2026-05-15 21:25:46', '2026-05-15 21:25:46', 'Administrador', 'Administrador');
--- 11 registros exportados
+', '2026-05-15 21:25:46', '2026-05-15 21:25:46', 'Administrador', 'Administrador'),
+  ('201', NULL, 'SELECT * FROM fza_articulos_skus WHERE CODIGO_ART_SKU = ''DEMO-BASICO'';', '2026-05-15 21:32:08', '2026-05-15 21:32:08', 'Administrador', 'Administrador'),
+  ('202', NULL, 'CALL PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ(''DEMO-CAMISA'');', '2026-05-15 21:35:19', '2026-05-15 21:35:19', 'Administrador', 'Administrador'),
+  ('203', NULL, NULL, '2026-05-16 14:22:21', '2026-05-16 14:22:21', 'Administrador', 'Administrador'),
+  ('204', 'sku_atributos_huerfanos', '-- ============================================================================
+--  vi_atributos_sku_basico — incluir filas virtuales para SKUs huérfanos
+-- ----------------------------------------------------------------------------
+--  Problema:
+--    La vista actual hace INNER JOIN entre fza_articulos_skus y la tabla
+--    puente fza_atributos_sku (SA). Un SKU sin filas en SA (creado a mano,
+--    importado, migrado, etc.) NO aparece en la vista, así que el grid
+--    "Atributos del SKU + Atributo básico (helper)" se queda vacío y no
+--    hay forma de asignarle color/talla básica desde la UI sin tocar SQL.
+--
+--  Solución:
+--    UNION ALL con filas "virtuales" (ID_AV NULL) para cada atributo de la
+--    variación del SKU que NO tenga su correspondiente fila en SA. El
+--    VALOR_AV de la fila virtual se deriva del propio código del SKU por
+--    posición ORDEN_VA (ej. DEMO-CAMISA/BLANCO/M → ''BLANCO'' para ORDEN=1
+--    ''CO'', ''M'' para ORDEN=2 ''TAL'').
+--
+--    Estas filas son sólo informativas. El primer EditValueChanged que
+--    edite el básico dispara AsegurarFilaSA() en Delphi, que materializa
+--    el AV (si no existía) y la fila SA, y a partir de ahí la fila pasa
+--    a ser "real" (con ID_AV no nulo) y la vista la sirve por la primera
+--    rama del UNION.
+--
+--  Idempotente — DROP + CREATE.
+-- ============================================================================
+
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+
+CREATE ALGORITHM = UNDEFINED VIEW `vi_atributos_sku_basico` AS
+
+-- ---------------------------------------------------------------------------
+-- 1) Filas REALES: SKU con su atributo enlazado en fza_atributos_sku (SA).
+-- ---------------------------------------------------------------------------
+SELECT
+    `sku`.`CODIGO_ART_SKU`                        AS `CODIGO_ART_SKU`,
+    `sku`.`CODIGO_UNIDAD_SKU`                     AS `CODIGO_UNIDAD_SKU`,
+    `sku`.`CODIGO_VAR_SKU`                        AS `CODIGO_VAR_SKU`,
+    `val`.`ID_AV`                                 AS `ID_AV`,
+    `val`.`ID_VA_AV`                              AS `ID_VA_AV`,
+    `va`.`NOMBRE_VA`                              AS `NOMBRE_ATRIBUTO`,
+    `va`.`ORDEN_VA`                               AS `ORDEN_ATRIBUTO`,
+    `val`.`AV`                                    AS `VALOR_AV`,
+    `val`.`DESCRIPCION_AV`                        AS `DESCRIPCION_AV`,
+    `aca`.`ID_AC_ACA`                             AS `ID_AC`,
+    `aab`.`ID_ATB_AAB`                            AS `ID_ATB_OVERRIDE`,
+    `acd`.`ID_ATB_ACD`                            AS `ID_ATB_CONJUNTO`,
+    `val`.`ID_ATB_AV`                             AS `ID_ATB_GLOBAL`,
+    CASE
+      WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN `aab`.`ID_ATB_AAB`
+      WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN `acd`.`ID_ATB_ACD`
+      ELSE `val`.`ID_ATB_AV`
+    END                                           AS `ID_ATB_AV`,
+    CASE
+      WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN ''A''
+      WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN ''C''
+      WHEN `val`.`ID_ATB_AV`      IS NOT NULL THEN ''G''
+      ELSE NULL
+    END                                           AS `FUENTE_ATB`,
+    `atb`.`CODIGO_ATB`                            AS `CODIGO_ATB`,
+    `atb`.`NOMBRE_ATB`                            AS `NOMBRE_ATB`,
+    `atb`.`DESCRIPCION_ATB`                       AS `DESCRIPCION_ATB`,
+    `atb`.`HEX_ATB`                               AS `HEX_ATB`,
+    `atb`.`VALOR_NUM_ATB`                         AS `VALOR_NUM_ATB`,
+    `atb`.`UNIDAD_ATB`                            AS `UNIDAD_ATB`,
+    CASE
+      WHEN `atb`.`VALOR_NUM_ATB` IS NOT NULL THEN
+        CONCAT(
+          TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+            CAST(`atb`.`VALOR_NUM_ATB` AS CHAR CHARSET utf8mb4))),
+          COALESCE(CONCAT('' '', `atb`.`UNIDAD_ATB`), '''')
+        )
+      WHEN `atb`.`HEX_ATB` IS NOT NULL THEN
+        CONCAT(`atb`.`NOMBRE_ATB`, '' '', `atb`.`HEX_ATB`)
+      ELSE `atb`.`NOMBRE_ATB`
+    END                                           AS `ETIQUETA_BASICO`
+FROM             `fza_articulos_skus`              `sku`
+JOIN             `fza_atributos_sku`               `sa`
+              ON `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`
+JOIN             `fza_atributos_valores`           `val`
+              ON `val`.`ID_AV` = `sa`.`ID_AV_SA`
+LEFT JOIN        `fza_variaciones_atributos`       `va`
+              ON `va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`
+             AND `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`
+LEFT JOIN        `fza_articulos_atributos_basicos` `aab`
+              ON `aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU`
+             AND `aab`.`ID_AV_AAB`      = `val`.`ID_AV`
+LEFT JOIN        `fza_articulos_conjuntos_asign`   `aca`
+              ON `aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU`
+             AND `aca`.`ID_VA_ACA`      = `val`.`ID_VA_AV`
+LEFT JOIN        `fza_atributos_conjuntos_det`     `acd`
+              ON `acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA`
+             AND `acd`.`ID_AV_ACD` = `val`.`ID_AV`
+LEFT JOIN        `fza_atributos_basicos`           `atb`
+              ON `atb`.`ID_ATB` = CASE
+                WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN `aab`.`ID_ATB_AAB`
+                WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN `acd`.`ID_ATB_ACD`
+                ELSE `val`.`ID_ATB_AV`
+              END
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- 2) Filas VIRTUALES: SKU con un atributo de su variación SIN fila en SA.
+--    El VALOR_AV se obtiene del propio código del SKU por posición ORDEN_VA.
+--    Se filtra por LIKE ''CODIGO_ART_SKU/%'' para no parsear códigos que no
+--    siguen la convención (CODIGO_ART/VAL1/VAL2…) y dar lugar a basura.
+-- ---------------------------------------------------------------------------
+SELECT
+    `sku`.`CODIGO_ART_SKU`                        AS `CODIGO_ART_SKU`,
+    `sku`.`CODIGO_UNIDAD_SKU`                     AS `CODIGO_UNIDAD_SKU`,
+    `sku`.`CODIGO_VAR_SKU`                        AS `CODIGO_VAR_SKU`,
+    NULL                                          AS `ID_AV`,
+    `va`.`ID_ATB_VA`                              AS `ID_VA_AV`,
+    `va`.`NOMBRE_VA`                              AS `NOMBRE_ATRIBUTO`,
+    `va`.`ORDEN_VA`                               AS `ORDEN_ATRIBUTO`,
+    SUBSTRING_INDEX(
+      SUBSTRING_INDEX(
+        SUBSTRING(`sku`.`CODIGO_UNIDAD_SKU`,
+                  CHAR_LENGTH(`sku`.`CODIGO_ART_SKU`) + 2),
+        ''/'', `va`.`ORDEN_VA`),
+      ''/'', -1)                                    AS `VALOR_AV`,
+    NULL                                          AS `DESCRIPCION_AV`,
+    NULL                                          AS `ID_AC`,
+    NULL                                          AS `ID_ATB_OVERRIDE`,
+    NULL                                          AS `ID_ATB_CONJUNTO`,
+    NULL                                          AS `ID_ATB_GLOBAL`,
+    NULL                                          AS `ID_ATB_AV`,
+    NULL                                          AS `FUENTE_ATB`,
+    NULL                                          AS `CODIGO_ATB`,
+    NULL                                          AS `NOMBRE_ATB`,
+    NULL                                          AS `DESCRIPCION_ATB`,
+    NULL                                          AS `HEX_ATB`,
+    NULL                                          AS `VALOR_NUM_ATB`,
+    NULL                                          AS `UNIDAD_ATB`,
+    NULL                                          AS `ETIQUETA_BASICO`
+FROM             `fza_articulos_skus`         `sku`
+JOIN             `fza_variaciones_atributos`  `va`
+              ON `va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`
+WHERE `sku`.`CODIGO_UNIDAD_SKU` LIKE CONCAT(`sku`.`CODIGO_ART_SKU`, ''/%'')
+  AND NOT EXISTS (
+        SELECT 1
+          FROM `fza_atributos_sku`     `sa`
+          JOIN `fza_atributos_valores` `v`
+            ON `v`.`ID_AV` = `sa`.`ID_AV_SA`
+         WHERE `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`
+           AND `v`.`ID_VA_AV`              = `va`.`ID_ATB_VA`
+      );
+', '2026-05-16 14:22:29', '2026-05-16 14:22:29', 'Administrador', 'Administrador'),
+  ('205', 'fix_alias_tipo_cantidad_articulo', '-- ============================================================================
+--  Fix typo alias TIPO_CATNTIDAD_ARTICULO -> TIPO_CANTIDAD_ARTICULO
+-- ----------------------------------------------------------------------------
+--  La vista vi_proveedores_articulos exponia la columna real
+--  TIPO_CANTIDAD_ART bajo un alias con typo: TIPO_CATNTIDAD_ARTICULO.
+--  El binding del Mto de Proveedores (inMtoProveedores.dfm/.pas) viajaba
+--  fiel al alias con typo, segun §1.5 del libro de estilo Delphi
+--  ("los nombres SQL viajan tal cual").
+--
+--  Tras arreglar el codigo (cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO +
+--  DataBinding.FieldName = ''TIPO_CANTIDAD_ARTICULO''), la vista tambien
+--  debe reflejar el alias sin typo para que el binding encuentre la
+--  columna en tiempo de ejecucion.
+--
+--  Cambia solo el alias (AS); la columna real TIPO_CANTIDAD_ART en
+--  fza_articulos no se toca.
+--
+--  Idempotente: re-crea la vista de cero.
+-- ============================================================================
+
+DROP VIEW IF EXISTS `vi_proveedores_articulos`;
+
+CREATE ALGORITHM=UNDEFINED VIEW `vi_proveedores_articulos` AS
+SELECT
+  `fza_articulos_proveedores`.`CODIGO_PRV_AP`           AS `CODIGO_PRV_PRV`,
+  `fza_articulos_proveedores`.`CODIGO_ART_AP`           AS `CODIGO_ART_ART`,
+  `vi_articulos`.`DESCRIPCION_ART`                      AS `DESCRIPCION_ART`,
+  `vi_articulos`.`CODIGO_FAM_ART`                       AS `CODIGO_FAM_FAM`,
+  `vi_articulos`.`DESCRIPCION_FAM`                      AS `DESCRIPCION_FAM`,
+  `vi_articulos`.`TIPO_CANTIDAD_ART`                    AS `TIPO_CANTIDAD_ARTICULO`,
+  `vi_articulos`.`ESACTIVO_FIJO_ART`                    AS `ESACTIVO_FIJO_ART`,
+  `fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_AP`    AS `PRECIO_ULT_COMPRA`,
+  `fza_articulos_proveedores`.`FECHA_VALIDEZ_AP`        AS `FECHA_VALIDEZ`,
+  `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` AS `ESPROVEEDORPRINCIPAL`,
+  `fza_articulos_proveedores`.`INSTANTE_MODIF`          AS `INSTANTE_MODIF`,
+  `fza_articulos_proveedores`.`INSTANTE_ALTA`           AS `INSTANTE_ALTA`,
+  `fza_articulos_proveedores`.`USUARIO_ALTA`            AS `USUARIO_ALTA`,
+  `fza_articulos_proveedores`.`USUARIO_MODIF`           AS `USUARIO_MODIF`
+FROM `fza_articulos_proveedores`
+LEFT JOIN `vi_articulos`
+  ON `fza_articulos_proveedores`.`CODIGO_ART_AP` = `vi_articulos`.`CODIGO_ART_ART`;
+
+-- Verificacion (opcional, ejecutar despues):
+-- SHOW CREATE VIEW vi_proveedores_articulos\\G
+-- SELECT TIPO_CANTIDAD_ARTICULO FROM vi_proveedores_articulos LIMIT 1;
+', '2026-05-16 14:35:16', '2026-05-16 14:35:16', 'Administrador', 'Administrador'),
+  ('206', 'sku_atributos_huerfanos', '-- ============================================================================
+--  vi_atributos_sku_basico — incluir filas virtuales para SKUs huérfanos
+-- ----------------------------------------------------------------------------
+--  Problema:
+--    La vista actual hace INNER JOIN entre fza_articulos_skus y la tabla
+--    puente fza_atributos_sku (SA). Un SKU sin filas en SA (creado a mano,
+--    importado, migrado, etc.) NO aparece en la vista, así que el grid
+--    "Atributos del SKU + Atributo básico (helper)" se queda vacío y no
+--    hay forma de asignarle color/talla básica desde la UI sin tocar SQL.
+--
+--  Solución:
+--    UNION ALL con filas "virtuales" (ID_AV NULL) para cada atributo de la
+--    variación del SKU que NO tenga su correspondiente fila en SA. El
+--    VALOR_AV de la fila virtual se deriva del propio código del SKU por
+--    posición ORDEN_VA (ej. DEMO-CAMISA/BLANCO/M → ''BLANCO'' para ORDEN=1
+--    ''CO'', ''M'' para ORDEN=2 ''TAL'').
+--
+--    Estas filas son sólo informativas. El primer EditValueChanged que
+--    edite el básico dispara AsegurarFilaSA() en Delphi, que materializa
+--    el AV (si no existía) y la fila SA, y a partir de ahí la fila pasa
+--    a ser "real" (con ID_AV no nulo) y la vista la sirve por la primera
+--    rama del UNION.
+--
+--  Idempotente — DROP + CREATE.
+-- ============================================================================
+
+DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
+
+CREATE ALGORITHM = UNDEFINED VIEW `vi_atributos_sku_basico` AS
+
+-- ---------------------------------------------------------------------------
+-- 1) Filas REALES: SKU con su atributo enlazado en fza_atributos_sku (SA).
+-- ---------------------------------------------------------------------------
+SELECT
+    `sku`.`CODIGO_ART_SKU`                        AS `CODIGO_ART_SKU`,
+    `sku`.`CODIGO_UNIDAD_SKU`                     AS `CODIGO_UNIDAD_SKU`,
+    `sku`.`CODIGO_VAR_SKU`                        AS `CODIGO_VAR_SKU`,
+    `val`.`ID_AV`                                 AS `ID_AV`,
+    `val`.`ID_VA_AV`                              AS `ID_VA_AV`,
+    `va`.`NOMBRE_VA`                              AS `NOMBRE_ATRIBUTO`,
+    `va`.`ORDEN_VA`                               AS `ORDEN_ATRIBUTO`,
+    `val`.`AV`                                    AS `VALOR_AV`,
+    `val`.`DESCRIPCION_AV`                        AS `DESCRIPCION_AV`,
+    `aca`.`ID_AC_ACA`                             AS `ID_AC`,
+    `aab`.`ID_ATB_AAB`                            AS `ID_ATB_OVERRIDE`,
+    `acd`.`ID_ATB_ACD`                            AS `ID_ATB_CONJUNTO`,
+    `val`.`ID_ATB_AV`                             AS `ID_ATB_GLOBAL`,
+    CASE
+      WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN `aab`.`ID_ATB_AAB`
+      WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN `acd`.`ID_ATB_ACD`
+      ELSE `val`.`ID_ATB_AV`
+    END                                           AS `ID_ATB_AV`,
+    CASE
+      WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN ''A''
+      WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN ''C''
+      WHEN `val`.`ID_ATB_AV`      IS NOT NULL THEN ''G''
+      ELSE NULL
+    END                                           AS `FUENTE_ATB`,
+    `atb`.`CODIGO_ATB`                            AS `CODIGO_ATB`,
+    `atb`.`NOMBRE_ATB`                            AS `NOMBRE_ATB`,
+    `atb`.`DESCRIPCION_ATB`                       AS `DESCRIPCION_ATB`,
+    `atb`.`HEX_ATB`                               AS `HEX_ATB`,
+    `atb`.`VALOR_NUM_ATB`                         AS `VALOR_NUM_ATB`,
+    `atb`.`UNIDAD_ATB`                            AS `UNIDAD_ATB`,
+    CASE
+      WHEN `atb`.`VALOR_NUM_ATB` IS NOT NULL THEN
+        CONCAT(
+          TRIM(TRAILING ''0'' FROM TRIM(TRAILING ''.'' FROM
+            CAST(`atb`.`VALOR_NUM_ATB` AS CHAR CHARSET utf8mb4))),
+          COALESCE(CONCAT('' '', `atb`.`UNIDAD_ATB`), '''')
+        )
+      WHEN `atb`.`HEX_ATB` IS NOT NULL THEN
+        CONCAT(`atb`.`NOMBRE_ATB`, '' '', `atb`.`HEX_ATB`)
+      ELSE `atb`.`NOMBRE_ATB`
+    END                                           AS `ETIQUETA_BASICO`
+FROM             `fza_articulos_skus`              `sku`
+JOIN             `fza_atributos_sku`               `sa`
+              ON `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`
+JOIN             `fza_atributos_valores`           `val`
+              ON `val`.`ID_AV` = `sa`.`ID_AV_SA`
+LEFT JOIN        `fza_variaciones_atributos`       `va`
+              ON `va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`
+             AND `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`
+LEFT JOIN        `fza_articulos_atributos_basicos` `aab`
+              ON `aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU`
+             AND `aab`.`ID_AV_AAB`      = `val`.`ID_AV`
+LEFT JOIN        `fza_articulos_conjuntos_asign`   `aca`
+              ON `aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU`
+             AND `aca`.`ID_VA_ACA`      = `val`.`ID_VA_AV`
+LEFT JOIN        `fza_atributos_conjuntos_det`     `acd`
+              ON `acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA`
+             AND `acd`.`ID_AV_ACD` = `val`.`ID_AV`
+LEFT JOIN        `fza_atributos_basicos`           `atb`
+              ON `atb`.`ID_ATB` = CASE
+                WHEN `aab`.`CODIGO_ART_AAB` IS NOT NULL THEN `aab`.`ID_ATB_AAB`
+                WHEN `acd`.`ID_ATB_ACD`     IS NOT NULL THEN `acd`.`ID_ATB_ACD`
+                ELSE `val`.`ID_ATB_AV`
+              END
+
+UNION ALL
+
+-- ---------------------------------------------------------------------------
+-- 2) Filas VIRTUALES: SKU con un atributo de su variación SIN fila en SA.
+--    El VALOR_AV se obtiene del propio código del SKU por posición ORDEN_VA.
+--    Se filtra por LIKE ''CODIGO_ART_SKU/%'' para no parsear códigos que no
+--    siguen la convención (CODIGO_ART/VAL1/VAL2…) y dar lugar a basura.
+-- ---------------------------------------------------------------------------
+SELECT
+    `sku`.`CODIGO_ART_SKU`                        AS `CODIGO_ART_SKU`,
+    `sku`.`CODIGO_UNIDAD_SKU`                     AS `CODIGO_UNIDAD_SKU`,
+    `sku`.`CODIGO_VAR_SKU`                        AS `CODIGO_VAR_SKU`,
+    NULL                                          AS `ID_AV`,
+    `va`.`ID_ATB_VA`                              AS `ID_VA_AV`,
+    `va`.`NOMBRE_VA`                              AS `NOMBRE_ATRIBUTO`,
+    `va`.`ORDEN_VA`                               AS `ORDEN_ATRIBUTO`,
+    SUBSTRING_INDEX(
+      SUBSTRING_INDEX(
+        SUBSTRING(`sku`.`CODIGO_UNIDAD_SKU`,
+                  CHAR_LENGTH(`sku`.`CODIGO_ART_SKU`) + 2),
+        ''/'', `va`.`ORDEN_VA`),
+      ''/'', -1)                                    AS `VALOR_AV`,
+    NULL                                          AS `DESCRIPCION_AV`,
+    NULL                                          AS `ID_AC`,
+    NULL                                          AS `ID_ATB_OVERRIDE`,
+    NULL                                          AS `ID_ATB_CONJUNTO`,
+    NULL                                          AS `ID_ATB_GLOBAL`,
+    NULL                                          AS `ID_ATB_AV`,
+    NULL                                          AS `FUENTE_ATB`,
+    NULL                                          AS `CODIGO_ATB`,
+    NULL                                          AS `NOMBRE_ATB`,
+    NULL                                          AS `DESCRIPCION_ATB`,
+    NULL                                          AS `HEX_ATB`,
+    NULL                                          AS `VALOR_NUM_ATB`,
+    NULL                                          AS `UNIDAD_ATB`,
+    NULL                                          AS `ETIQUETA_BASICO`
+FROM             `fza_articulos_skus`         `sku`
+JOIN             `fza_variaciones_atributos`  `va`
+              ON `va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`
+WHERE `sku`.`CODIGO_UNIDAD_SKU` LIKE CONCAT(`sku`.`CODIGO_ART_SKU`, ''/%'')
+  AND NOT EXISTS (
+        SELECT 1
+          FROM `fza_atributos_sku`     `sa`
+          JOIN `fza_atributos_valores` `v`
+            ON `v`.`ID_AV` = `sa`.`ID_AV_SA`
+         WHERE `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`
+           AND `v`.`ID_VA_AV`              = `va`.`ID_ATB_VA`
+      );
+', '2026-05-16 16:44:11', '2026-05-16 16:44:11', 'Administrador', 'Administrador');
+-- 17 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -7349,7 +7702,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-15 21:26:21', '2026-05-15 21:26:21', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-16 17:05:56', '2026-05-16 17:05:56', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -13187,7 +13540,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select distinct `ask`
 
 -- Vista: vi_atributos_sku_basico
 DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`aca`.`ID_AC_ACA` AS `ID_AC`,`aab`.`ID_ATB_AAB` AS `ID_ATB_OVERRIDE`,`acd`.`ID_ATB_ACD` AS `ID_ATB_CONJUNTO`,`val`.`ID_ATB_AV` AS `ID_ATB_GLOBAL`,case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end AS `ID_ATB_AV`,case when `aab`.`CODIGO_ART_AAB` is not null then 'A' when `acd`.`ID_ATB_ACD` is not null then 'C' when `val`.`ID_ATB_AV` is not null then 'G' else NULL end AS `FUENTE_ATB`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO` from (((((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_articulos_atributos_basicos` `aab` on(`aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU` and `aab`.`ID_AV_AAB` = `val`.`ID_AV`)) left join `fza_articulos_conjuntos_asign` `aca` on(`aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU` and `aca`.`ID_VA_ACA` = `val`.`ID_VA_AV`)) left join `fza_atributos_conjuntos_det` `acd` on(`acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA` and `acd`.`ID_AV_ACD` = `val`.`ID_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`aca`.`ID_AC_ACA` AS `ID_AC`,`aab`.`ID_ATB_AAB` AS `ID_ATB_OVERRIDE`,`acd`.`ID_ATB_ACD` AS `ID_ATB_CONJUNTO`,`val`.`ID_ATB_AV` AS `ID_ATB_GLOBAL`,case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end AS `ID_ATB_AV`,case when `aab`.`CODIGO_ART_AAB` is not null then 'A' when `acd`.`ID_ATB_ACD` is not null then 'C' when `val`.`ID_ATB_AV` is not null then 'G' else NULL end AS `FUENTE_ATB`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO` from (((((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_articulos_atributos_basicos` `aab` on(`aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU` and `aab`.`ID_AV_AAB` = `val`.`ID_AV`)) left join `fza_articulos_conjuntos_asign` `aca` on(`aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU` and `aca`.`ID_VA_ACA` = `val`.`ID_VA_AV`)) left join `fza_atributos_conjuntos_det` `acd` on(`acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA` and `acd`.`ID_AV_ACD` = `val`.`ID_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end)) union all select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,NULL AS `ID_AV`,`va`.`ID_ATB_VA` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,substring_index(substring_index(substr(`sku`.`CODIGO_UNIDAD_SKU`,char_length(`sku`.`CODIGO_ART_SKU`) + 2),'/',`va`.`ORDEN_VA`),'/',-1) AS `VALOR_AV`,NULL AS `DESCRIPCION_AV`,NULL AS `ID_AC`,NULL AS `ID_ATB_OVERRIDE`,NULL AS `ID_ATB_CONJUNTO`,NULL AS `ID_ATB_GLOBAL`,NULL AS `ID_ATB_AV`,NULL AS `FUENTE_ATB`,NULL AS `CODIGO_ATB`,NULL AS `NOMBRE_ATB`,NULL AS `DESCRIPCION_ATB`,NULL AS `HEX_ATB`,NULL AS `VALOR_NUM_ATB`,NULL AS `UNIDAD_ATB`,NULL AS `ETIQUETA_BASICO` from (`fza_articulos_skus` `sku` join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`)) where `sku`.`CODIGO_UNIDAD_SKU` like concat(`sku`.`CODIGO_ART_SKU`,'/%') and !exists(select 1 from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `v` on(`v`.`ID_AV` = `sa`.`ID_AV_SA`)) where `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU` and `v`.`ID_VA_AV` = `va`.`ID_ATB_VA` limit 1);
 
 -- Vista: vi_cajasdef
 DROP VIEW IF EXISTS `vi_cajasdef`;
@@ -13311,7 +13664,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores` AS select `fza_proveedores`.`C
 
 -- Vista: vi_proveedores_articulos
 DROP VIEW IF EXISTS `vi_proveedores_articulos`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores_articulos` AS select `fza_articulos_proveedores`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`fza_articulos_proveedores`.`CODIGO_ART_AP` AS `CODIGO_ART_ART`,`vi_articulos`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`vi_articulos`.`CODIGO_FAM_ART` AS `CODIGO_FAM_FAM`,`vi_articulos`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`vi_articulos`.`TIPO_CANTIDAD_ART` AS `TIPO_CATNTIDAD_ARTICULO`,`vi_articulos`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_AP` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_AP` AS `FECHA_VALIDEZ`,`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` AS `ESPROVEEDORPRINCIPAL`,`fza_articulos_proveedores`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_articulos_proveedores`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_articulos_proveedores`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_articulos_proveedores`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (`fza_articulos_proveedores` left join `vi_articulos` on(`fza_articulos_proveedores`.`CODIGO_ART_AP` = `vi_articulos`.`CODIGO_ART_ART`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores_articulos` AS select `fza_articulos_proveedores`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`fza_articulos_proveedores`.`CODIGO_ART_AP` AS `CODIGO_ART_ART`,`vi_articulos`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`vi_articulos`.`CODIGO_FAM_ART` AS `CODIGO_FAM_FAM`,`vi_articulos`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`vi_articulos`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ARTICULO`,`vi_articulos`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_AP` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_AP` AS `FECHA_VALIDEZ`,`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` AS `ESPROVEEDORPRINCIPAL`,`fza_articulos_proveedores`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_articulos_proveedores`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_articulos_proveedores`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_articulos_proveedores`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (`fza_articulos_proveedores` left join `vi_articulos` on(`fza_articulos_proveedores`.`CODIGO_ART_AP` = `vi_articulos`.`CODIGO_ART_ART`));
 
 -- Vista: vi_proveedores_busquedas
 DROP VIEW IF EXISTS `vi_proveedores_busquedas`;
@@ -17301,4 +17654,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 15/05/2026 21:26:32
+-- Backup completado: 16/05/2026 17:06:02

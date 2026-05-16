@@ -298,7 +298,7 @@ function scandatetimernof(const pattern:string;
 var
   defaultformatSettings:TFormatSettings;
 begin
-  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, formatSettings);
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, defaultformatSettings);
   result:=scandatetimer(pattern, s , defaultformatSettings, startpos);
 end;
 

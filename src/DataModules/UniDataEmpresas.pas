@@ -57,9 +57,6 @@ type
 //    function GetZonaDefault:String;
   end;
 
-//var
-//  dmEmpresas: TdmEmpresas;
-
 implementation
 
 uses
@@ -80,7 +77,7 @@ end;
 procedure TdmEmpresas.unqryRetencionesBeforeInsert(DataSet: TDataSet);
 begin
   inherited;
-    if ( (unqryTablaG.State = dsInsert) and
+    if ( (unqryTablaG.State = dsInsert) or
          (unqryTablaG.State = dsEdit)
        ) then
       unqryTablaG.Post;
@@ -92,7 +89,7 @@ var
   bSinErrores:Boolean;
 begin
   inherited;
-  if ( (unqryTablaG.State = dsInsert) and
+  if ( (unqryTablaG.State = dsInsert) or
        (unqryTablaG.State = dsEdit)
    ) then
     unqryTablaG.Post;
@@ -157,7 +154,7 @@ var
 //  sCodigoSerie:String;
 begin
   inherited;
-  if ( (unqryTablaG.State = dsInsert) and
+  if ( (unqryTablaG.State = dsInsert) or
        (unqryTablaG.State = dsEdit)
    ) then
     unqryTablaG.Post;
@@ -191,17 +188,6 @@ begin
                                  FindField('CODIGO_EMP_EMPSER').AsString;
       unqrySol.Open;
     end;
-//    if ((bSinErrores) and  not(ExistePeriodoUnico(
-//                                            unqrySol,
-//                                            FindField('FECHA_DESDE_EMPSER'),
-//                                            FindField('FECHA_HASTA_EMPSER')))
-//       ) then
-//    begin
-//      raise ERangeError.CreateFmt('No se pueden grabar dos series ' +
-//                                ' en la misma fecha para la empresa %s',
-//                              [FindField('CODIGO_EMP_EMPRET').AsString]);
-//      bSinErrores := False;
-//    end;
   end;
   if (assigned(unqrySol)) then
   begin
@@ -317,14 +303,12 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                         'para el campo Razón Social de Empresa',
                                                                 [sRazonSocial]);
-      bError := True;
     end;
     if ((sCodigoEmpresa = '') or (SimbolosProhibidos(sCodigoEmpresa))) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                               'para el campo Código de Empresa',
                                                               [sCodigoEmpresa]);
-      bError := True;
     end;
     if bError then
       Abort
@@ -351,23 +335,6 @@ begin
   end;
 end;
 
-//function TdmEmpresas.GetZonaDefault: String;
-//var
-//  unqrySol:TUniQuery;
-//begin
-//  unqrySol := TUniQuery.Create(Self);
-//  unqrySol.Connection := oConn;
-//  unqrySol.SQL.Text := 'SELECT IVA_IVAGRP FROM vi_ivas_grupos ' +
-//                       ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
-//  unqrySol.Open;
-//  if unqrySol.RecordCount = 0 then
-//    Sleep(0)
-//  //   MessageDlg('Empresa: #' + VarToStr(e.EditingValue) + '# no existe')
-//   else
-//      Result := unqrySol.Fields[0].AsString;
-//  unqrySol.Close;
-//  FreeAndNil(unqrySol);
-//end;
 
 
 
