@@ -193,16 +193,18 @@ enlazado al catálogo. Aquí se define, por ejemplo, que en el conjunto
 Reglas para cualquier grid que muestre `HEX_ATB` (o un color hex
 asociado a un atributo / SKU):
 
-- **En la celda del grid**: sólo el cuadrado de color de la paleta
-  (pintado con `OnCustomDrawCell`). Sin texto encima.
+- **En la celda del grid**: cuadrado de color de la paleta pintado
+  con `OnCustomDrawCell`.
 - **En el hint de la celda**: el valor HEX (`#RRGGBB`) y, si procede,
-  el `NOMBRE_ATB` del básico. El hint se engancha al evento de hint
-  de celda del view (donde la versión de cxGrid lo permita; si no,
-  vía `Application.OnShowHint`).
+  el `NOMBRE_ATB` del básico.
 
-Esto evita ensuciar el grid con texto que cambia de color de fuente
-según luminancia, y deja el HEX accesible al pasar el ratón sin
-ocupar espacio visual.
+**Estado actual de cxGrid en el proyecto**: la versión instalada no
+expone `OnGetCellHint` ni en el DFM ni a runtime
+(`E2003 Undeclared identifier`). Mientras no se actualice o se
+implemente vía `Application.OnShowHint`, el HEX se dibuja también
+dentro del cuadrado (texto blanco/negro según luminancia del fondo).
+Cuando se pueda enganchar el hint, hay que **quitar el `DrawText` del
+custom draw** y poner el HEX sólo en el tooltip.
 
 ## SKUs huérfanos: filas virtuales y materialización lazy
 
