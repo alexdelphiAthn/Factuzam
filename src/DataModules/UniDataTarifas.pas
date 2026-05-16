@@ -36,9 +36,6 @@ type
     //procedure GetCodigoAutoRetencion;
   end;
 
-//var
-//  dmTarifas: TdmTarifas;
-
 implementation
 
 uses

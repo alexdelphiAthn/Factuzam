@@ -43,23 +43,23 @@ uses
   procedure GrabarPerfilDatam(dmmModule:TDataModule;
                               Sender:TComponent;
                               sUser:string = 'Todos');
-  function GetVolumeID(DriveChar: Char): String;
-  function FindFormOwner(oSender: TObject):TComponent;
-  procedure SetDateTime(Year, Month, Day, Hour, Minu, Sec, MSec: Word);
-  procedure GetImageURL(sUrl: String;
-                        var memStream: TMemoryStream);
-  procedure ExecuteAndWait(const aCommando: string);
+  function GetVolumeID(ADriveChar: Char): String;
+  function FindFormOwner(AoSender: TObject):TComponent;
+  procedure SetDateTime(AYear, AMonth, ADay, AHour, AMinu, ASec, AMSec: Word);
+  procedure GetImageURL(AsUrl: String;
+                        var AmemStream: TMemoryStream);
+  procedure ExecuteAndWait(const ACommando: string);
   procedure LoadSQLFromProfile(dmmModule:TDataModule;
                                var oPerfilDic:TProfileDicc);
-  function sMD5(const texto:string):string;
-  function EncuentraPagina(pc: TcxPageControl;
-                           sName:string):integer;
+  function sMD5(const Atexto:string):string;
+  function EncuentraPagina(Apc: TcxPageControl;
+                           AsName: string): integer;
   function DarkModeIsEnabled:Boolean;
   function GetComputerName: string;
   function GetProgramPath: string;
   function GetWindowsUserName: string;
   function GetWindowsVersion: string;
-  function FindNextFocusableControl(Form:TWinControl): TWinControl;
+  function FindNextFocusableControl(AForm:TWinControl): TWinControl;
   function SanitizeFileName(const AFileName: string;
                             const AReplacement: Char = '_'): string;
 
@@ -89,7 +89,7 @@ begin
   end;
 end;
 
-function FindNextFocusableControl(Form:TWinControl): TWinControl;
+function FindNextFocusableControl(AForm:TWinControl): TWinControl;
 var
   List: TList;
   I: Integer;
@@ -98,7 +98,7 @@ begin
   Result := nil;
   List := TList.Create;
   try
-    //GetTabOrderList(Form, List);
+    //GetTabOrderList(AForm, List);
     // Intentar encontrar el control que tiene el foco actualmente
     CurrentIndex := -1;
     for I := 0 to List.Count - 1 do
@@ -123,7 +123,7 @@ begin
       end;
     end;
   finally
-    List.Free;
+    FreeAndNil(List);
   end;
 end;
 
@@ -174,7 +174,7 @@ begin
     else
       Result := 'Unknown';
   finally
-    Reg.Free;
+    FreeAndNil(Reg);
   end;
 end;
 
@@ -206,24 +206,24 @@ begin
         Reg.CloseKey;
       end;
   finally
-    Reg.Free;
+    FreeAndNil(Reg);
   end;
 {$ENDIF}
 end;
 
-function EncuentraPagina(pc: TcxPageControl;
-                         sName:string):integer; overload;
+function EncuentraPagina(Apc: TcxPageControl;
+                         AsName: string): integer; overload;
 Var
 //   AComponent: TComponent;
    aIndex, I: Integer;
-   IsFound : Boolean;
+   IsFound: Boolean;
 begin
-  aIndex:=-1;
+  aIndex := -1;
   I := 0;
   IsFound := False;
-  while ((I < pc.PageCount) and not(IsFound)) do
+  while ((I < Apc.PageCount) and not(IsFound)) do
   begin
-    if pc.Pages[I].Caption = sName then
+    if Apc.Pages[I].Caption = AsName then
     begin
       isFound := True;
       aIndex := I;
@@ -233,15 +233,15 @@ begin
   Result := aIndex;
 end;
 
-function sMD5(const texto:string):string;
+function sMD5(const Atexto:string):string;
 var
   idmd5 : TIdHashMessageDigest5;
 begin
   idmd5 := TIdHashMessageDigest5.Create;
   try
-    Result := idmd5.HashStringAsHex(String(UTF8Encode(texto)));
+    Result := idmd5.HashStringAsHex(String(UTF8Encode(Atexto)));
   finally
-    idmd5.Free;
+    FreeAndNil(idmd5);
   end;
 end;
 
@@ -266,13 +266,13 @@ begin
                      (oControl.Components[i] as TUniStoredProc).StoredProcName);
 end;
 
-procedure ExecuteAndWait(const aCommando: string);
+procedure ExecuteAndWait(const ACommando: string);
 var
   tmpStartupInfo: TStartupInfo;
   tmpProcessInformation: TProcessInformation;
   tmpProgram: String;
 begin
-  tmpProgram := trim(aCommando);
+  tmpProgram := trim(ACommando);
   FillChar(tmpStartupInfo, SizeOf(tmpStartupInfo), 0);
   with tmpStartupInfo do
   begin
@@ -296,26 +296,26 @@ begin
   end;
 end;
 
-procedure SetDateTime(Year, Month, Day, Hour, Minu, Sec, MSec: Word);
+procedure SetDateTime(AYear, AMonth, ADay, AHour, AMinu, ASec, AMSec: Word);
 var
   NewDateTime: TSystemTime;
 begin
   FillChar(NewDateTime, SizeOf(NewDateTime), #0);
-  NewDateTime.wYear := Year;
-  NewDateTime.wMonth := Month;
-  NewDateTime.wDay := Day;
-  NewDateTime.wHour := Hour;
-  NewDateTime.wMinute := Minu;
-  NewDateTime.wSecond := Sec;
-  NewDateTime.wMilliseconds := MSec;
+  NewDateTime.wYear := AYear;
+  NewDateTime.wMonth := AMonth;
+  NewDateTime.wDay := ADay;
+  NewDateTime.wHour := AHour;
+  NewDateTime.wMinute := AMinu;
+  NewDateTime.wSecond := ASec;
+  NewDateTime.wMilliseconds := AMSec;
   SetLocalTime(NewDateTime);
 end;
 
-function GetVolumeID(DriveChar: Char): String;
+function GetVolumeID(ADriveChar: Char): String;
 var
    MaxFileNameLength, VolFlags, SerNum: DWord;
 begin
-   if GetVolumeInformation(PChar(DriveChar + ':\'), nil, 0,
+   if GetVolumeInformation(PChar(ADriveChar + ':\'), nil, 0,
       @SerNum, MaxFileNameLength, VolFlags, nil, 0)
    then
    begin
@@ -326,13 +326,13 @@ begin
        Result := '';
 end;
 
-function FindFormOwner(oSender: TObject):TComponent;
+function FindFormOwner(AoSender: TObject):TComponent;
 begin
   Result := nil;
-  while not oSender.InheritsFrom(TForm) do
-    oSender := TObject((oSender as TComponent).Owner);
-  if Assigned(oSender) then
-    Result := (oSender as Tcomponent);
+  while not AoSender.InheritsFrom(TForm) do
+    AoSender := TObject((AoSender as TComponent).Owner);
+  if Assigned(AoSender) then
+    Result := (AoSender as Tcomponent);
 end;
 
 function EncontrarObjeto(oControl:TComponent;
@@ -381,7 +381,7 @@ begin
     oCon := oControl.Components[i];
     sCompName := oCon.Name;
     if StartsText('lbl', sCompName)  then
-    begin                       //son los �nicos label que no se deben renombrar
+    begin                       //son los únicos label que no se deben renombrar
       if (oCon is TcxLabel) and
          not SameText((oCon as TcxLabel).Caption, 'lblTablaOrigen') and
          not SameText((oCon as TcxLabel).Caption, 'lblEditMode')
@@ -571,7 +571,7 @@ procedure CargarCaptions(oControl:TComponent;
                   end;
 
                 finally
-                  SetList.Free;
+                  FreeAndNil(SetList);
                 end;
               end else
                 Result := System.Variants.VarToStr(GetPropValue(Component,
@@ -621,7 +621,7 @@ begin
         Result := oControl.Components[i];
 end;
 
-procedure GetImageURL(sUrl: String; var memStream: TMemoryStream);
+procedure GetImageURL(AsUrl: String; var AmemStream: TMemoryStream);
 var
   strStream: String;
 
@@ -630,23 +630,23 @@ var
 begin
   idhttp1 := Tidhttp.Create(nil);
   try
-   strStream :=  idhttp1.Get(sUrl);
+   strStream :=  idhttp1.Get(AsUrl);
 
   except
     Raise Exception.Create('La imagen no existe');
     Exit;
   end;
-  memStream := TMemoryStream.Create;
+  AmemStream := TMemoryStream.Create;
   //jpegimg   := TJPEGImage.Create;
   try
-    //memStream.CopyFrom(strStream, );
-    memStream.Write(strStream[1], Length(strStream));
-    memStream.Position := 0;
+    //AmemStream.CopyFrom(strStream, );
+    AmemStream.Write(strStream[1], Length(strStream));
+    AmemStream.Position := 0;
     //.Picture.Assign(jpegimg);
   finally
-    //memStream.Free;
+    //AmemStream.Free;
     //jpegimg.Free;
-    idhttp1.Free;
+    FreeAndNil(idhttp1);
   end;
 end;
 

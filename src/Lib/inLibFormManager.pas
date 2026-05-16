@@ -94,7 +94,7 @@ end;
 
 destructor TEmbeddedFormManager.Destroy;
 begin
-  FForms.Free;
+  FreeAndNil(FForms);
   inherited;
 end;
 
@@ -168,11 +168,11 @@ begin
     ParentTab := AForm.Parent;
     FForms.Remove(AForm);
     AForm.Parent := nil;
-    AForm.Free;
+    FreeAndNil(AForm);
     if (ParentTab <> nil) and
        (ParentTab is TcxTabSheet) and
        not (csDestroying in ParentTab.ComponentState) then
-      ParentTab.Free;
+      FreeAndNil(ParentTab);
   finally
     // Restaura y repinta de golpe
     SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);

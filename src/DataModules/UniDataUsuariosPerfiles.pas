@@ -28,9 +28,6 @@ type
     { Public declarations }
   end;
 
-//var
-//  dmUsuariosPerfiles: TdmUsuariosPerfiles;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

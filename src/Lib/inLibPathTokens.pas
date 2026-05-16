@@ -68,12 +68,12 @@ begin
   Result[7].Custom := GetAppDir;
 end;
 
-function ResolveToken(const Map: TTokenMap): string;
+function ResolveToken(const AMap: TTokenMap): string;
 begin
-  if Map.CSIDL = -1 then
-    Result := Map.Custom()
+  if AMap.CSIDL = -1 then
+    Result := AMap.Custom()
   else
-    Result := GetFolderByCSIDL(Map.CSIDL);
+    Result := GetFolderByCSIDL(AMap.CSIDL);
 end;
 
 // ---------------------------------------------------------------------------
@@ -81,7 +81,7 @@ end;
 // ---------------------------------------------------------------------------
 function PathToToken(const APath: string): string;
 var
-  Map       : TArray<TTokenMap>;
+  AMap       : TArray<TTokenMap>;
   Ruta      : string;
   MejorTok  : string;
   MejorBase : string;
@@ -93,11 +93,11 @@ begin
   Ruta      := ExcludeTrailingPathDelimiter(APath);
   MejorTok  := '';
   MejorBase := '';
-  Map       := BuildMap;
+  AMap       := BuildMap;
 
-  for i := 0 to High(Map) do
+  for i := 0 to High(AMap) do
   begin
-    BaseReal := ExcludeTrailingPathDelimiter(ResolveToken(Map[i]));
+    BaseReal := ExcludeTrailingPathDelimiter(ResolveToken(AMap[i]));
     if BaseReal = '' then Continue;
 
     // Coincidencia exacta o Ruta empieza por BaseReal + separador
@@ -108,7 +108,7 @@ begin
       if Length(BaseReal) > Length(MejorBase) then
       begin
         MejorBase := BaseReal;
-        MejorTok  := Map[i].Token;
+        MejorTok  := AMap[i].Token;
       end;
     end;
   end;
@@ -127,19 +127,19 @@ end;
 // ---------------------------------------------------------------------------
 function ExpandPathTokens(const APath: string): string;
 var
-  Map   : TArray<TTokenMap>;
+  AMap   : TArray<TTokenMap>;
   i     : Integer;
   Base  : string;
 begin
   Result := APath;
   if Result = '' then Exit;
 
-  Map := BuildMap;
-  for i := 0 to High(Map) do
-    if ContainsText(Result, Map[i].Token) then
+  AMap := BuildMap;
+  for i := 0 to High(AMap) do
+    if ContainsText(Result, AMap[i].Token) then
     begin
-      Base := ExcludeTrailingPathDelimiter(ResolveToken(Map[i]));
-      Result := ReplaceText(Result, Map[i].Token, Base);
+      Base := ExcludeTrailingPathDelimiter(ResolveToken(AMap[i]));
+      Result := ReplaceText(Result, AMap[i].Token, Base);
     end;
 end;
 

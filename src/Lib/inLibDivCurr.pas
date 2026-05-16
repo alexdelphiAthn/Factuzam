@@ -37,7 +37,7 @@ unit inLibDivCurr;
         Tasa := API.GetRate('EUR', 'USD');
         ShowMessage('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
       finally
-        API.Free;
+        FreeAndNil(API);
       end;
     end;
 
@@ -207,7 +207,7 @@ end;
 
 destructor TFrankfurterAPI.Destroy;
 begin
-  FHttpClient.Free;
+  FreeAndNil(FHttpClient);
   inherited;
 end;
 
@@ -319,7 +319,7 @@ begin
     Res := GetLatest(ABase, [UpperCase(ATarget)]);
     Result := Res.GetRate(ATarget);
   finally
-    if Assigned(Res.Rates) then Res.Rates.Free;
+    if Assigned(Res.Rates) then FreeAndNil(Res.Rates);
   end;
 end;
 
@@ -345,7 +345,7 @@ begin
   try
     ParseRatesInto(JSON, Result);
   finally
-    JSON.Free;
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -368,7 +368,7 @@ begin
   try
     ParseRatesInto(JSON, Result);
   finally
-    JSON.Free;
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -414,7 +414,7 @@ begin
         Result.AddOrSetValue(DayDate, DayRates);
       end;
   finally
-    JSON.Free;
+    FreeAndNil(JSON);
   end;
 end;
 
@@ -442,8 +442,8 @@ begin
     ParseRatesInto(JSON, Res);
     Result := Res.GetRate(ATo);
   finally
-    JSON.Free;
-    if Assigned(Res.Rates) then Res.Rates.Free;
+    FreeAndNil(JSON);
+    if Assigned(Res.Rates) then FreeAndNil(Res.Rates);
   end;
 end;
 
@@ -472,11 +472,11 @@ begin
         List.Add(Cur);
       end;
     finally
-      JSON.Free;
+      FreeAndNil(JSON);
     end;
     Result := List.ToArray;
   finally
-    List.Free;
+    FreeAndNil(List);
   end;
 end;
 
@@ -490,7 +490,7 @@ begin
   try
     Result := API.GetRate('EUR', ATarget);
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 
@@ -503,7 +503,7 @@ begin
   try
     Result := API.ConvertAmount(AAmount, AFrom, ATo);
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 

@@ -124,9 +124,6 @@ public
     // (TIPO_DOC_REF_MOV='FC').
     function GenerarMovimientosSalidaFactura: Integer;
   end;
-var
-  dmFacturas: TdmFacturas;
-
 implementation
 
 uses
@@ -357,18 +354,6 @@ begin
   FreeAndNil(unqrySol);
 end;
 
-//procedure TdmFacturas.CalcularFactura;
-//begin
-//  with unstdCalcularFactura do
-//  begin
-//    ParamByName('pSERIE_FACTURA').AsString :=
-//                          unqryTablaG.FieldByName('SERIE_FAC').AsString;
-//    ParamByName('pNRO_FACTURA').AsString :=
-//                            unqryTablaG.FieldByName('NUMERO_FAC').AsString;
-//    ExecProc;
-//  end;
-//  unqryTablaG.RefreshRecord;  //sólo refresca el registro en uso
-//end;
 
 procedure TdmFacturas.CalcularFactura;
 var
@@ -395,7 +380,7 @@ begin
               'Error al calcular factura: ' + facTotales.MensajeError);
         end;
       finally
-        facTotales.Free;
+        FreeAndNil(facTotales);
       end;
     except
       on E: Exception do
@@ -838,24 +823,6 @@ begin
           ctbTOTAL_FACTURA_LINEA.Visible := False;
         end;
       end;
-//      if (State = dsEdit) or (State = dsInsert) then
-//        if (unqryTablaG.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S') then
-//        begin
-//          unqryLinFac.ReadOnly := True;
-//          tvLineasFactura.optionsData.Editing := False;
-//        end
-//        else
-//        begin
-//          unqryLinFac.ReadOnly := False;
-//          tvLineasFactura.optionsData.Editing := True;
-//        end
-//      else
-//      if ((State = dsBrowse) and
-//          (unqryTablaG.FieldByName('ESCONSOLIDADA_FAC').AsString = 'N')) then
-//      begin
-//        unqryLinFac.ReadOnly := False;
-//        tvLineasFactura.optionsData.Editing := True;
-//      end;
     end;
   end;
 end;
@@ -1054,7 +1021,6 @@ begin
     begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
-      Abort;
     end;
     if (FindField(fnrolin).AsString  = '0') then
     begin
@@ -1117,17 +1083,6 @@ end;
 procedure TdmFacturas.unqryTablaGBeforeEdit(DataSet: TDataSet);
 begin
   inherited;
-//    if (unqryTablaG.FieldByName(
-//                                   'ESCONSOLIDADA_FAC').AsString = 'S') then
-//    begin
-//      unqryTablaG.ReadOnly := True;
-//      unqryLinFac.ReadOnly := True;
-//    end
-//    else
-//    begin
-//      unqryTablaG.ReadOnly := False;
-//      unqryLinFac.ReadOnly := False;
-//    end;
 end;
 
 procedure TdmFacturas.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -1144,17 +1099,6 @@ begin
                          unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString;
     FieldByName('FECHA_FAC').AsDateTime := Trunc(Now);
     FieldByName('FORMA_PAGO_FAC').AsString := FormaPagoDefault;
-//    FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString := 'N';
-//    FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString := 'N';
-//    FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString := 'N';
-//    FieldByName('ESRETENCIONES_CLIENTE_FAC').AsString := 'N';
-//    FieldByName('ESAPLICA_RE_ZONA_IVA_FAC').AsString := 'S';
-//    FieldByName('ESINTRACOMUNITARIO_CLIENTE_FAC').AsString := 'N';
-//    FieldByName('ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString := 'N';
-//    FieldByName('ESCREARARTICULOS_FAC').AsString := 'N';
-//    FieldByName('ESDESCRIPCIONES_AMP_FAC').AsString := 'N';
-//    FieldByName('ESFECHADEENTREGA_FAC').AsString := 'N';
-//    FieldByName('ESVENTA_ACTIVO_FIJO_FAC').AsString := 'N';
     FieldByName('ESCONSOLIDADA_FAC').AsString := 'N';
     (GetOwnerForm<TfrmMtoFacturas>).sbNuevaFacturaClick(Self.Owner);
   end;
@@ -1316,7 +1260,6 @@ begin
     if IsError then
     begin
       raise Exception.Create('No se ha grabado la cabecera de la factura');
-      Abort;
     end
     else
       if ((State = dsEdit) or (State = dsInsert)) then
@@ -1451,8 +1394,8 @@ begin
       qLineas.Next;
     end;
   finally
-    qLineas.Free;
-    qExiste.Free;
+    FreeAndNil(qLineas);
+    FreeAndNil(qExiste);
   end;
 
   if unqryMovimientosFac.Active then

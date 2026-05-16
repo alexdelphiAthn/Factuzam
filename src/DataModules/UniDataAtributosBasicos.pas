@@ -33,9 +33,6 @@ type
     { Public declarations }
   end;
 
-var
-  dmAtributosBasicos: TdmAtributosBasicos;
-
 implementation
 
 uses

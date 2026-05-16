@@ -51,14 +51,14 @@ type
      function GetNumVentanas: Integer;
      procedure SetNumVentanas(const Value: Integer);
    public
-     constructor Create(pCall,
-                        pCaption,
-                        pMenuItem,
-                        pUnitForm,
-                        pShortCut,
-                        pDataUnit:string;
-                        pNumVentanas:Integer;
-                        pOwn:TComponent);
+     constructor Create(ACall,
+                        ACaption,
+                        AMenuItem,
+                        AUnitForm,
+                        AShortCut,
+                        ADataUnit:string;
+                        ANumVentanas:Integer;
+                        AOwn:TComponent);
      Property Call   : string read GetCall write SetCall;
      Property Caption   : string read GetCaption write SetCaption;
      Property UnitForm   : string read GetUnitForm write SetUnitForm;
@@ -91,29 +91,29 @@ uses inMtoPrincipal;
 
 { TfzaForm }
 
-constructor TfzaForm.Create(pCall,
-                            pCaption,
-                            pMenuItem,
-                            pUnitForm,
-                            pShortCut,
-                            pDataUnit: string;
-                            pNumVentanas: Integer;
-                            pOwn:TComponent  );
+constructor TfzaForm.Create(ACall,
+                            ACaption,
+                            AMenuItem,
+                            AUnitForm,
+                            AShortCut,
+                            ADataUnit: string;
+                            ANumVentanas: Integer;
+                            AOwn:TComponent  );
 var
   frmOpen2:TfrmMtoPrincipal;
 begin
-  FCall := pCall;
-  FCaption := pCaption;
-  FUnitForm := pUnitForm;
-  FMenuItem := pMenuITem;
-  FShortCut := pShortCut;
-  FDataUnit := pDataUnit;
-  if pNumVentanas < 1 then
+  FCall := ACall;
+  FCaption := ACaption;
+  FUnitForm := AUnitForm;
+  FMenuItem := AMenuItem;
+  FShortCut := AShortCut;
+  FDataUnit := ADataUnit;
+  if ANumVentanas < 1 then
     FNumVentanas := 1
   else
-    FNumVentanas := pNumVentanas;
-  frmOpen2 := (pOwn as TfrmMtoPrincipal);
-  FmnMenuItem := (frmOpen2.FindComponent(FMenuITem) as TMenuItem);
+    FNumVentanas := ANumVentanas;
+  frmOpen2 := (AOwn as TfrmMtoPrincipal);
+  FmnMenuItem := (frmOpen2.FindComponent(FMenuItem) as TMenuItem);
 end;
 
 function TfzaForm.GetCall: string;
@@ -236,7 +236,7 @@ begin
     end;
     qrySol.Close;
   finally
-    qrySol.Free;
+    FreeAndNil(qrySol);
   end;
 end;
 
@@ -248,7 +248,7 @@ end;
 
 destructor TfzaWinF.Destroy;
 begin
-  FList.Free;
+  FreeAndNil(FList);
   inherited;
 end;
 

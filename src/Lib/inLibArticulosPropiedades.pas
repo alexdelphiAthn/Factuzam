@@ -85,25 +85,25 @@ type
     FSlots          : TList<TSlotProp>;
     FModificado     : Boolean;
 
-    function  TipoDesdeCadena(const s: string): TTipoValorProp;
+    function  TipoDesdeCadena(const ATipo: string): TTipoValorProp;
     procedure LimpiarControles;
     procedure ReconstruirVista;
     procedure CrearFilaLista      (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaTexto      (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaNumero     (var S: TSlotProp; ATop: Integer);
     procedure CrearFilaBooleano   (var S: TSlotProp; ATop: Integer);
-    procedure CrearBtnEliminar    (SlotIdx: Integer; ATop: Integer);
+    procedure CrearBtnEliminar    (ASlotIdx: Integer; ATop: Integer);
     procedure BtnEliminarClick(Sender: TObject);
     procedure UpsertSlot(const S: TSlotProp);
     procedure DeleteSlot(const CodigoPropiedad: string);
-    function IndexOfCodigo(const Cod: string): Integer;
+    function IndexOfCodigo(const ACod: string): Integer;
   public
     constructor Create(AScrollBox: TScrollBox;
                        AConexion: TUniConnection;
                        const AUsuario: string);
     destructor Destroy; override;
-    procedure CargarPropiedades(const CodigoArticulo: string);
-    procedure CargarPropiedadesPorFamilia(const CodigoFamilia: string);
+    procedure CargarPropiedades(const ACodigoArticulo: string);
+    procedure CargarPropiedadesPorFamilia(const ACodigoFamilia: string);
     procedure AbrirSelectorPropiedades;
     function GuardarPropiedades: Boolean;
     function Validar: string;
@@ -158,36 +158,14 @@ begin
 //  pnlBtn.Font.name := 'Lucida Sans';
 //  pnlBtn.Font.Height := -13;
 
-//  FBtnAceptar := TcxButton.Create(Self);
-//  FBtnAceptar.Parent  := pnlBtn;
-//  FBtnAceptar.Caption := '&Aceptar';
-//  FBtnAceptar.Width   := 90;
-//  FBtnAceptar.Height  := 28;
-//  FBtnAceptar.Left    := pnlBtn.Width - 200;
-//  FBtnAceptar.Top     := 6;
-//  FBtnAceptar.Anchors := [akRight, akTop];
-//  FBtnAceptar.ModalResult := mrNone;
-//  FbtnAceptar.ParentFont := True;
-//  FBtnAceptar.OnClick := BtnAceptarClick;
 
-//  FBtnCancelar := TcxButton.Create(Self);
-//  FBtnCancelar.Parent  := pnlBtn;
-//  FBtnCancelar.Caption := '&Cancelar';
-//  FBtnCancelar.Width   := 90;
-//  FBtnCancelar.Height  := 28;
-//  FBtnCancelar.Left    := pnlBtn.Width - 100;
-//  FBtnCancelar.Top     := 6;
-//  FBtnCancelar.ParentFont := True;
-//  FBtnCancelar.Anchors := [akRight, akTop];
-//  FBtnCancelar.ModalResult := mrNone;
-//  FBtnCancelar.OnClick := BtnCancelarClick;
 
   CargarLista;
 end;
 
 destructor TfrmSelPropiedades.Destroy;
 begin
-  CodigosSeleccionados.Free;
+  FreeAndNil(CodigosSeleccionados);
   inherited;
 end;
 
@@ -246,7 +224,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   // CodigosSeleccionados servirá como mapa índice→código
   // lo reutilizamos; los seleccionados reales se calculan en BtnAceptarClick
@@ -265,7 +243,7 @@ begin
     CodigosSeleccionados.Clear;
     CodigosSeleccionados.AddStrings(seleccionados);
   finally
-    seleccionados.Free;
+    FreeAndNil(seleccionados);
   end;
   ModalResult := mrOk;
 end;
@@ -297,7 +275,7 @@ end;
 destructor TGestorPropiedades.Destroy;
 begin
   LimpiarControles;
-  FSlots.Free;
+  FreeAndNil(FSlots);
   inherited;
 end;
 
@@ -305,20 +283,20 @@ end;
 { Helpers internos                                                            }
 { ═══════════════════════════════════════════════════════════════════════════ }
 
-function TGestorPropiedades.TipoDesdeCadena(const s: string): TTipoValorProp;
+function TGestorPropiedades.TipoDesdeCadena(const ATipo: string): TTipoValorProp;
 begin
-  if      s = 'LISTA'    then Result := tvpLista
-  else if s = 'NUMERO'   then Result := tvpNumero
-  else if s = 'BOOLEANO' then Result := tvpBooleano
-  else                        Result := tvpTextoLibre;
+  if      ATipo = 'LISTA'    then Result := tvpLista
+  else if ATipo = 'NUMERO'   then Result := tvpNumero
+  else if ATipo = 'BOOLEANO' then Result := tvpBooleano
+  else                            Result := tvpTextoLibre;
 end;
 
-function TGestorPropiedades.IndexOfCodigo(const Cod: string): Integer;
+function TGestorPropiedades.IndexOfCodigo(const ACod: string): Integer;
 var i: Integer;
 begin
   Result := -1;
   for i := 0 to FSlots.Count - 1 do
-    if FSlots[i].CodigoPropiedad = Cod then
+    if FSlots[i].CodigoPropiedad = ACod then
     begin
       Result := i;
       Break;
@@ -332,14 +310,14 @@ begin
   // Liberar diccionarios de opciones
   for i := 0 to FSlots.Count - 1 do
     if Assigned(FSlots[i].Opciones) then
-      FSlots[i].Opciones.Free;
+      FreeAndNil(FSlots[i].Opciones);
   FSlots.Clear;
 
   // Destruir controles del scroll
   FScrollBox.DisableAlign;
   try
     while FScrollBox.ControlCount > 0 do
-      FScrollBox.Controls[0].Free;
+      FreeAndNil(FScrollBox.Controls[0]);
   finally
     FScrollBox.EnableAlign;
   end;
@@ -349,18 +327,18 @@ end;
 { Carga desde BD                                                              }
 { ═══════════════════════════════════════════════════════════════════════════ }
 
-procedure TGestorPropiedades.CargarPropiedades(const CodigoArticulo: string);
+procedure TGestorPropiedades.CargarPropiedades(const ACodigoArticulo: string);
 var
   q    : TUniQuery;
   qOpc : TUniQuery;
   S    : TSlotProp;
   i    : Integer;
 begin
-  FCodigoArticulo := CodigoArticulo;
+  FCodigoArticulo := ACodigoArticulo;
   LimpiarControles;
   FModificado := False;
 
-  if CodigoArticulo = '' then Exit;
+  if ACodigoArticulo = '' then Exit;
 
   // ── 1. Propiedades ya asignadas a este artículo ────────────────────────
   q := TUniQuery.Create(nil);
@@ -381,7 +359,7 @@ begin
       'WHERE  ap.CODIGO_ART_ART = :art ' +
       '  AND  p.ESACTIVO_PROP = ''S'' ' +
       'ORDER  BY COALESCE(fa.ORDEN_MOSTRAR_FA, 999), p.NOMBRE_PROP_PROP';
-    q.ParamByName('art').AsString := CodigoArticulo;
+    q.ParamByName('art').AsString := ACodigoArticulo;
     q.Open;
     while not q.Eof do
     begin
@@ -401,7 +379,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
   // ── 2. Opciones para slots tipo LISTA ─────────────────────────────────
   qOpc := TUniQuery.Create(nil);
@@ -433,13 +411,13 @@ begin
       end;
     end;
   finally
-    qOpc.Free;
+    FreeAndNil(qOpc);
   end;
   ReconstruirVista;
 end;
 
 procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
-                                                   const CodigoFamilia: string);
+                                                   const ACodigoFamilia: string);
 var
   qProp     : TUniQuery;
   qOpc      : TUniQuery;
@@ -448,7 +426,7 @@ var
   idx, i    : Integer;
   EstaVacia : Boolean;
 begin
-  if CodigoFamilia = '' then Exit;
+  if ACodigoFamilia = '' then Exit;
 
   for i := 0 to FSlots.Count - 1 do
   begin
@@ -510,7 +488,7 @@ begin
       'WHERE fa.CODIGO_FAM_FAM = :fam ' +
       '  AND p.ESACTIVO_PROP = ''S'' ' +
       'ORDER BY fa.ORDEN_MOSTRAR_FA, p.NOMBRE_PROP_PROP';
-    qProp.ParamByName('fam').AsString := CodigoFamilia;
+    qProp.ParamByName('fam').AsString := ACodigoFamilia;
     qProp.Open;
     qOpc.Connection := FConexion;
     qOpc.SQL.Text   :=
@@ -564,8 +542,8 @@ begin
     end;
     ReconstruirVista;
   finally
-    qProp.Free;
-    qOpc.Free;
+    FreeAndNil(qProp);
+    FreeAndNil(qOpc);
   end;
 end;
 
@@ -578,7 +556,7 @@ begin
   FScrollBox.DisableAlign;
   try
     while FScrollBox.ControlCount > 0 do
-      FScrollBox.Controls[0].Free;
+      FreeAndNil(FScrollBox.Controls[0]);
     for i := 0 to FSlots.Count - 1 do
     begin
       S := FSlots[i];
@@ -724,7 +702,7 @@ begin
   S.Ctrl := chk;
 end;
 
-procedure TGestorPropiedades.CrearBtnEliminar(SlotIdx: Integer; ATop: Integer);
+procedure TGestorPropiedades.CrearBtnEliminar(ASlotIdx: Integer; ATop: Integer);
 var
   btn: TcxButton;
 begin
@@ -735,8 +713,8 @@ begin
   btn.Width   := ANCHO_BTN_DEL;
   btn.Height  := ALTO_FILA;
   btn.Caption := '×';
-  btn.Tag     := SlotIdx;
-  btn.Hint    := 'Quitar propiedad ' + FSlots[SlotIdx].NombrePropiedad;
+  btn.Tag     := ASlotIdx;
+  btn.Hint    := 'Quitar propiedad ' + FSlots[ASlotIdx].NombrePropiedad;
   btn.ShowHint:= True;
   btn.OnClick := BtnEliminarClick;
 end;
@@ -842,15 +820,15 @@ begin
           FModificado := True;
         end;
       finally
-        qProp.Free;
-        qOpc.Free;
+        FreeAndNil(qProp);
+        FreeAndNil(qOpc);
       end;
       ReconstruirVista;
     finally
-      dlg.Free;
+      FreeAndNil(dlg);
     end;
   finally
-    Excluidos.Free;
+    FreeAndNil(Excluidos);
   end;
 end;
 
@@ -976,7 +954,7 @@ begin
     q.ParamByName('usr').AsString := FUsuario;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -996,7 +974,7 @@ begin
     q.ParamByName('prop').AsString := CodigoPropiedad;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 

@@ -99,9 +99,6 @@ type
                                              aFechaTarifa: TDateTime);
   end;
 
-//var
-//  dmArticulos: TdmArticulos;
-
 implementation
 
 uses
@@ -561,7 +558,6 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Descripción de Artículos',
                [FindField('DESCRIPCION_ART').AsString]);
-        Abort;
     end
     else
       GetCodigoAutoArticulo;
@@ -672,7 +668,7 @@ begin
       end;
     finally
       // Liberamos memoria de forma segura
-      unqrySol.Free;
+      FreeAndNil(unqrySol);
     end;
 
     // ----------------------------------------------------------------
@@ -885,7 +881,7 @@ begin
         sFiltroAlm := sFiltroAlm + QuotedStr(Trim(lstCod[i]));
       end;
     finally
-      lstCod.Free;
+      FreeAndNil(lstCod);
     end;
     if sFiltroAlm <> '' then
       sFiltroAlm := 'WHERE CODIGO_ALM_STK IN (' + sFiltroAlm + ')';
