@@ -447,6 +447,8 @@ type
     // tvStock para colorear el nombre del atributo segun la paleta basica.
     FAtributosStock : TDictionary<string, string>;
     function AsegurarBasicoFilaActual: Integer;
+    function AsegurarFilaSA(const ACodSKU, AIdVaAv,
+                            AValorAv: string): Integer;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -2104,6 +2106,72 @@ begin
   else AText := '';
 end;
 
+function TfrmMtoArticulos.AsegurarFilaSA(
+  const ACodSKU, AIdVaAv, AValorAv: string): Integer;
+// Materializa una fila virtual del UNION de vi_atributos_sku_basico:
+//   1) busca o crea el AV (par ID_VA_AV + AV de fza_atributos_valores)
+//   2) inserta el bridge fza_atributos_sku (SKU <-> AV) si no existe
+//   3) devuelve el ID_AV resultante para que el llamante pueda colgar
+//      ya el atributo basico del articulo
+// Sin esto, los SKUs huerfanos (sin filas en SA) salen como meras filas
+// informativas en el grid y editar el basico no tiene donde aterrizar.
+var
+  qry: TUniQuery;
+begin
+  Result := 0;
+  if (ACodSKU = '') or (AIdVaAv = '') then Exit;
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    // 1) Buscar AV existente para esta variacion + valor.
+    qry.SQL.Text :=
+      'SELECT ID_AV FROM fza_atributos_valores '   +
+      ' WHERE ID_VA_AV = :IDVA AND AV = :VAL '     +
+      ' LIMIT 1';
+    qry.ParamByName('IDVA').AsString := AIdVaAv;
+    qry.ParamByName('VAL').AsString  := AValorAv;
+    qry.Open;
+    if not qry.IsEmpty then
+      Result := qry.FieldByName('ID_AV').AsInteger;
+    qry.Close;
+
+    // 2) Si no existia, crearlo.
+    if Result = 0 then
+    begin
+      qry.SQL.Text :=
+        'INSERT INTO fza_atributos_valores '                             +
+        '   (ID_VA_AV, AV, ORDEN_AV, '                                   +
+        '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '               +
+        'VALUES (:IDVA, :VAL, 0, NOW(), :USR, :USR)';
+      qry.ParamByName('IDVA').AsString := AIdVaAv;
+      qry.ParamByName('VAL').AsString  := AValorAv;
+      qry.ParamByName('USR').AsString  := oUser;
+      qry.Execute;
+
+      qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
+      qry.Open;
+      Result := qry.FieldByName('ID').AsInteger;
+      qry.Close;
+    end;
+
+    if Result = 0 then Exit;
+
+    // 3) Enlazar SKU <-> AV en la tabla puente (idempotente).
+    qry.SQL.Text :=
+      'INSERT IGNORE INTO fza_atributos_sku '                            +
+      '   (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, '                             +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                 +
+      'VALUES (:SKU, :AV, NOW(), :USR, :USR)';
+    qry.ParamByName('SKU').AsString  := ACodSKU;
+    qry.ParamByName('AV').AsInteger  := Result;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+end;
+
 function TfrmMtoArticulos.AsegurarBasicoFilaActual: Integer;
 // Devuelve el ID_ATB del básico aplicable a la fila activa del detalle
 // de SKUs. Si la fila no tiene básico (override blocked o nada heredado)
@@ -2137,9 +2205,16 @@ begin
   end;
 
   CodArt  := ds.FieldByName('CODIGO_ART_SKU').AsString;
-  IdAv    := ds.FieldByName('ID_AV').AsInteger;
   IdVaAv  := ds.FieldByName('ID_VA_AV').AsString;
   ValorAv := ds.FieldByName('VALOR_AV').AsString;
+  // Fila virtual del UNION de vi_atributos_sku_basico: el SKU no tenia
+  // todavia su atributo enlazado en fza_atributos_sku. Materializamos
+  // (AV + bridge SA) para tener un ID_AV real al que colgar el basico.
+  if ds.FieldByName('ID_AV').IsNull then
+    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
+                           IdVaAv, ValorAv)
+  else
+    IdAv := ds.FieldByName('ID_AV').AsInteger;
   if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
 
   // CODIGO_ATB único en su variación (UQ ID_VA_ATB+CODIGO_ATB).
@@ -2387,8 +2462,14 @@ begin
 
   ds   := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
-  IdAv   := ds.FieldByName('ID_AV').AsInteger;
   CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  // Fila virtual: materializamos AV+SA antes de poder asignar override.
+  if ds.FieldByName('ID_AV').IsNull then
+    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
+                           ds.FieldByName('ID_VA_AV').AsString,
+                           ds.FieldByName('VALOR_AV').AsString)
+  else
+    IdAv := ds.FieldByName('ID_AV').AsInteger;
   if (CodArt = '') or (IdAv = 0) then Exit;
   vNew   := (Sender as TcxCustomEdit).EditingValue;
 
