@@ -37,7 +37,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxLookupEdit,
   DBAccess, Uni,
-  UniDataComprasSesiones;
+  UniDataComprasSesiones, System.UITypes, Data.DB;
 
 type
   TCeldaMatriz = record
@@ -189,7 +189,7 @@ end;
 
 procedure TGestorMatrizCompras.LimpiarMatriz;
 var
-  i, j: Integer;
+  i: Integer;
 begin
   for i := 0 to FFilas.Count - 1 do
     FreeAndNil(FFilas[i].Celdas);
@@ -992,7 +992,7 @@ procedure CalcularPrecioVentaLinea(ADM: TdmComprasSesiones;
                                     ALinea: Integer);
 var
   q          : TUniQuery;
-  rCoste, rMargenLin, rMargenCab, rMargen,
+  rCoste, rMargenCab, rMargen,
   rMultiplo, rAjuste, rVenta : Double;
   iLinea     : Integer;
 begin

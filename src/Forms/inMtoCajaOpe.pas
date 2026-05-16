@@ -193,7 +193,6 @@ type
     function HayLineasConDeposito: Boolean;
     procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
-    procedure ComboAtributoCloseUp(Sender: TObject);
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -253,11 +252,6 @@ begin
   begin
     cxgrdLineasOpe.SetFocus;
   end;
-end;
-
-procedure TfrmMtoOpeCaja.ComboAtributoCloseUp(Sender: TObject);
-begin
-  PostMessage(Self.Handle, WM_SALTAR_ATRIBUTO, 0, 0);
 end;
 
 procedure TfrmMtoOpeCaja.WMSaltarAtributo(var Msg: TMessage);
@@ -583,6 +577,7 @@ var
   TextoBusqueda: string;
 begin
   tmrBusq.Enabled := False;
+  EditActivo := nil;
   dbtvBusq.BeginUpdate;
   try
     dbtvBusq.DataController.DataSource := nil;
@@ -2414,7 +2409,6 @@ procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   ObjTotales: TFacturaTotales;
-  SerieGenerada: string;
   NumeroGenerado: string;
   CodigoValeGenerado: string;
 begin

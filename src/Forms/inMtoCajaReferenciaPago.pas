@@ -81,7 +81,7 @@ type
     procedure btnGetDivisaClick(Sender: TObject);
   private
     FFormaPagoInfo: TFormaPagoInfo;
-    FImporteOriginal, FPendiente: Double;
+    FImporteOriginal: Double;
     FDatosResultado: TDatosReferencia;
     FRellenarDesdeEuros: Boolean;  // True cuando viene de F3
     FPendienteEuros: Currency;     // Importe en euros a cubrir

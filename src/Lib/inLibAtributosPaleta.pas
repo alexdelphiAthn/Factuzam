@@ -21,7 +21,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
-  cxGridCustomView, cxGridCustomTableView, cxGridTableView;
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
 
 type
   TInfoBasico = record

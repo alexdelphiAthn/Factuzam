@@ -38,7 +38,7 @@ uses
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
-  cxCustomListBox, cxCheckListBox;
+  cxCustomListBox, cxCheckListBox, System.UITypes;
 
 type
   // Ambito que elige el usuario cuando hay que crear un atributo basico
@@ -880,6 +880,8 @@ var
   PrecioPadre: Double;
 begin
   inherited;
+  UserHasta := 0;
+  DbHasta := 0;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 

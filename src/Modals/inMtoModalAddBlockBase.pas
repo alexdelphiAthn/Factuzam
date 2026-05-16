@@ -35,7 +35,7 @@ uses
   dxSkinscxPCPainter, dxScrollbarAnnotations, dxDateRanges, dxCore,
   cxLocalization,
   inMtoFrmBase, Vcl.ComCtrls, cxDateUtils, cxGroupBox, JvComponentBase,
-  JvEnterTab;
+  JvEnterTab, System.UITypes;
 
 type
   TStockCombinacion = (scCualquiera, scTodos, scSumaPositiva);

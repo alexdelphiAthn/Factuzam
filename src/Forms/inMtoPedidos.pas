@@ -271,7 +271,7 @@ var
   ds: TDataSet;
   lst: TList<TPair<string, Currency>>;
   par: TPair<string, Currency>;
-  fEntrPend, fYaAlbaranado, fEntrega: Double;
+  fEntrPend: Double;
   sNumeroAlb, sSerieAlb: string;
 begin
   inherited;

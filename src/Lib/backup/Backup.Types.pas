@@ -77,7 +77,3 @@ begin
 end;
 
 end.
-
-implementation
-
-end.
