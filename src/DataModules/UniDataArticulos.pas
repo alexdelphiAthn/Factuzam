@@ -99,9 +99,6 @@ type
                                              aFechaTarifa: TDateTime);
   end;
 
-//var
-//  dmArticulos: TdmArticulos;
-
 implementation
 
 uses

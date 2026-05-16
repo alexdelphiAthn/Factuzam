@@ -57,9 +57,6 @@ type
 //    function GetZonaDefault:String;
   end;
 
-//var
-//  dmEmpresas: TdmEmpresas;
-
 implementation
 
 uses

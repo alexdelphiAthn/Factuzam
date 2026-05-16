@@ -355,6 +355,7 @@ type
 
 var
   frmMtoComprasSesiones: TfrmMtoComprasSesiones;
+  dmmComprasSesiones: TdmComprasSesiones;
 
 implementation
 
@@ -378,21 +379,21 @@ procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
   if tdmDataModule = nil then Exit;
-  dmComprasSesiones := tdmDataModule as TdmComprasSesiones;
+  dmmComprasSesiones := tdmDataModule as TdmComprasSesiones;
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 
   // Wire de los lookups de cabecera contra los DataSource auxiliares del DM.
   // Sin esto los combos quedan vacios al pulsar "+" porque el DFM no puede
-  // resolver dmComprasSesiones.dsXxx en tiempo de streaming (la global aun
+  // resolver dmmComprasSesiones.dsXxx en tiempo de streaming (la global aun
   // es nil); por eso lo asignamos aqui, igual que cbbAlmacenMatriz.
-  cbbEmpresa.Properties.ListSource       := dmComprasSesiones.dsEmpresas;
-  cbbProveedor.Properties.ListSource     := dmComprasSesiones.dsProveedores;
-  cbbAlmacen.Properties.ListSource       := dmComprasSesiones.dsAlmacenes;
-  cbbTipoIva.Properties.ListSource       := dmComprasSesiones.dsIvas;
-  cbbTarifa.Properties.ListSource        := dmComprasSesiones.dsTarifas;
-  cbbVariacion.Properties.ListSource     := dmComprasSesiones.dsVariaciones;
-  cbbConjuntoPivot.Properties.ListSource := dmComprasSesiones.dsAtributosConjuntos;
-  cbbConjuntoFila.Properties.ListSource  := dmComprasSesiones.dsAtributosConjuntos;
+  cbbEmpresa.Properties.ListSource       := dmmComprasSesiones.dsEmpresas;
+  cbbProveedor.Properties.ListSource     := dmmComprasSesiones.dsProveedores;
+  cbbAlmacen.Properties.ListSource       := dmmComprasSesiones.dsAlmacenes;
+  cbbTipoIva.Properties.ListSource       := dmmComprasSesiones.dsIvas;
+  cbbTarifa.Properties.ListSource        := dmmComprasSesiones.dsTarifas;
+  cbbVariacion.Properties.ListSource     := dmmComprasSesiones.dsVariaciones;
+  cbbConjuntoPivot.Properties.ListSource := dmmComprasSesiones.dsAtributosConjuntos;
+  cbbConjuntoFila.Properties.ListSource  := dmmComprasSesiones.dsAtributosConjuntos;
 
   // El DataSource heredado de TfrmMtoGen solo trae OnStateChange wireado en
   // su DFM. Enganchamos aqui el OnDataChange para que al cambiar CODIGO_EMP_SES
@@ -402,7 +403,7 @@ begin
   // Master-detail: dsTablaG vive en el form, no en el DM, asi que el DFM del
   // DM no puede declararlo. Sin esto unqrySesionLin queda cerrado y
   // btnAddLinea lanza 'Cannot perform this operation on a closed dataset'.
-  with dmComprasSesiones do
+  with dmmComprasSesiones do
   begin
     unqrySesionLin.MasterFields   := 'SERIE_SES;NUMERO_SES';
     unqrySesionLin.MasterSource   := dsTablaG;
@@ -430,15 +431,15 @@ end;
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
 begin
   inherited;
-  tvLineas.DataController.DataSource         := dmComprasSesiones.dsSesionLin;
-  tvProps.DataController.DataSource          := dmComprasSesiones.dsSesionProps;
-  tvKits.DataController.DataSource           := dmComprasSesiones.dsSesionKits;
-  tvKitsDet.DataController.DataSource := dmComprasSesiones.dsSesionKitsDet;
-  tvPreview.DataController.DataSource        := dmComprasSesiones.dsPreviewSkus;
-  tvPreciosSku.DataController.DataSource     := dmComprasSesiones.dsLineaSkusPrecios;
+  tvLineas.DataController.DataSource         := dmmComprasSesiones.dsSesionLin;
+  tvProps.DataController.DataSource          := dmmComprasSesiones.dsSesionProps;
+  tvKits.DataController.DataSource           := dmmComprasSesiones.dsSesionKits;
+  tvKitsDet.DataController.DataSource := dmmComprasSesiones.dsSesionKitsDet;
+  tvPreview.DataController.DataSource        := dmmComprasSesiones.dsPreviewSkus;
+  tvPreciosSku.DataController.DataSource     := dmmComprasSesiones.dsLineaSkusPrecios;
 
   // Selector de alm. para la matriz: alimenta de la lista global de almacenes.
-  cbbAlmacenMatriz.Properties.ListSource     := dmComprasSesiones.dsAlmacenes;
+  cbbAlmacenMatriz.Properties.ListSource     := dmmComprasSesiones.dsAlmacenes;
   // cbbSerie es ahora TcxDBTextEdit (texto libre). El usuario puede
   // teclear cualquier serie; al grabar, BeforePost asegura que esa
   // serie exista en fza_empresas_series (la crea si no existe) y luego
@@ -446,7 +447,7 @@ begin
 
   pcSesion.ActivePage := tsCabecera;
   FGestorMatriz := TGestorMatrizCompras.Create(sbMatriz,
-                                                dmComprasSesiones,
+                                                dmmComprasSesiones,
                                                 oUser);
 end;
 
@@ -466,9 +467,9 @@ procedure TfrmMtoComprasSesiones.cbbEmpresaPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  if (dmComprasSesiones = nil) or
-     (dmComprasSesiones.unqryTablaG = nil) or
-     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
+  if (dmmComprasSesiones = nil) or
+     (dmmComprasSesiones.unqryTablaG = nil) or
+     (not dmmComprasSesiones.unqryTablaG.Active) then Exit;
 
   // Refresca el dropdown del combo Serie con las series de la nueva empresa
   RellenarItemsSerie;
@@ -476,10 +477,10 @@ begin
   // Auto-primera: si la sesion esta en alta o edicion y SERIE_SES esta vacia,
   // asigna la primera serie disponible. El usuario sigue pudiendo cambiarla
   // tecleando o desplegando el combo.
-  if not (dmComprasSesiones.unqryTablaG.State in [dsEdit, dsInsert]) then Exit;
-  if dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString <> '' then Exit;
+  if not (dmmComprasSesiones.unqryTablaG.State in [dsEdit, dsInsert]) then Exit;
+  if dmmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString <> '' then Exit;
   if cbbSerie.Properties.Items.Count > 0 then
-    dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString :=
+    dmmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString :=
       cbbSerie.Properties.Items[0];
 end;
 
@@ -494,13 +495,13 @@ begin
   // en fza_empresas_series.
   if not Assigned(cbbSerie) then Exit;
   cbbSerie.Properties.Items.Clear;
-  if (dmComprasSesiones = nil) or
-     (dmComprasSesiones.unqryTablaG = nil) or
-     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
-  if dmComprasSesiones.unqryTablaG.IsEmpty and
-     (dmComprasSesiones.unqryTablaG.State = dsBrowse) then Exit;
+  if (dmmComprasSesiones = nil) or
+     (dmmComprasSesiones.unqryTablaG = nil) or
+     (not dmmComprasSesiones.unqryTablaG.Active) then Exit;
+  if dmmComprasSesiones.unqryTablaG.IsEmpty and
+     (dmmComprasSesiones.unqryTablaG.State = dsBrowse) then Exit;
 
-  sEmp := dmComprasSesiones.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  sEmp := dmmComprasSesiones.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
   if Trim(sEmp) = '' then Exit;
 
   q := TUniQuery.Create(nil);
@@ -532,8 +533,8 @@ begin
   // Si no la global queda dangling y al abrir Sesiones por segunda vez
   // dsTablaGStateChange (que se dispara antes que CrearTablaPrincipal
   // reasigne la global) leeria memoria liberada -> AV.
-  if dmComprasSesiones = tdmDataModule then
-    dmComprasSesiones := nil;
+  if dmmComprasSesiones = tdmDataModule then
+    dmmComprasSesiones := nil;
   inherited;
 end;
 
@@ -548,7 +549,7 @@ procedure TfrmMtoComprasSesiones.btnGrabarClick(Sender: TObject);
 begin
   if (dsTablaG.State in dsEditModes) then
   begin
-    if dmComprasSesiones.DetectarConflictoConcurrencia then
+    if dmmComprasSesiones.DetectarConflictoConcurrencia then
     begin
       if MessageDlg(
         'Otro usuario ha modificado esta sesión mientras la editabas.' +
@@ -591,16 +592,16 @@ begin
 
   frmConfirm := TfrmModalSesionMaterializar.Create(Self);
   try
-    frmConfirm.ESGeneraPedido  := dmComprasSesiones.unqryTablaG
+    frmConfirm.ESGeneraPedido  := dmmComprasSesiones.unqryTablaG
                                     .FieldByName(
                                       'ESGENERA_PEDIDO_SES').AsString = 'S';
-    frmConfirm.ESGeneraAlbaran := dmComprasSesiones.unqryTablaG
+    frmConfirm.ESGeneraAlbaran := dmmComprasSesiones.unqryTablaG
                                     .FieldByName(
                                       'ESGENERA_ALBARAN_SES').AsString = 'S';
     if frmConfirm.ShowModal <> mrOk then Exit;
 
     bOk := inLibComprasSesionesMaterializar.MaterializarSesion(
-             dmComprasSesiones,
+             dmmComprasSesiones,
              frmConfirm.ESGeneraPedido,
              frmConfirm.ESGeneraAlbaran,
              oUser,
@@ -633,7 +634,7 @@ begin
   if MessageDlg('¿Anular la sesión? Esta acción no se puede deshacer.',
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   dsTablaG.DataSet.Edit;
-  dmComprasSesiones.unqryTablaG.FieldByName('ESTADO_SES').AsString := 'ANULADA';
+  dmmComprasSesiones.unqryTablaG.FieldByName('ESTADO_SES').AsString := 'ANULADA';
   dsTablaG.DataSet.Post;
   ActualizarEstadoUI;
 end;
@@ -644,7 +645,7 @@ begin
   // Clonar = INSERT en cabecera con datos copiados + INSERT de
   // lineas/filas/celdas
   // bajo nuevo NUMERO_SES. Implementación detallada en inLibComprasSesiones.
-  inLibComprasSesiones.ClonarSesion(dmComprasSesiones, oUser);
+  inLibComprasSesiones.ClonarSesion(dmmComprasSesiones, oUser);
 end;
 
 procedure TfrmMtoComprasSesiones.btnCerrarManualClick(Sender: TObject);
@@ -653,7 +654,7 @@ begin
   if MessageDlg('Marcar la sesión como CERRADA sin materializar. ¿Continuar?',
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   dsTablaG.DataSet.Edit;
-  dmComprasSesiones.unqryTablaG.FieldByName('ESTADO_SES').AsString := 'CERRADA';
+  dmmComprasSesiones.unqryTablaG.FieldByName('ESTADO_SES').AsString := 'CERRADA';
   dsTablaG.DataSet.Post;
   ActualizarEstadoUI;
 end;
@@ -662,14 +663,14 @@ procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
 begin
   inherited;
   if not EsSesionEditable then Exit;
-  dmComprasSesiones.unqrySesionLin.Append;
+  dmmComprasSesiones.unqrySesionLin.Append;
 end;
 
 procedure TfrmMtoComprasSesiones.btnDupLineaClick(Sender: TObject);
 begin
   inherited;
   if not EsSesionEditable then Exit;
-  inLibComprasSesiones.DuplicarLineaActual(dmComprasSesiones, oUser);
+  inLibComprasSesiones.DuplicarLineaActual(dmmComprasSesiones, oUser);
 end;
 
 procedure TfrmMtoComprasSesiones.btnDelLineaClick(Sender: TObject);
@@ -678,7 +679,7 @@ begin
   if not EsSesionEditable then Exit;
   if MessageDlg('¿Borrar la línea seleccionada (y sus celdas)?',
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  inLibComprasSesiones.BorrarLineaConCascada(dmComprasSesiones);
+  inLibComprasSesiones.BorrarLineaConCascada(dmmComprasSesiones);
 end;
 
 procedure TfrmMtoComprasSesiones.btnResolverDuplicadoClick(Sender: TObject);
@@ -688,7 +689,7 @@ var
 begin
   inherited;
   if not EsSesionEditable then Exit;
-  qL := dmComprasSesiones.unqrySesionLin;
+  qL := dmmComprasSesiones.unqrySesionLin;
   if qL.IsEmpty then Exit;
   if qL.FieldByName('ESDUPLICADO_SESLIN').AsString <> 'S' then Exit;
 
@@ -734,7 +735,7 @@ var
 begin
   inherited;
   if not EsSesionEditable then Exit;
-  if dmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
+  if dmmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
 
   // Si hay multi-seleccion en el grid, aplicar a todas; si no, solo a la actual.
   iSel := tvLineas.Controller.SelectedRecordCount;
@@ -748,13 +749,13 @@ begin
       aRecs[i] := iLin;
     end;
     inLibComprasSesiones.CalcularPrecioVentaLineas(
-      dmComprasSesiones, oUser, aRecs);
+      dmmComprasSesiones, oUser, aRecs);
   end
   else
   begin
     inLibComprasSesiones.CalcularPrecioVentaLinea(
-      dmComprasSesiones, oUser);
-    dmComprasSesiones.unqrySesionLin.Refresh;
+      dmmComprasSesiones, oUser);
+    dmmComprasSesiones.unqrySesionLin.Refresh;
   end;
 end;
 
@@ -788,41 +789,41 @@ end;
 procedure TfrmMtoComprasSesiones.btnAddPropClick(Sender: TObject);
 begin
   inherited;
-  dmComprasSesiones.unqrySesionProps.Append;
+  dmmComprasSesiones.unqrySesionProps.Append;
 end;
 
 procedure TfrmMtoComprasSesiones.btnDelPropClick(Sender: TObject);
 begin
   inherited;
-  if dmComprasSesiones.unqrySesionProps.IsEmpty then Exit;
+  if dmmComprasSesiones.unqrySesionProps.IsEmpty then Exit;
   if MessageDlg('¿Borrar la propiedad?',
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
-    dmComprasSesiones.unqrySesionProps.Delete;
+    dmmComprasSesiones.unqrySesionProps.Delete;
 end;
 
 procedure TfrmMtoComprasSesiones.btnAddKitClick(Sender: TObject);
 begin
   inherited;
-  dmComprasSesiones.unqrySesionKits.Append;
+  dmmComprasSesiones.unqrySesionKits.Append;
 end;
 
 procedure TfrmMtoComprasSesiones.btnDelKitClick(Sender: TObject);
 begin
   inherited;
-  if dmComprasSesiones.unqrySesionKits.IsEmpty then Exit;
+  if dmmComprasSesiones.unqrySesionKits.IsEmpty then Exit;
   if MessageDlg('¿Borrar el kit?',
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
-    dmComprasSesiones.unqrySesionKits.Delete;
+    dmmComprasSesiones.unqrySesionKits.Delete;
 end;
 
 procedure TfrmMtoComprasSesiones.btnImportarKitPrvClick(Sender: TObject);
 begin
   inherited;
-  inLibComprasSesiones.ImportarKitsDeProveedor(dmComprasSesiones, oUser);
+  inLibComprasSesiones.ImportarKitsDeProveedor(dmmComprasSesiones, oUser);
 end;
 
 procedure TfrmMtoComprasSesiones.btnAplicarKitFilaClick(Sender: TObject);
@@ -834,9 +835,9 @@ begin
   sKit := cbbKitAplicar.Text;
   if sKit = '' then Exit;
   nLin :=
-    dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    dmmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
   nFil := TGestorMatrizCompras(FGestorMatriz).FilaSeleccionada;
-  dmComprasSesiones.AplicarKitAFila(sKit, nLin, nFil);
+  dmmComprasSesiones.AplicarKitAFila(sKit, nLin, nFil);
   ReconstruirMatrizActual;
 end;
 
@@ -849,8 +850,8 @@ begin
   sKit := cbbKitAplicar.Text;
   if sKit = '' then Exit;
   nLin :=
-    dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  dmComprasSesiones.AplicarKitATodasFilas(sKit, nLin);
+    dmmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  dmmComprasSesiones.AplicarKitATodasFilas(sKit, nLin);
   ReconstruirMatrizActual;
 end;
 
@@ -866,7 +867,7 @@ var
   sError: string;
 begin
   inherited;
-  if inLibComprasSesiones.ValidarSesion(dmComprasSesiones, sError) then
+  if inLibComprasSesiones.ValidarSesion(dmmComprasSesiones, sError) then
     MessageDlg('Sesión validada correctamente.', mtInformation, [mbOk], 0)
   else
     MessageDlg('Validación FALLIDA:' + sLineBreak + sError,
@@ -914,17 +915,17 @@ begin
   try
     if frmSel.ShowModal = mrOk then
     begin
-      if not (dmComprasSesiones.unqrySesionLin.State in [dsEdit, dsInsert]) then
-        dmComprasSesiones.unqrySesionLin.Edit;
-      dmComprasSesiones.unqrySesionLin
+      if not (dmmComprasSesiones.unqrySesionLin.State in [dsEdit, dsInsert]) then
+        dmmComprasSesiones.unqrySesionLin.Edit;
+      dmmComprasSesiones.unqrySesionLin
         .FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString
           := frmSel.CodigoFamilia;
       // Si la descripcion esta vacia, prerellenarla con el nombre de la
       // familia para que la linea quede minimamente identificada hasta
       // que el usuario teclee algo mas concreto.
-      if dmComprasSesiones.unqrySesionLin
+      if dmmComprasSesiones.unqrySesionLin
            .FieldByName('DESCRIPCION_SESLIN').AsString = '' then
-        dmComprasSesiones.unqrySesionLin
+        dmmComprasSesiones.unqrySesionLin
           .FieldByName('DESCRIPCION_SESLIN').AsString
             := frmSel.NombreFamilia;
       // El Post real lo dispara el usuario al moverse de fila; cuando lo haga
@@ -944,10 +945,10 @@ begin
   inherited;
   ReconstruirMatrizActual;
   // Refrescar sub-grid de precios SKU para la nueva linea
-  if Assigned(dmComprasSesiones) and
-     Assigned(dmComprasSesiones.unqryLineaSkusPrecios) and
-     dmComprasSesiones.unqryLineaSkusPrecios.Active then
-    dmComprasSesiones.unqryLineaSkusPrecios.Refresh;
+  if Assigned(dmmComprasSesiones) and
+     Assigned(dmmComprasSesiones.unqryLineaSkusPrecios) and
+     dmmComprasSesiones.unqryLineaSkusPrecios.Active then
+    dmmComprasSesiones.unqryLineaSkusPrecios.Refresh;
 end;
 
 procedure TfrmMtoComprasSesiones.ActualizarEstadoUI;
@@ -994,7 +995,7 @@ var
   dm : TdmComprasSesiones;
 begin
   // Usamos tdmDataModule (propiedad del form, vida ligada al form) en vez
-  // de la variable global dmComprasSesiones, que puede quedar dangling al
+  // de la variable global dmmComprasSesiones, que puede quedar dangling al
   // cerrar y reabrir la pantalla y provocar AV en GetActive.
   Result := False;
   if not Assigned(tdmDataModule) then Exit;
@@ -1014,14 +1015,14 @@ procedure TfrmMtoComprasSesiones.ReconstruirMatrizActual;
 var
   sAlmCab : string;
 begin
-  if dmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
+  if dmmComprasSesiones.unqrySesionLin.IsEmpty then Exit;
 
   // Si el combo de almacen está vacio, inicializarlo con el almacen de
   // cabecera para que la matriz arranque editando ese.
   if (VarToStr(cbbAlmacenMatriz.EditValue) = '') and
-     (not dmComprasSesiones.unqryTablaG.IsEmpty) then
+     (not dmmComprasSesiones.unqryTablaG.IsEmpty) then
   begin
-    sAlmCab := dmComprasSesiones.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+    sAlmCab := dmmComprasSesiones.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
     if sAlmCab <> '' then
     begin
       cbbAlmacenMatriz.EditValue := sAlmCab;
@@ -1029,7 +1030,7 @@ begin
     end;
   end;
   TGestorMatrizCompras(FGestorMatriz).ReconstruirMatriz(
-    dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger);
+    dmmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger);
 end;
 
 procedure TfrmMtoComprasSesiones.ReconstruirResumenMaterializacion;
@@ -1037,9 +1038,9 @@ var
   iArts, iSkus : Integer;
   rTotal       : Double;
 begin
-  iArts  := inLibComprasSesiones.ContarArticulosNuevos(dmComprasSesiones);
-  iSkus  := inLibComprasSesiones.ContarSkusPotenciales(dmComprasSesiones);
-  rTotal := inLibComprasSesiones.CalcularTotalCompra(dmComprasSesiones);
+  iArts  := inLibComprasSesiones.ContarArticulosNuevos(dmmComprasSesiones);
+  iSkus  := inLibComprasSesiones.ContarSkusPotenciales(dmmComprasSesiones);
+  rTotal := inLibComprasSesiones.CalcularTotalCompra(dmmComprasSesiones);
   lblResNumArticulos.Caption := Format('► %d artículos nuevos en fza_articulos',
                                                                        [iArts]);
   lblResNumSkus.Caption := Format('► %d SKUs en fza_articulos_skus', [iSkus]);
@@ -1098,22 +1099,22 @@ procedure TfrmMtoComprasSesiones.ActualizarVisibilidadPreciosSku;
 var
   bVisible : Boolean;
 begin
-  if (dmComprasSesiones = nil) or
-     (dmComprasSesiones.unqryTablaG = nil) or
-     (not dmComprasSesiones.unqryTablaG.Active) then Exit;
-  bVisible := (not dmComprasSesiones.unqryTablaG.IsEmpty) and
-              (dmComprasSesiones.unqryTablaG.FieldByName(
+  if (dmmComprasSesiones = nil) or
+     (dmmComprasSesiones.unqryTablaG = nil) or
+     (not dmmComprasSesiones.unqryTablaG.Active) then Exit;
+  bVisible := (not dmmComprasSesiones.unqryTablaG.IsEmpty) and
+              (dmmComprasSesiones.unqryTablaG.FieldByName(
                                         'ESPRECIO_POR_SKU_SES').AsString = 'S');
   if Assigned(gbPreciosSku)   then
     gbPreciosSku.Visible   := bVisible;
   if Assigned(splPreciosSku)  then
     splPreciosSku.Visible  := bVisible;
-  if bVisible and Assigned(dmComprasSesiones.unqryLineaSkusPrecios) then
+  if bVisible and Assigned(dmmComprasSesiones.unqryLineaSkusPrecios) then
   begin
-    if not dmComprasSesiones.unqryLineaSkusPrecios.Active then
-      dmComprasSesiones.unqryLineaSkusPrecios.Open
+    if not dmmComprasSesiones.unqryLineaSkusPrecios.Active then
+      dmmComprasSesiones.unqryLineaSkusPrecios.Open
     else
-      dmComprasSesiones.unqryLineaSkusPrecios.Refresh;
+      dmmComprasSesiones.unqryLineaSkusPrecios.Refresh;
   end;
 end;
 
@@ -1123,8 +1124,8 @@ var
   q : TUniQuery;
   qSrc : TUniQuery;
 begin
-  if dmComprasSesiones.unqryLineaSkusPrecios.IsEmpty then Exit;
-  qSrc := dmComprasSesiones.unqryLineaSkusPrecios;
+  if dmmComprasSesiones.unqryLineaSkusPrecios.IsEmpty then Exit;
+  qSrc := dmmComprasSesiones.unqryLineaSkusPrecios;
 
   q := TUniQuery.Create(nil);
   try
@@ -1139,11 +1140,11 @@ begin
       'ON DUPLICATE KEY UPDATE ' +
       '  ' + AField + ' = :v, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
     q.ParamByName('s').AsString :=
-                dmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString;
+                dmmComprasSesiones.unqryTablaG.FieldByName('SERIE_SES').AsString;
     q.ParamByName('n').AsString :=
-               dmComprasSesiones.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+               dmmComprasSesiones.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.ParamByName('l').AsInteger :=
-         dmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+         dmmComprasSesiones.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     q.ParamByName('f').AsInteger := qSrc.FieldByName('ID_FILA').AsInteger;
     q.ParamByName('p').AsInteger := qSrc.FieldByName('ID_AV_PIVOT').AsInteger;
     if ANuevo = 0 then
@@ -1166,7 +1167,7 @@ begin
   inherited;
   edt := Sender as TcxCustomEdit;
   edt.PostEditValue;
-  v := dmComprasSesiones.unqryLineaSkusPrecios
+  v := dmmComprasSesiones.unqryLineaSkusPrecios
          .FieldByName('PRECIO_COMPRA_SESLINSKU').AsFloat;
   UpsertPrecioSku('PRECIO_COMPRA_SESLINSKU', v);
 end;
@@ -1180,7 +1181,7 @@ begin
   inherited;
   edt := Sender as TcxCustomEdit;
   edt.PostEditValue;
-  v := dmComprasSesiones.unqryLineaSkusPrecios
+  v := dmmComprasSesiones.unqryLineaSkusPrecios
          .FieldByName('PRECIO_VENTA_SESLINSKU').AsFloat;
   UpsertPrecioSku('PRECIO_VENTA_SESLINSKU', v);
 end;

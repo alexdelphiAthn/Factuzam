@@ -124,9 +124,6 @@ public
     // (TIPO_DOC_REF_MOV='FC').
     function GenerarMovimientosSalidaFactura: Integer;
   end;
-var
-  dmFacturas: TdmFacturas;
-
 implementation
 
 uses

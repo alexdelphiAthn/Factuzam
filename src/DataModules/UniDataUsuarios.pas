@@ -35,9 +35,6 @@ type
     { Public declarations }
   end;
 
-//var
-//  dmUsuarios: TdmUsuarios;
-
 implementation
 
 uses

@@ -125,8 +125,6 @@ type
     procedure ReconstruirFilasLinea(const ALineaID: Integer);
   end;
 
-var
-  dmComprasSesiones: TdmComprasSesiones;
 
 implementation
 

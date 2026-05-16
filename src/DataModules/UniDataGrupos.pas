@@ -32,9 +32,6 @@ type
     { Public declarations }
   end;
 
-var
-  dmGrupos: TdmGrupos;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
