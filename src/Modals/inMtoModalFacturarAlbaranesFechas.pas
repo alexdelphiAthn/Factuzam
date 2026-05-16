@@ -70,9 +70,6 @@ type
     dmmAlbaranes: TdmAlbaranes;
   end;
 
-var
-  frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas;
-
 implementation
 
 uses

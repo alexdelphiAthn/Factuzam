@@ -72,9 +72,6 @@ type
     dmFac : TdmFacturas;
   end;
 
-var
-  frmGenFacRec: TfrmGenFacRec;
-
 implementation
 
 uses

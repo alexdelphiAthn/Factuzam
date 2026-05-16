@@ -65,9 +65,6 @@ type
     dmPedidos: TdmPedidos;
   end;
 
-var
-  frmModalImportarPedidosPS: TfrmModalImportarPedidosPS;
-
 implementation
 
 {$R *.dfm}

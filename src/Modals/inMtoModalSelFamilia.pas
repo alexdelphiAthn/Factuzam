@@ -65,9 +65,6 @@ type
     property NombreFamilia : string read FNombreFamilia;
   end;
 
-var
-  frmModalSelFamilia: TfrmModalSelFamilia;
-
 implementation
 
 uses

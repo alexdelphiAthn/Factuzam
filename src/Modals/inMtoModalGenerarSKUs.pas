@@ -83,9 +83,6 @@ type
                             ATipoVariacion: string): Boolean;
   end;
 
-var
-  frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS;
-
 implementation
 
 {$R *.dfm}

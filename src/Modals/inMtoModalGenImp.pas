@@ -88,9 +88,6 @@ type
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
                                            DM: TDataModule);
 
-var
-  frmPrint: TfrmPrint;
-
 implementation
 
 uses

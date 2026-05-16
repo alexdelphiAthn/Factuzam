@@ -226,6 +226,5 @@ begin
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  Application.CreateForm(TfrmModalSelFamilia, frmModalSelFamilia);
   Application.Run;
 end.

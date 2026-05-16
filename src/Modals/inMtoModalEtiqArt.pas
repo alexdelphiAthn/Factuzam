@@ -59,9 +59,6 @@ type
     procedure preparar_consulta; override;
   end;
 
-var
-  frmPrintEtiqArt: TfrmPrintEtiqArt;
-
 implementation
 
 {$R *.dfm}
