@@ -389,7 +389,6 @@ begin
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1Click(Sender: TObject);
-var
 begin
   FFechaCaja := calMes.Date;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);

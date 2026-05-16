@@ -145,7 +145,6 @@ type
   private
 
     FTipoImpresion: TTipoImpresionTicket;
-    FTotalFactura: Currency;
     FDatosCobro: TDatosFaseCobro;
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
@@ -154,7 +153,6 @@ type
     procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
     procedure ActualizarInterfaz;
-    function  ValidarIntegridad: Boolean;
     procedure ConfigurarTablaVirtual;
     procedure ConfigurarModoDevolucion;
     procedure ConfigurarModoCobroNormal;
@@ -630,7 +628,6 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura:
                                                        TFacturaTotales);
-var
 begin
 if TotalesFactura = nil then Exit;
   FDatosCobro.CargarDatosFactura(TotalesFactura);
