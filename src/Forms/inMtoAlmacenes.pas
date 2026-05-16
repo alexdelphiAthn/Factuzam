@@ -64,7 +64,7 @@ type
     pnlButtonFicha: TPanel;
     pcDetail: TcxPageControl;
     tsAuditoria: TcxTabSheet;
-    pnl3: TPanel;
+    pnlAuditoria: TPanel;
     lblUsuarioAlta: TcxLabel;
     txtUSUARIOALTA: TcxDBTextEdit;
     lblInstanteAlta: TcxLabel;

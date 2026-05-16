@@ -188,7 +188,7 @@
               DesignSize = (
                 929
                 421)
-              object cxgrpbx1: TcxGroupBox
+              object cxgrpbxIdentificacion: TcxGroupBox
                 AlignWithMargins = True
                 Left = 19
                 Top = 3
@@ -299,7 +299,7 @@
                   TabOrder = 11
                   Transparent = True
                 end
-                object cxDBTextEdit1: TcxDBTextEdit
+                object txtCODIGO_POSTAL_EMP: TcxDBTextEdit
                   Left = 106
                   Top = 166
                   DataBinding.DataField = 'CODIGO_POSTAL_EMP'
@@ -307,14 +307,14 @@
                   TabOrder = 12
                   Width = 322
                 end
-                object cxLabel1: TcxLabel
+                object lblCodPostal: TcxLabel
                   Left = 6
                   Top = 171
                   Caption = 'C'#243'd Postal'
                   TabOrder = 13
                   Transparent = True
                 end
-                object cxLabel2: TcxLabel
+                object lblIBAN: TcxLabel
                   Left = 57
                   Top = 310
                   Caption = 'IBAN'
@@ -1522,7 +1522,7 @@
           DesignSize = (
             937
             178)
-          object cxgrpbx2: TcxGroupBox
+          object cxgrpbxFiscalidad: TcxGroupBox
             AlignWithMargins = True
             Left = 9
             Top = 5

@@ -34,11 +34,11 @@ type
   TfrmMtoGrupos = class(TfrmMtoGen)
     cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinESGRUPOADMINISTRADOR: TcxGridDBColumn;
-    Panel1: TPanel;
-    cxLabel1: TcxLabel;
-    cxLabel2: TcxLabel;
+    pnlBodyFicha: TPanel;
+    lblNombreGrupo: TcxLabel;
+    lblEsGrupoAdmin: TcxLabel;
     txtNOMBRE_GRUPO: TcxDBTextEdit;
-    cxDBCheckBox1: TcxDBCheckBox;
+    chkESGRUPOADMINISTRADOR_USUGRP: TcxDBCheckBox;
     cxgrdUsuarios: TcxGrid;
     tvUsuarios: TcxGridDBTableView;
     cxgrdlvlUsuarios: TcxGridLevel;
