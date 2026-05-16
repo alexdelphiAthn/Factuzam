@@ -420,11 +420,11 @@ begin
     if not unqrySesionKits.Active     then unqrySesionKits.Open;
     if not unqrySesionKitsDet.Active  then unqrySesionKitsDet.Open;
   end;
+end;
 
 procedure TfrmMtoComprasSesiones.ResetForm;
 begin
   inherited;
-end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
