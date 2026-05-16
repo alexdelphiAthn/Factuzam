@@ -147,7 +147,7 @@ begin
                             GetGValue(Dlg.Color),
                             GetBValue(Dlg.Color)]);
   finally
-    Dlg.Free;
+    FreeAndNil(Dlg);
   end;
 end;
 

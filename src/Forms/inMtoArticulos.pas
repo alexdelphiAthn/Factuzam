@@ -916,7 +916,7 @@ begin
         qryTodasTarifas.Next;
       end;
     finally
-      qryTodasTarifas.Free;
+      FreeAndNil(qryTodasTarifas);
     end;
     frmSel.CargarTarifas(ListaTarifas);
 
@@ -1019,17 +1019,17 @@ begin
         end;
       end;
     finally
-      TarifasActivas.Free;
+      FreeAndNil(TarifasActivas);
       dmmArticulos.unqryTarifasArticulos.EnableControls;
     end;
     dmmArticulos.unqryTarifasArticulos.Refresh;
     ActualizarVisibilidadColumnaSku;
   finally
-    SkusSel.Free;
-    TarifasSel.Free;
-    ListaSkus.Free;
-    ListaTarifas.Free;
-    frmSel.Free;
+    FreeAndNil(SkusSel);
+    FreeAndNil(TarifasSel);
+    FreeAndNil(ListaSkus);
+    FreeAndNil(ListaTarifas);
+    FreeAndNil(frmSel);
   end;
 end;
 
@@ -2206,7 +2206,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -2244,7 +2244,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2287,7 +2287,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2327,7 +2327,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2419,7 +2419,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   // Refrescamos la vista para repintar NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB,
   // FUENTE_ATB (pasa a 'A') y ETIQUETA_BASICO.
@@ -2488,7 +2488,7 @@ begin
       qry.ParamByName('ID').AsInteger  := IdAtb;
       qry.Execute;
     finally
-      qry.Free;
+      FreeAndNil(qry);
     end;
     if ds.State in [dsEdit, dsInsert] then ds.Cancel;
     ds.Refresh;
@@ -2496,7 +2496,7 @@ begin
     if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
       dmmArticulos.unqryAtributosBasicosLookup.Refresh;
   finally
-    Dlg.Free;
+    FreeAndNil(Dlg);
   end;
 end;
 

@@ -278,7 +278,7 @@ begin
     else
       ShowMessage('No se pudo crear la factura.');
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -315,7 +315,7 @@ begin
     dmmAlbaranes.unqryTablaG.Close;
     dmmAlbaranes.unqryTablaG.Open;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 

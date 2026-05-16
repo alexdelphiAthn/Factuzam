@@ -225,7 +225,7 @@ begin
         cbbSerie1.ItemIndex := 0;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -351,7 +351,7 @@ procedure TfrmMtoCajaFaseCobro.FormDestroy(Sender: TObject);
 begin
   inherited;
   if Assigned(FDatosCobro) then
-    FDatosCobro.Free;
+    FreeAndNil(FDatosCobro);
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarFormasPago;
@@ -415,7 +415,7 @@ begin
       end;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -929,7 +929,7 @@ begin
                                       DeudaActual);
       end;
     finally
-      qryCli.Free;
+      FreeAndNil(qryCli);
     end;
   end;
   CargarComboSeries;

@@ -742,10 +742,10 @@ begin
           DBSynEdit1.SetFocus;
       end;
     finally
-      slScript.Free;
+      FreeAndNil(slScript);
     end;
   finally
-    dlgAbrir.Free;
+    FreeAndNil(dlgAbrir);
   end;
 end;
 
@@ -896,7 +896,7 @@ begin
           end;
         end;
       finally
-        uScript.Free;
+        FreeAndNil(uScript);
       end;
     end;
   end;
@@ -914,7 +914,7 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxVista);
-  saveDialog.Free;
+  FreeAndNil(saveDialog);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnExportarExcelMetaClick(Sender: TObject);
@@ -929,7 +929,7 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxgrdMetadatos1);
-  saveDialog.Free;
+  FreeAndNil(saveDialog);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnVerDatosClick(Sender: TObject);
@@ -1033,7 +1033,7 @@ begin
 
   finally
     // Es vital liberar el diccionario de la memoria
-    DictNodos.Free;
+    FreeAndNil(DictNodos);
     dmmGeneradorProcesos.unqryMetadatos.EnableControls;
     TreeView1.Items.EndUpdate;
   end;
@@ -1480,7 +1480,7 @@ begin
         end;
         sCallText := sCallText + ');';
       finally
-        qryParams.Free;
+        FreeAndNil(qryParams);
       end;
       // Ponemos el dataset principal en modo Inserción
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then

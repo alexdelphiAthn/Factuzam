@@ -443,7 +443,7 @@ begin
         Exit;
       end;
     finally
-      qry.Free;
+      FreeAndNil(qry);
     end;
   end;
 
@@ -481,7 +481,7 @@ begin
         Exit;
       end;
     finally
-      qry.Free;
+      FreeAndNil(qry);
     end;
   end;
 end;
@@ -724,7 +724,7 @@ begin
     else
       Result := '';
   finally
-    unqryCon.Free;
+    FreeAndNil(unqryCon);
   end;
 end;
 
@@ -1015,8 +1015,8 @@ begin
       GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
-    Validador.Free;
-    Resolver.Free;
+    FreeAndNil(Validador);
+    FreeAndNil(Resolver);
   end;
 end;
 
@@ -1081,7 +1081,7 @@ begin
     GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
-    Resolver.Free;
+    FreeAndNil(Resolver);
   end;
 end;
 
@@ -1110,7 +1110,7 @@ begin
                                                                        := V.Valor;
     end;
   finally
-    Lookup.Free;
+    FreeAndNil(Lookup);
   end;
 end;
 
@@ -1155,7 +1155,7 @@ begin
       Clon.Next;
     end;
   finally
-    Clon.Free;
+    FreeAndNil(Clon);
   end;
 end;
 
@@ -1896,7 +1896,7 @@ begin
     Layout.RestaurarAlturaPanel('StockPanelHeight', pnl1, 30);
     Layout.RestaurarGrid('Lineas', cxGrid1DBTableView1);
   finally
-    Layout.Free;
+    FreeAndNil(Layout);
   end;
 end;
 
@@ -1998,7 +1998,7 @@ begin
       cxGrid1DBTableView1.EndUpdate;
     end;
   finally
-    NombresAtributos.Free;
+    FreeAndNil(NombresAtributos);
   end;
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
@@ -2126,7 +2126,7 @@ begin
         end;
       end;
     finally
-      unqry.Free;
+      FreeAndNil(unqry);
     end;
     if sNomCliente = '' then
     begin
@@ -2158,7 +2158,7 @@ begin
       Totales.ProcesarFacturaCompleta;
       ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
     finally
-      Totales.Free;
+      FreeAndNil(Totales);
     end;
   end;
   finally
@@ -2304,7 +2304,7 @@ begin
       lblNombreEmpleado.Caption := '';
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 //  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
 end;
@@ -2514,8 +2514,8 @@ begin
     end;
   finally
     if Assigned(frmFaseCobro) then
-      frmFaseCobro.Free;
-    ObjTotales.Free;
+      FreeAndNil(frmFaseCobro);
+    FreeAndNil(ObjTotales);
   end;
 end;
 
@@ -2575,7 +2575,7 @@ begin
     Totales.ProcesarFacturaCompleta;
     ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
   finally
-    Totales.Free;
+    FreeAndNil(Totales);
   end;
 end;
 
@@ -2778,7 +2778,7 @@ begin
     if Layout.PreguntarYGrabar('Personalización Caja') then
       ShowMessage('Layout guardado.');
   finally
-    Layout.Free;
+    FreeAndNil(Layout);
   end;
 end;
 

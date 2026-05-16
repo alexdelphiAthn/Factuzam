@@ -225,7 +225,7 @@ begin
       Log.LogInfo('El script se ejecutó exitosamente');
       ShowMessage('El script se ejecutó exitosamente');
     finally
-      SqlScript.Free;
+      FreeAndNil(SqlScript);
     end;
   end
   else
@@ -461,17 +461,17 @@ begin
             saveDialog.DefaultFolder := GetUserDeskFolder;
             MyText.SaveToFile(saveDialog.FileName);
           finally
-            MyText.Free;
+            FreeAndNil(MyText);
           end;
           Log.LogInfo(edtUser.Text + ' Guardó copia Encriptada en ' +
             savedialog.FileName);
           ShowMessage('La copia se guardó exitosamente');
         finally
-          Engine.Free;
+          FreeAndNil(Engine);
         end;
       finally
-        IncludeTables.Free;
-        ExcludeTables.Free;
+        FreeAndNil(IncludeTables);
+        FreeAndNil(ExcludeTables);
       end;
     end;
   end
@@ -529,7 +529,7 @@ begin
       MyText.LoadFromFile(opendialog.FileName);
       s := MyText.Text;
     finally
-      MyText.Free;
+      FreeAndNil(MyText);
     end;
     // Creamos y configuramos TUniScript
     SqlScript := TUniScript.Create(nil);
@@ -551,7 +551,7 @@ begin
       SqlScript.Execute;
       ShowMessage(SScriptSuccess);
     finally
-      SqlScript.Free; // Liberamos el componente
+      FreeAndNil(SqlScript); // Liberamos el componente
     end;
   end
   else
@@ -600,7 +600,7 @@ begin
       ShowMessageFmt(SPasswordBBDDChanged, [sPass]);
       Log.LogInfo(sPasswordBBDDChanged);
       esCadIniDir('ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
-      qryCommand.Free;
+      FreeAndNil(qryCommand);
     end;
   end;
 end;

@@ -279,7 +279,7 @@ end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
-  FVentasCal.Free;
+  FreeAndNil(FVentasCal);
 end;
 
 procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
@@ -336,7 +336,7 @@ begin
     frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
     frm.Show;
   except
-    frm.Free;
+    FreeAndNil(frm);
     raise;
   end;
 end;
@@ -365,7 +365,7 @@ begin
     else
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -558,7 +558,7 @@ begin
                                   Self.FFechaCaja);
     frmMtoOpeCaja.Show;
   except
-    frmMtoOpeCaja.Free;
+    FreeAndNil(frmMtoOpeCaja);
   end;
 end;
 

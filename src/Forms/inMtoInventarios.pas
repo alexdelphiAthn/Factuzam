@@ -638,7 +638,7 @@ begin
       tvLineas.EndUpdate;
     end;
   finally
-    NombresAtributos.Free;
+    FreeAndNil(NombresAtributos);
   end;
 end;
 
@@ -666,7 +666,7 @@ begin
                                                                        := V.Valor;
     end;
   finally
-    Lookup.Free;
+    FreeAndNil(Lookup);
   end;
 end;
 
@@ -766,7 +766,7 @@ begin
       Combo.Properties.Items.EndUpdate;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 
   // Si la celda esta vacia, preseleccionamos la primera opcion y, al entrar
@@ -1080,7 +1080,7 @@ begin
     ATipoArt     := Resolucion.TipoArticulo;
     AEncontrado  := True;
   finally
-    Validador.Free;
+    FreeAndNil(Validador);
   end;
 end;
 
@@ -1638,7 +1638,7 @@ begin
       Screen.Cursor := crDefault;
     end;
   finally
-    Lista.Free;
+    FreeAndNil(Lista);
   end;
 end;
 

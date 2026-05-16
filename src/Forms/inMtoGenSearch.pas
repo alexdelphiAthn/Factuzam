@@ -234,7 +234,7 @@ begin
       Result := (Trim(sCod) <> '');
     end;
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -311,7 +311,7 @@ begin
       end;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -351,7 +351,7 @@ begin
       QryDef.Next;
     end;
   finally
-    QryDef.Free;
+    FreeAndNil(QryDef);
   end;
   QryCont := TUniQuery.Create(nil);
   try
@@ -369,7 +369,7 @@ begin
                                QryCont.FieldByName('TIPO_DOC_CON').AsString;
     end;
   finally
-    QryCont.Free;
+    FreeAndNil(QryCont);
   end;
 end;
 
