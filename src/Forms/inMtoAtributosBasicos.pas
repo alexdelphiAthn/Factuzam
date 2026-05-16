@@ -30,7 +30,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosBasicos,
   cxCheckBox, cxSpinEdit, dxScrollbarAnnotations, dxCore,
-  inMtoPrincipal, cxMaskEdit, cxDBEdit, cxDBLookupComboBox, cxDBLookupEdit,
+  cxMaskEdit, cxDBEdit, cxDBLookupComboBox, cxDBLookupEdit,
   cxLookupEdit, cxDropDownEdit, cxButtonEdit, cxCurrencyEdit;
 
 type
@@ -87,7 +87,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 

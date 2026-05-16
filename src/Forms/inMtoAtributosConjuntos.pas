@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosConjuntos,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit, cxDBLookupComboBox,
   cxDBLookupEdit, cxLookupEdit, cxDropDownEdit,
   System.Actions, Vcl.ActnList;
@@ -106,7 +106,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto;
+  inLibWin, inLibShowMto, inMtoPrincipal;
 
 {$R *.dfm}
 

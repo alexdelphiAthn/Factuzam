@@ -33,7 +33,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
-  UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal, SynEditKeyCmds,
+  UniDataGeneradorProcesos, cxCurrencyEdit, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
 
@@ -229,7 +229,7 @@ uses
   inLibDevExp,
   inLibGlobalVar,
   inLibDir,
-  ts.Editor.CodeFormatters;
+  ts.Editor.CodeFormatters, inMtoPrincipal;
 
 {$R *.dfm}
 
