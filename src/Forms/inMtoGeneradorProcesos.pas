@@ -1030,10 +1030,6 @@ begin
 end;
 
 procedure TfrmMtoGeneradorProcesos.CrearTablaPrincipal;
-var
-  qry: TUniQuery;
-  nodeParent, nodeChild: TTreeNode;
-  i: Integer;
 begin
   DBSynEdit1.BeginUpdate;
   syndtEstructura.BeginUpdate;

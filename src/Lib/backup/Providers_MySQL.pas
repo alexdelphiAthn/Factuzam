@@ -83,7 +83,6 @@ function TMySQLMetadataProvider.GetFunctionDefinition(
   const FunctionName: string): string;
 var
   Query: TUniQuery;
-  OldDB: string;
   DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
@@ -183,7 +182,6 @@ function TMySQLMetadataProvider.GetProcedureDefinition(
   const ProcedureName:string): string;
 var
   Query: TUniQuery;
-  OldDB: string;
   DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
@@ -401,7 +399,6 @@ function TMySQLMetadataProvider.GetTriggerDefinition(
   const TriggerName: string): string;
 var
   Query: TUniQuery;
-  OldDB: string;
   DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);
@@ -468,7 +465,6 @@ function TMySQLMetadataProvider.GetViewDefinition(
   const ViewName: string): string;
 var
   Query: TUniQuery;
-  OldDB: string;
   DBPrefix: string;
 begin
   Query := TUniQuery.Create(nil);

@@ -35,7 +35,7 @@ type
     function GetCurrentForm: TComponent;
     procedure SetCurrentForm(const Value: TComponent);
   protected
-    procedure DoCreate; virtual;
+    procedure DoCreate; reintroduce; virtual;
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
   public

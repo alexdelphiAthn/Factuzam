@@ -355,8 +355,6 @@ begin
 end;
 
 procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje: Currency);
-var
-  BaseImponible: Currency;
 begin
   FPorcentajeDescuentoGlobal := APorcentaje;
   Recalcular;

@@ -126,7 +126,6 @@ const
 constructor TfrmSelPropiedades.Create(AOwner: TComponent;
   AConexion: TUniConnection; AExcluir: TStringList);
 var
-  pnlBtn: TPanel;
 begin
   inherited Create(AOwner);
   FConexion       := AConexion;
@@ -150,16 +149,6 @@ begin
     btnAceptar.OnClick := BtnAceptarClick;
   if Assigned(btnCancelar) then
     btnCancelar.OnClick := BtnCancelarClick;
-//  pnlBtn := TPanel.Create(Self);
-//  pnlBtn.Parent := Self;
-//  pnlBtn.Align  := alBottom;
-//  pnlBtn.Height := 40;
-//  pnlBtn.BevelOuter := bvNone;
-//  pnlBtn.Font.name := 'Lucida Sans';
-//  pnlBtn.Font.Height := -13;
-
-
-
   CargarLista;
 end;
 
