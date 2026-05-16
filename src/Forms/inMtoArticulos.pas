@@ -200,7 +200,7 @@ type
     tsSKUs: TcxTabSheet;
     pnlBotonesCB: TPanel;
     btnExportarExcelCB: TcxButton;
-    cxgrdTarifas: TcxGrid;
+    cxgrdSkus: TcxGrid;
     tvSkus: TcxGridDBTableView;
     tvSkusCODIGO_UNIDAD_SKU: TcxGridDBColumn;
     tvSkusCODIGO_ARTICULO_SKU: TcxGridDBColumn;
@@ -209,7 +209,7 @@ type
     tvSkusINSTANTEALTA: TcxGridDBColumn;
     tvSkusUSUARIOALTA: TcxGridDBColumn;
     tvSkusUSUARIOMODIF: TcxGridDBColumn;
-    cxgrdlvlTarifas: TcxGridLevel;
+    cxgrdlvlSkus: TcxGridLevel;
     cxTabSheet3: TcxTabSheet;
     tsMovimientos: TcxTabSheet;
     tvSkusCODIGO_BARRAS_CB: TcxGridDBColumn;
