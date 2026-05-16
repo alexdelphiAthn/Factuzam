@@ -188,23 +188,16 @@ enlazado al catálogo. Aquí se define, por ejemplo, que en el conjunto
     botón `[...]` (o doble-clic) abre `TColorDialog` para editar
     `HEX_ATB` directamente en `fza_atributos_basicos`.
 
-### Convención de visualización para atributos con paleta
+### Visualización de la paleta en grids
 
-Reglas para cualquier grid que muestre `HEX_ATB` (o un color hex
-asociado a un atributo / SKU):
-
-- **En la celda del grid**: cuadrado de color de la paleta pintado
-  con `OnCustomDrawCell`.
-- **En el hint de la celda**: el valor HEX (`#RRGGBB`) y, si procede,
-  el `NOMBRE_ATB` del básico.
-
-**Estado actual de cxGrid en el proyecto**: la versión instalada no
-expone `OnGetCellHint` ni en el DFM ni a runtime
-(`E2003 Undeclared identifier`). Mientras no se actualice o se
-implemente vía `Application.OnShowHint`, el HEX se dibuja también
-dentro del cuadrado (texto blanco/negro según luminancia del fondo).
-Cuando se pueda enganchar el hint, hay que **quitar el `DrawText` del
-custom draw** y poner el HEX sólo en el tooltip.
+`tvSkuAtributosBasicosHEX_ATBCustomDrawCell` pinta la celda de la
+columna "Paleta" como un cuadrado del color real
+(`fza_atributos_basicos.HEX_ATB`) con el valor `#RRGGBB` encima en
+texto blanco o negro según la luminancia del fondo
+(`LR * 0.299 + LG * 0.587 + LB * 0.114 < 128 → blanco`). Así se
+distingue el color y se lee el código a la vez sin necesidad de
+tooltip — útil además porque la versión de cxGrid del proyecto no
+expone `OnGetCellHint`.
 
 ## SKUs huérfanos: filas virtuales y materialización lazy
 

@@ -2816,8 +2816,6 @@ begin
   ACanvas.Rectangle(LRect);
 
   // Etiqueta del HEX encima, con texto blanco o negro segun luminancia.
-  // (La convencion deseada es mostrar el HEX en hint, pero esta version
-  // de cxGrid no expone OnGetCellHint; mientras tanto va en la celda.)
   LBrillo := (LR * 0.299 + LG * 0.587 + LB * 0.114);
   ACanvas.Brush.Style := bsClear;
   if LBrillo < 128 then
