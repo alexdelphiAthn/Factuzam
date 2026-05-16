@@ -425,8 +425,8 @@ begin
       qry.Connection := oConn;
       qry.SQL.Text :=
         'SELECT ESACTIVO_SKU FROM fza_articulos_skus ' +
-        ' WHERE CODIGO_UNIDAD_SKU = :sku';
-      qry.ParamByName('sku').AsString := SkuLimpio;
+        ' WHERE CODIGO_UNIDAD_SKU = :SKU';
+      qry.ParamByName('SKU').AsString := SkuLimpio;
       qry.Open;
       if qry.IsEmpty then
       begin
@@ -457,18 +457,18 @@ begin
         qry.SQL.Text :=
           'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
           '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :sku ' +
-          '   AND CODIGO_ALM_STK    = :alm';
-        qry.ParamByName('sku').AsString := SkuLimpio;
-        qry.ParamByName('alm').AsString := FCodigoAlmacen;
+          ' WHERE CODIGO_UNIDAD_STK = :SKU ' +
+          '   AND CODIGO_ALM_STK    = :ALM';
+        qry.ParamByName('SKU').AsString := SkuLimpio;
+        qry.ParamByName('ALM').AsString := FCodigoAlmacen;
       end
       else
       begin
         qry.SQL.Text :=
           'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
           '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :sku';
-        qry.ParamByName('sku').AsString := SkuLimpio;
+          ' WHERE CODIGO_UNIDAD_STK = :SKU';
+        qry.ParamByName('SKU').AsString := SkuLimpio;
       end;
       qry.Open;
       Cantidad := qry.FieldByName('QTY').AsFloat;
@@ -695,36 +695,30 @@ end;
 
 function TfrmMtoOpeCaja.BuscarArticulo: String;
 begin
-  var unqryCon := TUniQuery.Create(nil);
+  var unstrdprcCon := TUniStoredProc.Create(nil);
   try
-    unqryCon.Connection := oConn;
-    unqryCon.SQL.Text :=
-      'CALL PRC_BUSQUEDA_ARTICULOS(' +
-      '                            :p_tarifa,'   +
-      '                            :p_almacen,'  +
-      '                            :p_fecha,'    +
-      '                            :p_token,'    +
-      '                            :p_solostock,' +
-      '                            :p_solotarifa)';
+    unstrdprcCon.Connection := oConn;
+    unstrdprcCon.StoredProcName := 'PRC_BUSQUEDA_ARTICULOS';
+    unstrdprcCon.PrepareSQL;
 
-    unqryCon.ParamByName('p_tarifa').AsString :=
+    unstrdprcCon.ParamByName('p_tarifa').AsString :=
                                               DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    unqryCon.ParamByName('p_almacen').AsString  := FCodigoAlmacen;
-    unqryCon.ParamByName('p_fecha').AsDate      := FFecha;
-    unqryCon.ParamByName('p_token').AsString    := '';   // sin filtro inicial
-    unqryCon.ParamByName('p_solostock').AsInteger :=
+    unstrdprcCon.ParamByName('p_almacen').AsString  := FCodigoAlmacen;
+    unstrdprcCon.ParamByName('p_fecha').AsDate      := FFecha;
+    unstrdprcCon.ParamByName('p_token').AsString    := '';
+    unstrdprcCon.ParamByName('p_solostock').AsInteger :=
                        Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  False));
-    unqryCon.ParamByName('p_solotarifa').AsInteger :=
+    unstrdprcCon.ParamByName('p_solotarifa').AsInteger :=
                        Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
-                                       unqryCon,
+                                       unstrdprcCon,
                                        'frmMtoArtFacSearch') then
-      Result := unqryCon.FieldByName('CODIGO_ART_ART').AsString
+      Result := unstrdprcCon.FieldByName('CODIGO_ART_ART').AsString
     else
       Result := '';
   finally
-    FreeAndNil(unqryCon);
+    FreeAndNil(unstrdprcCon);
   end;
 end;
 

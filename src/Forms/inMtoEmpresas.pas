@@ -128,10 +128,10 @@ type
     cxgrdlvlcxgrd1Level1: TcxGridLevel;
     cxgrdlvlcxgrd1Level2: TcxGridLevel;
     pnlFacturaOpts: TPanel;
-    btIraFactura: TcxButton;
+    btnIraFactura: TcxButton;
     tvLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     btnIraCliente: TcxButton;
-    btExportarExcel: TcxButton;
+    btnExportarExcel: TcxButton;
     tvFacturacionFECHA_FACTURA: TcxGridDBColumn;
     tvFacturacionNRO_FACTURA: TcxGridDBColumn;
     tvFacturacionSERIE_FACTURA: TcxGridDBColumn;
@@ -275,9 +275,9 @@ type
     procedure btnNuevaEmpresaClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnAddIRPFClick(Sender: TObject);
-    procedure btIraFacturaClick(Sender: TObject);
+    procedure btnIraFacturaClick(Sender: TObject);
     procedure btnIraClienteClick(Sender: TObject);
-    procedure btExportarExcelClick(Sender: TObject);
+    procedure btnExportarExcelClick(Sender: TObject);
     procedure actClientesExecute(Sender: TObject);
     procedure actFacturasExecute(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
@@ -336,7 +336,7 @@ begin
   inherited;
   //Control + F
     if (pcPestana.ActivePage = tsHistoriaFacturacion) then
-       btIraFacturaClick(Sender)
+       btnIraFacturaClick(Sender)
     else
       ShowMto(Self.Owner,
               'Facturas');
@@ -353,13 +353,13 @@ begin
              'Articulos');
 end;
 
-procedure TfrmMtoEmpresas.btExportarExcelClick(Sender: TObject);
+procedure TfrmMtoEmpresas.btnExportarExcelClick(Sender: TObject);
 begin
   ExportarExcel(cxgrdEmpresasFacturas, 'Historico_Facturas_Empresa_' +
                        dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
 end;
 
-procedure TfrmMtoEmpresas.btIraFacturaClick(Sender: TObject);
+procedure TfrmMtoEmpresas.btnIraFacturaClick(Sender: TObject);
 var
   sNroFactura, sSerieFactura:String;
 begin

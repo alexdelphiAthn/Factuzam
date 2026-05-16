@@ -203,14 +203,14 @@ object frmLogon: TfrmLogon
       TabOrder = 4
       Width = 278
     end
-    object btChangePassRoot: TcxButton
+    object btnChangePassRoot: TcxButton
       Left = 306
       Top = 219
       Width = 30
       Height = 30
       Caption = '...'
       TabOrder = 5
-      OnClick = btChangePassRootClick
+      OnClick = btnChangePassRootClick
     end
     object btnTest: TcxButton
       Left = 24

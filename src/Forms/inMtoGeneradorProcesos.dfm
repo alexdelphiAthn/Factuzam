@@ -615,14 +615,14 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Height = 41
                   Align = alBottom
                   TabOrder = 0
-                  object btRefresh: TcxButton
+                  object btnRefresh: TcxButton
                     Left = 5
                     Top = 6
                     Width = 188
                     Height = 25
                     Caption = 'Refrescar &MetaDatos'
                     TabOrder = 0
-                    OnClick = btRefreshClick
+                    OnClick = btnRefreshClick
                   end
                   object cxLabel1: TcxLabel
                     Left = 199

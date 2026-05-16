@@ -102,7 +102,7 @@ type
     cxgrdlvlMetadatoslv11: TcxGridLevel;
     pnlTree: TPanel;
     pnlTreeBotton: TPanel;
-    btRefresh: TcxButton;
+    btnRefresh: TcxButton;
     cxVista: TcxGrid;
     tvVista: TcxGridDBTableView;
     tv3: TcxGridDBTableView;
@@ -148,7 +148,7 @@ type
     ScrollBar2: TScrollBar;
     DBSynEdit1: TDBSynEdit;
     actComentar: TAction;
-    procedure btRefreshClick(Sender: TObject);
+    procedure btnRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
     procedure btnEjecutarClick(Sender: TObject);
@@ -930,7 +930,7 @@ begin
     dsTablaG.DataSet.Post;
  end;
 
-procedure TfrmMtoGeneradorProcesos.btRefreshClick(Sender: TObject);
+procedure TfrmMtoGeneradorProcesos.btnRefreshClick(Sender: TObject);
 begin
   inherited;
   Screen.Cursor := crHourGlass;
@@ -1471,7 +1471,7 @@ procedure TfrmMtoGeneradorProcesos.tsMetadatosShow(Sender: TObject);
 begin
   inherited;
   if TreeView1.Items.Count = 0 then
-    btRefreshClick(nil);
+    btnRefreshClick(nil);
 end;
 
 procedure TfrmMtoGeneradorProcesos.tsSQLShow(Sender: TObject);

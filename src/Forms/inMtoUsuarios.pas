@@ -54,10 +54,10 @@ type
     cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinEMPRESADEF_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinULTIMOLOGIN_USUARIO: TcxGridDBColumn;
-    btSetPass: TcxButton;
+    btnSetPass: TcxButton;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn;
-    procedure btSetPassClick(Sender: TObject);
+    procedure btnSetPassClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   private
     { Private declarations }
@@ -80,7 +80,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoUsuarios }
 
-procedure TfrmMtoUsuarios.btSetPassClick(Sender: TObject);
+procedure TfrmMtoUsuarios.btnSetPassClick(Sender: TObject);
 var
   formulario: TfrmModalGenPass;
 begin

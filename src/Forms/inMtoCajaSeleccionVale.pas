@@ -229,16 +229,16 @@ begin
       SQL := SQL + ' AND (FECHA_CADUCIDAD_VL IS NULL ' +
                    '      OR FECHA_CADUCIDAD_VL >= CURDATE())';
     if AFiltro <> '' then
-      SQL := SQL + ' AND CODIGO_VL LIKE :filtro';
+      SQL := SQL + ' AND CODIGO_VL LIKE :FILTRO';
     // Filtrar también por PIN si se ha introducido
     if sPin <> '' then
-      SQL := SQL + ' AND PIN_SEGURIDAD_VL = :pin';
+      SQL := SQL + ' AND PIN_SEGURIDAD_VL = :PIN';
     SQL := SQL + ' ORDER BY FECHA_EMISION_VL DESC';
     qry.SQL.Text := SQL;
     if AFiltro <> '' then
-      qry.ParamByName('filtro').AsString := '%' + AFiltro + '%';
+      qry.ParamByName('FILTRO').AsString := '%' + AFiltro + '%';
     if sPin <> '' then
-      qry.ParamByName('pin').AsString := sPin;
+      qry.ParamByName('PIN').AsString := sPin;
     qry.Open;
     FMemVales.DisableControls;
     FMemVales.Clear;

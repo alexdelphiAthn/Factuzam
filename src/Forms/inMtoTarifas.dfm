@@ -231,14 +231,14 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   TabOrder = 0
                   OnClick = btnIraArticuloClick
                 end
-                object btAddBlock: TcxButton
+                object btnAddBlock: TcxButton
                   Left = 3
                   Top = 53
                   Width = 120
                   Height = 25
                   Caption = 'A'#241'adir Bloque'
                   TabOrder = 1
-                  OnClick = btAddBlockClick
+                  OnClick = btnAddBlockClick
                 end
               end
               object cxspltr1: TcxSplitter

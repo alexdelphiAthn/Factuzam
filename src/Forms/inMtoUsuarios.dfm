@@ -100,7 +100,7 @@
     end
   end
   inherited pButtonRightBar: TPanel
-    object btSetPass: TcxButton
+    object btnSetPass: TcxButton
       Left = 4
       Top = 128
       Width = 130
@@ -108,7 +108,7 @@
       Caption = 'Cambiar &Contrase'#241'a'
       TabOrder = 2
       WordWrap = True
-      OnClick = btSetPassClick
+      OnClick = btnSetPassClick
     end
   end
   inherited dsTablaG: TDataSource

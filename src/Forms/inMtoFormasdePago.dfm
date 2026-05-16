@@ -896,14 +896,14 @@
                     TabOrder = 1
                     OnClick = btnIraClienteClick
                   end
-                  object btExportarExcel: TcxButton
+                  object btnExportarExcel: TcxButton
                     Left = 7
                     Top = 176
                     Width = 108
                     Height = 34
                     Caption = 'Exp. Excel'
                     TabOrder = 2
-                    OnClick = btExportarExcelClick
+                    OnClick = btnExportarExcelClick
                   end
                   object btnIraEmpresa: TcxButton
                     Left = 7

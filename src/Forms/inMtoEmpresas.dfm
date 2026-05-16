@@ -1111,14 +1111,14 @@
                   Height = 419
                   Align = alRight
                   TabOrder = 1
-                  object btIraFactura: TcxButton
+                  object btnIraFactura: TcxButton
                     Left = 6
                     Top = 16
                     Width = 106
                     Height = 34
                     Caption = '&Ir a Factura'
                     TabOrder = 0
-                    OnClick = btIraFacturaClick
+                    OnClick = btnIraFacturaClick
                   end
                   object btnIraCliente: TcxButton
                     Left = 7
@@ -1129,14 +1129,14 @@
                     TabOrder = 1
                     OnClick = btnIraClienteClick
                   end
-                  object btExportarExcel: TcxButton
+                  object btnExportarExcel: TcxButton
                     Left = 5
                     Top = 136
                     Width = 106
                     Height = 34
                     Caption = 'Exp. Excel'
                     TabOrder = 3
-                    OnClick = btExportarExcelClick
+                    OnClick = btnExportarExcelClick
                   end
                   object btnIraArticulo: TcxButton
                     Left = 7
