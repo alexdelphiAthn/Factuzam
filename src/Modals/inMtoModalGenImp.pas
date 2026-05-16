@@ -387,38 +387,40 @@ var
   iButtonSel:Integer;
 begin
   unqrySol := TUniQuery.Create(nil);
-  unqrySol.Connection := oConn;
-  unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
-                       '  FROM fza_usuarios_perfiles ' +
-                       ' WHERE KEY_USUPER = :NombreReport ' +
-                       '   AND VALUE_USUPER = :Descripcion ';
-  unqrySol.ParamByName('NombreReport').AsString := Self.Name;
-  unqrySol.ParamByName('Descripcion').AsString := sElegido;
-  unqrySol.Open;
-  sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
-  if not((inLibGlobalVar.orootGroup = 'S') or
-      (oUser = sUserProp) or
-      (oGroup = sUserProp)) then
-    ShowMessageFmt('No tiene privilegios suficientes ' +
-                   'para borrar el formato de %s. '+
-                   'Consulte con el Administrador', [sUserProp])
-  else
-  begin
-    iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
-                             mtCustom,[mbYes,mbNo], 0);
-  if (iButtonSel = mrYes) then
-  begin
-    unqrySol.SQL.Text := 'DELETE  ' +
+  try
+    unqrySol.Connection := oConn;
+    unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
                          '  FROM fza_usuarios_perfiles ' +
                          ' WHERE KEY_USUPER = :NombreReport ' +
                          '   AND VALUE_USUPER = :Descripcion ';
     unqrySol.ParamByName('NombreReport').AsString := Self.Name;
     unqrySol.ParamByName('Descripcion').AsString := sElegido;
-
-    unqrySol.Execute;
-  end;
+    unqrySol.Open;
+    sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
+    if not((inLibGlobalVar.orootGroup = 'S') or
+        (oUser = sUserProp) or
+        (oGroup = sUserProp)) then
+      ShowMessageFmt('No tiene privilegios suficientes ' +
+                     'para borrar el formato de %s. '+
+                     'Consulte con el Administrador', [sUserProp])
+    else
+    begin
+      iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
+                               mtCustom,[mbYes,mbNo], 0);
+      if (iButtonSel = mrYes) then
+      begin
+        unqrySol.SQL.Text := 'DELETE  ' +
+                             '  FROM fza_usuarios_perfiles ' +
+                             ' WHERE KEY_USUPER = :NombreReport ' +
+                             '   AND VALUE_USUPER = :Descripcion ';
+        unqrySol.ParamByName('NombreReport').AsString := Self.Name;
+        unqrySol.ParamByName('Descripcion').AsString := sElegido;
+        unqrySol.Execute;
+      end;
+      CargarFormatos(form);
+    end;
+  finally
     FreeAndNil(unqrySol);
-    CargarFormatos(form);
   end;
 end;
 
