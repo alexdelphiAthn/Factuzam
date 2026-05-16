@@ -2477,9 +2477,9 @@ begin
        if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
                                               FCodigoAlmacen,
                                               FCodigoCaja,
-                                              frmFaseCobro.cbbSerie1.Text,
+                                              frmFaseCobro.cbbSERIE_FAC.Text,
                                               frmFaseCobro.DatosCobro,
-                                              frmFaseCobro.cbbSerie1.Text,
+                                              frmFaseCobro.cbbSERIE_FAC.Text,
                                               NumeroGenerado,
                                               CodigoValeGenerado) then
        begin
