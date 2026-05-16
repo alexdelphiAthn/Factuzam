@@ -41,6 +41,11 @@ uses
   cxCustomListBox, cxCheckListBox;
 
 type
+  // Ambito que elige el usuario cuando hay que crear un atributo basico
+  // nuevo desde el helper del SKU. Global = compartido entre articulos;
+  // ad-hoc = exclusivo de este articulo (CODIGO_ATB con prefijo AD_).
+  TAmbitoBasico = (abCancelar, abGlobal, abAdHoc);
+
   TfrmMtoArticulos = class(TfrmMtoGen)
     pnlTopFicha: TPanel;
     pnlButtonFicha: TPanel;
@@ -410,6 +415,9 @@ type
       Sender: TObject);
     procedure tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
       Sender: TObject);
+    procedure tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
+      Sender: TObject; var DisplayValue: Variant;
+      var ErrorText: TCaption; var Error: Boolean);
     procedure tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
     procedure tvSkuAtributosBasicosDblClick(Sender: TObject);
@@ -449,6 +457,8 @@ type
     function AsegurarBasicoFilaActual: Integer;
     function AsegurarFilaSA(const ACodSKU, AIdVaAv,
                             AValorAv: string): Integer;
+    function PreguntarAmbitoBasico(const ACodArt,
+                                   AValorAv: string): TAmbitoBasico;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -2099,6 +2109,48 @@ begin
   else AText := '';
 end;
 
+function TfrmMtoArticulos.PreguntarAmbitoBasico(
+  const ACodArt, AValorAv: string): TAmbitoBasico;
+// Cuando el helper del SKU tiene que CREAR un atributo basico nuevo
+// (porque la fila aun no tiene ninguno) preguntamos al usuario que
+// tipo quiere: global (compartido entre articulos) o ad-hoc (exclusivo
+// con prefijo AD_<articulo>_). Si elige cancelar, no se crea nada y
+// la edicion se descarta.
+//
+// MB_YESNOCANCEL nos da 3 botones de serie:
+//   Si       -> Global (Recommended por defecto)
+//   No       -> Ad-hoc (compatibilidad con comportamiento previo)
+//   Cancelar -> abCancelar
+var
+  CodGlobal, CodAdHoc, Texto: string;
+begin
+  Result    := abCancelar;
+  CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
+  if CodGlobal = '' then CodGlobal := '(sin valor)';
+  CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);
+
+  Texto :=
+    'Este SKU todavia no tiene un atributo basico asignado para ' +
+    'este valor.' + #13#10#13#10 +
+    'Si       -> Crear basico GLOBAL "' + CodGlobal + '"' + #13#10 +
+    '            (compartido con otros articulos que usen ese valor)' +
+    #13#10#13#10 +
+    'No       -> Crear basico AD-HOC "' + CodAdHoc + '"' + #13#10 +
+    '            (exclusivo de este articulo)' +
+    #13#10#13#10 +
+    'Cancelar -> No crear nada por ahora.';
+
+  case Application.MessageBox(
+         PChar(Texto),
+         'Como crear el atributo basico',
+         MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
+    ID_YES : Result := abGlobal;
+    ID_NO  : Result := abAdHoc;
+  else
+    Result := abCancelar;
+  end;
+end;
+
 function TfrmMtoArticulos.AsegurarFilaSA(
   const ACodSKU, AIdVaAv, AValorAv: string): Integer;
 // Materializa una fila virtual del UNION de vi_atributos_sku_basico:
@@ -2210,19 +2262,27 @@ begin
     IdAv := ds.FieldByName('ID_AV').AsInteger;
   if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
 
-  // CODIGO_ATB único en su variación (UQ ID_VA_ATB+CODIGO_ATB).
-  // Lo prefijamos con AD_ + código de artículo + valor visible para que
-  // sea legible y único entre artículos: AD_DEMO-CAMISA_3XL,
-  // AD_DEMO-CAMISA_AZUL_MARINO. Si el valor estuviera vacío caemos al
-  // ID interno como fallback para evitar colisiones.
+  // CODIGO_ATB unico en su variacion (UQ ID_VA_ATB+CODIGO_ATB).
+  // Si el valor esta vacio caemos al ID interno como fallback para
+  // evitar colisiones. Si hay valor, preguntamos al usuario si quiere
+  // un basico GLOBAL (compartido, CODIGO_ATB = valor) o AD-HOC (con
+  // prefijo AD_<articulo>_, exclusivo del articulo). De esta forma
+  // dejamos de imponer el prefijo AD_ sin preguntar.
   if Trim(ValorAv) = '' then
     Codigo := Format('AD_%s_%d', [CodArt, IdAv])
   else
-    Codigo := Format('AD_%s_%s',
-                     [CodArt,
-                      StringReplace(Trim(ValorAv), ' ', '_',
-                                    [rfReplaceAll])]);
-  // CODIGO_ATB es varchar(100): truncamos por si el artículo + valor
+  begin
+    case PreguntarAmbitoBasico(CodArt, ValorAv) of
+      abCancelar: Exit;
+      abGlobal  : Codigo := StringReplace(Trim(ValorAv), ' ', '_',
+                                          [rfReplaceAll]);
+      abAdHoc   : Codigo := Format('AD_%s_%s',
+                                   [CodArt,
+                                    StringReplace(Trim(ValorAv), ' ', '_',
+                                                  [rfReplaceAll])]);
+    end;
+  end;
+  // CODIGO_ATB es varchar(100): truncamos por si el articulo + valor
   // se nos van de largo.
   if Length(Codigo) > 100 then
     Codigo := Copy(Codigo, 1, 100);
@@ -2430,6 +2490,131 @@ begin
       Filtered := True;
     end;
   end;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant;
+  var ErrorText: TCaption; var Error: Boolean);
+// El combo "Basico" es un TcxLookupComboBox de seleccion estricta. Si el
+// usuario teclea un texto y pulsa Enter/Tab sin elegir nada del desple-
+// gable, ese texto cae aqui en DisplayValue. Aprovechamos para:
+//   1) Buscar match exacto (CODIGO_ATB o NOMBRE_ATB) entre los basicos
+//      de la misma variacion. Si lo hay, devolvemos el CODIGO_ATB y el
+//      combo lo resuelve a su ID via OnEditValueChanged.
+//   2) Si no hay match, preguntamos al usuario Global/Ad-hoc/Cancelar
+//      (PreguntarAmbitoBasico), creamos el basico nuevo en
+//      fza_atributos_basicos y refrescamos el lookup. Luego ponemos
+//      DisplayValue := CODIGO_ATB nuevo para que el combo lo seleccione
+//      y dispare el override automaticamente.
+//   3) Si cancela, marcamos Error para que el combo no asuma el texto
+//      tecleado como un ID huerfano.
+var
+  Texto, IdVaAv, CodArt: string;
+  ds                  : TDataSet;
+  qry                 : TUniQuery;
+  IdAtbExistente      : Integer;
+  CodigoExistente     : string;
+  Ambito              : TAmbitoBasico;
+  CodigoNuevo, NombreNuevo: string;
+begin
+  Error := False;
+  Texto := Trim(VarToStr(DisplayValue));
+  if Texto = '' then Exit;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+
+  IdVaAv := ds.FieldByName('ID_VA_AV').AsString;
+  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  if (IdVaAv = '') or (CodArt = '') then Exit;
+
+  // 1) Buscar match exacto en fza_atributos_basicos para este tipo de
+  //    atributo. Damos prioridad a CODIGO_ATB exacto sobre NOMBRE_ATB.
+  IdAtbExistente  := 0;
+  CodigoExistente := '';
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT ID_ATB, CODIGO_ATB FROM fza_atributos_basicos '          +
+      ' WHERE ID_VA_ATB = :IDVA '                                      +
+      '   AND ESACTIVO_ATB = ''S'' '                                   +
+      '   AND (CODIGO_ATB = :T OR NOMBRE_ATB = :T) '                   +
+      ' ORDER BY (CODIGO_ATB = :T) DESC '                              +
+      ' LIMIT 1';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('T').AsString    := Texto;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      IdAtbExistente  := qry.FieldByName('ID_ATB').AsInteger;
+      CodigoExistente := qry.FieldByName('CODIGO_ATB').AsString;
+    end;
+    qry.Close;
+  finally
+    qry.Free;
+  end;
+
+  if IdAtbExistente > 0 then
+  begin
+    // Ya existe: devolvemos el CODIGO_ATB para que el combo resuelva
+    // a su ID_ATB via su mecanismo interno de lookup.
+    DisplayValue := CodigoExistente;
+    Exit;
+  end;
+
+  // 2) No existe — preguntar al usuario qué quiere crear.
+  Ambito := PreguntarAmbitoBasico(CodArt, Texto);
+  if Ambito = abCancelar then
+  begin
+    Error     := True;
+    ErrorText := 'Sin asignar.';
+    Exit;
+  end;
+
+  // 3) Crear el basico nuevo con el codigo que toque segun el ambito.
+  NombreNuevo := Texto;
+  case Ambito of
+    abGlobal: CodigoNuevo := StringReplace(NombreNuevo, ' ', '_',
+                                           [rfReplaceAll]);
+    abAdHoc : CodigoNuevo := Format('AD_%s_%s',
+                                    [CodArt,
+                                     StringReplace(NombreNuevo, ' ', '_',
+                                                   [rfReplaceAll])]);
+  end;
+  if Length(CodigoNuevo) > 100 then
+    CodigoNuevo := Copy(CodigoNuevo, 1, 100);
+
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'INSERT INTO fza_atributos_basicos '              +
+      '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
+      '    ESACTIVO_ATB, '                              +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
+      'VALUES (:IDVA, :COD, :NOM, ''S'', '              +
+      '        NOW(), :USR, :USR) '                     +
+      'ON DUPLICATE KEY UPDATE '                        +
+      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('IDVA').AsString := IdVaAv;
+    qry.ParamByName('COD').AsString  := CodigoNuevo;
+    qry.ParamByName('NOM').AsString  := NombreNuevo;
+    qry.ParamByName('USR').AsString  := oUser;
+    qry.Execute;
+  finally
+    qry.Free;
+  end;
+
+  // 4) Refrescar lookup para que el combo lo encuentre al resolver.
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+
+  // 5) Devolver el CODIGO_ATB nuevo para que el combo lo seleccione.
+  //    Esto disparara OnEditValueChanged y se grabara el override.
+  DisplayValue := CodigoNuevo;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
