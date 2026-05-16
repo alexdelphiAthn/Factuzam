@@ -586,18 +586,6 @@ end;
 procedure TfrmMtoFacturas.btnConsolidarClick(Sender: TObject);
 begin
   inherited;
-//  with dmmFacturas.unqryTablaG do
-//  begin
-//    if Active = True then
-//    if (FieldByName('ESCONSOLIDADA_FAC').AsString <> 'S') then
-//    begin
-//      if ((dsTablaG.State <> dsEdit) and (dsTablaG.State <> dsInsert)) then
-//        dmmFacturas.unqryTablaG.Edit;
-//      FieldByName('ESCONSOLIDADA_FAC').AsString := 'S';
-//      FieldByName('INSTANTECONSO_FAC').AsDateTime := Now;
-//      Post;
-//    end;
-//  end;
 end;
 
 procedure TfrmMtoFacturas.ResetForm;
@@ -1255,28 +1243,6 @@ procedure TfrmMtoFacturas.chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange(
   Sender: TObject);
 begin
   inherited;
-  if chkESIVA_RECARGO_CLIENTE_FACTURA.Checked = True then
-  begin
-//    dbcPORCEN_REN_FACTURA.Visible := True;
-//    dbcTOTAL_REN_FACTURA.Visible := True;
-//    dbcPORCEN_RER_FACTURA.Visible := True;
-//    dbcTOTAL_RER_FACTURA.Visible := True;
-//    dbcPORCEN_RES_FACTURA.Visible := True;
-//    dbcTOTAL_RES_FACTURA.Visible := True;
-//    dbcPORCEN_REE_FACTURA.Visible := True;
-//    dbcTOTAL_REE_FACTURA.Visible := True;
-  end
-  else
-  begin
-//    dbcPORCEN_REN_FACTURA.Visible := False;
-//    dbcTOTAL_REN_FACTURA.Visible := False;
-//    dbcPORCEN_RER_FACTURA.Visible := False;
-//    dbcTOTAL_RER_FACTURA.Visible := False;
-//    dbcPORCEN_RES_FACTURA.Visible := False;
-//    dbcTOTAL_RES_FACTURA.Visible := False;
-//    dbcPORCEN_REE_FACTURA.Visible := False;
-//    dbcTOTAL_REE_FACTURA.Visible := False;
-  end;
 end;
 
 procedure TfrmMtoFacturas.
@@ -1755,12 +1721,6 @@ procedure TfrmMtoFacturas.spnRetencionPropertiesEditValueChanged(
 //  e : TcxCustomEdit;
 begin
   inherited;
-//  with dsTablaG do
-//  if ((State = dsInsert) or (State = dsEdit)) then
-//  begin
-//    e := Sender as TcxCustomEdit;
-//
-//  end;
 end;
 
 (*-AÑADIR CAMPO EN FACTURAS

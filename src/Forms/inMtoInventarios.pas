@@ -426,13 +426,6 @@ begin
 
   // Etiqueta visual del estado
   //lblEstadoDetalle.Caption := 'Estado del inventario: ' + Estado;
-//  case IndexStr(Estado, ['ABIERTO', 'APLICADO', 'CANCELADO']) of
-//    0: lblEstadoDetalle.Style.TextColor := clGreen;
-//    1: lblEstadoDetalle.Style.TextColor := clBlue;
-//    2: lblEstadoDetalle.Style.TextColor := clRed;
-//  else
-//    lblEstadoDetalle.Style.TextColor := clGray;
-//  end;
 
   // Botones de acciones globales
 {  btnRecalcular.Enabled               := Edicion;
@@ -670,29 +663,6 @@ begin
   end;
 end;
 
-//procedure TfrmMtoInventarios.ConstruirSkuDesdeAtributos;
-//var
-//  i: Integer;
-//  ArticuloPadre, Sku, Valor: string;
-//begin
-//  // Concatena: CODIGO_ART_ART/VAL1/VAL2/...
-//  if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
-//
-// ArticuloPadre :=
-// dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
-//  if ArticuloPadre = '' then Exit;
-//
-//  Sku := ArticuloPadre;
-//  for i := 1 to FNumAtributosActual do
-//  begin
-// Valor := dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) +
-// '_VALOR').AsString;
-//    if Valor = '' then Exit; // SKU incompleto — todavía falta algún atributo
-//    Sku := Sku + '/' + Valor;
-//  end;
-//
-// dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := Sku;
-//end;
 
 // ============================================================================
 //   EVENTOS DE EDICIÓN DEL GRID DE LÍNEAS

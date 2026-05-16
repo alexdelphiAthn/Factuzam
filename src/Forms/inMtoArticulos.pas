@@ -1813,13 +1813,6 @@ begin
 //  splitter.Align  := alTop;
 //  splitter.Height := 5;
 
-//  // ── Zona SKUs (scroll) ──
-//  FScrollVarSkus := TScrollBox.Create(Self);
-//  FScrollVarSkus.Parent      := tsVariaciones;
-//  FScrollVarSkus.Align       := alClient;
-//  FScrollVarSkus.BorderStyle := bsNone;
-//  FScrollVarSkus.Color       := clWindow;
-//  FScrollVarSkus.AutoScroll  := True;
 
   FGestorVar := TGestorVariaciones.Create(
     FScrollVarAtrib,

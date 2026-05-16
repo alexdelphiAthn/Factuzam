@@ -2713,30 +2713,6 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
-//var
-//  sCodEmpleado: string;
-//begin
-//  // Tarifa por defecto en cabecera
-//  if DatosCaja.cdsCabecera.State = dsBrowse then
-//    DatosCaja.cdsCabecera.Edit;
-//  DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-//    oCajaParams.GetString('vgerDefTarifa', 'PVP');
-//  lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
-//                         'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-//
-//  // Empleado por defecto
-//  if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
-//  begin
-//    sCodEmpleado := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
-//    if sCodEmpleado <> '' then
-//    begin
-//      btnCodigoEmpleado.Text := sCodEmpleado;
-//      btnCodigoEmpleado.ValidateEdit(True);
-//      btnCodigoCliente.SetFocus;
-//      Exit;
-//    end;
-//  end;
-//   btnCodigoEmpleado.SetFocus;
 begin
   RestaurarLayoutCaja;
   ActualizarFoco;

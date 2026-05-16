@@ -331,19 +331,6 @@ begin
     DisplayStr := PathToToken(Dir);   // guardamos con token
 end;
 
-// ── Botón "..." en campos de directorio ──────────────────────────────────
-//procedure TfrmMtoAppParam.InspectorEditButtonClick(Sender: TObject;
-//  Item: TJvCustomInspectorItem);
-//var
-//  Dir: string;
-//begin
-//  if (Item = nil) or not StartsText('appDir', Item.Name) then
-//    Exit;
-//  Dir := Item.DisplayValue;
-//  if SelectDirectory('Seleccione una carpeta', '', Dir,
-//                     [sdNewUI, sdNewFolder]) then
-//    Item.DisplayValue := Dir;
-//end;
 
 // -----------------------------------------------------------------------
 // CARGA Y GUARDADO  (idéntico al de CajaParam)
