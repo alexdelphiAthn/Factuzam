@@ -436,6 +436,11 @@ type
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
+    procedure tvSkuAtributosBasicosGetCellHint(
+      Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+      var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+      var AHintTextRect: TRect);
     procedure tvStockGetCellHint(Sender: TcxCustomGridTableView;
       ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
       var AHintText: TCaption; var AIsHintMultiLine: Boolean;
@@ -1712,6 +1717,12 @@ begin
   tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
   tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
+  // OnGetCellHint del helper de SKUs no se puede wirear desde el DFM
+  // en esta version de cxGrid; lo enganchamos aqui. Se necesita
+  // CellHints=True para que el grid genere hints por celda.
+  tvSkuAtributosBasicos.OptionsBehavior.CellHints := True;
+  tvSkuAtributosBasicos.OnGetCellHint :=
+                                       tvSkuAtributosBasicosGetCellHint;
   pkFieldName := 'CODIGO_ART_ART';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
@@ -2789,7 +2800,6 @@ var
   LColor: TColor;
   LRect: TRect;
   LR, LG, LB: Integer;
-  LBrillo: Double;
 begin
   ADone := False;
   if AViewInfo = nil then Exit;
@@ -2815,15 +2825,8 @@ begin
   ACanvas.Pen.Color   := clBlack;
   ACanvas.Rectangle(LRect);
 
-  // Etiqueta del HEX encima, con texto blanco o negro según luminancia.
-  LBrillo := (LR * 0.299 + LG * 0.587 + LB * 0.114);
-  ACanvas.Brush.Style := bsClear;
-  if LBrillo < 128 then
-    ACanvas.Font.Color := clWhite
-  else
-    ACanvas.Font.Color := clBlack;
-  ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
-
+  // Convencion: en el grid solo cuadrado de color; el HEX se muestra
+  // en el hint (ver tvSkuAtributosBasicosGetCellHint).
   ADone := True;
 end;
 
@@ -2838,6 +2841,45 @@ begin
   if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
     if PintarCeldaConTextoColor(ACanvas, AViewInfo, Info) then
       ADone := True;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosGetCellHint(
+  Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo; const MousePos: TPoint;
+  var AHintText: TCaption; var AIsHintMultiLine: Boolean;
+  var AHintTextRect: TRect);
+// Hint para el helper de SKUs. Convencion: las celdas de la columna
+// HEX_ATB (paleta) muestran solo el cuadrado de color en el grid; el
+// valor #RRGGBB y el nombre del basico se entregan aqui para que
+// salgan al pasar el raton. Otras celdas no llevan hint personalizado.
+var
+  ds    : TDataSet;
+  LHex  : string;
+  LNom  : string;
+begin
+  if ACellViewInfo = nil then Exit;
+  if ACellViewInfo.Item = nil then Exit;
+  // Solo nos interesa la columna HEX_ATB. La identificamos por su
+  // DataBinding.FieldName para no acoplar al nombre del objeto.
+  if not (ACellViewInfo.Item is TcxGridDBColumn) then Exit;
+  if not SameText(
+       TcxGridDBColumn(ACellViewInfo.Item).DataBinding.FieldName,
+       'HEX_ATB') then Exit;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+
+  LHex := Trim(ds.FieldByName('HEX_ATB').AsString);
+  LNom := Trim(ds.FieldByName('NOMBRE_ATB').AsString);
+  if (LHex = '') and (LNom = '') then Exit;
+  if (LNom <> '') and (LHex <> '') then
+    AHintText := LNom + ' ' + LHex
+  else if LHex <> '' then
+    AHintText := LHex
+  else
+    AHintText := LNom;
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
