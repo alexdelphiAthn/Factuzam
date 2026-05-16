@@ -19,7 +19,7 @@ type
     ExtendedInsertRows: Integer;
   end;
 
-  TColumnInfo = record  // O class, seg�n tu implementaci�n actual
+  TColumnInfo = record  // O class, según tu implementación actual
     ColumnName: string;
     DataType: string;
     IsNullable: string;
@@ -37,13 +37,13 @@ type
     destructor Destroy; override;
   end;
 
-  // Informaci�n de una columna dentro de un �ndice
+  // Información de una columna dentro de un índice
   TIndexColumn = record
     ColumnName: string;
     SeqInIndex: Integer;
   end;
 
-  // Informaci�n de un �ndice completo (contiene un array de TIndexColumn)
+  // Información de un índice completo (contiene un array de TIndexColumn)
   TIndexInfo = record
     IndexName: string;
     IsPrimary: Boolean;
@@ -51,7 +51,7 @@ type
     Columns: TArray<TIndexColumn>;
   end;
 
-  // Informaci�n de un trigger
+  // Información de un trigger
   TTriggerInfo = record
     TriggerName: string;
     EventManipulation: string; // ej. INSERT, UPDATE, DELETE

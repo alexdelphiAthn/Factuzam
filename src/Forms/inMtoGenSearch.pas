@@ -275,7 +275,7 @@ begin
       begin
         sCodigoFinal := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
         if sCodigoFinal = '' then
-          raise Exception.Create('No se pudo obtener el contador autom�tico.');
+          raise Exception.Create('No se pudo obtener el contador automático.');
       end;
       Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
       Qry.Open;
@@ -311,7 +311,7 @@ begin
       begin
         inLibGlobalVar.oConn.Rollback;
         if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
-        ShowMessage('Error al insertar (se ha cancelado la operaci�n): ' +
+        ShowMessage('Error al insertar (se ha cancelado la operación): ' +
                                                                      E.Message);
         Result := False;
       end;

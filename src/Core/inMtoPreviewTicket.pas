@@ -432,12 +432,12 @@ begin
                 var Modo := LeerByte;
                 FSubrayado := Modo <> 0;
               end;
-            'a': // Alineaci�n
+            'a': // Alineación
               begin
                 FAlineacion := LeerByte;
                 if FAlineacion > 2 then FAlineacion := 0;
               end;
-            'd': // Saltar n l�neas
+            'd': // Saltar n líneas
               begin
                 if BufferTexto <> '' then
                 begin
@@ -447,7 +447,7 @@ begin
                 var Lineas := LeerByte;
                 FCurrentY := FCurrentY + (Lineas * ObtenerAltoLinea);
               end;
-            '*': // Gr�ficos raster
+            '*': // Gráficos raster
               begin
                 if BufferTexto <> '' then
                 begin
@@ -512,7 +512,7 @@ begin
                         for var j := 1 to DataLength - 2 do
                           LeerByte;
                       end;
-                    67: // 'C' - Tama�o del m�dulo
+                    67: // 'C' - Tamaño del módulo
                       begin
                         FQRTamanoModulo := LeerByte;
                         for var j := 1 to DataLength - 3 do
