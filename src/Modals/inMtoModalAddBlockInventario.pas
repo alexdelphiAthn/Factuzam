@@ -274,7 +274,6 @@ function TfrmModalAddBlockInventario.ProximoNumeroLinea: Integer;
 var
   qry: TUniQuery;
 begin
-  Result := 1;
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := FConn;

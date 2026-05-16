@@ -349,7 +349,6 @@ begin
   inherited;
   if not (Self.Parent is TcxTabSheet) then
     Exit;
-  formMain := Application.MainForm;
   if (tdmDataModule <> nil) and
      CheckOpenDatasets(tdmDataModule as TDataModule) then
   begin

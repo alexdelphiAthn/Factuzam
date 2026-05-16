@@ -51,7 +51,6 @@ class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
 var
   formulario: TfrmMtoSearch;
 begin
-  Result := False;
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Caption := ACaption;
