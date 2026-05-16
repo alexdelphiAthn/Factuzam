@@ -495,8 +495,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       DataBinding.FieldName = 'ID_ATB_AV'
                       PropertiesClassName = 'TcxLookupComboBoxProperties'
                       Properties.DropDownListStyle = lsEditList
-                      Properties.IncrementalSearch = False
-                      Properties.PostPopupValueOnTab = True
                       Properties.KeyFieldNames = 'ID_ATB'
                       Properties.ListColumns = <
                         item
