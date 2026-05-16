@@ -118,7 +118,7 @@ type
     FOriginalArqueoColor: TColor;
     FOriginalESCColor:TColor;
     FOriginalSalirColor:TColor;
-    // M�todos auxiliares para cambiar colores
+    // Métodos auxiliares para cambiar colores
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
     procedure RestoreMenuItemColors(FKeyLabel,
@@ -150,9 +150,6 @@ begin
   cxDateNavigator1.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
   CargarVentasPeriodoVisible;
-  // Cargar ventas del mes actual al iniciar
-  //DecodeDate(Date, A�o, Mes, Dia);
-//  CargarVentasDelMes(A�o, Mes);
   //referente a los  CAMBIOS DE COLOR
   // Guardar los colores originales
   FOriginalF5Color := lblF5.Style.TextColor;
@@ -165,38 +162,12 @@ begin
   FOriginalGastosCajaColor := lblGastosCaja.Style.TextColor;
   FOriginalF11Color := lblF11.Style.TextColor;
   FOriginalArqueoColor := lblArqueo.Style.TextColor;
-//  // Asignar eventos de mouse
-//  // F5 - Ventas
-//  lblVentas.OnMouseEnter := lblVentasMouseEnter;
-//  lblVentas.OnMouseLeave := lblVentasMouseLeave;
-//  lblF5.OnMouseEnter := lblF5MouseEnter;
-//  lblF5.OnMouseLeave := lblF5MouseLeave;
-//  // F10 - Buscar/Modificar
-//  lblBuscarModificar.OnMouseEnter := lblBuscarModificarMouseEnter;
-//  lblBuscarModificar.OnMouseLeave := lblBuscarModificarMouseLeave;
-//  lblF10.OnMouseEnter := lblF10MouseEnter;
-//  lblF10.OnMouseLeave := lblF10MouseLeave;
-//  // F6 - Entrada de Cambio
-//  lblEntradaCambio.OnMouseEnter := lblEntradaCambioMouseEnter;
-//  lblEntradaCambio.OnMouseLeave := lblEntradaCambioMouseLeave;
-//  lblF6.OnMouseEnter := lblF6MouseEnter;
-//  lblF6.OnMouseLeave := lblF6MouseLeave;
-//  // F7 - Gastos por Caja
-//  lblGastosCaja.OnMouseEnter := lblGastosCajaMouseEnter;
-//  lblGastosCaja.OnMouseLeave := lblGastosCajaMouseLeave;
-//  lblF7.OnMouseEnter := lblF7MouseEnter;
-//  lblF7.OnMouseLeave := lblF7MouseLeave;
-//  // F11 - Arqueo
-//  lblArqueo.OnMouseEnter := lblArqueoMouseEnter;
-//  lblArqueo.OnMouseLeave := lblArqueoMouseLeave;
-//  lblF11.OnMouseEnter := lblF11MouseEnter;
-//  lblF11.OnMouseLeave := lblF11MouseLeave;
 end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
   if Assigned(VentasList) then
-    VentasList.Free;
+    FreeAndNil(VentasList);
 end;
 
 procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
@@ -207,7 +178,7 @@ begin
   end;
 end;
 
-// M�todos auxiliares
+// Métodos auxiliares
 procedure TfrmMtoMenuCaja.CargarVentasPeriodoVisible;
 var
   Query: TUniQuery;
@@ -217,12 +188,12 @@ var
 begin
  if not Assigned(VentasList) then
     VentasList := TVentasList.Create;
-  // Calcular primer y �ltimo d�a del mes
+  // Calcular primer y último día del mes
   PrimerDia := cxDateNavigator1.RealFirstDate;
   UltimoDia := cxDateNavigator1.RealLastDate;
   Query := TUniQuery.Create(nil);
   try
-    Query.Connection := dmDataCaja.UniConnection1; // Tu conexi�n
+    Query.Connection := dmDataCaja.UniConnection1; // Tu conexión
     // Consulta para obtener fecha y cantidad_artvin de ventas
     Query.SQL.Text :=
       ' SELECT FECHA, '+
@@ -246,7 +217,7 @@ begin
     end;
     Query.Close;
   finally
-    Query.Free;
+    FreeAndNil(Query);
   end;
   // Actualizar el navegador
   cxDateNavigator1.Invalidate;
@@ -470,7 +441,7 @@ end;
 
 function TVentasDia.GetHintText: string;
 begin
-  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s �',
+  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s €',
                    [FTotalVentas, FormatFloat('#,##0.00', FTotalCobrado)]);
 end;
 
