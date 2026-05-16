@@ -118,7 +118,7 @@ type
     cxgrdbclmnArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosCODIGO_FAMILIA: TcxGridDBColumn;
     cxgrdbclmnArticulosDESCRIPCION_FAMILIA: TcxGridDBColumn;
-    cxgrdbclmnArticulosTIPO_CATNTIDAD_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosESACTIVO_FIJO_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosPRECIO_ULT_COMPRA: TcxGridDBColumn;
     cxgrdbclmnArticulosFECHA_VALIDEZ: TcxGridDBColumn;

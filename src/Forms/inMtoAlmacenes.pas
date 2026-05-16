@@ -95,11 +95,11 @@ type
     cxdbtxtdtEMAIL_ALM: TcxDBTextEdit;
     lblPoblacion: TcxLabel;
     cxdbtxtdtCODPOSTAL: TcxDBTextEdit;
-    cxdbtxtdtPOBLACION_ALM1: TcxDBTextEdit;
+    cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit;
     lblDireccion: TcxLabel;
     cxdbtxtdtDIRECCION_ALM: TcxDBTextEdit;
-    lblPoblacion1: TcxLabel;
-    cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit;
+    lblProvincia: TcxLabel;
+    cxdbtxtdtPROVINCIA_ALM: TcxDBTextEdit;
     lblCodigoCliente: TcxLabel;
     cxdbtxtdtCODIGO_CLIENTE_ALM: TcxDBTextEdit;
     dbmAlmacenesCajasCODIGO_ALMACEN_ALMCAJ: TcxGridDBColumn;
