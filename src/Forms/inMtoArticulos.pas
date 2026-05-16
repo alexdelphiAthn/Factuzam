@@ -2213,7 +2213,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -2554,7 +2554,7 @@ begin
     end;
     qry.Close;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 
   if IdAtbExistente > 0 then
@@ -2565,7 +2565,7 @@ begin
     Exit;
   end;
 
-  // 2) No existe — preguntar al usuario qué quiere crear.
+  // 2) No existe — preguntar al usuario que quiere crear.
   Ambito := PreguntarAmbitoBasico(CodArt, Texto);
   if Ambito = abCancelar then
   begin
@@ -2605,7 +2605,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 
   // 4) Refrescar lookup para que el combo lo encuentre al resolver.
