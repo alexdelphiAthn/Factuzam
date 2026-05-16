@@ -43,7 +43,7 @@ type
 function GetPerfilValue(var APerfilDic: TProfileDicc; ASubKey: string): string;
 function GetPerfilValueText(var APerfilDic: TProfileDicc; ASubKey: string):
                                                                      WideString;
-procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
+procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
                                  var APerfilDic: TProfileDicc);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
                              AFormName: string); overload;
@@ -105,7 +105,7 @@ begin
   end;
 end;
 
-procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
+procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
   var APerfilDic: TProfileDicc);
 var
   oPerfilUserDicCopy: TProfileUserDicc;
@@ -116,11 +116,11 @@ var
   //Elapsed           : TTimeSpan;
 begin
   //Stopwatch := TStopwatch.StartNew;
-  oPerfilUserDic.TrimExcess;
+  APerfilUserDic.TrimExcess;
   APerfilDic := TProfileDicc.Create;
   oPerfilUserDicCopy := TProfileUserDicc.Create
     (
-      oPerfilUserDic,
+      APerfilUserDic,
       TEqualityComparer<TDictUserKey>.Construct
     (
     function(const Left, Right: TDictUserKey): Boolean
@@ -137,10 +137,10 @@ begin
     end
     )
       );
-  for oDictUKey in oPerfilUserDic.Keys do
+  for oDictUKey in APerfilUserDic.Keys do
   begin
     oDictUKeyCopy := oDictUKey;
-    oPerfilUserDic.TryGetValue(oDictUKey, oDictValue);
+    APerfilUserDic.TryGetValue(oDictUKey, oDictValue);
     if (oDictUKey.oProperty = User) then
       //si hay user, no me lo pienso y lo inserto
     begin
