@@ -113,13 +113,6 @@ begin
   inherited;
   Self.Position := poScreenCenter;
 end;
-//
-//procedure TfrmMtoModalCajDef.WMLocateRecord(var Message: TMessage);
-//begin
-//  if (sEmpresa = '') or (sAlmacen = '') or (sCaja = '') then
-//    Exit;
-//
-//end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);
 begin
