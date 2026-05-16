@@ -92,8 +92,8 @@ end;
 
 procedure TfrmPrintEtiqArt.FormDestroy(Sender: TObject);
 begin
-  FLayout.Free;
-  FCodigosTarifa.Free;
+  FreeAndNil(FLayout);
+  FreeAndNil(FCodigosTarifa);
   inherited;
 end;
 
@@ -122,7 +122,7 @@ begin
     if Layout.PreguntarYGrabar('Personalizacion Impresion Etiquetas Articulo')
       then ShowMessage('Layout guardado.');
   finally
-    Layout.Free;
+    FreeAndNil(Layout);
   end;
 end;
 

@@ -208,7 +208,7 @@ begin
       Screen.Cursor := crDefault;
     end;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 

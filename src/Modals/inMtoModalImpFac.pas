@@ -102,7 +102,7 @@ begin
     end;
     fPreview.ShowModal;
   finally
-    fPreview.Free;
+    FreeAndNil(fPreview);
   end;
 end;
 

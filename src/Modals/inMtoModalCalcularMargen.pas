@@ -153,7 +153,7 @@ begin
     frm.ShowModal;
     Result := frm.FResultado;
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -357,7 +357,7 @@ begin
       end;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 

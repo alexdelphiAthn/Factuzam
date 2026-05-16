@@ -127,7 +127,7 @@ begin
     frm.ShowModal;
     Result := frm.FResultadoInv;
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -292,7 +292,7 @@ begin
     qry.Open;
     Result := qry.FieldByName('PROX').AsInteger;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -344,7 +344,7 @@ begin
       qrySkus.Next;
     end;
   finally
-    qrySkus.Free;
+    FreeAndNil(qrySkus);
   end;
 end;
 
@@ -446,8 +446,8 @@ begin
     end;
   finally
     FSqlPreview.EnableControls;
-    ins.Free;
-    codigos.Free;
+    FreeAndNil(ins);
+    FreeAndNil(codigos);
   end;
 end;
 
