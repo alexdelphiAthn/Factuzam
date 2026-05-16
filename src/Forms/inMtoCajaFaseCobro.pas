@@ -692,19 +692,6 @@ begin
   btnF10.Enabled := btnSinPrecios.Enabled;
 end;
 
-function TfrmMtoCajaFaseCobro.ValidarIntegridad: Boolean;
-var
-  EsTotal0: Boolean;
-begin
-  EsTotal0 := (Abs(FDatosCobro.ImporteTotalPagar) < 0.01);
-  if EsTotal0 then
-    Result := True
-  else if FDatosCobro.EsDevolucionEconomica then
-    Result := (FDatosCobro.ImporteDevolucionPendiente <= 0.01)
-  else
-    Result := (txtPendienteCobro.Value <= 0.01);
-end;
-
 procedure TfrmMtoCajaFaseCobro.ActualizarInterfaz;
 begin
   txtDtoGlobal.Value      := FDatosCobro.ImporteDescuentoGlobal;
