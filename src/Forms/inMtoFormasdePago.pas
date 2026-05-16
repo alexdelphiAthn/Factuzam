@@ -38,18 +38,18 @@ uses
 
 type
   TfrmMtoFormasdePago = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlTopFicha: TPanel;
     cxdbtxtdt1: TcxDBTextEdit;
     cxdbtxtdt2: TcxDBTextEdit;
-    pnl2: TPanel;
+    pnlBodyFicha: TPanel;
     pcPestana: TcxPageControl;
     tsMasDatos: TcxTabSheet;
     cxdbtxtdt15: TcxDBTextEdit;
-    Panel1: TPanel;
+    pnlInnerHeader: TPanel;
     lblCodigo: TcxLabel;
     lblNombre: TcxLabel;
     tsOtros: TcxTabSheet;
-    pnl3: TPanel;
+    pnlBotonera: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;
@@ -62,7 +62,7 @@ type
     txtNOMBRE_FORMAPAGO: TcxDBTextEdit;
     txtCODIGO_FORMAPAGO: TcxDBTextEdit;
     tsVentas: TcxTabSheet;
-    cxspltr1: TcxSplitter;
+    splFicha: TcxSplitter;
     lblOrden: TcxLabel;
     cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit;
     cxGrdDBTabPrinCODIGO_FORMAPAGO: TcxGridDBColumn;
@@ -72,12 +72,12 @@ type
     cxGrdDBTabPrinN_PLAZOS_FORMAPAGO: TcxGridDBColumn;
     cxGrdDBTabPrinDIAS_ENTRE_PLAZOS_FORMAPAGO: TcxGridDBColumn;
     cxGrdDBTabPrinDEFAULT_FORMAPAGO: TcxGridDBColumn;
-    cxLabel1: TcxLabel;
-    cxDBSpinEdit1: TcxDBSpinEdit;
-    cxLabel2: TcxLabel;
-    cxDBSpinEdit2: TcxDBSpinEdit;
-    cxLabel3: TcxLabel;
-    cxDBSpinEdit3: TcxDBSpinEdit;
+    lblNPlazos: TcxLabel;
+    spnN_PLAZOS_FORMA_PAGO_FP: TcxDBSpinEdit;
+    lblDiasEntrePlazos: TcxLabel;
+    spnN_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP: TcxDBSpinEdit;
+    lblPctAdelanto: TcxLabel;
+    spnPORCENTAJE_ANTICIPO_FORMA_PAGO_FP: TcxDBSpinEdit;
     pnlFactura: TPanel;
     cxgrdFacturas: TcxGrid;
     tvFacturacion: TcxGridDBTableView;
@@ -159,14 +159,14 @@ type
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA: TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA: TcxGridDBColumn;
     tvLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
-    cxgrdlvlcxgrd1Level1: TcxGridLevel;
-    cxgrdlvlcxgrd1Level2: TcxGridLevel;
+    cxgrdlvlFacturas: TcxGridLevel;
+    cxgrdlvlLineas: TcxGridLevel;
     pnlFacturaOpts: TPanel;
     btnIraFactura: TcxButton;
     btnIraCliente: TcxButton;
     btnExportarExcel: TcxButton;
     cxGrdDBTabPrinPORCEN_ANTICIPO_FORMAPAGO: TcxGridDBColumn;
-    ActionListFormasdePAgo: TActionList;
+    alFormasdePago: TActionList;
     actClientes: TAction;
     actArticulos: TAction;
     actFacturas: TAction;
@@ -183,7 +183,7 @@ type
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
-    cxDBCheckBox1: TcxDBCheckBox;
+    chkESVERBANCOEMPRESA_FORMA_PAGO_FP: TcxDBCheckBox;
     procedure btnGrabarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);

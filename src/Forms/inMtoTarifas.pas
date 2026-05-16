@@ -38,18 +38,18 @@ uses
 
 type
   TfrmMtoTarifas = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlTopFicha: TPanel;
     cxdbtxtdt1: TcxDBTextEdit;
     cxdbtxtdt2: TcxDBTextEdit;
-    pnl2: TPanel;
+    pnlBodyFicha: TPanel;
     pcPestana: TcxPageControl;
     tsArticulos: TcxTabSheet;
     cxdbtxtdt15: TcxDBTextEdit;
-    Panel1: TPanel;
+    pnlInnerHeader: TPanel;
     lblCodigo: TcxLabel;
     lblNombre: TcxLabel;
     tsOtros: TcxTabSheet;
-    pnl3: TPanel;
+    pnlOtrosDatos: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;
@@ -71,10 +71,10 @@ type
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
     cxdbchckbxACTIVO_TARIFA: TcxDBCheckBox;
-    pnl6: TPanel;
+    pnlBotonera: TPanel;
     btnIraArticulo: TcxButton;
     btnAddBlock: TcxButton;
-    cxspltr1: TcxSplitter;
+    splHorizontal: TcxSplitter;
     pnlArticulos: TPanel;
     cxgrdArticulosTarifas: TcxGrid;
     tvArticulos: TcxGridDBTableView;
@@ -109,9 +109,9 @@ type
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdlvlArticulosTarifas: TcxGridLevel;
-    cxspltr2: TcxSplitter;
-    cxspltr3: TcxSplitter;
-    ActionListTarifas: TActionList;
+    splVertical: TcxSplitter;
+    splGeneral: TcxSplitter;
+    alTarifas: TActionList;
     actArticulos: TAction;
     actFamilias: TAction;
     actProveedores: TAction;

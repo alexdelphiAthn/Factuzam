@@ -113,7 +113,7 @@
         ExplicitTop = 30
         ExplicitWidth = 746
         ExplicitHeight = 600
-        object pnl1: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 746
@@ -145,7 +145,7 @@
             TabOrder = 3
             Width = 57
           end
-          object Panel1: TPanel
+          object pnlInnerHeader: TPanel
             Left = 1
             Top = 1
             Width = 744
@@ -196,7 +196,7 @@
             end
           end
         end
-        object pnl2: TPanel
+        object pnlBodyFicha: TPanel
           Left = 0
           Top = 121
           Width = 746
@@ -219,14 +219,14 @@
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos-'
               ImageIndex = 0
-              object cxLabel1: TcxLabel
+              object lblNPlazos: TcxLabel
                 Left = 28
                 Top = 32
                 Caption = 'N'#250'mero de plazos'
                 TabOrder = 0
                 Transparent = True
               end
-              object cxDBSpinEdit1: TcxDBSpinEdit
+              object spnN_PLAZOS_FORMA_PAGO_FP: TcxDBSpinEdit
                 Left = 191
                 Top = 31
                 DataBinding.DataField = 'N_PLAZOS_FORMA_PAGO_FP'
@@ -234,14 +234,14 @@
                 TabOrder = 1
                 Width = 106
               end
-              object cxLabel2: TcxLabel
+              object lblDiasEntrePlazos: TcxLabel
                 Left = 28
                 Top = 88
                 Caption = 'D'#237'as entre plazos'
                 TabOrder = 2
                 Transparent = True
               end
-              object cxDBSpinEdit2: TcxDBSpinEdit
+              object spnN_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP: TcxDBSpinEdit
                 Left = 191
                 Top = 87
                 DataBinding.DataField = 'N_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP'
@@ -249,14 +249,14 @@
                 TabOrder = 3
                 Width = 106
               end
-              object cxLabel3: TcxLabel
+              object lblPctAdelanto: TcxLabel
                 Left = 79
                 Top = 135
                 Caption = '% Adelanto'
                 TabOrder = 4
                 Transparent = True
               end
-              object cxDBSpinEdit3: TcxDBSpinEdit
+              object spnPORCENTAJE_ANTICIPO_FORMA_PAGO_FP: TcxDBSpinEdit
                 Left = 191
                 Top = 135
                 DataBinding.DataField = 'PORCENTAJE_ANTICIPO_FORMA_PAGO_FP'
@@ -268,7 +268,7 @@
                 TabOrder = 5
                 Width = 106
               end
-              object cxDBCheckBox1: TcxDBCheckBox
+              object chkESVERBANCOEMPRESA_FORMA_PAGO_FP: TcxDBCheckBox
                 Left = 76
                 Top = 198
                 Caption = 'Ver Banco Empresa en Factura'
@@ -864,9 +864,9 @@
                       Width = 64
                     end
                   end
-                  object cxgrdlvlcxgrd1Level1: TcxGridLevel
+                  object cxgrdlvlFacturas: TcxGridLevel
                     GridView = tvFacturacion
-                    object cxgrdlvlcxgrd1Level2: TcxGridLevel
+                    object cxgrdlvlLineas: TcxGridLevel
                       GridView = tvLineasFacturacion
                     end
                   end
@@ -929,7 +929,7 @@
             object tsOtros: TcxTabSheet
               Caption = '&3_Otros-'
               ImageIndex = 3
-              object pnl3: TPanel
+              object pnlBotonera: TPanel
                 Left = 0
                 Top = 364
                 Width = 736
@@ -1051,14 +1051,14 @@
             end
           end
         end
-        object cxspltr1: TcxSplitter
+        object splFicha: TcxSplitter
           Left = 0
           Top = 113
           Width = 746
           Height = 8
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
-          Control = pnl1
+          Control = pnlTopFicha
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1113,7 +1113,7 @@
     Left = 612
     Top = 559
   end
-  object ActionListFormasdePAgo: TActionList
+  object alFormasdePago: TActionList
     Left = 440
     Top = 304
     object actClientes: TAction

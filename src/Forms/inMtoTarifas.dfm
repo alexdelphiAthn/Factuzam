@@ -90,7 +90,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
         ExplicitTop = 29
         ExplicitWidth = 711
         ExplicitHeight = 543
-        object pnl1: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 892
@@ -122,7 +122,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             TabOrder = 3
             Width = 57
           end
-          object Panel1: TPanel
+          object pnlInnerHeader: TPanel
             Left = 1
             Top = 1
             Width = 890
@@ -185,7 +185,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             end
           end
         end
-        object pnl2: TPanel
+        object pnlBodyFicha: TPanel
           Left = 0
           Top = 123
           Width = 892
@@ -214,7 +214,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               ExplicitTop = 0
               ExplicitWidth = 705
               ExplicitHeight = 0
-              object pnl6: TPanel
+              object pnlBotonera: TPanel
                 Left = 759
                 Top = 0
                 Width = 127
@@ -241,13 +241,13 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   OnClick = btnAddBlockClick
                 end
               end
-              object cxspltr1: TcxSplitter
+              object splHorizontal: TcxSplitter
                 Left = 749
                 Top = 0
                 Width = 10
                 Height = 387
                 HotZoneClassName = 'TcxMediaPlayer9Style'
-                Control = pnl6
+                Control = pnlBotonera
                 ExplicitLeft = 568
               end
               object pnlArticulos: TPanel
@@ -555,7 +555,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                     GridView = tvArticulos
                   end
                 end
-                object cxspltr2: TcxSplitter
+                object splVertical: TcxSplitter
                   Left = 1
                   Top = 1
                   Width = 10
@@ -566,7 +566,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             object tsOtros: TcxTabSheet
               Caption = '&2_Otros'
               ImageIndex = 3
-              object pnl3: TPanel
+              object pnlOtrosDatos: TPanel
                 Left = 0
                 Top = 308
                 Width = 886
@@ -673,14 +673,14 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             end
           end
         end
-        object cxspltr3: TcxSplitter
+        object splGeneral: TcxSplitter
           Left = 0
           Top = 113
           Width = 892
           Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
-          Control = pnl2
+          Control = pnlBodyFicha
           ExplicitWidth = 711
         end
       end
@@ -752,7 +752,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
     Left = 404
     Top = 375
   end
-  object ActionListTarifas: TActionList
+  object alTarifas: TActionList
     Left = 416
     Top = 296
     object actArticulos: TAction
