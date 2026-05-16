@@ -247,7 +247,6 @@ inherited dmFacturas: TdmFacturas
       'select * from vi_facturas')
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
-    BeforeEdit = unqryTablaGBeforeEdit
     BeforePost = unqryFacBeforePost
     AfterPost = unqryFacAfterPost
     BeforeDelete = unqryTablaGBeforeDelete
@@ -2320,7 +2319,7 @@ inherited dmFacturas: TdmFacturas
       '       TIPO_MOV, CANTIDAD_MOV, '
       '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
       '  FROM vi_movimientos '
-      ' WHERE TIPO_DOC_REF_MOV   = ''FC'' '
+      ' WHERE TIPO_DOC_REF_MOV   = '#39'FC'#39' '
       '   AND SERIE_DOC_REF_MOV  = :SERIE_FAC '
       '   AND NUMERO_DOC_REF_MOV = :NUMERO_FAC '
       ' ORDER BY LINEA_MOV')
