@@ -40,9 +40,6 @@ type
     procedure preparar_consulta; override;
   end;
 
-var
-  frmPrintCliEti: TfrmPrintCliEti;
-
 implementation
 
 {$R *.dfm}

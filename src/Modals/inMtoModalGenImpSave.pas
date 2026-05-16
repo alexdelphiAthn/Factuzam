@@ -45,9 +45,6 @@ type
     sFicha:string;
   end;
 
-var
-  frmModalGenImpSave: TfrmModalGenImpSave;
-
 implementation
 
 uses

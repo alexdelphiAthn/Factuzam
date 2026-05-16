@@ -63,9 +63,6 @@ type
     property Descripcion : string read FDescripcion write FDescripcion;
   end;
 
-var
-  frmModalSesionDuplicado: TfrmModalSesionDuplicado;
-
 implementation
 
 {$R *.dfm}

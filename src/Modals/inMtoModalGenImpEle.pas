@@ -50,9 +50,6 @@ type
       bPredeterminado:boolean;
   end;
 
-var
-  frmMtoModalGenImpEle: TfrmMtoModalGenImpEle;
-
 implementation
 
 uses

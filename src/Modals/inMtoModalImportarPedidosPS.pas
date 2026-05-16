@@ -65,9 +65,6 @@ type
     dmPedidos: TdmPedidos;
   end;
 
-var
-  frmModalImportarPedidosPS: TfrmModalImportarPedidosPS;
-
 implementation
 
 {$R *.dfm}
@@ -82,7 +79,7 @@ end;
 
 procedure TfrmModalImportarPedidosPS.btnCerrarClick(Sender: TObject);
 begin
-  FResumen.Free;
+  FreeAndNil(FResumen);
   Close;
 end;
 
@@ -163,7 +160,7 @@ begin
             tvPedidos.DataController.Values[i, colImportado.Index] := 'S';
           end;
         finally
-          ord.Free;
+          FreeAndNil(ord);
         end;
       except
         on E: Exception do
@@ -174,7 +171,7 @@ begin
       end;
     end;
   finally
-    conn.Free;
+    FreeAndNil(conn);
     Screen.Cursor := crDefault;
   end;
   ShowMessageFmt('Importación finalizada. Pedidos importados: %d. Errores: %d.',

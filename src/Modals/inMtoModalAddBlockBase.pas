@@ -408,9 +408,12 @@ begin
   // Liberar los TStringList que cuelgan de los items del CheckListBox
   for i := 0 to chkLstAlmacenes.Items.Count - 1 do
     if chkLstAlmacenes.Items[i].ItemObject is TStringList then
+    begin
       chkLstAlmacenes.Items[i].ItemObject.Free;
+      chkLstAlmacenes.Items[i].ItemObject := nil;
+    end;
 
-  FCodigosPropiedades.Free;
+  FreeAndNil(FCodigosPropiedades);
   inherited;
   Action := caHide;
 end;
@@ -484,7 +487,7 @@ begin
     cbxPropiedad.ItemIndex := 0;
     CargarValoresPropiedad('');
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -547,7 +550,7 @@ begin
       qry.Next;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -790,7 +793,7 @@ begin
       Recorrer(tlFamilias.Items[i]);
     Result := lst.ToArray;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -811,7 +814,7 @@ begin
     end;
     Result := lst.ToArray;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -835,7 +838,7 @@ begin
     end;
     Result := lst.ToArray;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -856,7 +859,7 @@ begin
     end;
     Result := lst.ToArray;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -1120,7 +1123,7 @@ begin
 
     Result := sql.Text;
   finally
-    sql.Free;
+    FreeAndNil(sql);
   end;
 end;
 

@@ -70,9 +70,6 @@ type
     dmmAlbaranes: TdmAlbaranes;
   end;
 
-var
-  frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas;
-
 implementation
 
 uses
@@ -208,7 +205,7 @@ begin
       Screen.Cursor := crDefault;
     end;
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 

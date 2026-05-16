@@ -63,11 +63,7 @@ type
     cmbSerieFactura: TcxLookupComboBox;
     cxlbl2: TcxLabel;
     dtFecha: TcxDateEdit;
-//    procedure btn1Click(Sender: TObject);
-//    procedure btn2Click(Sender: TObject);
     procedure btn3Click(Sender: TObject);
-//    procedure btn4Click(Sender: TObject);
-   // procedure btnGenerarClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnGenerarClick(Sender: TObject);
     procedure chkAbonarClick(Sender: TObject);
@@ -75,9 +71,6 @@ type
   public
     dmFac : TdmFacturas;
   end;
-
-var
-  frmGenFacRec: TfrmGenFacRec;
 
 implementation
 
@@ -104,14 +97,6 @@ begin
   VAR ParentForm := TfrmMtoFacturas(Owner);
   with ParentForm.tdmDataModule as TdmFacturas do
   begin
-//    if (ExisteSerieEmpresa(FieldByName('SERIE_FAC').AsString,
-//                           FieldByName('CODIGO_EMP_FAC').AsString,
-//                           'FC')) then
-//    begin
-//      ShowMessage('Esta serie es usada por otra empresa.' +
-//                  ' Debe cambiar la serie ');
-//      IsError := True;
-//    end;
     if ((chkAbonar.Checked = True) and (IsError = False)) then
     begin
       SavedCursor := Screen.Cursor;

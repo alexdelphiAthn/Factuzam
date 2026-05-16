@@ -41,9 +41,6 @@ type
     const FieldStep   = 55;
   end;
 
-var
-  frmMtoModalAltaRapida: TfrmMtoModalAltaRapida;
-
 implementation
 
 {$R *.dfm}

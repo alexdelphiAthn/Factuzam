@@ -46,9 +46,6 @@ type
     sFicha:string;
   end;
 
-var
-  frmModalGenPass: TfrmModalGenPass;
-
 implementation
 
 {$R *.dfm}
@@ -64,7 +61,7 @@ begin
   inherited;
   if (edtPassword.Text <> edtPasswordCon.Text) then
   begin
-    ShowMessage('Los passwords no coinciden');
+    ShowMessage('Las contraseñas no coinciden');
   end
   else
   begin
