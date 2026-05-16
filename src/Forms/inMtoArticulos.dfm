@@ -627,7 +627,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OnClick = btnVerificarCBClick
                 end
               end
-              object cxgrdTarifas: TcxGrid
+              object cxgrdSkus: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 948
@@ -754,7 +754,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Width = 134
                   end
                 end
-                object cxgrdlvlTarifas: TcxGridLevel
+                object cxgrdlvlSkus: TcxGridLevel
                   GridView = tvSkus
                 end
               end
