@@ -467,7 +467,7 @@ begin
       // si antes los refactorizas también para que acepten la lista
       oConn.Commit;
     except
-      oConn.Commit;
+      oConn.Rollback;
       raise;
     end;
   finally

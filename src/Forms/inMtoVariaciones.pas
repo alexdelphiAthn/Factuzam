@@ -119,7 +119,7 @@ begin
   tvAtributos.DataController.DataSource  := dmmVariaciones.dsAtributosVariacion;
   tvArticulos.DataController.DataSource  := dmmVariaciones.dsArticulosVariacion;
   tvSkus.DataController.DataSource       := dmmVariaciones.dsSkusArticulo;
-  pkFieldName := '`CODIGO_VAR';
+  pkFieldName := 'CODIGO_VAR';
 end;
 
 procedure TfrmMtoVariaciones.dsTablaGStateChange(Sender: TObject);

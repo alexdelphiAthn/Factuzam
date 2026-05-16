@@ -84,7 +84,7 @@ procedure TfrmMtoCajaValesHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaValesHist := tdmDataModule as TdmCajaValesHist;
-  pkFieldName := '`CODIGO_VL';
+  pkFieldName := 'CODIGO_VL';
 end;
 
 initialization

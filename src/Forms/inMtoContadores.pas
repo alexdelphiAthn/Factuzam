@@ -87,7 +87,7 @@ procedure TfrmMtoContadores.CrearTablaPrincipal;
 begin
   inherited;
   dmmContadores := tdmDataModule as TdmContadores;
-  pkFieldName := '`TIPO_DOC_CON;SERIE_CON;EMPRESA_CON';
+  pkFieldName := 'TIPO_DOC_CON;SERIE_CON;EMPRESA_CON';
 end;
 
 procedure TfrmMtoContadores.dsTablaGStateChange(Sender: TObject);

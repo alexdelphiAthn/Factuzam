@@ -87,7 +87,7 @@ procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
   inherited;
   dmmMovimientosAlmacen := tdmDataModule as TdmMovimientosAlmacen;
-  pkFieldName := '`NUMERO_MOV';
+  pkFieldName := 'NUMERO_MOV';
 end;
 
 initialization

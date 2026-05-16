@@ -75,7 +75,7 @@ procedure TfrmMtoDepositosCliente.CrearTablaPrincipal;
 begin
   inherited;
   dmmDepositosCliente := tdmDataModule as TdmDepositosCliente;
-  pkFieldName := '`ID_DEPOSITO_DEP';
+  pkFieldName := 'ID_DEPOSITO_DEP';
 end;
 
 initialization
