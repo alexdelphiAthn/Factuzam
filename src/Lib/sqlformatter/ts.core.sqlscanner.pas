@@ -16,8 +16,10 @@
 // Codigo third-party - suprimir warnings/hints sin modificar fuentes externas.
 {$WARN WIDECHAR_REDUCED OFF}
 {$WARN IMPLICIT_STRING_CAST OFF}
+{$WARN IMPLICIT_STRING_CAST_LOSS OFF}
 {$WARN COMBINING_SIGNED_UNSIGNED OFF}
 {$WARN SYMBOL_DEPRECATED OFF}
+{$WARN NO_RETVAL OFF}
 {$HINTS OFF}
 unit ts.Core.SQLScanner;
 
