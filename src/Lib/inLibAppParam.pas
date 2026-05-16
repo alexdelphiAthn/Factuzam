@@ -30,29 +30,29 @@ type
     Tipo           : TTipoParametro;
     ValorPorDefecto: string;
     ValorActual    : string;
-    constructor Create(const aCategoria, aNombre, aDesc: string;
-                       aTipo: TTipoParametro; const aDefecto: string);
+    constructor Create(const ACategoria, ANombre, ADesc: string;
+                       ATipo: TTipoParametro; const ADefecto: string);
   end;
 
   TAppParams = class
   private
     FParams: TObjectDictionary<string, TAppParamDef>;
-    procedure CargarDesdeDB(const pUsuario, pGrupo: string);
+    procedure CargarDesdeDB(const AUsuario, AGrupo: string);
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure RegistrarParametro(const pCategoria, pNombre, pDesc: string;
-                                 pTipo: TTipoParametro; const pDefecto: string);
+    procedure RegistrarParametro(const ACategoria, ANombre, ADesc: string;
+                                 ATipo: TTipoParametro; const ADefecto: string);
     procedure RegistrarDefectos;
-    procedure InicializarParametrosApp(const pUsuario, pGrupo: string);
-    procedure Inicializar(const pUsuario, pGrupo: string);
-    procedure Recargar(const pUsuario, pGrupo: string);
-    function GetPath(const Nombre: string): string;
-    function GetString(const Key: string; const Default: string = '' ): string;
-    function GetBool  (const Key: string;
-                       const Default: Boolean  = False): Boolean;
-    function GetInt (const Key: string; const Default: Integer = 0 ): Integer;
+    procedure InicializarParametrosApp(const AUsuario, AGrupo: string);
+    procedure Inicializar(const AUsuario, AGrupo: string);
+    procedure Recargar(const AUsuario, AGrupo: string);
+    function GetPath(const ANombre: string): string;
+    function GetString(const AKey: string; const ADefault: string = '' ): string;
+    function GetBool  (const AKey: string;
+                       const ADefault: Boolean  = False): Boolean;
+    function GetInt (const AKey: string; const ADefault: Integer = 0 ): Integer;
 
     property Params: TObjectDictionary<string, TAppParamDef> read FParams;
   end;
@@ -67,15 +67,15 @@ uses
 
 { TAppParamDef }
 
-constructor TAppParamDef.Create(const aCategoria, aNombre, aDesc: string;
-                                aTipo: TTipoParametro; const aDefecto: string);
+constructor TAppParamDef.Create(const ACategoria, ANombre, ADesc: string;
+                                ATipo: TTipoParametro; const ADefecto: string);
 begin
-  Categoria       := aCategoria;
-  Nombre          := aNombre;
-  Descripcion     := aDesc;
-  Tipo            := aTipo;
-  ValorPorDefecto := aDefecto;
-  ValorActual     := aDefecto;
+  Categoria       := ACategoria;
+  Nombre          := ANombre;
+  Descripcion     := ADesc;
+  Tipo            := ATipo;
+  ValorPorDefecto := ADefecto;
+  ValorActual     := ADefecto;
 end;
 
 { TAppParams }
@@ -92,14 +92,14 @@ begin
   inherited;
 end;
 
-procedure TAppParams.RegistrarParametro(const pCategoria,
-                                        pNombre,
-                                        pDesc: string;
-                                        pTipo: TTipoParametro;
-                                        const pDefecto: string);
+procedure TAppParams.RegistrarParametro(const ACategoria,
+                                        ANombre,
+                                        ADesc: string;
+                                        ATipo: TTipoParametro;
+                                        const ADefecto: string);
 begin
-  FParams.AddOrSetValue(pNombre,
-    TAppParamDef.Create(pCategoria, pNombre, pDesc, pTipo, pDefecto));
+  FParams.AddOrSetValue(ANombre,
+    TAppParamDef.Create(ACategoria, ANombre, ADesc, ATipo, ADefecto));
 end;
 
 procedure TAppParams.RegistrarDefectos;
@@ -110,7 +110,7 @@ begin
     Param.ValorActual := Param.ValorPorDefecto;
 end;
 
-procedure TAppParams.CargarDesdeDB(const pUsuario, pGrupo: string);
+procedure TAppParams.CargarDesdeDB(const AUsuario, AGrupo: string);
 var
   qry    : TUniQuery;
   KeyDB  : string;
@@ -123,8 +123,8 @@ begin
     qry.Connection := oConn;
     qry.SQL.Text   :=
       'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := pUsuario;
-    qry.ParamByName('p_grupo').AsString      := pGrupo;
+    qry.ParamByName('p_usuario').AsString    := AUsuario;
+    qry.ParamByName('p_grupo').AsString      := AGrupo;
     qry.ParamByName('p_formulario').AsString := 'frmMtoAppParam';
     qry.Open;
     while not qry.Eof do
@@ -147,12 +147,12 @@ begin
   end;
 end;
 
-procedure TAppParams.Inicializar(const pUsuario, pGrupo: string);
+procedure TAppParams.Inicializar(const AUsuario, AGrupo: string);
 begin
-  CargarDesdeDB(pUsuario, pGrupo);
+  CargarDesdeDB(AUsuario, AGrupo);
 end;
 
-procedure TAppParams.InicializarParametrosApp(const pUsuario, pGrupo: string);
+procedure TAppParams.InicializarParametrosApp(const AUsuario, AGrupo: string);
 begin
   // --- Directorios ---
   RegistrarParametro('Directorios', 'appDirPDF',
@@ -171,52 +171,52 @@ begin
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
 
-  Inicializar(pUsuario, pGrupo);
+  Inicializar(AUsuario, AGrupo);
 end;
 
-procedure TAppParams.Recargar(const pUsuario, pGrupo: string);
+procedure TAppParams.Recargar(const AUsuario, AGrupo: string);
 begin
-  CargarDesdeDB(pUsuario, pGrupo);
+  CargarDesdeDB(AUsuario, AGrupo);
 end;
 
-function TAppParams.GetString(const Key: string; const Default: string): string;
+function TAppParams.GetString(const AKey: string; const ADefault: string): string;
 var
   ParamObj: TAppParamDef;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
     Result := ParamObj.ValorActual
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
-function TAppParams.GetBool(const Key: string; const Default: Boolean): Boolean;
+function TAppParams.GetBool(const AKey: string; const ADefault: Boolean): Boolean;
 var
   ParamObj: TAppParamDef;
   sVal: string;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
   begin
     sVal   := ParamObj.ValorActual;
     Result := SameText(sVal, 'True') or (sVal = '1');
   end
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
-function TAppParams.GetInt(const Key: string; const Default: Integer): Integer;
+function TAppParams.GetInt(const AKey: string; const ADefault: Integer): Integer;
 var
   ParamObj: TAppParamDef;
 begin
-  if FParams.TryGetValue(Key, ParamObj) then
+  if FParams.TryGetValue(AKey, ParamObj) then
   begin
     if not TryStrToInt(ParamObj.ValorActual, Result) then
-      Result := Default;
+      Result := ADefault;
   end
   else
-    Result := Default;
+    Result := ADefault;
 end;
 
-function TAppParams.GetPath(const Nombre: string): string;
+function TAppParams.GetPath(const ANombre: string): string;
 begin
   Result := ExpandPathTokens(GetString(Nombre));
 end;
