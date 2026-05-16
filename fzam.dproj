@@ -609,6 +609,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibArticulosAtributosLookup.pas"/>
+        <DCCReference Include="src\Lib\inLibAtributosPaleta.pas"/>
         <DCCReference Include="src\Modals\inMtoModalScriptLog.pas">
             <Form>frmMtoModalScriptLog</Form>
             <FormType>dfm</FormType>
