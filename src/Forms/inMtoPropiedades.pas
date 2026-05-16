@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPropiedades,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxDBEdit, cxDropDownEdit, cxSplitter, cxMaskEdit;
 
 type
@@ -43,17 +43,17 @@ type
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
 
-    pnl1: TPanel;
-    Panel1: TPanel;
+    pnlTopFicha: TPanel;
+    pnlBodyFicha: TPanel;
     lblCodigo: TcxLabel;
     txtCODIGO: TcxDBTextEdit;
     lblNombre: TcxLabel;
     txtNOMBRE: TcxDBTextEdit;
     lblTipo: TcxLabel;
-    cmbTIPO: TcxDBComboBox;
+    cbbTIPO: TcxDBComboBox;
     chkACTIVO: TcxDBCheckBox;
-    cxspltr1: TcxSplitter;
-    pnl2: TPanel;
+    splFicha: TcxSplitter;
+    pnlBottomFicha: TPanel;
     pcPestana: TcxPageControl;
 
     tsValores: TcxTabSheet;
@@ -88,6 +88,7 @@ type
     dmmPropiedades: TdmPropiedades;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -96,7 +97,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibGlobalVar;
+  inLibWin, inLibShowMto, inLibGlobalVar, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -108,7 +109,7 @@ procedure TfrmMtoPropiedades.CrearTablaPrincipal;
 begin
   inherited;
   dmmPropiedades := tdmDataModule as TdmPropiedades;
-  pkFieldName := '`CODIGO_PROP_ARTPROP';
+  pkFieldName := 'CODIGO_PROP_ARTPROP';
 
   dmmPropiedades.unqryArticulos.Connection := oConn;
   dmmPropiedades.unqryValores.Connection   := oConn;
@@ -120,6 +121,11 @@ begin
   tvArticulos.DataController.DataSource := dmmPropiedades.dsArticulos;
   tvValores.DataController.DataSource   := dmmPropiedades.dsValores;
   dmmPropiedades.unqryValores.BeforePost := unqryValoresBeforePost;
+end;
+
+procedure TfrmMtoPropiedades.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoPropiedades.dsTablaGStateChange(Sender: TObject);

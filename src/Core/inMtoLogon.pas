@@ -18,9 +18,6 @@ unit inMtoLogon;
 interface
 
 uses
-  {$IFDEF DEBUG}
-    //FastMM4,
-  {$ENDIF}
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxLookAndFeelPainters, StdCtrls, cxButtons, rtti,
   UniDataConn, inLibUser, ImgList, Buttons, cxControls, cxContainer,
@@ -58,7 +55,6 @@ type
     edtPass: TcxTextEdit;
     MySQLUniProvider1: TMySQLUniProvider;
     ucConexion: TUniConnection;
-//    udDump: TUniDump;
     chkRememberPassword: TcxCheckBox;
     chkRememberUser: TcxCheckBox;
     tbUsers: TUniTable;
@@ -75,7 +71,7 @@ type
     edtNomBD: TcxTextEdit;
     edtUserBD: TcxTextEdit;
     edtPassBD: TcxTextEdit;
-    btChangePassRoot: TcxButton;
+    btnChangePassRoot: TcxButton;
     btnTest: TcxButton;
     btnSubirScript: TcxButton;
     btnCopiaSeguridad: TcxButton;
@@ -91,7 +87,6 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-//    procedure rfbAbrirCarpetaClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnConfClick(Sender: TObject);
     procedure btnTestClick(Sender: TObject);
@@ -100,9 +95,8 @@ type
     procedure btnRecoverClick(Sender: TObject);
     procedure ucConexionError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure edtPassBDExit(Sender: TObject);
-    procedure btChangePassRootClick(Sender: TObject);
+    procedure btnChangePassRootClick(Sender: TObject);
     procedure edtPortBDPropertiesChange(Sender: TObject);
-//    procedure cxButton1Click(Sender: TObject);
     procedure leerini;
     procedure GetIniValues;
   private
@@ -123,8 +117,6 @@ type
   public
     sSuccess:String;
     function IsInitializeAuto:Boolean;
-//    function CheckIfExistsDataBase:Boolean;
-//    function CheckIfDatabaseIsUpdated:Boolean;
   end;
 var
   frmLogon          : TfrmLogon;
@@ -225,7 +217,7 @@ begin
       Log.LogInfo('El script se ejecutó exitosamente');
       ShowMessage('El script se ejecutó exitosamente');
     finally
-      SqlScript.Free;
+      FreeAndNil(SqlScript);
     end;
   end
   else
@@ -461,17 +453,17 @@ begin
             saveDialog.DefaultFolder := GetUserDeskFolder;
             MyText.SaveToFile(saveDialog.FileName);
           finally
-            MyText.Free;
+            FreeAndNil(MyText);
           end;
           Log.LogInfo(edtUser.Text + ' Guardó copia Encriptada en ' +
             savedialog.FileName);
           ShowMessage('La copia se guardó exitosamente');
         finally
-          Engine.Free;
+          FreeAndNil(Engine);
         end;
       finally
-        IncludeTables.Free;
-        ExcludeTables.Free;
+        FreeAndNil(IncludeTables);
+        FreeAndNil(ExcludeTables);
       end;
     end;
   end
@@ -529,7 +521,7 @@ begin
       MyText.LoadFromFile(opendialog.FileName);
       s := MyText.Text;
     finally
-      MyText.Free;
+      FreeAndNil(MyText);
     end;
     // Creamos y configuramos TUniScript
     SqlScript := TUniScript.Create(nil);
@@ -551,7 +543,7 @@ begin
       SqlScript.Execute;
       ShowMessage(SScriptSuccess);
     finally
-      SqlScript.Free; // Liberamos el componente
+      FreeAndNil(SqlScript); // Liberamos el componente
     end;
   end
   else
@@ -600,100 +592,11 @@ begin
       ShowMessageFmt(SPasswordBBDDChanged, [sPass]);
       Log.LogInfo(sPasswordBBDDChanged);
       esCadIniDir('ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
-      qryCommand.Free;
+      FreeAndNil(qryCommand);
     end;
   end;
 end;
 
-//function TfrmLogon.CheckIfDatabaseIsUpdated: Boolean;
-//var
-//  unqryTestBD       : TUniQuery;
-//  sFileUp:String;
-//  bActualizar: boolean;
-//begin
-//  Result := false;
-//  unqryTestBD := TUniQuery.Create(nil);
-//  unqryTestBD.Connection := ucConexion;
-//  unqryTestBD.SQL.Text := 'SELECT VALUE_USUPER ' +
-//                          '  FROM fza_usuarios_perfiles ' +
-//                          ' WHERE SUBKEY_USUPER = ' +
-// QuotedStr('DataBaseVersion') +
-//                          '   AND VALUE_USUPER = :VerBBDD ' ;
-//  unqryTestBD.ParamByName('VerBBDD').AsString := inLibGlobalVar.oVersion;
-//  unqryTestBD.Open;
-//  if (unqryTestBD.RecordCount = 1) then
-//    Result := True;
-//  bActualizar := (unqryTestBD.RecordCount = 0);
-//  unqryTestBD.Close;
-//  FreeAndNil(unqryTestBD);
-//  if (bActualizar) then
-//  begin
-//    if ( Application.MessageBox(PWideChar(SAdviceUpdateBBDD),
-//                                PWideChar(SAdvMsg),
-//                                MB_YESNO ) = ID_YES ) then
-//    begin
-//      var MyText := TStringList.Create;
-//      sFileUp := DirApp + '\factuzam_original_update_script.sql';
-//      if (Not(FileExists(sFileUp))) then
-//      begin
-//        ShowMessageFmt(SNotExistsUpBBDDFile, [sFileUp]);
-//        Exit;
-//      end;
-//      MyText.LoadFromFile(sFileUp);
-//      var sScript :string := StringReplace(MyText.Text,
-//                                   'factuzam',
-//                                   edtNomBD.Text,
-//                                   [rfReplaceAll,rfIgnoreCase]);
-//      UdDump.SQL.Text := sScript;
-//      UdDump.Restore;
-//      ShowMessage(SBBDDUpdateTo + inLibGlobalVar.oVersion);
-//      Result := True;
-//      FreeAndNil(MyText);
-//    end;
-//  end;
-//end;
-
-//function TfrmLogon.CheckIfExistsDataBase: Boolean;
-//var
-//  unqryTestBD       : TUniQuery;
-//begin
-//  Result := False;
-//  ConstruirConexionConnect( ucConexion,
-//                            edtUserBD.Text,
-//                            sPass,
-//                            edtHostName.Text,
-//                            edtPortBD.Text,
-//                            'information_schema');
-//  unqryTestBD := TUniQuery.Create(nil);
-//  unqryTestBD.Connection := ucConexion;
-//  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-//                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-//                          ' WHERE SCHEMA_NAME = :BBDD ' ;
-//  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-//  unqryTestBD.Open;
-//  if (unqryTestBD.RecordCount > 0) then
-//    Result := True
-//  else
-//    if (unqryTestBD.RecordCount = 0) then
-//    begin
-//       if Application.MessageBox(PWideChar(Format( SErrorCreateBBDD,
-//                                                   [edtNomBD.Text])),
-//         'Error',  MB_YESNO) = ID_YES then
-//       begin
-//         UdDump.SQL.Text := CrearBD(edtNomBD.Text);
-//         if UdDump.SQL.Text <> '' then
-//         begin
-//           UdDump.Restore;
-//           ShowMessage(SCreateSuccBBDD);
-//           Log.LogInfo(SCreateSuccBBDD);
-//           btChangePassRootClick(Self);
-//           Result := True;
-//         end;
-//       end;
-//    end;
-//  unqryTestBD.Close;
-//  FreeAndNil(unqryTestBD);
-//end;
 
 function TfrmLogon.CrearBD(sDatabaseN: string):String;
 var
@@ -717,26 +620,6 @@ begin
   FreeAndNil(MyText);
 end;
 
-//procedure TfrmLogon.cxButton1Click(Sender: TObject);
-//  procedure ListClassesDeclaredInNamedUnit(const UnitName: string);
-//  var
-//    Context: TRttiContext;
-//    t: TRttiType;
-//    DeclaringUnitName: string;
-//  begin
-//    Context := TRttiContext.Create;
-//    for t in Context.GetTypes do
-//      if t.IsInstance then
-//      begin
-//        DeclaringUnitName := t.AsInstance.DeclaringUnitName;
-//        if SameText(DeclaringUnitName, UnitName) then
-//          mList.Lines.add(t.ToString +' '+ DeclaringUnitName);
-//      end;
-//  end;
-//begin
-//  inherited;
-//  ListClassesDeclaredInNamedUnit(edtUnit.Text);
-//end;
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);
 begin
@@ -768,7 +651,7 @@ begin
   inliblog.Log.LogError('Error general: ' + E.ClassName +': '+ E.Message) ;
 end;
 
-procedure TfrmLogon.btChangePassRootClick(Sender: TObject);
+procedure TfrmLogon.btnChangePassRootClick(Sender: TObject);
 var
   bAllowChange:Boolean;
   sOldPass:String;
@@ -887,26 +770,10 @@ end;
 
 procedure TfrmLogon.edtPassBDExit(Sender: TObject);
 begin
-//  sPass := edtPassBDExit.Text;
-//  sPass := EncriptAES(sPass);
-
-//  sPassEn := leCadINI('ConnData', 'PasswordEn', 'x');
-//  try
-//    sPass := EncriptAES(sPassEn);
-//  except
-//    on E: Exception do
-//    begin
-//      ShowMessage('Password erroneo. E:' + E.ClassName +
-//        ' Mensaje:' + E.Message);
-//      raise;
-//      Exit;
-//    end;
-//  end;
 end;
 
 procedure TfrmLogon.edtPortBDPropertiesChange(Sender: TObject);
 begin
-//
 end;
 
 procedure TfrmLogon.escribirini;

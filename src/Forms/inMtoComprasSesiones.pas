@@ -350,6 +350,7 @@ type
     procedure RellenarItemsSerie;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -419,6 +420,11 @@ begin
     if not unqrySesionKits.Active     then unqrySesionKits.Open;
     if not unqrySesionKitsDet.Active  then unqrySesionKitsDet.Open;
   end;
+
+procedure TfrmMtoComprasSesiones.ResetForm;
+begin
+  inherited;
+end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
@@ -514,13 +520,13 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
-  if Assigned(FGestorMatriz) then FGestorMatriz.Free;
+  if Assigned(FGestorMatriz) then FreeAndNil(FGestorMatriz);
   FGestorMatriz := nil;
   // Anular la global ANTES de que el destructor heredado libere el DM.
   // Si no la global queda dangling y al abrir Sesiones por segunda vez
@@ -617,7 +623,7 @@ begin
                  mtError, [mbOk], 0);
     end;
   finally
-    frmConfirm.Free;
+    FreeAndNil(frmConfirm);
   end;
 end;
 
@@ -716,7 +722,7 @@ begin
 
     qL.Post;
   finally
-    frmDup.Free;
+    FreeAndNil(frmDup);
   end;
 end;
 
@@ -925,7 +931,7 @@ begin
       // BeforePost del dataset expandira al codigo autogenerado.
     end;
   finally
-    frmSel.Free;
+    FreeAndNil(frmSel);
   end;
   Key := 0;
 end;
@@ -1147,7 +1153,7 @@ begin
     q.ParamByName('u').AsString := oUser;
     q.ExecSQL;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 

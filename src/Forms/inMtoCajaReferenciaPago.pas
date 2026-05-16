@@ -137,7 +137,7 @@ begin
       Result := True;
     end;
   finally
-    Frm.Free;
+    FreeAndNil(Frm);
   end;
 end;
 
@@ -216,15 +216,6 @@ end;
 
 procedure TfrmCajaReferenciaPago.CargarDivisasDisponibles;
 begin
-//  cbbDivisa.Properties.Items.Clear;
-//  cbbDivisa.Properties.Items.Add('USD - Dólar Estadounidense');
-//  cbbDivisa.Properties.Items.Add('GBP - Libra Esterlina');
-//  cbbDivisa.Properties.Items.Add('CHF - Franco Suizo');
-//  cbbDivisa.Properties.Items.Add('JPY - Yen Japonés');
-//  cbbDivisa.Properties.Items.Add('BTC - Bitcoin');
-//  cbbDivisa.Properties.Items.Add('ETH - Ethereum');
-//  cbbDivisa.Properties.Items.Add('USDT - Tether');
-//  cbbDivisa.ItemIndex := 0;
 end;
 
 procedure TfrmCajaReferenciaPago.CargarRedesBlockchain;
@@ -315,13 +306,6 @@ begin
         edtFactorCambio.SetFocus;
       Exit;
     end;
-//    if edtImporteDivisa.Value <= 0 then
-//    begin
-//      ShowMessage('El importe en divisa debe ser mayor que cero.');
-//      if edtImporteDivisa.CanFocus then
-//        edtImporteDivisa.SetFocus;
-//      Exit;
-//    end;
   end;
   // Validar blockchain si es cripto
   if FDatosResultado.EsCripto then
@@ -404,7 +388,7 @@ begin
     edtFactorCambio.Value := Tasa;
 //    ShowMessage('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
   finally
-    API.Free;
+    FreeAndNil(API);
   end;
 end;
 

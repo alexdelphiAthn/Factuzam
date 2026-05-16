@@ -56,7 +56,7 @@ uses
 
 type
   TfrmMtoFacturas = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlVerifactu: TPanel;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
     tsTotales: TcxTabSheet;
@@ -119,8 +119,8 @@ type
     txtPROVINCIA_CLIENTE_FACTURA1: TcxDBTextEdit;
     txtPAIS_CLIENTE_FACTURA1: TcxDBTextEdit;
     txtDIRECCION2_CLIENTE_FACTURA1: TcxDBTextEdit;
-    lblcxlbl6: TcxLabel;
-    lblcxlbl13: TcxLabel;
+    lblExtra6: TcxLabel;
+    lblExtra13: TcxLabel;
     txtRAZONSOCIAL_CLIENTE_FACTURA: TcxDBTextEdit;
     txtNIF_CLIENTE_FACTURA: TcxDBTextEdit;
     lblNif: TcxLabel;
@@ -295,7 +295,7 @@ type
     ctbPRECIOSALIDA_FACTURA_LINEA: TcxGridDBColumn;
     ctbPORCEN_DTO_FACTURA_LINEA: TcxGridDBColumn;
     ctbPRECIO_DTO_FACTURA_LINEA: TcxGridDBColumn;
-    GroupBox1: TGroupBox;
+    grpDesgloseImpuestos: TGroupBox;
     lblTotRE: TcxLabel;
     PorRE: TcxLabel;
     lblTotIVA: TcxLabel;
@@ -305,38 +305,38 @@ type
     lblReducido: TcxLabel;
     lblSReducido: TcxLabel;
     lblExento: TcxLabel;
-    cxDBCurrencyEdit1: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit2: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit3: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit4: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit5: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit6: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit7: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit8: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit9: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit10: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit11: TcxDBCurrencyEdit;
-    cxDBCurrencyEdit12: TcxDBCurrencyEdit;
-    Shape1: TShape;
-    Shape2: TShape;
-    Shape3: TShape;
-    Shape4: TShape;
-    Shape5: TShape;
-    cxDBSpinEdit1: TcxDBSpinEdit;
-    cxDBSpinEdit2: TcxDBSpinEdit;
-    cxDBSpinEdit3: TcxDBSpinEdit;
-    cxDBSpinEdit4: TcxDBSpinEdit;
-    cxDBSpinEdit5: TcxDBSpinEdit;
-    Shape6: TShape;
-    cxDBSpinEdit7: TcxDBSpinEdit;
-    cxDBSpinEdit8: TcxDBSpinEdit;
-    cxDBSpinEdit9: TcxDBSpinEdit;
+    curTOTAL_BASEI_IVAN_FAC: TcxDBCurrencyEdit;
+    curTOTAL_BASEI_IVAR_FAC: TcxDBCurrencyEdit;
+    curTOTAL_BASEI_IVAS_FAC: TcxDBCurrencyEdit;
+    curTOTAL_BASEI_IVAE_FAC: TcxDBCurrencyEdit;
+    curTOTAL_IVAN_FAC: TcxDBCurrencyEdit;
+    curTOTAL_IVAR_FAC: TcxDBCurrencyEdit;
+    curTOTAL_IVAS_FAC: TcxDBCurrencyEdit;
+    curTOTAL_IVAE_FAC: TcxDBCurrencyEdit;
+    curTOTAL_REN_FAC: TcxDBCurrencyEdit;
+    curTOTAL_RER_FAC: TcxDBCurrencyEdit;
+    curTOTAL_RES_FAC: TcxDBCurrencyEdit;
+    curTOTAL_REE_FAC: TcxDBCurrencyEdit;
+    shpSeparador1: TShape;
+    shpSeparador2: TShape;
+    shpSeparador3: TShape;
+    shpSeparador4: TShape;
+    shpSeparador5: TShape;
+    spnPORCENTAJE_IVAN_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_IVAR_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_IVAS_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_IVAE_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_RER_FAC: TcxDBSpinEdit;
+    shpSeparador6: TShape;
+    spnPORCENTAJE_REN_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_RES_FAC: TcxDBSpinEdit;
+    spnPORCENTAJE_REE_FAC: TcxDBSpinEdit;
     ctbTOTAL_FACTURASIVA_LINEA: TcxGridDBColumn;
     ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA: TcxGridDBColumn;
     ctbCODIGO_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn;
     ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn;
     ctbPRECIO_ULT_COMPRA_FACTURA_LINEA: TcxGridDBColumn;
-    JvCalculator1: TJvCalculator;
+    jvcalcAux: TJvCalculator;
     btnCalculator: TcxButton;
     txtNOMBRE_PAIS_CLIENTE_FACTURA: TcxDBTextEdit;
     txtNOMBRE_PAIS_EMPRESA_FACTURA: TcxDBTextEdit;
@@ -363,20 +363,20 @@ type
     cxGrdMovimientosFac: TcxGrid;
     tvMovimientosFac: TcxGridDBTableView;
     cxGrdMovimientosFacLevel: TcxGridLevel;
-    scrlbx1: TScrollBox;
-    lbl18: TLabel;
-    lbl17: TLabel;
-    lbl13: TLabel;
-    lbl12: TLabel;
-    lbl11: TLabel;
-    lbl10: TLabel;
-    lbl9: TLabel;
-    lbl8: TLabel;
-    lbl7: TLabel;
-    lbl6: TLabel;
+    scrlbxVerifactu: TScrollBox;
+    lblPETICION_COMPLETA: TLabel;
+    lblRESPUESTA_COMPLETA: TLabel;
+    lblQRCODE_BASE64: TLabel;
+    lblVERIFACTU_URL: TLabel;
+    lblCHAIN_HASH: TLabel;
+    lblCHAIN_NUMBER: TLabel;
+    lblISSUED_TIME: TLabel;
+    lblISSUER_IRS_ID: TLabel;
+    lblQUEUE_ID: TLabel;
+    lblREQUEST_ID: TLabel;
     lbl: TLabel;
-    lbl15: TLabel;
-    lbl16: TLabel;
+    lblFECHA_PROCESAMIENTO: TLabel;
+    lblESTADO: TLabel;
     btnReconsolidar: TSpeedButton;
     btnConsultarEstado: TSpeedButton;
     btnCancelarFactura: TSpeedButton;
@@ -392,26 +392,26 @@ type
     imgQRCODE_PNG: TcxDBImage;
     txtREQUEST_ID: TcxDBTextEdit;
     spID_CONSOLIDACION: TcxDBSpinEdit;
-    cxdbmPETICION_COMPLETA1: TcxDBMemo;
+    cxdbmPETICION_COMPLETA_FACCON: TcxDBMemo;
     dteFECHA_PROCESAMIENTO: TcxDBDateEdit;
     txtESTADO: TcxDBTextEdit;
-    cxGrid1: TcxGrid;
-    cxGridDBTableView1: TcxGridDBTableView;
-    cxGridLevel1: TcxGridLevel;
+    cxgrdLineasFactura: TcxGrid;
+    tvLineasFactura: TcxGridDBTableView;
+    cxgrdlvlLineasFactura: TcxGridLevel;
     cxGridDBTableView1TIMESTAMP_LOG: TcxGridDBColumn;
     cxGridDBTableView1DESCRIPCION_LOG: TcxGridDBColumn;
     cxGridDBTableView1DATOS_ADICIONALES_LOG: TcxGridDBColumn;
     cxGridDBTableView1NRO_FACTURA_LOG: TcxGridDBColumn;
     cxGridDBTableView1SERIE_FACTURA_LOG: TcxGridDBColumn;
-    cxLabel1: TcxLabel;
-    cxDBTextEdit1: TcxDBTextEdit;
-    cxLabel2: TcxLabel;
-    cxDBTextEdit2: TcxDBTextEdit;
-    cxDBTextEdit3: TcxDBTextEdit;
-    cxLabel3: TcxLabel;
+    lblTipoFactura: TcxLabel;
+    txtTIPO_FAC: TcxDBTextEdit;
+    lblVendedorFactura: TcxLabel;
+    txtCODIGO_CAJERO_FAC: TcxDBTextEdit;
+    txtFASE_FAC: TcxDBTextEdit;
+    lblFaseFactura: TcxLabel;
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
-    cxButton1: TcxButton;
+    btnGenerarRecibos: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -470,7 +470,7 @@ type
     procedure chkFechaEntregaPropertiesChange(Sender: TObject);
     procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
-    procedure btNExportarLineasClick(Sender: TObject);
+    procedure btnExportarLineasClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
@@ -569,8 +569,8 @@ begin
       unqrySol.Connection := oConn;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_empresas ' +
-                           ' WHERE CODIGO_EMP_EMP = :empresa';
-      unqrySol.ParamByName('empresa').AsString := VarToStr(e.EditingValue);
+                           ' WHERE CODIGO_EMP_EMP = :EMPRESA';
+      unqrySol.ParamByName('EMPRESA').AsString := VarToStr(e.EditingValue);
       unqrySol.Open;
       if unqrySol.RecordCount = 0 then
         Sleep(0)
@@ -586,18 +586,6 @@ end;
 procedure TfrmMtoFacturas.btnConsolidarClick(Sender: TObject);
 begin
   inherited;
-//  with dmmFacturas.unqryTablaG do
-//  begin
-//    if Active = True then
-//    if (FieldByName('ESCONSOLIDADA_FAC').AsString <> 'S') then
-//    begin
-//      if ((dsTablaG.State <> dsEdit) and (dsTablaG.State <> dsInsert)) then
-//        dmmFacturas.unqryTablaG.Edit;
-//      FieldByName('ESCONSOLIDADA_FAC').AsString := 'S';
-//      FieldByName('INSTANTECONSO_FAC').AsDateTime := Now;
-//      Post;
-//    end;
-//  end;
 end;
 
 procedure TfrmMtoFacturas.ResetForm;
@@ -679,7 +667,7 @@ begin
                 dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
     form.ShowModal;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 
@@ -734,7 +722,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btNExportarLineasClick(Sender: TObject);
+procedure TfrmMtoFacturas.btnExportarLineasClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxGrdLineasFactura, 'Lineas_Factura_' +
@@ -880,7 +868,7 @@ begin
     form.dmFac := dmmFacturas;
     form.ShowModal;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 
@@ -929,7 +917,7 @@ begin
       for Item in Skus do
         Combo.Properties.Items.Add(Item.CodigoSku);
     finally
-      Resolver.Free;
+      FreeAndNil(Resolver);
     end;
   finally
     Combo.Properties.Items.EndUpdate;
@@ -1016,7 +1004,7 @@ begin
                                                     1 + fPorcen);
     end;
   finally
-    Resolver.Free;
+    FreeAndNil(Resolver);
   end;
 end;
 
@@ -1030,7 +1018,7 @@ begin
      form.dmFac := dmmFacturas;
      form.ShowModal;
    finally
-     form.Free;
+     FreeAndNil(form);
    end;
 end;
 
@@ -1255,28 +1243,6 @@ procedure TfrmMtoFacturas.chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange(
   Sender: TObject);
 begin
   inherited;
-  if chkESIVA_RECARGO_CLIENTE_FACTURA.Checked = True then
-  begin
-//    dbcPORCEN_REN_FACTURA.Visible := True;
-//    dbcTOTAL_REN_FACTURA.Visible := True;
-//    dbcPORCEN_RER_FACTURA.Visible := True;
-//    dbcTOTAL_RER_FACTURA.Visible := True;
-//    dbcPORCEN_RES_FACTURA.Visible := True;
-//    dbcTOTAL_RES_FACTURA.Visible := True;
-//    dbcPORCEN_REE_FACTURA.Visible := True;
-//    dbcTOTAL_REE_FACTURA.Visible := True;
-  end
-  else
-  begin
-//    dbcPORCEN_REN_FACTURA.Visible := False;
-//    dbcTOTAL_REN_FACTURA.Visible := False;
-//    dbcPORCEN_RER_FACTURA.Visible := False;
-//    dbcTOTAL_RER_FACTURA.Visible := False;
-//    dbcPORCEN_RES_FACTURA.Visible := False;
-//    dbcTOTAL_RES_FACTURA.Visible := False;
-//    dbcPORCEN_REE_FACTURA.Visible := False;
-//    dbcTOTAL_REE_FACTURA.Visible := False;
-  end;
 end;
 
 procedure TfrmMtoFacturas.
@@ -1561,8 +1527,8 @@ begin
                                                     1 + fPorcen);
     end;
   finally
-    Validador.Free;
-    Resolver.Free;
+    FreeAndNil(Validador);
+    FreeAndNil(Resolver);
   end;
 end;
 
@@ -1744,7 +1710,7 @@ begin
     txtCHAIN_HASH.DataBinding.DataSource := dsConsolidacion;
     cxdbmVERIFACTU_URL.DataBinding.DataSource := dsConsolidacion;
     cxdbmQRCODE_BASE64.DataBinding.DataSource := dsConsolidacion;
-    cxdbmPETICION_COMPLETA1.DataBinding.DataSource := dsConsolidacion;
+    cxdbmPETICION_COMPLETA_FACCON.DataBinding.DataSource := dsConsolidacion;
   end;
 end;
 
@@ -1755,12 +1721,6 @@ procedure TfrmMtoFacturas.spnRetencionPropertiesEditValueChanged(
 //  e : TcxCustomEdit;
 begin
   inherited;
-//  with dsTablaG do
-//  if ((State = dsInsert) or (State = dsEdit)) then
-//  begin
-//    e := Sender as TcxCustomEdit;
-//
-//  end;
 end;
 
 (*-AÑADIR CAMPO EN FACTURAS

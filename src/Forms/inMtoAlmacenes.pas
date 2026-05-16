@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAlmacenes, cxCheckBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
+  Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxSplitter, cxMaskEdit, cxDBEdit;
 
 type
@@ -64,7 +64,7 @@ type
     pnlButtonFicha: TPanel;
     pcDetail: TcxPageControl;
     tsAuditoria: TcxTabSheet;
-    pnl3: TPanel;
+    pnlAuditoria: TPanel;
     lblUsuarioAlta: TcxLabel;
     txtUSUARIOALTA: TcxDBTextEdit;
     lblInstanteAlta: TcxLabel;
@@ -95,11 +95,11 @@ type
     cxdbtxtdtEMAIL_ALM: TcxDBTextEdit;
     lblPoblacion: TcxLabel;
     cxdbtxtdtCODPOSTAL: TcxDBTextEdit;
-    cxdbtxtdtPOBLACION_ALM1: TcxDBTextEdit;
+    cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit;
     lblDireccion: TcxLabel;
     cxdbtxtdtDIRECCION_ALM: TcxDBTextEdit;
-    lblPoblacion1: TcxLabel;
-    cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit;
+    lblProvincia: TcxLabel;
+    cxdbtxtdtPROVINCIA_ALM: TcxDBTextEdit;
     lblCodigoCliente: TcxLabel;
     cxdbtxtdtCODIGO_CLIENTE_ALM: TcxDBTextEdit;
     dbmAlmacenesCajasCODIGO_ALMACEN_ALMCAJ: TcxGridDBColumn;
@@ -109,6 +109,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -118,7 +119,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -131,6 +132,11 @@ begin
   inherited;
   dmmAlmacenes := tdmDataModule as TdmAlmacenes;
   pkFieldName := 'CODIGO_ALM_ALM';
+end;
+
+procedure TfrmMtoAlmacenes.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

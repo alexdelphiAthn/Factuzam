@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataCajaOperacionesHist,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type
@@ -62,6 +62,7 @@ type
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -70,7 +71,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -82,8 +83,13 @@ procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  pkFieldName := '`CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
+  pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
                  'CODIGO_CAJA_OPCAJA;NUMERO_OPERACION_OPCAJA';
+end;
+
+procedure TfrmMtoCajaOperacionesHist.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

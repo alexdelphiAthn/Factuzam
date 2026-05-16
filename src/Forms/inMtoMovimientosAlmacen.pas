@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataMovimientosAlmacen,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type
@@ -67,6 +67,7 @@ type
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -75,7 +76,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -87,7 +88,12 @@ procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
   inherited;
   dmmMovimientosAlmacen := tdmDataModule as TdmMovimientosAlmacen;
-  pkFieldName := '`NUMERO_MOV';
+  pkFieldName := 'NUMERO_MOV';
+end;
+
+procedure TfrmMtoMovimientosAlmacen.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

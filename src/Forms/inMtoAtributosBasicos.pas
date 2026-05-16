@@ -30,7 +30,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosBasicos,
   cxCheckBox, cxSpinEdit, dxScrollbarAnnotations, dxCore,
-  inMtoPrincipal, cxMaskEdit, cxDBEdit, cxDBLookupComboBox, cxDBLookupEdit,
+  cxMaskEdit, cxDBEdit, cxDBLookupComboBox, cxDBLookupEdit,
   cxLookupEdit, cxDropDownEdit, cxButtonEdit, cxCurrencyEdit;
 
 type
@@ -78,6 +78,7 @@ type
     dmmAtributosBasicos: TdmAtributosBasicos;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -86,7 +87,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -101,6 +102,11 @@ begin
   (cxGrdDBTabPrinID_VA_ATB.Properties as TcxLookupComboBoxProperties).ListSource
                                     := dmmAtributosBasicos.dsAtributosLookup;
   pkFieldName := 'ID_ATB';
+end;
+
+procedure TfrmMtoAtributosBasicos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoAtributosBasicos.dsTablaGStateChange(Sender: TObject);
@@ -147,7 +153,7 @@ begin
                             GetGValue(Dlg.Color),
                             GetBValue(Dlg.Color)]);
   finally
-    Dlg.Free;
+    FreeAndNil(Dlg);
   end;
 end;
 

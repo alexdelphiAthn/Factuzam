@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPaises, cxCheckBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
+  Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
 
 type
   TfrmMtoPaises = class(TfrmMtoGen)
@@ -41,6 +41,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -50,7 +51,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -62,7 +63,12 @@ procedure TfrmMtoPaises.CrearTablaPrincipal;
 begin
   inherited;
   dmmPaises := tdmDataModule as TdmPaises;
-  pkFieldName := '`CODIGO_PAI_PAI';
+  pkFieldName := 'CODIGO_PAI_PAI';
+end;
+
+procedure TfrmMtoPaises.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

@@ -39,7 +39,7 @@ type
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;
     cxLevelMaestro:   TcxGridLevel;
-    splitter:         TSplitter;
+    splPrincipal:         TSplitter;
     pcHijos:          TcxPageControl;
     tsOperacion:      TcxTabSheet;
     tsPagos:          TcxTabSheet;
@@ -78,8 +78,8 @@ type
     btnReimprimir:    TButton;
     btnCerrar:        TButton;
     tmrBusqueda:      TTimer;
-    Button1: TButton;
-    Button2: TButton;
+    btnDevolverAbonar: TButton;
+    btnAnularVerifactu: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -159,8 +159,8 @@ end;
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
   inherited;
-  FLayout.Free;
-  FVentasCal.Free;
+  FreeAndNil(FLayout);
+  FreeAndNil(FVentasCal);
 end;
 
 procedure TfrmConsultaOpe.dtpFechaGetDayState(Sender: TObject;
@@ -245,7 +245,7 @@ begin
     if Layout.PreguntarYGrabar('Personalizacion Consulta Operaciones') then
       ShowMessage('Layout guardado.');
   finally
-    Layout.Free;
+    FreeAndNil(Layout);
   end;
 end;
 

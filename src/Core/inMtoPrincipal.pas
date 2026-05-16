@@ -251,7 +251,7 @@ begin
     TempList.Text := SQL;
     FLogMemo.Lines.AddStrings(TempList);
   finally
-    TempList.Free;
+    FreeAndNil(TempList);
   end;
   FLogMemo.SelStart := Length(FLogMemo.Text);
   SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
@@ -497,7 +497,7 @@ begin
           ShowMessage('La copia se guardó exitosamente.');
           Result := True;
         finally
-          Engine.Free;
+          FreeAndNil(Engine);
         end;
       except
         on E: Exception do
@@ -510,8 +510,8 @@ begin
         end;
       end;
     finally
-      IncludeTables.Free;
-      ExcludeTables.Free;
+      FreeAndNil(IncludeTables);
+      FreeAndNil(ExcludeTables);
     end;
   end;
 end;
@@ -778,7 +778,7 @@ begin
           end;
       end;
     finally
-      SqlScript.Free;
+      FreeAndNil(SqlScript);
     end;
   end;
 end;
@@ -805,32 +805,8 @@ begin
     inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
   end;
 
-//  if FDmConn <> nil then
-//    if FDmConn.conUni.Connected then
-//    begin
-//      bIsConnected := True;
-// dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
-//    end
-//    else
-//      bIsConnected := False;
-//  if (FDmConn = nil) or (not bIsConnected) then
-//  begin
-// dxstsbr1.Panels.Items[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
-//    inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
-//  end;
 end;
 
-//procedure TfrmMtoPrincipal.undmp1Error(Sender: TObject; E: Exception;
-//  SQL: string; var Action: TErrorAction);
-//begin
-//  inherited;
-//  ShowMessage('Ha habido incidencias');
-//  Action := eaAbort;
-//  // https://forums.devart.com/viewtopic.php?t=21244
-//  // Continúa a pesar de los errores, por ejemplo si hay filas duplicadas
-//  // if (EUniError(E).ErrorCode = 1062) then // ER_DUP_ENTRY
-//  // Action := eaContinue;
-//end;
 
 procedure TfrmMtoPrincipal.WMFreeControl(var Msg: TMessage);
 var
@@ -843,7 +819,7 @@ begin
   end
   else
   begin
-    TabACerrar.Free;
+    FreeAndNil(TabACerrar);
   end;
 end;
 

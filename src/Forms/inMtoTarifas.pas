@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, inMtoPrincipal, UniDataTarifas,
+  dxBevel, cxDBNavigator, UniDataTarifas,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
@@ -38,18 +38,18 @@ uses
 
 type
   TfrmMtoTarifas = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlTopFicha: TPanel;
     cxdbtxtdt1: TcxDBTextEdit;
     cxdbtxtdt2: TcxDBTextEdit;
-    pnl2: TPanel;
+    pnlBodyFicha: TPanel;
     pcPestana: TcxPageControl;
     tsArticulos: TcxTabSheet;
     cxdbtxtdt15: TcxDBTextEdit;
-    Panel1: TPanel;
+    pnlInnerHeader: TPanel;
     lblCodigo: TcxLabel;
     lblNombre: TcxLabel;
     tsOtros: TcxTabSheet;
-    pnl3: TPanel;
+    pnlOtrosDatos: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;
@@ -71,10 +71,10 @@ type
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
     cxdbchckbxACTIVO_TARIFA: TcxDBCheckBox;
-    pnl6: TPanel;
+    pnlBotonera: TPanel;
     btnIraArticulo: TcxButton;
-    btAddBlock: TcxButton;
-    cxspltr1: TcxSplitter;
+    btnAddBlock: TcxButton;
+    splHorizontal: TcxSplitter;
     pnlArticulos: TPanel;
     cxgrdArticulosTarifas: TcxGrid;
     tvArticulos: TcxGridDBTableView;
@@ -109,9 +109,9 @@ type
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdlvlArticulosTarifas: TcxGridLevel;
-    cxspltr2: TcxSplitter;
-    cxspltr3: TcxSplitter;
-    ActionListTarifas: TActionList;
+    splVertical: TcxSplitter;
+    splGeneral: TcxSplitter;
+    alTarifas: TActionList;
     actArticulos: TAction;
     actFamilias: TAction;
     actProveedores: TAction;
@@ -137,10 +137,11 @@ type
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actFamiliasExecute(Sender: TObject);
     procedure actProveedoresExecute(Sender: TObject);
-    procedure btAddBlockClick(Sender: TObject);
+    procedure btnAddBlockClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -156,7 +157,7 @@ uses
   inLibDevExp,
   inMtoArticulos,
   inMtoFamilias,
-  inMtoProveedores, inMtoModalAddBlockTarifa;
+  inMtoProveedores, inMtoModalAddBlockTarifa, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -198,7 +199,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoTarifas.btAddBlockClick(Sender: TObject);
+procedure TfrmMtoTarifas.btnAddBlockClick(Sender: TObject);
 var
   res        : TAddBlockTarifaResult;
   codigoTar  : string;
@@ -260,6 +261,11 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
+end;
+
+procedure TfrmMtoTarifas.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoTarifas.dsTablaGStateChange(Sender: TObject);

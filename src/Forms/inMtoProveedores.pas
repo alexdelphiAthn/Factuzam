@@ -118,7 +118,7 @@ type
     cxgrdbclmnArticulosDESCRIPCION_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosCODIGO_FAMILIA: TcxGridDBColumn;
     cxgrdbclmnArticulosDESCRIPCION_FAMILIA: TcxGridDBColumn;
-    cxgrdbclmnArticulosTIPO_CATNTIDAD_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosESACTIVO_FIJO_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnArticulosPRECIO_ULT_COMPRA: TcxGridDBColumn;
     cxgrdbclmnArticulosFECHA_VALIDEZ: TcxGridDBColumn;
@@ -177,6 +177,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -306,6 +307,11 @@ begin
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
+end;
+
+procedure TfrmMtoProveedores.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoProveedores.dsTablaGStateChange(Sender: TObject);

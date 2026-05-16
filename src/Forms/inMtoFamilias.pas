@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, inMtoPrincipal, UniDataFamilias,
+  dxBevel, cxDBNavigator, UniDataFamilias,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
@@ -39,7 +39,7 @@ uses
 
 type
   TfrmMtoFamilias = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlTopFicha: TPanel;
     cxdbtxtdt1: TcxDBTextEdit;
     cxdbtxtdt2: TcxDBTextEdit;
     pnlDetailFich: TPanel;
@@ -50,7 +50,7 @@ type
     lblCodigo: TcxLabel;
     lblNombre: TcxLabel;
     tsOtros: TcxTabSheet;
-    pnl3: TPanel;
+    pnlOtros: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;
@@ -77,7 +77,7 @@ type
     cxgrdbclmnGrdDBTabPrinACTIVO_FAMILIA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinORDEN_FAMILIA: TcxGridDBColumn;
     tsArticulos: TcxTabSheet;
-    cxspltr1: TcxSplitter;
+    splFicha: TcxSplitter;
     cxgrdArticulosFamilias: TcxGrid;
     tvArticulos: TcxGridDBTableView;
     tvLineasFacturacion: TcxGridDBTableView;
@@ -110,9 +110,9 @@ type
     dbcGrdDBTabPrinCODIGO_SUBFAMILIA: TcxGridDBColumn;
     dbcGrdDBTabPrinNOMBRE_SUBFAMILIA: TcxGridDBColumn;
     cbbFamilia: TcxDBLookupComboBox;
-    cxlbllbl1: TcxLabel;
+    lblFamiliaPadre: TcxLabel;
     chkDEFAULT_FAMILIA: TcxDBCheckBox;
-    ActionListFamilias: TActionList;
+    alFamilias: TActionList;
     actArticulo: TAction;
     actProveedores: TAction;
     actTarifas: TAction;
@@ -166,7 +166,7 @@ uses
   inMtoArticulos,
   inLibShowMto,
   inMtoProveedores,
-  inMtoTarifas;
+  inMtoTarifas, inMtoPrincipal;
 
 {$R *.dfm}
 

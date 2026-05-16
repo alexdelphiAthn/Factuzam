@@ -71,6 +71,7 @@ type
     sFicha:string;
     procedure AplicarEtiquetas; override;
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
     procedure CargarDefaultsDesdeBD(const aNombreTabla: string);
     { Public declarations }
   end;
@@ -116,6 +117,11 @@ begin
   inherited;
   cxGrdDBTabPrin.DataController.CreateAllItems;
   cxGrdDBTabPrin.ApplyBestFit();
+end;
+
+procedure TfrmMtoSearch.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoSearch.cxGrdDBTabPrinCellDblClick(
@@ -234,7 +240,7 @@ begin
       Result := (Trim(sCod) <> '');
     end;
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -311,7 +317,7 @@ begin
       end;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -351,7 +357,7 @@ begin
       QryDef.Next;
     end;
   finally
-    QryDef.Free;
+    FreeAndNil(QryDef);
   end;
   QryCont := TUniQuery.Create(nil);
   try
@@ -369,7 +375,7 @@ begin
                                QryCont.FieldByName('TIPO_DOC_CON').AsString;
     end;
   finally
-    QryCont.Free;
+    FreeAndNil(QryCont);
   end;
 end;
 

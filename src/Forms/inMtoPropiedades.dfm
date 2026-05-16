@@ -69,14 +69,14 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
         ExplicitTop = 29
         ExplicitWidth = 947
         ExplicitHeight = 487
-        object pnl1: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 947
           Height = 113
           Align = alTop
           TabOrder = 0
-          object Panel1: TPanel
+          object pnlBodyFicha: TPanel
             Left = 1
             Top = 1
             Width = 945
@@ -121,7 +121,7 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               TabOrder = 4
               Transparent = True
             end
-            object cmbTIPO: TcxDBComboBox
+            object cbbTIPO: TcxDBComboBox
               Left = 144
               Top = 77
               DataBinding.DataField = 'TIPO_VALOR_PROP'
@@ -148,16 +148,16 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             end
           end
         end
-        object cxspltr1: TcxSplitter
+        object splFicha: TcxSplitter
           Left = 0
           Top = 113
           Width = 947
           Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
-          Control = pnl1
+          Control = pnlTopFicha
         end
-        object pnl2: TPanel
+        object pnlBottomFicha: TPanel
           Left = 0
           Top = 123
           Width = 947
