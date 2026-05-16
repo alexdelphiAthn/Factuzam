@@ -44,6 +44,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -67,6 +68,11 @@ begin
   dmmUsuariosPerfiles := tdmDataModule as TdmUsuariosPerfiles;
   dsTablaG.DataSet := dmmUsuariosPerfiles.unqryTablaG;
   pkFieldName := 'USUARIO_GRUPO_USUPER;KEY_USUPER;SUBKEY_USUPER';
+end;
+
+procedure TfrmMtoUsuariosPerfiles.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

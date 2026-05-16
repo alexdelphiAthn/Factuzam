@@ -88,6 +88,7 @@ type
     dmmPropiedades: TdmPropiedades;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -120,6 +121,11 @@ begin
   tvArticulos.DataController.DataSource := dmmPropiedades.dsArticulos;
   tvValores.DataController.DataSource   := dmmPropiedades.dsValores;
   dmmPropiedades.unqryValores.BeforePost := unqryValoresBeforePost;
+end;
+
+procedure TfrmMtoPropiedades.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoPropiedades.dsTablaGStateChange(Sender: TObject);

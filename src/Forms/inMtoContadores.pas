@@ -66,6 +66,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -88,6 +89,11 @@ begin
   inherited;
   dmmContadores := tdmDataModule as TdmContadores;
   pkFieldName := 'TIPO_DOC_CON;SERIE_CON;EMPRESA_CON';
+end;
+
+procedure TfrmMtoContadores.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoContadores.dsTablaGStateChange(Sender: TObject);

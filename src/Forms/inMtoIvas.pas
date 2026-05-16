@@ -64,6 +64,7 @@ type
     { Public declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
 end;
 
 var
@@ -86,6 +87,11 @@ begin
   (cxGrdDBTabPrinGRUPO_ZONA_IVA.Properties as
                      TcxLookupComboBoxProperties).ListSource := dmmIvas.dsZonas;
   pkFieldName := 'CODIGO_IVA';
+end;
+
+procedure TfrmMtoIvas.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoIvas.cxgrdbclmnGrdDBTabPrinGRUPO_ZONA_IVAPropertiesChange(

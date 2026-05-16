@@ -179,6 +179,7 @@ type
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   private
     FFindDialog: TFindDialog;
     FReplaceDialog: TReplaceDialog;
@@ -1049,6 +1050,11 @@ begin
   IsColumnMode := False;
   DBSynEdit1.EndUpdate;
   syndtEstructura.EndUpdate;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(

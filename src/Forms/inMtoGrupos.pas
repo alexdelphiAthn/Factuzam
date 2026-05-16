@@ -51,6 +51,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -75,6 +76,11 @@ begin
   dsTablaG.DataSet := dmmGrupos.unqryTablaG;
   tvUsuarios.DataController.DataSource := dmmGrupos.dsUsuariosGrupo;
   pkFieldName := 'GRUPO_USU';
+end;
+
+procedure TfrmMtoGrupos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoGrupos.dsTablaGStateChange(Sender: TObject);

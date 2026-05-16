@@ -55,6 +55,7 @@ type
     dmmDepositosCliente: TdmDepositosCliente;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -76,6 +77,11 @@ begin
   inherited;
   dmmDepositosCliente := tdmDataModule as TdmDepositosCliente;
   pkFieldName := 'ID_DEPOSITO_DEP';
+end;
+
+procedure TfrmMtoDepositosCliente.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

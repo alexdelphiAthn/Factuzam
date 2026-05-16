@@ -141,6 +141,7 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -260,6 +261,11 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
+end;
+
+procedure TfrmMtoTarifas.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoTarifas.dsTablaGStateChange(Sender: TObject);

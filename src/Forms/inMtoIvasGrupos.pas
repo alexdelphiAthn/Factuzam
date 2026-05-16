@@ -46,6 +46,7 @@ type
     { Public declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
 end;
 
 var
@@ -66,6 +67,11 @@ begin
   inherited;
   dmmIvasGrupos := tdmDataModule as TdmIvasGrupos;
   pkFieldName := 'IVA_IVAGRP';
+end;
+
+procedure TfrmMtoIvasGrupos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoIvasGrupos.dsTablaGStateChange(Sender: TObject);

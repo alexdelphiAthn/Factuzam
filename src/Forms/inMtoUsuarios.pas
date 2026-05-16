@@ -63,6 +63,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -113,6 +114,11 @@ begin
                                                          dmmUsuarios.dsEmpresas;
   dmmUsuarios.unqryEmpresas.Open;
   pkFieldName := 'USUARIO_USU';
+end;
+
+procedure TfrmMtoUsuarios.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoUsuarios.dsTablaGStateChange(Sender: TObject);

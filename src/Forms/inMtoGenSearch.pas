@@ -71,6 +71,7 @@ type
     sFicha:string;
     procedure AplicarEtiquetas; override;
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
     procedure CargarDefaultsDesdeBD(const aNombreTabla: string);
     { Public declarations }
   end;
@@ -116,6 +117,11 @@ begin
   inherited;
   cxGrdDBTabPrin.DataController.CreateAllItems;
   cxGrdDBTabPrin.ApplyBestFit();
+end;
+
+procedure TfrmMtoSearch.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoSearch.cxGrdDBTabPrinCellDblClick(
