@@ -1399,7 +1399,6 @@ begin
   iGenerados := 0;
   iVacios    := 0;
   iSaltados  := 0;
-  iLimpiados := 0;
   try
     qrySkus.Connection   := oConn;
     qryInsert.Connection := oConn;

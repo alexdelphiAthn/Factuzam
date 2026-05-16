@@ -41,7 +41,11 @@ type
     function GenerateInsertSQL(const TableName: string;
                            Fields, Values: TStringList;
                            const HasIdentity: Boolean = False): string; override;
-
+    // MySQL no usa sequences clasicas (depende de AUTO_INCREMENT). Estos
+    // helpers existen por compatibilidad con motores con sequences (Oracle,
+    // PostgreSQL); el backup MySQL los devuelve vacios.
+    function GenerateCreateSequence(const SeqName: string): string; override;
+    function GenerateDropSequence(const SeqName: string): string; override;
   end;
 
 implementation
@@ -429,6 +433,16 @@ begin
   Result := SanitizeSQL +
             'ALTER TABLE ' + QuoteIdentifier(TableName) +
             ' MODIFY COLUMN ' + GenerateColumnDefinition(ColumnInfo) + ';';
+end;
+
+function TMySQLHelpers.GenerateCreateSequence(const SeqName: string): string;
+begin
+  Result := '';
+end;
+
+function TMySQLHelpers.GenerateDropSequence(const SeqName: string): string;
+begin
+  Result := '';
 end;
 
 end.

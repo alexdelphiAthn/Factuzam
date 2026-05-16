@@ -124,7 +124,6 @@ const
 
 constructor TfrmSelPropiedades.Create(AOwner: TComponent;
   AConexion: TUniConnection; AExcluir: TStringList);
-var
 begin
   inherited Create(AOwner);
   FConexion       := AConexion;
