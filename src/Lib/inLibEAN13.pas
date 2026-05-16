@@ -48,7 +48,7 @@ begin
   for i := 1 to 7 do
   begin
     // Validación de seguridad para asegurar que son solo números
-    if not (ACodigo7[i] in ['0'..'9']) then
+    if not CharInSet(ACodigo7[i], ['0'..'9']) then
       raise Exception.Create(
         'El código de barras contiene caracteres no numéricos.');
 
@@ -104,7 +104,7 @@ begin
   for i := 1 to 12 do
   begin
     // Validación de seguridad por si el string trae letras o basura
-    if not (ACodigo12[i] in ['0'..'9']) then
+    if not CharInSet(ACodigo12[i], ['0'..'9']) then
       raise Exception.Create(
         'El código de barras contiene caracteres no numéricos.');
 
