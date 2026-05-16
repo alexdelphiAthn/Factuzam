@@ -1459,6 +1459,25 @@ begin
       cdsLineas.EnableControls;
     end;
     // =======================================================================
+    // PASO 4.1: SINCRONIZAR CONTADOR_LINEAS_FAC CON LA ULTIMA LINEA INSERTADA
+    // El INSERT de cabecera no lo escribe, asi que al reabrir la factura
+    // desde inMtoFacturas el calculo del siguiente nro de linea arrancaria
+    // desde 0 y chocaria con la PK '...-010'.
+    // =======================================================================
+    if RequiereFactura then
+    begin
+      QryTrx.SQL.Text :=
+        'UPDATE fza_facturas SET CONTADOR_LINEAS_FAC = (' +
+        '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)),0),3,''0'')' +
+        '    FROM fza_facturas_lineas' +
+        '   WHERE NUMERO_FAC_FACLIN = :pnumfac' +
+        '     AND SERIE_FAC_FACLIN  = :pserie' +
+        ') WHERE NUMERO_FAC = :pnumfac AND SERIE_FAC = :pserie';
+      QryTrx.ParamByName('pnumfac').AsString := NumFactura;
+      QryTrx.ParamByName('pserie').AsString  := SerieGenerada;
+      QryTrx.Execute;
+    end;
+    // =======================================================================
     // PASO 4.5: REGISTRAR EL TOTAL DE LA VENTA NORMAL EN CAJA
     // =======================================================================
     if RequiereFactura then
