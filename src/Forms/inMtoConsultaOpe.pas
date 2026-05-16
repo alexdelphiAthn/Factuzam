@@ -39,7 +39,7 @@ type
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;
     cxLevelMaestro:   TcxGridLevel;
-    splitter:         TSplitter;
+    splPrincipal:         TSplitter;
     pcHijos:          TcxPageControl;
     tsOperacion:      TcxTabSheet;
     tsPagos:          TcxTabSheet;
@@ -78,8 +78,8 @@ type
     btnReimprimir:    TButton;
     btnCerrar:        TButton;
     tmrBusqueda:      TTimer;
-    Button1: TButton;
-    Button2: TButton;
+    btnDevolverAbonar: TButton;
+    btnAnularVerifactu: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

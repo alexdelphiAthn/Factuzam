@@ -19,7 +19,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   OnKeyDown = FormKeyDown
   OnShortCut = FormShortCut
   TextHeight = 15
-  object Shape1: TShape
+  object shpFondo: TShape
     Left = 258
     Top = 19
     Width = 14
@@ -28,7 +28,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Pen.Style = psClear
     Shape = stRoundRect
   end
-  object Shape2: TShape
+  object shpSeparador: TShape
     Left = 87
     Top = 8
     Width = 14
@@ -37,7 +37,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Pen.Style = psClear
     Shape = stRoundRect
   end
-  object jvgfnmtr1: TJvGIFAnimator
+  object gifAnimador: TJvGIFAnimator
     Left = 479
     Top = 576
     Width = 70
@@ -21199,7 +21199,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 62
     Width = 437
   end
-  object cxClock1: TcxClock
+  object clkHora: TcxClock
     AlignWithMargins = True
     Left = 287
     Top = 464
@@ -21471,7 +21471,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 56
     Width = 249
   end
-  object cxLabel2: TcxLabel
+  object lblTituloFzam: TcxLabel
     Left = 23
     Top = 242
     AutoSize = False
@@ -21497,7 +21497,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 113
     Width = 58
   end
-  object cxLabel3: TcxLabel
+  object lblTituloVerifactu: TcxLabel
     Left = 23
     Top = 37
     AutoSize = False
@@ -21609,7 +21609,7 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 43
     Width = 811
   end
-  object JvMonthCalendar1: TJvMonthCalendar
+  object calMes: TJvMonthCalendar
     Left = 28
     Top = 444
     Width = 244
@@ -21632,15 +21632,15 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     OnKeyDown = JvMonthCalendar1KeyDown
     StyleElements = [seFont, seClient]
   end
-  object Timer1: TTimer
+  object tmrReloj: TTimer
     OnTimer = Timer1Timer
     Left = 504
     Top = 440
   end
-  object ActionList1: TActionList
+  object alCajaMenu: TActionList
     Left = 424
     Top = 360
-    object Action1: TAction
+    object actSalirMenu: TAction
       Caption = 'ESCAPE'
       ShortCut = 27
       OnExecute = Action1Execute
