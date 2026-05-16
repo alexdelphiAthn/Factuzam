@@ -1226,6 +1226,7 @@ begin
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '') and
+       (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') and
        (IsError = False) then
     begin
       ShowMessage('Debe escribir la razón social del cliente a facturar ');
