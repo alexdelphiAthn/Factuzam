@@ -350,6 +350,7 @@ type
     procedure RellenarItemsSerie;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -419,6 +420,11 @@ begin
     if not unqrySesionKits.Active     then unqrySesionKits.Open;
     if not unqrySesionKitsDet.Active  then unqrySesionKitsDet.Open;
   end;
+
+procedure TfrmMtoComprasSesiones.ResetForm;
+begin
+  inherited;
+end;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);

@@ -64,6 +64,7 @@ type
     dmmCajaValesHist: TdmCajaValesHist;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -85,6 +86,11 @@ begin
   inherited;
   dmmCajaValesHist := tdmDataModule as TdmCajaValesHist;
   pkFieldName := 'CODIGO_VL';
+end;
+
+procedure TfrmMtoCajaValesHist.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

@@ -46,6 +46,7 @@ type
     dmmPropiedadesValores: TdmPropiedadesValores;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -67,6 +68,11 @@ begin
   inherited;
   dmmPropiedadesValores := tdmDataModule as TdmPropiedadesValores;
   pkFieldName := 'ID_PV_ARTPROP';
+end;
+
+procedure TfrmMtoPropiedadesValores.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

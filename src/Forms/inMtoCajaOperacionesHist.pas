@@ -62,6 +62,7 @@ type
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -84,6 +85,11 @@ begin
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
   pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
                  'CODIGO_CAJA_OPCAJA;NUMERO_OPERACION_OPCAJA';
+end;
+
+procedure TfrmMtoCajaOperacionesHist.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

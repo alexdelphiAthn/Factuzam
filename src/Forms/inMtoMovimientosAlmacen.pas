@@ -67,6 +67,7 @@ type
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -88,6 +89,11 @@ begin
   inherited;
   dmmMovimientosAlmacen := tdmDataModule as TdmMovimientosAlmacen;
   pkFieldName := 'NUMERO_MOV';
+end;
+
+procedure TfrmMtoMovimientosAlmacen.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

@@ -96,6 +96,7 @@ type
     dmmVariaciones: TdmVariaciones;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -120,6 +121,11 @@ begin
   tvArticulos.DataController.DataSource  := dmmVariaciones.dsArticulosVariacion;
   tvSkus.DataController.DataSource       := dmmVariaciones.dsSkusArticulo;
   pkFieldName := 'CODIGO_VAR';
+end;
+
+procedure TfrmMtoVariaciones.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoVariaciones.dsTablaGStateChange(Sender: TObject);

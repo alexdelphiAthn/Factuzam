@@ -177,6 +177,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -306,6 +307,11 @@ begin
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
+end;
+
+procedure TfrmMtoProveedores.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoProveedores.dsTablaGStateChange(Sender: TObject);

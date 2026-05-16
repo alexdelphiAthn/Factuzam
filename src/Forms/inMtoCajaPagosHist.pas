@@ -55,6 +55,7 @@ type
     dmmCajaPagosHist: TdmCajaPagosHist;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -77,6 +78,11 @@ begin
   dmmCajaPagosHist := tdmDataModule as TdmCajaPagosHist;
   pkFieldName := 'CODIGO_EMP_PAGO;CODIGO_ALM_PAGO;CODIGO_CAJA_PAGO;' +
                  'SERIE_OPERACION_PAGO;NUMERO_OPERACION_PAGO;NUMERO_LINEA_PAGO';
+end;
+
+procedure TfrmMtoCajaPagosHist.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

@@ -78,6 +78,7 @@ type
     dmmAtributosBasicos: TdmAtributosBasicos;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -101,6 +102,11 @@ begin
   (cxGrdDBTabPrinID_VA_ATB.Properties as TcxLookupComboBoxProperties).ListSource
                                     := dmmAtributosBasicos.dsAtributosLookup;
   pkFieldName := 'ID_ATB';
+end;
+
+procedure TfrmMtoAtributosBasicos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoAtributosBasicos.dsTablaGStateChange(Sender: TObject);

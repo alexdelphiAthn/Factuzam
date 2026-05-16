@@ -41,6 +41,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -63,6 +64,11 @@ begin
   inherited;
   dmmPaises := tdmDataModule as TdmPaises;
   pkFieldName := 'CODIGO_PAI_PAI';
+end;
+
+procedure TfrmMtoPaises.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

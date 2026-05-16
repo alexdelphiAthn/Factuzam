@@ -97,6 +97,7 @@ type
     procedure ActualizarDescripciones;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -135,6 +136,11 @@ begin
                                     := dmmAtributosConjuntos.dsAtributosLookup;
   pkFieldName := 'ID_AC';
   ActualizarDescripciones;
+end;
+
+procedure TfrmMtoAtributosConjuntos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGDataChange(Sender: TObject;

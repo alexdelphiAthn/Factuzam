@@ -197,6 +197,7 @@ type
     procedure btnExportarExcelClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -323,6 +324,11 @@ begin
                                                dmmFormasdePago.dsFacturasLineas;
   pcPestana.ActivePage := tsMasDatos;
   pkFieldName := 'CODIGO_FP_FP';
+end;
+
+procedure TfrmMtoFormasdePago.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoFormasdePago.dsTablaGStateChange(Sender: TObject);

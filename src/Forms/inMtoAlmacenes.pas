@@ -109,6 +109,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -131,6 +132,11 @@ begin
   inherited;
   dmmAlmacenes := tdmDataModule as TdmAlmacenes;
   pkFieldName := 'CODIGO_ALM_ALM';
+end;
+
+procedure TfrmMtoAlmacenes.ResetForm;
+begin
+  inherited;
 end;
 
 initialization
