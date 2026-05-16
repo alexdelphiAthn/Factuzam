@@ -494,6 +494,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Caption = 'B'#225'sico'
                       DataBinding.FieldName = 'ID_ATB_AV'
                       PropertiesClassName = 'TcxLookupComboBoxProperties'
+                      Properties.DropDownListStyle = lsEditList
                       Properties.KeyFieldNames = 'ID_ATB'
                       Properties.ListColumns = <
                         item
@@ -522,6 +523,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                           FieldName = 'UNIDAD_ATB'
                         end>
                       Properties.ListSource = dmArticulos.dsAtributosBasicosLookup
+                      Properties.OnCloseUp = tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged
                       Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
                       Properties.OnValidate = tvSkuAtributosBasicosID_ATB_AVPropertiesValidate

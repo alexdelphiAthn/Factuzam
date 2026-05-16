@@ -164,7 +164,17 @@ enlazado al catálogo. Aquí se define, por ejemplo, que en el conjunto
   | Fuente        | `FUENTE_ATB` (Artículo/Conjunto/Global) |
 
   - `OnInitPopup` filtra el lookup por `ID_VA_ATB` (un atributo CO sólo
-    ve básicos de color, TAL sólo tallas).
+    ve básicos de color, TAL sólo tallas). **`OnCloseUp` limpia el
+    filtro** al cerrar el desplegable: si quedara puesto, la grilla
+    no podría resolver `CODIGO_ATB` de las filas con otro `ID_VA_ATB`
+    y la columna "Básico" saldría vacía para esas filas.
+  - `OnValidate` del combo: si el usuario teclea un texto (`BONIATO`)
+    que no matchea ningún básico, busca match exacto por
+    `CODIGO_ATB` o `NOMBRE_ATB` y, si no existe, lanza
+    `PreguntarAmbitoBasico` para crear el básico al vuelo y enlazarlo.
+    Requiere `Properties.DropDownListStyle = lsEditList` en el column
+    para que el `TcxLookupComboBox` acepte tecleo libre (sin esta
+    propiedad el editor rechaza caracteres que no matchean la lista).
   - `OnEditValueChanged` **siempre hace UPSERT en
     `fza_articulos_atributos_basicos`**: con `ID_ATB_AAB = X` cuando se
     elige un básico, con `ID_ATB_AAB = NULL` cuando se vacía la celda
@@ -177,6 +187,102 @@ enlazado al catálogo. Aquí se define, por ejemplo, que en el conjunto
   - La columna "Paleta" pinta el color real con `OnCustomDrawCell` y su
     botón `[...]` (o doble-clic) abre `TColorDialog` para editar
     `HEX_ATB` directamente en `fza_atributos_basicos`.
+
+### Visualización de la paleta en grids
+
+`tvSkuAtributosBasicosHEX_ATBCustomDrawCell` pinta la celda de la
+columna "Paleta" como un cuadrado del color real
+(`fza_atributos_basicos.HEX_ATB`) con el valor `#RRGGBB` encima en
+texto blanco o negro según la luminancia del fondo
+(`LR * 0.299 + LG * 0.587 + LB * 0.114 < 128 → blanco`). Así se
+distingue el color y se lee el código a la vez sin necesidad de
+tooltip — útil además porque la versión de cxGrid del proyecto no
+expone `OnGetCellHint`.
+
+## SKUs huérfanos: filas virtuales y materialización lazy
+
+Un SKU "huérfano" es uno que existe en `fza_articulos_skus` pero **no
+tiene filas en `fza_atributos_sku`** (la tabla puente SA que liga el
+SKU a sus valores de atributo). Ocurre cuando el SKU se crea por SQL,
+import, migración manual… El INNER JOIN original de
+`vi_atributos_sku_basico` los dejaba fuera y la rejilla "Atributos del
+SKU + Atributo básico (helper)" salía vacía → el usuario no tenía
+forma de asignarles color/talla básica desde la UI sin tocar SQL.
+
+### Vista: `UNION ALL` con filas virtuales
+
+`vi_atributos_sku_basico` añade un segundo bloque (`UNION ALL`) con
+filas **virtuales** para cada atributo de la variación que no tenga
+su SA correspondiente:
+
+```sql
+SELECT
+  sku.CODIGO_ART_SKU, sku.CODIGO_UNIDAD_SKU, sku.CODIGO_VAR_SKU,
+  NULL                  AS ID_AV,            -- marcador de fila virtual
+  va.ID_ATB_VA          AS ID_VA_AV,
+  va.NOMBRE_VA          AS NOMBRE_ATRIBUTO,
+  va.ORDEN_VA           AS ORDEN_ATRIBUTO,
+  SUBSTRING_INDEX(
+    SUBSTRING_INDEX(
+      SUBSTRING(sku.CODIGO_UNIDAD_SKU,
+                CHAR_LENGTH(sku.CODIGO_ART_SKU) + 2),
+      '/', va.ORDEN_VA),
+    '/', -1)            AS VALOR_AV,         -- parse por posición ORDEN_VA
+  NULL, NULL, NULL, NULL, NULL, NULL,
+  NULL                  AS FUENTE_ATB,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL
+FROM fza_articulos_skus sku
+JOIN fza_variaciones_atributos va ON va.ID_VAR_VA = sku.CODIGO_VAR_SKU
+WHERE sku.CODIGO_UNIDAD_SKU LIKE CONCAT(sku.CODIGO_ART_SKU, '/%')
+  AND NOT EXISTS (
+        SELECT 1 FROM fza_atributos_sku sa
+        JOIN fza_atributos_valores v ON v.ID_AV = sa.ID_AV_SA
+        WHERE sa.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU
+          AND v.ID_VA_AV              = va.ID_ATB_VA);
+```
+
+La condición `LIKE CONCAT(...)` defiende contra códigos que no siguen
+la convención `<ARTICULO>/<VAL1>/<VAL2>/…`. `ID_AV IS NULL` marca la
+fila como virtual: la columna "Básico", "Nombre básico", "Paleta",
+"Fuente"… salen vacías, sólo se ve el `NOMBRE_ATRIBUTO` y `VALOR_AV`
+derivado del código.
+
+### Materialización lazy: `AsegurarFilaSA`
+
+Las filas virtuales son **sólo informativas**. La primera vez que el
+usuario edita el básico de una fila virtual, `AsegurarFilaSA`:
+
+1. Busca o crea el `ID_AV` en `fza_atributos_valores` (par
+   `ID_VA_AV + AV`).
+2. `INSERT IGNORE INTO fza_atributos_sku` con el bridge
+   SKU ↔ AV.
+3. Devuelve el `ID_AV` real para que el llamante pueda colgar el
+   básico del artículo.
+
+Se invoca desde:
+- `AsegurarBasicoFilaActual` (al editar Nombre / Paleta / Valor /
+  Unidad).
+- `tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged` (al
+  cambiar el lookup "Básico").
+
+Tras la materialización, en el siguiente `ds.Refresh` la fila pasa de
+la rama virtual del `UNION` a la rama real (con `ID_AV` poblado).
+
+### Diálogo Global / Ad-hoc / Cancelar
+
+Al crear un básico nuevo desde el helper (vía
+`AsegurarBasicoFilaActual` o vía `OnValidate` del combo),
+`PreguntarAmbitoBasico` muestra un `MessageBox` con tres opciones:
+
+| Botón     | Resultado                                                          |
+|-----------|--------------------------------------------------------------------|
+| Sí        | `abGlobal` → `CODIGO_ATB = <valor_av>` (compartido entre artículos)|
+| No        | `abAdHoc`  → `CODIGO_ATB = AD_<articulo>_<valor_av>` (exclusivo)   |
+| Cancelar  | `abCancelar` → no se crea nada, la edición se descarta             |
+
+Antes de esto, `AsegurarBasicoFilaActual` siempre creaba con prefijo
+`AD_<articulo>_`, lo que dejaba al usuario sin forma de crear básicos
+compartidos directamente desde el SKU.
 
 ## Script de actualización
 
@@ -209,6 +315,11 @@ Idempotente: `IF NOT EXISTS`, `ON DUPLICATE KEY UPDATE` y `UPDATE …
 WHERE col IS NULL` permiten re-ejecutarlo sin riesgo.
 
 > No tocamos `factuzam_original.sql`: el script lo aplica encima.
+
+`DESARROLLOS EN CURSO/sku_atributos_huerfanos.sql`: recrea
+`vi_atributos_sku_basico` con el `UNION ALL` que añade filas virtuales
+para SKUs sin SA. Idempotente (`DROP VIEW IF EXISTS` + `CREATE VIEW`).
+Se ejecuta encima del script anterior, no lo sustituye.
 
 ## Estilo
 
