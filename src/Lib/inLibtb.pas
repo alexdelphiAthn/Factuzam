@@ -792,7 +792,7 @@ begin
     ConsultaO := sConsulta;
   if ( ConsultaO <> sConsulta ) then
   begin
-    sConsulta := ConsultaO; //reseteo la consulta porque ha habido otras b�sq.
+    sConsulta := ConsultaO; //reseteo la consulta porque ha habido otras búsq.
     sqlConsulta.SQL.text := ConsultaO;
   end;
   if sBusqueda <> '' then
@@ -984,7 +984,7 @@ begin
   if (sResul <> '?') then
     Result := LetraNIF(sResul)
   else
-    Result := ' NIF No V�lido';
+    Result := ' NIF No Válido';
 end;
 
 function SoloLetraNIF(S:String):Char;
@@ -1042,7 +1042,7 @@ end;
 
 procedure ComprobarNIF(sNIF:String);
 begin
-  //si el primer digito no es un n�mero, es un CIF
+  //si el primer digito no es un número, es un CIF
   if (sNIF <> '') then
     if ( (sNIF[1] >= '0') and (sNIF[1] <= '9') ) then
       if ( SoloLetraNIF( sNIF ) <> TomarLetra( sNIF ) ) then
@@ -1117,7 +1117,7 @@ function AnsiSplit(const str: string;
                  const separator: string): TStringArray;
 // Devuelve un arreglo con las partes de "str" separadas por
 // "separator"
-// Versi�n ANSI
+// Versión ANSI
 var
  i, n: integer;
  p, q, s: PChar;

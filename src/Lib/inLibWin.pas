@@ -381,7 +381,7 @@ begin
     oCon := oControl.Components[i];
     sCompName := oCon.Name;
     if StartsText('lbl', sCompName)  then
-    begin                       //son los �nicos label que no se deben renombrar
+    begin                       //son los únicos label que no se deben renombrar
       if (oCon is TcxLabel) and
          not SameText((oCon as TcxLabel).Caption, 'lblTablaOrigen') and
          not SameText((oCon as TcxLabel).Caption, 'lblEditMode')
