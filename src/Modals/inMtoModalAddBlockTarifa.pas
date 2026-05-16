@@ -153,7 +153,7 @@ begin
     frm.ShowModal;
     Result := frm.FResultadoTarifa;
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -206,7 +206,7 @@ begin
       qry.Next;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -581,8 +581,8 @@ begin
     end;
   finally
     FSqlPreview.EnableControls;
-    ins.Free;
-    codigos.Free;
+    FreeAndNil(ins);
+    FreeAndNil(codigos);
   end;
 end;
 

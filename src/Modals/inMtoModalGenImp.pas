@@ -147,7 +147,7 @@ begin
     end;
   finally
     ctx.Free;
-    Map.Free;
+    FreeAndNil(Map);
   end;
 end;
 
@@ -335,7 +335,7 @@ begin
                                            sElegido);
                 end;
               finally
-                formularioSave.Free;
+                FreeAndNil(formularioSave);
               end;
             end;
           end
@@ -350,7 +350,7 @@ begin
           end;
         end;
       finally
-        form.Free;
+        FreeAndNil(form);
       end;
     end;
     if sFichaAccion = 'S' then
@@ -370,7 +370,7 @@ begin
            frxrprt1.AssignAll(frxReportOrigen);
         end;
       finally
-        memStream.Free;
+        FreeAndNil(memStream);
       end;
     end
     else if (sFichaAccion = 'O') then
@@ -499,7 +499,7 @@ begin
       else
         Result := False;
     finally
-      memStream.Free;
+      FreeAndNil(memStream);
       //https://forum.fast-report.com/en/categories/fastreport-vcl-6
     end;
   end;
