@@ -82,9 +82,6 @@ type
     FProcsInstalados: Boolean;
   end;
 
-var
-  dmAlbaranes: TdmAlbaranes;
-
 implementation
 
 uses

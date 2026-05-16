@@ -45,9 +45,6 @@ type
     //procedure GetCodigoAutoRetencion;
   end;
 
-var
-  dmGeneradorProcesos: TdmGeneradorProcesos;
-
 implementation
 
 uses

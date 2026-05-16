@@ -35,9 +35,6 @@ type
     procedure GetCodigoAutoIva;
   end;
 
-//var
-//  dmIvas: TdmIvas;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

@@ -171,9 +171,6 @@ type
     procedure DesempaquetarAtributosDesdeSku;
   end;
 
-var
-  dmInventarios: TdmInventarios;
-
 implementation
 
 uses

@@ -81,9 +81,6 @@ type
     FProcsInstalados: Boolean;
   end;
 
-var
-  dmPedidos: TdmPedidos;
-
 implementation
 
 uses
