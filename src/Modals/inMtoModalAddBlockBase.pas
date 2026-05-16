@@ -408,7 +408,10 @@ begin
   // Liberar los TStringList que cuelgan de los items del CheckListBox
   for i := 0 to chkLstAlmacenes.Items.Count - 1 do
     if chkLstAlmacenes.Items[i].ItemObject is TStringList then
-      chkLstAlmacenes.Items[i].FreeAndNil(ItemObject);
+    begin
+      chkLstAlmacenes.Items[i].ItemObject.Free;
+      chkLstAlmacenes.Items[i].ItemObject := nil;
+    end;
 
   FreeAndNil(FCodigosPropiedades);
   inherited;
