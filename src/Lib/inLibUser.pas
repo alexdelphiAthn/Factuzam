@@ -128,7 +128,7 @@ begin
       Result := (Left.sUser = Right.sUser) and
         (Left.sGroup = Right.sGroup) and
         (Left.sKey = Right.sKey) and
-        (Left.ASubKey = Right.ASubKey) and
+        (Left.sSubkey = Right.sSubkey) and
         (Left.oProperty = Right.oProperty);
     end,
     function(const Value: TDictUserKey): Integer
