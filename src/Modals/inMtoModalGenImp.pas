@@ -88,9 +88,6 @@ type
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
                                            DM: TDataModule);
 
-var
-  frmPrint: TfrmPrint;
-
 implementation
 
 uses
@@ -147,7 +144,7 @@ begin
     end;
   finally
     ctx.Free;
-    Map.Free;
+    FreeAndNil(Map);
   end;
 end;
 
@@ -335,7 +332,7 @@ begin
                                            sElegido);
                 end;
               finally
-                formularioSave.Free;
+                FreeAndNil(formularioSave);
               end;
             end;
           end
@@ -350,7 +347,7 @@ begin
           end;
         end;
       finally
-        form.Free;
+        FreeAndNil(form);
       end;
     end;
     if sFichaAccion = 'S' then
@@ -370,7 +367,7 @@ begin
            frxrprt1.AssignAll(frxReportOrigen);
         end;
       finally
-        memStream.Free;
+        FreeAndNil(memStream);
       end;
     end
     else if (sFichaAccion = 'O') then
@@ -387,38 +384,40 @@ var
   iButtonSel:Integer;
 begin
   unqrySol := TUniQuery.Create(nil);
-  unqrySol.Connection := oConn;
-  unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
-                       '  FROM fza_usuarios_perfiles ' +
-                       ' WHERE KEY_USUPER = :NombreReport ' +
-                       '   AND VALUE_USUPER = :Descripcion ';
-  unqrySol.ParamByName('NombreReport').AsString := Self.Name;
-  unqrySol.ParamByName('Descripcion').AsString := sElegido;
-  unqrySol.Open;
-  sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
-  if not((inLibGlobalVar.orootGroup = 'S') or
-      (oUser = sUserProp) or
-      (oGroup = sUserProp)) then
-    ShowMessageFmt('No tiene privilegios suficientes ' +
-                   'para borrar el formato de %s. '+
-                   'Consulte con el Administrador', [sUserProp])
-  else
-  begin
-    iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
-                             mtCustom,[mbYes,mbNo], 0);
-  if (iButtonSel = mrYes) then
-  begin
-    unqrySol.SQL.Text := 'DELETE  ' +
+  try
+    unqrySol.Connection := oConn;
+    unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
                          '  FROM fza_usuarios_perfiles ' +
                          ' WHERE KEY_USUPER = :NombreReport ' +
                          '   AND VALUE_USUPER = :Descripcion ';
     unqrySol.ParamByName('NombreReport').AsString := Self.Name;
     unqrySol.ParamByName('Descripcion').AsString := sElegido;
-
-    unqrySol.Execute;
-  end;
+    unqrySol.Open;
+    sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
+    if not((inLibGlobalVar.orootGroup = 'S') or
+        (oUser = sUserProp) or
+        (oGroup = sUserProp)) then
+      ShowMessageFmt('No tiene privilegios suficientes ' +
+                     'para borrar el formato de %s. '+
+                     'Consulte con el Administrador', [sUserProp])
+    else
+    begin
+      iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
+                               mtCustom,[mbYes,mbNo], 0);
+      if (iButtonSel = mrYes) then
+      begin
+        unqrySol.SQL.Text := 'DELETE  ' +
+                             '  FROM fza_usuarios_perfiles ' +
+                             ' WHERE KEY_USUPER = :NombreReport ' +
+                             '   AND VALUE_USUPER = :Descripcion ';
+        unqrySol.ParamByName('NombreReport').AsString := Self.Name;
+        unqrySol.ParamByName('Descripcion').AsString := sElegido;
+        unqrySol.Execute;
+      end;
+      CargarFormatos(form);
+    end;
+  finally
     FreeAndNil(unqrySol);
-    CargarFormatos(form);
   end;
 end;
 
@@ -499,7 +498,7 @@ begin
       else
         Result := False;
     finally
-      memStream.Free;
+      FreeAndNil(memStream);
       //https://forum.fast-report.com/en/categories/fastreport-vcl-6
     end;
   end;

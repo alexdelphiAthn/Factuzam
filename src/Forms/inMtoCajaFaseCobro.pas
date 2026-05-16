@@ -736,11 +736,6 @@ begin
                      FDatosCobro.PuedeDejarEnCuenta;
   if Assigned(btnDeposito) then
     btnDeposito.Enabled := PermiteCredito;
-//  txtDejarCuenta.Enabled := PermiteCredito;
-//  if txtDejarCuenta.Enabled then
-//    txtDejarCuenta.Style.Color := clWindow
-//  else
-//    txtDejarCuenta.Style.Color := clBtnFace;
   btnF7.Enabled := PermiteCredito;
 end;
 

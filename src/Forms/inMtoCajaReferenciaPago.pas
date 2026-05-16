@@ -241,11 +241,7 @@ end;
 procedure TfrmCajaReferenciaPago.edtImporteDivisaPropertiesChange(
   Sender: TObject);
 begin
-  // Si cambia el importe en divisa, recalcular el factor
-//  if (edtImporteDivisa.Value > 0) and (FImporteOriginal > 0) then
-//  begin
-//    edtFactorCambio.Value := FImporteOriginal / edtImporteDivisa.Value;
-//  end;
+  // TODO: recalcular el factor cuando cambia el importe en divisa
 end;
 
 procedure TfrmCajaReferenciaPago.edtImportePropertiesChange(Sender: TObject);

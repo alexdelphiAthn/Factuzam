@@ -96,15 +96,6 @@ end;
 procedure TfrmModalGenFilter.btnGuardarClick(Sender: TObject);
 begin
   inherited;
-//  if (edtPassword.Text <> edtPasswordCon.Text) then
-//  begin
-//    ShowMessage('Los passwords no coinciden');
-//  end
-//  else
-//  begin
-//    sFicha := 'S';
-//    PostMessage(Handle, WM_CLOSE, 0, 0);
-//  end;
 end;
 
 procedure TfrmModalGenFilter.FormClose(Sender: TObject;

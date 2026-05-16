@@ -83,9 +83,6 @@ type
                             ATipoVariacion: string): Boolean;
   end;
 
-var
-  frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS;
-
 implementation
 
 {$R *.dfm}
@@ -154,7 +151,7 @@ begin
     frm.FTipoVariacion  := ATipoVariacion;
     Result := (frm.ShowModal = mrOk);
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -300,12 +297,12 @@ begin
         Exit;
       end;
     finally
-      DimensionesSinValores.Free;
+      FreeAndNil(DimensionesSinValores);
     end;
     GenerarCombinaciones(0, '', '');
     ShowMessage('¡Combinaciones generadas con éxito!');
   finally
-    DimDict.Free;
+    FreeAndNil(DimDict);
   end;
   inherited;
 end;
@@ -436,7 +433,7 @@ begin
       if Respuesta <> mrYes then Exit;
     end;
   finally
-    qTemp.Free;
+    FreeAndNil(qTemp);
   end;
 
   // =========================================================================
@@ -465,7 +462,7 @@ end;
 destructor TDimensionSKU.Destroy;
 begin
   if Assigned(Valores) then
-    Valores.Free;
+    FreeAndNil(Valores);
   inherited;
 end;
 

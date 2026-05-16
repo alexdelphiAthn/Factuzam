@@ -48,9 +48,6 @@ type
     procedure ObtenerTarifasSeleccionadas(AOut: TStrings);
   end;
 
-var
-  frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar;
-
 implementation
 
 {$R *.dfm}
