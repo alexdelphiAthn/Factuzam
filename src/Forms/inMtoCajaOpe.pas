@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math,
+  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math, inMtoFrmBase,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -35,25 +35,25 @@ const
   WM_CANCELAR_LINEA = WM_USER + 100;
   WM_SALTAR_ATRIBUTO = WM_USER + 101;
 type
-  TfrmMtoOpeCaja = class(TForm)
-    pnlUp1: TPanel;
-    pnlCli1: TPanel;
+  TfrmMtoOpeCaja = class(TfrmBase)
+    pnlUp: TPanel;
+    pnlCli: TPanel;
     lblFecha: TcxLabel;
-    Panel1: TPanel;
+    pnlAccionesIzq: TPanel;
     btnF12: TcxButton;
     btnF3: TcxButton;
     btnF6: TcxButton;
     btnF5: TcxButton;
     btnF7: TcxButton;
-    cxLabel1: TcxLabel;
-    cxLabel2: TcxLabel;
-    cxLabel3: TcxLabel;
-    cxLabel4: TcxLabel;
-    cxLabel5: TcxLabel;
-    Panel2: TPanel;
-    cxGrid1: TcxGrid;
-    cxGrid1DBTableView1: TcxGridDBTableView;
-    cxGrid1Level1: TcxGridLevel;
+    lblCobro: TcxLabel;
+    lblBuscar: TcxLabel;
+    lblTarifa: TcxLabel;
+    lblIndIVA: TcxLabel;
+    lblOtro: TcxLabel;
+    pnlAccionesDer: TPanel;
+    cxgrdLineasOpe: TcxGrid;
+    tvLineasOpe: TcxGridDBTableView;
+    cxgrdlvlLineasOpe: TcxGridLevel;
     tvEmpleado: TcxGridDBColumn;
     tvArticulo: TcxGridDBColumn;
     tvDescripcion: TcxGridDBColumn;
@@ -64,48 +64,48 @@ type
     tvTotal: TcxGridDBColumn;
     lblTotal: TcxLabel;
     btnF8: TcxButton;
-    cxLabel6: TcxLabel;
+    lblEliminar: TcxLabel;
     lblNombreEmpleado: TcxLabel;
-    cxLabel8: TcxLabel;
+    lblCliente: TcxLabel;
     btnCodigoCliente: TcxButtonEdit;
     lblNombreCliente: TcxLabel;
-    Timer1: TTimer;
+    tmrReloj: TTimer;
     dsLineas: TDataSource;
-    jvntrstb1: TJvEnterAsTab;
+    jvEnterTab: TJvEnterAsTab;
     lblFechaCaja: TcxLabel;
     btnCodigoEmpleado: TcxButtonEdit;
     lblTarifa: TcxLabel;
     lblInstrucciones: TcxLabel;
-    pnl1: TPanel;
+    pnlBusqueda: TPanel;
     cxgrdStock: TcxGrid;
     dbtvStock: TcxGridDBTableView;
-    cxgrdlvl1: TcxGridLevel;
+    cxgrdlvlBusqueda: TcxGridLevel;
     dsStock: TDataSource;
-    cxspltr1: TcxSplitter;
+    splOpe: TcxSplitter;
     cxstylrpstry: TcxStyleRepository;
-    cxstyl: TcxStyle;
-    cxstyl1: TcxStyle;
+    styPrincipal: TcxStyle;
+    styImporte: TcxStyle;
     tmrBusq: TTimer;
     dsBusq: TDataSource;
     qryBusq: TUniQuery;
     tvrBusq: TcxGridViewRepository;
-    dbtvBusqDBTableView1: TcxGridDBTableView;
-    cxstyl2: TcxStyle;
-    cxgrdbclmnBusqDBTableView1INPUT_BUSQUEDA: TcxGridDBColumn;
-    cxgrdbclmnBusqDBTableView1CODIGO_ARTICULO: TcxGridDBColumn;
-    cxgrdbclmnBusqDBTableView1DESCRIPCION_ARTICULO: TcxGridDBColumn;
+    dbtvBusq: TcxGridDBTableView;
+    styCabecera: TcxStyle;
+    dbtvBusqINPUT_BUSQUEDA: TcxGridDBColumn;
+    dbtvBusqCODIGO_ARTICULO: TcxGridDBColumn;
+    dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn;
     edtrepArticulo: TcxEditRepository;
     repSoloTexto: TcxEditRepositoryTextItem;
     repComboBox: TcxEditRepositoryExtLookupComboBoxItem;
     btnF61: TcxButton;
-    lbl1: TcxLabel;
-    actlst1: TActionList;
+    lblBusqTick: TcxLabel;
+    alCajaOpe: TActionList;
     actBuscarEmpleados: TAction;
     actSalir: TAction;
     actEliminarLinea: TAction;
     actCobro: TAction;
     btnF2: TcxButton;
-    cxLabel7: TcxLabel;
+    lblCargarCta: TcxLabel;
     actCargarCta: TAction;
     actGuardarLayout: TAction;
     actAbrirArticulos: TAction;
@@ -249,9 +249,9 @@ begin
     if btnCodigoEmpleado.CanFocus then
       btnCodigoEmpleado.SetFocus;
   end
-  else if cxGrid1.CanFocus then
+  else if cxgrdLineasOpe.CanFocus then
   begin
-    cxGrid1.SetFocus;
+    cxgrdLineasOpe.SetFocus;
   end;
 end;
 
@@ -262,10 +262,10 @@ end;
 
 procedure TfrmMtoOpeCaja.WMSaltarAtributo(var Msg: TMessage);
 begin
-  if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
-     (cxGrid1DBTableView1.Controller.EditingController.IsEditing) then
+  if (tvLineasOpe.Controller.EditingController <> nil) and
+     (tvLineasOpe.Controller.EditingController.IsEditing) then
   begin
-    PostMessage(cxGrid1DBTableView1.Controller.EditingController.Edit.Handle,
+    PostMessage(tvLineasOpe.Controller.EditingController.Edit.Handle,
                 WM_KEYDOWN,
                 VK_RETURN, 0);
   end;
@@ -293,10 +293,10 @@ begin
             DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
       NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
     end;
-    if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
-       cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    if (tvLineasOpe.Controller.EditingController <> nil) and
+       tvLineasOpe.Controller.EditingController.IsEditing then
     begin
-      cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
+      tvLineasOpe.Controller.EditingController.HideEdit(True);
     end;
     // 2. Vaciar las líneas de la venta anterior
 // if (DatosCaja.cdsLineas.Active) and (DatosCaja.cdsLineas.RecordCount > 0)
@@ -317,7 +317,7 @@ begin
         DatosCaja.cdsLineas.EnableControls;
       end;
     end;
-    cxGrid1DBTableView1.DataController.Refresh;
+    tvLineasOpe.DataController.Refresh;
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
     begin
@@ -502,7 +502,7 @@ begin
 
   dbtvStock.ClearItems;
   GridRecalc(nil,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -530,13 +530,13 @@ begin
       if Trim(FScanBuffer) <> '' then
       begin
         tmrBusq.Enabled := False;
-        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-        cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
-        if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+        tvLineasOpe.Controller.EditingController.ShowEdit;
+        if tvLineasOpe.Controller.EditingController.IsEditing then
         begin
-          cxGrid1DBTableView1.Controller.EditingController.Edit.EditValue :=
+          tvLineasOpe.Controller.EditingController.Edit.EditValue :=
                                                                     FScanBuffer;
-          cxGrid1DBTableView1.Controller.EditingController.Edit.PostEditValue;
+          tvLineasOpe.Controller.EditingController.Edit.PostEditValue;
         end;
       end;
       FScanBuffer := '';
@@ -574,7 +574,7 @@ begin
       DatosCaja.cdsLineas.Delete;
 
     GridRecalc(nil,
-               cxGrid1DBTableView1,
+               tvLineasOpe,
                DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera,
                ActualizarLabelTotal);
@@ -588,15 +588,15 @@ var
   TextoBusqueda: string;
 begin
   tmrBusq.Enabled := False;
-  dbtvBusqDBTableView1.BeginUpdate;
+  dbtvBusq.BeginUpdate;
   try
-    dbtvBusqDBTableView1.DataController.DataSource := nil;
-    dbtvBusqDBTableView1.DataController.Filter.Clear;
-    dbtvBusqDBTableView1.DataController.Filter.Active := False;
-    dbtvBusqDBTableView1.Controller.IncSearchingText := '';
-    if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    dbtvBusq.DataController.DataSource := nil;
+    dbtvBusq.DataController.Filter.Clear;
+    dbtvBusq.DataController.Filter.Active := False;
+    dbtvBusq.Controller.IncSearchingText := '';
+    if tvLineasOpe.Controller.EditingController.IsEditing then
     begin
-      EditActivo := cxGrid1DBTableView1.Controller.EditingController.Edit;
+      EditActivo := tvLineasOpe.Controller.EditingController.Edit;
       if EditActivo <> nil then
       begin
         if EditActivo is TcxCustomTextEdit then
@@ -615,13 +615,13 @@ begin
           qryBusq.Close;
           qryBusq.ParamByName('TOKEN').AsString := '%' + TextoBusqueda + '%';
           qryBusq.Open;
-          dbtvBusqDBTableView1.DataController.DataSource := dsBusq;
-          dbtvBusqDBTableView1.DataController.Refresh;
+          dbtvBusq.DataController.DataSource := dsBusq;
+          dbtvBusq.DataController.Refresh;
         end;
       end;
     end;
   finally
-    dbtvBusqDBTableView1.EndUpdate;
+    dbtvBusq.EndUpdate;
   end;
   if (EditActivo is TcxExtLookupComboBox) then
     begin
@@ -643,7 +643,7 @@ var
   EsLaCeldaFocale: Boolean;
   ValorActual: Variant;
 begin
-  if (ARecord = nil) or (cxGrid1DBTableView1.Controller = nil) then
+  if (ARecord = nil) or (tvLineasOpe.Controller = nil) then
     Exit;
   ValorActual := ARecord.Values[Sender.Index];
   if (not VarIsNull(ValorActual)) and (Trim(VarToStr(ValorActual)) <> '') then
@@ -651,9 +651,9 @@ begin
     AProperties := repSoloTexto.Properties;
     Exit;
   end;
-  EsLaCeldaFocale := (cxGrid1DBTableView1.Controller.FocusedRecord = ARecord)
+  EsLaCeldaFocale := (tvLineasOpe.Controller.FocusedRecord = ARecord)
                      and
-                     (cxGrid1DBTableView1.Controller.FocusedItem = Sender);
+                     (tvLineasOpe.Controller.FocusedItem = Sender);
   if EsLaCeldaFocale then
     AProperties := repComboBox.Properties
   else
@@ -754,7 +754,7 @@ begin
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
       GridRecalc(nil,
-                 cxGrid1DBTableView1,
+                 tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
                  ActualizarLabelTotal);
@@ -804,7 +804,7 @@ begin
   end;
 
   GridRecalc(Sender,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -823,7 +823,7 @@ begin
   end;
 
   GridRecalc(Sender,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -840,7 +840,7 @@ begin
   end;
 
   GridRecalc(Sender,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -849,7 +849,7 @@ end;
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
 begin
   GridRecalc(Sender,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -858,7 +858,7 @@ end;
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
   GridRecalc(Sender,
-             cxGrid1DBTableView1,
+             tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
              ActualizarLabelTotal);
@@ -1006,7 +1006,7 @@ begin
       DatosCaja.cdsLineas.EnableControls;
     end;
     if Result and (not FActualizandoDepositos) then
-      GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas,
+      GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     FreeAndNil(Validador);
@@ -1072,7 +1072,7 @@ begin
     DatosCaja.cdsLineas.FieldByName(
                           'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
 
-    GridRecalc(nil, cxGrid1DBTableView1, DatosCaja.cdsLineas,
+    GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     FreeAndNil(Resolver);
@@ -1139,7 +1139,7 @@ begin
         Clon.Post;
         dsLineas.DataSet.EnableControls;
         GridRecalc(nil,
-                   cxGrid1DBTableView1,
+                   tvLineasOpe,
                    DatosCaja.cdsLineas,
                    DatosCaja.cdsCabecera,
                    ActualizarLabelTotal);
@@ -1162,11 +1162,11 @@ var
 begin
   MaxAtributos := 5;
   IndiceBase := tvArticulo.Index;
-  cxGrid1DBTableView1.BeginUpdate;
+  tvLineasOpe.BeginUpdate;
   try
     for i := 1 to MaxAtributos do
     begin
-      Col := cxGrid1DBTableView1.CreateColumn;
+      Col := tvLineasOpe.CreateColumn;
       Col.Name := 'tvAtributoDyn' + IntToStr(i);
       Col.Tag := i;
       Col.DataBinding.FieldName := 'ATTR' + IntToStr(i) + '_VALOR';
@@ -1182,7 +1182,7 @@ begin
       Col.Index := IndiceBase + i;
     end;
   finally
-    cxGrid1DBTableView1.EndUpdate;
+    tvLineasOpe.EndUpdate;
   end;
 end;
 
@@ -1356,13 +1356,13 @@ begin
          if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
            DatosCaja.cdsLineas.Post;
          DatosCaja.cdsLineas.Append;
-         cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+         tvLineasOpe.Controller.FocusedColumn := tvArticulo;
        end
        else
        begin
-         cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+         tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
        end;
-       cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+       tvLineasOpe.Controller.EditingController.ShowEdit;
        Key := 0;
        Exit;
     end;
@@ -1374,15 +1374,15 @@ begin
          // Comportamiento habitual: Guardar, nueva línea y foco a Artículo
          DatosCaja.cdsLineas.Post;
          DatosCaja.cdsLineas.Append;
-         cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+         tvLineasOpe.Controller.FocusedColumn := tvArticulo;
        end
        else
        begin
          // Comportamiento alternativo: Quedarse en la línea y pasar a
          // Descripción
-         cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+         tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
        end;
-       cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+       tvLineasOpe.Controller.EditingController.ShowEdit;
        Key := 0;
        Exit;
     end
@@ -1394,8 +1394,8 @@ begin
        if PrimeraColAtributo <> nil then
        begin
          PrimeraColAtributo.Visible := True;
-         cxGrid1DBTableView1.Controller.FocusedColumn := PrimeraColAtributo;
-         cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+         tvLineasOpe.Controller.FocusedColumn := PrimeraColAtributo;
+         tvLineasOpe.Controller.EditingController.ShowEdit;
          Key := 0;
          Exit;
        end;
@@ -1424,7 +1424,7 @@ begin
     end;
     NumAtributos := FNumAtributosActual;
     // HideEdit SOLO aquí, cuando el combo ya está cerrado y tiene valor
-    cxGrid1DBTableView1.Controller.EditingController.HideEdit(True);
+    tvLineasOpe.Controller.EditingController.HideEdit(True);
     // CAMBIO 5: Usar FNumAtributosActual en lugar de leer del dataset
     NumAtributos := FNumAtributosActual;
     if (AItem.Tag = NumAtributos) then
@@ -1455,8 +1455,8 @@ begin
               DatosCaja.cdsLineas.Delete;
           DatosCaja.cdsLineas.EnableControls;  // Antes del Append
           DatosCaja.cdsLineas.Append;
-          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+          tvLineasOpe.Controller.EditingController.ShowEdit;
           Key := 0;
           Exit;
         end;
@@ -1475,8 +1475,8 @@ begin
           DatosCaja.cdsLineas.EnableControls;
           dbtvStock.ClearItems;
           DatosCaja.cdsLineas.Append;
-          cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-          cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+          tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+          tvLineasOpe.Controller.EditingController.ShowEdit;
           Key := 0;
           Exit;
         end;
@@ -1495,15 +1495,15 @@ begin
           DatosCaja.cdsLineas.Post;
 
         DatosCaja.cdsLineas.Append;
-        cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
+        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
       end
       else
       begin
         // El parámetro indica quedarse: Movemos el foco a la descripción
-        cxGrid1DBTableView1.Controller.FocusedColumn := tvDescripcion;
+        tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
       end;
 
-      cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
       Key := 0;
     end; // Fin del if (AItem.Tag = NumAtributos)
   end;
@@ -1683,15 +1683,15 @@ begin
   if DatosCaja.cdsLineas.State = dsBrowse then
   begin
     DatosCaja.cdsLineas.Append;
-    cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-    cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+    tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
-  jvntrstb1.EnterAsTab := False;
+  jvEnterTab.EnterAsTab := False;
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Exit(Sender: TObject);
 begin
-  jvntrstb1.EnterAsTab := True;
+  jvEnterTab.EnterAsTab := True;
 end;
 
 procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
@@ -1702,19 +1702,19 @@ var
   CurrentEdit: TcxCustomEdit;
   Combo: TcxComboBox;
 begin
-  if cxGrid1DBTableView1.Controller.FocusedItem <> nil then
-  if (cxGrid1DBTableView1.Controller.FocusedItem.Tag > 0) then
+  if tvLineasOpe.Controller.FocusedItem <> nil then
+  if (tvLineasOpe.Controller.FocusedItem.Tag > 0) then
   begin
-    CurrentItem := cxGrid1DBTableView1.Controller.FocusedItem;
+    CurrentItem := tvLineasOpe.Controller.FocusedItem;
     if dsLineas.DataSet.State = dsBrowse then
       dsLineas.DataSet.Edit;
-    if not cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    if not tvLineasOpe.Controller.EditingController.IsEditing then
     begin
-      cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
-    if cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+    if tvLineasOpe.Controller.EditingController.IsEditing then
      begin
-       CurrentEdit := cxGrid1DBTableView1.Controller.EditingController.Edit;
+       CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
        if (CurrentEdit is TcxComboBox) then
        begin
          Combo := TcxComboBox(CurrentEdit);
@@ -1775,7 +1775,7 @@ begin
         begin
            RellenarAtributosDesdeSku(SkuDetectado);
         end;
-        cxGrid1.SetFocus;
+        cxgrdLineasOpe.SetFocus;
         // Comprobamos si es un SKU completo (el código de unidad es distinto al
         // padre)
         var EsSkuCompleto := (Trim(SkuDetectado) <> '')
@@ -1792,8 +1792,8 @@ begin
           if PrimeraCol <> nil then
           begin
             PrimeraCol.Visible := True;
-            cxGrid1DBTableView1.Controller.FocusedColumn := PrimeraCol;
-            cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+            tvLineasOpe.Controller.FocusedColumn := PrimeraCol;
+            tvLineasOpe.Controller.EditingController.ShowEdit;
           end;
         end
         else
@@ -1808,8 +1808,8 @@ begin
 
             // Creamos línea nueva y ponemos el foco en el buscador de artículos
             DatosCaja.cdsLineas.Append;
-            cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-            cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+            tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+            tvLineasOpe.Controller.EditingController.ShowEdit;
           end
           else
           begin
@@ -1817,8 +1817,8 @@ begin
             // dejarle en CANTIDAD_ARTVIN.
             // (Cambia 'tvCantidad' por el nombre real de tu columna de
             // cantidad_artvin)
-            // cxGrid1DBTableView1.Controller.FocusedColumn := tvCantidad;
-            // cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+            // tvLineasOpe.Controller.FocusedColumn := tvCantidad;
+            // tvLineasOpe.Controller.EditingController.ShowEdit;
           end;
         end;
       end;
@@ -1887,8 +1887,8 @@ begin
   try
     if not Layout.Disponible then Exit;
     Layout.RestaurarGeometria(Self);
-    Layout.RestaurarAlturaPanel('StockPanelHeight', pnl1, 30);
-    Layout.RestaurarGrid('Lineas', cxGrid1DBTableView1);
+    Layout.RestaurarAlturaPanel('StockPanelHeight', pnlBusqueda, 30);
+    Layout.RestaurarGrid('Lineas', tvLineasOpe);
   finally
     FreeAndNil(Layout);
   end;
@@ -1963,7 +1963,7 @@ begin
       DatosCaja.cdsLineas.FieldByName(
         'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
 
-    cxGrid1DBTableView1.BeginUpdate;
+    tvLineasOpe.BeginUpdate;
     try
       for i := 1 to 5 do
       begin
@@ -1989,12 +1989,12 @@ begin
         end;
       end;
     finally
-      cxGrid1DBTableView1.EndUpdate;
+      tvLineasOpe.EndUpdate;
     end;
   finally
     FreeAndNil(NombresAtributos);
   end;
-//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+//  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
@@ -2108,13 +2108,13 @@ begin
         // Si es un cliente con depósitos, los cargamos
         if SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLI').AsString, 'S') then
         begin
-          cxGrid1DBTableView1.BeginUpdate;
+          tvLineasOpe.BeginUpdate;
           FActualizandoDepositos := True;
           try
             if oCajaParams.GetBool('vgerAutoLoadDepositos', False) then
               DatosCaja.CargarDepositosCliente(sCodigo);
           finally
-            cxGrid1DBTableView1.EndUpdate;
+            tvLineasOpe.EndUpdate;
             FActualizandoDepositos := False;
           end;
         end;
@@ -2139,7 +2139,7 @@ begin
   // =======================================================================
   if DatosCaja.cdsLineas.Active then
   begin
-    cxGrid1DBTableView1.DataController.UpdateItems(False);
+    tvLineasOpe.DataController.UpdateItems(False);
 
     // 2º Ponemos el foco en la línea nueva
     AsegurarLineaNueva;
@@ -2181,10 +2181,10 @@ begin
       end;
     end;
     // 3. Forzamos el foco visual a la celda del Artículo, lista para escanear
-    if cxGrid1.CanFocus then
-      cxGrid1.SetFocus;
-    cxGrid1DBTableView1.Controller.FocusedColumn := tvArticulo;
-//    cxGrid1DBTableView1.Controller.EditingController.ShowEdit;
+    if cxgrdLineasOpe.CanFocus then
+      cxgrdLineasOpe.SetFocus;
+    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+//    tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
 end;
 
@@ -2225,7 +2225,7 @@ unqryClientes.SQL.Text := 'SELECT CODIGO_CLI_CLI as `Código`, ' +
         btnCodigoCliente.Text := unqryClientes.FieldByName('Código').AsString;
         if btnCodigoCliente.ValidateEdit(True) then
         begin
-          cxGrid1.SetFocus;
+          cxgrdLineasOpe.SetFocus;
         end;
       end;
     finally
@@ -2300,7 +2300,7 @@ begin
   finally
     FreeAndNil(qry);
   end;
-//  cxGrid1DBTableView1.ApplyBestFit(nil, True, False);
+//  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
 procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(
@@ -2528,17 +2528,17 @@ begin
 
   // 1. Matar la edición activa limpiamente (Evita el error de
   // Artículo no encontrado en la línea en blanco)
-  if (cxGrid1DBTableView1.Controller.EditingController <> nil) and
-     cxGrid1DBTableView1.Controller.EditingController.IsEditing then
+  if (tvLineasOpe.Controller.EditingController <> nil) and
+     tvLineasOpe.Controller.EditingController.IsEditing then
   begin
-    cxGrid1DBTableView1.Controller.EditingController.HideEdit(False);
+    tvLineasOpe.Controller.EditingController.HideEdit(False);
   end;
   // 2. Cancelar línea a medias si la hubiera
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
     DatosCaja.cdsLineas.Cancel;
   // 3. Limpieza y carga de depósitos de forma silenciosa
   DatosCaja.cdsLineas.DisableControls;
-  cxGrid1DBTableView1.BeginUpdate;
+  tvLineasOpe.BeginUpdate;
   FActualizandoDepositos := True;
   try
     DatosCaja.cdsLineas.First;
@@ -2555,10 +2555,10 @@ begin
     DatosCaja.CargarDepositosCliente(sCodigoCliente);
   finally
     DatosCaja.cdsLineas.EnableControls;
-    cxGrid1DBTableView1.EndUpdate;
+    tvLineasOpe.EndUpdate;
     FActualizandoDepositos := False;
   end;
-  cxGrid1DBTableView1.DataController.UpdateItems(False);
+  tvLineasOpe.DataController.UpdateItems(False);
   // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe
   // la caché)
   AsegurarLineaNueva;
@@ -2672,6 +2672,7 @@ end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
+  inherited;
   DatosCaja := TdmCajaOpe.Create(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
@@ -2683,14 +2684,14 @@ begin
   var PermiteDescuentos := oCajaParams.GetBool('vgerDescuentos', True);
   tvDescuento.Options.Editing := PermiteDescuentos;
   tvDescuentoMenos.Options.Editing := PermiteDescuentos;
-  with dbtvBusqDBTableView1.DataController do
+  with dbtvBusq.DataController do
   begin
     DataModeController.GridMode := True;
     DataModeController.SyncMode := False;
     Filter.AutoDataSetFilter := False;
     Options := Options - [dcoImmediatePost, dcoGroupsAlwaysExpanded];
   end;
-  with dbtvBusqDBTableView1.OptionsBehavior do
+  with dbtvBusq.OptionsBehavior do
   begin
     IncSearch := False;
     IncSearchItem := nil;
@@ -2743,8 +2744,8 @@ begin
   Layout := TLayoutSaver.Create(Self.Name);
   try
     Layout.GuardarGeometria(Self);
-    Layout.GuardarAlturaPanel('StockPanelHeight', pnl1);
-    Layout.GuardarGrid('Lineas', cxGrid1DBTableView1);
+    Layout.GuardarAlturaPanel('StockPanelHeight', pnlBusqueda);
+    Layout.GuardarGrid('Lineas', tvLineasOpe);
     if Layout.PreguntarYGrabar('Personalización Caja') then
       ShowMessage('Layout guardado.');
   finally
@@ -2789,10 +2790,10 @@ var
   i:Integer;
 begin
   Result := nil;
-  for i:= 0 to cxGrid1DBTableView1.ColumnCount - 1 do
-    if (cxGrid1DBTableView1.Columns[i].Tag = NumColumn) then
+  for i:= 0 to tvLineasOpe.ColumnCount - 1 do
+    if (tvLineasOpe.Columns[i].Tag = NumColumn) then
     begin
-      Result := (cxGrid1DBTableView1.Columns[i] as TcxGridDBColumn);
+      Result := (tvLineasOpe.Columns[i] as TcxGridDBColumn);
       Exit;
     end;
 end;
