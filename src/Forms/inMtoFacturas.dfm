@@ -12,7 +12,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 19
-  object Shape6: TShape [0]
+  object shpSeparador6: TShape [0]
     Left = 76
     Top = 79
     Width = 533
@@ -667,7 +667,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
         ExplicitTop = 29
         ExplicitWidth = 1083
         ExplicitHeight = 773
-        object pnl1: TPanel
+        object pnlVerifactu: TPanel
           Left = 0
           Top = 347
           Width = 1083
@@ -1295,42 +1295,42 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 TabOrder = 6
                 OnClick = btnGenerarRecibosClick
               end
-              object GroupBox1: TGroupBox
+              object grpDesgloseImpuestos: TGroupBox
                 Left = 432
                 Top = 11
                 Width = 617
                 Height = 318
                 Caption = 'Desglose Impuestos'
                 TabOrder = 13
-                object Shape1: TShape
+                object shpSeparador1: TShape
                   Left = 163
                   Top = 32
                   Width = 438
                   Height = 40
                   Brush.Style = bsClear
                 end
-                object Shape2: TShape
+                object shpSeparador2: TShape
                   Left = 68
                   Top = 71
                   Width = 533
                   Height = 50
                   Brush.Style = bsClear
                 end
-                object Shape3: TShape
+                object shpSeparador3: TShape
                   Left = 13
                   Top = 169
                   Width = 588
                   Height = 50
                   Brush.Style = bsClear
                 end
-                object Shape4: TShape
+                object shpSeparador4: TShape
                   Left = 68
                   Top = 120
                   Width = 533
                   Height = 50
                   Brush.Style = bsClear
                 end
-                object Shape5: TShape
+                object shpSeparador5: TShape
                   Left = 68
                   Top = 218
                   Width = 533
@@ -1391,7 +1391,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'Exento'
                   TabOrder = 8
                 end
-                object cxDBCurrencyEdit1: TcxDBCurrencyEdit
+                object curTOTAL_BASEI_IVAN_FAC: TcxDBCurrencyEdit
                   Left = 162
                   Top = 78
                   DataBinding.DataField = 'TOTAL_BASEI_IVAN_FAC'
@@ -1401,7 +1401,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 9
                   Width = 113
                 end
-                object cxDBCurrencyEdit2: TcxDBCurrencyEdit
+                object curTOTAL_BASEI_IVAR_FAC: TcxDBCurrencyEdit
                   Left = 162
                   Top = 132
                   DataBinding.DataField = 'TOTAL_BASEI_IVAR_FAC'
@@ -1411,7 +1411,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 10
                   Width = 113
                 end
-                object cxDBCurrencyEdit3: TcxDBCurrencyEdit
+                object curTOTAL_BASEI_IVAS_FAC: TcxDBCurrencyEdit
                   Left = 162
                   Top = 180
                   DataBinding.DataField = 'TOTAL_BASEI_IVAS_FAC'
@@ -1421,7 +1421,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 11
                   Width = 113
                 end
-                object cxDBCurrencyEdit4: TcxDBCurrencyEdit
+                object curTOTAL_BASEI_IVAE_FAC: TcxDBCurrencyEdit
                   Left = 160
                   Top = 228
                   DataBinding.DataField = 'TOTAL_BASEI_IVAE_FAC'
@@ -1431,7 +1431,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 12
                   Width = 115
                 end
-                object cxDBCurrencyEdit5: TcxDBCurrencyEdit
+                object curTOTAL_IVAN_FAC: TcxDBCurrencyEdit
                   Left = 337
                   Top = 78
                   DataBinding.DataField = 'TOTAL_IVAN_FAC'
@@ -1441,7 +1441,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 13
                   Width = 100
                 end
-                object cxDBCurrencyEdit6: TcxDBCurrencyEdit
+                object curTOTAL_IVAR_FAC: TcxDBCurrencyEdit
                   Left = 337
                   Top = 132
                   DataBinding.DataField = 'TOTAL_IVAR_FAC'
@@ -1451,7 +1451,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 14
                   Width = 100
                 end
-                object cxDBCurrencyEdit7: TcxDBCurrencyEdit
+                object curTOTAL_IVAS_FAC: TcxDBCurrencyEdit
                   Left = 337
                   Top = 180
                   DataBinding.DataField = 'TOTAL_IVAS_FAC'
@@ -1461,7 +1461,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 15
                   Width = 100
                 end
-                object cxDBCurrencyEdit8: TcxDBCurrencyEdit
+                object curTOTAL_IVAE_FAC: TcxDBCurrencyEdit
                   Left = 337
                   Top = 228
                   DataBinding.DataField = 'TOTAL_IVAE_FAC'
@@ -1471,7 +1471,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 16
                   Width = 100
                 end
-                object cxDBCurrencyEdit9: TcxDBCurrencyEdit
+                object curTOTAL_REN_FAC: TcxDBCurrencyEdit
                   Left = 501
                   Top = 78
                   DataBinding.DataField = 'TOTAL_REN_FAC'
@@ -1481,7 +1481,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 17
                   Width = 95
                 end
-                object cxDBCurrencyEdit10: TcxDBCurrencyEdit
+                object curTOTAL_RER_FAC: TcxDBCurrencyEdit
                   Left = 501
                   Top = 132
                   DataBinding.DataField = 'TOTAL_RER_FAC'
@@ -1491,7 +1491,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 18
                   Width = 95
                 end
-                object cxDBCurrencyEdit11: TcxDBCurrencyEdit
+                object curTOTAL_RES_FAC: TcxDBCurrencyEdit
                   Left = 501
                   Top = 180
                   DataBinding.DataField = 'TOTAL_RES_FAC'
@@ -1501,7 +1501,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 19
                   Width = 95
                 end
-                object cxDBCurrencyEdit12: TcxDBCurrencyEdit
+                object curTOTAL_REE_FAC: TcxDBCurrencyEdit
                   Left = 501
                   Top = 228
                   DataBinding.DataField = 'TOTAL_REE_FAC'
@@ -1511,7 +1511,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 20
                   Width = 95
                 end
-                object cxDBSpinEdit1: TcxDBSpinEdit
+                object spnPORCENTAJE_IVAN_FAC: TcxDBSpinEdit
                   Left = 272
                   Top = 78
                   DataBinding.DataField = 'PORCENTAJE_IVAN_FAC'
@@ -1527,7 +1527,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 21
                   Width = 59
                 end
-                object cxDBSpinEdit2: TcxDBSpinEdit
+                object spnPORCENTAJE_IVAR_FAC: TcxDBSpinEdit
                   Left = 272
                   Top = 132
                   DataBinding.DataField = 'PORCENTAJE_IVAR_FAC'
@@ -1543,7 +1543,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 22
                   Width = 64
                 end
-                object cxDBSpinEdit3: TcxDBSpinEdit
+                object spnPORCENTAJE_IVAS_FAC: TcxDBSpinEdit
                   Left = 272
                   Top = 180
                   DataBinding.DataField = 'PORCENTAJE_IVAS_FAC'
@@ -1559,7 +1559,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 23
                   Width = 64
                 end
-                object cxDBSpinEdit4: TcxDBSpinEdit
+                object spnPORCENTAJE_IVAE_FAC: TcxDBSpinEdit
                   Left = 272
                   Top = 228
                   DataBinding.DataField = 'PORCENTAJE_IVAE_FAC'
@@ -1575,7 +1575,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 24
                   Width = 64
                 end
-                object cxDBSpinEdit5: TcxDBSpinEdit
+                object spnPORCENTAJE_RER_FAC: TcxDBSpinEdit
                   Left = 440
                   Top = 132
                   DataBinding.DataField = 'PORCENTAJE_RER_FAC'
@@ -1591,7 +1591,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 25
                   Width = 63
                 end
-                object cxDBSpinEdit7: TcxDBSpinEdit
+                object spnPORCENTAJE_REN_FAC: TcxDBSpinEdit
                   Left = 440
                   Top = 78
                   DataBinding.DataField = 'PORCENTAJE_REN_FAC'
@@ -1607,7 +1607,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 26
                   Width = 63
                 end
-                object cxDBSpinEdit8: TcxDBSpinEdit
+                object spnPORCENTAJE_RES_FAC: TcxDBSpinEdit
                   Left = 440
                   Top = 180
                   DataBinding.DataField = 'PORCENTAJE_RES_FAC'
@@ -1623,7 +1623,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 27
                   Width = 63
                 end
-                object cxDBSpinEdit9: TcxDBSpinEdit
+                object spnPORCENTAJE_REE_FAC: TcxDBSpinEdit
                   Left = 440
                   Top = 228
                   DataBinding.DataField = 'PORCENTAJE_REE_FAC'
@@ -1723,7 +1723,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 4
                   OnClick = btnExportarRecibosClick
                 end
-                object cxButton1: TcxButton
+                object btnGenerarRecibos: TcxButton
                   Left = 3
                   Top = 190
                   Width = 152
@@ -2044,7 +2044,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              object scrlbx1: TScrollBox
+              object scrlbxVerifactu: TScrollBox
                 Left = 0
                 Top = 0
                 Width = 1079
@@ -2054,14 +2054,14 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Align = alClient
                 ParentBackground = True
                 TabOrder = 0
-                object lbl18: TLabel
+                object lblPETICION_COMPLETA: TLabel
                   Left = 33
                   Top = 612
                   Width = 176
                   Height = 19
                   Caption = 'PETICION_COMPLETA'
                 end
-                object lbl17: TLabel
+                object lblRESPUESTA_COMPLETA: TLabel
                   Left = 32
                   Top = 60
                   Width = 188
@@ -2069,7 +2069,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'RESPUESTA_COMPLETA'
                   FocusControl = cxdbmRESPUESTA_COMPLETA
                 end
-                object lbl13: TLabel
+                object lblQRCODE_BASE64: TLabel
                   Left = 63
                   Top = 543
                   Width = 140
@@ -2077,7 +2077,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'QRCODE_BASE64'
                   FocusControl = cxdbmQRCODE_BASE64
                 end
-                object lbl12: TLabel
+                object lblVERIFACTU_URL: TLabel
                   Left = 69
                   Top = 476
                   Width = 134
@@ -2085,7 +2085,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'VERIFACTU_URL'
                   FocusControl = cxdbmVERIFACTU_URL
                 end
-                object lbl11: TLabel
+                object lblCHAIN_HASH: TLabel
                   Left = 90
                   Top = 410
                   Width = 109
@@ -2093,7 +2093,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'CHAIN_HASH'
                   FocusControl = txtCHAIN_HASH
                 end
-                object lbl10: TLabel
+                object lblCHAIN_NUMBER: TLabel
                   Left = 81
                   Top = 361
                   Width = 136
@@ -2101,7 +2101,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'CHAIN_NUMBER'
                   FocusControl = txtCHAIN_NUMBER
                 end
-                object lbl9: TLabel
+                object lblISSUED_TIME: TLabel
                   Left = 110
                   Top = 313
                   Width = 109
@@ -2109,7 +2109,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'ISSUED_TIME'
                   FocusControl = dteISSUED_TIME
                 end
-                object lbl8: TLabel
+                object lblISSUER_IRS_ID: TLabel
                   Left = 97
                   Top = 264
                   Width = 118
@@ -2117,7 +2117,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'ISSUER_IRS_ID'
                   FocusControl = txtISSUER_IRS_ID
                 end
-                object lbl7: TLabel
+                object lblQUEUE_ID: TLabel
                   Left = 131
                   Top = 216
                   Width = 84
@@ -2125,7 +2125,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'QUEUE_ID'
                   FocusControl = spQUEUE_ID
                 end
-                object lbl6: TLabel
+                object lblREQUEST_ID: TLabel
                   Left = 114
                   Top = 167
                   Width = 101
@@ -2141,7 +2141,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'ID_FACCON'
                   FocusControl = spID_CONSOLIDACION
                 end
-                object lbl15: TLabel
+                object lblFECHA_PROCESAMIENTO: TLabel
                   Left = 435
                   Top = 224
                   Width = 205
@@ -2149,7 +2149,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   Caption = 'FECHA_PROCESAMIENTO'
                   FocusControl = dteFECHA_PROCESAMIENTO
                 end
-                object lbl16: TLabel
+                object lblESTADO: TLabel
                   Left = 375
                   Top = 20
                   Width = 65
@@ -2293,7 +2293,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 10
                   Width = 121
                 end
-                object cxdbmPETICION_COMPLETA1: TcxDBMemo
+                object cxdbmPETICION_COMPLETA_FACCON: TcxDBMemo
                   Left = 216
                   Top = 587
                   DataBinding.DataField = 'PETICION_COMPLETA_FACCON'
@@ -2332,7 +2332,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               ExplicitTop = 0
               ExplicitWidth = 0
               ExplicitHeight = 0
-              object cxGrid1: TcxGrid
+              object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 1079
@@ -2343,7 +2343,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                object cxGridDBTableView1: TcxGridDBTableView
+                object tvLineasFactura: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
@@ -2416,8 +2416,8 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     Visible = False
                   end
                 end
-                object cxGridLevel1: TcxGridLevel
-                  GridView = cxGridDBTableView1
+                object cxgrdlvlLineasFactura: TcxGridLevel
+                  GridView = tvLineasFactura
                 end
               end
             end
@@ -2748,7 +2748,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 13
                   Width = 348
                 end
-                object cxLabel1: TcxLabel
+                object lblTipoFactura: TcxLabel
                   Left = 366
                   Top = 154
                   Margins.Left = 4
@@ -2759,7 +2759,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 14
                   Transparent = True
                 end
-                object cxDBTextEdit1: TcxDBTextEdit
+                object txtTIPO_FAC: TcxDBTextEdit
                   Left = 495
                   Top = 150
                   DataBinding.DataField = 'TIPO_FAC'
@@ -2769,7 +2769,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 15
                   Width = 189
                 end
-                object cxLabel2: TcxLabel
+                object lblVendedorFactura: TcxLabel
                   Left = 338
                   Top = 16
                   Margins.Left = 4
@@ -2780,7 +2780,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 16
                   Transparent = True
                 end
-                object cxDBTextEdit2: TcxDBTextEdit
+                object txtCODIGO_CAJERO_FAC: TcxDBTextEdit
                   Left = 495
                   Top = 12
                   DataBinding.DataField = 'CODIGO_CAJERO_FAC'
@@ -2790,7 +2790,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 17
                   Width = 178
                 end
-                object cxDBTextEdit3: TcxDBTextEdit
+                object txtFASE_FAC: TcxDBTextEdit
                   Left = 495
                   Top = 196
                   DataBinding.DataField = 'FASE_FAC'
@@ -2800,7 +2800,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                   TabOrder = 18
                   Width = 189
                 end
-                object cxLabel3: TcxLabel
+                object lblFaseFactura: TcxLabel
                   Left = 367
                   Top = 196
                   Margins.Left = 4
@@ -3228,7 +3228,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     TabOrder = 2
                     Width = 328
                   end
-                  object lblcxlbl6: TcxLabel
+                  object lblExtra6: TcxLabel
                     Left = 26
                     Top = 148
                     Margins.Left = 4
@@ -3239,7 +3239,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     TabOrder = 10
                     Transparent = True
                   end
-                  object lblcxlbl13: TcxLabel
+                  object lblExtra13: TcxLabel
                     Left = 69
                     Top = 181
                     Margins.Left = 4
@@ -3516,7 +3516,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZoneClassName = 'TcxMediaPlayer9Style'
           HotZone.SizePercent = 50
           AlignSplitter = salTop
-          Control = pnl1
+          Control = pnlVerifactu
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3707,7 +3707,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
     Left = 1104
     Top = 72
   end
-  object JvCalculator1: TJvCalculator
+  object jvcalcAux: TJvCalculator
     Ctl3D = False
     Title = 'Calculadora'
     Left = 464
