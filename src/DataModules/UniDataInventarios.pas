@@ -1302,7 +1302,6 @@ begin
   // a partir del artículo padre y los valores de atributo de la línea.
   // CODIGO_VAR_SKU se hereda del primer SKU existente del artículo o, si no
   // hay ninguno, de fza_articulos.TIPO_VARIACION_ART.
-  Result := False;
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;

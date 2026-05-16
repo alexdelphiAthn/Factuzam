@@ -256,10 +256,6 @@ type
     procedure ConfigurarEstructuraCabecera;
     function GetTipoIVA(sTipoIVA: string): Currency;
     function CuadrarFacturaEnMemoria(dsCabecera, dsLineas: TDataSet): Boolean;
-    function EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
-                             ANumOperacion: string;
-                             ASerieFactura, ANumFactura: string;
-                             AImporte: Currency): string;
 //    function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
     procedure CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                         const AEmpresa, ACliente,
@@ -279,18 +275,6 @@ type
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
                                        const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
-    procedure AnularDepositoCliente(QryTrx:           TUniQuery;
-                                    const Acliente:    string;
-                                    const ASku:        string;
-                                    const AUsuario:    string;
-                                    const AAlmacenTienda:   string;
-                                    const AAlmacenDeposito: string;
-                                    const AEmpresa:    string;
-                                    const ACaja: string;
-                                    const ANumOpe:string;
-                                    const AArticulo:   string;
-                                    out   ImporteADevolver: Currency;
-                                    ACantidad: Double);
     procedure InsertarCabeceraFactura(
             QryTrx:          TUniQuery;
             // — identificación —
@@ -943,92 +927,6 @@ begin
   end;
 end;
 
-procedure TdmCajaOpe.AnularDepositoCliente(QryTrx:           TUniQuery;
-                                           const Acliente:    string;
-                                           const ASku:        string;
-                                           const AUsuario:    string;
-                                           const AAlmacenTienda:   string;
-                                           const AAlmacenDeposito: string;
-                                           const AEmpresa:    string;
-                                           const ACaja: string;
-                                           const ANumOpe:string;
-                                           const AArticulo:   string;
-                                           out   ImporteADevolver: Currency;
-                                           ACantidad: Double);
-begin
-  ImporteADevolver := 0;
-  QryTrx.SQL.Text :=
-    'SELECT IMPORTE_ANTICIPO_DEP ' +
-    '  FROM fza_depositos_cliente ' +
-    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
-    '   AND CODIGO_CLI_DEP = :CLIENTE ' +
-    '   AND ESTADO_DEP = ''PENDIENTE''';
-  QryTrx.ParamByName('SKU').AsString := ASku;
-  QryTrx.ParamByName('CLIENTE').AsString := ACliente;
-  QryTrx.Open;
-  if not QryTrx.IsEmpty then
-    ImporteADevolver := QryTrx.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
-  QryTrx.Close;
-  // 2. Marcar depósito como cancelado
-  QryTrx.SQL.Text :=
-    'UPDATE fza_depositos_cliente ' +
-    '   SET ESTADO_DEP   = ''CANCELADO'', ' +
-    '       EMPRESA_CANCEL_DEP = :EMP_CAN, ' +
-    '       ALMACEN_CANCEL_DEP = :ALM_CAN, ' +
-    '       CAJA_CANCEL_DEP = :CAJ_CAN, ' +
-    '       NUMERO_OPERACION_CANCEL_DEP = :NUM_CAN,'+
-    '       USUARIO_MODIF = :USUARIO ' +
-    ' WHERE CODIGO_UNIDAD_DEP = :SKU ' +
-    '   AND CODIGO_CLI_DEP = :CLIENTE ' +
-    '   AND ESTADO_DEP = ''PENDIENTE''';
-  QryTrx.ParamByName('USUARIO').AsString := AUsuario;
-  QryTrx.ParamByName('SKU').AsString     := ASku;
-  QryTrx.ParamByName('CLIENTE').AsString     := ACliente;
-  QryTrx.ParamByName('EMP_CAN').AsString     := AEmpresa;
-  QryTrx.ParamByName('ALM_CAN').AsString     := AAlmacenTienda;
-  QryTrx.ParamByName('CAJ_CAN').AsString     := ACaja;
-  QryTrx.ParamByName('NUM_CAN').AsString     := ANumOpe;
-  QryTrx.Execute;
-  // 3. Traspaso de stock: Salida del almacén depósito → Entrada a tienda
-  //    Coste = 0 en ambos lados:
-  // 3a. Salida del almacén depósito
-  InsertarMovimientoAlmacen(
-    QryTrx,
-    'TR',                  // traspaso interno
-    '',
-    '',
-    '0001',        // sin doc factura asociado
-    AEmpresa,
-    AAlmacenDeposito,      // almacén que pierde stock
-    ACaja,
-    AAlmacenTienda,        // almacén que recibe stock
-    'S',
-    ASku,
-    ACantidad,                     // salida → trigger usa PMP vigente
-    0,
-    AUsuario,
-    AAlmacenTienda,
-    ANumOpe, ACliente, AArticulo);
-  // 3b. Entrada al almacén tienda
-  InsertarMovimientoAlmacen(
-    QryTrx,
-    'TR',
-    '', '', '0002',
-    AEmpresa,
-    AAlmacenTienda,        // almacén que recibe stock
-    ACaja,
-    AAlmacenDeposito,      // almacén de procedencia
-    'E',
-    ASku,
-    ACantidad,
-    0,              // entrada sin coste → trigger toma PMP del almacén depós
-    AUsuario, AAlmacenTienda, ANumOpe, ACliente, AArticulo);
-end;
-
-// -----------------------------------------------------------------------------
-// MODIFICADO: CrearNuevoDepositoCliente
-// Sustituye los dos INSERTs incompletos por InsertarMovimientoAlmacen.
-// -----------------------------------------------------------------------------
 procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                                const AEmpresa,
                                                      ACliente,
@@ -1615,66 +1513,6 @@ begin
         'Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
   finally
     FreeAndNil(CalculadorFiscal);
-  end;
-end;
-
-function TdmCajaOpe.EmitirNuevoVale(const AEmpresa, AAlmacen, ACaja: string;
-                                    ANumOperacion: string;
-                                    ASerieFactura, ANumFactura: string;
-                                    AImporte: Currency): string;
-var
-  qrySP: TUniStoredProc;
-  qry:TUniQuery;
-begin
-  qry := TUniQuery.Create(nil);
-  qrySP := TUniStoredProc.Create(nil);
-  try
-    qrySP.Connection := inLibGlobalVar.oConn;
-    // =======================================================================
-    // 1. OBTENER EL CÓDIGO FORMATEADO DESDE EL NUEVO PROCEDURE
-    // =======================================================================
-    qrySP.StoredProcName := 'PRC_GENERAR_CODIGO_VALE';
-    qrySP.Prepare;
-    qrySP.ParamByName('pEmpresa').AsString   := AEmpresa;
-    qrySP.ParamByName('pAlmacen').AsString   := AAlmacen;
-    qrySP.ParamByName('pCaja').AsString  := ACaja;
-    qrySP.ParamByName('pNumOperacion').AsString   := ANumOperacion;
-    // Le pasamos el nombre del cajero. Si quieres puedes leerlo del
-    // cdsCabecera:
-    // cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString
-    qrySP.ParamByName('pUsuario').AsString   := oUser;
-    // Parámetro de salida (OUT) para recoger el código generado (VARCHAR 100)
-    qrySP.Execute;
-    Result := qrySP.ParamByName('pCodigoFinal').AsString;
-    // =======================================================================
-    // 2. INSERTAR EL NUEVO VALE EN LA BASE DE DATOS
-    // =======================================================================
-    qry.Connection := oConn;
-    qry.SQL.Text :=
-      'INSERT INTO fza_caja_vales ' +
-      '(CODIGO_VL, IMPORTE_NOMINAL_VL, FECHA_EMISION_VL, ESTADO_VL, ' +
-      ' CODIGO_CAJA_EMI_VL, CODIGO_ALM_EMI_VL, CODIGO_EMP_EMI_VL, ' +
-      ' NUMERO_OPERACION_EMI_VL, SERIE_FAC_EMI_VL, NUMERO_FAC_EMI_VL, ' +
-      ' USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA, INSTANTE_MODIF)' +
-      'VALUES ' +
-      '(:COD, :IMPORTE, :FECHA, ''PENDIENTE'', ' +
-      ' :CAJA, :ALMACEN, :EMPRESA, :NUMOP, :SERIE, :NUMFAC, ' +
-      ' :USUARIO, :USUARIO, :INSTANTE, :INSTANTE )';
-    qry.ParamByName('COD').AsString        := Result;
-    qry.ParamByName('IMPORTE').AsCurrency  := AImporte;
-    qry.ParamByName('FECHA').AsDateTime    := Now;
-    qry.ParamByName('CAJA').AsString       := ACaja;
-    qry.ParamByName('ALMACEN').AsString    := AAlmacen;
-    qry.ParamByName('EMPRESA').AsString    := AEmpresa;
-    qry.ParamByName('NUMOP').AsString      := ANumOperacion;
-    qry.ParamByName('SERIE').AsString      := ASerieFactura;
-    qry.ParamByName('NUMFAC').AsString     := ANumFactura;
-    qry.ParamByName('USUARIO').AsString     := oUser;
-    qry.ParamByName('INSTANTE').AsDateTime  := Now;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-    FreeAndNil(qrySP);
   end;
 end;
 
