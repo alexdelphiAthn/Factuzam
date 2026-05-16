@@ -415,6 +415,8 @@ type
       Sender: TObject);
     procedure tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
       Sender: TObject);
+    procedure tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp(
+      Sender: TObject);
     procedure tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
       Sender: TObject; var DisplayValue: Variant;
       var ErrorText: TCaption; var Error: Boolean);
@@ -2488,6 +2490,26 @@ begin
     begin
       Filter   := 'ID_VA_ATB = ' + QuotedStr(IdVa);
       Filtered := True;
+    end;
+  end;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp(
+  Sender: TObject);
+// Tras cerrar el desplegable, limpiamos el filtro del lookup. Si lo
+// dejamos puesto (ej. ID_VA_ATB = 'TAL') la grilla no puede resolver
+// el CODIGO_ATB de las filas con otro tipo de atributo (CO, MAT, ...)
+// y la columna "Basico" se ve vacia para esas filas. OnInitPopup
+// vuelve a aplicar el filtro la proxima vez que se abra el desplegable.
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
+  with dmmArticulos.unqryAtributosBasicosLookup do
+  begin
+    if Filtered then
+    begin
+      Filter   := '';
+      Filtered := False;
     end;
   end;
 end;
