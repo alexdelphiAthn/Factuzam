@@ -1108,17 +1108,6 @@ end;
 
 procedure TFacturaTotales.ValidarConfiguracion;
 begin
-//  if _fechaFactura = 0 then
-//    raise Exception.Create('La fecha de la factura es requerida');
-//
-//  if _codigoEmpresa = '' then
-//    raise Exception.Create('El código de empresa es requerido');
-//
-//  if not Assigned(_unqryLineas) or not _unqryLineas.Active then
-//    raise Exception.Create('El dataset de líneas debe estar activo');
-//
-//  if not Assigned(_unqryFac) or not _unqryFac.Active then
-//    raise Exception.Create('El dataset de factura debe estar activo');
 end;
 
 function TFacturaTotales.ValidarFactura: Boolean;

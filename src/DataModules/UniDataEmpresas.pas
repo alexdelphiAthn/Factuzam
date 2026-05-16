@@ -188,17 +188,6 @@ begin
                                  FindField('CODIGO_EMP_EMPSER').AsString;
       unqrySol.Open;
     end;
-//    if ((bSinErrores) and  not(ExistePeriodoUnico(
-//                                            unqrySol,
-//                                            FindField('FECHA_DESDE_EMPSER'),
-//                                            FindField('FECHA_HASTA_EMPSER')))
-//       ) then
-//    begin
-//      raise ERangeError.CreateFmt('No se pueden grabar dos series ' +
-//                                ' en la misma fecha para la empresa %s',
-//                              [FindField('CODIGO_EMP_EMPRET').AsString]);
-//      bSinErrores := False;
-//    end;
   end;
   if (assigned(unqrySol)) then
   begin
@@ -346,23 +335,6 @@ begin
   end;
 end;
 
-//function TdmEmpresas.GetZonaDefault: String;
-//var
-//  unqrySol:TUniQuery;
-//begin
-//  unqrySol := TUniQuery.Create(Self);
-//  unqrySol.Connection := oConn;
-//  unqrySol.SQL.Text := 'SELECT IVA_IVAGRP FROM vi_ivas_grupos ' +
-//                       ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
-//  unqrySol.Open;
-//  if unqrySol.RecordCount = 0 then
-//    Sleep(0)
-//  //   MessageDlg('Empresa: #' + VarToStr(e.EditingValue) + '# no existe')
-//   else
-//      Result := unqrySol.Fields[0].AsString;
-//  unqrySol.Close;
-//  FreeAndNil(unqrySol);
-//end;
 
 
 

@@ -110,18 +110,6 @@ begin
   begin
     unqryTablaG.FindField('IVA_IVAGRP').AsString :=
                                                  ObtenerSiguienteContador('IG');
-//    with unstrdprcContador do
-//    begin
-//      Params.Clear;
-//      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-//      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-//      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-//      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-//      ParamByName('ptipodoc').AsString :=  'IG';
-//      ExecProc;
-//      unqryTablaG.FindField('IVA_IVAGRP').AsString :=
-// ParamByName('pcont').AsString;
-//    end;
   end;
 end;
 
