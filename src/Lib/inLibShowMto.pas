@@ -26,13 +26,13 @@ uses
 
 type
   TFormBaseClass = class of TForm;
-  function BuscarTabla(Query: TUniQuery;
-                       const ClavePrimaria,
-                       ValoresBusqueda: string):Boolean;
-  procedure ShowMto(Owner: TComponent;
-                    sCall:String;
-                    sBusq:string = '');
-  function CrearDataModule(sDataUnit:String;var pOwner:TfrmMtoGen):TObject;
+  function BuscarTabla(AQuery: TUniQuery;
+                       const AClavePrimaria,
+                       AValoresBusqueda: string):Boolean;
+  procedure ShowMto(AOwner: TComponent;
+                    ACall:String;
+                    ABusq:string = '');
+  function CrearDataModule(ADataUnit:String;var AOwnerForm:TfrmMtoGen):TObject;
 
 implementation
 
@@ -42,9 +42,9 @@ implementation
       inLibLog,
       inLibUnitForm;
 
-procedure ShowMto(Owner: TComponent;
-                  sCall: String;
-                  sBusq:string = '');
+procedure ShowMto(AOwner: TComponent;
+                  ACall: String;
+                  ABusq:string = '');
 var
   frmMain: TfrmMtoPrincipal;
   ofzaF: TfzaForm;
@@ -59,8 +59,8 @@ var
   iForm: Integer;
   NewCaption: string;
 begin
-  if not (Owner is TfrmMtoPrincipal) then Exit;
-  frmMain := TfrmMtoPrincipal(Owner);
+  if not (AOwner is TfrmMtoPrincipal) then Exit;
+  frmMain := TfrmMtoPrincipal(AOwner);
   if frmMain.WindowState = wsMinimized then
     frmMain.WindowState := wsMaximized;
   for iForm := 0 to Screen.FormCount - 1 do
@@ -71,15 +71,15 @@ begin
   end;
   if frmMain.FormManager = nil then
     frmMain.FormManager := TEmbeddedFormManager.Create(frmMain.pcPrincipal);
-  ofzaF := frmMain.oFzaWinf.GetElement(sCall);
+  ofzaF := frmMain.oFzaWinf.GetElement(ACall);
   if ofzaF = nil then
   begin
-    ShowMessageFmt(SResWinFNotFnd, [sCall]);
+    ShowMessageFmt(SResWinFNotFnd, [ACall]);
     Exit;
   end;
   if (ofzaF.mnMenuItem <> nil) and (not ofzaF.mnMenuItem.Visible) then
   begin
-    inLibLog.Log.LogWarning('Intento de acceso a menú oculto: ' + sCall);
+    inLibLog.Log.LogWarning('Intento de acceso a menú oculto: ' + ACall);
     Exit;
   end;
   NewCaption := ofzaF.Caption;
@@ -131,16 +131,16 @@ begin
       (TargetForm.Parent as TcxTabSheet).PageControl.ActivePage :=
                                              (TargetForm.Parent as TcxTabSheet);
   end;
-  if (sBusq <> '') and (TargetForm is TfrmMtoGen) then
+  if (ABusq <> '') and (TargetForm is TfrmMtoGen) then
   begin
     frmGen := TfrmMtoGen(TargetForm);
     if (frmGen.tdmDataModule <> nil) and (frmGen.tdmDataModule is TdmBase) then
     begin
       dmDat := TdmBase(frmGen.tdmDataModule);
       sPkTab := frmGen.pkFieldName;
-      if not BuscarTabla(dmDat.unqryTablaG, sPkTab, sBusq) then
+      if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
       begin
-        ShowMessageFmt(SLocateNotFnd, [sBusq, ofzaF.Caption]);
+        ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
       end
       else
       begin
@@ -153,7 +153,7 @@ begin
   end;
 end;
 
-function CrearDataModule(sDataUnit: String; var pOwner: TfrmMtoGen): TObject;
+function CrearDataModule(ADataUnit: String; var AOwnerForm: TfrmMtoGen): TObject;
 type
   TDataMBaseClass = class of TDataModule;
 var
@@ -164,14 +164,14 @@ var
   NewDM: TDataModule;
 begin
   Result := nil;
-  if (pOwner.tdmDataModule <> nil) then
+  if (AOwnerForm.tdmDataModule <> nil) then
   begin
-    Result := pOwner.tdmDataModule;
+    Result := AOwnerForm.tdmDataModule;
     Exit;
   end;
   ctx := TRttiContext.Create;
   try
-    lType := ctx.FindType(sDataUnit);
+    lType := ctx.FindType(ADataUnit);
     if (lType <> nil) and (lType is TRttiInstanceType) then
     begin
       DataModuleClass := TRttiInstanceType(lType).MetaclassType;
@@ -180,14 +180,14 @@ begin
         Instance := DataModuleClass.NewInstance;
         NewDM := TDataModule(Instance);
         try
-          NewDM.Create(pOwner);
+          NewDM.Create(AOwnerForm);
           if NewDM is TdmBase then
           begin
-             TdmBase(NewDM).FCurrentForm := pOwner;
+             TdmBase(NewDM).FCurrentForm := AOwnerForm;
              // 1. Aseguramos conexión
-             if Assigned(pOwner.dsTablaG) then
-               pOwner.dsTablaG.DataSet := TdmBase(NewDM).unqryTablaG;
-              if (GetPerfilValueDef(pOwner.oPerfilDic,
+             if Assigned(AOwnerForm.dsTablaG) then
+               AOwnerForm.dsTablaG.DataSet := TdmBase(NewDM).unqryTablaG;
+              if (GetPerfilValueDef(AOwnerForm.oPerfilDic,
                                     'oGetSQLFromDB',
                                     'False') = 'True') then
               begin
@@ -204,12 +204,12 @@ begin
              except
                on E: Exception do
                  inLibLog.Log.LogError(
-                   'Error al abrir tabla en ' + sDataUnit + ': ' + E.Message);
+                   'Error al abrir tabla en ' + ADataUnit + ': ' + E.Message);
              end;
           end;
 //          if NewDM is TdmBase then
-//             TdmBase(NewDM).FCurrentForm := pOwner;
-          pOwner.tdmDataModule := NewDM;
+//             TdmBase(NewDM).FCurrentForm := AOwnerForm;
+          AOwnerForm.tdmDataModule := NewDM;
           Result := NewDM;
         except
           FreeAndNil(NewDM);
@@ -222,9 +222,9 @@ begin
   end;
 end;
 
-function BuscarTabla(Query: TUniQuery;
-                     const ClavePrimaria,
-                     ValoresBusqueda: string):Boolean;
+function BuscarTabla(AQuery: TUniQuery;
+                     const AClavePrimaria,
+                     AValoresBusqueda: string):Boolean;
 var
   ValArr: TArray<string>;
   bIsOnlyOne:boolean;
@@ -233,7 +233,7 @@ var
 begin
   bIsOnlyOne := false;
   Result := False;
-  ValArr := ValoresBusqueda.Split([',']);
+  ValArr := AValoresBusqueda.Split([',']);
   if Length(ValArr) = 1 then
     bIsOnlyOne := True
   else
@@ -242,17 +242,17 @@ begin
     for i := 0 to Length(ValArr) - 1 do
       miarray[i] := Trim(ValArr[i]);
   end;
-  if Query.Active then
+  if AQuery.Active then
   begin
-    Query.Refresh;
+    AQuery.Refresh;
     if bIsonlyOne then
     begin
-      if Query.Locate(ClavePrimaria, ValoresBusqueda, []) then
+      if AQuery.Locate(AClavePrimaria, AValoresBusqueda, []) then
         Result := True;
     end
     else
     begin
-      if Query.Locate(ClavePrimaria, miArray, []) then
+      if AQuery.Locate(AClavePrimaria, miArray, []) then
       begin
         Finalize(ValArr);
         Finalize(miArray);
