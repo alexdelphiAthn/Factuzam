@@ -614,9 +614,9 @@
                       Options.Editing = False
                       Width = 222
                     end
-                    object cxgrdbclmnArticulosTIPO_CATNTIDAD_ARTICULO: TcxGridDBColumn
-                      Caption = 'Tipo CANTIDAD_ARTVIN'
-                      DataBinding.FieldName = 'TIPO_CATNTIDAD_ARTICULO'
+                    object cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn
+                      Caption = 'Tipo Cantidad'
+                      DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO'
                       Width = 127
                     end
                     object cxgrdbclmnArticulosESACTIVO_FIJO_ARTICULO: TcxGridDBColumn
