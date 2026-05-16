@@ -457,8 +457,6 @@ type
       Sender: TObject);
     procedure sbRectificarClick(Sender: TObject);
     procedure sbImprimirClick(Sender: TObject);
-    procedure chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange(
-      Sender: TObject);
     procedure btnImprimirReciboClick(Sender: TObject);
     procedure chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURAPropertiesChange(
       Sender: TObject);
@@ -495,7 +493,6 @@ type
       Sender: TObject);
     procedure btnCalculatorClick(Sender: TObject);
     procedure chkConsolidadaPropertiesChange(Sender: TObject);
-    procedure btnConsolidarClick(Sender: TObject);
     procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(Sender: TObject);
     procedure ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
@@ -581,11 +578,6 @@ begin
       FreeAndNil(unqrySol);
     end;
   end;
-end;
-
-procedure TfrmMtoFacturas.btnConsolidarClick(Sender: TObject);
-begin
-  inherited;
 end;
 
 procedure TfrmMtoFacturas.ResetForm;
@@ -1071,6 +1063,8 @@ var
   sSubtipo: string;
 begin
   inherited;
+  if (dsTablaG.Dataset = nil) then
+    Exit;
   if ((dsTablaG.DataSet.State <> dsEdit) and
       (dsTablaG.DataSet.State <> dsInsert)) then
     Exit;
@@ -1237,12 +1231,6 @@ begin
                                                         'TcxTextEditProperties';
     end;
   end;
-end;
-
-procedure TfrmMtoFacturas.chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange(
-  Sender: TObject);
-begin
-  inherited;
 end;
 
 procedure TfrmMtoFacturas.

@@ -195,10 +195,10 @@ var
   AutoLoginSuccessful: Boolean;
 
 begin
-//  {$IFDEF DEBUG}
-//      ReportMemoryLeaksOnShutdown := True;
-//   {$ENDIF}
-   TdxDiacriticStringOptions.ComparisonMode :=
+  {$IFDEF DEBUG}
+      ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
+  TdxDiacriticStringOptions.ComparisonMode :=
                                    TdxDiacriticStringComparisonMode.Insensitive;
   TdxDiacriticStringOptions.NormalizationMode :=
                                      TdxDiacriticStringNormalizationMode.System;

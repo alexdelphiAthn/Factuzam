@@ -704,6 +704,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -1914,6 +1918,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -2044,6 +2052,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object scrlbxVerifactu: TScrollBox
                 Left = 0
                 Top = 0
@@ -2817,6 +2829,10 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -3339,7 +3355,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
                     DataBinding.DataSource = dsTablaG
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
-                    Properties.OnChange = chkESIVA_RECARGO_CLIENTE_FACTURAPropertiesChange
                     TabOrder = 16
                     Transparent = True
                   end
@@ -3517,6 +3532,7 @@ inherited frmMtoFacturas: TfrmMtoFacturas
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnlVerifactu
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3668,7 +3684,6 @@ inherited frmMtoFacturas: TfrmMtoFacturas
       Height = 34
       Caption = 'Consolida&r'
       TabOrder = 5
-      OnClick = btnConsolidarClick
     end
   end
   inherited Localizer1: TcxLocalizer
