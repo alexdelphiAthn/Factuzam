@@ -122,7 +122,7 @@ begin
         Exit;
       end;
     finally
-      FreeAndNil(ctx);
+      ctx.Free;
     end;
   end
   else
@@ -218,7 +218,7 @@ begin
       end;
     end;
   finally
-    FreeAndNil(ctx);
+    ctx.Free;
   end;
 end;
 
