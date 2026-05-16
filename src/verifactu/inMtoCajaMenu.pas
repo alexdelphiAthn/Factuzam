@@ -118,7 +118,7 @@ type
     FOriginalArqueoColor: TColor;
     FOriginalESCColor:TColor;
     FOriginalSalirColor:TColor;
-    // M�todos auxiliares para cambiar colores
+    // Métodos auxiliares para cambiar colores
     procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
                                    HoverColor: TColor);
     procedure RestoreMenuItemColors(FKeyLabel,
@@ -151,8 +151,8 @@ begin
   lblFecha.Caption := FormatDateTime( 'dddd d mmmm yyyy', Now);
   CargarVentasPeriodoVisible;
   // Cargar ventas del mes actual al iniciar
-  //DecodeDate(Date, A�o, Mes, Dia);
-//  CargarVentasDelMes(A�o, Mes);
+  //DecodeDate(Date, Año, Mes, Dia);
+//  CargarVentasDelMes(Año, Mes);
   //referente a los  CAMBIOS DE COLOR
   // Guardar los colores originales
   FOriginalF5Color := lblF5.Style.TextColor;
@@ -207,7 +207,7 @@ begin
   end;
 end;
 
-// M�todos auxiliares
+// Métodos auxiliares
 procedure TfrmMtoMenuCaja.CargarVentasPeriodoVisible;
 var
   Query: TUniQuery;
@@ -217,12 +217,12 @@ var
 begin
  if not Assigned(VentasList) then
     VentasList := TVentasList.Create;
-  // Calcular primer y �ltimo d�a del mes
+  // Calcular primer y último día del mes
   PrimerDia := cxDateNavigator1.RealFirstDate;
   UltimoDia := cxDateNavigator1.RealLastDate;
   Query := TUniQuery.Create(nil);
   try
-    Query.Connection := dmDataCaja.UniConnection1; // Tu conexi�n
+    Query.Connection := dmDataCaja.UniConnection1; // Tu conexión
     // Consulta para obtener fecha y cantidad_artvin de ventas
     Query.SQL.Text :=
       ' SELECT FECHA, '+
@@ -470,7 +470,7 @@ end;
 
 function TVentasDia.GetHintText: string;
 begin
-  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s �',
+  Result := Format('Total Ventas: %d' + #13 + 'Total Cobrado: %s €',
                    [FTotalVentas, FormatFloat('#,##0.00', FTotalCobrado)]);
 end;
 
