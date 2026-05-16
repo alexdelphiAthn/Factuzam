@@ -196,7 +196,6 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Nombre de Familias',
                [FindField('NOMBRE_FAM_FAM').AsString]);
-      Abort;
     end
     else
     if (FindField('CODIGO_FAM_FAM').AsString =
@@ -205,7 +204,6 @@ begin
       raise ERangeError.CreateFmt('%s no puede ser padre e hijo a la vez. ' +
                                        'Revise campo Familia Padre',
                [FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
-      Abort;
     end
     else
       if (FindField('CODIGO_FAM_FAM').AsString = '0') then

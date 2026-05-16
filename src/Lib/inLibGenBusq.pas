@@ -51,7 +51,7 @@ class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
 var
   formulario: TfrmMtoSearch;
 begin
-//  Result := False;
+  Result := False;
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Caption := ACaption;
@@ -78,7 +78,7 @@ var
   formulario: TfrmMtoSearch;
   QueryTemp: TUniQuery;
 begin
-//  Result := False;
+  Result := False;
   formulario := TfrmMtoSearch.Create(nil);
   QueryTemp := TUniQuery.Create(formulario);
   try

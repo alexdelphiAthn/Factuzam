@@ -561,7 +561,6 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Descripción de Artículos',
                [FindField('DESCRIPCION_ART').AsString]);
-        Abort;
     end
     else
       GetCodigoAutoArticulo;

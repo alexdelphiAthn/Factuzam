@@ -335,7 +335,6 @@ begin
     DebugFile := ExtractFilePath(ParamStr(0)) + 'ticket_escpos_debug_' +
                     ParamStr(1) + '_' + ParamStr(2) + '_' + ParamStr(3) +'.txt';
     AssignFile(F, DebugFile);
-    FileMode := fmOpenRead or fmShareDenyNone;
     Rewrite(F);
     try
       WriteLn(F, '=== COMANDOS ESC/POS - DEBUG ===');

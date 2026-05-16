@@ -61,62 +61,42 @@ end;
 
 procedure TdmIvasGrupos.unqryTablaGBeforePost(DataSet: TDataSet);
 var
- sCodigo,
- sDescripcion:String;
- bError : Boolean;
- unqrySol : TUniQuery;
+  sCodigo, sDescripcion: string;
+  unqrySol: TUniQuery;
 begin
   inherited;
-  bError := False;
   with unqryTablaG do
   begin
     sCodigo := Trim(FindField('IVA_IVAGRP').AsString);
     sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
     if ((sDescripcion = '') or (SimbolosProhibidos(sDescripcion))) then
-    begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                   'para el campo Descripción de Grupos de IVA',
-                                                                [sDescripcion]);
-      bError := True;
-    end;
-    if ((sCodigo = '') or
-        (SimbolosProhibidos(sCodigo))
-       ) then
-    begin
+                                  'para el campo Descripción de Grupos de IVA',
+                                  [sDescripcion]);
+    if ((sCodigo = '') or (SimbolosProhibidos(sCodigo))) then
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                        'para el campo Código de Grupos de IVA',
-                                                                     [sCodigo]);
-      bError := True;
-    end;
-    if (bError = False) then
+                                  'para el campo Código de Grupos de IVA',
+                                  [sCodigo]);
+    if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then
     begin
-      if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then
-      begin
-        unqrySol := TUniQuery.Create(nil);
+      unqrySol := TUniQuery.Create(nil);
+      try
         unqrySol.Connection := oConn;
         unqrySol.SQL.Text := 'SELECT ESDEFAULT_IVA_IVAGRP ' +
                              '  FROM vi_ivas_grupos ' +
                              ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
         if (DataSet.State = dsEdit) then
-        begin
           unqrySol.SQL.Text := unqrySol.SQL.Text +
                                ' AND IVA_IVAGRP <> ' + sCodigo;
-        end;
         unqrySol.Open;
         if (unqrySol.RecordCount > 0) then
-        begin
-          raise EDataBaseError.Create('No es posible marcar dos grupos de IVA'+
+          raise EDataBaseError.Create('No es posible marcar dos grupos de IVA' +
                                       ' como Grupo de IVA por Defecto');
-          bError := True;
-        end;
-        unqrySol.Close;
+      finally
         FreeAndNil(unqrySol);
       end;
     end;
-    if bError then
-      Abort
-    else
-      GetCodigoAutoIvaGrupo;
+    GetCodigoAutoIvaGrupo;
   end;
 end;
 
