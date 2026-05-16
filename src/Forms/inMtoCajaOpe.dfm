@@ -235,7 +235,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 8
         Transparent = True
       end
-      object lblTarifa: TcxLabel
+      object lblTextoTarifa: TcxLabel
         Left = 354
         Top = 71
         Caption = 'Tarifa'

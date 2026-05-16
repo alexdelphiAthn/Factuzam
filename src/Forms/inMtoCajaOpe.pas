@@ -47,7 +47,7 @@ type
     btnF7: TcxButton;
     lblCobro: TcxLabel;
     lblBuscar: TcxLabel;
-    lblTarifa: TcxLabel;
+    lblTextoTarifa: TcxLabel;
     lblIndIVA: TcxLabel;
     lblOtro: TcxLabel;
     pnlAccionesDer: TPanel;
