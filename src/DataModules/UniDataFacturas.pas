@@ -1011,8 +1011,9 @@ begin
 end;
 
 procedure TdmFacturas.unqryLinFacBeforePost(DataSet: TDataSet);
-//var
-//  sTipoIVA:String;
+var
+  sNuevoNroLinea: string;
+  iContadorBD: Integer;
 begin
   inherited;
   with unqryLinFac do
@@ -1022,18 +1023,31 @@ begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
     end;
-    if (FindField(fnrolin).AsString  = '0') then
+    if (FindField(fnrolin).AsString = '0') or
+       (FindField(fnrolin).AsString = '') then
     begin
       unstdGetContadorLinea.ParamByName('pnumfac').AsString :=
                             unqryTablaG.FieldByName(fnrofac).AsString;
       unstdGetContadorLinea.ParamByName('pserie').AsString :=
                           unqryTablaG.FieldByName(fseriefac).AsString;
       unstdGetContadorLinea.ExecProc;
-      FindField(fnrolin).AsString :=
+      sNuevoNroLinea :=
                        unstdGetContadorLinea.ParamByName('presul').AsString;
+      FindField(fnrolin).AsString := sNuevoNroLinea;
+      // El SP ha actualizado fza_facturas.CONTADOR_LINEAS_FAC en BD a
+      // (presul + 10). Si no sincronizamos el dataset de la cabecera, el
+      // proximo Post de la cabecera (disparado por unqryLinFacBeforeInsert
+      // al anadir la siguiente linea) escribiria el valor antiguo encima,
+      // y el SP volveria a devolver '010', generando un Duplicate entry.
+      if unqryTablaG.FindField('CONTADOR_LINEAS_FAC') <> nil then
+      begin
+        iContadorBD := StrToIntDef(sNuevoNroLinea, 0) + 10;
+        if unqryTablaG.State = dsBrowse then unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_FAC').AsString :=
+                                                Format('%.3d', [iContadorBD]);
+      end;
     end;
   end;
-//  CalcularLinea;
   oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
