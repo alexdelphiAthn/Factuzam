@@ -523,6 +523,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                           FieldName = 'UNIDAD_ATB'
                         end>
                       Properties.ListSource = dmArticulos.dsAtributosBasicosLookup
+                      Properties.OnCloseUp = tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp
                       Properties.OnEditValueChanged = tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged
                       Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
                       Properties.OnValidate = tvSkuAtributosBasicosID_ATB_AVPropertiesValidate
