@@ -44,7 +44,7 @@ uses
   Winapi.Windows,
   System.SysUtils, System.Classes, Generics.Collections,
   Vcl.Graphics, Vcl.ComCtrls,
-  Data.DB, Uni;
+  Data.DB, Uni, System.UITypes;
 
 type
   // ---------------------------------------------------------------------------

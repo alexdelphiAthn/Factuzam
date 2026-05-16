@@ -31,7 +31,7 @@ uses
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
-  inMtoCajaReferenciaPago;
+  inMtoCajaReferenciaPago, System.UITypes;
 
 type
   TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo);

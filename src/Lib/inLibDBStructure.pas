@@ -17,7 +17,7 @@ unit inLibDBStructure;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni;
+  System.SysUtils, System.Classes, Uni, Data.DB;
 
 type
   TDBStructureStatus = (
