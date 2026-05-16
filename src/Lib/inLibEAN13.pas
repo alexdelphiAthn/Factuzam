@@ -20,25 +20,25 @@ uses
   SysUtils;
 
 // Calcula el dígito de control a partir de los primeros 7 dígitos
-function CalcularDigitoEAN8(const Codigo7: string): Char;
+function CalcularDigitoEAN8(const ACodigo7: string): Char;
 
 // Valida si un código EAN-8 completo (8 dígitos) es correcto
-function EsEAN8Valido(const Codigo: string): Boolean;
+function EsEAN8Valido(const ACodigo: string): Boolean;
 
 // Calcula el dígito de control a partir de los primeros 12 dígitos
-function CalcularDigitoEAN13(const Codigo12: string): Char;
+function CalcularDigitoEAN13(const ACodigo12: string): Char;
 
 // Valida si un código EAN-13 completo (13 dígitos) es correcto
-function EsEAN13Valido(const Codigo: string): Boolean;
+function EsEAN13Valido(const ACodigo: string): Boolean;
 
 implementation
 
-function CalcularDigitoEAN8(const Codigo7: string): Char;
+function CalcularDigitoEAN8(const ACodigo7: string): Char;
 var
   i, SumaImpares, SumaPares, Total, Resto, DigitoControl: Integer;
 begin
   // Validamos que al menos tenga 7 caracteres
-  if Length(Codigo7) < 7 then
+  if Length(ACodigo7) < 7 then
     raise Exception.Create(
       'El código debe tener al menos 7 dígitos para calcular el control.');
 
@@ -48,16 +48,16 @@ begin
   for i := 1 to 7 do
   begin
     // Validación de seguridad para asegurar que son solo números
-    if not (Codigo7[i] in ['0'..'9']) then
+    if not (ACodigo7[i] in ['0'..'9']) then
       raise Exception.Create(
         'El código de barras contiene caracteres no numéricos.');
 
     // OJO a la diferencia con EAN-13:
     // En EAN-8, las posiciones IMPARES se multiplican por 3
     if (i mod 2) <> 0 then
-      SumaImpares := SumaImpares + ((Ord(Codigo7[i]) - Ord('0')) * 3)
+      SumaImpares := SumaImpares + ((Ord(ACodigo7[i]) - Ord('0')) * 3)
     else
-      SumaPares := SumaPares + (Ord(Codigo7[i]) - Ord('0'));
+      SumaPares := SumaPares + (Ord(ACodigo7[i]) - Ord('0'));
   end;
 
   Total := SumaImpares + SumaPares;
@@ -73,27 +73,27 @@ begin
   Result := Chr(DigitoControl + Ord('0'));
 end;
 
-function EsEAN8Valido(const Codigo: string): Boolean;
+function EsEAN8Valido(const ACodigo: string): Boolean;
 begin
   // Un EAN-8 estándar tiene exactamente 8 caracteres
-  if Length(Codigo) <> 8 then
+  if Length(ACodigo) <> 8 then
     Exit(False);
 
   try
     // Calculamos el dígito sobre los primeros 7 y comparamos con el 8º
-    Result := (CalcularDigitoEAN8(Copy(Codigo, 1, 7)) = Codigo[8]);
+    Result := (CalcularDigitoEAN8(Copy(ACodigo, 1, 7)) = ACodigo[8]);
   except
     // Si hay letras o caracteres raros, devolvemos False
     Result := False;
   end;
 end;
 
-function CalcularDigitoEAN13(const Codigo12: string): Char;
+function CalcularDigitoEAN13(const ACodigo12: string): Char;
 var
   i, SumaImpares, SumaPares, Total, Resto, DigitoControl: Integer;
 begin
   // Validamos que al menos tenga 12 caracteres para evitar Access Violations
-  if Length(Codigo12) < 12 then
+  if Length(ACodigo12) < 12 then
     raise Exception.Create(
       'El código debe tener al menos 12 dígitos para calcular el control.');
 
@@ -104,17 +104,17 @@ begin
   for i := 1 to 12 do
   begin
     // Validación de seguridad por si el string trae letras o basura
-    if not (Codigo12[i] in ['0'..'9']) then
+    if not (ACodigo12[i] in ['0'..'9']) then
       raise Exception.Create(
         'El código de barras contiene caracteres no numéricos.');
 
     // Convertimos el char a entero restando el valor ASCII del '0'
     if (i mod 2) <> 0 then
       // Posiciones impares (1, 3, 5...)
-      SumaImpares := SumaImpares + (Ord(Codigo12[i]) - Ord('0'))
+      SumaImpares := SumaImpares + (Ord(ACodigo12[i]) - Ord('0'))
     else
       // Posiciones pares (2, 4, 6...)
-      SumaPares := SumaPares + (Ord(Codigo12[i]) - Ord('0'));
+      SumaPares := SumaPares + (Ord(ACodigo12[i]) - Ord('0'));
   end;
 
   // La regla EAN-13 dice que las posiciones pares se multiplican por 3
@@ -132,15 +132,15 @@ begin
   Result := Chr(DigitoControl + Ord('0'));
 end;
 
-function EsEAN13Valido(const Codigo: string): Boolean;
+function EsEAN13Valido(const ACodigo: string): Boolean;
 begin
   // Un EAN-13 estándar tiene exactamente 13 caracteres
-  if Length(Codigo) <> 13 then
+  if Length(ACodigo) <> 13 then
     Exit(False);
 
   try
     // Calculamos el dígito sobre los primeros 12 y comparamos con el 13º
-    Result := (CalcularDigitoEAN13(Copy(Codigo, 1, 12)) = Codigo[13]);
+    Result := (CalcularDigitoEAN13(Copy(ACodigo, 1, 12)) = ACodigo[13]);
   except
     // Si contiene caracteres no numéricos y lanza la excepción, no es válido
     Result := False;

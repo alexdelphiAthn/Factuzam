@@ -40,30 +40,30 @@ type
   end;
   TProfileUserDicc = TDictionary<TDictUserKey, TDictValue>;
   TProfileDicc = TDictionary<string, TDictValue>;
-function GetPerfilValue(var oPerfilDic: TProfileDicc; sSubKey: string): string;
-function GetPerfilValueText(var oPerfilDic: TProfileDicc; sSubKey: string):
+function GetPerfilValue(var APerfilDic: TProfileDicc; ASubKey: string): string;
+function GetPerfilValueText(var APerfilDic: TProfileDicc; ASubKey: string):
                                                                      WideString;
 procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
-                                 var oPerfilDic: TProfileDicc);
-procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
-                             sFormName: string); overload;
-function GetPerfilSubKeyValueDef( var oPerfilDic: TProfileDicc;
-                                  sSubKey: string;
+                                 var APerfilDic: TProfileDicc);
+procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
+                             AFormName: string); overload;
+function GetPerfilSubKeyValueDef( var APerfilDic: TProfileDicc;
+                                  ASubKey: string;
                                   sSubSubKey: string;
                                   sValueDef: string): string;
-function GetPerfilValueTextDef( var oPerfilDic: TProfileDicc;
-                                sSubKey: string;
+function GetPerfilValueTextDef( var APerfilDic: TProfileDicc;
+                                ASubKey: string;
                                 sValueDef: WideString): WideString;
-function GetPerfilValueDef( var oPerfilDic: TProfileDicc;
-                            sSubKey: string;
+function GetPerfilValueDef( var APerfilDic: TProfileDicc;
+                            ASubKey: string;
                             sValueDef: string): string;
-procedure GetDictionaryKeySubKey( var oPerfilDic: TProfileDicc;
+procedure GetDictionaryKeySubKey( var APerfilDic: TProfileDicc;
                                 var oPerfilKeySub: TList<TComponent_Prop_Value>;
                                 sFieldName,
                                 sColumnName,
                                 sGridViewName: string);
-procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
-                           const sFormName, sUsuario, sGrupo: string); overload;
+procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
+                           const AFormName, sUsuario, sGrupo: string); overload;
 
 // procedure AbrirPerfiles(bTabVisible:Boolean; unqryPerfiles:TUniQuery;
 // Sender:TComponent);
@@ -75,28 +75,28 @@ uses
   inLibGlobalVar;
 
 // Dentro de inLibUser.pas
-procedure GetFormUserProfile(var oPerfilDic: TProfileDicc;
-  const sFormName, sUsuario, sGrupo: string);
+procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
+  const AFormName, sUsuario, sGrupo: string);
 var
   oDictValue: TDictValue;
   qPerfil: TUniQuery;
 begin
-  oPerfilDic := TProfileDicc.Create;
-  oPerfilDic.Clear;
+  APerfilDic := TProfileDicc.Create;
+  APerfilDic.Clear;
   qPerfil := TUniQuery.Create(nil);
   try
     qPerfil.Connection := inLibGlobalVar.oConn;
     qPerfil.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:u, :g, :f)';
     qPerfil.Params[0].AsString := sUsuario;
     qPerfil.Params[1].AsString := sGrupo;
-    qPerfil.Params[2].AsString := sFormName;
+    qPerfil.Params[2].AsString := AFormName;
     qPerfil.Open;
     while not qPerfil.Eof do
     begin
       oDictValue.sValue := qPerfil.FieldByName('VALUE_USUPER').AsString;
       oDictValue.sValueText :=
                         qPerfil.FieldByName('VALUE_TEXT_USUPER').AsWideString;
-      oPerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_USUPER').AsString,
+      APerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_USUPER').AsString,
                                oDictValue);
       qPerfil.Next;
     end;
@@ -106,7 +106,7 @@ begin
 end;
 
 procedure FilterProfileUserGroup(var oPerfilUserDic: TProfileUserDicc;
-  var oPerfilDic: TProfileDicc);
+  var APerfilDic: TProfileDicc);
 var
   oPerfilUserDicCopy: TProfileUserDicc;
   oDictUKey,
@@ -117,7 +117,7 @@ var
 begin
   //Stopwatch := TStopwatch.StartNew;
   oPerfilUserDic.TrimExcess;
-  oPerfilDic := TProfileDicc.Create;
+  APerfilDic := TProfileDicc.Create;
   oPerfilUserDicCopy := TProfileUserDicc.Create
     (
       oPerfilUserDic,
@@ -128,7 +128,7 @@ begin
       Result := (Left.sUser = Right.sUser) and
         (Left.sGroup = Right.sGroup) and
         (Left.sKey = Right.sKey) and
-        (Left.sSubKey = Right.sSubKey) and
+        (Left.ASubKey = Right.ASubKey) and
         (Left.oProperty = Right.oProperty);
     end,
     function(const Value: TDictUserKey): Integer
@@ -144,7 +144,7 @@ begin
     if (oDictUKey.oProperty = User) then
       //si hay user, no me lo pienso y lo inserto
     begin
-      oPerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
+      APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
     end
     else if (oDictUKey.oProperty = Group) then
       //si hay grupo, busco el mismo key-subkey para user
@@ -152,7 +152,7 @@ begin
       oDictUKeyCopy.oProperty := User;
       if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
         //si no hay user con el mismo key, lo añado
-        oPerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
+        APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
       //añado al perfil por defecto para el grupo
     end
     else if (oDictUKey.oProperty = All) then
@@ -163,7 +163,7 @@ begin
       begin
         oDictUKeyCopy.oProperty := Group;
         if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
-          oPerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
+          APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
             //añado al perfil por defecto
       end;
     end;
@@ -173,26 +173,26 @@ begin
   //ShowMessage(Elapsed.TotalMilliseconds.ToString);
 end;
 
-procedure GetFormUserProfile(var oPerfilDic: TProfileDicc; sFormName: string);
+procedure GetFormUserProfile(var APerfilDic: TProfileDicc; AFormName: string);
 var
   oPerfilUserDic    : TProfileUserDicc;
 begin
-  odmPerfiles.Assign_Profile_Dict(sFormName, oPerfilUserDic);
-  FilterProfileUserGroup(oPerfilUserDic, oPerfilDic);
+  odmPerfiles.Assign_Profile_Dict(AFormName, oPerfilUserDic);
+  FilterProfileUserGroup(oPerfilUserDic, APerfilDic);
   FreeAndNil(oPerfilUserDic);
 end;
 
 // Dentro de inLibUser.pas
-function GetPerfilValue(var oPerfilDic: TPRofileDicc;
-  sSubKey: string): string;
+function GetPerfilValue(var APerfilDic: TPRofileDicc;
+  ASubKey: string): string;
 var
   oDictValue: TDictValue;
 begin
-  oPerfilDic.TryGetValue(sSubKey, oDictValue);
+  APerfilDic.TryGetValue(ASubKey, oDictValue);
   Result:= oDictValue.sValue;
 end;
 
-procedure GetDictionaryKeySubKey(var oPerfilDic: TProfileDicc;
+procedure GetDictionaryKeySubKey(var APerfilDic: TProfileDicc;
                                 var oPerfilKeySub: TList<TComponent_Prop_Value>;
                                 sFieldName,
                                 sColumnName,
@@ -204,9 +204,9 @@ var
   pCPV              : TComponent_Prop_Value;
   sProperty         : string;
 begin
-  for oDictKey in oPerfilDic.Keys do
+  for oDictKey in APerfilDic.Keys do
   begin
-    oPerfilDic.TryGetValue(oDictKey, oDictValue);
+    APerfilDic.TryGetValue(oDictKey, oDictValue);
     if (Pos(sFieldName, oDictKey) > 0) then
     begin
       iLastDelimiter := LastDelimiter('_', oDictKey) + 1;
@@ -220,17 +220,17 @@ begin
   end;
 end;
 
-function GetPerfilSubKeyValueDef(var oPerfilDic: TPRofileDicc;
-  sSubKey: string;
+function GetPerfilSubKeyValueDef(var APerfilDic: TPRofileDicc;
+  ASubKey: string;
   sSubSubKey: string;
   sValueDef: string): string;
 var
   oDictValue        : TDictValue;
 begin
-  sSubKey := sSubKey + '_' + sSubSubKey;
-  if oPerfilDic.ContainsKey(sSubKey) then
+  ASubKey := ASubKey + '_' + sSubSubKey;
+  if APerfilDic.ContainsKey(ASubKey) then
   begin
-    oPerfilDic.TryGetValue(sSubKey,
+    APerfilDic.TryGetValue(ASubKey,
       oDictValue);
     Result := oDictValue.sValue;
   end
@@ -238,28 +238,28 @@ begin
     Result := sValueDef;
 end;
 
-function GetPerfilValueText(var oPerfilDic: TPRofileDicc;
-  sSubKey: string): WideString;
+function GetPerfilValueText(var APerfilDic: TPRofileDicc;
+  ASubKey: string): WideString;
 var
   oDictValue        : TDictValue;
 begin
-  oPerfilDic.TryGetValue(sSubKey,
+  APerfilDic.TryGetValue(ASubKey,
     oDictValue);
   Result := oDictValue.sValueText;
 end;
 
-function GetPerfilValueTextDef(var oPerfilDic: TPRofileDicc;
-  sSubKey: string;
+function GetPerfilValueTextDef(var APerfilDic: TPRofileDicc;
+  ASubKey: string;
   sValueDef: WideString): WideString;
 var
   oDictValue        : TDictValue;
 begin
-  if ((oPerfilDic <> nil) and (oPerfilDic.Count > 0)) then
+  if ((APerfilDic <> nil) and (APerfilDic.Count > 0)) then
   begin
-    oPerfilDic.TrimExcess;
-    if oPerfilDic.ContainsKey(sSubKey) then
+    APerfilDic.TrimExcess;
+    if APerfilDic.ContainsKey(ASubKey) then
     begin
-      oPerfilDic.TryGetValue(sSubKey,
+      APerfilDic.TryGetValue(ASubKey,
         oDictValue);
       Result := oDictValue.sValueText;
     end
@@ -270,15 +270,15 @@ begin
     Result := sValueDef;
 end;
 
-function GetPerfilValueDef(var oPerfilDic: TProfileDicc;
-  sSubKey: string;
+function GetPerfilValueDef(var APerfilDic: TProfileDicc;
+  ASubKey: string;
   sValueDef: string): string;
 var
   oDictValue        : TDictValue;
 begin
-  if oPerfilDic.ContainsKey(sSubKey) then
+  if APerfilDic.ContainsKey(ASubKey) then
   begin
-    oPerfilDic.TryGetValue(sSubKey,
+    APerfilDic.TryGetValue(ASubKey,
       oDictValue);
     Result := oDictValue.sValue;
   end
