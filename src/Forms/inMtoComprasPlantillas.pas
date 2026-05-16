@@ -115,6 +115,7 @@ type
     procedure btnDelKitClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -133,6 +134,11 @@ procedure TfrmMtoComprasPlantillas.CrearTablaPrincipal;
 begin
   inherited;
   pkFieldName := 'CODIGO_SESPL';
+end;
+
+procedure TfrmMtoComprasPlantillas.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoComprasPlantillas.FormCreate(Sender: TObject);

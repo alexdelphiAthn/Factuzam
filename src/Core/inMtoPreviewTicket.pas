@@ -125,7 +125,7 @@ begin
       MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
     finally
-      MetaCanvas.Free;
+      FreeAndNil(MetaCanvas);
       FCanvas := CanvasBackup;
     end;
     Pdf.DefaultPaperSize  := psUserDefined;
@@ -138,8 +138,8 @@ begin
                     Rect(MargenPDF, 0, AnchoPDF + MargenPDF, AltoPDF));
     Pdf.SaveToFile(RutaArchivo);
   finally
-    Metafile.Free;
-    Pdf.Free;
+    FreeAndNil(Metafile);
+    FreeAndNil(Pdf);
   end;
 end; *)
 
@@ -185,7 +185,7 @@ begin
       MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
     finally
-      MetaCanvas.Free;
+      FreeAndNil(MetaCanvas);
       FCanvas := CanvasBackup;
     end;
     Pdf.DefaultPaperSize  := psUserDefined;
@@ -202,8 +202,8 @@ begin
                          AlturaReal));      // abajo sin comprimir
     Pdf.SaveToFile(RutaArchivo);
   finally
-    Metafile.Free;
-    Pdf.Free;
+    FreeAndNil(Metafile);
+    FreeAndNil(Pdf);
   end;
 end;
 
@@ -224,7 +224,7 @@ begin
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
     Form.ExportarAPDF(Comandos, RutaPDF);
   finally
-    Form.Free;
+    FreeAndNil(Form);
   end;
 end;
 
@@ -283,8 +283,8 @@ begin
     FCanvas.Draw(StartX, FCurrentY, QRBitmap);
     FCurrentY := FCurrentY + QRHeight;
   finally
-    QRBitmap.Free;
-    QRCode.Free;
+    FreeAndNil(QRBitmap);
+    FreeAndNil(QRCode);
   end;
 end;
 

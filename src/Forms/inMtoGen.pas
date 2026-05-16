@@ -24,7 +24,7 @@ uses
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxNavigator, cxDBNavigator, Vcl.StdCtrls, Vcl.Buttons,
   cxContainer, cxEdit, cxLabel, Vcl.Menus, cxButtons,
-  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter, inMtoPrincipal,
+  dxSkinsLookAndFeelPainter, cxStyles, dxSkinscxPCPainter,
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
@@ -162,7 +162,7 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     UniDataGen, uGenericIfThen;
+     UniDataGen, uGenericIfThen, inMtoPrincipal;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -265,21 +265,13 @@ begin
       end;
     end;
   finally
-    oGrids.Free;
+    FreeAndNil(oGrids);
   end;
   Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
   if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
               'True') then
     SetLabelForm(Self, oPerfilDic);
 
-//  tsPerfil.TabVisible := false;
-//
-//  {$IFDEF DEBUG}
-//    tsPerfil.TabVisible := False;
-//  {$ENDIF }
-//
-//  if (tsPerfil.TabVisible = true) then
-//    AbrirPerfiles(tsPerfil.TabVisible);
 end;
 
 procedure TfrmMtoGen.btnCargarCaptionsClick(Sender: TObject);
@@ -467,11 +459,11 @@ begin
       // si antes los refactorizas también para que acepten la lista
       oConn.Commit;
     except
-      oConn.Commit;
+      oConn.Rollback;
       raise;
     end;
   finally
-    oList.Free;
+    FreeAndNil(oList);
     Screen.Cursor := crDefault;
   end;
 end;

@@ -158,17 +158,17 @@ type
     dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn;
     dbcTarifasESIMP_INCL_TARIFA: TcxGridDBBandedColumn;
     dbcTarifasESDEFAULT_TARIFA: TcxGridDBBandedColumn;
-    cxDBLabel1: TcxDBLabel;
-    cxDBLabel2: TcxDBLabel;
+    dbcDESCRIPCION_FAM: TcxDBLabel;
+    dbcNOMBRE_FAM_FAM: TcxDBLabel;
     tsGeneral: TcxTabSheet;
     rgTipoIVA: TcxDBRadioGroup;
     cxGroupBox2: TcxGroupBox;
     lblNombre1: TcxLabel;
     cxdbtxtdtTIPO_CANTIDAD_ARTICULO: TcxDBTextEdit;
-    cxLabel2: TcxLabel;
-    cxDBComboBox1: TcxDBComboBox;
-    tvProveedoresColumn1: TcxGridDBColumn;
-    cxDBCheckBox1: TcxDBCheckBox;
+    lblTipoArticulo: TcxLabel;
+    cbbTIPO_ART: TcxDBComboBox;
+    tvProveedoresREF_PROVEEDOR: TcxGridDBColumn;
+    chkESVARIACION_ART: TcxDBCheckBox;
     tsSkuMto: TcxTabSheet;
     pnlTopSkus: TPanel;
     pnlSkuMto: TPanel;
@@ -198,9 +198,9 @@ type
     tvSkuAtributosBasicosFUENTE_ATB: TcxGridDBColumn;
     cxgrdSkuAtributosBasicosLevel: TcxGridLevel;
     tsSKUs: TcxTabSheet;
-    Panel1: TPanel;
-    cxButton2: TcxButton;
-    cxGrid2: TcxGrid;
+    pnlBotonesCB: TPanel;
+    btnExportarExcelCB: TcxButton;
+    cxgrdTarifas: TcxGrid;
     tvSkus: TcxGridDBTableView;
     tvSkusCODIGO_UNIDAD_SKU: TcxGridDBColumn;
     tvSkusCODIGO_ARTICULO_SKU: TcxGridDBColumn;
@@ -209,7 +209,7 @@ type
     tvSkusINSTANTEALTA: TcxGridDBColumn;
     tvSkusUSUARIOALTA: TcxGridDBColumn;
     tvSkusUSUARIOMODIF: TcxGridDBColumn;
-    cxGridLevel1: TcxGridLevel;
+    cxgrdlvlTarifas: TcxGridLevel;
     cxTabSheet3: TcxTabSheet;
     tsMovimientos: TcxTabSheet;
     tvSkusCODIGO_BARRAS_CB: TcxGridDBColumn;
@@ -217,20 +217,20 @@ type
     tvSkusESPRINCIPAL_CB: TcxGridDBColumn;
     tvSkusID_CB: TcxGridDBColumn;
     tvSkusSTOCK_TOTAL: TcxGridDBColumn;
-    cxButton1: TcxButton;
-    cxButton5: TcxButton;
+    btnGenerarCB: TcxButton;
+    btnVerificarCB: TcxButton;
     cxGrdStock: TcxGrid;
     tvStock: TcxGridDBTableView;
-    cxGridLevel4: TcxGridLevel;
-    Panel2: TPanel;
-    btStockExportarExcel: TcxButton;
-    btReconstruirStock: TcxButton;
-    btImprimirEtiquetas: TcxButton;
+    cxgrdlvlStock: TcxGridLevel;
+    pnlBotonesTarifas: TPanel;
+    btnStockExportarExcel: TcxButton;
+    btnReconstruirStock: TcxButton;
+    btnImprimirEtiquetas: TcxButton;
     cxGrdMovimientos: TcxGrid;
     tvMovimientos: TcxGridDBTableView;
-    cxGridLevel5: TcxGridLevel;
-    Panel3: TPanel;
-    cxButton11: TcxButton;
+    cxgrdlvlStockAlt: TcxGridLevel;
+    pnlBotonesStock: TPanel;
+    btnExportarExcelStock: TcxButton;
     tvStockAlmacen: TcxGridDBColumn;
     tvStockColor: TcxGridDBColumn;
     tvStockDBColumn42: TcxGridDBColumn;
@@ -272,7 +272,7 @@ type
     tvMovimientosRAZONSOCIAL_CLIENTE: TcxGridDBColumn;
     tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
     tsPropiedades: TcxTabSheet;
-    cxDBCheckBox2: TcxDBCheckBox;
+    chkESTRAZABLE_ART: TcxDBCheckBox;
     tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBBandedColumn;
     tvTarifasESVARIACION_ARTICULO: TcxGridDBBandedColumn;
     tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBBandedColumn;
@@ -390,9 +390,9 @@ type
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
     procedure cxButton11Click(Sender: TObject);
-    procedure btStockExportarExcelClick(Sender: TObject);
-    procedure btReconstruirStockClick(Sender: TObject);
-    procedure btImprimirEtiquetasClick(Sender: TObject);
+    procedure btnStockExportarExcelClick(Sender: TObject);
+    procedure btnReconstruirStockClick(Sender: TObject);
+    procedure btnImprimirEtiquetasClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
     procedure dbcTarifasMARGENButtonClick(Sender: TObject;
@@ -918,7 +918,7 @@ begin
         qryTodasTarifas.Next;
       end;
     finally
-      qryTodasTarifas.Free;
+      FreeAndNil(qryTodasTarifas);
     end;
     frmSel.CargarTarifas(ListaTarifas);
 
@@ -1021,17 +1021,17 @@ begin
         end;
       end;
     finally
-      TarifasActivas.Free;
+      FreeAndNil(TarifasActivas);
       dmmArticulos.unqryTarifasArticulos.EnableControls;
     end;
     dmmArticulos.unqryTarifasArticulos.Refresh;
     ActualizarVisibilidadColumnaSku;
   finally
-    SkusSel.Free;
-    TarifasSel.Free;
-    ListaSkus.Free;
-    ListaTarifas.Free;
-    frmSel.Free;
+    FreeAndNil(SkusSel);
+    FreeAndNil(TarifasSel);
+    FreeAndNil(ListaSkus);
+    FreeAndNil(ListaTarifas);
+    FreeAndNil(frmSel);
   end;
 end;
 
@@ -1286,14 +1286,14 @@ begin
   txtDESCRIPCION_ARTICULO.SetFocus;
 end;
 
-procedure TfrmMtoArticulos.btStockExportarExcelClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnStockExportarExcelClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
-procedure TfrmMtoArticulos.btReconstruirStockClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnReconstruirStockClick(Sender: TObject);
 var
   sMensaje: string;
 begin
@@ -1329,7 +1329,7 @@ begin
   ShowMessage(sMensaje);
 end;
 
-procedure TfrmMtoArticulos.btImprimirEtiquetasClick(Sender: TObject);
+procedure TfrmMtoArticulos.btnImprimirEtiquetasClick(Sender: TObject);
 var
   formulario: TfrmPrintEtiqArt;
 begin
@@ -1815,13 +1815,6 @@ begin
 //  splitter.Align  := alTop;
 //  splitter.Height := 5;
 
-//  // ── Zona SKUs (scroll) ──
-//  FScrollVarSkus := TScrollBox.Create(Self);
-//  FScrollVarSkus.Parent      := tsVariaciones;
-//  FScrollVarSkus.Align       := alClient;
-//  FScrollVarSkus.BorderStyle := bsNone;
-//  FScrollVarSkus.Color       := clWindow;
-//  FScrollVarSkus.AutoScroll  := True;
 
   FGestorVar := TGestorVariaciones.Create(
     FScrollVarAtrib,
@@ -2281,7 +2274,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -2319,7 +2312,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2362,7 +2355,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2402,7 +2395,7 @@ begin
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
@@ -2500,7 +2493,7 @@ begin
     qry.ParamByName('USR').AsString  := oUser;
     qry.Execute;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
   // Refrescamos la vista para repintar NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB,
   // FUENTE_ATB (pasa a 'A') y ETIQUETA_BASICO.
@@ -2569,7 +2562,7 @@ begin
       qry.ParamByName('ID').AsInteger  := IdAtb;
       qry.Execute;
     finally
-      qry.Free;
+      FreeAndNil(qry);
     end;
     if ds.State in [dsEdit, dsInsert] then ds.Cancel;
     ds.Refresh;
@@ -2577,7 +2570,7 @@ begin
     if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
       dmmArticulos.unqryAtributosBasicosLookup.Refresh;
   finally
-    Dlg.Free;
+    FreeAndNil(Dlg);
   end;
 end;
 

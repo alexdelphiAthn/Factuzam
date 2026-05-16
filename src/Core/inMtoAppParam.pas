@@ -121,10 +121,10 @@ end;
 procedure TfrmMtoAppParam.FormDestroy(Sender: TObject);
 begin
   LimpiarMemoria;
-  FBools.Free;
-  FInts.Free;
-  FStrs.Free;
-  FValoresOriginales.Free;
+  FreeAndNil(FBools);
+  FreeAndNil(FInts);
+  FreeAndNil(FStrs);
+  FreeAndNil(FValoresOriginales);
   inherited;
 end;
 
@@ -331,19 +331,6 @@ begin
     DisplayStr := PathToToken(Dir);   // guardamos con token
 end;
 
-// ── Botón "..." en campos de directorio ──────────────────────────────────
-//procedure TfrmMtoAppParam.InspectorEditButtonClick(Sender: TObject;
-//  Item: TJvCustomInspectorItem);
-//var
-//  Dir: string;
-//begin
-//  if (Item = nil) or not StartsText('appDir', Item.Name) then
-//    Exit;
-//  Dir := Item.DisplayValue;
-//  if SelectDirectory('Seleccione una carpeta', '', Dir,
-//                     [sdNewUI, sdNewFolder]) then
-//    Item.DisplayValue := Dir;
-//end;
 
 // -----------------------------------------------------------------------
 // CARGA Y GUARDADO  (idéntico al de CajaParam)
@@ -440,7 +427,7 @@ begin
     end;
     CapturarValoresOriginales;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -535,7 +522,7 @@ begin
     else
       ShowMessage('No se detectaron cambios para guardar.');
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -634,8 +621,8 @@ begin
       end;
     end;
   finally
-    usuarios.Free;
-    qry.Free;
+    FreeAndNil(usuarios);
+    FreeAndNil(qry);
   end;
 end;
 

@@ -31,10 +31,10 @@ type
     cxLabel1: TcxLabel;
     hlEmail: TcxHyperLinkEdit;
     cxLabel2: TcxLabel;
-    btAceptar: TcxButton;
+    btnAceptar: TcxButton;
     procedure JvGIFAnimator1Click(Sender: TObject);
     procedure cxLabel1Click(Sender: TObject);
-    procedure btAceptarClick(Sender: TObject);
+    procedure btnAceptarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -59,7 +59,7 @@ begin
   Self.Close;
 end;
 
-procedure TfrmSplash.btAceptarClick(Sender: TObject);
+procedure TfrmSplash.btnAceptarClick(Sender: TObject);
 begin
   Self.Close;
 end;

@@ -88,7 +88,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
         ExplicitTop = 29
         ExplicitWidth = 736
         ExplicitHeight = 557
-        object pnl1: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 736
@@ -192,7 +192,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
               TabOrder = 5
               Width = 202
             end
-            object cxlbllbl1: TcxLabel
+            object lblFamiliaPadre: TcxLabel
               Left = 20
               Top = 112
               Margins.Left = 4
@@ -681,7 +681,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             object tsOtros: TcxTabSheet
               Caption = '&4_Otros'
               ImageIndex = 3
-              object pnl3: TPanel
+              object pnlOtros: TPanel
                 Left = 0
                 Top = 272
                 Width = 732
@@ -804,14 +804,14 @@ inherited frmMtoFamilias: TfrmMtoFamilias
             end
           end
         end
-        object cxspltr1: TcxSplitter
+        object splFicha: TcxSplitter
           Left = 0
           Top = 165
           Width = 736
           Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
-          Control = pnl1
+          Control = pnlTopFicha
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -898,7 +898,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
     Left = 600
     Top = 344
   end
-  object ActionListFamilias: TActionList
+  object alFamilias: TActionList
     Left = 512
     Top = 344
     object actArticulo: TAction

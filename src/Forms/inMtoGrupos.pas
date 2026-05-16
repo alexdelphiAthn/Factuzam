@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoPrincipal,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -34,11 +34,11 @@ type
   TfrmMtoGrupos = class(TfrmMtoGen)
     cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinESGRUPOADMINISTRADOR: TcxGridDBColumn;
-    Panel1: TPanel;
-    cxLabel1: TcxLabel;
-    cxLabel2: TcxLabel;
+    pnlBodyFicha: TPanel;
+    lblNombreGrupo: TcxLabel;
+    lblEsGrupoAdmin: TcxLabel;
     txtNOMBRE_GRUPO: TcxDBTextEdit;
-    cxDBCheckBox1: TcxDBCheckBox;
+    chkESGRUPOADMINISTRADOR_USUGRP: TcxDBCheckBox;
     cxgrdUsuarios: TcxGrid;
     tvUsuarios: TcxGridDBTableView;
     cxgrdlvlUsuarios: TcxGridLevel;
@@ -51,6 +51,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -60,7 +61,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -75,6 +76,11 @@ begin
   dsTablaG.DataSet := dmmGrupos.unqryTablaG;
   tvUsuarios.DataController.DataSource := dmmGrupos.dsUsuariosGrupo;
   pkFieldName := 'GRUPO_USU';
+end;
+
+procedure TfrmMtoGrupos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoGrupos.dsTablaGStateChange(Sender: TObject);

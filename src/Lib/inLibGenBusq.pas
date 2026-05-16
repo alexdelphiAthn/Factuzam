@@ -17,6 +17,7 @@ unit inLibGenBusq;
 interface
 uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       Classes, COMObj, ComCtrls, ExtActns, OleCtrls, Forms, inifiles, Uni,
+      DBAccess,
       SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
@@ -29,7 +30,7 @@ type
   public
     class function EjecutarBusqueda(
       const ACaption: string;
-      var ADataSet: TUniQuery;
+      ADataSet: TCustomDADataSet;
       const AName:String
     ): Boolean; overload;
 
@@ -45,7 +46,7 @@ type
 implementation
 
 class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
-                                               var ADataSet: TUniQuery;
+                                               ADataSet: TCustomDADataSet;
                                                const AName:String): Boolean;
 var
   formulario: TfrmMtoSearch;

@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataContadores, cxCheckBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
+  Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
   dxSkinBasic, dxSkinBlack, dxSkinBlue, dxSkinBlueprint, dxSkinCaramel,
   dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinFoggy, dxSkinGlassOceans, dxSkinHighContrast,
@@ -66,6 +66,7 @@ type
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -75,7 +76,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -87,7 +88,12 @@ procedure TfrmMtoContadores.CrearTablaPrincipal;
 begin
   inherited;
   dmmContadores := tdmDataModule as TdmContadores;
-  pkFieldName := '`TIPO_DOC_CON;SERIE_CON;EMPRESA_CON';
+  pkFieldName := 'TIPO_DOC_CON;SERIE_CON;EMPRESA_CON';
+end;
+
+procedure TfrmMtoContadores.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoContadores.dsTablaGStateChange(Sender: TObject);

@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoPrincipal,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -46,6 +46,7 @@ type
     { Public declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
 end;
 
 var
@@ -55,7 +56,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -66,6 +67,11 @@ begin
   inherited;
   dmmIvasGrupos := tdmDataModule as TdmIvasGrupos;
   pkFieldName := 'IVA_IVAGRP';
+end;
+
+procedure TfrmMtoIvasGrupos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoIvasGrupos.dsTablaGStateChange(Sender: TObject);

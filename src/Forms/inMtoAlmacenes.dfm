@@ -277,7 +277,7 @@
                 TabOrder = 5
                 Width = 79
               end
-              object cxdbtxtdtPOBLACION_ALM1: TcxDBTextEdit
+              object cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit
                 Left = 201
                 Top = 54
                 DataBinding.DataField = 'POBLACION_ALM'
@@ -300,14 +300,14 @@
                 TabOrder = 4
                 Width = 373
               end
-              object lblPoblacion1: TcxLabel
+              object lblProvincia: TcxLabel
                 Left = 23
                 Top = 88
                 Caption = 'Provincia'
                 TabOrder = 6
                 Transparent = True
               end
-              object cxdbtxtdtPOBLACION_ALM: TcxDBTextEdit
+              object cxdbtxtdtPROVINCIA_ALM: TcxDBTextEdit
                 Left = 116
                 Top = 85
                 DataBinding.DataField = 'PROVINCIA_ALM'
@@ -485,7 +485,7 @@
             object tsAuditoria: TcxTabSheet
               Caption = '&3_Otros'
               ImageIndex = 0
-              object pnl3: TPanel
+              object pnlAuditoria: TPanel
                 Left = 0
                 Top = 0
                 Width = 935

@@ -576,7 +576,7 @@ inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
     Left = 104
     Top = 424
   end
-  object ActionListConjuntos: TActionList
+  object alConjuntos: TActionList
     Left = 216
     Top = 312
     object actArticulo: TAction

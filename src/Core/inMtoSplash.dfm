@@ -43311,7 +43311,7 @@
         Height = 20
         Width = 185
       end
-      object btAceptar: TcxButton
+      object btnAceptar: TcxButton
         Left = 24
         Top = 135
         Width = 457
@@ -43324,7 +43324,7 @@
         Font.Name = 'Lucida Sans'
         Font.Style = []
         ParentFont = False
-        OnClick = btAceptarClick
+        OnClick = btnAceptarClick
       end
     end
   end

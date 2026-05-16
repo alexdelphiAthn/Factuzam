@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAtributosConjuntos,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxSplitter, cxMaskEdit, cxDBEdit, cxDBLookupComboBox,
   cxDBLookupEdit, cxLookupEdit, cxDropDownEdit,
   System.Actions, Vcl.ActnList;
@@ -77,7 +77,7 @@ type
     tvArticulosESACTIVO_ART: TcxGridDBColumn;
     tvArticulosCODIGO_FAM_ART: TcxGridDBColumn;
     tvArticulosNOMBRE_FAM_FAM: TcxGridDBColumn;
-    ActionListConjuntos: TActionList;
+    alConjuntos: TActionList;
     actArticulo: TAction;
     tsAuditoria: TcxTabSheet;
     pnlAuditoria: TPanel;
@@ -97,6 +97,7 @@ type
     procedure ActualizarDescripciones;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -105,7 +106,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto;
+  inLibWin, inLibShowMto, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -135,6 +136,11 @@ begin
                                     := dmmAtributosConjuntos.dsAtributosLookup;
   pkFieldName := 'ID_AC';
   ActualizarDescripciones;
+end;
+
+procedure TfrmMtoAtributosConjuntos.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGDataChange(Sender: TObject;

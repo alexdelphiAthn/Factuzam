@@ -321,7 +321,7 @@ begin
     else
       ShowMessage('No se pudo crear el albarán.');
   finally
-    lst.Free;
+    FreeAndNil(lst);
   end;
 end;
 
@@ -337,7 +337,7 @@ begin
     dmmPedidos.unqryTablaG.Close;
     dmmPedidos.unqryTablaG.Open;
   finally
-    form.Free;
+    FreeAndNil(form);
   end;
 end;
 

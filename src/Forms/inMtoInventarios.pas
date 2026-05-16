@@ -132,10 +132,10 @@ type
     lblInstanteModif: TcxLabel;
     txtINSTANTEMODIF: TcxDBTextEdit;
     splSplitterFicha: TcxSplitter;
-    cxDBCurrencyEdit1: TcxDBCurrencyEdit;
+    curTOTAL_EUROS_DIFERENCIA_INV: TcxDBCurrencyEdit;
     btnIraArticulo: TcxButton;
-    Panel3: TPanel;
-    cxButton11: TcxButton;
+    pnlBotonesAccion: TPanel;
+    btnExportarExcel: TcxButton;
     btnIraArticuloMov: TcxButton;
     ActionList1: TActionList;
     actIraArticulo: TAction;
@@ -426,13 +426,6 @@ begin
 
   // Etiqueta visual del estado
   //lblEstadoDetalle.Caption := 'Estado del inventario: ' + Estado;
-//  case IndexStr(Estado, ['ABIERTO', 'APLICADO', 'CANCELADO']) of
-//    0: lblEstadoDetalle.Style.TextColor := clGreen;
-//    1: lblEstadoDetalle.Style.TextColor := clBlue;
-//    2: lblEstadoDetalle.Style.TextColor := clRed;
-//  else
-//    lblEstadoDetalle.Style.TextColor := clGray;
-//  end;
 
   // Botones de acciones globales
 {  btnRecalcular.Enabled               := Edicion;
@@ -638,7 +631,7 @@ begin
       tvLineas.EndUpdate;
     end;
   finally
-    NombresAtributos.Free;
+    FreeAndNil(NombresAtributos);
   end;
 end;
 
@@ -666,33 +659,10 @@ begin
                                                                        := V.Valor;
     end;
   finally
-    Lookup.Free;
+    FreeAndNil(Lookup);
   end;
 end;
 
-//procedure TfrmMtoInventarios.ConstruirSkuDesdeAtributos;
-//var
-//  i: Integer;
-//  ArticuloPadre, Sku, Valor: string;
-//begin
-//  // Concatena: CODIGO_ART_ART/VAL1/VAL2/...
-//  if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
-//
-// ArticuloPadre :=
-// dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
-//  if ArticuloPadre = '' then Exit;
-//
-//  Sku := ArticuloPadre;
-//  for i := 1 to FNumAtributosActual do
-//  begin
-// Valor := dmmInventarios.cdsLineas.FieldByName('ATTR' + IntToStr(i) +
-// '_VALOR').AsString;
-//    if Valor = '' then Exit; // SKU incompleto — todavía falta algún atributo
-//    Sku := Sku + '/' + Valor;
-//  end;
-//
-// dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := Sku;
-//end;
 
 // ============================================================================
 //   EVENTOS DE EDICIÓN DEL GRID DE LÍNEAS
@@ -766,7 +736,7 @@ begin
       Combo.Properties.Items.EndUpdate;
     end;
   finally
-    Qry.Free;
+    FreeAndNil(Qry);
   end;
 
   // Si la celda esta vacia, preseleccionamos la primera opcion y, al entrar
@@ -1080,7 +1050,7 @@ begin
     ATipoArt     := Resolucion.TipoArticulo;
     AEncontrado  := True;
   finally
-    Validador.Free;
+    FreeAndNil(Validador);
   end;
 end;
 
@@ -1638,7 +1608,7 @@ begin
       Screen.Cursor := crDefault;
     end;
   finally
-    Lista.Free;
+    FreeAndNil(Lista);
   end;
 end;
 

@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataDepositosCliente,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type
@@ -55,6 +55,7 @@ type
     dmmDepositosCliente: TdmDepositosCliente;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -63,7 +64,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -75,7 +76,12 @@ procedure TfrmMtoDepositosCliente.CrearTablaPrincipal;
 begin
   inherited;
   dmmDepositosCliente := tdmDataModule as TdmDepositosCliente;
-  pkFieldName := '`ID_DEPOSITO_DEP';
+  pkFieldName := 'ID_DEPOSITO_DEP';
+end;
+
+procedure TfrmMtoDepositosCliente.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

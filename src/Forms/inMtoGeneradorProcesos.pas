@@ -33,7 +33,7 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
-  UniDataGeneradorProcesos, cxCurrencyEdit, inMtoPrincipal, SynEditKeyCmds,
+  UniDataGeneradorProcesos, cxCurrencyEdit, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList;
 
@@ -43,14 +43,14 @@ const
 
 type
   TfrmMtoGeneradorProcesos = class(TfrmMtoGen)
-    pnl1: TPanel;
+    pnlTopFicha: TPanel;
     cxdbtxtdt1: TcxDBTextEdit;
     cxdbtxtdt2: TcxDBTextEdit;
-    pnl2: TPanel;
+    pnlBodyFicha: TPanel;
     pcPestana: TcxPageControl;
     tsSQL: TcxTabSheet;
     cxdbtxtdt15: TcxDBTextEdit;
-    Panel1: TPanel;
+    pnlInnerHeader: TPanel;
     lblCodigo: TcxLabel;
     lblNombre: TcxLabel;
     tsVistaDatos: TcxTabSheet;
@@ -72,22 +72,22 @@ type
     cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
-    cxspltr1: TcxSplitter;
-    pnl6: TPanel;
-    pnl7: TPanel;
+    splArbolMeta: TcxSplitter;
+    pnlInferior: TPanel;
+    pnlScriptOuter: TPanel;
     synsqlsyn2: TSynSQLSyn;
     btnEjecutar: TcxButton;
     cxmResul: TcxMemo;
     tsMetadatos: TcxTabSheet;
-    cxspltr2: TcxSplitter;
+    splDetalleMeta: TcxSplitter;
     pnlTabs: TPanel;
     pcMetadato: TcxPageControl;
     tsEstructura: TcxTabSheet;
-    mmo1: TMemo;
+    mmoSalida: TMemo;
     tsContenido: TcxTabSheet;
     cxgrdMetadatos1: TcxGrid;
     tvMetadatostvVista: TcxGridDBTableView;
-    tv2: TcxGridDBTableView;
+    tvVistaDatos: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA1: TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA1: TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA1: TcxGridDBColumn;
@@ -102,10 +102,10 @@ type
     cxgrdlvlMetadatoslv11: TcxGridLevel;
     pnlTree: TPanel;
     pnlTreeBotton: TPanel;
-    btRefresh: TcxButton;
+    btnRefresh: TcxButton;
     cxVista: TcxGrid;
     tvVista: TcxGridDBTableView;
-    tv3: TcxGridDBTableView;
+    tvVistaContenido: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA11: TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA11: TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA11: TcxGridDBColumn;
@@ -119,7 +119,7 @@ type
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA11: TcxGridDBColumn;
     lvVista: TcxGridLevel;
     tsOtros: TcxTabSheet;
-    pnl3: TPanel;
+    pnlBotonera: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     cxlblUsuarioAlta: TcxLabel;
     cxlblInstanteAlta: TcxLabel;
@@ -134,21 +134,21 @@ type
     pnlFacturaOpts1: TPanel;
     btnExportarExcelMeta: TcxButton;
     btnEditarMeta: TcxButton;
-    TreeView1: TTreeView;
-    Panel2: TPanel;
+    tvMetadatos: TTreeView;
+    pnlSidePanel: TPanel;
     btnBonito: TButton;
     btnAbrirScript: TButton;
-    ActionList1: TActionList;
+    alGenerador: TActionList;
     ActionSeleccionar: TAction;
     ActionEjecutar: TAction;
-    cxLabel1: TcxLabel;
-    Panel3: TPanel;
+    lblAyudaSeleccion: TcxLabel;
+    pnlMetadatosBody: TPanel;
     syndtEstructura: TSynEdit;
-    ScrollBar1: TScrollBar;
-    ScrollBar2: TScrollBar;
+    sbVertDerecho: TScrollBar;
+    sbVertCentro: TScrollBar;
     DBSynEdit1: TDBSynEdit;
     actComentar: TAction;
-    procedure btRefreshClick(Sender: TObject);
+    procedure btnRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
     procedure btnEjecutarClick(Sender: TObject);
@@ -179,6 +179,7 @@ type
   public
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   private
     FFindDialog: TFindDialog;
     FReplaceDialog: TReplaceDialog;
@@ -228,7 +229,7 @@ uses
   inLibDevExp,
   inLibGlobalVar,
   inLibDir,
-  ts.Editor.CodeFormatters;
+  ts.Editor.CodeFormatters, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -572,17 +573,6 @@ begin
 
     SB.Position := APosition;
 
-//  except on E: Exception do
-//    ShowMessage(
-//      'ScrollBar: ' + SB.Name         + sLineBreak +
-//      'AMax='      + IntToStr(AMax)   + sLineBreak +
-//      'APageSize=' + IntToStr(APageSize) + sLineBreak +
-//      'APosition=' + IntToStr(APosition) + sLineBreak +
-//      'SB.Max='    + IntToStr(SB.Max) + sLineBreak +
-//      'SB.Min='    + IntToStr(SB.Min) + sLineBreak +
-//      'Error: '    + E.Message
-//    );
-//  end;
 end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -611,9 +601,9 @@ begin
   end
 
   // 2. Si el foco está en el árbol, disparamos la magia de Ctrl + A
-  else if Screen.ActiveControl = TreeView1 then
+  else if Screen.ActiveControl = tvMetadatos then
   begin
-    if TreeView1.Selected <> nil then
+    if tvMetadatos.Selected <> nil then
     begin
       with dmmGeneradorProcesos do
       begin
@@ -692,7 +682,7 @@ begin
   inherited;
   (Sender as TAction).Enabled := (Screen.ActiveControl = DBSynEdit1)
                                  or (Screen.ActiveControl = syndtEstructura)
-                                 or (screen.ActiveControl = TreeView1);
+                                 or (screen.ActiveControl = tvMetadatos);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnBonitoClick(Sender: TObject);
@@ -742,10 +732,10 @@ begin
           DBSynEdit1.SetFocus;
       end;
     finally
-      slScript.Free;
+      FreeAndNil(slScript);
     end;
   finally
-    dlgAbrir.Free;
+    FreeAndNil(dlgAbrir);
   end;
 end;
 
@@ -896,7 +886,7 @@ begin
           end;
         end;
       finally
-        uScript.Free;
+        FreeAndNil(uScript);
       end;
     end;
   end;
@@ -914,7 +904,7 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxVista);
-  saveDialog.Free;
+  FreeAndNil(saveDialog);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnExportarExcelMetaClick(Sender: TObject);
@@ -929,7 +919,7 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxgrdMetadatos1);
-  saveDialog.Free;
+  FreeAndNil(saveDialog);
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnVerDatosClick(Sender: TObject);
@@ -941,7 +931,7 @@ begin
     dsTablaG.DataSet.Post;
  end;
 
-procedure TfrmMtoGeneradorProcesos.btRefreshClick(Sender: TObject);
+procedure TfrmMtoGeneradorProcesos.btnRefreshClick(Sender: TObject);
 begin
   inherited;
   Screen.Cursor := crHourGlass;
@@ -969,13 +959,13 @@ var
   iCodigo, iParent: Integer;
   DictNodos: TDictionary<Integer, TTreeNode>;
 begin
-  TreeView1.Items.BeginUpdate;
+  tvMetadatos.Items.BeginUpdate;
 
   // Inicializamos el diccionario que actuará como caché de búsqueda ultra
   // rápida
   DictNodos := TDictionary<Integer, TTreeNode>.Create;
   try
-    TreeView1.Items.Clear;
+    tvMetadatos.Items.Clear;
     dmmGeneradorProcesos.unqryMetadatos.DisableControls;
 
     // Pasada 1: nodos raíz (PARENT = '-1')
@@ -993,7 +983,7 @@ begin
         iCodigo := StrToIntDef(sCodigo, 0);
 
         // Creamos el nodo raíz
-        nodeRaiz := TreeView1.Items.Add(nil, sNombre);
+        nodeRaiz := tvMetadatos.Items.Add(nil, sNombre);
         nodeRaiz.Data := Pointer(NativeInt(iCodigo));
 
         // ¡Magia! Lo guardamos en el diccionario usando su código como llave
@@ -1020,7 +1010,7 @@ begin
         // Buscamos el nodo padre de forma instantánea, sin recorrer el árbol
         if DictNodos.TryGetValue(iParent, nodeRaiz) then
         begin
-          nodeHijo := TreeView1.Items.AddChild(nodeRaiz, sNombre);
+          nodeHijo := tvMetadatos.Items.AddChild(nodeRaiz, sNombre);
           nodeHijo.Data := Pointer(NativeInt(iCodigo));
 
           // Añadimos también este hijo al diccionario por si tiene subniveles
@@ -1033,9 +1023,9 @@ begin
 
   finally
     // Es vital liberar el diccionario de la memoria
-    DictNodos.Free;
+    FreeAndNil(DictNodos);
     dmmGeneradorProcesos.unqryMetadatos.EnableControls;
-    TreeView1.Items.EndUpdate;
+    tvMetadatos.Items.EndUpdate;
   end;
 end;
 
@@ -1062,6 +1052,11 @@ begin
   syndtEstructura.EndUpdate;
 end;
 
+procedure TfrmMtoGeneradorProcesos.ResetForm;
+begin
+  inherited;
+end;
+
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
   Sender: TObject);
 var
@@ -1069,7 +1064,7 @@ var
   Formatter: ICodeFormatter;
 begin
   inherited;
-  ScrollBar2.Position := 1;
+  sbVertCentro.Position := 1;
   with dmmGeneradorProcesos do
   begin
     pcMetadato.ActivePage := tsEstructura;
@@ -1089,18 +1084,18 @@ begin
                          unqryMetadatos.FieldByName(
                            'NOMBRE_META_META').AsString;
       unqryEstructura.Open;
-      mmo1.Lines.Text :=
+      mmoSalida.Lines.Text :=
                       Trim(unqryEstructura.FieldByName('Create View').AsString);
-      mmo1.Lines.Text := StringReplace(mmo1.Lines.Text,
+      mmoSalida.Lines.Text := StringReplace(mmoSalida.Lines.Text,
                            'ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` '+
                            'SQL SECURITY DEFINER',
                            '',
                            [rfReplaceAll]);
-      mmo1.Lines.Text := StringReplace(mmo1.Lines.Text,
+      mmoSalida.Lines.Text := StringReplace(mmoSalida.Lines.Text,
                            ' separator '',''',
                            '',
                            [rfReplaceAll, rfIgnoreCase]);
-      var sSQL := mmo1.Lines.Text;
+      var sSQL := mmoSalida.Lines.Text;
       sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
 
       // 3. Normalizar espacios múltiples
@@ -1215,16 +1210,9 @@ procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
 begin
   inherited;
   // [Ctrl + X] Cortar
-//  with TAction.Create(Self) do
-//  begin
-//    ActionList := ActionList1;
-//    ShortCut := scCtrl + Ord('/');
-//    OnExecute := ActionComentarExecute;
-//    OnUpdate  := ActionEditoresUpdate;
-//  end;
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+X');
     OnExecute := ActionCortarExecute;
     OnUpdate  := ActionEditoresUpdate;
@@ -1232,7 +1220,7 @@ begin
   // [Ctrl + C] Copiar
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+C');
     OnExecute := ActionCopiarExecute;
     OnUpdate  := ActionEditoresUpdate;
@@ -1240,14 +1228,14 @@ begin
   // [Ctrl + V] Pegar
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+V');
     OnExecute := ActionPegarExecute;
     OnUpdate  := ActionEditoresUpdate;
   end;
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+Z');
     OnExecute := ActionDeshacerExecute;
     OnUpdate  := ActionEditoresUpdate;
@@ -1255,7 +1243,7 @@ begin
   // [Shift + Ctrl + Z] Rehacer
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Shift+Ctrl+Z');
     OnExecute := ActionRehacerExecute;
     OnUpdate  := ActionEditoresUpdate;
@@ -1263,7 +1251,7 @@ begin
   // [Ctrl + Y] Borrar Línea
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+Y');
     OnExecute := ActionBorrarLineaExecute;
     OnUpdate  := ActionEditoresUpdate;
@@ -1310,19 +1298,19 @@ begin
     DBsynEdit1.SetFocus;
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+F');
     OnExecute := ActionBuscarExecute;
   end;
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+R');
     OnExecute := ActionReemplazarExecute;
   end;
   with TAction.Create(Self) do
   begin
-    ActionList := ActionList1;
+    ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+Shift+F');
     OnExecute := ActionBuscarGlobalExecute;
   end;
@@ -1335,7 +1323,7 @@ procedure TfrmMtoGeneradorProcesos.SynEdit1StatusChange(Sender: TObject;
 begin
   inherited;
   SafeSetScrollBar(
-    ScrollBar1,
+    sbVertDerecho,
     DBSynEdit1.Lines.Count,
     DBSynEdit1.LinesInWindow,
     DBSynEdit1.TopLine
@@ -1353,8 +1341,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.ScrollBar1Change(Sender: TObject);
 begin
   inherited;
-  if DBSynEdit1.TopLine <> ScrollBar1.Position then
-    DBSynEdit1.TopLine := ScrollBar1.Position;
+  if DBSynEdit1.TopLine <> sbVertDerecho.Position then
+    DBSynEdit1.TopLine := sbVertDerecho.Position;
 end;
 
 procedure TfrmMtoGeneradorProcesos.syndtEstructuraStatusChange(Sender: TObject;
@@ -1362,7 +1350,7 @@ procedure TfrmMtoGeneradorProcesos.syndtEstructuraStatusChange(Sender: TObject;
 begin
   inherited;
   SafeSetScrollBar(
-    ScrollBar2,
+    sbVertCentro,
     syndtEstructura.Lines.Count,
     syndtEstructura.LinesInWindow,
     syndtEstructura.TopLine
@@ -1380,8 +1368,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.ScrollBar2Change(Sender: TObject);
 begin
   inherited;
-  if syndtEstructura.TopLine <> ScrollBar2.Position then
-    syndtEstructura.TopLine := ScrollBar2.Position;
+  if syndtEstructura.TopLine <> sbVertCentro.Position then
+    syndtEstructura.TopLine := sbVertCentro.Position;
 end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1Change(Sender: TObject;
@@ -1389,9 +1377,9 @@ procedure TfrmMtoGeneradorProcesos.TreeView1Change(Sender: TObject;
 var
   iCodigo: Integer;
 begin
-  ScrollBar2.PageSize := 1;
-  ScrollBar2.Max      := 1;
-  ScrollBar2.Position := 0;
+  sbVertCentro.PageSize := 1;
+  sbVertCentro.Max      := 1;
+  sbVertCentro.Position := 0;
   // Si no hay nodo seleccionado (por ejemplo, al limpiar el árbol), salimos
   if Node = nil then Exit;
 
@@ -1404,22 +1392,6 @@ begin
   // Llama a tu lógica existente para actualizar la interfaz/datos
   cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
 end;
-//end;
-//
-//procedure TfrmMtoGeneradorProcesos.TreeView1Click(Sender: TObject);
-//var
-//  nodo: TTreeNode;
-//  iCodigo: Integer;
-//begin
-//  nodo := TreeView1.Selected;
-//  if nodo = nil then Exit;
-//  iCodigo := NativeInt(nodo.Data);
-//  // Posicionar el dataset en el registro correspondiente
-//  dmmGeneradorProcesos.unqryMetadatos.Locate(
-//    'CODIGO_META_META', iCodigo, []);
-//  // Ahora llama a tu lógica existente
-//  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
-//end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
 var
@@ -1429,7 +1401,7 @@ var
   sCallText: string;
   qryParams: TUniQuery;
 begin
-  nodo := TreeView1.Selected;
+  nodo := tvMetadatos.Selected;
   if nodo = nil then Exit;
   iCodigo := NativeInt(nodo.Data);
   dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_META_META', iCodigo, []);
@@ -1480,7 +1452,7 @@ begin
         end;
         sCallText := sCallText + ');';
       finally
-        qryParams.Free;
+        FreeAndNil(qryParams);
       end;
       // Ponemos el dataset principal en modo Inserción
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
@@ -1504,8 +1476,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.tsMetadatosShow(Sender: TObject);
 begin
   inherited;
-  if TreeView1.Items.Count = 0 then
-    btRefreshClick(nil);
+  if tvMetadatos.Items.Count = 0 then
+    btnRefreshClick(nil);
 end;
 
 procedure TfrmMtoGeneradorProcesos.tsSQLShow(Sender: TObject);

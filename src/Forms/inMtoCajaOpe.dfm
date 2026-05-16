@@ -1,4 +1,4 @@
-object frmMtoOpeCaja: TfrmMtoOpeCaja
+inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Left = 0
   Top = 0
   Caption = 'Operaci'#243'n de Caja'
@@ -16,7 +16,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 22
-  object pnlUp1: TPanel
+  object pnlUp: TPanel
     Left = 0
     Top = 0
     Width = 1364
@@ -117,14 +117,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       TabOrder = 5
     end
   end
-  object pnlCli1: TPanel
+  object pnlCli: TPanel
     Left = 0
     Top = 89
     Width = 1364
     Height = 340
     Align = alClient
     TabOrder = 3
-    object Panel1: TPanel
+    object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
       Width = 1362
@@ -221,35 +221,35 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Font.Style = [fsUnderline]
         ParentFont = False
       end
-      object cxLabel1: TcxLabel
+      object lblCobro: TcxLabel
         Left = 31
         Top = 71
         Caption = 'Cobro'
         TabOrder = 7
         Transparent = True
       end
-      object cxLabel2: TcxLabel
+      object lblBuscar: TcxLabel
         Left = 136
         Top = 71
         Caption = 'Buscar'
         TabOrder = 8
         Transparent = True
       end
-      object cxLabel3: TcxLabel
+      object lblTarifa: TcxLabel
         Left = 354
         Top = 71
         Caption = 'Tarifa'
         TabOrder = 10
         Transparent = True
       end
-      object cxLabel4: TcxLabel
+      object lblIndIVA: TcxLabel
         Left = 555
         Top = 71
         Caption = 'Ind. IVA'
         TabOrder = 11
         Transparent = True
       end
-      object cxLabel5: TcxLabel
+      object lblOtro: TcxLabel
         Left = 673
         Top = 71
         Caption = 'Otro'
@@ -300,7 +300,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Font.Style = [fsUnderline]
         ParentFont = False
       end
-      object cxLabel6: TcxLabel
+      object lblEliminar: TcxLabel
         Left = 235
         Top = 71
         Caption = 'Eliminar'
@@ -324,7 +324,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Font.Style = [fsUnderline]
         ParentFont = False
       end
-      object lbl1: TcxLabel
+      object lblBusqTick: TcxLabel
         Left = 452
         Top = 71
         Caption = 'B'#250'sq Tick'
@@ -349,7 +349,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         ParentFont = False
         OnClick = btnF2Click
       end
-      object cxLabel7: TcxLabel
+      object lblCargarCta: TcxLabel
         Left = 763
         Top = 69
         Caption = 'Cargar cta.'
@@ -357,14 +357,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Transparent = True
       end
     end
-    object Panel2: TPanel
+    object pnlAccionesDer: TPanel
       Left = 1
       Top = 1
       Width = 1362
       Height = 240
       Align = alClient
       TabOrder = 0
-      object cxGrid1: TcxGrid
+      object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1
         Width = 1360
@@ -379,7 +379,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        object cxGrid1DBTableView1: TcxGridDBTableView
+        object tvLineasOpe: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
@@ -394,7 +394,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
           OptionsView.NoDataToDisplayInfoText = 'No hay art'#237'culos'
           OptionsView.ColumnAutoWidth = True
           OptionsView.GroupByBox = False
-          Styles.Header = cxstyl2
+          Styles.Header = styCabecera
           object tvEmpleado: TcxGridDBColumn
             Caption = 'Vend.'
             DataBinding.FieldName = 'CODIGO_VENDEDOR_FACLIN'
@@ -406,9 +406,9 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
             DataBinding.FieldName = 'CODIGO_ART_FACLIN'
             PropertiesClassName = 'TcxExtLookupComboBoxProperties'
             Properties.DropDownListStyle = lsEditList
-            Properties.View = dbtvBusqDBTableView1
+            Properties.View = dbtvBusq
             Properties.KeyFieldNames = 'CODIGO_PADRE'
-            Properties.ListFieldItem = cxgrdbclmnBusqDBTableView1INPUT_BUSQUEDA
+            Properties.ListFieldItem = dbtvBusqINPUT_BUSQUEDA
             Properties.OnCloseUp = tvArticuloPropertiesCloseUp
             Properties.OnValidate = tvArticuloPropertiesValidate
             OnGetProperties = tvArticuloGetProperties
@@ -462,11 +462,11 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
             Width = 137
           end
         end
-        object cxGrid1Level1: TcxGridLevel
-          GridView = cxGrid1DBTableView1
+        object cxgrdlvlLineasOpe: TcxGridLevel
+          GridView = tvLineasOpe
         end
       end
-      object pnl1: TPanel
+      object pnlBusqueda: TPanel
         Left = 1
         Top = 123
         Width = 1360
@@ -504,15 +504,15 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
             OptionsView.NoDataToDisplayInfoText = 'Sin stock'
             OptionsView.ColumnAutoWidth = True
             OptionsView.GroupByBox = False
-            Styles.Content = cxstyl1
-            Styles.Header = cxstyl
+            Styles.Content = styImporte
+            Styles.Header = styPrincipal
           end
-          object cxgrdlvl1: TcxGridLevel
+          object cxgrdlvlBusqueda: TcxGridLevel
             GridView = dbtvStock
           end
         end
       end
-      object cxspltr1: TcxSplitter
+      object splOpe: TcxSplitter
         Left = 1
         Top = 113
         Width = 1360
@@ -523,7 +523,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       end
     end
   end
-  object cxLabel8: TcxLabel
+  object lblCliente: TcxLabel
     Left = 463
     Top = 27
     AutoSize = False
@@ -575,7 +575,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     OnExit = btnCodigoEmpleadoExit
     Width = 121
   end
-  object Timer1: TTimer
+  object tmrReloj: TTimer
     OnTimer = Timer1Timer
     Left = 1040
     Top = 32
@@ -584,7 +584,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Left = 648
     Top = 136
   end
-  object jvntrstb1: TJvEnterAsTab
+  object jvEnterTab: TJvEnterAsTab
     Left = 840
     Top = 432
   end
@@ -597,7 +597,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
     Left = 896
     Top = 432
     PixelsPerInch = 96
-    object cxstyl: TcxStyle
+    object styPrincipal: TcxStyle
       AssignedValues = [svColor, svFont]
       Color = 11529442
       Font.Charset = DEFAULT_CHARSET
@@ -606,7 +606,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end
-    object cxstyl1: TcxStyle
+    object styImporte: TcxStyle
       AssignedValues = [svFont]
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clOlive
@@ -614,7 +614,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Font.Name = 'Lucida Sans'
       Font.Style = []
     end
-    object cxstyl2: TcxStyle
+    object styCabecera: TcxStyle
       AssignedValues = [svColor, svFont, svTextColor]
       Color = 11529442
       Font.Charset = DEFAULT_CHARSET
@@ -661,7 +661,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
   object tvrBusq: TcxGridViewRepository
     Left = 80
     Top = 312
-    object dbtvBusqDBTableView1: TcxGridDBTableView
+    object dbtvBusq: TcxGridDBTableView
       DataController.DataModeController.SyncMode = False
       DataController.DataSource = dsBusq
       DataController.KeyFieldNames = 'CODIGO_PADRE'
@@ -673,7 +673,7 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       OptionsSelection.CellSelect = False
       OptionsView.GroupByBox = False
       OptionsView.Header = False
-      object cxgrdbclmnBusqDBTableView1INPUT_BUSQUEDA: TcxGridDBColumn
+      object dbtvBusqINPUT_BUSQUEDA: TcxGridDBColumn
         DataBinding.FieldName = 'INPUT_BUSQUEDA'
         PropertiesClassName = 'TcxTextEditProperties'
         Properties.IncrementalSearch = False
@@ -690,10 +690,10 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
         Options.GroupFooters = False
         Options.Grouping = False
       end
-      object cxgrdbclmnBusqDBTableView1CODIGO_ARTICULO: TcxGridDBColumn
+      object dbtvBusqCODIGO_ARTICULO: TcxGridDBColumn
         DataBinding.FieldName = 'CODIGO_PADRE'
       end
-      object cxgrdbclmnBusqDBTableView1DESCRIPCION_ARTICULO: TcxGridDBColumn
+      object dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn
         DataBinding.FieldName = 'DESCRIPCION_ART'
       end
     end
@@ -713,14 +713,14 @@ object frmMtoOpeCaja: TfrmMtoOpeCaja
       Properties.ImmediateDropDownWhenActivated = True
       Properties.ImmediateDropDownWhenKeyPressed = False
       Properties.IncrementalFiltering = False
-      Properties.View = dbtvBusqDBTableView1
+      Properties.View = dbtvBusq
       Properties.KeyFieldNames = 'CODIGO_PADRE'
-      Properties.ListFieldItem = cxgrdbclmnBusqDBTableView1INPUT_BUSQUEDA
+      Properties.ListFieldItem = dbtvBusqINPUT_BUSQUEDA
       Properties.OnInitPopup = repComboBoxPropertiesInitPopup
       Properties.OnValidate = tvArticuloPropertiesValidate
     end
   end
-  object actlst1: TActionList
+  object alCajaOpe: TActionList
     Left = 312
     Top = 168
     object actBuscarEmpleados: TAction

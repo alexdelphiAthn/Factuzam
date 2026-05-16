@@ -71,7 +71,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         ExplicitTop = 29
         ExplicitWidth = 855
         ExplicitHeight = 500
-        object pnl1: TPanel
+        object pnlTopFicha: TPanel
           Left = 0
           Top = 0
           Width = 855
@@ -103,7 +103,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             TabOrder = 3
             Width = 57
           end
-          object Panel1: TPanel
+          object pnlInnerHeader: TPanel
             Left = 1
             Top = 1
             Width = 853
@@ -143,7 +143,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             end
           end
         end
-        object pnl2: TPanel
+        object pnlBodyFicha: TPanel
           Left = 0
           Top = 123
           Width = 855
@@ -171,7 +171,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               ExplicitTop = 0
               ExplicitWidth = 0
               ExplicitHeight = 0
-              object pnl6: TPanel
+              object pnlInferior: TPanel
                 Left = 0
                 Top = 259
                 Width = 849
@@ -188,14 +188,14 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Width = 847
                 end
               end
-              object pnl7: TPanel
+              object pnlScriptOuter: TPanel
                 Left = 0
                 Top = 0
                 Width = 849
                 Height = 259
                 Align = alClient
                 TabOrder = 1
-                object Panel2: TPanel
+                object pnlSidePanel: TPanel
                   Left = 731
                   Top = 1
                   Width = 117
@@ -221,7 +221,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     OnClick = btnAbrirScriptClick
                   end
                 end
-                object ScrollBar1: TScrollBar
+                object sbVertDerecho: TScrollBar
                   Left = 712
                   Top = 1
                   Width = 19
@@ -296,7 +296,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               ExplicitTop = 0
               ExplicitWidth = 0
               ExplicitHeight = 0
-              object cxspltr2: TcxSplitter
+              object splDetalleMeta: TcxSplitter
                 Left = 377
                 Top = 0
                 Width = 10
@@ -332,7 +332,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     ExplicitTop = 0
                     ExplicitWidth = 0
                     ExplicitHeight = 0
-                    object mmo1: TMemo
+                    object mmoSalida: TMemo
                       Left = 488
                       Top = 344
                       Width = 57
@@ -343,7 +343,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                       TabOrder = 0
                       Visible = False
                     end
-                    object Panel3: TPanel
+                    object pnlMetadatosBody: TPanel
                       Left = 0
                       Top = 0
                       Width = 456
@@ -418,7 +418,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                             ShortCut2 = 8201
                           end>
                       end
-                      object ScrollBar2: TScrollBar
+                      object sbVertCentro: TScrollBar
                         Left = 437
                         Top = 0
                         Width = 19
@@ -494,7 +494,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         OptionsView.GroupByBox = False
                         OptionsView.GroupFooters = gfAlwaysVisible
                       end
-                      object tv2: TcxGridDBTableView
+                      object tvVistaDatos: TcxGridDBTableView
                         DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
                         DataController.KeyFieldNames = 'LINEA_FACLIN'
                         DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
@@ -615,23 +615,23 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Height = 41
                   Align = alBottom
                   TabOrder = 0
-                  object btRefresh: TcxButton
+                  object btnRefresh: TcxButton
                     Left = 5
                     Top = 6
                     Width = 188
                     Height = 25
                     Caption = 'Refrescar &MetaDatos'
                     TabOrder = 0
-                    OnClick = btRefreshClick
+                    OnClick = btnRefreshClick
                   end
-                  object cxLabel1: TcxLabel
+                  object lblAyudaSeleccion: TcxLabel
                     Left = 199
                     Top = 8
                     Caption = 'Control+A al editor'
                     TabOrder = 1
                   end
                 end
-                object TreeView1: TTreeView
+                object tvMetadatos: TTreeView
                   Left = 1
                   Top = 1
                   Width = 375
@@ -704,7 +704,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   OptionsView.GroupByBox = False
                   OptionsView.GroupFooters = gfAlwaysVisible
                 end
-                object tv3: TcxGridDBTableView
+                object tvVistaContenido: TcxGridDBTableView
                   DataController.DetailKeyFieldNames = 'NUMERO_FAC_FACLIN; SERIE_FAC_FACLIN'
                   DataController.KeyFieldNames = 'LINEA_FACLIN'
                   DataController.MasterKeyFieldNames = 'NUMERO_FAC; SERIE_FAC'
@@ -811,7 +811,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsOtros: TcxTabSheet
               Caption = '&4_Otros'
               ImageIndex = 3
-              object pnl3: TPanel
+              object pnlBotonera: TPanel
                 Left = 0
                 Top = 265
                 Width = 849
@@ -918,14 +918,14 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             end
           end
         end
-        object cxspltr1: TcxSplitter
+        object splArbolMeta: TcxSplitter
           Left = 0
           Top = 113
           Width = 855
           Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
-          Control = pnl1
+          Control = pnlTopFicha
           ExplicitWidth = 10
         end
       end
@@ -1080,7 +1080,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Left = 428
     Top = 287
   end
-  object ActionList1: TActionList
+  object alGenerador: TActionList
     Left = 488
     Top = 272
     object ActionSeleccionar: TAction

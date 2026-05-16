@@ -34,9 +34,9 @@ type
     lblF10: TcxLabel;
     lblBuscarModificar: TcxLabel;
     lblVentas: TcxLabel;
-    Shape1: TShape;
-    cxClock1: TcxClock;
-    Timer1: TTimer;
+    shpFondo: TShape;
+    clkHora: TcxClock;
+    tmrReloj: TTimer;
     lblF6: TcxLabel;
     lblEntradaCambio: TcxLabel;
     lblF7: TcxLabel;
@@ -46,16 +46,16 @@ type
     lblSalir: TcxLabel;
     lblESC: TcxLabel;
     lblFecha: TcxLabel;
-    cxLabel2: TcxLabel;
-    cxLabel3: TcxLabel;
-    Shape2: TShape;
+    lblTituloFzam: TcxLabel;
+    lblTituloVerifactu: TcxLabel;
+    shpSeparador: TShape;
     lblF3: TcxLabel;
     lblTraspasos: TcxLabel;
-    jvgfnmtr1: TJvGIFAnimator;
+    gifAnimador: TJvGIFAnimator;
     lblEmpresa: TcxLabel;
-    JvMonthCalendar1: TJvMonthCalendar;
-    ActionList1: TActionList;
-    Action1: TAction;
+    calMes: TJvMonthCalendar;
+    alCajaMenu: TActionList;
+    actSalirMenu: TAction;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     // Eventos F5
@@ -219,13 +219,13 @@ procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 begin
   Self.Position := poScreenCenter;
   // forzar mes actual (evita fecha cacheada en DFM)
-  JvMonthCalendar1.Date := Date;
+  calMes.Date := Date;
 
   Application.ShowHint     := True;
   Application.HintPause    := 500;
   Application.HintHidePause := 5000;
-  JvMonthCalendar1.ShowHint       := True;
-  JvMonthCalendar1.ParentShowHint := False;
+  calMes.ShowHint       := True;
+  calMes.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
 
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
@@ -254,7 +254,7 @@ begin
 
   // Forzar repintado para que el calendario marque el mes actual con los días
   // con ventas
-  JvMonthCalendar1.Invalidate;
+  calMes.Invalidate;
 
   FOriginalF5Color := lblF5.Style.TextColor;
   FOriginalVentasColor := lblVentas.Style.TextColor;
@@ -279,7 +279,7 @@ end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
-  FVentasCal.Free;
+  FreeAndNil(FVentasCal);
 end;
 
 procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
@@ -317,7 +317,7 @@ end;
 
 procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
 begin
-  cxClock1.Time := Now;
+  clkHora.Time := Now;
 end;
 
 procedure TfrmMtoMenuCaja.AbrirBuscarModificar;
@@ -336,7 +336,7 @@ begin
     frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
     frm.Show;
   except
-    frm.Free;
+    FreeAndNil(frm);
     raise;
   end;
 end;
@@ -365,7 +365,7 @@ begin
     else
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);
   finally
-    frm.Free;
+    FreeAndNil(frm);
   end;
 end;
 
@@ -379,7 +379,7 @@ procedure TfrmMtoMenuCaja.RecargarCalendario;
 begin
   // Si el contexto cambió, esto vacía el caché internamente
   FVentasCal.Reconfigurar(FEmpresa, FAlmacen, FCaja);
-  JvMonthCalendar1.Invalidate;
+  calMes.Invalidate;
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
@@ -392,7 +392,7 @@ procedure TfrmMtoMenuCaja.JvMonthCalendar1Click(Sender: TObject);
 var
   VentaDia: TVentasDia;
 begin
-  FFechaCaja := JvMonthCalendar1.Date;
+  FFechaCaja := calMes.Date;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
   // Si quieres mostrar el resumen del día clickado, descomenta:
   // VentaDia := FVentasCal.GetVentasDia(FFechaCaja);
@@ -402,8 +402,8 @@ end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
 begin
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', JvMonthCalendar1.Date);
-  FFechaCaja := JvMonthCalendar1.Date;
+  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', calMes.Date);
+  FFechaCaja := calMes.Date;
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject;
@@ -434,7 +434,7 @@ end;
 
 procedure TfrmMtoMenuCaja.cxButton1Click(Sender: TObject);
 begin
-  JvMonthCalendar1.Date := Now;
+  calMes.Date := Now;
 end;
 
 // =============================================================================
@@ -558,7 +558,7 @@ begin
                                   Self.FFechaCaja);
     frmMtoOpeCaja.Show;
   except
-    frmMtoOpeCaja.Free;
+    FreeAndNil(frmMtoOpeCaja);
   end;
 end;
 

@@ -57,7 +57,7 @@
           BevelInner = bvRaised
           BevelKind = bkSoft
           TabOrder = 0
-          object lblDescuento1: TcxLabel
+          object lblImporteDtoLineal: TcxLabel
             Left = 8
             Top = 61
             Caption = 'Imp dto. Lineal'
@@ -70,7 +70,7 @@
             Style.IsFontAssigned = True
             TabOrder = 0
           end
-          object lblDescuento2: TcxLabel
+          object lblImporteTotalAPagar: TcxLabel
             Left = 8
             Top = 143
             Caption = 'Imp TOTAL a pagar'
@@ -194,7 +194,7 @@
           BevelInner = bvRaised
           BevelKind = bkSoft
           TabOrder = 1
-          object lblDescuento3: TcxLabel
+          object lblPendienteCobro: TcxLabel
             Left = 8
             Top = 58
             Caption = 'Pendiente de cobro'
@@ -207,7 +207,7 @@
             Style.IsFontAssigned = True
             TabOrder = 0
           end
-          object lblSuma1: TcxLabel
+          object lblImporteACuenta: TcxLabel
             Left = 8
             Top = 18
             Caption = 'Importe a dejar A CUENTA'
@@ -253,7 +253,7 @@
           BevelInner = bvRaised
           BevelKind = bkSoft
           TabOrder = 2
-          object lblDescuento31: TcxLabel
+          object lblValeEmitido: TcxLabel
             Left = 8
             Top = 58
             Caption = 'Vale Emitido'
@@ -266,7 +266,7 @@
             Style.IsFontAssigned = True
             TabOrder = 0
           end
-          object lblSuma11: TcxLabel
+          object lblValeRecogido: TcxLabel
             Left = 8
             Top = 14
             Caption = 'Vale Recogido'
@@ -321,7 +321,7 @@
             OptionsData.Inserting = False
             OptionsView.GroupByBox = False
             OptionsView.Indicator = True
-            Styles.Header = cxStyle1
+            Styles.Header = styCobroLine
             object cxgrdbclmnCodigo: TcxGridDBColumn
               Caption = 'C'#243'digo'
               DataBinding.FieldName = 'CODIGO_FP_CFP'
@@ -336,7 +336,7 @@
               DataBinding.FieldName = 'DESCRIPCION_FORMA_PAGO_CFP'
               Options.Editing = False
               Options.Focusing = False
-              Styles.Header = cxStyle1
+              Styles.Header = styCobroLine
               Width = 254
             end
             object dbmImporte: TcxGridDBColumn
@@ -347,18 +347,18 @@
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
               OnGetDisplayText = dbmImporteGetDisplayText
               HeaderAlignmentHorz = taRightJustify
-              Styles.Header = cxStyle1
+              Styles.Header = styCobroLine
               Width = 249
             end
-            object dbtvFormasPagoColumn1: TcxGridDBColumn
+            object dbtvFormasPagoESDIVISA_FORMA_PAGO_CFP: TcxGridDBColumn
               DataBinding.FieldName = 'ESDIVISA_FORMA_PAGO_CFP'
               Visible = False
             end
-            object dbtvFormasPagoColumn2: TcxGridDBColumn
+            object dbtvFormasPagoESCRIPTO_FORMA_PAGO_CFP: TcxGridDBColumn
               DataBinding.FieldName = 'ESCRIPTO_FORMA_PAGO_CFP'
               Visible = False
             end
-            object dbtvFormasPagoColumn3: TcxGridDBColumn
+            object dbtvFormasPagoESIMPORTE_DIVISA: TcxGridDBColumn
               DataBinding.FieldName = 'ESIMPORTE_DIVISA'
               Visible = False
             end
@@ -376,7 +376,7 @@
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
-          object lblDescuento4: TcxLabel
+          object lblPendienteCobroAlt: TcxLabel
             Left = 15
             Top = 43
             Caption = 'Pendiente de cobro'
@@ -402,7 +402,7 @@
             TabOrder = 1
             Width = 171
           end
-          object cxLabel1: TcxLabel
+          object lblDevolucionCambio: TcxLabel
             Left = 15
             Top = 4
             Caption = 'Devoluci'#243'n de cambio'
@@ -880,7 +880,7 @@
           Text = '00000000'
           Width = 209
         end
-        object cbbSerie1: TcxComboBox
+        object cbbSERIE_FAC: TcxComboBox
           Left = 32
           Top = 47
           ParentFont = False
@@ -891,7 +891,7 @@
           Style.Font.Style = []
           Style.IsFontAssigned = True
           TabOrder = 2
-          Text = 'cbbSerie1'
+          Text = 'cbbSERIE_FAC'
           Width = 209
         end
       end
@@ -928,7 +928,7 @@
       Height = 220
       Width = 58
     end
-    object cxLabel2: TcxLabel
+    object lblTituloFzam: TcxLabel
       Left = 1
       Top = 398
       AutoSize = False
@@ -957,7 +957,7 @@
     Left = 472
     Top = 512
   end
-  object ActionList1: TActionList
+  object alFaseCobro: TActionList
     Left = 304
     Top = 328
     object actSalir: TAction
@@ -996,9 +996,9 @@
       OnExecute = actDepositoClienteExecute
     end
   end
-  object cxStyleRepository1: TcxStyleRepository
+  object styRepoCobro: TcxStyleRepository
     PixelsPerInch = 96
-    object cxStyle1: TcxStyle
+    object styCobroLine: TcxStyle
       AssignedValues = [svColor, svTextColor]
       Color = clSkyBlue
       TextColorType = AlphaColor

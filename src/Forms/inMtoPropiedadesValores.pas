@@ -28,7 +28,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataPropiedadesValores,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, inMtoPrincipal, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type
@@ -46,6 +46,7 @@ type
     dmmPropiedadesValores: TdmPropiedadesValores;
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -54,7 +55,7 @@ var
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -66,7 +67,12 @@ procedure TfrmMtoPropiedadesValores.CrearTablaPrincipal;
 begin
   inherited;
   dmmPropiedadesValores := tdmDataModule as TdmPropiedadesValores;
-  pkFieldName := '`ID_PV_ARTPROP';
+  pkFieldName := 'ID_PV_ARTPROP';
+end;
+
+procedure TfrmMtoPropiedadesValores.ResetForm;
+begin
+  inherited;
 end;
 
 initialization

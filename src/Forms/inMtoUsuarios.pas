@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoPrincipal,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -54,15 +54,16 @@ type
     cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinEMPRESADEF_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinULTIMOLOGIN_USUARIO: TcxGridDBColumn;
-    btSetPass: TcxButton;
+    btnSetPass: TcxButton;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn;
-    procedure btSetPassClick(Sender: TObject);
+    procedure btnSetPassClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   private
     { Private declarations }
   public
     procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 
 var
@@ -72,7 +73,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoModalGenPass;
+  inLibWin, inMtoModalGenPass, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -80,7 +81,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoUsuarios }
 
-procedure TfrmMtoUsuarios.btSetPassClick(Sender: TObject);
+procedure TfrmMtoUsuarios.btnSetPassClick(Sender: TObject);
 var
   formulario: TfrmModalGenPass;
 begin
@@ -113,6 +114,11 @@ begin
                                                          dmmUsuarios.dsEmpresas;
   dmmUsuarios.unqryEmpresas.Open;
   pkFieldName := 'USUARIO_USU';
+end;
+
+procedure TfrmMtoUsuarios.ResetForm;
+begin
+  inherited;
 end;
 
 procedure TfrmMtoUsuarios.dsTablaGStateChange(Sender: TObject);
