@@ -273,5 +273,5 @@ end;
 initialization
   Log := TLog.Create;
 finalization
-  Log.Free;
+  FreeAndNil(Log);
 end.

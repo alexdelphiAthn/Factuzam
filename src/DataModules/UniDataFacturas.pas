@@ -395,7 +395,7 @@ begin
               'Error al calcular factura: ' + facTotales.MensajeError);
         end;
       finally
-        facTotales.Free;
+        FreeAndNil(facTotales);
       end;
     except
       on E: Exception do
@@ -1449,8 +1449,8 @@ begin
       qLineas.Next;
     end;
   finally
-    qLineas.Free;
-    qExiste.Free;
+    FreeAndNil(qLineas);
+    FreeAndNil(qExiste);
   end;
 
   if unqryMovimientosFac.Active then

@@ -158,7 +158,7 @@ end;
 destructor TGestorVariaciones.Destroy;
 begin
   LimpiarTodo;
-  FSlotsVar.Free;
+  FreeAndNil(FSlotsVar);
 //  FSlotsSkus.Free;
   inherited;
 end;
@@ -172,10 +172,10 @@ var i: Integer;
 begin
   for i := 0 to FSlotsVar.Count - 1 do
     if Assigned(FSlotsVar[i].Opciones) then
-      FSlotsVar[i].Opciones.Free;
+      FreeAndNil(FSlotsVar[i].Opciones);
   FSlotsVar.Clear;
   while FPanelAtributos.ControlCount > 0 do
-    FPanelAtributos.Controls[0].Free;
+    FreeAndNil(FPanelAtributos.Controls[0]);
 end;
 
 procedure TGestorVariaciones.LimpiarSkus;
@@ -225,7 +225,7 @@ begin
       FNombreVariacion:= q.FieldByName('NOMBRE_VAR').AsString;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 
   if FTipoVariacion = '' then
@@ -293,7 +293,7 @@ begin
       qSlots.Next;
     end;
     finally
-      qSlots.Free;
+      FreeAndNil(qSlots);
   end;
 
   // ── 2. Cargar opciones de conjuntos disponibles para cada atributo ──────
@@ -324,7 +324,7 @@ begin
       FSlotsVar[i] := S;
     end;
   finally
-    qOpc.Free;
+    FreeAndNil(qOpc);
   end;
 end;
 
@@ -391,7 +391,7 @@ begin
   FPanelAtributos.DisableAlign;
   try
     while FPanelAtributos.ControlCount > 0 do
-      FPanelAtributos.Controls[0].Free;
+      FreeAndNil(FPanelAtributos.Controls[0]);
     for i := 0 to FSlotsVar.Count - 1 do
     begin
       S := FSlotsVar[i];
@@ -599,7 +599,7 @@ begin
     q.ParamByName('usr').AsString  := FUsuario;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -618,7 +618,7 @@ begin
     q.ParamByName('atr').AsString := IdAtributo;
     q.Execute;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 

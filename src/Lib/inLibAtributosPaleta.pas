@@ -159,7 +159,7 @@ begin
     end;
     GCacheCargado := True;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -301,7 +301,7 @@ begin
       q.Next;
     end;
   finally
-    q.Free;
+    FreeAndNil(q);
   end;
 end;
 
@@ -381,7 +381,7 @@ begin
       end;
     end;
   finally
-    Bmp.Free;
+    FreeAndNil(Bmp);
   end;
 end;
 
@@ -390,6 +390,6 @@ initialization
   GCacheCargado := False;
 
 finalization
-  GCache.Free;
+  FreeAndNil(GCache);
 
 end.

@@ -181,7 +181,7 @@ begin
 
     unqryDelete.Execute;
   finally
-    unqryDelete.Free;
+    FreeAndNil(unqryDelete);
   end;
 end;
 
@@ -324,8 +324,8 @@ begin
       iStart := iEnd + 1;
     end;
   finally
-    sSQL.Free;
-    qry.Free;
+    FreeAndNil(sSQL);
+    FreeAndNil(qry);
   end;
 end;
 

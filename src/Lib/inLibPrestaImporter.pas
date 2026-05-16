@@ -80,10 +80,10 @@ end;
 
 destructor TPrestaConn.Destroy;
 begin
-  FRequest.Free;
-  FResponse.Free;
-  FClient.Free;
-  FAuth.Free;
+  FreeAndNil(FRequest);
+  FreeAndNil(FResponse);
+  FreeAndNil(FClient);
+  FreeAndNil(FAuth);
   inherited;
 end;
 
@@ -469,7 +469,7 @@ begin
           res.Estado     := Ord.EstadoPedido;
           aLista.Add(res);
         finally
-          Ord.Free;
+          FreeAndNil(Ord);
         end;
       except
         on E: Exception do
@@ -479,7 +479,7 @@ begin
     end;
     Result := True;
   finally
-    Conn.Free;
+    FreeAndNil(Conn);
   end;
 end;
 

@@ -120,7 +120,7 @@ end;
 
 destructor TTicketTermico.Destroy;
 begin
-  FComandos.Free;
+  FreeAndNil(FComandos);
   inherited;
 end;
 
@@ -282,8 +282,8 @@ begin
       FComandos.Append(Chr(DatosImagen[ByteIndex]));
     FComandos.Append(#13#10);
   finally
-    BitmapMono.Free;
-    BitmapEscalado.Free;
+    FreeAndNil(BitmapMono);
+    FreeAndNil(BitmapEscalado);
   end;
   Alinear(alIzquierda);
 end;
@@ -412,7 +412,7 @@ begin
                 Inc(i);
             end;
           finally
-            CP858.Free;
+            FreeAndNil(CP858);
           end;
           if not WritePrinter(hPrinter,
                               @DatosRaw[0],

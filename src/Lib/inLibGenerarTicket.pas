@@ -236,10 +236,10 @@ begin
         Ticket.Imprimir;
       end;
     finally
-      FormPreview.Free;
+      FreeAndNil(FormPreview);
     end;
   finally
-    Ticket.Free;
+    FreeAndNil(Ticket);
   end;
 end;
 

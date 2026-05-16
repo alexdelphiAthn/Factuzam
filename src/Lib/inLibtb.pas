@@ -161,8 +161,8 @@ begin
         Result[i] := Null; // Por seguridad, si falta algún valor
     end;
   finally
-    slCampos.Free;
-    slValores.Free;
+    FreeAndNil(slCampos);
+    FreeAndNil(slValores);
   end;
 end;
 
@@ -313,7 +313,7 @@ begin
       Calculador.Dto := Diferencia;
     end;
   finally
-    Calculador.Free; // Vuelca cambios al dataset de líneas
+    FreeAndNil(Calculador); // Vuelca cambios al dataset de líneas
   end;
   Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
   try
@@ -321,7 +321,7 @@ begin
     if Assigned(EventoUpdateTotal) then
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
-    Totales.Free;
+    FreeAndNil(Totales);
   end;
 end;
 
@@ -339,7 +339,7 @@ begin
     if not unqry.Eof then
       Result := unqry.Fields[0].AsString;
   finally
-    unqry.Free;
+    FreeAndNil(unqry);
   end;
 end;
 
@@ -365,7 +365,7 @@ begin
         ShowMessage('Error al generar contador automático: ' + E.Message);
     end;
   finally
-    SP.Free;
+    FreeAndNil(SP);
   end;
 end;
 
@@ -407,7 +407,7 @@ begin
       qryDefaults.Next;
     end;
   finally
-    qryDefaults.Free;
+    FreeAndNil(qryDefaults);
   end;
 end;
 
@@ -607,7 +607,7 @@ begin
     b64 := Base64EncodeBytes(dest);
     result := TEncoding.Default.GetString(b64);
   finally
-    cipher.Free;
+    FreeAndNil(cipher);
   end;
 end;
 

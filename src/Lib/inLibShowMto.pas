@@ -122,7 +122,7 @@ begin
         Exit;
       end;
     finally
-      ctx.Free;
+      FreeAndNil(ctx);
     end;
   end
   else
@@ -212,13 +212,13 @@ begin
           pOwner.tdmDataModule := NewDM;
           Result := NewDM;
         except
-          NewDM.Free;
+          FreeAndNil(NewDM);
           raise;
         end;
       end;
     end;
   finally
-    ctx.Free;
+    FreeAndNil(ctx);
   end;
 end;
 

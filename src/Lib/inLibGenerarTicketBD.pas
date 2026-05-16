@@ -328,7 +328,7 @@ begin
         end;
         Ticket.SaltarLineas(1);
       end;
-      qryDev.Free;
+      FreeAndNil(qryDev);
       // =======================================================================
       // CIFRA FINAL DE LA OPERACIÓN
       // =======================================================================
@@ -352,7 +352,7 @@ begin
         if not qryPagos.IsEmpty then
           TotalPagadoCaja := qryPagos.FieldByName('TOTAL').AsCurrency;
       finally
-        qryPagos.Free;
+        FreeAndNil(qryPagos);
       end;
       Ticket.LineaSeparadora('=');
       Ticket.SaltarLineas(1);
@@ -396,14 +396,14 @@ begin
         else
           Ticket.Imprimir;
       finally
-        FormPreview.Free;
+        FreeAndNil(FormPreview);
       end;
     finally
-      Ticket.Free;
+      FreeAndNil(Ticket);
     end;
   finally
-    QrySec.Free;
-    QryEmp.Free;
+    FreeAndNil(QrySec);
+    FreeAndNil(QryEmp);
   end;
 end;
 
@@ -644,15 +644,15 @@ begin
         else
           Ticket.Imprimir;
       finally
-        FormPreview.Free;
+        FreeAndNil(FormPreview);
       end;
     finally
-      Ticket.Free;
+      FreeAndNil(Ticket);
     end;
   finally
-    QryCab.Free;
-    QryLin.Free;
-    QryPagos.Free;
+    FreeAndNil(QryCab);
+    FreeAndNil(QryLin);
+    FreeAndNil(QryPagos);
   end;
 end;
 
@@ -691,7 +691,7 @@ begin
         RazonEmp := QryEmp.FieldByName('RAZON_SOCIAL_EMP').AsString;
       end;
     finally
-      QryEmp.Free;
+      FreeAndNil(QryEmp);
     end;
 
     // ── Depósitos pendientes del cliente con sus cobros ───────────────────
@@ -844,10 +844,10 @@ begin
           Ticket.Negrita(False);
         end;
       finally
-        QryDep.Free;
+        FreeAndNil(QryDep);
       end;
     finally
-      QryAnticipo.Free;
+      FreeAndNil(QryAnticipo);
     end;
     if not HayDatos then
       Exit;
@@ -865,10 +865,10 @@ begin
       else
         Ticket.Imprimir;
     finally
-      FormPreview.Free;
+      FreeAndNil(FormPreview);
     end;
   finally
-    Ticket.Free;
+    FreeAndNil(Ticket);
   end;
 end;
 

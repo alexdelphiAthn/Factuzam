@@ -236,7 +236,7 @@ begin
     end;
     qrySol.Close;
   finally
-    qrySol.Free;
+    FreeAndNil(qrySol);
   end;
 end;
 
@@ -248,7 +248,7 @@ end;
 
 destructor TfzaWinF.Destroy;
 begin
-  FList.Free;
+  FreeAndNil(FList);
   inherited;
 end;
 

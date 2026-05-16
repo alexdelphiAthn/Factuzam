@@ -437,7 +437,7 @@ begin
     if not qry.IsEmpty then
       Result := qry.FieldByName('EMPSER').AsString;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -466,7 +466,7 @@ begin
     unqryTablaG.FindField('NUMERO_INV').AsString :=
                                               sp.ParamByName('pcont').AsString;
   finally
-    sp.Free;
+    FreeAndNil(sp);
   end;
 end;
 
@@ -513,7 +513,7 @@ begin
         Clone.Next;
       end;
     finally
-      Clone.Free;
+      FreeAndNil(Clone);
     end;
   end;
   Result := Format('%.4d', [Maximo + 1]);
@@ -966,7 +966,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1037,7 +1037,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1105,7 +1105,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1182,7 +1182,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1271,7 +1271,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1291,7 +1291,7 @@ begin
     Result := not qry.IsEmpty;
     qry.Close;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1373,7 +1373,7 @@ begin
 
     Result := True;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
@@ -1489,7 +1489,7 @@ begin
       cdsLineas.EnableControls;
     end;
   finally
-    qry.Free;
+    FreeAndNil(qry);
   end;
 end;
 
