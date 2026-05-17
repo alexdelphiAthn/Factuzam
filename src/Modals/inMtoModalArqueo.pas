@@ -60,11 +60,8 @@ type
     lblOpeTitulo: TcxLabel;
     lblOpeDescuentosLbl: TcxLabel;
     lblOpeDescuentos: TcxLabel;
-    lblOpePuntosLbl: TcxLabel;
-    lblOpePuntos: TcxLabel;
     lblOpeNetoLbl: TcxLabel;
     lblOpeNeto: TcxLabel;
-    lblOpeCriterioDev: TcxLabel;
     lblOpeCreditoLbl: TcxLabel;
     lblOpeCredito: TcxLabel;
 
@@ -81,7 +78,6 @@ type
     lblCobPendiente: TcxLabel;
     lblCobIngresosLbl: TcxLabel;
     lblCobIngresos: TcxLabel;
-    lblCobCriterioCaja: TcxLabel;
 
     lblEftIngresosLbl: TcxLabel;
     lblEftIngresos: TcxLabel;
@@ -254,7 +250,6 @@ begin
   lblLinNeto.Caption         := FormatImporte(AArqueo.NetoLineas);
 
   lblOpeDescuentos.Caption   := FormatImporte(AArqueo.DescuentosOperaciones);
-  lblOpePuntos.Caption       := IntToStr(Trunc(AArqueo.PuntosRecogidos));
   lblOpeNeto.Caption         := FormatImporte(AArqueo.Neto);
   lblOpeCredito.Caption      := FormatImporte(AArqueo.Prestamos);
 

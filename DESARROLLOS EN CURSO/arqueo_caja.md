@@ -53,7 +53,7 @@ Columnas relevantes (todas las monetarias `decimal(19,6)`):
 - Contadores: `CANTIDAD_VENTAS_ARQ`, `CANTIDAD_OPERACIONES_ARQ`.
 - Líneas: `TOTAL_BRUTO_LINEAS_ARQ`, `TOTAL_DESCUENTOS_LINEAS_ARQ`.
 - Operaciones: `TOTAL_BRUTO_OPERACIONES_ARQ`,
-  `TOTAL_DESCUENTOS_OPERACIONES_ARQ`, `TOTAL_PUNTOS_RECOGIDOS_ARQ`,
+  `TOTAL_DESCUENTOS_OPERACIONES_ARQ`,
   `TOTAL_NETO_ARQ`, `TOTAL_PRESTAMOS_ARQ`.
 - Cobros: `TOTAL_VALES_RECOGIDOS_ARQ`, `TOTAL_VALES_EMITIDOS_ARQ`,
   `TOTAL_COBROS_CLIENTES_ARQ`, `TOTAL_PENDIENTE_COBRO_ARQ`,
@@ -95,7 +95,6 @@ contexto Empresa+Almacén+Caja del menú.
 | Líneas — Bruto + / = | `SUM(TOTAL_FACLIN)` (sin descuentos) de las facturas asociadas a las operaciones de tipo `VE`. |
 | Líneas — Descuento | `SUM` de descuentos de línea sobre esas mismas líneas. |
 | Operaciones — Descuentos | Descuento global de cabecera (`TOTAL_BASES_FAC` menos suma de líneas). |
-| Operaciones — Ptos. rcgdos. | 0 (módulo de puntos no implementado todavía). |
 | Operaciones — Neto | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'VE'`. |
 | Préstamos | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. Es la mercancía comprometida con el cliente (los depósitos del TPV son préstamos contables: la prenda queda apartada y el cliente paga a plazos). |
 | Cobros — Vales recogidos | `SUM(IMPORTE_REDIMIDO_VL)` de `fza_caja_vales` redimidos en la caja en el rango. |

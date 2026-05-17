@@ -34,7 +34,6 @@ CREATE TABLE `fza_caja_arqueos` (
   `TOTAL_DESCUENTOS_LINEAS_ARQ`      decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_BRUTO_OPERACIONES_ARQ`      decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_PUNTOS_RECOGIDOS_ARQ`       decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_PRESTAMOS_ARQ`              decimal(19,6) NOT NULL DEFAULT '0.000000'
       COMMENT 'Mercancía comprometida con clientes (depósitos abiertos)',

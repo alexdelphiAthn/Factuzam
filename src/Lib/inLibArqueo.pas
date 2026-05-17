@@ -64,7 +64,6 @@ type
     // Operaciones (cabecera)
     BrutoOperaciones       : Currency;
     DescuentosOperaciones  : Currency;
-    PuntosRecogidos        : Currency;
     Neto                   : Currency;
     Prestamos              : Currency;   // SUM de TIPO_OPERACION='DE' (DB)
 
