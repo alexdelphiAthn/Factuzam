@@ -74,15 +74,23 @@ const
 type
   TFotoResolucion = (frPx300, frPx600, frReal);
 
-  TFotoOrigen = (foSinFoto, foArticulo, foSku);
+  TFotoOrigen = (
+    foSinFoto,
+    foArticulo,        // fila CODIGO_UNIDAD_FOT = ''
+    foSkuPrefijo,      // fila con prefijo del SKU (ej. 'BLUS-SEDA/BLANCO')
+    foSku              // fila exacta del SKU completo
+  );
 
   TFotoInfo = record
-    Encontrada  : Boolean;
-    Origen      : TFotoOrigen;
-    CodigoArt   : string;
-    CodigoSku   : string;
-    NombreBase  : string;          // NOMBRE_FOT_FOT (sin extension)
-    ExtensionOrigen : string;      // sin punto (png, jpg, jpeg, ...)
+    Encontrada      : Boolean;
+    Origen          : TFotoOrigen;
+    CodigoArt       : string;
+    CodigoSku       : string;       // el SKU que se pidio resolver
+    ClaveResuelta   : string;       // el CODIGO_UNIDAD_FOT que matcheo
+                                    //   '' = articulo
+                                    //   SKU completo o prefijo si no
+    NombreBase      : string;       // NOMBRE_FOT_FOT (sin extension)
+    ExtensionOrigen : string;       // sin punto (png, jpg, jpeg, ...)
     procedure Clear;
   end;
 
@@ -133,8 +141,10 @@ type
     function Rotar(const ACodArt, ACodSku: string;
                    AHorario: Boolean): TFotoInfo;
 
-    /// Elimina la foto (BBDD + ficheros 300/600/real).
-    procedure Eliminar(const ACodArt, ACodSku: string);
+    /// Elimina la foto (BBDD + ficheros 300/600/real). `ACodUnidad` es
+    /// el valor exacto de `CODIGO_UNIDAD_FOT`: cadena vacia para la
+    /// foto del articulo, SKU completo, o prefijo de SKU.
+    procedure Eliminar(const ACodArt, ACodUnidad: string);
   end;
 
 /// Sustituye en el informe los TfrxPictureView llamados foto300/foto600/
@@ -144,6 +154,15 @@ type
 /// dataset, o el dataset no tiene los campos esperados), la imagen se
 /// limpia (queda en blanco).
 procedure SustituirFotosEnReport(Report: TfrxReport);
+
+/// Genera la lista de claves candidatas para `CODIGO_UNIDAD_FOT` a partir
+/// de un `CODIGO_UNIDAD_SKU`, en orden de mas a menos especifica:
+///   ['BLUS-SEDA/BLANCO/L', 'BLUS-SEDA/BLANCO']
+/// Se cortan los segmentos por '/'. Se descarta cualquier prefijo sin
+/// '/' (corresponderia al codigo de articulo, que se busca via fila
+/// con CODIGO_UNIDAD_FOT = ''). Si ACodSku = '' o no contiene '/'
+/// devuelve `[ACodSku]` o vacio.
+function GenerarPrefijosSku(const ACodSku: string): TArray<string>;
 
 var
   oFotos: TFotosArticulos;
@@ -161,8 +180,28 @@ begin
   Origen          := foSinFoto;
   CodigoArt       := '';
   CodigoSku       := '';
+  ClaveResuelta   := '';
   NombreBase      := '';
   ExtensionOrigen := '';
+end;
+
+function GenerarPrefijosSku(const ACodSku: string): TArray<string>;
+var
+  sActual: string;
+  iSep   : Integer;
+begin
+  SetLength(Result, 0);
+  if ACodSku = '' then Exit;
+  Result := Result + [ACodSku];           // 1. el SKU completo
+  sActual := ACodSku;
+  while True do
+  begin
+    iSep := LastDelimiter('/', sActual);
+    if iSep = 0 then Break;
+    sActual := Copy(sActual, 1, iSep - 1);
+    if Pos('/', sActual) = 0 then Break;  // ya no es prefijo, es el articulo
+    Result := Result + [sActual];
+  end;
 end;
 
 { ----------------------------------------------------------------- }
@@ -265,7 +304,11 @@ end;
 function TFotosArticulos.Resolver(const ACodArt,
                                   ACodSku: string): TFotoInfo;
 var
-  q: TUniQuery;
+  q        : TUniQuery;
+  prefijos : TArray<string>;
+  i        : Integer;
+  sInList  : string;
+  sClave   : string;
 begin
   Result.Clear;
   Result.CodigoArt := ACodArt;
@@ -275,21 +318,37 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
-    if ACodSku <> '' then
+
+    // 1. SKU completo o prefijo: una sola consulta con IN y ORDER BY
+    //    LENGTH(CODIGO_UNIDAD_FOT) DESC para que la mas especifica gane.
+    prefijos := GenerarPrefijosSku(ACodSku);
+    if Length(prefijos) > 0 then
     begin
-      // Intento foto del SKU
+      sInList := '';
+      for i := 0 to High(prefijos) do
+      begin
+        if sInList <> '' then sInList := sInList + ', ';
+        sInList := sInList + ':P' + IntToStr(i);
+      end;
       q.SQL.Text :=
-        ' SELECT * FROM fza_articulos_fotos ' +
-        '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-        '    AND CODIGO_UNIDAD_FOT = :CODIGO_SKU ' +
+        ' SELECT * FROM fza_articulos_fotos '             +
+        '  WHERE CODIGO_ART_FOT    = :CODIGO_ART '        +
+        '    AND CODIGO_UNIDAD_FOT IN (' + sInList + ') ' +
+        '  ORDER BY LENGTH(CODIGO_UNIDAD_FOT) DESC '      +
         '  LIMIT 1';
       q.ParamByName('CODIGO_ART').AsString := ACodArt;
-      q.ParamByName('CODIGO_SKU').AsString := ACodSku;
+      for i := 0 to High(prefijos) do
+        q.ParamByName('P' + IntToStr(i)).AsString := prefijos[i];
       q.Open;
       if not q.Eof then
       begin
+        sClave := q.FieldByName(fcodunidadfot).AsString;
         Result.Encontrada      := True;
-        Result.Origen          := foSku;
+        if sClave = ACodSku then
+          Result.Origen := foSku
+        else
+          Result.Origen := foSkuPrefijo;
+        Result.ClaveResuelta   := sClave;
         Result.NombreBase      := q.FieldByName(fnomfot).AsString;
         Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
         Exit;
@@ -297,7 +356,7 @@ begin
       q.Close;
     end;
 
-    // Fallback: foto del articulo
+    // 2. Fallback: foto del articulo (CODIGO_UNIDAD_FOT = '')
     q.SQL.Text :=
       ' SELECT * FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
@@ -309,6 +368,7 @@ begin
     begin
       Result.Encontrada      := True;
       Result.Origen          := foArticulo;
+      Result.ClaveResuelta   := '';
       Result.NombreBase      := q.FieldByName(fnomfot).AsString;
       Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
     end;
@@ -681,9 +741,11 @@ begin
   if ACodSku = '' then
     Result.Origen := foArticulo
   else
-    Result.Origen := foSku;
+    Result.Origen := foSku;     // si fuera prefijo, foSku sigue valiendo
+                                //   ya que la fila exacta matcheara
   Result.CodigoArt       := ACodArt;
   Result.CodigoSku       := ACodSku;
+  Result.ClaveResuelta   := ACodSku;
   Result.NombreBase      := sNombreNuevo;
   Result.ExtensionOrigen := sExt;
 end;
@@ -708,13 +770,11 @@ begin
   if not info.Encontrada then
     raise Exception.Create('No hay foto registrada para rotar.');
 
-  // Si la foto resuelta venia del articulo padre y se rota desde un
-  // SKU, en realidad estamos rotando la del articulo. Mantenemos la
-  // fila padre.
-  if info.Origen = foArticulo then
-    sClave := ClaveNombre(ACodArt, '')
-  else
-    sClave := ClaveNombre(ACodArt, ACodSku);
+  // Rotamos la fila que resolvio, sea cual sea su nivel: foto del
+  // articulo, prefijo, o SKU exacto. Asi una rotacion desde un SKU que
+  // hereda del padre afecta a la fila padre y todos los SKUs que la
+  // heredaban ven la imagen rotada.
+  sClave := ClaveNombre(ACodArt, info.ClaveResuelta);
 
   sNombreAnterior := info.NombreBase;
   sExtAnterior    := info.ExtensionOrigen;
@@ -750,14 +810,11 @@ begin
       '    SET NOMBRE_FOT_FOT   = :NOMBRE, ' +
       '        USUARIO_MODIF    = :USUARIO ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_SKU';
-    q.ParamByName('NOMBRE').AsString     := sNombreNuevo;
-    q.ParamByName('USUARIO').AsString    := oUser;
-    q.ParamByName('CODIGO_ART').AsString := ACodArt;
-    if info.Origen = foArticulo then
-      q.ParamByName('CODIGO_SKU').AsString := ''
-    else
-      q.ParamByName('CODIGO_SKU').AsString := ACodSku;
+      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
+    q.ParamByName('NOMBRE').AsString        := sNombreNuevo;
+    q.ParamByName('USUARIO').AsString       := oUser;
+    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
+    q.ParamByName('CODIGO_UNIDAD').AsString := info.ClaveResuelta;
     q.Execute;
   finally
     FreeAndNil(q);
@@ -767,14 +824,20 @@ begin
   Result.Origen          := info.Origen;
   Result.CodigoArt       := ACodArt;
   Result.CodigoSku       := ACodSku;
+  Result.ClaveResuelta   := info.ClaveResuelta;
   Result.NombreBase      := sNombreNuevo;
   Result.ExtensionOrigen := sExtAnterior;
 end;
 
-procedure TFotosArticulos.Eliminar(const ACodArt, ACodSku: string);
+procedure TFotosArticulos.Eliminar(const ACodArt, ACodUnidad: string);
+// Borra la fila exacta (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT) y los tres
+// ficheros que cuelgan de ella. ACodUnidad = '' borra la foto a nivel
+// articulo; un valor concreto borra esa fila de SKU o prefijo
+// independientemente de si hay heredadas por debajo.
 var
-  q   : TUniQuery;
-  info: TFotoInfo;
+  q          : TUniQuery;
+  sNombre    : string;
+  sExt       : string;
 
   procedure BorrarSiExiste(const ARuta: string);
   begin
@@ -783,17 +846,36 @@ var
   end;
 
 begin
-  info := Resolver(ACodArt, ACodSku);
-  // Solo borramos si la fila resuelta era exactamente la pedida; si
-  // estabamos resolviendo un SKU pero la foto venia del articulo padre,
-  // no hay nada que borrar para el SKU.
-  if info.Encontrada and
-     (((ACodSku = '') and (info.Origen = foArticulo)) or
-      ((ACodSku <> '') and (info.Origen = foSku))) then
+  // Localizamos el nombre del fichero asociado a la fila exacta antes
+  // de borrar el registro.
+  sNombre := '';
+  sExt    := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      ' SELECT NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+      '   FROM fza_articulos_fotos '                  +
+      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART '      +
+      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
+    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
+    q.ParamByName('CODIGO_UNIDAD').AsString := ACodUnidad;
+    q.Open;
+    if not q.Eof then
+    begin
+      sNombre := q.FieldByName(fnomfot).AsString;
+      sExt    := q.FieldByName(fextfot).AsString;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+
+  if sNombre <> '' then
   begin
-    BorrarSiExiste(RutaFoto(info, frPx300));
-    BorrarSiExiste(RutaFoto(info, frPx600));
-    BorrarSiExiste(RutaFoto(info, frReal));
+    if sExt = '' then sExt := 'png';
+    BorrarSiExiste(SubdirDe(frPx300) + sNombre + '.png');
+    BorrarSiExiste(SubdirDe(frPx600) + sNombre + '.png');
+    BorrarSiExiste(SubdirDe(frReal)  + sNombre + '.' + sExt);
   end;
 
   q := TUniQuery.Create(nil);
@@ -802,9 +884,9 @@ begin
     q.SQL.Text :=
       ' DELETE FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_SKU';
-    q.ParamByName('CODIGO_ART').AsString := ACodArt;
-    q.ParamByName('CODIGO_SKU').AsString := ACodSku;
+      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
+    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
+    q.ParamByName('CODIGO_UNIDAD').AsString := ACodUnidad;
     q.Execute;
   finally
     FreeAndNil(q);
