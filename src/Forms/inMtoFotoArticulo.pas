@@ -37,12 +37,10 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
+  Vcl.Menus, cxControls, cxMaskEdit,
   inLibFotos, inLibLayoutForm, inLibAppParam, System.UITypes;
 
 type
-  /// Firma del callback que la pantalla usa para repreguntar al Mto
-  /// padre cual es el par (articulo, sku) activo cada vez que cambia
-  /// el registro.
   TResolverArtSkuProc =
     procedure(out ACodArt, ACodSku: string) of object;
 
