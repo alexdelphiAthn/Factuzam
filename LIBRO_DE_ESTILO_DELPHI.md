@@ -1030,24 +1030,42 @@ Vive en `src/Forms/inMtoFotoArticulo.pas`. **No es modal**:
 ```pascal
 FormStyle := fsStayOnTop;
 Position  := poScreenCenter;
+KeyPreview := True;
 ```
 
-Render por **GDI** vía `TImage` + `Vcl.Imaging.PngImage` /
-`Vcl.Imaging.Jpeg` (no `cxImage`).
+Render por **GDI** vía `TImage` + `Vcl.Imaging.PngImage` (no
+`cxImage`).
 
 Singleton via variable global `frmFotoArticulo`. Al cerrarse se libera
 (`Action := caFree`) y la variable vuelve a `nil`, de modo que la
 siguiente invocación crea una instancia limpia.
 
-**Controles relevantes**:
-- `rgResolucion`: 300 / 600 / Real
-- `lblOrigen`: texto descriptivo de qué fila resolvió (SKU, grupo,
-  artículo o nada)
-- `cbbNivelSku`: combo poblado dinámicamente con el SKU actual y todos
-  sus prefijos. Determina a qué nivel se aplica el siguiente
-  *Cambiar foto del SKU / grupo* o *Quitar foto*.
-- Botones: *Cambiar foto del artículo*, *Cambiar foto del SKU / grupo*,
-  *Quitar foto*, *Rotar izquierda*, *Rotar derecha*.
+**Layout**:
+
+```
+pnlTop          alTop, h=38     barra superior fija
+├── btnToggle   "▼ Controles" / "▲ Controles" — toggle del panel
+└── lblOrigen   texto descriptivo de la foto resuelta
+pnlControles    alTop, h=180, Visible=False por defecto
+├── rgResolucion (300 / 600 / Real)
+├── lblNivel + cbbNivelSku (SKU completo y sus prefijos)
+├── btnCambiarArt, btnCambiarSku, btnQuitar
+└── btnRotarIzq, btnRotarDer
+pnlImage        alClient        ocupa todo el resto
+└── imgFoto     alClient, Proportional + Stretch
+```
+
+Por defecto `pnlControles.Visible = False` → la foto ocupa toda la
+ventana excepto la barra superior. Al pulsar **▼ Controles** (o **F11**)
+el panel se despliega; un nuevo click lo vuelve a encoger.
+`alClient` hace el ajuste automático sin animación intermedia.
+
+**Persistencia de geometría**: `Alt + F12` invoca `GuardarLayout`, que
+delega en `TLayoutSaver.GuardarGeometria(Self)` y luego
+`PreguntarYGrabar` para que el usuario elija ámbito (igual patrón que
+`inMtoConsultaOpe`). En `FormShow` se crea un `TLayoutLoader` que
+restaura `Left / Top / Width / Height / WindowState` si el usuario los
+guardó previamente.
 
 **Auto-refresh**. Cuando se invoca desde un `TfrmMtoGen` vía
 `Ctrl + Alt + F`, la pantalla queda enganchada al `dsTablaG` del Mto
@@ -1125,12 +1143,22 @@ alias canónicos: `CODIGO_ART_ART`, `CODIGO_ART_SKU`, `CODIGO_ART_FAC`,
 
 Estado actual de los overrides en el código:
 
-| Mto                 | Sub-grid de detalle    | Tabla        |
-|---------------------|------------------------|--------------|
-| `inMtoFacturas`     | `tvLineasFactura`      | `fza_facturas_lineas`  |
-| `inMtoTarifas`      | `tvArticulos`          | `fza_articulos_tarifas`|
-| `inMtoPedidos`      | `tvPedidosLineas`      | `fza_pedidos_lineas`   |
-| `inMtoAlbaranes`    | `tvLineasAlbaran`      | `fza_albaranes_lineas` |
+| Mto                       | Sub-grid de detalle    | Tabla                          |
+|---------------------------|------------------------|--------------------------------|
+| `inMtoFacturas`           | `tvLineasFactura`      | `fza_facturas_lineas`          |
+| `inMtoTarifas`            | `tvArticulos`          | `fza_articulos_tarifas`        |
+| `inMtoPedidos`            | `tvPedidosLineas`      | `fza_pedidos_lineas`           |
+| `inMtoAlbaranes`          | `tvLineasAlbaran`      | `fza_albaranes_lineas`         |
+| `inMtoComprasSesiones`    | `tvLineas`             | `fza_compras_sesiones_lineas` (artículo **tentativo**, ver §18.11) |
+
+`LeerArtSkuDeDataSet` ahora vive como función pública libre en
+`inLibFotos` (no como método de `TfrmMtoGen`), de modo que también es
+invocable desde formularios que no heredan de `TfrmMtoGen` — como
+`inMtoCajaOpe` o `inMtoConsultaOpe`. La lista de alias canónicos
+(`cAliasArt`, `cAliasSku`) es **single source of truth**: la usa la
+función pública, la usa la sustitución en FastReports y la usan los
+overrides. Para añadir una columna nueva (p.ej. una nueva tabla
+maestra), basta meter el alias en la constante.
 
 ### 18.7 FastReports — sustitución de imágenes
 
@@ -1234,11 +1262,39 @@ es esporádico).
 | `inMtoTarifas` (modificada)              | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvArticulos` |
 | `inMtoPedidos` (modificada)              | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvPedidosLineas` |
 | `inMtoAlbaranes` (modificada)            | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvLineasAlbaran` |
+| `inMtoComprasSesiones` (modificada)      | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvLineas` (artículo tentativo) |
 | `inMtoCajaOpe` (modificada)              | `src/Forms/`       | Foto embebida en panel de stock (sin Ctrl + Alt + F) |
 | `inMtoConsultaOpe` (modificada)          | `src/Forms/`       | Ctrl + Alt + F sobre línea de factura |
 | `inMtoModalGenImp` (modificada)          | `src/Modals/`      | `AfterReportLoaded` llama a `SustituirFotosEnReport` |
 | `inLibAppParam` (modificada)             | `src/Lib/`         | Registro de `appDirFotos` |
 | `fotos_articulos.sql`                    | `DESARROLLOS EN CURSO/` | DDL de la tabla y la vista |
+| `fotos_sesiones.md`                      | `DESARROLLOS EN CURSO/` | Diseño pendiente para fotos pre-materialización (§18.11) |
+
+---
+
+### 18.11 Sesiones de compras — fotos pre-materialización (pendiente)
+
+En `inMtoComprasSesiones` los artículos son **tentativos**: el código
+`CODIGO_ART_TENTATIVO_SESLIN` solo se materializa en `fza_articulos`
+al cerrar la sesión (`InLibComprasSesionesMaterializar`). El subsistema
+de fotos actual exige fila previa en `fza_articulos`, así que **no se
+puede subir foto durante la captura**.
+
+Solución diseñada (pendiente de implementar) en
+`DESARROLLOS EN CURSO/fotos_sesiones.md`:
+
+1. Tabla `fza_compras_sesiones_fotos` paralela, claveada por
+   `(SERIE, NUMERO, LINEA, CODIGO_UNIDAD)`.
+2. Ficheros bajo `appDirFotos` con prefijo
+   `ses_<SERIE>_<NUMERO>_<LINEA>_<NNN>.png` para no chocar.
+3. API en `oFotos.GuardarSesion / ResolverSesion`.
+4. En la materialización, `MigrarFotosSesion(...)` mueve cada fila a
+   `fza_articulos_fotos` con el código real y renombra los PNG.
+
+Hoy el Mto solo tiene el override de `ResolverArtSkuActivo` —
+`Ctrl + Alt + F` muestra la pantalla flotante y permite *ver* fotos de
+artículos ya creados, pero subir desde una línea de sesión todavía no
+funciona porque la FK lógica contra `fza_articulos` no se cumple.
 
 ---
 

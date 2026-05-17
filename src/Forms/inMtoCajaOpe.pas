@@ -2655,25 +2655,16 @@ end;
 // linea activa. Lo invoca DsLineasDataChange al cambiar de registro.
 procedure TfrmMtoOpeCaja.RefrescarFotoStock;
 var
-  ds   : TDataSet;
   sArt : string;
   sSku : string;
   info : TFotoInfo;
   sRuta: string;
   png  : TPngImage;
-  f    : TField;
 begin
   if not Assigned(imgFotoStock) then Exit;
   imgFotoStock.Picture.Assign(nil);
   if not Assigned(dsLineas) then Exit;
-  ds := dsLineas.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sArt := '';
-  sSku := '';
-  f := ds.FindField('CODIGO_ART_FACLIN');
-  if Assigned(f) and (not f.IsNull) then sArt := f.AsString;
-  f := ds.FindField('CODIGO_UNIDAD_FACLIN');
-  if Assigned(f) and (not f.IsNull) then sSku := f.AsString;
+  LeerArtSkuDeDataSet(dsLineas.DataSet, sArt, sSku);
   if sArt = '' then Exit;
   info  := oFotos.Resolver(sArt, sSku);
   sRuta := oFotos.RutaFoto(info, frPx300);

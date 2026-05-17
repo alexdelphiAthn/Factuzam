@@ -351,6 +351,7 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -363,6 +364,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
+  inLibFotos,
   inMtoPrincipal,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
@@ -419,6 +421,23 @@ begin
     if not unqrySesionLinProps.Active then unqrySesionLinProps.Open;
     if not unqrySesionKits.Active     then unqrySesionKits.Open;
     if not unqrySesionKitsDet.Active  then unqrySesionKitsDet.Open;
+  end;
+end;
+
+// dsTablaG apunta a la cabecera de sesion. El "articulo" activo vive
+// en la fila del sub-grid tvLineas (CODIGO_ART_TENTATIVO_SESLIN, que
+// puede ser un codigo de articulo que aun no existe).
+procedure TfrmMtoComprasSesiones.ResolverArtSkuActivo(out ACodArt,
+                                                     ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineas.DataController.DataSource) then
+  begin
+    ds := tvLineas.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
 end;
 

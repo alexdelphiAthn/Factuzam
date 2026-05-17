@@ -156,6 +156,7 @@ uses
   inLibShowMto,
   inLibUser,
   inLibDevExp,
+  inLibFotos,
   inMtoArticulos,
   inMtoFamilias,
   inMtoProveedores, inMtoModalAddBlockTarifa, inMtoPrincipal;
@@ -277,7 +278,7 @@ begin
   if Assigned(tvArticulos.DataController.DataSource) then
   begin
     ds := tvArticulos.DataController.DataSource.DataSet;
-    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
 end;
 

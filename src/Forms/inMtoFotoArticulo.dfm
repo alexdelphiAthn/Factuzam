@@ -1,22 +1,53 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
   Caption = 'Foto del art'#237'culo / SKU'
-  ClientHeight = 720
+  ClientHeight = 600
   ClientWidth = 720
   FormStyle = fsStayOnTop
   Position = poScreenCenter
+  KeyPreview = True
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
+  OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
+  OnShow = FormShow
   ExplicitWidth = 736
-  ExplicitHeight = 759
+  ExplicitHeight = 639
   TextHeight = 19
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
     Width = 720
-    Height = 225
+    Height = 38
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    object btnToggle: TcxButton
+      Left = 4
+      Top = 4
+      Width = 130
+      Height = 30
+      Caption = #9660' Controles'
+      TabOrder = 0
+      OnClick = btnToggleClick
+    end
+    object lblOrigen: TcxLabel
+      Left = 144
+      Top = 8
+      Caption = 'Sin foto'
+      Properties.WordWrap = True
+      Width = 572
+      AnchorY = 16
+    end
+  end
+  object pnlControles: TPanel [1]
+    Left = 0
+    Top = 38
+    Width = 720
+    Height = 180
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 1
+    Visible = False
     object rgResolucion: TcxRadioGroup
       Left = 8
       Top = 4
@@ -42,57 +73,49 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Height = 65
       Width = 360
     end
-    object lblOrigen: TcxLabel
+    object lblNivel: TcxLabel
       Left = 380
-      Top = 24
-      Caption = 'Sin foto'
-      Properties.WordWrap = True
+      Top = 4
+      Caption = 'Nivel al que aplica el cambio:'
       Width = 332
-      AnchorY = 32
+    end
+    object cbbNivelSku: TcxComboBox
+      Left = 380
+      Top = 36
+      Properties.DropDownListStyle = lsFixedList
+      TabOrder = 1
+      Width = 332
     end
     object btnCambiarArt: TcxButton
       Left = 8
-      Top = 80
+      Top = 84
       Width = 220
       Height = 40
       Caption = 'Cambiar foto del &art'#237'culo'
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnCambiarArtClick
     end
     object btnCambiarSku: TcxButton
       Left = 240
-      Top = 80
+      Top = 84
       Width = 220
       Height = 40
       Caption = 'Cambiar foto del &SKU / grupo'
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnCambiarSkuClick
     end
     object btnQuitar: TcxButton
       Left = 472
-      Top = 80
-      Width = 220
+      Top = 84
+      Width = 240
       Height = 40
       Caption = '&Quitar foto'
-      TabOrder = 3
-      OnClick = btnQuitarClick
-    end
-    object lblNivel: TcxLabel
-      Left = 8
-      Top = 132
-      Caption = 'Nivel al que aplica el cambio:'
-      Width = 220
-    end
-    object cbbNivelSku: TcxComboBox
-      Left = 240
-      Top = 130
-      Properties.DropDownListStyle = lsFixedList
       TabOrder = 4
-      Width = 452
+      OnClick = btnQuitarClick
     end
     object btnRotarIzq: TcxButton
       Left = 8
-      Top = 170
+      Top = 130
       Width = 220
       Height = 40
       Caption = 'Rotar &izquierda'
@@ -101,7 +124,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     end
     object btnRotarDer: TcxButton
       Left = 240
-      Top = 170
+      Top = 130
       Width = 220
       Height = 40
       Caption = 'Rotar &derecha'
@@ -109,19 +132,19 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       OnClick = btnRotarDerClick
     end
   end
-  object pnlImage: TPanel [1]
+  object pnlImage: TPanel [2]
     Left = 0
-    Top = 225
+    Top = 218
     Width = 720
-    Height = 495
+    Height = 382
     Align = alClient
     BevelOuter = bvLowered
-    TabOrder = 1
+    TabOrder = 2
     object imgFoto: TImage
       Left = 1
       Top = 1
       Width = 718
-      Height = 493
+      Height = 380
       Align = alClient
       Center = True
       Proportional = True

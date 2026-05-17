@@ -162,7 +162,7 @@ var
 implementation
 
 uses
-  inMtoModalImportarPedidosPS;
+  inMtoModalImportarPedidosPS, inLibFotos;
 
 {$R *.dfm}
 
@@ -181,7 +181,7 @@ begin
   if Assigned(tvPedidosLineas.DataController.DataSource) then
   begin
     ds := tvPedidosLineas.DataController.DataSource.DataSet;
-    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
 end;
 

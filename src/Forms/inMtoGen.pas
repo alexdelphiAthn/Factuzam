@@ -150,14 +150,9 @@ type
     // Los Mtos que necesiten otra fuente pueden sobreescribirlo (p.ej.
     // los que tienen el articulo activo en un sub-grid: facturas, pedidos,
     // albaranes, tarifas). Para esos casos basta llamar a
-    // `LeerArtSkuDeDataSet` pasando el DataSet del grid de detalle.
+    // `inLibFotos.LeerArtSkuDeDataSet` pasando el DataSet del grid de
+    // detalle.
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); virtual;
-    // Recorre los alias canonicos de ART y SKU sobre cualquier DataSet
-    // y devuelve los valores encontrados (o vacios). Lo usan tanto la
-    // implementacion por defecto de `ResolverArtSkuActivo` como los
-    // overrides de los Mtos con sub-grid.
-    procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
-                                  out ACodArt, ACodSku: string);
   public
     destructor Destroy; override;
   end;
@@ -176,7 +171,7 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inMtoFotoArticulo;
+     inLibFotos, inMtoFotoArticulo;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -785,46 +780,7 @@ begin
   ACodArt := '';
   ACodSku := '';
   if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) then
-    LeerArtSkuDeDataSet(dsTablaG.DataSet, ACodArt, ACodSku);
-end;
-
-procedure TfrmMtoGen.LeerArtSkuDeDataSet(ADataSet: TDataSet;
-                                         out ACodArt, ACodSku: string);
-const
-  cAliasArt: array[0..7] of string = (
-    'CODIGO_ART_ART',  'CODIGO_ART_SKU',  'CODIGO_ART_FAC',
-    'CODIGO_ART_FACLIN', 'CODIGO_ART_PEDLIN', 'CODIGO_ART_ALBLIN',
-    'CODIGO_ART_ARTTAR', 'CODIGO_ARTICULO');
-  cAliasSku: array[0..4] of string = (
-    'CODIGO_UNIDAD_SKU',    'CODIGO_UNIDAD_FAC',
-    'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_ALBLIN',
-    'CODIGO_UNIDAD_ARTTAR');
-var
-  i: Integer;
-  f: TField;
-begin
-  ACodArt := '';
-  ACodSku := '';
-  if (ADataSet = nil) or (not ADataSet.Active) or ADataSet.IsEmpty then
-    Exit;
-  for i := Low(cAliasArt) to High(cAliasArt) do
-  begin
-    f := ADataSet.FindField(cAliasArt[i]);
-    if Assigned(f) and (not f.IsNull) then
-    begin
-      ACodArt := f.AsString;
-      Break;
-    end;
-  end;
-  for i := Low(cAliasSku) to High(cAliasSku) do
-  begin
-    f := ADataSet.FindField(cAliasSku[i]);
-    if Assigned(f) and (not f.IsNull) then
-    begin
-      ACodSku := f.AsString;
-      Break;
-    end;
-  end;
+    inLibFotos.LeerArtSkuDeDataSet(dsTablaG.DataSet, ACodArt, ACodSku);
 end;
 
 procedure TfrmMtoGen.SimulateTabKey;

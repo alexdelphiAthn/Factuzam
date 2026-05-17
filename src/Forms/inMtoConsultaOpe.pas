@@ -128,7 +128,7 @@ implementation
 {$R *.dfm}
 
 uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar,
-     inMtoFotoArticulo;
+     inLibFotos, inMtoFotoArticulo;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -226,19 +226,11 @@ end;
 
 procedure TfrmConsultaOpe.ResolverArtSkuDeFacLin(out ACodArt,
                                                  ACodSku: string);
-var
-  ds: TDataSet;
-  f : TField;
 begin
   ACodArt := '';
   ACodSku := '';
   if not Assigned(FdmConsulta) then Exit;
-  ds := FdmConsulta.dsFacturaLin.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  f := ds.FindField('CODIGO_ART_FACLIN');
-  if Assigned(f) and (not f.IsNull) then ACodArt := f.AsString;
-  f := ds.FindField('CODIGO_UNIDAD_FACLIN');
-  if Assigned(f) and (not f.IsNull) then ACodSku := f.AsString;
+  LeerArtSkuDeDataSet(FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
 end;
 
 procedure TfrmConsultaOpe.RestaurarLayout;

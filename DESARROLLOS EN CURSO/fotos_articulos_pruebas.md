@@ -381,6 +381,45 @@ posiciónate sobre una línea en la pestaña "Líneas factura". Pulsa
 
 ---
 
+## 12. Sesiones de compras (parcial)
+
+`inMtoComprasSesiones` ya tiene override de `ResolverArtSkuActivo`
+sobre `tvLineas`, devolviendo `CODIGO_ART_TENTATIVO_SESLIN`.
+
+**12.1** Posiciónate en una línea cuyo `CODIGO_ART_TENTATIVO_SESLIN`
+**ya exista** en `fza_articulos`. Pulsa `Ctrl + Alt + F`: la pantalla
+flotante debe abrirse con la foto resuelta (o "Sin foto").
+
+**12.2** Posiciónate en una línea con un código **todavía no creado**
+(p.ej. uno que se materializará al cerrar la sesión). `Ctrl + Alt + F`
+muestra "Sin foto"; **subir foto fallará** porque no hay fila en
+`fza_articulos` contra la que enlazar. Esto está documentado como
+pendiente en `fotos_sesiones.md` (tabla auxiliar
+`fza_compras_sesiones_fotos` por implementar).
+
+---
+
+## 13. Panel desplegable + Alt+F12
+
+Cuando abres la pantalla flotante por defecto **solo se ve la imagen**
+(el panel de controles está oculto).
+
+**13.1** Pulsa el botón **▼ Controles** arriba a la izquierda. El
+panel se despliega y se ven: radio de resolución, combo de nivel,
+botones cambiar/quitar/rotar. El botón cambia a **▲ Controles**.
+
+**13.2** Pulsa de nuevo: el panel se encoge, vuelve a aparecer solo la
+imagen. Misma alternancia con **F11**.
+
+**13.3** Redimensiona la ventana (arrástrala por una esquina). Pulsa
+**Alt + F12**. Aparece el diálogo de guardar perfil (igual que en
+`inMtoConsultaOpe`). Acepta para "Solo yo" u otro ámbito.
+
+**13.4** Cierra la pantalla. Vuelve a abrirla con `Ctrl + Alt + F`:
+debe restaurarse con la geometría que guardaste (posición y tamaño).
+
+---
+
 ## Limitaciones conocidas
 
 - **Mtos sin sub-grid configurado**: si añades un Mto nuevo con
