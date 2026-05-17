@@ -2200,7 +2200,7 @@ unqryClientes.SQL.Text := 'SELECT CODIGO_CLI_CLI as `Código`, ' +
       formulario.Name := 'frmMtoCliSearch';
       formulario.Caption := 'Búsqueda de Clientes';
       formulario.dsTablaG.DataSet := unqryClientes;
-      formulario.dsTablaG.DataSet.Open;
+      unqryClientes.Open;
       formulario.ProcesarPerfiles;
       formulario.ShowModal;
       if formulario.sFicha = 'S' then
@@ -2212,7 +2212,6 @@ unqryClientes.SQL.Text := 'SELECT CODIGO_CLI_CLI as `Código`, ' +
         end;
       end;
     finally
-      formulario.dsTablaG.DataSet.Close;
       FreeAndNil(formulario);
     end;
   finally
@@ -2609,25 +2608,24 @@ var
   unqryEmpleados:TUniQuery;
 begin
   unqryEmpleados := TUniQuery.Create(nil);
-  unqryEmpleados.Connection := oConn;
-  unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USU ' +
-                                                    'as `Código de Empleado`,' +
-                             '       DIMINUTIVO_TICKET_USU ' +
-                                                     'as `Nombre de Empleado`' +
-                             '  FROM fza_usuarios ' +
-                             ' WHERE ESACTIVO_USU =' +QuotedStr('S') +
-                             '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
-                             ' ORDER BY CODIGO_EMPLEADO_USU ';
-  formulario := TfrmMtoSearch.Create(nil);
-  formulario.Name := 'frmMtoEmpCajSearch';
-  formulario.Caption := 'Búsqueda de Empleados en Caja';
   try
-    formulario.dsTablaG.DataSet := unqryEmpleados;
-    formulario.dsTablaG.DataSet.Open;
-    formulario.ProcesarPerfiles;
-    formulario.ShowModal;
-  finally
-      inherited;
+    unqryEmpleados.Connection := oConn;
+    unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USU ' +
+                                                    'as `Código de Empleado`,' +
+                               '       DIMINUTIVO_TICKET_USU ' +
+                                                     'as `Nombre de Empleado`' +
+                               '  FROM fza_usuarios ' +
+                               ' WHERE ESACTIVO_USU =' +QuotedStr('S') +
+                               '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
+                               ' ORDER BY CODIGO_EMPLEADO_USU ';
+    formulario := TfrmMtoSearch.Create(nil);
+    try
+      formulario.Name := 'frmMtoEmpCajSearch';
+      formulario.Caption := 'Búsqueda de Empleados en Caja';
+      formulario.dsTablaG.DataSet := unqryEmpleados;
+      unqryEmpleados.Open;
+      formulario.ProcesarPerfiles;
+      formulario.ShowModal;
       if formulario.sFicha = 'S' then
       begin
         btnCodigoEmpleado.Text := unqryEmpleados.Fields[0].AsString;
@@ -2636,9 +2634,11 @@ begin
           btnCodigoCliente.SetFocus;
         end;
       end;
-      formulario.dsTablaG.DataSet.Close;
-      FreeAndNil(unqryEmpleados);
+    finally
       FreeAndNil(formulario);
+    end;
+  finally
+    FreeAndNil(unqryEmpleados);
   end;
 end;
 
