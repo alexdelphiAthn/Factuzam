@@ -107,8 +107,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   object tmr1: TTimer
     Interval = 10000
     OnTimer = tmr1Timer
-    Left = 992
-    Top = 136
+    Left = 72
+    Top = 240
   end
   object StyleRepository1: TcxStyleRepository
     Left = 400
@@ -2911,7 +2911,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     NativeStyle = False
     SkinName = 'Office2019Colorful'
     FormCorners = fcRounded
-    Left = 560
-    Top = 296
+    Left = 400
+    Top = 216
   end
 end
