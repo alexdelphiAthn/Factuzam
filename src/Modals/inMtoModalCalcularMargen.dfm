@@ -22,6 +22,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 18
       Caption = 'Art'#237'culo'
       Properties.LineOptions.Visible = False
+      Transparent = True
     end
     object edtArticulo: TcxTextEdit
       Left = 220
@@ -35,6 +36,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 50
       Caption = 'Tarifa'
       Properties.LineOptions.Visible = False
+      Transparent = True
     end
     object edtTarifa: TcxTextEdit
       Left = 220
@@ -48,6 +50,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 82
       Caption = 'SKU'
       Properties.LineOptions.Visible = False
+      Transparent = True
     end
     object edtSku: TcxTextEdit
       Left = 220
@@ -62,6 +65,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Caption = 'Precio coste'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object edtCoste: TcxCurrencyEdit
       Left = 220
@@ -78,6 +82,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 174
       Caption = 'Margen %'
+      Transparent = True
     end
     object edtMargen: TcxCurrencyEdit
       Left = 220
@@ -92,6 +97,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 210
       Caption = 'Ajuste (siguiente m'#250'ltiplo)'
+      Transparent = True
     end
     object edtAjuste: TcxCurrencyEdit
       Left = 220
@@ -106,6 +112,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 246
       Caption = 'Menos (resta al final)'
+      Transparent = True
     end
     object edtMenos: TcxCurrencyEdit
       Left = 220
@@ -120,6 +127,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 298
       Caption = 'Precio salida actual'
+      Transparent = True
     end
     object edtPrecioActual: TcxCurrencyEdit
       Left = 220
@@ -135,6 +143,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Caption = 'Precio salida calculado'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object edtPrecioCalc: TcxCurrencyEdit
       Left = 220
@@ -152,6 +161,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Caption = 'precio = ceil(coste'#215'margen/100 / ajuste)'#215'ajuste '#8722' menos'
       Style.Font.Style = [fsItalic]
       Style.IsFontAssigned = True
+      Transparent = True
     end
   end
   object pnlButtons: TPanel [1]

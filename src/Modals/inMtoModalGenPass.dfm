@@ -20,6 +20,7 @@ inherited frmModalGenPass: TfrmModalGenPass
     Left = 21
     Top = 25
     Caption = 'Nombre usuario'
+    Transparent = True
   end
   object edtPassword: TcxTextEdit [2]
     Left = 163
@@ -33,6 +34,7 @@ inherited frmModalGenPass: TfrmModalGenPass
     Left = 61
     Top = 65
     Caption = 'Contrase'#241'a'
+    Transparent = True
   end
   object edtPasswordCon: TcxTextEdit [4]
     Left = 163
@@ -46,6 +48,7 @@ inherited frmModalGenPass: TfrmModalGenPass
     Left = 3
     Top = 105
     Caption = 'Repita Contrase'#241'a'
+    Transparent = True
   end
   object btnGuardar: TcxButton [6]
     Left = 256

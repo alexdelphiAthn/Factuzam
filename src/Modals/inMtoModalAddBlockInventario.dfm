@@ -12,6 +12,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
       Top = 12
       Caption = 'Inventario destino'
       TabOrder = 0
+      Transparent = True
     end
     object lblNotaCarga: TcxLabel
       Left = 12
@@ -22,6 +23,7 @@ inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
         'do "Recalcular te'#243'rico/PMP".'
       Style.TextColor = clNavy
       TabOrder = 1
+      Transparent = True
     end
   end
   inherited pnlCabeceraComun: TPanel
