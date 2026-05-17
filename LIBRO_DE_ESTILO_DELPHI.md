@@ -896,7 +896,230 @@ end.
 
 ---
 
-## 18. Checklist antes de un commit
+## 18. Sistema de fotos (artículo / SKU)
+
+Subsistema transversal para asociar imágenes a artículos y SKUs con
+fallback al padre (análogo al de tarifas). Lo usa cualquier pantalla que
+trabaje con artículos o SKUs, y los informes FastReport vía nombres
+reservados.
+
+### 18.1 Modelo de almacenamiento
+
+**BBDD** — tabla `fza_articulos_fotos` (DDL en
+`DESARROLLOS EN CURSO/fotos_articulos.sql`):
+
+| Columna | Significado |
+|--------|-------------|
+| `CODIGO_ART_FOT`       | FK lógica `fza_articulos.CODIGO_ART_ART`     |
+| `CODIGO_UNIDAD_FOT`    | FK lógica `fza_articulos_skus.CODIGO_UNIDAD_SKU`. `''` = foto a nivel artículo |
+| `NOMBRE_FOT_FOT`       | Nombre base del fichero (sin extensión, con sufijo `_NNN`) |
+| `EXTENSION_ORIGEN_FOT` | Extensión del fichero original sin punto (`png`, `jpg`, …) |
+| `INSTANTE_ALTA / INSTANTE_MODIF / USUARIO_ALTA / USUARIO_MODIF` | metadatos estándar |
+
+PK compuesta `(CODIGO_ART_FOT, CODIGO_UNIDAD_FOT)`. La vista
+`vi_articulos_fotos` expone el fallback resuelto por SKU.
+
+**Disco** — los ficheros reales viven bajo el parámetro `appDirFotos`:
+
+```
+<appDirFotos>/300/<NOMBRE_FOT_FOT>.png    PNG redimensionado a 300 px (lado mayor)
+<appDirFotos>/600/<NOMBRE_FOT_FOT>.png    PNG redimensionado a 600 px (lado mayor)
+<appDirFotos>/real/<NOMBRE_FOT_FOT>.<ext> fichero original, extensión nativa
+```
+
+El redimensionado se hace con GDI (`StretchBlt` + `HALFTONE` sobre
+`TBitmap pf32bit`). No hay BLOBs en BBDD — la tabla solo guarda metadatos.
+
+### 18.2 Convención de nombre de fichero
+
+Formato canónico:
+
+```
+<CLAVE>_<NNN>
+```
+
+- `<CLAVE>` = `CODIGO_UNIDAD_SKU` si la fila es de SKU, en otro caso
+  `CODIGO_ART_ART`. Los caracteres problemáticos para el sistema de
+  ficheros (`/ \ : * ? " < > |`) se sustituyen por `_`. Ejemplo:
+  `BLUS-SEDA/BLANCO/L` → `BLUS-SEDA_BLANCO_L`.
+- `<NNN>` = índice numérico de 3 dígitos con relleno (`001`, `002`, …).
+  Incrementa **en cada guardado y en cada rotación**. Los ficheros del
+  índice anterior se borran tras la escritura del nuevo. El cambio de
+  nombre invalida cualquier caché por nombre (FastReport en particular).
+
+### 18.3 Fallback de resolución
+
+`oFotos.Resolver(CODIGO_ART, CODIGO_UNIDAD_SKU)` aplica:
+
+1. Si existe fila con esos `(ART, SKU)`, devuelve la foto del SKU.
+2. En su defecto, fila `(ART, '')` — foto del artículo padre.
+3. Si nada, `Encontrada = False`.
+
+`TFotoInfo.Origen` deja constancia (`foSku`, `foArticulo`, `foSinFoto`)
+para que la UI sepa qué texto pintar.
+
+### 18.4 API pública — `inLibFotos`
+
+Singleton `oFotos: TFotosArticulos` creado en `initialization` de la
+unit. Reutiliza `inLibGlobalVar.oConn`.
+
+```pascal
+// Resolver con fallback
+function Resolver(const ACodArt, ACodSku: string): TFotoInfo;
+
+// Ruta absoluta de la foto resuelta en una resolución
+function RutaFoto(const AInfo: TFotoInfo;
+                  AResolucion: TFotoResolucion): string;
+
+// Importa una foto desde disco. Genera 300/600/real y avanza el índice.
+function Guardar(const ACodArt, ACodSku,
+                 AFicheroOrigen: string): TFotoInfo;
+
+// Rota 90° las tres copias en sentido horario / anti-horario y avanza
+// índice. La fila de BBDD afectada es la del nivel resuelto: si la foto
+// venía heredada del artículo, rota la del artículo (no crea una nueva
+// fila de SKU).
+function Rotar(const ACodArt, ACodSku: string;
+               AHorario: Boolean): TFotoInfo;
+
+// Borra fila y ficheros. Solo borra si la fila resuelta era exactamente
+// la del nivel pedido (un SKU heredado no se "auto-rompe" desde otro SKU).
+procedure Eliminar(const ACodArt, ACodSku: string);
+```
+
+`ACodSku = ''` → operación a nivel artículo.
+
+Constantes para los nombres de columna en la propia unit (`fcodartfot`,
+`fnomfot`, etc.) — el mismo patrón de §11.
+
+### 18.5 Formulario flotante — `frmFotoArticulo`
+
+Vive en `src/Forms/inMtoFotoArticulo.pas`. **No es modal**:
+
+```pascal
+FormStyle := fsStayOnTop;
+Position  := poScreenCenter;
+```
+
+Render por **GDI** vía `TImage` + `Vcl.Imaging.PngImage` /
+`Vcl.Imaging.Jpeg` (no `cxImage`).
+
+Singleton via variable global `frmFotoArticulo`. Al cerrarse se libera
+(`Action := caFree`) y la variable vuelve a `nil`, de modo que la
+siguiente invocación crea una instancia limpia.
+
+Helper de invocación:
+
+```pascal
+procedure MostrarFotoFlotante(AOwner: TComponent;
+                              const ACodArt, ACodSku: string);
+```
+
+Crea la pantalla si no existe, refresca el par (art, sku) y la trae al
+frente.
+
+Para usarse **dentro de otro modal** (donde un Show queda detrás) hay un
+wrapper en `src/Modals/inMtoModalFotoArticulo.pas` con la firma canónica
+`class function Ejecutar`:
+
+```pascal
+TfrmModalFotoArticulo.Ejecutar(AOwner, ACodArt, ACodSku);
+```
+
+Internamente crea el mismo `TfrmFotoArticulo` con `FormStyle := fsNormal`
+y `ShowModal`.
+
+### 18.6 Atajo `Ctrl + Alt + F`
+
+Gestionado en `TfrmMtoGen.FormKeyDown` — disponible en **cualquier Mto**
+que herede de `TfrmMtoGen`. Llama a `ResolverArtSkuActivo(out ACodArt,
+out ACodSku)` para sacar el par del registro activo de `dsTablaG`.
+
+`ResolverArtSkuActivo` es `virtual`. La implementación por defecto recorre
+una lista de alias habituales:
+
+```pascal
+CODIGO_ART_ART, CODIGO_ART_SKU, CODIGO_ART_FAC, CODIGO_ART_FACLIN,
+CODIGO_ART_PEDLIN, CODIGO_ART_ARTTAR, CODIGO_ARTICULO
+CODIGO_UNIDAD_SKU, CODIGO_UNIDAD_FAC, CODIGO_UNIDAD_FACLIN,
+CODIGO_UNIDAD_PEDLIN, CODIGO_UNIDAD_ARTTAR
+```
+
+**Cuándo sobreescribirlo**: cuando el artículo activo no está en
+`dsTablaG` sino en un sub-grid (ej. `inMtoTarifas` mostrando artículos
+de la tarifa en `tvArticulos`, `inMtoFacturas` mostrando líneas en
+`tvLineasFacturacion`). Patrón:
+
+```pascal
+procedure TfrmMtoTarifas.ResolverArtSkuActivo(out ACodArt,
+                                              ACodSku: string); override;
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  ds := tvArticulos.DataController.DataSource.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  ACodArt := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
+  ACodSku := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
+end;
+```
+
+### 18.7 FastReports — sustitución de imágenes
+
+En `TfrmPrint.AfterReportLoaded` (`inMtoModalGenImp`) se invoca
+`SustituirFotosEnReport(frxrprt1)`. La función recorre
+`Report.AllObjects` y, para cada `TfrxPictureView` cuyo `Name` sea
+exactamente `foto300`, `foto600` o `fotoReal` (case-insensitive), carga
+la foto del par (artículo, sku) que se obtiene de la **banda padre** de
+la imagen:
+
+- Sube por `pic.Parent` hasta encontrar `TfrxDataBand`.
+- Lee el `TDataSet` asociado a esa banda.
+- Busca los campos siguiendo la misma lista de alias que
+  `ResolverArtSkuActivo`.
+
+**Limitación conocida**: en esta versión de FastReport, `OnBeforePrint`
+de `TfrxView` es una propiedad `string` (nombre de un proc del script
+del informe) y no un evento Delphi nativo, por lo que la sustitución se
+hace una sola vez antes de `PrepareReport`. Cubre informes de un solo
+registro (ficha, vista previa, ticket). Para informes iterativos con
+foto distinta por banda habría que pasar a un esquema con scripts
+inyectados + user-function — está documentado en
+`DESARROLLOS EN CURSO/fotos_articulos.md` como pendiente.
+
+**Reglas para los diseñadores de informes**:
+
+- Para mostrar foto, añadir un `TfrxPictureView` y nombrarlo
+  exactamente `foto300`, `foto600` o `fotoReal`.
+- La imagen debe vivir dentro de una banda cuyo `DataSet` tenga columnas
+  con los alias de artículo/SKU reconocidos.
+- No usar otros nombres y luego escribir scripts a mano: el subsistema
+  ignora cualquier nombre que no sea uno de los tres reservados.
+
+### 18.8 Parámetro de aplicación
+
+Categoría `Directorios`, clave `appDirFotos`. Registrado en
+`inLibAppParam.InicializarParametrosApp`. Configurable desde
+`frmMtoAppParam` (Ctrl + Alt + P del menú principal). Los subdirectorios
+`300/`, `600/`, `real/` se crean automáticamente en el primer
+`oFotos.Guardar`.
+
+### 18.9 Resumen de unidades implicadas
+
+| Unidad                                   | Carpeta            | Rol                                      |
+|------------------------------------------|--------------------|------------------------------------------|
+| `inLibFotos`                             | `src/Lib/`         | Núcleo: persistencia, redimensionado, rotación, sustitución en informes |
+| `inMtoFotoArticulo`                      | `src/Forms/`       | Pantalla flotante (no modal)             |
+| `inMtoModalFotoArticulo`                 | `src/Modals/`      | Wrapper modal con `class function Ejecutar` |
+| `inMtoGen` (modificada)                  | `src/Forms/`       | Atajo Ctrl + Alt + F y `ResolverArtSkuActivo` virtual |
+| `inMtoModalGenImp` (modificada)          | `src/Modals/`      | `AfterReportLoaded` llama a `SustituirFotosEnReport` |
+| `inLibAppParam` (modificada)             | `src/Lib/`         | Registro de `appDirFotos` |
+| `fotos_articulos.sql`                    | `DESARROLLOS EN CURSO/` | DDL de la tabla y la vista |
+
+---
+
+## 19. Checklist antes de un commit
 
 - [ ] Cabecera de unidad presente y con la fecha correcta.
 - [ ] Nombre de unidad y nombre de fichero coinciden.
