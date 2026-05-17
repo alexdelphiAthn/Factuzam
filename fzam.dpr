@@ -1,7 +1,9 @@
 ﻿program Fzam;
 
 uses
+  {$IFDEF DEBUG}
   FastMM4,
+  {$ENDIF}
   Forms,
   MidasLib,
   {$IF CompilerVersion >= 37.0}
