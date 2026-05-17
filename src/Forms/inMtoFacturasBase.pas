@@ -506,6 +506,7 @@ type
     // Devuelve el TIPO_FAC por el que filtrar el listado: '' = sin filtro
     // (Base), 'NORMAL' o 'SIMPLIFICADA' en los descendientes.
     function TipoFacturaFiltro: string; virtual;
+    procedure unqryTablaGFilterRecord(DataSet: TDataSet; var Accept: Boolean);
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -1177,13 +1178,20 @@ begin
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   dmmFacturas.OpenTables;
-  // Filtrado por TIPO_FAC segun el descendiente. Cliente-side via Filter
-  // para no chocar con SQL editado en perfiles (oGetSQLFromDB).
+  // Filtrado por TIPO_FAC segun el descendiente. Usamos OnFilterRecord en
+  // lugar de Filter+expresion porque el parsing de Filter de TUniQuery es
+  // erratico (devuelve sin filtrar segun version/cursor). El recargo de
+  // CPU es despreciable: filtramos por igualdad en string, no es hot path.
   sFiltro := TipoFacturaFiltro;
   if sFiltro <> '' then
   begin
-    dmmFacturas.unqryTablaG.Filter   := 'TIPO_FAC = ' + QuotedStr(sFiltro);
-    dmmFacturas.unqryTablaG.Filtered := True;
+    dmmFacturas.unqryTablaG.OnFilterRecord := unqryTablaGFilterRecord;
+    dmmFacturas.unqryTablaG.Filtered       := True;
+  end
+  else
+  begin
+    dmmFacturas.unqryTablaG.OnFilterRecord := nil;
+    dmmFacturas.unqryTablaG.Filtered       := False;
   end;
   CheckConsolidacion;
 end;
@@ -1191,6 +1199,18 @@ end;
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin
   Result := '';
+end;
+
+procedure TfrmMtoFacturasBase.unqryTablaGFilterRecord(DataSet: TDataSet;
+                                                     var Accept: Boolean);
+var
+  sFiltro: string;
+begin
+  sFiltro := TipoFacturaFiltro;
+  if sFiltro = '' then
+    Accept := True
+  else
+    Accept := SameText(DataSet.FieldByName('TIPO_FAC').AsString, sFiltro);
 end;
 
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
