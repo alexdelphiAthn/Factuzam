@@ -26,12 +26,18 @@ uses
 type
   TfrmMtoFacturasNormal = class(TfrmMtoFacturasBase)
   public
+    function NombreVistaListado: string; override;
     function TipoFacturaFiltro: string; override;
   end;
 
 implementation
 
 {$R *.dfm}
+
+function TfrmMtoFacturasNormal.NombreVistaListado: string;
+begin
+  Result := 'vi_facturas_normales';
+end;
 
 function TfrmMtoFacturasNormal.TipoFacturaFiltro: string;
 begin

@@ -503,10 +503,13 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure CambiarIVA;
-    // Devuelve el TIPO_FAC por el que filtrar el listado: '' = sin filtro
-    // (Base), 'NORMAL' o 'SIMPLIFICADA' en los descendientes.
+    // Nombre de la vista SQL a consultar en el listado principal.
+    // La filtra el propio motor de BD (vi_facturas_normales /
+    // vi_facturas_simplificadas), no toca al codigo.
+    function NombreVistaListado: string; virtual;
+    // TIPO_FAC que el descendiente quiere por defecto en los inserts
+    // (se aplicara en unqryTablaGAfterInsert en commits siguientes).
     function TipoFacturaFiltro: string; virtual;
-    procedure unqryTablaGFilterRecord(DataSet: TDataSet; var Accept: Boolean);
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -1157,7 +1160,7 @@ end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 var
-  sFiltro: string;
+  sVista: string;
 begin
   inherited;
   dmmFacturas := (tdmDataModule as TdmFacturas);
@@ -1178,39 +1181,36 @@ begin
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   dmmFacturas.OpenTables;
-  // Filtrado por TIPO_FAC segun el descendiente. Usamos OnFilterRecord en
-  // lugar de Filter+expresion porque el parsing de Filter de TUniQuery es
-  // erratico (devuelve sin filtrar segun version/cursor). El recargo de
-  // CPU es despreciable: filtramos por igualdad en string, no es hot path.
-  sFiltro := TipoFacturaFiltro;
-  if sFiltro <> '' then
+  // Cada descendiente apunta a su propia vista de BD: el filtrado por
+  // TIPO_FAC vive en la vista, no en el form. Si el descendiente devuelve
+  // una vista distinta a vi_facturas, recargamos unqryTablaG con la nueva
+  // SQL.
+  sVista := NombreVistaListado;
+  if not SameText(sVista, 'vi_facturas') then
   begin
-    dmmFacturas.unqryTablaG.OnFilterRecord := unqryTablaGFilterRecord;
-    dmmFacturas.unqryTablaG.Filtered       := True;
-  end
-  else
-  begin
-    dmmFacturas.unqryTablaG.OnFilterRecord := nil;
-    dmmFacturas.unqryTablaG.Filtered       := False;
+    with dmmFacturas.unqryTablaG do
+    begin
+      DisableControls;
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM ' + sVista;
+        Open;
+      finally
+        EnableControls;
+      end;
+    end;
   end;
   CheckConsolidacion;
+end;
+
+function TfrmMtoFacturasBase.NombreVistaListado: string;
+begin
+  Result := 'vi_facturas';
 end;
 
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin
   Result := '';
-end;
-
-procedure TfrmMtoFacturasBase.unqryTablaGFilterRecord(DataSet: TDataSet;
-                                                     var Accept: Boolean);
-var
-  sFiltro: string;
-begin
-  sFiltro := TipoFacturaFiltro;
-  if sFiltro = '' then
-    Accept := True
-  else
-    Accept := SameText(DataSet.FieldByName('TIPO_FAC').AsString, sFiltro);
 end;
 
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
