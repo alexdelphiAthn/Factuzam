@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 16/05/2026 21:28:39
+-- Backup generado: 17/05/2026 9:04:08
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -1493,6 +1493,52 @@ CREATE TABLE `fza_atributos_valores_info` (
 ALTER TABLE `fza_atributos_valores_info` ADD INDEX `IDX_VALOR_INFO` (`ID_AV_AVI`);
 
 
+-- Tabla: fza_caja_arqueos
+
+DROP TABLE IF EXISTS `fza_caja_arqueos`;
+CREATE TABLE `fza_caja_arqueos` (
+  `CODIGO_ARQ` varchar(30) NOT NULL COMMENT 'ID único del arqueo / cierre Z',
+  `CODIGO_EMP_ARQ` varchar(10) NOT NULL,
+  `CODIGO_ALM_ARQ` varchar(10) NOT NULL,
+  `CODIGO_CAJA_ARQ` varchar(10) NOT NULL COMMENT 'Terminal físico (TPV1, TPV2...)',
+  `FECHA_DESDE_ARQ` date NOT NULL,
+  `FECHA_HASTA_ARQ` date NOT NULL,
+  `FASE_ARQ` varchar(15) NOT NULL DEFAULT 'ABIERTO' COMMENT 'ABIERTO, CERRADO',
+  `CODIGO_EMPLEADO_ARQ` varchar(20) NULL DEFAULT NULL,
+  `CANTIDAD_VENTAS_ARQ` int(11) NOT NULL DEFAULT '0',
+  `CANTIDAD_OPERACIONES_ARQ` int(11) NOT NULL DEFAULT '0',
+  `TOTAL_BRUTO_LINEAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_DESCUENTOS_LINEAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_BRUTO_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_NETO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_VENTA_CREDITO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_VALES_RECOGIDOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_VALES_EMITIDOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_COBROS_CLIENTES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_PENDIENTE_COBRO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_INGRESOS_CAJA_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_EFECTIVO_INGRESOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_EFECTIVO_ENTRADAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_EFECTIVO_SALIDAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_EFECTIVO_ANTERIOR_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_EFECTIVO_CAJA_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_OTROS_INGRESOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Suma de formas de pago sin cajón (tarjeta, bono, divisa, cripto...)',
+  `TOTAL_SALDO_RECONTAR_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Saldo teórico efectivo + otros (lo que debe estar en caja + ext.)',
+  `TOTAL_DEPOSITOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_ENCARGOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `OBSERVACIONES_ARQ` varchar(500) NULL DEFAULT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL,
+  `USUARIO_MODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_ARQ`)
+);
+ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_CTX_FECHA` (`CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`, `FECHA_DESDE_ARQ`);
+ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_FASE` (`FASE_ARQ`);
+ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_FECHA` (`FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`);
+
+
 -- Tabla: fza_caja_formas_pago
 
 DROP TABLE IF EXISTS `fza_caja_formas_pago`;
@@ -2385,7 +2431,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 208, 3, 'S', 'S', '2026-05-16 21:24:21', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 209, 3, 'S', 'S', '2026-05-17 07:28:29', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 18, 2, 'S', 'S', '2026-05-11 19:06:32', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -3411,8 +3457,83 @@ WHERE F.CONTADOR_LINEAS_FAC IS NULL
    OR F.CONTADOR_LINEAS_FAC = ''0''
    OR CAST(F.CONTADOR_LINEAS_FAC AS UNSIGNED) <
       CAST(L.ULTIMA_LINEA      AS UNSIGNED);
-', '2026-05-16 21:24:21', '2026-05-16 21:24:21', 'Administrador', 'Administrador');
--- 3 registros exportados
+', '2026-05-16 21:24:21', '2026-05-16 21:24:21', 'Administrador', 'Administrador'),
+  ('208', 'arqueo_caja', '-- ============================================================================
+-- Arqueo de Caja
+-- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
+--
+-- Soporta el modal `TfrmModalArqueo` (src/Modals/inMtoModalArqueo.pas)
+-- lanzado desde el menú de caja (F11). En este primer paso la pantalla es de
+-- solo lectura y no inserta filas; la tabla queda lista para el futuro F5
+-- Recuento (cierre Z), que persistirá una fila por arqueo y marcará
+-- `CODIGO_ARQUEO_OPCAJA` en `fza_caja_operaciones` (FK lógica ya existente).
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- IDEMPOTENCIA
+-- ---------------------------------------------------------------------------
+-- Re-ejecutable: DROP TABLE IF EXISTS + CREATE TABLE. Sin datos asociados.
+-- ---------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `fza_caja_arqueos`;
+CREATE TABLE `fza_caja_arqueos` (
+  `CODIGO_ARQ`                       varchar(30)   NOT NULL
+      COMMENT ''ID único del arqueo / cierre Z'',
+  `CODIGO_EMP_ARQ`                   varchar(10)   NOT NULL,
+  `CODIGO_ALM_ARQ`                   varchar(10)   NOT NULL,
+  `CODIGO_CAJA_ARQ`                  varchar(10)   NOT NULL
+      COMMENT ''Terminal físico (TPV1, TPV2...)'',
+  `FECHA_DESDE_ARQ`                  date          NOT NULL,
+  `FECHA_HASTA_ARQ`                  date          NOT NULL,
+  `FASE_ARQ`                         varchar(15)   NOT NULL DEFAULT ''ABIERTO''
+      COMMENT ''ABIERTO, CERRADO'',
+  `CODIGO_EMPLEADO_ARQ`              varchar(20)   NULL DEFAULT NULL,
+  `CANTIDAD_VENTAS_ARQ`              int(11)       NOT NULL DEFAULT 0,
+  `CANTIDAD_OPERACIONES_ARQ`         int(11)       NOT NULL DEFAULT 0,
+  `TOTAL_BRUTO_LINEAS_ARQ`           decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_DESCUENTOS_LINEAS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_BRUTO_OPERACIONES_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_VENTA_CREDITO_ARQ`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_VALES_RECOGIDOS_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_VALES_EMITIDOS_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_COBROS_CLIENTES_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_PENDIENTE_COBRO_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_INGRESOS_CAJA_ARQ`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_INGRESOS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_ENTRADAS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_SALIDAS_ARQ`       decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_ANTERIOR_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_CAJA_ARQ`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_OTROS_INGRESOS_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''Suma de formas de pago sin cajón (tarjeta, bono, divisa, cripto...)'',
+  `TOTAL_SALDO_RECONTAR_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''Saldo teórico efectivo + otros (lo que debe estar en caja + ext.)'',
+  `TOTAL_DEPOSITOS_ARQ`              decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_ENCARGOS_ARQ`               decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `OBSERVACIONES_ARQ`                varchar(500)  NULL DEFAULT NULL,
+  `INSTANTE_MODIF`                   timestamp     NOT NULL
+      DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA`                    timestamp     NOT NULL
+      DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`                     varchar(100)  NOT NULL,
+  `USUARIO_MODIF`                    varchar(100)  NOT NULL,
+  PRIMARY KEY (`CODIGO_ARQ`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_CTX_FECHA`
+      (`CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`,
+       `FECHA_DESDE_ARQ`);
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_FECHA`
+      (`FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`);
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_FASE`
+      (`FASE_ARQ`);
+', '2026-05-17 07:28:29', '2026-05-17 07:28:29', 'Administrador', 'Administrador');
+-- 4 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -5070,7 +5191,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-16 21:28:31', '2026-05-16 21:28:31', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-17 09:04:00', '2026-05-17 09:04:00', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -16818,4 +16939,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 16/05/2026 21:28:40
+-- Backup completado: 17/05/2026 9:04:08

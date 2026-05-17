@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalArqueo                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -30,7 +30,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
-  inMtoFrmBase, inLibArqueo, inLibArqueoTicket;
+  inMtoFrmBase, inLibArqueo, inLibArqueoTicket, Vcl.ComCtrls, dxCore,
+  cxDateUtils, cxCurrencyEdit, JvComponentBase, JvEnterTab, cxLocalization;
 
 type
   TfrmModalArqueo = class(TfrmBase)
