@@ -488,9 +488,13 @@ begin
       raise;
     end;
   end
-  else if (sExt = '.webp') then
+  else if (sExt = '.webp') or (sExt = '.avif') or (sExt = '.heic') or
+          (sExt = '.heif') then
   begin
-    // WebP via Windows Imaging Component (TWICImage).
+    // WebP, AVIF, HEIC, HEIF: todos via Windows Imaging Component
+    // (TWICImage). En Win10/11 los codecs vienen de serie o se
+    // instalan gratis desde Microsoft Store (AV1 Video Extension,
+    // HEIF Image Extensions, WebP Imaging Extensions).
     wic := TWICImage.Create;
     try
       wic.LoadFromFile(ARuta);
