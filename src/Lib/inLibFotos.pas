@@ -168,6 +168,20 @@ procedure SustituirFotosEnReport(Report: TfrxReport);
 /// devuelve `[ACodSku]` o vacio.
 function GenerarPrefijosSku(const ACodSku: string): TArray<string>;
 
+/// Lee el codigo de articulo y de SKU del registro activo de un
+/// DataSet, recorriendo los alias canonicos del esquema (CODIGO_ART_*,
+/// CODIGO_UNIDAD_*). Esta funcion es la fuente unica de aliases para
+/// el subsistema de fotos: la usan
+///   - `TfrmMtoGen.ResolverArtSkuActivo` (sobre dsTablaG)
+///   - Los overrides en Facturas / Tarifas / Pedidos / Albaranes (sobre
+///     el dataset del sub-grid de detalle)
+///   - `inMtoCajaOpe.RefrescarFotoStock` (sobre dsLineas)
+///   - `inMtoConsultaOpe.ResolverArtSkuDeFacLin` (sobre cxViewFacLin)
+///   - `SustituirFotoEnPicture` (sobre el dataset de la banda padre)
+/// Si el dataset es nil, no esta activo o esta vacio devuelve '' / ''.
+procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
+                              out ACodArt, ACodSku: string);
+
 var
   oFotos: TFotosArticulos;
 
@@ -862,6 +876,55 @@ end;
 {   FastReports: sustitucion automatica                             }
 { ----------------------------------------------------------------- }
 
+// ============================================================================
+//   Aliases canonicos de las columnas (single source of truth)
+// ============================================================================
+
+const
+  cAliasArt: array[0..11] of string = (
+    'CODIGO_ART_ART',  'CODIGO_ART_FAC',     'CODIGO_ART_FACLIN',
+    'CODIGO_ART_LIN',  'CODIGO_ART_SKU',     'CODIGO_ART_PEDLIN',
+    'CODIGO_ART_ALBLIN', 'CODIGO_ART_ARTTAR', 'CODIGO_ART_AAB',
+    // Sesiones de compras: el codigo puede ser tentativo (articulo
+    // todavia no creado, ver fza_compras_sesiones_fotos).
+    'CODIGO_ART_TENTATIVO_SESLIN',
+    'CODIGO_ART',      'CODIGO_ARTICULO');
+  cAliasSku: array[0..7] of string = (
+    'CODIGO_UNIDAD_SKU',    'CODIGO_UNIDAD_FAC',
+    'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_LIN',
+    'CODIGO_UNIDAD_PEDLIN', 'CODIGO_UNIDAD_ALBLIN',
+    'CODIGO_UNIDAD_ARTTAR', 'CODIGO_UNIDAD');
+
+procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
+                              out ACodArt, ACodSku: string);
+var
+  i: Integer;
+  f: TField;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if (ADataSet = nil) or (not ADataSet.Active) or ADataSet.IsEmpty then
+    Exit;
+  for i := Low(cAliasArt) to High(cAliasArt) do
+  begin
+    f := ADataSet.FindField(cAliasArt[i]);
+    if Assigned(f) and (not f.IsNull) then
+    begin
+      ACodArt := f.AsString;
+      Break;
+    end;
+  end;
+  for i := Low(cAliasSku) to High(cAliasSku) do
+  begin
+    f := ADataSet.FindField(cAliasSku[i]);
+    if Assigned(f) and (not f.IsNull) then
+    begin
+      ACodSku := f.AsString;
+      Break;
+    end;
+  end;
+end;
+
 // Localiza la banda padre del componente y devuelve el TDataSet asociado
 // si lo tiene. Sube la jerarquia hasta encontrar un TfrxDataBand u otro
 // banda con DataSet asignado.
@@ -886,24 +949,6 @@ begin
   end;
 end;
 
-// Busca en el dataset un campo cuyo nombre case con cualquiera de los
-// alias indicados. Devuelve '' si no encuentra ninguno.
-function LeerCampoConAlias(ADataSet: TDataSet;
-                           const AAlias: array of string): string;
-var
-  i: Integer;
-  f: TField;
-begin
-  Result := '';
-  if ADataSet = nil then Exit;
-  for i := Low(AAlias) to High(AAlias) do
-  begin
-    f := ADataSet.FindField(AAlias[i]);
-    if Assigned(f) and (not f.IsNull) then
-      Exit(f.AsString);
-  end;
-end;
-
 procedure SustituirFotoEnPicture(APic: TfrxPictureView;
                                  AResolucion: TFotoResolucion);
 var
@@ -920,25 +965,7 @@ begin
     APic.Picture.Assign(nil);
     Exit;
   end;
-  sArt := LeerCampoConAlias(oDataSet, ['CODIGO_ART_ART',
-                                       'CODIGO_ART_FAC',
-                                       'CODIGO_ART_FACLIN',
-                                       'CODIGO_ART_LIN',
-                                       'CODIGO_ART_SKU',
-                                       'CODIGO_ART_PEDLIN',
-                                       'CODIGO_ART_ALBLIN',
-                                       'CODIGO_ART_ARTTAR',
-                                       'CODIGO_ART_AAB',
-                                       'CODIGO_ART',
-                                       'CODIGO_ARTICULO']);
-  sSku := LeerCampoConAlias(oDataSet, ['CODIGO_UNIDAD_SKU',
-                                       'CODIGO_UNIDAD_FAC',
-                                       'CODIGO_UNIDAD_FACLIN',
-                                       'CODIGO_UNIDAD_LIN',
-                                       'CODIGO_UNIDAD_PEDLIN',
-                                       'CODIGO_UNIDAD_ALBLIN',
-                                       'CODIGO_UNIDAD_ARTTAR',
-                                       'CODIGO_UNIDAD']);
+  LeerArtSkuDeDataSet(oDataSet, sArt, sSku);
   if sArt = '' then
   begin
     APic.Picture.Assign(nil);

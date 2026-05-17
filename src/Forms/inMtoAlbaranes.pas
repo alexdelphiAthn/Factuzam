@@ -159,7 +159,7 @@ var
 implementation
 
 uses
-  inMtoModalFacturarAlbaranesFechas;
+  inMtoModalFacturarAlbaranesFechas, inLibFotos;
 
 {$R *.dfm}
 
@@ -178,7 +178,7 @@ begin
   if Assigned(tvLineasAlbaran.DataController.DataSource) then
   begin
     ds := tvLineasAlbaran.DataController.DataSource.DataSet;
-    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
 end;
 

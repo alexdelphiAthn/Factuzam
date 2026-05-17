@@ -524,6 +524,7 @@ uses
   inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
+  inLibFotos,
   inLibDefaultValues,
   inLibArticulosValidador,
   inLibArticulosResolver,
@@ -1166,7 +1167,7 @@ begin
   if Assigned(tvLineasFactura.DataController.DataSource) then
   begin
     ds := tvLineasFactura.DataController.DataSource.DataSet;
-    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
 end;
 

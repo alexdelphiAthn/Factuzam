@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoFotoArticulo                                             }
 {    Tipo:       Formulario (Mto)                                              }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.2.0                                                         }
 {   Fecha:       17/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -11,8 +11,16 @@
 {  Descripción:                                                                }
 {    Formulario flotante (no modal, top-most) que muestra la foto del          }
 {    articulo o SKU activo en la pantalla que lo invoca con Ctrl+Alt+F.        }
-{    Permite cambiar entre las resoluciones 300, 600 o real.                   }
-{    La carga del bitmap se hace via GDI (TImage + Vcl.Imaging.PngImage).      }
+{    Render por GDI (TImage + Vcl.Imaging.PngImage).                           }
+{                                                                              }
+{    UI con panel de controles desplegable: por defecto solo se ve la imagen   }
+{    y un boton pequeno arriba (▼ Controles). Al pulsarlo se estira hacia     }
+{    abajo el panel con resolucion, cambiar foto, rotar y quitar; un nuevo    }
+{    click lo encoge. F11 hace lo mismo desde teclado.                         }
+{                                                                              }
+{    Alt+F12 guarda la geometria de la ventana (igual patron que               }
+{    inMtoConsultaOpe), via TLayoutSaver. FormShow restaura.                   }
+{                                                                              }
 {    Para uso dentro de un formulario modal existe el wrapper                  }
 {    `inMtoModalFotoArticulo.TfrmModalFotoArticulo`.                           }
 {******************************************************************************}
@@ -29,7 +37,7 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
-  inLibFotos;
+  inLibFotos, inLibLayoutForm, System.UITypes;
 
 type
   /// Firma del callback que la pantalla usa para repreguntar al Mto
@@ -39,22 +47,28 @@ type
     procedure(out ACodArt, ACodSku: string) of object;
 
   TfrmFotoArticulo = class(TfrmBase)
-    pnlTop          : TPanel;
-    rgResolucion    : TcxRadioGroup;
-    lblOrigen       : TcxLabel;
-    lblNivel        : TcxLabel;
-    cbbNivelSku     : TcxComboBox;
-    pnlImage        : TPanel;
-    imgFoto         : TImage;
-    btnCambiarArt   : TcxButton;
-    btnCambiarSku   : TcxButton;
-    btnQuitar       : TcxButton;
-    btnRotarIzq     : TcxButton;
-    btnRotarDer     : TcxButton;
-    dlgAbrirFoto    : TOpenDialog;
+    pnlTop           : TPanel;
+    btnToggle        : TcxButton;
+    lblOrigen        : TcxLabel;
+    pnlControles     : TPanel;
+    rgResolucion     : TcxRadioGroup;
+    lblNivel         : TcxLabel;
+    cbbNivelSku      : TcxComboBox;
+    btnCambiarArt    : TcxButton;
+    btnCambiarSku    : TcxButton;
+    btnQuitar        : TcxButton;
+    btnRotarIzq      : TcxButton;
+    btnRotarDer      : TcxButton;
+    pnlImage         : TPanel;
+    imgFoto          : TImage;
+    dlgAbrirFoto     : TOpenDialog;
     procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure rgResolucionPropertiesEditValueChanged(Sender: TObject);
+    procedure btnToggleClick(Sender: TObject);
     procedure btnCambiarArtClick(Sender: TObject);
     procedure btnCambiarSkuClick(Sender: TObject);
     procedure btnQuitarClick(Sender: TObject);
@@ -64,17 +78,22 @@ type
     FCodigoArt              : string;
     FCodigoSku              : string;
     FUltimaInfo             : TFotoInfo;
+    // Persistencia de geometria (igual patron que inMtoConsultaOpe).
+    FLayoutLoader           : TLayoutLoader;
     // Auto-refresh: TDataSource del Mto invocante y handler previo del
     // OnDataChange para encadenarlo y poder restaurarlo al cerrar.
     FPadreDataSource        : TDataSource;
     FPadreResolver          : TResolverArtSkuProc;
     FPrevDataChangeHandler  : TDataChangeEvent;
     procedure CargarFotoActual;
-    function ResolucionElegida: TFotoResolucion;
+    function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
-    function ClaveNivelSeleccionado: string;
+    function  ClaveNivelSeleccionado: string;
     procedure DesengancharDataChange;
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
+    procedure ToggleControles;
+    procedure AjustarBotonToggle;
+    procedure GuardarLayout;
   public
     /// Carga la foto del par (articulo, sku). Llamar tras Create o cuando
     /// se quiera refrescar (al cambiar el registro activo).
@@ -107,11 +126,31 @@ begin
   inherited;
   Self.Position    := poScreenCenter;
   Self.FormStyle   := fsStayOnTop;
-  rgResolucion.ItemIndex := 0;  // 300 por defecto
+  Self.KeyPreview  := True;       // para que FormKeyDown vea Alt+F12 / F11
+  rgResolucion.ItemIndex := 0;    // 300 por defecto
   FUltimaInfo.Clear;
   FPadreDataSource := nil;
   FPadreResolver   := nil;
   FPrevDataChangeHandler := nil;
+  // Por defecto el panel de controles esta encogido.
+  pnlControles.Visible := False;
+  AjustarBotonToggle;
+end;
+
+procedure TfrmFotoArticulo.FormShow(Sender: TObject);
+begin
+  inherited;
+  // Restaura geometria si el usuario la guardo previamente con Alt+F12.
+  FLayoutLoader := TLayoutLoader.Create(Self.Name);
+  if FLayoutLoader.Disponible then
+    FLayoutLoader.RestaurarGeometria(Self);
+end;
+
+procedure TfrmFotoArticulo.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FLayoutLoader) then
+    FreeAndNil(FLayoutLoader);
+  inherited;
 end;
 
 procedure TfrmFotoArticulo.FormClose(Sender: TObject;
@@ -129,6 +168,66 @@ begin
     frmFotoArticulo := nil;
   end;
 end;
+
+procedure TfrmFotoArticulo.FormKeyDown(Sender: TObject; var Key: Word;
+                                       Shift: TShiftState);
+begin
+  inherited;
+  // Alt + F12 -> guardar geometria (igual patron que inMtoConsultaOpe).
+  if (Key = VK_F12) and (ssAlt in Shift) then
+  begin
+    GuardarLayout;
+    Key := 0;
+    Exit;
+  end;
+  // F11 -> mostrar / ocultar panel de controles (alternativa al boton).
+  if Key = VK_F11 then
+  begin
+    ToggleControles;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmFotoArticulo.GuardarLayout;
+var
+  saver: TLayoutSaver;
+begin
+  saver := TLayoutSaver.Create(Self.Name);
+  try
+    saver.GuardarGeometria(Self);
+    saver.PreguntarYGrabar('Foto del artículo / SKU');
+  finally
+    FreeAndNil(saver);
+  end;
+end;
+
+// ---------------------------------------------------------------------
+//   Panel de controles: estirar / encoger
+// ---------------------------------------------------------------------
+
+procedure TfrmFotoArticulo.ToggleControles;
+begin
+  pnlControles.Visible := not pnlControles.Visible;
+  AjustarBotonToggle;
+end;
+
+procedure TfrmFotoArticulo.AjustarBotonToggle;
+begin
+  if pnlControles.Visible then
+    btnToggle.Caption := '▲ Controles'
+  else
+    btnToggle.Caption := '▼ Controles';
+end;
+
+procedure TfrmFotoArticulo.btnToggleClick(Sender: TObject);
+begin
+  inherited;
+  ToggleControles;
+end;
+
+// ---------------------------------------------------------------------
+//   Resolucion / carga / etiqueta
+// ---------------------------------------------------------------------
 
 function TfrmFotoArticulo.ResolucionElegida: TFotoResolucion;
 begin
@@ -219,6 +318,10 @@ begin
   inherited;
   CargarFotoActual;
 end;
+
+// ---------------------------------------------------------------------
+//   Botones: cambiar / quitar / rotar
+// ---------------------------------------------------------------------
 
 procedure TfrmFotoArticulo.btnCambiarArtClick(Sender: TObject);
 begin
