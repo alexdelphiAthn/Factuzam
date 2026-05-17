@@ -174,6 +174,19 @@ begin
   FreeAndNil(FHooksDataSource);
   if Assigned(FLayoutLoader) then
     FreeAndNil(FLayoutLoader);
+  // Vaciamos explicitamente los strings que vivian en la instancia.
+  // En un mundo perfecto, el destructor del form ya los suelta cuando
+  // libera sus propios campos; pero algunos detectores de leak (FastMM)
+  // ven los strings interceptados antes de que la VCL libere el
+  // componente padre y los reportan como huerfanos. Limpiarlos aqui
+  // es belt-and-braces.
+  if Assigned(cbbNivelSku) then
+    cbbNivelSku.Properties.Items.Clear;
+  if Assigned(lblOrigen) then lblOrigen.Caption := '';
+  Self.Caption := '';
+  FCodigoArt   := '';
+  FCodigoSku   := '';
+  FUltimaInfo.Clear;
   // Si la instancia que se destruye es la singleton global, anulamos
   // la variable para que el siguiente Ctrl+Alt+F cree una limpia.
   // (FormClose tambien lo hace, pero si el Owner libera el form sin
@@ -587,5 +600,15 @@ begin
       frmFotoArticulo.SetFocus;
   end;
 end;
+
+initialization
+  frmFotoArticulo := nil;
+
+finalization
+  // Red de seguridad: si la instancia singleton sigue viva al cerrar
+  // la app (p.ej. el owner aun no la libero), la liberamos aqui para
+  // que ningun string asociado quede huerfano en el reporte de leaks.
+  if Assigned(frmFotoArticulo) then
+    FreeAndNil(frmFotoArticulo);
 
 end.
