@@ -653,6 +653,12 @@ procedure TfrmMtoGen.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
   SendMessage(Self.Handle, WM_SETREDRAW, WPARAM(False), 0);
+  // Si la pantalla flotante de fotos estaba enganchada a DataSources
+  // de este Mto (vinculados con Ctrl+Alt+F), la desenganchamos antes
+  // de que sus DataSources se liberen con el data module. Asi no
+  // quedan punteros colgando en FHooksDataSource.
+  if Assigned(frmFotoArticulo) then
+    frmFotoArticulo.VincularDataSources([], nil);
   if Assigned(cxGrdDBTabPrin) then
     cxGrdDBTabPrin.DataController.DataSource := nil;
 
