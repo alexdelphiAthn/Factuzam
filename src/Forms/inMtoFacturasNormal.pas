@@ -1,0 +1,41 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoFacturasNormal                                           }
+{    Tipo:       Formulario (Mto) descendiente                                 }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       17/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Pantalla de facturas NORMALES (venta mayor).                              }
+{    Descendiente de TfrmMtoFacturasBase: solo cambia el filtro TIPO_FAC.      }
+{    Las customizaciones de vista (columnas, anchos, orden) van en el .dfm     }
+{    propio o en fza_usuarios_perfiles bajo la clave 'frmMtoFacturasNormal'.   }
+{******************************************************************************}
+unit inMtoFacturasNormal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  inMtoFacturasBase;
+
+type
+  TfrmMtoFacturasNormal = class(TfrmMtoFacturasBase)
+  public
+    function TipoFacturaFiltro: string; override;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+function TfrmMtoFacturasNormal.TipoFacturaFiltro: string;
+begin
+  Result := 'NORMAL';
+end;
+
+end.
