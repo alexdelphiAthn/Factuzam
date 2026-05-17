@@ -2258,7 +2258,7 @@ inherited dmFacturas: TdmFacturas
       'WHERE NUMERO_FAC_FACCON = :NUMERO_FAC'
       'AND SERIE_FAC_FACCON = :SERIE_FAC'
       'ORDER BY ID_FACCON DESC')
-    MasterSource = frmMtoFacturas.dsTablaG
+    MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'SERIE_FAC;NUMERO_FAC'
     DetailFields = 'ID_FACCON;NUMERO_FAC_FACCON'
     ReadOnly = True
@@ -2289,7 +2289,7 @@ inherited dmFacturas: TdmFacturas
       'select *'
       'FROM fza_verifactu_eventos'
       'order by id_log desc')
-    MasterSource = frmMtoFacturas.dsTablaG
+    MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'NUMERO_FAC;SERIE_FAC'
     DetailFields = 'NUMERO_FAC_LOG;SERIE_FAC_LOG'
     ReadOnly = True
@@ -2324,7 +2324,7 @@ inherited dmFacturas: TdmFacturas
       '   AND SERIE_DOC_REF_MOV  = :SERIE_FAC '
       '   AND NUMERO_DOC_REF_MOV = :NUMERO_FAC '
       ' ORDER BY LINEA_MOV')
-    MasterSource = frmMtoFacturas.dsTablaG
+    MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'NUMERO_FAC;SERIE_FAC'
     ReadOnly = True
     Left = 1155

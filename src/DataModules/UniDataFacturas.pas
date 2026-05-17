@@ -127,7 +127,7 @@ public
 implementation
 
 uses
-  inMtoFacturas,
+  inMtoFacturasBase,
   inLibGlobalVar,
   inLibtb,
   inLibFacturas;
@@ -495,15 +495,15 @@ begin
      end;
   end;
   oLinFac :=
-    TLinFac.Create((GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac,
+    TLinFac.Create((GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryLinFac,
                             (
-                              GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG);
+                              GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG);
   oLinFac.Cant := 1;
   FreeAndNil(oLinFac);
   facTotales := TFacturaTotales.Create(
-    (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG,
+    (GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG,
                                        (
-                                         GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryLinFac);
+                                         GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryLinFac);
   facTotales.ProcesarFacturaCompleta;//(oLinFac);
   FreeAndNil(facTotales);
 end;
@@ -579,7 +579,7 @@ begin
     if (FindField('ESRETENCIONES_CLIENTE_FAC').AsString <> 'S') then
       unqryTablaG.FindField('PORCENTAJE_RETENCION_FAC').AsFloat := 0;
     if (State = dsInsert) then
-      (GetOwnerForm<TfrmMtoFacturas>).ActualizarComboSeries;
+      (GetOwnerForm<TfrmMtoFacturasBase>).ActualizarComboSeries;
   end;
 end;
 
@@ -627,7 +627,7 @@ begin
         CalcularRetencionesEmpresa;
       end;
      if (State = dsInsert) then
-       (GetOwnerForm<TfrmMtoFacturas>).ActualizarComboSeries;
+       (GetOwnerForm<TfrmMtoFacturasBase>).ActualizarComboSeries;
    end;
 end;
 
@@ -749,11 +749,11 @@ begin
   unqryErrores.Connection := inLibGlobalVar.oConn;
   unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
   unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
-  unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
-  unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
-  unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
-  unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
-  unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturas>).dsTablaG;
+  unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
 end;
 
 procedure TdmFacturas.OpenTables;
@@ -796,7 +796,7 @@ end;
 procedure TdmFacturas.dsLinFacStateChange(Sender: TObject);
 begin
   inherited;
-  var  Form := GetOwnerForm<TfrmMtoFacturas>;
+  var  Form := GetOwnerForm<TfrmMtoFacturasBase>;
   if not Assigned(Form) then Exit;
   with dsLinFac do
   begin
@@ -890,7 +890,7 @@ function TdmFacturas.GetTipoIVA(sTipoIVA: string): Currency;
 var
   fPorcen:Currency;
 begin
-  with (GetOwnerForm<TfrmMtoFacturas>).dmmFacturas.unqryTablaG do
+  with (GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG do
   begin
   case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
     0: fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
@@ -1128,7 +1128,7 @@ begin
     FieldByName('FECHA_FAC').AsDateTime := Trunc(Now);
     FieldByName('FORMA_PAGO_FAC').AsString := FormaPagoDefault;
     FieldByName('ESCONSOLIDADA_FAC').AsString := 'N';
-    (GetOwnerForm<TfrmMtoFacturas>).sbNuevaFacturaClick(Self.Owner);
+    (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
   end;
 end;
 
@@ -1235,11 +1235,11 @@ end;
 procedure TdmFacturas.unqryFacBeforePost(DataSet: TDataSet);
 var
   ISError:Boolean;
-  frmFac:TfrmMtoFacturas;
+  frmFac:TfrmMtoFacturasBase;
 begin
   inherited;
   IsError := False;
-  frmFac := (GetOwnerForm<TfrmMtoFacturas>);
+  frmFac := (GetOwnerForm<TfrmMtoFacturasBase>);
   with unqryTablaG do
   begin
     if ((ExisteSerieEmpresa(FieldByName(fseriefac).AsString,

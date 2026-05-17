@@ -1461,7 +1461,7 @@ begin
     // =======================================================================
     // PASO 4.1: SINCRONIZAR CONTADOR_LINEAS_FAC CON LA ULTIMA LINEA INSERTADA
     // El INSERT de cabecera no lo escribe, asi que al reabrir la factura
-    // desde inMtoFacturas el calculo del siguiente nro de linea arrancaria
+    // desde inMtoFacturasBase el calculo del siguiente nro de linea arrancaria
     // desde 0 y chocaria con la PK '...-010'.
     // =======================================================================
     if RequiereFactura then

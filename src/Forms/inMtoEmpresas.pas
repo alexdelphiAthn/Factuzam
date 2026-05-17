@@ -309,7 +309,7 @@ uses
   inLibDevExp,
   inLibIBAN,
   inMtoPrincipal,
-  inMtoFacturas,
+  inMtoFacturasBase,
   inMtoArticulos,
   inMtoClientes;
 

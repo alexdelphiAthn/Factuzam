@@ -1,4 +1,4 @@
-inherited frmMtoFacturas: TfrmMtoFacturas
+inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
