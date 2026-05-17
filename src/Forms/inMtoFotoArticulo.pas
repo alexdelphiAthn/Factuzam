@@ -89,7 +89,14 @@ type
     procedure RellenarNivelesSku;
     function  ClaveNivelSeleccionado: string;
     procedure DesengancharDataChange;
+    procedure DesengancharDataSource(ADataSource: TDataSource);
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
+  protected
+    // Auto-limpieza si alguno de los DataSources hookeados se libera
+    // antes que nosotros (al cerrar el Mto que los poseia). Usa el
+    // mecanismo nativo FreeNotification de la VCL.
+    procedure Notification(AComponent: TComponent;
+                           Operation: TOperation); override;
     procedure ToggleControles;
     procedure AjustarBotonToggle;
     procedure GuardarLayout;
@@ -482,7 +489,34 @@ begin
     FHooksDataSource.Add(
       TPair<TDataSource, TDataChangeEvent>.Create(ds, ds.OnDataChange));
     ds.OnDataChange := OnPadreDataChange;
+    // VCL nos avisara con Notification(opRemove) cuando este
+    // DataSource se libere, asi podemos limpiar el hook a tiempo
+    // (p.ej. cuando se cierra el Mto que lo posee).
+    ds.FreeNotification(Self);
   end;
+end;
+
+procedure TfrmFotoArticulo.DesengancharDataSource(ADataSource: TDataSource);
+var
+  i: Integer;
+begin
+  if (ADataSource = nil) or (FHooksDataSource = nil) then Exit;
+  for i := FHooksDataSource.Count - 1 downto 0 do
+    if FHooksDataSource[i].Key = ADataSource then
+    begin
+      // Restauramos el handler previo si el DataSource sigue vivo.
+      // Si el DataSource se esta liberando (lo descubrimos via
+      // Notification), no tocamos el OnDataChange — ya esta muerto.
+      FHooksDataSource.Delete(i);
+    end;
+end;
+
+procedure TfrmFotoArticulo.Notification(AComponent: TComponent;
+                                        Operation: TOperation);
+begin
+  inherited;
+  if (Operation = opRemove) and (AComponent is TDataSource) then
+    DesengancharDataSource(TDataSource(AComponent));
 end;
 
 procedure TfrmFotoArticulo.VincularMtoPadre(
@@ -501,7 +535,10 @@ begin
   begin
     for pair in FHooksDataSource do
       if Assigned(pair.Key) then
+      begin
         pair.Key.OnDataChange := pair.Value;
+        pair.Key.RemoveFreeNotification(Self);
+      end;
     FHooksDataSource.Clear;
   end;
   FPadreResolver := nil;
