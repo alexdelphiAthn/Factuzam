@@ -13444,7 +13444,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores', 1),
   ('DepositosCliente', 'Depósitos de Clientes', 'mnuDepositosCliente', 'inMtoDepositosCliente.TfrmMtoDepositosCliente', 'Ctrl+D', 'UniDataDepositosCliente.TdmDepositosCliente', 1),
   ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas', 1),
-  ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturasNormal.TfrmMtoFacturasNormal', 'Ctrl+F', 'UniDataFacturas.TdmFacturas', 5),
+  ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturas.TfrmMtoFacturas', 'Ctrl+F', 'UniDataFacturas.TdmFacturas', 5),
   ('Familias', 'Familias', 'mnuFamilias', 'inMtoFamilias.TfrmMtoFamilias', 'Ctrl+N', 'UniDataFamilias.TdmFamilias', 1),
   ('FormasdePago', 'Formas de Pago', 'mnuFormasdePago', 'inMtoFormasdePago.TfrmMtoFormasdePago', 'Ctrl+Q', 'UniDataFormasdePago.TdmFormasdePago', 1),
   ('GeneradorProcesos', 'Generador de Procesos', 'mnuGeneradorProcesos', 'inMtoGeneradorProcesos.TfrmMtoGeneradorProcesos', 'Ctrl+G', 'UniDataGeneradorProcesos.TdmGeneradorProcesos', 1),
