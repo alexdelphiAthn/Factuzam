@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFotoArticulo                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -37,7 +37,7 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
-  inLibFotos, inLibLayoutForm, System.UITypes;
+  inLibFotos, inLibLayoutForm, System.UITypes, Vcl.Menus, cxControls, cxMaskEdit;
 
 type
   /// Firma del callback que la pantalla usa para repreguntar al Mto
