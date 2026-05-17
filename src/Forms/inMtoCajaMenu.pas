@@ -172,7 +172,8 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal;
+  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal,
+  inMtoModalArqueo;
 
 {$R *.dfm}
 
@@ -697,7 +698,19 @@ end;
 // F11 - Arqueo
 procedure TfrmMtoMenuCaja.lblArqueoClick(Sender: TObject);
 begin
-  // TODO: implementar acción de Arqueo
+  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+  begin
+    ShowMessage('No hay empresa/almacén/caja asignados. ' +
+                'Selecciona una caja antes de hacer arqueo.');
+    Exit;
+  end;
+  TfrmModalArqueo.Ejecutar(Self,
+                           inLibGlobalVar.oConn,
+                           FEmpresa,
+                           FAlmacen,
+                           FCaja,
+                           DateOf(FFechaCaja),
+                           DateOf(FFechaCaja));
 end;
 
 procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);
