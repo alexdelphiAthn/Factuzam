@@ -473,6 +473,7 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -1672,26 +1673,47 @@ end;
 
 // El articulo activo siempre viene de dsTablaG (CODIGO_ART_ART). El
 // SKU activo depende de la pestana visible: cuando el usuario esta en
-// la pestana 2_SKUs (tsSkuMto), la fila activa de tvSkuMto tiene el
-// CODIGO_UNIDAD_SKU; en otras pestanas no hay SKU activo y se trabaja
-// a nivel articulo.
+// la pestana 2_SKUs, 8_Stock o 9_Movimientos, la fila activa del
+// sub-grid correspondiente lleva el CODIGO_UNIDAD_*; en otras pestanas
+// no hay SKU activo y se trabaja a nivel articulo.
 procedure TfrmMtoArticulos.ResolverArtSkuActivo(out ACodArt,
                                                 ACodSku: string);
-var
-  ds: TDataSet;
+
+  function LeerSkuDeGrid(AGrid: TcxGridDBTableView): string;
+  var
+    ds: TDataSet;
+  begin
+    Result := '';
+    if not Assigned(AGrid.DataController.DataSource) then Exit;
+    ds := AGrid.DataController.DataSource.DataSet;
+    // Reutilizamos la lista canonica de aliases (CODIGO_UNIDAD_*).
+    var sArt: string := '';
+    inLibFotos.LeerArtSkuDeDataSet(ds, sArt, Result);
+  end;
+
 begin
   inherited ResolverArtSkuActivo(ACodArt, ACodSku);
-  if (pcDetail.ActivePage = tsSkuMto) and
-     Assigned(tvSkuMto.DataController.DataSource) then
-  begin
-    ds := tvSkuMto.DataController.DataSource.DataSet;
-    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    begin
-      var f := ds.FindField('CODIGO_UNIDAD_SKU');
-      if Assigned(f) and (not f.IsNull) then
-        ACodSku := f.AsString;
-    end;
-  end;
+  // Si el inherited ya devolvio SKU (improbable en este Mto), no
+  // tocamos. Si no, miramos la pestana activa.
+  if ACodSku <> '' then Exit;
+  if pcDetail.ActivePage = tsSkuMto then
+    ACodSku := LeerSkuDeGrid(tvSkuMto)
+  else if pcDetail.ActivePage = cxTabSheet3 then       // 8_Stock
+    ACodSku := LeerSkuDeGrid(tvStock)
+  else if pcDetail.ActivePage = tsMovimientos then     // 9_Movimientos
+    ACodSku := LeerSkuDeGrid(tvMovimientos);
+end;
+
+function TfrmMtoArticulos.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  // El articulo viene de dsTablaG; el SKU puede venir de cualquiera
+  // de los tres sub-grids segun la pestana activa. Enganchamos los
+  // cuatro DataSources para que la pantalla flotante refresque al
+  // navegar en cualquiera de ellos.
+  Result := [dsTablaG,
+             dmmArticulos.dsSkus,            // pestaña 2_SKUs
+             dmmArticulos.dsStockArticulos,  // pestaña 8_Stock
+             dmmArticulos.dsMovimientosArticulos]; // pestaña 9_Movimientos
 end;
 
 procedure TfrmMtoArticulos.ResetForm;

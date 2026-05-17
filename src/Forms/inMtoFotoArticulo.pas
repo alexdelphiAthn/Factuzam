@@ -30,7 +30,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.StrUtils, Data.DB,
+  System.Classes, System.StrUtils, System.Generics.Collections, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.StdCtrls, Vcl.Imaging.PngImage,
   inMtoFrmBase, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
@@ -80,11 +80,12 @@ type
     FUltimaInfo             : TFotoInfo;
     // Persistencia de geometria (igual patron que inMtoConsultaOpe).
     FLayoutLoader           : TLayoutLoader;
-    // Auto-refresh: TDataSource del Mto invocante y handler previo del
-    // OnDataChange para encadenarlo y poder restaurarlo al cerrar.
-    FPadreDataSource        : TDataSource;
+    // Auto-refresh: lista de DataSources del Mto invocante con el
+    // handler previo de OnDataChange por cada uno (para poder
+    // restaurarlos al cerrar / re-vincular). Cuando cualquiera dispara
+    // OnDataChange(Field = nil) se recarga la foto via FPadreResolver.
+    FHooksDataSource        : TList<TPair<TDataSource, TDataChangeEvent>>;
     FPadreResolver          : TResolverArtSkuProc;
-    FPrevDataChangeHandler  : TDataChangeEvent;
     procedure CargarFotoActual;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
@@ -98,10 +99,17 @@ type
     /// Carga la foto del par (articulo, sku). Llamar tras Create o cuando
     /// se quiera refrescar (al cambiar el registro activo).
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
-    /// Engancha la pantalla al `dsTablaG` del Mto invocante para
-    /// auto-refresh cuando cambie el registro activo. `AResolver` se
-    /// invoca tras cada cambio de registro para obtener el nuevo par
-    /// (articulo, sku). Pasar `nil` a `ADataSource` desengancha.
+    /// Engancha la pantalla a uno o varios DataSources del Mto
+    /// invocante para auto-refresh cuando cambie el registro activo
+    /// en cualquiera de ellos. `AResolver` se invoca tras cada cambio
+    /// para obtener el nuevo par (articulo, sku). Pasar un array vacio
+    /// desengancha todo. Cada DataSource conserva su handler previo
+    /// encadenado, asi no se pisa logica del Mto.
+    procedure VincularDataSources(const ADataSources: array of TDataSource;
+                                  AResolver: TResolverArtSkuProc);
+    /// Atajo retro-compatible: equivale a VincularDataSources con un
+    /// solo DataSource. Se mantiene por los call sites que aun usan
+    /// la firma vieja.
     procedure VincularMtoPadre(ADataSource: TDataSource;
                                AResolver: TResolverArtSkuProc);
     property CodigoArt: string read FCodigoArt;
@@ -132,9 +140,8 @@ begin
   Self.KeyPreview  := True;       // para que FormKeyDown vea Alt+F12 / F11
   rgResolucion.ItemIndex := 0;    // 300 por defecto
   FUltimaInfo.Clear;
-  FPadreDataSource := nil;
+  FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   FPadreResolver   := nil;
-  FPrevDataChangeHandler := nil;
   // Por defecto el panel de controles esta encogido.
   pnlControles.Visible := False;
   AjustarBotonToggle;
@@ -158,6 +165,8 @@ end;
 
 procedure TfrmFotoArticulo.FormDestroy(Sender: TObject);
 begin
+  DesengancharDataChange;
+  FreeAndNil(FHooksDataSource);
   if Assigned(FLayoutLoader) then
     FreeAndNil(FLayoutLoader);
   inherited;
@@ -452,36 +461,62 @@ end;
 //   Auto-refresh: hook al dsTablaG del Mto padre
 // ---------------------------------------------------------------------
 
-procedure TfrmFotoArticulo.VincularMtoPadre(
-  ADataSource: TDataSource; AResolver: TResolverArtSkuProc);
+procedure TfrmFotoArticulo.VincularDataSources(
+  const ADataSources: array of TDataSource;
+  AResolver: TResolverArtSkuProc);
+var
+  ds: TDataSource;
 begin
   DesengancharDataChange;
-  FPadreDataSource := ADataSource;
-  FPadreResolver   := AResolver;
-  if Assigned(FPadreDataSource) then
+  FPadreResolver := AResolver;
+  if FHooksDataSource = nil then
+    FHooksDataSource :=
+      TList<TPair<TDataSource, TDataChangeEvent>>.Create;
+  for ds in ADataSources do
   begin
-    FPrevDataChangeHandler  := FPadreDataSource.OnDataChange;
-    FPadreDataSource.OnDataChange := OnPadreDataChange;
+    if ds = nil then Continue;
+    FHooksDataSource.Add(
+      TPair<TDataSource, TDataChangeEvent>.Create(ds, ds.OnDataChange));
+    ds.OnDataChange := OnPadreDataChange;
   end;
 end;
 
-procedure TfrmFotoArticulo.DesengancharDataChange;
+procedure TfrmFotoArticulo.VincularMtoPadre(
+  ADataSource: TDataSource; AResolver: TResolverArtSkuProc);
 begin
-  if Assigned(FPadreDataSource) then
-    FPadreDataSource.OnDataChange := FPrevDataChangeHandler;
-  FPadreDataSource := nil;
-  FPadreResolver   := nil;
-  FPrevDataChangeHandler := nil;
+  // Atajo retro-compatible: delega en VincularDataSources con un solo
+  // DataSource.
+  VincularDataSources([ADataSource], AResolver);
+end;
+
+procedure TfrmFotoArticulo.DesengancharDataChange;
+var
+  pair: TPair<TDataSource, TDataChangeEvent>;
+begin
+  if Assigned(FHooksDataSource) then
+  begin
+    for pair in FHooksDataSource do
+      if Assigned(pair.Key) then
+        pair.Key.OnDataChange := pair.Value;
+    FHooksDataSource.Clear;
+  end;
+  FPadreResolver := nil;
 end;
 
 procedure TfrmFotoArticulo.OnPadreDataChange(Sender: TObject; Field: TField);
 var
-  sArt, sSku: string;
+  sArt, sSku : string;
+  pair       : TPair<TDataSource, TDataChangeEvent>;
 begin
-  // Encadenamos al handler previo (si lo habia) para no romper logica
-  // existente del Mto.
-  if Assigned(FPrevDataChangeHandler) then
-    FPrevDataChangeHandler(Sender, Field);
+  // Encadenamos al handler previo (si lo habia) del DataSource que
+  // disparo, para no romper logica existente del Mto.
+  if Assigned(FHooksDataSource) then
+    for pair in FHooksDataSource do
+      if (pair.Key = Sender) and Assigned(pair.Value) then
+      begin
+        pair.Value(Sender, Field);
+        Break;
+      end;
   // Solo refrescamos cuando cambia el registro activo (Field = nil),
   // no en cada cambio de columna.
   if (Field = nil) and Assigned(FPadreResolver) then
