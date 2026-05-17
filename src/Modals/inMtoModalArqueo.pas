@@ -42,6 +42,22 @@ type
     pcArqueo: TcxPageControl;
     tsArqueo: TcxTabSheet;
     tsResumenes: TcxTabSheet;
+    tsMasDatos: TcxTabSheet;
+
+    // Más datos: rejilla resumen por IVA
+    pnlResIVA: TPanel;
+    lblResIVATit: TcxLabel;
+    cxgrdResIVA: TcxGrid;
+    tvResIVA: TcxGridDBTableView;
+    tvResIVABASE: TcxGridDBColumn;
+    tvResIVAPORC_IVA: TcxGridDBColumn;
+    tvResIVACUOTA_IVA: TcxGridDBColumn;
+    tvResIVAPORC_RE: TcxGridDBColumn;
+    tvResIVACUOTA_RE: TcxGridDBColumn;
+    tvResIVABASE_IVAS: TcxGridDBColumn;
+    lvResIVA: TcxGridLevel;
+    dsResIVA: TDataSource;
+    qryResIVA: TUniQuery;
 
     // Resúmenes: paneles y grids (uno por agrupación)
     pnlResEmpleado: TPanel;
@@ -407,6 +423,85 @@ begin
     '  GROUP BY FAMILIA                                                   ' +
     '  ORDER BY FAMILIA                                                   ';
 
+  // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
+  // Super Reducido, Exento). Cada bucket se agrega por separado vía UNION
+  // ALL. Se calcula Base + IVAS = base + cuota IVA + cuota RE para la última
+  // columna de la rejilla.
+  qryResIVA.SQL.Text :=
+    ' SELECT ORD, TIPO, PORC_IVA, BASE, CUOTA_IVA, PORC_RE, CUOTA_RE,      ' +
+    '        (BASE + CUOTA_IVA + CUOTA_RE) AS BASE_IVAS                    ' +
+    ' FROM (                                                               ' +
+    '   SELECT 1 AS ORD, ''N'' AS TIPO,                                    ' +
+    '          MAX(f.PORCENTAJE_IVAN_FAC)                AS PORC_IVA,      ' +
+    '          COALESCE(SUM(f.TOTAL_BASEI_IVAN_FAC), 0)  AS BASE,          ' +
+    '          COALESCE(SUM(f.TOTAL_IVAN_FAC), 0)        AS CUOTA_IVA,     ' +
+    '          MAX(f.PORCENTAJE_REN_FAC)                 AS PORC_RE,       ' +
+    '          COALESCE(SUM(f.TOTAL_REN_FAC), 0)         AS CUOTA_RE       ' +
+    '     FROM fza_caja_operaciones o                                      ' +
+    '     JOIN fza_facturas f                                              ' +
+    '       ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                           ' +
+    '      AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                          ' +
+    '    WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                            ' +
+    '      AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                         ' +
+    '      AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                         ' +
+    '      AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                            ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                          ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                          ' +
+    '   UNION ALL                                                          ' +
+    '   SELECT 2, ''R'',                                                   ' +
+    '          MAX(f.PORCENTAJE_IVAR_FAC),                                 ' +
+    '          COALESCE(SUM(f.TOTAL_BASEI_IVAR_FAC), 0),                   ' +
+    '          COALESCE(SUM(f.TOTAL_IVAR_FAC), 0),                         ' +
+    '          MAX(f.PORCENTAJE_RER_FAC),                                  ' +
+    '          COALESCE(SUM(f.TOTAL_RER_FAC), 0)                           ' +
+    '     FROM fza_caja_operaciones o                                      ' +
+    '     JOIN fza_facturas f                                              ' +
+    '       ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                           ' +
+    '      AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                          ' +
+    '    WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                            ' +
+    '      AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                         ' +
+    '      AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                         ' +
+    '      AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                            ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                          ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                          ' +
+    '   UNION ALL                                                          ' +
+    '   SELECT 3, ''S'',                                                   ' +
+    '          MAX(f.PORCENTAJE_IVAS_FAC),                                 ' +
+    '          COALESCE(SUM(f.TOTAL_BASEI_IVAS_FAC), 0),                   ' +
+    '          COALESCE(SUM(f.TOTAL_IVAS_FAC), 0),                         ' +
+    '          MAX(f.PORCENTAJE_RES_FAC),                                  ' +
+    '          COALESCE(SUM(f.TOTAL_RES_FAC), 0)                           ' +
+    '     FROM fza_caja_operaciones o                                      ' +
+    '     JOIN fza_facturas f                                              ' +
+    '       ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                           ' +
+    '      AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                          ' +
+    '    WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                            ' +
+    '      AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                         ' +
+    '      AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                         ' +
+    '      AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                            ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                          ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                          ' +
+    '   UNION ALL                                                          ' +
+    '   SELECT 4, ''E'',                                                   ' +
+    '          MAX(f.PORCENTAJE_IVAE_FAC),                                 ' +
+    '          COALESCE(SUM(f.TOTAL_BASEI_IVAE_FAC), 0),                   ' +
+    '          COALESCE(SUM(f.TOTAL_IVAE_FAC), 0),                         ' +
+    '          MAX(f.PORCENTAJE_REE_FAC),                                  ' +
+    '          COALESCE(SUM(f.TOTAL_REE_FAC), 0)                           ' +
+    '     FROM fza_caja_operaciones o                                      ' +
+    '     JOIN fza_facturas f                                              ' +
+    '       ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                           ' +
+    '      AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                          ' +
+    '    WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                            ' +
+    '      AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                         ' +
+    '      AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                         ' +
+    '      AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                            ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                          ' +
+    '      AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                          ' +
+    ' ) ivas                                                               ' +
+    ' WHERE BASE <> 0 OR CUOTA_IVA <> 0 OR CUOTA_RE <> 0                   ' +
+    ' ORDER BY ORD                                                         ';
+
   // Propiedad: 1 fila por (propiedad, valor). Suma sobre las líneas de venta
   // los TOTAL_FACLIN agregados al CODIGO_ART. Si la propiedad es de tipo
   // LISTA, el valor sale de fza_propiedades_valores.PV; si es libre, de
@@ -456,6 +551,7 @@ begin
   AbrirQryConParams(qryResFP);
   AbrirQryConParams(qryResFam);
   AbrirQryConParams(qryResProp);
+  AbrirQryConParams(qryResIVA);
 end;
 
 procedure TfrmModalArqueo.RellenarPantalla(const AArqueo: TArqueoCaja);
