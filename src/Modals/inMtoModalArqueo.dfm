@@ -1,6 +1,6 @@
 inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
-  ClientHeight = 600
+  ClientHeight = 510
   ClientWidth = 880
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
@@ -90,7 +90,7 @@ inherited frmModalArqueo: TfrmModalArqueo
     Left = 0
     Top = 70
     Width = 880
-    Height = 480
+    Height = 390
     Align = alClient
     BevelOuter = bvNone
     Color = clBtnFace
@@ -238,7 +238,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       object lblOpeCreditoLbl: TcxLabel
         Left = 320
         Top = 34
-        Caption = '- Vta. a cr'#233'dito'
+        Caption = '- Pr'#233'stamos'
       end
       object lblOpeCredito: TcxLabel
         Left = 410
@@ -463,57 +463,10 @@ inherited frmModalArqueo: TfrmModalArqueo
         Width = 160
       end
     end
-    object pnlOtros: TPanel
-      Left = 8
-      Top = 384
-      Width = 864
-      Height = 88
-      BevelInner = bvLowered
-      BevelOuter = bvNone
-      Color = clBtnFace
-      ParentBackground = False
-      TabOrder = 3
-      object lblOtrosTitulo: TcxLabel
-        Left = 10
-        Top = 6
-        Caption = 'Otros importes'
-        Style.Font.Style = [fsBold]
-        Style.TextColor = clNavy
-        Style.IsFontAssigned = True
-      end
-      object lblOtrosDepositosLbl: TcxLabel
-        Left = 16
-        Top = 32
-        Caption = 'Dep'#243'sitos'
-      end
-      object lblOtrosDepositos: TcxLabel
-        Left = 190
-        Top = 32
-        AutoSize = False
-        Caption = ''
-        Properties.Alignment.Horz = taRightJustify
-        Height = 21
-        Width = 150
-      end
-      object lblOtrosEncargosLbl: TcxLabel
-        Left = 16
-        Top = 58
-        Caption = 'Encargos'
-      end
-      object lblOtrosEncargos: TcxLabel
-        Left = 190
-        Top = 58
-        AutoSize = False
-        Caption = ''
-        Properties.Alignment.Horz = taRightJustify
-        Height = 21
-        Width = 150
-      end
-    end
   end
   object pnlBottom: TPanel [2]
     Left = 0
-    Top = 550
+    Top = 460
     Width = 880
     Height = 50
     Align = alBottom

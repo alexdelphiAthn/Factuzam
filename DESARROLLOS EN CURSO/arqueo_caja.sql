@@ -36,7 +36,8 @@ CREATE TABLE `fza_caja_arqueos` (
   `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_PUNTOS_RECOGIDOS_ARQ`       decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_VENTA_CREDITO_ARQ`          decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_PRESTAMOS_ARQ`              decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT 'Mercancía comprometida con clientes (depósitos abiertos)',
   `TOTAL_VALES_RECOGIDOS_ARQ`        decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_VALES_EMITIDOS_ARQ`         decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_COBROS_CLIENTES_ARQ`        decimal(19,6) NOT NULL DEFAULT '0.000000',
@@ -51,8 +52,6 @@ CREATE TABLE `fza_caja_arqueos` (
       COMMENT 'Suma de formas de pago sin cajón (tarjeta, bono, divisa, cripto...)',
   `TOTAL_SALDO_RECONTAR_ARQ`         decimal(19,6) NOT NULL DEFAULT '0.000000'
       COMMENT 'Saldo teórico efectivo + otros (lo que debe estar en caja + ext.)',
-  `TOTAL_DEPOSITOS_ARQ`              decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_ENCARGOS_ARQ`               decimal(19,6) NOT NULL DEFAULT '0.000000',
   `OBSERVACIONES_ARQ`                varchar(500)  NULL DEFAULT NULL,
   `INSTANTE_MODIF`                   timestamp     NOT NULL
       DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
