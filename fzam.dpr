@@ -104,6 +104,7 @@ uses
   inMtoCajaParam in 'src\Core\inMtoCajaParam.pas' {frmMtoCajaParam},
   inLibCajaParam in 'src\Lib\inLibCajaParam.pas',
   inLibArqueo in 'src\Lib\inLibArqueo.pas',
+  inLibArqueoTicket in 'src\Lib\inLibArqueoTicket.pas',
   inMtoModalArqueo in 'src\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   ts.core.sqlparser in 'src\Lib\sqlformatter\ts.core.sqlparser.pas',

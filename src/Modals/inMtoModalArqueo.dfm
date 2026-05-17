@@ -77,13 +77,22 @@ inherited frmModalArqueo: TfrmModalArqueo
       Width = 90
     end
     object btnRecalcular: TcxButton
-      Left = 700
+      Left = 540
       Top = 22
-      Width = 160
+      Width = 150
       Height = 35
       Caption = 'Recalcular (F5)'
       TabOrder = 2
       OnClick = btnRecalcularClick
+    end
+    object btnImprimir: TcxButton
+      Left = 700
+      Top = 22
+      Width = 160
+      Height = 35
+      Caption = 'Imprimir (F11)'
+      TabOrder = 3
+      OnClick = btnImprimirClick
     end
   end
   object pnlBody: TPanel [1]
@@ -729,6 +738,11 @@ inherited frmModalArqueo: TfrmModalArqueo
       Caption = 'Recalcular'
       ShortCut = 116
       OnExecute = actRecalcularExecute
+    end
+    object actImprimir: TAction
+      Caption = 'Imprimir'
+      ShortCut = 122
+      OnExecute = actImprimirExecute
     end
   end
   object dsResEmpleado: TDataSource

@@ -30,7 +30,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
-  inMtoFrmBase, inLibArqueo;
+  inMtoFrmBase, inLibArqueo, inLibArqueoTicket;
 
 type
   TfrmModalArqueo = class(TfrmBase)
@@ -99,6 +99,7 @@ type
     lblTituloVentas: TcxLabel;
     lblVentas: TcxLabel;
     btnRecalcular: TcxButton;
+    btnImprimir: TcxButton;
 
     // Sección Líneas artículos
     pnlLineas: TPanel;
@@ -159,13 +160,16 @@ type
     alArqueo: TActionList;
     actEscape: TAction;
     actRecalcular: TAction;
+    actImprimir: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAtrasClick(Sender: TObject);
     procedure btnRecalcularClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
     procedure actRecalcularExecute(Sender: TObject);
+    procedure actImprimirExecute(Sender: TObject);
     procedure dteFechaDesdePropertiesChange(Sender: TObject);
     procedure dteFechaHastaPropertiesChange(Sender: TObject);
   private
@@ -251,6 +255,25 @@ procedure TfrmModalArqueo.btnRecalcularClick(Sender: TObject);
 begin
   inherited;
   Recalcular;
+end;
+
+procedure TfrmModalArqueo.btnImprimirClick(Sender: TObject);
+begin
+  inherited;
+  actImprimirExecute(Sender);
+end;
+
+procedure TfrmModalArqueo.actImprimirExecute(Sender: TObject);
+begin
+  inherited;
+  if (FConn = nil) or (not FConn.Connected) then Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+                           dteFechaDesde.Date, dteFechaHasta.Date, 'DEBUG');
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TfrmModalArqueo.actEscapeExecute(Sender: TObject);
@@ -349,14 +372,16 @@ begin
 
   // Familia: nombre = "PADRE-HIJO" si la familia tiene padre (vía
   // CODIGO_SUBFAMILIA_FAM = código del padre), si no = nombre de la familia.
-  // Se cuenta sobre fza_facturas_lineas para tener el desglose por artículo.
+  // Las líneas de factura no siempre tienen CODIGO_FAM_FACLIN poblado, así
+  // que tiramos también de fza_articulos.CODIGO_FAM_ART como fallback.
   qryResFam.SQL.Text :=
     ' SELECT                                                              ' +
     '   CASE                                                              ' +
     '     WHEN p.NOMBRE_FAM_FAM IS NOT NULL                               ' +
     '     THEN CONCAT(p.NOMBRE_FAM_FAM, ''-'', f.NOMBRE_FAM_FAM)          ' +
     '     ELSE COALESCE(f.NOMBRE_FAM_FAM, l.NOMBRE_FAM_FACLIN,            ' +
-    '                   l.CODIGO_FAM_FACLIN, ''?'')                       ' +
+    '                   l.CODIGO_FAM_FACLIN, a.CODIGO_FAM_ART,            ' +
+    '                   ''(sin familia)'')                                ' +
     '   END                                       AS FAMILIA,             ' +
     '   COUNT(*)                                  AS UDS,                 ' +
     '   COALESCE(SUM(l.TOTAL_FACLIN), 0)          AS NETO                 ' +
@@ -366,8 +391,11 @@ begin
     '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA             ' +
     '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA            ' +
     '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA       ' +
+    '   LEFT JOIN fza_articulos a                                         ' +
+    '     ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                       ' +
     '   LEFT JOIN fza_articulos_familias f                                ' +
-    '     ON f.CODIGO_FAM_FAM = l.CODIGO_FAM_FACLIN                       ' +
+    '     ON f.CODIGO_FAM_FAM = COALESCE(l.CODIGO_FAM_FACLIN,             ' +
+    '                                    a.CODIGO_FAM_ART)                ' +
     '   LEFT JOIN fza_articulos_familias p                                ' +
     '     ON p.CODIGO_FAM_FAM = f.CODIGO_SUBFAMILIA_FAM                   ' +
     '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
