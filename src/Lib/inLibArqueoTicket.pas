@@ -57,6 +57,9 @@ type
     class procedure EscribirResumenFormaPago(ATicket: TTicketTermico;
                                              AConn: TUniConnection;
                                              const AArqueo: TArqueoCaja);
+    class procedure EscribirResumenSerie(ATicket: TTicketTermico;
+                                         AConn: TUniConnection;
+                                         const AArqueo: TArqueoCaja);
   public
     class procedure Imprimir(AConn: TUniConnection;
                              const AEmpresa: string;
@@ -460,6 +463,72 @@ begin
   end;
 end;
 
+class procedure TArqueoTicket.EscribirResumenSerie(ATicket: TTicketTermico;
+                                                  AConn: TUniConnection;
+                                                  const AArqueo: TArqueoCaja);
+var
+  Q: TUniQuery;
+  dBase, dCuota, dTotal, dPorc: Currency;
+begin
+  // Una fila por serie. % IVA se calcula como tipo efectivo
+  // (cuota / base * 100). Si la serie mezcla varios tipos de IVA la cifra
+  // del % es la media ponderada, no un tipo concreto.
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := AConn;
+    Q.SQL.Text :=
+      ' SELECT                                                              ' +
+      '   f.SERIE_FAC                              AS SERIE,                ' +
+      '   COALESCE(SUM(f.TOTAL_BASES_FAC), 0)      AS BASE,                 ' +
+      '   COALESCE(SUM(f.TOTAL_IMPUESTOS_FAC), 0)  AS CUOTA,                ' +
+      '   COALESCE(SUM(f.TOTAL_LIQUIDO_FAC), 0)    AS TOTAL                 ' +
+      '   FROM fza_caja_operaciones o                                       ' +
+      '   JOIN fza_facturas f                                               ' +
+      '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                            ' +
+      '    AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                           ' +
+      '  WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                             ' +
+      '    AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                          ' +
+      '    AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                          ' +
+      '    AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                             ' +
+      '    AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                           ' +
+      '    AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                           ' +
+      '  GROUP BY f.SERIE_FAC                                               ' +
+      '  ORDER BY f.SERIE_FAC                                               ';
+    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
+    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
+    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
+    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.Open;
+    if Q.IsEmpty then Exit;
+    ATicket.SaltarLineas(1);
+    ATicket.Negrita(True);
+    ATicket.EscribirLinea('RESUMEN VENTAS POR SERIE');
+    ATicket.Negrita(False);
+    ATicket.EscribirLinea('SE  BASE IMP   %IVA    CUOTA      TOTAL');
+    while not Q.Eof do
+    begin
+      dBase  := Q.FieldByName('BASE').AsCurrency;
+      dCuota := Q.FieldByName('CUOTA').AsCurrency;
+      dTotal := Q.FieldByName('TOTAL').AsCurrency;
+      if dBase <> 0 then
+        dPorc := (dCuota / dBase) * 100
+      else
+        dPorc := 0;
+      ATicket.EscribirLinea(
+        Format('%-3s %10s %6s %10s %10s',
+               [Q.FieldByName('SERIE').AsString,
+                FmtImp(dBase),
+                FormatFloat('0.00', dPorc),
+                FmtImp(dCuota),
+                FmtImp(dTotal)]));
+      Q.Next;
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 // =============================================================================
 //   API pública
 // =============================================================================
@@ -513,6 +582,7 @@ begin
     EscribirResumenSeccion(Ticket, AConn, Arqueo);
     EscribirResumenEmpleado(Ticket, AConn, Arqueo);
     EscribirResumenFormaPago(Ticket, AConn, Arqueo);
+    EscribirResumenSerie(Ticket, AConn, Arqueo);
 
     // Pie
     Ticket.SaltarLineas(1);
