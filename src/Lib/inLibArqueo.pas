@@ -101,6 +101,8 @@ type
                                    var AArqueo: TArqueoCaja);
     class procedure CalcularOperaciones(AConn: TUniConnection;
                                         var AArqueo: TArqueoCaja);
+    class procedure CalcularDepositos(AConn: TUniConnection;
+                                      var AArqueo: TArqueoCaja);
     class procedure CalcularVales(AConn: TUniConnection;
                                   var AArqueo: TArqueoCaja);
     class procedure CalcularPagos(AConn: TUniConnection;
@@ -148,6 +150,7 @@ begin
   CalcularContadores(AConn, Result);
   CalcularLineas(AConn, Result);
   CalcularOperaciones(AConn, Result);
+  CalcularDepositos(AConn, Result);
   CalcularVales(AConn, Result);
   CalcularPagos(AConn, Result);
   CalcularDerivados(Result);
@@ -249,20 +252,16 @@ class procedure TArqueoCalculadora.CalcularOperaciones(AConn: TUniConnection;
 var
   Query: TUniQuery;
 begin
-  // Esquema de cálculo (post-fix A+B+C+D1):
+  // Esquema de cálculo:
   //   - Neto              = SUM IMPORTE_TOTAL_OPCAJA WHERE TIPO='VE' (signed,
   //                         se mantiene como cifra interna).
   //   - VentasNormales    = VE > 0 sin DE en la misma operación.
   //   - Devoluciones      = ABS(SUM TIPO='DV')  ← canónico, no VE < 0.
-  //   - Préstamos         = −SUM(DE)            ← negado para ser positivo:
-  //                         representa la mercancía comprometida bruta. Los
-  //                         cierres en BBDD se guardan como DE negativo,
-  //                         negar nos da la magnitud.
-  //   - CobrosClientes    = SUM(CB > 0) RESTRINGIDO a depósitos que aún
-  //                         siguen abiertos (ESTADO_DEP='PENDIENTE'). Si el
-  //                         depósito ya cerró en el período, su anticipo ya
-  //                         está cubierto por la VE de cierre y no debe
-  //                         contarse como "cobro pendiente".
+  //
+  // Préstamos y CobrosClientes NO se calculan aquí: se sacan en
+  // CalcularDepositos directamente de fza_depositos_cliente, que tiene
+  // el saldo correcto (PRECIO_VENTA_DEP × CANTIDAD para el valor de la
+  // mercancía, IMPORTE_ANTICIPO_DEP para lo ya cobrado).
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;
@@ -297,17 +296,6 @@ begin
       '                  ELSE 0                                               ' +
       '                END), 0))                             AS V_DEVOL,      ' +
       '   COALESCE(SUM(CASE                                                   ' +
-      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_CB             ' +
-      '                   AND o.IMPORTE_TOTAL_OPCAJA > 0                      ' +
-      '                   AND EXISTS                                          ' +
-      '                       (SELECT 1 FROM fza_depositos_cliente d          ' +
-      '                         WHERE d.ID_DEPOSITO_DEP                       ' +
-      '                                  = o.ID_DEPOSITO_OPCAJA               ' +
-      '                           AND d.ESTADO_DEP = :pEST_DEP_OK)            ' +
-      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                               ' +
-      '                END), 0)                              AS COBROS,       ' +
-      '   COALESCE(SUM(CASE                                                   ' +
       '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_EC             ' +
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
@@ -316,40 +304,31 @@ begin
       '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_GC             ' +
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
-      '                END), 0)                              AS SALIDAS,      ' +
-      '   -COALESCE(SUM(CASE                                                  ' +
-      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_DE             ' +
-      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                               ' +
-      '                END), 0)                              AS PRESTAMOS     ' +
+      '                END), 0)                              AS SALIDAS       ' +
       '   FROM fza_caja_operaciones o                                         ' +
       '  WHERE o.CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
-      '    AND o.FECHA_OPERACION_OPCAJA   >= :pFDESDE                            ' +
-      '    AND o.FECHA_OPERACION_OPCAJA   <= :pFHASTA                            ';
-    Query.ParamByName('pTIPO_VE').AsString    := TipoOpVenta;
-    Query.ParamByName('pTIPO_DV').AsString    := TipoOpDevolucion;
-    Query.ParamByName('pTIPO_CB').AsString    := TipoOpCobroCuenta;
-    Query.ParamByName('pTIPO_EC').AsString    := TipoOpEntradaCambio;
-    Query.ParamByName('pTIPO_GC').AsString    := TipoOpGastoCaja;
-    Query.ParamByName('pTIPO_DE').AsString    := TipoOpDeposito;
-    Query.ParamByName('pEST_DEP_OK').AsString := EstadoDepositoAbierto;
-    Query.ParamByName('pEMPRESA').AsString    := AArqueo.Empresa;
-    Query.ParamByName('pALMACEN').AsString    := AArqueo.Almacen;
-    Query.ParamByName('pCAJA').AsString       := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDateTime       := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDateTime       := AArqueo.FechaHasta;
+      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                           ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                           ';
+    Query.ParamByName('pTIPO_VE').AsString      := TipoOpVenta;
+    Query.ParamByName('pTIPO_DV').AsString      := TipoOpDevolucion;
+    Query.ParamByName('pTIPO_EC').AsString      := TipoOpEntradaCambio;
+    Query.ParamByName('pTIPO_GC').AsString      := TipoOpGastoCaja;
+    Query.ParamByName('pTIPO_DE').AsString      := TipoOpDeposito;
+    Query.ParamByName('pEMPRESA').AsString      := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString      := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString         := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
     begin
       AArqueo.Neto             := Query.FieldByName('NETO').AsCurrency;
       AArqueo.VentasNormales   := Query.FieldByName('V_NORMALES').AsCurrency;
       AArqueo.Devoluciones     := Query.FieldByName('V_DEVOL').AsCurrency;
-      AArqueo.CobrosClientes   := Query.FieldByName('COBROS').AsCurrency;
       AArqueo.EfectivoEntradas := Query.FieldByName('ENTRADAS').AsCurrency;
       AArqueo.EfectivoSalidas  := Query.FieldByName('SALIDAS').AsCurrency;
-      AArqueo.Prestamos        := Query.FieldByName('PRESTAMOS').AsCurrency;
     end;
 
     // Operaciones — bruto y descuentos:
@@ -360,6 +339,51 @@ begin
     AArqueo.DescuentosOperaciones := AArqueo.NetoLineas - AArqueo.Neto;
     if AArqueo.DescuentosOperaciones < 0 then
       AArqueo.DescuentosOperaciones := 0;
+  finally
+    FreeAndNil(Query);
+  end;
+end;
+
+class procedure TArqueoCalculadora.CalcularDepositos(AConn: TUniConnection;
+                                                    var AArqueo: TArqueoCaja);
+var
+  Query: TUniQuery;
+begin
+  // Snapshot de depósitos abiertos al final del rango:
+  //   - Préstamos      = SUM(PRECIO_VENTA_DEP × CANTIDAD_PENDIENTE_DEP)
+  //                      = valor de la mercancía comprometida.
+  //   - CobrosClientes = SUM(IMPORTE_ANTICIPO_DEP)
+  //                      = anticipos ya entregados por el cliente.
+  // Se incluyen todos los depósitos PENDIENTE que existían al final del
+  // rango (FECHA_CREACION_DEP <= pFHASTA), no solo los creados en él:
+  // un depósito abierto hace una semana sigue siendo mercancía en préstamo
+  // hoy.
+  Query := TUniQuery.Create(nil);
+  try
+    Query.Connection := AConn;
+    Query.SQL.Text :=
+      ' SELECT                                                              ' +
+      '   COALESCE(SUM(d.PRECIO_VENTA_DEP                                   ' +
+      '              * COALESCE(d.CANTIDAD_PENDIENTE_DEP, 1)), 0)           ' +
+      '                                              AS PRESTAMOS,          ' +
+      '   COALESCE(SUM(d.IMPORTE_ANTICIPO_DEP), 0)   AS COBROS              ' +
+      '   FROM fza_depositos_cliente d                                      ' +
+      '  WHERE d.CODIGO_EMP_DEP        = :pEMPRESA                          ' +
+      '    AND d.CODIGO_ALM_DEP        = :pALMACEN                          ' +
+      '    AND d.CODIGO_CAJA_DEP       = :pCAJA                             ' +
+      '    AND d.ESTADO_DEP            = :pEST_DEP_OK                       ' +
+      '    AND d.FECHA_CREACION_DEP   <= :pFHASTA                           ';
+    Query.ParamByName('pEMPRESA').AsString    := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString    := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString       := AArqueo.Caja;
+    Query.ParamByName('pEST_DEP_OK').AsString := EstadoDepositoAbierto;
+    Query.ParamByName('pFHASTA').AsDateTime   := AArqueo.FechaHasta;
+    Query.Open;
+    if not Query.Eof then
+    begin
+      AArqueo.Prestamos      := Query.FieldByName('PRESTAMOS').AsCurrency;
+      AArqueo.CobrosClientes := Query.FieldByName('COBROS').AsCurrency;
+    end;
   finally
     FreeAndNil(Query);
   end;
