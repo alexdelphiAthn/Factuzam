@@ -1,19 +1,19 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
   Caption = 'Foto del art'#237'culo / SKU'
-  ClientHeight = 680
+  ClientHeight = 720
   ClientWidth = 720
   FormStyle = fsStayOnTop
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 736
-  ExplicitHeight = 719
+  ExplicitHeight = 759
   TextHeight = 19
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
     Width = 720
-    Height = 185
+    Height = 225
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -64,7 +64,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Top = 80
       Width = 220
       Height = 40
-      Caption = 'Cambiar foto del &SKU'
+      Caption = 'Cambiar foto del &SKU / grupo'
       TabOrder = 2
       OnClick = btnCambiarSkuClick
     end
@@ -77,28 +77,41 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       TabOrder = 3
       OnClick = btnQuitarClick
     end
+    object lblNivel: TcxLabel
+      Left = 8
+      Top = 132
+      Caption = 'Nivel al que aplica el cambio:'
+      Width = 220
+    end
+    object cbbNivelSku: TcxComboBox
+      Left = 240
+      Top = 130
+      Properties.DropDownListStyle = lsFixedList
+      TabOrder = 4
+      Width = 452
+    end
     object btnRotarIzq: TcxButton
       Left = 8
-      Top = 130
+      Top = 170
       Width = 220
       Height = 40
       Caption = 'Rotar &izquierda'
-      TabOrder = 4
+      TabOrder = 5
       OnClick = btnRotarIzqClick
     end
     object btnRotarDer: TcxButton
       Left = 240
-      Top = 130
+      Top = 170
       Width = 220
       Height = 40
       Caption = 'Rotar &derecha'
-      TabOrder = 5
+      TabOrder = 6
       OnClick = btnRotarDerClick
     end
   end
   object pnlImage: TPanel [1]
     Left = 0
-    Top = 185
+    Top = 225
     Width = 720
     Height = 495
     Align = alClient

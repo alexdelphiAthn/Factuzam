@@ -760,7 +760,13 @@ begin
     var sSku: string := '';
     ResolverArtSkuActivo(sArt, sSku);
     if sArt <> '' then
+    begin
       MostrarFotoFlotante(Self, sArt, sSku);
+      // Auto-refresh: la pantalla vuelve a resolver el par cada vez
+      // que cambia el registro activo en dsTablaG.
+      if Assigned(frmFotoArticulo) then
+        frmFotoArticulo.VincularMtoPadre(dsTablaG, ResolverArtSkuActivo);
+    end;
     Key := 0;
   end;
 end;

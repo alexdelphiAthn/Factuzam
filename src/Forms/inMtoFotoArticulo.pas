@@ -22,19 +22,28 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.StrUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
+  System.Classes, System.StrUtils, Data.DB,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
   inMtoFrmBase, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
-  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxRadioGroup,
-  cxGroupBox, cxButtons, JvComponentBase, JvEnterTab,
+  cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
+  cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
+  JvComponentBase, JvEnterTab,
   inLibFotos;
 
 type
+  /// Firma del callback que la pantalla usa para repreguntar al Mto
+  /// padre cual es el par (articulo, sku) activo cada vez que cambia
+  /// el registro.
+  TResolverArtSkuProc =
+    procedure(out ACodArt, ACodSku: string) of object;
+
   TfrmFotoArticulo = class(TfrmBase)
     pnlTop          : TPanel;
     rgResolucion    : TcxRadioGroup;
     lblOrigen       : TcxLabel;
+    lblNivel        : TcxLabel;
+    cbbNivelSku     : TcxComboBox;
     pnlImage        : TPanel;
     imgFoto         : TImage;
     btnCambiarArt   : TcxButton;
@@ -52,15 +61,30 @@ type
     procedure btnRotarIzqClick(Sender: TObject);
     procedure btnRotarDerClick(Sender: TObject);
   private
-    FCodigoArt    : string;
-    FCodigoSku    : string;
-    FUltimaInfo   : TFotoInfo;
+    FCodigoArt              : string;
+    FCodigoSku              : string;
+    FUltimaInfo             : TFotoInfo;
+    // Auto-refresh: TDataSource del Mto invocante y handler previo del
+    // OnDataChange para encadenarlo y poder restaurarlo al cerrar.
+    FPadreDataSource        : TDataSource;
+    FPadreResolver          : TResolverArtSkuProc;
+    FPrevDataChangeHandler  : TDataChangeEvent;
     procedure CargarFotoActual;
     function ResolucionElegida: TFotoResolucion;
+    procedure RellenarNivelesSku;
+    function ClaveNivelSeleccionado: string;
+    procedure DesengancharDataChange;
+    procedure OnPadreDataChange(Sender: TObject; Field: TField);
   public
     /// Carga la foto del par (articulo, sku). Llamar tras Create o cuando
     /// se quiera refrescar (al cambiar el registro activo).
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
+    /// Engancha la pantalla al `dsTablaG` del Mto invocante para
+    /// auto-refresh cuando cambie el registro activo. `AResolver` se
+    /// invoca tras cada cambio de registro para obtener el nuevo par
+    /// (articulo, sku). Pasar `nil` a `ADataSource` desengancha.
+    procedure VincularMtoPadre(ADataSource: TDataSource;
+                               AResolver: TResolverArtSkuProc);
     property CodigoArt: string read FCodigoArt;
     property CodigoSku: string read FCodigoSku;
   end;
@@ -85,12 +109,16 @@ begin
   Self.FormStyle   := fsStayOnTop;
   rgResolucion.ItemIndex := 0;  // 300 por defecto
   FUltimaInfo.Clear;
+  FPadreDataSource := nil;
+  FPadreResolver   := nil;
+  FPrevDataChangeHandler := nil;
 end;
 
 procedure TfrmFotoArticulo.FormClose(Sender: TObject;
                                      var Action: TCloseAction);
 begin
   inherited;
+  DesengancharDataChange;
   if Self <> frmFotoArticulo then
     Action := caFree
   else
@@ -119,12 +147,51 @@ begin
   FCodigoSku := ACodSku;
   FUltimaInfo := oFotos.Resolver(ACodArt, ACodSku);
   case FUltimaInfo.Origen of
-    foSku       : lblOrigen.Caption := 'Foto del SKU: ' + ACodSku;
-    foArticulo  : lblOrigen.Caption := 'Foto heredada del artículo: ' + ACodArt;
-    foSinFoto   : lblOrigen.Caption := 'Sin foto para ' + ACodArt +
-                                       IfThen(ACodSku <> '', ' / ' + ACodSku);
+    foSku        : lblOrigen.Caption := 'Foto del SKU: ' + ACodSku;
+    foSkuPrefijo : lblOrigen.Caption := 'Foto heredada del grupo: ' +
+                                        FUltimaInfo.ClaveResuelta;
+    foArticulo   : lblOrigen.Caption := 'Foto heredada del artículo: ' +
+                                        ACodArt;
+    foSinFoto    : lblOrigen.Caption := 'Sin foto para ' + ACodArt +
+                                        IfThen(ACodSku <> '',
+                                               ' / ' + ACodSku, '');
   end;
+  RellenarNivelesSku;
   CargarFotoActual;
+end;
+
+procedure TfrmFotoArticulo.RellenarNivelesSku;
+var
+  prefijos : TArray<string>;
+  i        : Integer;
+begin
+  cbbNivelSku.Properties.Items.BeginUpdate;
+  try
+    cbbNivelSku.Properties.Items.Clear;
+    if FCodigoSku = '' then
+    begin
+      lblNivel.Visible    := False;
+      cbbNivelSku.Visible := False;
+      Exit;
+    end;
+    lblNivel.Visible    := True;
+    cbbNivelSku.Visible := True;
+    prefijos := GenerarPrefijosSku(FCodigoSku);
+    for i := 0 to High(prefijos) do
+      cbbNivelSku.Properties.Items.Add(prefijos[i]);
+    if cbbNivelSku.Properties.Items.Count > 0 then
+      cbbNivelSku.ItemIndex := 0;  // por defecto: SKU completo
+  finally
+    cbbNivelSku.Properties.Items.EndUpdate;
+  end;
+end;
+
+function TfrmFotoArticulo.ClaveNivelSeleccionado: string;
+begin
+  if (cbbNivelSku.Visible) and (cbbNivelSku.ItemIndex >= 0) then
+    Result := cbbNivelSku.Properties.Items[cbbNivelSku.ItemIndex]
+  else
+    Result := FCodigoSku;
 end;
 
 procedure TfrmFotoArticulo.CargarFotoActual;
@@ -186,6 +253,8 @@ begin
 end;
 
 procedure TfrmFotoArticulo.btnCambiarSkuClick(Sender: TObject);
+var
+  sClave: string;
 begin
   inherited;
   if FCodigoSku = '' then
@@ -193,8 +262,9 @@ begin
     ShowMessage('No hay SKU activo. Usa "Cambiar foto del artículo".');
     Exit;
   end;
+  sClave := ClaveNivelSeleccionado;
   if not dlgAbrirFoto.Execute then Exit;
-  oFotos.Guardar(FCodigoArt, FCodigoSku, dlgAbrirFoto.FileName);
+  oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
@@ -204,10 +274,8 @@ begin
   if not FUltimaInfo.Encontrada then Exit;
   if MessageDlg('¿Eliminar la foto actual?', mtConfirmation,
                 [mbYes, mbNo], 0) <> mrYes then Exit;
-  case FUltimaInfo.Origen of
-    foSku       : oFotos.Eliminar(FCodigoArt, FCodigoSku);
-    foArticulo  : oFotos.Eliminar(FCodigoArt, '');
-  end;
+  // Borramos exactamente la fila que resolvio (articulo, prefijo o SKU)
+  oFotos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
@@ -225,6 +293,50 @@ begin
   if not FUltimaInfo.Encontrada then Exit;
   oFotos.Rotar(FCodigoArt, FCodigoSku, True);
   SetArticuloSku(FCodigoArt, FCodigoSku);
+end;
+
+// ---------------------------------------------------------------------
+//   Auto-refresh: hook al dsTablaG del Mto padre
+// ---------------------------------------------------------------------
+
+procedure TfrmFotoArticulo.VincularMtoPadre(
+  ADataSource: TDataSource; AResolver: TResolverArtSkuProc);
+begin
+  DesengancharDataChange;
+  FPadreDataSource := ADataSource;
+  FPadreResolver   := AResolver;
+  if Assigned(FPadreDataSource) then
+  begin
+    FPrevDataChangeHandler  := FPadreDataSource.OnDataChange;
+    FPadreDataSource.OnDataChange := OnPadreDataChange;
+  end;
+end;
+
+procedure TfrmFotoArticulo.DesengancharDataChange;
+begin
+  if Assigned(FPadreDataSource) then
+    FPadreDataSource.OnDataChange := FPrevDataChangeHandler;
+  FPadreDataSource := nil;
+  FPadreResolver   := nil;
+  FPrevDataChangeHandler := nil;
+end;
+
+procedure TfrmFotoArticulo.OnPadreDataChange(Sender: TObject; Field: TField);
+var
+  sArt, sSku: string;
+begin
+  // Encadenamos al handler previo (si lo habia) para no romper logica
+  // existente del Mto.
+  if Assigned(FPrevDataChangeHandler) then
+    FPrevDataChangeHandler(Sender, Field);
+  // Solo refrescamos cuando cambia el registro activo (Field = nil),
+  // no en cada cambio de columna.
+  if (Field = nil) and Assigned(FPadreResolver) then
+  begin
+    FPadreResolver(sArt, sSku);
+    if (sArt <> FCodigoArt) or (sSku <> FCodigoSku) then
+      SetArticuloSku(sArt, sSku);
+  end;
 end;
 
 procedure MostrarFotoFlotante(AOwner: TComponent;
