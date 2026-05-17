@@ -265,6 +265,15 @@ begin
                                         IfThen(ACodSku <> '',
                                                ' / ' + ACodSku, '');
   end;
+  // Reflejamos en el caption (titulo de la ventana) el articulo o SKU
+  // activo, para que el usuario lo vea sin necesidad de mirar la
+  // etiqueta lblOrigen.
+  if ACodArt = '' then
+    Self.Caption := 'Foto del artículo / SKU'
+  else if ACodSku <> '' then
+    Self.Caption := 'Foto — ' + ACodArt + ' / ' + ACodSku
+  else
+    Self.Caption := 'Foto — ' + ACodArt;
   RellenarNivelesSku;
   CargarFotoActual;
 end;
