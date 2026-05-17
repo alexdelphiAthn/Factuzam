@@ -265,15 +265,13 @@ begin
                                         IfThen(ACodSku <> '',
                                                ' / ' + ACodSku, '');
   end;
-  // Reflejamos en el caption (titulo de la ventana) el articulo o SKU
-  // activo, para que el usuario lo vea sin necesidad de mirar la
-  // etiqueta lblOrigen.
-  if ACodArt = '' then
-    Self.Caption := 'Foto del artículo / SKU'
-  else if ACodSku <> '' then
-    Self.Caption := 'Foto — ' + ACodArt + ' / ' + ACodSku
+  // Reflejamos en el caption (titulo de la ventana) solo el codigo del
+  // articulo o SKU activo: tanto el contexto como el icono de la
+  // barra de tareas ya identifican que es una pantalla de fotos.
+  if ACodSku <> '' then
+    Self.Caption := ACodSku
   else
-    Self.Caption := 'Foto — ' + ACodArt;
+    Self.Caption := ACodArt;
   RellenarNivelesSku;
   CargarFotoActual;
 end;
