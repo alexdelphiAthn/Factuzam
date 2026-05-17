@@ -175,6 +175,9 @@
         <DCCReference Include="src\Forms\inMtoFacturasNormal.pas">
             <Form>frmMtoFacturasNormal</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasSimplif.pas">
+            <Form>frmMtoFacturasSimplif</Form>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoArticulos.pas">
             <Form>frmMtoArticulos</Form>
         </DCCReference>
