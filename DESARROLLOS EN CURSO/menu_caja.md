@@ -83,7 +83,7 @@ navegación arriba/abajo (flechas) + Enter. El estado actual está siempre en
 | F10 | Buscar / Modificar  | `lblBuscarModificarClick:592` → `AbrirBuscarModificar:323` | Abre `TfrmConsultaOpe`. |
 | F6  | Entrada de Cambio   | `lblEntradaCambioClick:633`   | **TODO sin implementar.** |
 | F7  | Gastos por Caja     | `lblGastosCajaClick:661`      | **TODO sin implementar.** |
-| F11 | Arqueo              | `lblArqueoClick:700`          | **TODO sin implementar.** |
+| F11 | Arqueo              | `lblArqueoClick:700`          | Abre `TfrmModalArqueo.Ejecutar` (rango de fechas; solo lectura). |
 | F3  | Traspasos           | `lblTraspasosClick:728`       | **TODO sin implementar.** |
 | ESC | Salir               | `lblESCClick:767`             | `Close`. |
 
@@ -513,8 +513,14 @@ marcados como TODO en `inMtoCajaMenu.pas` y siguen sin implementar:
 
 - F6 — Entrada de Cambio (`lblEntradaCambioClick:633`).
 - F7 — Gastos por Caja (`lblGastosCajaClick:661`).
-- F11 — Arqueo (`lblArqueoClick:700`).
 - F3 — Traspasos (`lblTraspasosClick:728`).
+
+F11 Arqueo ya está enganchado a `TfrmModalArqueo.Ejecutar`
+(`src/Modals/inMtoModalArqueo.pas`, librería de cálculo
+`src/Lib/inLibArqueo.pas`). En su primer paso muestra los totales del rango
+seleccionado en modo solo lectura, sin recuento manual ni cierre Z; el
+desglose por forma de pago se devuelve en `TArqueoCaja.PagosPorForma` pero
+no se persiste todavía (tabla hija pendiente para el cierre Z futuro).
 
 El resto del esqueleto (hover/colores/atajos) ya está cableado, sólo falta
 encajar el formulario destino dentro de cada handler.

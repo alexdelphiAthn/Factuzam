@@ -103,6 +103,8 @@ uses
   inMtoCajaSeleccionVale in 'src\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
   inMtoCajaParam in 'src\Core\inMtoCajaParam.pas' {frmMtoCajaParam},
   inLibCajaParam in 'src\Lib\inLibCajaParam.pas',
+  inLibArqueo in 'src\Lib\inLibArqueo.pas',
+  inMtoModalArqueo in 'src\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   ts.core.sqlparser in 'src\Lib\sqlformatter\ts.core.sqlparser.pas',
   ts.core.sqlscanner in 'src\Lib\sqlformatter\ts.core.sqlscanner.pas',

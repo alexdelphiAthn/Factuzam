@@ -40,6 +40,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_atributos_sku`                  | `SA`      |
 | `fza_atributos_valores`              | `AV`      |
 | `fza_atributos_valores_info`         | `AVI`     |
+| `fza_caja_arqueos`                   | `ARQ`     |
 | `fza_caja_formas_pago`               | `CFP`     |
 | `fza_caja_operaciones`               | `OPCAJA`  |
 | `fza_caja_pagos`                     | `PAGO`    |
