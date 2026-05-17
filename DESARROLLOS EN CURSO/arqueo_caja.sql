@@ -34,9 +34,18 @@ CREATE TABLE `fza_caja_arqueos` (
   `TOTAL_DESCUENTOS_LINEAS_ARQ`      decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_BRUTO_OPERACIONES_ARQ`      decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT 'SUM IMPORTE_TOTAL_OPCAJA de VE en el rango (signed)',
   `TOTAL_PRESTAMOS_ARQ`              decimal(19,6) NOT NULL DEFAULT '0.000000'
-      COMMENT 'Mercancía comprometida con clientes (depósitos abiertos)',
+      COMMENT 'SUM TIPO=DE en el rango (compromiso bruto)',
+  `TOTAL_VENTAS_NORMALES_ARQ`        decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT 'VE > 0 sin DE en la misma operación',
+  `TOTAL_VENTAS_PRESTAMOS_ARQ`       decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT '= TOTAL_PRESTAMOS_ARQ − TOTAL_COBROS_CLIENTES_ARQ',
+  `TOTAL_DEVOLUCIONES_ARQ`           decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT 'ABS de VE < 0 (devoluciones a cliente)',
+  `TOTAL_VENTAS_ARQ`                 decimal(19,6) NOT NULL DEFAULT '0.000000'
+      COMMENT '= VentasNormales + VentasPrestamos − Devoluciones',
   `TOTAL_VALES_RECOGIDOS_ARQ`        decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_VALES_EMITIDOS_ARQ`         decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_COBROS_CLIENTES_ARQ`        decimal(19,6) NOT NULL DEFAULT '0.000000',

@@ -181,53 +181,67 @@ inherited frmModalArqueo: TfrmModalArqueo
         Style.TextColor = clNavy
         Style.IsFontAssigned = True
       end
-      object lblOpeDescuentosLbl: TcxLabel
+      object lblOpeVentasNormLbl: TcxLabel
         Left = 16
-        Top = 34
-        Caption = '- Descuentos'
+        Top = 30
+        Caption = 'Ventas Normales'
       end
-      object lblOpeDescuentos: TcxLabel
+      object lblOpeVentasNorm: TcxLabel
         Left = 175
-        Top = 34
+        Top = 30
         AutoSize = False
         Caption = ''
         Properties.Alignment.Horz = taRightJustify
         Height = 21
-        Width = 130
+        Width = 150
       end
-      object lblOpeNetoLbl: TcxLabel
+      object lblOpeVentasPrestLbl: TcxLabel
         Left = 16
-        Top = 60
-        Caption = '= Neto'
-        Style.Font.Style = [fsBold]
-        Style.IsFontAssigned = True
+        Top = 54
+        Caption = '+ Ventas Pr'#233'stamos'
       end
-      object lblOpeNeto: TcxLabel
+      object lblOpeVentasPrest: TcxLabel
         Left = 175
-        Top = 60
+        Top = 54
         AutoSize = False
         Caption = ''
-        Style.Font.Style = [fsBold]
-        Style.IsFontAssigned = True
         Properties.Alignment.Horz = taRightJustify
         Height = 21
-        Width = 130
+        Width = 150
       end
-      object lblOpeCreditoLbl: TcxLabel
-        Left = 320
-        Top = 34
-        Caption = '- Pr'#233'stamos'
+      object lblOpeDevolLbl: TcxLabel
+        Left = 16
+        Top = 78
+        Caption = #8722' Devoluciones'
       end
-      object lblOpeCredito: TcxLabel
-        Left = 410
-        Top = 34
+      object lblOpeDevol: TcxLabel
+        Left = 175
+        Top = 78
         AutoSize = False
         Caption = ''
         Style.TextColor = clRed
         Style.IsFontAssigned = True
         Properties.Alignment.Horz = taRightJustify
         Height = 21
-        Width = 76
+        Width = 150
+      end
+      object lblOpeTotalVentasLbl: TcxLabel
+        Left = 16
+        Top = 102
+        Caption = '= Total Ventas'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+      end
+      object lblOpeTotalVentas: TcxLabel
+        Left = 175
+        Top = 102
+        AutoSize = False
+        Caption = ''
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Properties.Alignment.Horz = taRightJustify
+        Height = 21
+        Width = 150
       end
     end
     object pnlCobros: TPanel
