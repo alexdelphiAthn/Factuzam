@@ -1,5 +1,7 @@
 inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
   Caption = 'Dep'#243'sitos de Clientes'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl

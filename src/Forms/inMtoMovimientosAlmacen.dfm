@@ -1,5 +1,7 @@
 inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
   Caption = 'Movimientos de Almac'#233'n'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl
