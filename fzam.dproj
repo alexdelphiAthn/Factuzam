@@ -630,6 +630,12 @@
             <Form>frmModalSelFamilia</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibFotos.pas"/>
+        <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">
+            <Form>frmFotoArticulo</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
