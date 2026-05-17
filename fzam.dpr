@@ -31,6 +31,7 @@ uses
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
   inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
+  inMtoFacturasNormal in 'src\Forms\inMtoFacturasNormal.pas' {frmMtoFacturasNormal},
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
   inMtoClientes in 'src\Forms\inMtoClientes.pas' {frmMtoClientes},
   inMtoContadores in 'src\Forms\inMtoContadores.pas' {frmMtoContadores},
