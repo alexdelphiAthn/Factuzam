@@ -191,7 +191,10 @@ uses
   inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
   inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
   inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
-  inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia};
+  inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
+  inLibFotos in 'src\Lib\inLibFotos.pas',
+  inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
+  inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas';
 
 var
   frmLogon: TfrmLogon;
