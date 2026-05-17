@@ -503,6 +503,9 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure CambiarIVA;
+    // Devuelve el TIPO_FAC por el que filtrar el listado: '' = sin filtro
+    // (Base), 'NORMAL' o 'SIMPLIFICADA' en los descendientes.
+    function TipoFacturaFiltro: string; virtual;
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -1152,6 +1155,8 @@ begin
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
+var
+  sFiltro: string;
 begin
   inherited;
   dmmFacturas := (tdmDataModule as TdmFacturas);
@@ -1172,7 +1177,20 @@ begin
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   dmmFacturas.OpenTables;
+  // Filtrado por TIPO_FAC segun el descendiente. Cliente-side via Filter
+  // para no chocar con SQL editado en perfiles (oGetSQLFromDB).
+  sFiltro := TipoFacturaFiltro;
+  if sFiltro <> '' then
+  begin
+    dmmFacturas.unqryTablaG.Filter   := 'TIPO_FAC = ' + QuotedStr(sFiltro);
+    dmmFacturas.unqryTablaG.Filtered := True;
+  end;
   CheckConsolidacion;
+end;
+
+function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
+begin
+  Result := '';
 end;
 
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
