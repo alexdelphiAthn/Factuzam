@@ -505,7 +505,8 @@ begin
     ATicket.Negrita(True);
     ATicket.EscribirLinea('RESUMEN VENTAS POR SERIE');
     ATicket.Negrita(False);
-    ATicket.EscribirLinea('SE  BASE IMP   %IVA    CUOTA      TOTAL');
+    ATicket.EscribirLinea(Format('%-7s %9s %5s %9s %9s',
+                                 ['SE', 'BASE IMP', '%IVA', 'CUOTA', 'TOTAL']));
     while not Q.Eof do
     begin
       dBase  := Q.FieldByName('BASE').AsCurrency;
@@ -516,8 +517,8 @@ begin
       else
         dPorc := 0;
       ATicket.EscribirLinea(
-        Format('%-3s %10s %6s %10s %10s',
-               [Q.FieldByName('SERIE').AsString,
+        Format('%-7s %9s %5s %9s %9s',
+               [Copy(Q.FieldByName('SERIE').AsString, 1, 7),
                 FmtImp(dBase),
                 FormatFloat('0.00', dPorc),
                 FmtImp(dCuota),
