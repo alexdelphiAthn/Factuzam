@@ -64,8 +64,12 @@ type
     // Operaciones (cabecera)
     BrutoOperaciones       : Currency;
     DescuentosOperaciones  : Currency;
-    Neto                   : Currency;
-    Prestamos              : Currency;   // SUM de TIPO_OPERACION='DE' (DB)
+    Neto                   : Currency;       // total de VE en el rango (signed)
+    Prestamos              : Currency;       // SUM TIPO='DE' (depósitos)
+    Devoluciones           : Currency;       // ABS de VE < 0 (devoluc. de venta)
+    VentasNormales         : Currency;       // VE > 0 sin DE en la misma op
+    VentasPrestamos        : Currency;       // = Prestamos - CobrosClientes
+    TotalVentas            : Currency;       // = VN + VP - Devoluciones
 
     // Cobros
     ValesRecogidos         : Currency;
@@ -241,9 +245,11 @@ class procedure TArqueoCalculadora.CalcularOperaciones(AConn: TUniConnection;
 var
   Query: TUniQuery;
 begin
-  // Neto = importe total de las operaciones de venta. El descuento global
-  // (cabecera) es la diferencia entre el neto de líneas y el neto de
-  // operaciones (las operaciones ya incluyen descuento global aplicado).
+  // Neto = importe total de las operaciones de venta (signed: incluye
+  // devoluciones como VE < 0). Las ventas se desglosan luego en:
+  //   - VentasNormales = VE > 0 sin DE en la misma operación
+  //   - Devoluciones   = ABS(VE < 0) (devoluciones a cliente)
+  //   - VentasPrestamos = Prestamos − CobrosClientes (en CalcularDerivados)
   //
   // Cobros: 'CB' agrupa dos cosas, "cobro a cuenta" positivo (cliente entrega
   // anticipo, efectivo real entrando a caja) y "consumo de anticipo" negativo
@@ -255,39 +261,63 @@ begin
   try
     Query.Connection := AConn;
     Query.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   COALESCE(SUM(CASE                                                 ' +
-      '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_VE             ' +
-      '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                             ' +
-      '                END), 0)                              AS NETO,       ' +
-      '   COALESCE(SUM(CASE                                                 ' +
-      '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_CB             ' +
-      '                   AND IMPORTE_TOTAL_OPCAJA > 0                      ' +
-      '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                             ' +
-      '                END), 0)                              AS COBROS,     ' +
-      '   COALESCE(SUM(CASE                                                 ' +
-      '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_EC             ' +
-      '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                             ' +
-      '                END), 0)                              AS ENTRADAS,   ' +
-      '   COALESCE(SUM(CASE                                                 ' +
-      '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_GC             ' +
-      '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                             ' +
-      '                END), 0)                              AS SALIDAS,    ' +
-      '   COALESCE(SUM(CASE                                                 ' +
-      '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_DE             ' +
-      '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
-      '                  ELSE 0                                             ' +
-      '                END), 0)                              AS PRESTAMOS   ' +
-      '   FROM fza_caja_operaciones                                         ' +
-      '  WHERE CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
-      '    AND CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
-      '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
-      '    AND FECHA_OP_DIA_OPCAJA   >= :pFDESDE                            ' +
-      '    AND FECHA_OP_DIA_OPCAJA   <= :pFHASTA                            ';
+      ' SELECT                                                                ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_VE             ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS NETO,         ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_VE             ' +
+      '                   AND o.IMPORTE_TOTAL_OPCAJA > 0                      ' +
+      '                   AND NOT EXISTS                                      ' +
+      '                       (SELECT 1 FROM fza_caja_operaciones o2          ' +
+      '                         WHERE o2.CODIGO_EMP_OPCAJA                    ' +
+      '                                  = o.CODIGO_EMP_OPCAJA                ' +
+      '                           AND o2.CODIGO_ALM_OPCAJA                    ' +
+      '                                  = o.CODIGO_ALM_OPCAJA                ' +
+      '                           AND o2.CODIGO_CAJA_OPCAJA                   ' +
+      '                                  = o.CODIGO_CAJA_OPCAJA               ' +
+      '                           AND o2.NUMERO_OPERACION_OPCAJA              ' +
+      '                                  = o.NUMERO_OPERACION_OPCAJA          ' +
+      '                           AND o2.TIPO_OPERACION_OPCAJA                ' +
+      '                                  = :pTIPO_DE)                         ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS V_NORMALES,   ' +
+      '   ABS(COALESCE(SUM(CASE                                               ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_VE             ' +
+      '                   AND o.IMPORTE_TOTAL_OPCAJA < 0                      ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0))                             AS V_DEVOL,      ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_CB             ' +
+      '                   AND o.IMPORTE_TOTAL_OPCAJA > 0                      ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS COBROS,       ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_EC             ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS ENTRADAS,     ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_GC             ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS SALIDAS,      ' +
+      '   COALESCE(SUM(CASE                                                   ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_DE             ' +
+      '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
+      '                  ELSE 0                                               ' +
+      '                END), 0)                              AS PRESTAMOS     ' +
+      '   FROM fza_caja_operaciones o                                         ' +
+      '  WHERE o.CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
+      '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
+      '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
+      '    AND o.FECHA_OP_DIA_OPCAJA   >= :pFDESDE                            ' +
+      '    AND o.FECHA_OP_DIA_OPCAJA   <= :pFHASTA                            ';
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pTIPO_CB').AsString  := TipoOpCobroCuenta;
     Query.ParamByName('pTIPO_EC').AsString  := TipoOpEntradaCambio;
@@ -302,6 +332,8 @@ begin
     if not Query.Eof then
     begin
       AArqueo.Neto             := Query.FieldByName('NETO').AsCurrency;
+      AArqueo.VentasNormales   := Query.FieldByName('V_NORMALES').AsCurrency;
+      AArqueo.Devoluciones     := Query.FieldByName('V_DEVOL').AsCurrency;
       AArqueo.CobrosClientes   := Query.FieldByName('COBROS').AsCurrency;
       AArqueo.EfectivoEntradas := Query.FieldByName('ENTRADAS').AsCurrency;
       AArqueo.EfectivoSalidas  := Query.FieldByName('SALIDAS').AsCurrency;
@@ -447,11 +479,21 @@ end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
 begin
-  // Pendiente de cobro: lo que falta por pagar de los préstamos abiertos.
-  //   Pendiente = Préstamos − Cobros clientes
-  // (los préstamos son la mercancía comprometida, los cobros lo ya entregado
-  // por el cliente como anticipo).
-  AArqueo.PendienteCobro := AArqueo.Prestamos - AArqueo.CobrosClientes;
+  // Ventas a préstamo = depósitos (compromiso de mercancía) menos lo que el
+  // cliente ya ha ido entregando como anticipo. Misma definición que la del
+  // antiguo "Pendiente de cobro".
+  AArqueo.VentasPrestamos := AArqueo.Prestamos - AArqueo.CobrosClientes;
+
+  // Total Ventas = ventas normales + ventas a préstamo − devoluciones.
+  AArqueo.TotalVentas :=
+      AArqueo.VentasNormales
+    + AArqueo.VentasPrestamos
+    - AArqueo.Devoluciones;
+
+  // Pendiente de cobro: lo mismo que VentasPrestamos para que la sección
+  // Cobros lo refleje también (se puede mover/quitar cuando el diseño se
+  // estabilice).
+  AArqueo.PendienteCobro := AArqueo.VentasPrestamos;
 
   // Cobros — Ingresos caja: neto operaciones − préstamos − vales recogidos
   //                         + vales emitidos + cobros clientes − pendiente

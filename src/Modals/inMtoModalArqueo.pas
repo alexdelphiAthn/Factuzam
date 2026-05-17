@@ -58,12 +58,14 @@ type
     // Sección Operaciones
     pnlOperaciones: TPanel;
     lblOpeTitulo: TcxLabel;
-    lblOpeDescuentosLbl: TcxLabel;
-    lblOpeDescuentos: TcxLabel;
-    lblOpeNetoLbl: TcxLabel;
-    lblOpeNeto: TcxLabel;
-    lblOpeCreditoLbl: TcxLabel;
-    lblOpeCredito: TcxLabel;
+    lblOpeVentasNormLbl: TcxLabel;
+    lblOpeVentasNorm: TcxLabel;
+    lblOpeVentasPrestLbl: TcxLabel;
+    lblOpeVentasPrest: TcxLabel;
+    lblOpeDevolLbl: TcxLabel;
+    lblOpeDevol: TcxLabel;
+    lblOpeTotalVentasLbl: TcxLabel;
+    lblOpeTotalVentas: TcxLabel;
 
     // Sección Cobros
     pnlCobros: TPanel;
@@ -249,9 +251,10 @@ begin
   lblLinDescuento.Caption    := FormatImporte(AArqueo.DescuentosLineas);
   lblLinNeto.Caption         := FormatImporte(AArqueo.NetoLineas);
 
-  lblOpeDescuentos.Caption   := FormatImporte(AArqueo.DescuentosOperaciones);
-  lblOpeNeto.Caption         := FormatImporte(AArqueo.Neto);
-  lblOpeCredito.Caption      := FormatImporte(AArqueo.Prestamos);
+  lblOpeVentasNorm.Caption    := FormatImporte(AArqueo.VentasNormales);
+  lblOpeVentasPrest.Caption   := FormatImporte(AArqueo.VentasPrestamos);
+  lblOpeDevol.Caption         := FormatImporte(AArqueo.Devoluciones);
+  lblOpeTotalVentas.Caption   := FormatImporte(AArqueo.TotalVentas);
 
   lblCobValesRec.Caption     := FormatImporte(AArqueo.ValesRecogidos);
   lblCobValesEmi.Caption     := FormatImporte(AArqueo.ValesEmitidos);
