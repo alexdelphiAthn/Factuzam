@@ -164,7 +164,8 @@ begin
   RegistrarParametro('Directorios', 'appDirHistoricoCaja',
     'Carpeta de Histórico de Caja', tpString, '');
   RegistrarParametro('Directorios', 'appDirFotos',
-    'Carpeta de Fotos de Artículos / SKUs', tpString, '');
+    'Carpeta de Fotos de Artículos / SKUs', tpString,
+    '$(PUBLICO)\Factuzam\fotos');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');

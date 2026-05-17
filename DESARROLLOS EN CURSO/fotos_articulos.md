@@ -10,6 +10,12 @@ hereda la del artículo padre.  Se almacena en la carpeta de parámetros
 <appDirFotos>/real/<fichero>.<ext> -> fichero original (sin tocar)
 ```
 
+El parámetro `appDirFotos` tiene valor por defecto
+`$(PUBLICO)\Factuzam\fotos` (en Windows expande a
+`C:\Users\Public\Documents\Factuzam\fotos`) para que la foto sea visible
+por todos los usuarios del equipo. En instalaciones multi-puesto se
+recomienda apuntarlo a una ruta UNC compartida en red.
+
 `<fichero>` es el `NOMBRE_FOT_FOT` que la BBDD asigna al alta, único por fila
 de `fza_articulos_fotos`.  La codificación impide colisiones cuando el SKU
 contiene `/` o `\` (que son frecuentes: `BLUS-SEDA/BLANCO/L`).
