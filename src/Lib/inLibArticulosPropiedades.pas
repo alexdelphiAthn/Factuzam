@@ -344,7 +344,11 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      FillChar(S, SizeOf(S), 0);
+      // Default() libera los strings del record anterior (decrementa
+      // su refcount) antes de re-inicializar. FillChar machacaba los
+      // punteros sin liberar, dejando los buffers de strings huerfanos
+      // -> ~20 UnicodeString leak por cada CargarPropiedades.
+      S := Default(TSlotProp);
       S.CodigoPropiedad := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
       S.NombrePropiedad := q.FieldByName('NOMBRE_PROP_PROP').AsString;
       S.TipoValor := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
@@ -483,7 +487,8 @@ begin
       idx := IndexOfCodigo(cod);
       if idx < 0 then
       begin
-        FillChar(S, SizeOf(S), 0);
+        // Ver nota arriba: FillChar machacaba strings sin liberar.
+        S := Default(TSlotProp);
         S.CodigoPropiedad := cod;
         S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
         S.TipoValor       :=
@@ -768,7 +773,8 @@ begin
           qProp.ParamByName('cod').AsString := cod;
           qProp.Open;
           if qProp.Eof then Continue;
-          FillChar(S, SizeOf(S), 0);
+          // Ver nota arriba: FillChar machacaba strings sin liberar.
+          S := Default(TSlotProp);
           S.CodigoPropiedad :=
             qProp.FieldByName('CODIGO_PROP_ARTPROP').AsString;
           S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
