@@ -472,6 +472,7 @@ type
     procedure AsegurarSkuArticulo(const aCodArticulo: string);
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -485,6 +486,7 @@ uses
   inLibUser,
   inLibDevExp,
   inLibShowMto,
+  inLibFotos,
   inLibGenBusq,
   inMtoProveedores,
   inMtoPrincipal,
@@ -1666,6 +1668,30 @@ begin
   end;
   if bAdded then
     dbcTarifasPRECIOSALIDA.FocusWithSelection;
+end;
+
+// El articulo activo siempre viene de dsTablaG (CODIGO_ART_ART). El
+// SKU activo depende de la pestana visible: cuando el usuario esta en
+// la pestana 2_SKUs (tsSkuMto), la fila activa de tvSkuMto tiene el
+// CODIGO_UNIDAD_SKU; en otras pestanas no hay SKU activo y se trabaja
+// a nivel articulo.
+procedure TfrmMtoArticulos.ResolverArtSkuActivo(out ACodArt,
+                                                ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  inherited ResolverArtSkuActivo(ACodArt, ACodSku);
+  if (pcDetail.ActivePage = tsSkuMto) and
+     Assigned(tvSkuMto.DataController.DataSource) then
+  begin
+    ds := tvSkuMto.DataController.DataSource.DataSet;
+    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+    begin
+      var f := ds.FindField('CODIGO_UNIDAD_SKU');
+      if Assigned(f) and (not f.IsNull) then
+        ACodSku := f.AsString;
+    end;
+  end;
 end;
 
 procedure TfrmMtoArticulos.ResetForm;
