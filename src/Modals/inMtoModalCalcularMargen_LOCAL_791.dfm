@@ -25,7 +25,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 18
       Caption = 'Art'#237'culo'
       TabOrder = 9
-      Transparent = True
     end
     object edtArticulo: TcxTextEdit
       Left = 220
@@ -39,7 +38,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 50
       Caption = 'Tarifa'
       TabOrder = 10
-      Transparent = True
     end
     object edtTarifa: TcxTextEdit
       Left = 220
@@ -53,7 +51,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 82
       Caption = 'SKU'
       TabOrder = 11
-      Transparent = True
     end
     object edtSku: TcxTextEdit
       Left = 220
@@ -67,7 +64,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 134
       Caption = 'Precio coste'
       TabOrder = 12
-      Transparent = True
     end
     object edtCoste: TcxCurrencyEdit
       Left = 220
@@ -83,7 +79,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 174
       Caption = 'Margen %'
       TabOrder = 13
-      Transparent = True
     end
     object edtMargen: TcxCurrencyEdit
       Left = 220
@@ -99,7 +94,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 210
       Caption = 'Ajuste (siguiente m'#250'ltiplo)'
       TabOrder = 14
-      Transparent = True
     end
     object edtAjuste: TcxCurrencyEdit
       Left = 258
@@ -115,7 +109,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 246
       Caption = 'Menos (resta al final)'
       TabOrder = 15
-      Transparent = True
     end
     object edtMenos: TcxCurrencyEdit
       Left = 220
@@ -131,7 +124,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 298
       Caption = 'Precio salida actual'
       TabOrder = 16
-      Transparent = True
     end
     object edtPrecioActual: TcxCurrencyEdit
       Left = 220
@@ -146,22 +138,20 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Top = 334
       Caption = 'Precio salida calculado'
       TabOrder = 17
-      Transparent = True
     end
     object edtPrecioCalc: TcxCurrencyEdit
-      Left = 220
+      Left = 226
       Top = 330
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.ReadOnly = True
       TabOrder = 8
-      Width = 160
+      Width = 154
     end
     object lblFormula: TcxLabel
       Left = 24
       Top = 376
       Caption = 'precio = ceil(coste'#215'margen/100 / ajuste)'#215'ajuste '#8722' menos'
       TabOrder = 18
-      Transparent = True
     end
   end
   object pnlButtons: TPanel [1]

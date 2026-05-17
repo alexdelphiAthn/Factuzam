@@ -24,8 +24,12 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 18
       Caption = 'Art'#237'culo'
+<<<<<<< HEAD
       TabOrder = 9
+=======
+      Properties.LineOptions.Visible = False
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtArticulo: TcxTextEdit
       Left = 220
@@ -38,8 +42,12 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 50
       Caption = 'Tarifa'
+<<<<<<< HEAD
       TabOrder = 10
+=======
+      Properties.LineOptions.Visible = False
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtTarifa: TcxTextEdit
       Left = 220
@@ -52,8 +60,12 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 82
       Caption = 'SKU'
+<<<<<<< HEAD
       TabOrder = 11
+=======
+      Properties.LineOptions.Visible = False
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtSku: TcxTextEdit
       Left = 220
@@ -66,8 +78,13 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 134
       Caption = 'Precio coste'
+<<<<<<< HEAD
       TabOrder = 12
+=======
+      Style.Font.Style = [fsBold]
+      Style.IsFontAssigned = True
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtCoste: TcxCurrencyEdit
       Left = 220
@@ -82,8 +99,11 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 174
       Caption = 'Margen %'
+<<<<<<< HEAD
       TabOrder = 13
+=======
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtMargen: TcxCurrencyEdit
       Left = 220
@@ -98,8 +118,11 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 210
       Caption = 'Ajuste (siguiente m'#250'ltiplo)'
+<<<<<<< HEAD
       TabOrder = 14
+=======
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtAjuste: TcxCurrencyEdit
       Left = 258
@@ -114,8 +137,11 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 246
       Caption = 'Menos (resta al final)'
+<<<<<<< HEAD
       TabOrder = 15
+=======
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtMenos: TcxCurrencyEdit
       Left = 220
@@ -130,8 +156,11 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 298
       Caption = 'Precio salida actual'
+<<<<<<< HEAD
       TabOrder = 16
+=======
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtPrecioActual: TcxCurrencyEdit
       Left = 220
@@ -145,23 +174,33 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 334
       Caption = 'Precio salida calculado'
+<<<<<<< HEAD
       TabOrder = 17
+=======
+      Style.Font.Style = [fsBold]
+      Style.IsFontAssigned = True
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
     object edtPrecioCalc: TcxCurrencyEdit
-      Left = 220
+      Left = 226
       Top = 330
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.ReadOnly = True
       TabOrder = 8
-      Width = 160
+      Width = 154
     end
     object lblFormula: TcxLabel
       Left = 24
       Top = 376
       Caption = 'precio = ceil(coste'#215'margen/100 / ajuste)'#215'ajuste '#8722' menos'
+<<<<<<< HEAD
       TabOrder = 18
+=======
+      Style.Font.Style = [fsItalic]
+      Style.IsFontAssigned = True
       Transparent = True
+>>>>>>> 747ddf0054866e444917ab1fcedabec46edc35b2
     end
   end
   object pnlButtons: TPanel [1]
