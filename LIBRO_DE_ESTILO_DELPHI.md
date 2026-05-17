@@ -947,16 +947,38 @@ Formato canónico:
   índice anterior se borran tras la escritura del nuevo. El cambio de
   nombre invalida cualquier caché por nombre (FastReport en particular).
 
-### 18.3 Fallback de resolución
+### 18.3 Fallback de resolución (jerárquico)
 
-`oFotos.Resolver(CODIGO_ART, CODIGO_UNIDAD_SKU)` aplica:
+`oFotos.Resolver(CODIGO_ART, CODIGO_UNIDAD_SKU)` aplica una cascada de
+más específico a más general:
 
-1. Si existe fila con esos `(ART, SKU)`, devuelve la foto del SKU.
-2. En su defecto, fila `(ART, '')` — foto del artículo padre.
-3. Si nada, `Encontrada = False`.
+1. **Match exacto del SKU** — fila con `CODIGO_UNIDAD_FOT = SKU`.
+2. **Match por prefijo** — el SKU se trocea por `/` y se prueban
+   prefijos sucesivamente más cortos, mientras quede al menos un `/`.
+   Por ejemplo, para `BLUS-SEDA/BLANCO/L`:
+   - intenta `BLUS-SEDA/BLANCO/L` (exacto)
+   - intenta `BLUS-SEDA/BLANCO` (prefijo)
+   - se para porque `BLUS-SEDA` ya no tiene `/`
+3. **Match a nivel artículo** — fila con `CODIGO_UNIDAD_FOT = ''`.
+4. Nada — `Encontrada = False`.
 
-`TFotoInfo.Origen` deja constancia (`foSku`, `foArticulo`, `foSinFoto`)
-para que la UI sepa qué texto pintar.
+La consulta SQL hace los pasos 1 y 2 con un solo `WHERE CODIGO_UNIDAD_FOT
+IN (...)` ordenado por `LENGTH(CODIGO_UNIDAD_FOT) DESC LIMIT 1`. El paso
+3 es una segunda consulta.
+
+`TFotoInfo.Origen` deja constancia:
+- `foSku`        : fila exacta del SKU completo
+- `foSkuPrefijo` : fila con un prefijo del SKU
+- `foArticulo`  : fila con `CODIGO_UNIDAD_FOT = ''`
+- `foSinFoto`   : no se encontró nada
+
+Y `TFotoInfo.ClaveResuelta` guarda el `CODIGO_UNIDAD_FOT` exacto que
+matcheó. Es lo que la UI usa para `Eliminar` y `Rotar` cuando hay que
+operar sobre la fila resuelta, no sobre el SKU original.
+
+El helper `GenerarPrefijosSku(ACodSku)` devuelve la lista de claves
+candidatas en orden de especificidad. Lo usa la pantalla para poblar
+el combo de niveles.
 
 ### 18.4 API pública — `inLibFotos`
 
@@ -1008,6 +1030,24 @@ Singleton via variable global `frmFotoArticulo`. Al cerrarse se libera
 (`Action := caFree`) y la variable vuelve a `nil`, de modo que la
 siguiente invocación crea una instancia limpia.
 
+**Controles relevantes**:
+- `rgResolucion`: 300 / 600 / Real
+- `lblOrigen`: texto descriptivo de qué fila resolvió (SKU, grupo,
+  artículo o nada)
+- `cbbNivelSku`: combo poblado dinámicamente con el SKU actual y todos
+  sus prefijos. Determina a qué nivel se aplica el siguiente
+  *Cambiar foto del SKU / grupo* o *Quitar foto*.
+- Botones: *Cambiar foto del artículo*, *Cambiar foto del SKU / grupo*,
+  *Quitar foto*, *Rotar izquierda*, *Rotar derecha*.
+
+**Auto-refresh**. Cuando se invoca desde un `TfrmMtoGen` vía
+`Ctrl + Alt + F`, la pantalla queda enganchada al `dsTablaG` del Mto
+mediante `VincularMtoPadre(ADataSource, AResolver)`. Encadena
+`OnDataChange`: ante cada cambio de registro activo (`Field = nil`),
+vuelve a llamar a `AResolver` y recarga la foto. Al cerrarse o al
+re-engancharse a otro Mto, restaura el handler previo de
+`OnDataChange` para no romper la lógica del Mto.
+
 Helper de invocación:
 
 ```pascal
@@ -1016,7 +1056,9 @@ procedure MostrarFotoFlotante(AOwner: TComponent;
 ```
 
 Crea la pantalla si no existe, refresca el par (art, sku) y la trae al
-frente.
+frente. No engancha por sí solo el auto-refresh; eso lo hace el
+llamador con `frmFotoArticulo.VincularMtoPadre(...)` (lo hace
+`inMtoGen.FormKeyDown` justo después de llamar al helper).
 
 Para usarse **dentro de otro modal** (donde un Show queda detrás) hay un
 wrapper en `src/Modals/inMtoModalFotoArticulo.pas` con la firma canónica
