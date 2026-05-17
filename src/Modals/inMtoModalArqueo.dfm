@@ -21,6 +21,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Top = 6
       Caption = 'Fecha desde'
       Style.TextColor = clNavy
+      Transparent = True
     end
     object dteFechaDesde: TcxDateEdit
       Left = 16
@@ -36,12 +37,14 @@ inherited frmModalArqueo: TfrmModalArqueo
       Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object lblTituloHasta: TcxLabel
       Left = 210
       Top = 6
       Caption = 'Fecha hasta'
       Style.TextColor = clNavy
+      Transparent = True
     end
     object dteFechaHasta: TcxDateEdit
       Left = 210
@@ -57,12 +60,14 @@ inherited frmModalArqueo: TfrmModalArqueo
       Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object lblTituloVentas: TcxLabel
       Left = 430
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
+      Transparent = True
     end
     object lblVentas: TcxLabel
       Left = 430
@@ -75,6 +80,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Properties.Alignment.Horz = taRightJustify
       Height = 28
       Width = 90
+      Transparent = True
     end
     object btnRecalcular: TcxButton
       Left = 540
@@ -136,11 +142,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblLinBrutoLbl: TcxLabel
             Left = 16
             Top = 34
             Caption = '+ Bruto'
+            Transparent = True
           end
           object lblLinBruto: TcxLabel
             Left = 190
@@ -152,11 +160,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblLinDescuentoLbl: TcxLabel
             Left = 16
             Top = 60
             Caption = '- Descuento'
+            Transparent = True
           end
           object lblLinDescuento: TcxLabel
             Left = 190
@@ -166,6 +176,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblLinNetoLbl: TcxLabel
             Left = 16
@@ -173,6 +184,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = '= Bruto'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblLinNeto: TcxLabel
             Left = 190
@@ -184,6 +196,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
         end
         object pnlOperaciones: TPanel
@@ -203,11 +216,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblOpeVentasNormLbl: TcxLabel
             Left = 16
             Top = 30
             Caption = 'Ventas Normales'
+            Transparent = True
           end
           object lblOpeVentasNorm: TcxLabel
             Left = 175
@@ -217,11 +232,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblOpeVentasPrestLbl: TcxLabel
             Left = 16
             Top = 54
             Caption = '+ Ventas Pr'#233'stamos'
+            Transparent = True
           end
           object lblOpeVentasPrest: TcxLabel
             Left = 175
@@ -231,11 +248,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblOpeDevolLbl: TcxLabel
             Left = 16
             Top = 78
             Caption = #8722' Devoluciones'
+            Transparent = True
           end
           object lblOpeDevol: TcxLabel
             Left = 175
@@ -247,6 +266,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblOpeTotalVentasLbl: TcxLabel
             Left = 16
@@ -254,6 +274,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = '= Total Ventas'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblOpeTotalVentas: TcxLabel
             Left = 175
@@ -265,6 +286,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
         end
         object pnlCobros: TPanel
@@ -284,11 +306,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblCobValesRecLbl: TcxLabel
             Left = 16
             Top = 34
             Caption = '- Vales recogidos'
+            Transparent = True
           end
           object lblCobValesRec: TcxLabel
             Left = 190
@@ -298,11 +322,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblCobValesEmiLbl: TcxLabel
             Left = 16
             Top = 60
             Caption = '+ Vales emitidos'
+            Transparent = True
           end
           object lblCobValesEmi: TcxLabel
             Left = 190
@@ -312,11 +338,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblCobClientesLbl: TcxLabel
             Left = 16
             Top = 86
             Caption = '+ Cobros clientes'
+            Transparent = True
           end
           object lblCobClientes: TcxLabel
             Left = 190
@@ -326,11 +354,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblCobPendienteLbl: TcxLabel
             Left = 16
             Top = 112
             Caption = '- Pendiente cobro'
+            Transparent = True
           end
           object lblCobPendiente: TcxLabel
             Left = 190
@@ -340,6 +370,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblCobIngresosLbl: TcxLabel
             Left = 16
@@ -347,6 +378,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = '= Ingresos caja'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblCobIngresos: TcxLabel
             Left = 190
@@ -358,6 +390,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 150
+            Transparent = True
           end
           object lblEftIngresosLbl: TcxLabel
             Left = 400
@@ -365,6 +398,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = 'Eftvo. ingresos'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblEftIngresos: TcxLabel
             Left = 690
@@ -376,11 +410,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblEftEntradasLbl: TcxLabel
             Left = 400
             Top = 60
             Caption = '+ Efectivo entradas'
+            Transparent = True
           end
           object lblEftEntradas: TcxLabel
             Left = 690
@@ -390,11 +426,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblEftSalidasLbl: TcxLabel
             Left = 400
             Top = 86
             Caption = '- Efectivo salidas'
+            Transparent = True
           end
           object lblEftSalidas: TcxLabel
             Left = 690
@@ -404,11 +442,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblEftAnteriorLbl: TcxLabel
             Left = 400
             Top = 112
             Caption = '+ Efectivo anterior'
+            Transparent = True
           end
           object lblEftAnterior: TcxLabel
             Left = 690
@@ -418,6 +458,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblEftCajaLbl: TcxLabel
             Left = 400
@@ -425,6 +466,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = '= Efectivo en caja'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblEftCaja: TcxLabel
             Left = 690
@@ -436,11 +478,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblTarjetasLbl: TcxLabel
             Left = 400
             Top = 164
             Caption = '+ Otros (tarj, bonos, divisa, cripto)'
+            Transparent = True
           end
           object lblTarjetas: TcxLabel
             Left = 690
@@ -450,6 +494,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
           object lblSaldoLbl: TcxLabel
             Left = 400
@@ -457,6 +502,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Caption = '= Saldo efectivo + otros (a recontar)'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object lblSaldo: TcxLabel
             Left = 690
@@ -468,6 +514,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Properties.Alignment.Horz = taRightJustify
             Height = 21
             Width = 160
+            Transparent = True
           end
         end
       end
@@ -490,6 +537,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object cxgrdResEmpleado: TcxGrid
             Left = 8
@@ -544,6 +592,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object cxgrdResFP: TcxGrid
             Left = 8
@@ -598,6 +647,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object cxgrdResFam: TcxGrid
             Left = 8
@@ -652,6 +702,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object cxgrdResProp: TcxGrid
             Left = 8
@@ -714,6 +765,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
             Style.IsFontAssigned = True
+            Transparent = True
           end
           object cxgrdResIVA: TcxGrid
             Left = 8
@@ -788,6 +840,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object btnAtras: TcxButton
       Left = 650

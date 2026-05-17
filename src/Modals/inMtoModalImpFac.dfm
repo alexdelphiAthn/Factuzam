@@ -54,6 +54,7 @@ inherited frmPrintFac: TfrmPrintFac
     Top = 4
     Caption = 'Factura N'#250'mero'
     TabOrder = 2
+    Transparent = True
   end
   object edtSerie: TcxTextEdit [3]
     Left = 8
