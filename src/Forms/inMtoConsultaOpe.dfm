@@ -930,6 +930,33 @@
           GridView = cxViewFacLin
         end
       end
+      object splFotoConsulta: TcxSplitter
+        Left = 988
+        Top = 70
+        Width = 8
+        Height = 260
+        AlignSplitter = salRight
+        Control = pnlFotoConsulta
+      end
+      object pnlFotoConsulta: TPanel
+        Left = 996
+        Top = 70
+        Width = 200
+        Height = 260
+        Align = alRight
+        BevelOuter = bvLowered
+        TabOrder = 2
+        object imgFotoConsulta: TImage
+          Left = 1
+          Top = 1
+          Width = 198
+          Height = 258
+          Align = alClient
+          Center = True
+          Proportional = True
+          Stretch = True
+        end
+      end
     end
   end
   object pnlPie: TPanel [4]

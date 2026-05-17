@@ -25,6 +25,7 @@ uses
   cxDBData, cxGridLevel, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxCalendar, cxTextEdit,
   cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxContainer, cxLabel,
+  cxSplitter, Vcl.Imaging.PngImage,
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, dxCore, cxDateUtils, dxCoreGraphics, cxCurrencyEdit,
   cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization;
@@ -74,6 +75,9 @@ type
     cxGridFacLin:     TcxGrid;
     cxViewFacLin:     TcxGridDBTableView;
     cxLevelFacLin:    TcxGridLevel;
+    splFotoConsulta:  TcxSplitter;
+    pnlFotoConsulta:  TPanel;
+    imgFotoConsulta:  TImage;
     pnlPie:           TPanel;
     btnReimprimir:    TButton;
     btnCerrar:        TButton;
@@ -105,6 +109,8 @@ type
     procedure AjustarVisibilidadPestanas;
     procedure AplicarAnchosPestanasHijas;
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
+    procedure OnFacturaLinDataChange(Sender: TObject; Field: TField);
+    procedure RefrescarFotoConsulta;
     // Lee el ARTICULO / SKU de la linea activa en cxViewFacLin para
     // alimentar la pantalla flotante de fotos (Ctrl + Alt + F).
     procedure ResolverArtSkuDeFacLin(out ACodArt, ACodSku: string);
@@ -153,7 +159,8 @@ begin
   cxViewDep.DataController.DataSource     := FdmConsulta.dsDepositos;
   cxViewFacCab.DataController.DataSource  := FdmConsulta.dsFactura;
   cxViewFacLin.DataController.DataSource  := FdmConsulta.dsFacturaLin;
-  FdmConsulta.dsMaestro.OnDataChange := OnMaestroDataChange;
+  FdmConsulta.dsMaestro.OnDataChange    := OnMaestroDataChange;
+  FdmConsulta.dsFacturaLin.OnDataChange := OnFacturaLinDataChange;
   tmrBusqueda.Enabled  := False;
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
@@ -233,11 +240,43 @@ begin
   LeerArtSkuDeDataSet(FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
 end;
 
+// Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU de
+// la linea de factura activa. Lo invoca OnFacturaLinDataChange.
+procedure TfrmConsultaOpe.RefrescarFotoConsulta;
+var
+  sArt, sSku: string;
+  info: TFotoInfo;
+  sRuta: string;
+  png: TPngImage;
+begin
+  if not Assigned(imgFotoConsulta) then Exit;
+  imgFotoConsulta.Picture.Assign(nil);
+  ResolverArtSkuDeFacLin(sArt, sSku);
+  if sArt = '' then Exit;
+  info := oFotos.Resolver(sArt, sSku);
+  sRuta := oFotos.RutaFoto(info, frPx300);
+  if sRuta = '' then Exit;
+  png := TPngImage.Create;
+  try
+    png.LoadFromFile(sRuta);
+    imgFotoConsulta.Picture.Assign(png);
+  finally
+    FreeAndNil(png);
+  end;
+end;
+
+procedure TfrmConsultaOpe.OnFacturaLinDataChange(Sender: TObject;
+                                                 Field: TField);
+begin
+  if Field = nil then RefrescarFotoConsulta;
+end;
+
 procedure TfrmConsultaOpe.RestaurarLayout;
 begin
   if not FLayout.Disponible then Exit;
   FLayout.RestaurarGeometria(Self);
   FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
+  FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
   FLayout.RestaurarGrid('Maestro', cxViewMaestro);
   AplicarAnchosPestanasHijas;
 end;
@@ -263,6 +302,7 @@ begin
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('PnlMaestroHeight', pnlMaestro);
+    Layout.GuardarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta);
     Layout.GuardarGrid('Maestro',     cxViewMaestro);
     Layout.GuardarGrid('Operacion',   cxViewOpe);
     Layout.GuardarGrid('Pagos',       cxViewPagos);
