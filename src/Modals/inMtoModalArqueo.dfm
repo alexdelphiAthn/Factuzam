@@ -695,6 +695,80 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
         end
       end
+      object tsMasDatos: TcxTabSheet
+        Caption = 'M'#225's datos'
+        object pnlResIVA: TPanel
+          Left = 8
+          Top = 8
+          Width = 864
+          Height = 250
+          BevelInner = bvLowered
+          BevelOuter = bvNone
+          Color = clBtnFace
+          ParentBackground = False
+          TabOrder = 0
+          object lblResIVATit: TcxLabel
+            Left = 10
+            Top = 6
+            Caption = 'Resumen por IVA'
+            Style.Font.Style = [fsBold]
+            Style.TextColor = clNavy
+            Style.IsFontAssigned = True
+          end
+          object cxgrdResIVA: TcxGrid
+            Left = 8
+            Top = 30
+            Width = 848
+            Height = 210
+            TabOrder = 0
+            object tvResIVA: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
+              DataController.DataSource = dsResIVA
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
+              OptionsView.GroupByBox = False
+              object tvResIVABASE: TcxGridDBColumn
+                Caption = 'Bases'
+                DataBinding.FieldName = 'BASE'
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 130
+              end
+              object tvResIVAPORC_IVA: TcxGridDBColumn
+                Caption = '% IVA'
+                DataBinding.FieldName = 'PORC_IVA'
+                Width = 80
+              end
+              object tvResIVACUOTA_IVA: TcxGridDBColumn
+                Caption = 'Cuota IVA'
+                DataBinding.FieldName = 'CUOTA_IVA'
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 130
+              end
+              object tvResIVAPORC_RE: TcxGridDBColumn
+                Caption = '% RE'
+                DataBinding.FieldName = 'PORC_RE'
+                Width = 80
+              end
+              object tvResIVACUOTA_RE: TcxGridDBColumn
+                Caption = 'Cuota RE'
+                DataBinding.FieldName = 'CUOTA_RE'
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 130
+              end
+              object tvResIVABASE_IVAS: TcxGridDBColumn
+                Caption = 'Base + IVAS'
+                DataBinding.FieldName = 'BASE_IVAS'
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 130
+              end
+            end
+            object lvResIVA: TcxGridLevel
+              GridView = tvResIVA
+            end
+          end
+        end
+      end
     end
   end
   object pnlBottom: TPanel [2]
@@ -858,6 +932,41 @@ inherited frmModalArqueo: TfrmModalArqueo
   object qryResProp: TUniQuery
     Left = 760
     Top = 360
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'pEMPRESA'
+        ParamType = ptInput
+      end
+      item
+        DataType = ftString
+        Name = 'pALMACEN'
+        ParamType = ptInput
+      end
+      item
+        DataType = ftString
+        Name = 'pCAJA'
+        ParamType = ptInput
+      end
+      item
+        DataType = ftDate
+        Name = 'pFDESDE'
+        ParamType = ptInput
+      end
+      item
+        DataType = ftDate
+        Name = 'pFHASTA'
+        ParamType = ptInput
+      end>
+  end
+  object dsResIVA: TDataSource
+    DataSet = qryResIVA
+    Left = 760
+    Top = 400
+  end
+  object qryResIVA: TUniQuery
+    Left = 760
+    Top = 440
     ParamData = <
       item
         DataType = ftString
