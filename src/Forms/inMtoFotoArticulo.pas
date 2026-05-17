@@ -167,6 +167,12 @@ begin
   FreeAndNil(FHooksDataSource);
   if Assigned(FLayoutLoader) then
     FreeAndNil(FLayoutLoader);
+  // Si la instancia que se destruye es la singleton global, anulamos
+  // la variable para que el siguiente Ctrl+Alt+F cree una limpia.
+  // (FormClose tambien lo hace, pero si el Owner libera el form sin
+  // pasar por OnClose -- p.ej. al cerrar la app -- caemos aqui igual.)
+  if Self = frmFotoArticulo then
+    frmFotoArticulo := nil;
   inherited;
 end;
 
@@ -529,7 +535,11 @@ procedure MostrarFotoFlotante(AOwner: TComponent;
                               const ACodArt, ACodSku: string);
 begin
   if frmFotoArticulo = nil then
-    frmFotoArticulo := TfrmFotoArticulo.Create(AOwner);
+    // Owner = Application, no el Mto que llama: la pantalla sobrevive
+    // a cierres de Mtos y se libera de forma ordenada al terminar la
+    // app (de lo contrario quedan colgando los hooks y los strings
+    // del combo + FUltimaInfo cuando el Mto se libera primero).
+    frmFotoArticulo := TfrmFotoArticulo.Create(Application);
   frmFotoArticulo.SetArticuloSku(ACodArt, ACodSku);
   if not frmFotoArticulo.Visible then
     frmFotoArticulo.Show
