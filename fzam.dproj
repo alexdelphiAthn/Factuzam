@@ -105,6 +105,7 @@
         <DCC_DebugInfoInTds>true</DCC_DebugInfoInTds>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+        <DCC_Define>FullDebugMode;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
