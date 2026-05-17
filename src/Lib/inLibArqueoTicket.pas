@@ -259,7 +259,7 @@ begin
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
       '    AND o.FECHA_OP_DIA_OPCAJA >= :pFDESDE                            ' +
       '    AND o.FECHA_OP_DIA_OPCAJA <= :pFHASTA                            ' +
-      '    AND o.IMPORTE_TOTAL_OPCAJA < 0                                   ' +
+      '    AND o.TIPO_OPERACION_OPCAJA = ''DV''                             ' +
       '  GROUP BY p.CODIGO_FP_CFP                                           ' +
       '  ORDER BY p.CODIGO_FP_CFP                                           ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
