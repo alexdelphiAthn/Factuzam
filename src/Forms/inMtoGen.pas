@@ -153,6 +153,12 @@ type
     // `inLibFotos.LeerArtSkuDeDataSet` pasando el DataSet del grid de
     // detalle.
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); virtual;
+    // Lista de DataSources que la pantalla flotante de fotos debe
+    // engancharse para refrescar al cambiar de registro activo. Default
+    // = [dsTablaG]. Los Mtos con sub-grids (lineas, SKUs, stock,
+    // movimientos...) lo sobreescriben para incluir tambien esos
+    // DataSources, asi la foto sigue al cursor en cualquier pestaña.
+    function DataSourcesParaFoto: TArray<TDataSource>; virtual;
   public
     destructor Destroy; override;
   end;
@@ -769,10 +775,13 @@ begin
     if sArt <> '' then
     begin
       MostrarFotoFlotante(Self, sArt, sSku);
-      // Auto-refresh: la pantalla vuelve a resolver el par cada vez
-      // que cambia el registro activo en dsTablaG.
+      // Auto-refresh: la pantalla flotante se engancha a todos los
+      // DataSources que el Mto declara en DataSourcesParaFoto (por
+      // defecto solo dsTablaG; los Mtos con sub-grids sobreescriben
+      // para incluir tambien esos data sources).
       if Assigned(frmFotoArticulo) then
-        frmFotoArticulo.VincularMtoPadre(dsTablaG, ResolverArtSkuActivo);
+        frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
+                                            ResolverArtSkuActivo);
     end;
     Key := 0;
   end;
@@ -784,6 +793,14 @@ begin
   ACodSku := '';
   if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) then
     inLibFotos.LeerArtSkuDeDataSet(dsTablaG.DataSet, ACodArt, ACodSku);
+end;
+
+function TfrmMtoGen.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  // Default: solo el data source principal. Los Mtos que tengan
+  // sub-grids con articulo / SKU activo sobreescriben para anadir
+  // tambien esos DataSources.
+  Result := [dsTablaG];
 end;
 
 procedure TfrmMtoGen.SimulateTabKey;
