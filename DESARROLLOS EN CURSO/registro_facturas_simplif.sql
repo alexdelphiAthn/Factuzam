@@ -2,8 +2,10 @@
 -- Registro de TfrmMtoFacturasSimplif en fza_winforms (paso 3/4 del refactor)
 -- =============================================================================
 -- Anade la entrada que ShowMto resuelve al hacer click en
--- 'Caja -> Facturas Simplificadas' (Ctrl+Alt+F). La pantalla consulta
+-- 'Caja -> Facturas Simplificadas' (Ctrl+Shift+F). La pantalla consulta
 -- vi_facturas_simplificadas, asi que su contenido lo filtra el motor de BD.
+-- Se usa Ctrl+Shift+ para todos los items de Caja por convencion del
+-- proyecto (Ctrl+Alt+F ya esta cogido por el sistema de fotos).
 --
 -- Comparte DataModule (UniDataFacturas.TdmFacturas) con FacturasNormal
 -- para no duplicar codigo de DataModule.
@@ -19,7 +21,7 @@ VALUES
    'Facturas Simplificadas',
    'mnuFacturasSimplif',
    'inMtoFacturasSimplif.TfrmMtoFacturasSimplif',
-   'Ctrl+Alt+F',
+   'Ctrl+Shift+F',
    'UniDataFacturas.TdmFacturas',
    5)
 ON DUPLICATE KEY UPDATE
