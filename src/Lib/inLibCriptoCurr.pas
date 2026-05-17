@@ -620,7 +620,9 @@ begin
     for Item in JSONArr do
     begin
       Obj := Item as TJSONObject;
-      FillChar(Market, SizeOf(Market), 0);
+      // Default() libera los strings (ID, Symbol, Name) del record
+      // anterior. FillChar machacaba los punteros sin liberar.
+      Market := Default(TCoinMarket);
 
       Market.ID                := SafeStr(Obj, 'id');
       Market.Symbol            := SafeStr(Obj, 'symbol');
