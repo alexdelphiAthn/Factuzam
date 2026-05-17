@@ -37,6 +37,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Caption = 'Sin foto'
       Properties.WordWrap = True
       TabOrder = 1
+      Visible = False
       Width = 69
     end
   end
@@ -98,8 +99,8 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       OnClick = btnCambiarArtClick
     end
     object btnCambiarSku: TcxButton
-      Left = 240
-      Top = 84
+      Left = 8
+      Top = 130
       Width = 220
       Height = 40
       Caption = 'Cambiar foto del &grupo'
@@ -116,8 +117,8 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       OnClick = btnQuitarClick
     end
     object btnRotarIzq: TcxButton
-      Left = 8
-      Top = 130
+      Left = 240
+      Top = 84
       Width = 220
       Height = 40
       Caption = 'Rotar &izquierda'
@@ -159,10 +160,10 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Left = 624
   end
   object dlgAbrirFoto: TOpenDialog
-    Filter =
-      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.avif;*.heic;*.bmp|' +
-      'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|' +
-      'AVIF|*.avif|HEIC|*.heic;*.heif|BMP|*.bmp|Todos|*.*'
+    Filter = 
+      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.avif;*.heic;*.bmp|PNG' +
+      '|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|AVIF|*.avif|HEIC|*' +
+      '.heic;*.heif|BMP|*.bmp|Todos|*.*'
     Title = 'Seleccionar foto'
     Left = 624
     Top = 16
