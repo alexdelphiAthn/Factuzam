@@ -1,19 +1,19 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
   Caption = 'Foto del art'#237'culo / SKU'
-  ClientHeight = 640
+  ClientHeight = 680
   ClientWidth = 720
   FormStyle = fsStayOnTop
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 736
-  ExplicitHeight = 679
+  ExplicitHeight = 719
   TextHeight = 19
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
     Width = 720
-    Height = 145
+    Height = 185
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -77,10 +77,28 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       TabOrder = 3
       OnClick = btnQuitarClick
     end
+    object btnRotarIzq: TcxButton
+      Left = 8
+      Top = 130
+      Width = 220
+      Height = 40
+      Caption = 'Rotar &izquierda'
+      TabOrder = 4
+      OnClick = btnRotarIzqClick
+    end
+    object btnRotarDer: TcxButton
+      Left = 240
+      Top = 130
+      Width = 220
+      Height = 40
+      Caption = 'Rotar &derecha'
+      TabOrder = 5
+      OnClick = btnRotarDerClick
+    end
   end
   object pnlImage: TPanel [1]
     Left = 0
-    Top = 145
+    Top = 185
     Width = 720
     Height = 495
     Align = alClient

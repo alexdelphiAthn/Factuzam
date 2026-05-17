@@ -40,6 +40,8 @@ type
     btnCambiarArt   : TcxButton;
     btnCambiarSku   : TcxButton;
     btnQuitar       : TcxButton;
+    btnRotarIzq     : TcxButton;
+    btnRotarDer     : TcxButton;
     dlgAbrirFoto    : TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -47,6 +49,8 @@ type
     procedure btnCambiarArtClick(Sender: TObject);
     procedure btnCambiarSkuClick(Sender: TObject);
     procedure btnQuitarClick(Sender: TObject);
+    procedure btnRotarIzqClick(Sender: TObject);
+    procedure btnRotarDerClick(Sender: TObject);
   private
     FCodigoArt    : string;
     FCodigoSku    : string;
@@ -204,6 +208,22 @@ begin
     foSku       : oFotos.Eliminar(FCodigoArt, FCodigoSku);
     foArticulo  : oFotos.Eliminar(FCodigoArt, '');
   end;
+  SetArticuloSku(FCodigoArt, FCodigoSku);
+end;
+
+procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
+begin
+  inherited;
+  if not FUltimaInfo.Encontrada then Exit;
+  oFotos.Rotar(FCodigoArt, FCodigoSku, False);
+  SetArticuloSku(FCodigoArt, FCodigoSku);
+end;
+
+procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
+begin
+  inherited;
+  if not FUltimaInfo.Encontrada then Exit;
+  oFotos.Rotar(FCodigoArt, FCodigoSku, True);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
