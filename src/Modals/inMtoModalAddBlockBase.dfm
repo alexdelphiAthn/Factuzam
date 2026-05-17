@@ -51,6 +51,7 @@
       Top = 12
       Style.TextColor = clGray
       TabOrder = 5
+      Transparent = True
     end
     object btnPrevisualizar: TcxButton
       Left = 945
@@ -139,6 +140,7 @@
           Top = 8
           Caption = '(0 sel.)'
           TabOrder = 4
+          Transparent = True
         end
       end
       object tlFamilias: TcxDBTreeList
@@ -222,6 +224,7 @@
           Top = 8
           Caption = '(0 sel.)'
           TabOrder = 3
+          Transparent = True
         end
       end
       object grdProveedores: TcxGrid
@@ -281,6 +284,7 @@
           Top = 9
           Caption = 'Filtrar propiedad:'
           TabOrder = 2
+          Transparent = True
         end
         object cbxPropiedad: TcxComboBox
           Left = 130
@@ -304,6 +308,7 @@
           Top = 8
           Caption = '(0 sel.)'
           TabOrder = 3
+          Transparent = True
         end
       end
       object grdPropValores: TcxGrid
@@ -363,6 +368,7 @@
           Caption = 
             'Marca uno o varios almacenes para acotar el filtro "S'#243'lo con stock". Si no marcas ninguno y activas el filtro, no se incluir'#225' ning'#250'n art'#237'culo.'
           TabOrder = 3
+          Transparent = True
         end
         object rgStockCombinacion: TcxRadioGroup
           Left = 8
@@ -407,6 +413,7 @@
           Top = 48
           Caption = '(0 sel.)'
           TabOrder = 4
+          Transparent = True
         end
       end
       object chkLstAlmacenes: TcxCheckListBox
@@ -438,6 +445,7 @@
         Top = 56
         Caption = 'Desde:'
         TabOrder = 3
+        Transparent = True
       end
       object dtAltaDesde: TcxDateEdit
         Left = 100
@@ -450,6 +458,7 @@
         Top = 96
         Caption = 'Hasta:'
         TabOrder = 4
+        Transparent = True
       end
       object dtAltaHasta: TcxDateEdit
         Left = 100
@@ -472,6 +481,7 @@
         Top = 56
         Caption = 'Periodo desde:'
         TabOrder = 5
+        Transparent = True
       end
       object dtVtaDesde: TcxDateEdit
         Left = 150
@@ -484,6 +494,7 @@
         Top = 96
         Caption = 'Periodo hasta:'
         TabOrder = 6
+        Transparent = True
       end
       object dtVtaHasta: TcxDateEdit
         Left = 150
@@ -512,6 +523,7 @@
         Top = 220
         Caption = 'N'#250'mero m'#237'nimo de ventas:'
         TabOrder = 7
+        Transparent = True
       end
       object spnNumMinVtas: TcxSpinEdit
         Left = 220
@@ -547,6 +559,7 @@
       Top = 4
       Caption = '0 art'#237'culos'
       TabOrder = 1
+      Transparent = True
     end
     object grdPreview: TcxGrid
       Left = 0

@@ -21,6 +21,7 @@ inherited frmModalSesionMaterializar: TfrmModalSesionMaterializar
       Caption = 'Atenci'#243'n: esta acci'#243'n no se puede deshacer.'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object lblResumen: TcxLabel
       Left = 16
@@ -28,6 +29,7 @@ inherited frmModalSesionMaterializar: TfrmModalSesionMaterializar
       Caption = 'Se van a crear los art'#237'culos, SKUs, c'#243'digos de barras y enlaces al proveedor seg'#250'n el detalle de la sesi'#243'n.'
       Properties.WordWrap = True
       Width = 540
+      Transparent = True
     end
     object chkPedido: TcxCheckBox
       Left = 16
@@ -53,6 +55,7 @@ inherited frmModalSesionMaterializar: TfrmModalSesionMaterializar
       Caption = 'Si ambos documentos est'#225'n marcados se generan en orden: pedido primero, luego albar'#225'n.'
       Properties.WordWrap = True
       Width = 540
+      Transparent = True
     end
   end
   object pnlButton: TPanel [1]

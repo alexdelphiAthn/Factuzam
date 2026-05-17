@@ -21,11 +21,13 @@ inherited frmModalSesionDuplicado: TfrmModalSesionDuplicado
       Caption = 'El c'#243'digo de art'#237'culo ya existe en el cat'#225'logo'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
+      Transparent = True
     end
     object lblCodigoExistente: TcxLabel
       Left = 16
       Top = 50
       Caption = 'C'#243'digo existente:'
+      Transparent = True
     end
     object lblDescripcionExistente: TcxLabel
       Left = 16
@@ -35,6 +37,7 @@ inherited frmModalSesionDuplicado: TfrmModalSesionDuplicado
       Style.IsFontAssigned = True
       Properties.WordWrap = True
       Width = 540
+      Transparent = True
     end
     object rgAccion: TcxRadioGroup
       Left = 16

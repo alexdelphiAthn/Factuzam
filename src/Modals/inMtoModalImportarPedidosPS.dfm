@@ -27,6 +27,7 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Top = 8
       Caption = 'URL base API PrestaShop (ej. http://midominio.com/api)'
       TabOrder = 3
+      Transparent = True
     end
     object edtBaseURL: TcxTextEdit
       Left = 8
@@ -39,6 +40,7 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Top = 50
       Caption = 'API Key'
       TabOrder = 4
+      Transparent = True
     end
     object edtApiKey: TcxTextEdit
       Left = 8
@@ -126,6 +128,7 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
       Top = 14
       Caption = 'Listo'
       TabOrder = 2
+      Transparent = True
     end
     object btnImportar: TcxButton
       Left = 660
