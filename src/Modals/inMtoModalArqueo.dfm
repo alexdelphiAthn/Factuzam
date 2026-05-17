@@ -17,6 +17,7 @@ inherited frmModalArqueo: TfrmModalArqueo
     ParentBackground = False
     TabOrder = 0
     object lblTituloDesde: TcxLabel
+      Transparent = True
       Left = 16
       Top = 6
       Caption = 'Fecha desde'
@@ -30,6 +31,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Properties.OnChange = dteFechaDesdePropertiesChange
     end
     object lblF10: TcxLabel
+      Transparent = True
       Left = 152
       Top = 32
       Caption = 'F10'
@@ -38,6 +40,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Style.IsFontAssigned = True
     end
     object lblTituloHasta: TcxLabel
+      Transparent = True
       Left = 210
       Top = 6
       Caption = 'Fecha hasta'
@@ -51,6 +54,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Properties.OnChange = dteFechaHastaPropertiesChange
     end
     object lblF6: TcxLabel
+      Transparent = True
       Left = 346
       Top = 32
       Caption = 'F6'
@@ -59,12 +63,14 @@ inherited frmModalArqueo: TfrmModalArqueo
       Style.IsFontAssigned = True
     end
     object lblTituloVentas: TcxLabel
+      Transparent = True
       Left = 430
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
     end
     object lblVentas: TcxLabel
+      Transparent = True
       Left = 430
       Top = 28
       AutoSize = False
@@ -130,6 +136,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 0
           object lblLineasTitulo: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'L'#237'neas art'#237'culos'
@@ -138,11 +145,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblLinBrutoLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 34
             Caption = '+ Bruto'
           end
           object lblLinBruto: TcxLabel
+            Transparent = True
             Left = 190
             Top = 34
             AutoSize = False
@@ -154,11 +163,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblLinDescuentoLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 60
             Caption = '- Descuento'
           end
           object lblLinDescuento: TcxLabel
+            Transparent = True
             Left = 190
             Top = 60
             AutoSize = False
@@ -168,6 +179,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblLinNetoLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 92
             Caption = '= Bruto'
@@ -175,6 +187,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblLinNeto: TcxLabel
+            Transparent = True
             Left = 190
             Top = 92
             AutoSize = False
@@ -197,6 +210,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 1
           object lblOpeTitulo: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Operaciones'
@@ -205,11 +219,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblOpeVentasNormLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 30
             Caption = 'Ventas Normales'
           end
           object lblOpeVentasNorm: TcxLabel
+            Transparent = True
             Left = 175
             Top = 30
             AutoSize = False
@@ -219,11 +235,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblOpeVentasPrestLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 54
             Caption = '+ Ventas Pr'#233'stamos'
           end
           object lblOpeVentasPrest: TcxLabel
+            Transparent = True
             Left = 175
             Top = 54
             AutoSize = False
@@ -233,11 +251,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblOpeDevolLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 78
             Caption = #8722' Devoluciones'
           end
           object lblOpeDevol: TcxLabel
+            Transparent = True
             Left = 175
             Top = 78
             AutoSize = False
@@ -249,6 +269,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblOpeTotalVentasLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 102
             Caption = '= Total Ventas'
@@ -256,6 +277,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblOpeTotalVentas: TcxLabel
+            Transparent = True
             Left = 175
             Top = 102
             AutoSize = False
@@ -278,6 +300,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 2
           object lblCobrosTitulo: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Cobros'
@@ -286,11 +309,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblCobValesRecLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 34
             Caption = '- Vales recogidos'
           end
           object lblCobValesRec: TcxLabel
+            Transparent = True
             Left = 190
             Top = 34
             AutoSize = False
@@ -300,11 +325,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblCobValesEmiLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 60
             Caption = '+ Vales emitidos'
           end
           object lblCobValesEmi: TcxLabel
+            Transparent = True
             Left = 190
             Top = 60
             AutoSize = False
@@ -314,11 +341,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblCobClientesLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 86
             Caption = '+ Cobros clientes'
           end
           object lblCobClientes: TcxLabel
+            Transparent = True
             Left = 190
             Top = 86
             AutoSize = False
@@ -328,11 +357,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblCobPendienteLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 112
             Caption = '- Pendiente cobro'
           end
           object lblCobPendiente: TcxLabel
+            Transparent = True
             Left = 190
             Top = 112
             AutoSize = False
@@ -342,6 +373,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblCobIngresosLbl: TcxLabel
+            Transparent = True
             Left = 16
             Top = 144
             Caption = '= Ingresos caja'
@@ -349,6 +381,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblCobIngresos: TcxLabel
+            Transparent = True
             Left = 190
             Top = 144
             AutoSize = False
@@ -360,6 +393,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
           end
           object lblEftIngresosLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 34
             Caption = 'Eftvo. ingresos'
@@ -367,6 +401,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblEftIngresos: TcxLabel
+            Transparent = True
             Left = 690
             Top = 34
             AutoSize = False
@@ -378,11 +413,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblEftEntradasLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 60
             Caption = '+ Efectivo entradas'
           end
           object lblEftEntradas: TcxLabel
+            Transparent = True
             Left = 690
             Top = 60
             AutoSize = False
@@ -392,11 +429,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblEftSalidasLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 86
             Caption = '- Efectivo salidas'
           end
           object lblEftSalidas: TcxLabel
+            Transparent = True
             Left = 690
             Top = 86
             AutoSize = False
@@ -406,11 +445,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblEftAnteriorLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 112
             Caption = '+ Efectivo anterior'
           end
           object lblEftAnterior: TcxLabel
+            Transparent = True
             Left = 690
             Top = 112
             AutoSize = False
@@ -420,6 +461,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblEftCajaLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 138
             Caption = '= Efectivo en caja'
@@ -427,6 +469,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblEftCaja: TcxLabel
+            Transparent = True
             Left = 690
             Top = 138
             AutoSize = False
@@ -438,11 +481,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblTarjetasLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 164
             Caption = '+ Otros (tarj, bonos, divisa, cripto)'
           end
           object lblTarjetas: TcxLabel
+            Transparent = True
             Left = 690
             Top = 164
             AutoSize = False
@@ -452,6 +497,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
           end
           object lblSaldoLbl: TcxLabel
+            Transparent = True
             Left = 400
             Top = 196
             Caption = '= Saldo efectivo + otros (a recontar)'
@@ -459,6 +505,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.IsFontAssigned = True
           end
           object lblSaldo: TcxLabel
+            Transparent = True
             Left = 690
             Top = 196
             AutoSize = False
@@ -484,6 +531,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 0
           object lblResEmpleadoTit: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Neto ventas por empleado'
@@ -538,6 +586,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 1
           object lblResFPTit: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Neto ventas por forma de pago'
@@ -592,6 +641,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 2
           object lblResFamTit: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Neto ventas por familia'
@@ -646,6 +696,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 3
           object lblResPropTit: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Neto ventas por propiedad'
@@ -708,6 +759,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           ParentBackground = False
           TabOrder = 0
           object lblResIVATit: TcxLabel
+            Transparent = True
             Left = 10
             Top = 6
             Caption = 'Resumen por IVA'
@@ -782,6 +834,7 @@ inherited frmModalArqueo: TfrmModalArqueo
     ParentBackground = False
     TabOrder = 2
     object lblESC: TcxLabel
+      Transparent = True
       Left = 600
       Top = 14
       Caption = 'ESC'
