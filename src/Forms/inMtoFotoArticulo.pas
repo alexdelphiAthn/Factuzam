@@ -37,7 +37,7 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
-  inLibFotos, inLibLayoutForm, System.UITypes;
+  inLibFotos, inLibLayoutForm, inLibAppParam, System.UITypes;
 
 type
   /// Firma del callback que la pantalla usa para repreguntar al Mto
@@ -277,9 +277,17 @@ begin
 end;
 
 procedure TfrmFotoArticulo.RellenarNivelesSku;
+// El combo se llena de mas especifico (SKU completo) a menos
+// (1 atributo). El indice por defecto lo dicta `appNumAtributosFoto`:
+// si vale N, se selecciona el nivel cuya clave incluye N segmentos
+// despues del articulo; si N >= total de atributos del SKU, gana el
+// SKU completo.
 var
-  prefijos : TArray<string>;
-  i        : Integer;
+  prefijos      : TArray<string>;
+  i             : Integer;
+  iNumAtribsCfg : Integer;
+  iSegmentos    : Integer;
+  iIdxDefault   : Integer;
 begin
   cbbNivelSku.Properties.Items.BeginUpdate;
   try
@@ -295,8 +303,28 @@ begin
     prefijos := GenerarPrefijosSku(FCodigoSku);
     for i := 0 to High(prefijos) do
       cbbNivelSku.Properties.Items.Add(prefijos[i]);
-    if cbbNivelSku.Properties.Items.Count > 0 then
-      cbbNivelSku.ItemIndex := 0;  // por defecto: SKU completo
+    if cbbNivelSku.Properties.Items.Count = 0 then Exit;
+
+    // Default: nivel con `appNumAtributosFoto` atributos. La cantidad
+    // de segmentos del SKU completo = numero de '/' + 1 = articulo +
+    // N atributos. El prefijo cuyo numero de '/' = appNumAtributosFoto
+    // es el que tiene exactamente esa cantidad de atributos.
+    iNumAtribsCfg := oAppParams.GetInt('appNumAtributosFoto', 1);
+    iIdxDefault   := 0;
+    for i := 0 to cbbNivelSku.Properties.Items.Count - 1 do
+    begin
+      // Numero de atributos = numero de '/' en la clave
+      iSegmentos := 0;
+      var sCl: string := cbbNivelSku.Properties.Items[i];
+      for var c: Char in sCl do
+        if c = '/' then Inc(iSegmentos);
+      if iSegmentos = iNumAtribsCfg then
+      begin
+        iIdxDefault := i;
+        Break;
+      end;
+    end;
+    cbbNivelSku.ItemIndex := iIdxDefault;
   finally
     cbbNivelSku.Properties.Items.EndUpdate;
   end;
@@ -304,7 +332,10 @@ end;
 
 function TfrmFotoArticulo.ClaveNivelSeleccionado: string;
 begin
-  if (cbbNivelSku.Visible) and (cbbNivelSku.ItemIndex >= 0) then
+  // Aunque el panel de controles este colapsado, el combo conserva
+  // su ItemIndex; usamos siempre el valor del combo si tiene items.
+  if (cbbNivelSku.Properties.Items.Count > 0) and
+     (cbbNivelSku.ItemIndex >= 0) then
     Result := cbbNivelSku.Properties.Items[cbbNivelSku.ItemIndex]
   else
     Result := FCodigoSku;
@@ -349,7 +380,15 @@ begin
     Exit;
   end;
   if not dlgAbrirFoto.Execute then Exit;
-  oFotos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName);
+  try
+    oFotos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('No se pudo guardar la foto: ' + E.Message);
+      Exit;
+    end;
+  end;
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
@@ -364,8 +403,21 @@ begin
     Exit;
   end;
   sClave := ClaveNivelSeleccionado;
+  if sClave = '' then
+  begin
+    ShowMessage('No hay nivel de atributos seleccionado en el combo.');
+    Exit;
+  end;
   if not dlgAbrirFoto.Execute then Exit;
-  oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName);
+  try
+    oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('No se pudo guardar la foto: ' + E.Message);
+      Exit;
+    end;
+  end;
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 

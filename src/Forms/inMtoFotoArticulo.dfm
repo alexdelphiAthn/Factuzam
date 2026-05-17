@@ -77,7 +77,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     object lblNivel: TcxLabel
       Left = 380
       Top = 4
-      Caption = 'Nivel al que aplica el cambio:'
+      Caption = 'Nivel (atributos del SKU):'
       Width = 332
     end
     object cbbNivelSku: TcxComboBox
@@ -101,7 +101,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Top = 84
       Width = 220
       Height = 40
-      Caption = 'Cambiar foto del &SKU / grupo'
+      Caption = 'Cambiar foto del &grupo'
       TabOrder = 3
       OnClick = btnCambiarSkuClick
     end
