@@ -49,7 +49,7 @@ uses
   System.SysUtils, System.Classes, System.StrUtils, System.IOUtils,
   Vcl.Graphics, Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
   Data.DB, DBAccess, Uni,
-  frxClass;
+  frxClass, frxDBSet;
 
 const
   // Columnas de fza_articulos_fotos
