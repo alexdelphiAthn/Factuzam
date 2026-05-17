@@ -176,14 +176,14 @@ begin
       '  WHERE CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
-      '    AND FECHA_OP_DIA_OPCAJA   >= :pFDESDE                            ' +
-      '    AND FECHA_OP_DIA_OPCAJA   <= :pFHASTA                            ';
+      '    AND FECHA_OPERACION_OPCAJA   >= :pFDESDE                            ' +
+      '    AND FECHA_OPERACION_OPCAJA   <= :pFHASTA                            ';
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+    Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
     begin
@@ -224,14 +224,14 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA        = :pEMPRESA                       ' +
       '    AND o.CODIGO_ALM_OPCAJA        = :pALMACEN                       ' +
       '    AND o.CODIGO_CAJA_OPCAJA       = :pCAJA                          ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA     >= :pFDESDE                        ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA     <= :pFHASTA                        ';
+      '    AND o.FECHA_OPERACION_OPCAJA     >= :pFDESDE                        ' +
+      '    AND o.FECHA_OPERACION_OPCAJA     <= :pFHASTA                        ';
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+    Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
     begin
@@ -326,8 +326,8 @@ begin
       '  WHERE o.CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA   >= :pFDESDE                            ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA   <= :pFHASTA                            ';
+      '    AND o.FECHA_OPERACION_OPCAJA   >= :pFDESDE                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA   <= :pFHASTA                            ';
     Query.ParamByName('pTIPO_VE').AsString    := TipoOpVenta;
     Query.ParamByName('pTIPO_DV').AsString    := TipoOpDevolucion;
     Query.ParamByName('pTIPO_CB').AsString    := TipoOpCobroCuenta;
@@ -338,8 +338,8 @@ begin
     Query.ParamByName('pEMPRESA').AsString    := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString    := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString       := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate       := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate       := AArqueo.FechaHasta;
+    Query.ParamByName('pFDESDE').AsDateTime       := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime       := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
     begin
@@ -385,8 +385,8 @@ begin
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+    Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
       AArqueo.ValesEmitidos := Query.FieldByName('EMITIDOS').AsCurrency;
@@ -409,8 +409,8 @@ begin
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+    Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
       AArqueo.ValesRecogidos := Query.FieldByName('RECOGIDOS').AsCurrency;
@@ -455,8 +455,8 @@ begin
         '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
         '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
         '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-        '    AND o.FECHA_OP_DIA_OPCAJA >= :pFDESDE                            ' +
-        '    AND o.FECHA_OP_DIA_OPCAJA <= :pFHASTA                            ' +
+        '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
+        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
         '  GROUP BY p.CODIGO_FP_CFP,                                          ' +
         '           fp.DESCRIPCION_FORMA_PAGO_CFP,                            ' +
         '           fp.ESABRE_CAJON_FORMA_PAGO_CFP                            ' +
@@ -464,8 +464,8 @@ begin
       Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
       Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
       Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-      Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-      Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+      Query.ParamByName('pFDESDE').AsDateTime     := AArqueo.FechaDesde;
+      Query.ParamByName('pFHASTA').AsDateTime     := AArqueo.FechaHasta;
       Query.Open;
       while not Query.Eof do
       begin
