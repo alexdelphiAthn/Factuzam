@@ -124,13 +124,13 @@ type
     procedure Recalcular;
     function  FormatImporte(AValor: Currency): string;
   public
-    class procedure Ejecutar(
-      AOwner                  : TComponent;
-      AConn                   : TUniConnection;
-      const AEmpresa,
-            AAlmacen, ACaja   : string;
-      AFechaDesde,
-      AFechaHasta             : TDate);
+    class procedure Ejecutar(AOwner       : TComponent;
+                             AConn        : TUniConnection;
+                             const AEmpresa : string;
+                             const AAlmacen : string;
+                             const ACaja    : string;
+                             AFechaDesde    : TDate;
+                             AFechaHasta    : TDate);
   end;
 
 implementation
@@ -143,13 +143,13 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 //   API pública
 // =============================================================================
 
-class procedure TfrmModalArqueo.Ejecutar(
-  AOwner                  : TComponent;
-  AConn                   : TUniConnection;
-  const AEmpresa,
-        AAlmacen, ACaja   : string;
-  AFechaDesde,
-  AFechaHasta             : TDate);
+class procedure TfrmModalArqueo.Ejecutar(AOwner       : TComponent;
+                                         AConn        : TUniConnection;
+                                         const AEmpresa : string;
+                                         const AAlmacen : string;
+                                         const ACaja    : string;
+                                         AFechaDesde    : TDate;
+                                         AFechaHasta    : TDate);
 var
   frm: TfrmModalArqueo;
 begin

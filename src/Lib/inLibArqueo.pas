@@ -100,12 +100,12 @@ type
                                   var AArqueo: TArqueoCaja);
     class procedure CalcularDerivados(var AArqueo: TArqueoCaja);
   public
-    class function Calcular(
-      AConn                  : TUniConnection;
-      const AEmpresa,
-            AAlmacen, ACaja  : string;
-      AFechaDesde,
-      AFechaHasta            : TDate): TArqueoCaja;
+    class function Calcular(AConn          : TUniConnection;
+                            const AEmpresa : string;
+                            const AAlmacen : string;
+                            const ACaja    : string;
+                            AFechaDesde    : TDate;
+                            AFechaHasta    : TDate): TArqueoCaja;
   end;
 
 implementation
@@ -117,12 +117,12 @@ uses
 //   API pública
 // =============================================================================
 
-class function TArqueoCalculadora.Calcular(
-  AConn                  : TUniConnection;
-  const AEmpresa,
-        AAlmacen, ACaja  : string;
-  AFechaDesde,
-  AFechaHasta            : TDate): TArqueoCaja;
+class function TArqueoCalculadora.Calcular(AConn          : TUniConnection;
+                                           const AEmpresa : string;
+                                           const AAlmacen : string;
+                                           const ACaja    : string;
+                                           AFechaDesde    : TDate;
+                                           AFechaHasta    : TDate): TArqueoCaja;
 begin
   // Record que se rellena por pasos. FillChar deja PagosPorForma a nil, que es
   // el valor válido de inicialización para un dynamic array.
