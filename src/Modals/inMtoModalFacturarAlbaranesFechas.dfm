@@ -28,6 +28,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Top = 8
       Caption = 'Serie albar'#225'n'
       TabOrder = 5
+      Transparent = True
     end
     object edtSerie: TcxTextEdit
       Left = 8
@@ -40,6 +41,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Top = 8
       Caption = 'Fecha desde'
       TabOrder = 6
+      Transparent = True
     end
     object dteDesde: TcxDateEdit
       Left = 110
@@ -52,6 +54,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Top = 8
       Caption = 'Fecha hasta'
       TabOrder = 7
+      Transparent = True
     end
     object dteHasta: TcxDateEdit
       Left = 252
@@ -146,6 +149,7 @@ object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
       Top = 14
       Caption = 'Listo'
       TabOrder = 3
+      Transparent = True
     end
     object btnSeleccionarTodos: TcxButton
       Left = 480

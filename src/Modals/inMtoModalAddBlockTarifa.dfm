@@ -9,6 +9,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Top = 6
       Caption = 'Tarifa destino:'
       TabOrder = 11
+      Transparent = True
     end
     object cbxTarifa: TcxComboBox
       Left = 12
@@ -22,6 +23,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Top = 6
       Caption = 'Fecha desde:'
       TabOrder = 12
+      Transparent = True
     end
     object dtFechaDesde: TcxDateEdit
       Left = 227
@@ -48,6 +50,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Top = 6
       Caption = '% Dto:'
       TabOrder = 13
+      Transparent = True
     end
     object spnPorcenDto: TcxCurrencyEdit
       Left = 580
@@ -68,6 +71,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Top = 32
       Caption = 'M'#250'ltiplo:'
       TabOrder = 14
+      Transparent = True
     end
     object spnMultiplo: TcxCurrencyEdit
       Left = 660
@@ -83,6 +87,7 @@ inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
       Top = 32
       Caption = 'Menos:'
       TabOrder = 15
+      Transparent = True
     end
     object spnRestar: TcxCurrencyEdit
       Left = 790

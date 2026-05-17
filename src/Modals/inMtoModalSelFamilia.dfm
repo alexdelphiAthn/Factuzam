@@ -27,6 +27,7 @@ inherited frmModalSelFamilia: TfrmModalSelFamilia
         Left = 8
         Top = 12
         Caption = 'Filtro'
+        Transparent = True
       end
       object txtFiltro: TcxTextEdit
         Left = 60

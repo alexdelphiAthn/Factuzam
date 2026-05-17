@@ -22,6 +22,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
     Top = 4
     Caption = 'Recibo N'#250'mero'
     TabOrder = 1
+    Transparent = True
   end
   object edtSerie: TcxTextEdit [2]
     Left = 8
