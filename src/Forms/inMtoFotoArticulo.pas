@@ -37,11 +37,7 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
-<<<<<<< HEAD
-  inLibFotos, inLibLayoutForm, System.UITypes, Vcl.Menus, cxControls, cxMaskEdit;
-=======
   inLibFotos, inLibLayoutForm, inLibAppParam, System.UITypes;
->>>>>>> 619fac6966a2b4920fd1c59e14dade73ba529bbe
 
 type
   /// Firma del callback que la pantalla usa para repreguntar al Mto
