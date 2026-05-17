@@ -349,15 +349,24 @@ class procedure TArqueoCalculadora.CalcularDepositos(AConn: TUniConnection;
 var
   Query: TUniQuery;
 begin
-  // Snapshot de depósitos abiertos al final del rango:
+  // Métricas de depósitos basadas en el PERÍODO (no snapshot actual),
+  // para que un arqueo de una temporada pasada siga siendo correcto
+  // aunque los depósitos de entonces estén cerrados hoy:
+  //
   //   - Préstamos      = SUM(PRECIO_VENTA_DEP × CANTIDAD_PENDIENTE_DEP)
-  //                      = valor de la mercancía comprometida.
-  //   - CobrosClientes = SUM(IMPORTE_ANTICIPO_DEP)
-  //                      = anticipos ya entregados por el cliente.
-  // Se incluyen todos los depósitos PENDIENTE que existían al final del
-  // rango (FECHA_CREACION_DEP <= pFHASTA), no solo los creados en él:
-  // un depósito abierto hace una semana sigue siendo mercancía en préstamo
-  // hoy.
+  //                      de los depósitos cuya FECHA_CREACION_DEP cae
+  //                      en el rango. Da el valor de la mercancía
+  //                      comprometida en el período (independiente del
+  //                      ESTADO_DEP actual).
+  //
+  //   - CobrosClientes = SUM(IMPORTE_TOTAL_OPCAJA) de las operaciones
+  //                      CB+ y DE+ ligadas a un depósito
+  //                      (ID_DEPOSITO_OPCAJA no nulo) que ocurrieron en
+  //                      el rango. Es el flujo real de efectivo entrado
+  //                      como anticipo durante el período, igual de
+  //                      válido para arqueos pasados o actuales.
+
+  // 1) Préstamos: valor de los depósitos creados en el período.
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;
@@ -365,25 +374,53 @@ begin
       ' SELECT                                                              ' +
       '   COALESCE(SUM(d.PRECIO_VENTA_DEP                                   ' +
       '              * COALESCE(d.CANTIDAD_PENDIENTE_DEP, 1)), 0)           ' +
-      '                                              AS PRESTAMOS,          ' +
-      '   COALESCE(SUM(d.IMPORTE_ANTICIPO_DEP), 0)   AS COBROS              ' +
+      '                                              AS PRESTAMOS           ' +
       '   FROM fza_depositos_cliente d                                      ' +
       '  WHERE d.CODIGO_EMP_DEP        = :pEMPRESA                          ' +
       '    AND d.CODIGO_ALM_DEP        = :pALMACEN                          ' +
       '    AND d.CODIGO_CAJA_DEP       = :pCAJA                             ' +
-      '    AND d.ESTADO_DEP            = :pEST_DEP_OK                       ' +
+      '    AND d.FECHA_CREACION_DEP   >= :pFDESDE                           ' +
       '    AND d.FECHA_CREACION_DEP   <= :pFHASTA                           ';
-    Query.ParamByName('pEMPRESA').AsString    := AArqueo.Empresa;
-    Query.ParamByName('pALMACEN').AsString    := AArqueo.Almacen;
-    Query.ParamByName('pCAJA').AsString       := AArqueo.Caja;
-    Query.ParamByName('pEST_DEP_OK').AsString := EstadoDepositoAbierto;
-    Query.ParamByName('pFHASTA').AsDateTime   := AArqueo.FechaHasta;
+    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
-    begin
-      AArqueo.Prestamos      := Query.FieldByName('PRESTAMOS').AsCurrency;
+      AArqueo.Prestamos := Query.FieldByName('PRESTAMOS').AsCurrency;
+  finally
+    FreeAndNil(Query);
+  end;
+
+  // 2) Cobros clientes: anticipos cobrados (CB+ y DE+ ligados a depósito)
+  //    en el período.
+  Query := TUniQuery.Create(nil);
+  try
+    Query.Connection := AConn;
+    Query.SQL.Text :=
+      ' SELECT                                                              ' +
+      '   COALESCE(SUM(o.IMPORTE_TOTAL_OPCAJA), 0)   AS COBROS              ' +
+      '   FROM fza_caja_operaciones o                                       ' +
+      '  WHERE o.CODIGO_EMP_OPCAJA      = :pEMPRESA                         ' +
+      '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                         ' +
+      '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
+      '    AND o.TIPO_OPERACION_OPCAJA IN (:pTIPO_CB, :pTIPO_DE)             ' +
+      '    AND o.IMPORTE_TOTAL_OPCAJA  > 0                                  ' +
+      '    AND o.ID_DEPOSITO_OPCAJA   IS NOT NULL                           ' +
+      '    AND o.ID_DEPOSITO_OPCAJA  <> ''''                                ';
+    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
+    Query.ParamByName('pTIPO_CB').AsString  := TipoOpCobroCuenta;
+    Query.ParamByName('pTIPO_DE').AsString  := TipoOpDeposito;
+    Query.Open;
+    if not Query.Eof then
       AArqueo.CobrosClientes := Query.FieldByName('COBROS').AsCurrency;
-    end;
   finally
     FreeAndNil(Query);
   end;
@@ -515,12 +552,14 @@ end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
 begin
-  // Ventas a préstamo (= "Pendiente de cobro"): mercancía comprometida (en
-  // depósitos abiertos) menos lo que el cliente ya ha entregado como
-  // anticipo. Con Préstamos y CobrosClientes positivos (fix B y D1) la
-  // cifra es interpretable y suele ser positiva.
-  AArqueo.VentasPrestamos := AArqueo.Prestamos - AArqueo.CobrosClientes;
-  AArqueo.PendienteCobro  := AArqueo.VentasPrestamos;
+  // Ventas a préstamo = valor de la mercancía comprometida en el período
+  // (no el pendiente). Si el cliente ha entregado anticipos, esa parte
+  // ya está cobrada pero la venta "comprometida" sigue siendo el total.
+  AArqueo.VentasPrestamos := AArqueo.Prestamos;
+
+  // Pendiente de cobro = lo que el cliente aún debe entregar para retirar
+  // la mercancía = Préstamos − Cobros clientes.
+  AArqueo.PendienteCobro := AArqueo.Prestamos - AArqueo.CobrosClientes;
 
   // Total Ventas = ventas normales + ventas a préstamo − devoluciones.
   AArqueo.TotalVentas :=
