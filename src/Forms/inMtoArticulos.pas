@@ -1625,18 +1625,15 @@ var
   formulario : TfrmMtoModalArtTar;
 begin
   formulario := TfrmMtoModalArtTar.Create(Self.Owner);
-  formulario.Name := 'frmMtoModalArtTar';
-  formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
   try
+    formulario.Name := 'frmMtoModalArtTar';
+    formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
     dmmArticulos.FillTarifas(formulario.lstTarifas);
     formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+      IterateCheckedListArt(formulario.lstTarifas);
   finally
-      inherited;
-      if formulario.sFicha = 'S' then
-      begin
-        IterateCheckedListArt(formulario.lstTarifas);
-      end;
-      FreeAndNil(formulario);
+    FreeAndNil(formulario);
   end;
 end;
 

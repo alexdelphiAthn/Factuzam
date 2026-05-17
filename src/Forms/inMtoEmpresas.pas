@@ -574,18 +574,15 @@ var
   formulario:TfrmMtoModalEmpCer;
 begin
   formulario := TfrmMtoModalEmpCer.Create(Self.Owner);
-  formulario.Name := 'frmMtoModalEmpCer';
-  //formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
   try
+    formulario.Name := 'frmMtoModalEmpCer';
+    //formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
     //dmmArticulos.FillTarifas(formulario.lstTarifas);
     formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+      IterateCheckedList(formulario.lstCertificates);
   finally
-      inherited;
-      if formulario.sFicha = 'S' then
-      begin
-        IterateCheckedList(formulario.lstCertificates);
-      end;
-      FreeAndNil(formulario);
+    FreeAndNil(formulario);
   end;
 end;
 
