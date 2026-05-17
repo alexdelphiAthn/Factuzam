@@ -1,7 +1,6 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
   BorderIcons = [biSystemMenu]
   Caption = 'Foto del art'#237'culo / SKU'
-  BorderIcons = [biSystemMenu]
   ClientHeight = 600
   ClientWidth = 720
   FormStyle = fsStayOnTop
