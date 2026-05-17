@@ -34,6 +34,8 @@ implementation
 
 {$R *.dfm}
 
+procedure ForceReferenceToClass(C: TClass); begin end;
+
 function TfrmMtoFacturasNormal.NombreVistaListado: string;
 begin
   Result := 'vi_facturas_normales';
@@ -44,4 +46,6 @@ begin
   Result := 'NORMAL';
 end;
 
+initialization
+  ForceReferenceToClass(TfrmMtoFacturasNormal);
 end.
