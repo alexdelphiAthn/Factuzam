@@ -3,7 +3,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
   ClientHeight = 600
   ClientWidth = 720
   FormStyle = fsStayOnTop
-  Position = poScreenCenter
+  Position = poDesigned
   KeyPreview = True
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose

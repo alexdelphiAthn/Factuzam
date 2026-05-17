@@ -124,7 +124,10 @@ implementation
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
 begin
   inherited;
-  Self.Position    := poScreenCenter;
+  // poDesigned (no poScreenCenter) para que Left/Top guardados con
+  // Alt+F12 no sean sobrescritos al mostrarse el form. Si no hay
+  // layout guardado, FormShow centra manualmente.
+  Self.Position    := poDesigned;
   Self.FormStyle   := fsStayOnTop;
   Self.KeyPreview  := True;       // para que FormKeyDown vea Alt+F12 / F11
   rgResolucion.ItemIndex := 0;    // 300 por defecto
@@ -140,10 +143,17 @@ end;
 procedure TfrmFotoArticulo.FormShow(Sender: TObject);
 begin
   inherited;
-  // Restaura geometria si el usuario la guardo previamente con Alt+F12.
+  // Restaura geometria (Left/Top/Width/Height/WindowState) si el
+  // usuario la guardo previamente con Alt+F12. Si no hay layout,
+  // centramos manualmente en pantalla.
   FLayoutLoader := TLayoutLoader.Create(Self.Name);
   if FLayoutLoader.Disponible then
-    FLayoutLoader.RestaurarGeometria(Self);
+    FLayoutLoader.RestaurarGeometria(Self)
+  else
+  begin
+    Self.Left := (Screen.Width  - Self.Width)  div 2;
+    Self.Top  := (Screen.Height - Self.Height) div 2;
+  end;
 end;
 
 procedure TfrmFotoArticulo.FormDestroy(Sender: TObject);
