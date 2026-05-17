@@ -1100,10 +1100,20 @@ inyectados + user-function — está documentado en
 ### 18.8 Parámetro de aplicación
 
 Categoría `Directorios`, clave `appDirFotos`. Registrado en
-`inLibAppParam.InicializarParametrosApp`. Configurable desde
-`frmMtoAppParam` (Ctrl + Alt + P del menú principal). Los subdirectorios
-`300/`, `600/`, `real/` se crean automáticamente en el primer
-`oFotos.Guardar`.
+`inLibAppParam.InicializarParametrosApp` con valor por defecto
+`$(PUBLICO)\Factuzam\fotos` — token resuelto por
+`inLibPathTokens.ExpandPathTokens` a `CSIDL_COMMON_DOCUMENTS`
+(`C:\Users\Public\Documents` en Windows estándar). Lo elegimos público
+porque las fotos son un recurso compartido entre todos los usuarios de
+la máquina, no un dato personal.
+
+Configurable desde `frmMtoAppParam`. Para una instalación multi-puesto
+se recomienda apuntarlo a una ruta UNC compartida (p.ej.
+`\\servidor\factuzam\fotos`); el subsistema funciona idénticamente con
+cualquier ruta resoluble por el filesystem de Windows.
+
+Los subdirectorios `300/`, `600/`, `real/` se crean automáticamente en
+el primer `oFotos.Guardar`.
 
 ### 18.9 Resumen de unidades implicadas
 
