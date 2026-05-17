@@ -113,6 +113,22 @@ inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
             end
           end
         end
+        object splFotoDep: TcxSplitter
+          AlignSplitter = salRight
+          Control = pnlFotoDep
+        end
+        object pnlFotoDep: TPanel
+          Width = 200
+          Align = alRight
+          BevelOuter = bvLowered
+          TabOrder = 1
+          object imgFotoDep: TImage
+            Align = alClient
+            Center = True
+            Proportional = True
+            Stretch = True
+          end
+        end
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
