@@ -98,14 +98,6 @@ type
     lblSaldoLbl: TcxLabel;
     lblSaldo: TcxLabel;
 
-    // Sección Otros importes
-    pnlOtros: TPanel;
-    lblOtrosTitulo: TcxLabel;
-    lblOtrosDepositosLbl: TcxLabel;
-    lblOtrosDepositos: TcxLabel;
-    lblOtrosEncargosLbl: TcxLabel;
-    lblOtrosEncargos: TcxLabel;
-
     // Pie
     btnAtras: TcxButton;
     lblESC: TcxLabel;
@@ -264,7 +256,7 @@ begin
   lblOpeDescuentos.Caption   := FormatImporte(AArqueo.DescuentosOperaciones);
   lblOpePuntos.Caption       := IntToStr(Trunc(AArqueo.PuntosRecogidos));
   lblOpeNeto.Caption         := FormatImporte(AArqueo.Neto);
-  lblOpeCredito.Caption      := FormatImporte(AArqueo.VentaCredito);
+  lblOpeCredito.Caption      := FormatImporte(AArqueo.Prestamos);
 
   lblCobValesRec.Caption     := FormatImporte(AArqueo.ValesRecogidos);
   lblCobValesEmi.Caption     := FormatImporte(AArqueo.ValesEmitidos);
@@ -279,9 +271,6 @@ begin
   lblEftCaja.Caption         := FormatImporte(AArqueo.EfectivoCaja);
   lblTarjetas.Caption        := FormatImporte(AArqueo.OtrosIngresos);
   lblSaldo.Caption           := FormatImporte(AArqueo.SaldoRecontar);
-
-  lblOtrosDepositos.Caption  := FormatImporte(AArqueo.Depositos);
-  lblOtrosEncargos.Caption   := FormatImporte(AArqueo.Encargos);
 end;
 
 function TfrmModalArqueo.FormatImporte(AValor: Currency): string;

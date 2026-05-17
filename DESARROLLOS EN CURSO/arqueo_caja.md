@@ -54,7 +54,7 @@ Columnas relevantes (todas las monetarias `decimal(19,6)`):
 - Líneas: `TOTAL_BRUTO_LINEAS_ARQ`, `TOTAL_DESCUENTOS_LINEAS_ARQ`.
 - Operaciones: `TOTAL_BRUTO_OPERACIONES_ARQ`,
   `TOTAL_DESCUENTOS_OPERACIONES_ARQ`, `TOTAL_PUNTOS_RECOGIDOS_ARQ`,
-  `TOTAL_NETO_ARQ`, `TOTAL_VENTA_CREDITO_ARQ`.
+  `TOTAL_NETO_ARQ`, `TOTAL_PRESTAMOS_ARQ`.
 - Cobros: `TOTAL_VALES_RECOGIDOS_ARQ`, `TOTAL_VALES_EMITIDOS_ARQ`,
   `TOTAL_COBROS_CLIENTES_ARQ`, `TOTAL_PENDIENTE_COBRO_ARQ`,
   `TOTAL_INGRESOS_CAJA_ARQ`.
@@ -70,7 +70,7 @@ Columnas relevantes (todas las monetarias `decimal(19,6)`):
   > El desglose por forma se calcula al vuelo en `TArqueoPagoForma` y se
   > guardará en una tabla hija (`fza_caja_arqueos_pagos`) cuando se
   > implemente el cierre Z; en este primer paso no se persiste.
-- Otros: `TOTAL_DEPOSITOS_ARQ`, `TOTAL_ENCARGOS_ARQ`, `OBSERVACIONES_ARQ`.
+- Observaciones: `OBSERVACIONES_ARQ`.
 - Auditoría estándar: `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`,
   `USUARIO_MODIF`.
 
@@ -97,20 +97,18 @@ contexto Empresa+Almacén+Caja del menú.
 | Operaciones — Descuentos | Descuento global de cabecera (`TOTAL_BASES_FAC` menos suma de líneas). |
 | Operaciones — Ptos. rcgdos. | 0 (módulo de puntos no implementado todavía). |
 | Operaciones — Neto | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'VE'`. |
-| Vta. a crédito | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` y signo negativo (cobros a cuenta pendientes). |
+| Préstamos | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. Es la mercancía comprometida con el cliente (los depósitos del TPV son préstamos contables: la prenda queda apartada y el cliente paga a plazos). |
 | Cobros — Vales recogidos | `SUM(IMPORTE_REDIMIDO_VL)` de `fza_caja_vales` redimidos en la caja en el rango. |
 | Cobros — Vales emitidos | `SUM(IMPORTE_NOMINAL_VL)` de `fza_caja_vales` emitidos en la caja en el rango. |
 | Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` **y `IMPORTE > 0`** (los CB negativos son "consumo de anticipo" cuando se cierra un depósito y se venden contra la venta; no son flujo real de caja, su efecto ya queda en el VE de cierre del depósito). |
-| Pendiente cobro | Diferencia entre lo facturado y lo cobrado (futuro). |
-| Ingresos caja | Bruto operaciones − descuentos − vales recogidos + vales emitidos + cobros clientes − pendiente cobro. |
+| Pendiente cobro | `Préstamos − Cobros clientes` — saldo que el cliente aún debe entregar para retirar la mercancía. |
+| Ingresos caja | `Neto − Préstamos − Vales recogidos + Vales emitidos + Cobros clientes − Pendiente cobro`. |
 | Efectivo ingresos | `SUM(IMPORTE_ENTREGADO_PAGO)` de `fza_caja_pagos` para las formas con `ESABRE_CAJON_FORMA_PAGO_CFP = 'S'` (efectivo, divisas en metálico, lo que se mete en el cajón). |
 | Efectivo entradas / salidas | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA IN ('EC','GC')`. |
 | Efectivo anterior | 0 (solo se rellena cuando se cierre el arqueo anterior y se enlace). |
 | Efectivo en caja | Efectivo ingresos + entradas − salidas + anterior. |
 | Otros ingresos (tarj., bono, divisa, cripto) | `SUM(IMPORTE_ENTREGADO_PAGO)` para las formas con `ESABRE_CAJON_FORMA_PAGO_CFP = 'N'`. |
 | Saldo efectivo + otros | Efectivo en caja + otros ingresos. |
-| Depósitos | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. |
-| Encargos | 0 (futuro). |
 
 ---
 

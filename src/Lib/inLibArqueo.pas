@@ -66,7 +66,7 @@ type
     DescuentosOperaciones  : Currency;
     PuntosRecogidos        : Currency;
     Neto                   : Currency;
-    VentaCredito           : Currency;
+    Prestamos              : Currency;   // SUM de TIPO_OPERACION='DE' (DB)
 
     // Cobros
     ValesRecogidos         : Currency;
@@ -84,10 +84,6 @@ type
     OtrosIngresos          : Currency;       // suma de formas sin cajón
     SaldoRecontar          : Currency;
     PagosPorForma          : TArray<TArqueoPagoForma>;
-
-    // Otros
-    Depositos              : Currency;
-    Encargos               : Currency;
   end;
 
   TArqueoCalculadora = class
@@ -286,7 +282,7 @@ begin
       '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_DE             ' +
       '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                             ' +
-      '                END), 0)                              AS DEPOSIT     ' +
+      '                END), 0)                              AS PRESTAMOS   ' +
       '   FROM fza_caja_operaciones                                         ' +
       '  WHERE CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
@@ -310,7 +306,7 @@ begin
       AArqueo.CobrosClientes   := Query.FieldByName('COBROS').AsCurrency;
       AArqueo.EfectivoEntradas := Query.FieldByName('ENTRADAS').AsCurrency;
       AArqueo.EfectivoSalidas  := Query.FieldByName('SALIDAS').AsCurrency;
-      AArqueo.Depositos        := Query.FieldByName('DEPOSIT').AsCurrency;
+      AArqueo.Prestamos        := Query.FieldByName('PRESTAMOS').AsCurrency;
     end;
 
     // Operaciones — bruto y descuentos:
@@ -452,10 +448,17 @@ end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
 begin
-  // Cobros — Ingresos caja: neto operaciones − vales recogidos
+  // Pendiente de cobro: lo que falta por pagar de los préstamos abiertos.
+  //   Pendiente = Préstamos − Cobros clientes
+  // (los préstamos son la mercancía comprometida, los cobros lo ya entregado
+  // por el cliente como anticipo).
+  AArqueo.PendienteCobro := AArqueo.Prestamos - AArqueo.CobrosClientes;
+
+  // Cobros — Ingresos caja: neto operaciones − préstamos − vales recogidos
   //                         + vales emitidos + cobros clientes − pendiente
   AArqueo.IngresosCaja :=
       AArqueo.Neto
+    - AArqueo.Prestamos
     - AArqueo.ValesRecogidos
     + AArqueo.ValesEmitidos
     + AArqueo.CobrosClientes
