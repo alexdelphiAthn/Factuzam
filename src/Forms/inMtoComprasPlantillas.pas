@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -39,7 +39,8 @@ uses
   cxButtons, cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupComboBox,
   cxCheckBox, cxGroupBox, cxNavigator, cxDBNavigator,
   dxDateRanges, dxScrollbarAnnotations, dxBevel,
-  Uni, MemDS, DBAccess, System.UITypes;
+  Uni, MemDS, DBAccess, System.UITypes, cxGraphics, cxBlobEdit, cxDBLookupEdit,
+  dxShellDialogs, JvComponentBase, JvEnterTab, cxLocalization, cxRadioGroup;
 
 type
   TfrmMtoComprasPlantillas = class(TfrmMtoGen)

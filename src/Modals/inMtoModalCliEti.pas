@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalCliEti                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -25,7 +25,8 @@ uses
   cxClasses, cxLocalization, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSkinsCore,
   dxSkinBlue, cxControls, cxContainer, cxEdit, cxTextEdit, cxMaskEdit,
   cxSpinEdit, cxLabel, cxGroupBox, cxRadioGroup, UniDataClientes, inMtoClientes,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab, frxSmartMemo, frLocalization, frLanguageSpanish,
+  System.Actions, Vcl.ActnList, frxExportBaseImageSettingsDialog, frCoreClasses;
 
 type
   TfrmPrintCliEti = class(TfrmPrint)

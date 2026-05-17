@@ -2,20 +2,25 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
   Caption = 'Plantillas de Sesiones de Compra'
   ClientHeight = 700
   ClientWidth = 1100
-  OnCreate = FormCreate
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1100
   ExplicitHeight = 700
   TextHeight = 19
   inherited pButtonPage: TPanel
     Width = 960
     Height = 700
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitWidth = 960
+    ExplicitHeight = 700
     inherited pcPantalla: TcxPageControl
       Width = 960
       Height = 660
-      ClientRectBottom = 656
-      ClientRectRight = 956
+      ExplicitWidth = 960
+      ExplicitHeight = 660
+      ClientRectBottom = 658
+      ClientRectRight = 958
       inherited tsLista: TcxTabSheet
-        inherited cxgrdPrincipal: TcxGrid
+        inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcCodigoSespl: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -49,28 +54,30 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
         object pcPlantilla: TcxPageControl
           Left = 0
           Top = 0
-          Width = 952
-          Height = 626
+          Width = 956
+          Height = 629
           Align = alClient
           TabOrder = 0
           Properties.ActivePage = tsDatos
-          ClientRectBottom = 622
-          ClientRectLeft = 4
-          ClientRectRight = 948
-          ClientRectTop = 30
+          Properties.CustomButtons.Buttons = <>
+          ClientRectBottom = 627
+          ClientRectLeft = 2
+          ClientRectRight = 954
+          ClientRectTop = 29
           object tsDatos: TcxTabSheet
             Caption = 'Datos'
             object gbDatos: TcxGroupBox
               Left = 8
               Top = 8
-              Width = 928
-              Height = 580
               Caption = ' Cabecera de plantilla '
               TabOrder = 0
+              Height = 580
+              Width = 928
               object lblCodigo: TcxLabel
                 Left = 16
                 Top = 24
                 Caption = 'C'#243'digo'
+                TabOrder = 10
               end
               object txtCodigo: TcxDBTextEdit
                 Left = 100
@@ -84,6 +91,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 16
                 Top = 60
                 Caption = 'Nombre'
+                TabOrder = 11
               end
               object txtNombre: TcxDBTextEdit
                 Left = 100
@@ -97,6 +105,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 16
                 Top = 96
                 Caption = 'Descripci'#243'n'
+                TabOrder = 12
               end
               object txtDescripcion: TcxDBTextEdit
                 Left = 100
@@ -110,12 +119,14 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 16
                 Top = 132
                 Caption = 'Proveedor'
+                TabOrder = 13
               end
               object cbbProveedor: TcxDBLookupComboBox
                 Left = 100
                 Top = 130
                 DataBinding.DataField = 'CODIGO_PRV_SESPL'
                 DataBinding.DataSource = dsTablaG
+                Properties.ListColumns = <>
                 TabOrder = 3
                 Width = 280
               end
@@ -123,12 +134,14 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 400
                 Top = 132
                 Caption = 'Familia'
+                TabOrder = 14
               end
               object cbbFamilia: TcxDBLookupComboBox
                 Left = 460
                 Top = 130
                 DataBinding.DataField = 'CODIGO_FAM_SESPL'
                 DataBinding.DataSource = dsTablaG
+                Properties.ListColumns = <>
                 TabOrder = 4
                 Width = 200
               end
@@ -136,12 +149,14 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 16
                 Top = 168
                 Caption = 'Variaci'#243'n'
+                TabOrder = 15
               end
               object cbbVariacion: TcxDBLookupComboBox
                 Left = 100
                 Top = 166
                 DataBinding.DataField = 'CODIGO_VAR_SESPL'
                 DataBinding.DataSource = dsTablaG
+                Properties.ListColumns = <>
                 TabOrder = 5
                 Width = 200
               end
@@ -154,18 +169,19 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 6
-                Width = 200
               end
               object lblConjPivot: TcxLabel
                 Left = 16
                 Top = 204
                 Caption = 'Conj. pivot'
+                TabOrder = 16
               end
               object cbbConjuntoPivot: TcxDBLookupComboBox
                 Left = 100
                 Top = 202
                 DataBinding.DataField = 'ID_AC_PIVOT_SESPL'
                 DataBinding.DataSource = dsTablaG
+                Properties.ListColumns = <>
                 TabOrder = 7
                 Width = 280
               end
@@ -173,12 +189,14 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Left = 16
                 Top = 240
                 Caption = 'Conj. fila'
+                TabOrder = 17
               end
               object cbbConjuntoFila: TcxDBLookupComboBox
                 Left = 100
                 Top = 238
                 DataBinding.DataField = 'ID_AC_FILA_SESPL'
                 DataBinding.DataSource = dsTablaG
+                Properties.ListColumns = <>
                 TabOrder = 8
                 Width = 280
               end
@@ -191,12 +209,15 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 9
-                Width = 200
               end
             end
           end
           object tsPropsPlantilla: TcxTabSheet
             Caption = 'Propiedades'
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object cxgrdProps: TcxGrid
               Left = 0
               Top = 36
@@ -205,8 +226,6 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
               Align = alClient
               TabOrder = 0
               object tvProps: TcxGridDBTableView
-                DataController.DataSource = nil
-                Navigator.Buttons.CustomButtons = <>
                 object dbcPropsCodigo: TcxGridDBColumn
                   Caption = 'C'#243'digo'
                   DataBinding.FieldName = 'CODIGO_PROP_SESPLPROP'
@@ -245,6 +264,10 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
           end
           object tsKitsPlantilla: TcxTabSheet
             Caption = 'Kits'
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object cxgrdKits: TcxGrid
               Left = 0
               Top = 36
@@ -253,8 +276,6 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
               Align = alLeft
               TabOrder = 0
               object tvKits: TcxGridDBTableView
-                DataController.DataSource = nil
-                Navigator.Buttons.CustomButtons = <>
                 object dbcKitsCodigo: TcxGridDBColumn
                   Caption = 'C'#243'digo'
                   DataBinding.FieldName = 'CODIGO_SESPLKIT'
@@ -276,8 +297,6 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
               Align = alClient
               TabOrder = 1
               object tvKitsDet: TcxGridDBTableView
-                DataController.DataSource = nil
-                Navigator.Buttons.CustomButtons = <>
                 object dbcKitsDetValor: TcxGridDBColumn
                   Caption = 'Valor (talla)'
                   DataBinding.FieldName = 'VALOR_DESTINO_SESPLKITD'
@@ -312,6 +331,50 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
           end
         end
       end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 954
+        ExplicitHeight = 627
+        inherited pnlPerfilTop: TPanel
+          Width = 956
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 954
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 956
+          Height = 572
+          StyleElements = [seFont, seClient, seBorder]
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      Width = 960
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitWidth = 960
+      inherited pnlTopGrid: TPanel
+        Width = 960
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 960
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    Left = 960
+    Height = 700
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 960
+    ExplicitHeight = 700
+    inherited pButtonGen: TPanel
+      Top = 502
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
     end
   end
   object unqryPlantillas: TUniQuery
@@ -329,6 +392,12 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
     MasterSource = dsTablaG
     Left = 64
     Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_SESPL'
+        Value = nil
+      end>
   end
   object dsPlantillaProps: TDataSource
     DataSet = unqryPlantillaProps
@@ -343,6 +412,12 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
     MasterSource = dsTablaG
     Left = 116
     Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_SESPL'
+        Value = nil
+      end>
   end
   object dsPlantillaKits: TDataSource
     DataSet = unqryPlantillaKits
@@ -358,6 +433,17 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
     MasterSource = dsPlantillaKits
     Left = 168
     Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_SESPL_SESPLKIT'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_SESPLKIT'
+        Value = nil
+      end>
   end
   object dsPlantillaKitsDet: TDataSource
     DataSet = unqryPlantillaKitsDet

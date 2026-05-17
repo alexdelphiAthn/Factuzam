@@ -85,14 +85,14 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
             TabOrder = 0
             object lblCodigo: TcxLabel
               Left = 21
-              Top = 21
+              Top = 17
               Caption = 'C'#243'digo'
               TabOrder = 0
               Transparent = True
             end
             object txtCODIGO: TcxDBTextEdit
               Left = 110
-              Top = 17
+              Top = 13
               DataBinding.DataField = 'CODIGO_PROP_ARTPROP'
               DataBinding.DataSource = dsTablaG
               Properties.ReadOnly = True

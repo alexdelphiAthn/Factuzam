@@ -167,10 +167,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
               OnShow = tsSQLShow
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlInferior: TPanel
                 Left = 0
                 Top = 259
@@ -203,22 +199,13 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   Align = alRight
                   TabOrder = 0
                   object btnBonito: TButton
-                    Left = 24
+                    Left = 6
                     Top = 16
-                    Width = 75
-                    Height = 25
+                    Width = 99
+                    Height = 41
                     Caption = '&Bonito'
                     TabOrder = 0
                     OnClick = btnBonitoClick
-                  end
-                  object btnAbrirScript: TButton
-                    Left = 24
-                    Top = 47
-                    Width = 75
-                    Height = 25
-                    Caption = '&Abrir Script'
-                    TabOrder = 1
-                    OnClick = btnAbrirScriptClick
                   end
                 end
                 object sbVertDerecho: TScrollBar
@@ -292,10 +279,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&2_Metadatos'
               ImageIndex = 2
               OnShow = tsMetadatosShow
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object splDetalleMeta: TcxSplitter
                 Left = 377
                 Top = 0
@@ -328,10 +311,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object mmoSalida: TMemo
                       Left = 488
                       Top = 344
@@ -439,10 +418,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsContenido: TcxTabSheet
                     Caption = '&Vista Contenido'
                     ImageIndex = 1
-                    ExplicitLeft = 0
-                    ExplicitTop = 0
-                    ExplicitWidth = 0
-                    ExplicitHeight = 0
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
@@ -648,10 +623,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsVistaDatos: TcxTabSheet
               Caption = '&3_VistaDatos'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
@@ -926,7 +897,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlTopFicha
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1041,12 +1011,22 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     object btnEjecutar: TcxButton
       Left = 1
       Top = 328
-      Width = 138
+      Width = 136
       Height = 49
       Caption = '&Ejecutar (F5)'
       TabOrder = 2
       WordWrap = True
       OnClick = btnEjecutarClick
+    end
+    object btnAbrirScript: TcxButton
+      Left = 1
+      Top = 223
+      Width = 136
+      Height = 49
+      Caption = '&Script (F3)'
+      TabOrder = 3
+      WordWrap = True
+      OnClick = btnAbrirScriptClick
     end
   end
   object synsqlsyn2: TSynSQLSyn [4]
@@ -1097,6 +1077,11 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     end
     object actComentar: TAction
       Caption = 'Comentar'
+    end
+    object actAbrirScript: TAction
+      Caption = 'Abrir Script'
+      ShortCut = 114
+      OnExecute = btnAbrirScriptClick
     end
   end
 end

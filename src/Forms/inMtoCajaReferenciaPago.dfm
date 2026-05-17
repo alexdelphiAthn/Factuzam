@@ -3,7 +3,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Datos de Pago'
-  ClientHeight = 520
+  ClientHeight = 541
   ClientWidth = 500
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,13 +21,13 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     Left = 0
     Top = 0
     Width = 500
-    Height = 460
+    Height = 481
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitWidth = 494
-    ExplicitHeight = 451
+    ExplicitWidth = 498
+    ExplicitHeight = 452
     object gbInfoPago: TcxGroupBox
       Left = 10
       Top = 9
@@ -110,7 +110,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       Style.Font.Style = []
       Style.IsFontAssigned = True
       TabOrder = 1
-      Height = 85
+      Height = 94
       Width = 480
       object lblReferencia: TcxLabel
         Left = 29
@@ -119,8 +119,8 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
         TabOrder = 0
       end
       object lblEjemplo: TcxLabel
-        Left = 15
-        Top = 55
+        Left = 29
+        Top = 50
         Caption = 'Ej: 123456'
         TabOrder = 1
       end
@@ -143,7 +143,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
       Top = 207
       Caption = ' Otra Divisa '
       TabOrder = 2
-      Height = 142
+      Height = 162
       Width = 480
       object lblDivisa: TcxLabel
         Left = 59
@@ -230,7 +230,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     end
     object gbBlockchain: TcxGroupBox
       Left = 10
-      Top = 355
+      Top = 368
       Caption = ' Blockchain '
       TabOrder = 3
       Visible = False
@@ -265,18 +265,18 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
   end
   object pnlBotones: TPanel
     Left = 0
-    Top = 460
+    Top = 481
     Width = 500
     Height = 60
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 451
-    ExplicitWidth = 494
+    ExplicitTop = 452
+    ExplicitWidth = 498
     object btnAceptar: TcxButton
       Left = 357
-      Top = 5
+      Top = 9
       Width = 133
       Height = 45
       Caption = 'Aceptar (F12)'
@@ -291,7 +291,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     end
     object btnCancelar: TcxButton
       Left = 208
-      Top = 5
+      Top = 9
       Width = 143
       Height = 45
       Caption = 'Cancelar (ESC)'
@@ -306,7 +306,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     end
     object txtSobra: TcxCurrencyEdit
       Left = 65
-      Top = 0
+      Top = 4
       Enabled = False
       ParentFont = False
       Properties.DisplayFormat = ',0.00 '#8364' ;-,0.00 '#8364' '
@@ -321,7 +321,7 @@ object frmCajaReferenciaPago: TfrmCajaReferenciaPago
     end
     object cxLabel2: TcxLabel
       Left = 10
-      Top = 3
+      Top = 7
       Caption = 'Sobra:'
       Enabled = False
       TabOrder = 3
