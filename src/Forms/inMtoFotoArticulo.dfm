@@ -1,10 +1,10 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
+  BorderIcons = [biSystemMenu]
   Caption = 'Foto del art'#237'culo / SKU'
   ClientHeight = 600
   ClientWidth = 720
   FormStyle = fsStayOnTop
   Position = poDesigned
-  KeyPreview = True
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnDestroy = FormDestroy
@@ -21,6 +21,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 718
     object btnToggle: TcxButton
       Left = 4
       Top = 4
@@ -35,8 +36,8 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Top = 8
       Caption = 'Sin foto'
       Properties.WordWrap = True
-      Width = 572
-      AnchorY = 16
+      TabOrder = 1
+      Width = 69
     end
   end
   object pnlControles: TPanel [1]
@@ -48,6 +49,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     BevelOuter = bvNone
     TabOrder = 1
     Visible = False
+    ExplicitWidth = 718
     object rgResolucion: TcxRadioGroup
       Left = 8
       Top = 4
@@ -77,7 +79,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Left = 380
       Top = 4
       Caption = 'Nivel al que aplica el cambio:'
-      Width = 332
+      TabOrder = 7
     end
     object cbbNivelSku: TcxComboBox
       Left = 380
@@ -140,6 +142,8 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 2
+    ExplicitWidth = 718
+    ExplicitHeight = 374
     object imgFoto: TImage
       Left = 1
       Top = 1
@@ -151,17 +155,15 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Stretch = True
     end
   end
+  inherited Localizer1: TcxLocalizer
+    Left = 624
+  end
   object dlgAbrirFoto: TOpenDialog
-    Filter =
-      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|' +
-      'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|BMP|*.bmp|' +
-      'Todos|*.*'
+    Filter = 
+      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|PNG|*.png|JPG|*.j' +
+      'pg;*.jpeg|GIF|*.gif|WebP|*.webp|BMP|*.bmp|Todos|*.*'
     Title = 'Seleccionar foto'
     Left = 624
     Top = 16
-  end
-  inherited Localizer1: TcxLocalizer
-    Left = 624
-    Top = 80
   end
 end
