@@ -487,15 +487,18 @@ begin
   inherited;
   bGuardar := False;
   formulario := TfrmModalGenImpSave.Create(Self);
-  formulario.edtNombreOrigen.Text := Self.Name;
-  formulario.edtDescripcion.Text := 'Reset Grids';
-  formulario.ShowModal;
-  if (formulario.sFicha = 'S') then
-  begin
-    bGuardar := True;
-    sPermisos := formulario.cbbPermisos.Text;
+  try
+    formulario.edtNombreOrigen.Text := Self.Name;
+    formulario.edtDescripcion.Text := 'Reset Grids';
+    formulario.ShowModal;
+    if (formulario.sFicha = 'S') then
+    begin
+      bGuardar := True;
+      sPermisos := formulario.cbbPermisos.Text;
+    end;
+  finally
+    FreeAndNil(formulario);
   end;
-  FreeAndNil(formulario);
   if bGuardar then
   begin
     for i:= 0 to Self.Componentcount - 1 do

@@ -107,8 +107,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   object tmr1: TTimer
     Interval = 10000
     OnTimer = tmr1Timer
-    Left = 992
-    Top = 136
+    Left = 72
+    Top = 240
   end
   object StyleRepository1: TcxStyleRepository
     Left = 400
@@ -1350,18 +1350,23 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuCajaPagosHist: TMenuItem
         Caption = 'Hist'#243'rico de Pagos de Caja'
-        ShortCut = 49232
+        ShortCut = 24656
         OnClick = mnuCajaPagosHistClick
       end
       object mnuCajaValesHist: TMenuItem
         Caption = 'Hist'#243'rico de Vales'
-        ShortCut = 49228
+        ShortCut = 24662
         OnClick = mnuCajaValesHistClick
       end
       object mnuCajaOperacionesHist: TMenuItem
         Caption = 'Hist'#243'rico de Operaciones'
-        ShortCut = 49231
+        ShortCut = 24655
         OnClick = mnuCajaOperacionesHistClick
+      end
+      object mnuFacturasSimplif: TMenuItem
+        Caption = 'Facturas Simplificadas'
+        ShortCut = 24646
+        OnClick = mnuFacturasSimplifClick
       end
     end
     object mnuAlmacen: TMenuItem
@@ -2906,7 +2911,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     NativeStyle = False
     SkinName = 'Office2019Colorful'
     FormCorners = fcRounded
-    Left = 560
-    Top = 296
+    Left = 400
+    Top = 216
   end
 end

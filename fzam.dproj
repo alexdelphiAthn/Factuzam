@@ -169,8 +169,14 @@
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoFacturas.pas">
-            <Form>frmMtoFacturas</Form>
+        <DCCReference Include="src\Forms\inMtoFacturasBase.pas">
+            <Form>frmMtoFacturasBase</Form>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasNormal.pas">
+            <Form>frmMtoFacturasNormal</Form>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasSimplif.pas">
+            <Form>frmMtoFacturasSimplif</Form>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoArticulos.pas">
             <Form>frmMtoArticulos</Form>
@@ -399,6 +405,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
+        <DCCReference Include="src\Lib\inLibArqueo.pas"/>
+        <DCCReference Include="src\Lib\inLibArqueoTicket.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalArqueo.pas">
+            <Form>frmModalArqueo</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlparser.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlscanner.pas"/>

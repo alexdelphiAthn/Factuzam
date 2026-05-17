@@ -86,8 +86,13 @@ Columnas relevantes (todas las monetarias `decimal(19,6)`):
 
 Todo se calcula en `TArqueoCalculadora.Calcular`, una única clase con queries
 parametrizadas (`oConn`, empresa, almacén, caja, fecha desde, fecha hasta).
-Filtros siempre por `FECHA_OP_DIA_OPCAJA BETWEEN :desde AND :hasta` y el
-contexto Empresa+Almacén+Caja del menú.
+Filtros siempre por `FECHA_OPERACION_OPCAJA BETWEEN :desde AND :hasta`
+(datetime, no date) y el contexto Empresa+Almacén+Caja del menú. Las
+fechas del modal son `TcxDateEdit` con `Kind=ckDateTime`; los defaults
+son 00:00:00 para "desde" y 23:59:59 para "hasta" del rango pedido,
+así un arqueo de un día concreto cubre el día entero. Se evita la
+columna `FECHA_OP_DIA_OPCAJA` (que no siempre está poblada en filas
+recién insertadas) usando directamente el datetime de la operación.
 
 | Concepto en la pantalla | Origen |
 |---|---|
@@ -96,12 +101,13 @@ contexto Empresa+Almacén+Caja del menú.
 | Líneas — Descuento | `SUM` de descuentos de línea sobre esas mismas líneas. |
 | Operaciones — Descuentos | Descuento global de cabecera (`TOTAL_BASES_FAC` menos suma de líneas). |
 | Operaciones — Neto | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'VE'`. |
-| Préstamos | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. Es la mercancía comprometida con el cliente (los depósitos del TPV son préstamos contables: la prenda queda apartada y el cliente paga a plazos). |
+| Préstamos / Ventas Préstamos | `SUM(PRECIO_VENTA_DEP × CANTIDAD_PENDIENTE_DEP)` de `fza_depositos_cliente` cuya `FECHA_CREACION_DEP` cae en el rango (no se filtra por `ESTADO_DEP` para que los arqueos pasados sigan reflejando los préstamos que se abrieron entonces aunque hoy estén cerrados). Es el **valor entero de la mercancía comprometida**, no el pendiente. |
+| Devoluciones | `ABS(SUM(IMPORTE_TOTAL_OPCAJA))` con `TIPO_OPERACION_OPCAJA = 'DV'`. Las devoluciones son operaciones con tipo canónico **DV** (no VE negativas). |
 | Cobros — Vales recogidos | `SUM(IMPORTE_REDIMIDO_VL)` de `fza_caja_vales` redimidos en la caja en el rango. |
 | Cobros — Vales emitidos | `SUM(IMPORTE_NOMINAL_VL)` de `fza_caja_vales` emitidos en la caja en el rango. |
-| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` **y `IMPORTE > 0`** (los CB negativos son "consumo de anticipo" cuando se cierra un depósito y se venden contra la venta; no son flujo real de caja, su efecto ya queda en el VE de cierre del depósito). |
+| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` de `fza_caja_operaciones` con `TIPO IN ('CB','DE') AND IMPORTE > 0 AND ID_DEPOSITO_OPCAJA NOT NULL`, dentro del rango. Es el flujo de efectivo entrado como anticipos. Lee de operaciones (no del snapshot de `fza_depositos_cliente.IMPORTE_ANTICIPO_DEP`) para que un arqueo de temporada pasada vea los cobros que se hicieron entonces aunque los depósitos ya estén cerrados hoy. |
 | Pendiente cobro | `Préstamos − Cobros clientes` — saldo que el cliente aún debe entregar para retirar la mercancía. |
-| Ingresos caja | `Neto − Préstamos − Vales recogidos + Vales emitidos + Cobros clientes − Pendiente cobro`. |
+| Ingresos caja | `Efectivo ingresos + Otros ingresos` (= `SaldoRecontar`). Es la suma directa de `fza_caja_pagos.IMPORTE_ENTREGADO_PAGO`. La antigua fórmula compleja (`Neto − Préstamos − VR + VE + CC − Pendiente`) arrastraba los desajustes del flujo real y daba cifras irreales; se sustituye por la suma directa de pagos. |
 | Efectivo ingresos | `SUM(IMPORTE_ENTREGADO_PAGO)` de `fza_caja_pagos` para las formas con `ESABRE_CAJON_FORMA_PAGO_CFP = 'S'` (efectivo, divisas en metálico, lo que se mete en el cajón). |
 | Efectivo entradas / salidas | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA IN ('EC','GC')`. |
 | Efectivo anterior | 0 (solo se rellena cuando se cierre el arqueo anterior y se enlace). |
