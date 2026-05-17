@@ -92,7 +92,7 @@ implementation
 
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
-  System.Generics.Collections, System.Rtti;
+  System.Generics.Collections, System.Rtti, inLibFotos;
 
 {$R *.dfm}
 
@@ -150,7 +150,11 @@ end;
 
 procedure TfrmPrint.AfterReportLoaded;
 begin
-  // Hook para descendientes: re-enlazar DataSets del informe
+  // Hook para descendientes: re-enlazar DataSets del informe.
+  // Aqui ademas sustituimos los TfrxPictureView llamados foto300 /
+  // foto600 / fotoReal por la foto resuelta del par (articulo, sku) que
+  // vive en la banda padre del componente.
+  SustituirFotosEnReport(frxrprt1);
 end;
 
 procedure TfrmPrint.actSalirExecute(Sender: TObject);

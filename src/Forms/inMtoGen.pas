@@ -145,6 +145,10 @@ type
     procedure ResetForm;  virtual;
     procedure AbrirPerfiles(bTabVisible:Boolean);
     procedure CargarPerfilesParticulares; virtual;
+    // Resuelve los codigos ART y SKU del registro activo en `dsTablaG`.
+    // Recorre la lista de alias habituales (CODIGO_ART_*, CODIGO_UNIDAD_*).
+    // Los Mtos que necesiten otra fuente pueden sobreescribirlo.
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); virtual;
   public
     destructor Destroy; override;
   end;
@@ -162,7 +166,8 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     UniDataGen, uGenericIfThen, inMtoPrincipal;
+     UniDataGen, uGenericIfThen, inMtoPrincipal,
+     inMtoFotoArticulo;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -747,6 +752,57 @@ begin
         (dsTablaG.State = dsInsert)) then
       dsTablaG.DataSet.Post;
     key := 0;
+  end;
+  // Ctrl + Alt + F -> Foto del articulo / SKU activo
+  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
+  begin
+    var sArt: string := '';
+    var sSku: string := '';
+    ResolverArtSkuActivo(sArt, sSku);
+    if sArt <> '' then
+      MostrarFotoFlotante(Self, sArt, sSku);
+    Key := 0;
+  end;
+end;
+
+procedure TfrmMtoGen.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
+const
+  cAliasArt: array[0..6] of string = (
+    'CODIGO_ART_ART', 'CODIGO_ART_SKU', 'CODIGO_ART_FAC',
+    'CODIGO_ART_FACLIN', 'CODIGO_ART_PEDLIN', 'CODIGO_ART_ARTTAR',
+    'CODIGO_ARTICULO');
+  cAliasSku: array[0..4] of string = (
+    'CODIGO_UNIDAD_SKU', 'CODIGO_UNIDAD_FAC',
+    'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_PEDLIN',
+    'CODIGO_UNIDAD_ARTTAR');
+var
+  i: Integer;
+  ds: TDataSet;
+  f : TField;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if (dsTablaG = nil) or (dsTablaG.DataSet = nil) or
+     (not dsTablaG.DataSet.Active) or dsTablaG.DataSet.IsEmpty then
+    Exit;
+  ds := dsTablaG.DataSet;
+  for i := Low(cAliasArt) to High(cAliasArt) do
+  begin
+    f := ds.FindField(cAliasArt[i]);
+    if Assigned(f) and (not f.IsNull) then
+    begin
+      ACodArt := f.AsString;
+      Break;
+    end;
+  end;
+  for i := Low(cAliasSku) to High(cAliasSku) do
+  begin
+    f := ds.FindField(cAliasSku[i]);
+    if Assigned(f) and (not f.IsNull) then
+    begin
+      ACodSku := f.AsString;
+      Break;
+    end;
   end;
 end;
 

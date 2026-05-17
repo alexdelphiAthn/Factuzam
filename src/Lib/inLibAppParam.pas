@@ -163,6 +163,8 @@ begin
     'Carpeta de Copias de seguridad', tpString, '');
   RegistrarParametro('Directorios', 'appDirHistoricoCaja',
     'Carpeta de Histórico de Caja', tpString, '');
+  RegistrarParametro('Directorios', 'appDirFotos',
+    'Carpeta de Fotos de Artículos / SKUs', tpString, '');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
