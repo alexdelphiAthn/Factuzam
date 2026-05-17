@@ -36,7 +36,7 @@ uses
   dxSkinOffice2010Blue, dxSkinOffice2010Silver, dxSkinOffice2013DarkGray,
   dxSkinOffice2013LightGray, dxSkinOffice2013White, dxSkinOffice2016Colorful,
   dxSkinOffice2016Dark, dxSkinOffice2019Black, dxSkinOffice2019Colorful,
-  inMtoFacturas,
+  inMtoFacturasBase,
   UniDataFacturas,  dxSkinOffice2019DarkGray, dxSkinOffice2019White,
   dxSkinPumpkin, dxSkinSeven,
   dxSkinSevenClassic, dxSkinSharp, dxSkinSharpPlus, dxSkinSilver,
@@ -94,7 +94,7 @@ var
 begin
   IsError := False;
 
-  VAR ParentForm := TfrmMtoFacturas(Owner);
+  VAR ParentForm := TfrmMtoFacturasBase(Owner);
   with ParentForm.tdmDataModule as TdmFacturas do
   begin
     if chkAbonar.Checked and not IsError then
@@ -169,9 +169,9 @@ end;
 
 procedure TfrmGenFacRec.FormCreate(Sender: TObject);
 begin
- if Owner is TfrmMtoFacturas then
+ if Owner is TfrmMtoFacturasBase then
   begin
-    VAR ParentForm := TfrmMtoFacturas(Owner);
+    VAR ParentForm := TfrmMtoFacturasBase(Owner);
     with ParentForm.tdmDataModule as TdmFacturas do
     begin
       if not unqrySeries.Active then
