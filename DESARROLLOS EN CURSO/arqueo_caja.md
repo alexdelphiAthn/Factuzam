@@ -100,7 +100,7 @@ contexto Empresa+Almacén+Caja del menú.
 | Vta. a crédito | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` y signo negativo (cobros a cuenta pendientes). |
 | Cobros — Vales recogidos | `SUM(IMPORTE_REDIMIDO_VL)` de `fza_caja_vales` redimidos en la caja en el rango. |
 | Cobros — Vales emitidos | `SUM(IMPORTE_NOMINAL_VL)` de `fza_caja_vales` emitidos en la caja en el rango. |
-| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'`. |
+| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` **y `IMPORTE > 0`** (los CB negativos son "consumo de anticipo" cuando se cierra un depósito y se venden contra la venta; no son flujo real de caja, su efecto ya queda en el VE de cierre del depósito). |
 | Pendiente cobro | Diferencia entre lo facturado y lo cobrado (futuro). |
 | Ingresos caja | Bruto operaciones − descuentos − vales recogidos + vales emitidos + cobros clientes − pendiente cobro. |
 | Efectivo ingresos | `SUM(IMPORTE_ENTREGADO_PAGO)` de `fza_caja_pagos` para las formas con `ESABRE_CAJON_FORMA_PAGO_CFP = 'S'` (efectivo, divisas en metálico, lo que se mete en el cajón). |
