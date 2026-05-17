@@ -1,15 +1,11 @@
 inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
-  ClientHeight = 552
+  ClientHeight = 510
   ClientWidth = 880
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitLeft = 3
-  ExplicitTop = 3
-  ExplicitWidth = 896
-  ExplicitHeight = 591
-  TextHeight = 19
+  TextHeight = 17
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
@@ -17,88 +13,92 @@ inherited frmModalArqueo: TfrmModalArqueo
     Height = 70
     Align = alTop
     BevelOuter = bvNone
+    Color = clBtnFace
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 878
     object lblTituloDesde: TcxLabel
       Left = 16
       Top = 6
       Caption = 'Fecha desde'
       Style.TextColor = clNavy
-      TabOrder = 4
       Transparent = True
     end
     object dteFechaDesde: TcxDateEdit
       Left = 16
       Top = 28
-      Properties.OnChange = dteFechaDesdePropertiesChange
       TabOrder = 0
-      Width = 130
+      Width = 170
+      Properties.Kind = ckDateTime
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.OnChange = dteFechaDesdePropertiesChange
     end
     object lblF10: TcxLabel
-      Left = 152
+      Left = 192
       Top = 32
       Caption = 'F10'
+      Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
-      TabOrder = 5
+      Style.IsFontAssigned = True
       Transparent = True
     end
     object lblTituloHasta: TcxLabel
-      Left = 210
+      Left = 250
       Top = 6
       Caption = 'Fecha hasta'
       Style.TextColor = clNavy
-      TabOrder = 6
       Transparent = True
     end
     object dteFechaHasta: TcxDateEdit
-      Left = 210
+      Left = 250
       Top = 28
-      Properties.OnChange = dteFechaHastaPropertiesChange
       TabOrder = 1
-      Width = 130
+      Width = 170
+      Properties.Kind = ckDateTime
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.OnChange = dteFechaHastaPropertiesChange
     end
     object lblF6: TcxLabel
-      Left = 346
+      Left = 426
       Top = 32
       Caption = 'F6'
+      Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
-      TabOrder = 7
+      Style.IsFontAssigned = True
       Transparent = True
     end
     object lblTituloVentas: TcxLabel
-      Left = 430
+      Left = 480
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
-      TabOrder = 8
       Transparent = True
     end
     object lblVentas: TcxLabel
-      Left = 430
+      Left = 480
       Top = 28
       AutoSize = False
       Caption = '0'
+      Style.Font.Height = -19
+      Style.Font.Style = [fsBold]
+      Style.IsFontAssigned = True
       Properties.Alignment.Horz = taRightJustify
-      TabOrder = 9
-      Transparent = True
       Height = 28
       Width = 90
-      AnchorX = 520
+      Transparent = True
     end
     object btnRecalcular: TcxButton
-      Left = 540
+      Left = 580
       Top = 22
-      Width = 150
+      Width = 140
       Height = 35
       Caption = 'Recalcular (F5)'
       TabOrder = 2
       OnClick = btnRecalcularClick
     end
     object btnImprimir: TcxButton
-      Left = 700
+      Left = 728
       Top = 22
-      Width = 160
+      Width = 144
       Height = 35
       Caption = 'Imprimir (F11)'
       TabOrder = 3
@@ -109,431 +109,416 @@ inherited frmModalArqueo: TfrmModalArqueo
     Left = 0
     Top = 70
     Width = 880
-    Height = 432
+    Height = 390
     Align = alClient
     BevelOuter = bvNone
+    Color = clBtnFace
     ParentBackground = False
     TabOrder = 1
-    ExplicitWidth = 878
-    ExplicitHeight = 382
     object pcArqueo: TcxPageControl
       Left = 0
       Top = 0
       Width = 880
-      Height = 432
+      Height = 390
       Align = alClient
       TabOrder = 0
       Properties.ActivePage = tsArqueo
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 878
-      ExplicitHeight = 382
-      ClientRectBottom = 430
-      ClientRectLeft = 2
-      ClientRectRight = 878
-      ClientRectTop = 29
+      ClientRectBottom = 386
+      ClientRectRight = 876
+      ClientRectTop = 28
       object tsArqueo: TcxTabSheet
         Caption = 'Arqueo'
-        ExplicitWidth = 874
-        ExplicitHeight = 351
         object pnlLineas: TPanel
           Left = 8
           Top = 8
           Width = 360
-          Height = 157
+          Height = 130
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 0
           object lblLineasTitulo: TcxLabel
             Left = 10
             Top = 6
             Caption = 'L'#237'neas art'#237'culos'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 0
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblLinBrutoLbl: TcxLabel
             Left = 16
             Top = 34
             Caption = '+ Bruto'
-            TabOrder = 1
             Transparent = True
           end
           object lblLinBruto: TcxLabel
             Left = 190
             Top = 34
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 2
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblLinDescuentoLbl: TcxLabel
             Left = 16
             Top = 60
             Caption = '- Descuento'
-            TabOrder = 3
             Transparent = True
           end
           object lblLinDescuento: TcxLabel
             Left = 190
             Top = 60
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 4
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblLinNetoLbl: TcxLabel
             Left = 16
             Top = 92
             Caption = '= Bruto'
-            TabOrder = 5
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblLinNeto: TcxLabel
             Left = 190
             Top = 92
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 6
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
         end
         object pnlOperaciones: TPanel
           Left = 376
           Top = 8
-          Width = 497
-          Height = 157
+          Width = 496
+          Height = 130
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 1
           object lblOpeTitulo: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Operaciones'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 0
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblOpeVentasNormLbl: TcxLabel
             Left = 16
             Top = 30
             Caption = 'Ventas Normales'
-            TabOrder = 1
             Transparent = True
           end
           object lblOpeVentasNorm: TcxLabel
             Left = 175
             Top = 30
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 2
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 325
+            Transparent = True
           end
           object lblOpeVentasPrestLbl: TcxLabel
             Left = 16
             Top = 54
             Caption = '+ Ventas Pr'#233'stamos'
-            TabOrder = 3
             Transparent = True
           end
           object lblOpeVentasPrest: TcxLabel
             Left = 175
             Top = 54
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 4
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 325
+            Transparent = True
           end
           object lblOpeDevolLbl: TcxLabel
             Left = 16
             Top = 78
             Caption = #8722' Devoluciones'
-            TabOrder = 5
             Transparent = True
           end
           object lblOpeDevol: TcxLabel
             Left = 175
             Top = 78
             AutoSize = False
+            Caption = ''
             Style.TextColor = clRed
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 6
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 325
+            Transparent = True
           end
           object lblOpeTotalVentasLbl: TcxLabel
             Left = 16
             Top = 102
             Caption = '= Total Ventas'
-            TabOrder = 7
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblOpeTotalVentas: TcxLabel
             Left = 175
             Top = 102
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 8
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 325
+            Transparent = True
           end
         end
         object pnlCobros: TPanel
-          Left = 0
-          Top = 171
-          Width = 876
+          Left = 8
+          Top = 146
+          Width = 864
           Height = 230
-          Align = alBottom
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 2
-          ExplicitLeft = 8
-          ExplicitTop = 146
-          ExplicitWidth = 864
           object lblCobrosTitulo: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Cobros'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 0
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblCobValesRecLbl: TcxLabel
             Left = 16
             Top = 34
             Caption = '- Vales recogidos'
-            TabOrder = 1
             Transparent = True
           end
           object lblCobValesRec: TcxLabel
             Left = 190
             Top = 34
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 2
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblCobValesEmiLbl: TcxLabel
             Left = 16
             Top = 60
             Caption = '+ Vales emitidos'
-            TabOrder = 3
             Transparent = True
           end
           object lblCobValesEmi: TcxLabel
             Left = 190
             Top = 60
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 4
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblCobClientesLbl: TcxLabel
             Left = 16
             Top = 86
             Caption = '+ Cobros clientes'
-            TabOrder = 5
             Transparent = True
           end
           object lblCobClientes: TcxLabel
             Left = 190
             Top = 86
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 6
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblCobPendienteLbl: TcxLabel
             Left = 16
             Top = 112
             Caption = '- Pendiente cobro'
-            TabOrder = 7
             Transparent = True
           end
           object lblCobPendiente: TcxLabel
             Left = 190
             Top = 112
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 8
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblCobIngresosLbl: TcxLabel
             Left = 16
             Top = 144
             Caption = '= Ingresos caja'
-            TabOrder = 9
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblCobIngresos: TcxLabel
             Left = 190
             Top = 144
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 10
-            Transparent = True
             Height = 21
             Width = 150
-            AnchorX = 340
+            Transparent = True
           end
           object lblEftIngresosLbl: TcxLabel
             Left = 400
             Top = 34
             Caption = 'Eftvo. ingresos'
-            TabOrder = 11
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblEftIngresos: TcxLabel
             Left = 690
             Top = 34
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 12
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblEftEntradasLbl: TcxLabel
             Left = 400
             Top = 60
             Caption = '+ Efectivo entradas'
-            TabOrder = 13
             Transparent = True
           end
           object lblEftEntradas: TcxLabel
             Left = 690
             Top = 60
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 14
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblEftSalidasLbl: TcxLabel
             Left = 400
             Top = 86
             Caption = '- Efectivo salidas'
-            TabOrder = 15
             Transparent = True
           end
           object lblEftSalidas: TcxLabel
             Left = 690
             Top = 86
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 16
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblEftAnteriorLbl: TcxLabel
             Left = 400
             Top = 112
             Caption = '+ Efectivo anterior'
-            TabOrder = 17
             Transparent = True
           end
           object lblEftAnterior: TcxLabel
             Left = 690
             Top = 112
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 18
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblEftCajaLbl: TcxLabel
             Left = 400
             Top = 138
             Caption = '= Efectivo en caja'
-            TabOrder = 19
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblEftCaja: TcxLabel
             Left = 690
             Top = 138
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 20
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblTarjetasLbl: TcxLabel
             Left = 400
             Top = 164
             Caption = '+ Otros (tarj, bonos, divisa, cripto)'
-            TabOrder = 21
             Transparent = True
           end
           object lblTarjetas: TcxLabel
             Left = 690
             Top = 164
             AutoSize = False
+            Caption = ''
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 22
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
           object lblSaldoLbl: TcxLabel
             Left = 400
             Top = 196
             Caption = '= Saldo efectivo + otros (a recontar)'
-            TabOrder = 23
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object lblSaldo: TcxLabel
             Left = 690
             Top = 196
             AutoSize = False
+            Caption = ''
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 24
-            Transparent = True
             Height = 21
             Width = 160
-            AnchorX = 850
+            Transparent = True
           end
         end
       end
@@ -546,14 +531,16 @@ inherited frmModalArqueo: TfrmModalArqueo
           Height = 170
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 0
           object lblResEmpleadoTit: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Neto ventas por empleado'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 1
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object cxgrdResEmpleado: TcxGrid
@@ -563,7 +550,11 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 130
             TabOrder = 0
             object tvResEmpleado: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
               DataController.DataSource = dsResEmpleado
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
               OptionsBehavior.IncSearch = True
               OptionsView.GroupByBox = False
               object tvResEmpleadoEMP: TcxGridDBColumn
@@ -595,14 +586,16 @@ inherited frmModalArqueo: TfrmModalArqueo
           Height = 170
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 1
           object lblResFPTit: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Neto ventas por forma de pago'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 1
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object cxgrdResFP: TcxGrid
@@ -612,7 +605,11 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 130
             TabOrder = 0
             object tvResFP: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
               DataController.DataSource = dsResFP
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
               OptionsBehavior.IncSearch = True
               OptionsView.GroupByBox = False
               object tvResFPFP: TcxGridDBColumn
@@ -644,14 +641,16 @@ inherited frmModalArqueo: TfrmModalArqueo
           Height = 170
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 2
           object lblResFamTit: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Neto ventas por familia'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 1
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object cxgrdResFam: TcxGrid
@@ -661,7 +660,11 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 130
             TabOrder = 0
             object tvResFam: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
               DataController.DataSource = dsResFam
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
               OptionsBehavior.IncSearch = True
               OptionsView.GroupByBox = False
               object tvResFamFAM: TcxGridDBColumn
@@ -693,14 +696,16 @@ inherited frmModalArqueo: TfrmModalArqueo
           Height = 170
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 3
           object lblResPropTit: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Neto ventas por propiedad'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 1
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object cxgrdResProp: TcxGrid
@@ -710,7 +715,11 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 130
             TabOrder = 0
             object tvResProp: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
               DataController.DataSource = dsResProp
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
               OptionsBehavior.IncSearch = True
               OptionsView.GroupByBox = False
               object tvResPropPROP: TcxGridDBColumn
@@ -750,14 +759,16 @@ inherited frmModalArqueo: TfrmModalArqueo
           Height = 250
           BevelInner = bvLowered
           BevelOuter = bvNone
+          Color = clBtnFace
           ParentBackground = False
           TabOrder = 0
           object lblResIVATit: TcxLabel
             Left = 10
             Top = 6
             Caption = 'Resumen por IVA'
+            Style.Font.Style = [fsBold]
             Style.TextColor = clNavy
-            TabOrder = 1
+            Style.IsFontAssigned = True
             Transparent = True
           end
           object cxgrdResIVA: TcxGrid
@@ -767,7 +778,11 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 210
             TabOrder = 0
             object tvResIVA: TcxGridDBTableView
+              Navigator.Buttons.CustomButtons = <>
               DataController.DataSource = dsResIVA
+              DataController.Summary.DefaultGroupSummaryItems = <>
+              DataController.Summary.FooterSummaryItems = <>
+              DataController.Summary.SummaryGroups = <>
               OptionsView.GroupByBox = False
               object tvResIVABASE: TcxGridDBColumn
                 Caption = 'Bases'
@@ -814,21 +829,21 @@ inherited frmModalArqueo: TfrmModalArqueo
   end
   object pnlBottom: TPanel [2]
     Left = 0
-    Top = 502
+    Top = 460
     Width = 880
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
+    Color = clBtnFace
     ParentBackground = False
     TabOrder = 2
-    ExplicitTop = 452
-    ExplicitWidth = 878
     object lblESC: TcxLabel
       Left = 600
       Top = 14
       Caption = 'ESC'
+      Style.Font.Style = [fsBold]
       Style.TextColor = clBlue
-      TabOrder = 1
+      Style.IsFontAssigned = True
       Transparent = True
     end
     object btnAtras: TcxButton
@@ -874,31 +889,26 @@ inherited frmModalArqueo: TfrmModalArqueo
         DataType = ftString
         Name = 'pEMPRESA'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pALMACEN'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pCAJA'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
-        Value = nil
       end>
   end
   object dsResFP: TDataSource
@@ -914,31 +924,26 @@ inherited frmModalArqueo: TfrmModalArqueo
         DataType = ftString
         Name = 'pEMPRESA'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pALMACEN'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pCAJA'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
-        Value = nil
       end>
   end
   object dsResFam: TDataSource
@@ -954,31 +959,26 @@ inherited frmModalArqueo: TfrmModalArqueo
         DataType = ftString
         Name = 'pEMPRESA'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pALMACEN'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pCAJA'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
-        Value = nil
       end>
   end
   object dsResProp: TDataSource
@@ -994,31 +994,26 @@ inherited frmModalArqueo: TfrmModalArqueo
         DataType = ftString
         Name = 'pEMPRESA'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pALMACEN'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pCAJA'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
-        Value = nil
       end>
   end
   object dsResIVA: TDataSource
@@ -1034,31 +1029,26 @@ inherited frmModalArqueo: TfrmModalArqueo
         DataType = ftString
         Name = 'pEMPRESA'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pALMACEN'
         ParamType = ptInput
-        Value = nil
       end
       item
         DataType = ftString
         Name = 'pCAJA'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
-        Value = nil
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
-        Value = nil
       end>
   end
 end

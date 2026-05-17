@@ -86,8 +86,13 @@ Columnas relevantes (todas las monetarias `decimal(19,6)`):
 
 Todo se calcula en `TArqueoCalculadora.Calcular`, una única clase con queries
 parametrizadas (`oConn`, empresa, almacén, caja, fecha desde, fecha hasta).
-Filtros siempre por `FECHA_OP_DIA_OPCAJA BETWEEN :desde AND :hasta` y el
-contexto Empresa+Almacén+Caja del menú.
+Filtros siempre por `FECHA_OPERACION_OPCAJA BETWEEN :desde AND :hasta`
+(datetime, no date) y el contexto Empresa+Almacén+Caja del menú. Las
+fechas del modal son `TcxDateEdit` con `Kind=ckDateTime`; los defaults
+son 00:00:00 para "desde" y 23:59:59 para "hasta" del rango pedido,
+así un arqueo de un día concreto cubre el día entero. Se evita la
+columna `FECHA_OP_DIA_OPCAJA` (que no siempre está poblada en filas
+recién insertadas) usando directamente el datetime de la operación.
 
 | Concepto en la pantalla | Origen |
 |---|---|
