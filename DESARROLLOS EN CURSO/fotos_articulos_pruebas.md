@@ -96,7 +96,11 @@ la pestaña **SKUs** y posiciónate en cualquier SKU,
 p.ej. `BLUS-SEDA/BLANCO/L`.
 
 **2.2** `Ctrl + Alt + F`. Etiqueta: *Sin foto para BLUS-SEDA /
-BLUS-SEDA/BLANCO/L*.
+BLUS-SEDA/BLANCO/L*. El combo **Nivel al que aplica el cambio** debe
+mostrar dos opciones:
+
+- `BLUS-SEDA/BLANCO/L` (seleccionada por defecto, SKU completo)
+- `BLUS-SEDA/BLANCO`   (prefijo de grupo)
 
 **2.3** Pulsa **Cambiar foto del artículo** y elige una imagen. Tras
 guardar, la etiqueta debe decir *Foto heredada del artículo: BLUS-SEDA*
@@ -104,10 +108,12 @@ guardar, la etiqueta debe decir *Foto heredada del artículo: BLUS-SEDA*
 
 **2.4** Vuelve a `Ctrl + Alt + F` estando en otro SKU del mismo artículo
 (`BLUS-SEDA/NEGRO/M`). Debe mostrarse **la misma foto** y etiqueta
-*Foto heredada del artículo: BLUS-SEDA*. **← fallback funcionando.**
+*Foto heredada del artículo: BLUS-SEDA*. **← fallback artículo
+funcionando.**
 
-**2.5** Estando en `BLUS-SEDA/NEGRO/M`, pulsa **Cambiar foto del SKU** y
-elige una imagen distinta. La etiqueta debe pasar a
+**2.5** Estando en `BLUS-SEDA/NEGRO/M`, deja el combo en la opción del
+SKU completo (`BLUS-SEDA/NEGRO/M`), pulsa **Cambiar foto del SKU /
+grupo** y elige una imagen distinta. La etiqueta debe pasar a
 *Foto del SKU: BLUS-SEDA/NEGRO/M*.
 
 **2.6** En disco:
@@ -119,6 +125,64 @@ real/BLUS-SEDA_NEGRO_M_001.jpg         la del SKU, '/' saneado a '_'
 
 **2.7** Cambia a otro SKU sin foto propia (`BLUS-SEDA/ROSA/M`) y
 `Ctrl + Alt + F`: debe heredar la del artículo, no la de `NEGRO/M`.
+
+---
+
+## 2bis. Foto por prefijo de SKU (grupo)
+
+Permite asignar una foto a TODOS los SKUs que compartan un prefijo
+(típicamente un color, talla agrupada, etc.). El resolver elige siempre
+la coincidencia más específica.
+
+**2bis.1** Sitúate en `BLUS-SEDA/BLANCO/L`. `Ctrl + Alt + F`.
+
+**2bis.2** En el combo **Nivel al que aplica el cambio**, selecciona
+`BLUS-SEDA/BLANCO` (la opción del prefijo). Pulsa **Cambiar foto del
+SKU / grupo** y elige una imagen distinta de las anteriores.
+
+**2bis.3** Verifica:
+
+```sql
+SELECT CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT
+  FROM fza_articulos_fotos
+ WHERE CODIGO_ART_FOT='BLUS-SEDA';
+```
+
+Debe haber una fila con `CODIGO_UNIDAD_FOT = 'BLUS-SEDA/BLANCO'`.
+
+**2bis.4** Sin cerrar la pantalla, en el Mto navega a otro SKU
+**del mismo grupo BLANCO**, p.ej. `BLUS-SEDA/BLANCO/M`. La pantalla
+flotante debe **auto-refrescarse** y mostrar la foto del prefijo con
+etiqueta *Foto heredada del grupo: BLUS-SEDA/BLANCO*.
+
+**2bis.5** Navega ahora a un SKU de otro color, p.ej. `BLUS-SEDA/NEGRO/M`
+(el que tiene foto propia del paso 2.5). Debe mostrar **su foto
+propia** (etiqueta *Foto del SKU: BLUS-SEDA/NEGRO/M*), porque la
+coincidencia exacta gana frente al prefijo.
+
+**2bis.6** Navega a `BLUS-SEDA/ROSA/M` (sin foto propia, sin foto de
+grupo ROSA): debe mostrar la del artículo, no la de BLANCO.
+
+**2bis.7** Cambia el combo a `BLUS-SEDA/BLANCO/L` (vuelve al SKU
+completo) y pulsa **Quitar foto** desde un SKU del grupo BLANCO. Debe
+borrarse la fila del **grupo** (porque era la que estaba resolviendo)
+y los SKUs del grupo BLANCO deben volver a heredar la del artículo.
+
+---
+
+## 2ter. Auto-refresh al navegar
+
+**2ter.1** Con la pantalla flotante abierta sobre el Mto de Artículos,
+sin cerrarla, navega por la lista de artículos (flechas, click).
+La foto debe **cambiar automáticamente** sin tener que volver a pulsar
+Ctrl + Alt + F. La etiqueta también se actualiza.
+
+**2ter.2** Para artículos sin foto registrada: la etiqueta debe pasar a
+*Sin foto para …* y el panel quedar en blanco.
+
+**2ter.3** Cierra y vuelve a abrir el Mto. Verifica que tu `OnDataChange`
+local sigue funcionando (la pantalla restaura el handler previo al
+desengancharse).
 
 ---
 
