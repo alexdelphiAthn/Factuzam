@@ -27,11 +27,13 @@ inherited frmModalArqueo: TfrmModalArqueo
       Left = 16
       Top = 28
       TabOrder = 0
-      Width = 130
+      Width = 170
+      Properties.Kind = ckDateTime
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.OnChange = dteFechaDesdePropertiesChange
     end
     object lblF10: TcxLabel
-      Left = 152
+      Left = 192
       Top = 32
       Caption = 'F10'
       Style.Font.Style = [fsBold]
@@ -40,21 +42,23 @@ inherited frmModalArqueo: TfrmModalArqueo
       Transparent = True
     end
     object lblTituloHasta: TcxLabel
-      Left = 210
+      Left = 250
       Top = 6
       Caption = 'Fecha hasta'
       Style.TextColor = clNavy
       Transparent = True
     end
     object dteFechaHasta: TcxDateEdit
-      Left = 210
+      Left = 250
       Top = 28
       TabOrder = 1
-      Width = 130
+      Width = 170
+      Properties.Kind = ckDateTime
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.OnChange = dteFechaHastaPropertiesChange
     end
     object lblF6: TcxLabel
-      Left = 346
+      Left = 426
       Top = 32
       Caption = 'F6'
       Style.Font.Style = [fsBold]
@@ -63,14 +67,14 @@ inherited frmModalArqueo: TfrmModalArqueo
       Transparent = True
     end
     object lblTituloVentas: TcxLabel
-      Left = 430
+      Left = 480
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
       Transparent = True
     end
     object lblVentas: TcxLabel
-      Left = 430
+      Left = 480
       Top = 28
       AutoSize = False
       Caption = '0'
@@ -83,18 +87,18 @@ inherited frmModalArqueo: TfrmModalArqueo
       Transparent = True
     end
     object btnRecalcular: TcxButton
-      Left = 540
+      Left = 580
       Top = 22
-      Width = 150
+      Width = 140
       Height = 35
       Caption = 'Recalcular (F5)'
       TabOrder = 2
       OnClick = btnRecalcularClick
     end
     object btnImprimir: TcxButton
-      Left = 700
+      Left = 728
       Top = 22
-      Width = 160
+      Width = 144
       Height = 35
       Caption = 'Imprimir (F11)'
       TabOrder = 3
@@ -897,12 +901,12 @@ inherited frmModalArqueo: TfrmModalArqueo
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
       end>
@@ -932,12 +936,12 @@ inherited frmModalArqueo: TfrmModalArqueo
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
       end>
@@ -967,12 +971,12 @@ inherited frmModalArqueo: TfrmModalArqueo
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
       end>
@@ -1002,12 +1006,12 @@ inherited frmModalArqueo: TfrmModalArqueo
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
       end>
@@ -1037,12 +1041,12 @@ inherited frmModalArqueo: TfrmModalArqueo
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFDESDE'
         ParamType = ptInput
       end
       item
-        DataType = ftDate
+        DataType = ftDateTime
         Name = 'pFHASTA'
         ParamType = ptInput
       end>
