@@ -33,11 +33,15 @@ uses
 const
   // Tipos de operación en fza_caja_operaciones.TIPO_OPERACION_OPCAJA
   TipoOpVenta         = 'VE';
+  TipoOpDevolucion    = 'DV';
   TipoOpCobroCuenta   = 'CB';
   TipoOpEntradaCambio = 'EC';
   TipoOpGastoCaja     = 'GC';
   TipoOpDeposito      = 'DE';
   TipoOpValeRedimido  = 'VR';
+
+  // Estado de depósito (fza_depositos_cliente.ESTADO_DEP)
+  EstadoDepositoAbierto = 'PENDIENTE';
 
 type
   TArqueoPagoForma = record
@@ -245,18 +249,20 @@ class procedure TArqueoCalculadora.CalcularOperaciones(AConn: TUniConnection;
 var
   Query: TUniQuery;
 begin
-  // Neto = importe total de las operaciones de venta (signed: incluye
-  // devoluciones como VE < 0). Las ventas se desglosan luego en:
-  //   - VentasNormales = VE > 0 sin DE en la misma operación
-  //   - Devoluciones   = ABS(VE < 0) (devoluciones a cliente)
-  //   - VentasPrestamos = Prestamos − CobrosClientes (en CalcularDerivados)
-  //
-  // Cobros: 'CB' agrupa dos cosas, "cobro a cuenta" positivo (cliente entrega
-  // anticipo, efectivo real entrando a caja) y "consumo de anticipo" negativo
-  // (al cerrar un depósito y vender, el saldo de anticipo previo se gasta
-  // contra la venta; no hay movimiento físico). Para el arqueo solo cuentan
-  // los positivos: el efecto del consumo ya queda recogido en la VE de cierre
-  // del depósito.
+  // Esquema de cálculo (post-fix A+B+C+D1):
+  //   - Neto              = SUM IMPORTE_TOTAL_OPCAJA WHERE TIPO='VE' (signed,
+  //                         se mantiene como cifra interna).
+  //   - VentasNormales    = VE > 0 sin DE en la misma operación.
+  //   - Devoluciones      = ABS(SUM TIPO='DV')  ← canónico, no VE < 0.
+  //   - Préstamos         = −SUM(DE)            ← negado para ser positivo:
+  //                         representa la mercancía comprometida bruta. Los
+  //                         cierres en BBDD se guardan como DE negativo,
+  //                         negar nos da la magnitud.
+  //   - CobrosClientes    = SUM(CB > 0) RESTRINGIDO a depósitos que aún
+  //                         siguen abiertos (ESTADO_DEP='PENDIENTE'). Si el
+  //                         depósito ya cerró en el período, su anticipo ya
+  //                         está cubierto por la VE de cierre y no debe
+  //                         contarse como "cobro pendiente".
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;
@@ -286,14 +292,18 @@ begin
       '                  ELSE 0                                               ' +
       '                END), 0)                              AS V_NORMALES,   ' +
       '   ABS(COALESCE(SUM(CASE                                               ' +
-      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_VE             ' +
-      '                   AND o.IMPORTE_TOTAL_OPCAJA < 0                      ' +
+      '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_DV             ' +
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
       '                END), 0))                             AS V_DEVOL,      ' +
       '   COALESCE(SUM(CASE                                                   ' +
       '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_CB             ' +
       '                   AND o.IMPORTE_TOTAL_OPCAJA > 0                      ' +
+      '                   AND EXISTS                                          ' +
+      '                       (SELECT 1 FROM fza_depositos_cliente d          ' +
+      '                         WHERE d.ID_DEPOSITO_DEP                       ' +
+      '                                  = o.ID_DEPOSITO_OPCAJA               ' +
+      '                           AND d.ESTADO_DEP = :pEST_DEP_OK)            ' +
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
       '                END), 0)                              AS COBROS,       ' +
@@ -307,7 +317,7 @@ begin
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
       '                END), 0)                              AS SALIDAS,      ' +
-      '   COALESCE(SUM(CASE                                                   ' +
+      '   -COALESCE(SUM(CASE                                                  ' +
       '                  WHEN o.TIPO_OPERACION_OPCAJA = :pTIPO_DE             ' +
       '                  THEN o.IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                               ' +
@@ -318,16 +328,18 @@ begin
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
       '    AND o.FECHA_OP_DIA_OPCAJA   >= :pFDESDE                            ' +
       '    AND o.FECHA_OP_DIA_OPCAJA   <= :pFHASTA                            ';
-    Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
-    Query.ParamByName('pTIPO_CB').AsString  := TipoOpCobroCuenta;
-    Query.ParamByName('pTIPO_EC').AsString  := TipoOpEntradaCambio;
-    Query.ParamByName('pTIPO_GC').AsString  := TipoOpGastoCaja;
-    Query.ParamByName('pTIPO_DE').AsString  := TipoOpDeposito;
-    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
-    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
-    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDate     := AArqueo.FechaDesde;
-    Query.ParamByName('pFHASTA').AsDate     := AArqueo.FechaHasta;
+    Query.ParamByName('pTIPO_VE').AsString    := TipoOpVenta;
+    Query.ParamByName('pTIPO_DV').AsString    := TipoOpDevolucion;
+    Query.ParamByName('pTIPO_CB').AsString    := TipoOpCobroCuenta;
+    Query.ParamByName('pTIPO_EC').AsString    := TipoOpEntradaCambio;
+    Query.ParamByName('pTIPO_GC').AsString    := TipoOpGastoCaja;
+    Query.ParamByName('pTIPO_DE').AsString    := TipoOpDeposito;
+    Query.ParamByName('pEST_DEP_OK').AsString := EstadoDepositoAbierto;
+    Query.ParamByName('pEMPRESA').AsString    := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString    := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString       := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDate       := AArqueo.FechaDesde;
+    Query.ParamByName('pFHASTA').AsDate       := AArqueo.FechaHasta;
     Query.Open;
     if not Query.Eof then
     begin
@@ -479,31 +491,18 @@ end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
 begin
-  // Ventas a préstamo = depósitos (compromiso de mercancía) menos lo que el
-  // cliente ya ha ido entregando como anticipo. Misma definición que la del
-  // antiguo "Pendiente de cobro".
+  // Ventas a préstamo (= "Pendiente de cobro"): mercancía comprometida (en
+  // depósitos abiertos) menos lo que el cliente ya ha entregado como
+  // anticipo. Con Préstamos y CobrosClientes positivos (fix B y D1) la
+  // cifra es interpretable y suele ser positiva.
   AArqueo.VentasPrestamos := AArqueo.Prestamos - AArqueo.CobrosClientes;
+  AArqueo.PendienteCobro  := AArqueo.VentasPrestamos;
 
   // Total Ventas = ventas normales + ventas a préstamo − devoluciones.
   AArqueo.TotalVentas :=
       AArqueo.VentasNormales
     + AArqueo.VentasPrestamos
     - AArqueo.Devoluciones;
-
-  // Pendiente de cobro: lo mismo que VentasPrestamos para que la sección
-  // Cobros lo refleje también (se puede mover/quitar cuando el diseño se
-  // estabilice).
-  AArqueo.PendienteCobro := AArqueo.VentasPrestamos;
-
-  // Cobros — Ingresos caja: neto operaciones − préstamos − vales recogidos
-  //                         + vales emitidos + cobros clientes − pendiente
-  AArqueo.IngresosCaja :=
-      AArqueo.Neto
-    - AArqueo.Prestamos
-    - AArqueo.ValesRecogidos
-    + AArqueo.ValesEmitidos
-    + AArqueo.CobrosClientes
-    - AArqueo.PendienteCobro;
 
   // Efectivo en caja: efectivo ingresos + entradas − salidas + anterior
   AArqueo.EfectivoCaja :=
@@ -515,6 +514,14 @@ begin
   // Saldo a recontar: efectivo en caja + ingresos por formas no-caja
   // (tarjetas, bonos, divisa, cripto...).
   AArqueo.SaldoRecontar := AArqueo.EfectivoCaja + AArqueo.OtrosIngresos;
+
+  // Ingresos caja: en este primer paso lo unificamos con SaldoRecontar
+  // (fix C). La fórmula teórica "Neto − Prestamos − VR + VE + CC − Pendiente"
+  // arrastra los desajustes del flujo de caja real (consumos de anticipo,
+  // tipos DV vs VE…) y daba cifras irreales. La suma directa de los pagos
+  // entregados (fza_caja_pagos) es la única cifra fiable hasta que se
+  // implemente el cuadre cruzado con F5 Recuento.
+  AArqueo.IngresosCaja := AArqueo.SaldoRecontar;
 end;
 
 end.

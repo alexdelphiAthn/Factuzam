@@ -96,12 +96,13 @@ contexto Empresa+Almacén+Caja del menú.
 | Líneas — Descuento | `SUM` de descuentos de línea sobre esas mismas líneas. |
 | Operaciones — Descuentos | Descuento global de cabecera (`TOTAL_BASES_FAC` menos suma de líneas). |
 | Operaciones — Neto | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'VE'`. |
-| Préstamos | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. Es la mercancía comprometida con el cliente (los depósitos del TPV son préstamos contables: la prenda queda apartada y el cliente paga a plazos). |
+| Préstamos | `−SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'DE'`. Mercancía comprometida con el cliente (los depósitos del TPV son préstamos contables: la prenda queda apartada y el cliente paga a plazos). Se niega la suma porque los cierres en BBDD se guardan como DE negativo; al negar obtenemos la magnitud positiva. |
+| Devoluciones | `ABS(SUM(IMPORTE_TOTAL_OPCAJA))` con `TIPO_OPERACION_OPCAJA = 'DV'`. Las devoluciones son operaciones con tipo canónico **DV** (no VE negativas). |
 | Cobros — Vales recogidos | `SUM(IMPORTE_REDIMIDO_VL)` de `fza_caja_vales` redimidos en la caja en el rango. |
 | Cobros — Vales emitidos | `SUM(IMPORTE_NOMINAL_VL)` de `fza_caja_vales` emitidos en la caja en el rango. |
-| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB'` **y `IMPORTE > 0`** (los CB negativos son "consumo de anticipo" cuando se cierra un depósito y se venden contra la venta; no son flujo real de caja, su efecto ya queda en el VE de cierre del depósito). |
-| Pendiente cobro | `Préstamos − Cobros clientes` — saldo que el cliente aún debe entregar para retirar la mercancía. |
-| Ingresos caja | `Neto − Préstamos − Vales recogidos + Vales emitidos + Cobros clientes − Pendiente cobro`. |
+| Cobros clientes | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA = 'CB' AND IMPORTE > 0` **y limitado a aquellos cuya `ID_DEPOSITO_OPCAJA` apunta a un depósito todavía `ESTADO_DEP='PENDIENTE'`**. Es decir, anticipos cobrados que aún no se han consumido contra una venta de cierre. |
+| Pendiente cobro / Ventas Préstamos | `Préstamos − Cobros clientes` — saldo que el cliente aún debe entregar para retirar la mercancía. |
+| Ingresos caja | `Efectivo ingresos + Otros ingresos` (= `SaldoRecontar`). Es la suma directa de `fza_caja_pagos.IMPORTE_ENTREGADO_PAGO`. La antigua fórmula compleja (`Neto − Préstamos − VR + VE + CC − Pendiente`) arrastraba los desajustes del flujo real y daba cifras irreales; se sustituye por la suma directa de pagos. |
 | Efectivo ingresos | `SUM(IMPORTE_ENTREGADO_PAGO)` de `fza_caja_pagos` para las formas con `ESABRE_CAJON_FORMA_PAGO_CFP = 'S'` (efectivo, divisas en metálico, lo que se mete en el cajón). |
 | Efectivo entradas / salidas | `SUM(IMPORTE_TOTAL_OPCAJA)` con `TIPO_OPERACION_OPCAJA IN ('EC','GC')`. |
 | Efectivo anterior | 0 (solo se rellena cuando se cierre el arqueo anterior y se enlace). |
