@@ -5,10 +5,14 @@ hereda la del artículo padre.  Se almacena en la carpeta de parámetros
 `appDirFotos` en tres resoluciones:
 
 ```
-<appDirFotos>/300/<fichero>.png    -> PNG redimensionado a 300 px (lado mayor)
-<appDirFotos>/600/<fichero>.png    -> PNG redimensionado a 600 px (lado mayor)
-<appDirFotos>/real/<fichero>.<ext> -> fichero original (sin tocar)
+<appDirFotos>/300/<fichero>.png   -> PNG redimensionado a 300 px (lado mayor)
+<appDirFotos>/600/<fichero>.png   -> PNG redimensionado a 600 px (lado mayor)
+<appDirFotos>/real/<fichero>.png  -> PNG en resolución original (sin redimensionar)
 ```
+
+Los tres son PNG: el "real" no es una copia byte-a-byte del fichero
+fuente, se re-encodifica a PNG manteniendo las dimensiones originales
+para que las tres copias se traten igual.
 
 El parámetro `appDirFotos` tiene valor por defecto
 `$(PUBLICO)\Factuzam\fotos` (en Windows expande a

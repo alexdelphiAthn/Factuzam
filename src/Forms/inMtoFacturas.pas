@@ -503,6 +503,7 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure CambiarIVA;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -1149,6 +1150,24 @@ begin
     //      tvRecibos.optionsData.Inserting := True;
 
         end;  *)
+end;
+
+// dsTablaG apunta a la cabecera de factura, que no tiene CODIGO_ART_*.
+// El articulo activo vive en la linea seleccionada del sub-grid
+// tvLineasFactura. Leemos de ahi para que Ctrl+Alt+F muestre la foto
+// de la linea actual.
+procedure TfrmMtoFacturas.ResolverArtSkuActivo(out ACodArt,
+                                               ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineasFactura.DataController.DataSource) then
+  begin
+    ds := tvLineasFactura.DataController.DataSource.DataSet;
+    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
 end;
 
 procedure TfrmMtoFacturas.CrearTablaPrincipal;

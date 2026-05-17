@@ -67,12 +67,13 @@ el primer guardado.
 - Etiqueta: *Foto del SKU: BOLSO-PIEL* (porque ese artículo tiene un
   solo SKU autogenerado con el mismo código).
 
-**1.4** Verifica en disco:
+**1.4** Verifica en disco — los tres son PNG (el "real" también, con
+la resolución original):
 
 ```
 C:\Factuzam\fotos\300\BOLSO-PIEL_001.png    300 px lado mayor
 C:\Factuzam\fotos\600\BOLSO-PIEL_001.png    600 px lado mayor
-C:\Factuzam\fotos\real\BOLSO-PIEL_001.jpg   original con extensión nativa
+C:\Factuzam\fotos\real\BOLSO-PIEL_001.png   resolución original como PNG
 ```
 
 Verifica en BBDD:
@@ -320,15 +321,72 @@ Debe abrir la misma pantalla con `ShowModal`, sin `fsStayOnTop`.
 
 ---
 
+## 9. Mtos de documentos con sub-grid de líneas
+
+`Ctrl + Alt + F` debe funcionar sobre la **línea activa** del grid de
+detalle, no sobre la cabecera del documento. Los cuatro Mtos
+implicados ya sobreescriben `ResolverArtSkuActivo`:
+
+| Mto                | Pestaña a probar           | Grid de detalle    |
+|--------------------|----------------------------|--------------------|
+| `inMtoFacturas`    | Líneas de factura          | `tvLineasFactura`  |
+| `inMtoTarifas`     | Artículos                  | `tvArticulos`      |
+| `inMtoPedidos`     | Líneas del pedido          | `tvPedidosLineas`  |
+| `inMtoAlbaranes`   | Líneas del albarán         | `tvLineasAlbaran`  |
+
+**9.1** En cada uno, posiciónate sobre una línea con artículo conocido
+(p.ej. uno al que ya le hayas asignado foto en §1 o §2). Pulsa
+`Ctrl + Alt + F`: debe abrirse la pantalla flotante con la foto del
+artículo / SKU de esa línea.
+
+**9.2** Navega entre líneas con flechas: la pantalla debe
+auto-refrescarse (estamos enganchados al `dsLineas` / `dsArticulos` del
+grid, no al `dsTablaG` de cabecera).
+
+**9.3** Si pulsas Ctrl + Alt + F desde la cabecera (registro activo de
+cabecera, sin línea con artículo seleccionable) no se abre nada — los
+overrides devuelven `''`.
+
+---
+
+## 10. Caja Operaciones — foto embebida
+
+`inMtoCajaOpe` no usa Ctrl + Alt + F. La foto se muestra en un panel
+fijo a la derecha del grid de stock (`pnlFotoStock`), siempre cargada
+en resolución 300 px.
+
+**10.1** Abre Caja, introduce un código de artículo y graba la línea
+(o navega a una línea existente). La foto del artículo / SKU debe
+aparecer en el panel a la derecha del grid de stock.
+
+**10.2** Mueve el cursor entre líneas: la foto debe auto-refrescarse
+con el artículo de la línea activa.
+
+**10.3** Línea sin artículo aún introducido / sin foto en BBDD: el
+panel se queda en blanco (no error).
+
+---
+
+## 11. Consulta de operaciones
+
+`inMtoConsultaOpe` ya tiene Ctrl + Alt + F a mano (no hereda de
+`TfrmMtoGen`) sobre la **línea de factura** activa
+(`cxViewFacLin`).
+
+**11.1** Abre la consulta, busca una factura con artículos con foto,
+posiciónate sobre una línea en la pestaña "Líneas factura". Pulsa
+`Ctrl + Alt + F`: debe salir la foto del artículo / SKU de la línea.
+
+**11.2** Navega entre líneas: auto-refresh igual que en el resto.
+
+---
+
 ## Limitaciones conocidas
 
-- **Mtos con sub-grid**: en `inMtoTarifas`, `inMtoFacturas`,
-  `inMtoPedidos`, el artículo activo vive en un grid de detalle, no en
-  `dsTablaG`. La implementación por defecto de `ResolverArtSkuActivo`
-  devuelve `''` en esos casos y `Ctrl + Alt + F` muestra *Sin foto*.
-  Solución: sobreescribir `ResolverArtSkuActivo` en cada uno de esos
-  Mtos para leer del grid activo. Patrón en
-  `LIBRO_DE_ESTILO_DELPHI.md` §18.6.
+- **Mtos sin sub-grid configurado**: si añades un Mto nuevo con
+  artículos en sub-grid y olvidas sobreescribir `ResolverArtSkuActivo`,
+  `Ctrl + Alt + F` lee del `dsTablaG` (cabecera) y devolverá `''`.
+  Patrón de override en `LIBRO_DE_ESTILO_DELPHI.md` §18.6.
 - **FastReports iterativos**: la sustitución se hace una sola vez antes
   de `PrepareReport`. Para informes que iteran filas y necesitan foto
   distinta por banda, hoy se mostrará la del registro activo en el

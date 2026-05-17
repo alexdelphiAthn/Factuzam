@@ -150,6 +150,7 @@ type
     procedure btnImprimirClick(Sender: TObject);
   public
     dmmAlbaranes: TdmAlbaranes;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -163,6 +164,23 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// dsTablaG apunta a la cabecera de albaran. El articulo activo vive en
+// la fila del sub-grid tvLineasAlbaran (CODIGO_ART_ALBLIN /
+// CODIGO_UNIDAD_ALBLIN).
+procedure TfrmMtoAlbaranes.ResolverArtSkuActivo(out ACodArt,
+                                                ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineasAlbaran.DataController.DataSource) then
+  begin
+    ds := tvLineasAlbaran.DataController.DataSource.DataSet;
+    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
 var

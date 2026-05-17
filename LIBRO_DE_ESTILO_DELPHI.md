@@ -919,16 +919,25 @@ reservados.
 PK compuesta `(CODIGO_ART_FOT, CODIGO_UNIDAD_FOT)`. La vista
 `vi_articulos_fotos` expone el fallback resuelto por SKU.
 
-**Disco** — los ficheros reales viven bajo el parámetro `appDirFotos`:
+**Disco** — los ficheros viven bajo el parámetro `appDirFotos`, **todos
+como PNG** (el original se re-encodifica a PNG sin perder dimensiones):
 
 ```
 <appDirFotos>/300/<NOMBRE_FOT_FOT>.png    PNG redimensionado a 300 px (lado mayor)
 <appDirFotos>/600/<NOMBRE_FOT_FOT>.png    PNG redimensionado a 600 px (lado mayor)
-<appDirFotos>/real/<NOMBRE_FOT_FOT>.<ext> fichero original, extensión nativa
+<appDirFotos>/real/<NOMBRE_FOT_FOT>.png   PNG en resolución original (sin redimensionar)
 ```
 
 El redimensionado se hace con GDI (`StretchBlt` + `HALFTONE` sobre
-`TBitmap pf32bit`). No hay BLOBs en BBDD — la tabla solo guarda metadatos.
+`TBitmap pf32bit`). El "real" no es una copia byte-a-byte del fichero
+fuente: se carga el grafico (PNG / JPG / BMP) y se vuelve a guardar
+como PNG manteniendo las dimensiones — así los tres se tratan igual,
+sin diferencias de extensión ni de codec a la hora de cargar.
+
+No hay BLOBs en BBDD — la tabla solo guarda metadatos
+(`NOMBRE_FOT_FOT`, `EXTENSION_ORIGEN_FOT` se conserva como
+traza informativa del fichero subido pero ya no se usa para componer
+la ruta en disco).
 
 ### 18.2 Convención de nombre de fichero
 
@@ -1088,24 +1097,40 @@ CODIGO_UNIDAD_PEDLIN, CODIGO_UNIDAD_ARTTAR
 ```
 
 **Cuándo sobreescribirlo**: cuando el artículo activo no está en
-`dsTablaG` sino en un sub-grid (ej. `inMtoTarifas` mostrando artículos
-de la tarifa en `tvArticulos`, `inMtoFacturas` mostrando líneas en
-`tvLineasFacturacion`). Patrón:
+`dsTablaG` sino en un sub-grid (el caso más común para documentos
+maestro-detalle: `inMtoFacturas`, `inMtoTarifas`, `inMtoPedidos`,
+`inMtoAlbaranes`). Para esos casos basta delegar en
+`LeerArtSkuDeDataSet` pasando el DataSet del grid de detalle:
 
 ```pascal
-procedure TfrmMtoTarifas.ResolverArtSkuActivo(out ACodArt,
-                                              ACodSku: string); override;
+procedure TfrmMtoFacturas.ResolverArtSkuActivo(out ACodArt,
+                                               ACodSku: string);
 var
   ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  ds := tvArticulos.DataController.DataSource.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  ACodArt := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
-  ACodSku := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
+  ACodArt := '';  ACodSku := '';
+  if Assigned(tvLineasFactura.DataController.DataSource) then
+  begin
+    ds := tvLineasFactura.DataController.DataSource.DataSet;
+    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);  // recorre los alias
+  end;
 end;
 ```
+
+`LeerArtSkuDeDataSet` (también público en `TfrmMtoGen`) recorre los
+alias canónicos: `CODIGO_ART_ART`, `CODIGO_ART_SKU`, `CODIGO_ART_FAC`,
+`CODIGO_ART_FACLIN`, `CODIGO_ART_PEDLIN`, `CODIGO_ART_ALBLIN`,
+`CODIGO_ART_ARTTAR`, `CODIGO_ARTICULO` y los equivalentes de
+`CODIGO_UNIDAD_*`.
+
+Estado actual de los overrides en el código:
+
+| Mto                 | Sub-grid de detalle    | Tabla        |
+|---------------------|------------------------|--------------|
+| `inMtoFacturas`     | `tvLineasFactura`      | `fza_facturas_lineas`  |
+| `inMtoTarifas`      | `tvArticulos`          | `fza_articulos_tarifas`|
+| `inMtoPedidos`      | `tvPedidosLineas`      | `fza_pedidos_lineas`   |
+| `inMtoAlbaranes`    | `tvLineasAlbaran`      | `fza_albaranes_lineas` |
 
 ### 18.7 FastReports — sustitución de imágenes
 
@@ -1157,14 +1182,60 @@ cualquier ruta resoluble por el filesystem de Windows.
 Los subdirectorios `300/`, `600/`, `real/` se crean automáticamente en
 el primer `oFotos.Guardar`.
 
-### 18.9 Resumen de unidades implicadas
+### 18.9 Formularios fuera de `TfrmMtoGen`
+
+Algunos formularios heredan de `TfrmBase` directamente (la pantalla
+operativa de caja, la consulta de operaciones) y no se benefician del
+`Ctrl + Alt + F` heredado. Se integran a mano según convenga:
+
+**`TfrmMtoOpeCaja` (caja operaciones) — foto embebida en el panel de
+stock**. No usa la pantalla flotante: incrustamos un `TImage` en el
+panel `pnlBusqueda` (a la derecha del grid `cxgrdStock`) con
+`Proportional + Stretch + Center`. Siempre se carga la copia 300 px
+del par (artículo, sku) de la línea activa. Refresco vía hook directo
+de `dsLineas.OnDataChange`:
+
+```pascal
+procedure TfrmMtoOpeCaja.DsLineasDataChange(Sender: TObject; Field: TField);
+begin
+  if Field = nil then RefrescarFotoStock;   // cambio de registro activo
+end;
+
+procedure TfrmMtoOpeCaja.RefrescarFotoStock;
+// ... lee CODIGO_ART_FACLIN / CODIGO_UNIDAD_FACLIN del dataset activo,
+//     resuelve via oFotos.Resolver, carga imgFotoStock con la 300 px ...
+```
+
+Encaje del DFM: `pnlFotoStock: TPanel; Align = alRight; Width = 120`
+dentro de `pnlBusqueda`. El grid `cxgrdStock` con `Align = alClient` se
+reduce automáticamente.
+
+**`TfrmConsultaOpe` (consulta de operaciones) — Ctrl + Alt + F a mano**.
+Tiene un `FormKeyDown` propio donde se intercala el atajo. Lee de la
+línea de factura activa (`FdmConsulta.dsFacturaLin.DataSet`) y llama a
+`MostrarFotoFlotante` + `VincularMtoPadre`. El patrón es idéntico al de
+`TfrmMtoGen.FormKeyDown`, solo que la fuente del par (art, sku) la
+provee un método privado `ResolverArtSkuDeFacLin`.
+
+Cualquier otro formulario que quiera incorporar fotos sigue uno de los
+dos patrones: foto embebida (más cómoda cuando la pantalla ya es ancha
+y hay sitio fijo) o atajo + flotante (más rápido cuando el caso de uso
+es esporádico).
+
+### 18.10 Resumen de unidades implicadas
 
 | Unidad                                   | Carpeta            | Rol                                      |
 |------------------------------------------|--------------------|------------------------------------------|
 | `inLibFotos`                             | `src/Lib/`         | Núcleo: persistencia, redimensionado, rotación, sustitución en informes |
 | `inMtoFotoArticulo`                      | `src/Forms/`       | Pantalla flotante (no modal)             |
 | `inMtoModalFotoArticulo`                 | `src/Modals/`      | Wrapper modal con `class function Ejecutar` |
-| `inMtoGen` (modificada)                  | `src/Forms/`       | Atajo Ctrl + Alt + F y `ResolverArtSkuActivo` virtual |
+| `inMtoGen` (modificada)                  | `src/Forms/`       | Atajo Ctrl + Alt + F, `ResolverArtSkuActivo` virtual y `LeerArtSkuDeDataSet` |
+| `inMtoFacturas` (modificada)             | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvLineasFactura` |
+| `inMtoTarifas` (modificada)              | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvArticulos` |
+| `inMtoPedidos` (modificada)              | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvPedidosLineas` |
+| `inMtoAlbaranes` (modificada)            | `src/Forms/`       | Override de `ResolverArtSkuActivo` sobre `tvLineasAlbaran` |
+| `inMtoCajaOpe` (modificada)              | `src/Forms/`       | Foto embebida en panel de stock (sin Ctrl + Alt + F) |
+| `inMtoConsultaOpe` (modificada)          | `src/Forms/`       | Ctrl + Alt + F sobre línea de factura |
 | `inMtoModalGenImp` (modificada)          | `src/Modals/`      | `AfterReportLoaded` llama a `SustituirFotosEnReport` |
 | `inLibAppParam` (modificada)             | `src/Lib/`         | Registro de `appDirFotos` |
 | `fotos_articulos.sql`                    | `DESARROLLOS EN CURSO/` | DDL de la tabla y la vista |

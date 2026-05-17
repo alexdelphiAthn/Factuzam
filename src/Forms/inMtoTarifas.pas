@@ -142,6 +142,7 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -261,6 +262,23 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
+end;
+
+// dsTablaG apunta a la cabecera de tarifa. El articulo activo vive en
+// la fila del sub-grid tvArticulos (CODIGO_ART_ARTTAR /
+// CODIGO_UNIDAD_ARTTAR).
+procedure TfrmMtoTarifas.ResolverArtSkuActivo(out ACodArt,
+                                              ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvArticulos.DataController.DataSource) then
+  begin
+    ds := tvArticulos.DataController.DataSource.DataSet;
+    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
 end;
 
 procedure TfrmMtoTarifas.ResetForm;

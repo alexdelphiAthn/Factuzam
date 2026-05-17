@@ -105,6 +105,9 @@ type
     procedure AjustarVisibilidadPestanas;
     procedure AplicarAnchosPestanasHijas;
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
+    // Lee el ARTICULO / SKU de la linea activa en cxViewFacLin para
+    // alimentar la pantalla flotante de fotos (Ctrl + Alt + F).
+    procedure ResolverArtSkuDeFacLin(out ACodArt, ACodSku: string);
   public
     procedure PrepararValores(const AEmpresa,
                                     AAlmacen,
@@ -124,7 +127,8 @@ implementation
 
 {$R *.dfm}
 
-uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar;
+uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar,
+     inMtoFotoArticulo;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -195,12 +199,46 @@ end;
 
 procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
                                                        Shift: TShiftState);
+var
+  sArt, sSku: string;
 begin
+  // Ctrl + Alt + F -> Foto del articulo / SKU de la linea de factura
+  // activa en cxViewFacLin.
+  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
+  begin
+    ResolverArtSkuDeFacLin(sArt, sSku);
+    if sArt <> '' then
+    begin
+      MostrarFotoFlotante(Self, sArt, sSku);
+      if Assigned(frmFotoArticulo) then
+        frmFotoArticulo.VincularMtoPadre(FdmConsulta.dsFacturaLin,
+                                         ResolverArtSkuDeFacLin);
+    end;
+    Key := 0;
+    Exit;
+  end;
   case Key of
     VK_ESCAPE: Close;
     VK_F5:     RecargarMaestro;
     VK_F12:    if ssAlt in Shift then GuardarLayout;
   end;
+end;
+
+procedure TfrmConsultaOpe.ResolverArtSkuDeFacLin(out ACodArt,
+                                                 ACodSku: string);
+var
+  ds: TDataSet;
+  f : TField;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if not Assigned(FdmConsulta) then Exit;
+  ds := FdmConsulta.dsFacturaLin.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  f := ds.FindField('CODIGO_ART_FACLIN');
+  if Assigned(f) and (not f.IsNull) then ACodArt := f.AsString;
+  f := ds.FindField('CODIGO_UNIDAD_FACLIN');
+  if Assigned(f) and (not f.IsNull) then ACodSku := f.AsString;
 end;
 
 procedure TfrmConsultaOpe.RestaurarLayout;
