@@ -492,15 +492,40 @@ begin
           (sExt = '.heif') then
   begin
     // WebP, AVIF, HEIC, HEIF: todos via Windows Imaging Component
-    // (TWICImage). En Win10/11 los codecs vienen de serie o se
-    // instalan gratis desde Microsoft Store (AV1 Video Extension,
-    // HEIF Image Extensions, WebP Imaging Extensions).
+    // (TWICImage). Los codecs son extensiones que pueden faltar:
+    //   .webp -> "WebP Imaging Extensions" (Microsoft Store, gratis)
+    //   .avif -> "AV1 Video Extension" (Microsoft Store, gratis)
+    //   .heic / .heif -> "HEIF Image Extensions" (gratis)
+    // Si el codec no esta instalado en Windows, LoadFromFile lanza
+    // EInvalidGraphic con 0xC00D5212 ("Imagen no valida"). Capturamos
+    // y damos un mensaje accionable.
     wic := TWICImage.Create;
     try
-      wic.LoadFromFile(ARuta);
+      try
+        wic.LoadFromFile(ARuta);
+      except
+        on E: Exception do
+        begin
+          FreeAndNil(wic);
+          var sCodec: string;
+          if sExt = '.webp' then sCodec := 'WebP Imaging Extensions'
+          else if sExt = '.avif' then sCodec := 'AV1 Video Extension'
+          else sCodec := 'HEIF Image Extensions';
+          raise EInvalidGraphic.Create(
+            'No se puede importar ' + UpperCase(Copy(sExt, 2, MaxInt)) +
+            ' en este equipo: falta el codec "' + sCodec + '".' +
+            sLineBreak + sLineBreak +
+            'Instálalo gratis desde Microsoft Store y reintenta.' +
+            sLineBreak + sLineBreak +
+            'Alternativa: guarda la imagen en PNG o JPG y vuelve a' +
+            ' subirla.' +
+            sLineBreak + sLineBreak +
+            'Error original: ' + E.Message);
+        end;
+      end;
       Result := wic;
     except
-      FreeAndNil(wic);
+      if Assigned(wic) then FreeAndNil(wic);
       raise;
     end;
   end
