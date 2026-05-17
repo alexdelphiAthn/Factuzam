@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalAltaRapida                                          }
 {    Tipo:       Formulario (Modal)                                            }
@@ -21,7 +21,7 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxContainer,
-  cxEdit, cxLabel, cxTextEdit, cxButtons, cxClasses;
+  cxEdit, cxLabel, cxTextEdit, cxButtons, cxClasses, Vcl.Menus;
 
 type
   TfrmMtoModalAltaRapida = class(TForm)

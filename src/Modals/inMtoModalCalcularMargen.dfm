@@ -5,6 +5,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
   ClientHeight = 480
   ClientWidth = 700
   Position = poScreenCenter
+  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 716
   ExplicitHeight = 519
@@ -17,11 +18,13 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 698
+    ExplicitHeight = 412
     object lblArticulo: TcxLabel
       Left = 24
       Top = 18
       Caption = 'Art'#237'culo'
-      Properties.LineOptions.Visible = False
+      TabOrder = 9
     end
     object edtArticulo: TcxTextEdit
       Left = 220
@@ -34,7 +37,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 50
       Caption = 'Tarifa'
-      Properties.LineOptions.Visible = False
+      TabOrder = 10
     end
     object edtTarifa: TcxTextEdit
       Left = 220
@@ -47,7 +50,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 82
       Caption = 'SKU'
-      Properties.LineOptions.Visible = False
+      TabOrder = 11
     end
     object edtSku: TcxTextEdit
       Left = 220
@@ -60,8 +63,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 134
       Caption = 'Precio coste'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 12
     end
     object edtCoste: TcxCurrencyEdit
       Left = 220
@@ -69,8 +71,6 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.OnChange = RecalcularPrecioSalida
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
       TabOrder = 3
       Width = 160
     end
@@ -78,6 +78,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 174
       Caption = 'Margen %'
+      TabOrder = 13
     end
     object edtMargen: TcxCurrencyEdit
       Left = 220
@@ -92,20 +93,22 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 210
       Caption = 'Ajuste (siguiente m'#250'ltiplo)'
+      TabOrder = 14
     end
     object edtAjuste: TcxCurrencyEdit
-      Left = 220
+      Left = 258
       Top = 206
       Properties.DecimalPlaces = 4
       Properties.DisplayFormat = '0.0000'
       Properties.OnChange = RecalcularPrecioSalida
       TabOrder = 5
-      Width = 160
+      Width = 122
     end
     object lblMenos: TcxLabel
       Left = 24
       Top = 246
       Caption = 'Menos (resta al final)'
+      TabOrder = 15
     end
     object edtMenos: TcxCurrencyEdit
       Left = 220
@@ -120,6 +123,7 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 298
       Caption = 'Precio salida actual'
+      TabOrder = 16
     end
     object edtPrecioActual: TcxCurrencyEdit
       Left = 220
@@ -133,25 +137,21 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
       Left = 24
       Top = 334
       Caption = 'Precio salida calculado'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 17
     end
     object edtPrecioCalc: TcxCurrencyEdit
-      Left = 220
+      Left = 226
       Top = 330
       Properties.DisplayFormat = '0.00 '#8364';-0.00 '#8364
       Properties.ReadOnly = True
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
       TabOrder = 8
-      Width = 160
+      Width = 154
     end
     object lblFormula: TcxLabel
       Left = 24
       Top = 376
       Caption = 'precio = ceil(coste'#215'margen/100 / ajuste)'#215'ajuste '#8722' menos'
-      Style.Font.Style = [fsItalic]
-      Style.IsFontAssigned = True
+      TabOrder = 18
     end
   end
   object pnlButtons: TPanel [1]
@@ -162,6 +162,8 @@ inherited frmModalCalcularMargen: TfrmModalCalcularMargen
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 412
+    ExplicitWidth = 698
     object btnCancelar: TcxButton
       Left = 100
       Top = 10

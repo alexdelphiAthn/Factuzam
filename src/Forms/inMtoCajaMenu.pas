@@ -290,6 +290,7 @@ begin
     VK_F5:     lblVentasClick(Sender);
     VK_ESCAPE: lblESCClick(Sender);
     VK_F10:    AbrirBuscarModificar;
+    VK_F11:    lblArqueoClick(Sender);
   end;
 end;
 
@@ -715,7 +716,7 @@ end;
 
 procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);
 begin
-  ChangeMenuItemColors(lblF11, lblArqueo, clWebOrange);
+  ChangeMenuItemColors(lblF11, lblArqueo, clBlue);
 end;
 
 procedure TfrmMtoMenuCaja.lblArqueoMouseLeave(Sender: TObject);

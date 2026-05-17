@@ -137,7 +137,6 @@ type
     tvMetadatos: TTreeView;
     pnlSidePanel: TPanel;
     btnBonito: TButton;
-    btnAbrirScript: TButton;
     alGenerador: TActionList;
     ActionSeleccionar: TAction;
     ActionEjecutar: TAction;
@@ -148,6 +147,8 @@ type
     sbVertCentro: TScrollBar;
     DBSynEdit1: TDBSynEdit;
     actComentar: TAction;
+    btnAbrirScript: TcxButton;
+    actAbrirScript: TAction;
     procedure btnRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);

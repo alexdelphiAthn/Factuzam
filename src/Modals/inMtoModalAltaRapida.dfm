@@ -21,16 +21,20 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 0
+    ExplicitWidth = 448
+    ExplicitHeight = 542
+    object BevelSep: TBevel
+      Left = 25
+      Top = 125
+      Width = 380
+      Height = 2
+      Shape = bsTopLine
+    end
     object lblCod: TcxLabel
       Left = 25
       Top = 15
       Caption = 'C'#243'digo:'
-      Style.Font.Charset = DEFAULT_CHARSET
-      Style.Font.Color = clWindowText
-      Style.Font.Height = -13
-      Style.Font.Name = 'Segoe UI'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 2
       Transparent = True
     end
     object edtCod: TcxTextEdit
@@ -43,12 +47,7 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
       Left = 25
       Top = 70
       Caption = 'Descripci'#243'n:'
-      Style.Font.Charset = DEFAULT_CHARSET
-      Style.Font.Color = clWindowText
-      Style.Font.Height = -13
-      Style.Font.Name = 'Segoe UI'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 3
       Transparent = True
     end
     object edtDesc: TcxTextEdit
@@ -56,13 +55,6 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
       Top = 90
       TabOrder = 1
       Width = 380
-    end
-    object BevelSep: TBevel
-      Left = 25
-      Top = 125
-      Width = 380
-      Height = 2
-      Shape = bsTopLine
     end
   end
   object pnlBotones: TPanel
@@ -73,6 +65,8 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 542
+    ExplicitWidth = 448
     object btnOk: TcxButton
       Left = 230
       Top = 12
@@ -80,9 +74,9 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
       Height = 30
       Caption = '&Guardar'
       Default = True
+      LookAndFeel.NativeStyle = False
       ModalResult = 1
       TabOrder = 0
-      LookAndFeel.NativeStyle = False
     end
     object btnCancel: TcxButton
       Left = 330
@@ -91,9 +85,9 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
       Height = 30
       Cancel = True
       Caption = '&Cancelar'
+      LookAndFeel.NativeStyle = False
       ModalResult = 2
       TabOrder = 1
-      LookAndFeel.NativeStyle = False
     end
   end
 end

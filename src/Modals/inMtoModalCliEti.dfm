@@ -1,18 +1,20 @@
-﻿inherited frmPrintCliEti: TfrmPrintCliEti
+inherited frmPrintCliEti: TfrmPrintCliEti
   Caption = 'Impresi'#243'n de Etiquetas'
   ClientHeight = 296
   ClientWidth = 389
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 405
   ExplicitHeight = 335
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 245
     Height = 296
-    ExplicitLeft = 245
-    ExplicitHeight = 296
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 243
+    ExplicitHeight = 288
     inherited btnSalir: TcxButton
-      Top = 271
-      ExplicitTop = 270
+      Top = 270
+      ExplicitTop = 262
     end
   end
   object cxRadioGroup1: TcxRadioGroup [1]
@@ -28,6 +30,7 @@
       Top = 22
       Caption = 'Dejar espacios en blanco antes de imprimir etiqueta'
       Properties.WordWrap = True
+      TabOrder = 0
       Width = 154
     end
   end
@@ -47,6 +50,7 @@
     Left = 21
     Top = 48
     Caption = 'C'#243'digo de Cliente: '
+    TabOrder = 4
   end
   inherited frxrprt1: TfrxReport
     Left = 8

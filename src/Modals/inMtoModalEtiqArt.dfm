@@ -6,18 +6,18 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitWidth = 556
-  ExplicitHeight = 499
+  ExplicitWidth = 554
+  ExplicitHeight = 491
   TextHeight = 19
   inherited pnl1: TPanel
     Left = 394
     Height = 452
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 394
-    ExplicitHeight = 452
+    ExplicitLeft = 392
+    ExplicitHeight = 444
     inherited btnSalir: TcxButton
-      Top = 434
-      ExplicitTop = 426
+      Top = 426
+      ExplicitTop = 418
     end
   end
   object pnlOpciones: TPanel [1]
@@ -28,6 +28,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 392
+    ExplicitHeight = 444
     object cxlblArticulo: TcxLabel
       Left = 12
       Top = 12
@@ -69,10 +71,10 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       TabOrder = 7
     end
     object dtFechaAplicacion: TcxDateEdit
-      Left = 156
+      Left = 193
       Top = 104
       TabOrder = 3
-      Width = 220
+      Width = 183
     end
     object cxlblAlmacenes: TcxLabel
       Left = 12
