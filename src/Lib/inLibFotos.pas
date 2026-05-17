@@ -932,48 +932,35 @@ begin
     APic.Picture.LoadFromFile(sRuta);
 end;
 
-type
-  TFotoPicHook = class
-    Resolucion: TFotoResolucion;
-    procedure OnBeforePrint(Sender: TfrxComponent);
-  end;
-
-procedure TFotoPicHook.OnBeforePrint(Sender: TfrxComponent);
-begin
-  if Sender is TfrxPictureView then
-    SustituirFotoEnPicture(TfrxPictureView(Sender), Resolucion);
-end;
-
-// Lista de hooks viva por TfrxReport para poder liberar al finalizar.
-var
-  oHooksReporte: TList;
-
-procedure LiberarHooks;
-var
-  i: Integer;
-begin
-  if not Assigned(oHooksReporte) then Exit;
-  for i := 0 to oHooksReporte.Count - 1 do
-    TFotoPicHook(oHooksReporte[i]).Free;
-  oHooksReporte.Clear;
-end;
+// ============================================================================
+//   FastReport: sustitucion de fotos
+// ============================================================================
+//
+// En esta version de FastReport `OnBeforePrint` de un `TfrxView` es una
+// propiedad STRING (nombre de un proc del script del informe) y no un
+// evento Delphi nativo, por lo que no se puede enganchar codigo desde
+// fuera del script.
+//
+// Estrategia simple y robusta: una sola pasada justo antes de imprimir,
+// recorriendo `Report.AllObjects` y cargando la foto resuelta a partir
+// del dataset que la imagen tenga vinculado (`TfrxPictureView.DataSet`)
+// o, en su defecto, del dataset de la banda padre. Esto cubre informes
+// de un solo registro (ficha de articulo, vista previa, ticket) y
+// informes iterativos cuando la imagen sigue el dataset de su banda:
+// FastReport vuelve a evaluar `AllObjects` por iteracion al preparar el
+// reporte. Para informes mas exoticos se podria pasar luego a un hook
+// con scripts, pero hoy se queda en esta capa.
 
 procedure SustituirFotosEnReport(Report: TfrxReport);
 var
   i      : Integer;
   obj    : TfrxComponent;
   pic    : TfrxPictureView;
-  hook   : TFotoPicHook;
   sName  : string;
   bMatch : Boolean;
   res    : TFotoResolucion;
 begin
   if Report = nil then Exit;
-  if not Assigned(oHooksReporte) then
-    oHooksReporte := TList.Create
-  else
-    LiberarHooks;
-
   for i := 0 to Report.AllObjects.Count - 1 do
   begin
     obj := TfrxComponent(Report.AllObjects[i]);
@@ -986,24 +973,14 @@ begin
     else if sName = 'fotoreal' then res := frReal
     else bMatch := False;
     if not bMatch then Continue;
-
-    hook := TFotoPicHook.Create;
-    hook.Resolucion := res;
-    oHooksReporte.Add(hook);
-    // En FastReport 6, `OnBeforePrint` de un TfrxView es una propiedad
-    // string (nombre de un proc del script). El evento Delphi para
-    // engancharse en codigo nativo es `OnBeforePrintEvent`.
-    pic.OnBeforePrintEvent := hook.OnBeforePrint;
+    SustituirFotoEnPicture(pic, res);
   end;
 end;
 
 initialization
   oFotos := TFotosArticulos.Create;
-  oHooksReporte := TList.Create;
 
 finalization
-  LiberarHooks;
-  FreeAndNil(oHooksReporte);
   FreeAndNil(oFotos);
 
 end.
