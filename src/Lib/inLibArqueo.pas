@@ -249,6 +249,13 @@ begin
   // Neto = importe total de las operaciones de venta. El descuento global
   // (cabecera) es la diferencia entre el neto de líneas y el neto de
   // operaciones (las operaciones ya incluyen descuento global aplicado).
+  //
+  // Cobros: 'CB' agrupa dos cosas, "cobro a cuenta" positivo (cliente entrega
+  // anticipo, efectivo real entrando a caja) y "consumo de anticipo" negativo
+  // (al cerrar un depósito y vender, el saldo de anticipo previo se gasta
+  // contra la venta; no hay movimiento físico). Para el arqueo solo cuentan
+  // los positivos: el efecto del consumo ya queda recogido en la VE de cierre
+  // del depósito.
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;
@@ -261,6 +268,7 @@ begin
       '                END), 0)                              AS NETO,       ' +
       '   COALESCE(SUM(CASE                                                 ' +
       '                  WHEN TIPO_OPERACION_OPCAJA = :pTIPO_CB             ' +
+      '                   AND IMPORTE_TOTAL_OPCAJA > 0                      ' +
       '                  THEN IMPORTE_TOTAL_OPCAJA                          ' +
       '                  ELSE 0                                             ' +
       '                END), 0)                              AS COBROS,     ' +
