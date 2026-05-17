@@ -166,6 +166,17 @@ begin
   RegistrarParametro('Directorios', 'appDirFotos',
     'Carpeta de Fotos de Artículos / SKUs', tpString,
     '$(PUBLICO)\Factuzam\fotos');
+  // Numero de atributos del SKU que componen la clave de foto. Vease
+  // LIBRO_DE_ESTILO_DELPHI.md 18 ("Sistema de fotos").
+  //   0 = una sola foto por articulo (CODIGO_UNIDAD_FOT = '')
+  //   1 = una por (articulo, primer atributo).  Ej: ART/COLOR
+  //   2 = una por (articulo, primer atributo, segundo atributo)
+  //   ...
+  // El usuario puede seguir asignando a otro nivel desde el combo del
+  // form de fotos; este parametro solo fija el DEFAULT pre-seleccionado.
+  RegistrarParametro('Fotos', 'appNumAtributosFoto',
+    'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
+    tpInteger, '1');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
