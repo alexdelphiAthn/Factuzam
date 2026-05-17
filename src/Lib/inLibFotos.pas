@@ -51,6 +51,7 @@ uses
   Winapi.Windows,
   System.SysUtils, System.Classes, System.StrUtils, System.IOUtils,
   Vcl.Graphics, Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
+  Vcl.Imaging.GIFImg,
   Data.DB, DBAccess, Uni,
   frxClass, frxDBSet;
 
@@ -411,11 +412,17 @@ end;
 
 function TFotosArticulos.CargarGraficoDeFichero(
                                           const ARuta: string): TGraphic;
+// Lee el fichero original del disco y devuelve un TGraphic listo para
+// volcar via Canvas.Draw / StretchDraw. Acepta PNG, JPG/JPEG, GIF, BMP
+// y WebP (este via TWICImage, decodificador WIC de Windows; en Win10+
+// el codec viene de serie, en Win7/8 se instala por separado).
 var
-  sExt: string;
-  png : TPngImage;
-  jpg : TJPEGImage;
-  bmp : TBitmap;
+  sExt : string;
+  png  : TPngImage;
+  jpg  : TJPEGImage;
+  gif  : TGIFImage;
+  wic  : TWICImage;
+  bmp  : TBitmap;
 begin
   Result := nil;
   sExt := LowerCase(ExtractFileExt(ARuta));
@@ -438,6 +445,29 @@ begin
       Result := jpg;
     except
       FreeAndNil(jpg);
+      raise;
+    end;
+  end
+  else if (sExt = '.gif') then
+  begin
+    gif := TGIFImage.Create;
+    try
+      gif.LoadFromFile(ARuta);
+      Result := gif;
+    except
+      FreeAndNil(gif);
+      raise;
+    end;
+  end
+  else if (sExt = '.webp') then
+  begin
+    // WebP via Windows Imaging Component (TWICImage).
+    wic := TWICImage.Create;
+    try
+      wic.LoadFromFile(ARuta);
+      Result := wic;
+    except
+      FreeAndNil(wic);
       raise;
     end;
   end
