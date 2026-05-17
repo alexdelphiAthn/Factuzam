@@ -238,6 +238,7 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -251,6 +252,7 @@ uses
   inLibUser,
   inLibShowMto,
   inLibDevExp,
+  inLibFotos,
   inLibGenBusq,
   inLibGlobalVar,
   inLibArticulosValidador,
@@ -262,6 +264,23 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoInventarios }
+
+// dsTablaG apunta a la cabecera del inventario. El articulo activo
+// vive en la linea seleccionada del sub-grid tvLineas (CODIGO_ART_INVLIN
+// / CODIGO_UNIDAD_INVLIN).
+procedure TfrmMtoInventarios.ResolverArtSkuActivo(out ACodArt,
+                                                  ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineas.DataController.DataSource) then
+  begin
+    ds := tvLineas.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 begin

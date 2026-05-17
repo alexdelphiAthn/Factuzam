@@ -492,6 +492,14 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             Stretch = True
           end
         end
+        object splFotoStock: TcxSplitter
+          Left = 1232
+          Top = 1
+          Width = 8
+          Height = 114
+          AlignSplitter = salRight
+          Control = pnlFotoStock
+        end
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
