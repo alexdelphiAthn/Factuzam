@@ -31,11 +31,18 @@ use sólo las del proyecto).
 
 **0.3 Parámetro** — abre Factuzam y entra a *Parámetros de Aplicación*
 (`frmMtoAppParam`). En la categoría **Directorios** debe aparecer
-`appDirFotos`. Asigna una carpeta vacía, p.ej. `C:\Factuzam\fotos`.
-Guarda.
+`appDirFotos` con valor por defecto `$(PUBLICO)\Factuzam\fotos`, que se
+expande a `C:\Users\Public\Documents\Factuzam\fotos` y es accesible
+para todos los usuarios de la máquina (lo lógico para un recurso
+compartido).
 
-Verifica en disco que la carpeta existe. Los subdirectorios `300/`,
-`600/`, `real/` se crearán automáticamente con el primer guardado.
+Puedes dejar el valor por defecto o cambiarlo a una ruta compartida en
+red (`\\servidor\factuzam\fotos`, etc.). Si quieres una carpeta de
+prueba aislada, asigna por ejemplo `C:\Factuzam\fotos`.
+
+Verifica en disco que la carpeta resuelta existe (créala si no). Los
+subdirectorios `300/`, `600/`, `real/` se crearán automáticamente con
+el primer guardado.
 
 ---
 
