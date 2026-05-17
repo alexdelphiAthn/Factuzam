@@ -29,7 +29,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataDepositosCliente,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, cxSplitter, inLibFotos;
 
 type
   TfrmMtoDepositosCliente = class(TfrmMtoGen)
@@ -51,8 +51,14 @@ type
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+    splFotoDep: TcxSplitter;
+    pnlFotoDep: TPanel;
+    imgFotoDep: TImage;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     dmmDepositosCliente: TdmDepositosCliente;
+    FFotoEmb: TFotoEmbebida;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -71,6 +77,19 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoDepositosCliente }
+
+procedure TfrmMtoDepositosCliente.FormCreate(Sender: TObject);
+begin
+  inherited;
+  // Foto embebida del articulo / SKU de la fila activa de dsTablaG.
+  FFotoEmb := TFotoEmbebida.Create(imgFotoDep, dsTablaG);
+end;
+
+procedure TfrmMtoDepositosCliente.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FFotoEmb);
+  inherited;
+end;
 
 procedure TfrmMtoDepositosCliente.CrearTablaPrincipal;
 begin

@@ -182,6 +182,22 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             end
           end
         end
+        object splFotoMov: TcxSplitter
+          AlignSplitter = salRight
+          Control = pnlFotoMov
+        end
+        object pnlFotoMov: TPanel
+          Width = 200
+          Align = alRight
+          BevelOuter = bvLowered
+          TabOrder = 1
+          object imgFotoMov: TImage
+            Align = alClient
+            Center = True
+            Proportional = True
+            Stretch = True
+          end
+        end
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
