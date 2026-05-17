@@ -195,30 +195,16 @@ inherited frmModalArqueo: TfrmModalArqueo
         Height = 21
         Width = 130
       end
-      object lblOpePuntosLbl: TcxLabel
-        Left = 16
-        Top = 60
-        Caption = '- Ptos. rcgdos.'
-      end
-      object lblOpePuntos: TcxLabel
-        Left = 175
-        Top = 60
-        AutoSize = False
-        Caption = '0'
-        Properties.Alignment.Horz = taRightJustify
-        Height = 21
-        Width = 130
-      end
       object lblOpeNetoLbl: TcxLabel
         Left = 16
-        Top = 86
+        Top = 60
         Caption = '= Neto'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
       end
       object lblOpeNeto: TcxLabel
         Left = 175
-        Top = 86
+        Top = 60
         AutoSize = False
         Caption = ''
         Style.Font.Style = [fsBold]
@@ -226,14 +212,6 @@ inherited frmModalArqueo: TfrmModalArqueo
         Properties.Alignment.Horz = taRightJustify
         Height = 21
         Width = 130
-      end
-      object lblOpeCriterioDev: TcxLabel
-        Left = 16
-        Top = 108
-        Caption = '[Venta criterio devengo]'
-        Style.Font.Style = [fsItalic]
-        Style.TextColor = clGray
-        Style.IsFontAssigned = True
       end
       object lblOpeCreditoLbl: TcxLabel
         Left = 320
@@ -343,14 +321,6 @@ inherited frmModalArqueo: TfrmModalArqueo
         Properties.Alignment.Horz = taRightJustify
         Height = 21
         Width = 150
-      end
-      object lblCobCriterioCaja: TcxLabel
-        Left = 16
-        Top = 170
-        Caption = '[Venta criterio caja]'
-        Style.Font.Style = [fsItalic]
-        Style.TextColor = clGray
-        Style.IsFontAssigned = True
       end
       object lblEftIngresosLbl: TcxLabel
         Left = 400
