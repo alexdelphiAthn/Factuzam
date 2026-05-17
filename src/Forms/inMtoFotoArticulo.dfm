@@ -79,8 +79,13 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     object lblNivel: TcxLabel
       Left = 380
       Top = 4
+<<<<<<< HEAD
       Caption = 'Nivel al que aplica el cambio:'
       TabOrder = 7
+=======
+      Caption = 'Nivel (atributos del SKU):'
+      Width = 332
+>>>>>>> 619fac6966a2b4920fd1c59e14dade73ba529bbe
     end
     object cbbNivelSku: TcxComboBox
       Left = 380
@@ -103,7 +108,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Top = 84
       Width = 220
       Height = 40
-      Caption = 'Cambiar foto del &SKU / grupo'
+      Caption = 'Cambiar foto del &grupo'
       TabOrder = 3
       OnClick = btnCambiarSkuClick
     end
@@ -160,9 +165,16 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Left = 624
   end
   object dlgAbrirFoto: TOpenDialog
+<<<<<<< HEAD
     Filter = 
       'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|PNG|*.png|JPG|*.j' +
       'pg;*.jpeg|GIF|*.gif|WebP|*.webp|BMP|*.bmp|Todos|*.*'
+=======
+    Filter =
+      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.avif;*.heic;*.bmp|' +
+      'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|' +
+      'AVIF|*.avif|HEIC|*.heic;*.heif|BMP|*.bmp|Todos|*.*'
+>>>>>>> 619fac6966a2b4920fd1c59e14dade73ba529bbe
     Title = 'Seleccionar foto'
     Left = 624
     Top = 16

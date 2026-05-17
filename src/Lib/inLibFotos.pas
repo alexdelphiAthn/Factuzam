@@ -50,8 +50,8 @@ interface
 uses
   Winapi.Windows,
   System.SysUtils, System.Classes, System.StrUtils, System.IOUtils,
-  Vcl.Graphics, Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
-  Vcl.Imaging.GIFImg,
+  Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, Vcl.Imaging.PngImage,
+  Vcl.Imaging.Jpeg, Vcl.Imaging.GIFImg,
   Data.DB, DBAccess, Uni,
   frxClass, frxDBSet;
 
@@ -179,9 +179,38 @@ function GenerarPrefijosSku(const ACodSku: string): TArray<string>;
 ///   - `inMtoCajaOpe.RefrescarFotoStock` (sobre dsLineas)
 ///   - `inMtoConsultaOpe.ResolverArtSkuDeFacLin` (sobre cxViewFacLin)
 ///   - `SustituirFotoEnPicture` (sobre el dataset de la banda padre)
+///   - `TFotoEmbebida.OnDataChange` (sobre el dataset hookeado)
 /// Si el dataset es nil, no esta activo o esta vacio devuelve '' / ''.
 procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
                               out ACodArt, ACodSku: string);
+
+type
+  /// Helper para poner una foto embebida en un Mto. Engancha el
+  /// `OnDataChange` del DataSource (encadenando el handler previo si
+  /// lo habia) y mantiene un `TImage` cargado con la foto a 300 px del
+  /// articulo / SKU activo. Liberar con FreeAndNil restaura el handler
+  /// previo.
+  ///
+  /// Patron de uso en un Mto:
+  ///   - DFM: TPanel + TcxSplitter + TImage (Align = alClient)
+  ///   - FormCreate: FFoto := TFotoEmbebida.Create(imgFoto, dsLineas);
+  ///   - FormDestroy: FreeAndNil(FFoto);
+  ///   - Layout persist: GuardarAnchoPanel / RestaurarAnchoPanel sobre
+  ///     el panel contenedor (vease inLibLayoutForm).
+  TFotoEmbebida = class
+  private
+    FImage          : TImage;
+    FDataSource     : TDataSource;
+    FPrevDataChange : TDataChangeEvent;
+    procedure OnDataChange(Sender: TObject; Field: TField);
+  public
+    constructor Create(AImage: TImage; ADataSource: TDataSource);
+    destructor  Destroy; override;
+    /// Recarga la foto a 300 px del articulo / SKU activo. Lo llama
+    /// el hook OnDataChange en cada cambio de registro, pero tambien
+    /// se puede invocar a mano (p.ej. tras un Refresh externo).
+    procedure Refrescar;
+  end;
 
 var
   oFotos: TFotosArticulos;
@@ -459,9 +488,13 @@ begin
       raise;
     end;
   end
-  else if (sExt = '.webp') then
+  else if (sExt = '.webp') or (sExt = '.avif') or (sExt = '.heic') or
+          (sExt = '.heif') then
   begin
-    // WebP via Windows Imaging Component (TWICImage).
+    // WebP, AVIF, HEIC, HEIF: todos via Windows Imaging Component
+    // (TWICImage). En Win10/11 los codecs vienen de serie o se
+    // instalan gratis desde Microsoft Store (AV1 Video Extension,
+    // HEIF Image Extensions, WebP Imaging Extensions).
     wic := TWICImage.Create;
     try
       wic.LoadFromFile(ARuta);
@@ -911,22 +944,23 @@ end;
 // ============================================================================
 
 const
-  cAliasArt: array[0..13] of string = (
+  cAliasArt: array[0..14] of string = (
     'CODIGO_ART_ART',  'CODIGO_ART_FAC',     'CODIGO_ART_FACLIN',
     'CODIGO_ART_LIN',  'CODIGO_ART_SKU',     'CODIGO_ART_PEDLIN',
     'CODIGO_ART_ALBLIN', 'CODIGO_ART_ARTTAR', 'CODIGO_ART_AAB',
-    // Inventarios + movimientos de almacen.
-    'CODIGO_ART_INVLIN', 'CODIGO_ART_MOV',
+    // Inventarios + movimientos de almacen + depositos cliente.
+    'CODIGO_ART_INVLIN', 'CODIGO_ART_MOV', 'CODIGO_ART_DEP',
     // Sesiones de compras: el codigo puede ser tentativo (articulo
     // todavia no creado, ver fza_compras_sesiones_fotos).
     'CODIGO_ART_TENTATIVO_SESLIN',
     'CODIGO_ART',      'CODIGO_ARTICULO');
-  cAliasSku: array[0..9] of string = (
+  cAliasSku: array[0..10] of string = (
     'CODIGO_UNIDAD_SKU',    'CODIGO_UNIDAD_FAC',
     'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_LIN',
     'CODIGO_UNIDAD_PEDLIN', 'CODIGO_UNIDAD_ALBLIN',
     'CODIGO_UNIDAD_ARTTAR',
     'CODIGO_UNIDAD_INVLIN', 'CODIGO_UNIDAD_MOV',
+    'CODIGO_UNIDAD_DEP',
     'CODIGO_UNIDAD');
 
 procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
@@ -1064,6 +1098,61 @@ begin
     else bMatch := False;
     if not bMatch then Continue;
     SustituirFotoEnPicture(pic, res);
+  end;
+end;
+
+// ============================================================================
+//   TFotoEmbebida — foto pegada a un grid de Mto
+// ============================================================================
+
+constructor TFotoEmbebida.Create(AImage: TImage; ADataSource: TDataSource);
+begin
+  inherited Create;
+  FImage      := AImage;
+  FDataSource := ADataSource;
+  if Assigned(FDataSource) then
+  begin
+    FPrevDataChange := FDataSource.OnDataChange;
+    FDataSource.OnDataChange := OnDataChange;
+  end;
+  Refrescar;
+end;
+
+destructor TFotoEmbebida.Destroy;
+begin
+  if Assigned(FDataSource) then
+    FDataSource.OnDataChange := FPrevDataChange;
+  inherited;
+end;
+
+procedure TFotoEmbebida.OnDataChange(Sender: TObject; Field: TField);
+begin
+  if Assigned(FPrevDataChange) then
+    FPrevDataChange(Sender, Field);
+  if Field = nil then Refrescar;
+end;
+
+procedure TFotoEmbebida.Refrescar;
+var
+  sArt, sSku: string;
+  info      : TFotoInfo;
+  sRuta     : string;
+  png       : TPngImage;
+begin
+  if not Assigned(FImage) then Exit;
+  FImage.Picture.Assign(nil);
+  if not Assigned(FDataSource) then Exit;
+  LeerArtSkuDeDataSet(FDataSource.DataSet, sArt, sSku);
+  if sArt = '' then Exit;
+  info  := oFotos.Resolver(sArt, sSku);
+  sRuta := oFotos.RutaFoto(info, frPx300);
+  if sRuta = '' then Exit;
+  png := TPngImage.Create;
+  try
+    png.LoadFromFile(sRuta);
+    FImage.Picture.Assign(png);
+  finally
+    FreeAndNil(png);
   end;
 end;
 
