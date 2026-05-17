@@ -1,6 +1,7 @@
 ﻿program Fzam;
 
 uses
+  FastMM4,
   Forms,
   MidasLib,
   {$IF CompilerVersion >= 37.0}
