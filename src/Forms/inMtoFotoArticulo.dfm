@@ -1,7 +1,6 @@
 inherited frmFotoArticulo: TfrmFotoArticulo
   BorderIcons = [biSystemMenu]
   Caption = 'Foto del art'#237'culo / SKU'
-  BorderIcons = [biSystemMenu]
   ClientHeight = 600
   ClientWidth = 720
   FormStyle = fsStayOnTop
@@ -79,13 +78,9 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     object lblNivel: TcxLabel
       Left = 380
       Top = 4
-<<<<<<< HEAD
-      Caption = 'Nivel al que aplica el cambio:'
-      TabOrder = 7
-=======
       Caption = 'Nivel (atributos del SKU):'
+      TabOrder = 7
       Width = 332
->>>>>>> 619fac6966a2b4920fd1c59e14dade73ba529bbe
     end
     object cbbNivelSku: TcxComboBox
       Left = 380
@@ -165,16 +160,10 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Left = 624
   end
   object dlgAbrirFoto: TOpenDialog
-<<<<<<< HEAD
-    Filter = 
-      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|PNG|*.png|JPG|*.j' +
-      'pg;*.jpeg|GIF|*.gif|WebP|*.webp|BMP|*.bmp|Todos|*.*'
-=======
     Filter =
       'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.avif;*.heic;*.bmp|' +
       'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|' +
       'AVIF|*.avif|HEIC|*.heic;*.heif|BMP|*.bmp|Todos|*.*'
->>>>>>> 619fac6966a2b4920fd1c59e14dade73ba529bbe
     Title = 'Seleccionar foto'
     Left = 624
     Top = 16
