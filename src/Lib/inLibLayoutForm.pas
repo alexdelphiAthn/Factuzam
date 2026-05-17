@@ -78,6 +78,9 @@ type
     procedure RestaurarAlturaPanel(const AClave: string;
                                    APanel: TPanel;
                                    AMinimo: Integer = 30);
+    procedure RestaurarAnchoPanel(const AClave: string;
+                                  APanel: TPanel;
+                                  AMinimo: Integer = 30);
     procedure RestaurarGrid(const APrefijoClave: string;
                             AView: TcxGridDBTableView);
     property Disponible: Boolean read FDisponible;
@@ -97,6 +100,7 @@ type
     destructor  Destroy; override;
     procedure GuardarGeometria(AForm: TForm);
     procedure GuardarAlturaPanel(const AClave: string; APanel: TPanel);
+    procedure GuardarAnchoPanel(const AClave: string; APanel: TPanel);
     procedure GuardarGrid(const APrefijoClave: string;
                           AView: TcxGridDBTableView);
     function  PreguntarYGrabar(const ADescripcion: string): Boolean;
@@ -157,6 +161,17 @@ begin
   H := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
   if H > AMinimo then
     APanel.Height := H;
+end;
+
+procedure TLayoutLoader.RestaurarAnchoPanel(const AClave: string;
+  APanel: TPanel; AMinimo: Integer);
+var
+  W: Integer;
+begin
+  if not FDisponible then Exit;
+  W := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
+  if W > AMinimo then
+    APanel.Width := W;
 end;
 
 procedure TLayoutLoader.RestaurarGrid(const APrefijoClave: string;
@@ -220,6 +235,11 @@ end;
 procedure TLayoutSaver.GuardarAlturaPanel(const AClave: string; APanel: TPanel);
 begin
   SetClave(AClave, IntToStr(APanel.Height));
+end;
+
+procedure TLayoutSaver.GuardarAnchoPanel(const AClave: string; APanel: TPanel);
+begin
+  SetClave(AClave, IntToStr(APanel.Width));
 end;
 
 procedure TLayoutSaver.GuardarGrid(const APrefijoClave: string;

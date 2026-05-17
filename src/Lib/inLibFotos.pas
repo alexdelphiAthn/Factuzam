@@ -911,19 +911,23 @@ end;
 // ============================================================================
 
 const
-  cAliasArt: array[0..11] of string = (
+  cAliasArt: array[0..13] of string = (
     'CODIGO_ART_ART',  'CODIGO_ART_FAC',     'CODIGO_ART_FACLIN',
     'CODIGO_ART_LIN',  'CODIGO_ART_SKU',     'CODIGO_ART_PEDLIN',
     'CODIGO_ART_ALBLIN', 'CODIGO_ART_ARTTAR', 'CODIGO_ART_AAB',
+    // Inventarios + movimientos de almacen.
+    'CODIGO_ART_INVLIN', 'CODIGO_ART_MOV',
     // Sesiones de compras: el codigo puede ser tentativo (articulo
     // todavia no creado, ver fza_compras_sesiones_fotos).
     'CODIGO_ART_TENTATIVO_SESLIN',
     'CODIGO_ART',      'CODIGO_ARTICULO');
-  cAliasSku: array[0..7] of string = (
+  cAliasSku: array[0..9] of string = (
     'CODIGO_UNIDAD_SKU',    'CODIGO_UNIDAD_FAC',
     'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_LIN',
     'CODIGO_UNIDAD_PEDLIN', 'CODIGO_UNIDAD_ALBLIN',
-    'CODIGO_UNIDAD_ARTTAR', 'CODIGO_UNIDAD');
+    'CODIGO_UNIDAD_ARTTAR',
+    'CODIGO_UNIDAD_INVLIN', 'CODIGO_UNIDAD_MOV',
+    'CODIGO_UNIDAD');
 
 procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
                               out ACodArt, ACodSku: string);

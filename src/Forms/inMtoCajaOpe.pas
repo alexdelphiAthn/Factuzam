@@ -83,6 +83,7 @@ type
     dsStock: TDataSource;
     pnlFotoStock: TPanel;
     imgFotoStock: TImage;
+    splFotoStock: TcxSplitter;
     splOpe: TcxSplitter;
     cxstylrpstry: TcxStyleRepository;
     styPrincipal: TcxStyle;
@@ -1875,6 +1876,7 @@ begin
     if not Layout.Disponible then Exit;
     Layout.RestaurarGeometria(Self);
     Layout.RestaurarAlturaPanel('StockPanelHeight', pnlBusqueda, 30);
+    Layout.RestaurarAnchoPanel('FotoStockWidth',   pnlFotoStock, 50);
     Layout.RestaurarGrid('Lineas', tvLineasOpe);
   finally
     FreeAndNil(Layout);
@@ -2762,6 +2764,7 @@ begin
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('StockPanelHeight', pnlBusqueda);
+    Layout.GuardarAnchoPanel('FotoStockWidth',    pnlFotoStock);
     Layout.GuardarGrid('Lineas', tvLineasOpe);
     if Layout.PreguntarYGrabar('Personalización Caja') then
       ShowMessage('Layout guardado.');
