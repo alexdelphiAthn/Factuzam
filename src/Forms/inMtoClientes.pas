@@ -434,7 +434,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
-  inMtoFacturas,
+  inMtoFacturasBase,
   inMtoEmpresas,
   inMtoArticulos,
   inMtoModalCliEti,

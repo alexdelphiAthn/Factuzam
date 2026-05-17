@@ -24,7 +24,7 @@ uses
   DBAccess, Uni, frxExportXLSX, frxClass, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
-  cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturas,
+  cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturasBase,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
   frxExportBaseImageSettingsDialog, frCoreClasses;

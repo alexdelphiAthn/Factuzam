@@ -491,7 +491,7 @@ uses
   inMtoTarifas,
   inMtoFamilias,
   inMtoEmpresas,
-  inMtoFacturas,
+  inMtoFacturasBase,
   inMtoModalArtTar,
   inLibGlobalVar,
   inMtoModalGenerarSKUs,

@@ -30,7 +30,7 @@ uses
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
-  inMtoFacturas in 'src\Forms\inMtoFacturas.pas' {frmMtoFacturas},
+  inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
   inMtoClientes in 'src\Forms\inMtoClientes.pas' {frmMtoClientes},
   inMtoContadores in 'src\Forms\inMtoContadores.pas' {frmMtoContadores},
