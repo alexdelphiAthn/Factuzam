@@ -69,7 +69,7 @@ procedure TfrmMtoModalEmpCer.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+  Action := caHide;
 end;
 
 procedure TfrmMtoModalEmpCer.FormCreate(Sender: TObject);

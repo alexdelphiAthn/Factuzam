@@ -152,13 +152,13 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    >= :pFDESDE                         ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    <= :pFHASTA                         ';
+      '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     ATicket.Alinear(alIzquierda);
     if not Q.IsEmpty then
@@ -257,16 +257,16 @@ begin
       '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
       '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA >= :pFDESDE                            ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA <= :pFHASTA                            ' +
-      '    AND o.IMPORTE_TOTAL_OPCAJA < 0                                   ' +
+      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
+      '    AND o.TIPO_OPERACION_OPCAJA = ''DV''                             ' +
       '  GROUP BY p.CODIGO_FP_CFP                                           ' +
       '  ORDER BY p.CODIGO_FP_CFP                                           ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
@@ -329,15 +329,15 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    >= :pFDESDE                         ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    <= :pFHASTA                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
       '  GROUP BY FAMILIA                                                   ' +
       '  ORDER BY NETO DESC                                                 ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     if Q.IsEmpty then Exit;
     ATicket.SaltarLineas(1);
@@ -379,15 +379,15 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    >= :pFDESDE                         ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA    <= :pFHASTA                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
       '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA                                  ' +
       '  ORDER BY NETO DESC                                                 ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     if Q.IsEmpty then Exit;
     ATicket.SaltarLineas(1);
@@ -435,15 +435,15 @@ begin
       '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
       '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA >= :pFDESDE                            ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA <= :pFHASTA                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
       '  GROUP BY p.CODIGO_FP_CFP, fp.DESCRIPCION_FORMA_PAGO_CFP            ' +
       '  ORDER BY IMP DESC                                                  ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     if Q.IsEmpty then Exit;
     ATicket.SaltarLineas(1);
@@ -490,15 +490,15 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                          ' +
       '    AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                          ' +
       '    AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                             ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA  >= :pFDESDE                           ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA  <= :pFHASTA                           ' +
+      '    AND o.FECHA_OPERACION_OPCAJA  >= :pFDESDE                           ' +
+      '    AND o.FECHA_OPERACION_OPCAJA  <= :pFHASTA                           ' +
       '  GROUP BY f.SERIE_FAC                                               ' +
       '  ORDER BY f.SERIE_FAC                                               ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDate    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDate    := AArqueo.FechaHasta;
+    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
     Q.Open;
     if Q.IsEmpty then Exit;
     ATicket.SaltarLineas(1);

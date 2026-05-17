@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inMtoFacturas                                                 }
+{  Módulo:       inMtoFacturasBase                                             }
 {    Tipo:       Formulario (Mto)                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       11/05/2026                                                    }
@@ -12,7 +12,7 @@
 {    Mantenimiento de facturas de venta.                                       }
 {    Cabecera, lineas, impuestos y totales sobre fza_facturas.                 }
 {******************************************************************************}
-unit inMtoFacturas;
+unit inMtoFacturasBase;
 
 interface
 
@@ -55,7 +55,7 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue;
 
 type
-  TfrmMtoFacturas = class(TfrmMtoGen)
+  TfrmMtoFacturasBase = class(TfrmMtoGen)
     pnlVerifactu: TPanel;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
@@ -504,6 +504,13 @@ type
     procedure ResetForm; override;
     procedure CambiarIVA;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    // Nombre de la vista SQL a consultar en el listado principal.
+    // La filtra el propio motor de BD (vi_facturas_normales /
+    // vi_facturas_simplificadas), no toca al codigo.
+    function NombreVistaListado: string; virtual;
+    // TIPO_FAC que el descendiente quiere por defecto en los inserts
+    // (se aplicara en unqryTablaGAfterInsert en commits siguientes).
+    function TipoFacturaFiltro: string; virtual;
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -513,7 +520,7 @@ type
   end;
 
 //var
-//  //frmMtoFacturas: TfrmMtoFacturas;
+//  //frmMtoFacturasBase: TfrmMtoFacturasBase;
 //  dmmFacturas : TdmFacturas;
 
 implementation
@@ -544,7 +551,7 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
-procedure TfrmMtoFacturas.btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
   Sender: TObject);
 var
   e: TcxCustomEdit;
@@ -582,7 +589,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.ResetForm;
+procedure TfrmMtoFacturasBase.ResetForm;
 begin
   inherited;
   if Assigned(dmmFacturas) and Assigned(pcCab) and Assigned(pcDetail) then
@@ -592,7 +599,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnUpdateClienteClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
 begin
   inherited;
   with dmmFacturas.unqryTablaG do
@@ -605,7 +612,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnUpdateEmpresaClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnUpdateEmpresaClick(Sender: TObject);
 begin
   inherited;
   with dmmFacturas.unqryTablaG do
@@ -618,7 +625,7 @@ begin
   end;
  end;
 
-procedure TfrmMtoFacturas.sbNuevaFacturaClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.sbNuevaFacturaClick(Sender: TObject);
 var
   sEmpresaDef:String;
 begin
@@ -647,7 +654,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnImprimirReciboClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnImprimirReciboClick(Sender: TObject);
 var
   form:TfrmPrintRecFac;
 begin
@@ -665,7 +672,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnIraArticuloClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
   with tvLineasFactura.DataController.DataSet do
@@ -674,7 +681,7 @@ begin
           FieldByName(fcodart).AsString);
 end;
 
-procedure TfrmMtoFacturas.actArticuloExecute(Sender: TObject);
+procedure TfrmMtoFacturasBase.actArticuloExecute(Sender: TObject);
 begin
   inherited;
     if ((pcDetail.ActivePage = tsLineasFactura)) then
@@ -683,19 +690,19 @@ begin
       ShowMto(Self.Owner, 'Articulos');
 end;
 
-procedure TfrmMtoFacturas.actClienteExecute(Sender: TObject);
+procedure TfrmMtoFacturasBase.actClienteExecute(Sender: TObject);
 begin
   inherited;
   btnIraClienteClick(Sender);
 end;
 
-procedure TfrmMtoFacturas.actEmpresaExecute(Sender: TObject);
+procedure TfrmMtoFacturasBase.actEmpresaExecute(Sender: TObject);
 begin
   inherited;
   btnIrAEmpresaClick(Sender);
 end;
 
-procedure TfrmMtoFacturas.ActualizarComboSeries;
+procedure TfrmMtoFacturasBase.ActualizarComboSeries;
 begin
   if ((dsTablaG.State = dsInsert)) then
   begin
@@ -716,7 +723,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnExportarLineasClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnExportarLineasClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxGrdLineasFactura, 'Lineas_Factura_' +
@@ -725,13 +732,13 @@ begin
                 dsTablaG.Dataset.FieldByName(fnrofac).AsString);
 end;
 
-procedure TfrmMtoFacturas.btnCalculatorClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnCalculatorClick(Sender: TObject);
 begin
   inherited;
   jvcalcAux.Execute;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_CLIENTEKeyUp(Sender: TObject; var Key: Word;
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   inherited;
@@ -743,7 +750,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_CLIENTEPropertiesButtonClick(
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesButtonClick(
                                                          Sender: TObject;
                                                          AButtonIndex: Integer);
 begin
@@ -758,13 +765,13 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_CLIENTEPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesChange(Sender: TObject);
 begin
   inherited;
   //ActualizarComboSeries;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_CLIENTEPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesEditValueChanged(
   Sender: TObject);
   var
     e: TcxCustomEdit;
@@ -785,7 +792,7 @@ begin
     end;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
+procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
@@ -797,14 +804,14 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnCODIGO_EMPRESA_FACTURAPropertiesChange(
+procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesChange(
   Sender: TObject);
 begin
   inherited;
   //ActualizarComboSeries;
 end;
 
-procedure TfrmMtoFacturas.btnExportarRecibosClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnExportarRecibosClick(Sender: TObject);
 begin
   inherited;
   ExportarExcel(cxGrdLineasFactura, 'Recibos_Factura_' +
@@ -813,7 +820,7 @@ begin
                       dsTablaG.Dataset.FieldByName(fnrofac).AsString);
 end;
 
-procedure TfrmMtoFacturas.btnGenerarRecibosClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
 var
   bReemplazar:Boolean;
 begin
@@ -850,7 +857,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.sbImprimirClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
 var
   form: TfrmPrintFac;
 begin
@@ -866,25 +873,25 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnReciboDevueltoClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnReciboDevueltoClick(Sender: TObject);
 begin
   inherited;
   CambiarEstadoRecibo('Devuelto');
 end;
 
-procedure TfrmMtoFacturas.btnReciboEmitidoClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnReciboEmitidoClick(Sender: TObject);
 begin
   inherited;
   CambiarEstadoRecibo('Emitido');
 end;
 
-procedure TfrmMtoFacturas.btnReciboPagadoClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
 begin
   inherited;
   CambiarEstadoRecibo('Pagado');
 end;
 
-procedure TfrmMtoFacturas.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
+procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
   Sender: TObject);
 var
   Combo    : TcxComboBox;
@@ -918,7 +925,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 var
   e          : TcxCustomEdit;
@@ -1002,7 +1009,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.sbRectificarClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.sbRectificarClick(Sender: TObject);
 var
   form:TfrmGenFacRec;
 begin
@@ -1016,7 +1023,7 @@ begin
    end;
 end;
 
-procedure TfrmMtoFacturas.CambiarEstadoRecibo(sEstado: string);
+procedure TfrmMtoFacturasBase.CambiarEstadoRecibo(sEstado: string);
 begin
   with dmmFacturas.unqryRecibos do
   begin
@@ -1032,7 +1039,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.cbbCanalIVAPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.cbbCanalIVAPropertiesChange(Sender: TObject);
 var
  Edit: TcxCustomEdit;
  NewValue: Variant;
@@ -1052,7 +1059,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.cbbSerieFacturaKeyUp(Sender: TObject; var Key: Word;
+procedure TfrmMtoFacturasBase.cbbSerieFacturaKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   inherited;
@@ -1060,7 +1067,7 @@ begin
     cbbSerieFactura.DroppedDown := True;
 end;
 
-procedure TfrmMtoFacturas.cbbSerieFacturaPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.cbbSerieFacturaPropertiesChange(Sender: TObject);
 var
   sSubtipo: string;
 begin
@@ -1079,7 +1086,7 @@ begin
   dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
-procedure TfrmMtoFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
+procedure TfrmMtoFacturasBase.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
   Sender: TObject);
 var
   e: TcxCustomEdit;
@@ -1112,7 +1119,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.CheckConsolidacion;
+procedure TfrmMtoFacturasBase.CheckConsolidacion;
 begin
 (*  if Assigned(dmmFacturas) and
      Assigned(dsTablaG.Dataset) and
@@ -1157,8 +1164,8 @@ end;
 // El articulo activo vive en la linea seleccionada del sub-grid
 // tvLineasFactura. Leemos de ahi para que Ctrl+Alt+F muestre la foto
 // de la linea actual.
-procedure TfrmMtoFacturas.ResolverArtSkuActivo(out ACodArt,
-                                               ACodSku: string);
+procedure TfrmMtoFacturasBase.ResolverArtSkuActivo(out ACodArt,
+                                                   ACodSku: string);
 var
   ds: TDataSet;
 begin
@@ -1171,7 +1178,9 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.CrearTablaPrincipal;
+procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
+var
+  sVista: string;
 begin
   inherited;
   dmmFacturas := (tdmDataModule as TdmFacturas);
@@ -1192,10 +1201,39 @@ begin
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   dmmFacturas.OpenTables;
+  // Cada descendiente apunta a su propia vista de BD: el filtrado por
+  // TIPO_FAC vive en la vista, no en el form. Si el descendiente devuelve
+  // una vista distinta a vi_facturas, recargamos unqryTablaG con la nueva
+  // SQL.
+  sVista := NombreVistaListado;
+  if not SameText(sVista, 'vi_facturas') then
+  begin
+    with dmmFacturas.unqryTablaG do
+    begin
+      DisableControls;
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM ' + sVista;
+        Open;
+      finally
+        EnableControls;
+      end;
+    end;
+  end;
   CheckConsolidacion;
 end;
 
-procedure TfrmMtoFacturas.chkConsolidadaPropertiesChange(Sender: TObject);
+function TfrmMtoFacturasBase.NombreVistaListado: string;
+begin
+  Result := 'vi_facturas';
+end;
+
+function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
+begin
+  Result := '';
+end;
+
+procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
 begin
   inherited;
 //  if Assigned(dmmFacturas) then
@@ -1204,7 +1242,7 @@ begin
 //        CheckConsolidacion;
 end;
 
-procedure TfrmMtoFacturas.chkCrearArticulosPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
 begin
   inherited;
   if (chkCrearArticulos.Checked = True) then
@@ -1227,7 +1265,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.chkDescripcion_ampliadaPropertiesChange(
+procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
   Sender: TObject);
 begin
   inherited;
@@ -1253,7 +1291,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                    chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURAPropertiesChange(
   Sender: TObject);
 begin
@@ -1274,7 +1312,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.chkFechaEntregaPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.chkFechaEntregaPropertiesChange(Sender: TObject);
 begin
   inherited;
   if (chkFechaEntrega.Checked = True) then
@@ -1283,7 +1321,7 @@ begin
     ctbFECHA_ENTREGA_FACTURA_LINEA.Visible := False;
 end;
 
-procedure TfrmMtoFacturas.dsTablaGStateChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   if Assigned(dsTablaG.DataSet) then
@@ -1316,7 +1354,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.dteFECHA_FACTURAKeyUp(Sender: TObject;
+procedure TfrmMtoFacturasBase.dteFECHA_FACTURAKeyUp(Sender: TObject;
                                                      var Key: Word;
                                                      Shift: TShiftState);
 begin
@@ -1325,7 +1363,7 @@ begin
     dteFECHA_FACTURA.DroppedDown := True;
 end;
 
-procedure TfrmMtoFacturas.dteFECHA_FACTURAPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.dteFECHA_FACTURAPropertiesChange(Sender: TObject);
 var
   e: TcxCustomEdit;
   NewValue : Variant;
@@ -1350,7 +1388,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.btnIrAClienteClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnIrAClienteClick(Sender: TObject);
 begin
   inherited;
     with cxGrdDBTabPrin.DataController.DataSet do
@@ -1359,7 +1397,7 @@ begin
           FieldByName('CODIGO_CLI_FAC').AsString);
 end;
 
-procedure TfrmMtoFacturas.btnIrAEmpresaClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnIrAEmpresaClick(Sender: TObject);
 begin
   inherited;
   ShowMto(Self.Owner,
@@ -1368,7 +1406,7 @@ begin
                                             'CODIGO_EMP_FAC').AsString);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                 cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
@@ -1389,7 +1427,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
                                                                Sender: TObject);
 var
@@ -1540,7 +1578,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.sbGrabarClick(Sender: TObject);
+procedure TfrmMtoFacturasBase.sbGrabarClick(Sender: TObject);
 begin
   with dmmFacturas do
   begin
@@ -1564,7 +1602,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.tvLineasFacturaKeyDown(Sender: TObject;
+procedure TfrmMtoFacturasBase.tvLineasFacturaKeyDown(Sender: TObject;
                                                  var Key: Word;
                                                  Shift: TShiftState);
 begin
@@ -1589,7 +1627,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturas.CambiarIVA;
+procedure TfrmMtoFacturasBase.CambiarIVA;
 begin
   if (dsTablaG.DataSet.State = dsInsert) then
     dmmFacturas.AsignarIVA(
@@ -1597,7 +1635,7 @@ begin
         dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
               tvLineasFacturaPORCEN_DTO_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
@@ -1608,7 +1646,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
             tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
@@ -1619,7 +1657,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 //var
 //  e: TcxCustomEdit;
@@ -1631,7 +1669,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
  cxgrdbclmntv1PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
                                                                Sender: TObject);
 begin
@@ -1642,7 +1680,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
  cxgrdbclmntv1PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
                                                                Sender: TObject);
 begin
@@ -1653,7 +1691,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                     cxgrdbclmntv1TIPOIVA_ARTICULO_FACTURA_LINEAPropertiesChange(
                                                                Sender: TObject);
 begin
@@ -1664,7 +1702,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                       ctbCODIGO_FAMILIA_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
@@ -1673,7 +1711,7 @@ begin
 
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                     ctbCODIGO_PROVEEDOR_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
@@ -1681,7 +1719,7 @@ begin
   //rellenar razon social proveedor y precio de coste
 end;
 
-procedure TfrmMtoFacturas.ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -1691,7 +1729,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.
+procedure TfrmMtoFacturasBase.
                   cxgrdbclmntv1CANTIDAD_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
@@ -1702,7 +1740,7 @@ begin
              dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturas.AsignarControles;
+procedure TfrmMtoFacturasBase.AsignarControles;
 begin
   with dmmFacturas do
   begin
@@ -1723,7 +1761,7 @@ begin
 end;
 
 
-procedure TfrmMtoFacturas.spnRetencionPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.spnRetencionPropertiesEditValueChanged(
   Sender: TObject);
 //var
 //  e : TcxCustomEdit;
@@ -1739,7 +1777,7 @@ end;
 -REVISAR EL AFTERINSERT PARA PONER UN VALOR POR DEFECTO*)
 
 initialization
-  ForceReferenceToClass(TfrmMtoFacturas);
+  ForceReferenceToClass(TfrmMtoFacturasBase);
 end.
 
 

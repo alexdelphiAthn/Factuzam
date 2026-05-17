@@ -193,7 +193,7 @@ uses
   inMtoPrincipal,
   inMtoArticulos,
   inMtoClientes,
-  inMtoFacturas;
+  inMtoFacturasBase;
 
 {$R *.dfm}
 
