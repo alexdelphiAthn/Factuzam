@@ -990,7 +990,10 @@ begin
     hook := TFotoPicHook.Create;
     hook.Resolucion := res;
     oHooksReporte.Add(hook);
-    pic.OnBeforePrint := hook.OnBeforePrint;
+    // En FastReport 6, `OnBeforePrint` de un TfrxView es una propiedad
+    // string (nombre de un proc del script). El evento Delphi para
+    // engancharse en codigo nativo es `OnBeforePrintEvent`.
+    pic.OnBeforePrintEvent := hook.OnBeforePrint;
   end;
 end;
 
