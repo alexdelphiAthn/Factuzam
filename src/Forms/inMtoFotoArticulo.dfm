@@ -154,9 +154,9 @@ inherited frmFotoArticulo: TfrmFotoArticulo
   end
   object dlgAbrirFoto: TOpenDialog
     Filter =
-      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|' +
-      'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|BMP|*.bmp|' +
-      'Todos|*.*'
+      'Im'#225'genes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.avif;*.heic;*.bmp|' +
+      'PNG|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|' +
+      'AVIF|*.avif|HEIC|*.heic;*.heif|BMP|*.bmp|Todos|*.*'
     Title = 'Seleccionar foto'
     Left = 624
     Top = 16
