@@ -29,7 +29,7 @@ uses
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -81,6 +81,8 @@ type
     dbtvStock: TcxGridDBTableView;
     cxgrdlvlBusqueda: TcxGridLevel;
     dsStock: TDataSource;
+    pnlFotoStock: TPanel;
+    imgFotoStock: TImage;
     splOpe: TcxSplitter;
     cxstylrpstry: TcxStyleRepository;
     styPrincipal: TcxStyle;
@@ -193,6 +195,8 @@ type
     function HayLineasConDeposito: Boolean;
     procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
+    procedure DsLineasDataChange(Sender: TObject; Field: TField);
+    procedure RefrescarFotoStock;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -2647,12 +2651,57 @@ begin
   Action := caFree;
 end;
 
+// Carga en imgFotoStock la foto a 300 px del articulo / SKU de la
+// linea activa. Lo invoca DsLineasDataChange al cambiar de registro.
+procedure TfrmMtoOpeCaja.RefrescarFotoStock;
+var
+  ds   : TDataSet;
+  sArt : string;
+  sSku : string;
+  info : TFotoInfo;
+  sRuta: string;
+  png  : TPngImage;
+  f    : TField;
+begin
+  if not Assigned(imgFotoStock) then Exit;
+  imgFotoStock.Picture.Assign(nil);
+  if not Assigned(dsLineas) then Exit;
+  ds := dsLineas.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sArt := '';
+  sSku := '';
+  f := ds.FindField('CODIGO_ART_FACLIN');
+  if Assigned(f) and (not f.IsNull) then sArt := f.AsString;
+  f := ds.FindField('CODIGO_UNIDAD_FACLIN');
+  if Assigned(f) and (not f.IsNull) then sSku := f.AsString;
+  if sArt = '' then Exit;
+  info  := oFotos.Resolver(sArt, sSku);
+  sRuta := oFotos.RutaFoto(info, frPx300);
+  if sRuta = '' then Exit;
+  png := TPngImage.Create;
+  try
+    png.LoadFromFile(sRuta);
+    imgFotoStock.Picture.Assign(png);
+  finally
+    FreeAndNil(png);
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.DsLineasDataChange(Sender: TObject; Field: TField);
+begin
+  // Solo refrescamos cuando cambia el registro activo (Field = nil),
+  // no en cada cambio de columna.
+  if Field = nil then
+    RefrescarFotoStock;
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
   DatosCaja := TdmCajaOpe.Create(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
+  dsLineas.OnDataChange := DsLineasDataChange;
   ConstruirColumnasDinamicas;
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;

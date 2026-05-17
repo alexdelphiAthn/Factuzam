@@ -22,12 +22,14 @@ unit inLibFotos;
     Encapsula la persistencia, redimensionado y resolucion de fotos de
     articulos y SKUs. La tabla fza_articulos_fotos guarda una fila por
     foto registrada (a nivel articulo cuando CODIGO_UNIDAD_FOT = '',
-    a nivel SKU en otro caso); las imagenes reales viven en
-    `oAppParams.GetPath('appDirFotos')` repartidas en tres subcarpetas:
+    a nivel SKU en otro caso); las imagenes viven en
+    `oAppParams.GetPath('appDirFotos')` repartidas en tres subcarpetas
+    siempre como PNG:
 
       300/   PNG redimensionado a 300 px (lado mayor)
       600/   PNG redimensionado a 600 px (lado mayor)
-      real/  fichero original con su extension nativa
+      real/  PNG en la resolucion original (sin redimensionar, sin
+             perdida)
 
     El nombre de fichero base (`NOMBRE_FOT_FOT`) es estable y se genera al
     alta a partir del par (articulo, sku) y se conserva mientras la foto
@@ -36,8 +38,9 @@ unit inLibFotos;
 
     Resolucion (analogo al fallback de tarifas):
       1. Si hay foto del SKU, esa.
-      2. Si no, foto del articulo padre.
-      3. Si no, vacio.
+      2. Si no, fotos por prefijos del SKU separados por '/'.
+      3. Si no, foto del articulo padre.
+      4. Si no, vacio.
 
   Constantes para nombres de columna SQL: vease seccion `const` mas abajo.
 }
@@ -112,11 +115,12 @@ type
     procedure GuardarRedimensionado(const AOriginal: TGraphic;
                                     const ARutaPng: string;
                                     ALadoMayor: Integer);
+    procedure GuardarComoPng(const AOriginal: TGraphic;
+                             const ARutaPng: string);
     function CargarGraficoDeFichero(const ARuta: string): TGraphic;
     procedure RotarBitmap90(ABitmap: TBitmap; AHorario: Boolean);
     procedure RotarFicheroPng(const ARuta: string; AHorario: Boolean);
-    procedure RotarFicheroReal(const ARuta: string; AHorario: Boolean);
-    procedure BorrarFicherosDeNombre(const ANombreBase, AExtReal: string);
+    procedure BorrarFicherosDeNombre(const ANombreBase: string);
   public
     /// Ruta del fichero para una foto resuelta, en la resolucion pedida.
     /// Devuelve '' si AInfo.Encontrada = False o si el fichero no existe.
@@ -277,8 +281,7 @@ begin
     Result := 0;
 end;
 
-procedure TFotosArticulos.BorrarFicherosDeNombre(const ANombreBase,
-                                                 AExtReal: string);
+procedure TFotosArticulos.BorrarFicherosDeNombre(const ANombreBase: string);
 
   procedure BorrarSiExiste(const ARuta: string);
   begin
@@ -286,15 +289,11 @@ procedure TFotosArticulos.BorrarFicherosDeNombre(const ANombreBase,
       DeleteFile(PChar(ARuta));
   end;
 
-var
-  sExt: string;
 begin
   if ANombreBase = '' then Exit;
   BorrarSiExiste(SubdirDe(frPx300) + ANombreBase + '.png');
   BorrarSiExiste(SubdirDe(frPx600) + ANombreBase + '.png');
-  sExt := AExtReal;
-  if sExt = '' then sExt := 'png';
-  BorrarSiExiste(SubdirDe(frReal) + ANombreBase + '.' + sExt);
+  BorrarSiExiste(SubdirDe(frReal)  + ANombreBase + '.png');
 end;
 
 { ----------------------------------------------------------------- }
@@ -380,20 +379,14 @@ end;
 function TFotosArticulos.RutaFoto(const AInfo: TFotoInfo;
                                   AResolucion: TFotoResolucion): string;
 var
-  sDir, sFichero, sExt: string;
+  sDir, sFichero: string;
 begin
+  // Las tres copias son PNG (real/ conserva la resolucion original).
   Result := '';
   if not AInfo.Encontrada then Exit;
   sDir := SubdirDe(AResolucion);
   if sDir = '' then Exit;
-  if AResolucion = frReal then
-  begin
-    sExt := AInfo.ExtensionOrigen;
-    if sExt = '' then sExt := 'png';
-  end
-  else
-    sExt := 'png';
-  sFichero := sDir + AInfo.NombreBase + '.' + sExt;
+  sFichero := sDir + AInfo.NombreBase + '.png';
   if FileExists(sFichero) then
     Result := sFichero;
 end;
@@ -444,6 +437,39 @@ begin
       FreeAndNil(bmp);
       raise;
     end;
+  end;
+end;
+
+procedure TFotosArticulos.GuardarComoPng(const AOriginal: TGraphic;
+                                         const ARutaPng: string);
+// Guarda el grafico tal cual (resolucion original) como PNG. Para los
+// formatos que ya son PNG es directo; para JPG/BMP/otros se hace un
+// pase a TBitmap pf32bit y luego TPngImage.Assign.
+var
+  oBitmap: TBitmap;
+  oPng   : TPngImage;
+begin
+  if (AOriginal = nil) or
+     (AOriginal.Width = 0) or (AOriginal.Height = 0) then Exit;
+  if AOriginal is TPngImage then
+  begin
+    TPngImage(AOriginal).SaveToFile(ARutaPng);
+    Exit;
+  end;
+  oBitmap := TBitmap.Create;
+  try
+    oBitmap.PixelFormat := pf32bit;
+    oBitmap.SetSize(AOriginal.Width, AOriginal.Height);
+    oBitmap.Canvas.Draw(0, 0, AOriginal);
+    oPng := TPngImage.Create;
+    try
+      oPng.Assign(oBitmap);
+      oPng.SaveToFile(ARutaPng);
+    finally
+      FreeAndNil(oPng);
+    end;
+  finally
+    FreeAndNil(oBitmap);
   end;
 end;
 
@@ -574,53 +600,9 @@ begin
   end;
 end;
 
-procedure TFotosArticulos.RotarFicheroReal(const ARuta: string;
-                                           AHorario: Boolean);
-var
-  graf : TGraphic;
-  bmp  : TBitmap;
-  sExt : string;
-  jpg  : TJPEGImage;
-  png  : TPngImage;
-begin
-  if not FileExists(ARuta) then Exit;
-  sExt := LowerCase(ExtractFileExt(ARuta));
-  graf := CargarGraficoDeFichero(ARuta);
-  bmp  := TBitmap.Create;
-  try
-    bmp.PixelFormat := pf32bit;
-    bmp.SetSize(graf.Width, graf.Height);
-    bmp.Canvas.Draw(0, 0, graf);
-    RotarBitmap90(bmp, AHorario);
-    // Guardamos en la misma extension original (re-encodificamos)
-    if (sExt = '.jpg') or (sExt = '.jpeg') then
-    begin
-      jpg := TJPEGImage.Create;
-      try
-        jpg.Assign(bmp);
-        jpg.SaveToFile(ARuta);
-      finally
-        FreeAndNil(jpg);
-      end;
-    end
-    else if (sExt = '.bmp') then
-      bmp.SaveToFile(ARuta)
-    else
-    begin
-      // PNG o cualquier otra: PNG es lo mas seguro
-      png := TPngImage.Create;
-      try
-        png.Assign(bmp);
-        png.SaveToFile(ARuta);
-      finally
-        FreeAndNil(png);
-      end;
-    end;
-  finally
-    FreeAndNil(bmp);
-    FreeAndNil(graf);
-  end;
-end;
+// Las tres copias son PNG, asi que rotar `real/` es exactamente lo
+// mismo que rotar `300/` o `600/`. Dejamos el alias por claridad en
+// el sitio de llamada.
 
 { ----------------------------------------------------------------- }
 {   Guardar / eliminar / rotar                                      }
@@ -655,7 +637,9 @@ begin
   ForceDirectories(sDirBase + cSubdirReal);
 
   sClave := ClaveNombre(ACodArt, ACodSku);
-  sExt   := LowerCase(ExtractFileExt(AFicheroOrigen));
+  // La extension de origen ya no se usa para almacenar (todo es PNG)
+  // pero la dejamos rellena en BBDD para trazabilidad.
+  sExt := LowerCase(ExtractFileExt(AFicheroOrigen));
   if Length(sExt) > 0 then
     sExt := Copy(sExt, 2, MaxInt);
   if sExt = '' then sExt := 'png';
@@ -688,11 +672,15 @@ begin
   end;
   sNombreNuevo := ComponerNombre(sClave, iIndice);
 
-  // 2. Copia real (con extension original) y redimensionados PNG.
-  TFile.Copy(AFicheroOrigen,
-             SubdirDe(frReal) + sNombreNuevo + '.' + sExt, True);
+  // 2. Generamos los tres PNG: 300, 600 y real (en su resolucion
+  //    nativa). La copia real ya no es un volcado byte-a-byte: se
+  //    re-encodifica a PNG, manteniendo las dimensiones originales,
+  //    para que las tres copias se traten igual (mismo formato, sin
+  //    perdida).
   oGraphic := CargarGraficoDeFichero(AFicheroOrigen);
   try
+    GuardarComoPng(oGraphic,
+                   SubdirDe(frReal) + sNombreNuevo + '.png');
     GuardarRedimensionado(oGraphic,
                           SubdirDe(frPx300) + sNombreNuevo + '.png',
                           cLado300);
@@ -735,7 +723,7 @@ begin
   //    distinto del nuevo). Se hace al final para que un fallo en la
   //    escritura no deje al sistema sin foto.
   if (sNombreAnterior <> '') and (sNombreAnterior <> sNombreNuevo) then
-    BorrarFicherosDeNombre(sNombreAnterior, sExtAnterior);
+    BorrarFicherosDeNombre(sNombreAnterior);
 
   Result.Encontrada      := True;
   if ACodSku = '' then
@@ -756,13 +744,11 @@ var
   info             : TFotoInfo;
   sClave           : string;
   sNombreAnterior  : string;
-  sExtAnterior     : string;
   sNombreNuevo     : string;
   iIndice          : Integer;
   ruta300, ruta600 : string;
   rutaReal         : string;
-  rutaReal300, rutaReal600: string;
-  rutaRealNuevo    : string;
+  rutaReal300, rutaReal600, rutaRealNuevo: string;
   q                : TUniQuery;
 begin
   Result.Clear;
@@ -775,28 +761,25 @@ begin
   // hereda del padre afecta a la fila padre y todos los SKUs que la
   // heredaban ven la imagen rotada.
   sClave := ClaveNombre(ACodArt, info.ClaveResuelta);
-
   sNombreAnterior := info.NombreBase;
-  sExtAnterior    := info.ExtensionOrigen;
-  if sExtAnterior = '' then sExtAnterior := 'png';
 
   ruta300  := SubdirDe(frPx300) + sNombreAnterior + '.png';
   ruta600  := SubdirDe(frPx600) + sNombreAnterior + '.png';
-  rutaReal := SubdirDe(frReal)  + sNombreAnterior + '.' + sExtAnterior;
+  rutaReal := SubdirDe(frReal)  + sNombreAnterior + '.png';
 
-  // Rotamos in situ sobre los ficheros existentes...
+  // Las tres copias son PNG; mismo procedimiento.
   RotarFicheroPng(ruta300,  AHorario);
   RotarFicheroPng(ruta600,  AHorario);
-  RotarFicheroReal(rutaReal, AHorario);
+  RotarFicheroPng(rutaReal, AHorario);
 
-  // ...y los renombramos al siguiente indice.
+  // Renombramos al siguiente indice.
   iIndice      := ExtraerIndice(sNombreAnterior) + 1;
   if iIndice < 1 then iIndice := 1;
   sNombreNuevo := ComponerNombre(sClave, iIndice);
 
-  rutaRealNuevo := SubdirDe(frReal) + sNombreNuevo + '.' + sExtAnterior;
   rutaReal300   := SubdirDe(frPx300) + sNombreNuevo + '.png';
   rutaReal600   := SubdirDe(frPx600) + sNombreNuevo + '.png';
+  rutaRealNuevo := SubdirDe(frReal)  + sNombreNuevo + '.png';
   if FileExists(ruta300)  then RenameFile(ruta300,  rutaReal300);
   if FileExists(ruta600)  then RenameFile(ruta600,  rutaReal600);
   if FileExists(rutaReal) then RenameFile(rutaReal, rutaRealNuevo);
@@ -826,57 +809,39 @@ begin
   Result.CodigoSku       := ACodSku;
   Result.ClaveResuelta   := info.ClaveResuelta;
   Result.NombreBase      := sNombreNuevo;
-  Result.ExtensionOrigen := sExtAnterior;
+  Result.ExtensionOrigen := info.ExtensionOrigen;
 end;
 
 procedure TFotosArticulos.Eliminar(const ACodArt, ACodUnidad: string);
 // Borra la fila exacta (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT) y los tres
-// ficheros que cuelgan de ella. ACodUnidad = '' borra la foto a nivel
-// articulo; un valor concreto borra esa fila de SKU o prefijo
+// ficheros PNG que cuelgan de ella. ACodUnidad = '' borra la foto a
+// nivel articulo; un valor concreto borra esa fila de SKU o prefijo
 // independientemente de si hay heredadas por debajo.
 var
-  q          : TUniQuery;
-  sNombre    : string;
-  sExt       : string;
-
-  procedure BorrarSiExiste(const ARuta: string);
-  begin
-    if (ARuta <> '') and FileExists(ARuta) then
-      DeleteFile(PChar(ARuta));
-  end;
-
+  q       : TUniQuery;
+  sNombre : string;
 begin
   // Localizamos el nombre del fichero asociado a la fila exacta antes
   // de borrar el registro.
   sNombre := '';
-  sExt    := '';
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
     q.SQL.Text :=
-      ' SELECT NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
-      '   FROM fza_articulos_fotos '                  +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART '      +
+      ' SELECT NOMBRE_FOT_FOT '                  +
+      '   FROM fza_articulos_fotos '             +
+      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
       '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
     q.ParamByName('CODIGO_ART').AsString    := ACodArt;
     q.ParamByName('CODIGO_UNIDAD').AsString := ACodUnidad;
     q.Open;
     if not q.Eof then
-    begin
       sNombre := q.FieldByName(fnomfot).AsString;
-      sExt    := q.FieldByName(fextfot).AsString;
-    end;
   finally
     FreeAndNil(q);
   end;
 
-  if sNombre <> '' then
-  begin
-    if sExt = '' then sExt := 'png';
-    BorrarSiExiste(SubdirDe(frPx300) + sNombre + '.png');
-    BorrarSiExiste(SubdirDe(frPx600) + sNombre + '.png');
-    BorrarSiExiste(SubdirDe(frReal)  + sNombre + '.' + sExt);
-  end;
+  BorrarFicherosDeNombre(sNombre);
 
   q := TUniQuery.Create(nil);
   try
@@ -948,8 +913,6 @@ var
   info    : TFotoInfo;
   sRuta   : string;
   png     : TPngImage;
-  jpg     : TJPEGImage;
-  sExt    : string;
 begin
   oDataSet := ObtenerDataSetDeBandaPadre(APic);
   if oDataSet = nil then
@@ -963,6 +926,7 @@ begin
                                        'CODIGO_ART_LIN',
                                        'CODIGO_ART_SKU',
                                        'CODIGO_ART_PEDLIN',
+                                       'CODIGO_ART_ALBLIN',
                                        'CODIGO_ART_ARTTAR',
                                        'CODIGO_ART_AAB',
                                        'CODIGO_ART',
@@ -972,6 +936,7 @@ begin
                                        'CODIGO_UNIDAD_FACLIN',
                                        'CODIGO_UNIDAD_LIN',
                                        'CODIGO_UNIDAD_PEDLIN',
+                                       'CODIGO_UNIDAD_ALBLIN',
                                        'CODIGO_UNIDAD_ARTTAR',
                                        'CODIGO_UNIDAD']);
   if sArt = '' then
@@ -979,7 +944,6 @@ begin
     APic.Picture.Assign(nil);
     Exit;
   end;
-
   info  := oFotos.Resolver(sArt, sSku);
   sRuta := oFotos.RutaFoto(info, AResolucion);
   if sRuta = '' then
@@ -987,31 +951,14 @@ begin
     APic.Picture.Assign(nil);
     Exit;
   end;
-
-  // Cargamos en la TPicture segun la extension real.
-  sExt := LowerCase(ExtractFileExt(sRuta));
-  if sExt = '.png' then
-  begin
-    png := TPngImage.Create;
-    try
-      png.LoadFromFile(sRuta);
-      APic.Picture.Assign(png);
-    finally
-      FreeAndNil(png);
-    end;
-  end
-  else if (sExt = '.jpg') or (sExt = '.jpeg') then
-  begin
-    jpg := TJPEGImage.Create;
-    try
-      jpg.LoadFromFile(sRuta);
-      APic.Picture.Assign(jpg);
-    finally
-      FreeAndNil(jpg);
-    end;
-  end
-  else
-    APic.Picture.LoadFromFile(sRuta);
+  // Las tres copias son siempre PNG.
+  png := TPngImage.Create;
+  try
+    png.LoadFromFile(sRuta);
+    APic.Picture.Assign(png);
+  finally
+    FreeAndNil(png);
+  end;
 end;
 
 // ============================================================================

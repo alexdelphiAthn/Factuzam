@@ -24,7 +24,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.StrUtils, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Imaging.PngImage, Vcl.Imaging.Jpeg,
+  Vcl.StdCtrls, Vcl.Imaging.PngImage,
   inMtoFrmBase, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
@@ -197,39 +197,20 @@ end;
 procedure TfrmFotoArticulo.CargarFotoActual;
 var
   sRuta : string;
-  sExt  : string;
   png   : TPngImage;
-  jpg   : TJPEGImage;
 begin
   imgFoto.Picture.Assign(nil);
   if not FUltimaInfo.Encontrada then Exit;
-
   sRuta := oFotos.RutaFoto(FUltimaInfo, ResolucionElegida);
   if sRuta = '' then Exit;
-
-  sExt := LowerCase(ExtractFileExt(sRuta));
-  if sExt = '.png' then
-  begin
-    png := TPngImage.Create;
-    try
-      png.LoadFromFile(sRuta);
-      imgFoto.Picture.Assign(png);
-    finally
-      FreeAndNil(png);
-    end;
-  end
-  else if (sExt = '.jpg') or (sExt = '.jpeg') then
-  begin
-    jpg := TJPEGImage.Create;
-    try
-      jpg.LoadFromFile(sRuta);
-      imgFoto.Picture.Assign(jpg);
-    finally
-      FreeAndNil(jpg);
-    end;
-  end
-  else
-    imgFoto.Picture.LoadFromFile(sRuta);
+  // Las tres copias son siempre PNG.
+  png := TPngImage.Create;
+  try
+    png.LoadFromFile(sRuta);
+    imgFoto.Picture.Assign(png);
+  finally
+    FreeAndNil(png);
+  end;
 end;
 
 procedure TfrmFotoArticulo.rgResolucionPropertiesEditValueChanged(

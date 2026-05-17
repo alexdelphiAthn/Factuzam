@@ -153,6 +153,7 @@ type
     procedure RellenarLineasAlEntregarTodo;
   public
     dmmPedidos: TdmPedidos;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -166,6 +167,23 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// dsTablaG apunta a la cabecera de pedido. El articulo activo vive en
+// la fila del sub-grid tvPedidosLineas (CODIGO_ART_PEDLIN; los pedidos
+// trabajan a nivel articulo, sin SKU).
+procedure TfrmMtoPedidos.ResolverArtSkuActivo(out ACodArt,
+                                              ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvPedidosLineas.DataController.DataSource) then
+  begin
+    ds := tvPedidosLineas.DataController.DataSource.DataSet;
+    LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
 var

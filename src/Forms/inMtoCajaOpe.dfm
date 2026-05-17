@@ -473,6 +473,25 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Height = 116
         Align = alBottom
         TabOrder = 1
+        object pnlFotoStock: TPanel
+          Left = 1240
+          Top = 1
+          Width = 120
+          Height = 114
+          Align = alRight
+          BevelOuter = bvLowered
+          TabOrder = 1
+          object imgFotoStock: TImage
+            Left = 1
+            Top = 1
+            Width = 118
+            Height = 112
+            Align = alClient
+            Center = True
+            Proportional = True
+            Stretch = True
+          end
+        end
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
