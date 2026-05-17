@@ -428,7 +428,7 @@ end;
 procedure TfrmPrint.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+  Action := caHide;
   unqryPerfiles.Close;
 end;
 
@@ -454,16 +454,19 @@ begin
   Result := False;
   bGuardar := False;
   formulario := TfrmModalGenImpSave.Create(Application);
-  formulario.edtNombreOrigen.Text := Self.Name;
-  formulario.edtDescripcion.Text := sElegido;
-  formulario.ShowModal;
-  if (formulario.sFicha = 'S') then
-  begin
-    bGuardar := True;
-    sDescripcion := formulario.edtDescripcion.Text;
-    sPermisos := formulario.cbbPermisos.Text;
+  try
+    formulario.edtNombreOrigen.Text := Self.Name;
+    formulario.edtDescripcion.Text := sElegido;
+    formulario.ShowModal;
+    if (formulario.sFicha = 'S') then
+    begin
+      bGuardar := True;
+      sDescripcion := formulario.edtDescripcion.Text;
+      sPermisos := formulario.cbbPermisos.Text;
+    end;
+  finally
+    FreeAndNil(formulario);
   end;
-  FreeAndNil(formulario);
   if bGuardar then
   begin
     memStream:=TMemoryStream.Create;
