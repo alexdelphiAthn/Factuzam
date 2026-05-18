@@ -174,6 +174,8 @@ type
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
+    procedure cxgrdLineasEnter(Sender: TObject);
+    procedure cxgrdLineasExit(Sender: TObject);
   private
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FConjuntoPos  : TDictionary<Integer, TArrPosConjunto>;
@@ -181,6 +183,7 @@ type
     FBasicosColor : TArray<string>;
     FBmpSwatch    : TBitmap;
     function  Dmm: TdmComprasSesiones;
+    procedure ActivarEnterComoTab(AActivo: Boolean);
     procedure CargarBasicosColor;
     procedure CrearColumnasTallas;
     procedure TallaCellEditValueChanged(Sender: TObject);
@@ -216,6 +219,43 @@ const
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// ===========================================================================
+//   TJvEnterAsTab — apagar mientras el grid tiene foco
+// ===========================================================================
+// El TJvEnterAsTab heredado de TfrmBase (jvntrstb1) convierte VK_RETURN en
+// VK_TAB a nivel de mensaje de aplicacion, asi que la pulsacion de Enter no
+// llega nunca al grid (sale del control en lugar de mover de celda). Mismo
+// patron que en inMtoCajaOpe / inMtoInventarios / inMtoGeneradorProcesos:
+// recorremos componentes en los 3 niveles habituales (Self, Owner, MainForm)
+// y conmutamos EnterAsTab.
+procedure TfrmMtoPruebaSesionGrid.ActivarEnterComoTab(AActivo: Boolean);
+  procedure CambiarEn(AOwner: TComponent);
+  var
+    i : Integer;
+  begin
+    if not Assigned(AOwner) then Exit;
+    for i := 0 to AOwner.ComponentCount - 1 do
+      if AOwner.Components[i] is TJvEnterAsTab then
+        TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
+  end;
+begin
+  CambiarEn(Self);
+  CambiarEn(Self.Owner);
+  CambiarEn(Application.MainForm);
+end;
+
+procedure TfrmMtoPruebaSesionGrid.cxgrdLineasEnter(Sender: TObject);
+begin
+  inherited;
+  ActivarEnterComoTab(False);
+end;
+
+procedure TfrmMtoPruebaSesionGrid.cxgrdLineasExit(Sender: TObject);
+begin
+  inherited;
+  ActivarEnterComoTab(True);
+end;
 
 // ===========================================================================
 //   Bootstrapping
