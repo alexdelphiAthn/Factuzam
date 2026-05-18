@@ -386,6 +386,14 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               Options.Editing = False
               Width = 110
             end
+            object dbcLinNumero: TcxGridDBColumn
+              Caption = 'L'#237'nea'
+              DataBinding.FieldName = 'LINEA_SESLIN'
+              PropertiesClassName = 'TcxSpinEditProperties'
+              Properties.Increment = 10.000000000000000000
+              Properties.MinValue = 1.000000000000000000
+              Width = 70
+            end
           end
           object glLineas: TcxGridLevel
             GridView = tvLineas
