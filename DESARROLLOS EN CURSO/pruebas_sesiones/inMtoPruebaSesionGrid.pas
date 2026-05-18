@@ -326,11 +326,12 @@ begin
     col.Visible     := False;             // se hara visible segun max
     // Unbound: sin DataBinding.FieldName, valor float en la cache del grid
     col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    curProps := TcxCurrencyEditProperties(
-                  col.CreateProperties(TcxCurrencyEditProperties));
+    // PropertiesClass := X; el getter `Properties` crea la instancia y
+    // ya podemos castearla y configurarla. CreateProperties es private.
+    col.PropertiesClass := TcxCurrencyEditProperties;
+    curProps := TcxCurrencyEditProperties(col.Properties);
     curProps.DisplayFormat := '#,##0';
     curProps.OnEditValueChanged := TallaCellEditValueChanged;
-    col.PropertiesClass := TcxCurrencyEditProperties;
     FTallaColumns[i] := col;
   end;
 end;
@@ -883,8 +884,6 @@ end;
 procedure TfrmMtoPruebaSesionGrid.TallaCellEditValueChanged(Sender: TObject);
 var
   ed          : TcxCustomEdit;
-  edController: TcxCustomGridTableController;
-  iCol        : Integer;
   col         : TcxGridColumn;
   iLinea, iAc : Integer;
   arr         : TArrPosConjunto;
@@ -897,8 +896,8 @@ begin
   ed := TcxCustomEdit(Sender);
   ed.PostEditValue;
 
-  edController := tvLineas.Controller;
-  col := edController.FocusedColumn;
+  // tvLineas.Controller es TcxGridTableController; FocusedColumn vive ahi.
+  col := tvLineas.Controller.FocusedColumn;
   if col = nil then Exit;
   iPos := col.Tag;  // posicion 1..N en el conjunto
   if (iPos < 1) or (iPos > CANT_TALLAS_MAX) then Exit;
