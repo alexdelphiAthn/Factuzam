@@ -784,11 +784,13 @@ var
   ds         : TDataSet;
   sExpandido : string;
   sTentativo : string;
+  sNombre    : string;
+  q          : TUniQuery;
 begin
   // Helper compartido por F3 y OnEditValueChanged de la columna Familia:
   // pone CODIGO_FAM_SESLIN, intenta expandir a CODIGO_ART_TENTATIVO via
   // ResolverCodigoFamilia (incrementa CONTADOR_ART_FAM) y prerellena la
-  // descripcion si esta vacia.
+  // descripcion con NOMBRE_FAM_FAM si esta vacia.
   if Trim(ACodigoFam) = '' then Exit;
   ds := Dmm.unqrySesionLin;
   if ds.IsEmpty then Exit;
@@ -799,9 +801,33 @@ begin
                            sExpandido) then
     sTentativo := sExpandido;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
-  if (ANombreFam <> '') and
-     (ds.FieldByName('DESCRIPCION_SESLIN').AsString = '') then
-    ds.FieldByName('DESCRIPCION_SESLIN').AsString := ANombreFam;
+
+  // Descripcion: si esta vacia, copiar NOMBRE_FAM_FAM. Si venimos del
+  // modal F3 ya lo recibimos en ANombreFam (sin query). Si venimos de
+  // tipeo manual la consulta puntual a fza_articulos_familias trae
+  // el nombre para esta linea.
+  if ds.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
+  begin
+    sNombre := ANombreFam;
+    if sNombre = '' then
+    begin
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := inLibGlobalVar.oConn;
+        q.SQL.Text :=
+          'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
+          ' WHERE CODIGO_FAM_FAM = :p';
+        q.ParamByName('p').AsString := ACodigoFam;
+        q.Open;
+        if not q.IsEmpty then
+          sNombre := q.FieldByName('NOMBRE_FAM_FAM').AsString;
+      finally
+        FreeAndNil(q);
+      end;
+    end;
+    if sNombre <> '' then
+      ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
+  end;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.tvLineasFocusedRecordChanged(
