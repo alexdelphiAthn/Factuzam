@@ -116,6 +116,7 @@ type
     pnlLineasTop             : TPanel;
     btnAddLinea              : TcxButton;
     btnDelLinea              : TcxButton;
+    btnNuevoColor            : TcxButton;
     lblHint                  : TcxLabel;
 
     // ------------------------------------------------------------------
@@ -148,6 +149,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
+    procedure btnNuevoColorClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -563,6 +565,105 @@ begin
   end;
   Dmm.unqrySesionLin.Delete;
   if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.btnNuevoColorClick(Sender: TObject);
+var
+  ds                 : TDataSet;
+  sFam, sCodArt      : string;
+  sRefPrv, sDescr    : string;
+  rPrCompra, rPrVenta: Double;
+  iAcPivot           : Integer;
+  rMargen            : Double;
+  sTipoIva           : string;
+  iNewLinea          : Integer;
+  cantidades         : TArray<Double>;
+  i, iSrcIdx         : Integer;
+  arr                : TArrPosConjunto;
+  v                  : Variant;
+begin
+  inherited;
+  // Duplica la linea activa con todos los datos comerciales (codigo,
+  // familia, modelo prov., descripcion, precios, sistema de tallas) y
+  // sus cantidades por talla, dejando vacios COLOR_TEXTO_SESLIN y
+  // CODIGO_ATB_COLOR_SESLIN. Util cuando el cliente compra el mismo
+  // articulo en varios colores: clic, cambias color, terminas.
+  if FGestorTallas = nil then Exit;
+  ds := Dmm.unqrySesionLin;
+  if (ds = nil) or ds.IsEmpty then Exit;
+  if Dmm.unqryTablaG.IsEmpty then Exit;
+
+  // 1. Snapshot de los campos de la linea origen (incluido el record
+  //    idx del cxGrid antes de mover nada).
+  iSrcIdx    := tvLineas.Controller.FocusedRecordIndex;
+  sFam       := ds.FieldByName('CODIGO_FAM_SESLIN').AsString;
+  sCodArt    := ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+  sRefPrv    := ds.FieldByName('REF_PRV_SESLIN').AsString;
+  sDescr     := ds.FieldByName('DESCRIPCION_SESLIN').AsString;
+  rPrCompra  := ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+  rPrVenta   := ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat;
+  iAcPivot   := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  rMargen    := ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
+  sTipoIva   := ds.FieldByName('TIPO_IVA_SESLIN').AsString;
+
+  // 2. Snapshot de cantidades por talla desde Values[] del cxGrid.
+  SetLength(cantidades, CANT_TALLAS_MAX);
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+  begin
+    cantidades[i] := 0;
+    if FTallaColumns[i] = nil then Continue;
+    if iSrcIdx < 0 then Continue;
+    v := tvLineas.DataController.Values[iSrcIdx, FTallaColumns[i].Index];
+    if (not VarIsNull(v)) and (not VarIsEmpty(v)) and VarIsNumeric(v) then
+      cantidades[i] := v;
+  end;
+
+  // 3. Postear lo en edicion antes del Insert (mismo patron que
+  //    btnAddLineaClick para no romper el master-detail).
+  if Dmm.unqryTablaG.State in [dsInsert, dsEdit] then
+    Dmm.unqryTablaG.Post;
+  if ds.State in [dsEdit, dsInsert] then ds.Post;
+  Dmm.unqryTablaG.Edit;
+
+  // 4. Insert + asignacion de campos copiados (excepto color).
+  ds.Insert;
+  ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sFam;
+  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sCodArt;
+  ds.FieldByName('REF_PRV_SESLIN').AsString             := sRefPrv;
+  ds.FieldByName('DESCRIPCION_SESLIN').AsString         := sDescr;
+  ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat        := rPrCompra;
+  ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat         := rPrVenta;
+  if iAcPivot > 0 then
+    ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := iAcPivot;
+  if rMargen > 0 then
+    ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat := rMargen;
+  if sTipoIva <> '' then
+    ds.FieldByName('TIPO_IVA_SESLIN').AsString := sTipoIva;
+  // Color y color basico se quedan vacios — los rellena el usuario.
+  ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
+  ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  ds.Post;
+  iNewLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
+
+  // 5. Persistir cantidades para la nueva linea (mismo conjunto pivot).
+  if iAcPivot > 0 then
+  begin
+    arr := FGestorTallas.GetPosicionesConjunto(iAcPivot);
+    for i := 0 to High(arr) do
+      if (i <= High(cantidades)) and (cantidades[i] > 0) then
+        FGestorTallas.PersistirCantidad(iNewLinea, arr[i].IdAv, cantidades[i]);
+  end;
+
+  // 6. Refrescar Values[] de TODAS las lineas (incluida la nueva).
+  FGestorTallas.RecalcularMaxColumnas;
+  FGestorTallas.CargarCantidadesTodasLineas;
+
+  // 7. Foco en la celda Color de la nueva linea.
+  if ds.Locate('LINEA_SESLIN', iNewLinea, []) then
+    tvLineas.Controller.FocusedRecordIndex := ds.RecNo - 1;
+  tvLineas.Controller.FocusedColumn := dbcLinColor;
+  if tvLineas.Controller.EditingController <> nil then
+    tvLineas.Controller.EditingController.ShowEdit;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.tvLineasEditKeyDown(

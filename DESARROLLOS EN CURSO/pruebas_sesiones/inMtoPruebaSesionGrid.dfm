@@ -282,13 +282,26 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             TabOrder = 1
             OnClick = btnDelLineaClick
           end
+          object btnNuevoColor: TcxButton
+            Left = 296
+            Top = 5
+            Width = 170
+            Height = 28
+            Caption = 'Otro color (mismo art'#237'culo)'
+            TabOrder = 2
+            LookAndFeel.NativeStyle = False
+            LookAndFeel.Kind = lfFlat
+            Colors.Default = 14346982
+            Colors.Normal = 14346982
+            OnClick = btnNuevoColorClick
+          end
           object lblHint: TcxLabel
-            Left = 297
+            Left = 472
             Top = 7
-            Caption = 
+            Caption =
               'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
               'coste.'
-            TabOrder = 2
+            TabOrder = 3
           end
         end
         object cxgrdLineas: TcxGrid
