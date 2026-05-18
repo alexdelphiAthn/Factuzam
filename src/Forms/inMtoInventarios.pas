@@ -179,6 +179,9 @@ type
     procedure tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit;
       var Key: Word; Shift: TShiftState);
+    procedure tvLineasCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
     procedure OnAtributoChanged(Sender: TObject);
     procedure ForzarDespliegue(Sender: TObject);
 
@@ -258,6 +261,7 @@ uses
   inLibGlobalVar,
   inLibArticulosValidador,
   inLibArticulosAtributosLookup,
+  inLibAtributosPaleta,
   inMtoPrincipal, inMtoModalAddBlockInventario;
 
 {$R *.dfm}
@@ -706,6 +710,14 @@ begin
     AAllow := False;
     ShowMessage('El inventario no está ABIERTO. No se puede editar.');
   end;
+end;
+
+procedure TfrmMtoInventarios.tvLineasCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;

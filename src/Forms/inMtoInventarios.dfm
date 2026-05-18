@@ -345,6 +345,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Align = alClient
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
+                  OnCustomDrawCell = tvLineasCustomDrawCell
                   OnEditing = tvLineasEditing
                   OnEditKeyDown = tvLineasEditKeyDown
                   OnFocusedRecordChanged = tvLineasFocusedRecordChanged
