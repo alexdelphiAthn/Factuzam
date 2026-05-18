@@ -35,6 +35,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
+      OnChange = pcPrincipalChange
       ExplicitWidth = 1122
       ExplicitHeight = 451
       ClientRectBottom = 457
