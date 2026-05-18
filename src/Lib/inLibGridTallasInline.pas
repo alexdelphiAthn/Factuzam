@@ -640,6 +640,15 @@ begin
 
   PersistirCantidad(iLinea, arr[iPos - 1].IdAv, rCant);
   RefrescarTotalesLineaActual;
+  // ds.Edit + asignaciones de totales bound dentro de RefrescarTotales
+  // invalidan los Values[] no-bound del cxGrid (incluso con
+  // BeginUpdate). El BeginUpdate suspende el repintado, pero las
+  // notificaciones internas siguen llegando y limpian la cache de
+  // valores no-bound de TODAS las lineas. Por eso re-publicamos todas
+  // las cantidades desde SESCEL aqui: la lectura es barata (un SELECT
+  // agregado) y el bulk via BeginUpdate/EndUpdate del DataController
+  // deja todo coherente en una sola pasada.
+  CargarCantidadesTodasLineas;
 end;
 
 // =============================================================================
