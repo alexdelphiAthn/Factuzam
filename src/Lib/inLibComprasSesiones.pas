@@ -975,12 +975,15 @@ function CalcularPrecioVenta(ACoste, AMargenPct,
 var
   rBase : Double;
 begin
+  // AAjuste se RESTA del precio redondeado (convencion descuento
+  // final: introducir 0.01 para terminar en .99). Antes se sumaba y
+  // habia que introducir -0.01; cambio acordado en pruebas_sesiones.
   rBase := ACoste * (1 + AMargenPct / 100);
   if AMultiplo > 0 then
     Result := Ceil(rBase / AMultiplo) * AMultiplo
   else
     Result := rBase;
-  Result := Result + AAjuste;
+  Result := Result - AAjuste;
   if Result < 0 then Result := 0;
 end;
 
