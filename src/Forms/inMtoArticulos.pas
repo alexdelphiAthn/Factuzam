@@ -474,6 +474,11 @@ type
     procedure ResetForm;  override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
+    // Recorre las columnas de tvStock y, para las que contienen valores que
+    // casan con la paleta basica del articulo, añade ANCHO_SWATCH_PX al
+    // ancho — necesario porque ApplyBestFit mide solo el texto y no el
+    // cuadradito que pinta tvStockCustomDrawCell.
+    procedure EnsancharColumnasStockParaSwatch;
   public
     // Data module de ESTA instancia (campo de instancia, no variable
     // global, asi no se pisa cuando hay dos Mtos Articulos abiertos a
@@ -1944,11 +1949,13 @@ begin
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
   dmmArticulos.unqrySkus.Refresh;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
-  dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
-  // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA usado por tvStock para
-  // colorear las celdas con el color de la paleta basica.
+  // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
+  // unqryStockArticulosAfterScroll: el bestfit que hace ese metodo necesita
+  // saber qué columnas pintaran swatch para reservarles el ancho del
+  // cuadradito.
   if FAtributosStock <> nil then
     CargarMapaAtributosArticulo(CodArticulo, FAtributosStock);
+  dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
   ActualizarVisibilidadColumnaSku;
 end;
 
@@ -2891,6 +2898,16 @@ begin
   if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
     if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
       ADone := True;
+end;
+
+procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
+var
+  i : Integer;
+begin
+  if (tvStock = nil) or (FAtributosStock = nil) then Exit;
+  if FAtributosStock.Count = 0 then Exit;
+  for i := 0 to tvStock.ColumnCount - 1 do
+    AjustarAnchoColumnaParaSwatch(tvStock.Columns[i], FAtributosStock);
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;

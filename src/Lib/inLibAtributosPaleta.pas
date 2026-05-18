@@ -31,6 +31,13 @@ type
     EsValido : Boolean;      // True si Color es parseable
   end;
 
+const
+  // Pixeles horizontales que reserva PintarCeldaConCuadradoColor delante
+  // del texto para el swatch (margen + cuadrado + hueco). Se expone para
+  // que los consumidores puedan ensanchar las columnas tras un ApplyBestFit
+  // que solo mide el texto.
+  ANCHO_SWATCH_PX = 18; // MARGEN_IZQ(4) + LADO_CUADRADO(10) + HUECO_TEXTO(4)
+
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
 
@@ -78,6 +85,15 @@ procedure CargarMapaAtributosArticulo(const ACodArt: string;
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
+
+// Recorre los valores de AColumn buscando textos que casen con la paleta
+// basica del articulo (via `ADict`). Si encuentra al menos uno, ensancha la
+// columna en ANCHO_SWATCH_PX para que el cuadradito de color no recorte el
+// texto tras un ApplyBestFit (que solo mide caracteres). Devuelve True si
+// se aplico el ensanche.
+function AjustarAnchoColumnaParaSwatch(AColumn: TcxGridColumn;
+                                       ADict: TDictionary<string, string>)
+                                       : Boolean;
 
 // Limpia AImages y la rellena con un swatch (cuadrado) por cada AV de
 // `AAvs` (CODIGO_ATB esperado). El swatch se genera SOLO si existe en la
@@ -198,6 +214,8 @@ const
   LADO_CUADRADO = 10;
   MARGEN_IZQ    = 4;
   HUECO_TEXTO   = 4;
+  // OJO: si tocas alguno de estos tres, actualiza ANCHO_SWATCH_PX en la
+  // interface (debe ser MARGEN_IZQ + LADO_CUADRADO + HUECO_TEXTO).
 var
   Bounds, Cuadrado, TxtRect : TRect;
   Texto : string;
@@ -330,6 +348,33 @@ begin
       for IdVa in ADict.Values do
         if ObtenerInfoBasico(IdVa, Sufijo, AInfo) then
           Exit(True);
+  end;
+end;
+
+function AjustarAnchoColumnaParaSwatch(AColumn: TcxGridColumn;
+                                       ADict: TDictionary<string, string>)
+                                       : Boolean;
+var
+  Tabla : TcxCustomGridTableView;
+  i, n  : Integer;
+  v     : Variant;
+  Info  : TInfoBasico;
+begin
+  Result := False;
+  if (AColumn = nil) or (ADict = nil) or (ADict.Count = 0) then Exit;
+  Tabla := AColumn.GridView as TcxCustomGridTableView;
+  if (Tabla = nil) or (Tabla.DataController = nil) then Exit;
+  n := Tabla.DataController.RecordCount;
+  if n = 0 then Exit;
+  for i := 0 to n - 1 do
+  begin
+    v := Tabla.DataController.Values[i, AColumn.Index];
+    if VarIsNull(v) or VarIsClear(v) then Continue;
+    if BuscarInfoBasicoEnArticulo(VarToStr(v), ADict, Info) then
+    begin
+      AColumn.Width := AColumn.Width + ANCHO_SWATCH_PX;
+      Exit(True);
+    end;
   end;
 end;
 
