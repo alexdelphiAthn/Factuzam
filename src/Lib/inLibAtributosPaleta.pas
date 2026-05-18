@@ -36,7 +36,7 @@ const
   // del texto para el swatch (margen + cuadrado + hueco). Se expone para
   // que los consumidores puedan ensanchar las columnas tras un ApplyBestFit
   // que solo mide el texto.
-  ANCHO_SWATCH_PX = 18; // MARGEN_IZQ(4) + LADO_CUADRADO(10) + HUECO_TEXTO(4)
+  ANCHO_SWATCH_PX = 20; // MARGEN_IZQ(4) + LADO_CUADRADO(12) + HUECO_TEXTO(4)
 
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
@@ -211,7 +211,7 @@ function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
                                      const AInfo: TInfoBasico;
                                      const ATexto: string): Boolean;
 const
-  LADO_CUADRADO = 10;
+  LADO_CUADRADO = 12;
   MARGEN_IZQ    = 4;
   HUECO_TEXTO   = 4;
   // OJO: si tocas alguno de estos tres, actualiza ANCHO_SWATCH_PX en la
