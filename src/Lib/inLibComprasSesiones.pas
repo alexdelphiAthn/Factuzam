@@ -975,10 +975,13 @@ function CalcularPrecioVenta(ACoste, AMargenPct,
 var
   rBase : Double;
 begin
-  // AAjuste se RESTA del precio redondeado (convencion descuento
-  // final: introducir 0.01 para terminar en .99). Antes se sumaba y
-  // habia que introducir -0.01; cambio acordado en pruebas_sesiones.
-  rBase := ACoste * (1 + AMargenPct / 100);
+  // Convencion canonica del sistema (igual que inMtoModalCalcularMargen):
+  //   precio = coste * margen / 100
+  // margen 100 -> coste tal cual; 120 -> coste*1.20; 250 -> coste*2.50;
+  // 400 -> coste*4.
+  // AAjuste se RESTA del precio redondeado (descuento final: introducir
+  // 0.01 para terminar en .99).
+  rBase := ACoste * AMargenPct / 100;
   if AMultiplo > 0 then
     Result := Ceil(rBase / AMultiplo) * AMultiplo
   else

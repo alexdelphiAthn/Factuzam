@@ -254,23 +254,28 @@ Durante la sesión hay un botón **«Calcular venta»** que aplica esta fórmula
 a las líneas seleccionadas:
 
 ```
-precio_base   = precio_coste × (1 + PORCENTAJE_MARGEN_SES / 100)
+precio_base   = precio_coste × PORCENTAJE_MARGEN_SES / 100
 precio_redond = redondeo_arriba(precio_base, MULTIPLO_REDONDEO_SES)
 precio_venta  = precio_redond − AJUSTE_FINAL_SES
 ```
+
+Convención del margen (idéntica a `inMtoModalCalcularMargen`): el campo
+es un multiplicador × 100. `margen = 100` deja el coste tal cual,
+`margen = 120` aplica un +20% (coste × 1,20), `margen = 250` triplica
+y medio (coste × 2,50), `margen = 400` cuadruplica.
 
 Parámetros (cabecera de sesión, todos persistentes):
 
 | Campo                       | Significado                                          | Ejemplo |
 |-----------------------------|------------------------------------------------------|---------|
-| `PORCENTAJE_MARGEN_SES`     | Margen comercial sobre coste (default; override por línea) | 55.0    |
+| `PORCENTAJE_MARGEN_SES`     | Multiplicador × 100 sobre coste (100 = sin margen, 250 = ×2,50). Default; override por línea | 250.0 |
 | `MULTIPLO_REDONDEO_SES`     | Múltiplo al que sube el precio (`0` = sin redondeo) | 0.50    |
 | `AJUSTE_FINAL_SES`          | Descuento final que se RESTA del redondeado (positivo para terminar en .99) | 0.01 |
 | `ESPRECIOS_SIN_IVA_SES`     | Si los precios introducidos son sin IVA o con IVA    | 'S'     |
 | `ESPRECIO_POR_SKU_SES`      | Activa el sub-grid de overrides por SKU              | 'N'     |
 
-Ejemplo: coste 4,80 € × 55 % = 7,44 → redondeo arriba a 0,50 = 7,50 →
-ajuste 0,01 (se resta) = **7,49 €**.
+Ejemplo: coste 12 € × margen 250 = `12 × 250 / 100 = 30,00` → redondeo
+a 1 = 30,00 → ajuste 0,01 (se resta) = **29,99 €**.
 
 La fórmula se aplica al pulsar el botón, no automáticamente al teclear el
 coste — así el usuario puede ajustar manualmente sin perder el control. El

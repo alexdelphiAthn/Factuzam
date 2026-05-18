@@ -113,13 +113,18 @@ calcula y persiste `PRECIO_VENTA_SESLIN` aplicando la fórmula ya
 existente (`inLibComprasSesiones.CalcularPrecioVenta`):
 
 ```
-base   = coste × (1 + margen / 100)            -- margen de cabecera
+base   = coste × margen / 100                  -- margen de cabecera
 venta  = ceil(base / múltiplo) × múltiplo − ajuste
 ```
 
+Convención del margen (igual que `inMtoModalCalcularMargen`): el campo
+es un multiplicador × 100. `margen = 100` deja el coste tal cual,
+`margen = 250` lo multiplica por 2,5.
+
 El **ajuste final se RESTA** del redondeado (convención descuento
 final: introducir `0,01` para terminar en `.99`). Ejemplo:
-coste 10 × 250 % = 35 → ceil(35/1) × 1 = 35 → 35 − 0,01 = **34,99**.
+coste 12 × margen 250 = `12 × 250 / 100 = 30,00` → ceil(30/1) × 1 =
+30,00 → 30,00 − 0,01 = **29,99**.
 
 El margen por línea puede sobreescribir el de cabecera vía
 `PORCENTAJE_MARGEN_SESLIN` (no expuesto en esta prueba; queda para
