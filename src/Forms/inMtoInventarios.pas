@@ -211,6 +211,10 @@ type
     FUltimoArticuloPadre: string;
     FProcesandoAtributo: Boolean;
     FInicializandoCombo: Boolean;
+    // Bitmap reutilizable para pintar el cuadradito de color en el glyph
+    // del boton [...] de las columnas SKU. Se repinta en cada InitEdit con
+    // el color del AV actual; si no hay color, el boton vuelve a bkEllipsis.
+    FBmpSwatchBoton: TBitmap;
 
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -335,6 +339,7 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
+  FBmpSwatchBoton := TBitmap.Create;
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -356,6 +361,7 @@ end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FreeAndNil(FBmpSwatchBoton);
   if Assigned(cbbCODIGO_EMPRESA_INVENTARIO) then
     cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource := nil;
   if Assigned(cbbCODIGO_ALMACEN_INVENTARIO) then
@@ -737,14 +743,60 @@ end;
 
 procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;
   AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+var
+  BE        : TcxButtonEdit;
+  AvActual  : string;
+  NombreAtb : string;
+  IdVa      : string;
+  Mapa      : TDictionary<string, string>;
+  Info      : TInfoBasico;
+  Btn       : TcxEditButton;
 begin
-  // Las columnas SKU1..SKU5 son TcxButtonEdit (boton con [...]). Al entrar
-  // a la celda disparamos el popup automaticamente via OnEnter para que el
-  // usuario no tenga que clicar el boton expresamente (mismo patron de UX
-  // que cuando eran TcxComboBox + ForzarDespliegue).
+  // Columnas SKU1..SKU5 — TcxButtonEdit. Configuramos:
+  //   (1) Glyph del boton = cuadradito del color del AV actual (si esta en
+  //       la paleta basica). Si no, el boton vuelve a su look [...].
+  //   (2) Si la celda esta VACIA, auto-abrimos el selector al entrar
+  //       (sustituye a ForzarDespliegue del antiguo combo). Si ya tiene
+  //       valor, el usuario ve el cuadradito y clica si quiere cambiar.
   if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
-  if AEdit = nil then Exit;
-  AEdit.OnEnter := AbrirPopupSkuEnEntrada;
+  if not (AEdit is TcxButtonEdit) then Exit;
+  BE := TcxButtonEdit(AEdit);
+  if BE.Properties.Buttons.Count = 0 then Exit;
+  Btn := BE.Properties.Buttons[0];
+
+  AvActual  := '';
+  NombreAtb := '';
+  if dmmInventarios.cdsLineas.Active and
+     (not dmmInventarios.cdsLineas.IsEmpty) then
+  begin
+    AvActual  := dmmInventarios.cdsLineas.FieldByName(
+                   'ATTR' + IntToStr(AItem.Tag) + '_VALOR').AsString;
+    NombreAtb := dmmInventarios.cdsLineas.FieldByName(
+                   'ATTR' + IntToStr(AItem.Tag) + '_NOMBRE').AsString;
+  end;
+
+  IdVa := '';
+  Mapa := ObtenerMapaAtributosGlobal;
+  if Mapa <> nil then
+    Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+
+  Info := Default(TInfoBasico);
+  if (IdVa <> '') and (Trim(AvActual) <> '') then
+    ObtenerInfoBasico(IdVa, AvActual, Info);
+
+  if Info.EsValido and
+     PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
+  begin
+    Btn.Glyph.Assign(FBmpSwatchBoton);
+    Btn.Kind := bkGlyph;
+  end
+  else
+    Btn.Kind := bkEllipsis;
+
+  if Trim(AvActual) = '' then
+    BE.OnEnter := AbrirPopupSkuEnEntrada
+  else
+    BE.OnEnter := nil;
 end;
 
 procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
