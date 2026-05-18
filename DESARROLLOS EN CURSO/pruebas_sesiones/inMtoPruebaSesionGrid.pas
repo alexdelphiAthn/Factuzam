@@ -63,12 +63,10 @@ uses
   dxDateRanges;
 
 const
-  // Numero maximo de columnas de talla inline. 15 cubre con holgura los
-  // conjuntos habituales (tallas ropa 38-46 = 5; calzado EU 36-46 = 11;
-  // tallas niño/adulto extendidas hasta ~12). Si en algun escenario hace
-  // falta mas, sube esta constante y anyade columnas en el DFM con el
-  // mismo patron Tag = 1..N.
-  CANT_TALLAS_MAX = 15;
+  // Numero maximo de columnas de talla inline. Subido a 20 a peticion
+  // de un cliente con sistemas extensos (rangos de calzado largos,
+  // tallas internacionales niño+adulto, etc.).
+  CANT_TALLAS_MAX = 20;
 
 type
   TPosConjunto = record
@@ -174,6 +172,7 @@ type
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
+    procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
   private
@@ -192,6 +191,8 @@ type
     procedure RecalcularColumnasTallasDocumento;
     procedure ActualizarCaptionsTallasLineaActiva;
     procedure CargarCantidadesTodasLineas;
+    procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
+                const ANombreFam: string = '');
     procedure CargarCantidadesUnaLinea(ARecordIndex: Integer; ALinea: Integer);
     procedure PersistirCantidad(ALinea, AIdAv: Integer; ACantidad: Double);
     procedure RefrescarTotalesLinea(ALinea: Integer);
@@ -514,22 +515,16 @@ begin
   if Dmm = nil then Exit;
   ds := Dmm.unqrySesionLin;
   if (ds = nil) or not ds.Active then Exit;
+  if ds.IsEmpty then Exit;
   for i := 0 to tvLineas.DataController.RecordCount - 1 do
   begin
-    iLinea := tvLineas.DataController.Values[
-                i,
-                dbcLinCodArt.Index];  // truco: leemos por columna conocida
-    // El metodo Values[record, colIdx] devuelve Variant; necesitamos
-    // LINEA_SESLIN concretamente. Como las columnas talla son no-bound,
-    // recurrimos al DataSet del record:
-    if not ds.IsEmpty then
-    begin
-      // Mover el DataSet al record idx i y leer LINEA_SESLIN
-      ds.RecNo := i + 1;
-      iLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
-      if iLinea > 0 then
-        CargarCantidadesUnaLinea(i, iLinea);
-    end;
+    // Las columnas talla son no-bound; el record idx del grid no nos
+    // da LINEA_SESLIN directamente. Movemos el DataSet a ese record y
+    // leemos el campo.
+    ds.RecNo := i + 1;
+    iLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
+    if iLinea > 0 then
+      CargarCantidadesUnaLinea(i, iLinea);
   end;
 end;
 
@@ -739,10 +734,7 @@ procedure TfrmMtoPruebaSesionGrid.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  frmSel     : TfrmModalSelFamilia;
-  ds         : TDataSet;
-  sExpandido : string;
-  sTentativo : string;
+  frmSel : TfrmModalSelFamilia;
 begin
   inherited;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
@@ -752,32 +744,64 @@ begin
   frmSel := TfrmModalSelFamilia.Create(Self);
   try
     if frmSel.ShowModal = mrOk then
-    begin
-      ds := Dmm.unqrySesionLin;
-      if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-      ds.FieldByName('CODIGO_FAM_SESLIN').AsString := frmSel.CodigoFamilia;
-      // Expansion inmediata familia -> codigo articulo. Asi el usuario ve
-      // el codigo (FAMILIA + relleno del contador) en cuanto sale del modal
-      // de seleccion, sin tener que mover el foco fuera del row para que
-      // el BeforePost del DM lo expanda. Si la familia tiene contador
-      // activo, ResolverCodigoFamilia incrementa CONTADOR_ART_FAM en
-      // BBDD y devuelve True; si no, devuelve False y dejamos el codigo
-      // de familia como tentativo. El BeforePost del DM hace una segunda
-      // llamada idempotente: con un codigo ya expandido ('BOLSOS00001'),
-      // ResolverCodigoFamilia no encuentra familia y no incrementa de nuevo.
-      sTentativo := frmSel.CodigoFamilia;
-      if ResolverCodigoFamilia(inLibGlobalVar.oConn,
-                               frmSel.CodigoFamilia, oUser,
-                               sExpandido) then
-        sTentativo := sExpandido;
-      ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
-      if ds.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
-        ds.FieldByName('DESCRIPCION_SESLIN').AsString := frmSel.NombreFamilia;
-    end;
+      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
   finally
     FreeAndNil(frmSel);
   end;
   Key := 0;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.dbcLinFamiliaPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  ed       : TcxCustomEdit;
+  sNuevo   : string;
+  sTent    : string;
+begin
+  inherited;
+  if not (Sender is TcxCustomEdit) then Exit;
+  ed := TcxCustomEdit(Sender);
+  ed.PostEditValue;
+
+  // El usuario ha tecleado el codigo de familia directamente (sin F3).
+  // Comportamos igual que el modal: si la familia tiene contador activo,
+  // ResolverCodigoFamilia genera CODIGO_FAM+RELLENO. Si ya hay un codigo
+  // tentativo expandido para esa misma familia ('BOLSOS00001' cuando
+  // sNuevo='BOLSOS'), no consumimos otro contador.
+  sNuevo := Trim(Dmm.unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString);
+  if sNuevo = '' then Exit;
+  sTent  := Dmm.unqrySesionLin.FieldByName(
+                                    'CODIGO_ART_TENTATIVO_SESLIN').AsString;
+  if (sTent <> '') and (Length(sTent) > Length(sNuevo))
+     and SameText(Copy(sTent, 1, Length(sNuevo)), sNuevo) then
+    Exit; // ya parece expandido para la familia actual
+  ExpandirCodigoFamiliaActiva(sNuevo);
+end;
+
+procedure TfrmMtoPruebaSesionGrid.ExpandirCodigoFamiliaActiva(
+  const ACodigoFam: string; const ANombreFam: string);
+var
+  ds         : TDataSet;
+  sExpandido : string;
+  sTentativo : string;
+begin
+  // Helper compartido por F3 y OnEditValueChanged de la columna Familia:
+  // pone CODIGO_FAM_SESLIN, intenta expandir a CODIGO_ART_TENTATIVO via
+  // ResolverCodigoFamilia (incrementa CONTADOR_ART_FAM) y prerellena la
+  // descripcion si esta vacia.
+  if Trim(ACodigoFam) = '' then Exit;
+  ds := Dmm.unqrySesionLin;
+  if ds.IsEmpty then Exit;
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+  ds.FieldByName('CODIGO_FAM_SESLIN').AsString := ACodigoFam;
+  sTentativo := ACodigoFam;
+  if ResolverCodigoFamilia(inLibGlobalVar.oConn, ACodigoFam, oUser,
+                           sExpandido) then
+    sTentativo := sExpandido;
+  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
+  if (ANombreFam <> '') and
+     (ds.FieldByName('DESCRIPCION_SESLIN').AsString = '') then
+    ds.FieldByName('DESCRIPCION_SESLIN').AsString := ANombreFam;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.tvLineasFocusedRecordChanged(
@@ -803,6 +827,10 @@ var
   Info     : TInfoBasico;
 begin
   inherited;
+  // Estilo Excel: al entrar a una celda el contenido queda seleccionado,
+  // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
+  if AEdit is TcxCustomTextEdit then
+    TcxCustomTextEdit(AEdit).SelectAll;
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
   BE := TcxButtonEdit(AEdit);
@@ -930,10 +958,38 @@ end;
 
 procedure TfrmMtoPruebaSesionGrid.dbcLinTallasPropertiesEditValueChanged(
   Sender: TObject);
+var
+  iAc  : Integer;
+  arr  : TArrPosConjunto;
 begin
   inherited;
   if Sender is TcxCustomEdit then
     TcxCustomEdit(Sender).PostEditValue;
+  if Dmm.unqrySesionLin.IsEmpty then Exit;
+  // VALIDACION DE TAMANO: rechazamos sistemas de tallas con mas de
+  // CANT_TALLAS_MAX valores ANTES de Postear el cambio y reasignar
+  // columnas. Asi el usuario ve el error y la linea se queda con el
+  // pivot anterior (o vacio) sin reordenar el grid.
+  iAc := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  if iAc > 0 then
+  begin
+    arr := GetPosicionesConjunto(iAc);
+    if Length(arr) > CANT_TALLAS_MAX then
+    begin
+      MessageDlg(Format(
+        'El sistema de tallas seleccionado tiene %d valores; el ' +
+        'maximo admitido por la prueba 01 es %d. Elige un sistema ' +
+        'con menos tallas o reduce el conjunto antes de usarlo aqui.',
+        [Length(arr), CANT_TALLAS_MAX]),
+        mtError, [mbOk], 0);
+      if not (Dmm.unqrySesionLin.State in [dsEdit, dsInsert]) then
+        Dmm.unqrySesionLin.Edit;
+      Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').Clear;
+      // Mantener la cache: el conjunto sigue existiendo en BBDD; otra
+      // linea podria querer comprobarlo (recibira el mismo error).
+      Exit;
+    end;
+  end;
   if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
     Dmm.unqrySesionLin.Post;
   // El conjunto pivot de la linea ha cambiado: hay que recalcular el
