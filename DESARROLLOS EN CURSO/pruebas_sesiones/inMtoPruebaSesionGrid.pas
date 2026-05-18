@@ -141,6 +141,7 @@ type
     // Properties).
     dbcLinTotalTallas        : TcxGridDBColumn;
     dbcLinImporteTotal       : TcxGridDBColumn;
+    dbcLinNumero             : TcxGridDBColumn;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -643,8 +644,16 @@ begin
                mtInformation, [mbOk], 0);
     Exit;
   end;
+  // Si el master esta en dsInsert/dsEdit, hay que Postearlo primero para que
+  // tenga SERIE_SES/NUMERO_SES (los rellena BeforePost via PRC_GET_NEXT_CONT).
+  // Despues volvemos a ponerlo en Edit ANTES de Insert al detail: si el
+  // AfterInsert del DM se encuentra el master en dsBrowse y llama a Edit,
+  // la transicion del master rompe el dsInsert del detail master-detail y
+  // las asignaciones de SERIE_SES_SESLIN, etc. revientan con
+  // 'Dataset not in edit or insert mode'.
   if Dmm.unqryTablaG.State in [dsInsert, dsEdit] then
     Dmm.unqryTablaG.Post;
+  Dmm.unqryTablaG.Edit;
   Dmm.unqrySesionLin.Insert;
 end;
 
