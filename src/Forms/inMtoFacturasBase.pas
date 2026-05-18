@@ -504,6 +504,7 @@ type
     procedure ResetForm; override;
     procedure CambiarIVA;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
     // Nombre de la vista SQL a consultar en el listado principal.
     // La filtra el propio motor de BD (vi_facturas_normales /
     // vi_facturas_simplificadas), no toca al codigo.
@@ -1176,6 +1177,18 @@ begin
     ds := tvLineasFactura.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
+end;
+
+function TfrmMtoFacturasBase.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  // dsTablaG es la cabecera (no tiene articulo). El articulo activo
+  // viene de la linea seleccionada en tvLineasFactura, cuyo
+  // DataSource es dmmFacturas.dsLinFac. Lo anadimos al hook para que
+  // la pantalla flotante refresque al cambiar de linea.
+  if Assigned(dmmFacturas) then
+    Result := [dsTablaG, dmmFacturas.dsLinFac]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;

@@ -103,6 +103,7 @@ type
     procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
+    procedure pcPrincipalChange(Sender: TObject);
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -224,6 +225,8 @@ uses inLibUser,
   inLibCajaParam,
   inLibAppParam,
   inLibBuscarImpresora,
+  inMtoGen,
+  inMtoFotoArticulo,
   System.RegularExpressions;
 
 {$R *.dfm}
@@ -1066,6 +1069,41 @@ procedure TfrmMtoPrincipal.mnuDepositosClienteClick(Sender: TObject);
 begin
   if (mnuDepositosCliente.Visible) then
     ShowMto(Self, 'DepositosCliente');
+end;
+
+// Foto flotante transversal: cuando el usuario cambia de pestana
+// (=Mto activo), si la pantalla flotante de fotos esta visible la
+// re-vinculamos al nuevo Mto y refrescamos la foto al articulo / SKU
+// del registro activo. Asi una sola pulsacion de Ctrl+Alt+F sirve
+// para "anclar" la pantalla flotante a TODA la sesion: a partir de
+// ahi sigue automaticamente al Mto que tenga el foco. Si el nuevo
+// tab no es un TfrmMtoGen (o el grid esta vacio) desenganchamos para
+// que no muestre datos obsoletos del Mto anterior.
+procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
+var
+  ts        : TcxTabSheet;
+  frmActivo : TfrmMtoGen;
+  sArt, sSku: string;
+begin
+  if not Assigned(frmFotoArticulo) then Exit;
+  if not frmFotoArticulo.Visible then Exit;
+  if pcPrincipal.ActivePageIndex < 0 then
+  begin
+    frmFotoArticulo.VincularDataSources([], nil);
+    frmFotoArticulo.SetArticuloSku('', '');
+    Exit;
+  end;
+  ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
+  if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
+  begin
+    frmFotoArticulo.VincularDataSources([], nil);
+    Exit;
+  end;
+  frmActivo := TfrmMtoGen(ts.Controls[0]);
+  frmFotoArticulo.VincularDataSources(frmActivo.DataSourcesParaFoto,
+                                      frmActivo.ResolverArtSkuActivo);
+  frmActivo.ResolverArtSkuActivo(sArt, sSku);
+  frmFotoArticulo.SetArticuloSku(sArt, sSku);
 end;
 
 end.

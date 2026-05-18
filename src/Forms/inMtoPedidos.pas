@@ -154,6 +154,7 @@ type
   public
     dmmPedidos: TdmPedidos;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -183,6 +184,16 @@ begin
     ds := tvPedidosLineas.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
+end;
+
+// Para que la pantalla flotante refresque al moverse entre lineas del
+// pedido, ademas de dsTablaG (cabecera) enganchamos dsPedidosLineas.
+function TfrmMtoPedidos.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmPedidos) then
+    Result := [dsTablaG, dmmPedidos.dsPedidosLineas]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);

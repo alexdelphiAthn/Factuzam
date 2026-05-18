@@ -52,3 +52,31 @@ ofrece un selector de resolución 300 / 600 / real.
 Para usarse dentro de un formulario modal existe la variante
 `TfrmModalFotoArticulo.Ejecutar(...)`, que abre la misma pantalla con
 `ShowModal`.
+
+### Comportamiento transversal
+
+La pantalla flotante es **única en toda la sesión** (singleton
+`frmFotoArticulo`) y sigue automáticamente al Mto que tenga el foco:
+
+- Una sola pulsación de `Ctrl + Alt + F` la "ancla" a la sesión.
+- Al **cambiar de pestaña** en `pcPrincipal` (Articulos → Facturas →
+  Pedidos…) el handler `TfrmMtoPrincipal.pcPrincipalChange` re-vincula la
+  pantalla al nuevo Mto activo y refresca la foto al artículo / SKU del
+  registro activo (sin necesidad de volver a pulsar `Ctrl + Alt + F`).
+- Al **moverse el cursor** dentro del Mto activo (cambio de fila en el
+  grid principal o en cualquier sub-grid declarado en
+  `DataSourcesParaFoto`) el hook `OnDataChange` dispara
+  `SetArticuloSku` con el nuevo par.
+
+Los Mtos con sub-grids (Facturas, Pedidos, Albaranes, Tarifas,
+ComprasSesiones, Inventarios) sobreescriben dos métodos virtuales de
+`TfrmMtoGen`:
+
+- `ResolverArtSkuActivo(out ACodArt, ACodSku: string)`: lee artículo /
+  SKU del sub-grid donde vive el artículo activo (no de `dsTablaG`,
+  que es la cabecera del documento).
+- `DataSourcesParaFoto: TArray<TDataSource>`: lista de DataSources que
+  la pantalla flotante engancha vía `VincularDataSources`. Por defecto
+  `[dsTablaG]`; los Mtos con sub-grids devuelven
+  `[dsTablaG, dmm*.dsSubGrid]` para que la foto siga al cursor en
+  cualquier pestaña / grid.

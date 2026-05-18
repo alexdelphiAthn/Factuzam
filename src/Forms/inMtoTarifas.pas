@@ -143,6 +143,7 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -280,6 +281,18 @@ begin
     ds := tvArticulos.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
+end;
+
+// dsTablaG es la cabecera (no tiene articulo). El articulo activo viene
+// del sub-grid tvArticulos, cuyo DataSource es
+// dmmTarifas.dsArticulosTarifas. Lo anadimos al hook para que la
+// pantalla flotante refresque al moverse el cursor entre lineas.
+function TfrmMtoTarifas.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmTarifas) then
+    Result := [dsTablaG, dmmTarifas.dsArticulosTarifas]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoTarifas.ResetForm;

@@ -1,7 +1,5 @@
 inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
   Caption = 'Movimientos de Almac'#233'n'
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl
@@ -182,22 +180,6 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
               Visible = False
               Width = 130
             end
-          end
-        end
-        object splFotoMov: TcxSplitter
-          AlignSplitter = salRight
-          Control = pnlFotoMov
-        end
-        object pnlFotoMov: TPanel
-          Width = 200
-          Align = alRight
-          BevelOuter = bvLowered
-          TabOrder = 1
-          object imgFotoMov: TImage
-            Align = alClient
-            Center = True
-            Proportional = True
-            Stretch = True
           end
         end
       end
