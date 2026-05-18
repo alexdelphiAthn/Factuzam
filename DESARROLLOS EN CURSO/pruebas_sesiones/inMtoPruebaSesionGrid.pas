@@ -335,10 +335,17 @@ begin
   FDsConjuntosTallas := TDataSource.Create(Self);
   FDsConjuntosTallas.DataSet := FQryConjuntosTallas;
 
+  // CrearColumnasTallas tambien tiene que correr antes del inherited:
+  // CrearTablaPrincipal (lanzada desde inherited) llama a
+  // RecalcularColumnasTallasDocumento y CargarCantidadesTodasLineas;
+  // si las columnas no existen todavia ambos son no-op y al abrir
+  // una sesion existente las celdas de talla quedan ocultas y sin
+  // valores (necesitas mover una linea para que se refresquen).
+  CrearColumnasTallas;
+
   inherited;
 
   CargarBasicosColor;
-  CrearColumnasTallas;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.FormDestroy(Sender: TObject);
