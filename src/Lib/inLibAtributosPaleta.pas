@@ -19,7 +19,8 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
-  System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
+  System.Types, System.Generics.Collections,
+  Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
 
