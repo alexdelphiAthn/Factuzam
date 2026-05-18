@@ -175,6 +175,7 @@ type
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
+    procedure btnGrabarClick(Sender: TObject);
   private
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FConjuntoPos  : TDictionary<Integer, TArrPosConjunto>;
@@ -258,6 +259,16 @@ procedure TfrmMtoPruebaSesionGrid.cxgrdLineasExit(Sender: TObject);
 begin
   inherited;
   ActivarEnterComoTab(True);
+end;
+
+procedure TfrmMtoPruebaSesionGrid.btnGrabarClick(Sender: TObject);
+begin
+  inherited;
+  // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
+  // row (los Posts del master/detail provocan re-fetch). Recargamos
+  // las cantidades desde fza_compras_sesiones_celdas para que las
+  // celdas talla vuelvan a mostrar lo que el usuario tecleo.
+  CargarCantidadesTodasLineas;
 end;
 
 // ===========================================================================
