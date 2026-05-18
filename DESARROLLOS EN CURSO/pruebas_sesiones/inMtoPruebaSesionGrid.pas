@@ -334,6 +334,25 @@ end;
 
 procedure TfrmMtoPruebaSesionGrid.FormDestroy(Sender: TObject);
 begin
+  // Cerrar la query del lookup y soltar la connection ANTES del
+  // inherited: TfrmMtoGen.FormDestroy libera el DataModule y, por
+  // los caminos de UniDAC, la oConn global puede quedar en estado
+  // 'not connected' antes de que esta query (Owner=Self) sea
+  // destruida automaticamente al final del proceso. Si la
+  // destrucion automatica encuentra Active=True intenta cerrar el
+  // cursor contra una conexion ya inactiva -> "Connection is not
+  // connected".
+  if Assigned(FQryConjuntosTallas) then
+  begin
+    try
+      if FQryConjuntosTallas.Active then FQryConjuntosTallas.Close;
+    except
+      // Si la conexion ya cayo no podemos hacer nada util aqui.
+    end;
+    FQryConjuntosTallas.Connection := nil;
+    FreeAndNil(FQryConjuntosTallas);
+  end;
+  FreeAndNil(FDsConjuntosTallas);
   FreeAndNil(FConjuntoPos);
   FreeAndNil(FBmpSwatch);
   inherited;
