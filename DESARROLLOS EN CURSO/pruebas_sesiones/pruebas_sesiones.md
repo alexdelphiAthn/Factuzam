@@ -57,12 +57,15 @@ Columnas, en orden visual:
 |--------------------|------------------------------------------------|----------------------------------------------------------------|
 | Familia            | `CODIGO_FAM_SESLIN`                            | F3 abre `TfrmModalSelFamilia`. Al cambiar, copia descripción.  |
 | Cód. artículo      | `CODIGO_ART_TENTATIVO_SESLIN`                  | Read-only. Se rellena en `BeforePost` con `FAMILIA + CONTADOR` |
+| Modelo prov.       | `REF_PRV_SESLIN`                               | Código del proveedor para la prenda (referencia / modelo).     |
 | Descripción        | `DESCRIPCION_SESLIN`                           | Prerellenada con `NOMBRE_FAM_FAM`; editable                    |
 | Color              | `COLOR_TEXTO_SESLIN`                           | Texto libre. Atributo no-pivot ("atributo1"). NUEVA columna    |
 | Color básico       | `CODIGO_ATB_COLOR_SESLIN`                      | Selector con paleta (mismo combo que `inMtoInventarios`). NUEVA columna |
 | Pr. compra         | `PRECIO_COMPRA_SESLIN`                         | Al cambiar, propone Pr. venta vía `CalcularPrecioVenta`        |
 | Pr. venta          | `PRECIO_VENTA_SESLIN`                          | Calculado pero override-able                                   |
-| Sistema tallas     | `ID_AC_PIVOT_SESLIN`                           | Lookup `fza_atributos_conjuntos`. Al cambiar, reconstruye matriz |
+| Sistema tallas     | `ID_AC_PIVOT_SESLIN`                           | Lookup `fza_atributos_conjuntos`. Al cambiar, recalcula el     |
+|                    |                                                | máximo de columnas TALLA y los rótulos                         |
+| TALLA 1..N         | (no-bound, cache → `fza_compras_sesiones_celdas`) | N = máximo de valores entre los conjuntos del documento. Rótulos siguen al sistema de la línea con foco. |
 | Total tallas       | `TOTAL_UNIDADES_SESLIN`                        | Read-only. Suma de cantidades en celdas (lo refresca el form)  |
 | Importe total s/IVA| `TOTAL_LINEA_SESLIN`                           | Read-only. = `TOTAL_UNIDADES × PRECIO_COMPRA`                  |
 
@@ -141,19 +144,18 @@ caché resuelve el HEX por `(ID_VA_ATB='CO', CODIGO_ATB)`.
 Idempotente: en `pruebas_sesiones.sql` se envuelve en bloques
 `INFORMATION_SCHEMA` (mismo patrón que `compras_sesiones.sql`).
 
-#### 5.2 SESFIL — auto-creación de una fila por línea
+#### 5.2 SESFIL no se usa en esta prueba
 
-El motor de la matriz (`TGestorMatrizCompras`) lee filas de
-`fza_compras_sesiones_lineas_filas`. Para que la matriz se pueda
-editar, la prueba crea automáticamente **una fila SESFIL con
-`ID_FILA_SESFIL = 1`** por cada línea de sesión, en el momento de
-elegir el `ID_AC_PIVOT_SESLIN` (o de obtener foco la línea si ya tiene
-pivot). `ETIQUETA_TEXTO_SESFIL` se mantiene sincronizada con
-`COLOR_TEXTO_SESLIN` para que la etiqueta de la fila en la matriz
-muestre lo que el usuario tecleó.
+La prueba inline edita cantidades directamente en
+`fza_compras_sesiones_celdas` con `ID_FILA_SES_SESCEL = 1` fijo (una
+fila lógica por línea — no hay sub-grid color×color). No se inserta
+nada en `fza_compras_sesiones_lineas_filas` ni en `_filas_atr`: el
+atributo libre + el ATB básico ya viven denormalizados en SESLIN
+(`COLOR_TEXTO_SESLIN` y `CODIGO_ATB_COLOR_SESLIN`).
 
-No hace falta `_filas_atr` porque el atributo libre + ATB básico ya
-viven en SESLIN (denormalizados para esta prueba).
+Si la prueba se promueve a Mto real, la materialización tendrá que
+generar las filas SESFIL/SESFILAT correspondientes a partir de SESLIN
+para que el flujo de `fza_articulos_skus` siga el patrón habitual.
 
 #### 5.3 Genericidad — pensando en más atributos
 
@@ -206,33 +208,34 @@ DM lo aporta `UniDataComprasSesiones` (ya en el dpr).
 3. Tab Ficha: rellenar Empresa, Proveedor, Tarifa, Margen,
               Múltiplo, Ajuste. Grabar.
    ↓
-4. Botón [+ Línea]: añade fila al grid; el form crea una SESFIL.
+4. Botón [+ Línea]: añade fila al grid de artículos.
    ↓
 5. En la fila:
    - Tecla F3 en Familia → modal selector → BOLSOS → contador → BOLSOS00001
    - Descripción se prerellena con «Bolsos y Mochilas»; se edita
    - Tecleas Color = «AZUL TURQUESA PROV-XYZ»
-   - Color básico (lookup) = AZUL
+   - Color básico → selector paleta (mismo de inventarios) = AZUL
    - Pr. compra = 4,80 → se propone Pr. venta = 7,49 (vía fórmula)
-   - Sistema tallas = «42-46 Caballero» → matriz dibuja 5 columnas
+   - Sistema tallas = «42-46 Caballero» → la fila despliega 5 columnas
+     TALLA con rótulos 42, 43, 44, 45, 46.
    ↓
-6. En la matriz: tecleas cantidades 1,2,3,2,1.
-   Total tallas y Importe total se refrescan en la fila del grid.
+6. En la propia fila tecleas las cantidades 1, 2, 3, 2, 1 en cada
+   columna TALLA. Total tallas e Importe s/IVA se refrescan.
    ↓
-7. Repites pasos 4-6 para más artículos. Grabar.
+7. Repites pasos 4-6 para más artículos. Si una línea nueva usa un
+   conjunto con más tallas, el grid amplía sus columnas TALLA; las
+   líneas anteriores con conjuntos más cortos quedan con celdas en
+   blanco al final. Grabar.
 ```
 
-### 9. Decisiones cerradas sobre edición de tallas (objetivo final)
-
-Estado **objetivo** de la Prueba 01 — el que vale como definición de
-hecho:
+### 9. Edición inline de tallas
 
 - **Edición INLINE** en la propia línea del artículo. No hay matriz
   debajo del grid: las cantidades se teclean directamente en cada celda
   de talla, dentro de la fila del artículo.
 - **Número de columnas de talla = máximo** de valores entre todos los
-  sistemas de tallas usados por alguna línea de la sesión. Recalculado
-  al cambiar conjunto en cualquier línea.
+  sistemas de tallas referenciados por alguna línea de la sesión.
+  Recalculado al cambiar el conjunto pivot en cualquier línea.
 - Las líneas con conjuntos más cortos tienen **columnas en blanco** al
   final de las tallas (no rotuladas, no editables).
 - **Captions dinámicas**: cuando el foco está sobre una línea, los
@@ -240,39 +243,36 @@ hecho:
   línea. Si hay dos líneas con sistemas distintos y muevo el foco, los
   rótulos cambian al tallaje de la línea activa.
 
-### 10. Estado actual del código (V1, en commit)
+### 10. Cómo está implementada la edición inline
 
-El código publicado en esta carpeta implementa todo el diseño SALVO la
-edición inline de tallas. Las cantidades se editan en una tira
-(matriz) dibujada **debajo** del grid mediante
-`TGestorMatrizCompras` — un patrón ya probado en el Mto real. Sirve
-como banco de pruebas funcional del modelo de datos y de los demás
-flujos (familia → contador, PVP propuesto, paleta de colores básicos,
-sistema de tallas por línea).
+Las columnas de talla son **no-bound**
+(`DataBinding.ValueTypeClass = TcxFloatValueType`, sin `FieldName`).
+El valor vive en `tvLineas.DataController.Values[record, col]` y se
+sincroniza con `fza_compras_sesiones_celdas`:
 
-El siguiente paso (V1.1) es sustituir esa tira por las columnas inline
-descritas en §9. Implementación prevista:
+- **Lectura** (`CargarCantidadesTodasLineas` /
+  `CargarCantidadesUnaLinea`): al abrir la sesión, recorre las celdas
+  existentes en BBDD y las publica en las columnas no-bound por
+  posición — la posición se calcula desde el conjunto pivot de la
+  línea (`fza_atributos_conjuntos_det` ordenado por `ORDEN_ACD`).
+- **Escritura** (`TallaCellEditValueChanged`): cuando el usuario teclea
+  en una celda, leemos `LINEA_SESLIN` + `ID_AC_PIVOT_SESLIN`,
+  resolvemos el `ID_AV` por posición (`Tag` de la columna) y
+  persistimos vía upsert SQL (`INSERT … ON DUPLICATE KEY UPDATE`).
+- **Caché** (`FConjuntoPos: TDictionary<ID_AC, TArrPosConjunto>`):
+  cachea las posiciones por conjunto para no reconsultar
+  `fza_atributos_conjuntos_det` en cada edición.
+- **Máximo de columnas visibles** (`MaxLongConjuntosSesion`): consulta
+  los `ID_AC_PIVOT_SESLIN` distintos de la sesión, mira el tamaño de
+  cada conjunto y devuelve el máximo. `RecalcularColumnasTallasDocumento`
+  muestra ese número de columnas y oculta el resto.
 
-1. Quitar `pnlMatrizCab`, `sbMatriz` y la liberación de
-   `FGestorMatriz` del form.
-2. Añadir 12 columnas no-bound a `tvLineas`
-   (`PropertiesClassName='TcxCurrencyEditProperties'`,
-   `DataBinding.ValueType='Float'`, `Tag=1..12`).
-3. Cachear las posiciones del conjunto pivot de cada línea
-   (`TDictionary<ID_AC, TArray<ID_AV>>`) y poblar las celdas no-bound
-   vía `tvLineas.DataController.Values[record, col]` a partir de
-   `fza_compras_sesiones_celdas`.
-4. Recalcular el máximo de valores entre todos los conjuntos referenciados
-   en la sesión y mostrar/ocultar columnas según ese máximo.
-5. Captions: actualizar al cambiar el foco de fila
-   (`OnFocusedRecordChanged`) leyendo el conjunto de la línea actual.
-6. Edición: `Properties.OnEditValueChanged` de cada columna persiste a
-   `fza_compras_sesiones_celdas` con el mismo upsert que ya hace
-   `TGestorMatrizCompras.OnCantidadChange`.
+Las 15 columnas TALLA se crean en runtime (`CrearColumnasTallas`) entre
+`dbcLinTallas` (sistema) y `dbcLinTotalTallas` para mantener el orden
+visual del usuario.
 
-Sin foto, sin código de barras, sin propiedades de familia
-(fijas/variables) — a propósito; el Mto real cubre todos esos casos.
-Esta prueba se centra en el flujo «coste + tallas → artículos».
+### 11. Limitaciones reconocidas
+
 - Sin materialización: la sesión vive en `BORRADOR`. Promoverla a
   pedido/albarán es el flujo del Mto real, no de esta prueba.
 - Sin foto, sin código de barras, sin propiedades de familia
