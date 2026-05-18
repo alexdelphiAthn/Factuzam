@@ -558,9 +558,20 @@ begin
     FreeAndNil(q);
   end;
   rPr := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName(FCfg.FieldTotalUds).AsFloat   := rTot;
-  ds.FieldByName(FCfg.FieldTotalLinea).AsFloat := rTot * rPr;
+  // BeginUpdate/EndUpdate del DataController para que el cxGrid no
+  // re-renderice la fila tras el ds.Edit y las asignaciones de campos
+  // bound — el re-render limpia los Values[] no-bound de TODAS las
+  // celdas talla de TODAS las lineas. Sin esta envoltura, en cuanto el
+  // usuario teclea una cantidad y disparamos RefrescarTotales, las
+  // tallas se borran visualmente (los datos siguen bien en SESCEL).
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+    ds.FieldByName(FCfg.FieldTotalUds).AsFloat   := rTot;
+    ds.FieldByName(FCfg.FieldTotalLinea).AsFloat := rTot * rPr;
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
   // Sin Post — lo decide el Mto cuando el usuario Graba o cambia
   // de fila.
 end;
