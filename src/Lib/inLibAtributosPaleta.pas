@@ -246,11 +246,18 @@ begin
                    TopY,
                    Bounds.Left + MARGEN_IZQ + LADO_CUADRADO,
                    TopY + LADO_CUADRADO);
+  // Relleno con el color de la paleta
+  ACanvas.Brush.Style := bsSolid;
   ACanvas.Brush.Color := AInfo.Color;
   ACanvas.FillRect(Cuadrado);
-  ACanvas.Pen.Color := clBlack;
-  ACanvas.Pen.Width := 1;
-  ACanvas.FrameRect(Cuadrado);
+  // Borde fino negro. Usamos Rectangle con bsClear: FrameRect dibuja el
+  // contorno con el brush (no con el pen), asi que para colores claros
+  // como BLANCO el borde queda invisible.
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.Pen.Color   := clBlack;
+  ACanvas.Pen.Width   := 1;
+  ACanvas.Rectangle(Cuadrado);
+  ACanvas.Brush.Style := bsSolid;
 
   // Texto desplazado a la derecha del cuadrado
   TxtRect := Bounds;
