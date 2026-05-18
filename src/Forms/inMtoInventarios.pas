@@ -239,6 +239,7 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -280,6 +281,16 @@ begin
     ds := tvLineas.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
+end;
+
+// Para que la pantalla flotante refresque al moverse entre lineas del
+// inventario, ademas de dsTablaG (cabecera) enganchamos dsLineas.
+function TfrmMtoInventarios.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmInventarios) then
+    Result := [dsTablaG, dmmInventarios.dsLineas]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;

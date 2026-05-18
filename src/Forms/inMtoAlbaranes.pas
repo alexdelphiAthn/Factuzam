@@ -151,6 +151,7 @@ type
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -180,6 +181,16 @@ begin
     ds := tvLineasAlbaran.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
   end;
+end;
+
+// Para que la pantalla flotante refresque al moverse entre lineas del
+// albaran, ademas de dsTablaG (cabecera) enganchamos dsAlbaranesLineas.
+function TfrmMtoAlbaranes.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmAlbaranes) then
+    Result := [dsTablaG, dmmAlbaranes.dsAlbaranesLineas]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);

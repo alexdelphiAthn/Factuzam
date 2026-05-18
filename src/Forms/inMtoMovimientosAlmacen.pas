@@ -29,7 +29,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataMovimientosAlmacen,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, cxSplitter, inLibFotos;
+  dxShellDialogs;
 
 type
   TfrmMtoMovimientosAlmacen = class(TfrmMtoGen)
@@ -63,14 +63,8 @@ type
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
-    splFotoMov: TcxSplitter;
-    pnlFotoMov: TPanel;
-    imgFotoMov: TImage;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
   private
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
-    FFotoEmb: TFotoEmbebida;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -89,19 +83,6 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoMovimientosAlmacen }
-
-procedure TfrmMtoMovimientosAlmacen.FormCreate(Sender: TObject);
-begin
-  inherited;
-  // Foto embebida del articulo de la fila activa de dsTablaG.
-  FFotoEmb := TFotoEmbebida.Create(imgFotoMov, dsTablaG);
-end;
-
-procedure TfrmMtoMovimientosAlmacen.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(FFotoEmb);
-  inherited;
-end;
 
 procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
