@@ -104,6 +104,16 @@ type
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
+  public
+    // Auto-enganche de la pantalla flotante de fotos al Mto recibido.
+    // Si la ventana nunca se ha mostrado en esta sesion y AAuto = True,
+    // la abre. Si ya estaba abierta, la re-vincula al nuevo Mto y
+    // refresca el articulo / SKU activo. Llamado tanto desde
+    // pcPrincipalChange (cambio de pestana) como desde
+    // TfrmMtoGen.FormShow (primer mostrado del Mto), para garantizar
+    // cero pulsaciones de Ctrl+Alt+F.
+    procedure EngancharFotoAlMto(AMto: TObject);
+    procedure NotificarFotoCerrada;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -184,6 +194,11 @@ type
     FLogForm: TForm;
     FLogMemo: TSynEdit;
     FSavedNCMValid: Boolean;
+    // Foto flotante auto-mostrar: True hasta que el usuario la cierre
+    // explicitamente. Mientras este True, el pcPrincipalChange / hook
+    // de FormShow de cada Mto abre la pantalla flotante la primera vez
+    // que tienen articulo activo (cero pulsaciones).
+    FFotoAutoMostrar: Boolean;
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
@@ -369,6 +384,7 @@ begin
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
+  FFotoAutoMostrar := True;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
@@ -1072,38 +1088,58 @@ begin
 end;
 
 // Foto flotante transversal: cuando el usuario cambia de pestana
-// (=Mto activo), si la pantalla flotante de fotos esta visible la
-// re-vinculamos al nuevo Mto y refrescamos la foto al articulo / SKU
-// del registro activo. Asi una sola pulsacion de Ctrl+Alt+F sirve
-// para "anclar" la pantalla flotante a TODA la sesion: a partir de
-// ahi sigue automaticamente al Mto que tenga el foco. Si el nuevo
-// tab no es un TfrmMtoGen (o el grid esta vacio) desenganchamos para
-// que no muestre datos obsoletos del Mto anterior.
+// (=Mto activo), si la pantalla flotante ya esta abierta la
+// re-vincula al nuevo Mto. Si todavia no se mostro en la sesion y
+// FFotoAutoMostrar sigue True, la abre automaticamente (cero
+// pulsaciones de Ctrl+Alt+F).
 procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
 var
-  ts        : TcxTabSheet;
-  frmActivo : TfrmMtoGen;
-  sArt, sSku: string;
+  ts: TcxTabSheet;
 begin
-  if not Assigned(frmFotoArticulo) then Exit;
-  if not frmFotoArticulo.Visible then Exit;
   if pcPrincipal.ActivePageIndex < 0 then
   begin
-    frmFotoArticulo.VincularDataSources([], nil);
-    frmFotoArticulo.SetArticuloSku('', '');
+    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+    begin
+      frmFotoArticulo.VincularDataSources([], nil);
+      frmFotoArticulo.SetArticuloSku('', '');
+    end;
     Exit;
   end;
   ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
   if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
   begin
-    frmFotoArticulo.VincularDataSources([], nil);
+    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+      frmFotoArticulo.VincularDataSources([], nil);
     Exit;
   end;
-  frmActivo := TfrmMtoGen(ts.Controls[0]);
+  EngancharFotoAlMto(ts.Controls[0]);
+end;
+
+procedure TfrmMtoPrincipal.EngancharFotoAlMto(AMto: TObject);
+var
+  frmActivo : TfrmMtoGen;
+  sArt, sSku: string;
+begin
+  if not (AMto is TfrmMtoGen) then Exit;
+  frmActivo := TfrmMtoGen(AMto);
+  frmActivo.ResolverArtSkuActivo(sArt, sSku);
+  // Auto-mostrar la PRIMERA vez en la sesion. Si el usuario cierra la
+  // ventana, FFotoAutoMostrar = False y respetamos su decision.
+  if (frmFotoArticulo = nil) and FFotoAutoMostrar and (sArt <> '') then
+    MostrarFotoFlotante(Self, sArt, sSku);
+  if not Assigned(frmFotoArticulo) then Exit;
+  if not frmFotoArticulo.Visible then Exit;
   frmFotoArticulo.VincularDataSources(frmActivo.DataSourcesParaFoto,
                                       frmActivo.ResolverArtSkuActivo);
-  frmActivo.ResolverArtSkuActivo(sArt, sSku);
   frmFotoArticulo.SetArticuloSku(sArt, sSku);
+end;
+
+procedure TfrmMtoPrincipal.NotificarFotoCerrada;
+begin
+  // Llamado por TfrmFotoArticulo en su FormClose. Desactiva el
+  // auto-mostrar para el resto de la sesion (respeta la decision
+  // del usuario de cerrar la ventana).
+  FFotoAutoMostrar := False;
 end;
 
 end.
