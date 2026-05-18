@@ -698,8 +698,10 @@ procedure TfrmMtoPruebaSesionGrid.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  frmSel : TfrmModalSelFamilia;
-  ds     : TDataSet;
+  frmSel     : TfrmModalSelFamilia;
+  ds         : TDataSet;
+  sExpandido : string;
+  sTentativo : string;
 begin
   inherited;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
@@ -713,9 +715,21 @@ begin
       ds := Dmm.unqrySesionLin;
       if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
       ds.FieldByName('CODIGO_FAM_SESLIN').AsString := frmSel.CodigoFamilia;
-      if ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString = '' then
-        ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
-                                                          frmSel.CodigoFamilia;
+      // Expansion inmediata familia -> codigo articulo. Asi el usuario ve
+      // el codigo (FAMILIA + relleno del contador) en cuanto sale del modal
+      // de seleccion, sin tener que mover el foco fuera del row para que
+      // el BeforePost del DM lo expanda. Si la familia tiene contador
+      // activo, ResolverCodigoFamilia incrementa CONTADOR_ART_FAM en
+      // BBDD y devuelve True; si no, devuelve False y dejamos el codigo
+      // de familia como tentativo. El BeforePost del DM hace una segunda
+      // llamada idempotente: con un codigo ya expandido ('BOLSOS00001'),
+      // ResolverCodigoFamilia no encuentra familia y no incrementa de nuevo.
+      sTentativo := frmSel.CodigoFamilia;
+      if ResolverCodigoFamilia(inLibGlobalVar.oConn,
+                               frmSel.CodigoFamilia, oUser,
+                               sExpandido) then
+        sTentativo := sExpandido;
+      ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
       if ds.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
         ds.FieldByName('DESCRIPCION_SESLIN').AsString := frmSel.NombreFamilia;
     end;
