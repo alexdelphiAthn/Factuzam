@@ -375,16 +375,42 @@ end;
 
 procedure TdmComprasSesiones.CalcularTotalesLineaActual;
 var
+  q         : TUniQuery;
   rTotalUds : Double;
   rPrecio   : Double;
+  iLinea    : Integer;
+  sSerie    : string;
+  sNumero   : string;
 begin
   // Recalcula TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN para la línea
-  // actualmente en edición sumando las celdas activas.
-  // Implementación: SELECT SUM(CANTIDAD_SESCEL)
-  //                   FROM fza_compras_sesiones_celdas
-  //                  WHERE pk de línea.
+  // actualmente en edición sumando las celdas de fza_compras_sesiones_celdas.
+  // Se invoca desde unqrySesionLinBeforePost para que los totales se
+  // persistan correctamente cuando el usuario graba la sesión.
   rTotalUds := 0;
-  // TODO: ejecutar consulta de agregación.
+  if unqrySesionLin.IsEmpty then Exit;
+  iLinea  := unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  sSerie  := unqrySesionLin.FieldByName('SERIE_SES_SESLIN').AsString;
+  sNumero := unqrySesionLin.FieldByName('NUMERO_SES_SESLIN').AsString;
+  if iLinea <= 0 then Exit;
+  if (sSerie = '') or (sNumero = '') then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) AS TOTAL ' +
+      '  FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL = :l';
+    q.ParamByName('s').AsString  := sSerie;
+    q.ParamByName('n').AsString  := sNumero;
+    q.ParamByName('l').AsInteger := iLinea;
+    q.Open;
+    rTotalUds := q.FieldByName('TOTAL').AsFloat;
+  finally
+    FreeAndNil(q);
+  end;
+
   rPrecio := unqrySesionLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
   if not (unqrySesionLin.State in [dsInsert, dsEdit]) then
     unqrySesionLin.Edit;
