@@ -396,6 +396,7 @@ begin
   ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
+  odmPerfiles.PrecargarPerfilesUsuario;
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   oAppParams.InicializarParametrosApp(oUser, oGroup);
   oNomImpresoraCaja := GetImpresoraCaja;
