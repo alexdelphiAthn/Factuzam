@@ -375,30 +375,77 @@ end;
 
 procedure TGestorGridTallas.CargarCantidadesTodasLineas;
 var
-  ds : TDataSet;
-  bk : TBookmark;
-  i, iLinea : Integer;
+  q     : TUniQuery;
+  i     : Integer;
+  ds    : TDataSet;
+  bk    : TBookmark;
+  iLin  : Integer;
+  rCant : Double;
+  iIdAv : Integer;
+  iAc   : Integer;
+  arr   : TArrPosConjunto;
+  j     : Integer;
 begin
+  // Estrategia: lanzar UN SOLO SELECT que trae todas las celdas del
+  // documento (LINEA, ID_AV, SUM(CANTIDAD)) y, para cada fila del
+  // resultado, ubicar el record idx en cxGrid via Locate sobre el
+  // dataset y publicar el Values[].
+  //
+  // Antes iteraba el dataset con DisableControls+bookmark, pero
+  // cxGrid no respetaba los Values[] no-bound durante el suspend y
+  // las celdas quedaban en blanco al EnableControls. Usar Locate
+  // (cxGrid esta enterado del cambio de record) deja los Values[]
+  // estables porque solo cambia el "current" del cxGrid una vez por
+  // celda persistida, no por record completo.
   ds := Lineas;
-  if (ds = nil) or not ds.Active then Exit;
-  if ds.IsEmpty then Exit;
+  if (ds = nil) or not ds.Active or ds.IsEmpty then Exit;
+  if SerieDoc = '' then Exit;
 
-  // DisableControls evita que cxGrid se entere de los cambios de
-  // cursor durante el recorrido. Sin esto cada Next provoca un
-  // re-render del row anterior, limpiando los Values[] que acabamos
-  // de fijar — solo la ultima iteracion sobrevivia.
   bk := ds.GetBookmark;
   ds.DisableControls;
   try
-    ds.First;
-    i := 0;
-    while not ds.Eof do
-    begin
-      iLinea := ds.FieldByName(FCfg.FieldLinea).AsInteger;
-      if iLinea > 0 then
-        CargarCantidadesUnaLinea(i, iLinea);
-      Inc(i);
-      ds.Next;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := FCfg.Conexion;
+      q.SQL.Text :=
+        'SELECT ' + FCfg.FieldLineaCel    + ' AS LIN, ' +
+        '       ' + FCfg.FieldAvPivotCel  + ' AS AVI, ' +
+        '       SUM(' + FCfg.FieldCantidadCel + ') AS CANT ' +
+        '  FROM ' + FCfg.TablaCeldas + ' ' +
+        ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
+        '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
+        ' GROUP BY ' + FCfg.FieldLineaCel + ', ' + FCfg.FieldAvPivotCel;
+      q.ParamByName('s').AsString := SerieDoc;
+      q.ParamByName('n').AsString := NumeroDoc;
+      q.Open;
+      while not q.Eof do
+      begin
+        iLin   := q.FieldByName('LIN').AsInteger;
+        iIdAv  := q.FieldByName('AVI').AsInteger;
+        rCant  := q.FieldByName('CANT').AsFloat;
+        // Localizar el record en el dataset (no mueve el cursor visible
+        // porque controles estan disabled — pero la cxGrid sigue
+        // sincronizada por bookmark interno).
+        if ds.Locate(FCfg.FieldLinea, iLin, []) then
+        begin
+          // RecNo (1-based) -> record idx cxGrid (0-based)
+          i := ds.RecNo - 1;
+          iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+          arr := GetPosicionesConjunto(iAc);
+          for j := 0 to High(arr) do
+            if arr[j].IdAv = iIdAv then
+            begin
+              if (j <= High(FCfg.ColumnasTallas)) and
+                 (FCfg.ColumnasTallas[j] <> nil) then
+                FCfg.Grid.DataController.Values[
+                  i, FCfg.ColumnasTallas[j].Index] := rCant;
+              Break;
+            end;
+        end;
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
     end;
   finally
     if Assigned(bk) then
@@ -408,6 +455,8 @@ begin
     end;
     ds.EnableControls;
   end;
+  // Forzar al cxGrid a invalidar/repintar tras el bulk de Values.
+  FCfg.Grid.LayoutChanged;
 end;
 
 procedure TGestorGridTallas.CargarCantidadesUnaLinea(ARecordIndex,
