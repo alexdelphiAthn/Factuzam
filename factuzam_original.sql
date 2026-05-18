@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 18/05/2026 9:15:17
+-- Backup generado: 18/05/2026 22:02:43
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -367,10 +367,10 @@ CREATE TABLE `fza_articulos_familias` (
 
 -- Datos de fza_articulos_familias
 INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
-  ('BOLSOS', 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 1, 'S', '2026-05-14 19:43:32', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
+  ('BOLSOS', 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 7, 'S', '2026-05-18 21:42:31', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
   ('CALZADO', 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 0, 'S', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
-  ('COMPLEMENTOS', 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
-  ('DEPORTIVO', 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 0, 'N', '2026-05-12 18:34:25', '2026-01-01 08:00:00', 'DEMO', 'DEMO', 5),
+  ('COMPLEMENTOS', 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 2, 'S', '2026-05-18 22:01:06', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
+  ('DEPORTIVO', 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 1, 'S', '2026-05-18 20:29:11', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
   ('OTR', 'S', 6, 'S', NULL, 'Otros articulos agrícolas', 'Otros articulos agrícolas', 0, 'N', '2026-05-12 18:38:02', '2022-11-02 16:06:31', 'Administrador', 'Administrador', 5),
   ('ROPA', 'S', 1, 'N', NULL, 'Ropa de Vestir', 'Ropa de Vestir a la moda', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Adminnistrador', 'Administrador', 5);
 -- 6 registros exportados
@@ -2212,7 +2212,7 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SE
 
 -- Datos de fza_compras_sesiones
 INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 230, 'PVP', 'S', 'S', 1, 0, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'N', NULL, NULL, NULL, NULL, NULL, 0, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-14 19:13:48', 'Administrador', 'N');
+  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'N', NULL, NULL, NULL, NULL, NULL, 90, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-18 22:01:51', 'Administrador', 'N');
 -- 1 registros exportados
 
 
@@ -2233,6 +2233,50 @@ CREATE TABLE `fza_compras_sesiones_celdas` (
 );
 ALTER TABLE `fza_compras_sesiones_celdas` ADD INDEX `IDX_SESCEL_ALM` (`CODIGO_ALM_SESCEL`);
 ALTER TABLE `fza_compras_sesiones_celdas` ADD INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`);
+
+-- Datos de fza_compras_sesiones_celdas
+INSERT INTO `fza_compras_sesiones_celdas` (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCEL`, `LINEA_SES_SESCEL`, `ID_FILA_SES_SESCEL`, `ID_AV_PIVOT_SESCEL`, `CODIGO_ALM_SESCEL`, `CANTIDAD_SESCEL`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
+  ('A1', '000002', 10, 1, 126, '', 2, '2026-05-18 21:41:16', 'Administrador'),
+  ('A1', '000002', 10, 1, 127, '', 2, '2026-05-18 20:06:25', 'Administrador'),
+  ('A1', '000002', 10, 1, 224, '', 2, '2026-05-18 20:06:24', 'Administrador'),
+  ('A1', '000002', 10, 1, 225, '', 1, '2026-05-18 20:08:51', 'Administrador'),
+  ('A1', '000002', 10, 1, 226, '', 2, '2026-05-18 20:06:25', 'Administrador'),
+  ('A1', '000002', 10, 1, 227, '', 1, '2026-05-18 20:06:22', 'Administrador'),
+  ('A1', '000002', 20, 1, 126, '', 2, '2026-05-18 20:30:01', 'Administrador'),
+  ('A1', '000002', 20, 1, 127, '', 1, '2026-05-18 20:30:01', 'Administrador'),
+  ('A1', '000002', 20, 1, 224, '', 2, '2026-05-18 20:30:00', 'Administrador'),
+  ('A1', '000002', 20, 1, 225, '', 1, '2026-05-18 20:30:00', 'Administrador'),
+  ('A1', '000002', 20, 1, 226, '', 1, '2026-05-18 20:30:02', 'Administrador'),
+  ('A1', '000002', 20, 1, 227, '', 1, '2026-05-18 20:29:59', 'Administrador'),
+  ('A1', '000002', 50, 1, 126, '', 2, '2026-05-18 21:00:02', 'Administrador'),
+  ('A1', '000002', 50, 1, 127, '', 3, '2026-05-18 21:00:04', 'Administrador'),
+  ('A1', '000002', 50, 1, 224, '', 1, '2026-05-18 21:48:35', 'Administrador'),
+  ('A1', '000002', 50, 1, 225, '', 2, '2026-05-18 21:00:02', 'Administrador'),
+  ('A1', '000002', 50, 1, 226, '', 2, '2026-05-18 21:00:04', 'Administrador'),
+  ('A1', '000002', 50, 1, 227, '', 1, '2026-05-18 21:00:01', 'Administrador'),
+  ('A1', '000002', 60, 1, 126, '', 1, '2026-05-18 21:28:05', 'Administrador'),
+  ('A1', '000002', 60, 1, 127, '', 1, '2026-05-18 21:27:39', 'Administrador'),
+  ('A1', '000002', 60, 1, 224, '', 2, '2026-05-18 21:27:39', 'Administrador'),
+  ('A1', '000002', 60, 1, 225, '', 1, '2026-05-18 21:27:39', 'Administrador'),
+  ('A1', '000002', 60, 1, 226, '', 1, '2026-05-18 21:27:39', 'Administrador'),
+  ('A1', '000002', 60, 1, 227, '', 1, '2026-05-18 21:27:39', 'Administrador'),
+  ('A1', '000002', 70, 1, 126, '', 1, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 70, 1, 127, '', 1, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 70, 1, 224, '', 2, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 70, 1, 225, '', 1, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 70, 1, 226, '', 1, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 70, 1, 227, '', 1, '2026-05-18 21:40:11', 'Administrador'),
+  ('A1', '000002', 80, 1, 9101, '', 1, '2026-05-18 21:43:09', 'Administrador'),
+  ('A1', '000002', 80, 1, 9102, '', 1, '2026-05-18 21:43:10', 'Administrador'),
+  ('A1', '000002', 80, 1, 9103, '', 2, '2026-05-18 21:43:11', 'Administrador'),
+  ('A1', '000002', 80, 1, 9104, '', 2, '2026-05-18 21:43:12', 'Administrador'),
+  ('A1', '000002', 90, 1, 126, '', 2, '2026-05-18 22:01:48', 'Administrador'),
+  ('A1', '000002', 90, 1, 127, '', 1, '2026-05-18 22:01:49', 'Administrador'),
+  ('A1', '000002', 90, 1, 224, '', 2, '2026-05-18 22:01:47', 'Administrador'),
+  ('A1', '000002', 90, 1, 225, '', 2, '2026-05-18 22:01:47', 'Administrador'),
+  ('A1', '000002', 90, 1, 226, '', 1, '2026-05-18 22:01:49', 'Administrador'),
+  ('A1', '000002', 90, 1, 227, '', 1, '2026-05-18 22:01:47', 'Administrador');
+-- 40 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_documentos
@@ -2320,9 +2364,23 @@ CREATE TABLE `fza_compras_sesiones_lineas` (
   `USUARIO_ALTA` varchar(50) NOT NULL,
   `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
+  `COLOR_TEXTO_SESLIN` varchar(100) NULL DEFAULT NULL COMMENT 'Texto libre del color/atributo no-pivot de la linea (p. ej. AZUL TURQUESA PROV-XYZ). Para la prueba 01 del grid plano.',
+  `CODIGO_ATB_COLOR_SESLIN` varchar(100) NULL DEFAULT NULL COMMENT 'CODIGO_ATB del color basico asociado a la linea (ID_VA_ATB=''CO''). NULL = sin mapeo.',
   PRIMARY KEY (`SERIE_SES_SESLIN`,`NUMERO_SES_SESLIN`,`LINEA_SESLIN`)
 );
 ALTER TABLE `fza_compras_sesiones_lineas` ADD INDEX `IDX_SESLIN_ART_TENT` (`CODIGO_ART_TENTATIVO_SESLIN`);
+ALTER TABLE `fza_compras_sesiones_lineas` ADD INDEX `IDX_SESLIN_ATB_COLOR` (`CODIGO_ATB_COLOR_SESLIN`);
+
+-- Datos de fza_compras_sesiones_lineas
+INSERT INTO `fza_compras_sesiones_lineas` (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN`, `DESCRIPCION_SESLIN`, `CODIGO_FAM_SESLIN`, `TIPO_LINEA_SESLIN`, `TIPO_ART_SESLIN`, `TIPO_IVA_SESLIN`, `TIPO_CANTIDAD_SESLIN`, `ESTRAZABLE_SESLIN`, `CODIGO_VAR_SESLIN`, `ID_VA_PIVOT_SESLIN`, `ID_AC_PIVOT_SESLIN`, `ID_VA_FILA_SESLIN`, `ID_AC_FILA_SESLIN`, `CANTIDAD_ESCALAR_SESLIN`, `ESDUPLICADO_SESLIN`, `ACCION_DUPLICADO_SESLIN`, `CODIGO_ART_REUSAR_SESLIN`, `PRECIO_COMPRA_SESLIN`, `PORCENTAJE_MARGEN_SESLIN`, `PRECIO_VENTA_SESLIN`, `REF_PRV_SESLIN`, `TOTAL_UNIDADES_SESLIN`, `TOTAL_LINEA_SESLIN`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `COLOR_TEXTO_SESLIN`, `CODIGO_ATB_COLOR_SESLIN`) VALUES
+  ('A1', '000002', 10, 'BOLSOS00005', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 35.01, 'ART03983', 10, 100, '2026-05-18 19:25:22', 'Administrador', '2026-05-18 21:41:16', 'Administrador', '07', 'AZUL_CIELO'),
+  ('A1', '000002', 20, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 8, 272, '2026-05-18 20:28:16', 'Administrador', '2026-05-18 20:30:34', 'Administrador', '389', 'BLANCO'),
+  ('A1', '000002', 50, 'BOLSOS00006', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 24.99, 'ART03983', 11, 110, '2026-05-18 20:59:10', 'Administrador', '2026-05-18 21:48:35', 'Administrador', '08', 'VERDE'),
+  ('A1', '000002', 60, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:27:39', 'Administrador', '2026-05-18 21:28:05', 'Administrador', '981', 'MARRON'),
+  ('A1', '000002', 70, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:40:11', 'Administrador', '2026-05-18 21:40:30', 'Administrador', '87', 'VERDE'),
+  ('A1', '000002', 80, 'BOLSOS00007', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 3, NULL, NULL, NULL, 'N', NULL, NULL, 22, NULL, 54.99, 'AIMOE98Ç', 6, 132, '2026-05-18 21:42:18', 'Administrador', '2026-05-18 21:43:14', 'Administrador', '32', 'AMARILLO'),
+  ('A1', '000002', 90, 'COMPLEMENTOS002', 'Complementos Accesorios', 'COMPLEMENTOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29.99, 'PUNKU383', 9, 108, '2026-05-18 22:00:15', 'Administrador', '2026-05-18 22:01:51', 'Administrador', '21', 'AZUL');
+-- 7 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_lineas_filas
@@ -2480,7 +2538,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 219, 3, 'S', 'S', '2026-05-18 07:01:09', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 220, 3, 'S', 'S', '2026-05-18 18:48:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -3903,8 +3961,108 @@ UPDATE fza_winforms
 ', '2026-05-17 18:06:28', '2026-05-17 18:06:28', 'Administrador', 'Administrador'),
   ('218', NULL, 'SELECT COUNT(*) FROM fza_usuarios_perfiles
  WHERE USUARIO_GRUPO_USUPER IN (''TU_USER'',''TU_GRUPO'',''TODOS'')
-   AND TYPE_BLOB_USUPER IS NULL;', '2026-05-18 07:01:09', '2026-05-18 07:01:09', 'Administrador', 'Administrador');
--- 14 registros exportados
+   AND TYPE_BLOB_USUPER IS NULL;', '2026-05-18 07:01:09', '2026-05-18 07:01:09', 'Administrador', 'Administrador'),
+  ('219', 'pruebas_sesiones', '-- ============================================================================
+-- Pruebas — Sesiones de creación de artículos: Prueba 01 (grid plano)
+--
+-- Reutiliza por completo las tablas fza_compras_sesiones* del módulo
+-- principal (ver DESARROLLOS EN CURSO/compras_sesiones.sql). Lo único
+-- que esta prueba aporta al esquema:
+--
+--   1. Dos columnas nuevas en fza_compras_sesiones_lineas para almacenar
+--      el atributo no-pivot "color" (texto libre + FK lógica al ATB
+--      básico). Se denormaliza por simplicidad de la prueba; en
+--      producción se moverá a tabla hija si crece el número de atributos.
+--
+--   2. Una entrada en fza_winforms para que TfrmMtoPruebaSesionGrid se
+--      pueda invocar con ShowMto y resuelva su DataModule a
+--      TdmComprasSesiones (el mismo del Mto real).
+--
+-- Idempotente: pasa el chequeo INFORMATION_SCHEMA antes de ALTER.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Columna COLOR_TEXTO_SESLIN — atributo no-pivot, texto libre
+-- ---------------------------------------------------------------------------
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones_lineas''
+     AND COLUMN_NAME  = ''COLOR_TEXTO_SESLIN''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones_lineas` ''
+  ''ADD COLUMN `COLOR_TEXTO_SESLIN` varchar(100) DEFAULT NULL ''
+  ''  COMMENT ''''Texto libre del color/atributo no-pivot de la linea ''
+  ''(p. ej. AZUL TURQUESA PROV-XYZ). Para la prueba 01 del grid plano.'''''',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 2. Columna CODIGO_ATB_COLOR_SESLIN — codigo del basico (ATB) elegido
+-- ---------------------------------------------------------------------------
+-- Se guarda el CODIGO_ATB (varchar) en lugar del ID_ATB (int) porque el
+-- selector reutilizado de inventarios (SeleccionarAvConPaleta de
+-- inLibAtributosPaleta) trabaja con codigos: el usuario ve y elige
+-- ''NEGRO'', ''AZUL'', ''AZUL_MARINO''... y la cache de paleta resuelve el
+-- color HEX por (ID_VA_ATB=''CO'', CODIGO_ATB).
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones_lineas''
+     AND COLUMN_NAME  = ''CODIGO_ATB_COLOR_SESLIN''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones_lineas` ''
+  ''ADD COLUMN `CODIGO_ATB_COLOR_SESLIN` varchar(100) DEFAULT NULL ''
+  ''  COMMENT ''''CODIGO_ATB del color basico asociado a la linea ''
+  ''(ID_VA_ATB=''''''''CO''''''''). NULL = sin mapeo.'''''',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indice por CODIGO_ATB_COLOR para futuras agregaciones por color basico.
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_compras_sesiones_lineas''
+     AND INDEX_NAME   = ''IDX_SESLIN_ATB_COLOR''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones_lineas` ''
+  ''ADD INDEX `IDX_SESLIN_ATB_COLOR` (`CODIGO_ATB_COLOR_SESLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 3. Registro de la ventana en fza_winforms
+-- ---------------------------------------------------------------------------
+-- ShowMto(Self, ''PruebaSesionGrid'') resuelve aqui. Reutiliza el mismo
+-- DataModule que el Mto real (TdmComprasSesiones).
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`,
+   `UNITF_WINF`, `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''PruebaSesionGrid'',
+   ''Prueba 01 - Sesion grid plano'',
+   NULL,
+   ''inMtoPruebaSesionGrid.TfrmMtoPruebaSesionGrid'',
+   ''Ctrl+Shift+S'',
+   ''UniDataComprasSesiones.TdmComprasSesiones'',
+   1)
+ON DUPLICATE KEY UPDATE
+  `CAPTION_WINF`     = VALUES(`CAPTION_WINF`),
+  `UNITF_WINF`       = VALUES(`UNITF_WINF`),
+  `SHORTCUT_WINF`    = VALUES(`SHORTCUT_WINF`),
+  `DATAMODULE_WINF`  = VALUES(`DATAMODULE_WINF`),
+  `NUM_VENTANAS_WINF`= VALUES(`NUM_VENTANAS_WINF`);
+', '2026-05-18 18:48:11', '2026-05-18 18:48:11', 'Administrador', 'Administrador');
+-- 15 registros exportados
 
 
 -- Tabla: fza_inventarios
@@ -5574,7 +5732,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-18 09:15:12', '2026-05-18 09:15:12', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-18 21:59:56', '2026-05-18 21:59:56', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -13148,11 +13306,12 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Propiedades', 'Propiedades', 'mnuPropiedades', 'inMtoPropiedades.TfrmMtoPropiedades', 'Ctrl+Y', 'UniDataPropiedades.TdmPropiedades', 5),
   ('PropiedadesValores', 'Valores de Propiedades', 'mnuPropiedadesValores', 'inMtoPropiedadesValores.TfrmMtoPropiedadesValores', 'Ctrl+Alt+Y', 'UniDataPropiedadesValores.TdmPropiedadesValores', 5),
   ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 5),
+  ('PruebaSesionGrid', 'Prueba 01 - Sesion grid plano', NULL, 'inMtoPruebaSesionGrid.TfrmMtoPruebaSesionGrid', 'Ctrl+Shift+S', 'UniDataComprasSesiones.TdmComprasSesiones', 1),
   ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas', 5),
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 5),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 5),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5);
--- 35 registros exportados
+-- 36 registros exportados
 
 
 -- ========================================
@@ -17355,4 +17514,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 18/05/2026 9:15:17
+-- Backup completado: 18/05/2026 22:02:50
