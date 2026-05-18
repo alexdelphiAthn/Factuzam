@@ -302,10 +302,15 @@ end;
 
 procedure TfrmMtoPruebaSesionGrid.FormCreate(Sender: TObject);
 begin
-  inherited;
-  FBmpSwatch    := TBitmap.Create;
-  FConjuntoPos  := TDictionary<Integer, TArrPosConjunto>.Create;
-  CargarBasicosColor;
+  // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
+  // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
+  // grid dispara OnFocusedRecordChanged) tiene que estar creado ANTES.
+  // Si FConjuntoPos o FDsConjuntosTallas aun son nil al disparar el
+  // primer FocusedRecordChanged, ActualizarCaptionsTallasLineaActiva
+  // hace `FConjuntoPos.TryGetValue` con Self=nil -> AV en
+  // TDictionary.Hash.
+  FBmpSwatch   := TBitmap.Create;
+  FConjuntoPos := TDictionary<Integer, TArrPosConjunto>.Create;
   // Query propia del lookup "Sistema tallas": solo conjuntos del
   // atributo pivot (ID_VA_AC = 'TAL'), no colores ni otros ejes. Trae
   // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
@@ -329,6 +334,10 @@ begin
   FQryConjuntosTallas.Open;
   FDsConjuntosTallas := TDataSource.Create(Self);
   FDsConjuntosTallas.DataSet := FQryConjuntosTallas;
+
+  inherited;
+
+  CargarBasicosColor;
   CrearColumnasTallas;
 end;
 
@@ -436,6 +445,7 @@ begin
   // indicado. Cacheado en FConjuntoPos para no re-consultar en cada
   // refresco de la matriz.
   if AIdAc <= 0 then Exit(nil);
+  if FConjuntoPos = nil then Exit(nil); // form en construccion/destruccion
   if FConjuntoPos.TryGetValue(AIdAc, Result) then Exit;
 
   q := TUniQuery.Create(nil);
