@@ -2,7 +2,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
   Caption = 'Prueba 01 - Sesion grid plano (crear articulos)'
   ClientHeight = 720
   ClientWidth = 1240
-  OnCreate = FormCreate
+  StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
   ExplicitWidth = 1240
   ExplicitHeight = 720
@@ -10,6 +10,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
   inherited pButtonPage: TPanel
     Width = 1100
     Height = 720
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1100
     ExplicitHeight = 720
     inherited pcPantalla: TcxPageControl
@@ -17,17 +18,17 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
       Height = 680
       ExplicitWidth = 1100
       ExplicitHeight = 680
-      ClientRectBottom = 676
-      ClientRectRight = 1096
+      ClientRectBottom = 678
+      ClientRectRight = 1098
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 29
-        ExplicitWidth = 1092
+        ExplicitWidth = 1096
         ExplicitHeight = 649
         inherited cxGrdPrincipal: TcxGrid
-          Width = 1092
+          Width = 1096
           Height = 649
-          ExplicitWidth = 1092
+          ExplicitWidth = 1096
           ExplicitHeight = 649
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcSerieSes: TcxGridDBColumn
@@ -76,16 +77,16 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
       inherited tsFicha: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 29
-        ExplicitWidth = 1092
+        ExplicitWidth = 1096
         ExplicitHeight = 649
         object gbCabecera: TcxGroupBox
-          Left = 4
-          Top = 4
+          Left = 0
+          Top = 0
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
-          Height = 130
-          Width = 1084
+          Height = 160
+          Width = 1096
           object lblSerie: TcxLabel
             Left = 12
             Top = 24
@@ -134,13 +135,13 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           end
           object lblEmpresa: TcxLabel
             Left = 12
-            Top = 58
+            Top = 67
             Caption = 'Empresa'
             TabOrder = 6
           end
           object cbbEmpresa: TcxDBLookupComboBox
-            Left = 80
-            Top = 56
+            Left = 92
+            Top = 65
             DataBinding.DataField = 'CODIGO_EMP_SES'
             DataBinding.DataSource = dsTablaG
             Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
@@ -156,17 +157,17 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               end>
             Properties.ListOptions.ShowHeader = False
             TabOrder = 7
-            Width = 280
+            Width = 268
           end
           object lblProveedor: TcxLabel
             Left = 380
-            Top = 58
+            Top = 67
             Caption = 'Proveedor'
             TabOrder = 8
           end
           object cbbProveedor: TcxDBLookupComboBox
             Left = 470
-            Top = 56
+            Top = 65
             DataBinding.DataField = 'CODIGO_PRV_SES'
             DataBinding.DataSource = dsTablaG
             Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
@@ -186,13 +187,13 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           end
           object lblTarifa: TcxLabel
             Left = 770
-            Top = 58
+            Top = 67
             Caption = 'Tarifa venta'
             TabOrder = 10
           end
           object cbbTarifa: TcxDBLookupComboBox
-            Left = 870
-            Top = 56
+            Left = 876
+            Top = 65
             DataBinding.DataField = 'CODIGO_TAR_SES'
             DataBinding.DataSource = dsTablaG
             Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
@@ -203,33 +204,32 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               end>
             Properties.ListOptions.ShowHeader = False
             TabOrder = 11
-            Width = 180
+            Width = 174
           end
           object lblMargen: TcxLabel
             Left = 12
-            Top = 92
+            Top = 109
             Caption = 'Margen %'
             TabOrder = 12
           end
           object spnMargen: TcxDBSpinEdit
-            Left = 90
-            Top = 90
+            Left = 102
+            Top = 107
             DataBinding.DataField = 'PORCENTAJE_MARGEN_SES'
             DataBinding.DataSource = dsTablaG
-            Properties.Increment = 1.000000000000000000
             Properties.ValueType = vtFloat
             TabOrder = 13
-            Width = 90
+            Width = 92
           end
           object lblMultiploRedondeo: TcxLabel
             Left = 200
-            Top = 92
+            Top = 109
             Caption = 'M'#250'lt. redondeo'
             TabOrder = 14
           end
           object spnMultiploRedondeo: TcxDBSpinEdit
-            Left = 320
-            Top = 90
+            Left = 334
+            Top = 106
             DataBinding.DataField = 'MULTIPLO_REDONDEO_SES'
             DataBinding.DataSource = dsTablaG
             Properties.Increment = 0.050000000000000000
@@ -239,13 +239,13 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           end
           object lblAjusteFinal: TcxLabel
             Left = 430
-            Top = 92
+            Top = 109
             Caption = 'Ajuste final'
             TabOrder = 16
           end
           object spnAjusteFinal: TcxDBSpinEdit
             Left = 530
-            Top = 90
+            Top = 107
             DataBinding.DataField = 'AJUSTE_FINAL_SES'
             DataBinding.DataSource = dsTablaG
             Properties.Increment = 0.010000000000000000
@@ -257,51 +257,56 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           end
         end
         object pnlLineasTop: TPanel
-          Left = 4
-          Top = 138
-          Width = 1084
+          Left = 0
+          Top = 160
+          Width = 1096
           Height = 36
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitTop = 130
           object btnAddLinea: TcxButton
-            Left = 4
+            Left = 12
             Top = 4
-            Width = 110
+            Width = 136
             Height = 28
             Caption = '+ A'#241'adir l'#237'nea'
             TabOrder = 0
             OnClick = btnAddLineaClick
           end
           object btnDelLinea: TcxButton
-            Left = 120
-            Top = 4
-            Width = 110
+            Left = 154
+            Top = 5
+            Width = 137
             Height = 28
             Caption = '- Borrar l'#237'nea'
             TabOrder = 1
             OnClick = btnDelLineaClick
           end
           object lblHint: TcxLabel
-            Left = 248
-            Top = 8
-            Caption = 'F3 sobre Familia abre el selector. PVP se propone al teclear el coste.'
+            Left = 297
+            Top = 7
+            Caption = 
+              'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
+              'coste.'
             TabOrder = 2
           end
         end
         object cxgrdLineas: TcxGrid
-          Left = 4
-          Top = 178
-          Width = 1084
-          Height = 467
+          Left = 0
+          Top = 196
+          Width = 1096
+          Height = 453
           Align = alClient
           TabOrder = 2
+          ExplicitTop = 166
+          ExplicitHeight = 483
           object tvLineas: TcxGridDBTableView
+            OnCustomDrawCell = tvLineasCustomDrawCell
+            OnEditKeyDown = tvLineasEditKeyDown
             OnFocusedRecordChanged = tvLineasFocusedRecordChanged
             OnInitEdit = tvLineasInitEdit
-            OnEditKeyDown = tvLineasEditKeyDown
-            OnCustomDrawCell = tvLineasCustomDrawCell
-            NavigatorButtons.ConfirmDelete = False
+            OptionsView.GroupByBox = False
             object dbcLinFamilia: TcxGridDBColumn
               Caption = 'Familia (F3)'
               DataBinding.FieldName = 'CODIGO_FAM_SESLIN'
@@ -321,7 +326,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             object dbcLinDescripcion: TcxGridDBColumn
               Caption = 'Descripci'#243'n'
               DataBinding.FieldName = 'DESCRIPCION_SESLIN'
-              Width = 200
+              Width = 341
             end
             object dbcLinColor: TcxGridDBColumn
               Caption = 'Color'
@@ -345,7 +350,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               DataBinding.FieldName = 'PRECIO_COMPRA_SESLIN'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.OnEditValueChanged = dbcLinPrecioCompraPropertiesEditValueChanged
-              Width = 90
+              Width = 136
             end
             object dbcLinPrecioVenta: TcxGridDBColumn
               Caption = 'Pr. venta'
@@ -386,6 +391,65 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             GridView = tvLineas
           end
         end
+      end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 1096
+        ExplicitHeight = 649
+        inherited pnlPerfilTop: TPanel
+          Width = 1096
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 1096
+          Height = 592
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          ExplicitHeight = 592
+          inherited cxgrdPerfil: TcxGrid
+            Width = 1096
+            Height = 592
+            ExplicitWidth = 1096
+            ExplicitHeight = 592
+          end
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      Width = 1100
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitWidth = 1100
+      inherited pnlTopGrid: TPanel
+        Width = 1100
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 1100
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    Left = 1100
+    Height = 720
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 1100
+    ExplicitHeight = 720
+    inherited pButtonGen: TPanel
+      Top = 522
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitTop = 522
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end
