@@ -474,16 +474,15 @@ type
     procedure ResetForm;  override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
-    // Acceso al data module de ESTA instancia (no la variable global,
-    // que se pisa al abrir un segundo Mto). Cualquier metodo del form
-    // debe usar `dmm.X` en vez de `dmm.X` para ser seguro
-    // cuando hay varias ventanas Articulos abiertas a la vez.
-    function dmm: TdmArticulos; inline;
+  public
+    // Data module de ESTA instancia (campo de instancia, no variable
+    // global, asi no se pisa cuando hay dos Mtos Articulos abiertos a
+    // la vez). Mismo patron que TfrmMtoFacturasBase.dmmFacturas.
+    dmmArticulos: TdmArticulos;
   end;
 
 var
   frmMtoArticulos: TfrmMtoArticulos;
-  dmmArticulos : TdmArticulos;
 
 implementation
 
@@ -521,12 +520,12 @@ var
 begin
   HayVars := False;
   EsEstandar := True;
-  if Assigned(dmm) and (dmm.unqryTablaG.Active = True) and
-     (not dmm.unqryTablaG.IsEmpty) then
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG.Active = True) and
+     (not dmmArticulos.unqryTablaG.IsEmpty) then
   begin
-    HayVars := dmm.unqryTablaG.FieldByName(
+    HayVars := dmmArticulos.unqryTablaG.FieldByName(
                                      'ESVARIACION_ART').AsWideString = 'S';
-    Tipo := Trim(dmm.unqryTablaG.FieldByName('TIPO_ART').AsString);
+    Tipo := Trim(dmmArticulos.unqryTablaG.FieldByName('TIPO_ART').AsString);
     // Por defecto se considera ESTANDAR si está vacío (compat. con altas)
     EsEstandar := (Tipo = '') or SameText(Tipo, 'ESTANDAR');
   end;
@@ -563,8 +562,8 @@ var
   hayPrecioSku: Boolean;
   dsSkus: TDataSet;
 begin
-  if not Assigned(dmm) then Exit;
-  ds := dmm.unqryTarifasArticulos;
+  if not Assigned(dmmArticulos) then Exit;
+  ds := dmmArticulos.unqryTarifasArticulos;
   if (ds = nil) or (not ds.Active) then
   begin
     tvTarifasCODIGO_UNIDAD_TARIFA.Visible := False;
@@ -596,7 +595,7 @@ begin
   tvTarifasCODIGO_UNIDAD_TARIFA.Visible := hay;
 
   // Columnas de precio/fecha de última compra del grid de SKUs
-  dsSkus := dmm.unqrySkus;
+  dsSkus := dmmArticulos.unqrySkus;
   hayPrecioSku := False;
   if (dsSkus <> nil) and dsSkus.Active then
   begin
@@ -742,14 +741,14 @@ var
   CodArticulo, TipoVariacion: string;
 begin
   // 1. Nos aseguramos de que el artículo no esté a medias de editar
-  if dmm.unqryTablaG.State in [dsInsert, dsEdit] then
-    dmm.unqryTablaG.Post;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
 
   // 2. Leemos los datos clave del dataset principal
   CodArticulo   :=
-    dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   TipoVariacion :=
-    dmm.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString;
+    dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString;
 
   // 3. Validamos que haya un esquema de variación asignado
   if (CodArticulo = '') or (TipoVariacion = '') then
@@ -767,10 +766,10 @@ begin
   begin
     // Si la pantalla devuelve True, refrescamos los datasets afectados.
   end;
-  dmm.unqrySkus.Close;
-  dmm.unqrySkus.Open;
-  dmm.unqryVariacionesArticulos.Close;
-  dmm.unqryVariacionesArticulos.Open;
+  dmmArticulos.unqrySkus.Close;
+  dmmArticulos.unqrySkus.Open;
+  dmmArticulos.unqryVariacionesArticulos.Close;
+  dmmArticulos.unqryVariacionesArticulos.Open;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -864,7 +863,7 @@ end;
 
 procedure TfrmMtoArticulos.btnAddProveedorClick(Sender: TObject);
 begin
-  with dmm do
+  with dmmArticulos do
     if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
     unqryTablaG.Post;
   BuscarProveedores;
@@ -890,11 +889,11 @@ begin
   inherited;
   UserHasta := 0;
   DbHasta := 0;
-  if dmm.unqryTablaG.State in [dsInsert, dsEdit] then
-    dmm.unqryTablaG.Post;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
 
   CodArticulo :=
-    dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
 
   frmSel := TfrmMtoModalAddPreciosTar.Create(Self);
   // evitamos el caFree heredado para poder hacer Free manual
@@ -906,9 +905,9 @@ begin
   try
     // --- CARGA DE SKUs ---
     ListaSkus.Add('ARTÍCULO');
-    if not dmm.unqryVariacionesArticulos.Active then
-      dmm.unqryVariacionesArticulos.Open;
-    with dmm.unqryVariacionesArticulos do
+    if not dmmArticulos.unqryVariacionesArticulos.Active then
+      dmmArticulos.unqryVariacionesArticulos.Open;
+    with dmmArticulos.unqryVariacionesArticulos do
     begin
       DisableControls;
       try
@@ -927,7 +926,7 @@ begin
     // --- CARGA DE TARIFAS ACTIVAS ---
     qryTodasTarifas := TUniQuery.Create(nil);
     try
-      qryTodasTarifas.Connection := dmm.unqryTablaG.Connection;
+      qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
       qryTodasTarifas.SQL.Text := '  SELECT CODIGO_TAR_ARTTAR ' +
                                   '    FROM fza_tarifas ' +
                                   '   WHERE ESACTIVO_ARTTAR = ''S'' ' +
@@ -953,39 +952,39 @@ begin
     TieneUserHasta := frmSel.TieneFechaHasta;
     if TieneUserHasta then UserHasta := frmSel.FechaHasta;
 
-    dmm.unqryTarifasArticulos.DisableControls;
+    dmmArticulos.unqryTarifasArticulos.DisableControls;
     TarifasActivas := TStringList.Create;
     TarifasActivas.Sorted := True;
     TarifasActivas.Duplicates := dupIgnore;
     try
-      Bkm := dmm.unqryTarifasArticulos.GetBookmark;
-      dmm.unqryTarifasArticulos.First;
-      while not dmm.unqryTarifasArticulos.Eof do
+      Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
+      dmmArticulos.unqryTarifasArticulos.First;
+      while not dmmArticulos.unqryTarifasArticulos.Eof do
       begin
-        DbDesde := dmm.unqryTarifasArticulos.FieldByName(
+        DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName(
                                              'FECHA_DESDE_ARTTAR').AsDateTime;
-        DbHastaIsNull := dmm.unqryTarifasArticulos.FieldByName(
+        DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName(
                                                  'FECHA_HASTA_ARTTAR').IsNull;
         if not DbHastaIsNull then
-          DbHasta := dmm.unqryTarifasArticulos.FieldByName(
+          DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName(
                                              'FECHA_HASTA_ARTTAR').AsDateTime;
         Cond1 := (not TieneUserHasta) or (DbDesde <= UserHasta);
         Cond2 := DbHastaIsNull or (UserDesde <= DbHasta);
         HaySolapamiento := Cond1 and Cond2;
         if HaySolapamiento then
         begin
-          LlaveUnica := dmm.unqryTarifasArticulos.FieldByName(
+          LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName(
             'CODIGO_UNIDAD_ARTTAR').AsString + '|' +
-                        dmm.unqryTarifasArticulos.FieldByName(
+                        dmmArticulos.unqryTarifasArticulos.FieldByName(
                           'CODIGO_TAR_ARTTAR').AsString;
           // Marcamos combinación como ocupada en estas fechas
           TarifasActivas.Add(LlaveUnica);
         end;
-        dmm.unqryTarifasArticulos.Next;
+        dmmArticulos.unqryTarifasArticulos.Next;
       end;
-      if dmm.unqryTarifasArticulos.BookmarkValid(Bkm) then
-        dmm.unqryTarifasArticulos.GotoBookmark(Bkm);
-      dmm.unqryTarifasArticulos.FreeBookmark(Bkm);
+      if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
+        dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
+      dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
 
       for i := 0 to SkusSel.Count - 1 do
       begin
@@ -998,15 +997,15 @@ begin
 
           if TarifasActivas.IndexOf(LlaveUnica) <> -1 then Continue;
 
-          dmm.unqryTarifasArticulos.Append;
+          dmmArticulos.unqryTarifasArticulos.Append;
           if SkusSel[i] = 'ARTÍCULO' then
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'CODIGO_UNIDAD_ARTTAR').AsString := ''
           else
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'CODIGO_UNIDAD_ARTTAR').AsString := SkusSel[i];
 
-          dmm.unqryTarifasArticulos.FieldByName(
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
             'CODIGO_TAR_ARTTAR').AsString := TarifasSel[j];
 
           // Para filas de SKU heredamos el precio del padre (fila del
@@ -1014,39 +1013,39 @@ begin
           if SkusSel[i] = 'ARTÍCULO' then
             PrecioPadre := 0
           else
-            PrecioPadre := dmm.ObtenerPrecioTarifaPadre(
+            PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
                                                        codArticulo,
                                                        TarifasSel[j]);
 
-          dmm.unqryTarifasArticulos.FieldByName(
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
             'PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
-          dmm.unqryTarifasArticulos.FieldByName(
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
             'PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
           if PrecioPadre > 0 then
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'ESACTIVO_ARTTAR').AsString := 'S'
           else
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'ESACTIVO_ARTTAR').AsString := 'N';
 
-          dmm.unqryTarifasArticulos.FieldByName(
+          dmmArticulos.unqryTarifasArticulos.FieldByName(
             'FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
           if TieneUserHasta then
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
           else
-            dmm.unqryTarifasArticulos.FieldByName(
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
               'FECHA_HASTA_ARTTAR').Clear;
 
-          dmm.unqryTarifasArticulos.Post;
+          dmmArticulos.unqryTarifasArticulos.Post;
           TarifasActivas.Add(LlaveUnica);
         end;
       end;
     finally
       FreeAndNil(TarifasActivas);
-      dmm.unqryTarifasArticulos.EnableControls;
+      dmmArticulos.unqryTarifasArticulos.EnableControls;
     end;
-    dmm.unqryTarifasArticulos.Refresh;
+    dmmArticulos.unqryTarifasArticulos.Refresh;
     ActualizarVisibilidadColumnaSku;
   finally
     FreeAndNil(SkusSel);
@@ -1074,7 +1073,7 @@ var
   res        : TCalcularMargenResult;
 begin
   inherited;
-  ds := dmm.unqryTarifasArticulos;
+  ds := dmmArticulos.unqryTarifasArticulos;
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then
   begin
     ShowMessage('Selecciona primero un precio de tarifa.');
@@ -1162,15 +1161,15 @@ end;
 procedure TfrmMtoArticulos.btnCrearTarifaClick(Sender: TObject);
 begin
   inherited;
-  if ( (dmm.unqryTablaG.State = dsInsert) or
-       (dmm.unqryTablaG.State = dsEdit)) then
-    dmm.unqryTablaG.Post;
-  if ( (dmm.unqryTarifasArticulos.State = dsInsert) or
-       (dmm.unqryTarifasArticulos.State = dsEdit)) then
+  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
+       (dmmArticulos.unqryTablaG.State = dsEdit)) then
+    dmmArticulos.unqryTablaG.Post;
+  if ( (dmmArticulos.unqryTarifasArticulos.State = dsInsert) or
+       (dmmArticulos.unqryTarifasArticulos.State = dsEdit)) then
   begin
-    dmm.unqryTarifasArticulos.Post;
+    dmmArticulos.unqryTarifasArticulos.Post;
   end;
-  //dmm.unqryTarifasArticulos.Insert;
+  //dmmArticulos.unqryTarifasArticulos.Insert;
   IncorporarTarifas;
 end;
 
@@ -1230,7 +1229,7 @@ begin
   inherited;
     ShowMto(Self.Owner,
             'Tarifas',
-                 dmm.unqryTarifasArticulos.FieldByName(
+                 dmmArticulos.unqryTarifasArticulos.FieldByName(
                                                      'CODIGO_TAR_ARTTAR').AsString);
 end;
 
@@ -1257,30 +1256,30 @@ begin
       end;
     end;
   end;
-  if ( (dmm.unqryProveedoresArticulos.State = dsInsert) or
-       (dmm.unqryProveedoresArticulos.State = dsEdit)) then
+  if ( (dmmArticulos.unqryProveedoresArticulos.State = dsInsert) or
+       (dmmArticulos.unqryProveedoresArticulos.State = dsEdit)) then
   begin
-    dmm.unqryProveedoresArticulos.Post;
+    dmmArticulos.unqryProveedoresArticulos.Post;
   end;
-  if ( (dmm.unqryTarifasArticulos.State = dsInsert) or
-       (dmm.unqryTarifasArticulos.State = dsEdit)) then
+  if ( (dmmArticulos.unqryTarifasArticulos.State = dsInsert) or
+       (dmmArticulos.unqryTarifasArticulos.State = dsEdit)) then
   begin
-    dmm.unqryTarifasArticulos.Post;
+    dmmArticulos.unqryTarifasArticulos.Post;
   end;
-  if ( (dmm.unqryVariacionesArticulos.State = dsInsert) or
-       (dmm.unqryVariacionesArticulos.State = dsEdit)) then
+  if ( (dmmArticulos.unqryVariacionesArticulos.State = dsInsert) or
+       (dmmArticulos.unqryVariacionesArticulos.State = dsEdit)) then
   begin
-    dmm.unqryVariacionesArticulos.Post;
+    dmmArticulos.unqryVariacionesArticulos.Post;
   end;
-  if ( (dmm.unqrySkus.State = dsInsert) or
-       (dmm.unqrySkus.State = dsEdit)) then
+  if ( (dmmArticulos.unqrySkus.State = dsInsert) or
+       (dmmArticulos.unqrySkus.State = dsEdit)) then
   begin
-    dmm.unqrySkus.Post;
+    dmmArticulos.unqrySkus.Post;
   end;
-  if ( (dmm.unqryTablaG.State = dsInsert) or
-       (dmm.unqryTablaG.State = dsEdit)) then
+  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
+       (dmmArticulos.unqryTablaG.State = dsEdit)) then
   begin
-    dmm.unqryTablaG.Post;
+    dmmArticulos.unqryTablaG.Post;
   end;
   if Assigned(FGestorVar) then
   try
@@ -1297,12 +1296,12 @@ end;
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
 begin
   inherited;
-  if ( (dmm.unqryTablaG.State = dsInsert) or
-       (dmm.unqryTablaG.State = dsEdit)) then
+  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
+       (dmmArticulos.unqryTablaG.State = dsEdit)) then
   begin
-    dmm.unqryTablaG.Post;
+    dmmArticulos.unqryTablaG.Post;
   end;
-  dmm.unqryTablaG.Insert;
+  dmmArticulos.unqryTablaG.Insert;
   pcPantalla.Properties.ActivePage := tsFicha;
   tsFicha.SetFocus;
   txtDESCRIPCION_ARTICULO.SetFocus;
@@ -1330,10 +1329,10 @@ begin
   Screen.Cursor := crHourGlass;
   try
     try
-      sMensaje := dmm.ReconstruirStock;
-      if dmm.unqryTablaG.Active and
-         (not dmm.unqryTablaG.IsEmpty) then
-        dmm.unqryStockArticulosAfterScroll(dmm.unqryTablaG);
+      sMensaje := dmmArticulos.ReconstruirStock;
+      if dmmArticulos.unqryTablaG.Active and
+         (not dmmArticulos.unqryTablaG.IsEmpty) then
+        dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
     except
       on E: Exception do
       begin
@@ -1361,14 +1360,11 @@ begin
     ShowMessage('Seleccione primero un artículo para imprimir sus etiquetas.');
     Exit;
   end;
-  // Aseguramos que la variable global dmmArticulos apunte al DM de
-  // ESTA instancia mientras el modal este abierto (el modal lo usa
-  // como global). Con dos Mtos Articulos abiertos a la vez, la global
-  // podria apuntar al otro DM y el modal cargaria tarifas / almacenes
-  // del articulo equivocado.
-  dmmArticulos := dmm;
   formulario := TfrmPrintEtiqArt.Create(Application);
   try
+    // Pasamos el DM de ESTA instancia al modal (campo de instancia,
+    // no global, asi funciona aunque haya dos Mtos abiertos).
+    formulario.DM := dmmArticulos;
     formulario.edtCodArt.Text :=
                         dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString;
     formulario.ShowModal;
@@ -1391,11 +1387,11 @@ var
 begin
   inherited;
   // 1) Asegurar que el artículo está guardado
-  if dmm.unqryTablaG.State in [dsInsert, dsEdit] then
-    dmm.unqryTablaG.Post;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
 
   CodArticulo :=
-    dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
     ShowMessage(
@@ -1539,8 +1535,8 @@ begin
     // Close+Open en lugar de Refresh: las filas recién insertadas necesitan
     // que el dataset reabra la vista para que ID_CB aparezca en la rejilla
     // (Refresh sobre detail master/detail no siempre repuebla los IDs).
-    dmm.unqryVariacionesArticulos.Close;
-    dmm.unqryVariacionesArticulos.Open;
+    dmmArticulos.unqryVariacionesArticulos.Close;
+    dmmArticulos.unqryVariacionesArticulos.Open;
     ActualizarVisibilidadVariaciones;
     ShowMessage(Format('Generación finalizada.' + sLineBreak +
                        '- EAN-13 internos creados: %d' + sLineBreak +
@@ -1562,11 +1558,11 @@ var
   iOk13, iOk8, iKo, iSkip: Integer;
 begin
   inherited;
-  if dmm.unqryTablaG.State in [dsInsert, dsEdit] then
-    dmm.unqryTablaG.Post;
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    dmmArticulos.unqryTablaG.Post;
 
   CodArticulo :=
-    dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
     ShowMessage('Seleccione o guarde un artículo antes de verificar.');
@@ -1642,7 +1638,7 @@ begin
   try
     formulario.Name := 'frmMtoModalArtTar';
     formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
-    dmm.FillTarifas(formulario.lstTarifas);
+    dmmArticulos.FillTarifas(formulario.lstTarifas);
     formulario.ShowModal;
     if formulario.sFicha = 'S' then
       IterateCheckedListArt(formulario.lstTarifas);
@@ -1658,7 +1654,7 @@ var
   item: TListItem;
 begin
   bAdded := False;
-  with dmm.unqryTarifasArticulos do
+  with dmmArticulos.unqryTarifasArticulos do
   begin
     for i := 0 to lst.Items.Count - 1 do
     begin
@@ -1722,20 +1718,11 @@ begin
   // cuatro DataSources para que la pantalla flotante refresque al
   // navegar en cualquiera de ellos.
   Result := [dsTablaG,
-             dmm.dsSkus,            // pestaña 2_SKUs
-             dmm.dsStockArticulos,  // pestaña 8_Stock
-             dmm.dsMovimientosArticulos]; // pestaña 9_Movimientos
+             dmmArticulos.dsSkus,            // pestaña 2_SKUs
+             dmmArticulos.dsStockArticulos,  // pestaña 8_Stock
+             dmmArticulos.dsMovimientosArticulos]; // pestaña 9_Movimientos
 end;
 
-function TfrmMtoArticulos.dmm: TdmArticulos;
-begin
-  // Devuelve el data module de ESTA instancia. tdmDataModule es un
-  // campo de instancia de TfrmMtoGen que se rellena al crear el Mto,
-  // mientras que la variable global dmmArticulos se pisa al abrir
-  // un segundo Mto Articulos (causando AV en la primera al recibir
-  // DataChanged y resolver el DM equivocado).
-  Result := TdmArticulos(tdmDataModule);
-end;
 
 procedure TfrmMtoArticulos.ResetForm;
 begin
@@ -1746,9 +1733,9 @@ end;
 procedure TfrmMtoArticulos.BuscarProveedores;
 begin
   if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Proveedores en Articulos',
-                                     dmm.unqryProveedores,
+                                     dmmArticulos.unqryProveedores,
                                      'frmMtoArtProvSearch') then
-    dmm.CopiarProveedoraArticulo(dmm.unqryProveedores);
+    dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
 end;
 
 procedure TfrmMtoArticulos.cbbFamiliaPropertiesEditValueChanged(
@@ -1757,7 +1744,7 @@ begin
   inherited;
   // Verificamos que el gestor esté creado y estemos en modo inserción o edición
   if Assigned(FGestorProp) and
-     (dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+     (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
   begin
     // Forzamos a que el control actualice su EditValue
     cbbFamilia.PostEditValue;
@@ -1772,27 +1759,27 @@ begin
   if FAtributosStock = nil then
     FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
-  cbbFamilia.Properties.ListSource := dmm.dsFamiliaArticulos;
-  tvTarifas.DataController.DataSource := dmm.dsTarifasArticulos;
+  cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
+  tvTarifas.DataController.DataSource := dmmArticulos.dsTarifasArticulos;
   tvProveedores.DataController.DataSource :=
-                                            dmm.dsProveedoresArticulos;
-  tvLinFac.DataController.DataSource := dmm.dsLinFacturasArticulos;
-  tvSkus.DataController.DataSource := dmm.dsVariacionesArticulos;
-  tvStock.DataController.DataSource := dmm.dsStockArticulos;
+                                            dmmArticulos.dsProveedoresArticulos;
+  tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
+  tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
+  tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
   pkFieldName := 'CODIGO_ART_ART';
-  dmm.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
+  dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
-  if dmm.unqryTablaG.Active
-     and (dmm.unqryTablaG.RecordCount > 0) then
+  if dmmArticulos.unqryTablaG.Active
+     and (dmmArticulos.unqryTablaG.RecordCount > 0) then
   begin
     FArticuloCargado :=
-      dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
     FGestorProp.CargarPropiedades(FArticuloCargado);
   end else
     FArticuloCargado := '';
   FGestorVar.CargarVariaciones(
-    dmm.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
   ActualizarVisibilidadVariaciones;
   ActualizarVisibilidadColumnaSku;
   // Carga el mapa de atributos para el articulo inicial -- OnAfterScrollArticulos
@@ -1800,8 +1787,8 @@ begin
   // hasta que el usuario navegaba a otro registro.
   if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
     CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
-  if (FArticuloCargado <> '') and Assigned(dmm) then
-    dmm.unqryStockArticulosAfterScroll(dmm.unqryTablaG);
+  if (FArticuloCargado <> '') and Assigned(dmmArticulos) then
+    dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -1874,7 +1861,7 @@ begin
   FCbbTipoVariacion.DataBinding.DataSource := dsTablaG;
   FCbbTipoVariacion.DataBinding.DataField  := 'TIPO_VARIACION_ART';
   // ListSource apunta a un dataset con las variaciones activas
-  FCbbTipoVariacion.Properties.ListSource     := dmm.dsVariaciones;
+  FCbbTipoVariacion.Properties.ListSource     := dmmArticulos.dsVariaciones;
   FCbbTipoVariacion.Properties.KeyFieldNames  := 'CODIGO_VAR';
   FCbbTipoVariacion.Properties.ListFieldNames := 'NOMBRE_VAR';
   // por defecto solo lectura
@@ -1906,8 +1893,8 @@ end;
 procedure TfrmMtoArticulos.BtnAddPropClick(Sender: TObject);
 begin
   // Si hay cambios no guardados en el artículo, grabar primero
-  if (dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-    dmm.unqryTablaG.Post;
+  if (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
+    dmmArticulos.unqryTablaG.Post;
 
   if Assigned(FGestorProp) then
     FGestorProp.AbrirSelectorPropiedades;
@@ -1955,9 +1942,9 @@ begin
   // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
   // para que la rejilla SKUs y CB tenga al menos una fila editable
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
-  dmm.unqrySkus.Refresh;
-  dmm.unqryVariacionesArticulos.Refresh;
-  dmm.unqryStockArticulosAfterScroll(DataSet);
+  dmmArticulos.unqrySkus.Refresh;
+  dmmArticulos.unqryVariacionesArticulos.Refresh;
+  dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA usado por tvStock para
   // colorear las celdas con el color de la paleta basica.
   if FAtributosStock <> nil then
@@ -1978,9 +1965,9 @@ begin
   inherited;
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
     Exit;
-  if not Assigned(dmm) or not Assigned(dmm.unqryTablaG) then
+  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
     Exit;
-  if not dmm.unqryTablaG.Active then
+  if not dmmArticulos.unqryTablaG.Active then
     Exit;
   // Refrescamos visibilidad de stock/movimientos según el nuevo TIPO_ART
   ActualizarVisibilidadVariaciones;
@@ -1994,17 +1981,17 @@ begin
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
     Exit;
   // 2. Asegurar que los objetos de datos existen
-  if not Assigned(dmm) or not Assigned(dmm.unqryTablaG) then
+  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
     Exit;
   // 3. Comprobar que el dataset está activo, no está vacío y no está bloqueado
-  if dmm.unqryTablaG.IsEmpty then
+  if dmmArticulos.unqryTablaG.IsEmpty then
     Exit;
-  if dmm.unqryTablaG.ControlsDisabled then
+  if dmmArticulos.unqryTablaG.ControlsDisabled then
     Exit;
-  if not dmm.unqryTablaG.Active then
+  if not dmmArticulos.unqryTablaG.Active then
     Exit;
   // 4. Validar el estado de edición y la interacción REAL del usuario
-  if (dmm.unqryTablaG.State in [dsEdit, dsInsert]) then
+  if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
   begin
     // El Focus garantiza que el evento lo ha disparado el usuario y no un
     // refresco del dataset
@@ -2031,8 +2018,8 @@ var
     e: TcxCustomEdit;
 begin
   inherited;
-  if (dmm <> nil) then
-    with dmm.unqryTarifasArticulos do
+  if (dmmArticulos <> nil) then
+    with dmmArticulos.unqryTarifasArticulos do
     begin
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
@@ -2057,8 +2044,8 @@ var
     e: TcxCustomEdit;
   begin
   inherited;
-  if (dmm <> nil) then
-    with dmm.unqryTarifasArticulos do
+  if (dmmArticulos <> nil) then
+    with dmmArticulos.unqryTarifasArticulos do
     begin
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
@@ -2092,8 +2079,8 @@ var
     e: TcxCustomEdit;
 begin
   inherited;
-  if (dmm <> nil) then
-    with dmm.unqryTarifasArticulos do
+  if (dmmArticulos <> nil) then
+    with dmmArticulos.unqryTarifasArticulos do
     begin
     if ((State = dsInsert) or (State = dsEdit)) then
       begin
@@ -2115,8 +2102,8 @@ var
     e: TcxCustomEdit;
 begin
   inherited;
-  if (dmm <> nil) then
-    with dmm.unqryTarifasArticulos do
+  if (dmmArticulos <> nil) then
+    with dmmArticulos.unqryTarifasArticulos do
     begin
       if ((State = dsInsert) or (State = dsEdit)) then
       begin
@@ -2304,11 +2291,11 @@ var
   Codigo  : string;
 begin
   Result := 0;
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryDetallesAtributos)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
 
-  ds := dmm.unqryDetallesAtributos;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
 
   if not ds.FieldByName('ID_ATB_AV').IsNull then
@@ -2414,9 +2401,9 @@ var
   vNew : Variant;
   IdAtb: Integer;
 begin
-  if (not Assigned(dmm)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
   // Si la fila no tiene básico aún (bloqueado o heredado=NULL), creamos
   // uno ad-hoc para que la edición tenga un destino.
@@ -2444,8 +2431,8 @@ begin
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
-  if Assigned(dmm.unqryAtributosBasicosLookup) then
-    dmm.unqryAtributosBasicosLookup.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
@@ -2456,9 +2443,9 @@ var
   vNew : Variant;
   IdAtb: Integer;
 begin
-  if (not Assigned(dmm)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
   IdAtb := AsegurarBasicoFilaActual;
   if IdAtb = 0 then
@@ -2487,8 +2474,8 @@ begin
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
-  if Assigned(dmm.unqryAtributosBasicosLookup) then
-    dmm.unqryAtributosBasicosLookup.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
@@ -2499,9 +2486,9 @@ var
   vNew : Variant;
   IdAtb: Integer;
 begin
-  if (not Assigned(dmm)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
   IdAtb := AsegurarBasicoFilaActual;
   if IdAtb = 0 then
@@ -2527,8 +2514,8 @@ begin
   end;
   if ds.State in [dsEdit, dsInsert] then ds.Cancel;
   ds.Refresh;
-  if Assigned(dmm.unqryAtributosBasicosLookup) then
-    dmm.unqryAtributosBasicosLookup.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
@@ -2540,12 +2527,12 @@ var
   ds : TDataSet;
   IdVa: string;
 begin
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryAtributosBasicosLookup)) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
   IdVa := ds.FieldByName('ID_VA_AV').AsString;
-  with dmm.unqryAtributosBasicosLookup do
+  with dmmArticulos.unqryAtributosBasicosLookup do
   begin
     if IdVa = '' then
     begin
@@ -2568,9 +2555,9 @@ procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp(
 // y la columna "Basico" se ve vacia para esas filas. OnInitPopup
 // vuelve a aplicar el filtro la proxima vez que se abra el desplegable.
 begin
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryAtributosBasicosLookup)) then Exit;
-  with dmm.unqryAtributosBasicosLookup do
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
+  with dmmArticulos.unqryAtributosBasicosLookup do
   begin
     if Filtered then
     begin
@@ -2608,10 +2595,10 @@ begin
   Error := False;
   Texto := Trim(VarToStr(DisplayValue));
   if Texto = '' then Exit;
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryDetallesAtributos)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
 
   IdVaAv := ds.FieldByName('ID_VA_AV').AsString;
@@ -2697,8 +2684,8 @@ begin
   end;
 
   // 4) Refrescar lookup para que el combo lo encuentre al resolver.
-  if Assigned(dmm.unqryAtributosBasicosLookup) then
-    dmm.unqryAtributosBasicosLookup.Refresh;
+  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 
   // 5) Devolver el CODIGO_ATB nuevo para que el combo lo seleccione.
   //    Esto disparara OnEditValueChanged y se grabara el override.
@@ -2722,11 +2709,11 @@ var
   vNew  : Variant;
   CodArt: string;
 begin
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryDetallesAtributos)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
 
-  ds   := dmm.unqryDetallesAtributos;
+  ds   := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
   CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
   // Fila virtual: materializamos AV+SA antes de poder asignar override.
@@ -2791,10 +2778,10 @@ var
   LHex: string;
   qry: TUniQuery;
 begin
-  if (not Assigned(dmm)) or
-     (not Assigned(dmm.unqryDetallesAtributos)) or
-     (not dmm.unqryDetallesAtributos.Active) then Exit;
-  ds := dmm.unqryDetallesAtributos;
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
   if ds.IsEmpty then Exit;
   IdAtb := AsegurarBasicoFilaActual;
   if IdAtb = 0 then Exit;
@@ -2840,8 +2827,8 @@ begin
     if ds.State in [dsEdit, dsInsert] then ds.Cancel;
     ds.Refresh;
     // El lookup tiene cacheado el HEX viejo: refrescamos también.
-    if Assigned(dmm.unqryAtributosBasicosLookup) then
-      dmm.unqryAtributosBasicosLookup.Refresh;
+    if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+      dmmArticulos.unqryAtributosBasicosLookup.Refresh;
   finally
     FreeAndNil(Dlg);
   end;
