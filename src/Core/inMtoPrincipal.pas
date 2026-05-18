@@ -939,7 +939,7 @@ procedure TfrmMtoPrincipal.Sesiones1Click(Sender: TObject);
 begin
   inherited;
   if mnuCrearArtculosyunpedidoounalbarn.Visible then
-    ShowMto(Self, 'ComprasSesiones');
+    ShowMto(Self, 'PruebaSesionGrid');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
