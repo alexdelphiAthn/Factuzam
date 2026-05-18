@@ -56,6 +56,10 @@ type
     function ObtenerCodigoTarifa: string;
     function ObtenerAlmacenesCsv: string;
   public
+    // Data module asignado por el Mto Articulos que invoca este modal
+    // (campo de instancia del form padre, no variable global, para que
+    // funcione cuando hay dos ventanas Articulos abiertas a la vez).
+    DM: TdmArticulos;
     procedure preparar_consulta; override;
   end;
 
@@ -64,26 +68,29 @@ implementation
 {$R *.dfm}
 
 procedure TfrmPrintEtiqArt.FormCreate(Sender: TObject);
-var
-  Idx: Integer;
 begin
   inherited;
   FCodigosTarifa := TStringList.Create;
   FLayout        := TLayoutLoader.Create(Self.Name);
-  // Carga tarifas en cbbTarifa y deja seleccionada la marcada por defecto.
-  Idx := -1;
-  dmmArticulos.CargarTarifasEtiquetas(cbbTarifa.Properties.Items,
-                                      FCodigosTarifa, Idx);
-  if Idx >= 0 then
-    cbbTarifa.ItemIndex := Idx;
-  // Carga almacenes activos en la lista multi-seleccion.
-  dmmArticulos.CargarAlmacenesEtiquetas(lvAlmacenes);
   dtFechaAplicacion.Date := Date;
 end;
 
 procedure TfrmPrintEtiqArt.FormShow(Sender: TObject);
+var
+  Idx: Integer;
 begin
   inherited;
+  // Las cargas que dependen de DM se hacen aqui (no en FormCreate)
+  // porque la asignacion formulario.DM := dmmArticulos en el invocador
+  // ocurre DESPUES del Create y ANTES del ShowModal.
+  if Assigned(DM) then
+  begin
+    Idx := -1;
+    DM.CargarTarifasEtiquetas(cbbTarifa.Properties.Items, FCodigosTarifa, Idx);
+    if Idx >= 0 then
+      cbbTarifa.ItemIndex := Idx;
+    DM.CargarAlmacenesEtiquetas(lvAlmacenes);
+  end;
   RestaurarLayout;
 end;
 
@@ -158,7 +165,7 @@ begin
   sCodArt := '';
   if chkSoloEsteArt.Checked then
     sCodArt := Trim(edtCodArt.Text);
-  dmmArticulos.CrearDataSetEtiquetasArt(sCodArt,
+  DM.CrearDataSetEtiquetasArt(sCodArt,
                                         ObtenerCodigoTarifa,
                                         ObtenerAlmacenesCsv,
                                         dtFechaAplicacion.Date);
