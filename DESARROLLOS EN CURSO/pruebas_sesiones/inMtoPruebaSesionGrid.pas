@@ -168,6 +168,10 @@ type
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 var ADone: Boolean);
+    procedure tvLineasEditing(
+                Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                var AAllow: Boolean);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
@@ -576,11 +580,12 @@ var
   iAcPivot           : Integer;
   rMargen            : Double;
   sTipoIva           : string;
-  iNewLinea          : Integer;
+  iSrcLinea, iNewLinea, iSiguiente : Integer;
   cantidades         : TArray<Double>;
   i, iSrcIdx         : Integer;
   arr                : TArrPosConjunto;
   v                  : Variant;
+  q                  : TUniQuery;
 begin
   inherited;
   // Duplica la linea activa con todos los datos comerciales (codigo,
@@ -596,6 +601,7 @@ begin
   // 1. Snapshot de los campos de la linea origen (incluido el record
   //    idx del cxGrid antes de mover nada).
   iSrcIdx    := tvLineas.Controller.FocusedRecordIndex;
+  iSrcLinea  := ds.FieldByName('LINEA_SESLIN').AsInteger;
   sFam       := ds.FieldByName('CODIGO_FAM_SESLIN').AsString;
   sCodArt    := ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
   sRefPrv    := ds.FieldByName('REF_PRV_SESLIN').AsString;
@@ -605,6 +611,32 @@ begin
   iAcPivot   := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
   rMargen    := ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
   sTipoIva   := ds.FieldByName('TIPO_IVA_SESLIN').AsString;
+
+  // 1b. Buscar la siguiente linea (LINEA_SESLIN minimo > origen). Si
+  //     existe y hay hueco (>1), la nueva linea ira con el LINEA
+  //     intermedio para quedar justo a continuacion en el grid (que
+  //     ordena por LINEA). Si la origen es la ultima, dejamos el
+  //     LINEA por defecto del AfterInsert (CONTADOR+10).
+  iSiguiente := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN > :l';
+    q.ParamByName('s').AsString  :=
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString  :=
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger := iSrcLinea;
+    q.Open;
+    if not q.FieldByName('SIGUIENTE').IsNull then
+      iSiguiente := q.FieldByName('SIGUIENTE').AsInteger;
+  finally
+    FreeAndNil(q);
+  end;
 
   // 2. Snapshot de cantidades por talla desde Values[] del cxGrid.
   SetLength(cantidades, CANT_TALLAS_MAX);
@@ -642,6 +674,14 @@ begin
   // Color y color basico se quedan vacios — los rellena el usuario.
   ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
   ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  // Sobreescribir LINEA_SESLIN si hay hueco para colocarse justo
+  // detras de la origen (mantener cohesion visual entre las variantes
+  // de color del mismo articulo).
+  if (iSiguiente > 0) and ((iSiguiente - iSrcLinea) > 1) then
+    ds.FieldByName('LINEA_SESLIN').AsInteger :=
+      (iSrcLinea + iSiguiente) div 2;
+  // (si la origen es la ultima, mantenemos el LINEA secuencial que
+  //  asigno el AfterInsert del DM — CONTADOR_LINEAS_SES + 10).
   ds.Post;
   iNewLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
 
@@ -824,22 +864,83 @@ var
   Col      : TcxGridColumn;
   Info     : TInfoBasico;
   AvActual : string;
+  colAc    : TcxGridColumn;
+  vAc      : Variant;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
 begin
   inherited;
   Col := nil;
   if AViewInfo.GridRecord = nil then Exit;
   if AViewInfo.Item is TcxGridColumn then
     Col := TcxGridColumn(AViewInfo.Item);
-  if Col <> dbcLinColorBasico then Exit;
+  if Col = nil then Exit;
 
+  // ---- Sombreado celdas talla fuera del conjunto de la fila ----
+  // Cada fila puede tener un sistema de tallaje distinto. Las celdas
+  // talla cuyo Tag (posicion 1..N) excede el tamanyo del conjunto pivot
+  // de esa fila no aplican — las pintamos con un sombreado claro para
+  // que el usuario vea que no son editables. El bloqueo de edicion
+  // efectivo se hace en tvLineasEditing.
+  if (Col.Tag >= 1) and (Col.Tag <= CANT_TALLAS_MAX) and
+     (Col = FTallaColumns[Col.Tag - 1]) then
+  begin
+    colAc := tvLineas.GetColumnByFieldName('ID_AC_PIVOT_SESLIN');
+    if colAc <> nil then
+    begin
+      vAc := AViewInfo.GridRecord.Values[colAc.Index];
+      if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
+      begin
+        iAc := vAc;
+        if (iAc > 0) and Assigned(FGestorTallas) then
+        begin
+          arr := FGestorTallas.GetPosicionesConjunto(iAc);
+          if Col.Tag > Length(arr) then
+          begin
+            // Posicion fuera del conjunto de esta fila → sombrear.
+            ACanvas.Brush.Color := $00E8E8E8;  // gris claro
+            ACanvas.FillRect(AViewInfo.Bounds);
+            ADone := True;
+            Exit;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  // ---- Swatch de color basico ----
+  if Col <> dbcLinColorBasico then Exit;
   AvActual := VarToStr(AViewInfo.GridRecord.Values[Col.Index]);
   if Trim(AvActual) = '' then Exit;
-
   Info := Default(TInfoBasico);
   if not ObtenerInfoBasico(fIdVaColor, AvActual, Info) then Exit;
   if not Info.EsValido then Exit;
   if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
     ADone := True;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.tvLineasEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+var
+  iAc : Integer;
+  arr : TArrPosConjunto;
+begin
+  inherited;
+  // Si la celda es una talla cuya posicion (Tag) excede el tamanyo
+  // del conjunto pivot de la linea con foco, no permitir edicion. Asi
+  // el usuario no puede teclear cantidades en celdas que no aplican
+  // al sistema de tallaje de esa linea.
+  if AItem = nil then Exit;
+  if (AItem.Tag < 1) or (AItem.Tag > CANT_TALLAS_MAX) then Exit;
+  if FGestorTallas = nil then Exit;
+  if Dmm.unqrySesionLin.IsEmpty then Exit;
+
+  iAc := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  if iAc <= 0 then Exit;
+  arr := FGestorTallas.GetPosicionesConjunto(iAc);
+  if AItem.Tag > Length(arr) then
+    AAllow := False;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.dbcLinColorBasicoPropertiesButtonClick(
