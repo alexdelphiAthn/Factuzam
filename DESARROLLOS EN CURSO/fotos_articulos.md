@@ -53,28 +53,27 @@ Para usarse dentro de un formulario modal existe la variante
 `TfrmModalFotoArticulo.Ejecutar(...)`, que abre la misma pantalla con
 `ShowModal`.
 
-### Comportamiento transversal (cero pulsaciones)
+### Comportamiento transversal
 
 La pantalla flotante es **única en toda la sesión** (singleton
-`frmFotoArticulo`) y se abre / sigue al Mto activo de forma
-automática, sin necesidad de pulsar `Ctrl + Alt + F`:
+`frmFotoArticulo`) y sigue al Mto activo una vez abierta:
 
-- Al abrir el **primer Mto con artículo** activo (Artículos, Facturas,
-  Pedidos, etc.) la ventana flotante se muestra sola. El disparador es
-  `TfrmMtoGen.FormShow`, que invoca
-  `TfrmMtoPrincipal.EngancharFotoAlMto(Self)`.
-- Al **cambiar de pestaña** en `pcPrincipal` el handler
-  `pcPrincipalChange` llama igualmente a `EngancharFotoAlMto`, que
-  re-vincula los `DataSources` y refresca la foto al artículo / SKU
-  activo en el nuevo Mto.
+- **Apertura manual**: la ventana se abre únicamente cuando el usuario
+  pulsa `Ctrl + Alt + F` en el Mto activo. No hay auto-show.
+- Al **cambiar de pestaña** en `pcPrincipal`, si la flotante ya está
+  abierta, el handler `pcPrincipalChange` llama a `EngancharFotoAlMto`,
+  que re-vincula los `DataSources` y refresca la foto al artículo /
+  SKU activo del nuevo Mto. Si la flotante no está abierta, no se
+  abre sola.
+- Al abrir un **nuevo Mto**, `TfrmMtoGen.FormShow` invoca igualmente
+  `EngancharFotoAlMto(Self)` con la misma semántica: re-vincula si la
+  ventana está abierta, no hace nada si no lo está.
 - Al **moverse el cursor** dentro del Mto activo (cambio de fila en el
   grid principal o en cualquier sub-grid declarado en
   `DataSourcesParaFoto`) el hook `OnDataChange` dispara
   `SetArticuloSku` con el nuevo par.
-- Si el usuario **cierra la ventana** explícitamente, el
-  `FormClose` notifica al principal vía `NotificarFotoCerrada`, que
-  desactiva el flag `FFotoAutoMostrar`. A partir de ahí la ventana
-  ya no se vuelve a abrir sola; sólo `Ctrl + Alt + F` la re-activa.
+- Cuando el usuario **cierra la ventana** la siguiente vez se crea una
+  instancia limpia con el próximo `Ctrl + Alt + F`.
 
 Los Mtos con sub-grids (Facturas, Pedidos, Albaranes, Tarifas,
 ComprasSesiones, Inventarios) sobreescriben dos métodos virtuales de
