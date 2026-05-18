@@ -10,6 +10,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1140
   ExplicitHeight = 613
   TextHeight = 19
@@ -59,6 +61,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
+        ExplicitWidth = 1120
         Height = 69
         Width = 1122
       end

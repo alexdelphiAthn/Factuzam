@@ -21,7 +21,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 718
+    ExplicitWidth = 722
     object btnToggle: TcxButton
       Left = 4
       Top = 4
@@ -50,7 +50,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
     BevelOuter = bvNone
     TabOrder = 1
     Visible = False
-    ExplicitWidth = 718
+    ExplicitWidth = 722
     object rgResolucion: TcxRadioGroup
       Left = 8
       Top = 4

@@ -169,7 +169,8 @@ var
   hwndRet: HWND;
 begin
   inherited;
-  if Msg.Active = WA_INACTIVE then Exit;
+  if Msg.Active = WA_INACTIVE then
+    Exit;
   // Si por alguna razon nos activamos (alt-tab, click en taskbar,
   // focus traversal del SO), devolvemos el foco al form que lo
   // tenia justo antes. Msg.ActiveWindow trae ese handle.
@@ -178,7 +179,7 @@ begin
     then if Assigned(Application.MainForm) then
            hwndRet := Application.MainForm.Handle;
   if (hwndRet <> 0) and (hwndRet <> Self.Handle) then
-    Windows.SetActiveWindow(hwndRet);
+    SetActiveWindow(hwndRet);
 end;
 
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);

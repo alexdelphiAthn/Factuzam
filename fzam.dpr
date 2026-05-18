@@ -1,9 +1,9 @@
 ﻿program Fzam;
 
 uses
-  {$IFDEF DEBUG}
-  FastMM4,
-  {$ENDIF}
+//  {$IFDEF DEBUG}
+//  FastMM4,
+//  {$ENDIF}
   Forms,
   MidasLib,
   {$IF CompilerVersion >= 37.0}
@@ -206,9 +206,9 @@ var
   AutoLoginSuccessful: Boolean;
 
 begin
-  {$IFDEF DEBUG}
-      ReportMemoryLeaksOnShutdown := True;
-  {$ENDIF}
+//  {$IFDEF DEBUG}
+//      ReportMemoryLeaksOnShutdown := True;
+//  {$ENDIF}
   TdxDiacriticStringOptions.ComparisonMode :=
                                    TdxDiacriticStringComparisonMode.Insensitive;
   TdxDiacriticStringOptions.NormalizationMode :=
