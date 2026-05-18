@@ -343,7 +343,76 @@ DM lo aporta `UniDataComprasSesiones` (ya en el dpr).
    blanco al final. Grabar.
 ```
 
-### 12. Limitaciones reconocidas
+### 12. Patrón reutilizable a futuro — grid tallas inline en todo Compras
+
+Esta prueba es el **banco de pruebas del patrón "grid de tallas
+inline"**. Los clientes compran en **horizontal** (una fila por
+artículo + cantidades por talla en columnas), no en vertical (una
+fila por talla). Ese patrón aparece en todo el módulo de Compras:
+
+| Documento                    | Mto actual / nuevo            | Tabla líneas              | Tabla celdas (necesaria)         |
+|------------------------------|-------------------------------|---------------------------|----------------------------------|
+| Sesión de compra             | `inMtoComprasSesiones` (prod) | `fza_compras_sesiones_lineas` | `fza_compras_sesiones_celdas`  |
+| Pedido de compra (proveedor) | nuevo (`fza_pedidos_compra`)  | `fza_pedidos_compra_lineas`   | `fza_pedidos_compra_celdas` (a crear) |
+| Albarán de compra            | nuevo (`fza_albaranes_compra`)| `fza_albaranes_compra_lineas` | `fza_albaranes_compra_celdas` (a crear) |
+| Factura de compra            | `inMtoFacturas*` cuando `CODIGO_PRV_FAC` no NULL | `fza_facturas_lineas`     | `fza_facturas_celdas` (a crear)  |
+
+Lo que esta prueba está estabilizando para reutilizarse en los demás:
+
+- **Creación dinámica de N columnas no-bound** (`CrearColumnasTallas`)
+  con `PropertiesClass = TcxCurrencyEditProperties`, `ValueTypeClass
+  = TcxFloatValueType` y `Tag` como índice posicional.
+- **Cálculo del máximo de tallas del documento**
+  (`MaxLongConjuntosSesion`) para decidir cuántas columnas mostrar.
+- **Captions dinámicos** al cambiar foco
+  (`ActualizarCaptionsTallasLineaActiva`).
+- **Caché del conjunto pivot** (`FConjuntoPos: TDictionary<ID_AC,
+  TArrPosConjunto>`) para no reconsultar.
+- **Persistencia upsert por celda**
+  (`PersistirCantidad`, INSERT…ON DUPLICATE KEY UPDATE / DELETE si 0).
+- **Carga inicial con `DisableControls`** para no perder filas tras
+  Post/refresh (`CargarCantidadesTodasLineas`).
+- **`FocusCellOnTab` + `GoToNextCellOnEnter`** para que Enter
+  navegue celda a celda sin pelearse con `TJvEnterAsTab`.
+- **`SelectAll` en `InitEdit`** estilo Excel.
+- **Footer summary** (`Kind = skSum`) con el total del documento.
+
+#### Plan de extracción cuando la prueba estabilice
+
+Cuando se consolide la UX y el modelo de datos, extraer todo el
+montaje a una unidad reutilizable, p.ej. `inLibGridTallasInline`:
+
+```pascal
+TGridTallasInline = class
+public
+  constructor Create(AOwnerForm: TForm;
+                     AGrid: TcxGridDBTableView;
+                     ASourceLineas: TDataSource;
+                     ATablaCeldas: string;     // 'fza_compras_sesiones_celdas'
+                     APrefijoCeldas: string;   // 'SESCEL'
+                     APrefijoLineas: string);  // 'SESLIN'
+  procedure MontarColumnas(ARefIndex: TcxGridDBColumn;
+                           ANombreCampoConjunto: string;  // 'ID_AC_PIVOT_SESLIN'
+                           ANombreCampoLinea: string;     // 'LINEA_SESLIN'
+                           ANombreCampoCantidad: string;  // 'CANTIDAD_SESCEL'
+                           AColumnaFooter: TcxGridDBColumn = nil);
+  procedure CargarTodasLineas;
+  procedure RefrescarMaxColumnas;
+end;
+```
+
+Cada Mto que quiera adoptar el patrón crearía una instancia del
+gestor en su `FormCreate` apuntando a las tablas/campos de su
+documento. La generalización valdrá tanto para Sesiones (ya
+hecho) como para los Pedidos/Albaranes/Facturas que vendrán.
+
+A nivel de BBDD habrá que crear las tablas paralelas
+`fza_<doc>_celdas` con la misma estructura (`SERIE`, `NUMERO`,
+`LINEA`, `ID_AV_PIVOT`, `CODIGO_ALM`, `CANTIDAD`) y la
+materialización entre documentos (Sesión → Pedido → Albarán →
+Factura) tendrá que arrastrar también las celdas.
+
+### 13. Limitaciones reconocidas
 
 - Sin materialización: la sesión vive en `BORRADOR`. Promoverla a
   pedido/albarán es el flujo del Mto real, no de esta prueba.
@@ -357,7 +426,7 @@ DM lo aporta `UniDataComprasSesiones` (ya en el dpr).
 - Un solo almacén por documento (`CODIGO_ALM_SES` de cabecera, sin
   capas multi-almacén como sí hay en el Mto real).
 
-### 13. Cambios a propagar a `compras_sesiones.md` cuando la prueba estabilice
+### 14. Cambios a propagar a `compras_sesiones.md` cuando la prueba estabilice
 
 Estos puntos van al doc de producción si la variante se asciende:
 
