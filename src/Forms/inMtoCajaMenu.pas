@@ -173,7 +173,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal,
-  inMtoModalArqueo;
+  inMtoModalArqueo, System.Diagnostics;
 
 {$R *.dfm}
 
@@ -547,16 +547,33 @@ end;
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 var
   frmMtoOpeCaja: TfrmMtoOpeCaja;
+  swOuter, swCreate, swPrep, swShow: TStopwatch;
+  MsCreate, MsPrep, MsShow, MsTotal: Int64;
 begin
+  swOuter := TStopwatch.StartNew;
+  swCreate := TStopwatch.StartNew;
   frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
+  MsCreate := swCreate.ElapsedMilliseconds;
   try
     frmMtoOpeCaja.PopupParent := Self;
     frmMtoOpeCaja.Tag := 1;
     frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)',
                                     [Self.FCaja]);
+    swPrep := TStopwatch.StartNew;
     frmMtoOpeCaja.PrepararValores(Self.FEmpresa, Self.FAlmacen, Self.FCaja,
                                   Self.FFechaCaja);
+    MsPrep := swPrep.ElapsedMilliseconds;
+    swShow := TStopwatch.StartNew;
     frmMtoOpeCaja.Show;
+    MsShow := swShow.ElapsedMilliseconds;
+    MsTotal := swOuter.ElapsedMilliseconds;
+    ShowMessage(Format(
+      '[DIAG] Apertura OpeCaja (ms):' + sLineBreak +
+      '  TOTAL: %d' + sLineBreak +
+      '  Create() (DFM stream + FormCreate): %d' + sLineBreak +
+      '  PrepararValores (incl. AplicarValoresPorDefecto SQL): %d' + sLineBreak +
+      '  Show() (FormShow + RestaurarLayoutCaja SQL): %d',
+      [MsTotal, MsCreate, MsPrep, MsShow]));
   except
     FreeAndNil(frmMtoOpeCaja);
   end;
