@@ -315,6 +315,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           OnExit = cxgrdLineasExit
           object tvLineas: TcxGridDBTableView
             OnCustomDrawCell = tvLineasCustomDrawCell
+            OnEditing = tvLineasEditing
             OnEditKeyDown = tvLineasEditKeyDown
             OnFocusedRecordChanged = tvLineasFocusedRecordChanged
             OnInitEdit = tvLineasInitEdit
