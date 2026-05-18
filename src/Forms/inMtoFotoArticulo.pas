@@ -134,9 +134,6 @@ procedure MostrarFotoFlotante(AOwner: TComponent;
 
 implementation
 
-uses
-  inMtoPrincipal;
-
 {$R *.dfm}
 
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
@@ -211,13 +208,6 @@ procedure TfrmFotoArticulo.FormClose(Sender: TObject;
 begin
   inherited;
   DesengancharDataChange;
-  // Avisamos al principal que el usuario cerro la ventana
-  // explicitamente para que NO la re-abra automaticamente al
-  // cambiar de pestana / abrir nuevos Mtos. La unica manera de
-  // re-activar el auto-mostrar es pulsar Ctrl+Alt+F manualmente.
-  if Assigned(Application.MainForm) and
-     (Application.MainForm is TfrmMtoPrincipal) then
-    TfrmMtoPrincipal(Application.MainForm).NotificarFotoCerrada;
   if Self <> frmFotoArticulo then
     Action := caFree
   else
