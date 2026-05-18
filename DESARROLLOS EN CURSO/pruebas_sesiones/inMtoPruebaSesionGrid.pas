@@ -140,7 +140,6 @@ type
     // Properties).
     dbcLinTotalTallas        : TcxGridDBColumn;
     dbcLinImporteTotal       : TcxGridDBColumn;
-    dbcLinTotalArticulos     : TcxGridDBColumn;
     dbcLinNumero             : TcxGridDBColumn;
 
     // ------------------------------------------------------------------
