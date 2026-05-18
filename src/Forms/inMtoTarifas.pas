@@ -140,6 +140,7 @@ type
     procedure btnAddBlockClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   public
+    dmmTarifas: TdmTarifas;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -148,7 +149,6 @@ type
 
 var
   frmMtoTarifas: TfrmMtoTarifas;
-  dmmTarifas : TdmTarifas;
 
 implementation
 

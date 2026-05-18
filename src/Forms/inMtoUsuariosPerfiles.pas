@@ -43,13 +43,13 @@ type
   private
     { Private declarations }
   public
+    dmmUsuariosPerfiles: TdmUsuariosPerfiles;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoUsuariosPerfiles: TfrmMtoUsuariosPerfiles;
-  dmmUsuariosPerfiles:TdmUsuariosPerfiles;
 
 implementation
 
