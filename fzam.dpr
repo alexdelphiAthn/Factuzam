@@ -199,7 +199,8 @@ uses
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
-  inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas';
+  inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
+  inMtoPruebaSesionGrid in 'DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas' {frmMtoPruebaSesionGrid};
 
 var
   frmLogon: TfrmLogon;
