@@ -375,88 +375,39 @@ end;
 
 procedure TGestorGridTallas.CargarCantidadesTodasLineas;
 var
-  q     : TUniQuery;
-  i     : Integer;
-  ds    : TDataSet;
-  bk    : TBookmark;
-  iLin  : Integer;
-  rCant : Double;
-  iIdAv : Integer;
-  iAc   : Integer;
-  arr   : TArrPosConjunto;
-  j     : Integer;
+  i, iLinea : Integer;
+  colLinea  : TcxGridDBColumn;
+  vLinea    : Variant;
 begin
-  // Estrategia: lanzar UN SOLO SELECT que trae todas las celdas del
-  // documento (LINEA, ID_AV, SUM(CANTIDAD)) y, para cada fila del
-  // resultado, ubicar el record idx en cxGrid via Locate sobre el
-  // dataset y publicar el Values[].
-  //
-  // Antes iteraba el dataset con DisableControls+bookmark, pero
-  // cxGrid no respetaba los Values[] no-bound durante el suspend y
-  // las celdas quedaban en blanco al EnableControls. Usar Locate
-  // (cxGrid esta enterado del cambio de record) deja los Values[]
-  // estables porque solo cambia el "current" del cxGrid una vez por
-  // celda persistida, no por record completo.
-  ds := Lineas;
-  if (ds = nil) or not ds.Active or ds.IsEmpty then Exit;
+  // Estrategia correcta para columnas no-bound en cxGridDBTableView:
+  // iterar el DataController del propio grid, NO el dataset subyacente.
+  //   - ds.DisableControls/EnableControls sobre el dataset hace que
+  //     cxGrid limpie los Values[] no-bound al EnableControls (resetea
+  //     el DataController desde cero).
+  //   - DataController.BeginUpdate/EndUpdate suspende solo el cxGrid
+  //     sin tocar el dataset; al EndUpdate el grid repinta de una vez
+  //     con todos los Values[] que hayamos asignado en memoria.
+  //   - Leer LINEA por Values[recordIdx, colLinea.Index] saca el dato
+  //     sin tocar el cursor del dataset y sin disparar refrescos.
+  if (Lineas = nil) or not Lineas.Active or Lineas.IsEmpty then Exit;
   if SerieDoc = '' then Exit;
 
-  bk := ds.GetBookmark;
-  ds.DisableControls;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+
+  FCfg.Grid.DataController.BeginUpdate;
   try
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := FCfg.Conexion;
-      q.SQL.Text :=
-        'SELECT ' + FCfg.FieldLineaCel    + ' AS LIN, ' +
-        '       ' + FCfg.FieldAvPivotCel  + ' AS AVI, ' +
-        '       SUM(' + FCfg.FieldCantidadCel + ') AS CANT ' +
-        '  FROM ' + FCfg.TablaCeldas + ' ' +
-        ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
-        '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
-        ' GROUP BY ' + FCfg.FieldLineaCel + ', ' + FCfg.FieldAvPivotCel;
-      q.ParamByName('s').AsString := SerieDoc;
-      q.ParamByName('n').AsString := NumeroDoc;
-      q.Open;
-      while not q.Eof do
-      begin
-        iLin   := q.FieldByName('LIN').AsInteger;
-        iIdAv  := q.FieldByName('AVI').AsInteger;
-        rCant  := q.FieldByName('CANT').AsFloat;
-        // Localizar el record en el dataset (no mueve el cursor visible
-        // porque controles estan disabled — pero la cxGrid sigue
-        // sincronizada por bookmark interno).
-        if ds.Locate(FCfg.FieldLinea, iLin, []) then
-        begin
-          // RecNo (1-based) -> record idx cxGrid (0-based)
-          i := ds.RecNo - 1;
-          iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
-          arr := GetPosicionesConjunto(iAc);
-          for j := 0 to High(arr) do
-            if arr[j].IdAv = iIdAv then
-            begin
-              if (j <= High(FCfg.ColumnasTallas)) and
-                 (FCfg.ColumnasTallas[j] <> nil) then
-                FCfg.Grid.DataController.Values[
-                  i, FCfg.ColumnasTallas[j].Index] := rCant;
-              Break;
-            end;
-        end;
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
+    for i := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    begin
+      vLinea := FCfg.Grid.DataController.Values[i, colLinea.Index];
+      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
+      iLinea := vLinea;
+      if iLinea > 0 then
+        CargarCantidadesUnaLinea(i, iLinea);
     end;
   finally
-    if Assigned(bk) then
-    begin
-      if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
-      ds.FreeBookmark(bk);
-    end;
-    ds.EnableControls;
+    FCfg.Grid.DataController.EndUpdate;
   end;
-  // Forzar al cxGrid a invalidar/repintar tras el bulk de Values.
-  FCfg.Grid.LayoutChanged;
 end;
 
 procedure TGestorGridTallas.CargarCantidadesUnaLinea(ARecordIndex,
@@ -468,9 +419,19 @@ var
   i     : Integer;
   iIdAv : Integer;
   rCant : Double;
+  colAc : TcxGridDBColumn;
+  vAc   : Variant;
 begin
-  if Lineas = nil then Exit;
-  iAc := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+  // Leemos ID_AC_PIVOT del DataController (no del cursor del dataset:
+  // la iteracion de CargarCantidadesTodasLineas no mueve el cursor,
+  // asi que FieldByName devolveria siempre el conjunto de la linea
+  // con foco, no el de la linea ARecordIndex).
+  colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldConjuntoPivot);
+  if colAc = nil then Exit;
+  vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
+  if VarIsNull(vAc) or VarIsEmpty(vAc) then Exit;
+  iAc := vAc;
+
   arr := GetPosicionesConjunto(iAc);
   if Length(arr) = 0 then Exit;
 
