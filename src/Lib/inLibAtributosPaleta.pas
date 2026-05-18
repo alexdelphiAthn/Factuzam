@@ -79,6 +79,38 @@ function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
 procedure CargarMapaAtributosArticulo(const ACodArt: string;
                                       ADict: TDictionary<string, string>);
 
+// Variante global del anterior: NOMBRE_VA (uppercase) -> ID_ATB_VA para todos
+// los atributos definidos en fza_variaciones_atributos. Pensada para grids que
+// muestran lineas de articulos distintos (inventario, caja, ...) y necesitan
+// un solo diccionario en vez de uno por articulo.
+procedure CargarMapaAtributosGlobal(ADict: TDictionary<string, string>);
+
+// Diccionario global cacheado en la propia libreria (carga perezosa). NO
+// liberar el resultado — pertenece a la unidad. Pensado para que un form
+// que quiera pintar cuadraditos solo tenga que llamar a
+// `PintarCeldaSwatchSiAplica` desde su OnCustomDrawCell, sin gestionar
+// estado ni inicializaciones.
+function ObtenerMapaAtributosGlobal: TDictionary<string, string>;
+
+// Invalida el diccionario global (llamar tras alta/baja en
+// fza_variaciones_atributos o tras refrescar la paleta basica).
+procedure InvalidarMapaAtributosGlobal;
+
+// Helper "todo en uno" para usar desde OnCustomDrawCell. Busca un match en
+// la paleta (usando ADict, o el diccionario global si ADict es nil) y, si
+// procede, pinta la celda con cuadradito + texto. Devuelve True si pinto
+// (el llamante debe poner ADone := True).
+//
+// Uso tipico (diccionario global):
+//   procedure TfrmX.tvFooCustomDrawCell(Sender; ACanvas; AViewInfo; var ADone);
+//   begin
+//     if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+//       ADone := True;
+//   end;
+function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
+                                   AViewInfo: TcxGridTableDataCellViewInfo;
+                                   ADict: TDictionary<string, string>): Boolean;
+
 // Busca un basico para `ATexto` probando cada ID_VA presente en `ADict`. Si
 // el texto contiene '/', tambien prueba con el ultimo segmento tras la barra.
 // Devuelve True en el primer match valido.
@@ -112,6 +144,11 @@ uses
 var
   GCache        : TDictionary<string, TInfoBasico>;
   GCacheCargado : Boolean;
+  // Mapa NOMBRE_VA -> ID_ATB_VA global (todas las variaciones del sistema),
+  // cacheado para los grids que no tienen un articulo padre concreto
+  // (inventario, caja, ...). Carga perezosa via ObtenerMapaAtributosGlobal.
+  GMapaGlobal        : TDictionary<string, string>;
+  GMapaGlobalCargado : Boolean;
 
 function ClaveCache(const AIdVA, ACodigoATB: string): string;
 begin
@@ -330,6 +367,70 @@ begin
   end;
 end;
 
+procedure CargarMapaAtributosGlobal(ADict: TDictionary<string, string>);
+var
+  q : TUniQuery;
+  Nombre : string;
+begin
+  if ADict = nil then Exit;
+  ADict.Clear;
+  if oConn = nil then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'SELECT ID_ATB_VA, COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE_VA ' +
+      '  FROM fza_variaciones_atributos';
+    q.Open;
+    while not q.Eof do
+    begin
+      Nombre := UpperCase(Trim(q.FieldByName('NOMBRE_VA').AsString));
+      if Nombre <> '' then
+        ADict.AddOrSetValue(Nombre, q.FieldByName('ID_ATB_VA').AsString);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function ObtenerMapaAtributosGlobal: TDictionary<string, string>;
+begin
+  if GMapaGlobal = nil then
+    GMapaGlobal := TDictionary<string, string>.Create;
+  if not GMapaGlobalCargado then
+  begin
+    CargarMapaAtributosGlobal(GMapaGlobal);
+    GMapaGlobalCargado := True;
+  end;
+  Result := GMapaGlobal;
+end;
+
+procedure InvalidarMapaAtributosGlobal;
+begin
+  if GMapaGlobal <> nil then
+    GMapaGlobal.Clear;
+  GMapaGlobalCargado := False;
+end;
+
+function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
+                                   AViewInfo: TcxGridTableDataCellViewInfo;
+                                   ADict: TDictionary<string, string>): Boolean;
+var
+  Dict : TDictionary<string, string>;
+  Info : TInfoBasico;
+begin
+  Result := False;
+  if (ACanvas = nil) or (AViewInfo = nil) then Exit;
+  if ADict <> nil then
+    Dict := ADict
+  else
+    Dict := ObtenerMapaAtributosGlobal;
+  if (Dict = nil) or (Dict.Count = 0) then Exit;
+  if not BuscarInfoBasicoEnArticulo(AViewInfo.Text, Dict, Info) then Exit;
+  Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info);
+end;
+
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
@@ -438,10 +539,13 @@ begin
 end;
 
 initialization
-  GCache        := TDictionary<string, TInfoBasico>.Create;
-  GCacheCargado := False;
+  GCache             := TDictionary<string, TInfoBasico>.Create;
+  GCacheCargado      := False;
+  GMapaGlobal        := nil;
+  GMapaGlobalCargado := False;
 
 finalization
   FreeAndNil(GCache);
+  FreeAndNil(GMapaGlobal);
 
 end.
