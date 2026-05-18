@@ -62,7 +62,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.UITypes,
   Data.DB, DBAccess, Uni,
   cxControls, cxClasses, cxEdit, cxTextEdit, cxCurrencyEdit, cxCustomData,
-  cxGridCustomTableView, cxGridDBTableView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   JvEnterTab;
 
 type
