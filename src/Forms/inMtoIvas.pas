@@ -63,13 +63,13 @@ type
   public
     { Public declarations }
   public
+    dmmIvas: TdmIvas;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
 end;
 
 var
   frmMtoIvas: TfrmMtoIvas;
-  dmmIvas : TdmIvas;
 
 implementation
 

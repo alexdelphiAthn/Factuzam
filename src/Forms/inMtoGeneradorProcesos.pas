@@ -178,6 +178,7 @@ type
     procedure syndtEstructuraScroll(Sender: TObject; ScrollBar: TScrollBarKind);
     procedure tsSQLShow(Sender: TObject);
   public
+    dmmGeneradorProcesos: TdmGeneradorProcesos;
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -218,7 +219,6 @@ type
 
 var
   frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos;
-  dmmGeneradorProcesos : TdmGeneradorProcesos;
   IsColumnMode: Boolean;
 
 implementation

@@ -349,6 +349,7 @@ type
     procedure UpsertPrecioSku(AField: string; ANuevo: Double);
     procedure RellenarItemsSerie;
   public
+    dmmComprasSesiones: TdmComprasSesiones;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -357,7 +358,6 @@ type
 
 var
   frmMtoComprasSesiones: TfrmMtoComprasSesiones;
-  dmmComprasSesiones: TdmComprasSesiones;
 
 implementation
 

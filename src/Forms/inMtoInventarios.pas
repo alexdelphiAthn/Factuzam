@@ -236,6 +236,7 @@ type
     procedure CargarLineasYRefrescar;
 
   public
+    dmmInventarios: TdmInventarios;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -244,7 +245,6 @@ type
 
 var
   frmMtoInventarios: TfrmMtoInventarios;
-  dmmInventarios: TdmInventarios;
 
 implementation
 

@@ -288,6 +288,7 @@ type
     procedure txtCODIGO_PAIS_EMPRESAPropertiesChange(Sender: TObject);
     procedure btnSeleccionarCerClick(Sender: TObject);
   public
+    dmmEmpresas: TdmEmpresas;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   private
@@ -297,7 +298,6 @@ type
 
 var
   frmMtoEmpresas: TfrmMtoEmpresas;
-  dmmEmpresas : TdmEmpresas;
 
 implementation
 

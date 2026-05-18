@@ -40,13 +40,13 @@ type
   private
     { Private declarations }
   public
+    dmmPaises: TdmPaises;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoPaises: TfrmMtoPaises;
-  dmmPaises:TdmPaises;
 
 implementation
 

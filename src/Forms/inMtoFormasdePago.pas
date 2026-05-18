@@ -196,13 +196,13 @@ type
     procedure actClientesExecute(Sender: TObject);
     procedure btnExportarExcelClick(Sender: TObject);
   public
+    dmmFormasdePago: TdmFormasdePago;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoFormasdePago: TfrmMtoFormasdePago;
-  dmmFormasdePago : TdmFormasdePago;
 
 implementation
 
