@@ -691,7 +691,14 @@ begin
     LB.Canvas.Brush.Color := clWindow;
   LB.Canvas.FillRect(ARect);
 
-  HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
+  HayColor := False;
+  // Si FIdVa esta vacio o no casa, probamos contra el mapa global (mismo
+  // fallback que usa el browse via BuscarInfoBasicoEnArticulo).
+  if Trim(FIdVa) <> '' then
+    HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
+  if not HayColor then
+    HayColor := BuscarInfoBasicoEnArticulo(Av,
+                                           ObtenerMapaAtributosGlobal, Info);
 
   if HayColor then
   begin
