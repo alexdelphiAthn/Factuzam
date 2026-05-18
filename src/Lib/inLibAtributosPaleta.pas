@@ -136,10 +136,39 @@ procedure RellenarImageListPaleta(AImages: TCustomImageList;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
 
+// Muestra un selector modal con un TListBox owner-drawn que pinta el
+// cuadradito de paleta basica al lado de cada AV. Pensado para combos de
+// atributo donde TcxComboBox no permite owner-draw nativo. Si `AIdVa` es
+// vacio (o el AV no esta en la paleta) el item entra sin cuadradito.
+// Devuelve True si el usuario eligio un valor; False si cancelo.
+function SeleccionarAvConPaleta(const ATitulo, AIdVa: string;
+                                const AAvs: array of string;
+                                const AValorActual: string;
+                                out AValor: string): Boolean;
+
 implementation
 
 uses
-  Uni, inLibGlobalVar;
+  Uni, inLibGlobalVar,
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
+
+type
+  // Form auxiliar (no en interface) usado solo por SeleccionarAvConPaleta.
+  TfrmSelPalAvAux = class(TForm)
+  private
+    FListBox  : TListBox;
+    FIdVa     : string;
+    FAvs      : TArray<string>;
+    procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
+                              ARect: TRect; State: TOwnerDrawState);
+    procedure ListBoxDblClick(Sender: TObject);
+    procedure ListBoxKeyDown(Sender: TObject;
+                             var Key: Word; Shift: TShiftState);
+  public
+    constructor CreateConOpciones(const ATitulo, AIdVa: string;
+                                  const AAvs: array of string;
+                                  const AValorActual: string);
+  end;
 
 var
   GCache        : TDictionary<string, TInfoBasico>;
@@ -535,6 +564,189 @@ begin
     end;
   finally
     FreeAndNil(Bmp);
+  end;
+end;
+
+{ TfrmSelPalAvAux }
+
+constructor TfrmSelPalAvAux.CreateConOpciones(const ATitulo, AIdVa: string;
+                                              const AAvs: array of string;
+                                              const AValorActual: string);
+const
+  ALTO_FILA  = 22;
+  ANCHO_BTN  = 80;
+  ALTO_PANEL = 40;
+var
+  i, idxSel : Integer;
+  Panel     : TPanel;
+  BtnOK, BtnCancel : TButton;
+begin
+  inherited CreateNew(nil);
+  Caption     := ATitulo;
+  BorderStyle := bsDialog;
+  Position    := poScreenCenter;
+  ClientWidth := 260;
+  ClientHeight:= 340;
+  KeyPreview  := True;
+
+  FIdVa := AIdVa;
+  SetLength(FAvs, Length(AAvs));
+  for i := 0 to High(AAvs) do
+    FAvs[i] := AAvs[i];
+
+  Panel := TPanel.Create(Self);
+  Panel.Parent      := Self;
+  Panel.Align       := alBottom;
+  Panel.Height      := ALTO_PANEL;
+  Panel.BevelOuter  := bvNone;
+
+  BtnCancel := TButton.Create(Self);
+  BtnCancel.Parent      := Panel;
+  BtnCancel.Caption     := 'Cancelar';
+  BtnCancel.ModalResult := mrCancel;
+  BtnCancel.Cancel      := True;
+  BtnCancel.Width       := ANCHO_BTN;
+  BtnCancel.Top         := 8;
+  BtnCancel.Left        := ClientWidth - ANCHO_BTN - 8;
+
+  BtnOK := TButton.Create(Self);
+  BtnOK.Parent      := Panel;
+  BtnOK.Caption     := 'Aceptar';
+  BtnOK.ModalResult := mrOk;
+  BtnOK.Default     := True;
+  BtnOK.Width       := ANCHO_BTN;
+  BtnOK.Top         := 8;
+  BtnOK.Left        := BtnCancel.Left - ANCHO_BTN - 8;
+
+  FListBox := TListBox.Create(Self);
+  FListBox.Parent     := Self;
+  FListBox.Align      := alClient;
+  FListBox.Style      := lbOwnerDrawFixed;
+  FListBox.ItemHeight := ALTO_FILA;
+  FListBox.OnDrawItem := ListBoxDrawItem;
+  FListBox.OnDblClick := ListBoxDblClick;
+  FListBox.OnKeyDown  := ListBoxKeyDown;
+
+  idxSel := -1;
+  for i := 0 to High(AAvs) do
+  begin
+    FListBox.Items.Add(AAvs[i]);
+    if (idxSel < 0) and SameText(AAvs[i], AValorActual) then
+      idxSel := i;
+  end;
+  if (idxSel < 0) and (FListBox.Items.Count > 0) then
+    idxSel := 0;
+  if idxSel >= 0 then
+    FListBox.ItemIndex := idxSel;
+  ActiveControl := FListBox;
+end;
+
+procedure TfrmSelPalAvAux.ListBoxDrawItem(Control: TWinControl; Index: Integer;
+                                          ARect: TRect; State: TOwnerDrawState);
+const
+  LADO        = 12;
+  MARGEN_IZQ  = 8;
+  HUECO_TEXTO = 8;
+var
+  LB        : TListBox;
+  Av        : string;
+  Info      : TInfoBasico;
+  Cuadrado  : TRect;
+  TextRect  : TRect;
+  Alto, Top : Integer;
+  HayColor  : Boolean;
+begin
+  LB := Control as TListBox;
+  if (Index < 0) or (Index >= LB.Items.Count) then Exit;
+  Av := LB.Items[Index];
+
+  // Fondo (respeta seleccion)
+  if odSelected in State then
+    LB.Canvas.Brush.Color := clHighlight
+  else
+    LB.Canvas.Brush.Color := clWindow;
+  LB.Canvas.FillRect(ARect);
+
+  HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
+
+  if HayColor then
+  begin
+    Alto := ARect.Bottom - ARect.Top;
+    if Alto > LADO then
+      Top := ARect.Top + (Alto - LADO) div 2
+    else
+      Top := ARect.Top;
+    Cuadrado := System.Types.Rect(ARect.Left + MARGEN_IZQ, Top,
+                                  ARect.Left + MARGEN_IZQ + LADO,
+                                  Top + LADO);
+    LB.Canvas.Brush.Style := bsSolid;
+    LB.Canvas.Brush.Color := Info.Color;
+    LB.Canvas.FillRect(Cuadrado);
+    LB.Canvas.Brush.Style := bsClear;
+    LB.Canvas.Pen.Color   := clBlack;
+    LB.Canvas.Pen.Width   := 1;
+    LB.Canvas.Rectangle(Cuadrado);
+    LB.Canvas.Brush.Style := bsSolid;
+    TextRect := System.Types.Rect(Cuadrado.Right + HUECO_TEXTO, ARect.Top,
+                                  ARect.Right, ARect.Bottom);
+  end
+  else
+    TextRect := System.Types.Rect(ARect.Left + MARGEN_IZQ, ARect.Top,
+                                  ARect.Right, ARect.Bottom);
+
+  if odSelected in State then
+    LB.Canvas.Font.Color := clHighlightText
+  else
+    LB.Canvas.Font.Color := clWindowText;
+  LB.Canvas.Brush.Style := bsClear;
+  Winapi.Windows.DrawText(LB.Canvas.Handle, PChar(Av), -1, TextRect,
+                          DT_SINGLELINE or DT_VCENTER or DT_LEFT or
+                          DT_END_ELLIPSIS);
+  LB.Canvas.Brush.Style := bsSolid;
+
+  if odFocused in State then
+    LB.Canvas.DrawFocusRect(ARect);
+end;
+
+procedure TfrmSelPalAvAux.ListBoxDblClick(Sender: TObject);
+begin
+  if FListBox.ItemIndex >= 0 then
+    ModalResult := mrOk;
+end;
+
+procedure TfrmSelPalAvAux.ListBoxKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and (FListBox.ItemIndex >= 0) then
+  begin
+    ModalResult := mrOk;
+    Key := 0;
+  end;
+end;
+
+function SeleccionarAvConPaleta(const ATitulo, AIdVa: string;
+                                const AAvs: array of string;
+                                const AValorActual: string;
+                                out AValor: string): Boolean;
+var
+  F : TfrmSelPalAvAux;
+begin
+  AValor := '';
+  Result := False;
+  if Length(AAvs) = 0 then Exit;
+  F := TfrmSelPalAvAux.CreateConOpciones(ATitulo, AIdVa, AAvs, AValorActual);
+  try
+    if F.ShowModal = mrOk then
+    begin
+      if (F.FListBox.ItemIndex >= 0) and
+         (F.FListBox.ItemIndex < Length(F.FAvs)) then
+      begin
+        AValor := F.FAvs[F.FListBox.ItemIndex];
+        Result := True;
+      end;
+    end;
+  finally
+    F.Free;
   end;
 end;
 
