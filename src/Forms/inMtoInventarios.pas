@@ -32,7 +32,7 @@ uses
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnMan;
+  Vcl.ActnMan, System.Generics.Collections;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -163,6 +163,8 @@ type
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasUnidadPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure tvLineasSkuPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
     procedure tvLineasUdsFisicasPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasGetCellHint(Sender: TcxCustomGridTableView;
@@ -209,12 +211,29 @@ type
     FUltimoArticuloPadre: string;
     FProcesandoAtributo: Boolean;
     FInicializandoCombo: Boolean;
+    // Bitmap reutilizable para pintar el cuadradito de color en el glyph
+    // del boton [...] de las columnas SKU. Se repinta en cada InitEdit con
+    // el color del AV actual; si no hay color, el boton vuelve a bkEllipsis.
+    FBmpSwatchBoton: TBitmap;
 
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
     function ObtenerColumnaSkuPorTag(NumColumn: Integer): TcxGridDBColumn;
 //    procedure ConstruirSkuDesdeAtributos;
+
+    // === SELECTOR DE AV CON CUADRADITO DE PALETA ===
+    // Carga los AVs validos para (articulo padre, posicion) — misma SQL que
+    // antes usaba InitEdit para poblar el combo.
+    procedure CargarAvsValidos(const ACodArt: string; AOrden: Integer;
+                               var AAvs: TArray<string>);
+    // Aplica AV al campo ATTRn_VALOR y dispara el rebuild del SKU + recalculo
+    // de teorico/PMP si la fila queda completa. Es la version "sin editor"
+    // del cuerpo de OnAtributoChanged.
+    procedure RegistrarValorAtributo(AOrden: Integer; const AvNuevo: string);
+    // Handler OnEnter de un sigle-shot que abre el popup en cuanto el cursor
+    // entra en la celda (sustituye a ForzarDespliegue para los TcxButtonEdit).
+    procedure AbrirPopupSkuEnEntrada(Sender: TObject);
 
     // === BUSQUEDA UNIFICADA DE ARTICULOS (codigo, SKU o codigo de barras) ===
     procedure ResolverInputArticulo(const AInput: string;
@@ -320,6 +339,7 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
+  FBmpSwatchBoton := TBitmap.Create;
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -341,6 +361,7 @@ end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FreeAndNil(FBmpSwatchBoton);
   if Assigned(cbbCODIGO_EMPRESA_INVENTARIO) then
     cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource := nil;
   if Assigned(cbbCODIGO_ALMACEN_INVENTARIO) then
@@ -723,81 +744,59 @@ end;
 procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;
   AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
 var
-  Combo: TcxComboBox;
-  Qry: TUniQuery;
-  ArticuloPadre: string;
-  OrdenColumna: Integer;
-  ValorActual: Variant;
+  BE        : TcxButtonEdit;
+  AvActual  : string;
+  NombreAtb : string;
+  IdVa      : string;
+  Mapa      : TDictionary<string, string>;
+  Info      : TInfoBasico;
+  Btn       : TcxEditButton;
 begin
-  // Solo nos interesan las columnas dinamicas SKU1..SKU5 (Tag = 1..5).
-  // Al iniciar la edicion, poblamos el combo con los valores validos del
-  // atributo correspondiente para el articulo padre actual.
+  // Columnas SKU1..SKU5 — TcxButtonEdit. Configuramos:
+  //   (1) Glyph del boton = cuadradito del color del AV actual (si esta en
+  //       la paleta basica). Si no, el boton vuelve a su look [...].
+  //   (2) Si la celda esta VACIA, auto-abrimos el selector al entrar
+  //       (sustituye a ForzarDespliegue del antiguo combo). Si ya tiene
+  //       valor, el usuario ve el cuadradito y clica si quiere cambiar.
   if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
-  if not (AEdit is TcxComboBox) then Exit;
+  if not (AEdit is TcxButtonEdit) then Exit;
+  BE := TcxButtonEdit(AEdit);
+  if BE.Properties.Buttons.Count = 0 then Exit;
+  Btn := BE.Properties.Buttons[0];
 
-  Combo := TcxComboBox(AEdit);
-  Combo.Tag := AItem.Tag;
-  Combo.Properties.OnEditValueChanged := OnAtributoChanged;
-  Combo.OnEnter := nil;
-  OrdenColumna := AItem.Tag;
-
-  if dmmInventarios.cdsLineas.Active then
-    ArticuloPadre :=
-      dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString
-  else
-    ArticuloPadre := '';
-
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := oConn;
-    Qry.SQL.Text :=
-        '  SELECT DISTINCT V.AV ' +
-        '    FROM fza_atributos_valores V ' +
-        '    JOIN vi_atributos_nombres N ' +
-        '      ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
-        '    JOIN fza_atributos_sku REL ' +
-        '      ON V.ID_AV = REL.ID_AV_SA ' +
-        '    JOIN fza_articulos_skus S ' +
-        '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
-        '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
-        '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE ' +
-        '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN ' +
-        '   ORDER BY V.AV';
-    Qry.ParamByName('PADRE').AsString  := ArticuloPadre;
-    Qry.ParamByName('ORDEN').AsInteger := OrdenColumna;
-    Qry.Open;
-    Combo.Properties.Items.BeginUpdate;
-    try
-      Combo.Properties.Items.Clear;
-      while not Qry.Eof do
-      begin
-        Combo.Properties.Items.Add(Qry.FieldByName('AV').AsString);
-        Qry.Next;
-      end;
-    finally
-      Combo.Properties.Items.EndUpdate;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
-
-  // Si la celda esta vacia, preseleccionamos la primera opcion y, al entrar
-  // el editor, abrimos el dropdown automaticamente (igual que inMtoCajaOpe).
-  if Combo.Properties.Items.Count > 0 then
+  AvActual  := '';
+  NombreAtb := '';
+  if dmmInventarios.cdsLineas.Active and
+     (not dmmInventarios.cdsLineas.IsEmpty) then
   begin
-    ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
-    if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
-    begin
-      // Mismo patron que inMtoCajaOpe: NO ponemos guard FInicializandoCombo
-      // alrededor de ItemIndex := 0 aqui. El fin es justamente que la
-      // asignacion dispare OnAtributoChanged, que a su vez hace PostEditValue
-      // (commit del valor al campo ATTR1_VALOR via la DataLink) y rebuild
-      // del SKU. Si ponemos guard, el campo se queda vacio y al salir de
-      // la celda no hay valor (que era el bug previo).
-      Combo.OnEnter := ForzarDespliegue;
-      Combo.ItemIndex := 0;
-    end;
+    AvActual  := dmmInventarios.cdsLineas.FieldByName(
+                   'ATTR' + IntToStr(AItem.Tag) + '_VALOR').AsString;
+    NombreAtb := dmmInventarios.cdsLineas.FieldByName(
+                   'ATTR' + IntToStr(AItem.Tag) + '_NOMBRE').AsString;
   end;
+
+  IdVa := '';
+  Mapa := ObtenerMapaAtributosGlobal;
+  if Mapa <> nil then
+    Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+
+  Info := Default(TInfoBasico);
+  if (IdVa <> '') and (Trim(AvActual) <> '') then
+    ObtenerInfoBasico(IdVa, AvActual, Info);
+
+  if Info.EsValido and
+     PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
+  begin
+    Btn.Glyph.Assign(FBmpSwatchBoton);
+    Btn.Kind := bkGlyph;
+  end
+  else
+    Btn.Kind := bkEllipsis;
+
+  if Trim(AvActual) = '' then
+    BE.OnEnter := AbrirPopupSkuEnEntrada
+  else
+    BE.OnEnter := nil;
 end;
 
 procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
@@ -1000,6 +999,174 @@ begin
   RellenarLineaDesdeBusqueda(Input, Resolved, Error, ErrorText);
   if not Error then
     DisplayValue := Resolved;
+end;
+
+procedure TfrmMtoInventarios.CargarAvsValidos(const ACodArt: string;
+  AOrden: Integer; var AAvs: TArray<string>);
+var
+  Qry: TUniQuery;
+begin
+  SetLength(AAvs, 0);
+  if Trim(ACodArt) = '' then Exit;
+  if (AOrden < 1) or (AOrden > 5) then Exit;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn;
+    Qry.SQL.Text :=
+        '  SELECT DISTINCT V.AV ' +
+        '    FROM fza_atributos_valores V ' +
+        '    JOIN vi_atributos_nombres N ' +
+        '      ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
+        '    JOIN fza_atributos_sku REL ' +
+        '      ON V.ID_AV = REL.ID_AV_SA ' +
+        '    JOIN fza_articulos_skus S ' +
+        '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
+        '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
+        '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE ' +
+        '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN ' +
+        '   ORDER BY V.AV';
+    Qry.ParamByName('PADRE').AsString  := ACodArt;
+    Qry.ParamByName('ORDEN').AsInteger := AOrden;
+    Qry.Open;
+    while not Qry.Eof do
+    begin
+      SetLength(AAvs, Length(AAvs) + 1);
+      AAvs[High(AAvs)] := Qry.FieldByName('AV').AsString;
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoInventarios.RegistrarValorAtributo(AOrden: Integer;
+  const AvNuevo: string);
+var
+  SkuNuevo: string;
+  CantTeo, PMPAct: Currency;
+  NumAtributosRequeridos, NumSeparadores, i: Integer;
+begin
+  if (AOrden < 1) or (AOrden > 5) then Exit;
+  if not dmmInventarios.cdsLineas.Active then Exit;
+  if dmmInventarios.cdsLineas.IsEmpty then Exit;
+
+  if dmmInventarios.cdsLineas.State = dsBrowse then
+    dmmInventarios.cdsLineas.Edit;
+  if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
+
+  dmmInventarios.cdsLineas.FieldByName(
+    'ATTR' + IntToStr(AOrden) + '_VALOR').AsString := AvNuevo;
+
+  SkuNuevo := dmmInventarios.GenerarSkuFinal(
+                dmmInventarios.cdsLineas.FieldByName(
+                  'CODIGO_ART_INVLIN').AsString);
+  if Trim(SkuNuevo) = '' then
+    SkuNuevo := dmmInventarios.cdsLineas.FieldByName(
+                  'CODIGO_ART_INVLIN').AsString;
+  dmmInventarios.cdsLineas.FieldByName(
+    'CODIGO_UNIDAD_INVLIN').AsString := SkuNuevo;
+
+  NumAtributosRequeridos :=
+        dmmInventarios.cdsLineas.FieldByName(
+          'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+  NumSeparadores := 0;
+  for i := 1 to Length(SkuNuevo) do
+    if SkuNuevo[i] = '/' then
+      Inc(NumSeparadores);
+
+  if (NumAtributosRequeridos > 0)
+     and (NumSeparadores = NumAtributosRequeridos) then
+  begin
+    dmmInventarios.RellenarDatosSku(SkuNuevo, CantTeo, PMPAct);
+    dmmInventarios.cdsLineas.FieldByName(
+      'CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName(
+      'CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName(
+      'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName(
+      'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
+    dmmInventarios.cdsLineas.FieldByName(
+      'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+  end;
+end;
+
+procedure TfrmMtoInventarios.tvLineasSkuPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  Col: TcxGridColumn;
+  Orden: Integer;
+  ArtPadre, NombreAtb, IdVa, AvActual, AvNuevo: string;
+  Avs: TArray<string>;
+  Mapa: TDictionary<string, string>;
+  EditCtrl: TWinControl;
+  ScrPt: TPoint;
+  WidHint: Integer;
+begin
+  if not PuedeEditar then
+  begin
+    ShowMessage('El inventario no está ABIERTO. No se puede editar.');
+    Exit;
+  end;
+  Col := tvLineas.Controller.FocusedColumn;
+  if Col = nil then Exit;
+  Orden := Col.Tag;
+  if (Orden < 1) or (Orden > 5) then Exit;
+  if not dmmInventarios.cdsLineas.Active then Exit;
+  if dmmInventarios.cdsLineas.IsEmpty then Exit;
+
+  ArtPadre := dmmInventarios.cdsLineas.FieldByName(
+                'CODIGO_ART_INVLIN').AsString;
+  AvActual := dmmInventarios.cdsLineas.FieldByName(
+                'ATTR' + IntToStr(Orden) + '_VALOR').AsString;
+  NombreAtb := dmmInventarios.cdsLineas.FieldByName(
+                'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
+
+  CargarAvsValidos(ArtPadre, Orden, Avs);
+  if Length(Avs) = 0 then
+  begin
+    ShowMessage('No hay valores definidos para este atributo.');
+    Exit;
+  end;
+
+  IdVa := '';
+  Mapa := ObtenerMapaAtributosGlobal;
+  if Mapa <> nil then
+    Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+
+  // Posicion donde sale el "desplegable": justo debajo del editor.
+  ScrPt.X := -1; ScrPt.Y := -1;
+  WidHint := 120;
+  if Sender is TWinControl then
+  begin
+    EditCtrl := TWinControl(Sender);
+    ScrPt    := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
+    WidHint  := EditCtrl.Width;
+  end;
+
+  if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
+                                ScrPt.X, ScrPt.Y, WidHint) then
+    Exit;
+
+  RegistrarValorAtributo(Orden, AvNuevo);
+
+  // Reflejamos el valor en el editor actual para que la celda muestre el AV
+  // elegido al instante (sin esperar al refresh de la DataLink).
+  if Sender is TcxCustomEdit then
+    TcxCustomEdit(Sender).EditValue := AvNuevo;
+end;
+
+procedure TfrmMtoInventarios.AbrirPopupSkuEnEntrada(Sender: TObject);
+var
+  BE: TcxCustomEdit;
+begin
+  // OnEnter single-shot: dispara el click del boton para abrir el selector
+  // automaticamente al entrar en la celda (sustituye a ForzarDespliegue).
+  if not (Sender is TcxCustomEdit) then Exit;
+  BE := TcxCustomEdit(Sender);
+  BE.OnEnter := nil;
+  // Convocamos directamente el handler. AButtonIndex = 0 (unico boton).
+  tvLineasSkuPropertiesButtonClick(BE, 0);
 end;
 
 procedure TfrmMtoInventarios.tvLineasUnidadPropertiesButtonClick(

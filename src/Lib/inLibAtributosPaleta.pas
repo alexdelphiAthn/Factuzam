@@ -19,7 +19,8 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
-  System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
+  System.Types, System.Generics.Collections,
+  Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
 
@@ -136,10 +137,59 @@ procedure RellenarImageListPaleta(AImages: TCustomImageList;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
 
+// Pinta un cuadradito de color en ABmp (lo redimensiona a ALado x ALado).
+// Devuelve True si pinto algo (AInfo valido); False si no, y deja ABmp sin
+// tocar. Util para glyphs de botones / iconos pequenyos.
+function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
+                              ALado: Integer = 14): Boolean;
+
+// Muestra un dropdown sin marco con un TListBox owner-drawn que pinta el
+// cuadradito de paleta basica al lado de cada AV. Pensado para imitar un
+// combo desde una celda de cxGrid: pasa AScreenLeft/AScreenTop = pos en
+// pantalla justo debajo del editor, y AWidthHint = ancho del editor (se
+// expande si los AVs no caben). Un click selecciona y cierra; Esc o click
+// fuera cancelan. Si AScreenLeft/Top son negativos, sale centrado.
+function SeleccionarAvConPaleta(const AIdVa: string;
+                                const AAvs: array of string;
+                                const AValorActual: string;
+                                out AValor: string;
+                                AScreenLeft: Integer = -1;
+                                AScreenTop: Integer = -1;
+                                AWidthHint: Integer = 120): Boolean;
+
 implementation
 
 uses
-  Uni, inLibGlobalVar;
+  Uni, inLibGlobalVar,
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
+
+type
+  // Form auxiliar (no en interface) usado solo por SeleccionarAvConPaleta.
+  // Se muestra como un dropdown sin marco: posicionado a las coordenadas
+  // recibidas (justo debajo del editor), ancho calculado segun el AV mas
+  // largo, alto = items * 22 con tope. Un click selecciona+cierra; Esc o
+  // click fuera cancelan.
+  TfrmSelPalAvAux = class(TForm)
+  private
+    FListBox  : TListBox;
+    FIdVa     : string;
+    FAvs      : TArray<string>;
+    FShown    : Boolean;
+    procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
+                              ARect: TRect; State: TOwnerDrawState);
+    procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
+                               Shift: TShiftState; X, Y: Integer);
+    procedure ListBoxKeyDown(Sender: TObject;
+                             var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  public
+    constructor CreateConOpciones(const AIdVa: string;
+                                  const AAvs: array of string;
+                                  const AValorActual: string;
+                                  AScreenLeft, AScreenTop, AWidthHint: Integer);
+  end;
 
 var
   GCache        : TDictionary<string, TInfoBasico>;
@@ -535,6 +585,260 @@ begin
     end;
   finally
     FreeAndNil(Bmp);
+  end;
+end;
+
+function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
+                              ALado: Integer): Boolean;
+begin
+  Result := False;
+  if (ABmp = nil) or (not AInfo.EsValido) or (ALado < 4) then Exit;
+  ABmp.PixelFormat := pf24bit;
+  ABmp.SetSize(ALado, ALado);
+  ABmp.Canvas.Brush.Style := bsSolid;
+  ABmp.Canvas.Brush.Color := AInfo.Color;
+  ABmp.Canvas.FillRect(System.Types.Rect(0, 0, ALado, ALado));
+  ABmp.Canvas.Brush.Style := bsClear;
+  ABmp.Canvas.Pen.Color   := clBlack;
+  ABmp.Canvas.Pen.Width   := 1;
+  ABmp.Canvas.Rectangle(0, 0, ALado, ALado);
+  Result := True;
+end;
+
+{ TfrmSelPalAvAux }
+
+constructor TfrmSelPalAvAux.CreateConOpciones(const AIdVa: string;
+                                              const AAvs: array of string;
+                                              const AValorActual: string;
+                                              AScreenLeft, AScreenTop,
+                                              AWidthHint: Integer);
+const
+  ALTO_FILA   = 22;
+  ANCHO_MIN   = 80;
+  ALTO_MAX    = 360;
+  EXTRA_W     = 32;  // swatch(12) + margenes + scrollbar margin
+  PADD_LISTB  = 4;   // border interno del listbox
+var
+  i, idxSel, MaxTextW, W, H : Integer;
+  Bmp : TBitmap;
+begin
+  inherited CreateNew(nil);
+  BorderStyle := bsNone;
+  Position    := poDesigned;
+  Caption     := '';
+  KeyPreview  := True;
+  FShown      := False;
+  OnShow       := FormShow;
+  OnDeactivate := FormDeactivate;
+  OnKeyDown    := FormKeyDown;
+
+  FIdVa := AIdVa;
+  SetLength(FAvs, Length(AAvs));
+  for i := 0 to High(AAvs) do
+    FAvs[i] := AAvs[i];
+
+  FListBox := TListBox.Create(Self);
+  FListBox.Parent      := Self;
+  FListBox.Align       := alClient;
+  FListBox.Style       := lbOwnerDrawFixed;
+  FListBox.BorderStyle := bsSingle;
+  FListBox.ItemHeight  := ALTO_FILA;
+  FListBox.OnDrawItem  := ListBoxDrawItem;
+  FListBox.OnMouseDown := ListBoxMouseDown;
+  FListBox.OnKeyDown   := ListBoxKeyDown;
+
+  idxSel := -1;
+  for i := 0 to High(AAvs) do
+  begin
+    FListBox.Items.Add(AAvs[i]);
+    if (idxSel < 0) and SameText(AAvs[i], AValorActual) then
+      idxSel := i;
+  end;
+  if (idxSel < 0) and (FListBox.Items.Count > 0) then
+    idxSel := 0;
+  if idxSel >= 0 then
+    FListBox.ItemIndex := idxSel;
+  ActiveControl := FListBox;
+
+  // Ancho segun el AV mas largo
+  MaxTextW := 0;
+  Bmp := TBitmap.Create;
+  try
+    Bmp.Canvas.Font.Assign(Self.Font);
+    for i := 0 to High(AAvs) do
+    begin
+      W := Bmp.Canvas.TextWidth(AAvs[i]);
+      if W > MaxTextW then MaxTextW := W;
+    end;
+  finally
+    Bmp.Free;
+  end;
+  W := MaxTextW + EXTRA_W;
+  if W < AWidthHint then W := AWidthHint;
+  if W < ANCHO_MIN  then W := ANCHO_MIN;
+  Width := W;
+
+  // Alto adaptado, con tope
+  H := Length(AAvs) * ALTO_FILA + PADD_LISTB;
+  if H > ALTO_MAX then H := ALTO_MAX;
+  Height := H;
+
+  if (AScreenLeft >= 0) and (AScreenTop >= 0) then
+  begin
+    Left := AScreenLeft;
+    Top  := AScreenTop;
+  end
+  else
+    Position := poScreenCenter;
+end;
+
+procedure TfrmSelPalAvAux.ListBoxDrawItem(Control: TWinControl; Index: Integer;
+                                          ARect: TRect; State: TOwnerDrawState);
+const
+  LADO        = 12;
+  MARGEN_IZQ  = 8;
+  HUECO_TEXTO = 8;
+var
+  LB        : TListBox;
+  Av        : string;
+  Info      : TInfoBasico;
+  Cuadrado  : TRect;
+  TextRect  : TRect;
+  Alto, Top : Integer;
+  HayColor  : Boolean;
+begin
+  LB := Control as TListBox;
+  if (Index < 0) or (Index >= LB.Items.Count) then Exit;
+  Av := LB.Items[Index];
+
+  // Fondo (respeta seleccion)
+  if odSelected in State then
+    LB.Canvas.Brush.Color := clHighlight
+  else
+    LB.Canvas.Brush.Color := clWindow;
+  LB.Canvas.FillRect(ARect);
+
+  HayColor := False;
+  // Si FIdVa esta vacio o no casa, probamos contra el mapa global (mismo
+  // fallback que usa el browse via BuscarInfoBasicoEnArticulo).
+  if Trim(FIdVa) <> '' then
+    HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
+  if not HayColor then
+    HayColor := BuscarInfoBasicoEnArticulo(Av,
+                                           ObtenerMapaAtributosGlobal, Info);
+
+  if HayColor then
+  begin
+    Alto := ARect.Bottom - ARect.Top;
+    if Alto > LADO then
+      Top := ARect.Top + (Alto - LADO) div 2
+    else
+      Top := ARect.Top;
+    Cuadrado := System.Types.Rect(ARect.Left + MARGEN_IZQ, Top,
+                                  ARect.Left + MARGEN_IZQ + LADO,
+                                  Top + LADO);
+    LB.Canvas.Brush.Style := bsSolid;
+    LB.Canvas.Brush.Color := Info.Color;
+    LB.Canvas.FillRect(Cuadrado);
+    LB.Canvas.Brush.Style := bsClear;
+    LB.Canvas.Pen.Color   := clBlack;
+    LB.Canvas.Pen.Width   := 1;
+    LB.Canvas.Rectangle(Cuadrado);
+    LB.Canvas.Brush.Style := bsSolid;
+    TextRect := System.Types.Rect(Cuadrado.Right + HUECO_TEXTO, ARect.Top,
+                                  ARect.Right, ARect.Bottom);
+  end
+  else
+    TextRect := System.Types.Rect(ARect.Left + MARGEN_IZQ, ARect.Top,
+                                  ARect.Right, ARect.Bottom);
+
+  if odSelected in State then
+    LB.Canvas.Font.Color := clHighlightText
+  else
+    LB.Canvas.Font.Color := clWindowText;
+  LB.Canvas.Brush.Style := bsClear;
+  Winapi.Windows.DrawText(LB.Canvas.Handle, PChar(Av), -1, TextRect,
+                          DT_SINGLELINE or DT_VCENTER or DT_LEFT or
+                          DT_END_ELLIPSIS);
+  LB.Canvas.Brush.Style := bsSolid;
+
+  if odFocused in State then
+    LB.Canvas.DrawFocusRect(ARect);
+end;
+
+procedure TfrmSelPalAvAux.ListBoxMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Idx: Integer;
+begin
+  if Button <> mbLeft then Exit;
+  Idx := FListBox.ItemAtPos(System.Types.Point(X, Y), True);
+  if Idx >= 0 then
+  begin
+    FListBox.ItemIndex := Idx;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TfrmSelPalAvAux.ListBoxKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and (FListBox.ItemIndex >= 0) then
+  begin
+    ModalResult := mrOk;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmSelPalAvAux.FormShow(Sender: TObject);
+begin
+  FShown := True;
+end;
+
+procedure TfrmSelPalAvAux.FormDeactivate(Sender: TObject);
+begin
+  // Click fuera del popup -> cancela (como un combo). Guardamos con FShown
+  // para que esto no dispare durante la creacion/animacion inicial.
+  if FShown and (ModalResult = mrNone) then
+    ModalResult := mrCancel;
+end;
+
+procedure TfrmSelPalAvAux.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    ModalResult := mrCancel;
+    Key := 0;
+  end;
+end;
+
+function SeleccionarAvConPaleta(const AIdVa: string;
+                                const AAvs: array of string;
+                                const AValorActual: string;
+                                out AValor: string;
+                                AScreenLeft, AScreenTop,
+                                AWidthHint: Integer): Boolean;
+var
+  F : TfrmSelPalAvAux;
+begin
+  AValor := '';
+  Result := False;
+  if Length(AAvs) = 0 then Exit;
+  F := TfrmSelPalAvAux.CreateConOpciones(AIdVa, AAvs, AValorActual,
+                                          AScreenLeft, AScreenTop, AWidthHint);
+  try
+    if F.ShowModal = mrOk then
+    begin
+      if (F.FListBox.ItemIndex >= 0) and
+         (F.FListBox.ItemIndex < Length(F.FAvs)) then
+      begin
+        AValor := F.FAvs[F.FListBox.ItemIndex];
+        Result := True;
+      end;
+    end;
+  finally
+    F.Free;
   end;
 end;
 
