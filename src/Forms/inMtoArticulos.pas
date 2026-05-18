@@ -2889,7 +2889,7 @@ begin
   if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
   if FAtributosStock.Count = 0 then Exit;
   if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
-    if PintarCeldaConTextoColor(ACanvas, AViewInfo, Info) then
+    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
       ADone := True;
 end;
 
