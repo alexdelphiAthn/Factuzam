@@ -70,9 +70,8 @@ Orden visual final de las columnas:
 | Pr. venta            | `PRECIO_VENTA_SESLIN`                     | Calculado pero override-able.                                                                               |
 | Sistema tallas       | `ID_AC_PIVOT_SESLIN`                      | Lookup `fza_atributos_conjuntos`. Validación: si tiene > `CANT_TALLAS_MAX` valores → `mtError` (ver §3.4).  |
 | Talla 1..N           | No-bound → `fza_compras_sesiones_celdas`  | N = máximo de valores entre los conjuntos del documento. Captions siguen al sistema de la línea con foco.   |
-| Total tallas         | `TOTAL_UNIDADES_SESLIN`                   | Read-only. Suma de cantidades en celdas (la refresca `RefrescarTotalesLinea`).                              |
+| Total tallas         | `TOTAL_UNIDADES_SESLIN`                   | Read-only. Suma de cantidades en celdas. Lleva además footer summary (`skSum`) que muestra el total del documento al pie del grid (`OptionsView.Footer=True`). |
 | Importe s/IVA        | `TOTAL_LINEA_SESLIN`                      | Read-only. = `TOTAL_UNIDADES × PRECIO_COMPRA`.                                                              |
-| Total artículos      | `TOTAL_UNIDADES_SESLIN` (footer = `skSum`)| Por fila replica «Total tallas»; al pie del grid muestra la suma del documento (`OptionsView.Footer=True`). |
 | Línea                | `LINEA_SESLIN`                            | Editable, spin de paso 10. Permite intercalar (escribir 15 entre 10 y 20).                                  |
 
 #### 3.1 Familia → código artículo (F3 y tecleo manual)
@@ -211,9 +210,12 @@ Las columnas de talla son **no-bound**
   una pulsación lo sustituye y Tab/Enter lo deja como está.
 - **F3 sobre Familia** abre el modal selector jerárquico
   (`TfrmModalSelFamilia`).
-- **Total artículos** se ve por fila (= TOTAL_UNIDADES de la línea) y
+- **Total tallas** se ve por fila (= TOTAL_UNIDADES de la línea) y
   con `Kind = skSum` al pie del grid (`OptionsView.Footer = True`) —
-  ahí se ve la suma de cantidades de todo el documento.
+  ahí se ve la suma de cantidades de todo el documento. Una sola
+  columna; se intentó tener tambien una «Total artículos» separada
+  pero al ser bound al mismo campo el guardado/restauración de
+  perfiles del grid creaba duplicidades.
 - **Línea editable** con spin de paso 10: si el usuario quiere
   intercalar una línea, edita el número a uno entre dos existentes
   (p.ej. 15 entre 10 y 20). `unqrySesionLinAfterInsert` ya numera de
@@ -374,7 +376,7 @@ Estos puntos van al doc de producción si la variante se asciende:
 5. **Validación**: documentar el límite `CANT_TALLAS_MAX = 20` como
    constante global (o configurable por instalación) y propagarla a
    las pantallas del Mto real que pintan matriz pivotada.
-6. **Footer**: añadir `FooterSummaryItems` en `Total artículos` del
+6. **Footer**: añadir `FooterSummaryItems` en `Total tallas` del
    grid de líneas del Mto real (suma del documento).
 7. **Línea editable**: el spin de paso 10 en `LINEA_SESLIN` para
    intercalar es trasplantable tal cual al Mto real.

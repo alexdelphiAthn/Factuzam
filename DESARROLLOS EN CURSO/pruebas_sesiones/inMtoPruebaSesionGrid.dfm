@@ -309,7 +309,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               item
                 Format = '#,##0'
                 Kind = skSum
-                Column = dbcLinTotalArticulos
+                Column = dbcLinTotalTallas
               end>
             OptionsBehavior.GoToNextCellOnEnter = True
             OptionsBehavior.FocusCellOnTab = True
@@ -401,8 +401,9 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             object dbcLinTotalTallas: TcxGridDBColumn
               Caption = 'Total tallas'
               DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
+              PropertiesClassName = 'TcxSpinEditProperties'
               Options.Editing = False
-              Width = 90
+              Width = 100
             end
             object dbcLinImporteTotal: TcxGridDBColumn
               Caption = 'Importe s/IVA'
@@ -410,13 +411,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Options.Editing = False
               Width = 110
-            end
-            object dbcLinTotalArticulos: TcxGridDBColumn
-              Caption = 'Total art'#237'culos'
-              DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
-              PropertiesClassName = 'TcxSpinEditProperties'
-              Options.Editing = False
-              Width = 100
             end
             object dbcLinNumero: TcxGridDBColumn
               Caption = 'L'#237'nea'
