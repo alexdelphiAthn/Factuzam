@@ -826,6 +826,12 @@ procedure TfrmMtoGen.FormShow(Sender: TObject);
 begin
   inherited;
   ResetForm;
+  // Auto-enganche de la pantalla flotante de fotos al Mto que se
+  // acaba de mostrar (cero pulsaciones de Ctrl+Alt+F). El principal
+  // decide si abrirla por primera vez o solo re-vincular, segun el
+  // flag FFotoAutoMostrar.
+  if (Self.Owner is TfrmMtoPrincipal) then
+    TfrmMtoPrincipal(Self.Owner).EngancharFotoAlMto(Self);
 end;
 
 procedure TfrmMtoGen.pcPantallaPageChanging(Sender: TObject;
