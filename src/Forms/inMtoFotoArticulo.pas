@@ -99,17 +99,6 @@ type
     // mecanismo nativo FreeNotification de la VCL.
     procedure Notification(AComponent: TComponent;
                            Operation: TOperation); override;
-    // Anade WS_EX_NOACTIVATE: la ventana NO se activa al mostrarse.
-    procedure CreateParams(var Params: TCreateParams); override;
-    // WM_MOUSEACTIVATE = MA_NOACTIVATE: los clicks en la flotante
-    // (btnLayout, btnRotar, btnCambiar...) se procesan SIN activar
-    // la ventana, asi el Mto no pierde el foco del teclado.
-    procedure WMMouseActivate(var Msg: TWMMouseActivate);
-                              message WM_MOUSEACTIVATE;
-    // Cinturon y tirantes: si por algun motivo la flotante recibe
-    // WM_ACTIVATE (alt-tab, click en taskbar, focus traversal),
-    // devolvemos el foco a la ventana que lo tenia antes.
-    procedure WMActivate(var Msg: TWMActivate); message WM_ACTIVATE;
     procedure ToggleControles;
     procedure AjustarBotonToggle;
     procedure GuardarLayout;
@@ -150,38 +139,6 @@ uses
 
 {$R *.dfm}
 
-procedure TfrmFotoArticulo.CreateParams(var Params: TCreateParams);
-begin
-  inherited;
-  Params.ExStyle := Params.ExStyle or WS_EX_NOACTIVATE;
-end;
-
-procedure TfrmFotoArticulo.WMMouseActivate(var Msg: TWMMouseActivate);
-begin
-  // Permite procesar el click (no descartamos el mensaje) pero le
-  // dice a Windows que NO active la ventana. Resultado: btnLayout,
-  // btnRotar, etc. siguen funcionando, pero el Mto no pierde foco.
-  Msg.Result := MA_NOACTIVATE;
-end;
-
-procedure TfrmFotoArticulo.WMActivate(var Msg: TWMActivate);
-var
-  hwndRet: HWND;
-begin
-  inherited;
-  if Msg.Active = WA_INACTIVE then
-    Exit;
-  // Si por alguna razon nos activamos (alt-tab, click en taskbar,
-  // focus traversal del SO), devolvemos el foco al form que lo
-  // tenia justo antes. Msg.ActiveWindow trae ese handle.
-  hwndRet := Msg.ActiveWindow;
-  if (hwndRet = 0) or (not IsWindow(hwndRet)) or (hwndRet = Self.Handle)
-    then if Assigned(Application.MainForm) then
-           hwndRet := Application.MainForm.Handle;
-  if (hwndRet <> 0) and (hwndRet <> Self.Handle) then
-    SetActiveWindow(hwndRet);
-end;
-
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -190,11 +147,11 @@ begin
   // layout guardado, FormShow centra manualmente.
   Self.Position    := poDesigned;
   Self.FormStyle   := fsStayOnTop;
-  // KeyPreview solo procesa teclas cuando la propia flotante tiene
-  // el foco (lo que solo ocurre tras click directo del usuario, ya
-  // que WS_EX_NOACTIVATE evita robo de foco al mostrarse). Asi los
-  // shortcuts F11 / Alt+F12 siguen disponibles SIN interferir con
-  // las teclas que el usuario pulsa cuando esta editando un Mto.
+  // KeyPreview procesa teclas cuando la flotante esta activa (tras
+  // click directo del usuario). El auto-show usa SW_SHOWNOACTIVATE
+  // para no robar el foco al Mto, pero una vez el usuario clicka un
+  // boton o el combo, la ventana se activa normalmente y necesita
+  // procesar F11 / Alt+F12.
   Self.KeyPreview  := True;
   rgResolucion.ItemIndex := 0;    // 300 por defecto
   FUltimaInfo.Clear;
@@ -544,9 +501,9 @@ end;
 procedure TfrmFotoArticulo.btnLayoutClick(Sender: TObject);
 begin
   inherited;
-  // Equivalente al antiguo Alt+F12. Con WS_EX_NOACTIVATE la ventana
-  // ya no recibe teclas (no es foreground), asi que hace falta un
-  // boton explicito para guardar la geometria.
+  // Equivalente a Alt+F12. Como el auto-show no activa la ventana,
+  // hasta que el usuario no clicke algo el shortcut no llega aqui;
+  // este boton explicito siempre funciona.
   GuardarLayout;
 end;
 
@@ -655,10 +612,9 @@ procedure MostrarFotoFlotante(AOwner: TComponent;
 var
   hwndPrev: HWND;
 begin
-  // Capturamos el foreground window ANTES de tocar nada, asi
-  // podemos devolverle el foco despues. Esto cubre el caso en que
-  // TForm.Show internamente acabe activando la flotante a pesar de
-  // WS_EX_NOACTIVATE (algunas combinaciones Windows / VCL).
+  // Capturamos el foreground window ANTES de mostrar la flotante,
+  // asi podemos devolverle el foco despues (clave para que el Mto
+  // no pierda el teclado cuando la ventana se auto-abre).
   hwndPrev := GetForegroundWindow;
   if frmFotoArticulo = nil then
     // Owner = Application, no el Mto que llama: la pantalla sobrevive
@@ -668,12 +624,23 @@ begin
     frmFotoArticulo := TfrmFotoArticulo.Create(Application);
   frmFotoArticulo.SetArticuloSku(ACodArt, ACodSku);
   if not frmFotoArticulo.Visible then
-    frmFotoArticulo.Show;
-  // Restauramos el foreground window si cambio. NO usamos
-  // BringToFront / SetFocus aposta: la ventana ya es fsStayOnTop +
-  // WS_EX_NOACTIVATE, no necesita pelearse por el foco.
+  begin
+    // SW_SHOWNOACTIVATE: muestra la ventana SIN activarla. A
+    // diferencia de TForm.Show (que termina llamando SetActiveWindow
+    // y roba el teclado al Mto), aqui la flotante aparece encima por
+    // ser fsStayOnTop pero el foco se queda en quien lo tenia.
+    // Sincronizamos Visible a mano porque ShowWindow no lo hace.
+    ShowWindow(frmFotoArticulo.Handle, SW_SHOWNOACTIVATE);
+    frmFotoArticulo.Visible := True;
+  end;
+  // Belt-and-braces: si por algun motivo el foreground cambio
+  // (algunas combinaciones Windows/VCL activan igual), lo devolvemos.
+  // Cuando el usuario clicka DIRECTAMENTE sobre la flotante (boton,
+  // combo, radio), la activacion es normal: WM_MOUSEACTIVATE default
+  // -> MA_ACTIVATE y los controles funcionan.
   if (hwndPrev <> 0) and IsWindow(hwndPrev) and
-     (hwndPrev <> frmFotoArticulo.Handle) then
+     (hwndPrev <> frmFotoArticulo.Handle) and
+     (GetForegroundWindow = frmFotoArticulo.Handle) then
     SetForegroundWindow(hwndPrev);
 end;
 
