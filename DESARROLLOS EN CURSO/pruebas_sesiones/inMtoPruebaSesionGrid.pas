@@ -59,7 +59,8 @@ uses
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoGen,
-  UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons;
+  UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
+  dxDateRanges;
 
 const
   // Numero maximo de columnas de talla inline. 15 cubre con holgura los
