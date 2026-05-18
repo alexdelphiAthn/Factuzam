@@ -180,6 +180,8 @@ type
     FConjuntoPos  : TDictionary<Integer, TArrPosConjunto>;
                     // ID_AC -> posiciones ordenadas (IdAv, Valor)
     FBasicosColor : TArray<string>;
+    FQryConjuntosTallas : TUniQuery;
+    FDsConjuntosTallas  : TDataSource;
     FBmpSwatch    : TBitmap;
     function  Dmm: TdmComprasSesiones;
     procedure ActivarEnterComoTab(AActivo: Boolean);
@@ -278,7 +280,7 @@ begin
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
 
   TcxLookupComboBoxProperties(dbcLinTallas.Properties).ListSource :=
-                                                    Dmm.dsAtributosConjuntos;
+                                                    FDsConjuntosTallas;
 
   with Dmm do
   begin
@@ -304,6 +306,29 @@ begin
   FBmpSwatch    := TBitmap.Create;
   FConjuntoPos  := TDictionary<Integer, TArrPosConjunto>.Create;
   CargarBasicosColor;
+  // Query propia del lookup "Sistema tallas": solo conjuntos del
+  // atributo pivot (ID_VA_AC = 'TAL'), no colores ni otros ejes. Trae
+  // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
+  // mostrarlas como rango en el dropdown.
+  FQryConjuntosTallas := TUniQuery.Create(Self);
+  FQryConjuntosTallas.Connection := inLibGlobalVar.oConn;
+  FQryConjuntosTallas.SQL.Text :=
+    'SELECT AC.ID_AC, AC.NOMBRE_AC, ' +
+    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
+    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
+    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
+    '    ORDER BY ACD.ORDEN_ACD, AV.AV LIMIT 1) AS PRIMERA, ' +
+    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
+    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
+    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
+    '    ORDER BY ACD.ORDEN_ACD DESC, AV.AV DESC LIMIT 1) AS ULTIMA ' +
+    '  FROM fza_atributos_conjuntos AC ' +
+    ' WHERE AC.ESACTIVO_AC = ''S'' ' +
+    '   AND AC.ID_VA_AC = ''TAL'' ' +
+    ' ORDER BY AC.NOMBRE_AC';
+  FQryConjuntosTallas.Open;
+  FDsConjuntosTallas := TDataSource.Create(Self);
+  FDsConjuntosTallas.DataSet := FQryConjuntosTallas;
   CrearColumnasTallas;
 end;
 
@@ -665,7 +690,12 @@ begin
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   ds.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTot;
   ds.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    := rTot * rPr;
-  ds.Post;
+  // NO hacemos ds.Post aqui. Posteaaba el master mientras el usuario
+  // sigue tecleando cantidades; el AfterPost provocaba un re-render
+  // del row y cxGrid limpiaba los Values no-bound de la fila — la
+  // cantidad recien tecleada desaparecia visualmente aunque ya estaba
+  // persistida en SESCEL. El Post real lo dispara el grid al cambiar
+  // de fila o el boton Grabar.
 end;
 
 // ===========================================================================
