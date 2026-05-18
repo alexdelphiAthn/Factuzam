@@ -57,6 +57,7 @@ type
     btnQuitar        : TcxButton;
     btnRotarIzq      : TcxButton;
     btnRotarDer      : TcxButton;
+    btnLayout        : TcxButton;
     pnlImage         : TPanel;
     imgFoto          : TImage;
     dlgAbrirFoto     : TOpenDialog;
@@ -72,6 +73,7 @@ type
     procedure btnQuitarClick(Sender: TObject);
     procedure btnRotarIzqClick(Sender: TObject);
     procedure btnRotarDerClick(Sender: TObject);
+    procedure btnLayoutClick(Sender: TObject);
   private
     FCodigoArt              : string;
     FCodigoSku              : string;
@@ -97,6 +99,13 @@ type
     // mecanismo nativo FreeNotification de la VCL.
     procedure Notification(AComponent: TComponent;
                            Operation: TOperation); override;
+    // Anade WS_EX_NOACTIVATE: la ventana se muestra como topmost
+    // pero NO recibe foco al aparecer / al BringToFront, asi no
+    // roba teclas al Mto activo (Ctrl+S, F2, INSERT, Ctrl+Del...).
+    // El click del usuario sobre la propia flotante si le da foco
+    // (Windows lo permite aunque tenga NOACTIVATE), asi se pueden
+    // usar sus botones / shortcuts Alt+F12, F11.
+    procedure CreateParams(var Params: TCreateParams); override;
     procedure ToggleControles;
     procedure AjustarBotonToggle;
     procedure GuardarLayout;
@@ -137,6 +146,12 @@ uses
 
 {$R *.dfm}
 
+procedure TfrmFotoArticulo.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_NOACTIVATE;
+end;
+
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -145,7 +160,12 @@ begin
   // layout guardado, FormShow centra manualmente.
   Self.Position    := poDesigned;
   Self.FormStyle   := fsStayOnTop;
-  Self.KeyPreview  := True;       // para que FormKeyDown vea Alt+F12 / F11
+  // KeyPreview solo procesa teclas cuando la propia flotante tiene
+  // el foco (lo que solo ocurre tras click directo del usuario, ya
+  // que WS_EX_NOACTIVATE evita robo de foco al mostrarse). Asi los
+  // shortcuts F11 / Alt+F12 siguen disponibles SIN interferir con
+  // las teclas que el usuario pulsa cuando esta editando un Mto.
+  Self.KeyPreview  := True;
   rgResolucion.ItemIndex := 0;    // 300 por defecto
   FUltimaInfo.Clear;
   FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
@@ -491,6 +511,15 @@ begin
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
+procedure TfrmFotoArticulo.btnLayoutClick(Sender: TObject);
+begin
+  inherited;
+  // Equivalente al antiguo Alt+F12. Con WS_EX_NOACTIVATE la ventana
+  // ya no recibe teclas (no es foreground), asi que hace falta un
+  // boton explicito para guardar la geometria.
+  GuardarLayout;
+end;
+
 // ---------------------------------------------------------------------
 //   Auto-refresh: hook al dsTablaG del Mto padre
 // ---------------------------------------------------------------------
@@ -602,13 +631,12 @@ begin
     frmFotoArticulo := TfrmFotoArticulo.Create(Application);
   frmFotoArticulo.SetArticuloSku(ACodArt, ACodSku);
   if not frmFotoArticulo.Visible then
-    frmFotoArticulo.Show
-  else
-  begin
-    frmFotoArticulo.BringToFront;
-    if frmFotoArticulo.CanFocus then
-      frmFotoArticulo.SetFocus;
-  end;
+    frmFotoArticulo.Show;
+  // NO se llama a BringToFront / SetFocus aposta: la ventana es
+  // fsStayOnTop + WS_EX_NOACTIVATE, ya esta siempre encima sin robar
+  // foco. Si la activaramos aqui, capturaria las teclas que el
+  // usuario pulsa en el Mto activo (Ctrl+Del, F2, INSERT...) y
+  // dejarian de funcionar como antes.
 end;
 
 initialization
