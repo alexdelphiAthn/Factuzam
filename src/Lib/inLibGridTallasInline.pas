@@ -610,6 +610,7 @@ var
   arr    : TArrPosConjunto;
   rCant  : Double;
   vEdit  : Variant;
+  idxRec : Integer;
 begin
   if not (ASender is TcxCustomEdit) then Exit;
   ed := TcxCustomEdit(ASender);
@@ -638,17 +639,17 @@ begin
   else
     rCant := vEdit;
 
+  // Capturamos el record idx visual ANTES de tocar totales: el
+  // RefrescarTotales hace ds.Edit + asignaciones de campos bound,
+  // y cxGrid reacciona repintando la fila desde el dataset, lo que
+  // borra los Values[] no-bound de esa fila (tallas en blanco).
+  // Re-inyectamos esa misma fila justo despues para neutralizarlo.
+  idxRec := FCfg.Grid.Controller.FocusedRecordIndex;
+
   PersistirCantidad(iLinea, arr[iPos - 1].IdAv, rCant);
   RefrescarTotalesLineaActual;
-  // ds.Edit + asignaciones de totales bound dentro de RefrescarTotales
-  // invalidan los Values[] no-bound del cxGrid (incluso con
-  // BeginUpdate). El BeginUpdate suspende el repintado, pero las
-  // notificaciones internas siguen llegando y limpian la cache de
-  // valores no-bound de TODAS las lineas. Por eso re-publicamos todas
-  // las cantidades desde SESCEL aqui: la lectura es barata (un SELECT
-  // agregado) y el bulk via BeginUpdate/EndUpdate del DataController
-  // deja todo coherente en una sola pasada.
-  CargarCantidadesTodasLineas;
+  if idxRec >= 0 then
+    CargarCantidadesUnaLinea(idxRec, iLinea);
 end;
 
 // =============================================================================

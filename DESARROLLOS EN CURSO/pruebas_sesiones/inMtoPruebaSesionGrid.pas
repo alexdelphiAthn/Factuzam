@@ -193,6 +193,7 @@ type
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
@@ -277,6 +278,11 @@ begin
   begin
     unqrySesionLin.MasterFields := 'SERIE_SES;NUMERO_SES';
     unqrySesionLin.MasterSource := dsTablaG;
+    // Hook AfterPost: cuando el usuario cambia de fila el dataset
+    // hace Post automatico y cxGrid repinta la fila desde el dataset,
+    // limpiando los Values[] no-bound. Re-publicamos las cantidades
+    // de todas las lineas desde la cache de SESCEL.
+    unqrySesionLin.AfterPost := unqrySesionLinAfterPostHook;
     if not unqrySesionLin.Active then unqrySesionLin.Open;
     if not unqrySesionCel.Active then unqrySesionCel.Open;
   end;
@@ -310,6 +316,19 @@ begin
   FGestorTallas.InvalidarCache;
   FGestorTallas.RecalcularMaxColumnas;
   FGestorTallas.CargarCantidadesTodasLineas;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.unqrySesionLinAfterPostHook(
+                                                      DataSet: TDataSet);
+begin
+  // Cuando el usuario cambia de fila el dataset hace Post automatico:
+  // cxGrid reacciona repintando la fila desde el dataset y eso borra
+  // los Values[] no-bound (tallas) de la fila que abandona. Re-cargamos
+  // las cantidades de todas las lineas desde SESCEL — el SELECT
+  // agregado es barato y el BeginUpdate/EndUpdate del DataController
+  // lo deja en una sola pasada.
+  if Assigned(FGestorTallas) then
+    FGestorTallas.CargarCantidadesTodasLineas;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.ResetForm;
