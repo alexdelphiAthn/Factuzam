@@ -319,6 +319,9 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             object dbcLinFamilia: TcxGridDBColumn
               Caption = 'Familia (F3)'
               DataBinding.FieldName = 'CODIGO_FAM_SESLIN'
+              PropertiesClassName = 'TcxTextEditProperties'
+              Properties.CharCase = ecUpperCase
+              Properties.OnEditValueChanged = dbcLinFamiliaPropertiesEditValueChanged
               Width = 110
             end
             object dbcLinCodArt: TcxGridDBColumn
