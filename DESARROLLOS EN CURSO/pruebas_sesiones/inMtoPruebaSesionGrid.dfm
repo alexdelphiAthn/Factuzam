@@ -312,6 +312,8 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
                 Column = dbcLinTotalArticulos
               end>
             OptionsBehavior.GoToNextCellOnEnter = True
+            OptionsBehavior.FocusCellOnTab = True
+            OptionsBehavior.FocusCellOnCycle = True
             OptionsView.Footer = True
             OptionsView.GroupByBox = False
             object dbcLinFamilia: TcxGridDBColumn
