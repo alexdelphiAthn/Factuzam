@@ -579,6 +579,7 @@ procedure TfrmMtoPruebaSesionGrid.CargarCantidadesTodasLineas;
 var
   i, iLinea : Integer;
   ds        : TDataSet;
+  bk        : TBookmark;
 begin
   // Recorre todas las lineas de la sesion y vuelca las cantidades de
   // fza_compras_sesiones_celdas a las celdas no-bound del grid.
@@ -587,15 +588,33 @@ begin
   ds := Dmm.unqrySesionLin;
   if (ds = nil) or not ds.Active then Exit;
   if ds.IsEmpty then Exit;
-  for i := 0 to tvLineas.DataController.RecordCount - 1 do
-  begin
-    // Las columnas talla son no-bound; el record idx del grid no nos
-    // da LINEA_SESLIN directamente. Movemos el DataSet a ese record y
-    // leemos el campo.
-    ds.RecNo := i + 1;
-    iLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
-    if iLinea > 0 then
-      CargarCantidadesUnaLinea(i, iLinea);
+
+  // DisableControls evita que cxGrid se entere de los cambios de
+  // cursor del DataSet mientras recorremos. Sin esto, cada
+  // `ds.Next` provocaba un re-fetch del row anterior en el grid y
+  // limpiaba los Values[] que acabamos de fijar para la linea i-1;
+  // resultado: solo la ultima iteracion sobrevivia con datos
+  // visibles, las anteriores quedaban en blanco.
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    i := 0;
+    while not ds.Eof do
+    begin
+      iLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
+      if iLinea > 0 then
+        CargarCantidadesUnaLinea(i, iLinea);
+      Inc(i);
+      ds.Next;
+    end;
+  finally
+    if Assigned(bk) then
+    begin
+      if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
+      ds.FreeBookmark(bk);
+    end;
+    ds.EnableControls;
   end;
 end;
 
