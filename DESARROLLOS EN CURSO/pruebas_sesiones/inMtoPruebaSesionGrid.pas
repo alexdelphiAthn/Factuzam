@@ -186,6 +186,7 @@ type
     procedure CargarBasicosColor;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
@@ -276,11 +277,33 @@ begin
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
 
   InicializarGestorTallas;
+
+  // Hook OnDataChange del master: cuando el usuario navega de una
+  // sesion a otra (o se posiciona en la primera tras abrir el form),
+  // re-cargamos las cantidades de tallas. Sin esto, las celdas no-bound
+  // quedan vacias hasta que se Postea una linea, aunque los totales
+  // (TOTAL_UNIDADES_SESLIN, bound) si se ven correctos.
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+
   if Assigned(FGestorTallas) then
   begin
     FGestorTallas.RecalcularMaxColumnas;
     FGestorTallas.CargarCantidadesTodasLineas;
   end;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.dsTablaGDataChangeHook(Sender: TObject;
+                                                          Field: TField);
+begin
+  // Field = nil => cambio de record activo en el master (no es un cambio
+  // puntual de un campo del registro actual). Es el momento de
+  // recalcular columnas y volver a publicar las cantidades de las
+  // lineas de esta sesion.
+  if Field <> nil then Exit;
+  if FGestorTallas = nil then Exit;
+  FGestorTallas.InvalidarCache;
+  FGestorTallas.RecalcularMaxColumnas;
+  FGestorTallas.CargarCantidadesTodasLineas;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.ResetForm;
