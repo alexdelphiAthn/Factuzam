@@ -306,6 +306,13 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             OnEditKeyDown = tvLineasEditKeyDown
             OnFocusedRecordChanged = tvLineasFocusedRecordChanged
             OnInitEdit = tvLineasInitEdit
+            DataController.Summary.FooterSummaryItems = <
+              item
+                Format = '#,##0'
+                Kind = skSum
+                Column = dbcLinTotalArticulos
+              end>
+            OptionsView.Footer = True
             OptionsView.GroupByBox = False
             object dbcLinFamilia: TcxGridDBColumn
               Caption = 'Familia (F3)'
@@ -385,6 +392,13 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Options.Editing = False
               Width = 110
+            end
+            object dbcLinTotalArticulos: TcxGridDBColumn
+              Caption = 'Total art'#237'culos'
+              DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
+              PropertiesClassName = 'TcxSpinEditProperties'
+              Options.Editing = False
+              Width = 100
             end
             object dbcLinNumero: TcxGridDBColumn
               Caption = 'L'#237'nea'
