@@ -582,7 +582,7 @@ end;
 procedure TGestorGridTallas.PersistirCeldaActiva(ASender: TObject);
 var
   ed     : TcxCustomEdit;
-  col    : TcxGridColumn;
+  item   : TcxCustomGridTableItem;
   iPos   : Integer;
   iLinea : Integer;
   iAc    : Integer;
@@ -594,9 +594,14 @@ begin
   ed := TcxCustomEdit(ASender);
   ed.PostEditValue;
 
-  col := FCfg.Grid.Controller.FocusedColumn;
-  if col = nil then Exit;
-  iPos := col.Tag;
+  // El FocusedItem del grid (TcxCustomGridTableItem) es la base de
+  // todas las columnas; nos basta su Tag para identificar la posicion
+  // de la celda. Asi evitamos depender del tipo concreto TcxGridColumn /
+  // TcxGridDBColumn (que en este build no resuelve desde la libreria
+  // por algun fallo de scope incluso con cxGridTableView en uses).
+  item := FCfg.Grid.Controller.FocusedItem;
+  if item = nil then Exit;
+  iPos := item.Tag;
   if (iPos < 1) or (iPos > FCfg.MaxColumnas) then Exit;
   if Lineas = nil then Exit;
   if Lineas.IsEmpty then Exit;
