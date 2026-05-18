@@ -81,6 +81,14 @@ var
   oDictValue: TDictValue;
   qPerfil: TUniQuery;
 begin
+  // Si la caché en memoria está precargada para el usuario y grupo actuales,
+  // sírvela y evita el round-trip a PRC_GETPERFILFORMULARIO.
+  if Assigned(inLibGlobalVar.odmPerfiles) and
+     (sUsuario = inLibGlobalVar.oUser) and
+     (sGrupo   = inLibGlobalVar.oGroup) and
+     inLibGlobalVar.odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
+    Exit;
+
   APerfilDic := TProfileDicc.Create;
   APerfilDic.Clear;
   qPerfil := TUniQuery.Create(nil);
@@ -177,6 +185,12 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc; AFormName: string);
 var
   oPerfilUserDic    : TProfileUserDicc;
 begin
+  // Si la caché está precargada para el usuario/grupo actuales, sírvela y
+  // ahorramos el SELECT a fza_usuarios_perfiles + FilterProfileUserGroup.
+  if Assigned(odmPerfiles) and
+     odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
+    Exit;
+
   odmPerfiles.Assign_Profile_Dict(AFormName, oPerfilUserDic);
   FilterProfileUserGroup(oPerfilUserDic, APerfilDic);
   FreeAndNil(oPerfilUserDic);

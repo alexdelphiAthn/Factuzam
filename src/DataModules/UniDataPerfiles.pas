@@ -48,7 +48,10 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryPerfilesBeforePost(DataSet: TDataSet);
   private
-    { Private declarations }
+    FCachePerfilesForm: TObjectDictionary<string, TProfileDicc>;
+    FCachePrecargada: Boolean;
+    function ClonarPerfilDicc(AOrigen: TProfileDicc): TProfileDicc;
+    function CargarPerfilFormDesdeDB(const AFormName: string): TProfileDicc;
   public
     // Métodos existentes mejorados
     procedure GrabarPerfil(psuser,
@@ -65,6 +68,16 @@ type
     // NUEVOS MÉTODOS para centralizar lógica y evitar SQL en los formularios
     function GetProfileSubKey(sKey: string; sDef: string = ''): string;
     procedure DeleteProfile(sUserGroup, sKey: string; sSubKey: string = '');
+
+    // Caché en memoria de perfiles de formulario (KEY_USUPER -> SUBKEY -> Value)
+    // resueltos por prioridad user > group > Todos. Se precarga al login para
+    // que GetFormUserProfile no llame a PRC_GETPERFILFORMULARIO en cada apertura.
+    procedure PrecargarPerfilesUsuario;
+    function ObtenerPerfilFormCache(const AFormName: string;
+                                    out APerfilDic: TProfileDicc): Boolean;
+    procedure ResincronizarCachePerfilForm(const AFormName: string);
+    procedure InvalidarCachePerfiles;
+    property CachePrecargada: Boolean read FCachePrecargada;
   end;
 
 var
@@ -149,12 +162,160 @@ end;
 procedure TdmPerfiles.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-//
+  FCachePerfilesForm := TObjectDictionary<string, TProfileDicc>.Create(
+    [doOwnsValues]);
+  FCachePrecargada := False;
 end;
 
 procedure TdmPerfiles.DataModuleDestroy(Sender: TObject);
 begin
-  //
+  FreeAndNil(FCachePerfilesForm);
+end;
+
+function TdmPerfiles.ClonarPerfilDicc(AOrigen: TProfileDicc): TProfileDicc;
+var
+  oPair: TPair<string, TDictValue>;
+begin
+  Result := TProfileDicc.Create;
+  if AOrigen = nil then Exit;
+  for oPair in AOrigen do
+    Result.AddOrSetValue(oPair.Key, oPair.Value);
+end;
+
+function TdmPerfiles.CargarPerfilFormDesdeDB(
+                                   const AFormName: string): TProfileDicc;
+var
+  qry: TUniQuery;
+  v: TDictValue;
+begin
+  Result := TProfileDicc.Create;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    // Mismo criterio de resolución que PRC_GETPERFILFORMULARIO: por cada
+    // SUBKEY queda la fila con USUARIO_GRUPO de mayor prioridad. Lo conseguimos
+    // ordenando ascendente por prioridad (Todos -> Group -> User) e iterando
+    // con AddOrSetValue: la última asignación, que es la de mayor prioridad,
+    // sobreescribe a las anteriores.
+    qry.SQL.Text :=
+      'SELECT SUBKEY_USUPER, VALUE_USUPER, VALUE_TEXT_USUPER ' +
+      '  FROM fza_usuarios_perfiles ' +
+      ' WHERE KEY_USUPER = :key ' +
+      '   AND USUARIO_GRUPO_USUPER IN (:u, :g, :a) ' +
+      ' ORDER BY SUBKEY_USUPER, ' +
+      '          CASE USUARIO_GRUPO_USUPER ' +
+      '            WHEN :a THEN 1 ' +
+      '            WHEN :g THEN 2 ' +
+      '            WHEN :u THEN 3 ' +
+      '          END';
+    qry.ParamByName('key').AsString := AFormName;
+    qry.ParamByName('u').AsString   := oUser;
+    qry.ParamByName('g').AsString   := oGroup;
+    qry.ParamByName('a').AsString   := oAll;
+    qry.Open;
+    while not qry.Eof do
+    begin
+      v.sValue     := qry.FieldByName('VALUE_USUPER').AsString;
+      v.sValueText := qry.FieldByName('VALUE_TEXT_USUPER').AsWideString;
+      Result.AddOrSetValue(qry.FieldByName('SUBKEY_USUPER').AsString, v);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TdmPerfiles.PrecargarPerfilesUsuario;
+var
+  qry: TUniQuery;
+  sKeyForm, sSubKey: string;
+  v: TDictValue;
+  PerfilDic: TProfileDicc;
+begin
+  FCachePerfilesForm.Clear;
+  FCachePrecargada := False;
+  if (oConn = nil) or (not oConn.Connected) then Exit;
+  try
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER, VALUE_TEXT_USUPER ' +
+        '  FROM fza_usuarios_perfiles ' +
+        ' WHERE USUARIO_GRUPO_USUPER IN (:u, :g, :a) ' +
+        ' ORDER BY KEY_USUPER, SUBKEY_USUPER, ' +
+        '          CASE USUARIO_GRUPO_USUPER ' +
+        '            WHEN :a THEN 1 ' +
+        '            WHEN :g THEN 2 ' +
+        '            WHEN :u THEN 3 ' +
+        '          END';
+      qry.ParamByName('u').AsString := oUser;
+      qry.ParamByName('g').AsString := oGroup;
+      qry.ParamByName('a').AsString := oAll;
+      qry.Open;
+      while not qry.Eof do
+      begin
+        sKeyForm := qry.FieldByName('KEY_USUPER').AsString;
+        sSubKey  := qry.FieldByName('SUBKEY_USUPER').AsString;
+        v.sValue     := qry.FieldByName('VALUE_USUPER').AsString;
+        v.sValueText := qry.FieldByName('VALUE_TEXT_USUPER').AsWideString;
+        if not FCachePerfilesForm.TryGetValue(sKeyForm, PerfilDic) then
+        begin
+          PerfilDic := TProfileDicc.Create;
+          FCachePerfilesForm.Add(sKeyForm, PerfilDic);
+        end;
+        PerfilDic.AddOrSetValue(sSubKey, v);
+        qry.Next;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+    FCachePrecargada := True;
+  except
+    // Si la precarga falla, dejamos FCachePrecargada=False para que los
+    // callers (GetFormUserProfile) caigan al camino SQL/SP anterior y la
+    // app siga funcionando.
+    FCachePerfilesForm.Clear;
+  end;
+end;
+
+function TdmPerfiles.ObtenerPerfilFormCache(const AFormName: string;
+                                       out APerfilDic: TProfileDicc): Boolean;
+var
+  Cached: TProfileDicc;
+begin
+  APerfilDic := nil;
+  Result := False;
+  if not FCachePrecargada then Exit;
+  // Servimos siempre un clon: el caller (TLayoutLoader, etc.) hace
+  // FreeAndNil de FPerfil en su Destroy. Si devolviéramos la referencia
+  // cacheada, la siguiente apertura del mismo form crashearía.
+  if FCachePerfilesForm.TryGetValue(AFormName, Cached) then
+    APerfilDic := ClonarPerfilDicc(Cached)
+  else
+    APerfilDic := TProfileDicc.Create;
+  Result := True;
+end;
+
+procedure TdmPerfiles.ResincronizarCachePerfilForm(const AFormName: string);
+var
+  Nuevo: TProfileDicc;
+begin
+  if not FCachePrecargada then Exit;
+  Nuevo := CargarPerfilFormDesdeDB(AFormName);
+  if Nuevo.Count > 0 then
+    FCachePerfilesForm.AddOrSetValue(AFormName, Nuevo)
+  else
+  begin
+    FreeAndNil(Nuevo);
+    FCachePerfilesForm.Remove(AFormName);
+  end;
+end;
+
+procedure TdmPerfiles.InvalidarCachePerfiles;
+begin
+  FCachePerfilesForm.Clear;
+  FCachePrecargada := False;
 end;
 
 procedure TdmPerfiles.DeleteProfile(sUserGroup,
@@ -183,6 +344,7 @@ begin
   finally
     FreeAndNil(unqryDelete);
   end;
+  ResincronizarCachePerfilForm(sKey);
 end;
 
 function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey,
@@ -261,6 +423,7 @@ begin
   unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsString := psValueText;
   unstdGrabarPerfil.ParamByName('pUSUARIO_MODIF').AsString := oUser;
   unstdGrabarPerfil.Execute;
+  ResincronizarCachePerfilForm(pskey);
 end;
 
 procedure TdmPerfiles.GrabarPerfilesBatch(const AItems: TPerfilList);
@@ -271,6 +434,8 @@ var
   sSQL: TStringBuilder;
   qry: TUniQuery;
   sUsuarioActual: string;
+  oClavesAfectadas: TList<string>;
+  sClave: string;
 begin
   if (AItems = nil) or (AItems.Count = 0) then Exit;
 
@@ -326,6 +491,18 @@ begin
   finally
     FreeAndNil(sSQL);
     FreeAndNil(qry);
+  end;
+
+  // Resincronizar la caché solo para las KEY tocadas
+  oClavesAfectadas := TList<string>.Create;
+  try
+    for i := 0 to AItems.Count - 1 do
+      if oClavesAfectadas.IndexOf(AItems[i].KeyPerfil) < 0 then
+        oClavesAfectadas.Add(AItems[i].KeyPerfil);
+    for sClave in oClavesAfectadas do
+      ResincronizarCachePerfilForm(sClave);
+  finally
+    FreeAndNil(oClavesAfectadas);
   end;
 end;
 
