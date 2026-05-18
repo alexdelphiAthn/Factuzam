@@ -264,7 +264,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitTop = 130
           object btnAddLinea: TcxButton
             Left = 12
             Top = 4
@@ -299,8 +298,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           Height = 453
           Align = alClient
           TabOrder = 2
-          ExplicitTop = 166
-          ExplicitHeight = 483
           object tvLineas: TcxGridDBTableView
             OnCustomDrawCell = tvLineasCustomDrawCell
             OnEditKeyDown = tvLineasEditKeyDown
@@ -312,6 +309,7 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
                 Kind = skSum
                 Column = dbcLinTotalArticulos
               end>
+            OptionsBehavior.GoToNextCellOnEnter = True
             OptionsView.Footer = True
             OptionsView.GroupByBox = False
             object dbcLinFamilia: TcxGridDBColumn
