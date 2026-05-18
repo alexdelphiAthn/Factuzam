@@ -136,6 +136,12 @@ procedure RellenarImageListPaleta(AImages: TCustomImageList;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
 
+// Pinta un cuadradito de color en ABmp (lo redimensiona a ALado x ALado).
+// Devuelve True si pinto algo (AInfo valido); False si no, y deja ABmp sin
+// tocar. Util para glyphs de botones / iconos pequenyos.
+function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
+                              ALado: Integer = 14): Boolean;
+
 // Muestra un selector modal con un TListBox owner-drawn que pinta el
 // cuadradito de paleta basica al lado de cada AV. Pensado para combos de
 // atributo donde TcxComboBox no permite owner-draw nativo. Si `AIdVa` es
@@ -565,6 +571,23 @@ begin
   finally
     FreeAndNil(Bmp);
   end;
+end;
+
+function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
+                              ALado: Integer): Boolean;
+begin
+  Result := False;
+  if (ABmp = nil) or (not AInfo.EsValido) or (ALado < 4) then Exit;
+  ABmp.PixelFormat := pf24bit;
+  ABmp.SetSize(ALado, ALado);
+  ABmp.Canvas.Brush.Style := bsSolid;
+  ABmp.Canvas.Brush.Color := AInfo.Color;
+  ABmp.Canvas.FillRect(System.Types.Rect(0, 0, ALado, ALado));
+  ABmp.Canvas.Brush.Style := bsClear;
+  ABmp.Canvas.Pen.Color   := clBlack;
+  ABmp.Canvas.Pen.Width   := 1;
+  ABmp.Canvas.Rectangle(0, 0, ALado, ALado);
+  Result := True;
 end;
 
 { TfrmSelPalAvAux }
