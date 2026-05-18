@@ -21,8 +21,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections, Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   cxGraphics,
-  cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes,
-  cxImageComboBox;
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
 
 type
   TInfoBasico = record
@@ -136,17 +135,6 @@ procedure RellenarImageListPaleta(AImages: TCustomImageList;
                                   const AIdVa: string;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
-
-// Configura un TcxImageComboBoxProperties para mostrar cada AV con su
-// cuadradito (si esta en la paleta). Hace dos cosas:
-//   1) Rellena AImages con un swatch por AV con color en paleta.
-//   2) Vuelca los Items con Description=Value=AV e ImageIndex=swatch
-//      (-1 si el AV no esta en la paleta — se muestra solo texto).
-// El llamante solo tiene que tener un TImageList preparado y los AVs.
-procedure ConfigurarImageComboConPaleta(AProps : TcxImageComboBoxProperties;
-                                        AImages: TCustomImageList;
-                                        const AIdVa: string;
-                                        const AAvs : array of string);
 
 implementation
 
@@ -547,44 +535,6 @@ begin
     end;
   finally
     FreeAndNil(Bmp);
-  end;
-end;
-
-procedure ConfigurarImageComboConPaleta(AProps : TcxImageComboBoxProperties;
-                                        AImages: TCustomImageList;
-                                        const AIdVa: string;
-                                        const AAvs : array of string);
-var
-  AvToIdx : TDictionary<string, Integer>;
-  i, Idx  : Integer;
-  Av, Clave : string;
-  Item    : TcxImageComboBoxItem;
-begin
-  if AProps = nil then Exit;
-  AProps.Items.BeginUpdate;
-  try
-    AProps.Items.Clear;
-    AProps.Images := AImages;
-    AvToIdx := TDictionary<string, Integer>.Create;
-    try
-      RellenarImageListPaleta(AImages, AIdVa, AAvs, AvToIdx);
-      for i := 0 to High(AAvs) do
-      begin
-        Av := AAvs[i];
-        Item := AProps.Items.Add;
-        Item.Description := Av;
-        Item.Value       := Av;
-        Clave := UpperCase(Trim(Av));
-        if AvToIdx.TryGetValue(Clave, Idx) then
-          Item.ImageIndex := Idx
-        else
-          Item.ImageIndex := -1;
-      end;
-    finally
-      FreeAndNil(AvToIdx);
-    end;
-  finally
-    AProps.Items.EndUpdate;
   end;
 end;
 

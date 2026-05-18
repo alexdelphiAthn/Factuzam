@@ -24,8 +24,7 @@ uses
   cxClasses, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
   cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox, cxMaskEdit,
-  cxDropDownEdit, cxDBEdit, cxLabel, cxGridBandedTableView, cxImageComboBox,
-  ImgList,
+  cxDropDownEdit, cxDBEdit, cxLabel, cxGridBandedTableView,
   cxGridDBBandedTableView, cxLocalization, cxCurrencyEdit,
   dxBevel, cxDBNavigator, UniDataInventarios, cxGridExportLink,
   dxDateRanges, MemDS, DBAccess, Uni, inMtoGen, Vcl.Menus, cxButtons,
@@ -33,7 +32,7 @@ uses
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnMan, System.Generics.Collections;
+  Vcl.ActnMan;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -210,10 +209,6 @@ type
     FUltimoArticuloPadre: string;
     FProcesandoAtributo: Boolean;
     FInicializandoCombo: Boolean;
-    // ImageList compartido por los combos SKU1..SKU5 para mostrar el
-    // cuadradito de paleta junto a cada AV. Se rellena dinamicamente en
-    // tvLineasInitEdit segun el atributo de la fila.
-    FImagesSwatch: TImageList;
 
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -325,7 +320,6 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
-  FImagesSwatch := TImageList.Create(Self);
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -729,22 +723,19 @@ end;
 procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;
   AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
 var
-  Combo: TcxImageComboBox;
+  Combo: TcxComboBox;
   Qry: TUniQuery;
-  ArticuloPadre, NombreAtb, IdVa: string;
+  ArticuloPadre: string;
   OrdenColumna: Integer;
   ValorActual: Variant;
-  Avs: TArray<string>;
-  Mapa: TDictionary<string, string>;
 begin
   // Solo nos interesan las columnas dinamicas SKU1..SKU5 (Tag = 1..5).
   // Al iniciar la edicion, poblamos el combo con los valores validos del
-  // atributo correspondiente para el articulo padre actual y, si el atributo
-  // tiene paleta basica, anyadimos un cuadradito de color por AV.
+  // atributo correspondiente para el articulo padre actual.
   if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
-  if not (AEdit is TcxImageComboBox) then Exit;
+  if not (AEdit is TcxComboBox) then Exit;
 
-  Combo := TcxImageComboBox(AEdit);
+  Combo := TcxComboBox(AEdit);
   Combo.Tag := AItem.Tag;
   Combo.Properties.OnEditValueChanged := OnAtributoChanged;
   Combo.OnEnter := nil;
@@ -756,7 +747,6 @@ begin
   else
     ArticuloPadre := '';
 
-  // 1) AVs validos para (articulo, posicion)
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := oConn;
@@ -776,42 +766,34 @@ begin
     Qry.ParamByName('PADRE').AsString  := ArticuloPadre;
     Qry.ParamByName('ORDEN').AsInteger := OrdenColumna;
     Qry.Open;
-    SetLength(Avs, 0);
-    while not Qry.Eof do
-    begin
-      SetLength(Avs, Length(Avs) + 1);
-      Avs[High(Avs)] := Qry.FieldByName('AV').AsString;
-      Qry.Next;
+    Combo.Properties.Items.BeginUpdate;
+    try
+      Combo.Properties.Items.Clear;
+      while not Qry.Eof do
+      begin
+        Combo.Properties.Items.Add(Qry.FieldByName('AV').AsString);
+        Qry.Next;
+      end;
+    finally
+      Combo.Properties.Items.EndUpdate;
     end;
   finally
     FreeAndNil(Qry);
   end;
 
-  // 2) ID_VA del atributo de la fila (Color / Talla / ...) via el NOMBRE.
-  // Si no se resuelve, IdVa = '' y ConfigurarImageComboConPaleta solo pinta
-  // los items sin cuadradito (sin romper nada).
-  IdVa := '';
-  if dmmInventarios.cdsLineas.Active then
-  begin
-    NombreAtb := dmmInventarios.cdsLineas.FieldByName(
-                   'ATTR' + IntToStr(OrdenColumna) + '_NOMBRE').AsString;
-    Mapa := ObtenerMapaAtributosGlobal;
-    if Mapa <> nil then
-      Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
-  end;
-
-  // 3) Items + swatches en un solo paso
-  ConfigurarImageComboConPaleta(Combo.Properties, FImagesSwatch, IdVa, Avs);
-
   // Si la celda esta vacia, preseleccionamos la primera opcion y, al entrar
-  // el editor, abrimos el dropdown automaticamente.
+  // el editor, abrimos el dropdown automaticamente (igual que inMtoCajaOpe).
   if Combo.Properties.Items.Count > 0 then
   begin
     ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
     if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
     begin
-      // NO ponemos guard FInicializandoCombo aqui: queremos que ItemIndex := 0
-      // dispare OnAtributoChanged y haga PostEditValue + rebuild del SKU.
+      // Mismo patron que inMtoCajaOpe: NO ponemos guard FInicializandoCombo
+      // alrededor de ItemIndex := 0 aqui. El fin es justamente que la
+      // asignacion dispare OnAtributoChanged, que a su vez hace PostEditValue
+      // (commit del valor al campo ATTR1_VALOR via la DataLink) y rebuild
+      // del SKU. Si ponemos guard, el campo se queda vacio y al salir de
+      // la celda no hay valor (que era el bug previo).
       Combo.OnEnter := ForzarDespliegue;
       Combo.ItemIndex := 0;
     end;
@@ -842,17 +824,17 @@ end;
 
 procedure TfrmMtoInventarios.ForzarDespliegue(Sender: TObject);
 var
-  Combo: TcxCustomComboBox;
+  Combo: TcxComboBox;
 begin
-  // Soporta TcxComboBox y TcxImageComboBox via su ancestro comun.
-  if not (Sender is TcxCustomComboBox) then Exit;
-  Combo := TcxCustomComboBox(Sender);
+  if not (Sender is TcxComboBox) then Exit;
+  Combo := TcxComboBox(Sender);
   // Reasignamos ItemIndex con el guard FInicializandoCombo para que
   // OnAtributoChanged no recalcule un SKU intermedio antes de que el usuario
   // confirme.
   FInicializandoCombo := True;
   try
-    Combo.ItemIndex := 0;
+    if Combo.Properties.Items.Count > 0 then
+      Combo.ItemIndex := 0;
   finally
     FInicializandoCombo := False;
   end;
@@ -890,15 +872,13 @@ begin
   // Defensa: aseguramos que el campo ATTRn_VALOR tiene el valor del editor.
   // Aunque la DataLink deberia hacerlo, en algunos casos no se sincroniza
   // antes de que GenerarSkuFinal lea, dejando el SKU sin atributos.
-  // Cast a TcxCustomComboBox para soportar tanto TcxComboBox como
-  // TcxImageComboBox (los combos de SKU son del segundo tipo).
-  if (Edit is TcxCustomComboBox) then
+  if (Edit is TcxComboBox) then
   begin
-    var ColIdx := TcxCustomComboBox(Edit).Tag;
+    var ColIdx := TcxComboBox(Edit).Tag;
     if (ColIdx >= 1) and (ColIdx <= 5) then
       dmmInventarios.cdsLineas.FieldByName(
         'ATTR' + IntToStr(ColIdx) + '_VALOR').AsString :=
-                                    VarToStr(TcxCustomComboBox(Edit).EditValue);
+                                          VarToStr(TcxComboBox(Edit).EditValue);
   end;
 
   SkuNuevo := dmmInventarios.GenerarSkuFinal(
