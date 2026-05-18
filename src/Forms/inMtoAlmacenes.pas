@@ -108,13 +108,13 @@ type
   private
     { Private declarations }
   public
+    dmmAlmacenes: TdmAlmacenes;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoAlmacenes: TfrmMtoAlmacenes;
-  dmmAlmacenes: TdmAlmacenes;
 
 implementation
 

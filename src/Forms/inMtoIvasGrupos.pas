@@ -45,13 +45,13 @@ type
   public
     { Public declarations }
   public
+    dmmIvasGrupos: TdmIvasGrupos;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
 end;
 
 var
   frmMtoIvasGrupos: TfrmMtoIvasGrupos;
-  dmmIvasGrupos : TdmIvasGrupos;
 
 implementation
 
