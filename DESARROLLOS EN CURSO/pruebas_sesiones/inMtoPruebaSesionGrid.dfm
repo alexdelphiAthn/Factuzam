@@ -293,8 +293,8 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           Left = 4
           Top = 178
           Width = 1084
-          Height = 250
-          Align = alTop
+          Height = 467
+          Align = alClient
           TabOrder = 2
           object tvLineas: TcxGridDBTableView
             OnFocusedRecordChanged = tvLineasFocusedRecordChanged
@@ -311,6 +311,11 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               Caption = 'C'#243'd. art'#237'culo'
               DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
               Options.Editing = False
+              Width = 130
+            end
+            object dbcLinRefPrv: TcxGridDBColumn
+              Caption = 'Modelo prov.'
+              DataBinding.FieldName = 'REF_PRV_SESLIN'
               Width = 130
             end
             object dbcLinDescripcion: TcxGridDBColumn
@@ -380,29 +385,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           object glLineas: TcxGridLevel
             GridView = tvLineas
           end
-        end
-        object pnlMatrizCab: TPanel
-          Left = 4
-          Top = 432
-          Width = 1084
-          Height = 28
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 3
-          object lblMatriz: TcxLabel
-            Left = 4
-            Top = 4
-            Caption = 'Tallas de la l'#237'nea seleccionada (introduce cantidades por talla):'
-            TabOrder = 0
-          end
-        end
-        object sbMatriz: TScrollBox
-          Left = 4
-          Top = 464
-          Width = 1084
-          Height = 181
-          Align = alClient
-          TabOrder = 4
         end
       end
     end
