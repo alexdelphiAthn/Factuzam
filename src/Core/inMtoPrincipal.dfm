@@ -10,8 +10,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 1140
   ExplicitHeight = 613
   TextHeight = 19
@@ -35,7 +33,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
-      OnChange = pcPrincipalChange
       ExplicitWidth = 1122
       ExplicitHeight = 451
       ClientRectBottom = 457
@@ -62,7 +59,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1120
         Height = 69
         Width = 1122
       end
