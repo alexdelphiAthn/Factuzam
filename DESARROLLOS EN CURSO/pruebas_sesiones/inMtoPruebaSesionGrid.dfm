@@ -374,14 +374,27 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               Caption = 'Sistema tallas'
               DataBinding.FieldName = 'ID_AC_PIVOT_SESLIN'
               PropertiesClassName = 'TcxLookupComboBoxProperties'
-              Properties.DropDownAutoSize = True
+              Properties.DropDownAutoSize = False
+              Properties.DropDownWidth = 380
               Properties.ImmediatePost = True
               Properties.KeyFieldNames = 'ID_AC'
               Properties.ListColumns = <
                 item
+                  Caption = 'Sistema'
+                  Width = 240
                   FieldName = 'NOMBRE_AC'
+                end
+                item
+                  Caption = 'Desde'
+                  Width = 60
+                  FieldName = 'PRIMERA'
+                end
+                item
+                  Caption = 'Hasta'
+                  Width = 60
+                  FieldName = 'ULTIMA'
                 end>
-              Properties.ListOptions.ShowHeader = False
+              Properties.ListOptions.ShowHeader = True
               Properties.OnEditValueChanged = dbcLinTallasPropertiesEditValueChanged
               Width = 170
             end
