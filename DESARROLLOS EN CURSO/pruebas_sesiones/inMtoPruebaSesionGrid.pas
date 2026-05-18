@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoPruebaSesionGrid                                         }
 {    Tipo:       Formulario (Mto)                                              }
@@ -59,7 +59,7 @@ uses
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoGen,
-  UniDataComprasSesiones;
+  UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons;
 
 const
   // Numero maximo de columnas de talla inline. 15 cubre con holgura los
