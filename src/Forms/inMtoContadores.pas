@@ -65,13 +65,13 @@ type
   private
     { Private declarations }
   public
+    dmmContadores: TdmContadores;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoContadores: TfrmMtoContadores;
-  dmmContadores:TdmContadores;
 
 implementation
 

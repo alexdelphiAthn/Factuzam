@@ -76,12 +76,12 @@ type
     { Private declarations }
   public
     { Public declarations }
+    dmmDataGen: TdmGenFilter;
     sFicha:string;
   end;
 
 var
   frmModalGenFilter: TfrmModalGenFilter;
-  dmmDataGen:TdmGenFilter;
 
 implementation
 

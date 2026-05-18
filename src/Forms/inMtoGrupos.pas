@@ -50,13 +50,13 @@ type
   private
     { Private declarations }
   public
+    dmmGrupos: TdmGrupos;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
 var
   frmMtoGrupos: TfrmMtoGrupos;
-  dmmGrupos:TdmGrupos;
 
 implementation
 
