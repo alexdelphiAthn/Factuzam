@@ -134,6 +134,15 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       TabOrder = 6
       OnClick = btnRotarDerClick
     end
+    object btnLayout: TcxButton
+      Left = 472
+      Top = 130
+      Width = 240
+      Height = 40
+      Caption = 'Guardar &layout'
+      TabOrder = 8
+      OnClick = btnLayoutClick
+    end
   end
   object pnlImage: TPanel [2]
     Left = 0

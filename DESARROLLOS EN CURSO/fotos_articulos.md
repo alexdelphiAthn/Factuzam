@@ -53,20 +53,28 @@ Para usarse dentro de un formulario modal existe la variante
 `TfrmModalFotoArticulo.Ejecutar(...)`, que abre la misma pantalla con
 `ShowModal`.
 
-### Comportamiento transversal
+### Comportamiento transversal (cero pulsaciones)
 
 La pantalla flotante es **única en toda la sesión** (singleton
-`frmFotoArticulo`) y sigue automáticamente al Mto que tenga el foco:
+`frmFotoArticulo`) y se abre / sigue al Mto activo de forma
+automática, sin necesidad de pulsar `Ctrl + Alt + F`:
 
-- Una sola pulsación de `Ctrl + Alt + F` la "ancla" a la sesión.
-- Al **cambiar de pestaña** en `pcPrincipal` (Articulos → Facturas →
-  Pedidos…) el handler `TfrmMtoPrincipal.pcPrincipalChange` re-vincula la
-  pantalla al nuevo Mto activo y refresca la foto al artículo / SKU del
-  registro activo (sin necesidad de volver a pulsar `Ctrl + Alt + F`).
+- Al abrir el **primer Mto con artículo** activo (Artículos, Facturas,
+  Pedidos, etc.) la ventana flotante se muestra sola. El disparador es
+  `TfrmMtoGen.FormShow`, que invoca
+  `TfrmMtoPrincipal.EngancharFotoAlMto(Self)`.
+- Al **cambiar de pestaña** en `pcPrincipal` el handler
+  `pcPrincipalChange` llama igualmente a `EngancharFotoAlMto`, que
+  re-vincula los `DataSources` y refresca la foto al artículo / SKU
+  activo en el nuevo Mto.
 - Al **moverse el cursor** dentro del Mto activo (cambio de fila en el
   grid principal o en cualquier sub-grid declarado en
   `DataSourcesParaFoto`) el hook `OnDataChange` dispara
   `SetArticuloSku` con el nuevo par.
+- Si el usuario **cierra la ventana** explícitamente, el
+  `FormClose` notifica al principal vía `NotificarFotoCerrada`, que
+  desactiva el flag `FFotoAutoMostrar`. A partir de ahí la ventana
+  ya no se vuelve a abrir sola; sólo `Ctrl + Alt + F` la re-activa.
 
 Los Mtos con sub-grids (Facturas, Pedidos, Albaranes, Tarifas,
 ComprasSesiones, Inventarios) sobreescriben dos métodos virtuales de
