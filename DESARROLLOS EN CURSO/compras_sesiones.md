@@ -256,7 +256,7 @@ a las líneas seleccionadas:
 ```
 precio_base   = precio_coste × (1 + PORCENTAJE_MARGEN_SES / 100)
 precio_redond = redondeo_arriba(precio_base, MULTIPLO_REDONDEO_SES)
-precio_venta  = precio_redond + AJUSTE_FINAL_SES
+precio_venta  = precio_redond − AJUSTE_FINAL_SES
 ```
 
 Parámetros (cabecera de sesión, todos persistentes):
@@ -265,12 +265,12 @@ Parámetros (cabecera de sesión, todos persistentes):
 |-----------------------------|------------------------------------------------------|---------|
 | `PORCENTAJE_MARGEN_SES`     | Margen comercial sobre coste (default; override por línea) | 55.0    |
 | `MULTIPLO_REDONDEO_SES`     | Múltiplo al que sube el precio (`0` = sin redondeo) | 0.50    |
-| `AJUSTE_FINAL_SES`          | Suma/resta final (negativo para terminar en .99)     | -0.01   |
+| `AJUSTE_FINAL_SES`          | Descuento final que se RESTA del redondeado (positivo para terminar en .99) | 0.01 |
 | `ESPRECIOS_SIN_IVA_SES`     | Si los precios introducidos son sin IVA o con IVA    | 'S'     |
 | `ESPRECIO_POR_SKU_SES`      | Activa el sub-grid de overrides por SKU              | 'N'     |
 
 Ejemplo: coste 4,80 € × 55 % = 7,44 → redondeo arriba a 0,50 = 7,50 →
-ajuste −0,01 = **7,49 €**.
+ajuste 0,01 (se resta) = **7,49 €**.
 
 La fórmula se aplica al pulsar el botón, no automáticamente al teclear el
 coste — así el usuario puede ajustar manualmente sin perder el control. El
@@ -333,8 +333,8 @@ Parámetros de fórmula de precio venta (ver §2.5 y §11.1):
 
 - `MULTIPLO_REDONDEO_SES decimal(19,6)` — múltiplo al que sube el precio
   venta calculado; `0` = sin redondeo.
-- `AJUSTE_FINAL_SES decimal(19,6)` — sumando final tras el redondeo,
-  típicamente negativo (−0.01 para acabar en .99).
+- `AJUSTE_FINAL_SES decimal(19,6)` — descuento final que se RESTA al
+  precio redondeado; típicamente 0.01 para acabar en .99.
 - `ESPRECIO_POR_SKU_SES char(1)` — `'S'` activa el sub-grid de precios
   por SKU (`fza_compras_sesiones_lineas_skus_precios`).
 
