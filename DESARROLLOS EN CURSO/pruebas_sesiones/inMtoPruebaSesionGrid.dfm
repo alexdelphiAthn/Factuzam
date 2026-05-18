@@ -298,6 +298,8 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
           Height = 453
           Align = alClient
           TabOrder = 2
+          OnEnter = cxgrdLineasEnter
+          OnExit = cxgrdLineasExit
           object tvLineas: TcxGridDBTableView
             OnCustomDrawCell = tvLineasCustomDrawCell
             OnEditKeyDown = tvLineasEditKeyDown
