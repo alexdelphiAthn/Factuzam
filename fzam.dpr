@@ -183,6 +183,7 @@ uses
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
+  inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
   inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
   inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
   inLibArticulosValidador in 'src\Lib\inLibArticulosValidador.pas',

@@ -59,6 +59,7 @@ uses
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoGen,
+  inLibGridTallasInline,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges;
 
@@ -69,11 +70,9 @@ const
   CANT_TALLAS_MAX = 20;
 
 type
-  TPosConjunto = record
-    IdAv  : Integer;
-    Valor : string;
-  end;
-  TArrPosConjunto = TArray<TPosConjunto>;
+  // Los tipos TPosConjunto / TArrPosConjunto viven ahora en
+  // inLibGridTallasInline (compartidos con futuros Mtos de Pedidos
+  // / Albaranes / Facturas que reusen el patron).
 
   TfrmMtoPruebaSesionGrid = class(TfrmMtoGen)
     // ------------------------------------------------------------------
@@ -176,28 +175,19 @@ type
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
   private
+    FGestorTallas : TGestorGridTallas;     // mueve toda la logica reusable
+                                           // de tallas pivotadas a la lib
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
-    FConjuntoPos  : TDictionary<Integer, TArrPosConjunto>;
-                    // ID_AC -> posiciones ordenadas (IdAv, Valor)
     FBasicosColor : TArray<string>;
     FQryConjuntosTallas : TUniQuery;
     FDsConjuntosTallas  : TDataSource;
     FBmpSwatch    : TBitmap;
     function  Dmm: TdmComprasSesiones;
-    procedure ActivarEnterComoTab(AActivo: Boolean);
     procedure CargarBasicosColor;
     procedure CrearColumnasTallas;
-    procedure TallaCellEditValueChanged(Sender: TObject);
-    function  GetPosicionesConjunto(AIdAc: Integer): TArrPosConjunto;
-    function  MaxLongConjuntosSesion: Integer;
-    procedure RecalcularColumnasTallasDocumento;
-    procedure ActualizarCaptionsTallasLineaActiva;
-    procedure CargarCantidadesTodasLineas;
+    procedure InicializarGestorTallas;
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
-    procedure CargarCantidadesUnaLinea(ARecordIndex: Integer; ALinea: Integer);
-    procedure PersistirCantidad(ALinea, AIdAv: Integer; ACantidad: Double);
-    procedure RefrescarTotalesLinea(ALinea: Integer);
     procedure ProponerPrecioVenta;
   public
     procedure CrearTablaPrincipal; override;
@@ -226,38 +216,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // ===========================================================================
 //   TJvEnterAsTab — apagar mientras el grid tiene foco
 // ===========================================================================
-// El TJvEnterAsTab heredado de TfrmBase (jvntrstb1) convierte VK_RETURN en
-// VK_TAB a nivel de mensaje de aplicacion, asi que la pulsacion de Enter no
-// llega nunca al grid (sale del control en lugar de mover de celda). Mismo
-// patron que en inMtoCajaOpe / inMtoInventarios / inMtoGeneradorProcesos:
-// recorremos componentes en los 3 niveles habituales (Self, Owner, MainForm)
-// y conmutamos EnterAsTab.
-procedure TfrmMtoPruebaSesionGrid.ActivarEnterComoTab(AActivo: Boolean);
-  procedure CambiarEn(AOwner: TComponent);
-  var
-    i : Integer;
-  begin
-    if not Assigned(AOwner) then Exit;
-    for i := 0 to AOwner.ComponentCount - 1 do
-      if AOwner.Components[i] is TJvEnterAsTab then
-        TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
-  end;
-begin
-  CambiarEn(Self);
-  CambiarEn(Self.Owner);
-  CambiarEn(Application.MainForm);
-end;
+// TJvEnterAsTab heredado de TfrmBase convierte VK_RETURN en VK_TAB a nivel
+// de mensaje. Lo apagamos al entrar al grid y reactivamos al salir, asi
+// Enter navega celda a celda (combinado con FocusCellOnTab del grid).
+// La logica vive en inLibGridTallasInline.ActivarEnterComoTab — funciona
+// igual para cualquier Mto que use el patron.
 
 procedure TfrmMtoPruebaSesionGrid.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
-  ActivarEnterComoTab(False);
+  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
 end;
 
 procedure TfrmMtoPruebaSesionGrid.cxgrdLineasExit(Sender: TObject);
 begin
   inherited;
-  ActivarEnterComoTab(True);
+  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoPruebaSesionGrid.btnGrabarClick(Sender: TObject);
@@ -265,9 +239,9 @@ begin
   inherited;
   // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
   // row (los Posts del master/detail provocan re-fetch). Recargamos
-  // las cantidades desde fza_compras_sesiones_celdas para que las
-  // celdas talla vuelvan a mostrar lo que el usuario tecleo.
-  CargarCantidadesTodasLineas;
+  // las cantidades desde la tabla de celdas para que las celdas
+  // talla vuelvan a mostrar lo que el usuario tecleo.
+  if Assigned(FGestorTallas) then FGestorTallas.CargarCantidadesTodasLineas;
 end;
 
 // ===========================================================================
@@ -301,8 +275,12 @@ begin
   end;
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
 
-  RecalcularColumnasTallasDocumento;
-  CargarCantidadesTodasLineas;
+  InicializarGestorTallas;
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.CargarCantidadesTodasLineas;
+  end;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.ResetForm;
@@ -314,13 +292,9 @@ procedure TfrmMtoPruebaSesionGrid.FormCreate(Sender: TObject);
 begin
   // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
   // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
-  // grid dispara OnFocusedRecordChanged) tiene que estar creado ANTES.
-  // Si FConjuntoPos o FDsConjuntosTallas aun son nil al disparar el
-  // primer FocusedRecordChanged, ActualizarCaptionsTallasLineaActiva
-  // hace `FConjuntoPos.TryGetValue` con Self=nil -> AV en
-  // TDictionary.Hash.
-  FBmpSwatch   := TBitmap.Create;
-  FConjuntoPos := TDictionary<Integer, TArrPosConjunto>.Create;
+  // grid dispara OnFocusedRecordChanged sobre el gestor de tallas) tiene
+  // que estar creado ANTES del inherited.
+  FBmpSwatch := TBitmap.Create;
   // Query propia del lookup "Sistema tallas": solo conjuntos del
   // atributo pivot (ID_VA_AC = 'TAL'), no colores ni otros ejes. Trae
   // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
@@ -345,12 +319,10 @@ begin
   FDsConjuntosTallas := TDataSource.Create(Self);
   FDsConjuntosTallas.DataSet := FQryConjuntosTallas;
 
-  // CrearColumnasTallas tambien tiene que correr antes del inherited:
-  // CrearTablaPrincipal (lanzada desde inherited) llama a
-  // RecalcularColumnasTallasDocumento y CargarCantidadesTodasLineas;
-  // si las columnas no existen todavia ambos son no-op y al abrir
-  // una sesion existente las celdas de talla quedan ocultas y sin
-  // valores (necesitas mover una linea para que se refresquen).
+  // CrearColumnasTallas debe correr antes de inherited (CrearTablaPrincipal,
+  // lanzada desde inherited, llama a RecalcularMaxColumnas y
+  // CargarCantidadesTodasLineas del gestor; si las columnas no existen
+  // todavia ambos son no-op).
   CrearColumnasTallas;
 
   inherited;
@@ -379,7 +351,7 @@ begin
     FreeAndNil(FQryConjuntosTallas);
   end;
   FreeAndNil(FDsConjuntosTallas);
-  FreeAndNil(FConjuntoPos);
+  FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
   inherited;
 end;
@@ -426,7 +398,8 @@ begin
   // Inserta CANT_TALLAS_MAX columnas no-bound entre dbcLinTallas (sistema
   // de tallas) y dbcLinTotalTallas. Cada columna persiste su valor en el
   // DataController.Values del cxGrid; cuando el usuario teclea, el
-  // OnEditValueChanged actualiza fza_compras_sesiones_celdas.
+  // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
+  // que upsertea en la tabla de celdas y refresca totales.
   if not Assigned(dbcLinTotalTallas) then Exit;
   idxRefe := dbcLinTotalTallas.Index;
   for i := 0 to CANT_TALLAS_MAX - 1 do
@@ -438,330 +411,75 @@ begin
     col.Width       := 50;
     col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
     col.Visible     := False;             // se hara visible segun max
-    // Unbound: sin DataBinding.FieldName, valor float en la cache del grid
     col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    // PropertiesClass := X; el getter `Properties` crea la instancia y
-    // ya podemos castearla y configurarla. CreateProperties es private.
     col.PropertiesClass := TcxCurrencyEditProperties;
     curProps := TcxCurrencyEditProperties(col.Properties);
     curProps.DisplayFormat := '#,##0';
-    curProps.OnEditValueChanged := TallaCellEditValueChanged;
+    // El handler se asigna en InicializarGestorTallas (necesita la
+    // instancia del gestor para delegar). Aqui solo dejamos las
+    // columnas listas con su Tag posicional.
     FTallaColumns[i] := col;
   end;
 end;
 
-function TfrmMtoPruebaSesionGrid.GetPosicionesConjunto(AIdAc: Integer)
-  : TArrPosConjunto;
+procedure TfrmMtoPruebaSesionGrid.InicializarGestorTallas;
 var
-  q      : TUniQuery;
-  arr    : TArrPosConjunto;
-  i      : Integer;
-  posReg : TPosConjunto;
-begin
-  // Devuelve la lista ordenada de (ID_AV, VALOR) del conjunto pivot
-  // indicado. Cacheado en FConjuntoPos para no re-consultar en cada
-  // refresco de la matriz.
-  if AIdAc <= 0 then Exit(nil);
-  if FConjuntoPos = nil then Exit(nil); // form en construccion/destruccion
-  if FConjuntoPos.TryGetValue(AIdAc, Result) then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT ACD.ID_AV_ACD, AV.AV AS VALOR ' +
-      '  FROM fza_atributos_conjuntos_det ACD ' +
-      '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-      ' WHERE ACD.ID_AC_ACD = :p ' +
-      ' ORDER BY ACD.ORDEN_ACD, AV.AV';
-    q.ParamByName('p').AsInteger := AIdAc;
-    q.Open;
-    SetLength(arr, q.RecordCount);
-    i := 0;
-    while not q.Eof do
-    begin
-      posReg.IdAv  := q.FieldByName('ID_AV_ACD').AsInteger;
-      posReg.Valor := q.FieldByName('VALOR').AsString;
-      arr[i] := posReg;
-      Inc(i);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-  FConjuntoPos.Add(AIdAc, arr);
-  Result := arr;
-end;
-
-function TfrmMtoPruebaSesionGrid.MaxLongConjuntosSesion: Integer;
-var
-  q     : TUniQuery;
-  arr   : TArrPosConjunto;
-  iIdAc : Integer;
-begin
-  // Recorre los ID_AC_PIVOT_SESLIN distintos de la sesion en curso y
-  // devuelve el numero maximo de valores entre ellos. Define cuantas
-  // columnas TALLA se muestran en el grid.
-  Result := 0;
-  if Dmm.unqryTablaG.IsEmpty then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT DISTINCT ID_AC_PIVOT_SESLIN ' +
-      '  FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
-      '   AND ID_AC_PIVOT_SESLIN IS NOT NULL';
-    q.ParamByName('s').AsString :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.Open;
-    while not q.Eof do
-    begin
-      iIdAc := q.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-      arr := GetPosicionesConjunto(iIdAc);
-      if Length(arr) > Result then Result := Length(arr);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-  if Result > CANT_TALLAS_MAX then Result := CANT_TALLAS_MAX;
-end;
-
-procedure TfrmMtoPruebaSesionGrid.RecalcularColumnasTallasDocumento;
-var
-  i, iMax : Integer;
-begin
-  // Muestra las primeras iMax columnas y oculta el resto. iMax = max
-  // valores entre los conjuntos referenciados por alguna linea de la
-  // sesion. Captions iniciales: 'Talla 1', 'Talla 2'... — se sobrescriben
-  // al cambiar la fila activa con los valores del conjunto en curso.
-  iMax := MaxLongConjuntosSesion;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    if FTallaColumns[i] = nil then Continue;
-    FTallaColumns[i].Visible := (i < iMax);
-    if i < iMax then
-      FTallaColumns[i].Caption := 'Talla ' + IntToStr(i + 1);
-  end;
-end;
-
-procedure TfrmMtoPruebaSesionGrid.ActualizarCaptionsTallasLineaActiva;
-var
-  ds   : TDataSet;
-  iAc  : Integer;
-  arr  : TArrPosConjunto;
-  i    : Integer;
-begin
-  // Cuando el foco entra en una linea, los rotulos de las columnas TALLA
-  // se actualizan al conjunto de esa linea (las primeras N posiciones).
-  // El resto queda con la caption generica 'Talla N+1' para indicar que
-  // no aplica al sistema de la linea activa.
-  ds := Dmm.unqrySesionLin;
-  if (ds = nil) or ds.IsEmpty then Exit;
-  iAc := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  arr := GetPosicionesConjunto(iAc);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    if FTallaColumns[i] = nil then Continue;
-    if not FTallaColumns[i].Visible then Continue;
-    if i < Length(arr) then
-      FTallaColumns[i].Caption := arr[i].Valor
-    else
-      FTallaColumns[i].Caption := 'Talla ' + IntToStr(i + 1);
-  end;
-end;
-
-procedure TfrmMtoPruebaSesionGrid.CargarCantidadesTodasLineas;
-var
-  i, iLinea : Integer;
-  ds        : TDataSet;
-  bk        : TBookmark;
-begin
-  // Recorre todas las lineas de la sesion y vuelca las cantidades de
-  // fza_compras_sesiones_celdas a las celdas no-bound del grid.
-  // Se llama al abrir la sesion y al cambiar de cabecera.
-  if Dmm = nil then Exit;
-  ds := Dmm.unqrySesionLin;
-  if (ds = nil) or not ds.Active then Exit;
-  if ds.IsEmpty then Exit;
-
-  // DisableControls evita que cxGrid se entere de los cambios de
-  // cursor del DataSet mientras recorremos. Sin esto, cada
-  // `ds.Next` provocaba un re-fetch del row anterior en el grid y
-  // limpiaba los Values[] que acabamos de fijar para la linea i-1;
-  // resultado: solo la ultima iteracion sobrevivia con datos
-  // visibles, las anteriores quedaban en blanco.
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    i := 0;
-    while not ds.Eof do
-    begin
-      iLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
-      if iLinea > 0 then
-        CargarCantidadesUnaLinea(i, iLinea);
-      Inc(i);
-      ds.Next;
-    end;
-  finally
-    if Assigned(bk) then
-    begin
-      if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
-      ds.FreeBookmark(bk);
-    end;
-    ds.EnableControls;
-  end;
-end;
-
-procedure TfrmMtoPruebaSesionGrid.CargarCantidadesUnaLinea(
-  ARecordIndex: Integer; ALinea: Integer);
-var
-  q       : TUniQuery;
-  iAc     : Integer;
-  arr     : TArrPosConjunto;
+  cfg     : TGridTallasConfig;
   i       : Integer;
-  iIdAv   : Integer;
-  rCant   : Double;
+  arrCols : TArray<TcxGridDBColumn>;
 begin
-  // Lee las celdas existentes de la linea en SESCEL y las publica en
-  // las columnas no-bound del grid por posicion (segun el orden del
-  // conjunto pivot de esa misma linea).
-  iAc := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  arr := GetPosicionesConjunto(iAc);
-  if Length(arr) = 0 then Exit;
+  // Cablea el gestor de tallas pivotadas (libreria reutilizable) con
+  // los nombres de tabla/campos especificos de Sesiones de compra.
+  // Si en el futuro se reusa este patron para Pedidos / Albaranes /
+  // Facturas, basta crear otro form con los sufijos PEDLIN/PEDCEL,
+  // ALBLIN/ALBCEL, etc. y la libreria hace lo mismo sin cambios.
+  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
+  if Dmm = nil then Exit;
 
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT ID_AV_PIVOT_SESCEL, SUM(CANTIDAD_SESCEL) AS TOTAL ' +
-      '  FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l ' +
-      ' GROUP BY ID_AV_PIVOT_SESCEL';
-    q.ParamByName('s').AsString  :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.Open;
-    while not q.Eof do
-    begin
-      iIdAv := q.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      rCant := q.FieldByName('TOTAL').AsFloat;
-      for i := 0 to High(arr) do
-        if arr[i].IdAv = iIdAv then
-        begin
-          if FTallaColumns[i] <> nil then
-            tvLineas.DataController.Values[
-              ARecordIndex, FTallaColumns[i].Index] := rCant;
-          Break;
-        end;
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  SetLength(arrCols, CANT_TALLAS_MAX);
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    arrCols[i] := FTallaColumns[i];
+
+  cfg := Default(TGridTallasConfig);
+  cfg.Conexion           := inLibGlobalVar.oConn;
+  cfg.Usuario            := oUser;
+  cfg.Grid               := tvLineas;
+  cfg.SourceMaster       := dsTablaG;
+  cfg.SourceLineas       := Dmm.dsSesionLin;
+  cfg.ColumnasTallas     := arrCols;
+  cfg.FieldSerieMaster   := 'SERIE_SES';
+  cfg.FieldNumeroMaster  := 'NUMERO_SES';
+  cfg.FieldLinea         := 'LINEA_SESLIN';
+  cfg.FieldConjuntoPivot := 'ID_AC_PIVOT_SESLIN';
+  cfg.FieldPrecioBase    := 'PRECIO_COMPRA_SESLIN';
+  cfg.FieldTotalUds      := 'TOTAL_UNIDADES_SESLIN';
+  cfg.FieldTotalLinea    := 'TOTAL_LINEA_SESLIN';
+  cfg.TablaCeldas        := 'fza_compras_sesiones_celdas';
+  cfg.FieldSerieCel      := 'SERIE_SES_SESCEL';
+  cfg.FieldNumeroCel     := 'NUMERO_SES_SESCEL';
+  cfg.FieldLineaCel      := 'LINEA_SES_SESCEL';
+  cfg.FieldFilaCel       := 'ID_FILA_SES_SESCEL';
+  cfg.FieldAvPivotCel    := 'ID_AV_PIVOT_SESCEL';
+  cfg.FieldCantidadCel   := 'CANTIDAD_SESCEL';
+  cfg.FieldAlmacenCel    := 'CODIGO_ALM_SESCEL';
+  cfg.IdFilaFijo         := 1;
+  cfg.MaxColumnas        := CANT_TALLAS_MAX;
+
+  FGestorTallas := TGestorGridTallas.Create(cfg);
+
+  // Hookear el OnEditValueChanged de cada columna talla al gestor.
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    if FTallaColumns[i] <> nil then
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).OnEditValueChanged
+                                       := FGestorTallas.PersistirCeldaActiva;
 end;
 
-// ===========================================================================
-//   Persistencia de cantidades
-// ===========================================================================
-
-procedure TfrmMtoPruebaSesionGrid.PersistirCantidad(ALinea, AIdAv: Integer;
-                                                   ACantidad: Double);
-var
-  q      : TUniQuery;
-  sAlm   : string;
-begin
-  // Upsert en fza_compras_sesiones_celdas con ID_FILA = 1 (la prueba
-  // trabaja con una fila por linea). Si ACantidad <= 0, borra la celda.
-  // CODIGO_ALM_SESCEL = '' para usar el almacen de la cabecera al
-  // materializar (la prueba no expone selector de almacen).
-  if Dmm.unqryTablaG.IsEmpty then Exit;
-  if ALinea <= 0 then Exit;
-  if AIdAv <= 0 then Exit;
-  sAlm := '';
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    if ACantidad <= 0 then
-    begin
-      q.SQL.Text :=
-        'DELETE FROM fza_compras_sesiones_celdas ' +
-        ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-        '   AND LINEA_SES_SESCEL = :l AND ID_FILA_SES_SESCEL = 1 ' +
-        '   AND ID_AV_PIVOT_SESCEL = :p AND CODIGO_ALM_SESCEL = :a';
-    end
-    else
-    begin
-      q.SQL.Text :=
-        'INSERT INTO fza_compras_sesiones_celdas ' +
-        '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
-        '   ID_FILA_SES_SESCEL, ID_AV_PIVOT_SESCEL, CODIGO_ALM_SESCEL, ' +
-        '   CANTIDAD_SESCEL, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:s, :n, :l, 1, :p, :a, :c, NOW(), :u) ' +
-        'ON DUPLICATE KEY UPDATE ' +
-        '  CANTIDAD_SESCEL = :c, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-      q.ParamByName('c').AsFloat  := ACantidad;
-      q.ParamByName('u').AsString := oUser;
-    end;
-    q.ParamByName('s').AsString  :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('p').AsInteger := AIdAv;
-    q.ParamByName('a').AsString  := sAlm;
-    q.ExecSQL;
-  finally
-    FreeAndNil(q);
-  end;
-end;
-
-procedure TfrmMtoPruebaSesionGrid.RefrescarTotalesLinea(ALinea: Integer);
-var
-  q     : TUniQuery;
-  rTot  : Double;
-  rPr   : Double;
-  ds    : TDataSet;
-begin
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) AS TOTAL ' +
-      '  FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l';
-    q.ParamByName('s').AsString  :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.Open;
-    rTot := q.FieldByName('TOTAL').AsFloat;
-  finally
-    FreeAndNil(q);
-  end;
-  ds := Dmm.unqrySesionLin;
-  rPr := ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTot;
-  ds.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    := rTot * rPr;
-  // NO hacemos ds.Post aqui. Posteaaba el master mientras el usuario
-  // sigue tecleando cantidades; el AfterPost provocaba un re-render
-  // del row y cxGrid limpiaba los Values no-bound de la fila — la
-  // cantidad recien tecleada desaparecia visualmente aunque ya estaba
-  // persistida en SESCEL. El Post real lo dispara el grid al cambiar
-  // de fila o el boton Grabar.
-end;
+// Toda la logica reusable de tallas pivotadas (cache de conjuntos,
+// maximo del documento, recalcular columnas, captions dinamicas,
+// carga / persistencia de celdas, refresco de totales y validacion)
+// vive ahora en inLibGridTallasInline.TGestorGridTallas — ver
+// InicializarGestorTallas mas abajo. El form solo delega y mantiene
+// la cabecera y los handlers especificos (familia, color, PVP).
 
 // ===========================================================================
 //   Lineas — alta, baja, navegacion
@@ -802,7 +520,6 @@ begin
   // cascade en BBDD; el patron es delete-on-app).
   if iLinea > 0 then
   begin
-    PersistirCantidad(iLinea, -1, 0); // no hace nada; placeholder
     // Borrado explicito de celdas de la linea
     with TUniQuery.Create(nil) do
     try
@@ -822,7 +539,7 @@ begin
     end;
   end;
   Dmm.unqrySesionLin.Delete;
-  RecalcularColumnasTallasDocumento;
+  if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.tvLineasEditKeyDown(
@@ -931,7 +648,7 @@ procedure TfrmMtoPruebaSesionGrid.tvLineasFocusedRecordChanged(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   inherited;
-  ActualizarCaptionsTallasLineaActiva;
+  if Assigned(FGestorTallas) then FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 // ===========================================================================
@@ -1079,86 +796,27 @@ end;
 
 procedure TfrmMtoPruebaSesionGrid.dbcLinTallasPropertiesEditValueChanged(
   Sender: TObject);
-var
-  iAc  : Integer;
-  arr  : TArrPosConjunto;
 begin
   inherited;
   if Sender is TcxCustomEdit then
     TcxCustomEdit(Sender).PostEditValue;
   if Dmm.unqrySesionLin.IsEmpty then Exit;
-  // VALIDACION DE TAMANO: rechazamos sistemas de tallas con mas de
-  // CANT_TALLAS_MAX valores ANTES de Postear el cambio y reasignar
-  // columnas. Asi el usuario ve el error y la linea se queda con el
-  // pivot anterior (o vacio) sin reordenar el grid.
-  iAc := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  if iAc > 0 then
-  begin
-    arr := GetPosicionesConjunto(iAc);
-    if Length(arr) > CANT_TALLAS_MAX then
-    begin
-      MessageDlg(Format(
-        'El sistema de tallas seleccionado tiene %d valores; el ' +
-        'maximo admitido por la prueba 01 es %d. Elige un sistema ' +
-        'con menos tallas o reduce el conjunto antes de usarlo aqui.',
-        [Length(arr), CANT_TALLAS_MAX]),
-        mtError, [mbOk], 0);
-      if not (Dmm.unqrySesionLin.State in [dsEdit, dsInsert]) then
-        Dmm.unqrySesionLin.Edit;
-      Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').Clear;
-      // Mantener la cache: el conjunto sigue existiendo en BBDD; otra
-      // linea podria querer comprobarlo (recibira el mismo error).
-      Exit;
-    end;
-  end;
+  if FGestorTallas = nil then Exit;
+
+  // Rechaza sistemas con mas valores que el maximo (mtError + clear)
+  // ANTES de Postear/reasignar columnas. La validacion vive en la
+  // libreria — un solo punto para todos los Mtos que usen el patron.
+  if not FGestorTallas.ValidarSistemaSeleccionado then Exit;
+
   if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
     Dmm.unqrySesionLin.Post;
-  // El conjunto pivot de la linea ha cambiado: hay que recalcular el
-  // max-del-documento y actualizar captions a las del nuevo conjunto.
-  RecalcularColumnasTallasDocumento;
-  ActualizarCaptionsTallasLineaActiva;
+  FGestorTallas.RecalcularMaxColumnas;
+  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
-// ===========================================================================
-//   Edicion inline de celdas TALLA
-// ===========================================================================
-
-procedure TfrmMtoPruebaSesionGrid.TallaCellEditValueChanged(Sender: TObject);
-var
-  ed          : TcxCustomEdit;
-  col         : TcxGridColumn;
-  iLinea, iAc : Integer;
-  arr         : TArrPosConjunto;
-  iPos        : Integer;
-  rCant       : Double;
-  vEdit       : Variant;
-begin
-  inherited;
-  if not (Sender is TcxCustomEdit) then Exit;
-  ed := TcxCustomEdit(Sender);
-  ed.PostEditValue;
-
-  // tvLineas.Controller es TcxGridTableController; FocusedColumn vive ahi.
-  col := tvLineas.Controller.FocusedColumn;
-  if col = nil then Exit;
-  iPos := col.Tag;  // posicion 1..N en el conjunto
-  if (iPos < 1) or (iPos > CANT_TALLAS_MAX) then Exit;
-
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-  iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  iAc    := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  arr := GetPosicionesConjunto(iAc);
-  if iPos > Length(arr) then Exit;       // posicion fuera del sistema
-
-  vEdit := ed.EditValue;
-  if VarIsNull(vEdit) or VarIsClear(vEdit) then
-    rCant := 0
-  else
-    rCant := vEdit;
-
-  PersistirCantidad(iLinea, arr[iPos - 1].IdAv, rCant);
-  RefrescarTotalesLinea(iLinea);
-end;
+// La edicion de celdas talla (antiguo TallaCellEditValueChanged) se
+// extrajo a TGestorGridTallas.PersistirCeldaActiva; el handler se
+// engancha automaticamente en InicializarGestorTallas.
 
 initialization
   ForceReferenceToClass(TfrmMtoPruebaSesionGrid);

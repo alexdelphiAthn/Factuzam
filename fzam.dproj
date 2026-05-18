@@ -592,6 +592,7 @@
             <Form>frmFotoArticulo</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
+        <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas">
             <Form>frmMtoPruebaSesionGrid</Form>
         </DCCReference>
