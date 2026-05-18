@@ -26,7 +26,7 @@ uses
   Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles,
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
-  inLibVentasCalendario, System.Actions, Vcl.ActnList;
+  inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses, cxImage;
 
 type
   TfrmMtoMenuCaja = class(TfrmBase)
@@ -46,8 +46,6 @@ type
     lblSalir: TcxLabel;
     lblESC: TcxLabel;
     lblFecha: TcxLabel;
-    lblTituloFzam: TcxLabel;
-    lblTituloVerifactu: TcxLabel;
     shpSeparador: TShape;
     lblF3: TcxLabel;
     lblTraspasos: TcxLabel;
@@ -56,6 +54,7 @@ type
     calMes: TJvMonthCalendar;
     alCajaMenu: TActionList;
     actSalirMenu: TAction;
+    cxImage1: TcxImage;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     // Eventos F5
